@@ -1,7 +1,6 @@
 #include "pthread.hpp"
 #include "mutex.hpp"
 #include "../Errno/errno.hpp"
-#include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "pthread_lock_tracking.hpp"
 
@@ -121,8 +120,7 @@ void pt_mutex::teardown_thread_safety()
 {
     if (this->_state_mutex != ft_nullptr)
     {
-        this->_state_mutex->~pt_mutex();
-        cma_free(this->_state_mutex);
+        delete this->_state_mutex;
         this->_state_mutex = ft_nullptr;
     }
     return ;
@@ -217,4 +215,3 @@ pthread_mutex_t   *pt_mutex::get_native_mutex() const
     this->set_error(FT_ERR_SUCCESSS);
     return (&this->_native_mutex);
 }
-

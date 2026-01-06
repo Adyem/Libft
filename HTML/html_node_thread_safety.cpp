@@ -1,4 +1,3 @@
-#include <cstdlib>
 #include <new>
 
 #include "parser.hpp"
@@ -10,7 +9,6 @@
 int html_node_prepare_thread_safety(html_node *node)
 {
     pt_mutex *mutex_pointer;
-    void     *memory;
 
     if (!node)
     {
@@ -22,20 +20,18 @@ int html_node_prepare_thread_safety(html_node *node)
         ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
-    memory = std::malloc(sizeof(pt_mutex));
-    if (!memory)
+    mutex_pointer = new (std::nothrow) pt_mutex();
+    if (!mutex_pointer)
     {
         ft_errno = FT_ERR_NO_MEMORY;
         return (-1);
     }
-    mutex_pointer = new(memory) pt_mutex();
     if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
     {
         int mutex_error;
 
         mutex_error = mutex_pointer->get_error();
-        mutex_pointer->~pt_mutex();
-        std::free(memory);
+        delete mutex_pointer;
         ft_errno = mutex_error;
         return (-1);
     }
@@ -51,8 +47,7 @@ void html_node_teardown_thread_safety(html_node *node)
         return ;
     if (node->mutex)
     {
-        node->mutex->~pt_mutex();
-        std::free(node->mutex);
+        delete node->mutex;
         node->mutex = ft_nullptr;
     }
     node->thread_safe_enabled = false;
@@ -120,4 +115,3 @@ bool html_node_is_thread_safe_enabled(const html_node *node)
         return (false);
     return (true);
 }
-

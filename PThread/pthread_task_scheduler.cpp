@@ -1,7 +1,7 @@
 #include "task_scheduler.hpp"
 #include "pthread.hpp"
 #include "../System_utils/system_utils.hpp"
-#include "../CMA/CMA.hpp"
+#include <new>
 #include <utility>
 #include "../Template/move.hpp"
 
@@ -62,7 +62,6 @@ bool ft_scheduled_task_state::is_cancelled() const
 
 int ft_scheduled_task_state::enable_thread_safety()
 {
-    void *memory;
     pt_mutex *state_mutex;
 
     if (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr)
@@ -70,20 +69,18 @@ int ft_scheduled_task_state::enable_thread_safety()
         this->set_error(FT_ERR_SUCCESSS);
         return (0);
     }
-    memory = cma_malloc(sizeof(pt_mutex));
-    if (memory == ft_nullptr)
+    state_mutex = new (std::nothrow) pt_mutex();
+    if (state_mutex == ft_nullptr)
     {
         this->set_error(FT_ERR_NO_MEMORY);
         return (-1);
     }
-    state_mutex = new(memory) pt_mutex();
     if (state_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         int mutex_error;
 
         mutex_error = state_mutex->get_error();
-        state_mutex->~pt_mutex();
-        cma_free(memory);
+        delete state_mutex;
         this->set_error(mutex_error);
         return (-1);
     }
@@ -201,8 +198,7 @@ void ft_scheduled_task_state::teardown_thread_safety()
 {
     if (this->_state_mutex != ft_nullptr)
     {
-        this->_state_mutex->~pt_mutex();
-        cma_free(this->_state_mutex);
+        delete this->_state_mutex;
         this->_state_mutex = ft_nullptr;
     }
     this->_thread_safe_enabled = false;
@@ -429,7 +425,6 @@ const char *ft_scheduled_task_handle::get_error_str() const
 
 int ft_scheduled_task_handle::enable_thread_safety()
 {
-    void *memory;
     pt_mutex *state_mutex;
 
     if (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr)
@@ -437,20 +432,18 @@ int ft_scheduled_task_handle::enable_thread_safety()
         this->set_error(FT_ERR_SUCCESSS);
         return (0);
     }
-    memory = cma_malloc(sizeof(pt_mutex));
-    if (memory == ft_nullptr)
+    state_mutex = new (std::nothrow) pt_mutex();
+    if (state_mutex == ft_nullptr)
     {
         this->set_error(FT_ERR_NO_MEMORY);
         return (-1);
     }
-    state_mutex = new(memory) pt_mutex();
     if (state_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         int mutex_error;
 
         mutex_error = state_mutex->get_error();
-        state_mutex->~pt_mutex();
-        cma_free(memory);
+        delete state_mutex;
         this->set_error(mutex_error);
         return (-1);
     }
@@ -558,8 +551,7 @@ void ft_scheduled_task_handle::teardown_thread_safety()
 {
     if (this->_state_mutex != ft_nullptr)
     {
-        this->_state_mutex->~pt_mutex();
-        cma_free(this->_state_mutex);
+        delete this->_state_mutex;
         this->_state_mutex = ft_nullptr;
     }
     this->_thread_safe_enabled = false;
@@ -1705,7 +1697,6 @@ size_t ft_task_scheduler::get_worker_total_count() const
 
 int ft_task_scheduler::enable_thread_safety()
 {
-    void *memory;
     pt_mutex *state_mutex;
 
     if (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr)
@@ -1723,20 +1714,18 @@ int ft_task_scheduler::enable_thread_safety()
         this->set_error(FT_ERR_SUCCESSS);
         return (0);
     }
-    memory = cma_malloc(sizeof(pt_mutex));
-    if (memory == ft_nullptr)
+    state_mutex = new (std::nothrow) pt_mutex();
+    if (state_mutex == ft_nullptr)
     {
         this->set_error(FT_ERR_NO_MEMORY);
         return (-1);
     }
-    state_mutex = new(memory) pt_mutex();
     if (state_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         int mutex_error;
 
         mutex_error = state_mutex->get_error();
-        state_mutex->~pt_mutex();
-        cma_free(memory);
+        delete state_mutex;
         this->set_error(mutex_error);
         return (-1);
     }
@@ -1864,11 +1853,9 @@ void ft_task_scheduler::teardown_thread_safety()
     this->_scheduled_condition.disable_thread_safety();
     if (this->_state_mutex != ft_nullptr)
     {
-        this->_state_mutex->~pt_mutex();
-        cma_free(this->_state_mutex);
+        delete this->_state_mutex;
         this->_state_mutex = ft_nullptr;
     }
     this->_thread_safe_enabled = false;
     return ;
 }
-

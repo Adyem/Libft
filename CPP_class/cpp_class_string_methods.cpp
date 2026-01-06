@@ -8,7 +8,7 @@
 #include "class_nullptr.hpp"
 #include <climits>
 
-thread_local ft_string::operation_error_stack ft_string::_operation_errors = {{}, 0};
+thread_local ft_operation_error_stack ft_string::_operation_errors = {{}, 0};
 
 static int ft_string_current_error() noexcept
 {
@@ -100,6 +100,8 @@ int ft_string::mutex_guard::get_error() const noexcept
 
 void ft_string::push_error_unlocked(int error_code) const noexcept
 {
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
     ft_string::record_operation_error(error_code);
     this->set_error_unlocked(error_code);
     return ;
@@ -113,6 +115,8 @@ void ft_string::push_error(int error_code) const noexcept
 
 void ft_string::set_system_error_unlocked(int error_code) const noexcept
 {
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
     ft_sys_errno = error_code;
     return ;
 }
@@ -132,6 +136,8 @@ void ft_string::set_error_unlocked(int error_code) const noexcept
 
 void ft_string::set_error(int error_code) const noexcept
 {
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
     this->set_error_unlocked(error_code);
     return ;
 }
@@ -240,6 +246,8 @@ void ft_string::record_operation_error(int error_code) noexcept
 
 int ft_string::last_operation_error() noexcept
 {
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
     if (ft_string::_operation_errors.count == 0)
         return (FT_ERR_SUCCESSS);
     return (ft_string::_operation_errors.errors[0]);
@@ -247,6 +255,8 @@ int ft_string::last_operation_error() noexcept
 
 int ft_string::operation_error_at(size_t index) noexcept
 {
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
     if (index == 0 || index > ft_string::_operation_errors.count)
         return (FT_ERR_SUCCESSS);
     return (ft_string::_operation_errors.errors[index - 1]);
@@ -254,6 +264,8 @@ int ft_string::operation_error_at(size_t index) noexcept
 
 void ft_string::pop_operation_errors() noexcept
 {
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
     ft_string::_operation_errors.count = 0;
     return ;
 }
@@ -261,6 +273,8 @@ void ft_string::pop_operation_errors() noexcept
 int ft_string::pop_oldest_operation_error() noexcept
 {
     int popped_error;
+
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
     if (ft_string::_operation_errors.count == 0)
         return (FT_ERR_SUCCESSS);
@@ -273,6 +287,8 @@ int ft_string::pop_oldest_operation_error() noexcept
 int ft_string::operation_error_index() noexcept
 {
     size_t index;
+
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
     index = 0;
     while (index < ft_string::_operation_errors.count)
@@ -799,35 +815,29 @@ bool ft_string::empty() const noexcept
 
 int ft_string::get_error() const noexcept
 {
-    ft_string::mutex_guard guard;
-    int lock_error;
     int error_value;
 
-    lock_error = this->lock_self(guard);
-    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(lock_error);
-        return (lock_error);
+        std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
+        error_value = this->_error_code;
+        ft_errno = error_value;
     }
-    error_value = this->_error_code;
-    ft_errno = error_value;
     return (error_value);
 }
 
 const char *ft_string::get_error_str() const noexcept
 {
-    ft_string::mutex_guard guard;
-    int lock_error;
     const char *error_string;
+    int error_value;
 
-    lock_error = this->lock_self(guard);
-    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(lock_error);
-        return (ft_strerror(lock_error));
+        std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
+        error_value = this->_error_code;
+        ft_errno = error_value;
     }
-    error_string = ft_strerror(this->_error_code);
-    ft_errno = this->_error_code;
+    error_string = ft_strerror(error_value);
     return (error_string);
 }
 

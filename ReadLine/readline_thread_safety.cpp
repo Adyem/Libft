@@ -1,5 +1,5 @@
 #include "readline_internal.hpp"
-#include "../CMA/CMA.hpp"
+#include <new>
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
@@ -8,7 +8,6 @@
 int rl_state_prepare_thread_safety(readline_state_t *state)
 {
     pt_mutex *mutex_pointer;
-    void     *memory;
 
     if (state == ft_nullptr)
     {
@@ -20,20 +19,18 @@ int rl_state_prepare_thread_safety(readline_state_t *state)
         ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
-    memory = cma_malloc(sizeof(pt_mutex));
-    if (memory == ft_nullptr)
+    mutex_pointer = new (std::nothrow) pt_mutex();
+    if (mutex_pointer == ft_nullptr)
     {
         ft_errno = FT_ERR_NO_MEMORY;
         return (-1);
     }
-    mutex_pointer = new(memory) pt_mutex();
     if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
     {
         int mutex_error;
 
         mutex_error = mutex_pointer->get_error();
-        mutex_pointer->~pt_mutex();
-        cma_free(memory);
+        delete mutex_pointer;
         ft_errno = mutex_error;
         return (-1);
     }
@@ -49,8 +46,7 @@ void rl_state_teardown_thread_safety(readline_state_t *state)
         return ;
     if (state->mutex != ft_nullptr)
     {
-        state->mutex->~pt_mutex();
-        cma_free(state->mutex);
+        delete state->mutex;
         state->mutex = ft_nullptr;
     }
     state->thread_safe_enabled = false;

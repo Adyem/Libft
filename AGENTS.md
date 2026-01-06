@@ -8,7 +8,6 @@ After declaring a class, indent access specifiers (private, public, protected) b
 In class declarations, place private members above public members and separate the sections with an empty line.
 Function and variable names must use snake_case.
 Use full variable names instead of short ones or single letters, dont use s or str use string.
-Eevery function sets ft_errno to FT_ERR_SUCCESS upon succesfull completion setting relevant error values upon failure.
 
 Use Allman style braces (opening brace on a new line).
 In classes, member variable names must start with an underscore (_).
@@ -17,9 +16,20 @@ Template classes may define member functions in the same file as the class decla
 other classes must split declarations into .hpp files and definitions into .cpp files.
 Do not define member function bodies inside the class declaration; place all definitions outside the class.
 Every class must declare and define a constructor and destructor, even if they simply contain return ;.
-Classes must track errors with a mutable _error_code member, a private set_error to update ft_errno, and public get_error and get_error_str helpers.
-Use ft_sys_errno for structural or lifecycle failures (allocation, locking, construction, destruction) and reserve ft_errno for user-visible semantic results.
-Internal helpers and constructors must not clear or overwrite ft_errno when they succeed; semantic operations may update ft_errno to reflect their outcomes.
+Class error handling must use the shared error-stack types from the Errno module.
+When publishing or reading class error codes or error stacks, do not lock the class mutex; use
+`std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());` instead.
+
+#Errno Global Error Stack
+
+Define and use a global error stack in the Errno module so non-class functions can record errors
+without overwriting prior state, preserving older errors in the stack. Use helper functions for
+all global stack access; do not touch the stack directly. Helpers must provide push, pop last,
+pop all, and fetch by index (1-based). The newest error is always at the lowest index, and
+helpers must also support retrieving the most recent error and error string values using the
+same ordering rules.
+Any successful function must push a value onto the global error stack noting the successful
+operation.
 
 Only .cpp files must be prefixed with the name of the module they belong to.
 For .hpp files, prefix only those meant for internal use with the module name.
