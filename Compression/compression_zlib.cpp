@@ -58,7 +58,7 @@ static int  compression_assign_string(ft_string &destination, const unsigned cha
 {
     int string_error;
 
-    string_error = destination.get_error();
+    string_error = ft_string::last_operation_error();
     if (string_error != FT_ERR_SUCCESSS)
     {
         ft_errno = string_error;
@@ -67,7 +67,7 @@ static int  compression_assign_string(ft_string &destination, const unsigned cha
     if (size == 0)
     {
         destination.clear();
-        string_error = destination.get_error();
+        string_error = ft_string::last_operation_error();
         if (string_error != FT_ERR_SUCCESSS)
         {
             ft_errno = string_error;
@@ -82,7 +82,7 @@ static int  compression_assign_string(ft_string &destination, const unsigned cha
         return (1);
     }
     destination.assign(reinterpret_cast<const char *>(buffer), size);
-    string_error = destination.get_error();
+    string_error = ft_string::last_operation_error();
     if (string_error != FT_ERR_SUCCESSS)
     {
         ft_errno = string_error;

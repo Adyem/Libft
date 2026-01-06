@@ -3,9 +3,9 @@
 
 size_t yaml_find_char(const ft_string &string, char character) noexcept
 {
-    if (string.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = string.get_error();
+        ft_errno = ft_string::last_operation_error();
         return (static_cast<size_t>(-1));
     }
     const char *data = string.c_str();
@@ -26,11 +26,11 @@ size_t yaml_find_char(const ft_string &string, char character) noexcept
 
 ft_string yaml_substr(const ft_string &string, size_t start, size_t length) noexcept
 {
-    if (string.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        ft_string error_string(string.get_error());
+        ft_string error_string(ft_string::last_operation_error());
 
-        ft_errno = string.get_error();
+        ft_errno = ft_string::last_operation_error();
         return (error_string);
     }
     ft_string result;
@@ -39,11 +39,11 @@ ft_string yaml_substr(const ft_string &string, size_t start, size_t length) noex
     while (index < length && start + index < string.size())
     {
         result.append(data[start + index]);
-        if (result.get_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
         {
-            ft_string error_string(result.get_error());
+            ft_string error_string(ft_string::last_operation_error());
 
-            ft_errno = result.get_error();
+            ft_errno = ft_string::last_operation_error();
             return (error_string);
         }
         index++;
@@ -54,11 +54,11 @@ ft_string yaml_substr(const ft_string &string, size_t start, size_t length) noex
 
 ft_string yaml_substr_from(const ft_string &string, size_t start) noexcept
 {
-    if (string.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        ft_string error_string(string.get_error());
+        ft_string error_string(ft_string::last_operation_error());
 
-        ft_errno = string.get_error();
+        ft_errno = ft_string::last_operation_error();
         return (error_string);
     }
     if (start >= string.size())
@@ -67,11 +67,11 @@ ft_string yaml_substr_from(const ft_string &string, size_t start) noexcept
         return (ft_string());
     }
     ft_string part = yaml_substr(string, start, string.size() - start);
-    if (part.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        ft_string error_string(part.get_error());
+        ft_string error_string(ft_string::last_operation_error());
 
-        ft_errno = part.get_error();
+        ft_errno = ft_string::last_operation_error();
         return (error_string);
     }
     ft_errno = FT_ERR_SUCCESSS;
@@ -80,9 +80,9 @@ ft_string yaml_substr_from(const ft_string &string, size_t start) noexcept
 
 size_t yaml_count_indent(const ft_string &line) noexcept
 {
-    if (line.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = line.get_error();
+        ft_errno = ft_string::last_operation_error();
         return (0);
     }
     const char *data = line.c_str();
@@ -96,9 +96,9 @@ size_t yaml_count_indent(const ft_string &line) noexcept
 
 void yaml_trim(ft_string &string) noexcept
 {
-    if (string.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = string.get_error();
+        ft_errno = ft_string::last_operation_error();
         return ;
     }
     const char *data = string.c_str();
@@ -115,10 +115,10 @@ void yaml_trim(ft_string &string) noexcept
         return ;
     }
     ft_string trimmed = yaml_substr(string, start_index, end_index - start_index);
-    if (trimmed.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        string = ft_string(trimmed.get_error());
-        ft_errno = trimmed.get_error();
+        string = ft_string(ft_string::last_operation_error());
+        ft_errno = ft_string::last_operation_error();
         return ;
     }
     string = trimmed;
@@ -128,10 +128,10 @@ void yaml_trim(ft_string &string) noexcept
 
 int yaml_split_lines(const ft_string &content, ft_vector<ft_string> &lines) noexcept
 {
-    if (content.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = content.get_error();
-        return (content.get_error());
+        ft_errno = ft_string::last_operation_error();
+        return (ft_string::last_operation_error());
     }
     const char *data = content.c_str();
     size_t start_index = 0;
@@ -142,10 +142,10 @@ int yaml_split_lines(const ft_string &content, ft_vector<ft_string> &lines) noex
         while (end_index < content_length && data[end_index] != '\n')
             end_index++;
         ft_string part = yaml_substr(content, start_index, end_index - start_index);
-        if (part.get_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = part.get_error();
-            return (part.get_error());
+            ft_errno = ft_string::last_operation_error();
+            return (ft_string::last_operation_error());
         }
         lines.push_back(part);
         if (lines.get_error() != FT_ERR_SUCCESSS)
@@ -158,4 +158,3 @@ int yaml_split_lines(const ft_string &content, ft_vector<ft_string> &lines) noex
     ft_errno = FT_ERR_SUCCESSS;
     return (FT_ERR_SUCCESSS);
 }
-

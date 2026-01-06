@@ -36,7 +36,7 @@ struct api_request_metrics_guard
             _endpoint = host;
         else
             _endpoint = "(null)";
-        if (_endpoint.get_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
         {
             _enabled = false;
             return ;
@@ -53,7 +53,7 @@ struct api_request_metrics_guard
                 return ;
             }
             _endpoint.append(':');
-            if (_endpoint.get_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
             {
                 _enabled = false;
                 cma_free(port_string);
@@ -61,7 +61,7 @@ struct api_request_metrics_guard
             }
             _endpoint.append(port_string);
             cma_free(port_string);
-            if (_endpoint.get_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
             {
                 _enabled = false;
                 return ;

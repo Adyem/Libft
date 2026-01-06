@@ -301,9 +301,9 @@ int udp_socket::configure_address(const SocketConfig &config)
     address_family = mutable_config->_address_family;
     protocol_value = mutable_config->_protocol;
     socket_config_unlock(mutable_config, lock_acquired);
-    if (host_copy.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(host_copy.get_error());
+        this->set_error(ft_string::last_operation_error());
         nw_close(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error_code);
@@ -358,9 +358,9 @@ int udp_socket::configure_address(const SocketConfig &config)
     int resolver_error;
 
     port_string = ft_to_string(static_cast<long>(port_value));
-    if (port_string.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(port_string.get_error());
+        this->set_error(ft_string::last_operation_error());
         nw_close(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error_code);

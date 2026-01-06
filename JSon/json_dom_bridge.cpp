@@ -56,10 +56,10 @@ static int json_dom_append_item(const json_item *item, ft_dom_node *group_node) 
         ft_string number_string;
 
         number_string = item->big_number->to_string_base(10);
-        if (number_string.get_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
         {
             json_dom_delete_node(item_node);
-            ft_errno = number_string.get_error();
+            ft_errno = ft_string::last_operation_error();
             return (-1);
         }
         if (item_node->set_value(number_string) != 0)
@@ -384,4 +384,3 @@ int json_document_from_dom(const ft_dom_document &dom, json_document &document) 
     document.set_manual_error(FT_ERR_SUCCESSS);
     return (0);
 }
-

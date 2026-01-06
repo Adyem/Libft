@@ -72,9 +72,9 @@ static bool networking_dns_append_literal(ft_string &target, const char *literal
     if (value == ft_nullptr)
         value = "";
     target.append(value);
-    if (target.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = target.get_error();
+        ft_errno = ft_string::last_operation_error();
         return (false);
     }
     ft_errno = FT_ERR_SUCCESSS;
@@ -84,9 +84,9 @@ static bool networking_dns_append_literal(ft_string &target, const char *literal
 static bool networking_dns_append_string(ft_string &target, const ft_string &value) noexcept
 {
     target.append(value);
-    if (target.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = target.get_error();
+        ft_errno = ft_string::last_operation_error();
         return (false);
     }
     ft_errno = FT_ERR_SUCCESSS;
@@ -96,9 +96,9 @@ static bool networking_dns_append_string(ft_string &target, const ft_string &val
 static bool networking_dns_append_separator(ft_string &target) noexcept
 {
     target.append('|');
-    if (target.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = target.get_error();
+        ft_errno = ft_string::last_operation_error();
         return (false);
     }
     ft_errno = FT_ERR_SUCCESSS;
@@ -261,9 +261,9 @@ bool networking_dns_resolve(const char *host, const char *service,
         return (false);
     }
     cache_key = host;
-    if (cache_key.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = cache_key.get_error();
+        ft_errno = ft_string::last_operation_error();
         return (false);
     }
     if (!networking_dns_append_separator(cache_key))
@@ -276,9 +276,9 @@ bool networking_dns_resolve(const char *host, const char *service,
     if (!networking_dns_append_separator(cache_key))
         return (false);
     number_string = ft_to_string(static_cast<long>(family));
-    if (number_string.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = number_string.get_error();
+        ft_errno = ft_string::last_operation_error();
         return (false);
     }
     if (!networking_dns_append_string(cache_key, number_string))
@@ -286,9 +286,9 @@ bool networking_dns_resolve(const char *host, const char *service,
     if (!networking_dns_append_separator(cache_key))
         return (false);
     number_string = ft_to_string(static_cast<long>(socktype));
-    if (number_string.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = number_string.get_error();
+        ft_errno = ft_string::last_operation_error();
         return (false);
     }
     if (!networking_dns_append_string(cache_key, number_string))
@@ -296,9 +296,9 @@ bool networking_dns_resolve(const char *host, const char *service,
     if (!networking_dns_append_separator(cache_key))
         return (false);
     number_string = ft_to_string(static_cast<long>(protocol));
-    if (number_string.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = number_string.get_error();
+        ft_errno = ft_string::last_operation_error();
         return (false);
     }
     if (!networking_dns_append_string(cache_key, number_string))
@@ -306,9 +306,9 @@ bool networking_dns_resolve(const char *host, const char *service,
     if (!networking_dns_append_separator(cache_key))
         return (false);
     number_string = ft_to_string(static_cast<long>(flags));
-    if (number_string.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = number_string.get_error();
+        ft_errno = ft_string::last_operation_error();
         return (false);
     }
     if (!networking_dns_append_string(cache_key, number_string))

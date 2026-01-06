@@ -228,7 +228,7 @@ static bool tls_copy_bio_to_string(BIO *memory, ft_string &output)
     long memory_length;
 
     output.clear();
-    if (output.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
         return (false);
     if (memory == ft_nullptr)
     {
@@ -244,7 +244,7 @@ static bool tls_copy_bio_to_string(BIO *memory, ft_string &output)
     if (memory_length == 0)
         return (true);
     output.append(memory_data, static_cast<size_t>(memory_length));
-    if (output.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
         return (false);
     return (true);
 }
@@ -257,7 +257,7 @@ static bool tls_extract_x509_name(X509_NAME *name, ft_string &output)
     if (name == ft_nullptr)
     {
         output.clear();
-        return (output.get_error() == FT_ERR_SUCCESSS);
+        return (ft_string::last_operation_error() == FT_ERR_SUCCESSS);
     }
     memory = BIO_new(BIO_s_mem());
     if (memory == ft_nullptr)
@@ -290,7 +290,7 @@ static bool tls_extract_asn1_time(const ASN1_TIME *time_value, ft_string &output
     if (time_value == ft_nullptr)
     {
         output.clear();
-        return (output.get_error() == FT_ERR_SUCCESSS);
+        return (ft_string::last_operation_error() == FT_ERR_SUCCESSS);
     }
     memory = BIO_new(BIO_s_mem());
     if (memory == ft_nullptr)
@@ -324,7 +324,7 @@ static bool tls_extract_serial_number(const ASN1_INTEGER *serial_value,
     if (serial_value == ft_nullptr)
     {
         output.clear();
-        return (output.get_error() == FT_ERR_SUCCESSS);
+        return (ft_string::last_operation_error() == FT_ERR_SUCCESSS);
     }
     memory = BIO_new(BIO_s_mem());
     if (memory == ft_nullptr)
@@ -358,7 +358,7 @@ static bool tls_compute_certificate_fingerprint(X509 *certificate,
     char byte_buffer[3];
 
     output.clear();
-    if (output.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
         return (false);
     if (certificate == ft_nullptr)
     {
@@ -380,12 +380,12 @@ static bool tls_compute_certificate_fingerprint(X509 *certificate,
             return (false);
         }
         output.append(byte_buffer, 2);
-        if (output.get_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
             return (false);
         if (index + 1 < digest_length)
         {
             output.append(':');
-            if (output.get_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
                 return (false);
         }
         index++;
@@ -1219,15 +1219,15 @@ bool api_tls_client::populate_handshake_diagnostics()
         return (false);
     }
     this->_handshake_diagnostics.protocol.clear();
-    if (this->_handshake_diagnostics.protocol.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(this->_handshake_diagnostics.protocol.get_error());
+        this->set_error(ft_string::last_operation_error());
         return (false);
     }
     this->_handshake_diagnostics.cipher.clear();
-    if (this->_handshake_diagnostics.cipher.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(this->_handshake_diagnostics.cipher.get_error());
+        this->set_error(ft_string::last_operation_error());
         return (false);
     }
     this->_handshake_diagnostics.certificates.clear();
@@ -1240,9 +1240,9 @@ bool api_tls_client::populate_handshake_diagnostics()
     if (protocol_name != ft_nullptr)
     {
         this->_handshake_diagnostics.protocol.append(protocol_name);
-        if (this->_handshake_diagnostics.protocol.get_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
         {
-            this->set_error(this->_handshake_diagnostics.protocol.get_error());
+            this->set_error(ft_string::last_operation_error());
             return (false);
         }
     }
@@ -1253,9 +1253,9 @@ bool api_tls_client::populate_handshake_diagnostics()
         if (cipher_name != ft_nullptr)
         {
             this->_handshake_diagnostics.cipher.append(cipher_name);
-            if (this->_handshake_diagnostics.cipher.get_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
             {
-                this->set_error(this->_handshake_diagnostics.cipher.get_error());
+                this->set_error(ft_string::last_operation_error());
                 return (false);
             }
         }
@@ -1348,4 +1348,3 @@ const api_tls_handshake_diagnostics &api_tls_client::get_handshake_diagnostics()
         this->set_error(FT_ERR_SUCCESSS);
     return (this->_handshake_diagnostics);
 }
-

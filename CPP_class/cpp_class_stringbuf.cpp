@@ -5,8 +5,11 @@
 ft_stringbuf::ft_stringbuf(const ft_string &string) noexcept
     : _storage(string), _position(0), _error_code(FT_ERR_SUCCESSS), _mutex()
 {
-    if (this->_storage.get_error() != FT_ERR_SUCCESSS)
-        this->set_error(this->_storage.get_error());
+    int storage_error;
+
+    storage_error = ft_string::last_operation_error();
+    if (storage_error != FT_ERR_SUCCESSS)
+        this->set_error(storage_error);
     return ;
 }
 
@@ -24,8 +27,8 @@ ft_stringbuf::ft_stringbuf(const ft_stringbuf &other) noexcept
     }
     this->_position = other._position;
     this->_error_code = other._error_code;
-    if (this->_storage.get_error() != FT_ERR_SUCCESSS)
-        this->_error_code = this->_storage.get_error();
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        this->_error_code = ft_string::last_operation_error();
     this->set_error_unlocked(this->_error_code);
     ft_stringbuf::finalize_lock(other_guard);
     return ;
@@ -71,8 +74,8 @@ ft_stringbuf &ft_stringbuf::operator=(const ft_stringbuf &other) noexcept
     this->_storage = other._storage;
     this->_position = other._position;
     this->_error_code = other._error_code;
-    if (this->_storage.get_error() != FT_ERR_SUCCESSS)
-        this->_error_code = this->_storage.get_error();
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        this->_error_code = ft_string::last_operation_error();
     this->set_error_unlocked(this->_error_code);
     ft_stringbuf::finalize_lock(second_guard);
     ft_stringbuf::finalize_lock(first_guard);
@@ -95,8 +98,8 @@ ft_stringbuf::ft_stringbuf(ft_stringbuf &&other) noexcept
     this->_error_code = other._error_code;
     other._position = 0;
     other._error_code = FT_ERR_SUCCESSS;
-    if (this->_storage.get_error() != FT_ERR_SUCCESSS)
-        this->_error_code = this->_storage.get_error();
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        this->_error_code = ft_string::last_operation_error();
     this->set_error_unlocked(this->_error_code);
     ft_stringbuf::finalize_lock(other_guard);
     return ;
@@ -141,8 +144,8 @@ ft_stringbuf &ft_stringbuf::operator=(ft_stringbuf &&other) noexcept
     this->_error_code = other._error_code;
     other._position = 0;
     other._error_code = FT_ERR_SUCCESSS;
-    if (this->_storage.get_error() != FT_ERR_SUCCESSS)
-        this->_error_code = this->_storage.get_error();
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        this->_error_code = ft_string::last_operation_error();
     this->set_error_unlocked(this->_error_code);
     ft_stringbuf::finalize_lock(second_guard);
     ft_stringbuf::finalize_lock(first_guard);
@@ -319,8 +322,8 @@ ft_string ft_stringbuf::str() const
     }
     start = this->_storage.c_str();
     result = ft_string(start + this->_position);
-    if (result.get_error() != FT_ERR_SUCCESSS)
-        this->set_error_unlocked(result.get_error());
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        this->set_error_unlocked(ft_string::last_operation_error());
     else
         this->set_error_unlocked(FT_ERR_SUCCESSS);
     ft_stringbuf::finalize_lock(guard);

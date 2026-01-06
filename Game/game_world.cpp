@@ -699,11 +699,11 @@ int ft_world::save_to_buffer(ft_string &out_buffer, const ft_character &characte
         return (this->_error);
     }
     out_buffer = serialized_state;
-    if (out_buffer.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
         int assign_error;
 
-        assign_error = out_buffer.get_error();
+        assign_error = ft_string::last_operation_error();
         cma_free(serialized_state);
         this->set_error(assign_error);
         return (this->_error);
@@ -1124,4 +1124,3 @@ int ft_world::restore_from_groups(json_group *groups, ft_character &character,
     this->set_error(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);
 }
-

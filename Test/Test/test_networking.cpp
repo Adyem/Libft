@@ -264,7 +264,7 @@ FT_TEST(test_udp_socket_propagates_ft_errno_on_creation_failure,
     config._send_timeout = 0;
     config._port = 54355;
     config._ip = "127.0.0.1";
-    if (config._ip.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
         return (0);
     errno = 0;
     ft_errno = FT_ERR_SUCCESSS;

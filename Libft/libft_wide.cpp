@@ -118,8 +118,8 @@ ft_string ft_utf16_to_utf8(const char16_t *input, size_t input_length)
                 &encoded_length) != FT_SUCCESS)
             return (ft_string(ft_errno));
         result.append(encoded_buffer, encoded_length);
-        if (result.get_error() != FT_ERR_SUCCESSS)
-            return (ft_string(result.get_error()));
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            return (ft_string(ft_string::last_operation_error()));
         index += advance;
     }
     ft_errno = FT_ERR_SUCCESSS;
@@ -162,8 +162,8 @@ ft_string ft_utf32_to_utf8(const char32_t *input, size_t input_length)
                 &encoded_length) != FT_SUCCESS)
             return (ft_string(ft_errno));
         result.append(encoded_buffer, encoded_length);
-        if (result.get_error() != FT_ERR_SUCCESSS)
-            return (ft_string(result.get_error()));
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            return (ft_string(ft_string::last_operation_error()));
         index++;
     }
     ft_errno = FT_ERR_SUCCESSS;

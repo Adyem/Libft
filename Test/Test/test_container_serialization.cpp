@@ -55,21 +55,21 @@ struct ft_serialized_entry
 static int ft_entry_serializer(const ft_serialized_entry &entry, ft_string &output) noexcept
 {
     output = entry.name;
-    if (output.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
         return (-1);
     ft_string separator("#");
 
-    if (separator.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
         return (-1);
     output += separator;
-    if (output.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
         return (-1);
     ft_string quantity_string = ft_to_string(static_cast<long>(entry.quantity));
 
-    if (quantity_string.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
         return (-1);
     output += quantity_string;
-    if (output.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
         return (-1);
     ft_errno = FT_ERR_SUCCESSS;
     return (0);

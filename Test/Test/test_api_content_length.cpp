@@ -13,7 +13,7 @@ FT_TEST(test_api_append_content_length_propagates_string_error, "api_append_cont
     append_result = api_append_content_length_header(request, 42);
     FT_ASSERT_EQ(false, append_result);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, request.get_error());
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::last_operation_error());
     cma_set_alloc_limit(0);
     return (1);
 }
@@ -30,4 +30,3 @@ FT_TEST(test_api_append_content_length_successful_append, "api_append_content_le
     FT_ASSERT(request.find("Content-Length: 7") != ft_string::npos);
     return (1);
 }
-
