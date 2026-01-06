@@ -33,6 +33,8 @@ class ft_big_number
             ft_size_t   count;
         };
 
+        class error_scope;
+
         char*           _digits;
         ft_size_t       _size;
         ft_size_t       _capacity;

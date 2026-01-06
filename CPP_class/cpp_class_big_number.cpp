@@ -46,7 +46,7 @@ static const char g_big_number_value_to_digit_table[] = "0123456789ABCDEF";
 thread_local ft_big_number::error_stack ft_big_number::_error_stack = {{}, 0, 1, FT_ERR_SUCCESSS, 0};
 thread_local ft_big_number::operation_error_stack ft_big_number::_operation_errors = {{}, 0};
 
-class ft_big_number_error_scope
+class ft_big_number::error_scope
 {
     private:
         unsigned int    _index;
@@ -54,13 +54,13 @@ class ft_big_number_error_scope
         bool            _active;
 
     public:
-        ft_big_number_error_scope() noexcept;
-        ~ft_big_number_error_scope() noexcept;
+        error_scope() noexcept;
+        ~error_scope() noexcept;
         void            set_error(int error_code) noexcept;
         unsigned int    get_op_id() const noexcept;
 };
 
-ft_big_number_error_scope::ft_big_number_error_scope() noexcept
+ft_big_number::error_scope::error_scope() noexcept
     : _index(0)
     , _op_id(0)
     , _active(false)
@@ -81,7 +81,7 @@ ft_big_number_error_scope::ft_big_number_error_scope() noexcept
     return ;
 }
 
-ft_big_number_error_scope::~ft_big_number_error_scope() noexcept
+ft_big_number::error_scope::~error_scope() noexcept
 {
     if (!this->_active)
         return ;
@@ -93,7 +93,7 @@ ft_big_number_error_scope::~ft_big_number_error_scope() noexcept
     return ;
 }
 
-void ft_big_number_error_scope::set_error(int error_code) noexcept
+void ft_big_number::error_scope::set_error(int error_code) noexcept
 {
     if (!this->_active)
         return ;
@@ -101,7 +101,7 @@ void ft_big_number_error_scope::set_error(int error_code) noexcept
     return ;
 }
 
-unsigned int ft_big_number_error_scope::get_op_id() const noexcept
+unsigned int ft_big_number::error_scope::get_op_id() const noexcept
 {
     return (this->_op_id);
 }
@@ -1242,7 +1242,7 @@ void ft_big_number::clear() noexcept
 
 ft_big_number ft_big_number::operator+(const ft_big_number& other) const noexcept
 {
-    ft_big_number_error_scope error_scope;
+    ft_big_number::error_scope error_scope;
     ft_big_number_mutex_guard this_guard;
     ft_big_number_mutex_guard other_guard;
     ft_big_number result;
@@ -1311,7 +1311,7 @@ finalize_add:
 
 ft_big_number ft_big_number::operator-(const ft_big_number& other) const noexcept
 {
-    ft_big_number_error_scope error_scope;
+    ft_big_number::error_scope error_scope;
     ft_big_number_mutex_guard this_guard;
     ft_big_number_mutex_guard other_guard;
     ft_big_number result;
@@ -1384,7 +1384,7 @@ finalize_subtract:
 
 ft_big_number ft_big_number::operator*(const ft_big_number& other) const noexcept
 {
-    ft_big_number_error_scope error_scope;
+    ft_big_number::error_scope error_scope;
     ft_big_number_mutex_guard this_guard;
     ft_big_number_mutex_guard other_guard;
     ft_big_number result;
@@ -1491,7 +1491,7 @@ finalize_multiply:
 
 ft_big_number ft_big_number::operator/(const ft_big_number& other) const noexcept
 {
-    ft_big_number_error_scope error_scope;
+    ft_big_number::error_scope error_scope;
     int stored_errno;
     ft_big_number result;
     ft_big_number_mutex_guard this_guard;
@@ -1642,7 +1642,7 @@ cleanup_division:
 
 ft_big_number ft_big_number::operator%(const ft_big_number& other) const noexcept
 {
-    ft_big_number_error_scope error_scope;
+    ft_big_number::error_scope error_scope;
     int stored_errno;
     ft_big_number result;
     ft_big_number quotient;
