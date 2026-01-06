@@ -347,10 +347,10 @@ static int rl_history_json_save(void *context_pointer)
         if (history_entry == ft_nullptr)
             history_entry = "";
         key_string = ft_to_string(history_index);
-        if (key_string.get_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
         {
             json_free_groups(history_group);
-            ft_errno = key_string.get_error();
+            ft_errno = ft_string::last_operation_error();
             return (-1);
         }
         item_pointer = json_create_item(key_string.c_str(), history_entry);

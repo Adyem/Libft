@@ -45,15 +45,15 @@ ft_dom_node::ft_dom_node() noexcept
     _children(), _attribute_keys(), _attribute_values(), _mutex(ft_nullptr), _thread_safe_enabled(false)
 {
     this->_name = "";
-    if (this->_name.get_error() != FT_ERR_SUCCESSS)
+    if (this->ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(this->_name.get_error());
+        this->set_error(this->ft_string::last_operation_error());
         return ;
     }
     this->_value = "";
-    if (this->_value.get_error() != FT_ERR_SUCCESSS)
+    if (this->ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(this->_value.get_error());
+        this->set_error(this->ft_string::last_operation_error());
         return ;
     }
     if (this->prepare_thread_safety() != 0)
@@ -250,9 +250,9 @@ int ft_dom_node::set_name(const ft_string &name) noexcept
     if (guard.get_status() != 0)
         return (-1);
     this->_name = name;
-    if (this->_name.get_error() != FT_ERR_SUCCESSS)
+    if (this->ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(this->_name.get_error());
+        this->set_error(this->ft_string::last_operation_error());
         return (-1);
     }
     this->set_error(FT_ERR_SUCCESSS);
@@ -268,9 +268,9 @@ int ft_dom_node::set_name(const char *name) noexcept
     }
     ft_string temp(name);
 
-    if (temp.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(temp.get_error());
+        this->set_error(ft_string::last_operation_error());
         return (-1);
     }
     return (this->set_name(temp));
@@ -296,9 +296,9 @@ int ft_dom_node::set_value(const ft_string &value) noexcept
     if (guard.get_status() != 0)
         return (-1);
     this->_value = value;
-    if (this->_value.get_error() != FT_ERR_SUCCESSS)
+    if (this->ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(this->_value.get_error());
+        this->set_error(this->ft_string::last_operation_error());
         return (-1);
     }
     this->set_error(FT_ERR_SUCCESSS);
@@ -314,9 +314,9 @@ int ft_dom_node::set_value(const char *value) noexcept
     }
     ft_string temp(value);
 
-    if (temp.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(temp.get_error());
+        this->set_error(ft_string::last_operation_error());
         return (-1);
     }
     return (this->set_value(temp));
@@ -399,9 +399,9 @@ int ft_dom_node::add_attribute(const ft_string &key, const ft_string &value) noe
                 return (-1);
             }
             existing_value = value;
-            if (existing_value.get_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
             {
-                this->set_error(existing_value.get_error());
+                this->set_error(ft_string::last_operation_error());
                 return (-1);
             }
             this->set_error(FT_ERR_SUCCESSS);
@@ -434,16 +434,16 @@ int ft_dom_node::add_attribute(const char *key, const char *value) noexcept
     }
     ft_string key_string(key);
 
-    if (key_string.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(key_string.get_error());
+        this->set_error(ft_string::last_operation_error());
         return (-1);
     }
     ft_string value_string(value);
 
-    if (value_string.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(value_string.get_error());
+        this->set_error(ft_string::last_operation_error());
         return (-1);
     }
     return (this->add_attribute(key_string, value_string));
@@ -516,10 +516,11 @@ ft_string ft_dom_node::get_attribute(const ft_string &key) const noexcept
                 const_cast<ft_dom_node *>(this)->set_error(this->_attribute_values.get_error());
                 return (ft_string(this->_attribute_values.get_error()));
             }
-            if (result.get_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
             {
-                const_cast<ft_dom_node *>(this)->set_error(result.get_error());
-                return (ft_string(result.get_error()));
+                const_cast<ft_dom_node *>(this)->set_error(
+                    ft_string::last_operation_error());
+                return (ft_string(ft_string::last_operation_error()));
             }
             const_cast<ft_dom_node *>(this)->set_error(FT_ERR_SUCCESSS);
             return (result);
@@ -941,15 +942,15 @@ int ft_dom_validation_report::add_error(const ft_string &path, const ft_string &
     ft_dom_validation_error error_entry;
 
     error_entry.path = path;
-    if (error_entry.path.get_error() != FT_ERR_SUCCESSS)
+    if (error_entry.ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(error_entry.path.get_error());
+        this->set_error(error_entry.ft_string::last_operation_error());
         return (-1);
     }
     error_entry.message = message;
-    if (error_entry.message.get_error() != FT_ERR_SUCCESSS)
+    if (error_entry.ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(error_entry.message.get_error());
+        this->set_error(error_entry.ft_string::last_operation_error());
         return (-1);
     }
     this->_errors.push_back(error_entry);
@@ -992,9 +993,9 @@ int ft_dom_schema::add_rule(const ft_string &path, ft_dom_node_type type, bool r
     ft_dom_schema_rule rule;
 
     rule.path = path;
-    if (rule.path.get_error() != FT_ERR_SUCCESSS)
+    if (rule.ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(rule.path.get_error());
+        this->set_error(rule.ft_string::last_operation_error());
         return (-1);
     }
     rule.type = type;
@@ -1014,15 +1015,15 @@ static ft_string ft_dom_build_path(const ft_string &base, const ft_string &segme
     ft_string result;
 
     result = base;
-    if (result.get_error() != FT_ERR_SUCCESSS)
-        return (ft_string(result.get_error()));
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        return (ft_string(ft_string::last_operation_error()));
     if (result.size() != 0)
         result += "/";
-    if (result.get_error() != FT_ERR_SUCCESSS)
-        return (ft_string(result.get_error()));
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        return (ft_string(ft_string::last_operation_error()));
     result += segment;
-    if (result.get_error() != FT_ERR_SUCCESSS)
-        return (ft_string(result.get_error()));
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        return (ft_string(ft_string::last_operation_error()));
     return (result);
 }
 
@@ -1033,9 +1034,9 @@ int ft_dom_schema::validate_rule(const ft_dom_schema_rule &rule, const ft_dom_no
     const ft_dom_node *target_node;
 
     full_path = ft_dom_build_path(base_path, rule.path);
-    if (full_path.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        const_cast<ft_dom_schema *>(this)->set_error(full_path.get_error());
+        const_cast<ft_dom_schema *>(this)->set_error(ft_string::last_operation_error());
         return (-1);
     }
     target_node = ft_nullptr;
@@ -1045,9 +1046,9 @@ int ft_dom_schema::validate_rule(const ft_dom_schema_rule &rule, const ft_dom_no
         {
             ft_string message("Required node missing");
 
-            if (message.get_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
             {
-                const_cast<ft_dom_schema *>(this)->set_error(message.get_error());
+                const_cast<ft_dom_schema *>(this)->set_error(ft_string::last_operation_error());
                 return (-1);
             }
             report.add_error(full_path, message);
@@ -1067,9 +1068,9 @@ int ft_dom_schema::validate_rule(const ft_dom_schema_rule &rule, const ft_dom_no
         {
             ft_string message("Required node missing");
 
-            if (message.get_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
             {
-                const_cast<ft_dom_schema *>(this)->set_error(message.get_error());
+                const_cast<ft_dom_schema *>(this)->set_error(ft_string::last_operation_error());
                 return (-1);
             }
             report.add_error(full_path, message);
@@ -1095,9 +1096,9 @@ int ft_dom_schema::validate_rule(const ft_dom_schema_rule &rule, const ft_dom_no
     {
         ft_string message("Node type mismatch");
 
-        if (message.get_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
         {
-            const_cast<ft_dom_schema *>(this)->set_error(message.get_error());
+            const_cast<ft_dom_schema *>(this)->set_error(ft_string::last_operation_error());
             return (-1);
         }
         report.add_error(full_path, message);
@@ -1131,7 +1132,7 @@ int ft_dom_schema::validate(const ft_dom_document &document, ft_dom_validation_r
         ft_string path("<root>");
         ft_string message("Document has no root node");
 
-        if (path.get_error() != FT_ERR_SUCCESSS || message.get_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS || ft_string::last_operation_error() != FT_ERR_SUCCESSS)
         {
             const_cast<ft_dom_schema *>(this)->set_error(FT_ERR_NO_MEMORY);
             return (-1);
@@ -1219,10 +1220,10 @@ int ft_dom_find_path(const ft_dom_node *root, const ft_string &path, const ft_do
             ft_string segment;
 
             segment.assign(raw_path + start_index, segment_length);
-            if (segment.get_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
             {
                 status = -1;
-                error_code = segment.get_error();
+                error_code = ft_string::last_operation_error();
             }
             else
             {
@@ -1262,4 +1263,3 @@ int ft_dom_find_path(const ft_dom_node *root, const ft_string &path, const ft_do
     ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
-

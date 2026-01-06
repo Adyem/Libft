@@ -1273,8 +1273,11 @@ static bool parse_url(const char *url, bool &tls, ft_string &host,
     while (walker < scheme_end)
     {
         scheme.append(*walker);
-        if (scheme.get_error())
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = ft_string::last_operation_error();
             return (false);
+        }
         walker++;
     }
     tls = (scheme == "https");
@@ -1284,15 +1287,21 @@ static bool parse_url(const char *url, bool &tls, ft_string &host,
     if (path_start)
     {
         path.append(path_start);
-        if (path.get_error())
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = ft_string::last_operation_error();
             return (false);
+        }
     }
     else
     {
         slash = "/";
         path = slash;
-        if (path.get_error())
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = ft_string::last_operation_error();
             return (false);
+        }
     }
     if (path_start)
     {
@@ -1301,8 +1310,11 @@ static bool parse_url(const char *url, bool &tls, ft_string &host,
         while (walker < path_start)
         {
             hostport.append(*walker);
-            if (hostport.get_error())
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            {
+                ft_errno = ft_string::last_operation_error();
                 return (false);
+            }
             walker++;
         }
     }
@@ -1310,8 +1322,11 @@ static bool parse_url(const char *url, bool &tls, ft_string &host,
     {
         hostport.clear();
         hostport.append(host_start);
-        if (hostport.get_error())
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = ft_string::last_operation_error();
             return (false);
+        }
     }
     colon = ft_strchr(hostport.c_str(), ':');
     if (colon)
@@ -1321,8 +1336,11 @@ static bool parse_url(const char *url, bool &tls, ft_string &host,
         while (walker < colon)
         {
             host.append(*walker);
-            if (host.get_error())
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            {
+                ft_errno = ft_string::last_operation_error();
                 return (false);
+            }
             walker++;
         }
         port = static_cast<uint16_t>(ft_atoi(colon + 1));
@@ -1330,8 +1348,11 @@ static bool parse_url(const char *url, bool &tls, ft_string &host,
     else
     {
         host = hostport;
-        if (host.get_error())
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = ft_string::last_operation_error();
             return (false);
+        }
         if (tls)
             port = 443;
         else

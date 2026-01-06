@@ -46,9 +46,9 @@ ft_string ft_span_to_string(const char *buffer, size_t length)
         return (result);
     }
     result.assign(buffer, length);
-    if (result.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        return (ft_string(result.get_error()));
+        return (ft_string(ft_string::last_operation_error()));
     }
     ft_errno = FT_ERR_SUCCESSS;
     return (result);

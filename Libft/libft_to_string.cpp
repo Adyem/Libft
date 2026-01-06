@@ -7,7 +7,7 @@ static ft_string create_string_from_buffer(const char *buffer)
     ft_string result(buffer);
     int result_error;
 
-    result_error = result.get_error();
+    result_error = ft_string::last_operation_error();
     if (result_error != FT_ERR_SUCCESSS)
     {
         ft_errno = result_error;

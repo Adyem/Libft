@@ -21,7 +21,7 @@ static int append_line_to_vector(ft_vector<ft_string> &lines, char *line_buffer)
     ft_string line_string(line_buffer);
     int string_error;
 
-    string_error = line_string.get_error();
+    string_error = ft_string::last_operation_error();
     if (line_buffer)
         cma_free(line_buffer);
     if (string_error != FT_ERR_SUCCESSS)

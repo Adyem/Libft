@@ -140,37 +140,37 @@ static bool api_async_build_request(const api_async_request &data,
         return (false);
     }
     request += data.method;
-    if (request.get_error())
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = request.get_error();
+        ft_errno = ft_string::last_operation_error();
         request.clear();
         return (false);
     }
     request += " ";
-    if (request.get_error())
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = request.get_error();
+        ft_errno = ft_string::last_operation_error();
         request.clear();
         return (false);
     }
     request += data.path;
-    if (request.get_error())
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = request.get_error();
+        ft_errno = ft_string::last_operation_error();
         request.clear();
         return (false);
     }
     request += " HTTP/1.1\r\nHost: ";
-    if (request.get_error())
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = request.get_error();
+        ft_errno = ft_string::last_operation_error();
         request.clear();
         return (false);
     }
     request += data.ip;
-    if (request.get_error())
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = request.get_error();
+        ft_errno = ft_string::last_operation_error();
         request.clear();
         return (false);
     }
@@ -179,9 +179,9 @@ static bool api_async_build_request(const api_async_request &data,
         ft_string headers_string;
 
         headers_string = data.headers;
-        if (headers_string.get_error())
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = headers_string.get_error();
+            ft_errno = ft_string::last_operation_error();
             request.clear();
             return (false);
         }
@@ -189,9 +189,9 @@ static bool api_async_build_request(const api_async_request &data,
         if (!headers_string.empty())
         {
             api_request_append_header_block(request, headers_string);
-            if (request.get_error())
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
             {
-                ft_errno = request.get_error();
+                ft_errno = ft_string::last_operation_error();
                 request.clear();
                 return (false);
             }
@@ -209,16 +209,16 @@ static bool api_async_build_request(const api_async_request &data,
         }
         body_string = temporary_string;
         cma_free(temporary_string);
-        if (body_string.get_error())
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = body_string.get_error();
+            ft_errno = ft_string::last_operation_error();
             request.clear();
             return (false);
         }
         request += "\r\nContent-Type: application/json";
-        if (request.get_error())
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = request.get_error();
+            ft_errno = ft_string::last_operation_error();
             request.clear();
             return (false);
         }
@@ -231,18 +231,18 @@ static bool api_async_build_request(const api_async_request &data,
         }
     }
     request += "\r\nConnection: keep-alive\r\n\r\n";
-    if (request.get_error())
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = request.get_error();
+        ft_errno = ft_string::last_operation_error();
         request.clear();
         return (false);
     }
     if (data.payload)
     {
         request += body_string.c_str();
-        if (request.get_error())
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = request.get_error();
+            ft_errno = ft_string::last_operation_error();
             request.clear();
             return (false);
         }

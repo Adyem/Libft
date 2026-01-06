@@ -274,9 +274,9 @@ int ft_vector_serialize_json(const ft_vector<ElementType> &values,
             return (-1);
         }
         ft_string key_string(item_prefix);
-        if (key_string.get_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
         {
-            int error_code = key_string.get_error();
+            int error_code = ft_string::last_operation_error();
             if (error_code == FT_ERR_SUCCESSS)
                 error_code = FT_ERR_NO_MEMORY;
             json_free_groups(group);
@@ -284,9 +284,9 @@ int ft_vector_serialize_json(const ft_vector<ElementType> &values,
             return (-1);
         }
         ft_string index_string = ft_to_string(static_cast<long>(index));
-        if (index_string.get_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
         {
-            int error_code = index_string.get_error();
+            int error_code = ft_string::last_operation_error();
             if (error_code == FT_ERR_SUCCESSS)
                 error_code = FT_ERR_NO_MEMORY;
             json_free_groups(group);
@@ -294,9 +294,9 @@ int ft_vector_serialize_json(const ft_vector<ElementType> &values,
             return (-1);
         }
         key_string += index_string;
-        if (key_string.get_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
         {
-            int error_code = key_string.get_error();
+            int error_code = ft_string::last_operation_error();
             if (error_code == FT_ERR_SUCCESSS)
                 error_code = FT_ERR_NO_MEMORY;
             json_free_groups(group);
@@ -367,27 +367,27 @@ int ft_vector_deserialize_json(json_group *group,
     while (index < static_cast<size_t>(expected_count))
     {
         ft_string key_string(item_prefix);
-        if (key_string.get_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
         {
-            int error_code = key_string.get_error();
+            int error_code = ft_string::last_operation_error();
             if (error_code == FT_ERR_SUCCESSS)
                 error_code = FT_ERR_NO_MEMORY;
             ft_errno = error_code;
             return (-1);
         }
         ft_string index_string = ft_to_string(static_cast<long>(index));
-        if (index_string.get_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
         {
-            int error_code = index_string.get_error();
+            int error_code = ft_string::last_operation_error();
             if (error_code == FT_ERR_SUCCESSS)
                 error_code = FT_ERR_NO_MEMORY;
             ft_errno = error_code;
             return (-1);
         }
         key_string += index_string;
-        if (key_string.get_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
         {
-            int error_code = key_string.get_error();
+            int error_code = ft_string::last_operation_error();
             if (error_code == FT_ERR_SUCCESSS)
                 error_code = FT_ERR_NO_MEMORY;
             ft_errno = error_code;

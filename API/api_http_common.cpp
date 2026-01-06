@@ -454,8 +454,11 @@ bool api_http_decode_chunked(const char *body_start, size_t body_size,
         while (index < chunk_size_t)
         {
             decoded_body.append(body_start[offset + index]);
-            if (decoded_body.get_error())
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            {
+                ft_errno = ft_string::last_operation_error();
                 return (false);
+            }
             index++;
         }
         offset += chunk_size_t;
