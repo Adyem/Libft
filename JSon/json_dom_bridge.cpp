@@ -239,11 +239,13 @@ static int json_dom_apply_item(ft_dom_node *item_node, json_group *group, json_d
     if (has_type_attribute && type_attribute == "big_number")
     {
         ft_big_number big_number_value;
+        int big_number_error;
 
         big_number_value.assign(item_value);
-        if (big_number_value.get_error() != FT_ERR_SUCCESSS)
+        big_number_error = ft_big_number::last_operation_error();
+        if (big_number_error != FT_ERR_SUCCESSS)
         {
-            document.set_manual_error(big_number_value.get_error());
+            document.set_manual_error(big_number_error);
             return (-1);
         }
         json_item *json_item_pointer;
