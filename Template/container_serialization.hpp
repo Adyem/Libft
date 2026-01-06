@@ -22,9 +22,9 @@ namespace ft_container_serialization
         if constexpr (std::is_same<ElementType, ft_string>::value)
         {
             output = value;
-            if (output.get_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
             {
-                int error_code = output.get_error();
+                int error_code = ft_string::last_operation_error();
                 if (error_code == FT_ERR_SUCCESSS)
                     error_code = FT_ERR_NO_MEMORY;
                 ft_errno = error_code;
@@ -41,9 +41,9 @@ namespace ft_container_serialization
                 return (-1);
             }
             output = value;
-            if (output.get_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
             {
-                int error_code = output.get_error();
+                int error_code = ft_string::last_operation_error();
                 if (error_code == FT_ERR_SUCCESSS)
                     error_code = FT_ERR_NO_MEMORY;
                 ft_errno = error_code;
@@ -67,18 +67,18 @@ namespace ft_container_serialization
                     return (-1);
                 }
                 ft_string serialized = ft_to_string(static_cast<long>(value));
-                if (serialized.get_error() != FT_ERR_SUCCESSS)
+                if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
                 {
-                    int error_code = serialized.get_error();
+                    int error_code = ft_string::last_operation_error();
                     if (error_code == FT_ERR_SUCCESSS)
                         error_code = FT_ERR_NO_MEMORY;
                     ft_errno = error_code;
                     return (-1);
                 }
                 output = serialized;
-                if (output.get_error() != FT_ERR_SUCCESSS)
+                if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
                 {
-                    int error_code = output.get_error();
+                    int error_code = ft_string::last_operation_error();
                     if (error_code == FT_ERR_SUCCESSS)
                         error_code = FT_ERR_NO_MEMORY;
                     ft_errno = error_code;
@@ -90,18 +90,18 @@ namespace ft_container_serialization
             else
             {
                 ft_string serialized = ft_to_string(static_cast<unsigned long long>(value));
-                if (serialized.get_error() != FT_ERR_SUCCESSS)
+                if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
                 {
-                    int error_code = serialized.get_error();
+                    int error_code = ft_string::last_operation_error();
                     if (error_code == FT_ERR_SUCCESSS)
                         error_code = FT_ERR_NO_MEMORY;
                     ft_errno = error_code;
                     return (-1);
                 }
                 output = serialized;
-                if (output.get_error() != FT_ERR_SUCCESSS)
+                if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
                 {
-                    int error_code = output.get_error();
+                    int error_code = ft_string::last_operation_error();
                     if (error_code == FT_ERR_SUCCESSS)
                         error_code = FT_ERR_NO_MEMORY;
                     ft_errno = error_code;
@@ -114,18 +114,18 @@ namespace ft_container_serialization
         else if constexpr (std::is_floating_point<ElementType>::value)
         {
             ft_string serialized = ft_to_string(static_cast<double>(value));
-            if (serialized.get_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
             {
-                int error_code = serialized.get_error();
+                int error_code = ft_string::last_operation_error();
                 if (error_code == FT_ERR_SUCCESSS)
                     error_code = FT_ERR_NO_MEMORY;
                 ft_errno = error_code;
                 return (-1);
             }
             output = serialized;
-            if (output.get_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
             {
-                int error_code = output.get_error();
+                int error_code = ft_string::last_operation_error();
                 if (error_code == FT_ERR_SUCCESSS)
                     error_code = FT_ERR_NO_MEMORY;
                 ft_errno = error_code;
@@ -152,9 +152,9 @@ namespace ft_container_serialization
         if constexpr (std::is_same<ElementType, ft_string>::value)
         {
             output = value_string;
-            if (output.get_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
             {
-                int error_code = output.get_error();
+                int error_code = ft_string::last_operation_error();
                 if (error_code == FT_ERR_SUCCESSS)
                     error_code = FT_ERR_NO_MEMORY;
                 ft_errno = error_code;
@@ -200,9 +200,9 @@ namespace ft_container_serialization
         else if constexpr (std::is_floating_point<ElementType>::value)
         {
             ft_string input_copy = value_string;
-            if (input_copy.get_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
             {
-                int error_code = input_copy.get_error();
+                int error_code = ft_string::last_operation_error();
                 if (error_code == FT_ERR_SUCCESSS)
                     error_code = FT_ERR_NO_MEMORY;
                 ft_errno = error_code;
