@@ -27,7 +27,6 @@
 #include <utility>
 
 #include "../Template/move.hpp"
-#include "../CMA/CMA.hpp"
 template <typename ElementType>
 class ft_blocking_queue
 {
@@ -312,8 +311,7 @@ void ft_blocking_queue<ElementType>::teardown_thread_safety()
 {
     if (this->_state_mutex != ft_nullptr)
     {
-        this->_state_mutex->~pt_mutex();
-        cma_free(this->_state_mutex);
+        delete this->_state_mutex;
         this->_state_mutex = ft_nullptr;
     }
     this->_thread_safe_enabled = false;
@@ -324,7 +322,6 @@ void ft_blocking_queue<ElementType>::teardown_thread_safety()
 template <typename ElementType>
 int ft_blocking_queue<ElementType>::enable_thread_safety()
 {
-    void *memory;
     pt_mutex *state_mutex;
 
     if (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr)
@@ -337,20 +334,18 @@ int ft_blocking_queue<ElementType>::enable_thread_safety()
         this->set_error(FT_ERR_SUCCESSS);
         return (0);
     }
-    memory = cma_malloc(sizeof(pt_mutex));
-    if (memory == ft_nullptr)
+    state_mutex = new (std::nothrow) pt_mutex();
+    if (state_mutex == ft_nullptr)
     {
         this->set_error(FT_ERR_NO_MEMORY);
         return (-1);
     }
-    state_mutex = new(memory) pt_mutex();
     if (state_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         int mutex_error;
 
         mutex_error = state_mutex->get_error();
-        state_mutex->~pt_mutex();
-        cma_free(memory);
+        delete state_mutex;
         this->set_error(mutex_error);
         return (-1);
     }

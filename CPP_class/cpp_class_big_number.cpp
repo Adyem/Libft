@@ -1,4 +1,6 @@
 #include "class_big_number.hpp"
+#include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "class_nullptr.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Libft/libft.hpp"
@@ -43,21 +45,21 @@ static const ft_big_number_digit_entry g_big_number_digit_to_value_table[] =
 
 static const char g_big_number_value_to_digit_table[] = "0123456789ABCDEF";
 
-thread_local ft_big_number::error_stack ft_big_number::_error_stack = {{}, 0, 1, FT_ERR_SUCCESSS, 0};
-thread_local ft_big_number::operation_error_stack ft_big_number::_operation_errors = {{}, 0};
+thread_local ft_error_stack ft_big_number::_error_stack = {{}, 0, 1, FT_ERR_SUCCESSS, 0};
+thread_local ft_operation_error_stack ft_big_number::_operation_errors = {{}, 0};
 
 class ft_big_number::error_scope
 {
     private:
-        unsigned int    _index;
-        unsigned int    _op_id;
+        uint32_t        _index;
+        uint32_t        _op_id;
         bool            _active;
 
     public:
         error_scope() noexcept;
         ~error_scope() noexcept;
         void            set_error(int error_code) noexcept;
-        unsigned int    get_op_id() const noexcept;
+        uint32_t        get_op_id() const noexcept;
 };
 
 ft_big_number::error_scope::error_scope() noexcept
@@ -65,6 +67,8 @@ ft_big_number::error_scope::error_scope() noexcept
     , _op_id(0)
     , _active(false)
 {
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
     if (ft_big_number::_error_stack.depth >= 32)
     {
         this->_op_id = ft_big_number::_error_stack.next_op_id;
@@ -83,6 +87,8 @@ ft_big_number::error_scope::error_scope() noexcept
 
 ft_big_number::error_scope::~error_scope() noexcept
 {
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
     if (!this->_active)
         return ;
     if (ft_big_number::_error_stack.depth == 0)
@@ -95,13 +101,15 @@ ft_big_number::error_scope::~error_scope() noexcept
 
 void ft_big_number::error_scope::set_error(int error_code) noexcept
 {
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
     if (!this->_active)
         return ;
     ft_big_number::_error_stack.frames[this->_index].code = error_code;
     return ;
 }
 
-unsigned int ft_big_number::error_scope::get_op_id() const noexcept
+uint32_t ft_big_number::error_scope::get_op_id() const noexcept
 {
     return (this->_op_id);
 }
@@ -146,21 +154,27 @@ void ft_big_number::finalize_errno_keeper(int stored_errno) noexcept
 
 int ft_big_number::last_error() noexcept
 {
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
     if (ft_big_number::_error_stack.depth == 0)
         return (ft_big_number::_error_stack.last_error);
     return (ft_big_number::_error_stack.frames[ft_big_number::_error_stack.depth - 1].code);
 }
 
-unsigned int ft_big_number::last_op_id() noexcept
+uint32_t ft_big_number::last_op_id() noexcept
 {
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
     if (ft_big_number::_error_stack.depth == 0)
         return (ft_big_number::_error_stack.last_op_id);
     return (ft_big_number::_error_stack.frames[ft_big_number::_error_stack.depth - 1].op_id);
 }
 
-int ft_big_number::error_for(unsigned int op_id) noexcept
+int ft_big_number::error_for(uint32_t op_id) noexcept
 {
-    unsigned int index;
+    uint32_t index;
+
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
     if (ft_big_number::_error_stack.depth == 0)
         return (FT_ERR_SUCCESSS);
@@ -200,6 +214,8 @@ void ft_big_number::record_operation_error(int error_code) noexcept
 
 int ft_big_number::last_operation_error() noexcept
 {
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
     if (ft_big_number::_operation_errors.count == 0)
         return (FT_ERR_SUCCESSS);
     return (ft_big_number::_operation_errors.errors[0]);
@@ -207,6 +223,8 @@ int ft_big_number::last_operation_error() noexcept
 
 int ft_big_number::operation_error_at(ft_size_t index) noexcept
 {
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
     if (index == 0 || index > ft_big_number::_operation_errors.count)
         return (FT_ERR_SUCCESSS);
     return (ft_big_number::_operation_errors.errors[index - 1]);
@@ -214,6 +232,8 @@ int ft_big_number::operation_error_at(ft_size_t index) noexcept
 
 void ft_big_number::pop_operation_errors() noexcept
 {
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
     ft_big_number::_operation_errors.count = 0;
     return ;
 }
@@ -221,6 +241,8 @@ void ft_big_number::pop_operation_errors() noexcept
 int ft_big_number::pop_oldest_operation_error() noexcept
 {
     int popped_error;
+
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
     if (ft_big_number::_operation_errors.count == 0)
         return (FT_ERR_SUCCESSS);
@@ -233,6 +255,8 @@ int ft_big_number::pop_oldest_operation_error() noexcept
 int ft_big_number::operation_error_index() noexcept
 {
     ft_size_t index;
+
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
     index = 0;
     while (index < ft_big_number::_operation_errors.count)
@@ -273,20 +297,20 @@ void ft_big_number::sleep_backoff() noexcept
 
 void ft_big_number::set_error_unlocked(int error_code) const noexcept
 {
-    ft_big_number::record_operation_error(error_code);
-    return ;
-}
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
-void ft_big_number::set_error(int error_code) const noexcept
-{
-    this->set_error_unlocked(error_code);
+    ft_big_number::record_operation_error(error_code);
+    ft_errno = error_code;
     return ;
 }
 
 void ft_big_number::set_system_error_unlocked(int error_code) const noexcept
 {
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
     if (error_code != FT_SYS_ERR_SUCCESS)
         ft_big_number::record_operation_error(error_code);
+    ft_sys_errno = error_code;
     return ;
 }
 
@@ -583,7 +607,7 @@ ft_big_number::ft_big_number(ft_big_number&& other) noexcept
     other._size = 0;
     other._capacity = 0;
     other._is_negative = false;
-    other.set_error(FT_ERR_SUCCESSS);
+    other.set_error_unlocked(FT_ERR_SUCCESSS);
     other.set_system_error(FT_SYS_ERR_SUCCESS);
     this->set_error_unlocked(FT_ERR_SUCCESSS);
     return ;
@@ -653,7 +677,7 @@ ft_big_number& ft_big_number::operator=(ft_big_number&& other) noexcept
     other._size = 0;
     other._capacity = 0;
     other._is_negative = false;
-    other.set_error(FT_ERR_SUCCESSS);
+    other.set_error_unlocked(FT_ERR_SUCCESSS);
     other.set_system_error(FT_SYS_ERR_SUCCESS);
     this->set_error_unlocked(FT_ERR_SUCCESSS);
     return (*this);
@@ -802,7 +826,7 @@ ft_big_number ft_big_number::subtract_magnitude(const ft_big_number& other) cons
     int comparison = this->compare_magnitude(other);
     if (comparison < 0)
     {
-        result.set_error(FT_ERR_INVALID_STATE);
+        result.set_error_unlocked(FT_ERR_INVALID_STATE);
         return (result);
     }
     if (comparison == 0)
@@ -1941,7 +1965,7 @@ ft_string ft_big_number::to_string_base(int base) noexcept
 
     if (base < 2 || base > 16)
     {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
         return (ft_string(FT_ERR_INVALID_ARGUMENT));
     }
     lock_error = this->lock_self(guard);
@@ -1965,7 +1989,7 @@ ft_string ft_big_number::to_string_base(int base) noexcept
         zero_result.append('0');
         if (ft_big_number::last_operation_error() != 0)
         {
-            this->set_error(FT_ERR_NO_MEMORY);
+            this->set_error_unlocked(FT_ERR_NO_MEMORY);
             return (ft_string(FT_ERR_NO_MEMORY));
         }
         return (zero_result);
@@ -1974,7 +1998,7 @@ ft_string ft_big_number::to_string_base(int base) noexcept
 
     if (ft_big_number::last_operation_error() != 0)
     {
-        this->set_error(ft_big_number::last_operation_error());
+        this->set_error_unlocked(ft_big_number::last_operation_error());
         return (ft_string(ft_big_number::last_operation_error()));
     }
     magnitude._is_negative = false;
@@ -1983,7 +2007,7 @@ ft_string ft_big_number::to_string_base(int base) noexcept
     base_value.append_unsigned(static_cast<unsigned long>(base));
     if (ft_big_number::last_operation_error() != 0)
     {
-        this->set_error(ft_big_number::last_operation_error());
+        this->set_error_unlocked(ft_big_number::last_operation_error());
         return (ft_string(ft_big_number::last_operation_error()));
     }
     ft_string digits;
@@ -1994,21 +2018,21 @@ ft_string ft_big_number::to_string_base(int base) noexcept
 
         if (ft_big_number::last_operation_error() != 0)
         {
-            this->set_error(ft_big_number::last_operation_error());
+            this->set_error_unlocked(ft_big_number::last_operation_error());
             return (ft_string(ft_big_number::last_operation_error()));
         }
         ft_big_number product = quotient * base_value;
 
         if (ft_big_number::last_operation_error() != 0)
         {
-            this->set_error(ft_big_number::last_operation_error());
+            this->set_error_unlocked(ft_big_number::last_operation_error());
             return (ft_string(ft_big_number::last_operation_error()));
         }
         ft_big_number remainder_number = magnitude - product;
 
         if (ft_big_number::last_operation_error() != 0)
         {
-            this->set_error(ft_big_number::last_operation_error());
+            this->set_error_unlocked(ft_big_number::last_operation_error());
             return (ft_string(ft_big_number::last_operation_error()));
         }
         const char* remainder_digits = remainder_number.c_str();
@@ -2024,19 +2048,19 @@ ft_string ft_big_number::to_string_base(int base) noexcept
 
         if (digit_symbol == '\0')
         {
-            this->set_error(FT_ERR_INVALID_ARGUMENT);
+            this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
             return (ft_string(FT_ERR_INVALID_ARGUMENT));
         }
         digits.append(digit_symbol);
         if (ft_big_number::last_operation_error() != 0)
         {
-            this->set_error(FT_ERR_NO_MEMORY);
+            this->set_error_unlocked(FT_ERR_NO_MEMORY);
             return (ft_string(FT_ERR_NO_MEMORY));
         }
         magnitude = quotient;
         if (ft_big_number::last_operation_error() != 0)
         {
-            this->set_error(ft_big_number::last_operation_error());
+            this->set_error_unlocked(ft_big_number::last_operation_error());
             return (ft_string(ft_big_number::last_operation_error()));
         }
         magnitude._is_negative = false;
@@ -2048,7 +2072,7 @@ ft_string ft_big_number::to_string_base(int base) noexcept
         result.append('-');
         if (ft_big_number::last_operation_error() != 0)
         {
-            this->set_error(FT_ERR_NO_MEMORY);
+            this->set_error_unlocked(FT_ERR_NO_MEMORY);
             return (ft_string(FT_ERR_NO_MEMORY));
         }
     }
@@ -2061,7 +2085,7 @@ ft_string ft_big_number::to_string_base(int base) noexcept
         result.append(digits_buffer[digits_length]);
         if (ft_big_number::last_operation_error() != 0)
         {
-            this->set_error(FT_ERR_NO_MEMORY);
+            this->set_error_unlocked(FT_ERR_NO_MEMORY);
             return (ft_string(FT_ERR_NO_MEMORY));
         }
     }
@@ -2076,7 +2100,7 @@ ft_big_number ft_big_number::mod_pow(const ft_big_number& exponent, const ft_big
     {
         ft_big_number error_result;
 
-        error_result.set_error(ft_big_number::last_operation_error());
+        error_result.set_error_unlocked(ft_big_number::last_operation_error());
         return (error_result);
     }
     ft_big_number exponent_value(exponent);
@@ -2085,7 +2109,7 @@ ft_big_number ft_big_number::mod_pow(const ft_big_number& exponent, const ft_big
     {
         ft_big_number error_result;
 
-        error_result.set_error(ft_big_number::last_operation_error());
+        error_result.set_error_unlocked(ft_big_number::last_operation_error());
         return (error_result);
     }
     ft_big_number modulus_value(modulus);
@@ -2094,28 +2118,28 @@ ft_big_number ft_big_number::mod_pow(const ft_big_number& exponent, const ft_big
     {
         ft_big_number error_result;
 
-        error_result.set_error(ft_big_number::last_operation_error());
+        error_result.set_error_unlocked(ft_big_number::last_operation_error());
         return (error_result);
     }
     if (modulus_value.is_zero_value())
     {
         ft_big_number error_result;
 
-        error_result.set_error(FT_ERR_DIVIDE_BY_ZERO);
+        error_result.set_error_unlocked(FT_ERR_DIVIDE_BY_ZERO);
         return (error_result);
     }
     if (modulus_value.is_negative())
     {
         ft_big_number error_result;
 
-        error_result.set_error(FT_ERR_INVALID_ARGUMENT);
+        error_result.set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
         return (error_result);
     }
     if (exponent_value.is_negative())
     {
         ft_big_number error_result;
 
-        error_result.set_error(FT_ERR_INVALID_ARGUMENT);
+        error_result.set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
         return (error_result);
     }
     modulus_value._is_negative = false;
@@ -2126,7 +2150,7 @@ ft_big_number ft_big_number::mod_pow(const ft_big_number& exponent, const ft_big
     {
         ft_big_number error_result;
 
-        error_result.set_error(ft_big_number::last_operation_error());
+        error_result.set_error_unlocked(ft_big_number::last_operation_error());
         return (error_result);
     }
     while (base_remainder.is_negative())
@@ -2137,7 +2161,7 @@ ft_big_number ft_big_number::mod_pow(const ft_big_number& exponent, const ft_big
         {
             ft_big_number error_result;
 
-            error_result.set_error(ft_big_number::last_operation_error());
+            error_result.set_error_unlocked(ft_big_number::last_operation_error());
             return (error_result);
         }
         base_remainder = adjusted_base;
@@ -2152,7 +2176,7 @@ ft_big_number ft_big_number::mod_pow(const ft_big_number& exponent, const ft_big
     {
         ft_big_number error_result;
 
-        error_result.set_error(ft_big_number::last_operation_error());
+        error_result.set_error_unlocked(ft_big_number::last_operation_error());
         return (error_result);
     }
     if (exponent_value.is_zero_value())
@@ -2163,7 +2187,7 @@ ft_big_number ft_big_number::mod_pow(const ft_big_number& exponent, const ft_big
         {
             ft_big_number error_result;
 
-            error_result.set_error(ft_big_number::last_operation_error());
+            error_result.set_error_unlocked(ft_big_number::last_operation_error());
             return (error_result);
         }
         identity_result._is_negative = false;
@@ -2178,7 +2202,7 @@ ft_big_number ft_big_number::mod_pow(const ft_big_number& exponent, const ft_big
     {
         ft_big_number error_result;
 
-        error_result.set_error(ft_big_number::last_operation_error());
+        error_result.set_error_unlocked(ft_big_number::last_operation_error());
         return (error_result);
     }
     while (!exponent_value.is_zero_value())
@@ -2189,7 +2213,7 @@ ft_big_number ft_big_number::mod_pow(const ft_big_number& exponent, const ft_big
         {
             ft_big_number error_result;
 
-            error_result.set_error(ft_big_number::last_operation_error());
+            error_result.set_error_unlocked(ft_big_number::last_operation_error());
             return (error_result);
         }
         ft_big_number reduced_value = product_value % modulus_value;
@@ -2198,7 +2222,7 @@ ft_big_number ft_big_number::mod_pow(const ft_big_number& exponent, const ft_big
         {
             ft_big_number error_result;
 
-            error_result.set_error(ft_big_number::last_operation_error());
+            error_result.set_error_unlocked(ft_big_number::last_operation_error());
             return (error_result);
         }
         accumulator = reduced_value;
@@ -2208,7 +2232,7 @@ ft_big_number ft_big_number::mod_pow(const ft_big_number& exponent, const ft_big
         {
             ft_big_number error_result;
 
-            error_result.set_error(ft_big_number::last_operation_error());
+            error_result.set_error_unlocked(ft_big_number::last_operation_error());
             return (error_result);
         }
         exponent_value = next_exponent;

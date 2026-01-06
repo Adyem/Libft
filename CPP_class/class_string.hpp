@@ -4,23 +4,18 @@
 #include <cstddef>
 #include <cstring>
 #include <climits>
+#include "../Errno/errno_internal.hpp"
 #include "../PThread/recursive_mutex.hpp"
 
 class ft_string
 {
     private:
-        struct operation_error_stack
-        {
-            int         errors[20];
-            size_t      count;
-        };
-
         char*            _data;
         std::size_t      _length;
         std::size_t      _capacity;
         mutable int      _error_code;
         mutable pt_recursive_mutex  _mutex;
-        static thread_local operation_error_stack _operation_errors;
+        static thread_local ft_operation_error_stack _operation_errors;
 
         class mutex_guard
         {
