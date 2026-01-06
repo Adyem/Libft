@@ -179,10 +179,15 @@ int ft_big_number::error_for(unsigned int op_id) noexcept
 void ft_big_number::record_operation_error(int error_code) noexcept
 {
     ft_size_t index;
+    ft_size_t shift_index;
 
     if (ft_big_number::_operation_errors.count < 20)
         ft_big_number::_operation_errors.count++;
-    index = ft_big_number::_operation_errors.count;
+    if (ft_big_number::_operation_errors.count > 0)
+        shift_index = ft_big_number::_operation_errors.count - 1;
+    else
+        shift_index = 0;
+    index = shift_index;
     while (index > 0)
     {
         ft_big_number::_operation_errors.errors[index] =
