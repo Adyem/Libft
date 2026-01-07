@@ -52,35 +52,35 @@ class ft_big_number::error_scope
 {
     private:
         uint32_t        _index;
-        uint32_t        _op_id;
+        uint32_t        _operation_id;
         bool            _active;
 
     public:
         error_scope() noexcept;
         ~error_scope() noexcept;
         void            set_error(int error_code) noexcept;
-        uint32_t        get_op_id() const noexcept;
+        uint32_t        get_operation_id() const noexcept;
 };
 
 ft_big_number::error_scope::error_scope() noexcept
     : _index(0)
-    , _op_id(0)
+    , _operation_id(0)
     , _active(false)
 {
     std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
     if (ft_big_number::_error_stack.depth >= 32)
     {
-        this->_op_id = ft_big_number::_error_stack.next_op_id;
+        this->_operation_id = ft_big_number::_error_stack.next_op_id;
         ft_big_number::_error_stack.next_op_id++;
         return ;
     }
     this->_index = ft_big_number::_error_stack.depth;
     ft_big_number::_error_stack.depth++;
-    this->_op_id = ft_big_number::_error_stack.next_op_id;
+    this->_operation_id = ft_big_number::_error_stack.next_op_id;
     ft_big_number::_error_stack.next_op_id++;
     ft_big_number::_error_stack.frames[this->_index].code = FT_ERR_SUCCESSS;
-    ft_big_number::_error_stack.frames[this->_index].op_id = this->_op_id;
+    ft_big_number::_error_stack.frames[this->_index].op_id = this->_operation_id;
     this->_active = true;
     return ;
 }
@@ -109,9 +109,9 @@ void ft_big_number::error_scope::set_error(int error_code) noexcept
     return ;
 }
 
-uint32_t ft_big_number::error_scope::get_op_id() const noexcept
+uint32_t ft_big_number::error_scope::get_operation_id() const noexcept
 {
-    return (this->_op_id);
+    return (this->_operation_id);
 }
 
 static int ft_big_number_digit_value(char digit) noexcept
@@ -170,7 +170,7 @@ uint32_t ft_big_number::last_op_id() noexcept
     return (ft_big_number::_error_stack.frames[ft_big_number::_error_stack.depth - 1].op_id);
 }
 
-int ft_big_number::error_for(uint32_t op_id) noexcept
+int ft_big_number::error_for(uint32_t operation_id) noexcept
 {
     uint32_t index;
 
@@ -182,10 +182,10 @@ int ft_big_number::error_for(uint32_t op_id) noexcept
     while (index > 0)
     {
         index--;
-        if (ft_big_number::_error_stack.frames[index].op_id == op_id)
+        if (ft_big_number::_error_stack.frames[index].op_id == operation_id)
             return (ft_big_number::_error_stack.frames[index].code);
     }
-    if (ft_big_number::_error_stack.last_op_id == op_id)
+    if (ft_big_number::_error_stack.last_op_id == operation_id)
         return (ft_big_number::_error_stack.last_error);
     return (FT_ERR_SUCCESSS);
 }
@@ -507,24 +507,34 @@ void ft_big_number::trim_leading_zeros_unlocked() noexcept
     ft_size_t new_size;
 
     if (!this->_digits || this->_size == 0)
+    {
+        this->set_error_unlocked(FT_ERR_SUCCESSS);
         return ;
+    }
     leading_index = 0;
     while (leading_index + 1 < this->_size && this->_digits[leading_index] == '0')
         leading_index++;
     if (leading_index == 0)
+    {
+        this->set_error_unlocked(FT_ERR_SUCCESSS);
         return ;
+    }
     new_size = this->_size - leading_index;
     ft_memmove(this->_digits, this->_digits + leading_index, new_size);
     this->_size = new_size;
     this->_digits[this->_size] = '\0';
     this->shrink_capacity();
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     return ;
 }
 
 void ft_big_number::reduce_to_unlocked(ft_size_t new_size) noexcept
 {
     if (new_size >= this->_size)
+    {
+        this->set_error_unlocked(FT_ERR_SUCCESSS);
         return ;
+    }
     this->_size = new_size;
     if (this->_digits)
     {
@@ -533,6 +543,7 @@ void ft_big_number::reduce_to_unlocked(ft_size_t new_size) noexcept
             this->_digits[0] = '\0';
     }
     this->shrink_capacity();
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -560,6 +571,7 @@ ft_big_number::ft_big_number(const ft_big_number& other) noexcept
     lock_error = other.lock_self(other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
+        this->set_error_unlocked(lock_error);
         this->set_system_error(lock_error);
         return ;
     }
@@ -574,6 +586,7 @@ ft_big_number::ft_big_number(const ft_big_number& other) noexcept
             this->_size = 0;
             this->_capacity = 0;
             this->_is_negative = false;
+            this->set_error_unlocked(FT_ERR_NO_MEMORY);
             this->set_system_error(FT_SYS_ERR_NO_MEMORY);
             return ;
         }
@@ -596,6 +609,7 @@ ft_big_number::ft_big_number(ft_big_number&& other) noexcept
     lock_error = other.lock_self(other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
+        this->set_error_unlocked(lock_error);
         this->set_system_error(lock_error);
         return ;
     }
@@ -631,6 +645,7 @@ ft_big_number& ft_big_number::operator=(const ft_big_number& other) noexcept
     lock_error = ft_big_number::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
+        this->set_error_unlocked(lock_error);
         this->set_system_error(lock_error);
         return (*this);
     }
@@ -640,6 +655,7 @@ ft_big_number& ft_big_number::operator=(const ft_big_number& other) noexcept
         new_digits = static_cast<char*>(cma_calloc(other._capacity, sizeof(char)));
         if (!new_digits)
         {
+            this->set_error_unlocked(FT_ERR_NO_MEMORY);
             this->set_system_error(FT_SYS_ERR_NO_MEMORY);
             return (*this);
         }
@@ -665,6 +681,7 @@ ft_big_number& ft_big_number::operator=(ft_big_number&& other) noexcept
     lock_error = ft_big_number::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
+        this->set_error_unlocked(lock_error);
         this->set_system_error(lock_error);
         return (*this);
     }
@@ -889,7 +906,10 @@ ft_big_number ft_big_number::subtract_magnitude(const ft_big_number& other) cons
 void ft_big_number::reserve(ft_size_t new_capacity) noexcept
 {
     if (new_capacity <= this->_capacity)
+    {
+        this->set_error_unlocked(FT_ERR_SUCCESSS);
         return ;
+    }
     if (new_capacity < this->_size + 1)
         new_capacity = this->_size + 1;
     if (new_capacity < 16)
@@ -901,24 +921,30 @@ void ft_big_number::reserve(ft_size_t new_capacity) noexcept
         new_digits = static_cast<char*>(cma_calloc(new_capacity, sizeof(char)));
     if (!new_digits)
     {
+        this->set_error_unlocked(FT_ERR_NO_MEMORY);
         this->set_system_error(FT_SYS_ERR_NO_MEMORY);
         return ;
     }
     this->_digits = new_digits;
     this->_capacity = new_capacity;
     this->set_system_error(FT_SYS_ERR_SUCCESS);
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     return ;
 }
 
 void ft_big_number::shrink_capacity() noexcept
 {
     if (!this->_digits)
+    {
+        this->set_error_unlocked(FT_ERR_SUCCESSS);
         return ;
+    }
     if (this->_size == 0)
     {
         cma_free(this->_digits);
         this->_digits = ft_nullptr;
         this->_capacity = 0;
+        this->set_error_unlocked(FT_ERR_SUCCESSS);
         return ;
     }
     ft_size_t desired_capacity = this->_size + 1;
@@ -930,23 +956,28 @@ void ft_big_number::shrink_capacity() noexcept
     else
         shrink_threshold = std::numeric_limits<ft_size_t>::max();
     if (this->_capacity <= shrink_threshold)
+    {
+        this->set_error_unlocked(FT_ERR_SUCCESSS);
         return ;
+    }
     char* new_digits = static_cast<char*>(cma_realloc(this->_digits, desired_capacity));
     if (!new_digits)
     {
+        this->set_error_unlocked(FT_ERR_NO_MEMORY);
         this->set_system_error(FT_SYS_ERR_NO_MEMORY);
         return ;
     }
     this->_digits = new_digits;
     this->_capacity = desired_capacity;
     this->set_system_error(FT_SYS_ERR_SUCCESS);
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     return ;
 }
 
 void ft_big_number::assign(const char* number) noexcept
 {
     ft_big_number_mutex_guard guard;
-        int lock_error;
+    int lock_error;
     bool parsed_negative;
     ft_size_t start_index;
     ft_size_t length;
@@ -1022,7 +1053,7 @@ void ft_big_number::assign(const char* number) noexcept
 void ft_big_number::assign_base(const char* digits, int base) noexcept
 {
     ft_big_number_mutex_guard guard;
-        int lock_error;
+    int lock_error;
     int local_error;
     bool parsed_negative;
     ft_size_t index;
@@ -1152,7 +1183,7 @@ void ft_big_number::assign_base(const char* digits, int base) noexcept
 void ft_big_number::append_digit(char digit) noexcept
 {
     ft_big_number_mutex_guard guard;
-        int lock_error;
+    int lock_error;
 
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
@@ -1176,7 +1207,7 @@ void ft_big_number::append_digit(char digit) noexcept
 void ft_big_number::append(const char* digits) noexcept
 {
     ft_big_number_mutex_guard guard;
-        int lock_error;
+    int lock_error;
 
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
@@ -1206,7 +1237,7 @@ void ft_big_number::append(const char* digits) noexcept
 void ft_big_number::append_unsigned(unsigned long value) noexcept
 {
     ft_big_number_mutex_guard guard;
-        int lock_error;
+    int lock_error;
 
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
@@ -1230,7 +1261,7 @@ void ft_big_number::append_unsigned(unsigned long value) noexcept
 void ft_big_number::trim_leading_zeros() noexcept
 {
     ft_big_number_mutex_guard guard;
-        int lock_error;
+    int lock_error;
 
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
@@ -1245,7 +1276,7 @@ void ft_big_number::trim_leading_zeros() noexcept
 void ft_big_number::reduce_to(ft_size_t new_size) noexcept
 {
     ft_big_number_mutex_guard guard;
-        int lock_error;
+    int lock_error;
 
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
@@ -1260,7 +1291,7 @@ void ft_big_number::reduce_to(ft_size_t new_size) noexcept
 void ft_big_number::clear() noexcept
 {
     ft_big_number_mutex_guard guard;
-        int lock_error;
+    int lock_error;
 
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
@@ -1349,8 +1380,8 @@ ft_big_number ft_big_number::operator-(const ft_big_number& other) const noexcep
     ft_big_number result;
     int lock_error;
     int operation_error;
-    bool lhs_negative;
-    bool rhs_negative;
+    bool left_negative;
+    bool right_negative;
 
     operation_error = FT_SYS_ERR_SUCCESS;
     lock_error = ft_big_number::lock_pair(*this, other, this_guard, other_guard);
@@ -1368,16 +1399,16 @@ ft_big_number ft_big_number::operator-(const ft_big_number& other) const noexcep
         result.set_system_error(operation_error);
         goto finalize_subtract;
     }
-    lhs_negative = this->_is_negative;
-    rhs_negative = !other._is_negative;
+    left_negative = this->_is_negative;
+    right_negative = !other._is_negative;
     if (other.is_zero_value())
-        rhs_negative = false;
-    if (lhs_negative == rhs_negative)
+        right_negative = false;
+    if (left_negative == right_negative)
     {
         result = this->add_magnitude(other);
         if (ft_big_number::last_operation_error() == FT_ERR_SUCCESSS)
         {
-            result._is_negative = lhs_negative;
+            result._is_negative = left_negative;
             if (result.is_zero_value())
                 result._is_negative = false;
         }
@@ -1392,13 +1423,13 @@ ft_big_number ft_big_number::operator-(const ft_big_number& other) const noexcep
         {
             result = this->subtract_magnitude(other);
             if (ft_big_number::last_operation_error() == FT_ERR_SUCCESSS)
-                result._is_negative = lhs_negative;
+                result._is_negative = left_negative;
         }
         else
         {
             result = other.subtract_magnitude(*this);
             if (ft_big_number::last_operation_error() == FT_ERR_SUCCESSS)
-                result._is_negative = rhs_negative;
+                result._is_negative = right_negative;
         }
         if (ft_big_number::last_operation_error() == FT_ERR_SUCCESSS
                 && result.is_zero_value())
@@ -1876,17 +1907,19 @@ const char* ft_big_number::c_str() const noexcept
 {
     ft_big_number_mutex_guard guard;
     const char* digits_pointer;
-        int lock_error;
+    int lock_error;
 
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
+        this->set_error_unlocked(lock_error);
         return ("0");
     }
     if (this->_digits && this->_size > 0)
         digits_pointer = this->_digits;
     else
         digits_pointer = "0";
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     return (digits_pointer);
 }
 
@@ -1894,14 +1927,16 @@ ft_size_t ft_big_number::size() const noexcept
 {
     ft_big_number_mutex_guard guard;
     ft_size_t current_size;
-        int lock_error;
+    int lock_error;
 
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
+        this->set_error_unlocked(lock_error);
         return (0);
     }
     current_size = this->_size;
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     return (current_size);
 }
 
@@ -1909,14 +1944,16 @@ bool ft_big_number::empty() const noexcept
 {
     ft_big_number_mutex_guard guard;
     bool is_empty_result;
-        int lock_error;
+    int lock_error;
 
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
+        this->set_error_unlocked(lock_error);
         return (true);
     }
     is_empty_result = (this->_size == 0);
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     return (is_empty_result);
 }
 
@@ -1924,17 +1961,19 @@ bool ft_big_number::is_negative() const noexcept
 {
     ft_big_number_mutex_guard guard;
     bool result;
-        int lock_error;
+    int lock_error;
 
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
+        this->set_error_unlocked(lock_error);
         return (false);
     }
     if (this->is_zero_value())
         result = false;
     else
         result = this->_is_negative;
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -1942,24 +1981,26 @@ bool ft_big_number::is_positive() const noexcept
 {
     ft_big_number_mutex_guard guard;
     bool result;
-        int lock_error;
+    int lock_error;
 
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
+        this->set_error_unlocked(lock_error);
         return (false);
     }
     if (this->is_zero_value())
         result = false;
     else
         result = !this->_is_negative;
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     return (result);
 }
 
 ft_string ft_big_number::to_string_base(int base) noexcept
 {
     ft_big_number_mutex_guard guard;
-        int lock_error;
+    int lock_error;
     bool original_negative;
     bool is_zero_value_result;
 
@@ -2269,15 +2310,17 @@ const char* ft_big_number::operation_error_str_at(ft_size_t index) noexcept
 void ft_big_number::reset_system_error() const noexcept
 {
     ft_big_number_mutex_guard guard;
-        int lock_error;
+    int lock_error;
 
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
+        this->set_error_unlocked(lock_error);
         this->set_system_error(lock_error);
         return ;
     }
     this->set_system_error_unlocked(FT_SYS_ERR_SUCCESS);
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     return ;
 }
 

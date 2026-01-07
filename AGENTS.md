@@ -19,6 +19,14 @@ Every class must declare and define a constructor and destructor, even if they s
 Class error handling must use the shared error-stack types from the Errno module.
 When publishing or reading class error codes or error stacks, do not lock the class mutex; use
 `std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());` instead.
+A function that pushes an entry must leave it on the stack.
+The function that checks the entry is responsible for popping it.
+When a function succeeds it must place exactly one success entry on the stack.
+Within a function, if an error was reported it must not later push a success on the stack.
+If the function has not pushed anything yet and succeeds, it must push a success entry.
+If an error was reported and then popped because it was handled, the function must still push a success entry to report it completed successfully.
+If an error is still on the stack, the function must not push a success entry.
+If an error was handled and popped, the function must push a success entry.
 
 #Errno Global Error Stack
 
@@ -28,6 +36,14 @@ all global stack access; do not touch the stack directly. Helpers must provide p
 pop all, and fetch by index (1-based). The newest error is always at the lowest index, and
 helpers must also support retrieving the most recent error and error string values using the
 same ordering rules.
+A function that pushes an entry must leave it on the stack.
+The function that checks the entry is responsible for popping it.
+When a function succeeds it must place exactly one success entry on the stack.
+Within a function, if an error was reported it must not later push a success on the stack.
+If the function has not pushed anything yet and succeeds, it must push a success entry.
+If an error was reported and then popped because it was handled, the function must still push a success entry to report it completed successfully.
+If an error is still on the stack, the function must not push a success entry.
+If an error was handled and popped, the function must push a success entry.
 Any successful function must push a value onto the global error stack noting the successful
 operation.
 
