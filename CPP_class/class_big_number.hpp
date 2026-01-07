@@ -92,7 +92,7 @@ class ft_big_number
         void        reset_system_error() const noexcept;
         static int  last_error() noexcept;
         static uint32_t last_op_id() noexcept;
-        static int  error_for(uint32_t op_id) noexcept;
+        static int  error_for(uint32_t operation_id) noexcept;
         static int  last_operation_error() noexcept;
         static int  operation_error_at(ft_size_t index) noexcept;
         static void pop_operation_errors() noexcept;

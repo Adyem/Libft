@@ -47,6 +47,7 @@ void ft_set_errno_locked(int error_code);
 void ft_set_sys_errno_locked(int error_code);
 void ft_global_error_stack_push(int error_code);
 int ft_global_error_stack_pop_last(void);
+int ft_global_error_stack_pop_newest(void);
 void ft_global_error_stack_pop_all(void);
 int ft_global_error_stack_error_at(ft_size_t index);
 int ft_global_error_stack_last_error(void);

@@ -100,6 +100,26 @@ int ft_global_error_stack_pop_last(void)
     return (error_code);
 }
 
+int ft_global_error_stack_pop_newest(void)
+{
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    ft_operation_error_stack &error_stack = ft_global_error_stack();
+    ft_size_t index;
+    int error_code;
+
+    if (error_stack.count == 0)
+        return (FT_ERR_SUCCESSS);
+    error_code = error_stack.errors[0];
+    index = 0;
+    while (index + 1 < error_stack.count)
+    {
+        error_stack.errors[index] = error_stack.errors[index + 1];
+        index++;
+    }
+    error_stack.count--;
+    return (error_code);
+}
+
 void ft_global_error_stack_pop_all(void)
 {
     std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
