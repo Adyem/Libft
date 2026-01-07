@@ -3,7 +3,6 @@
 
 #include <mutex>
 #include <cstdint>
-#include "../Libft/libft.hpp"
 
 class ft_errno_mutex_wrapper
 {
@@ -42,6 +41,8 @@ struct ft_operation_error_stack
     int32_t     errors[20];
     uint32_t    count;
 };
+
+#include "../Libft/libft.hpp"
 
 ft_errno_mutex_wrapper &ft_errno_mutex();
 void ft_set_errno_locked(int error_code);
