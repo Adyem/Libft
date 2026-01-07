@@ -49,37 +49,55 @@ namespace ft_detail
     {
         return (((value) - repeat_byte(0x01)) & ~(value) & repeat_byte(0x80)) != 0;
     }
+
+    constexpr size_t strlen_raw(const char *string)
+    {
+        const char *string_pointer = string;
+
+        while (*string_pointer)
+            ++string_pointer;
+        return (static_cast<size_t>(string_pointer - string));
+    }
 }
 
 constexpr size_t ft_strlen_size_t(const char *string)
 {
-    if (!ft_is_constant_evaluated())
-        ft_errno = FT_ERR_SUCCESSS;
     if (!string)
     {
         if (!ft_is_constant_evaluated())
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
+        {
+            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
+        }
         return (0);
     }
-    const char *string_pointer = string;
-    while (*string_pointer)
-        ++string_pointer;
-    return (static_cast<size_t>(string_pointer - string));
+    if (!ft_is_constant_evaluated())
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return (ft_detail::strlen_raw(string));
 }
 
 constexpr int ft_strlen(const char *string)
 {
     size_t length = 0;
 
-    if (!ft_is_constant_evaluated())
-        ft_errno = FT_ERR_SUCCESSS;
-    length = ft_strlen_size_t(string);
+    if (!string)
+    {
+        if (!ft_is_constant_evaluated())
+        {
+            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
+        }
+        return (0);
+    }
+    length = ft_detail::strlen_raw(string);
     if (length > static_cast<size_t>(FT_INT_MAX))
     {
         if (!ft_is_constant_evaluated())
-            ft_errno = FT_ERR_OUT_OF_RANGE;
+        {
+            ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
+        }
         return (FT_INT_MAX);
     }
+    if (!ft_is_constant_evaluated())
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (static_cast<int>(length));
 }
 
