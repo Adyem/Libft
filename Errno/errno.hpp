@@ -11,6 +11,7 @@ int &ft_sys_errno_reference(void);
 
 int ft_map_system_error(int error_code);
 int ft_set_errno_from_system_error(int error_code);
+void ft_global_error_stack_push(int error_code);
 
 enum ft_sys_error_t
 {
