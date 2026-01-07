@@ -19,6 +19,8 @@ typedef unsigned long long ft_size_t;
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_string.hpp"
 
+class ft_string;
+
 constexpr bool ft_is_constant_evaluated()
 {
 #if defined(__cpp_lib_is_constant_evaluated)
