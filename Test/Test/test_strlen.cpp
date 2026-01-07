@@ -11,18 +11,26 @@ static void ft_clear_error_stack(void)
     return ;
 }
 
-static void ft_assert_single_stack_error(int expected_error)
+static int ft_assert_single_stack_error(int expected_error)
 {
-    FT_ASSERT_EQ(expected_error, ft_global_error_stack_error_at(1));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_global_error_stack_error_at(2));
-    return ;
+    if (expected_error != ft_global_error_stack_error_at(1))
+    {
+        ft_test_fail("expected_error == ft_global_error_stack_error_at(1)", __FILE__, __LINE__);
+        return (0);
+    }
+    if (FT_ERR_SUCCESSS != ft_global_error_stack_error_at(2))
+    {
+        ft_test_fail("FT_ERR_SUCCESSS == ft_global_error_stack_error_at(2)", __FILE__, __LINE__);
+        return (0);
+    }
+    return (1);
 }
 
 FT_TEST(test_strlen_nullptr, "ft_strlen nullptr")
 {
     ft_clear_error_stack();
     FT_ASSERT_EQ(0, ft_strlen(ft_nullptr));
-    ft_assert_single_stack_error(FT_ERR_INVALID_ARGUMENT);
+    FT_ASSERT(ft_assert_single_stack_error(FT_ERR_INVALID_ARGUMENT));
     return (1);
 }
 
@@ -30,7 +38,7 @@ FT_TEST(test_strlen_nullptr_sets_errno, "ft_strlen nullptr sets FT_ERR_INVALID_A
 {
     ft_clear_error_stack();
     FT_ASSERT_EQ(0, ft_strlen(ft_nullptr));
-    ft_assert_single_stack_error(FT_ERR_INVALID_ARGUMENT);
+    FT_ASSERT(ft_assert_single_stack_error(FT_ERR_INVALID_ARGUMENT));
     return (1);
 }
 
@@ -46,7 +54,7 @@ FT_TEST(test_strlen_stops_at_embedded_null, "ft_strlen stops counting at first n
     buffer[4] = 'd';
     buffer[5] = '\0';
     FT_ASSERT_EQ(static_cast<size_t>(2), ft_strlen(buffer));
-    ft_assert_single_stack_error(FT_ERR_SUCCESSS);
+    FT_ASSERT(ft_assert_single_stack_error(FT_ERR_SUCCESSS));
     return (1);
 }
 
@@ -54,7 +62,7 @@ FT_TEST(test_strlen_simple, "ft_strlen basic")
 {
     ft_clear_error_stack();
     FT_ASSERT_EQ(4, ft_strlen("test"));
-    ft_assert_single_stack_error(FT_ERR_SUCCESSS);
+    FT_ASSERT(ft_assert_single_stack_error(FT_ERR_SUCCESSS));
     return (1);
 }
 
@@ -72,7 +80,7 @@ FT_TEST(test_strlen_long, "ft_strlen long string")
     }
     buffer[1024] = '\0';
     FT_ASSERT_EQ(1024, ft_strlen(buffer));
-    ft_assert_single_stack_error(FT_ERR_SUCCESSS);
+    FT_ASSERT(ft_assert_single_stack_error(FT_ERR_SUCCESSS));
     return (1);
 }
 
@@ -80,7 +88,7 @@ FT_TEST(test_strlen_empty, "ft_strlen empty string")
 {
     ft_clear_error_stack();
     FT_ASSERT_EQ(0, ft_strlen(""));
-    ft_assert_single_stack_error(FT_ERR_SUCCESSS);
+    FT_ASSERT(ft_assert_single_stack_error(FT_ERR_SUCCESSS));
     return (1);
 }
 
@@ -96,7 +104,7 @@ FT_TEST(test_strlen_embedded_null, "ft_strlen embedded null")
     string[4] = 'd';
     string[5] = '\0';
     FT_ASSERT_EQ(2, ft_strlen(string));
-    ft_assert_single_stack_error(FT_ERR_SUCCESSS);
+    FT_ASSERT(ft_assert_single_stack_error(FT_ERR_SUCCESSS));
     return (1);
 }
 
@@ -104,7 +112,7 @@ FT_TEST(test_strlen_resets_errno_on_success, "ft_strlen clears ft_errno before m
 {
     ft_clear_error_stack();
     FT_ASSERT_EQ(3, ft_strlen("abc"));
-    ft_assert_single_stack_error(FT_ERR_SUCCESSS);
+    FT_ASSERT(ft_assert_single_stack_error(FT_ERR_SUCCESSS));
     return (1);
 }
 
@@ -117,7 +125,7 @@ FT_TEST(test_strlen_counts_non_ascii_bytes, "ft_strlen counts bytes beyond ascii
     string[1] = static_cast<char>(0x80);
     string[2] = '\0';
     FT_ASSERT_EQ(2, ft_strlen(string));
-    ft_assert_single_stack_error(FT_ERR_SUCCESSS);
+    FT_ASSERT(ft_assert_single_stack_error(FT_ERR_SUCCESSS));
     return (1);
 }
 
@@ -135,7 +143,7 @@ FT_TEST(test_strlen_size_t_large_buffer, "ft_strlen_size_t handles wide buffers"
     }
     buffer[2048] = '\0';
     FT_ASSERT_EQ(static_cast<size_t>(2048), ft_strlen_size_t(buffer));
-    ft_assert_single_stack_error(FT_ERR_SUCCESSS);
+    FT_ASSERT(ft_assert_single_stack_error(FT_ERR_SUCCESSS));
     return (1);
 }
 
@@ -143,7 +151,7 @@ FT_TEST(test_strlen_size_t_nullptr_sets_errno, "ft_strlen_size_t nullptr sets FT
 {
     ft_clear_error_stack();
     FT_ASSERT_EQ(static_cast<size_t>(0), ft_strlen_size_t(ft_nullptr));
-    ft_assert_single_stack_error(FT_ERR_INVALID_ARGUMENT);
+    FT_ASSERT(ft_assert_single_stack_error(FT_ERR_INVALID_ARGUMENT));
     return (1);
 }
 
@@ -166,7 +174,7 @@ FT_TEST(test_strlen_size_t_handles_unaligned_pointers,
     start_pointer = buffer + 1;
     measured_length = ft_strlen_size_t(start_pointer);
     FT_ASSERT_EQ(static_cast<size_t>(5), measured_length);
-    ft_assert_single_stack_error(FT_ERR_SUCCESSS);
+    FT_ASSERT(ft_assert_single_stack_error(FT_ERR_SUCCESSS));
     return (1);
 }
 
@@ -182,10 +190,10 @@ FT_TEST(test_strlen_size_t_recovers_after_nullptr, "ft_strlen_size_t clears errn
     buffer[4] = 'e';
     buffer[5] = '\0';
     FT_ASSERT_EQ(static_cast<size_t>(0), ft_strlen_size_t(ft_nullptr));
-    ft_assert_single_stack_error(FT_ERR_INVALID_ARGUMENT);
+    FT_ASSERT(ft_assert_single_stack_error(FT_ERR_INVALID_ARGUMENT));
     ft_clear_error_stack();
     FT_ASSERT_EQ(static_cast<size_t>(5), ft_strlen_size_t(buffer));
-    ft_assert_single_stack_error(FT_ERR_SUCCESSS);
+    FT_ASSERT(ft_assert_single_stack_error(FT_ERR_SUCCESSS));
     return (1);
 }
 
