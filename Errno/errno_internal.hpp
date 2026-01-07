@@ -7,7 +7,7 @@
 class ft_errno_mutex_wrapper
 {
     private:
-        std::mutex _mutex;
+        std::recursive_mutex _mutex;
 
     public:
         ft_errno_mutex_wrapper(void);
