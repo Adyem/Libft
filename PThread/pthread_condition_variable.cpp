@@ -4,7 +4,7 @@
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Libft/libft.hpp"
-#include "../CMA/CMA.hpp"
+#include <new>
 #include <cerrno>
 #include <time.h>
 
@@ -151,8 +151,7 @@ void pt_condition_variable::teardown_thread_safety()
 {
     if (this->_state_mutex != ft_nullptr)
     {
-        this->_state_mutex->~pt_mutex();
-        cma_free(this->_state_mutex);
+        delete this->_state_mutex;
         this->_state_mutex = ft_nullptr;
     }
     this->_thread_safe_enabled = false;
@@ -161,7 +160,6 @@ void pt_condition_variable::teardown_thread_safety()
 
 int pt_condition_variable::enable_thread_safety()
 {
-    void *memory;
     pt_mutex *state_mutex;
 
     if (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr)
@@ -169,20 +167,18 @@ int pt_condition_variable::enable_thread_safety()
         this->set_error(FT_ERR_SUCCESSS);
         return (0);
     }
-    memory = cma_malloc(sizeof(pt_mutex));
-    if (memory == ft_nullptr)
+    state_mutex = new (std::nothrow) pt_mutex();
+    if (state_mutex == ft_nullptr)
     {
         this->set_error(FT_ERR_NO_MEMORY);
         return (-1);
     }
-    state_mutex = new(memory) pt_mutex();
     if (state_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         int mutex_error;
 
         mutex_error = state_mutex->get_error();
-        state_mutex->~pt_mutex();
-        cma_free(memory);
+        delete state_mutex;
         this->set_error(mutex_error);
         return (-1);
     }

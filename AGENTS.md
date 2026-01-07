@@ -57,4 +57,3 @@ Code that relies on platform-specific features must place only the platform-depe
 #Build and Test Timing
 
 Building the library and running the full test suite typically takes about two and a half minutes, possibly a little longer.
-

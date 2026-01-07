@@ -4,23 +4,18 @@
 #include <cstddef>
 #include <cstring>
 #include <climits>
+#include "../Errno/errno_internal.hpp"
 #include "../PThread/recursive_mutex.hpp"
 
 class ft_string
 {
     private:
-        struct operation_error_stack
-        {
-            int         errors[20];
-            size_t      count;
-        };
-
         char*            _data;
         std::size_t      _length;
         std::size_t      _capacity;
         mutable int      _error_code;
         mutable pt_recursive_mutex  _mutex;
-        static thread_local operation_error_stack _operation_errors;
+        static thread_local ft_operation_error_stack _operation_errors;
 
         class mutex_guard
         {
@@ -55,7 +50,7 @@ class ft_string
                 mutex_guard &second_guard) noexcept;
         static void sleep_backoff() noexcept;
         void    resize_unlocked(size_t new_capacity) noexcept;
-        void    append_char_unlocked(char c) noexcept;
+        void    append_char_unlocked(char character) noexcept;
         void    append_unlocked(const char *string, size_t length) noexcept;
         void    clear_unlocked() noexcept;
         void    ensure_empty_buffer_unlocked() noexcept;
@@ -70,7 +65,7 @@ class ft_string
 
     public:
         ft_string() noexcept;
-        ft_string(const char *init_str) noexcept;
+        ft_string(const char *initial_string) noexcept;
         ft_string(size_t count, char character) noexcept;
         ft_string(const ft_string& other) noexcept;
         ft_string(ft_string&& other) noexcept;
@@ -78,18 +73,18 @@ class ft_string
         ft_string &operator=(ft_string&& other) noexcept;
         ft_string &operator=(const char *other) noexcept;
         ft_string& operator+=(const ft_string& other) noexcept;
-        ft_string& operator+=(const char* cstr) noexcept;
-        ft_string& operator+=(char c) noexcept;
+        ft_string& operator+=(const char* string_value) noexcept;
+        ft_string& operator+=(char character) noexcept;
         ~ft_string();
 
         explicit ft_string(int error_code) noexcept;
 
         static void* operator new(size_t size) noexcept;
-        static void operator delete(void* ptr) noexcept;
+        static void operator delete(void* pointer) noexcept;
         static void* operator new[](size_t size) noexcept;
-        static void operator delete[](void* ptr) noexcept;
+        static void operator delete[](void* pointer) noexcept;
 
-        void        append(char c) noexcept;
+        void        append(char character) noexcept;
         void        append(const char *string) noexcept;
         void        append(const char *string, size_t length) noexcept;
         void        append(const ft_string &string) noexcept;
@@ -126,30 +121,35 @@ class ft_string
 
         operator const char*() const noexcept;
 
-        friend ft_string operator+(const ft_string &lhs, const ft_string &rhs) noexcept;
-        friend ft_string operator+(const ft_string &lhs, const char *rhs) noexcept;
-        friend ft_string operator+(const char *lhs, const ft_string &rhs) noexcept;
-        friend ft_string operator+(const ft_string &lhs, char rhs) noexcept;
-        friend ft_string operator+(char lhs, const ft_string &rhs) noexcept;
+        friend ft_string operator+(const ft_string &left_value,
+            const ft_string &right_value) noexcept;
+        friend ft_string operator+(const ft_string &left_value,
+            const char *right_value) noexcept;
+        friend ft_string operator+(const char *left_value,
+            const ft_string &right_value) noexcept;
+        friend ft_string operator+(const ft_string &left_value,
+            char right_character) noexcept;
+        friend ft_string operator+(char left_character,
+            const ft_string &right_value) noexcept;
 
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex    *get_mutex_for_testing() noexcept;
 #endif
 };
 
-bool operator==(const ft_string &lhs, const ft_string &rhs) noexcept;
-bool operator==(const ft_string &lhs, const char* rhs) noexcept;
-bool operator==(const char* lhs, const ft_string &rhs) noexcept;
-bool operator!=(const ft_string &lhs, const ft_string &rhs) noexcept;
-bool operator!=(const ft_string &lhs, const char* rhs) noexcept;
-bool operator!=(const char* lhs, const ft_string &rhs) noexcept;
+bool operator==(const ft_string &left_value, const ft_string &right_value) noexcept;
+bool operator==(const ft_string &left_value, const char* right_value) noexcept;
+bool operator==(const char* left_value, const ft_string &right_value) noexcept;
+bool operator!=(const ft_string &left_value, const ft_string &right_value) noexcept;
+bool operator!=(const ft_string &left_value, const char* right_value) noexcept;
+bool operator!=(const char* left_value, const ft_string &right_value) noexcept;
 
-bool operator<(const ft_string &lhs, const ft_string &rhs) noexcept;
-bool operator<(const ft_string &lhs, const char* rhs) noexcept;
-bool operator<(const char* lhs, const ft_string &rhs) noexcept;
+bool operator<(const ft_string &left_value, const ft_string &right_value) noexcept;
+bool operator<(const ft_string &left_value, const char* right_value) noexcept;
+bool operator<(const char* left_value, const ft_string &right_value) noexcept;
 
-bool operator>(const ft_string &lhs, const ft_string &rhs) noexcept;
-bool operator>(const ft_string &lhs, const char* rhs) noexcept;
-bool operator>(const char* lhs, const ft_string &rhs) noexcept;
+bool operator>(const ft_string &left_value, const ft_string &right_value) noexcept;
+bool operator>(const ft_string &left_value, const char* right_value) noexcept;
+bool operator>(const char* left_value, const ft_string &right_value) noexcept;
 
 #endif

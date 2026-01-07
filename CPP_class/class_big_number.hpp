@@ -2,8 +2,10 @@
 #define FT_BIG_NUMBER_HPP
 
 #include "../Libft/libft.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/unique_lock.hpp"
+#include <cstdint>
 
 class ft_big_number;
 
@@ -12,27 +14,6 @@ typedef ft_unique_lock<pt_recursive_mutex>    ft_big_number_mutex_guard;
 class ft_big_number
 {
     private:
-        struct error_frame
-        {
-            int             code;
-            unsigned int    op_id;
-        };
-
-        struct error_stack
-        {
-            error_frame     frames[32];
-            unsigned int    depth;
-            unsigned int    next_op_id;
-            int             last_error;
-            unsigned int    last_op_id;
-        };
-
-        struct operation_error_stack
-        {
-            int         errors[20];
-            ft_size_t   count;
-        };
-
         class error_scope;
 
         char*           _digits;
@@ -40,13 +21,12 @@ class ft_big_number
         ft_size_t       _capacity;
         bool            _is_negative;
         mutable pt_recursive_mutex    _mutex;
-        static thread_local error_stack _error_stack;
-        static thread_local operation_error_stack _operation_errors;
+        static thread_local ft_error_stack _error_stack;
+        static thread_local ft_operation_error_stack _operation_errors;
 
         void    reserve(ft_size_t new_capacity) noexcept;
         void    shrink_capacity() noexcept;
         void    set_error_unlocked(int error_code) const noexcept;
-        void    set_error(int error_code) const noexcept;
         void    set_system_error_unlocked(int error_code) const noexcept;
         void    set_system_error(int error_code) const noexcept;
         int     lock_self(ft_big_number_mutex_guard &guard) const noexcept;
@@ -111,8 +91,8 @@ class ft_big_number
         static const char *operation_error_str_at(ft_size_t index) noexcept;
         void        reset_system_error() const noexcept;
         static int  last_error() noexcept;
-        static unsigned int last_op_id() noexcept;
-        static int  error_for(unsigned int op_id) noexcept;
+        static uint32_t last_op_id() noexcept;
+        static int  error_for(uint32_t operation_id) noexcept;
         static int  last_operation_error() noexcept;
         static int  operation_error_at(ft_size_t index) noexcept;
         static void pop_operation_errors() noexcept;

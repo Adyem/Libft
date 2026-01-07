@@ -1,5 +1,5 @@
 #include "readline_internal.hpp"
-#include "../CMA/CMA.hpp"
+#include <new>
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
@@ -21,7 +21,6 @@ static void rl_terminal_dimensions_clear(terminal_dimensions *dimensions)
 int rl_terminal_dimensions_prepare_thread_safety(terminal_dimensions *dimensions)
 {
     pt_mutex *mutex_pointer;
-    void     *memory;
 
     if (dimensions == ft_nullptr)
     {
@@ -33,20 +32,18 @@ int rl_terminal_dimensions_prepare_thread_safety(terminal_dimensions *dimensions
         ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
-    memory = cma_malloc(sizeof(pt_mutex));
-    if (memory == ft_nullptr)
+    mutex_pointer = new (std::nothrow) pt_mutex();
+    if (mutex_pointer == ft_nullptr)
     {
         ft_errno = FT_ERR_NO_MEMORY;
         return (-1);
     }
-    mutex_pointer = new(memory) pt_mutex();
     if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
     {
         int mutex_error;
 
         mutex_error = mutex_pointer->get_error();
-        mutex_pointer->~pt_mutex();
-        cma_free(memory);
+        delete mutex_pointer;
         ft_errno = mutex_error;
         return (-1);
     }
@@ -62,8 +59,7 @@ void rl_terminal_dimensions_teardown_thread_safety(terminal_dimensions *dimensio
         return ;
     if (dimensions->mutex != ft_nullptr)
     {
-        dimensions->mutex->~pt_mutex();
-        cma_free(dimensions->mutex);
+        delete dimensions->mutex;
         dimensions->mutex = ft_nullptr;
     }
     dimensions->thread_safe_enabled = false;

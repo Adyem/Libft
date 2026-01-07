@@ -17,7 +17,7 @@ ft_string::ft_string() noexcept
     return ;
 }
 
-ft_string::ft_string(const char* init_str) noexcept
+ft_string::ft_string(const char* initial_string) noexcept
     : _data(ft_nullptr)
     , _length(0)
     , _capacity(0)
@@ -26,8 +26,8 @@ ft_string::ft_string(const char* init_str) noexcept
 {
     this->push_error_unlocked(FT_ERR_SUCCESSS);
     this->set_system_error_unlocked(FT_SYS_ERR_SUCCESS);
-    if (init_str)
-        this->assign(init_str, ft_strlen_size_t(init_str));
+    if (initial_string)
+        this->assign(initial_string, ft_strlen_size_t(initial_string));
     return ;
 }
 
@@ -247,29 +247,29 @@ ft_string::~ft_string()
 
 void *ft_string::operator new(size_t size) noexcept
 {
-    void* ptr = cma_malloc(size);
-    if (!ptr)
+    void* pointer = cma_malloc(size);
+    if (!pointer)
         return (ft_nullptr);
-    return (ptr);
+    return (pointer);
 }
 
-void ft_string::operator delete(void* ptr) noexcept
+void ft_string::operator delete(void* pointer) noexcept
 {
-    cma_free(ptr);
+    cma_free(pointer);
     return ;
 }
 
 void *ft_string::operator new[](size_t size) noexcept
 {
-    void* ptr = cma_malloc(size);
-    if (!ptr)
+    void* pointer = cma_malloc(size);
+    if (!pointer)
         return (ft_nullptr);
-    return (ptr);
+    return (pointer);
 }
 
-void ft_string::operator delete[](void* ptr) noexcept
+void ft_string::operator delete[](void* pointer) noexcept
 {
-    cma_free(ptr);
+    cma_free(pointer);
     return ;
 }
 
