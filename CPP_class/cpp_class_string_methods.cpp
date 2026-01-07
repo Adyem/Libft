@@ -129,6 +129,8 @@ void ft_string::set_system_error(int error_code) const noexcept
 
 void ft_string::set_error_unlocked(int error_code) const noexcept
 {
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
     this->_error_code = error_code;
     ft_errno = error_code;
     return ;
@@ -230,6 +232,8 @@ int ft_string::lock_pair(const ft_string &first, const ft_string &second,
 void ft_string::record_operation_error(int error_code) noexcept
 {
     size_t index;
+
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
     if (ft_string::_operation_errors.count < 20)
         ft_string::_operation_errors.count++;
