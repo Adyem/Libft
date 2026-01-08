@@ -13,22 +13,30 @@ int ft_random_poisson(double lambda_value)
     ft_init_random_engine();
     if (lambda_value <= 0.0)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
     limit_value = math_exp(-lambda_value);
     if (ft_errno != FT_ERR_SUCCESSS)
+    {
+        int error_code = ft_errno;
+        ft_global_error_stack_push(error_code);
         return (0);
+    }
     product_value = 1.0;
     count_value = 0;
     while (product_value > limit_value)
     {
         random_value = static_cast<double>(ft_random_float());
-        if (ft_errno != FT_ERR_SUCCESSS)
+        int error_code = ft_global_error_stack_pop_newest();
+        if (error_code != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(error_code);
             return (0);
+        }
         product_value = product_value * random_value;
         count_value = count_value + 1;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (count_value - 1);
 }

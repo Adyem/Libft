@@ -11,33 +11,39 @@ int cmp_rng_secure_bytes(unsigned char *buffer, size_t length)
     if (CryptAcquireContext(&crypt_provider, ft_nullptr, ft_nullptr,
             PROV_RSA_FULL, CRYPT_VERIFYCONTEXT) == 0)
     {
+        int error_code;
         DWORD last_error = GetLastError();
         if (last_error != 0)
-            ft_errno = ft_map_system_error(static_cast<int>(last_error));
+            error_code = ft_map_system_error(static_cast<int>(last_error));
         else
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
+            error_code = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     if (CryptGenRandom(crypt_provider, static_cast<DWORD>(length), buffer) == 0)
     {
+        int error_code;
         DWORD last_error = GetLastError();
         CryptReleaseContext(crypt_provider, 0);
         if (last_error != 0)
-            ft_errno = ft_map_system_error(static_cast<int>(last_error));
+            error_code = ft_map_system_error(static_cast<int>(last_error));
         else
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
+            error_code = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     if (CryptReleaseContext(crypt_provider, 0) == 0)
     {
+        int error_code;
         DWORD last_error = GetLastError();
         if (last_error != 0)
-            ft_errno = ft_map_system_error(static_cast<int>(last_error));
+            error_code = ft_map_system_error(static_cast<int>(last_error));
         else
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
+            error_code = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 #else
@@ -94,14 +100,18 @@ int cmp_rng_secure_bytes(unsigned char *buffer, size_t length)
     g_force_rng_open_errno = 0;
     if (forced_open_errno != 0)
     {
+        int error_code;
+
         errno = forced_open_errno;
-        ft_errno = ft_map_system_error(errno);
+        error_code = ft_map_system_error(errno);
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     int file_descriptor = open("/dev/urandom", O_RDONLY);
     if (file_descriptor < 0)
     {
-        ft_errno = ft_map_system_error(errno);
+        int error_code = ft_map_system_error(errno);
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     size_t offset = 0;
@@ -110,12 +120,15 @@ int cmp_rng_secure_bytes(unsigned char *buffer, size_t length)
         int forced_read_errno = g_force_rng_read_errno;
         if (forced_read_errno != 0)
         {
+            int error_code;
+
             g_force_rng_read_errno = 0;
             errno = forced_read_errno;
-            ft_errno = ft_map_system_error(errno);
+            error_code = ft_map_system_error(errno);
             int stored_errno = errno;
             close(file_descriptor);
             errno = stored_errno;
+            ft_global_error_stack_push(error_code);
             return (-1);
         }
         ssize_t bytes_read;
@@ -132,10 +145,11 @@ int cmp_rng_secure_bytes(unsigned char *buffer, size_t length)
         }
         if (bytes_read < 0)
         {
-            ft_errno = ft_map_system_error(errno);
+            int error_code = ft_map_system_error(errno);
             int stored_errno = errno;
             close(file_descriptor);
             errno = stored_errno;
+            ft_global_error_stack_push(error_code);
             return (-1);
         }
         if (bytes_read == 0)
@@ -144,10 +158,11 @@ int cmp_rng_secure_bytes(unsigned char *buffer, size_t length)
 
             if (close_result < 0)
             {
-                ft_errno = ft_map_system_error(errno);
+                int error_code = ft_map_system_error(errno);
+                ft_global_error_stack_push(error_code);
                 return (-1);
             }
-            ft_errno = FT_ERR_IO;
+            ft_global_error_stack_push(FT_ERR_IO);
             return (-1);
         }
         offset += static_cast<size_t>(bytes_read);
@@ -155,18 +170,22 @@ int cmp_rng_secure_bytes(unsigned char *buffer, size_t length)
     int close_result = close(file_descriptor);
     if (close_result < 0)
     {
-        ft_errno = ft_map_system_error(errno);
+        int error_code = ft_map_system_error(errno);
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     int forced_close_errno = g_force_rng_close_errno;
     g_force_rng_close_errno = 0;
     if (forced_close_errno != 0)
     {
+        int error_code;
+
         errno = forced_close_errno;
-        ft_errno = ft_map_system_error(errno);
+        error_code = ft_map_system_error(errno);
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 #endif

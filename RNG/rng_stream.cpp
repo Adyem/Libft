@@ -2,6 +2,7 @@
 #include "rng.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../Math/math.hpp"
 #include <climits>
 #include <limits>
@@ -30,7 +31,7 @@ rng_stream::rng_stream(const rng_stream &other)
 
     this->_engine = other._engine;
     this->_error_code = other._error_code;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -43,7 +44,7 @@ rng_stream &rng_stream::operator=(const rng_stream &other)
     std::lock_guard<std::mutex> other_lock(other._mutex, std::adopt_lock);
     this->_engine = other._engine;
     this->_error_code = other._error_code;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (*this);
 }
 
@@ -57,7 +58,7 @@ rng_stream::rng_stream(rng_stream &&other) noexcept
 
     other._engine = default_engine;
     other._error_code = FT_ERR_SUCCESSS;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -74,7 +75,7 @@ rng_stream &rng_stream::operator=(rng_stream &&other) noexcept
 
     other._engine = default_engine;
     other._error_code = FT_ERR_SUCCESSS;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (*this);
 }
 
@@ -104,9 +105,10 @@ void    rng_stream::reseed_from_string(const char *seed_string)
     uint32_t derived_seed;
 
     derived_seed = ft_random_seed(seed_string);
-    if (ft_errno != FT_ERR_SUCCESSS)
+    int error_code = ft_global_error_stack_pop_newest();
+    if (error_code != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
+        this->set_error(error_code);
         return ;
     }
     this->reseed(derived_seed);
@@ -485,16 +487,16 @@ float   rng_stream::random_chi_squared(float degrees_of_freedom)
 
 void    rng_stream::set_error(int error_code) const
 {
-    std::lock_guard<std::mutex> lock_guard(this->_mutex);
+    std::lock_guard<ft_errno_mutex_wrapper> lock_guard(ft_errno_mutex());
 
-    ft_errno = error_code;
     this->_error_code = error_code;
+    ft_global_error_stack_push(error_code);
     return ;
 }
 
 int rng_stream::get_error() const
 {
-    std::lock_guard<std::mutex> lock_guard(this->_mutex);
+    std::lock_guard<ft_errno_mutex_wrapper> lock_guard(ft_errno_mutex());
     int error_code;
 
     error_code = this->_error_code;
@@ -506,7 +508,7 @@ const char  *rng_stream::get_error_str() const
     int error_code;
 
     {
-        std::lock_guard<std::mutex> lock_guard(this->_mutex);
+        std::lock_guard<ft_errno_mutex_wrapper> lock_guard(ft_errno_mutex());
 
         error_code = this->_error_code;
     }

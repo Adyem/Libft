@@ -11,9 +11,13 @@ float ft_random_float(void)
     float random_value;
 
     ft_unique_lock<pt_mutex> guard(g_random_engine_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    int error_code = guard.get_error();
+    if (error_code != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(error_code);
         return (0.0f);
+    }
     random_value = distribution(g_random_engine);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (random_value);
 }

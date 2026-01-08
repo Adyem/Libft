@@ -16,23 +16,27 @@ float ft_random_beta(float alpha, float beta)
     ft_init_random_engine();
     if (alpha <= 0.0f || beta <= 0.0f)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0.0f);
     }
     alpha_distribution = std::gamma_distribution<float>(alpha, 1.0f);
     beta_distribution = std::gamma_distribution<float>(beta, 1.0f);
     {
         ft_unique_lock<pt_mutex> guard(g_random_engine_mutex);
+        int error_code = guard.get_error();
 
-        if (guard.get_error() != FT_ERR_SUCCESSS)
+        if (error_code != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(error_code);
             return (0.0f);
+        }
         alpha_sample = alpha_distribution(g_random_engine);
         beta_sample = beta_distribution(g_random_engine);
     }
     sum = alpha_sample + beta_sample;
     if (sum <= 0.0f)
     {
-        ft_errno = FT_ERR_INVALID_STATE;
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return (0.0f);
     }
     result = alpha_sample / sum;
@@ -40,6 +44,6 @@ float ft_random_beta(float alpha, float beta)
         result = 0.0f;
     if (result > 1.0f)
         result = 1.0f;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }

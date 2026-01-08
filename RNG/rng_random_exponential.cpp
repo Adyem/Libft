@@ -11,17 +11,25 @@ float ft_random_exponential(float lambda_value)
     ft_init_random_engine();
     if (lambda_value <= 0.0f)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0.0f);
     }
     uniform_value = ft_random_float();
-    if (ft_errno != FT_ERR_SUCCESSS)
+    int error_code = ft_global_error_stack_pop_newest();
+    if (error_code != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(error_code);
         return (0.0f);
+    }
     if (uniform_value < 0.0000000001f)
         uniform_value = 0.0000000001f;
     result = static_cast<float>(-math_log(uniform_value)) / lambda_value;
     if (ft_errno != FT_ERR_SUCCESSS)
+    {
+        error_code = ft_errno;
+        ft_global_error_stack_push(error_code);
         return (0.0f);
-    ft_errno = FT_ERR_SUCCESSS;
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
