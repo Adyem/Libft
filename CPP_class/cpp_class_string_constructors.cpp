@@ -86,6 +86,8 @@ ft_string::ft_string(const ft_string& other) noexcept
         }
         ft_memcpy(this->_data, other._data, this->_length + 1);
     }
+    if (!this->_data)
+        this->_capacity = 0;
     this->push_error_unlocked(FT_ERR_SUCCESSS);
     this->set_system_error_unlocked(FT_SYS_ERR_SUCCESS);
     return ;
@@ -168,6 +170,8 @@ ft_string& ft_string::operator=(const ft_string& other) noexcept
         }
         ft_memcpy(this->_data, other._data, this->_length + 1);
     }
+    if (!this->_data)
+        this->_capacity = 0;
     this->push_error_unlocked(FT_ERR_SUCCESSS);
     if (other_guard.owns_lock())
         other_guard.unlock();

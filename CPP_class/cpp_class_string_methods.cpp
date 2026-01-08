@@ -326,6 +326,12 @@ void ft_string::resize_unlocked(size_t new_capacity) noexcept
 
 void ft_string::append_char_unlocked(char character) noexcept
 {
+    if (!this->_data)
+    {
+        this->ensure_empty_buffer_unlocked();
+        if (ft_string_current_error() != FT_ERR_SUCCESSS)
+            return ;
+    }
     if (this->_length + 1 >= this->_capacity)
     {
         size_t new_capacity;
@@ -584,6 +590,8 @@ void ft_string::move_unlocked(ft_string &other) noexcept
     this->_length = other._length;
     this->_capacity = other._capacity;
     this->push_error_unlocked(other_error_code);
+    if (!this->_data)
+        this->_capacity = 0;
     other._data = ft_nullptr;
     other._length = 0;
     other._capacity = 0;
@@ -950,16 +958,12 @@ ft_string& ft_string::operator+=(const char* string_value) noexcept
     }
     if (string_value)
     {
-        size_t index;
+        size_t string_length;
 
-        index = 0;
-        while (string_value[index] != '\0')
-        {
-            this->append_char_unlocked(string_value[index]);
-            if (ft_string_current_error() != FT_ERR_SUCCESSS)
-                return (*this);
-            index++;
-        }
+        string_length = ft_strlen_size_t(string_value);
+        this->append_unlocked(string_value, string_length);
+        if (ft_string_current_error() != FT_ERR_SUCCESSS)
+            return (*this);
     }
     this->push_error(FT_ERR_SUCCESSS);
     return (*this);
