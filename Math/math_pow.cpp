@@ -9,12 +9,11 @@ double math_pow(double base_value, int exponent)
 
     result = 1.0;
     exponent_value = static_cast<long long>(exponent);
-    ft_errno = FT_ERR_SUCCESSS;
     if (exponent_value < 0)
     {
         if (math_fabs(base_value) <= DBL_MIN)
         {
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
+            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
             return (math_nan());
         }
         base_value = 1.0 / base_value;
@@ -27,5 +26,6 @@ double math_pow(double base_value, int exponent)
         base_value *= base_value;
         exponent_value /= 2;
     }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }

@@ -7,11 +7,20 @@
 
 static void zero_buffer(char *buffer, size_t buffer_size)
 {
+    unsigned char *buffer_bytes;
+    size_t offset;
+
     if (buffer == ft_nullptr)
         return ;
     if (buffer_size == 0)
         return ;
-    ft_memset(buffer, 0, buffer_size);
+    buffer_bytes = reinterpret_cast<unsigned char *>(buffer);
+    offset = 0;
+    while (offset < buffer_size)
+    {
+        buffer_bytes[offset] = 0;
+        offset++;
+    }
     return ;
 }
 

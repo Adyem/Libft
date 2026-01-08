@@ -7,7 +7,6 @@ double math_exp(double value)
     double result;
     int    iteration;
 
-    ft_errno = FT_ERR_SUCCESSS;
     current_term = 1.0;
     result = 1.0;
     iteration = 1;
@@ -15,7 +14,8 @@ double math_exp(double value)
     {
         current_term *= value / iteration;
         result += current_term;
-        ++iteration;
+        iteration++;
     }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }

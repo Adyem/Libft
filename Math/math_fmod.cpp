@@ -28,28 +28,27 @@ double math_fmod(double value, double modulus)
 
     if (math_isnan(value) || math_isnan(modulus))
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (math_nan());
     }
     if (math_is_infinite_internal(value) != 0)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (math_nan());
     }
     if (math_fabs(modulus) <= std::numeric_limits<double>::denorm_min())
     {
-        ft_errno = FT_ERR_OUT_OF_RANGE;
+        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
         return (math_nan());
     }
     if (math_is_infinite_internal(modulus) != 0)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (value);
     }
     remainder_value = std::fmod(value, modulus);
     if (math_fabs(remainder_value) <= std::numeric_limits<double>::denorm_min())
         remainder_value = value * 0.0;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (remainder_value);
 }
-
