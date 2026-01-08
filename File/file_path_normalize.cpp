@@ -7,22 +7,40 @@
 ft_string file_path_normalize(const char *path)
 {
     ft_string empty_result;
+    int error_code;
+
     if (path == ft_nullptr)
     {
-        if (empty_result.get_error() != FT_ERR_SUCCESSS)
+        error_code = empty_result.get_error();
+        if (error_code != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(error_code);
             return (empty_result);
+        }
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (empty_result);
     }
     ft_string original(path);
-    if (original.get_error())
+    error_code = original.get_error();
+    if (error_code != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(error_code);
         return (original);
+    }
     char *data = original.print();
     if (!data)
+    {
+        ft_global_error_stack_push(FT_ERR_INTERNAL);
         return (empty_result);
+    }
     cmp_normalize_slashes(data);
     ft_string result;
-    if (result.get_error())
+    error_code = result.get_error();
+    if (error_code != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(error_code);
         return (result);
+    }
     size_t index = 0;
     char path_sep = cmp_path_separator();
     while (data[index] != '\0')
@@ -41,7 +59,12 @@ ft_string file_path_normalize(const char *path)
             ++index;
         }
     }
-    if (result.get_error())
+    error_code = result.get_error();
+    if (error_code != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(error_code);
         return (result);
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }

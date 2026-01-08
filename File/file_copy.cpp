@@ -22,23 +22,44 @@ int file_copy_with_buffer(const char *source_path, const char *destination_path,
 {
     int source_flags;
     int destination_flags;
+    int error_code;
 
     if (source_path == ft_nullptr || destination_path == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     ft_file source_file;
     ft_file destination_file;
     source_flags = O_RDONLY | FILE_BINARY_FLAG;
     if (source_file.open(source_path, source_flags) != 0)
+    {
+        error_code = source_file.get_error();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_FILE_OPEN_FAILED;
+        ft_global_error_stack_push(error_code);
         return (-1);
+    }
     destination_flags = O_WRONLY | O_CREAT | O_TRUNC | FILE_BINARY_FLAG;
     if (destination_file.open(destination_path, destination_flags, 0644) != 0)
+    {
+        error_code = destination_file.get_error();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_FILE_OPEN_FAILED;
+        ft_global_error_stack_push(error_code);
         return (-1);
+    }
     if (ft_file_stream_copy(source_file, destination_file, buffer_size) != 0)
+    {
+        error_code = destination_file.get_error();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = source_file.get_error();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_IO;
+        ft_global_error_stack_push(error_code);
         return (-1);
-    ft_errno = FT_ERR_SUCCESSS;
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
