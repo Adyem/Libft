@@ -355,6 +355,12 @@ void ft_string::append_unlocked(const char *string, size_t length) noexcept
         this->push_error_unlocked(FT_ERR_SUCCESSS);
         return ;
     }
+    if (!this->_data)
+    {
+        this->ensure_empty_buffer_unlocked();
+        if (ft_string_current_error() != FT_ERR_SUCCESSS)
+            return ;
+    }
     if (this->_length + length >= this->_capacity)
     {
         new_capacity = this->_capacity;
