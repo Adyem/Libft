@@ -14,20 +14,36 @@ float ft_random_normal(void)
 
     ft_init_random_engine();
     uniform_one = ft_random_float();
-    if (ft_errno != FT_ERR_SUCCESSS)
+    int error_code = ft_global_error_stack_pop_newest();
+    if (error_code != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(error_code);
         return (0.0f);
+    }
     if (uniform_one < 0.0000000001f)
         uniform_one = 0.0000000001f;
     uniform_two = ft_random_float();
-    if (ft_errno != FT_ERR_SUCCESSS)
+    error_code = ft_global_error_stack_pop_newest();
+    if (error_code != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(error_code);
         return (0.0f);
+    }
     radius = static_cast<float>(math_sqrt(-2.0 * math_log(uniform_one)));
     if (ft_errno != FT_ERR_SUCCESSS)
+    {
+        error_code = ft_errno;
+        ft_global_error_stack_push(error_code);
         return (0.0f);
+    }
     angle = 2.0f * pi_value * uniform_two;
     result = radius * static_cast<float>(math_cos(angle));
     if (ft_errno != FT_ERR_SUCCESSS)
+    {
+        error_code = ft_errno;
+        ft_global_error_stack_push(error_code);
         return (0.0f);
-    ft_errno = FT_ERR_SUCCESSS;
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }

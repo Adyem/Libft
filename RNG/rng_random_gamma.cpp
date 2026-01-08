@@ -12,17 +12,21 @@ float ft_random_gamma(float shape, float scale)
     ft_init_random_engine();
     if (shape <= 0.0f || scale <= 0.0f)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0.0f);
     }
     distribution = std::gamma_distribution<float>(shape, scale);
     {
         ft_unique_lock<pt_mutex> guard(g_random_engine_mutex);
+        int error_code = guard.get_error();
 
-        if (guard.get_error() != FT_ERR_SUCCESSS)
+        if (error_code != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(error_code);
             return (0.0f);
+        }
         sample_value = distribution(g_random_engine);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (sample_value);
 }

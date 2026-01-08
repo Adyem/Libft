@@ -5,13 +5,24 @@ void ft_generate_uuid(char out[37])
 {
     if (out == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     unsigned char uuid_bytes[16];
     if (rng_secure_bytes(uuid_bytes, 16) != 0)
     {
+        int error_code = ft_global_error_stack_pop_newest();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_INTERNAL;
         out[0] = '\0';
+        ft_global_error_stack_push(error_code);
+        return ;
+    }
+    int error_code = ft_global_error_stack_pop_newest();
+    if (error_code != FT_ERR_SUCCESSS)
+    {
+        out[0] = '\0';
+        ft_global_error_stack_push(error_code);
         return ;
     }
     uuid_bytes[6] = static_cast<unsigned char>((uuid_bytes[6] & 0x0F) | 0x40);
@@ -33,7 +44,6 @@ void ft_generate_uuid(char out[37])
         byte_index++;
     }
     out[output_index] = '\0';
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
-
