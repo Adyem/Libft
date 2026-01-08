@@ -37,6 +37,9 @@ the function must push a success entry to report that it completed successfully.
 If a function completes successfully without having pushed any entry,
 it must push exactly one success entry.
 
+Functions that report error text or terminate the process (such as ft_strerror, ft_perror, ft_exit, or any helper that exits)
+must not modify the error stack.
+
 #Errno Global Error Stack
 
 Define and use a global error stack in the Errno module so non-class functions can record errors

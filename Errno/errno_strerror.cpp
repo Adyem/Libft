@@ -103,13 +103,18 @@ const char* ft_strerror(int error_code)
 {
     const char *custom_message;
     const char *system_message;
+    const char *error_message;
 
-    ft_errno = FT_ERR_SUCCESSS;
     custom_message = ft_find_custom_error(error_code);
     if (custom_message != NULL)
-        return (custom_message);
-    system_message = cmp_system_strerror(error_code);
-    if (system_message != NULL)
-        return (system_message);
-    return ("Unrecognized error code");
+        error_message = custom_message;
+    else
+    {
+        system_message = cmp_system_strerror(error_code);
+        if (system_message != NULL)
+            error_message = system_message;
+        else
+            error_message = "Unrecognized error code";
+    }
+    return (error_message);
 }

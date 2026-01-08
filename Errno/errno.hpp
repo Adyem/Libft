@@ -12,6 +12,13 @@ int &ft_sys_errno_reference(void);
 int ft_map_system_error(int error_code);
 int ft_set_errno_from_system_error(int error_code);
 void ft_global_error_stack_push(int error_code);
+int ft_global_error_stack_pop_last(void);
+int ft_global_error_stack_pop_newest(void);
+void ft_global_error_stack_pop_all(void);
+int ft_global_error_stack_error_at(ft_size_t index);
+int ft_global_error_stack_last_error(void);
+const char *ft_global_error_stack_error_str_at(ft_size_t index);
+const char *ft_global_error_stack_last_error_str(void);
 
 enum ft_sys_error_t
 {

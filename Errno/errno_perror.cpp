@@ -3,13 +3,12 @@
 
 void    ft_perror(const char *error_msg)
 {
-    int saved_errno;
+    int error_code;
 
-    saved_errno = ft_errno;
+    error_code = ft_global_error_stack_last_error();
     if (!error_msg)
-        pf_printf_fd(2, "%s\n", ft_strerror(saved_errno));
+        pf_printf_fd(2, "%s\n", ft_strerror(error_code));
     else
-        pf_printf_fd(2, "%s: %s\n", error_msg, ft_strerror(saved_errno));
-    ft_errno = FT_ERR_SUCCESSS;
+        pf_printf_fd(2, "%s: %s\n", error_msg, ft_strerror(error_code));
     return ;
 }

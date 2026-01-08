@@ -14,10 +14,17 @@ static ft_string normalize_path(ft_string path)
 int file_dir_exists(const char *rel_path)
 {
     ft_string path = normalize_path(rel_path);
-    if (path.get_error())
+    int error_code;
+    int result;
+
+    error_code = path.get_error();
+    if (error_code != FT_ERR_SUCCESSS)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
-    return (cmp_directory_exists(path.c_str()));
+    result = cmp_directory_exists(path.c_str());
+    error_code = ft_errno;
+    ft_global_error_stack_push(error_code);
+    return (result);
 }

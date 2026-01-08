@@ -35,7 +35,7 @@ ft_file_watch::~ft_file_watch()
 void ft_file_watch::set_error(int error) const
 {
     this->_error_code = error;
-    ft_errno = error;
+    ft_global_error_stack_push(error);
     return ;
 }
 
@@ -187,7 +187,7 @@ int ft_file_watch::watch_directory(const char *path, void (*callback)(const char
         final_errno = status;
     else
         final_errno = FT_ERR_SUCCESSS;
-    ft_errno = final_errno;
+    ft_global_error_stack_push(final_errno);
     return (result);
 }
 
@@ -231,7 +231,7 @@ void ft_file_watch::stop()
         final_errno = status;
     else
         final_errno = FT_ERR_SUCCESSS;
-    ft_errno = final_errno;
+    ft_global_error_stack_push(final_errno);
     return ;
 }
 
@@ -279,7 +279,7 @@ bool ft_file_watch::snapshot_callback(void (**callback)(const char *, int, void 
     if (!running)
     {
         mutex_guard.unlock();
-        ft_errno = FT_ERR_INVALID_STATE;
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return (false);
     }
     *callback = this->_callback;
@@ -293,9 +293,9 @@ bool ft_file_watch::snapshot_callback(void (**callback)(const char *, int, void 
     }
     mutex_guard.unlock();
     if (status != FT_ERR_SUCCESSS)
-        ft_errno = status;
+        ft_global_error_stack_push(status);
     else
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);
 }
 
@@ -313,12 +313,12 @@ bool ft_file_watch::get_linux_handles(int &fd) const
     if (!running || this->_fd < 0)
     {
         mutex_guard.unlock();
-        ft_errno = FT_ERR_INVALID_STATE;
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return (false);
     }
     fd = this->_fd;
     mutex_guard.unlock();
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);
 }
 #elif defined(__APPLE__) || defined(__FreeBSD__)
@@ -335,13 +335,13 @@ bool ft_file_watch::get_bsd_handles(int &kqueue_handle, int &fd) const
     if (!running || this->_kqueue < 0 || this->_fd < 0)
     {
         mutex_guard.unlock();
-        ft_errno = FT_ERR_INVALID_STATE;
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return (false);
     }
     kqueue_handle = this->_kqueue;
     fd = this->_fd;
     mutex_guard.unlock();
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);
 }
 #elif defined(_WIN32)
@@ -358,12 +358,12 @@ bool ft_file_watch::get_windows_handle(void *&handle) const
     if (!running || this->_handle == ft_nullptr)
     {
         mutex_guard.unlock();
-        ft_errno = FT_ERR_INVALID_STATE;
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return (false);
     }
     handle = this->_handle;
     mutex_guard.unlock();
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);
 }
 #endif
@@ -379,7 +379,7 @@ int ft_file_watch::get_error() const
     }
     error_code = this->_error_code;
     mutex_guard.unlock();
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (error_code);
 }
 
@@ -396,7 +396,7 @@ const char *ft_file_watch::get_error_str() const
     error_code = this->_error_code;
     error_string = ft_strerror(error_code);
     mutex_guard.unlock();
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (error_string);
 }
 
