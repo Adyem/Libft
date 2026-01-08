@@ -64,6 +64,13 @@ This registry enumerates every error code defined in [`Errno/errno.hpp`](errno.h
 | `FT_ERR_CRYPTO_INVALID_PADDING` | 57 | Cryptographic operation encountered invalid padding. | Encryption module |
 | `FT_ERR_DATABASE_UNAVAILABLE` | 58 | Database unavailable. | Database integrations |
 | `FT_ERR_TIMEOUT` | 59 | Operation timed out. | Networking timeouts, API clients |
+| `FT_ERR_SYS_NO_MEMORY` | 60 | System memory allocation failed. | Errno module (system wrappers) |
+| `FT_ERR_SYS_INVALID_STATE` | 61 | System state was invalid. | Errno module (system wrappers) |
+| `FT_ERR_SYS_MUTEX_LOCK_FAILED` | 62 | System mutex lock failed. | Errno module (mutex wrappers) |
+| `FT_ERR_SYS_MUTEX_ALREADY_LOCKED` | 63 | System mutex was already locked. | Errno module (mutex wrappers) |
+| `FT_ERR_SYS_MUTEX_NOT_OWNER` | 64 | System mutex unlock attempted by non-owner. | Errno module (mutex wrappers) |
+| `FT_ERR_SYS_MUTEX_UNLOCK_FAILED` | 65 | System mutex unlock failed. | Errno module (mutex wrappers) |
+| `FT_ERR_SYS_INTERNAL` | 66 | Internal system error. | Errno module (system wrappers) |
 | `FT_ERR_SSL_SYSCALL_ERROR` | 2005 | SSL syscall failure propagated from platform `errno`. | Networking TLS wrappers |
 | `FT_ERR_HTTP_PROTOCOL_MISMATCH` | 2006 | Server replied with a different HTTP version than requested. | API HTTP clients |
 | `FT_ERR_API_CIRCUIT_OPEN` | 2007 | API circuit breaker prevented request execution. | API HTTP clients |
@@ -72,4 +79,4 @@ This registry enumerates every error code defined in [`Errno/errno.hpp`](errno.h
 
 * When adding new error codes, update this registry and provide guidance on the modules that surface the value.
 * Modules should document code-specific remediation steps in their README entries and keep error propagation consistent with this table.
-* Tests should exercise both success and failure paths to ensure `ft_errno` is set and cleared as described here.
+* Tests should exercise both success and failure paths to ensure error codes are pushed and cleared as described here.
