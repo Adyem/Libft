@@ -11,11 +11,11 @@ long ft_atol(const char *string)
     const unsigned long long positive_limit = static_cast<unsigned long long>(FT_LONG_MAX);
     const unsigned long long negative_limit = static_cast<unsigned long long>(FT_LONG_MAX) + 1ULL;
     bool digit_found = false;
+    int error_code = FT_ERR_SUCCESSS;
 
-    ft_errno = FT_ERR_SUCCESSS;
     if (string == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
     while (string[index] == ' ' || ((string[index] >= '\t')
@@ -37,13 +37,13 @@ long ft_atol(const char *string)
         {
             if (result > positive_limit / 10)
             {
-                ft_errno = FT_ERR_OUT_OF_RANGE;
+                ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
                 return (FT_LONG_MAX);
             }
             if (result == positive_limit / 10
                 && static_cast<unsigned long long>(digit) > positive_limit % 10)
             {
-                ft_errno = FT_ERR_OUT_OF_RANGE;
+                ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
                 return (FT_LONG_MAX);
             }
         }
@@ -51,13 +51,13 @@ long ft_atol(const char *string)
         {
             if (result > negative_limit / 10)
             {
-                ft_errno = FT_ERR_OUT_OF_RANGE;
+                ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
                 return (FT_LONG_MIN);
             }
             if (result == negative_limit / 10
                 && static_cast<unsigned long long>(digit) > negative_limit % 10)
             {
-                ft_errno = FT_ERR_OUT_OF_RANGE;
+                ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
                 return (FT_LONG_MIN);
             }
         }
@@ -66,30 +66,40 @@ long ft_atol(const char *string)
     }
     if (digit_found == false)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
     if (string[index] != '\0')
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-    if (ft_errno != FT_ERR_SUCCESSS)
+        error_code = FT_ERR_INVALID_ARGUMENT;
+    if (error_code != FT_ERR_SUCCESSS)
     {
         if (sign == -1)
         {
             if (result == negative_limit)
+            {
+                ft_global_error_stack_push(error_code);
                 return (FT_LONG_MIN);
+            }
             long signed_result = -static_cast<long>(result);
 
+            ft_global_error_stack_push(error_code);
             return (signed_result);
         }
+        ft_global_error_stack_push(error_code);
         return (static_cast<long>(result));
     }
     if (sign == -1)
     {
         if (result == negative_limit)
+        {
+            ft_global_error_stack_push(FT_ERR_SUCCESSS);
             return (FT_LONG_MIN);
+        }
         long signed_result = -static_cast<long>(result);
 
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (signed_result);
     }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (static_cast<long>(result));
 }

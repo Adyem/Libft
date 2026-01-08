@@ -4,20 +4,26 @@
 
 char    *ft_strchr(const char *string, int char_to_find)
 {
-    ft_errno = FT_ERR_SUCCESSS;
     if (!string)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     char target_char = static_cast<char>(char_to_find);
     while (*string)
     {
         if (*string == target_char)
+        {
+            ft_global_error_stack_push(FT_ERR_SUCCESSS);
             return (const_cast<char *>(string));
+        }
         ++string;
     }
     if (target_char == '\0')
+    {
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (const_cast<char *>(string));
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (ft_nullptr);
 }

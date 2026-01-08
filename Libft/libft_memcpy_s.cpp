@@ -7,15 +7,12 @@
 
 static void zero_buffer(void *buffer, size_t buffer_size)
 {
-    int saved_errno;
-
     if (buffer == ft_nullptr)
         return ;
     if (buffer_size == 0)
         return ;
-    saved_errno = ft_errno;
     ft_memset(buffer, 0, buffer_size);
-    ft_errno = saved_errno;
+    ft_global_error_stack_pop_newest();
     return ;
 }
 
@@ -24,14 +21,17 @@ int ft_memcpy_s(void *destination, size_t destination_size, const void *source, 
     void *copy_result;
     char *destination_bytes;
     const char *source_bytes;
+    int error_code;
 
-    ft_errno = FT_ERR_SUCCESSS;
     if (number_of_bytes == 0)
+    {
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (0);
+    }
     if (destination == ft_nullptr || source == ft_nullptr)
     {
         zero_buffer(destination, destination_size);
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     destination_bytes = static_cast<char *>(destination);
@@ -39,24 +39,27 @@ int ft_memcpy_s(void *destination, size_t destination_size, const void *source, 
     if (destination_size < number_of_bytes)
     {
         zero_buffer(destination, destination_size);
-        ft_errno = FT_ERR_OUT_OF_RANGE;
+        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
         return (-1);
     }
     if ((destination_bytes < source_bytes + number_of_bytes)
         && (source_bytes < destination_bytes + number_of_bytes))
     {
         zero_buffer(destination, destination_size);
-        ft_errno = FT_ERR_OVERLAP;
+        ft_global_error_stack_push(FT_ERR_OVERLAP);
         return (-1);
     }
     copy_result = ft_memcpy(destination, source, number_of_bytes);
-    if (ft_errno != FT_ERR_SUCCESSS)
+    error_code = ft_global_error_stack_pop_newest();
+    if (error_code != FT_ERR_SUCCESSS || copy_result == ft_nullptr)
     {
         zero_buffer(destination, destination_size);
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
-    if (copy_result == ft_nullptr)
-        return (-1);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 #endif

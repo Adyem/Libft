@@ -5,17 +5,22 @@
 
 void* ft_memcpy(void* destination, const void* source, size_t size)
 {
-    ft_errno = FT_ERR_SUCCESSS;
     if (size == 0)
+    {
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (destination);
+    }
     if (destination == ft_nullptr || source == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
 
     if (destination == source)
+    {
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (destination);
+    }
 
     unsigned char*       dest = static_cast<unsigned char*>(destination);
     const unsigned char* src = static_cast<const unsigned char*>(source);
@@ -37,7 +42,7 @@ void* ft_memcpy(void* destination, const void* source, size_t size)
         src_limit = UINTPTR_MAX;
     if (dest_address < src_limit && src_address < dest_limit)
     {
-        ft_errno = FT_ERR_OVERLAP;
+        ft_global_error_stack_push(FT_ERR_OVERLAP);
         return (destination);
     }
 
@@ -49,5 +54,6 @@ void* ft_memcpy(void* destination, const void* source, size_t size)
         --size;
     }
 
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (destination);
 }

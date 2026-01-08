@@ -18,29 +18,38 @@ static void zero_buffer(void *buffer, size_t buffer_size)
 int ft_memmove_s(void *destination, size_t destination_size, const void *source, size_t number_of_bytes)
 {
     void *move_result;
+    int error_code;
 
-    ft_errno = FT_ERR_SUCCESSS;
     if (number_of_bytes == 0)
+    {
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (0);
+    }
     if (destination == ft_nullptr || source == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (destination_size < number_of_bytes)
     {
         zero_buffer(destination, destination_size);
-        ft_errno = FT_ERR_OUT_OF_RANGE;
+        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
         return (-1);
     }
     move_result = ft_memmove(destination, source, number_of_bytes);
-    if (ft_errno != FT_ERR_SUCCESSS)
+    error_code = ft_global_error_stack_pop_newest();
+    if (error_code != FT_ERR_SUCCESSS)
     {
         zero_buffer(destination, destination_size);
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     if (move_result == ft_nullptr)
+    {
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 #endif

@@ -4,10 +4,9 @@
 
 void ft_striteri(char *string, void (*function)(unsigned int, char *))
 {
-    ft_errno = FT_ERR_SUCCESSS;
     if (string == ft_nullptr || function == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     unsigned int index = 0;
@@ -16,4 +15,6 @@ void ft_striteri(char *string, void (*function)(unsigned int, char *))
         function(index, &string[index]);
         index++;
     }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return ;
 }

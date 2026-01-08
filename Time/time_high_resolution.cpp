@@ -6,20 +6,29 @@
 bool    time_high_resolution_now(t_high_resolution_time_point *time_point)
 {
     long long   nanoseconds;
+    int         error_code;
 
     if (!time_point)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
     if (cmp_high_resolution_time(&nanoseconds) != 0)
     {
-        if (ft_errno == FT_ERR_SUCCESSS)
-            ft_errno = FT_ERR_TERMINATED;
+        error_code = ft_global_error_stack_pop_newest();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_TERMINATED;
+        ft_global_error_stack_push(error_code);
+        return (false);
+    }
+    error_code = ft_global_error_stack_pop_newest();
+    if (error_code != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(error_code);
         return (false);
     }
     time_point->nanoseconds = nanoseconds;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);
 }
 

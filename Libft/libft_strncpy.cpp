@@ -6,12 +6,14 @@ char *ft_strncpy(char *destination, const char *source, size_t number_of_charact
 {
     size_t index;
 
-    ft_errno = FT_ERR_SUCCESSS;
     if (number_of_characters == 0)
+    {
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (destination);
+    }
     if (destination == ft_nullptr || source == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     index = 0;
@@ -25,5 +27,6 @@ char *ft_strncpy(char *destination, const char *source, size_t number_of_charact
         destination[index] = '\0';
         index++;
     }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (destination);
 }

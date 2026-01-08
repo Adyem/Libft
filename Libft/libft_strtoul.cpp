@@ -24,22 +24,22 @@ unsigned long ft_strtoul(const char *input_string, char **end_pointer, int numer
     bool digit_processed = false;
     unsigned long base_value;
     unsigned long limit_value;
+    int error_code = FT_ERR_SUCCESSS;
 
     if (current_character == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         if (end_pointer != ft_nullptr)
             *end_pointer = ft_nullptr;
         return (0UL);
     }
     if (numeric_base != 0 && (numeric_base < 2 || numeric_base > 36))
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         if (end_pointer != ft_nullptr)
             *end_pointer = const_cast<char *>(input_string);
         return (0UL);
     }
-    ft_errno = FT_ERR_SUCCESSS;
     while (*current_character == ' ' || (*current_character >= '\t'
                 && *current_character <= '\r'))
         ++current_character;
@@ -96,7 +96,7 @@ unsigned long ft_strtoul(const char *input_string, char **end_pointer, int numer
     }
     if (!digit_processed)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         if (end_pointer != ft_nullptr)
             *end_pointer = const_cast<char *>(input_string);
         return (0UL);
@@ -104,13 +104,18 @@ unsigned long ft_strtoul(const char *input_string, char **end_pointer, int numer
     if (end_pointer)
         *end_pointer = const_cast<char *>(current_character);
     if (overflow_detected)
-        ft_errno = FT_ERR_OUT_OF_RANGE;
+        error_code = FT_ERR_OUT_OF_RANGE;
     if (sign_value < 0)
     {
         if (overflow_detected)
+        {
+            ft_global_error_stack_push(error_code);
             return (limit_value);
+        }
         unsigned long negated_value = 0UL - accumulated_value;
+        ft_global_error_stack_push(error_code);
         return (negated_value);
     }
+    ft_global_error_stack_push(error_code);
     return (accumulated_value);
 }

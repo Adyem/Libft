@@ -14,10 +14,9 @@ int ft_validate_int(const char *input)
 
     if (input == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (FT_FAILURE);
     }
-    ft_errno = FT_ERR_SUCCESSS;
     result = 0;
     maximum_value = static_cast<long>(FT_INT_MAX);
     minimum_value = static_cast<long>(FT_INT_MIN);
@@ -31,7 +30,7 @@ int ft_validate_int(const char *input)
     }
     if (input[index] == '\0')
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (FT_FAILURE);
     }
     while (input[index] != '\0')
@@ -43,7 +42,7 @@ int ft_validate_int(const char *input)
             {
                 if (result > (maximum_value - digit) / 10)
                 {
-                    ft_errno = FT_ERR_OUT_OF_RANGE;
+                    ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
                     return (FT_FAILURE);
                 }
                 result = (result * 10) + digit;
@@ -52,7 +51,7 @@ int ft_validate_int(const char *input)
             {
                 if (result < (minimum_value + digit) / 10)
                 {
-                    ft_errno = FT_ERR_OUT_OF_RANGE;
+                    ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
                     return (FT_FAILURE);
                 }
                 result = (result * 10) - digit;
@@ -61,9 +60,10 @@ int ft_validate_int(const char *input)
         }
         else
         {
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
+            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
             return (FT_FAILURE);
         }
     }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (FT_SUCCESS);
 }

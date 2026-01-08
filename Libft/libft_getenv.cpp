@@ -10,21 +10,33 @@
 char    *ft_getenv(const char *name)
 {
     char    *value;
-    int     stored_errno;
+    int     error_code;
 
-    ft_errno = FT_ERR_SUCCESSS;
     if (name == ft_nullptr || *name == '\0')
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     if (ft_environment_lock() != 0)
+    {
+        error_code = ft_global_error_stack_pop_newest();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_MUTEX_ALREADY_LOCKED;
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
+    }
+    ft_global_error_stack_pop_newest();
     value = getenv(name);
-    stored_errno = ft_errno;
     if (ft_environment_unlock() != 0)
+    {
+        error_code = ft_global_error_stack_pop_newest();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_MUTEX_NOT_OWNER;
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
-    ft_errno = stored_errno;
+    }
+    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (value);
 }
 #endif

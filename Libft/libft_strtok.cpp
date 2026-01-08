@@ -20,7 +20,6 @@ char    *ft_strtok(char *string, const char *delimiters)
     size_t          new_delimiters_hash;
     unsigned char   delimiter_character_value;
 
-    ft_errno = FT_ERR_SUCCESSS;
     if (string != ft_nullptr)
     {
         saved_string = string;
@@ -31,11 +30,14 @@ char    *ft_strtok(char *string, const char *delimiters)
     }
     if (delimiters == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     if (saved_string == ft_nullptr)
+    {
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (ft_nullptr);
+    }
     new_delimiters_hash = 5381;
     delimiter_index = 0;
     while (delimiters[delimiter_index] != '\0')
@@ -82,6 +84,7 @@ char    *ft_strtok(char *string, const char *delimiters)
     if (*current_pointer == '\0')
     {
         saved_string = ft_nullptr;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (ft_nullptr);
     }
     token_start = current_pointer;
@@ -99,6 +102,6 @@ char    *ft_strtok(char *string, const char *delimiters)
         *current_pointer = '\0';
         saved_string = current_pointer + 1;
     }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (token_start);
 }
-

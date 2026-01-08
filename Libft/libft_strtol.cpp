@@ -25,22 +25,22 @@ long ft_strtol(const char *input_string, char **end_pointer, int numeric_base)
     unsigned long positive_limit;
     unsigned long negative_limit;
     unsigned long base_value;
+    int error_code = FT_ERR_SUCCESSS;
 
     if (current_character == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         if (end_pointer != ft_nullptr)
             *end_pointer = ft_nullptr;
         return (0L);
     }
     if (numeric_base != 0 && (numeric_base < 2 || numeric_base > 36))
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         if (end_pointer != ft_nullptr)
             *end_pointer = const_cast<char *>(input_string);
         return (0L);
     }
-    ft_errno = FT_ERR_SUCCESSS;
     while (*current_character == ' ' || (*current_character >= '\t'
                 && *current_character <= '\r'))
         ++current_character;
@@ -106,7 +106,7 @@ long ft_strtol(const char *input_string, char **end_pointer, int numeric_base)
     }
     if (!digit_processed)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         if (end_pointer != ft_nullptr)
             *end_pointer = const_cast<char *>(input_string);
         return (0L);
@@ -114,14 +114,19 @@ long ft_strtol(const char *input_string, char **end_pointer, int numeric_base)
     if (end_pointer)
         *end_pointer = const_cast<char *>(current_character);
     if (overflow_detected)
-        ft_errno = FT_ERR_OUT_OF_RANGE;
+        error_code = FT_ERR_OUT_OF_RANGE;
     if (sign_value < 0)
     {
         if (accumulated_value > positive_limit)
+        {
+            ft_global_error_stack_push(error_code);
             return (FT_LONG_MIN);
+        }
         long result = static_cast<long>(accumulated_value);
+        ft_global_error_stack_push(error_code);
         return (-result);
     }
     long result = static_cast<long>(accumulated_value);
+    ft_global_error_stack_push(error_code);
     return (result);
 }

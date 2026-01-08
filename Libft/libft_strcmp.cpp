@@ -4,10 +4,9 @@
 
 int    ft_strcmp(const char *string1, const char *string2)
 {
-    ft_errno = FT_ERR_SUCCESSS;
     if (string1 == ft_nullptr || string2 == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     while (*string1 != '\0' && static_cast<unsigned char>(*string1) == static_cast<unsigned char>(*string2))
@@ -20,5 +19,6 @@ int    ft_strcmp(const char *string1, const char *string2)
     int left_value = static_cast<int>(left_character);
     int right_value = static_cast<int>(right_character);
     int result = left_value - right_value;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }

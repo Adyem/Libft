@@ -8,29 +8,30 @@ size_t ft_strlcat(char *destination, const char *source, size_t buffer_size)
     size_t source_length;
     size_t copy_index;
 
-    ft_errno = FT_ERR_SUCCESSS;
     if (source == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
     source_length = ft_strlen_size_t(source);
-    if (ft_errno != FT_ERR_SUCCESSS)
-        return (0);
     if (buffer_size == 0)
     {
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (source_length);
     }
     if (destination == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
     destination_length = 0;
     while (destination_length < buffer_size && destination[destination_length] != '\0')
         destination_length++;
     if (destination_length == buffer_size)
+    {
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (buffer_size + source_length);
+    }
     copy_index = 0;
     while ((destination_length + copy_index + 1) < buffer_size && source[copy_index])
     {
@@ -38,5 +39,6 @@ size_t ft_strlcat(char *destination, const char *source, size_t buffer_size)
         copy_index++;
     }
     destination[destination_length + copy_index] = '\0';
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (destination_length + source_length);
 }

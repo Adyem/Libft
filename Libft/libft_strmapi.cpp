@@ -5,19 +5,24 @@
 
 char *ft_strmapi(const char *string, char (*function)(unsigned int, char))
 {
-    ft_errno = FT_ERR_SUCCESSS;
+    int length_error;
+
     if (string == ft_nullptr || function == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     size_t length = ft_strlen_size_t(string);
-    if (ft_errno != FT_ERR_SUCCESSS)
+    length_error = ft_global_error_stack_pop_newest();
+    if (length_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(length_error);
         return (ft_nullptr);
+    }
     char *result = static_cast<char*>(cma_malloc(length + 1));
     if (result == ft_nullptr)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     unsigned int index = 0;
@@ -27,5 +32,6 @@ char *ft_strmapi(const char *string, char (*function)(unsigned int, char))
         index++;
     }
     result[length] = '\0';
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }

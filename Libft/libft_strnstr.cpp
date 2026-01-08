@@ -9,32 +9,38 @@ char    *ft_strnstr(const char *haystack, const char *needle, size_t max_length)
     char    *haystack_pointer;
     size_t  needle_length;
 
-    ft_errno = FT_ERR_SUCCESSS;
     if (needle == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     if (max_length == 0)
     {
-        ft_errno = FT_ERR_SUCCESSS;
         if (needle[0] == '\0')
+        {
+            ft_global_error_stack_push(FT_ERR_SUCCESSS);
             return (const_cast<char *>(haystack));
+        }
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (ft_nullptr);
     }
     if (haystack == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     needle_length = ft_strlen_size_t(needle);
-    if (ft_errno != FT_ERR_SUCCESSS)
-        return (ft_nullptr);
     haystack_pointer = const_cast<char *>(haystack);
     if (needle_length > max_length)
+    {
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (ft_nullptr);
+    }
     if (needle_length == 0)
+    {
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (haystack_pointer);
+    }
     haystack_index = 0;
     while (haystack_pointer[haystack_index] != '\0' && haystack_index < max_length)
     {
@@ -47,8 +53,12 @@ char    *ft_strnstr(const char *haystack, const char *needle, size_t max_length)
             match_index++;
         }
         if (match_index == needle_length)
+        {
+            ft_global_error_stack_push(FT_ERR_SUCCESSS);
             return (haystack_pointer + haystack_index);
+        }
         haystack_index++;
     }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (ft_nullptr);
 }

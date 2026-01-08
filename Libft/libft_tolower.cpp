@@ -4,10 +4,9 @@
 
 void ft_to_lower(char *string)
 {
-    ft_errno = FT_ERR_SUCCESSS;
     if (string == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     while (*string != '\0')
@@ -16,5 +15,6 @@ void ft_to_lower(char *string)
             *string += 32;
         string++;
     }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }

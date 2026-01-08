@@ -31,14 +31,15 @@ static int assign_locale(const char *locale_name, std::locale &locale_object)
     }
     catch (const std::bad_alloc &)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (-1);
     }
     catch (const std::runtime_error &)
     {
-        ft_errno = FT_ERR_CONFIGURATION;
+        ft_global_error_stack_push(FT_ERR_CONFIGURATION);
         return (-1);
     }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -49,17 +50,25 @@ int su_locale_compare(const char *left, const char *right, const char *locale_na
     size_t left_length;
     size_t right_length;
     int comparison_value;
+    int error_code;
 
     if (left == ft_nullptr || right == ft_nullptr || result == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
-    ft_errno = FT_ERR_SUCCESSS;
     if (assign_locale(locale_name, locale_object) != 0)
     {
-        if (ft_errno == FT_ERR_SUCCESSS)
-            ft_errno = FT_ERR_CONFIGURATION;
+        error_code = ft_global_error_stack_pop_newest();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_CONFIGURATION;
+        ft_global_error_stack_push(error_code);
+        return (-1);
+    }
+    error_code = ft_global_error_stack_pop_newest();
+    if (error_code != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     try
@@ -68,18 +77,19 @@ int su_locale_compare(const char *left, const char *right, const char *locale_na
     }
     catch (const std::bad_cast &)
     {
-        ft_errno = FT_ERR_CONFIGURATION;
+        ft_global_error_stack_push(FT_ERR_CONFIGURATION);
         return (-1);
     }
     catch (const std::bad_alloc &)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (-1);
     }
     left_length = std::char_traits<char>::length(left);
     right_length = std::char_traits<char>::length(right);
     comparison_value = collate_facet->compare(left, left + left_length, right, right + right_length);
     *result = comparison_value;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -90,17 +100,25 @@ int su_locale_casefold(const char *input, const char *locale_name, ft_string &ou
     size_t input_length;
     std::string transformed_string;
     size_t index;
+    int error_code;
 
     if (input == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
-    ft_errno = FT_ERR_SUCCESSS;
     if (assign_locale(locale_name, locale_object) != 0)
     {
-        if (ft_errno == FT_ERR_SUCCESSS)
-            ft_errno = FT_ERR_CONFIGURATION;
+        error_code = ft_global_error_stack_pop_newest();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_CONFIGURATION;
+        ft_global_error_stack_push(error_code);
+        return (-1);
+    }
+    error_code = ft_global_error_stack_pop_newest();
+    if (error_code != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     try
@@ -109,12 +127,12 @@ int su_locale_casefold(const char *input, const char *locale_name, ft_string &ou
     }
     catch (const std::bad_cast &)
     {
-        ft_errno = FT_ERR_CONFIGURATION;
+        ft_global_error_stack_push(FT_ERR_CONFIGURATION);
         return (-1);
     }
     catch (const std::bad_alloc &)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (-1);
     }
     input_length = std::char_traits<char>::length(input);
@@ -124,7 +142,7 @@ int su_locale_casefold(const char *input, const char *locale_name, ft_string &ou
     }
     catch (const std::bad_alloc &)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (-1);
     }
     index = 0;
@@ -136,9 +154,9 @@ int su_locale_casefold(const char *input, const char *locale_name, ft_string &ou
     output.assign(transformed_string.c_str(), transformed_string.size());
     if (output.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = output.get_error();
+        ft_global_error_stack_push(output.get_error());
         return (-1);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }

@@ -28,7 +28,7 @@ static size_t   format_time_component(char *destination, size_t destination_size
     {
         if (digit_count >= sizeof(reversed_digits))
         {
-            ft_errno = FT_ERR_OUT_OF_RANGE;
+            ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
             return (0);
         }
         reversed_digits[digit_count] = '0';
@@ -38,7 +38,7 @@ static size_t   format_time_component(char *destination, size_t destination_size
     {
         if (digit_count >= sizeof(reversed_digits))
         {
-            ft_errno = FT_ERR_OUT_OF_RANGE;
+            ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
             return (0);
         }
         reversed_digits[digit_count] = static_cast<char>('0' + (magnitude % 10));
@@ -49,7 +49,7 @@ static size_t   format_time_component(char *destination, size_t destination_size
     {
         if (digit_count >= sizeof(reversed_digits))
         {
-            ft_errno = FT_ERR_OUT_OF_RANGE;
+            ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
             return (0);
         }
         reversed_digits[digit_count] = '-';
@@ -60,7 +60,7 @@ static size_t   format_time_component(char *destination, size_t destination_size
         required_length = static_cast<size_t>(minimum_width);
     if (required_length >= destination_size)
     {
-        ft_errno = FT_ERR_OUT_OF_RANGE;
+        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
         return (0);
     }
     destination[required_length] = '\0';
@@ -77,7 +77,7 @@ static size_t   format_time_component(char *destination, size_t destination_size
         index--;
         destination[index] = '0';
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (required_length);
 }
 
@@ -92,16 +92,23 @@ size_t  time_strftime(char *buffer, size_t size, const char *format, const t_tim
     int     lock_error;
     bool    format_failed;
     size_t  formatted_length;
+    int     error_code;
 
     if (!buffer || size == 0 || !format || !time_info)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
     lock_acquired = false;
     lock_error = time_info_lock(time_info, &lock_acquired);
-    if (lock_error != 0)
+    error_code = ft_global_error_stack_pop_newest();
+    if (lock_error != 0 || error_code != FT_ERR_SUCCESSS)
+    {
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_INVALID_STATE;
+        ft_global_error_stack_push(error_code);
         return (0);
+    }
     format_index = 0;
     output_index = 0;
     format_failed = false;
@@ -142,7 +149,17 @@ size_t  time_strftime(char *buffer, size_t size, const char *format, const t_tim
                 else
                     minimum_width = 2;
                 length = format_time_component(number_buffer, sizeof(number_buffer), value, minimum_width);
-                if (length == 0 && ft_errno != FT_ERR_SUCCESSS)
+                error_code = ft_global_error_stack_pop_newest();
+                if (length == 0 && error_code != FT_ERR_SUCCESSS)
+                {
+                    if (output_index < size)
+                        buffer[output_index] = '\0';
+                    else if (size > 0)
+                        buffer[size - 1] = '\0';
+                    format_failed = true;
+                    break;
+                }
+                if (error_code != FT_ERR_SUCCESSS)
                 {
                     if (output_index < size)
                         buffer[output_index] = '\0';
@@ -171,12 +188,27 @@ size_t  time_strftime(char *buffer, size_t size, const char *format, const t_tim
     if (!format_failed)
     {
         buffer[output_index] = '\0';
-        ft_errno = FT_ERR_SUCCESSS;
         formatted_length = output_index;
+        error_code = FT_ERR_SUCCESSS;
     }
     else
+    {
         formatted_length = 0;
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_OUT_OF_RANGE;
+    }
     time_info_unlock(time_info, lock_acquired);
+    error_code = ft_global_error_stack_pop_newest();
+    if (error_code != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(error_code);
+        return (0);
+    }
+    if (formatted_length == 0)
+    {
+        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
+        return (0);
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (formatted_length);
 }
-

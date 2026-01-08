@@ -34,11 +34,12 @@ int ft_environment_lock(void)
 {
     int lock_result;
     int forced_errno;
+    int error_code;
 
     std::call_once(g_environment_mutex_once, ft_environment_initialize_mutex);
     if (g_environment_mutex_init_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = g_environment_mutex_init_error;
+        ft_global_error_stack_push(g_environment_mutex_init_error);
         return (-1);
     }
     if (g_environment_force_lock_failure != 0)
@@ -47,17 +48,19 @@ int ft_environment_lock(void)
         g_environment_force_lock_failure = 0;
         g_environment_forced_lock_errno = FT_ERR_SUCCESSS;
         if (forced_errno != FT_ERR_SUCCESSS)
-            ft_errno = forced_errno;
+            error_code = forced_errno;
         else
-            ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
+            error_code = FT_ERR_MUTEX_ALREADY_LOCKED;
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     lock_result = pthread_mutex_lock(&g_environment_mutex);
     if (lock_result != 0)
     {
-        ft_errno = ft_map_system_error(lock_result);
+        ft_global_error_stack_push(ft_map_system_error(lock_result));
         return (-1);
     }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -65,17 +68,18 @@ int ft_environment_unlock(void)
 {
     int unlock_result;
     int forced_errno;
+    int error_code;
 
     std::call_once(g_environment_mutex_once, ft_environment_initialize_mutex);
     if (g_environment_mutex_init_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = g_environment_mutex_init_error;
+        ft_global_error_stack_push(g_environment_mutex_init_error);
         return (-1);
     }
     unlock_result = pthread_mutex_unlock(&g_environment_mutex);
     if (unlock_result != 0)
     {
-        ft_errno = ft_map_system_error(unlock_result);
+        ft_global_error_stack_push(ft_map_system_error(unlock_result));
         return (-1);
     }
     if (g_environment_force_unlock_failure != 0)
@@ -84,11 +88,13 @@ int ft_environment_unlock(void)
         g_environment_force_unlock_failure = 0;
         g_environment_forced_unlock_errno = FT_ERR_SUCCESSS;
         if (forced_errno != FT_ERR_SUCCESSS)
-            ft_errno = forced_errno;
+            error_code = forced_errno;
         else
-            ft_errno = FT_ERR_MUTEX_NOT_OWNER;
+            error_code = FT_ERR_MUTEX_NOT_OWNER;
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 

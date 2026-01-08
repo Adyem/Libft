@@ -39,10 +39,9 @@ size_t ft_wstrlen(const wchar_t *string)
 {
     size_t length;
 
-    ft_errno = FT_ERR_SUCCESSS;
     if (string == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
     length = 0;
@@ -50,6 +49,7 @@ size_t ft_wstrlen(const wchar_t *string)
     {
         length++;
     }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (length);
 }
 
@@ -63,7 +63,7 @@ static int ft_utf16_decode_unit(const char16_t *input, size_t length,
     {
         if (index + 1 >= length)
         {
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
+            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
             return (FT_FAILURE);
         }
         char16_t second_unit;
@@ -71,22 +71,24 @@ static int ft_utf16_decode_unit(const char16_t *input, size_t length,
         second_unit = input[index + 1];
         if (second_unit < 0xDC00 || second_unit > 0xDFFF)
         {
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
+            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
             return (FT_FAILURE);
         }
         *code_point_pointer = 0x10000;
         *code_point_pointer += static_cast<uint32_t>(first_unit - 0xD800) << 10;
         *code_point_pointer += static_cast<uint32_t>(second_unit - 0xDC00);
         *advance = 2;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (FT_SUCCESS);
     }
     if (first_unit >= 0xDC00 && first_unit <= 0xDFFF)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (FT_FAILURE);
     }
     *code_point_pointer = static_cast<uint32_t>(first_unit);
     *advance = 1;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (FT_SUCCESS);
 }
 
@@ -95,11 +97,11 @@ ft_string ft_utf16_to_utf8(const char16_t *input, size_t input_length)
     ft_string result;
     size_t length;
     size_t index;
+    int error_code;
 
-    ft_errno = FT_ERR_SUCCESSS;
     if (input == ft_nullptr && input_length != 0)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_string(FT_ERR_INVALID_ARGUMENT));
     }
     length = ft_utf16_effective_length(input, input_length);
@@ -112,17 +114,44 @@ ft_string ft_utf16_to_utf8(const char16_t *input, size_t input_length)
         size_t encoded_length;
 
         if (ft_utf16_decode_unit(input, length, index, &code_point, &advance) != FT_SUCCESS)
-            return (ft_string(ft_errno));
+        {
+            error_code = ft_global_error_stack_pop_newest();
+            if (error_code == FT_ERR_SUCCESSS)
+                error_code = FT_ERR_INVALID_ARGUMENT;
+            ft_global_error_stack_push(error_code);
+            return (ft_string(error_code));
+        }
+        error_code = ft_global_error_stack_pop_newest();
+        if (error_code != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(error_code);
+            return (ft_string(error_code));
+        }
         encoded_length = 0;
         if (ft_utf8_encode(code_point, encoded_buffer, sizeof(encoded_buffer),
                 &encoded_length) != FT_SUCCESS)
-            return (ft_string(ft_errno));
+        {
+            error_code = ft_global_error_stack_pop_newest();
+            if (error_code == FT_ERR_SUCCESSS)
+                error_code = FT_ERR_INVALID_ARGUMENT;
+            ft_global_error_stack_push(error_code);
+            return (ft_string(error_code));
+        }
+        error_code = ft_global_error_stack_pop_newest();
+        if (error_code != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(error_code);
+            return (ft_string(error_code));
+        }
         result.append(encoded_buffer, encoded_length);
         if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(ft_string::last_operation_error());
             return (ft_string(ft_string::last_operation_error()));
+        }
         index += advance;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -131,11 +160,11 @@ ft_string ft_utf32_to_utf8(const char32_t *input, size_t input_length)
     ft_string result;
     size_t length;
     size_t index;
+    int error_code;
 
-    ft_errno = FT_ERR_SUCCESSS;
     if (input == ft_nullptr && input_length != 0)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_string(FT_ERR_INVALID_ARGUMENT));
     }
     length = ft_utf32_effective_length(input, input_length);
@@ -149,24 +178,39 @@ ft_string ft_utf32_to_utf8(const char32_t *input, size_t input_length)
         code_point = static_cast<uint32_t>(input[index]);
         if (code_point >= 0xD800 && code_point <= 0xDFFF)
         {
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
+            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
             return (ft_string(FT_ERR_INVALID_ARGUMENT));
         }
         if (code_point > 0x10FFFF)
         {
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
+            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
             return (ft_string(FT_ERR_INVALID_ARGUMENT));
         }
         encoded_length = 0;
         if (ft_utf8_encode(code_point, encoded_buffer, sizeof(encoded_buffer),
                 &encoded_length) != FT_SUCCESS)
-            return (ft_string(ft_errno));
+        {
+            error_code = ft_global_error_stack_pop_newest();
+            if (error_code == FT_ERR_SUCCESSS)
+                error_code = FT_ERR_INVALID_ARGUMENT;
+            ft_global_error_stack_push(error_code);
+            return (ft_string(error_code));
+        }
+        error_code = ft_global_error_stack_pop_newest();
+        if (error_code != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(error_code);
+            return (ft_string(error_code));
+        }
         result.append(encoded_buffer, encoded_length);
         if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(ft_string::last_operation_error());
             return (ft_string(ft_string::last_operation_error()));
+        }
         index++;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -177,10 +221,11 @@ static char16_t *ft_allocate_utf16(size_t code_unit_count)
     buffer = static_cast<char16_t *>(cma_malloc((code_unit_count + 1) * sizeof(char16_t)));
     if (buffer == ft_nullptr)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     buffer[code_unit_count] = static_cast<char16_t>(0);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (buffer);
 }
 
@@ -190,18 +235,26 @@ char16_t *ft_utf8_to_utf16(const char *input, size_t input_length, size_t *outpu
     size_t index;
     size_t code_unit_count;
     char16_t *result;
+    int error_code;
 
-    ft_errno = FT_ERR_SUCCESSS;
     if (output_length_pointer != ft_nullptr)
         *output_length_pointer = 0;
     if (input == ft_nullptr && input_length != 0)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     effective_length = input_length;
     if (effective_length == 0 && input != ft_nullptr)
+    {
         effective_length = ft_strlen_size_t(input);
+        error_code = ft_global_error_stack_pop_newest();
+        if (error_code != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(error_code);
+            return (ft_nullptr);
+        }
+    }
     index = 0;
     code_unit_count = 0;
     while (index < effective_length)
@@ -215,12 +268,24 @@ char16_t *ft_utf8_to_utf16(const char *input, size_t input_length, size_t *outpu
         sequence_length = 0;
         if (ft_utf8_next(input, effective_length, &working_index, &code_point,
                 &sequence_length) != FT_SUCCESS)
+        {
+            error_code = ft_global_error_stack_pop_newest();
+            if (error_code == FT_ERR_SUCCESSS)
+                error_code = FT_ERR_INVALID_ARGUMENT;
+            ft_global_error_stack_push(error_code);
             return (ft_nullptr);
+        }
+        error_code = ft_global_error_stack_pop_newest();
+        if (error_code != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(error_code);
+            return (ft_nullptr);
+        }
         if (code_point <= 0xFFFF)
         {
             if (code_point >= 0xD800 && code_point <= 0xDFFF)
             {
-                ft_errno = FT_ERR_INVALID_ARGUMENT;
+                ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
                 return (ft_nullptr);
             }
             code_unit_count++;
@@ -233,7 +298,18 @@ char16_t *ft_utf8_to_utf16(const char *input, size_t input_length, size_t *outpu
     }
     result = ft_allocate_utf16(code_unit_count);
     if (result == ft_nullptr)
+    {
+        error_code = ft_global_error_stack_pop_newest();
+        if (error_code != FT_ERR_SUCCESSS)
+            ft_global_error_stack_push(error_code);
         return (ft_nullptr);
+    }
+    error_code = ft_global_error_stack_pop_newest();
+    if (error_code != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(error_code);
+        return (ft_nullptr);
+    }
     index = 0;
     size_t output_index;
 
@@ -252,9 +328,18 @@ char16_t *ft_utf8_to_utf16(const char *input, size_t input_length, size_t *outpu
         {
             int decode_error;
 
-            decode_error = ft_errno;
+            decode_error = ft_global_error_stack_pop_newest();
+            if (decode_error == FT_ERR_SUCCESSS)
+                decode_error = FT_ERR_INVALID_ARGUMENT;
             cma_free(result);
-            ft_errno = decode_error;
+            ft_global_error_stack_push(decode_error);
+            return (ft_nullptr);
+        }
+        error_code = ft_global_error_stack_pop_newest();
+        if (error_code != FT_ERR_SUCCESSS)
+        {
+            cma_free(result);
+            ft_global_error_stack_push(error_code);
             return (ft_nullptr);
         }
         if (code_point <= 0xFFFF)
@@ -262,7 +347,7 @@ char16_t *ft_utf8_to_utf16(const char *input, size_t input_length, size_t *outpu
             if (code_point >= 0xD800 && code_point <= 0xDFFF)
             {
                 cma_free(result);
-                ft_errno = FT_ERR_INVALID_ARGUMENT;
+                ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
                 return (ft_nullptr);
             }
             result[output_index] = static_cast<char16_t>(code_point);
@@ -282,7 +367,7 @@ char16_t *ft_utf8_to_utf16(const char *input, size_t input_length, size_t *outpu
     result[output_index] = static_cast<char16_t>(0);
     if (output_length_pointer != ft_nullptr)
         *output_length_pointer = output_index;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -292,18 +377,26 @@ char32_t *ft_utf8_to_utf32(const char *input, size_t input_length, size_t *outpu
     size_t index;
     size_t code_point_count;
     char32_t *result;
+    int error_code;
 
-    ft_errno = FT_ERR_SUCCESSS;
     if (output_length_pointer != ft_nullptr)
         *output_length_pointer = 0;
     if (input == ft_nullptr && input_length != 0)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     effective_length = input_length;
     if (effective_length == 0 && input != ft_nullptr)
+    {
         effective_length = ft_strlen_size_t(input);
+        error_code = ft_global_error_stack_pop_newest();
+        if (error_code != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(error_code);
+            return (ft_nullptr);
+        }
+    }
     index = 0;
     code_point_count = 0;
     while (index < effective_length)
@@ -317,14 +410,26 @@ char32_t *ft_utf8_to_utf32(const char *input, size_t input_length, size_t *outpu
         sequence_length = 0;
         if (ft_utf8_next(input, effective_length, &working_index, &code_point,
                 &sequence_length) != FT_SUCCESS)
+        {
+            error_code = ft_global_error_stack_pop_newest();
+            if (error_code == FT_ERR_SUCCESSS)
+                error_code = FT_ERR_INVALID_ARGUMENT;
+            ft_global_error_stack_push(error_code);
             return (ft_nullptr);
+        }
+        error_code = ft_global_error_stack_pop_newest();
+        if (error_code != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(error_code);
+            return (ft_nullptr);
+        }
         code_point_count++;
         index = working_index;
     }
     result = static_cast<char32_t *>(cma_malloc((code_point_count + 1) * sizeof(char32_t)));
     if (result == ft_nullptr)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     index = 0;
@@ -345,9 +450,18 @@ char32_t *ft_utf8_to_utf32(const char *input, size_t input_length, size_t *outpu
         {
             int decode_error;
 
-            decode_error = ft_errno;
+            decode_error = ft_global_error_stack_pop_newest();
+            if (decode_error == FT_ERR_SUCCESSS)
+                decode_error = FT_ERR_INVALID_ARGUMENT;
             cma_free(result);
-            ft_errno = decode_error;
+            ft_global_error_stack_push(decode_error);
+            return (ft_nullptr);
+        }
+        error_code = ft_global_error_stack_pop_newest();
+        if (error_code != FT_ERR_SUCCESSS)
+        {
+            cma_free(result);
+            ft_global_error_stack_push(error_code);
             return (ft_nullptr);
         }
         result[output_index] = static_cast<char32_t>(code_point);
@@ -357,6 +471,6 @@ char32_t *ft_utf8_to_utf32(const char *input, size_t input_length, size_t *outpu
     result[output_index] = static_cast<char32_t>(0);
     if (output_length_pointer != ft_nullptr)
         *output_length_pointer = output_index;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }

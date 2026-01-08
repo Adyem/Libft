@@ -10,11 +10,11 @@ static ft_string create_string_from_buffer(const char *buffer)
     result_error = ft_string::last_operation_error();
     if (result_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = result_error;
+        ft_global_error_stack_push(result_error);
     }
     else
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
     }
     return (result);
 }
@@ -27,12 +27,12 @@ static ft_string format_signed_long(long number)
     conversion_result = std::snprintf(buffer, sizeof(buffer), "%ld", number);
     if (conversion_result < 0)
     {
-        ft_errno = FT_ERR_INTERNAL;
+        ft_global_error_stack_push(FT_ERR_INTERNAL);
         return (ft_string(FT_ERR_INTERNAL));
     }
     if (static_cast<size_t>(conversion_result) >= sizeof(buffer))
     {
-        ft_errno = FT_ERR_INTERNAL;
+        ft_global_error_stack_push(FT_ERR_INTERNAL);
         return (ft_string(FT_ERR_INTERNAL));
     }
     return (create_string_from_buffer(buffer));
@@ -46,12 +46,12 @@ static ft_string format_unsigned_long(unsigned long number)
     conversion_result = std::snprintf(buffer, sizeof(buffer), "%lu", number);
     if (conversion_result < 0)
     {
-        ft_errno = FT_ERR_INTERNAL;
+        ft_global_error_stack_push(FT_ERR_INTERNAL);
         return (ft_string(FT_ERR_INTERNAL));
     }
     if (static_cast<size_t>(conversion_result) >= sizeof(buffer))
     {
-        ft_errno = FT_ERR_INTERNAL;
+        ft_global_error_stack_push(FT_ERR_INTERNAL);
         return (ft_string(FT_ERR_INTERNAL));
     }
     return (create_string_from_buffer(buffer));
@@ -65,12 +65,12 @@ static ft_string format_double_value(double number)
     conversion_result = std::snprintf(buffer, sizeof(buffer), "%.17g", number);
     if (conversion_result < 0)
     {
-        ft_errno = FT_ERR_INTERNAL;
+        ft_global_error_stack_push(FT_ERR_INTERNAL);
         return (ft_string(FT_ERR_INTERNAL));
     }
     if (static_cast<size_t>(conversion_result) >= sizeof(buffer))
     {
-        ft_errno = FT_ERR_INTERNAL;
+        ft_global_error_stack_push(FT_ERR_INTERNAL);
         return (ft_string(FT_ERR_INTERNAL));
     }
     return (create_string_from_buffer(buffer));
@@ -84,12 +84,12 @@ static ft_string format_unsigned_long_long(unsigned long long number)
     conversion_result = std::snprintf(buffer, sizeof(buffer), "%llu", number);
     if (conversion_result < 0)
     {
-        ft_errno = FT_ERR_INTERNAL;
+        ft_global_error_stack_push(FT_ERR_INTERNAL);
         return (ft_string(FT_ERR_INTERNAL));
     }
     if (static_cast<size_t>(conversion_result) >= sizeof(buffer))
     {
-        ft_errno = FT_ERR_INTERNAL;
+        ft_global_error_stack_push(FT_ERR_INTERNAL);
         return (ft_string(FT_ERR_INTERNAL));
     }
     return (create_string_from_buffer(buffer));
@@ -97,39 +97,98 @@ static ft_string format_unsigned_long_long(unsigned long long number)
 
 ft_string ft_to_string(long number)
 {
-    ft_errno = FT_ERR_SUCCESSS;
-    return (format_signed_long(number));
+    ft_string result;
+    int error_code;
+
+    result = format_signed_long(number);
+    error_code = ft_global_error_stack_pop_newest();
+    if (error_code == FT_ERR_SUCCESSS)
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    else
+        ft_global_error_stack_push(error_code);
+    return (result);
 }
 
 ft_string ft_to_string(unsigned long number)
 {
-    ft_errno = FT_ERR_SUCCESSS;
-    return (format_unsigned_long(number));
+    ft_string result;
+    int error_code;
+
+    result = format_unsigned_long(number);
+    error_code = ft_global_error_stack_pop_newest();
+    if (error_code == FT_ERR_SUCCESSS)
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    else
+        ft_global_error_stack_push(error_code);
+    return (result);
 }
 
 ft_string ft_to_string(unsigned long long number)
 {
-    ft_errno = FT_ERR_SUCCESSS;
-    return (format_unsigned_long_long(number));
+    ft_string result;
+    int error_code;
+
+    result = format_unsigned_long_long(number);
+    error_code = ft_global_error_stack_pop_newest();
+    if (error_code == FT_ERR_SUCCESSS)
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    else
+        ft_global_error_stack_push(error_code);
+    return (result);
 }
 
 ft_string ft_to_string(double number)
 {
-    ft_errno = FT_ERR_SUCCESSS;
-    return (format_double_value(number));
+    ft_string result;
+    int error_code;
+
+    result = format_double_value(number);
+    error_code = ft_global_error_stack_pop_newest();
+    if (error_code == FT_ERR_SUCCESSS)
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    else
+        ft_global_error_stack_push(error_code);
+    return (result);
 }
 
 ft_string ft_to_string(int number)
 {
-    return (ft_to_string(static_cast<long>(number)));
+    ft_string result;
+    int error_code;
+
+    result = ft_to_string(static_cast<long>(number));
+    error_code = ft_global_error_stack_pop_newest();
+    if (error_code == FT_ERR_SUCCESSS)
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    else
+        ft_global_error_stack_push(error_code);
+    return (result);
 }
 
 ft_string ft_to_string(unsigned int number)
 {
-    return (ft_to_string(static_cast<unsigned long>(number)));
+    ft_string result;
+    int error_code;
+
+    result = ft_to_string(static_cast<unsigned long>(number));
+    error_code = ft_global_error_stack_pop_newest();
+    if (error_code == FT_ERR_SUCCESSS)
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    else
+        ft_global_error_stack_push(error_code);
+    return (result);
 }
 
 ft_string ft_to_string(float number)
 {
-    return (ft_to_string(static_cast<double>(number)));
+    ft_string result;
+    int error_code;
+
+    result = ft_to_string(static_cast<double>(number));
+    error_code = ft_global_error_stack_pop_newest();
+    if (error_code == FT_ERR_SUCCESSS)
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    else
+        ft_global_error_stack_push(error_code);
+    return (result);
 }
