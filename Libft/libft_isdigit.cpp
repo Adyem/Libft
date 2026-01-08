@@ -2,8 +2,11 @@
 
 int    ft_isdigit(int character)
 {
-    ft_errno = FT_ERR_SUCCESSS;
     if (character >= '0' && character <= '9')
+    {
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (1);
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }

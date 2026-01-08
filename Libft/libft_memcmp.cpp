@@ -8,12 +8,14 @@ int    ft_memcmp(const void *pointer1, const void *pointer2, size_t size)
     const unsigned char    *string2;
     size_t                index;
 
-    ft_errno = FT_ERR_SUCCESSS;
     if (size == 0)
+    {
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (0);
+    }
     if (pointer1 == ft_nullptr || pointer2 == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
 
@@ -23,8 +25,12 @@ int    ft_memcmp(const void *pointer1, const void *pointer2, size_t size)
     while (index < size)
     {
         if (string1[index] != string2[index])
+        {
+            ft_global_error_stack_push(FT_ERR_SUCCESSS);
             return (string1[index] - string2[index]);
+        }
         index++;
     }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }

@@ -11,10 +11,11 @@
 FILE *ft_fopen(const char *filename, const char *mode)
 {
     FILE *file_handle;
+    int error_code;
 
     if (filename == ft_nullptr || mode == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     file_handle = std::fopen(filename, mode);
@@ -26,16 +27,16 @@ FILE *ft_fopen(const char *filename, const char *mode)
         if (open_error != 0)
         {
             if (open_error == EINVAL)
-                ft_errno = FT_ERR_INVALID_ARGUMENT;
+                error_code = FT_ERR_INVALID_ARGUMENT;
             else
-                ft_errno = cmp_map_system_error_to_ft(open_error);
+                error_code = cmp_map_system_error_to_ft(open_error);
         }
         else
-            ft_errno = FT_ERR_INVALID_HANDLE;
+            error_code = FT_ERR_INVALID_HANDLE;
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (file_handle);
 }
 #endif
-

@@ -15,16 +15,37 @@
 int ft_unsetenv(const char *name)
 {
     int result;
-    int stored_errno;
+    char *invalid_character;
+    int error_code;
+    int unlock_error;
 
-    ft_errno = FT_ERR_SUCCESSS;
-    if (name == ft_nullptr || *name == '\0' || ft_strchr(name, '=') != ft_nullptr)
+    if (name == ft_nullptr || *name == '\0')
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
+        return (-1);
+    }
+    invalid_character = ft_strchr(name, '=');
+    error_code = ft_global_error_stack_pop_newest();
+    if (error_code != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(error_code);
+        return (-1);
+    }
+    if (invalid_character != ft_nullptr)
+    {
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (ft_environment_lock() != 0)
+    {
+        error_code = ft_global_error_stack_pop_newest();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_MUTEX_ALREADY_LOCKED;
+        ft_global_error_stack_push(error_code);
         return (-1);
+    }
+    ft_global_error_stack_pop_newest();
+    error_code = FT_ERR_SUCCESSS;
     result = cmp_unsetenv(name);
     if (result != 0)
     {
@@ -37,35 +58,45 @@ int ft_unsetenv(const char *name)
         last_error = GetLastError();
         socket_error = WSAGetLastError();
         if (result > 0)
-            ft_errno = ft_map_system_error(result);
+            error_code = ft_map_system_error(result);
         else if (last_error != 0)
-            ft_errno = ft_map_system_error(last_error);
+            error_code = ft_map_system_error(last_error);
         else if (socket_error != 0)
-            ft_errno = ft_map_system_error(socket_error);
+            error_code = ft_map_system_error(socket_error);
         else if (saved_errno != 0)
-            ft_errno = ft_map_system_error(saved_errno);
+            error_code = ft_map_system_error(saved_errno);
         else
-            ft_errno = FT_ERR_TERMINATED;
+            error_code = FT_ERR_TERMINATED;
 #else
         int saved_errno;
 
         saved_errno = errno;
         if (saved_errno != 0)
-            ft_errno = ft_map_system_error(saved_errno);
+            error_code = ft_map_system_error(saved_errno);
         else
-            ft_errno = FT_ERR_TERMINATED;
+            error_code = FT_ERR_TERMINATED;
 #endif
     }
-    stored_errno = ft_errno;
     if (ft_environment_unlock() != 0)
     {
-        if (result != 0)
-            ft_errno = stored_errno;
+        unlock_error = ft_global_error_stack_pop_newest();
+        if (unlock_error == FT_ERR_SUCCESSS)
+            unlock_error = FT_ERR_MUTEX_NOT_OWNER;
         if (result == 0)
+        {
+            ft_global_error_stack_push(unlock_error);
             return (-1);
+        }
+        ft_global_error_stack_push(error_code);
         return (result);
     }
-    ft_errno = stored_errno;
+    ft_global_error_stack_pop_newest();
+    if (result != 0)
+    {
+        ft_global_error_stack_push(error_code);
+        return (result);
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
 #endif

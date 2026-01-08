@@ -2,9 +2,12 @@
 
 int ft_isalpha(int character)
 {
-    ft_errno = FT_ERR_SUCCESSS;
     if ((character >= 'a' && character <= 'z') ||
         (character >= 'A' && character <= 'Z'))
+    {
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (1);
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }

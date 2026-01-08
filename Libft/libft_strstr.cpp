@@ -5,15 +5,15 @@
 char    *ft_strstr(const char *haystack, const char *needle)
 {
     size_t  haystack_length;
+    char    *result;
 
-    ft_errno = FT_ERR_SUCCESSS;
     if (haystack == ft_nullptr || needle == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     haystack_length = ft_strlen_size_t(haystack);
-    if (ft_errno != FT_ERR_SUCCESSS)
-        return (ft_nullptr);
-    return (ft_strnstr(haystack, needle, haystack_length));
+    result = ft_strnstr(haystack, needle, haystack_length);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return (result);
 }

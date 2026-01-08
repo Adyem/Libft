@@ -2,7 +2,11 @@
 
 int ft_isspace(int character)
 {
-    ft_errno = FT_ERR_SUCCESSS;
-    return (character == ' ' || character == '\f' || character == '\n' ||
-            character == '\r' || character == '\t' || character == '\v');
+    int result = 0;
+
+    if (character == ' ' || character == '\f' || character == '\n' ||
+        character == '\r' || character == '\t' || character == '\v')
+        result = 1;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return (result);
 }

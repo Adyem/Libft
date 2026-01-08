@@ -7,19 +7,19 @@
 t_time  time_now(void)
 {
     std::time_t standard_time;
-    int saved_errno;
+    int error_code;
 
     standard_time = ::time(ft_nullptr);
     if (standard_time == static_cast<std::time_t>(-1))
     {
-        saved_errno = errno;
-        if (saved_errno != 0)
-            ft_errno = ft_map_system_error(saved_errno);
+        error_code = errno;
+        if (error_code != 0)
+            error_code = ft_map_system_error(error_code);
         else
-            ft_errno = FT_ERR_TERMINATED;
+            error_code = FT_ERR_TERMINATED;
+        ft_global_error_stack_push(error_code);
         return (static_cast<t_time>(-1));
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (static_cast<t_time>(standard_time));
 }
-

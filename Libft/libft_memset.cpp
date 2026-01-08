@@ -8,13 +8,12 @@ void *ft_memset(void *destination, int value, size_t number_of_bytes)
     {
         if (number_of_bytes == 0)
         {
-            ft_errno = FT_ERR_SUCCESSS;
+            ft_global_error_stack_push(FT_ERR_SUCCESSS);
             return (ft_nullptr);
         }
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
-    ft_errno = FT_ERR_SUCCESSS;
     unsigned char *destination_pointer = static_cast<unsigned char *>(destination);
     unsigned char byte_value = static_cast<unsigned char>(value);
 
@@ -25,5 +24,6 @@ void *ft_memset(void *destination, int value, size_t number_of_bytes)
         number_of_bytes--;
     }
 
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (destination);
 }

@@ -4,10 +4,9 @@
 
 char    *ft_strrchr(const char *string, int char_to_find)
 {
-    ft_errno = FT_ERR_SUCCESSS;
     if (!string)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     size_t string_length = ft_strlen_size_t(string);
@@ -15,10 +14,17 @@ char    *ft_strrchr(const char *string, int char_to_find)
     while (string_length > 0)
     {
         if (string[string_length] == target_char)
+        {
+            ft_global_error_stack_push(FT_ERR_SUCCESSS);
             return (const_cast<char *>(string) + string_length);
+        }
         --string_length;
     }
     if (string[string_length] == target_char)
+    {
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (const_cast<char *>(string) + string_length);
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (ft_nullptr);
 }

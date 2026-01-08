@@ -11,10 +11,11 @@
 int ft_fclose(FILE *stream)
 {
     int close_result;
+    int error_code;
 
     if (stream == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_HANDLE;
+        ft_global_error_stack_push(FT_ERR_INVALID_HANDLE);
         return (EOF);
     }
     close_result = std::fclose(stream);
@@ -24,13 +25,13 @@ int ft_fclose(FILE *stream)
 
         close_error = errno;
         if (close_error != 0)
-            ft_errno = cmp_map_system_error_to_ft(close_error);
+            error_code = cmp_map_system_error_to_ft(close_error);
         else
-            ft_errno = FT_ERR_INVALID_HANDLE;
+            error_code = FT_ERR_INVALID_HANDLE;
+        ft_global_error_stack_push(error_code);
         return (EOF);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (FT_SUCCESS);
 }
 #endif
-

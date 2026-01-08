@@ -19,59 +19,68 @@ int ft_strncat_s(char *destination, size_t destination_size, const char *source,
 {
     size_t destination_length;
     size_t source_length;
+    int error_code;
 
-    ft_errno = FT_ERR_SUCCESSS;
     if (destination == ft_nullptr || source == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (destination_size == 0)
     {
-        ft_errno = FT_ERR_OUT_OF_RANGE;
+        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
         return (-1);
     }
     destination_length = static_cast<size_t>(ft_strlen(destination));
-    if (ft_errno != FT_ERR_SUCCESSS)
+    error_code = ft_global_error_stack_pop_newest();
+    if (error_code != FT_ERR_SUCCESSS)
     {
         zero_buffer(destination, destination_size);
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     if (destination_length >= destination_size)
     {
         zero_buffer(destination, destination_size);
-        ft_errno = FT_ERR_OUT_OF_RANGE;
+        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
         return (-1);
     }
     source_length = static_cast<size_t>(ft_strlen(source));
-    if (ft_errno != FT_ERR_SUCCESSS)
+    error_code = ft_global_error_stack_pop_newest();
+    if (error_code != FT_ERR_SUCCESSS)
     {
         zero_buffer(destination, destination_size);
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     if (source_length > max_append_length)
     {
         zero_buffer(destination, destination_size);
-        ft_errno = FT_ERR_OUT_OF_RANGE;
+        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
         return (-1);
     }
     if (destination_length + source_length + 1 > destination_size)
     {
         zero_buffer(destination, destination_size);
-        ft_errno = FT_ERR_OUT_OF_RANGE;
+        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
         return (-1);
     }
     if (ft_memcpy(destination + destination_length, source, source_length) == ft_nullptr)
     {
+        error_code = ft_global_error_stack_pop_newest();
         zero_buffer(destination, destination_size);
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     destination[destination_length + source_length] = '\0';
-    if (ft_errno != FT_ERR_SUCCESSS)
+    error_code = ft_global_error_stack_pop_newest();
+    if (error_code != FT_ERR_SUCCESSS)
     {
         zero_buffer(destination, destination_size);
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 #endif

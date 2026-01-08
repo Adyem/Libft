@@ -6,10 +6,9 @@ size_t ft_strlcpy(char *destination, const char *source, size_t buffer_size)
 {
     size_t source_length;
 
-    ft_errno = FT_ERR_SUCCESSS;
     if (source == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
     source_length = 0;
@@ -19,11 +18,12 @@ size_t ft_strlcpy(char *destination, const char *source, size_t buffer_size)
         {
             source_length++;
         }
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (source_length);
     }
     if (destination == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
     while (source_length < buffer_size - 1 && source[source_length] != '\0')
@@ -37,5 +37,6 @@ size_t ft_strlcpy(char *destination, const char *source, size_t buffer_size)
     {
         source_length++;
     }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (source_length);
 }
