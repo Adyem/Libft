@@ -17,9 +17,22 @@ other classes must split declarations into .hpp files and definitions into .cpp 
 Do not define member function bodies inside the class declaration; place all definitions outside the class.
 Every class must declare and define a constructor and destructor, even if they simply contain return ;.
 
+#Class Mutex Requirements
+
+Each class must own a recursive mutex that can be locked multiple times and must be unlocked the same number of times.
+
+During error handling, do not lock the class mutex. Use the Errno module mutex wrapper instead via
+`std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());` so error reporting does not re-lock the class mutex.
+
+Every class must expose a helper function that provides direct access to its recursive mutex.
+Document and implement this helper as a dedicated low-level interface intended for cases like
+validating constructor error handling immediately after construction by manually locking and
+unlocking the mutex to verify proper use.
+
 #Errno and Error Stack Rules
 
 Class and non-class error handling must use the shared error-stack types from the Errno module.
+Classes must push errors to both the thread-local error stack and their class-only error stack.
 
 When publishing or reading class error codes or error stacks, do not lock the class mutex; use
 `std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());` instead.

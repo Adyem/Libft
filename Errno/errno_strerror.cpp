@@ -11,14 +11,6 @@ typedef struct s_ft_error_string
 static const t_ft_error_string g_error_strings[] =
 {
     {FT_ERR_SUCCESSS, "Success"},
-    {FT_SYS_ERR_SUCCESS, "Success"},
-    {FT_SYS_ERR_NO_MEMORY, "System memory allocation failed"},
-    {FT_SYS_ERR_INVALID_STATE, "Invalid internal state"},
-    {FT_SYS_ERR_MUTEX_LOCK_FAILED, "Mutex lock failed"},
-    {FT_SYS_ERR_MUTEX_ALREADY_LOCKED, "Mutex already locked"},
-    {FT_SYS_ERR_MUTEX_NOT_OWNER, "Thread is not the owner of the mutex"},
-    {FT_SYS_ERR_MUTEX_UNLOCK_FAILED, "Mutex unlock failed"},
-    {FT_SYS_ERR_INTERNAL, "Internal system error"},
     {FT_ERR_NO_MEMORY, "Memory allocation failed"},
     {FT_ERR_FILE_OPEN_FAILED, "File open failed"},
     {FT_ERR_INVALID_ARGUMENT, "Invalid argument"},
@@ -78,6 +70,13 @@ static const t_ft_error_string g_error_strings[] =
     {FT_ERR_CRYPTO_INVALID_PADDING, "Invalid cryptographic padding"},
     {FT_ERR_DATABASE_UNAVAILABLE, "Database unavailable"},
     {FT_ERR_TIMEOUT, "Operation timed out"},
+    {FT_ERR_SYS_NO_MEMORY, "System memory allocation failed"},
+    {FT_ERR_SYS_INVALID_STATE, "Invalid internal state"},
+    {FT_ERR_SYS_MUTEX_LOCK_FAILED, "Mutex lock failed"},
+    {FT_ERR_SYS_MUTEX_ALREADY_LOCKED, "Mutex already locked"},
+    {FT_ERR_SYS_MUTEX_NOT_OWNER, "Thread is not the owner of the mutex"},
+    {FT_ERR_SYS_MUTEX_UNLOCK_FAILED, "Mutex unlock failed"},
+    {FT_ERR_SYS_INTERNAL, "Internal system error"},
     {FT_ERR_SSL_SYSCALL_ERROR, "SSL system call error"},
     {FT_ERR_HTTP_PROTOCOL_MISMATCH, "HTTP protocol mismatch"},
     {FT_ERR_API_CIRCUIT_OPEN, "API circuit breaker is open"}

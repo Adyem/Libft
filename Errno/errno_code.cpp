@@ -53,26 +53,8 @@ static ft_operation_error_stack &ft_global_error_stack()
     return (error_stack);
 }
 
-void ft_set_errno_locked(int error_code)
+static void ft_global_error_stack_push_unlocked(ft_operation_error_stack &error_stack, int error_code)
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
-
-    ft_errno = error_code;
-    return ;
-}
-
-void ft_set_sys_errno_locked(int error_code)
-{
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
-
-    ft_sys_errno = error_code;
-    return ;
-}
-
-void ft_global_error_stack_push(int error_code)
-{
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
-    ft_operation_error_stack &error_stack = ft_global_error_stack();
     ft_size_t index;
 
     if (error_stack.count < 20)
@@ -87,6 +69,32 @@ void ft_global_error_stack_push(int error_code)
     return ;
 }
 
+void ft_set_errno_locked(int error_code)
+{
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    ft_operation_error_stack &error_stack = ft_global_error_stack();
+
+    ft_global_error_stack_push_unlocked(error_stack, error_code);
+    return ;
+}
+
+void ft_set_sys_errno_locked(int error_code)
+{
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    ft_operation_error_stack &error_stack = ft_global_error_stack();
+
+    ft_global_error_stack_push_unlocked(error_stack, error_code);
+    return ;
+}
+
+void ft_global_error_stack_push(int error_code)
+{
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    ft_operation_error_stack &error_stack = ft_global_error_stack();
+
+    ft_global_error_stack_push_unlocked(error_stack, error_code);
+    return ;
+}
 int ft_global_error_stack_pop_last(void)
 {
     std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
@@ -171,18 +179,4 @@ const char *ft_global_error_stack_last_error_str(void)
     if (!error_string)
         error_string = "unknown error";
     return (error_string);
-}
-
-int &ft_errno_reference(void)
-{
-    static thread_local int thread_errno = FT_ERR_SUCCESSS;
-
-    return (thread_errno);
-}
-
-int &ft_sys_errno_reference(void)
-{
-    static thread_local int thread_sys_errno = FT_SYS_ERR_SUCCESS;
-
-    return (thread_sys_errno);
 }
