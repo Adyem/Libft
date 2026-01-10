@@ -61,7 +61,7 @@ static bool parse_timezone_offset(const char *timezone_buffer, int *offset_secon
 
     if (!timezone_buffer || !offset_seconds)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
     if ((timezone_buffer[0] == 'Z' || timezone_buffer[0] == 'z')
@@ -72,7 +72,7 @@ static bool parse_timezone_offset(const char *timezone_buffer, int *offset_secon
     }
     if (timezone_buffer[0] != '+' && timezone_buffer[0] != '-')
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
     sign_multiplier = 1;
@@ -82,7 +82,7 @@ static bool parse_timezone_offset(const char *timezone_buffer, int *offset_secon
     offset_length = ft_strlen(offset_part);
     if (offset_length == 0)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
     offset_hours = 0;
@@ -91,7 +91,7 @@ static bool parse_timezone_offset(const char *timezone_buffer, int *offset_secon
     {
         if (std::sscanf(offset_part, "%d:%d", &offset_hours, &offset_minutes) != 2)
         {
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
+            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
             return (false);
         }
     }
@@ -99,7 +99,7 @@ static bool parse_timezone_offset(const char *timezone_buffer, int *offset_secon
     {
         if (std::sscanf(offset_part, "%d", &offset_hours) != 1)
         {
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
+            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
             return (false);
         }
         offset_minutes = 0;
@@ -108,26 +108,27 @@ static bool parse_timezone_offset(const char *timezone_buffer, int *offset_secon
     {
         if (std::sscanf(offset_part, "%2d%2d", &offset_hours, &offset_minutes) != 2)
         {
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
+            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
             return (false);
         }
     }
     else
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
     if (offset_hours < 0 || offset_hours > 23)
     {
-        ft_errno = FT_ERR_OUT_OF_RANGE;
+        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
         return (false);
     }
     if (offset_minutes < 0 || offset_minutes > 59)
     {
-        ft_errno = FT_ERR_OUT_OF_RANGE;
+        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
         return (false);
     }
     *offset_seconds = sign_multiplier * ((offset_hours * 60) + offset_minutes) * 60;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);
 }
 
@@ -145,46 +146,54 @@ bool    time_parse_iso8601(const char *string_input, std::tm *time_output, t_tim
     int offset_seconds;
     std::time_t adjusted_epoch;
     std::tm *utc_time;
+    int error_code;
 
     if (!string_input)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
     ft_memset(&parsed_time, 0, sizeof(parsed_time));
     ft_memset(timezone_buffer, 0, sizeof(timezone_buffer));
     if (std::sscanf(string_input, "%d-%d-%dT%d:%d:%d%6s", &year, &month, &day, &hours, &minutes, &seconds, timezone_buffer) != 7)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
     if (month < 1 || month > 12)
     {
-        ft_errno = FT_ERR_OUT_OF_RANGE;
+        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
         return (false);
     }
     if (day < 1 || day > get_days_in_month(year, month))
     {
-        ft_errno = FT_ERR_OUT_OF_RANGE;
+        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
         return (false);
     }
     if (hours < 0 || hours > 23)
     {
-        ft_errno = FT_ERR_OUT_OF_RANGE;
+        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
         return (false);
     }
     if (minutes < 0 || minutes > 59)
     {
-        ft_errno = FT_ERR_OUT_OF_RANGE;
+        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
         return (false);
     }
     if (seconds < 0 || seconds > 60)
     {
-        ft_errno = FT_ERR_OUT_OF_RANGE;
+        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
         return (false);
     }
     if (!parse_timezone_offset(timezone_buffer, &offset_seconds))
+    {
+        error_code = ft_global_error_stack_pop_newest();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_INTERNAL;
+        ft_global_error_stack_push(error_code);
         return (false);
+    }
+    ft_global_error_stack_pop_newest();
     parsed_time.tm_year = year - 1900;
     parsed_time.tm_mon = month - 1;
     parsed_time.tm_mday = day;
@@ -198,6 +207,7 @@ bool    time_parse_iso8601(const char *string_input, std::tm *time_output, t_tim
         if (epoch_time == static_cast<std::time_t>(-1)
             && ft_errno != FT_ERR_SUCCESSS)
         {
+            ft_global_error_stack_push(ft_errno);
             return (false);
         }
         adjusted_epoch = epoch_time - static_cast<std::time_t>(offset_seconds);
@@ -209,6 +219,7 @@ bool    time_parse_iso8601(const char *string_input, std::tm *time_output, t_tim
         if (epoch_time == static_cast<std::time_t>(-1)
             && ft_errno != FT_ERR_SUCCESSS)
         {
+            ft_global_error_stack_push(ft_errno);
             return (false);
         }
         adjusted_epoch = epoch_time - static_cast<std::time_t>(offset_seconds);
@@ -221,12 +232,12 @@ bool    time_parse_iso8601(const char *string_input, std::tm *time_output, t_tim
         utc_time = std::gmtime(&epoch_copy);
         if (!utc_time)
         {
-            ft_errno = FT_ERR_OUT_OF_RANGE;
+            ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
             return (false);
         }
         *time_output = *utc_time;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);
 }
 
@@ -238,7 +249,7 @@ bool    time_parse_custom(const char *string_input, const char *format, std::tm 
 
     if (!string_input || !format)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
     ft_memset(&parsed_time, 0, sizeof(parsed_time));
@@ -246,7 +257,7 @@ bool    time_parse_custom(const char *string_input, const char *format, std::tm 
     input_stream >> std::get_time(&parsed_time, format);
     if (input_stream.fail())
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
     parsed_time.tm_isdst = 0;
@@ -256,6 +267,7 @@ bool    time_parse_custom(const char *string_input, const char *format, std::tm 
         if (epoch_time == static_cast<std::time_t>(-1)
             && ft_errno != FT_ERR_SUCCESSS)
         {
+            ft_global_error_stack_push(ft_errno);
             return (false);
         }
     }
@@ -264,7 +276,7 @@ bool    time_parse_custom(const char *string_input, const char *format, std::tm 
         epoch_time = std::mktime(&parsed_time);
         if (epoch_time == static_cast<std::time_t>(-1))
         {
-            ft_errno = FT_ERR_OUT_OF_RANGE;
+            ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
             return (false);
         }
     }
@@ -281,7 +293,7 @@ bool    time_parse_custom(const char *string_input, const char *format, std::tm 
             utc_time = std::gmtime(&epoch_copy);
             if (!utc_time)
             {
-                ft_errno = FT_ERR_OUT_OF_RANGE;
+                ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
                 return (false);
             }
             *time_output = *utc_time;
@@ -289,7 +301,7 @@ bool    time_parse_custom(const char *string_input, const char *format, std::tm 
         else
             *time_output = parsed_time;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);
 }
 
@@ -297,4 +309,3 @@ bool    time_parse_custom(const char *string_input, const char *format, std::tm 
 {
     return (time_parse_custom(string_input, format, time_output, timestamp_output, false));
 }
-

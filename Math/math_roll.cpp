@@ -19,6 +19,14 @@ void math_calculate_j(char *string, int *j)
     return ;
 }
 
+static int  *math_roll_report_error(int error_code, char *buffer)
+{
+    if (buffer)
+        cma_free(buffer);
+    ft_global_error_stack_push(error_code);
+    return (ft_nullptr);
+}
+
 static int execute_roll_function(char *string, RollExecuteFunc func)
 {
     int currentIndex = 0;
@@ -75,56 +83,59 @@ int *math_roll(const char *expression)
     char    *result;
     int     *value;
     int     parse_error;
-
-    ft_errno = FT_ERR_SUCCESSS;
+    int     error_code;
 
     if (!expression)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (ft_nullptr);
+        return (math_roll_report_error(FT_ERR_INVALID_ARGUMENT, ft_nullptr));
     }
     result = cma_strdup(expression);
     if (!result)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        error_code = ft_errno;
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_NO_MEMORY;
         if (DEBUG == 1)
         {
             pf_printf_fd(2, "168-Error: Malloc failed in cma_strdup\n");
         }
-        return (ft_nullptr);
+        return (math_roll_report_error(error_code, ft_nullptr));
     }
     if (math_roll_validate(result))
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
         if (DEBUG == 1)
         {
             pf_printf_fd(2, "169-Command Roll Error with the string: %s\n", result);
         }
-        cma_free(result);
-        return (ft_nullptr);
+        return (math_roll_report_error(FT_ERR_INVALID_ARGUMENT, result));
     }
     parse_error = math_roll_parse(result, 0);
     if (parse_error)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        cma_free(result);
-        return (ft_nullptr);
+        return (math_roll_report_error(FT_ERR_INVALID_ARGUMENT, result));
     }
     if (!math_check_string_number(result))
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        cma_free(result);
-        return (ft_nullptr);
+        return (math_roll_report_error(FT_ERR_INVALID_ARGUMENT, result));
     }
     value = reinterpret_cast<int*>(cma_malloc(sizeof(int)));
     if (!value)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
-        cma_free(result);
-        return (ft_nullptr);
+        error_code = ft_errno;
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_NO_MEMORY;
+        return (math_roll_report_error(error_code, result));
     }
     *value = ft_atoi(result);
+    error_code = ft_global_error_stack_pop_newest();
+    if (error_code != FT_ERR_SUCCESSS)
+    {
+        cma_free(result);
+        cma_free(value);
+        ft_global_error_stack_push(error_code);
+        return (ft_nullptr);
+    }
     cma_free(result);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (value);
 }

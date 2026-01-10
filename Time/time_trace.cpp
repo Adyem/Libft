@@ -28,28 +28,29 @@ static bool time_trace_write_raw(const char *buffer, size_t length, bool flush)
 
     if (buffer == ft_nullptr && length != 0)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
     if (g_trace_file == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_STATE;
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return (false);
     }
     written = std::fwrite(buffer, 1, length, g_trace_file);
     if (written != length)
     {
-        ft_errno = FT_ERR_IO;
+        ft_global_error_stack_push(FT_ERR_IO);
         return (false);
     }
     if (flush)
     {
         if (std::fflush(g_trace_file) != 0)
         {
-            ft_errno = FT_ERR_IO;
+            ft_global_error_stack_push(FT_ERR_IO);
             return (false);
         }
     }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);
 }
 
@@ -112,7 +113,7 @@ static bool time_trace_write_event_line(const std::string &line)
 {
     if (!g_trace_session_active || g_trace_file == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_STATE;
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return (false);
     }
     if (!g_trace_first_event)
@@ -124,7 +125,7 @@ static bool time_trace_write_event_line(const std::string &line)
         return (false);
     if (g_trace_first_event)
         g_trace_first_event = false;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);
 }
 
@@ -177,18 +178,18 @@ bool    time_trace_begin_session(const char *file_path)
 
     if (g_trace_session_active)
     {
-        ft_errno = FT_ERR_ALREADY_INITIALIZED;
+        ft_global_error_stack_push(FT_ERR_ALREADY_INITIALIZED);
         return (false);
     }
     if (file_path == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
     g_trace_file = std::fopen(file_path, "w");
     if (g_trace_file == ft_nullptr)
     {
-        ft_errno = FT_ERR_IO;
+        ft_global_error_stack_push(FT_ERR_IO);
         return (false);
     }
     header = "{\"traceEvents\":[\n";
@@ -197,21 +198,21 @@ bool    time_trace_begin_session(const char *file_path)
     {
         std::fclose(g_trace_file);
         g_trace_file = ft_nullptr;
-        ft_errno = FT_ERR_IO;
+        ft_global_error_stack_push(FT_ERR_IO);
         return (false);
     }
     if (std::fflush(g_trace_file) != 0)
     {
         std::fclose(g_trace_file);
         g_trace_file = ft_nullptr;
-        ft_errno = FT_ERR_IO;
+        ft_global_error_stack_push(FT_ERR_IO);
         return (false);
     }
     g_trace_session_start = std::chrono::steady_clock::now();
     g_trace_session_active = true;
     g_trace_first_event = true;
     g_trace_stack.clear();
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);
 }
 
@@ -222,12 +223,12 @@ bool    time_trace_end_session(void)
 
     if (!g_trace_session_active)
     {
-        ft_errno = FT_ERR_INVALID_STATE;
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return (false);
     }
     if (!g_trace_stack.empty())
     {
-        ft_errno = FT_ERR_INVALID_STATE;
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return (false);
     }
     footer = "\n]}\n";
@@ -237,21 +238,21 @@ bool    time_trace_end_session(void)
         std::fclose(g_trace_file);
         g_trace_file = ft_nullptr;
         g_trace_session_active = false;
-        ft_errno = FT_ERR_IO;
+        ft_global_error_stack_push(FT_ERR_IO);
         return (false);
     }
     if (std::fclose(g_trace_file) != 0)
     {
         g_trace_file = ft_nullptr;
         g_trace_session_active = false;
-        ft_errno = FT_ERR_IO;
+        ft_global_error_stack_push(FT_ERR_IO);
         return (false);
     }
     g_trace_file = ft_nullptr;
     g_trace_session_active = false;
     g_trace_first_event = true;
     g_trace_stack.clear();
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);
 }
 
@@ -261,7 +262,7 @@ bool    time_trace_begin_event(const char *name, const char *category)
 
     if (!g_trace_session_active || g_trace_file == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_STATE;
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return (false);
     }
     if (name == ft_nullptr)
@@ -279,10 +280,10 @@ bool    time_trace_begin_event(const char *name, const char *category)
     }
     catch (const std::bad_alloc &)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (false);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);
 }
 
@@ -295,12 +296,12 @@ bool    time_trace_end_event(void)
 
     if (!g_trace_session_active || g_trace_file == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_STATE;
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return (false);
     }
     if (g_trace_stack.empty())
     {
-        ft_errno = FT_ERR_INVALID_STATE;
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return (false);
     }
     frame = g_trace_stack.back();
@@ -313,7 +314,7 @@ bool    time_trace_end_event(void)
     if (!time_trace_write_duration_event(frame.name, frame.category,
             start_us, duration_us))
         return (false);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);
 }
 
@@ -326,7 +327,7 @@ bool    time_trace_instant_event(const char *name, const char *category)
 
     if (!g_trace_session_active || g_trace_file == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_STATE;
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return (false);
     }
     if (name == ft_nullptr)
@@ -342,6 +343,6 @@ bool    time_trace_instant_event(const char *name, const char *category)
     if (!time_trace_write_instant_event(event_name, event_category,
             timestamp_us))
         return (false);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);
 }
