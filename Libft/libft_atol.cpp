@@ -3,6 +3,12 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 
+static long report_atol_result(int error_code, long return_value)
+{
+    ft_global_error_stack_push(error_code);
+    return (return_value);
+}
+
 long ft_atol(const char *string)
 {
     long index = 0;
@@ -14,10 +20,7 @@ long ft_atol(const char *string)
     int error_code = FT_ERR_SUCCESSS;
 
     if (string == ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
-        return (0);
-    }
+        return (report_atol_result(FT_ERR_INVALID_ARGUMENT, 0));
     while (string[index] == ' ' || ((string[index] >= '\t')
             && (string[index] <= '\r')))
         index++;
@@ -36,39 +39,24 @@ long ft_atol(const char *string)
         if (sign == 1)
         {
             if (result > positive_limit / 10)
-            {
-                ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
-                return (FT_LONG_MAX);
-            }
+                return (report_atol_result(FT_ERR_OUT_OF_RANGE, FT_LONG_MAX));
             if (result == positive_limit / 10
                 && static_cast<unsigned long long>(digit) > positive_limit % 10)
-            {
-                ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
-                return (FT_LONG_MAX);
-            }
+                return (report_atol_result(FT_ERR_OUT_OF_RANGE, FT_LONG_MAX));
         }
         else
         {
             if (result > negative_limit / 10)
-            {
-                ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
-                return (FT_LONG_MIN);
-            }
+                return (report_atol_result(FT_ERR_OUT_OF_RANGE, FT_LONG_MIN));
             if (result == negative_limit / 10
                 && static_cast<unsigned long long>(digit) > negative_limit % 10)
-            {
-                ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
-                return (FT_LONG_MIN);
-            }
+                return (report_atol_result(FT_ERR_OUT_OF_RANGE, FT_LONG_MIN));
         }
         result = result * 10 + static_cast<unsigned long long>(digit);
         index++;
     }
     if (digit_found == false)
-    {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
-        return (0);
-    }
+        return (report_atol_result(FT_ERR_INVALID_ARGUMENT, 0));
     if (string[index] != '\0')
         error_code = FT_ERR_INVALID_ARGUMENT;
     if (error_code != FT_ERR_SUCCESSS)
@@ -77,29 +65,21 @@ long ft_atol(const char *string)
         {
             if (result == negative_limit)
             {
-                ft_global_error_stack_push(error_code);
-                return (FT_LONG_MIN);
+                return (report_atol_result(error_code, FT_LONG_MIN));
             }
             long signed_result = -static_cast<long>(result);
 
-            ft_global_error_stack_push(error_code);
-            return (signed_result);
+            return (report_atol_result(error_code, signed_result));
         }
-        ft_global_error_stack_push(error_code);
-        return (static_cast<long>(result));
+        return (report_atol_result(error_code, static_cast<long>(result)));
     }
     if (sign == -1)
     {
         if (result == negative_limit)
-        {
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
-            return (FT_LONG_MIN);
-        }
+            return (report_atol_result(FT_ERR_SUCCESSS, FT_LONG_MIN));
         long signed_result = -static_cast<long>(result);
 
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-        return (signed_result);
+        return (report_atol_result(FT_ERR_SUCCESSS, signed_result));
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (static_cast<long>(result));
+    return (report_atol_result(FT_ERR_SUCCESSS, static_cast<long>(result)));
 }

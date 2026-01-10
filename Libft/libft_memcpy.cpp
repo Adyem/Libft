@@ -3,24 +3,21 @@
 #include "../Errno/errno.hpp"
 #include <cstdint>
 
+static void *report_memcpy_result(int error_code, void *result)
+{
+    ft_global_error_stack_push(error_code);
+    return (result);
+}
+
 void* ft_memcpy(void* destination, const void* source, size_t size)
 {
     if (size == 0)
-    {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-        return (destination);
-    }
+        return (report_memcpy_result(FT_ERR_SUCCESSS, destination));
     if (destination == ft_nullptr || source == ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
-        return (ft_nullptr);
-    }
+        return (report_memcpy_result(FT_ERR_INVALID_ARGUMENT, ft_nullptr));
 
     if (destination == source)
-    {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-        return (destination);
-    }
+        return (report_memcpy_result(FT_ERR_SUCCESSS, destination));
 
     unsigned char*       dest = static_cast<unsigned char*>(destination);
     const unsigned char* src = static_cast<const unsigned char*>(source);
@@ -41,10 +38,7 @@ void* ft_memcpy(void* destination, const void* source, size_t size)
     if (src_limit < src_address)
         src_limit = UINTPTR_MAX;
     if (dest_address < src_limit && src_address < dest_limit)
-    {
-        ft_global_error_stack_push(FT_ERR_OVERLAP);
-        return (destination);
-    }
+        return (report_memcpy_result(FT_ERR_OVERLAP, destination));
 
     while (size != 0)
     {
@@ -54,6 +48,5 @@ void* ft_memcpy(void* destination, const void* source, size_t size)
         --size;
     }
 
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (destination);
+    return (report_memcpy_result(FT_ERR_SUCCESSS, destination));
 }

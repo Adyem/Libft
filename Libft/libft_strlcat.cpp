@@ -2,6 +2,12 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 
+static size_t report_strlcat_result(int error_code, size_t return_value)
+{
+    ft_global_error_stack_push(error_code);
+    return (return_value);
+}
+
 size_t ft_strlcat(char *destination, const char *source, size_t buffer_size)
 {
     size_t destination_length;
@@ -9,29 +15,18 @@ size_t ft_strlcat(char *destination, const char *source, size_t buffer_size)
     size_t copy_index;
 
     if (source == ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
-        return (0);
-    }
+        return (report_strlcat_result(FT_ERR_INVALID_ARGUMENT, 0));
     source_length = ft_strlen_size_t(source);
     if (buffer_size == 0)
-    {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-        return (source_length);
-    }
+        return (report_strlcat_result(FT_ERR_SUCCESSS, source_length));
     if (destination == ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
-        return (0);
-    }
+        return (report_strlcat_result(FT_ERR_INVALID_ARGUMENT, 0));
     destination_length = 0;
     while (destination_length < buffer_size && destination[destination_length] != '\0')
         destination_length++;
     if (destination_length == buffer_size)
-    {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-        return (buffer_size + source_length);
-    }
+        return (report_strlcat_result(FT_ERR_SUCCESSS,
+            buffer_size + source_length));
     copy_index = 0;
     while ((destination_length + copy_index + 1) < buffer_size && source[copy_index])
     {
@@ -39,6 +34,6 @@ size_t ft_strlcat(char *destination, const char *source, size_t buffer_size)
         copy_index++;
     }
     destination[destination_length + copy_index] = '\0';
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (destination_length + source_length);
+    return (report_strlcat_result(FT_ERR_SUCCESSS,
+        destination_length + source_length));
 }
