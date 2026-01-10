@@ -8,7 +8,7 @@ static void time_benchmark_set_error(t_time_benchmark *benchmark, int error_code
 {
     if (benchmark != ft_nullptr)
         benchmark->error_code = error_code;
-    ft_errno = error_code;
+    ft_global_error_stack_push(error_code);
     return ;
 }
 
@@ -22,7 +22,7 @@ void    time_benchmark_reset(t_time_benchmark *benchmark)
 {
     if (benchmark == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     benchmark->sample_count = 0;
@@ -43,7 +43,7 @@ int time_benchmark_add_sample(t_time_benchmark *benchmark, double duration_ms)
 
     if (benchmark == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (!(duration_ms >= 0.0))
@@ -113,7 +113,7 @@ bool    time_benchmark_snapshot(const t_time_benchmark *benchmark,
 
     if (benchmark == ft_nullptr || out_snapshot == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
     out_snapshot->sample_count = benchmark->sample_count;
@@ -122,9 +122,12 @@ bool    time_benchmark_snapshot(const t_time_benchmark *benchmark,
     out_snapshot->maximum_ms = benchmark->maximum_ms;
     jitter_ms = time_benchmark_calculate_jitter(benchmark);
     out_snapshot->jitter_ms = jitter_ms;
-    ft_errno = benchmark->error_code;
     if (benchmark->error_code != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(benchmark->error_code);
         return (false);
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);
 }
 
@@ -132,10 +135,10 @@ size_t  time_benchmark_get_sample_count(const t_time_benchmark *benchmark)
 {
     if (benchmark == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
-    ft_errno = benchmark->error_code;
+    ft_global_error_stack_push(benchmark->error_code);
     return (benchmark->sample_count);
 }
 
@@ -143,10 +146,10 @@ double  time_benchmark_get_average_ms(const t_time_benchmark *benchmark)
 {
     if (benchmark == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0.0);
     }
-    ft_errno = benchmark->error_code;
+    ft_global_error_stack_push(benchmark->error_code);
     return (benchmark->rolling_mean_ms);
 }
 
@@ -154,12 +157,15 @@ double  time_benchmark_get_jitter_ms(const t_time_benchmark *benchmark)
 {
     if (benchmark == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0.0);
     }
-    ft_errno = benchmark->error_code;
     if (benchmark->error_code != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(benchmark->error_code);
         return (0.0);
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (time_benchmark_calculate_jitter(benchmark));
 }
 
@@ -167,10 +173,10 @@ double  time_benchmark_get_minimum_ms(const t_time_benchmark *benchmark)
 {
     if (benchmark == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0.0);
     }
-    ft_errno = benchmark->error_code;
+    ft_global_error_stack_push(benchmark->error_code);
     return (benchmark->minimum_ms);
 }
 
@@ -178,10 +184,10 @@ double  time_benchmark_get_maximum_ms(const t_time_benchmark *benchmark)
 {
     if (benchmark == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0.0);
     }
-    ft_errno = benchmark->error_code;
+    ft_global_error_stack_push(benchmark->error_code);
     return (benchmark->maximum_ms);
 }
 
@@ -189,10 +195,10 @@ int time_benchmark_get_error(const t_time_benchmark *benchmark)
 {
     if (benchmark == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (FT_ERR_INVALID_ARGUMENT);
     }
-    ft_errno = benchmark->error_code;
+    ft_global_error_stack_push(benchmark->error_code);
     return (benchmark->error_code);
 }
 
@@ -200,9 +206,9 @@ const char  *time_benchmark_get_error_str(const t_time_benchmark *benchmark)
 {
     if (benchmark == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_strerror(FT_ERR_INVALID_ARGUMENT));
     }
-    ft_errno = benchmark->error_code;
+    ft_global_error_stack_push(benchmark->error_code);
     return (ft_strerror(benchmark->error_code));
 }
