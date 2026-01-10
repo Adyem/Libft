@@ -84,3 +84,73 @@ Within the ReadLine module, only public-facing entry points that callers use dir
 - rl_clear_suggestions
 
 All other ReadLine helpers are internal-use and must report errors via existing internal mechanisms without pushing to the global error stack.
+
+#Compatebility Module Error Stack Rules
+
+Everything in the Compatebility module is internal-use only and must not push to the global error stack directly.
+
+#CMA Error Stack Rules
+
+Within the CMA module, only public-facing entry points that callers use directly should push to the global error stack:
+- cma_set_backend
+- cma_clear_backend
+- cma_backend_is_enabled
+- cma_malloc
+- cma_free
+- cma_checked_free
+- cma_strdup
+- cma_strndup
+- cma_memdup
+- cma_calloc
+- cma_realloc
+- cma_aligned_alloc
+- cma_alloc_size
+- cma_block_size
+- cma_checked_block_size
+- cma_atoi
+- cma_split
+- cma_itoa
+- cma_itoa_base
+- cma_strjoin
+- cma_strjoin_multiple
+- cma_substr
+- cma_strtrim
+- cma_free_double
+- cma_set_alloc_limit
+- cma_set_thread_safety
+- cma_get_stats
+- cma_get_extended_stats
+- cma_leak_detection_enable
+- cma_leak_detection_disable
+- cma_leak_detection_clear
+- cma_leak_detection_is_enabled
+- cma_leak_detection_outstanding_allocations
+- cma_leak_detection_outstanding_bytes
+- cma_leak_detection_report
+
+All other CMA helpers are internal-use and must report errors via existing internal mechanisms without pushing to the global error stack.
+
+#SCMA Error Stack Rules
+
+Within the SCMA module, only public-facing entry points that callers use directly should push to the global error stack:
+- scma_initialize
+- scma_shutdown
+- scma_is_initialized
+- scma_allocate
+- scma_free
+- scma_resize
+- scma_get_size
+- scma_handle_is_valid
+- scma_write
+- scma_read
+- scma_snapshot
+- scma_release_snapshot
+- scma_get_stats
+- scma_debug_dump
+- scma_runtime_mutex
+- scma_mutex_lock
+- scma_mutex_unlock
+- scma_mutex_close
+- scma_mutex_lock_count
+
+All other SCMA helpers are internal-use and must report errors via existing internal mechanisms without pushing to the global error stack.

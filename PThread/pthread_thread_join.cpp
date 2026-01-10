@@ -12,15 +12,18 @@ int pt_thread_join(pthread_t thread, void **retval)
     {
         return_value = ESRCH;
         ft_errno = ft_map_system_error(return_value);
+        ft_global_error_stack_push(ft_errno);
         return (return_value);
     }
     return_value = pthread_join(thread, retval);
     if (return_value != 0)
     {
         ft_errno = ft_map_system_error(return_value);
+        ft_global_error_stack_push(ft_errno);
         return (return_value);
     }
     ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (return_value);
 }
 
@@ -34,12 +37,14 @@ int pt_thread_timed_join(pthread_t thread, void **retval, long timeout_ms)
     {
         return_value = ESRCH;
         ft_errno = ft_map_system_error(return_value);
+        ft_global_error_stack_push(ft_errno);
         return (return_value);
     }
     if (timeout_ms < 0)
     {
         return_value = EINVAL;
         ft_errno = ft_map_system_error(return_value);
+        ft_global_error_stack_push(ft_errno);
         return (return_value);
     }
 #ifdef __linux__
@@ -48,6 +53,7 @@ int pt_thread_timed_join(pthread_t thread, void **retval, long timeout_ms)
     {
         return_value = errno;
         ft_errno = ft_map_system_error(return_value);
+        ft_global_error_stack_push(ft_errno);
         return (return_value);
     }
     absolute_timeout.tv_sec += timeout_ms / 1000;
@@ -62,14 +68,17 @@ int pt_thread_timed_join(pthread_t thread, void **retval, long timeout_ms)
     if (return_value != 0)
     {
         ft_errno = ft_map_system_error(return_value);
+        ft_global_error_stack_push(ft_errno);
         return (return_value);
     }
     ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (return_value);
 #else
     (void)retval;
     (void)timeout_ms;
     ft_errno = FT_ERR_INVALID_STATE;
+    ft_global_error_stack_push(ft_errno);
     return (EINVAL);
 #endif
 }
