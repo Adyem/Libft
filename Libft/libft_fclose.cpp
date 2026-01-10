@@ -8,16 +8,19 @@
 #include <cerrno>
 #include <cstdio>
 
+static int report_close_error(int error_code)
+{
+    ft_global_error_stack_push(error_code);
+    return (EOF);
+}
+
 int ft_fclose(FILE *stream)
 {
     int close_result;
     int error_code;
 
     if (stream == ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_INVALID_HANDLE);
-        return (EOF);
-    }
+        return (report_close_error(FT_ERR_INVALID_HANDLE));
     close_result = std::fclose(stream);
     if (close_result != 0)
     {
@@ -28,8 +31,7 @@ int ft_fclose(FILE *stream)
             error_code = cmp_map_system_error_to_ft(close_error);
         else
             error_code = FT_ERR_INVALID_HANDLE;
-        ft_global_error_stack_push(error_code);
-        return (EOF);
+        return (report_close_error(error_code));
     }
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (FT_SUCCESS);

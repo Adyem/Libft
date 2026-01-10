@@ -19,6 +19,18 @@ static ft_string create_string_from_buffer(const char *buffer)
     return (result);
 }
 
+static void report_latest_error(void)
+{
+    int error_code;
+
+    error_code = ft_global_error_stack_pop_newest();
+    if (error_code == FT_ERR_SUCCESSS)
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    else
+        ft_global_error_stack_push(error_code);
+    return ;
+}
+
 static ft_string format_signed_long(long number)
 {
     char buffer[64];
@@ -98,97 +110,62 @@ static ft_string format_unsigned_long_long(unsigned long long number)
 ft_string ft_to_string(long number)
 {
     ft_string result;
-    int error_code;
 
     result = format_signed_long(number);
-    error_code = ft_global_error_stack_pop_newest();
-    if (error_code == FT_ERR_SUCCESSS)
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    else
-        ft_global_error_stack_push(error_code);
+    report_latest_error();
     return (result);
 }
 
 ft_string ft_to_string(unsigned long number)
 {
     ft_string result;
-    int error_code;
 
     result = format_unsigned_long(number);
-    error_code = ft_global_error_stack_pop_newest();
-    if (error_code == FT_ERR_SUCCESSS)
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    else
-        ft_global_error_stack_push(error_code);
+    report_latest_error();
     return (result);
 }
 
 ft_string ft_to_string(unsigned long long number)
 {
     ft_string result;
-    int error_code;
 
     result = format_unsigned_long_long(number);
-    error_code = ft_global_error_stack_pop_newest();
-    if (error_code == FT_ERR_SUCCESSS)
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    else
-        ft_global_error_stack_push(error_code);
+    report_latest_error();
     return (result);
 }
 
 ft_string ft_to_string(double number)
 {
     ft_string result;
-    int error_code;
 
     result = format_double_value(number);
-    error_code = ft_global_error_stack_pop_newest();
-    if (error_code == FT_ERR_SUCCESSS)
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    else
-        ft_global_error_stack_push(error_code);
+    report_latest_error();
     return (result);
 }
 
 ft_string ft_to_string(int number)
 {
     ft_string result;
-    int error_code;
 
     result = ft_to_string(static_cast<long>(number));
-    error_code = ft_global_error_stack_pop_newest();
-    if (error_code == FT_ERR_SUCCESSS)
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    else
-        ft_global_error_stack_push(error_code);
+    report_latest_error();
     return (result);
 }
 
 ft_string ft_to_string(unsigned int number)
 {
     ft_string result;
-    int error_code;
 
     result = ft_to_string(static_cast<unsigned long>(number));
-    error_code = ft_global_error_stack_pop_newest();
-    if (error_code == FT_ERR_SUCCESSS)
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    else
-        ft_global_error_stack_push(error_code);
+    report_latest_error();
     return (result);
 }
 
 ft_string ft_to_string(float number)
 {
     ft_string result;
-    int error_code;
 
     result = ft_to_string(static_cast<double>(number));
-    error_code = ft_global_error_stack_pop_newest();
-    if (error_code == FT_ERR_SUCCESSS)
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    else
-        ft_global_error_stack_push(error_code);
+    report_latest_error();
     return (result);
 }

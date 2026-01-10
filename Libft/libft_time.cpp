@@ -8,6 +8,18 @@
 #include "../Time/time.hpp"
 #include <cerrno>
 
+static int64_t report_time_error(int error_code, int64_t return_value)
+{
+    ft_global_error_stack_push(error_code);
+    return (return_value);
+}
+
+static char *report_time_string_error(int error_code)
+{
+    ft_global_error_stack_push(error_code);
+    return (ft_nullptr);
+}
+
 int64_t ft_time_ms(void)
 {
     struct timeval time_value;
@@ -20,8 +32,7 @@ int64_t ft_time_ms(void)
             error_code = ft_map_system_error(errno);
         else
             error_code = FT_ERR_TERMINATED;
-        ft_global_error_stack_push(error_code);
-        return (-1);
+        return (report_time_error(error_code, -1));
     }
     milliseconds = time_value.tv_sec * 1000;
     milliseconds += time_value.tv_usec / 1000;
@@ -37,10 +48,7 @@ char *ft_time_format(char *buffer, size_t buffer_size)
     int error_code;
 
     if (!buffer || buffer_size == 0)
-    {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
-        return (ft_nullptr);
-    }
+        return (report_time_string_error(FT_ERR_INVALID_ARGUMENT));
     ft_bzero(&time_info, sizeof(time_info));
     current_time = time_now();
     error_code = ft_global_error_stack_pop_newest();
@@ -48,24 +56,19 @@ char *ft_time_format(char *buffer, size_t buffer_size)
     {
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_TERMINATED;
-        ft_global_error_stack_push(error_code);
-        return (ft_nullptr);
+        return (report_time_string_error(error_code));
     }
     time_local(current_time, &time_info);
     error_code = ft_global_error_stack_pop_newest();
     if (error_code != FT_ERR_SUCCESSS)
-    {
-        ft_global_error_stack_push(error_code);
-        return (ft_nullptr);
-    }
+        return (report_time_string_error(error_code));
     formatted_length = time_strftime(buffer, buffer_size, "%Y-%m-%d %H:%M:%S", &time_info);
     error_code = ft_global_error_stack_pop_newest();
     if (formatted_length == 0 || error_code != FT_ERR_SUCCESSS)
     {
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_OUT_OF_RANGE;
-        ft_global_error_stack_push(error_code);
-        return (ft_nullptr);
+        return (report_time_string_error(error_code));
     }
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (buffer);
