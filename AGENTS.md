@@ -74,3 +74,13 @@ Code that relies on platform-specific features must place only the platform-depe
 #Build and Test Timing
 
 Building the library and running the full test suite typically takes about two and a half minutes, possibly a little longer.
+
+#ReadLine Error Stack Rules
+
+Within the ReadLine module, only public-facing entry points that callers use directly should push to the global error stack:
+- rl_readline
+- rl_clear_history
+- rl_add_suggestion
+- rl_clear_suggestions
+
+All other ReadLine helpers are internal-use and must report errors via existing internal mechanisms without pushing to the global error stack.

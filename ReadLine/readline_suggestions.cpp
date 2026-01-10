@@ -15,6 +15,7 @@ void rl_add_suggestion(const char *word)
         if (strcmp(suggestions[index], word) == 0)
         {
             ft_errno = FT_ERR_SUCCESSS;
+            ft_global_error_stack_push(ft_errno);
             return ;
         }
         index++;
@@ -25,15 +26,22 @@ void rl_add_suggestion(const char *word)
 
         new_suggestion = cma_strdup(word);
         if (new_suggestion == ft_nullptr)
+        {
+            if (ft_errno == FT_ERR_SUCCESSS)
+                ft_errno = FT_ERR_NO_MEMORY;
+            ft_global_error_stack_push(ft_errno);
             return ;
+        }
         suggestions[suggestion_count] = new_suggestion;
         suggestion_count++;
         ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(ft_errno);
     }
     else
     {
         pf_printf_fd(2, "Suggestion list full\n");
         ft_errno = FT_ERR_OUT_OF_RANGE;
+        ft_global_error_stack_push(ft_errno);
     }
     return ;
 }
@@ -48,5 +56,6 @@ void rl_clear_suggestions()
     }
     suggestion_count = 0;
     ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(ft_errno);
     return ;
 }
