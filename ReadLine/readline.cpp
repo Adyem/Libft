@@ -106,5 +106,6 @@ char *rl_readline(const char *prompt)
     if (DEBUG == 1)
         pf_printf("returning %s\n", state.buffer);
     ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(ft_errno);
     return (state.buffer);
 }

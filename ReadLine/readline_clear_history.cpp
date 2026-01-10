@@ -17,5 +17,6 @@ void rl_clear_history()
     }
     history_count = 0;
     ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(ft_errno);
     return ;
 }
