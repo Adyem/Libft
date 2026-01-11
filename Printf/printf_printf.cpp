@@ -13,6 +13,7 @@ int pf_printf_fd(int fd, const char *format, ...)
 {
     va_list args;
     int        printed_chars;
+    int        error_code;
 
     if (!format)
     {
@@ -22,14 +23,11 @@ int pf_printf_fd(int fd, const char *format, ...)
     va_start(args, format);
     printed_chars = pf_printf_fd_v(fd, format, args);
     va_end(args);
+    error_code = ft_global_error_stack_pop_newest();
     if (printed_chars < 0)
     {
-        int error_code;
-
-        error_code = ft_errno;
-        if (error_code == FT_ERR_SUCCESSS)
-            error_code = FT_ERR_IO;
-        ft_global_error_stack_push(error_code);
+        if (error_code != FT_ERR_SUCCESSS)
+            ft_global_error_stack_push(error_code);
         return (printed_chars);
     }
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
@@ -40,6 +38,7 @@ int pf_printf(const char *format, ...)
 {
     va_list    args;
     int        printed_chars;
+    int        error_code;
 
     if (!format)
     {
@@ -49,14 +48,11 @@ int pf_printf(const char *format, ...)
     va_start(args, format);
     printed_chars = pf_printf_fd_v(1, format, args);
     va_end(args);
+    error_code = ft_global_error_stack_pop_newest();
     if (printed_chars < 0)
     {
-        int error_code;
-
-        error_code = ft_errno;
-        if (error_code == FT_ERR_SUCCESSS)
-            error_code = FT_ERR_IO;
-        ft_global_error_stack_push(error_code);
+        if (error_code != FT_ERR_SUCCESSS)
+            ft_global_error_stack_push(error_code);
         return (printed_chars);
     }
     ft_global_error_stack_push(FT_ERR_SUCCESSS);

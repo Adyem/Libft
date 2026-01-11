@@ -49,9 +49,12 @@ static int pf_stream_writer(const char *data_pointer, size_t data_length, void *
 
 int ft_vfprintf(FILE *stream, const char *format, va_list args)
 {
+    int error_code;
+
     if (stream == ft_nullptr || format == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        error_code = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     pf_stream_writer_context context;
@@ -68,20 +71,23 @@ int ft_vfprintf(FILE *stream, const char *format, va_list args)
 
         format_error = ft_errno;
         va_end(current_args);
-        ft_errno = format_error;
-        if (written_count != SIZE_MAX && ft_errno == FT_ERR_SUCCESSS)
-            ft_errno = FT_ERR_IO;
+        ft_global_error_stack_push(format_error);
         return (-1);
     }
     va_end(current_args);
     if (pf_flush_stream(stream) != 0)
-        return (-1);
-    if (written_count > static_cast<size_t>(INT_MAX))
     {
-        ft_errno = FT_ERR_OUT_OF_RANGE;
+        error_code = ft_errno;
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    if (written_count > static_cast<size_t>(INT_MAX))
+    {
+        error_code = FT_ERR_OUT_OF_RANGE;
+        ft_global_error_stack_push(error_code);
+        return (-1);
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (static_cast<int>(written_count));
 }
 
@@ -89,15 +95,24 @@ int ft_fprintf(FILE *stream, const char *format, ...)
 {
     va_list args;
     int result;
+    int error_code;
 
     if (stream == ft_nullptr || format == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        error_code = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     va_start(args, format);
     result = ft_vfprintf(stream, format, args);
     va_end(args);
+    error_code = ft_global_error_stack_pop_newest();
+    if (result < 0)
+    {
+        if (error_code != FT_ERR_SUCCESSS)
+            ft_global_error_stack_push(error_code);
+        return (result);
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
-
