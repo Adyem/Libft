@@ -479,6 +479,7 @@ int ft_file::seek(off_t offset, int whence) noexcept
 int ft_file::printf(const char *format, ...)
 {
     int printed_chars;
+    int error_code;
     va_list args;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
@@ -499,9 +500,11 @@ int ft_file::printf(const char *format, ...)
     va_start(args, format);
     printed_chars = pf_printf_fd_v(this->_fd, format, args);
     va_end(args);
+    error_code = ft_global_error_stack_pop_newest();
     if (printed_chars < 0)
     {
-        this->set_error(ft_errno);
+        if (error_code != FT_ERR_SUCCESSS)
+            this->set_error(error_code);
         return (printed_chars);
     }
     this->set_error(FT_ERR_SUCCESSS);

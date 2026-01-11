@@ -28,32 +28,30 @@ int pf_register_custom_specifier(char specifier, t_pf_custom_formatter handler, 
 
     if (handler == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_POINTER;
+        ft_global_error_stack_push(FT_ERR_INVALID_POINTER);
         return (-1);
     }
     index = static_cast<unsigned char>(specifier);
     entry = &g_pf_custom_specifiers[index];
     if (entry->handler != ft_nullptr)
     {
-        ft_errno = FT_ERR_ALREADY_EXISTS;
+        ft_global_error_stack_push(FT_ERR_ALREADY_EXISTS);
         return (-1);
     }
     entry->handler = handler;
     entry->context = context;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
 int pf_unregister_custom_specifier(char specifier)
 {
     unsigned char               index;
-    int                         previous_errno;
     std::lock_guard<std::mutex> guard(g_pf_custom_specifiers_mutex);
 
-    previous_errno = ft_errno;
     index = static_cast<unsigned char>(specifier);
     pf_clear_entry(g_pf_custom_specifiers[index]);
-    ft_errno = previous_errno;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 

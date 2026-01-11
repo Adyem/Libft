@@ -85,45 +85,56 @@ void pf_reset_ftell_function(void)
 
 int pf_vsnprintf(char *string, size_t size, const char *format, va_list args)
 {
+    int error_code;
+
     if (format == ft_nullptr || (string == ft_nullptr && size > 0))
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        error_code = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     FILE *stream = g_pf_tmpfile_function();
     if (stream == ft_nullptr)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        error_code = FT_ERR_NO_MEMORY;
         if (string != ft_nullptr && size > 0)
             string[0] = '\0';
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     va_list copy;
     va_copy(copy, args);
     int printed = ft_vfprintf(stream, format, copy);
     va_end(copy);
+    error_code = ft_global_error_stack_pop_newest();
     if (printed < 0)
     {
         if (string != ft_nullptr && size > 0)
             string[0] = '\0';
         fclose(stream);
+        if (error_code != FT_ERR_SUCCESSS)
+            ft_global_error_stack_push(error_code);
         return (printed);
     }
     if (pf_flush_stream(stream) != 0)
     {
+        error_code = ft_errno;
         fclose(stream);
         if (string != ft_nullptr && size > 0)
             string[0] = '\0';
+        if (error_code != FT_ERR_SUCCESSS)
+            ft_global_error_stack_push(error_code);
         return (-1);
     }
     long position = g_pf_ftell_function(stream);
     if (position < 0)
     {
         int saved_errno = errno;
-        ft_errno = ft_map_system_error(saved_errno);
+        error_code = ft_map_system_error(saved_errno);
         fclose(stream);
         if (string != ft_nullptr && size > 0)
             string[0] = '\0';
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     rewind(stream);
@@ -138,7 +149,6 @@ int pf_vsnprintf(char *string, size_t size, const char *format, va_list args)
         string[read_bytes] = '\0';
     }
     fclose(stream);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (printed);
 }
-

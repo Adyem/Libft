@@ -46,10 +46,11 @@ ssize_t su_read(int file_descriptor, void *buffer, size_t count)
         ssize_t read_result = cmp_read(file_descriptor, buffer, count);
         if (read_result >= 0)
         {
-            ft_errno = FT_ERR_SUCCESSS;
+            ft_global_error_stack_push(FT_ERR_SUCCESSS);
             return (read_result);
         }
         int stored_error = ft_errno;
+        int error_code;
         if (stored_error != FT_ERR_SUCCESSS)
             stored_error = cmp_normalize_ft_errno(stored_error);
 #if defined(_WIN32) || defined(_WIN64)
@@ -63,14 +64,14 @@ ssize_t su_read(int file_descriptor, void *buffer, size_t count)
         if (stored_error == FT_ERR_SUCCESSS && errno != 0)
             stored_error = cmp_map_system_error_to_ft(errno);
 #endif
-        ft_errno = stored_error;
+        error_code = stored_error;
 #if defined(__linux__) || defined(__APPLE__)
         const int max_retries = 10;
         const int retry_delay_ms = 500;
-        if (ft_errno == ft_map_system_error(EINTR))
+        if (error_code == ft_map_system_error(EINTR))
             continue ;
-        else if (ft_errno == ft_map_system_error(EAGAIN)
-            || ft_errno == ft_map_system_error(EWOULDBLOCK))
+        else if (error_code == ft_map_system_error(EAGAIN)
+            || error_code == ft_map_system_error(EWOULDBLOCK))
         {
             if (retry_attempts < max_retries)
             {
@@ -80,11 +81,18 @@ ssize_t su_read(int file_descriptor, void *buffer, size_t count)
                 continue ;
             }
             else
+            {
+                ft_global_error_stack_push(error_code);
                 return (-1);
+            }
         }
         else
+        {
+            ft_global_error_stack_push(error_code);
             return (-1);
+        }
 #else
+        ft_global_error_stack_push(error_code);
         return (-1);
 #endif
     }
@@ -112,10 +120,11 @@ ssize_t su_write(int file_descriptor, const void *buffer, size_t count)
         {
             if (write_result == 0)
             {
-                ft_errno = FT_ERR_IO;
+                ft_global_error_stack_push(FT_ERR_IO);
                 return (-1);
             }
             int stored_error = ft_errno;
+            int error_code;
             if (stored_error != FT_ERR_SUCCESSS)
                 stored_error = cmp_normalize_ft_errno(stored_error);
 #if defined(_WIN32) || defined(_WIN64)
@@ -129,14 +138,14 @@ ssize_t su_write(int file_descriptor, const void *buffer, size_t count)
             if (stored_error == FT_ERR_SUCCESSS && errno != 0)
                 stored_error = cmp_map_system_error_to_ft(errno);
 #endif
-            ft_errno = stored_error;
+            error_code = stored_error;
 #if defined(__linux__) || defined(__APPLE__)
             const int max_retries = 10;
             const int retry_delay_ms = 500;
-            if (ft_errno == ft_map_system_error(EINTR))
+            if (error_code == ft_map_system_error(EINTR))
                 continue ;
-            else if (ft_errno == ft_map_system_error(EAGAIN)
-                || ft_errno == ft_map_system_error(EWOULDBLOCK))
+            else if (error_code == ft_map_system_error(EAGAIN)
+                || error_code == ft_map_system_error(EWOULDBLOCK))
             {
                 if (retry_attempts < max_retries)
                 {
@@ -146,16 +155,23 @@ ssize_t su_write(int file_descriptor, const void *buffer, size_t count)
                     continue ;
                 }
                 else
+                {
+                    ft_global_error_stack_push(error_code);
                     return (-1);
+                }
             }
             else
+            {
+                ft_global_error_stack_push(error_code);
                 return (-1);
+            }
 #else
+            ft_global_error_stack_push(error_code);
             return (-1);
 #endif
         }
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (total_written);
 }
 
@@ -165,6 +181,7 @@ int su_close(int file_descriptor)
     if (close_result != 0)
     {
         int stored_error = ft_errno;
+        int error_code;
         if (stored_error != FT_ERR_SUCCESSS)
             stored_error = cmp_normalize_ft_errno(stored_error);
 #if defined(_WIN32) || defined(_WIN64)
@@ -178,10 +195,10 @@ int su_close(int file_descriptor)
         if (stored_error == FT_ERR_SUCCESSS && errno != 0)
             stored_error = cmp_map_system_error_to_ft(errno);
 #endif
-        ft_errno = stored_error;
+        error_code = stored_error;
+        ft_global_error_stack_push(error_code);
         return (close_result);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
-

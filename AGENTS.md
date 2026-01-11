@@ -43,6 +43,8 @@ The function that checks the entry is responsible for popping it.
 Functions marked strictly for internal use must not push any errors on the stack.
 When a function returns an error value, check that return value alone. Use the error stack only to
 determine the error type (still pop the newest value when required).
+If a function returns an error value and the popped error entry is success, do not publish or set
+an error code from that success value.
 
 If a function completes with an error entry still present on the stack,
 it must not push a success entry.

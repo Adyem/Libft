@@ -230,6 +230,7 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
     size_t sink_count;
     bool use_color;
     int final_error;
+    int format_error;
     char message_buffer[1024];
     va_list args_copy;
 
@@ -244,8 +245,15 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
         return ;
     }
     va_copy(args_copy, args);
-    pf_vsnprintf(message_buffer, sizeof(message_buffer), fmt, args_copy);
+    int formatted_length = pf_vsnprintf(message_buffer, sizeof(message_buffer), fmt, args_copy);
     va_end(args_copy);
+    format_error = ft_global_error_stack_pop_newest();
+    if (formatted_length < 0)
+    {
+        if (format_error != FT_ERR_SUCCESSS)
+            ft_errno = format_error;
+        return ;
+    }
     message_text = ft_string(message_buffer);
     if (message_text.get_error() != FT_ERR_SUCCESSS)
     {
