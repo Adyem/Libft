@@ -6,41 +6,45 @@
 
 int cma_checked_free(void* ptr)
 {
+    int error_code;
+
     if (OFFSWITCH == 1)
     {
         std::free(ptr);
-        ft_errno = FT_ERR_SUCCESSS;
+        error_code = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(error_code);
         return (0);
     }
     if (!ptr)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        error_code = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(error_code);
         return (0);
     }
     cma_allocator_guard allocator_guard;
 
     if (!allocator_guard.is_active())
+    {
+        error_code = allocator_guard.get_error();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_INVALID_STATE;
+        ft_global_error_stack_push(error_code);
         return (-1);
+    }
     Block* found = cma_find_block_for_pointer(ptr);
     if (!found)
     {
-        int error_code;
-
-        ft_errno = FT_ERR_INVALID_POINTER;
-        error_code = ft_errno;
+        error_code = FT_ERR_INVALID_POINTER;
         allocator_guard.unlock();
-        ft_errno = error_code;
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     cma_validate_block(found, "cma_checked_free", ptr);
     if (static_cast<void *>(cma_block_user_pointer(found)) != ptr)
     {
-        int error_code;
-
-        ft_errno = FT_ERR_INVALID_POINTER;
-        error_code = ft_errno;
+        error_code = FT_ERR_INVALID_POINTER;
         allocator_guard.unlock();
-        ft_errno = error_code;
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     ft_size_t freed_size = found->size;
@@ -55,8 +59,8 @@ int cma_checked_free(void* ptr)
     else
         g_cma_current_bytes = 0;
     g_cma_free_count++;
-    ft_errno = FT_ERR_SUCCESSS;
     allocator_guard.unlock();
-    ft_errno = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
     return (0);
 }

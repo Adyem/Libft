@@ -56,7 +56,10 @@ static void *allocate_block_locked(ft_size_t aligned_size, ft_size_t user_size)
         page = create_page(aligned_size);
         if (!page)
         {
-            ft_errno = FT_ERR_NO_MEMORY;
+            int error_code;
+
+            error_code = FT_ERR_NO_MEMORY;
+            ft_global_error_stack_push(error_code);
             return (ft_nullptr);
         }
         block = page->blocks;
@@ -64,7 +67,6 @@ static void *allocate_block_locked(ft_size_t aligned_size, ft_size_t user_size)
     cma_validate_block(block, "cma_realloc allocate", ft_nullptr);
     if (!cma_block_is_free(block))
     {
-        ft_errno = FT_ERR_INVALID_STATE;
         su_sigabrt();
     }
     block = split_block(block, aligned_size);
@@ -74,7 +76,6 @@ static void *allocate_block_locked(ft_size_t aligned_size, ft_size_t user_size)
     g_cma_current_bytes += block->size;
     if (g_cma_current_bytes > g_cma_peak_bytes)
         g_cma_peak_bytes = g_cma_current_bytes;
-    ft_errno = FT_ERR_SUCCESSS;
     void *result;
 
     cma_debug_prepare_allocation(block, user_size);
@@ -91,7 +92,6 @@ static void release_block_locked(Block *block)
     cma_validate_block(block, "cma_realloc release", ft_nullptr);
     if (cma_block_is_free(block))
     {
-        ft_errno = FT_ERR_INVALID_STATE;
         su_sigabrt();
     }
     freed_size = block->size;
@@ -113,20 +113,31 @@ static void release_block_locked(Block *block)
 
 void *cma_realloc(void* ptr, ft_size_t new_size)
 {
+    int error_code;
+
     if (new_size > FT_SYSTEM_SIZE_MAX)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        error_code = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }
     if (g_cma_alloc_limit != 0 && new_size > g_cma_alloc_limit)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        error_code = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }
     if (cma_backend_is_enabled())
     {
         if (!ptr || cma_backend_owns_pointer(ptr))
-            return (cma_backend_reallocate(ptr, new_size));
+        {
+            void *memory_pointer;
+
+            memory_pointer = cma_backend_reallocate(ptr, new_size);
+            error_code = ft_global_error_stack_pop_newest();
+            ft_global_error_stack_push(error_code);
+            return (memory_pointer);
+        }
     }
     if (OFFSWITCH == 1)
     {
@@ -134,33 +145,48 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
         if (!ptr && result)
         {
             g_cma_allocation_count++;
-            ft_errno = FT_ERR_SUCCESSS;
+            error_code = FT_ERR_SUCCESSS;
         }
         else if (ptr && new_size == 0)
         {
             g_cma_free_count++;
-            ft_errno = FT_ERR_SUCCESSS;
+            error_code = FT_ERR_SUCCESSS;
         }
         else if (!result && new_size != 0)
-            ft_errno = FT_ERR_NO_MEMORY;
+            error_code = FT_ERR_NO_MEMORY;
         else
-            ft_errno = FT_ERR_SUCCESSS;
+            error_code = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(error_code);
         return (result);
     }
     cma_allocator_guard allocator_guard;
 
     if (!allocator_guard.is_active())
+    {
+        error_code = allocator_guard.get_error();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_INVALID_STATE;
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
+    }
     if (!ptr)
     {
         allocator_guard.unlock();
-        return (cma_malloc(new_size));
+        void *memory_pointer;
+
+        memory_pointer = cma_malloc(new_size);
+        error_code = ft_global_error_stack_pop_newest();
+        ft_global_error_stack_push(error_code);
+        return (memory_pointer);
     }
     if (new_size == 0)
     {
         allocator_guard.unlock();
         cma_free(ptr);
-        ft_errno = FT_ERR_SUCCESSS;
+        error_code = ft_global_error_stack_pop_newest();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }
     ft_size_t instrumented_size = cma_debug_allocation_size(new_size);
@@ -168,9 +194,9 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
     {
         int error_code;
 
-        error_code = ft_errno;
+        error_code = FT_ERR_OUT_OF_RANGE;
         allocator_guard.unlock();
-        ft_errno = error_code;
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }
     ft_size_t aligned_size = align16(instrumented_size);
@@ -179,10 +205,9 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
     {
         int error_code;
 
-        ft_errno = FT_ERR_INVALID_POINTER;
-        error_code = ft_errno;
+        error_code = FT_ERR_INVALID_POINTER;
         allocator_guard.unlock();
-        ft_errno = error_code;
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }
     cma_validate_block(block, "cma_realloc header", ptr);
@@ -202,9 +227,9 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
         user_pointer = cma_block_user_pointer(block);
         cma_leak_tracker_record_free(ptr);
         cma_leak_tracker_record_allocation(ptr, cma_block_user_size(block));
-        ft_errno = FT_ERR_SUCCESSS;
         allocator_guard.unlock();
-        ft_errno = FT_ERR_SUCCESSS;
+        error_code = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(error_code);
         return (user_pointer);
     }
     Block *old_block;
@@ -223,15 +248,15 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
     {
         int error_code;
 
-        error_code = ft_errno;
+        error_code = ft_global_error_stack_pop_newest();
         allocator_guard.unlock();
-        ft_errno = error_code;
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }
     ft_memcpy(new_ptr, ptr, static_cast<size_t>(copy_size));
     release_block_locked(old_block);
-    ft_errno = FT_ERR_SUCCESSS;
     allocator_guard.unlock();
-    ft_errno = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
     return (new_ptr);
 }

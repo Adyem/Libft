@@ -104,14 +104,13 @@ static Block   *find_aligned_free_block(ft_size_t aligned_size, ft_size_t alignm
     return (ft_nullptr);
 }
 
-static void    *aligned_alloc_offswitch(ft_size_t alignment, ft_size_t request_size)
+static void    *aligned_alloc_offswitch(ft_size_t alignment, ft_size_t request_size,
+            int *error_code)
 {
     size_t  alignment_value;
     size_t  allocation_size;
     size_t  remainder;
     void    *pointer;
-    int     error_code;
-
     alignment_value = static_cast<size_t>(alignment);
     allocation_size = static_cast<size_t>(request_size);
     remainder = 0;
@@ -123,24 +122,23 @@ static void    *aligned_alloc_offswitch(ft_size_t alignment, ft_size_t request_s
         allocation_size = alignment_value;
     pointer = ft_nullptr;
 #ifdef _WIN32
-    (void)error_code;
     pointer = std::aligned_alloc(alignment_value, allocation_size);
     if (pointer)
     {
         g_cma_allocation_count++;
-        ft_errno = FT_ERR_SUCCESSS;
+        *error_code = FT_ERR_SUCCESSS;
     }
     else
-        ft_errno = FT_ERR_NO_MEMORY;
+        *error_code = FT_ERR_NO_MEMORY;
 #else
-    error_code = posix_memalign(&pointer, alignment_value, allocation_size);
-    if (error_code == 0 && pointer)
+    *error_code = posix_memalign(&pointer, alignment_value, allocation_size);
+    if (*error_code == 0 && pointer)
     {
         g_cma_allocation_count++;
-        ft_errno = FT_ERR_SUCCESSS;
+        *error_code = FT_ERR_SUCCESSS;
     }
     else
-        ft_errno = FT_ERR_NO_MEMORY;
+        *error_code = FT_ERR_NO_MEMORY;
 #endif
     if (ft_log_get_alloc_logging())
         ft_log_debug("cma_aligned_alloc %llu (alignment %llu) -> %p",
@@ -166,16 +164,19 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
     ft_size_t   padding;
     Block       *block;
     void        *result;
+    int         error_code;
 
     if ((alignment & (alignment - 1)) != 0
         || alignment < sizeof(void *))
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        error_code = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }
     if (alignment > FT_SYSTEM_SIZE_MAX || size > FT_SYSTEM_SIZE_MAX)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        error_code = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }
     request_size = size;
@@ -186,7 +187,8 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
     backend_aligned_size = align16(request_size);
     if (backend_aligned_size < request_size)
     {
-        ft_errno = FT_ERR_OUT_OF_RANGE;
+        error_code = FT_ERR_OUT_OF_RANGE;
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }
     ft_size_t   limit_check_size;
@@ -196,11 +198,19 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
         limit_check_size = alignment;
     if (g_cma_alloc_limit != 0 && limit_check_size > g_cma_alloc_limit)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        error_code = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }
     if (cma_backend_is_enabled())
-        return (cma_backend_aligned_allocate(alignment, backend_aligned_size));
+    {
+        void *memory_pointer;
+
+        memory_pointer = cma_backend_aligned_allocate(alignment, backend_aligned_size);
+        error_code = ft_global_error_stack_pop_newest();
+        ft_global_error_stack_push(error_code);
+        return (memory_pointer);
+    }
     ft_size_t   instrumented_size;
 
     instrumented_size = cma_debug_allocation_size(request_size);
@@ -208,24 +218,33 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
     {
         int error_code;
 
-        error_code = ft_errno;
-        if (error_code == FT_ERR_SUCCESSS)
-            error_code = FT_ERR_NO_MEMORY;
-        ft_errno = error_code;
+        error_code = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }
     aligned_size = align16(instrumented_size);
     if (aligned_size < instrumented_size)
     {
-        ft_errno = FT_ERR_OUT_OF_RANGE;
+        error_code = FT_ERR_OUT_OF_RANGE;
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }
     if (OFFSWITCH == 1)
-        return (aligned_alloc_offswitch(alignment, request_size));
+    {
+        result = aligned_alloc_offswitch(alignment, request_size, &error_code);
+        ft_global_error_stack_push(error_code);
+        return (result);
+    }
     cma_allocator_guard allocator_guard;
 
     if (!allocator_guard.is_active())
+    {
+        error_code = allocator_guard.get_error();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_INVALID_STATE;
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
+    }
     padding = 0;
     block = find_aligned_free_block(aligned_size, alignment, &padding);
     if (!block)
@@ -238,10 +257,9 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
         {
             int error_code;
 
-            ft_errno = FT_ERR_OUT_OF_RANGE;
-            error_code = ft_errno;
+            error_code = FT_ERR_OUT_OF_RANGE;
             allocator_guard.unlock();
-            ft_errno = error_code;
+            ft_global_error_stack_push(error_code);
             return (ft_nullptr);
         }
         page = create_page(page_request);
@@ -249,10 +267,9 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
         {
             int error_code;
 
-            ft_errno = FT_ERR_NO_MEMORY;
-            error_code = ft_errno;
+            error_code = FT_ERR_NO_MEMORY;
             allocator_guard.unlock();
-            ft_errno = error_code;
+            ft_global_error_stack_push(error_code);
             return (ft_nullptr);
         }
         block = page->blocks;
@@ -263,10 +280,9 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
     {
         int error_code;
 
-        ft_errno = FT_ERR_OUT_OF_RANGE;
-        error_code = ft_errno;
+        error_code = FT_ERR_OUT_OF_RANGE;
         allocator_guard.unlock();
-        ft_errno = error_code;
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }
     if (padding > 0)
@@ -280,10 +296,9 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
         {
             int error_code;
 
-            ft_errno = FT_ERR_NO_MEMORY;
-            error_code = ft_errno;
+            error_code = FT_ERR_NO_MEMORY;
             allocator_guard.unlock();
-            ft_errno = error_code;
+            ft_global_error_stack_push(error_code);
             return (ft_nullptr);
         }
         cma_validate_block(block, "cma_aligned_alloc aligned", ft_nullptr);
@@ -293,7 +308,6 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
     if (!cma_block_is_free(block))
     {
         allocator_guard.unlock();
-        ft_errno = FT_ERR_INVALID_STATE;
         su_sigabrt();
     }
     cma_mark_block_allocated(block);
@@ -305,9 +319,10 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
     result = static_cast<void *>(cma_block_user_pointer(block));
     cma_leak_tracker_record_allocation(result, cma_block_user_size(block));
     allocator_guard.unlock();
-    ft_errno = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESSS;
     if (ft_log_get_alloc_logging())
         ft_log_debug("cma_aligned_alloc %llu (alignment %llu) -> %p",
             request_size, alignment, result);
+    ft_global_error_stack_push(error_code);
     return (result);
 }

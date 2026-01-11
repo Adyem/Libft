@@ -15,9 +15,12 @@
 
 void* cma_malloc(ft_size_t size)
 {
+    int error_code;
+
     if (size > FT_SYSTEM_SIZE_MAX)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        error_code = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }
     ft_size_t request_size = size;
@@ -25,29 +28,45 @@ void* cma_malloc(ft_size_t size)
         size = 1;
     if (g_cma_alloc_limit != 0 && size > g_cma_alloc_limit)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        error_code = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }
     if (cma_backend_is_enabled())
-        return (cma_backend_allocate(size));
+    {
+        void *memory_pointer;
+
+        memory_pointer = cma_backend_allocate(size);
+        error_code = ft_global_error_stack_pop_newest();
+        ft_global_error_stack_push(error_code);
+        return (memory_pointer);
+    }
     if (OFFSWITCH == 1)
     {
-        void *ptr = malloc(static_cast<size_t>(size));
-        if (ptr)
+        void *memory_pointer = malloc(static_cast<size_t>(size));
+
+        if (memory_pointer)
         {
             g_cma_allocation_count++;
-            ft_errno = FT_ERR_SUCCESSS;
+            error_code = FT_ERR_SUCCESSS;
         }
         else
-            ft_errno = FT_ERR_NO_MEMORY;
+            error_code = FT_ERR_NO_MEMORY;
         if (ft_log_get_alloc_logging())
-            ft_log_debug("cma_malloc %llu -> %p", size, ptr);
-        return (ptr);
+            ft_log_debug("cma_malloc %llu -> %p", size, memory_pointer);
+        ft_global_error_stack_push(error_code);
+        return (memory_pointer);
     }
     cma_allocator_guard allocator_guard;
 
     if (!allocator_guard.is_active())
+    {
+        error_code = allocator_guard.get_error();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_INVALID_STATE;
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
+    }
     ft_size_t instrumented_size = cma_debug_allocation_size(size);
     ft_size_t aligned_size = align16(instrumented_size);
     Block *block = find_free_block(aligned_size);
@@ -60,9 +79,8 @@ void* cma_malloc(ft_size_t size)
             int error_code;
 
             error_code = FT_ERR_NO_MEMORY;
-            ft_errno = error_code;
             allocator_guard.unlock();
-            ft_errno = error_code;
+            ft_global_error_stack_push(error_code);
             return (ft_nullptr);
         }
         block = page->blocks;
@@ -71,7 +89,6 @@ void* cma_malloc(ft_size_t size)
     if (!cma_block_is_free(block))
     {
         allocator_guard.unlock();
-        ft_errno = FT_ERR_INVALID_STATE;
         su_sigabrt();
     }
     block = split_block(block, aligned_size);
@@ -85,7 +102,7 @@ void* cma_malloc(ft_size_t size)
     void *result = static_cast<void *>(cma_block_user_pointer(block));
     cma_leak_tracker_record_allocation(result, cma_block_user_size(block));
     allocator_guard.unlock();
-    ft_errno = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESSS;
     if (ft_log_get_alloc_logging())
     {
         if (request_size == size)
@@ -94,5 +111,6 @@ void* cma_malloc(ft_size_t size)
             ft_log_debug("cma_malloc %llu (rounded to %llu) -> %p",
                 request_size, aligned_size, result);
     }
+    ft_global_error_stack_push(error_code);
     return (result);
 }

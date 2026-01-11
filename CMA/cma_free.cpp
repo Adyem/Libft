@@ -11,34 +11,49 @@
 
 void cma_free(void* ptr)
 {
+    int error_code;
+
     if (OFFSWITCH == 1)
     {
         std::free(ptr);
         g_cma_free_count++;
+        error_code = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(error_code);
         if (ft_log_get_alloc_logging())
             ft_log_debug("cma_free %p", ptr);
         return ;
     }
     if (!ptr)
+    {
+        error_code = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(error_code);
         return ;
+    }
     if (cma_backend_is_enabled() && cma_backend_owns_pointer(ptr))
     {
         cma_backend_deallocate(ptr);
+        error_code = ft_global_error_stack_pop_newest();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(error_code);
         return ;
     }
     cma_allocator_guard allocator_guard;
 
     if (!allocator_guard.is_active())
+    {
+        error_code = allocator_guard.get_error();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_INVALID_STATE;
+        ft_global_error_stack_push(error_code);
         return ;
+    }
     Block* block = cma_find_block_for_pointer(ptr);
     if (!block)
     {
-        int error_code;
-
         error_code = FT_ERR_INVALID_POINTER;
-        ft_errno = FT_ERR_INVALID_POINTER;
         allocator_guard.unlock();
-        ft_errno = error_code;
+        ft_global_error_stack_push(error_code);
         return ;
     }
     ft_size_t freed_size = 0;
@@ -46,7 +61,6 @@ void cma_free(void* ptr)
     if (cma_block_is_free(block))
     {
         allocator_guard.unlock();
-        ft_errno = FT_ERR_INVALID_STATE;
         su_sigabrt();
     }
     freed_size = block->size;
@@ -63,8 +77,9 @@ void cma_free(void* ptr)
         g_cma_current_bytes = 0;
     g_cma_free_count++;
     allocator_guard.unlock();
-    ft_errno = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESSS;
     if (ft_log_get_alloc_logging())
         ft_log_debug("cma_free %p", ptr);
+    ft_global_error_stack_push(error_code);
     return ;
 }
