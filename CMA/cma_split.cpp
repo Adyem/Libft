@@ -1,5 +1,6 @@
 #include "CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Errno/errno.hpp"
 
 static int    ft_count_words(const char *string, char delimiter)
 {
@@ -19,7 +20,8 @@ static int    ft_count_words(const char *string, char delimiter)
     return (word_count);
 }
 
-static char    **ft_malloc_strings(char **strings, const char *string, char delimiter)
+static char    **ft_malloc_strings(char **strings, const char *string, char delimiter,
+                int *error_code)
 {
     int    char_count;
     int    index;
@@ -36,8 +38,11 @@ static char    **ft_malloc_strings(char **strings, const char *string, char deli
             || (string[index] != delimiter && string[index + 1] == '\0'))
         {
             strings[array_index] = static_cast<char *>(cma_malloc(sizeof(char) * (char_count + 1)));
+            *error_code = ft_global_error_stack_pop_newest();
             if (!strings[array_index])
+            {
                 return (ft_nullptr);
+            }
             char_count = 0;
             array_index++;
         }
@@ -80,10 +85,12 @@ static char    **ft_memory_error(char **strings)
     while (strings[index])
     {
         cma_free(strings[index]);
+        ft_global_error_stack_pop_newest();
         strings[index] = ft_nullptr;
         index++;
     }
     cma_free(strings);
+    ft_global_error_stack_pop_newest();
     return (ft_nullptr);
 }
 
@@ -91,25 +98,44 @@ char    **cma_split(char const *string, char delimiter)
 {
     char    **strings;
     int        word_count;
+    int        error_code;
 
     if (!string)
     {
         strings = static_cast<char **>(cma_malloc(sizeof(*strings)));
+        error_code = ft_global_error_stack_pop_newest();
         if (!strings)
+        {
+            ft_global_error_stack_push(error_code);
             return (ft_nullptr);
+        }
         strings[0] = ft_nullptr;
+        error_code = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(error_code);
         return (strings);
     }
     word_count = ft_count_words(string, delimiter);
     strings = static_cast<char **>(cma_malloc(sizeof(*strings) * (word_count + 1)));
+    error_code = ft_global_error_stack_pop_newest();
     if (!strings)
+    {
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
-    if (ft_malloc_strings(strings, string, delimiter))
+    }
+    if (ft_malloc_strings(strings, string, delimiter, &error_code))
     {
         ft_copy_strings(strings, string, delimiter);
         strings[word_count] = ft_nullptr;
     }
     else
+    {
         strings = ft_memory_error(strings);
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_INTERNAL;
+        ft_global_error_stack_push(error_code);
+        return (ft_nullptr);
+    }
+    error_code = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
     return (strings);
 }

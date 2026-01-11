@@ -10,29 +10,31 @@ char    *cma_strdup(const char *string)
     char        *new_string;
     ft_size_t   index;
     ft_size_t   allocation_size;
+    int         error_code;
 
     if (!string)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        error_code = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }
-    ft_errno = FT_ERR_SUCCESSS;
     measured_length_raw = ft_strlen_size_t(string);
-    if (ft_errno != FT_ERR_SUCCESSS)
-    {
-        ft_errno = FT_ERR_OUT_OF_RANGE;
-        return (ft_nullptr);
-    }
+    error_code = ft_global_error_stack_pop_newest();
     if (measured_length_raw >= static_cast<size_t>(FT_SYSTEM_SIZE_MAX))
     {
-        ft_errno = FT_ERR_OUT_OF_RANGE;
+        error_code = FT_ERR_OUT_OF_RANGE;
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }
     length = static_cast<ft_size_t>(measured_length_raw);
     allocation_size = length + static_cast<ft_size_t>(1);
     new_string = static_cast<char *>(cma_malloc(allocation_size));
+    error_code = ft_global_error_stack_pop_newest();
     if (!new_string)
+    {
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
+    }
     index = 0;
     while (index < length)
     {
@@ -40,5 +42,7 @@ char    *cma_strdup(const char *string)
         index++;
     }
     new_string[index] = '\0';
+    error_code = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
     return (new_string);
 }

@@ -41,6 +41,8 @@ Errors and successful completions are reported by pushing entries onto the appro
 A function that pushes an entry must leave it on the stack.
 The function that checks the entry is responsible for popping it.
 Functions marked strictly for internal use must not push any errors on the stack.
+When a function returns an error value, check that return value alone. Use the error stack only to
+determine the error type (still pop the newest value when required).
 
 If a function completes with an error entry still present on the stack,
 it must not push a success entry.

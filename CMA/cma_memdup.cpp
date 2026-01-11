@@ -6,20 +6,39 @@
 void* cma_memdup(const void* source, size_t size)
 {
     if (size == 0)
-        return (cma_malloc(0));
+    {
+        void *memory_pointer;
+        int error_code;
+
+        memory_pointer = cma_malloc(0);
+        error_code = ft_global_error_stack_pop_newest();
+        if (!memory_pointer)
+        {
+            ft_global_error_stack_push(error_code);
+            return (ft_nullptr);
+        }
+        error_code = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(error_code);
+        return (memory_pointer);
+    }
     if (source == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        error_code = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }
     void *duplicate;
+    int error_code;
 
     duplicate = cma_malloc(size);
+    error_code = ft_global_error_stack_pop_newest();
     if (duplicate == ft_nullptr)
     {
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }
     ft_memcpy(duplicate, source, size);
-    ft_errno = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
     return (duplicate);
 }

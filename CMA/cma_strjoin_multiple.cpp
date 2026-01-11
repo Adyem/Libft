@@ -5,27 +5,31 @@
 
 char *cma_strjoin_multiple(int count, ...)
 {
+    int error_code;
+
     if (count <= 0)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        error_code = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }
     if (static_cast<size_t>(count) > SIZE_MAX / sizeof(size_t))
     {
-        ft_errno = FT_ERR_OUT_OF_RANGE;
+        error_code = FT_ERR_OUT_OF_RANGE;
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }
     size_t *cached_lengths = static_cast<size_t*>(cma_malloc(static_cast<size_t>(count) * sizeof(size_t)));
+    error_code = ft_global_error_stack_pop_newest();
     if (!cached_lengths)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }
     va_list args;
     va_start(args, count);
     size_t total_length = 0;
     int argument_index = 0;
-    ft_errno = FT_ERR_SUCCESSS;
     while (argument_index < count)
     {
         const char *current_string = va_arg(args, const char *);
@@ -33,18 +37,17 @@ char *cma_strjoin_multiple(int count, ...)
         if (current_string)
         {
             size_t measured_length = ft_strlen_size_t(current_string);
-            if (ft_errno != FT_ERR_SUCCESSS)
-            {
-                va_end(args);
-                cma_free(cached_lengths);
-                return (ft_nullptr);
-            }
+            error_code = ft_global_error_stack_pop_newest();
             current_length = measured_length;
             if (total_length > SIZE_MAX - current_length)
             {
-                ft_errno = FT_ERR_OUT_OF_RANGE;
+                error_code = FT_ERR_OUT_OF_RANGE;
                 va_end(args);
                 cma_free(cached_lengths);
+                error_code = ft_global_error_stack_pop_newest();
+                if (error_code == FT_ERR_SUCCESSS)
+                    error_code = FT_ERR_OUT_OF_RANGE;
+                ft_global_error_stack_push(error_code);
                 return (ft_nullptr);
             }
             total_length += current_length;
@@ -55,15 +58,21 @@ char *cma_strjoin_multiple(int count, ...)
     va_end(args);
     if (total_length == SIZE_MAX)
     {
-        ft_errno = FT_ERR_OUT_OF_RANGE;
+        error_code = FT_ERR_OUT_OF_RANGE;
         cma_free(cached_lengths);
+        error_code = ft_global_error_stack_pop_newest();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_OUT_OF_RANGE;
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }
     char *result = static_cast<char*>(cma_malloc(total_length + 1));
+    error_code = ft_global_error_stack_pop_newest();
     if (!result)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
         cma_free(cached_lengths);
+        error_code = ft_global_error_stack_pop_newest();
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }
     va_start(args, count);
@@ -85,6 +94,16 @@ char *cma_strjoin_multiple(int count, ...)
     }
     va_end(args);
     cma_free(cached_lengths);
+    error_code = ft_global_error_stack_pop_newest();
+    if (error_code != FT_ERR_SUCCESSS)
+    {
+        cma_free(result);
+        ft_global_error_stack_pop_newest();
+        ft_global_error_stack_push(error_code);
+        return (ft_nullptr);
+    }
     result[result_index] = '\0';
+    error_code = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
     return (result);
 }

@@ -27,10 +27,12 @@ char    *cma_itoa_base(int number, int base)
     int length;
     char *result_string;
     unsigned int absolute_value;
+    int error_code;
 
     if (base < 2 || base > 16)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        error_code = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }
     if (number < 0 && base == 10)
@@ -41,8 +43,12 @@ char    *cma_itoa_base(int number, int base)
         absolute_value = static_cast<unsigned int>(number);
     length = calculate_length(number, base);
     result_string = static_cast<char*>(cma_malloc(length + is_negative + 1));
+    error_code = ft_global_error_stack_pop_newest();
     if (!result_string)
+    {
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
+    }
     result_string[length + is_negative] = '\0';
     while (length > 0)
     {
@@ -52,5 +58,7 @@ char    *cma_itoa_base(int number, int base)
     }
     if (is_negative)
         result_string[0] = '-';
+    error_code = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
     return (result_string);
 }
