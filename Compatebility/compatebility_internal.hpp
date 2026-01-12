@@ -104,7 +104,7 @@ int cmp_map_system_error_to_ft(int error_code);
 int cmp_normalize_ft_errno(int error_code);
 char *cmp_get_home_directory(void);
 unsigned int cmp_get_cpu_count(void);
-unsigned long long cmp_get_total_memory(void);
+int cmp_get_total_memory(unsigned long long *total_memory);
 std::time_t cmp_timegm(std::tm *time_pointer);
 int cmp_localtime(const std::time_t *time_value, std::tm *output);
 int cmp_time_get_time_of_day(struct timeval *time_value);

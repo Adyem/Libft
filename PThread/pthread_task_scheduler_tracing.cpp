@@ -1,5 +1,6 @@
 #include "task_scheduler_tracing.hpp"
 #include "pthread.hpp"
+#include "../Errno/errno.hpp"
 #include "../Template/vector.hpp"
 #include <atomic>
 #include <mutex>
@@ -15,7 +16,7 @@ const char *const g_ft_task_trace_label_schedule_repeat = "scheduled_repeat";
 
 static void task_scheduler_trace_set_error(int error)
 {
-    ft_errno = error;
+    ft_global_error_stack_push(error);
     return ;
 }
 
@@ -137,11 +138,13 @@ unsigned long long task_scheduler_trace_generate_span_id(void)
     next_value = g_task_scheduler_trace_counter.fetch_add(1);
     if (next_value == 0)
         next_value = g_task_scheduler_trace_counter.fetch_add(1);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (next_value);
 }
 
 unsigned long long task_scheduler_trace_current_span(void)
 {
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (g_task_scheduler_trace_current);
 }
 
@@ -151,11 +154,13 @@ unsigned long long task_scheduler_trace_push_span(unsigned long long span_id)
 
     previous_span = g_task_scheduler_trace_current;
     g_task_scheduler_trace_current = span_id;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (previous_span);
 }
 
 void task_scheduler_trace_pop_span(unsigned long long previous_span)
 {
     g_task_scheduler_trace_current = previous_span;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
