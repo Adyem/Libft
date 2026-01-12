@@ -14,6 +14,18 @@ static std::mutex                         g_su_resource_tracers_mutex;
 static const char                        *g_su_abort_reason = ft_nullptr;
 static std::mutex                         g_su_abort_reason_mutex;
 
+static int su_resource_tracer_report(int error_code, int return_value)
+{
+    ft_global_error_stack_push(error_code);
+    return (return_value);
+}
+
+static void su_resource_tracer_report_void(int error_code)
+{
+    ft_global_error_stack_push(error_code);
+    return ;
+}
+
 static void su_log_resource_tracing_event(const char *reason)
 {
     if (g_logger == ft_nullptr)
@@ -29,8 +41,7 @@ int su_register_resource_tracer(t_su_resource_tracer tracer)
 {
     if (tracer == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (-1);
+        return (su_resource_tracer_report(FT_ERR_INVALID_ARGUMENT, -1));
     }
     std::lock_guard<std::mutex> guard(g_su_resource_tracers_mutex);
     size_t index = 0;
@@ -39,8 +50,7 @@ int su_register_resource_tracer(t_su_resource_tracer tracer)
     {
         if (g_su_resource_tracers[index] == tracer)
         {
-            ft_errno = FT_ERR_ALREADY_EXISTS;
-            return (-1);
+            return (su_resource_tracer_report(FT_ERR_ALREADY_EXISTS, -1));
         }
         index += 1;
     }
@@ -50,19 +60,16 @@ int su_register_resource_tracer(t_su_resource_tracer tracer)
     }
     catch (const std::bad_alloc &)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
-        return (-1);
+        return (su_resource_tracer_report(FT_ERR_NO_MEMORY, -1));
     }
-    ft_errno = FT_ERR_SUCCESSS;
-    return (0);
+    return (su_resource_tracer_report(FT_ERR_SUCCESSS, 0));
 }
 
 int su_unregister_resource_tracer(t_su_resource_tracer tracer)
 {
     if (tracer == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (-1);
+        return (su_resource_tracer_report(FT_ERR_INVALID_ARGUMENT, -1));
     }
     std::lock_guard<std::mutex> guard(g_su_resource_tracers_mutex);
     size_t index = 0;
@@ -72,20 +79,18 @@ int su_unregister_resource_tracer(t_su_resource_tracer tracer)
         if (g_su_resource_tracers[index] == tracer)
         {
             g_su_resource_tracers.erase(g_su_resource_tracers.begin() + static_cast<t_tracer_vector::difference_type>(index));
-            ft_errno = FT_ERR_SUCCESSS;
-            return (0);
+            return (su_resource_tracer_report(FT_ERR_SUCCESSS, 0));
         }
         index += 1;
     }
-    ft_errno = FT_ERR_NOT_FOUND;
-    return (-1);
+    return (su_resource_tracer_report(FT_ERR_NOT_FOUND, -1));
 }
 
 void su_clear_resource_tracers(void)
 {
     std::lock_guard<std::mutex> guard(g_su_resource_tracers_mutex);
     g_su_resource_tracers.clear();
-    ft_errno = FT_ERR_SUCCESSS;
+    su_resource_tracer_report_void(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -101,7 +106,7 @@ void su_run_resource_tracers(const char *reason)
         }
         catch (const std::bad_alloc &)
         {
-            ft_errno = FT_ERR_NO_MEMORY;
+            su_resource_tracer_report_void(FT_ERR_NO_MEMORY);
             return ;
         }
         size_t index = 0;
@@ -113,7 +118,7 @@ void su_run_resource_tracers(const char *reason)
             }
             catch (const std::bad_alloc &)
             {
-                ft_errno = FT_ERR_NO_MEMORY;
+                su_resource_tracer_report_void(FT_ERR_NO_MEMORY);
                 return ;
             }
             index += 1;
@@ -129,7 +134,7 @@ void su_run_resource_tracers(const char *reason)
             tracer(reason);
         run_index += 1;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    su_resource_tracer_report_void(FT_ERR_SUCCESSS);
     return ;
 }
 

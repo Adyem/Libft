@@ -1000,29 +1000,36 @@ unsigned int cmp_get_cpu_count(void)
 #endif
 }
 
-unsigned long long cmp_get_total_memory(void)
+int cmp_get_total_memory(unsigned long long *total_memory)
 {
+    int error_code;
+
+    if (total_memory == ft_nullptr)
+    {
+        return (FT_ERR_INVALID_ARGUMENT);
+    }
     if (global_force_total_memory_enabled != 0)
     {
         if (global_force_total_memory_should_fail != 0)
         {
 #if defined(_WIN32) || defined(_WIN64)
             if (global_force_total_memory_last_error != 0)
-                ft_errno = ft_map_system_error(static_cast<int>(global_force_total_memory_last_error));
+                error_code = ft_map_system_error(static_cast<int>(global_force_total_memory_last_error));
             else if (global_force_total_memory_errno_value != 0)
-                ft_errno = ft_map_system_error(global_force_total_memory_errno_value);
+                error_code = ft_map_system_error(global_force_total_memory_errno_value);
             else
-                ft_errno = FT_ERR_TERMINATED;
+                error_code = FT_ERR_TERMINATED;
 #else
             if (global_force_total_memory_errno_value != 0)
-                ft_errno = ft_map_system_error(global_force_total_memory_errno_value);
+                error_code = ft_map_system_error(global_force_total_memory_errno_value);
             else
-                ft_errno = FT_ERR_TERMINATED;
+                error_code = FT_ERR_TERMINATED;
 #endif
-            return (0);
+            *total_memory = 0;
+            return (error_code);
         }
-        ft_errno = FT_ERR_SUCCESSS;
-        return (global_force_total_memory_value);
+        *total_memory = global_force_total_memory_value;
+        return (FT_ERR_SUCCESSS);
     }
 #if defined(_WIN32) || defined(_WIN64)
     MEMORYSTATUSEX memory_status;
@@ -1034,13 +1041,14 @@ unsigned long long cmp_get_total_memory(void)
 
         last_error = GetLastError();
         if (last_error != 0)
-            ft_errno = ft_map_system_error(static_cast<int>(last_error));
+            error_code = ft_map_system_error(static_cast<int>(last_error));
         else
-            ft_errno = FT_ERR_TERMINATED;
-        return (0);
+            error_code = FT_ERR_TERMINATED;
+        *total_memory = 0;
+        return (error_code);
     }
-    ft_errno = FT_ERR_SUCCESSS;
-    return (memory_status.ullTotalPhys);
+    *total_memory = memory_status.ullTotalPhys;
+    return (FT_ERR_SUCCESSS);
 #elif defined(__APPLE__) && defined(__MACH__)
     unsigned long long memory_size;
     size_t size;
@@ -1050,13 +1058,14 @@ unsigned long long cmp_get_total_memory(void)
     if (sysctlbyname("hw.memsize", &memory_size, &size, ft_nullptr, 0) != 0)
     {
         if (errno != 0)
-            ft_errno = ft_map_system_error(errno);
+            error_code = ft_map_system_error(errno);
         else
-            ft_errno = FT_ERR_TERMINATED;
-        return (0);
+            error_code = FT_ERR_TERMINATED;
+        *total_memory = 0;
+        return (error_code);
     }
-    ft_errno = FT_ERR_SUCCESSS;
-    return (memory_size);
+    *total_memory = memory_size;
+    return (FT_ERR_SUCCESSS);
 #else
     long pages;
     long page_size;
@@ -1066,24 +1075,26 @@ unsigned long long cmp_get_total_memory(void)
     if (pages < 0)
     {
         if (errno != 0)
-            ft_errno = ft_map_system_error(errno);
+            error_code = ft_map_system_error(errno);
         else
-            ft_errno = FT_ERR_TERMINATED;
-        return (0);
+            error_code = FT_ERR_TERMINATED;
+        *total_memory = 0;
+        return (error_code);
     }
     errno = 0;
     page_size = sysconf(_SC_PAGE_SIZE);
     if (page_size < 0)
     {
         if (errno != 0)
-            ft_errno = ft_map_system_error(errno);
+            error_code = ft_map_system_error(errno);
         else
-            ft_errno = FT_ERR_TERMINATED;
-        return (0);
+            error_code = FT_ERR_TERMINATED;
+        *total_memory = 0;
+        return (error_code);
     }
-    ft_errno = FT_ERR_SUCCESSS;
-    return (static_cast<unsigned long long>(pages) *
-            static_cast<unsigned long long>(page_size));
+    *total_memory = static_cast<unsigned long long>(pages) *
+        static_cast<unsigned long long>(page_size);
+    return (FT_ERR_SUCCESSS);
 #endif
 }
 
