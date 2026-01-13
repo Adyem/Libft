@@ -15,6 +15,8 @@ int pt_mutex::unlock(pthread_t thread_id) const
     bool should_notify_release;
     int result;
     pt_mutex_vector owned_mutexes;
+    int lock_error;
+    int tracking_error;
 
     this->set_error(FT_ERR_SUCCESSS);
     tracking_reports_owned = false;
@@ -24,13 +26,19 @@ int pt_mutex::unlock(pthread_t thread_id) const
     bool native_initialized;
 
     state_lock_acquired = false;
-    if (this->lock_internal(&state_lock_acquired) != 0)
+    lock_error = this->lock_internal(&state_lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
+        this->set_error(lock_error);
         goto cleanup;
     }
     native_initialized = this->_native_initialized;
-    this->unlock_internal(state_lock_acquired);
+    lock_error = this->unlock_internal(state_lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
+    {
+        this->set_error(lock_error);
+        goto cleanup;
+    }
     if (!native_initialized)
     {
         this->set_error(FT_ERR_INVALID_STATE);
@@ -44,9 +52,10 @@ int pt_mutex::unlock(pthread_t thread_id) const
         if (owner == 0)
         {
             owned_mutexes = pt_lock_tracking::get_owned_mutexes(thread_id);
-            if (ft_errno != FT_ERR_SUCCESSS)
+            tracking_error = ft_global_error_stack_pop_newest();
+            if (tracking_error != FT_ERR_SUCCESSS)
             {
-                this->set_error(ft_errno);
+                this->set_error(tracking_error);
                 goto cleanup;
             }
             ft_size_t index;
@@ -84,9 +93,10 @@ int pt_mutex::unlock(pthread_t thread_id) const
         ft_size_t index;
 
         owned_mutexes = pt_lock_tracking::get_owned_mutexes(thread_id);
-        if (ft_errno != FT_ERR_SUCCESSS)
+        tracking_error = ft_global_error_stack_pop_newest();
+        if (tracking_error != FT_ERR_SUCCESSS)
         {
-            this->set_error(ft_errno);
+            this->set_error(tracking_error);
             goto cleanup;
         }
         index = 0;
@@ -114,6 +124,9 @@ int pt_mutex::unlock(pthread_t thread_id) const
         if (should_notify_release)
         {
             pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
+            tracking_error = ft_global_error_stack_pop_newest();
+            if (tracking_error != FT_ERR_SUCCESSS)
+                this->set_error(tracking_error);
         }
         if (mutex_error == EPERM || mutex_error == EINVAL)
         {
@@ -126,7 +139,8 @@ int pt_mutex::unlock(pthread_t thread_id) const
         bool reset_lock_acquired;
 
         reset_lock_acquired = false;
-        if (this->lock_internal(&reset_lock_acquired) == 0 && reset_lock_acquired)
+        lock_error = this->lock_internal(&reset_lock_acquired);
+        if (lock_error == FT_ERR_SUCCESSS && reset_lock_acquired)
         {
             this->_native_initialized = false;
             this->unlock_internal(reset_lock_acquired);
@@ -138,6 +152,12 @@ int pt_mutex::unlock(pthread_t thread_id) const
     if (should_notify_release)
     {
         pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
+        tracking_error = ft_global_error_stack_pop_newest();
+        if (tracking_error != FT_ERR_SUCCESSS)
+        {
+            this->set_error(tracking_error);
+            goto cleanup;
+        }
     }
     this->set_error(FT_ERR_SUCCESSS);
 

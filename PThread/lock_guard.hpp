@@ -3,6 +3,7 @@
 
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 
 #ifndef PTHREAD_NO_PROMISE
 #define LOCK_GUARD_DEFINED_PTHREAD_NO_PROMISE
@@ -21,8 +22,10 @@ class ft_lock_guard
         MutexType *_mutex;
         bool _owns_lock;
         mutable int _error_code;
+        static thread_local ft_operation_error_stack _operation_errors;
 
         void set_error(int error) const;
+        static void record_error(ft_operation_error_stack &error_stack, int error);
 
     public:
         explicit ft_lock_guard(MutexType &mutex);
@@ -39,7 +42,30 @@ template <typename MutexType>
 void ft_lock_guard<MutexType>::set_error(int error) const
 {
     this->_error_code = error;
-    ft_errno = error;
+    ft_lock_guard<MutexType>::record_error(ft_lock_guard<MutexType>::_operation_errors, error);
+    ft_global_error_stack_push(error);
+    return ;
+}
+
+template <typename MutexType>
+void ft_lock_guard<MutexType>::record_error(ft_operation_error_stack &error_stack, int error)
+{
+    ft_size_t index;
+    ft_size_t shift_index;
+
+    if (error_stack.count < 20)
+        error_stack.count++;
+    if (error_stack.count > 0)
+        shift_index = error_stack.count - 1;
+    else
+        shift_index = 0;
+    index = shift_index;
+    while (index > 0)
+    {
+        error_stack.errors[index] = error_stack.errors[index - 1];
+        index--;
+    }
+    error_stack.errors[0] = error;
     return ;
 }
 
@@ -91,5 +117,8 @@ const char *ft_lock_guard<MutexType>::get_error_str() const
 {
     return (ft_strerror(this->_error_code));
 }
+
+template <typename MutexType>
+thread_local ft_operation_error_stack ft_lock_guard<MutexType>::_operation_errors = {{}, 0};
 
 #endif

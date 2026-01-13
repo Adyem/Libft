@@ -8,6 +8,7 @@
 #include <new>
 #include "pthread.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Errno/errno_internal.hpp"
 
 template <typename t_type>
 class pt_system_allocator
@@ -69,14 +70,17 @@ class pt_lock_tracking
 {
     private:
         static pthread_mutex_t *get_registry_mutex(void);
-        static std::vector<s_pt_thread_lock_info, pt_system_allocator<s_pt_thread_lock_info> > *get_thread_infos(void);
-        static bool ensure_registry_mutex_initialized(void);
+        static std::vector<s_pt_thread_lock_info, pt_system_allocator<s_pt_thread_lock_info> > *get_thread_infos(int *error_code);
+        static bool ensure_registry_mutex_initialized(int *error_code);
 
-        static s_pt_thread_lock_info *find_thread_info(pt_thread_id_type thread_identifier);
-        static s_pt_thread_lock_info *lookup_thread_info(pt_thread_id_type thread_identifier);
+        static s_pt_thread_lock_info *find_thread_info(pt_thread_id_type thread_identifier, int *error_code);
+        static s_pt_thread_lock_info *lookup_thread_info(pt_thread_id_type thread_identifier, int *error_code);
         static bool vector_contains_mutex(const pt_mutex_vector &mutexes, pthread_mutex_t *mutex_pointer);
         static bool vector_contains_thread(const pt_thread_vector &thread_identifiers, pt_thread_id_type thread_identifier);
         static bool detect_cycle(const s_pt_thread_lock_info *origin, pthread_mutex_t *requested_mutex, pt_mutex_vector *visited_mutexes, pt_thread_vector *visited_threads);
+        static void record_error(ft_operation_error_stack &error_stack, int error_code);
+        static void set_error(int error_code);
+        static thread_local ft_operation_error_stack _operation_errors;
 
     public:
         pt_lock_tracking();

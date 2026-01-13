@@ -5,6 +5,7 @@
 #include <atomic>
 #include <time.h>
 #include <type_traits>
+#include "../Errno/errno_internal.hpp"
 
 class pt_mutex
 {
@@ -15,11 +16,13 @@ class pt_mutex
         mutable pthread_mutex_t           _native_mutex;
         mutable bool                      _native_initialized;
         mutable pt_mutex                  *_state_mutex;
+        static thread_local ft_operation_error_stack _operation_errors;
 
         void    set_error(int error) const;
         bool    ensure_native_mutex() const;
         int     lock_internal(bool *lock_acquired) const;
-        void    unlock_internal(bool lock_acquired) const;
+        int     unlock_internal(bool lock_acquired) const;
+        static void record_error(ft_operation_error_stack &error_stack, int error_code);
         void    teardown_thread_safety();
 
         pt_mutex(const pt_mutex&) = delete;

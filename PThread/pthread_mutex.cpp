@@ -4,6 +4,29 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "pthread_lock_tracking.hpp"
 
+thread_local ft_operation_error_stack pt_mutex::_operation_errors = {{}, 0};
+
+void pt_mutex::record_error(ft_operation_error_stack &error_stack, int error_code)
+{
+    ft_size_t index;
+    ft_size_t shift_index;
+
+    if (error_stack.count < 20)
+        error_stack.count++;
+    if (error_stack.count > 0)
+        shift_index = error_stack.count - 1;
+    else
+        shift_index = 0;
+    index = shift_index;
+    while (index > 0)
+    {
+        error_stack.errors[index] = error_stack.errors[index - 1];
+        index--;
+    }
+    error_stack.errors[0] = error_code;
+    return ;
+}
+
 pt_mutex::pt_mutex()
     : _owner(0), _lock(false), _error(FT_ERR_SUCCESSS), _native_initialized(false),
     _state_mutex(ft_nullptr)
@@ -34,15 +57,19 @@ pt_mutex::~pt_mutex()
 void    pt_mutex::set_error(int error) const
 {
     bool lock_acquired;
+    int lock_error;
 
     lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = error;
+        pt_mutex::record_error(pt_mutex::_operation_errors, error);
+        ft_global_error_stack_push(error);
         return ;
     }
     this->_error = error;
-    ft_errno = error;
+    pt_mutex::record_error(pt_mutex::_operation_errors, error);
+    ft_global_error_stack_push(error);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -51,9 +78,11 @@ bool pt_mutex::ensure_native_mutex() const
 {
     bool lock_acquired;
     bool initialized;
+    int lock_error;
 
     lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
         return (false);
     initialized = this->_native_initialized;
     if (initialized)
@@ -83,37 +112,23 @@ int pt_mutex::lock_internal(bool *lock_acquired) const
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (this->_state_mutex == ft_nullptr)
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-        return (0);
-    }
+        return (FT_ERR_SUCCESSS);
     this->_state_mutex->lock(THREAD_ID);
     if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = this->_state_mutex->get_error();
-        return (-1);
-    }
+        return (this->_state_mutex->get_error());
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    ft_errno = FT_ERR_SUCCESSS;
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
-void pt_mutex::unlock_internal(bool lock_acquired) const
+int pt_mutex::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-        return ;
-    }
+        return (FT_ERR_SUCCESSS);
     this->_state_mutex->unlock(THREAD_ID);
     if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = this->_state_mutex->get_error();
-        return ;
-    }
-    ft_errno = FT_ERR_SUCCESSS;
-    return ;
+        return (this->_state_mutex->get_error());
+    return (FT_ERR_SUCCESSS);
 }
 
 void pt_mutex::teardown_thread_safety()
@@ -129,10 +144,12 @@ void pt_mutex::teardown_thread_safety()
 int pt_mutex::lock_state(bool *lock_acquired) const
 {
     int result;
+    int lock_error;
 
-    result = this->lock_internal(lock_acquired);
-    if (result != 0)
-        const_cast<pt_mutex *>(this)->set_error(ft_errno);
+    lock_error = this->lock_internal(lock_acquired);
+    result = (lock_error == FT_ERR_SUCCESSS ? 0 : -1);
+    if (lock_error != FT_ERR_SUCCESSS)
+        const_cast<pt_mutex *>(this)->set_error(lock_error);
     else
         const_cast<pt_mutex *>(this)->set_error(FT_ERR_SUCCESSS);
     return (result);
@@ -140,9 +157,11 @@ int pt_mutex::lock_state(bool *lock_acquired) const
 
 void pt_mutex::unlock_state(bool lock_acquired) const
 {
-    this->unlock_internal(lock_acquired);
-    if (this->_state_mutex != ft_nullptr && this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
-        const_cast<pt_mutex *>(this)->set_error(this->_state_mutex->get_error());
+    int unlock_error;
+
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESSS)
+        const_cast<pt_mutex *>(this)->set_error(unlock_error);
     else
         const_cast<pt_mutex *>(this)->set_error(FT_ERR_SUCCESSS);
     return ;
@@ -154,8 +173,8 @@ bool pt_mutex::is_owned_by_thread(pthread_t thread_id) const
     pt_mutex_vector owned_mutexes;
     ft_size_t index;
     bool lock_flag;
+    int tracking_error;
 
-    ft_errno = FT_ERR_SUCCESSS;
     lock_flag = this->_lock.load(std::memory_order_acquire);
     if (!lock_flag)
     {
@@ -167,23 +186,21 @@ bool pt_mutex::is_owned_by_thread(pthread_t thread_id) const
         bool matches_owner;
 
         matches_owner = (pt_thread_equal(owner_thread, thread_id) != 0);
-        ft_errno = FT_ERR_SUCCESSS;
         return (matches_owner);
     }
     owned_mutexes = pt_lock_tracking::get_owned_mutexes(thread_id);
-    if (ft_errno != FT_ERR_SUCCESSS)
+    tracking_error = ft_global_error_stack_pop_newest();
+    if (tracking_error != FT_ERR_SUCCESSS)
         return (false);
     index = 0;
     while (index < owned_mutexes.size())
     {
         if (owned_mutexes[index] == &this->_native_mutex)
         {
-            ft_errno = FT_ERR_SUCCESSS;
             return (true);
         }
         index += 1;
     }
-    ft_errno = FT_ERR_SUCCESSS;
     return (false);
 }
 
@@ -191,9 +208,11 @@ int pt_mutex::get_error() const
 {
     bool lock_acquired;
     int error_value;
+    int lock_error;
 
     lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
         return (this->_error);
     error_value = this->_error;
     this->unlock_internal(lock_acquired);
