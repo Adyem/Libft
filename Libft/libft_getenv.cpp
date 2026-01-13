@@ -37,7 +37,8 @@ char    *ft_getenv(const char *name)
         return (report_env_error(error_code));
     }
     ft_global_error_stack_pop_newest();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    error_code = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
     return (value);
 }
 #endif

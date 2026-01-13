@@ -36,7 +36,8 @@ int64_t ft_time_ms(void)
     }
     milliseconds = time_value.tv_sec * 1000;
     milliseconds += time_value.tv_usec / 1000;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    error_code = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
     return (milliseconds);
 }
 
@@ -70,7 +71,8 @@ char *ft_time_format(char *buffer, size_t buffer_size)
             error_code = FT_ERR_OUT_OF_RANGE;
         return (report_time_string_error(error_code));
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    error_code = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
     return (buffer);
 }
 #endif

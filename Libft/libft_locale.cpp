@@ -38,7 +38,8 @@ int    ft_locale_compare(const char *left, const char *right, const char *locale
     error_code = ft_global_error_stack_pop_newest();
     if (error_code != FT_ERR_SUCCESSS)
         return (report_locale_error(error_code, FT_ERR_CONFIGURATION));
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    error_code = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
     return (comparison_result);
 }
 
@@ -57,7 +58,8 @@ ft_string    ft_locale_casefold(const char *input, const char *locale_name)
     error_code = ft_global_error_stack_pop_newest();
     if (error_code != FT_ERR_SUCCESSS)
         return (report_locale_string_error(error_code, FT_ERR_CONFIGURATION));
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    error_code = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
     return (folded_result);
 }
 

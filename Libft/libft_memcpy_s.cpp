@@ -40,7 +40,8 @@ int ft_memcpy_s(void *destination, size_t destination_size, const void *source, 
 
     if (number_of_bytes == 0)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        error_code = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(error_code);
         return (0);
     }
     if (destination == ft_nullptr || source == ft_nullptr)
@@ -63,7 +64,8 @@ int ft_memcpy_s(void *destination, size_t destination_size, const void *source, 
             error_code = FT_ERR_INVALID_ARGUMENT;
         return (report_copy_error(destination, destination_size, error_code));
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    error_code = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
     return (0);
 }
 #endif
