@@ -12,15 +12,11 @@ char    *su_get_home_directory(void)
     result = cmp_get_home_directory();
     if (result == ft_nullptr)
     {
-        error_code = ft_errno;
-        if (error_code == FT_ERR_SUCCESSS)
-            error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_errno = error_code;
+        error_code = FT_ERR_INVALID_ARGUMENT;
         ft_global_error_stack_push(error_code);
         return (result);
     }
     error_code = FT_ERR_SUCCESSS;
-    ft_errno = error_code;
     ft_global_error_stack_push(error_code);
     return (result);
 }
