@@ -13,22 +13,28 @@ int    scma_write(scma_handle handle, ft_size_t offset,
 
     write_result = 0;
     if (scma_mutex_lock() != 0)
+    {
+        ft_global_error_stack_push(FT_ERR_SYS_MUTEX_LOCK_FAILED);
         return (0);
+    }
     if (!scma_validate_handle(handle, &block))
+    {
+        ft_global_error_stack_push(FT_ERR_INVALID_HANDLE);
         return (scma_unlock_and_return_int(0));
+    }
     if (!source)
     {
-        ft_errno = FT_ERR_INVALID_POINTER;
+        ft_global_error_stack_push(FT_ERR_INVALID_POINTER);
         return (scma_unlock_and_return_int(0));
     }
     if (offset > block->size)
     {
-        ft_errno = FT_ERR_OUT_OF_RANGE;
+        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
         return (scma_unlock_and_return_int(0));
     }
     if (size > block->size - offset)
     {
-        ft_errno = FT_ERR_OUT_OF_RANGE;
+        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
         return (scma_unlock_and_return_int(0));
     }
     heap_data = scma_get_heap_data();
@@ -36,7 +42,7 @@ int    scma_write(scma_handle handle, ft_size_t offset,
         source,
         static_cast<size_t>(size));
     scma_update_tracked_snapshot(handle, offset, source, size);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     write_result = 1;
     return (scma_unlock_and_return_int(write_result));
 }
@@ -50,29 +56,35 @@ int    scma_read(scma_handle handle, ft_size_t offset,
 
     read_result = 0;
     if (scma_mutex_lock() != 0)
+    {
+        ft_global_error_stack_push(FT_ERR_SYS_MUTEX_LOCK_FAILED);
         return (0);
+    }
     if (!scma_validate_handle(handle, &block))
+    {
+        ft_global_error_stack_push(FT_ERR_INVALID_HANDLE);
         return (scma_unlock_and_return_int(0));
+    }
     if (!destination)
     {
-        ft_errno = FT_ERR_INVALID_POINTER;
+        ft_global_error_stack_push(FT_ERR_INVALID_POINTER);
         return (scma_unlock_and_return_int(0));
     }
     if (offset > block->size)
     {
-        ft_errno = FT_ERR_OUT_OF_RANGE;
+        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
         return (scma_unlock_and_return_int(0));
     }
     if (size > block->size - offset)
     {
-        ft_errno = FT_ERR_OUT_OF_RANGE;
+        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
         return (scma_unlock_and_return_int(0));
     }
     heap_data = scma_get_heap_data();
     std::memcpy(destination,
         heap_data + static_cast<size_t>(block->offset + offset),
         static_cast<size_t>(size));
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     read_result = 1;
     return (scma_unlock_and_return_int(read_result));
 }

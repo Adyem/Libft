@@ -8,15 +8,18 @@
 #include "basic_encryption.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 
+static const char *encryption_key_report(int error_code, const char *result)
+{
+    ft_global_error_stack_push(error_code);
+    return (result);
+}
+
 const char *be_getEncryptionKey(void)
 {
     size_t key_length = 32;
     char *key = static_cast<char *>(cma_malloc(key_length + 1));
     if (key == ft_nullptr)
-    {
-        ft_errno = FT_ERR_NO_MEMORY;
-        return (ft_nullptr);
-    }
+        return (encryption_key_report(FT_ERR_NO_MEMORY, ft_nullptr));
     if (cmp_rng_secure_bytes(reinterpret_cast<unsigned char *>(key), key_length) == 0)
     {
         size_t index = 0;
@@ -27,10 +30,9 @@ const char *be_getEncryptionKey(void)
             index++;
         }
         key[key_length] = '\0';
-        ft_errno = FT_ERR_SUCCESSS;
-        return (key);
+        return (encryption_key_report(FT_ERR_SUCCESSS, key));
     }
-    int secure_error = ft_errno;
+    int secure_error = FT_ERR_INTERNAL;
     uint32_t seed_value = ft_random_seed(ft_nullptr);
     size_t index = 0;
     while (index < key_length)
@@ -42,9 +44,7 @@ const char *be_getEncryptionKey(void)
     key[key_length] = '\0';
     if (secure_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = secure_error;
-        return (key);
+        return (encryption_key_report(secure_error, key));
     }
-    ft_errno = FT_ERR_SUCCESSS;
-    return (key);
+    return (encryption_key_report(FT_ERR_SUCCESSS, key));
 }
