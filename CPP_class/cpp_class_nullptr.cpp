@@ -16,7 +16,7 @@ void ft_nullptr_t::set_error_internal(int error_code) const noexcept
 void ft_nullptr_t::set_error(int error_code) const noexcept
 {
     this->set_error_internal(error_code);
-    ft_errno = error_code;
+    ft_global_error_stack_push(error_code);
     return ;
 }
 
@@ -34,7 +34,7 @@ ft_nullptr_t::ft_nullptr_t(const ft_nullptr_t &other) noexcept
 
     other_error = other._error_code;
     this->set_error_internal(other_error);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -46,12 +46,12 @@ ft_nullptr_t &ft_nullptr_t::operator=(const ft_nullptr_t &other) noexcept
     other_address = get_nullptr_address(other);
     if (this == other_address)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (*this);
     }
     other_error = other._error_code;
     this->set_error_internal(other_error);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (*this);
 }
 
@@ -66,7 +66,7 @@ int ft_nullptr_t::get_error() const noexcept
     int error_code;
 
     error_code = this->_error_code;
-    ft_errno = error_code;
+    ft_global_error_stack_push(error_code);
     return (error_code);
 }
 
@@ -75,7 +75,7 @@ const char *ft_nullptr_t::get_error_str() const noexcept
     const char *error_string;
 
     error_string = ft_strerror(this->_error_code);
-    ft_errno = this->_error_code;
+    ft_global_error_stack_push(this->_error_code);
     return (error_string);
 }
 

@@ -2,19 +2,21 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Libft/libft.hpp"
 #include "../CMA/CMA.hpp"
+#include "../Errno/errno.hpp"
 
 static int normalize_selector_value(char *value_string)
 {
     size_t value_length;
     char opening_character;
     char closing_character;
+    int length_error;
 
     if (!value_string)
         return (0);
     value_length = ft_strlen_size_t(value_string);
-    if (ft_errno != FT_ERR_SUCCESSS)
+    length_error = ft_global_error_stack_pop_newest();
+    if (length_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = FT_ERR_OUT_OF_RANGE;
         return (-1);
     }
     if (value_length < 2)

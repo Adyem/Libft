@@ -36,16 +36,14 @@ extern const ft_nullptr_t ft_nullptr_instance;
 template <typename PointerType>
 inline ft_nullptr_t::operator PointerType*() const noexcept
 {
-    this->set_error_internal(FT_ERR_SUCCESSS);
-    ft_errno = FT_ERR_SUCCESSS;
+    this->set_error(FT_ERR_SUCCESSS);
     return (static_cast<PointerType*>(nullptr));
 }
 
 template <typename ClassType, typename MemberType>
 inline ft_nullptr_t::operator MemberType ClassType::*() const noexcept
 {
-    this->set_error_internal(FT_ERR_SUCCESSS);
-    ft_errno = FT_ERR_SUCCESSS;
+    this->set_error(FT_ERR_SUCCESSS);
     return (static_cast<MemberType ClassType::*>(nullptr));
 }
 
