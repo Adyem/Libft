@@ -3,6 +3,13 @@
 #include <cerrno>
 #include <unistd.h>
 
+static void log_close_report(int error_code)
+{
+    ft_errno = error_code;
+    ft_global_error_stack_push(error_code);
+    return ;
+}
+
 void ft_log_close()
 {
     ft_log_enable_remote_health(false);
@@ -13,14 +20,20 @@ void ft_log_close()
     int    final_error;
 
     if (logger_lock_sinks() != 0)
+    {
+        log_close_report(ft_errno);
         return ;
+    }
     sink_count = g_sinks.size();
     if (g_sinks.get_error() != FT_ERR_SUCCESSS)
     {
         final_error = g_sinks.get_error();
         if (logger_unlock_sinks() != 0)
+        {
+            log_close_report(ft_errno);
             return ;
-        ft_errno = final_error;
+        }
+        log_close_report(final_error);
         return ;
     }
     index = 0;
@@ -33,8 +46,11 @@ void ft_log_close()
         {
             final_error = g_sinks.get_error();
             if (logger_unlock_sinks() != 0)
+            {
+                log_close_report(ft_errno);
                 return ;
-            ft_errno = final_error;
+            }
+            log_close_report(final_error);
             return ;
         }
         sinks_snapshot.push_back(entry);
@@ -42,8 +58,11 @@ void ft_log_close()
         {
             final_error = sinks_snapshot.get_error();
             if (logger_unlock_sinks() != 0)
+            {
+                log_close_report(ft_errno);
                 return ;
-            ft_errno = final_error;
+            }
+            log_close_report(final_error);
             return ;
         }
         index++;
@@ -51,10 +70,13 @@ void ft_log_close()
     g_sinks.clear();
     clear_error = g_sinks.get_error();
     if (logger_unlock_sinks() != 0)
+    {
+        log_close_report(ft_errno);
         return ;
+    }
     if (clear_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = clear_error;
+        log_close_report(clear_error);
         return ;
     }
     size_t snapshot_count;
@@ -62,7 +84,7 @@ void ft_log_close()
     snapshot_count = sinks_snapshot.size();
     if (sinks_snapshot.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = sinks_snapshot.get_error();
+        log_close_report(sinks_snapshot.get_error());
         return ;
     }
     index = 0;
@@ -73,7 +95,7 @@ void ft_log_close()
         entry = sinks_snapshot[index];
         if (sinks_snapshot.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = sinks_snapshot.get_error();
+            log_close_report(sinks_snapshot.get_error());
             return ;
         }
         bool sink_lock_acquired;
@@ -128,11 +150,11 @@ void ft_log_close()
         log_sink_teardown_thread_safety(&entry);
         if (sink_error != FT_ERR_SUCCESSS)
         {
-            ft_errno = sink_error;
+            log_close_report(sink_error);
             return ;
         }
         index++;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    log_close_report(FT_ERR_SUCCESSS);
     return ;
 }

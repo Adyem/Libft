@@ -6,17 +6,21 @@ int ft_log_set_syslog(const char *identifier)
 {
     if (cmp_syslog_open(identifier) != 0)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (ft_log_add_sink(ft_syslog_sink, ft_nullptr) != 0)
     {
+        int error_code;
+
         cmp_syslog_close();
-        if (ft_errno == FT_ERR_SUCCESSS)
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
+        error_code = ft_global_error_stack_last_error();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 

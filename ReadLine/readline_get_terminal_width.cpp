@@ -1,6 +1,5 @@
 #include "readline_internal.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
-#include "../Errno/errno.hpp"
 
 int rl_get_terminal_width(void)
 {
@@ -17,10 +16,6 @@ int rl_get_terminal_width(void)
         ft_nullptr, &dimensions_valid) != 0)
         return (-1);
     if (dimensions_valid == false)
-    {
-        ft_errno = FT_ERR_TERMINATED;
         return (-1);
-    }
-    ft_errno = FT_ERR_SUCCESSS;
     return (static_cast<int>(cols));
 }

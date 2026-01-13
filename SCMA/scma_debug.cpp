@@ -13,15 +13,18 @@ int    scma_get_stats(scma_stats *out_stats)
     ft_size_t &heap_capacity = scma_heap_capacity_ref();
 
     if (scma_mutex_lock() != 0)
+    {
+        ft_global_error_stack_push(FT_ERR_SYS_MUTEX_LOCK_FAILED);
         return (0);
+    }
     if (!scma_initialized_ref())
     {
-        ft_errno = FT_ERR_INVALID_STATE;
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return (scma_unlock_and_return_int(0));
     }
     if (!out_stats)
     {
-        ft_errno = FT_ERR_INVALID_POINTER;
+        ft_global_error_stack_push(FT_ERR_INVALID_POINTER);
         return (scma_unlock_and_return_int(0));
     }
     stats.block_count = block_count;
@@ -32,7 +35,7 @@ int    scma_get_stats(scma_stats *out_stats)
     else
         stats.snapshot_active = 0;
     *out_stats = stats;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (scma_unlock_and_return_int(1));
 }
 
@@ -45,9 +48,13 @@ void    scma_debug_dump(void)
     ft_size_t &heap_capacity_ref_value = scma_heap_capacity_ref();
 
     if (scma_mutex_lock() != 0)
+    {
+        ft_global_error_stack_push(FT_ERR_SYS_MUTEX_LOCK_FAILED);
         return ;
+    }
     if (!scma_initialized_ref())
     {
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         std::printf("[scma] not initialized\n");
         scma_unlock_and_return_void();
         return ;
@@ -72,6 +79,7 @@ void    scma_debug_dump(void)
             static_cast<unsigned long long>(block->generation));
         index++;
     }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     scma_unlock_and_return_void();
     return ;
 }

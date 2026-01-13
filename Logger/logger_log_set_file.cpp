@@ -26,34 +26,38 @@ void ft_file_sink(const char *message, void *user_data)
     return ;
 }
 
+static int log_set_file_report(int error_code, int return_value)
+{
+    ft_errno = error_code;
+    ft_global_error_stack_push(error_code);
+    return (return_value);
+}
+
 int ft_log_set_file(const char *path, size_t max_size)
 {
     s_file_sink *sink;
     int          file_descriptor;
 
     if (!path)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (-1);
-    }
+        return (log_set_file_report(FT_ERR_INVALID_ARGUMENT, -1));
     file_descriptor = open(path, O_CREAT | O_WRONLY | O_APPEND, 0644);
     if (file_descriptor == -1)
     {
         int saved_errno;
+        int error_code;
 
         saved_errno = errno;
         if (saved_errno != 0)
-            ft_errno = cmp_map_system_error_to_ft(saved_errno);
+            error_code = cmp_map_system_error_to_ft(saved_errno);
         else
-            ft_errno = FT_ERR_INVALID_HANDLE;
-        return (-1);
+            error_code = FT_ERR_INVALID_HANDLE;
+        return (log_set_file_report(error_code, -1));
     }
     sink = new(std::nothrow) s_file_sink;
     if (!sink)
     {
         close(file_descriptor);
-        ft_errno = FT_ERR_NO_MEMORY;
-        return (-1);
+        return (log_set_file_report(FT_ERR_NO_MEMORY, -1));
     }
     sink->fd = file_descriptor;
     sink->path = path;
@@ -62,10 +66,12 @@ int ft_log_set_file(const char *path, size_t max_size)
     sink->max_age_seconds = 0;
     if (sink->path.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = sink->path.get_error();
+        int error_code;
+
+        error_code = sink->path.get_error();
         close(file_descriptor);
         delete sink;
-        return (-1);
+        return (log_set_file_report(error_code, -1));
     }
     if (file_sink_prepare_thread_safety(sink) != 0)
     {
@@ -74,8 +80,7 @@ int ft_log_set_file(const char *path, size_t max_size)
         prepare_error = ft_errno;
         close(file_descriptor);
         delete sink;
-        ft_errno = prepare_error;
-        return (-1);
+        return (log_set_file_report(prepare_error, -1));
     }
     if (ft_log_add_sink(ft_file_sink, sink) != 0)
     {
@@ -87,9 +92,7 @@ int ft_log_set_file(const char *path, size_t max_size)
         close(file_descriptor);
         file_sink_teardown_thread_safety(sink);
         delete sink;
-        ft_errno = error_code;
-        return (-1);
+        return (log_set_file_report(error_code, -1));
     }
-    ft_errno = FT_ERR_SUCCESSS;
-    return (0);
+    return (log_set_file_report(FT_ERR_SUCCESSS, 0));
 }
