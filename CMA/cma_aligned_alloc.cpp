@@ -206,8 +206,8 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
     {
         void *memory_pointer;
 
-        memory_pointer = cma_backend_aligned_allocate(alignment, backend_aligned_size);
-        error_code = ft_global_error_stack_pop_newest();
+        memory_pointer = cma_backend_aligned_allocate(alignment,
+                backend_aligned_size, &error_code);
         ft_global_error_stack_push(error_code);
         return (memory_pointer);
     }

@@ -8,6 +8,19 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 
+static int g_cma_allocator_mutex_error = FT_ERR_SUCCESSS;
+
+static void cma_allocator_mutex_set_error(int error_code)
+{
+    g_cma_allocator_mutex_error = error_code;
+    return ;
+}
+
+static int cma_allocator_mutex_get_error()
+{
+    return (g_cma_allocator_mutex_error);
+}
+
 static bool initialize_cma_allocator_mutex(pthread_mutex_t **mutex_storage)
 {
     pthread_mutex_t *mutex_pointer;
@@ -18,7 +31,7 @@ static bool initialize_cma_allocator_mutex(pthread_mutex_t **mutex_storage)
     mutex_pointer = static_cast<pthread_mutex_t *>(std::malloc(sizeof(pthread_mutex_t)));
     if (mutex_pointer == ft_nullptr)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        cma_allocator_mutex_set_error(FT_ERR_NO_MEMORY);
         return (false);
     }
     attributes_initialized = false;
@@ -38,12 +51,12 @@ static bool initialize_cma_allocator_mutex(pthread_mutex_t **mutex_storage)
         if (mutex_error != 0)
         {
             std::free(mutex_pointer);
-            ft_errno = FT_ERR_INITIALIZATION_FAILED;
+            cma_allocator_mutex_set_error(FT_ERR_INITIALIZATION_FAILED);
             return (false);
         }
     }
     *mutex_storage = mutex_pointer;
-    ft_errno = FT_ERR_SUCCESSS;
+    cma_allocator_mutex_set_error(FT_ERR_SUCCESSS);
     return (true);
 }
 
@@ -72,11 +85,12 @@ cma_allocator_guard::cma_allocator_guard()
 {
     if (this->acquire_allocator_mutex() == false)
     {
+        int error_code;
+
         this->_active = false;
-        if (ft_errno == FT_ERR_SUCCESSS)
+        error_code = this->get_error();
+        if (error_code == FT_ERR_SUCCESSS)
             this->set_error(FT_ERR_INVALID_STATE);
-        else
-            this->set_error(ft_errno);
         return ;
     }
     this->_was_active = true;
@@ -121,8 +135,6 @@ void cma_allocator_guard::unlock()
     release_error = this->release_all_mutexes();
     this->_active = false;
     this->set_error(release_error);
-    if (release_error == FT_ERR_SUCCESSS)
-        ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -139,15 +151,13 @@ const char *cma_allocator_guard::get_error_str() const
 void cma_allocator_guard::set_error(int error) const
 {
     this->_error_code = error;
-    ft_errno = error;
     return ;
 }
 
 void cma_allocator_guard::log_inactive_guard(void *return_address) const
 {
     pt_thread_id_type thread_identifier;
-    int previous_errno;
-    int errno_snapshot;
+    int error_snapshot;
     int lock_state;
     int active_state;
     ft_size_t owned_mutex_count;
@@ -160,8 +170,7 @@ void cma_allocator_guard::log_inactive_guard(void *return_address) const
     if (this->_failure_logged)
         return ;
     this->_failure_logged = true;
-    previous_errno = ft_errno;
-    errno_snapshot = previous_errno;
+    error_snapshot = ft_global_error_stack_last_error();
     thread_identifier = pt_thread_self();
     if (this->_lock_acquired)
         lock_state = 1;
@@ -186,8 +195,7 @@ void cma_allocator_guard::log_inactive_guard(void *return_address) const
         reinterpret_cast<void *>(thread_identifier), return_address,
         symbol_name, this, active_state, lock_state,
         static_cast<size_t>(owned_mutex_count), error_code,
-        error_string, errno_snapshot);
-    ft_errno = previous_errno;
+        error_string, error_snapshot);
     return ;
 }
 
@@ -199,7 +207,7 @@ bool cma_allocator_guard::acquire_allocator_mutex()
     if (mutex_pointer == ft_nullptr)
     {
         this->_lock_acquired = false;
-        this->set_error(ft_errno);
+        this->set_error(cma_allocator_mutex_get_error());
         return (false);
     }
     return (this->acquire_mutex(mutex_pointer));
@@ -213,15 +221,17 @@ bool cma_allocator_guard::acquire_mutex(pthread_mutex_t *mutex_pointer)
     pt_mutex_vector current_mutexes;
     pt_mutex_vector tracked_mutexes;
     ft_size_t index;
+    int error_code;
 
     thread_identifier = pt_thread_self();
     while (true)
     {
         current_mutexes = pt_lock_tracking::get_owned_mutexes(thread_identifier);
-        if (ft_errno != FT_ERR_SUCCESSS)
+        error_code = ft_global_error_stack_pop_newest();
+        if (error_code != FT_ERR_SUCCESSS)
         {
             this->_lock_acquired = false;
-            this->set_error(ft_errno);
+            this->set_error(error_code);
             return (false);
         }
         tracked_mutexes = this->owned_mutex_pointers();
@@ -236,8 +246,11 @@ bool cma_allocator_guard::acquire_mutex(pthread_mutex_t *mutex_pointer)
         {
             int release_error;
             int snapshot_error;
+            int notify_error;
 
+            notify_error = ft_global_error_stack_pop_newest();
             pt_lock_tracking::notify_released(thread_identifier, mutex_pointer);
+            ft_global_error_stack_pop_newest();
             previous_mutexes = this->snapshot_owned_mutexes();
             snapshot_error = previous_mutexes.get_error();
             if (snapshot_error != FT_ERR_SUCCESSS)
@@ -245,6 +258,8 @@ bool cma_allocator_guard::acquire_mutex(pthread_mutex_t *mutex_pointer)
                 release_error = this->release_all_mutexes();
                 if (release_error != FT_ERR_SUCCESSS)
                     this->set_error(release_error);
+                else if (notify_error != FT_ERR_SUCCESSS)
+                    this->set_error(notify_error);
                 else
                     this->set_error(snapshot_error);
                 return (false);
@@ -255,12 +270,14 @@ bool cma_allocator_guard::acquire_mutex(pthread_mutex_t *mutex_pointer)
                 this->set_error(release_error);
                 return (false);
             }
+            if (notify_error != FT_ERR_SUCCESSS)
+                this->set_error(notify_error);
             this->sleep_random_backoff();
             if (!this->reacquire_mutexes(previous_mutexes))
             {
                 int reacquire_error;
 
-                reacquire_error = ft_errno;
+                reacquire_error = this->get_error();
                 release_error = this->release_all_mutexes();
                 if (release_error != FT_ERR_SUCCESSS)
                     this->set_error(release_error);
@@ -270,17 +287,21 @@ bool cma_allocator_guard::acquire_mutex(pthread_mutex_t *mutex_pointer)
             }
             continue ;
         }
+        ft_global_error_stack_pop_newest();
         local_lock_acquired = false;
-        if (cma_lock_allocator(&local_lock_acquired) != 0)
+        error_code = cma_lock_allocator(&local_lock_acquired);
+        if (error_code != FT_ERR_SUCCESSS)
         {
             pt_lock_tracking::notify_released(thread_identifier, mutex_pointer);
+            ft_global_error_stack_pop_newest();
             this->_lock_acquired = false;
-            this->set_error(ft_errno);
+            this->set_error(error_code);
             return (false);
         }
         if (!local_lock_acquired)
         {
             pt_lock_tracking::notify_released(thread_identifier, mutex_pointer);
+            ft_global_error_stack_pop_newest();
             this->_lock_acquired = false;
             this->set_error(FT_ERR_INVALID_STATE);
             return (false);
@@ -292,9 +313,9 @@ bool cma_allocator_guard::acquire_mutex(pthread_mutex_t *mutex_pointer)
             int unlock_error;
 
             vector_error = this->_owned_mutexes.get_error();
-            cma_unlock_allocator(local_lock_acquired);
-            unlock_error = ft_errno;
+            unlock_error = cma_unlock_allocator(local_lock_acquired);
             pt_lock_tracking::notify_released(thread_identifier, mutex_pointer);
+            ft_global_error_stack_pop_newest();
             this->_lock_acquired = false;
             if (unlock_error != FT_ERR_SUCCESSS)
                 this->set_error(unlock_error);
@@ -303,6 +324,7 @@ bool cma_allocator_guard::acquire_mutex(pthread_mutex_t *mutex_pointer)
             return (false);
         }
         pt_lock_tracking::notify_acquired(thread_identifier, mutex_pointer);
+        ft_global_error_stack_pop_newest();
         this->set_error(FT_ERR_SUCCESSS);
         return (true);
     }
@@ -321,23 +343,22 @@ int cma_allocator_guard::release_all_mutexes()
     {
         pthread_mutex_t *mutex_pointer;
         bool lock_state;
+        int unlock_error;
+        int notify_error;
 
         count -= 1;
         mutex_pointer = this->_owned_mutexes[count].mutex_pointer;
         lock_state = this->_owned_mutexes[count].lock_acquired;
-        cma_unlock_allocator(lock_state);
-        if (ft_errno != FT_ERR_SUCCESSS && release_error == FT_ERR_SUCCESSS)
-            release_error = ft_errno;
+        unlock_error = cma_unlock_allocator(lock_state);
+        if (unlock_error != FT_ERR_SUCCESSS && release_error == FT_ERR_SUCCESSS)
+            release_error = unlock_error;
         pt_lock_tracking::notify_released(thread_identifier, mutex_pointer);
-        if (ft_errno != FT_ERR_SUCCESSS && release_error == FT_ERR_SUCCESSS)
-            release_error = ft_errno;
+        notify_error = ft_global_error_stack_pop_newest();
+        if (notify_error != FT_ERR_SUCCESSS && release_error == FT_ERR_SUCCESSS)
+            release_error = notify_error;
         this->_owned_mutexes.pop_back();
     }
     this->_lock_acquired = false;
-    if (release_error != FT_ERR_SUCCESSS)
-        ft_errno = release_error;
-    else
-        ft_errno = FT_ERR_SUCCESSS;
     return (release_error);
 }
 
@@ -452,40 +473,35 @@ int cma_lock_allocator(bool *lock_acquired)
 
     if (!lock_acquired)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     *lock_acquired = false;
     mutex_pointer = cma_allocator_mutex();
     if (mutex_pointer == ft_nullptr)
     {
-        ft_errno = FT_ERR_INITIALIZATION_FAILED;
-        return (-1);
+        return (FT_ERR_INITIALIZATION_FAILED);
     }
     mutex_error = pthread_mutex_lock(mutex_pointer);
     if (mutex_error != 0)
     {
-        ft_errno = FT_ERR_INVALID_STATE;
-        return (-1);
+        return (FT_ERR_INVALID_STATE);
     }
     if (cma_metadata_make_writable() != 0)
     {
         pthread_mutex_unlock(mutex_pointer);
-        return (-1);
+        return (FT_ERR_INVALID_STATE);
     }
     guard_incremented = cma_metadata_guard_increment();
     if (!guard_incremented)
     {
         pthread_mutex_unlock(mutex_pointer);
-        ft_errno = FT_ERR_INVALID_STATE;
-        return (-1);
+        return (FT_ERR_INVALID_STATE);
     }
     *lock_acquired = true;
-    ft_errno = FT_ERR_SUCCESSS;
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
-void cma_unlock_allocator(bool lock_acquired)
+int cma_unlock_allocator(bool lock_acquired)
 {
     bool guard_decremented;
     int mutex_error;
@@ -493,25 +509,20 @@ void cma_unlock_allocator(bool lock_acquired)
 
     if (!lock_acquired)
     {
-        ft_errno = FT_ERR_SUCCESSS;
-        return ;
+        return (FT_ERR_SUCCESSS);
     }
     guard_decremented = cma_metadata_guard_decrement();
     mutex_pointer = cma_allocator_mutex();
     if (mutex_pointer == ft_nullptr)
     {
-        ft_errno = FT_ERR_INITIALIZATION_FAILED;
-        return ;
+        return (FT_ERR_INITIALIZATION_FAILED);
     }
     mutex_error = pthread_mutex_unlock(mutex_pointer);
     if (!guard_decremented)
-        return ;
+        return (FT_ERR_INVALID_STATE);
     if (mutex_error != 0)
     {
-        ft_errno = FT_ERR_INVALID_STATE;
-        return ;
+        return (FT_ERR_INVALID_STATE);
     }
-    ft_errno = FT_ERR_SUCCESSS;
-    return ;
+    return (FT_ERR_SUCCESSS);
 }
-

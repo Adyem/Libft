@@ -24,7 +24,6 @@ ft_size_t cma_debug_allocation_size(ft_size_t requested_size)
     maximum_value = std::numeric_limits<ft_size_t>::max();
     if (requested_size > maximum_value - guard_bytes)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
         return (maximum_value);
     }
     return (requested_size + guard_bytes);
@@ -41,7 +40,6 @@ void cma_debug_initialize_block(Block *block)
 
 static void cma_debug_abort(void)
 {
-    ft_errno = FT_ERR_INVALID_STATE;
     su_sigabrt();
     return ;
 }
