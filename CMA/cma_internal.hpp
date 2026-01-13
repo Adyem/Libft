@@ -116,16 +116,18 @@ void    free_page_if_empty(Page *page);
 void    cma_validate_block(Block *block, const char *context, void *user_pointer);
 Block    *cma_find_block_for_pointer(const void *memory_pointer);
 int     cma_lock_allocator(bool *lock_acquired);
-void    cma_unlock_allocator(bool lock_acquired);
+int     cma_unlock_allocator(bool lock_acquired);
 int     cma_backend_is_enabled(void) __attribute__ ((warn_unused_result));
 int     cma_backend_owns_pointer(const void *memory_pointer)
             __attribute__ ((warn_unused_result));
-void    *cma_backend_allocate(ft_size_t size)
+void    *cma_backend_allocate(ft_size_t size, int *error_code)
             __attribute__ ((warn_unused_result, hot));
-void    *cma_backend_reallocate(void *memory_pointer, ft_size_t size)
+void    *cma_backend_reallocate(void *memory_pointer, ft_size_t size,
+            int *error_code)
             __attribute__ ((warn_unused_result, hot));
-void    cma_backend_deallocate(void *memory_pointer) __attribute__ ((hot));
-void    *cma_backend_aligned_allocate(ft_size_t alignment, ft_size_t size)
+int     cma_backend_deallocate(void *memory_pointer) __attribute__ ((hot));
+void    *cma_backend_aligned_allocate(ft_size_t alignment, ft_size_t size,
+            int *error_code)
             __attribute__ ((warn_unused_result, hot));
 ft_size_t    cma_backend_block_size(const void *memory_pointer)
             __attribute__ ((warn_unused_result, hot));
