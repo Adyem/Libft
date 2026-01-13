@@ -5,6 +5,7 @@
 #include "../Template/vector.hpp"
 #include "../Template/map.hpp"
 #include "../Parser/document_backend.hpp"
+#include "../Errno/errno_internal.hpp"
 
 class pt_mutex;
 
@@ -20,6 +21,8 @@ class yaml_value
     private:
         mutable int _error_code;
         void set_error(int error_code) const noexcept;
+        static thread_local ft_operation_error_stack _operation_errors;
+        static void record_operation_error_unlocked(int error_code) noexcept;
 
         yaml_type _type;
         ft_string _scalar;
@@ -33,7 +36,7 @@ class yaml_value
         int prepare_thread_safety() noexcept;
         void teardown_thread_safety() noexcept;
         int lock(bool *lock_acquired) const noexcept;
-        void unlock(bool lock_acquired) const noexcept;
+        int unlock(bool lock_acquired) const noexcept;
 
     public:
         class thread_guard
@@ -76,6 +79,8 @@ class yaml_value
         const ft_vector<ft_string> &get_map_keys() const noexcept;
 
         bool is_thread_safe_enabled() const noexcept;
+        // Low-level mutex access for validation after construction.
+        pt_mutex *mutex_handle() const noexcept;
 };
 
 size_t      yaml_find_char(const ft_string &string, char character) noexcept;

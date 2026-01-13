@@ -11,15 +11,11 @@ unsigned int    su_get_cpu_count(void)
     result = cmp_get_cpu_count();
     if (result == 0)
     {
-        error_code = ft_errno;
-        if (error_code == FT_ERR_SUCCESSS)
-            error_code = FT_ERR_TERMINATED;
-        ft_errno = error_code;
+        error_code = FT_ERR_TERMINATED;
         ft_global_error_stack_push(error_code);
         return (result);
     }
     error_code = FT_ERR_SUCCESSS;
-    ft_errno = error_code;
     ft_global_error_stack_push(error_code);
     return (result);
 }
@@ -32,12 +28,10 @@ unsigned long long su_get_total_memory(void)
     error_code = cmp_get_total_memory(&result);
     if (error_code != FT_ERR_SUCCESSS)
     {
-        ft_errno = error_code;
         ft_global_error_stack_push(error_code);
         return (result);
     }
     error_code = FT_ERR_SUCCESSS;
-    ft_errno = error_code;
     ft_global_error_stack_push(error_code);
     return (result);
 }

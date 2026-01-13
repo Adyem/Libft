@@ -1,21 +1,35 @@
 #include "yaml.hpp"
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread.hpp"
+
+thread_local ft_operation_error_stack yaml_value::_operation_errors = {{}, 0};
+
+void yaml_value::record_operation_error_unlocked(int error_code) noexcept
+{
+    size_t index;
+
+    if (yaml_value::_operation_errors.count < 20)
+        yaml_value::_operation_errors.count++;
+    index = yaml_value::_operation_errors.count;
+    while (index > 0)
+    {
+        yaml_value::_operation_errors.errors[index] =
+            yaml_value::_operation_errors.errors[index - 1];
+        index--;
+    }
+    yaml_value::_operation_errors.errors[0] = error_code;
+    return ;
+}
 
 yaml_value::thread_guard::thread_guard(const yaml_value *value) noexcept
     : _value(value), _lock_acquired(false), _status(0)
 {
     if (!this->_value)
-    {
-        ft_errno = FT_ERR_SUCCESSS;
         return ;
-    }
     this->_status = this->_value->lock(&this->_lock_acquired);
-    if (this->_status != 0)
-        return ;
-    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -23,7 +37,11 @@ yaml_value::thread_guard::~thread_guard() noexcept
 {
     if (!this->_value)
         return ;
-    this->_value->unlock(this->_lock_acquired);
+    int unlock_error;
+
+    unlock_error = this->_value->unlock(this->_lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESSS)
+        this->_value->set_error(unlock_error);
     return ;
 }
 
@@ -49,9 +67,12 @@ yaml_value::yaml_value() noexcept
         this->set_error(this->_scalar.get_error());
         return ;
     }
-    if (this->prepare_thread_safety() != 0)
+    int prepare_error;
+
+    prepare_error = this->prepare_thread_safety();
+    if (prepare_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
+        this->set_error(prepare_error);
         return ;
     }
     this->set_error(FT_ERR_SUCCESSS);
@@ -125,7 +146,7 @@ yaml_value::~yaml_value() noexcept
             }
         }
         else
-            this->set_error(ft_errno);
+            this->set_error(guard.get_status());
     }
     this->teardown_thread_safety();
     return ;
@@ -133,19 +154,34 @@ yaml_value::~yaml_value() noexcept
 
 void yaml_value::set_error(int error_code) const noexcept
 {
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
     this->_error_code = error_code;
-    ft_errno = error_code;
+    yaml_value::record_operation_error_unlocked(error_code);
+    ft_global_error_stack_push(error_code);
     return ;
 }
 
 int yaml_value::get_error() const noexcept
 {
-    return (this->_error_code);
+    int error_code;
+
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
+    error_code = this->_error_code;
+    return (error_code);
 }
 
 const char *yaml_value::get_error_str() const noexcept
 {
-    return (ft_strerror(this->_error_code));
+    int error_code;
+
+    {
+        std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
+        error_code = this->_error_code;
+    }
+    return (ft_strerror(error_code));
 }
 
 void yaml_value::set_type(yaml_type type) noexcept
@@ -165,7 +201,7 @@ yaml_type yaml_value::get_type() const noexcept
 
     if (guard.get_status() != 0)
     {
-        const_cast<yaml_value *>(this)->set_error(ft_errno);
+        const_cast<yaml_value *>(this)->set_error(guard.get_status());
         return (this->_type);
     }
     const_cast<yaml_value *>(this)->set_error(FT_ERR_SUCCESSS);
@@ -195,7 +231,7 @@ const ft_string &yaml_value::get_scalar() const noexcept
 
     if (guard.get_status() != 0)
     {
-        const_cast<yaml_value *>(this)->set_error(ft_errno);
+        const_cast<yaml_value *>(this)->set_error(guard.get_status());
         return (this->_scalar);
     }
     const_cast<yaml_value *>(this)->set_error(FT_ERR_SUCCESSS);
@@ -225,7 +261,7 @@ const ft_vector<yaml_value*> &yaml_value::get_list() const noexcept
 
     if (guard.get_status() != 0)
     {
-        const_cast<yaml_value *>(this)->set_error(ft_errno);
+        const_cast<yaml_value *>(this)->set_error(guard.get_status());
         return (this->_list);
     }
     const_cast<yaml_value *>(this)->set_error(FT_ERR_SUCCESSS);
@@ -261,7 +297,7 @@ const ft_map<ft_string, yaml_value*> &yaml_value::get_map() const noexcept
 
     if (guard.get_status() != 0)
     {
-        const_cast<yaml_value *>(this)->set_error(ft_errno);
+        const_cast<yaml_value *>(this)->set_error(guard.get_status());
         return (this->_map);
     }
     const_cast<yaml_value *>(this)->set_error(FT_ERR_SUCCESSS);
@@ -274,7 +310,7 @@ const ft_vector<ft_string> &yaml_value::get_map_keys() const noexcept
 
     if (guard.get_status() != 0)
     {
-        const_cast<yaml_value *>(this)->set_error(ft_errno);
+        const_cast<yaml_value *>(this)->set_error(guard.get_status());
         return (this->_map_keys);
     }
     const_cast<yaml_value *>(this)->set_error(FT_ERR_SUCCESSS);
@@ -286,7 +322,10 @@ bool yaml_value::is_thread_safe_enabled() const noexcept
     thread_guard guard(this);
 
     if (guard.get_status() != 0)
+    {
+        const_cast<yaml_value *>(this)->set_error(guard.get_status());
         return (false);
+    }
     if (!this->_thread_safe_enabled || !this->_mutex)
     {
         const_cast<yaml_value *>(this)->set_error(FT_ERR_SUCCESSS);
@@ -303,14 +342,12 @@ int yaml_value::prepare_thread_safety() noexcept
 
     if (this->_thread_safe_enabled && this->_mutex)
     {
-        this->set_error(FT_ERR_SUCCESSS);
-        return (0);
+        return (FT_ERR_SUCCESSS);
     }
     memory_pointer = cma_malloc(sizeof(pt_mutex));
     if (!memory_pointer)
     {
-        this->set_error(FT_ERR_NO_MEMORY);
-        return (-1);
+        return (FT_ERR_NO_MEMORY);
     }
     mutex_pointer = new(memory_pointer) pt_mutex();
     if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
@@ -320,13 +357,11 @@ int yaml_value::prepare_thread_safety() noexcept
         mutex_error = mutex_pointer->get_error();
         mutex_pointer->~pt_mutex();
         cma_free(memory_pointer);
-        this->set_error(mutex_error);
-        return (-1);
+        return (mutex_error);
     }
     this->_mutex = mutex_pointer;
     this->_thread_safe_enabled = true;
-    this->set_error(FT_ERR_SUCCESSS);
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
 void yaml_value::teardown_thread_safety() noexcept
@@ -351,8 +386,7 @@ int yaml_value::lock(bool *lock_acquired) const noexcept
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || !this->_mutex)
     {
-        ft_errno = FT_ERR_SUCCESSS;
-        return (0);
+        return (FT_ERR_SUCCESSS);
     }
     this->_mutex->lock(THREAD_ID);
     mutex_error = this->_mutex->get_error();
@@ -360,27 +394,20 @@ int yaml_value::lock(bool *lock_acquired) const noexcept
     {
         if (lock_acquired)
             *lock_acquired = true;
-        const_cast<yaml_value *>(this)->_error_code = FT_ERR_SUCCESSS;
-        ft_errno = FT_ERR_SUCCESSS;
-        return (0);
+        return (FT_ERR_SUCCESSS);
     }
     if (mutex_error == FT_ERR_MUTEX_ALREADY_LOCKED)
     {
-        const_cast<yaml_value *>(this)->_error_code = FT_ERR_SUCCESSS;
-        ft_errno = FT_ERR_SUCCESSS;
-        return (0);
+        return (FT_ERR_SUCCESSS);
     }
-    ft_errno = mutex_error;
-    const_cast<yaml_value *>(this)->set_error(mutex_error);
-    return (-1);
+    return (mutex_error);
 }
 
-void yaml_value::unlock(bool lock_acquired) const noexcept
+int yaml_value::unlock(bool lock_acquired) const noexcept
 {
     if (!lock_acquired || !this->_thread_safe_enabled || !this->_mutex)
     {
-        ft_errno = FT_ERR_SUCCESSS;
-        return ;
+        return (FT_ERR_SUCCESSS);
     }
     this->_mutex->unlock(THREAD_ID);
     if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
@@ -388,12 +415,12 @@ void yaml_value::unlock(bool lock_acquired) const noexcept
         int mutex_error;
 
         mutex_error = this->_mutex->get_error();
-        ft_errno = mutex_error;
-        const_cast<yaml_value *>(this)->set_error(mutex_error);
-        return ;
+        return (mutex_error);
     }
-    const_cast<yaml_value *>(this)->_error_code = FT_ERR_SUCCESSS;
-    ft_errno = FT_ERR_SUCCESSS;
-    return ;
+    return (FT_ERR_SUCCESSS);
 }
 
+pt_mutex *yaml_value::mutex_handle() const noexcept
+{
+    return (this->_mutex);
+}
