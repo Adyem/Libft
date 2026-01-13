@@ -45,10 +45,18 @@ static char *rl_error(readline_state_t *state)
 char *rl_readline(const char *prompt)
 {
     readline_state_t     state;
+    int                 error_code;
 
+    error_code = FT_ERR_SUCCESSS;
     ft_errno = FT_ERR_SUCCESSS;
     if (rl_initialize_state(&state))
+    {
+        error_code = ft_errno;
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_INTERNAL;
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
+    }
     pf_printf("%s", prompt);
     fflush(stdout);
     while (1)
@@ -56,12 +64,26 @@ char *rl_readline(const char *prompt)
         int key_result = rl_read_key();
 
         if (key_result == -1)
-            return (rl_error(&state));
+        {
+            error_code = ft_errno;
+            if (error_code == FT_ERR_SUCCESSS)
+                error_code = FT_ERR_IO;
+            rl_error(&state);
+            ft_global_error_stack_push(error_code);
+            return (ft_nullptr);
+        }
         char character = static_cast<char>(key_result);
         int custom_result = rl_dispatch_custom_key(&state, prompt, key_result);
 
         if (custom_result == -1)
-            return (rl_error(&state));
+        {
+            error_code = ft_errno;
+            if (error_code == FT_ERR_SUCCESSS)
+                error_code = FT_ERR_INTERNAL;
+            rl_error(&state);
+            ft_global_error_stack_push(error_code);
+            return (ft_nullptr);
+        }
         if (custom_result == 1)
             continue ;
 
@@ -80,22 +102,50 @@ char *rl_readline(const char *prompt)
         else if (character == 127 || character == '\b')
         {
             if (rl_handle_backspace(&state, prompt) == -1)
-                return (rl_error(&state));
+            {
+                error_code = ft_errno;
+                if (error_code == FT_ERR_SUCCESSS)
+                    error_code = FT_ERR_INTERNAL;
+                rl_error(&state);
+                ft_global_error_stack_push(error_code);
+                return (ft_nullptr);
+            }
         }
         else if (character == 27)
         {
             if (rl_handle_escape_sequence(&state, prompt) == -1)
-                return (rl_error(&state));
+            {
+                error_code = ft_errno;
+                if (error_code == FT_ERR_SUCCESSS)
+                    error_code = FT_ERR_INTERNAL;
+                rl_error(&state);
+                ft_global_error_stack_push(error_code);
+                return (ft_nullptr);
+            }
         }
         else if (character == '\t')
         {
             if (rl_handle_tab_completion(&state, prompt) == -1)
-                return (rl_error(&state));
+            {
+                error_code = ft_errno;
+                if (error_code == FT_ERR_SUCCESSS)
+                    error_code = FT_ERR_INTERNAL;
+                rl_error(&state);
+                ft_global_error_stack_push(error_code);
+                return (ft_nullptr);
+            }
         }
         else if (character >= 32 && character <= 126)
         {
             if (rl_handle_printable_char(&state, character, prompt) == -1)
-                return (rl_error(&state));
+            {
+                error_code = ft_errno;
+                if (error_code == FT_ERR_SUCCESSS)
+                    error_code = FT_ERR_INTERNAL;
+                rl_error(&state);
+                ft_global_error_stack_push(error_code);
+                return (ft_nullptr);
+            }
         }
     }
     int line_length = ft_strlen(state.buffer);
@@ -105,7 +155,7 @@ char *rl_readline(const char *prompt)
     rl_state_teardown_thread_safety(&state);
     if (DEBUG == 1)
         pf_printf("returning %s\n", state.buffer);
-    ft_errno = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(ft_errno);
+    error_code = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
     return (state.buffer);
 }

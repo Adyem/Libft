@@ -9,13 +9,14 @@
 
 void rl_add_suggestion(const char *word)
 {
+    int error_code;
     int index = 0;
     while (index < suggestion_count)
     {
         if (strcmp(suggestions[index], word) == 0)
         {
-            ft_errno = FT_ERR_SUCCESSS;
-            ft_global_error_stack_push(ft_errno);
+            error_code = FT_ERR_SUCCESSS;
+            ft_global_error_stack_push(error_code);
             return ;
         }
         index++;
@@ -27,35 +28,44 @@ void rl_add_suggestion(const char *word)
         new_suggestion = cma_strdup(word);
         if (new_suggestion == ft_nullptr)
         {
-            if (ft_errno == FT_ERR_SUCCESSS)
-                ft_errno = FT_ERR_NO_MEMORY;
-            ft_global_error_stack_push(ft_errno);
+            error_code = ft_global_error_stack_pop_newest();
+            if (error_code == FT_ERR_SUCCESSS)
+                error_code = FT_ERR_NO_MEMORY;
+            ft_global_error_stack_push(error_code);
             return ;
         }
         suggestions[suggestion_count] = new_suggestion;
         suggestion_count++;
-        ft_errno = FT_ERR_SUCCESSS;
-        ft_global_error_stack_push(ft_errno);
+        error_code = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(error_code);
     }
     else
     {
         pf_printf_fd(2, "Suggestion list full\n");
-        ft_errno = FT_ERR_OUT_OF_RANGE;
-        ft_global_error_stack_push(ft_errno);
+        error_code = FT_ERR_OUT_OF_RANGE;
+        ft_global_error_stack_push(error_code);
     }
     return ;
 }
 
 void rl_clear_suggestions()
 {
+    int error_code;
     int index = 0;
     while (index < suggestion_count)
     {
         cma_free(suggestions[index]);
+        error_code = ft_global_error_stack_pop_newest();
+        if (error_code != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(error_code);
+            suggestion_count = 0;
+            return ;
+        }
         index++;
     }
     suggestion_count = 0;
-    ft_errno = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(ft_errno);
+    error_code = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
     return ;
 }

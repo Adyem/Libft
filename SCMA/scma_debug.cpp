@@ -11,20 +11,27 @@ int    scma_get_stats(scma_stats *out_stats)
     ft_size_t &block_count = scma_block_count_ref();
     ft_size_t &used_size = scma_used_size_ref();
     ft_size_t &heap_capacity = scma_heap_capacity_ref();
+    int error_code;
 
     if (scma_mutex_lock() != 0)
     {
-        ft_global_error_stack_push(FT_ERR_SYS_MUTEX_LOCK_FAILED);
+        error_code = FT_ERR_SYS_MUTEX_LOCK_FAILED;
+        ft_errno = error_code;
+        ft_global_error_stack_push(error_code);
         return (0);
     }
     if (!scma_initialized_ref())
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
+        error_code = FT_ERR_INVALID_STATE;
+        ft_errno = error_code;
+        ft_global_error_stack_push(error_code);
         return (scma_unlock_and_return_int(0));
     }
     if (!out_stats)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_POINTER);
+        error_code = FT_ERR_INVALID_POINTER;
+        ft_errno = error_code;
+        ft_global_error_stack_push(error_code);
         return (scma_unlock_and_return_int(0));
     }
     stats.block_count = block_count;
@@ -35,7 +42,9 @@ int    scma_get_stats(scma_stats *out_stats)
     else
         stats.snapshot_active = 0;
     *out_stats = stats;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    error_code = FT_ERR_SUCCESSS;
+    ft_errno = error_code;
+    ft_global_error_stack_push(error_code);
     return (scma_unlock_and_return_int(1));
 }
 
@@ -46,15 +55,20 @@ void    scma_debug_dump(void)
     size_t heap_capacity;
     ft_size_t &used_size = scma_used_size_ref();
     ft_size_t &heap_capacity_ref_value = scma_heap_capacity_ref();
+    int error_code;
 
     if (scma_mutex_lock() != 0)
     {
-        ft_global_error_stack_push(FT_ERR_SYS_MUTEX_LOCK_FAILED);
+        error_code = FT_ERR_SYS_MUTEX_LOCK_FAILED;
+        ft_errno = error_code;
+        ft_global_error_stack_push(error_code);
         return ;
     }
     if (!scma_initialized_ref())
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
+        error_code = FT_ERR_INVALID_STATE;
+        ft_errno = error_code;
+        ft_global_error_stack_push(error_code);
         std::printf("[scma] not initialized\n");
         scma_unlock_and_return_void();
         return ;
@@ -79,7 +93,9 @@ void    scma_debug_dump(void)
             static_cast<unsigned long long>(block->generation));
         index++;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    error_code = FT_ERR_SUCCESSS;
+    ft_errno = error_code;
+    ft_global_error_stack_push(error_code);
     scma_unlock_and_return_void();
     return ;
 }

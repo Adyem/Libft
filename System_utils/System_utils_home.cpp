@@ -15,9 +15,12 @@ char    *su_get_home_directory(void)
         error_code = ft_errno;
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_INVALID_ARGUMENT;
+        ft_errno = error_code;
         ft_global_error_stack_push(error_code);
         return (result);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    error_code = FT_ERR_SUCCESSS;
+    ft_errno = error_code;
+    ft_global_error_stack_push(error_code);
     return (result);
 }

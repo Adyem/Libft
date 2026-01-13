@@ -21,21 +21,25 @@ static void rl_terminal_dimensions_clear(terminal_dimensions *dimensions)
 int rl_terminal_dimensions_prepare_thread_safety(terminal_dimensions *dimensions)
 {
     pt_mutex *mutex_pointer;
+    int error_code;
 
     if (dimensions == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        error_code = FT_ERR_INVALID_ARGUMENT;
+        ft_errno = error_code;
         return (-1);
     }
     if (dimensions->thread_safe_enabled == true && dimensions->mutex != ft_nullptr)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        error_code = FT_ERR_SUCCESSS;
+        ft_errno = error_code;
         return (0);
     }
     mutex_pointer = new (std::nothrow) pt_mutex();
     if (mutex_pointer == ft_nullptr)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        error_code = FT_ERR_NO_MEMORY;
+        ft_errno = error_code;
         return (-1);
     }
     if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
@@ -49,7 +53,8 @@ int rl_terminal_dimensions_prepare_thread_safety(terminal_dimensions *dimensions
     }
     dimensions->mutex = mutex_pointer;
     dimensions->thread_safe_enabled = true;
-    ft_errno = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESSS;
+    ft_errno = error_code;
     return (0);
 }
 
@@ -68,32 +73,40 @@ void rl_terminal_dimensions_teardown_thread_safety(terminal_dimensions *dimensio
 
 int rl_terminal_dimensions_lock(terminal_dimensions *dimensions, bool *lock_acquired)
 {
+    int error_code;
+
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (dimensions == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        error_code = FT_ERR_INVALID_ARGUMENT;
+        ft_errno = error_code;
         return (-1);
     }
     if (dimensions->thread_safe_enabled == false || dimensions->mutex == ft_nullptr)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        error_code = FT_ERR_SUCCESSS;
+        ft_errno = error_code;
         return (0);
     }
     dimensions->mutex->lock(THREAD_ID);
     if (dimensions->mutex->get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = dimensions->mutex->get_error();
+        error_code = dimensions->mutex->get_error();
+        ft_errno = error_code;
         return (-1);
     }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    ft_errno = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESSS;
+    ft_errno = error_code;
     return (0);
 }
 
 void rl_terminal_dimensions_unlock(terminal_dimensions *dimensions, bool lock_acquired)
 {
+    int error_code;
+
     if (dimensions == ft_nullptr || lock_acquired == false)
         return ;
     if (dimensions->mutex == ft_nullptr)
@@ -101,10 +114,12 @@ void rl_terminal_dimensions_unlock(terminal_dimensions *dimensions, bool lock_ac
     dimensions->mutex->unlock(THREAD_ID);
     if (dimensions->mutex->get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = dimensions->mutex->get_error();
+        error_code = dimensions->mutex->get_error();
+        ft_errno = error_code;
         return ;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESSS;
+    ft_errno = error_code;
     return ;
 }
 
@@ -115,10 +130,12 @@ int rl_terminal_dimensions_refresh(terminal_dimensions *dimensions)
     unsigned short x_pixels;
     unsigned short y_pixels;
     bool           lock_acquired;
+    int error_code;
 
     if (dimensions == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        error_code = FT_ERR_INVALID_ARGUMENT;
+        ft_errno = error_code;
         return (-1);
     }
     lock_acquired = false;
@@ -129,7 +146,10 @@ int rl_terminal_dimensions_refresh(terminal_dimensions *dimensions)
         rl_terminal_dimensions_clear(dimensions);
         rl_terminal_dimensions_unlock(dimensions, lock_acquired);
         if (ft_errno == FT_ERR_SUCCESSS)
-            ft_errno = FT_ERR_TERMINATED;
+        {
+            error_code = FT_ERR_TERMINATED;
+            ft_errno = error_code;
+        }
         return (-1);
     }
     dimensions->rows = rows;
@@ -137,11 +157,13 @@ int rl_terminal_dimensions_refresh(terminal_dimensions *dimensions)
     dimensions->x_pixels = x_pixels;
     dimensions->y_pixels = y_pixels;
     dimensions->dimensions_valid = true;
-    ft_errno = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESSS;
+    ft_errno = error_code;
     rl_terminal_dimensions_unlock(dimensions, lock_acquired);
     if (lock_acquired == true && ft_errno != FT_ERR_SUCCESSS)
         return (-1);
-    ft_errno = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESSS;
+    ft_errno = error_code;
     return (0);
 }
 
@@ -151,10 +173,12 @@ int rl_terminal_dimensions_get(terminal_dimensions *dimensions,
     bool *dimensions_valid)
 {
     bool lock_acquired;
+    int error_code;
 
     if (dimensions == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        error_code = FT_ERR_INVALID_ARGUMENT;
+        ft_errno = error_code;
         return (-1);
     }
     lock_acquired = false;
@@ -170,10 +194,12 @@ int rl_terminal_dimensions_get(terminal_dimensions *dimensions,
         *y_pixels = dimensions->y_pixels;
     if (dimensions_valid != ft_nullptr)
         *dimensions_valid = dimensions->dimensions_valid;
-    ft_errno = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESSS;
+    ft_errno = error_code;
     rl_terminal_dimensions_unlock(dimensions, lock_acquired);
     if (lock_acquired == true && ft_errno != FT_ERR_SUCCESSS)
         return (-1);
-    ft_errno = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESSS;
+    ft_errno = error_code;
     return (0);
 }

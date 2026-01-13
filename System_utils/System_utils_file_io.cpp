@@ -46,6 +46,7 @@ ssize_t su_read(int file_descriptor, void *buffer, size_t count)
         ssize_t read_result = cmp_read(file_descriptor, buffer, count);
         if (read_result >= 0)
         {
+            ft_errno = FT_ERR_SUCCESSS;
             ft_global_error_stack_push(FT_ERR_SUCCESSS);
             return (read_result);
         }
@@ -82,16 +83,19 @@ ssize_t su_read(int file_descriptor, void *buffer, size_t count)
             }
             else
             {
+                ft_errno = error_code;
                 ft_global_error_stack_push(error_code);
                 return (-1);
             }
         }
         else
         {
+            ft_errno = error_code;
             ft_global_error_stack_push(error_code);
             return (-1);
         }
 #else
+        ft_errno = error_code;
         ft_global_error_stack_push(error_code);
         return (-1);
 #endif
@@ -120,6 +124,7 @@ ssize_t su_write(int file_descriptor, const void *buffer, size_t count)
         {
             if (write_result == 0)
             {
+                ft_errno = FT_ERR_IO;
                 ft_global_error_stack_push(FT_ERR_IO);
                 return (-1);
             }
@@ -156,21 +161,25 @@ ssize_t su_write(int file_descriptor, const void *buffer, size_t count)
                 }
                 else
                 {
+                    ft_errno = error_code;
                     ft_global_error_stack_push(error_code);
                     return (-1);
                 }
             }
             else
             {
+                ft_errno = error_code;
                 ft_global_error_stack_push(error_code);
                 return (-1);
             }
 #else
+            ft_errno = error_code;
             ft_global_error_stack_push(error_code);
             return (-1);
 #endif
         }
     }
+    ft_errno = FT_ERR_SUCCESSS;
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (total_written);
 }
@@ -196,9 +205,11 @@ int su_close(int file_descriptor)
             stored_error = cmp_map_system_error_to_ft(errno);
 #endif
         error_code = stored_error;
+        ft_errno = error_code;
         ft_global_error_stack_push(error_code);
         return (close_result);
     }
+    ft_errno = FT_ERR_SUCCESSS;
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
