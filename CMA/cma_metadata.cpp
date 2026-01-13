@@ -47,11 +47,9 @@ static ft_size_t cma_metadata_compute_page_size(void)
     system_page_size = sysconf(_SC_PAGESIZE);
     if (system_page_size <= 0)
     {
-        ft_errno = FT_ERR_INVALID_STATE;
         return (0);
     }
     g_cma_metadata_page_size = static_cast<ft_size_t>(system_page_size);
-    ft_errno = FT_ERR_SUCCESSS;
     return (g_cma_metadata_page_size);
 }
 
@@ -76,7 +74,6 @@ static bool cma_metadata_add_chunk(void)
     chunk = static_cast<cma_metadata_chunk *>(std::malloc(sizeof(cma_metadata_chunk)));
     if (chunk == ft_nullptr)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
         return (false);
     }
     chunk->memory = static_cast<unsigned char *>(mmap(ft_nullptr, chunk_size,
@@ -84,7 +81,6 @@ static bool cma_metadata_add_chunk(void)
     if (chunk->memory == reinterpret_cast<unsigned char *>(MAP_FAILED))
     {
         std::free(chunk);
-        ft_errno = FT_ERR_NO_MEMORY;
         return (false);
     }
     chunk->size = chunk_size;
@@ -101,7 +97,6 @@ static bool cma_metadata_add_chunk(void)
         chunk->protected_state = true;
         UNPROTECT_METADATA(chunk->memory, chunk->size);
     }
-    ft_errno = FT_ERR_SUCCESSS;
     return (true);
 }
 
@@ -131,7 +126,6 @@ static int cma_metadata_apply_protection(int protection)
         }
         if (mprotect(chunk->memory, chunk->size, protection) != 0)
         {
-            ft_errno = FT_ERR_INVALID_STATE;
             return (-1);
         }
         if (protection == PROT_NONE)
@@ -146,7 +140,6 @@ static int cma_metadata_apply_protection(int protection)
         }
         chunk = chunk->next;
     }
-    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -156,7 +149,6 @@ int cma_metadata_make_writable(void)
     {
         if (!cma_metadata_add_chunk())
         {
-            ft_errno = FT_ERR_NO_MEMORY;
             return (-1);
         }
     }
@@ -172,7 +164,6 @@ int cma_metadata_make_writable(void)
                 if (mprotect(chunk->memory, chunk->size,
                         PROT_READ | PROT_WRITE) != 0)
                 {
-                    ft_errno = FT_ERR_INVALID_STATE;
                     return (-1);
                 }
                 UNPROTECT_METADATA(chunk->memory, chunk->size);
@@ -180,12 +171,10 @@ int cma_metadata_make_writable(void)
             }
             chunk = chunk->next;
         }
-        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     if (cma_metadata_apply_protection(PROT_READ | PROT_WRITE) != 0)
         return (-1);
-    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -207,7 +196,6 @@ bool cma_metadata_guard_decrement(void)
 {
     if (g_cma_metadata_access_depth == 0)
     {
-        ft_errno = FT_ERR_INVALID_STATE;
         return (false);
     }
     g_cma_metadata_access_depth--;
@@ -220,7 +208,6 @@ bool cma_metadata_guard_decrement(void)
 
 int cma_metadata_make_writable(void)
 {
-    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -239,7 +226,6 @@ bool cma_metadata_guard_decrement(void)
 {
     if (g_cma_metadata_access_depth == 0)
     {
-        ft_errno = FT_ERR_INVALID_STATE;
         return (false);
     }
     g_cma_metadata_access_depth--;
@@ -261,14 +247,12 @@ Block    *cma_metadata_allocate_block(void)
         block = g_cma_metadata_free_list;
         g_cma_metadata_free_list = block->next;
         std::memset(block, 0, sizeof(Block));
-        ft_errno = FT_ERR_SUCCESSS;
         return (block);
     }
     if (g_cma_metadata_chunks == ft_nullptr)
     {
         if (!cma_metadata_add_chunk())
         {
-            ft_errno = FT_ERR_NO_MEMORY;
             return (ft_nullptr);
         }
     }
@@ -281,14 +265,12 @@ Block    *cma_metadata_allocate_block(void)
             block = reinterpret_cast<Block *>(chunk->memory + chunk->used);
             chunk->used += stride;
             std::memset(block, 0, sizeof(Block));
-            ft_errno = FT_ERR_SUCCESSS;
             return (block);
         }
         if (chunk->next == ft_nullptr)
         {
             if (!cma_metadata_add_chunk())
             {
-                ft_errno = FT_ERR_NO_MEMORY;
                 return (ft_nullptr);
             }
             chunk = g_cma_metadata_chunks;
@@ -296,7 +278,6 @@ Block    *cma_metadata_allocate_block(void)
         }
         chunk = chunk->next;
     }
-    ft_errno = FT_ERR_NO_MEMORY;
     return (ft_nullptr);
 }
 
@@ -339,4 +320,3 @@ void    cma_metadata_reset(void)
     g_cma_metadata_page_size = 0;
     return ;
 }
-

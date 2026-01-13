@@ -55,7 +55,6 @@ static void report_corrupted_block(Block *block, const char *context,
     (void)block;
     (void)user_pointer;
     (void)context;
-    ft_errno = FT_ERR_INVALID_STATE;
     su_sigabrt();
     return ;
 }
@@ -402,7 +401,6 @@ void free_page_if_empty(Page *page)
 {
     if (!page || page->heap == false)
     {
-        ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
     if (page->blocks && cma_block_is_free(page->blocks) &&
@@ -418,10 +416,8 @@ void free_page_if_empty(Page *page)
         std::free(page->start);
         cma_metadata_release_block(page->blocks);
         std::free(page);
-        ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
-    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 

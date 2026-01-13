@@ -31,10 +31,7 @@ void cma_free(void* ptr)
     }
     if (cma_backend_is_enabled() && cma_backend_owns_pointer(ptr))
     {
-        cma_backend_deallocate(ptr);
-        error_code = ft_global_error_stack_pop_newest();
-        if (error_code == FT_ERR_SUCCESSS)
-            error_code = FT_ERR_SUCCESSS;
+        error_code = cma_backend_deallocate(ptr);
         ft_global_error_stack_push(error_code);
         return ;
     }

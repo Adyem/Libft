@@ -382,7 +382,6 @@ template <typename t_element>
 void cma_guard_vector<t_element>::set_error(int error_code) const
 {
     this->_error_code = error_code;
-    ft_errno = error_code;
     return ;
 }
 

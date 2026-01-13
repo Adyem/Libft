@@ -3,6 +3,7 @@
 #include "cma_guard_vector.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../Libft/libft.hpp"
 
 struct s_cma_leak_record
@@ -15,6 +16,30 @@ static thread_local bool g_cma_leak_detection_enabled = false;
 static thread_local bool g_cma_leak_detection_error = false;
 static thread_local cma_guard_vector<s_cma_leak_record> g_cma_leak_records;
 static thread_local ft_size_t g_cma_leak_outstanding_bytes = 0;
+static thread_local ft_operation_error_stack g_cma_leak_errors = {{}, 0};
+
+static void cma_leak_tracker_set_error(int error_code)
+{
+    ft_size_t index;
+
+    if (g_cma_leak_errors.count < 20)
+        g_cma_leak_errors.count++;
+    index = g_cma_leak_errors.count;
+    while (index > 0)
+    {
+        g_cma_leak_errors.errors[index] = g_cma_leak_errors.errors[index - 1];
+        index--;
+    }
+    g_cma_leak_errors.errors[0] = error_code;
+    return ;
+}
+
+static int cma_leak_tracker_last_error()
+{
+    if (g_cma_leak_errors.count == 0)
+        return (FT_ERR_SUCCESSS);
+    return (g_cma_leak_errors.errors[0]);
+}
 
 static bool cma_leak_tracker_is_active()
 {
@@ -29,7 +54,7 @@ static void cma_leak_tracker_handle_error(int error_code)
 {
     g_cma_leak_detection_enabled = false;
     g_cma_leak_detection_error = true;
-    ft_errno = error_code;
+    cma_leak_tracker_set_error(error_code);
     return ;
 }
 
@@ -81,12 +106,12 @@ void cma_leak_tracker_record_allocation(void *memory_pointer, ft_size_t size)
 
     if (!cma_leak_tracker_is_active())
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        cma_leak_tracker_set_error(FT_ERR_SUCCESSS);
         return ;
     }
     if (memory_pointer == ft_nullptr)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        cma_leak_tracker_set_error(FT_ERR_SUCCESSS);
         return ;
     }
     record.pointer = memory_pointer;
@@ -98,7 +123,7 @@ void cma_leak_tracker_record_allocation(void *memory_pointer, ft_size_t size)
         return ;
     }
     g_cma_leak_outstanding_bytes += size;
-    ft_errno = FT_ERR_SUCCESSS;
+    cma_leak_tracker_set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -109,12 +134,12 @@ void cma_leak_tracker_record_free(void *memory_pointer)
 
     if (!cma_leak_tracker_is_active())
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        cma_leak_tracker_set_error(FT_ERR_SUCCESSS);
         return ;
     }
     if (memory_pointer == ft_nullptr)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        cma_leak_tracker_set_error(FT_ERR_SUCCESSS);
         return ;
     }
     record_count = g_cma_leak_records.size();
@@ -140,7 +165,7 @@ void cma_leak_tracker_record_free(void *memory_pointer)
             last_index = g_cma_leak_records.size();
             if (last_index == 0)
             {
-                ft_errno = FT_ERR_SUCCESSS;
+                cma_leak_tracker_set_error(FT_ERR_SUCCESSS);
                 return ;
             }
             last_index -= 1;
@@ -165,12 +190,12 @@ void cma_leak_tracker_record_free(void *memory_pointer)
                 cma_leak_tracker_handle_error(g_cma_leak_records.get_error());
                 return ;
             }
-            ft_errno = FT_ERR_SUCCESSS;
+            cma_leak_tracker_set_error(FT_ERR_SUCCESSS);
             return ;
         }
         record_index += 1;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    cma_leak_tracker_set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -201,7 +226,7 @@ void cma_leak_detection_clear(void)
 
     if (!cma_leak_tracker_clear_records(true))
     {
-        error_code = ft_errno;
+        error_code = cma_leak_tracker_last_error();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_INTERNAL;
         ft_global_error_stack_push(error_code);
@@ -444,7 +469,7 @@ ft_string cma_leak_detection_report(bool clear_after)
     {
         if (!cma_leak_tracker_clear_records(true))
         {
-            error_code = ft_errno;
+            error_code = cma_leak_tracker_last_error();
             if (error_code == FT_ERR_SUCCESSS)
                 error_code = FT_ERR_INTERNAL;
             ft_global_error_stack_push(error_code);
