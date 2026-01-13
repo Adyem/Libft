@@ -11,21 +11,25 @@ int xml_node_prepare_thread_safety(xml_node *node) noexcept
 {
     pt_mutex *mutex_pointer;
     void     *allocated_memory;
+    int       allocation_error;
 
     if (!node)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (node->thread_safe_enabled && node->mutex)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (0);
     }
     allocated_memory = cma_malloc(sizeof(pt_mutex));
+    allocation_error = ft_global_error_stack_pop_newest();
     if (!allocated_memory)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        if (allocation_error == FT_ERR_SUCCESSS)
+            allocation_error = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(allocation_error);
         return (-1);
     }
     mutex_pointer = new(allocated_memory) pt_mutex();
@@ -36,12 +40,12 @@ int xml_node_prepare_thread_safety(xml_node *node) noexcept
         mutex_error_code = mutex_pointer->get_error();
         mutex_pointer->~pt_mutex();
         cma_free(allocated_memory);
-        ft_errno = mutex_error_code;
+        ft_global_error_stack_push(mutex_error_code);
         return (-1);
     }
     node->mutex = mutex_pointer;
     node->thread_safe_enabled = true;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -67,13 +71,13 @@ int xml_node_lock(const xml_node *node, bool *lock_acquired) noexcept
         *lock_acquired = false;
     if (!node)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     mutable_node = const_cast<xml_node *>(node);
     if (!mutable_node->thread_safe_enabled || !mutable_node->mutex)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (0);
     }
     mutable_node->mutex->lock(THREAD_ID);
@@ -82,12 +86,12 @@ int xml_node_lock(const xml_node *node, bool *lock_acquired) noexcept
         int mutex_error_code;
 
         mutex_error_code = mutable_node->mutex->get_error();
-        ft_errno = mutex_error_code;
+        ft_global_error_stack_push(mutex_error_code);
         return (-1);
     }
     if (lock_acquired)
         *lock_acquired = true;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -98,15 +102,15 @@ void xml_node_unlock(const xml_node *node, bool lock_acquired) noexcept
     if (!node || !lock_acquired)
     {
         if (!node)
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
+            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         else
-            ft_errno = FT_ERR_SUCCESSS;
+            ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return ;
     }
     mutable_node = const_cast<xml_node *>(node);
     if (!mutable_node->mutex)
     {
-        ft_errno = FT_ERR_INVALID_STATE;
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return ;
     }
     mutable_node->mutex->unlock(THREAD_ID);
@@ -115,10 +119,10 @@ void xml_node_unlock(const xml_node *node, bool lock_acquired) noexcept
         int mutex_error_code;
 
         mutex_error_code = mutable_node->mutex->get_error();
-        ft_errno = mutex_error_code;
+        ft_global_error_stack_push(mutex_error_code);
         return ;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 

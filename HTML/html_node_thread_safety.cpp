@@ -12,21 +12,18 @@ int html_node_prepare_thread_safety(html_node *node)
 
     if (!node)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        ft_global_error_stack_push(ft_errno);
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (node->thread_safe_enabled && node->mutex)
     {
-        ft_errno = FT_ERR_SUCCESSS;
-        ft_global_error_stack_push(ft_errno);
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (0);
     }
     mutex_pointer = new (std::nothrow) pt_mutex();
     if (!mutex_pointer)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
-        ft_global_error_stack_push(ft_errno);
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (-1);
     }
     if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
@@ -35,14 +32,12 @@ int html_node_prepare_thread_safety(html_node *node)
 
         mutex_error = mutex_pointer->get_error();
         delete mutex_pointer;
-        ft_errno = mutex_error;
-        ft_global_error_stack_push(ft_errno);
+        ft_global_error_stack_push(mutex_error);
         return (-1);
     }
     node->mutex = mutex_pointer;
     node->thread_safe_enabled = true;
-    ft_errno = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(ft_errno);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -63,46 +58,42 @@ void html_node_teardown_thread_safety(html_node *node)
 int html_node_lock(const html_node *node, bool *lock_acquired)
 {
     html_node *mutable_node;
+    int error_code;
 
-    ft_errno = FT_ERR_SUCCESSS;
     if (lock_acquired)
         *lock_acquired = false;
     if (!node)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        ft_global_error_stack_push(ft_errno);
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     mutable_node = const_cast<html_node *>(node);
     if (!mutable_node->thread_safe_enabled || !mutable_node->mutex)
     {
-        ft_errno = FT_ERR_SUCCESSS;
-        ft_global_error_stack_push(ft_errno);
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (0);
     }
     mutable_node->mutex->lock(THREAD_ID);
     if (mutable_node->mutex->get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = mutable_node->mutex->get_error();
-        ft_global_error_stack_push(ft_errno);
+        error_code = mutable_node->mutex->get_error();
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     if (lock_acquired)
         *lock_acquired = true;
-    ft_errno = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(ft_errno);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
 void html_node_unlock(const html_node *node, bool lock_acquired)
 {
     html_node *mutable_node;
+    int error_code;
 
-    ft_errno = FT_ERR_SUCCESSS;
     if (!node || !lock_acquired)
     {
-        ft_errno = FT_ERR_SUCCESSS;
-        ft_global_error_stack_push(ft_errno);
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return ;
     }
     mutable_node = const_cast<html_node *>(node);
@@ -111,12 +102,11 @@ void html_node_unlock(const html_node *node, bool lock_acquired)
     mutable_node->mutex->unlock(THREAD_ID);
     if (mutable_node->mutex->get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = mutable_node->mutex->get_error();
-        ft_global_error_stack_push(ft_errno);
+        error_code = mutable_node->mutex->get_error();
+        ft_global_error_stack_push(error_code);
         return ;
     }
-    ft_errno = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(ft_errno);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 

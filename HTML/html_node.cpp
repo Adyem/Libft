@@ -25,7 +25,7 @@ html_node *html_create_node(const char *tagName, const char *textContent)
     newNode = new(std::nothrow) html_node;
     if (!newNode)
     {
-        ft_errno = HTML_MALLOC_FAIL;
+        ft_global_error_stack_push(HTML_MALLOC_FAIL);
         return (ft_nullptr);
     }
     newNode->mutex = ft_nullptr;
@@ -34,7 +34,7 @@ html_node *html_create_node(const char *tagName, const char *textContent)
     if (!newNode->tag)
     {
         delete newNode;
-        ft_errno = HTML_MALLOC_FAIL;
+        ft_global_error_stack_push(HTML_MALLOC_FAIL);
         return (ft_nullptr);
     }
     if (textContent)
@@ -45,7 +45,7 @@ html_node *html_create_node(const char *tagName, const char *textContent)
     {
         html_release_string(newNode->tag);
         delete newNode;
-        ft_errno = HTML_MALLOC_FAIL;
+        ft_global_error_stack_push(HTML_MALLOC_FAIL);
         return (ft_nullptr);
     }
     newNode->attributes = ft_nullptr;
@@ -53,9 +53,13 @@ html_node *html_create_node(const char *tagName, const char *textContent)
     newNode->next = ft_nullptr;
     if (html_node_prepare_thread_safety(newNode) != 0)
     {
+        int thread_safe_error;
+
+        thread_safe_error = ft_global_error_stack_pop_newest();
         html_release_string(newNode->tag);
         html_release_string(newNode->text);
         delete newNode;
+        ft_global_error_stack_push(thread_safe_error);
         return (ft_nullptr);
     }
     return (newNode);
@@ -66,7 +70,7 @@ html_attr *html_create_attr(const char *key, const char *value)
     html_attr *newAttr = new(std::nothrow) html_attr;
     if (!newAttr)
     {
-        ft_errno = HTML_MALLOC_FAIL;
+        ft_global_error_stack_push(HTML_MALLOC_FAIL);
         return (ft_nullptr);
     }
     newAttr->mutex = ft_nullptr;
@@ -75,7 +79,7 @@ html_attr *html_create_attr(const char *key, const char *value)
     if (!newAttr->key)
     {
         delete newAttr;
-        ft_errno = HTML_MALLOC_FAIL;
+        ft_global_error_stack_push(HTML_MALLOC_FAIL);
         return (ft_nullptr);
     }
     newAttr->value = cma_strdup(value);
@@ -83,15 +87,19 @@ html_attr *html_create_attr(const char *key, const char *value)
     {
         html_release_string(newAttr->key);
         delete newAttr;
-        ft_errno = HTML_MALLOC_FAIL;
+        ft_global_error_stack_push(HTML_MALLOC_FAIL);
         return (ft_nullptr);
     }
     newAttr->next = ft_nullptr;
     if (html_attr_prepare_thread_safety(newAttr) != 0)
     {
+        int thread_safe_error;
+
+        thread_safe_error = ft_global_error_stack_pop_newest();
         html_release_string(newAttr->key);
         html_release_string(newAttr->value);
         delete newAttr;
+        ft_global_error_stack_push(thread_safe_error);
         return (ft_nullptr);
     }
     return (newAttr);
@@ -265,7 +273,7 @@ void html_append_node(html_node **headNode, html_node *newNode)
 
     if (!headNode)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     if (!(*headNode))
