@@ -3,6 +3,7 @@
 #include "../../Libft/libft.hpp"
 #include "../../CPP_class/class_file.hpp"
 #include "../../CPP_class/class_file_stream.hpp"
+#include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Compatebility/compatebility_internal.hpp"
 #include "../Compatebility/compatebility_system_test_hooks.hpp"
@@ -27,7 +28,9 @@
 
 static void remove_directory_if_present(const char *directory_path)
 {
-    if (cmp_directory_exists(directory_path) != 1)
+    int error_code = FT_ERR_SUCCESSS;
+
+    if (cmp_directory_exists(directory_path, &error_code) != 1)
         return ;
 #if defined(_WIN32) || defined(_WIN64)
     RemoveDirectoryA(directory_path);
@@ -294,25 +297,28 @@ FT_TEST(test_file_copy_with_buffer_small_chunks, "file_copy_with_buffer streams 
 
 FT_TEST(test_file_copy_with_buffer_rejects_null_paths, "file_copy_with_buffer validates inputs")
 {
-    ft_errno = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESSS;
+
     FT_ASSERT_EQ(-1, file_copy_with_buffer(ft_nullptr, "ignored.bin", 4));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
-    ft_errno = FT_ERR_SUCCESSS;
+    error_code = ft_global_error_stack_pop_newest();
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_code);
     FT_ASSERT_EQ(-1, file_copy_with_buffer("ignored.bin", ft_nullptr, 4));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    error_code = ft_global_error_stack_pop_newest();
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_code);
     return (1);
 }
 
 FT_TEST(test_ft_file_copy_to_propagates_errors, "ft_file copy_to reports invalid handles and arguments")
 {
     ft_file source_file;
+    int error_code;
 
-    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(-1, source_file.copy_to("ft_file_copy_to_destination.bin"));
-    FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, ft_errno);
-    ft_errno = FT_ERR_SUCCESSS;
+    error_code = ft_global_error_stack_pop_newest();
+    FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, error_code);
     FT_ASSERT_EQ(-1, source_file.copy_to(ft_nullptr));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    error_code = ft_global_error_stack_pop_newest();
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_code);
     return (1);
 }
 
@@ -352,9 +358,11 @@ FT_TEST(test_ft_file_copy_to_streams_payload, "ft_file copy_to streams using sha
 
 FT_TEST(test_file_readdir_handles_null_stream, "file_readdir sets FT_ERR_INVALID_ARGUMENT when stream is null")
 {
-    ft_errno = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESSS;
+
     FT_ASSERT_EQ(ft_nullptr, file_readdir(ft_nullptr));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    error_code = ft_global_error_stack_pop_newest();
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_code);
     return (1);
 }
 
@@ -362,38 +370,43 @@ FT_TEST(test_file_readdir_clears_error_on_success, "file_readdir sets FT_ERR_SUC
 {
     file_dir *directory_stream;
     file_dirent *directory_entry;
+    int error_code;
 
     directory_stream = file_opendir(".");
     FT_ASSERT(directory_stream != ft_nullptr);
     if (directory_stream == ft_nullptr)
         return (0);
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
     directory_entry = file_readdir(directory_stream);
     FT_ASSERT(directory_entry != ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    error_code = ft_global_error_stack_pop_newest();
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, error_code);
     FT_ASSERT_EQ(0, file_closedir(directory_stream));
+    ft_global_error_stack_pop_newest();
     return (1);
 }
 
 FT_TEST(test_file_closedir_handles_null_stream, "file_closedir sets FT_ERR_INVALID_ARGUMENT when stream is null")
 {
-    ft_errno = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESSS;
+
     FT_ASSERT_EQ(-1, file_closedir(ft_nullptr));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    error_code = ft_global_error_stack_pop_newest();
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_code);
     return (1);
 }
 
 FT_TEST(test_file_closedir_clears_error_on_success, "file_closedir sets FT_ERR_SUCCESSS after close")
 {
     file_dir *directory_stream;
+    int error_code;
 
     directory_stream = file_opendir(".");
     FT_ASSERT(directory_stream != ft_nullptr);
     if (directory_stream == ft_nullptr)
         return (0);
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(0, file_closedir(directory_stream));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    error_code = ft_global_error_stack_pop_newest();
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, error_code);
     return (1);
 }
 
@@ -426,14 +439,13 @@ FT_TEST(test_file_copy_with_buffer_zero_size_uses_default,
         file_delete(destination_path);
         return (0);
     }
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
     if (file_copy_with_buffer(source_path, destination_path, 0) != 0)
     {
         file_delete(source_path);
         file_delete(destination_path);
         return (0);
     }
-    if (ft_errno != FT_ERR_SUCCESSS)
+    if (ft_global_error_stack_pop_newest() != FT_ERR_SUCCESSS)
     {
         file_delete(source_path);
         file_delete(destination_path);
@@ -465,4 +477,3 @@ FT_TEST(test_file_copy_with_buffer_zero_size_uses_default,
     file_delete(destination_path);
     return (1);
 }
-

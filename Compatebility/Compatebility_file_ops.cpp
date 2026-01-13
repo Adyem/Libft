@@ -2,6 +2,13 @@
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 
+static void cmp_set_error_code(int *error_code_out, int error_code)
+{
+    if (error_code_out != ft_nullptr)
+        *error_code_out = error_code;
+    return ;
+}
+
 #if defined(_WIN32) || defined(_WIN64)
 # include <windows.h>
 # include <stdio.h>
@@ -20,14 +27,14 @@ void cmp_set_force_cross_device_move(int force_cross_device_move)
     return ;
 }
 
-int cmp_file_exists(const char *path)
+int cmp_file_exists(const char *path, int *error_code_out)
 {
     DWORD file_attributes;
     DWORD last_error;
 
     if (path == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        cmp_set_error_code(error_code_out, FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
     file_attributes = GetFileAttributesA(path);
@@ -35,50 +42,52 @@ int cmp_file_exists(const char *path)
     {
         if ((file_attributes & FILE_ATTRIBUTE_DIRECTORY) == 0)
         {
-            ft_errno = FT_ERR_SUCCESSS;
+            cmp_set_error_code(error_code_out, FT_ERR_SUCCESSS);
             return (1);
         }
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        cmp_set_error_code(error_code_out, FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
     last_error = GetLastError();
     if (last_error != 0)
-        ft_errno = cmp_map_system_error_to_ft(static_cast<int>(last_error));
+        cmp_set_error_code(error_code_out, cmp_map_system_error_to_ft(static_cast<int>(last_error)));
     else
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        cmp_set_error_code(error_code_out, FT_ERR_INVALID_ARGUMENT);
     return (0);
 }
 
-int cmp_file_delete(const char *path)
+int cmp_file_delete(const char *path, int *error_code_out)
 {
     DWORD last_error;
 
     if (path == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        cmp_set_error_code(error_code_out, FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (DeleteFileA(path) != 0)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        cmp_set_error_code(error_code_out, FT_ERR_SUCCESSS);
         return (0);
     }
     last_error = GetLastError();
     if (last_error != 0)
-        ft_errno = cmp_map_system_error_to_ft(static_cast<int>(last_error));
+        cmp_set_error_code(error_code_out, cmp_map_system_error_to_ft(static_cast<int>(last_error)));
     else
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        cmp_set_error_code(error_code_out, FT_ERR_INVALID_ARGUMENT);
     return (-1);
 }
 
-int cmp_file_move(const char *source_path, const char *destination_path)
+int cmp_file_move(const char *source_path, const char *destination_path, int *error_code_out)
 {
     DWORD last_error;
     int stored_error;
+    int delete_error;
+    int copy_error;
 
     if (source_path == ft_nullptr || destination_path == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        cmp_set_error_code(error_code_out, FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (global_force_cross_device_move == false)
@@ -86,7 +95,7 @@ int cmp_file_move(const char *source_path, const char *destination_path)
         if (MoveFileExA(source_path, destination_path,
                 MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING))
         {
-            ft_errno = FT_ERR_SUCCESSS;
+            cmp_set_error_code(error_code_out, FT_ERR_SUCCESSS);
             return (0);
         }
         last_error = GetLastError();
@@ -95,89 +104,102 @@ int cmp_file_move(const char *source_path, const char *destination_path)
         last_error = ERROR_NOT_SAME_DEVICE;
     if (last_error == ERROR_NOT_SAME_DEVICE)
     {
-        if (cmp_file_copy(source_path, destination_path) == 0)
+        if (cmp_file_copy(source_path, destination_path, &copy_error) == 0)
         {
-            if (cmp_file_delete(source_path) == 0)
+            if (cmp_file_delete(source_path, &delete_error) == 0)
             {
-                ft_errno = FT_ERR_SUCCESSS;
+                cmp_set_error_code(error_code_out, FT_ERR_SUCCESSS);
                 return (0);
             }
-            stored_error = ft_errno;
-            cmp_file_delete(destination_path);
-            ft_errno = stored_error;
+            stored_error = delete_error;
+            cmp_file_delete(destination_path, &delete_error);
+            if (stored_error == FT_ERR_SUCCESSS)
+                stored_error = FT_ERR_INTERNAL;
+            cmp_set_error_code(error_code_out, stored_error);
+            return (-1);
         }
+        if (copy_error != FT_ERR_SUCCESSS)
+        {
+            cmp_set_error_code(error_code_out, copy_error);
+            return (-1);
+        }
+        cmp_set_error_code(error_code_out, FT_ERR_INTERNAL);
+        return (-1);
     }
     else if (last_error != 0)
-        ft_errno = cmp_map_system_error_to_ft(static_cast<int>(last_error));
+        stored_error = cmp_map_system_error_to_ft(static_cast<int>(last_error));
     else
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        stored_error = FT_ERR_INVALID_ARGUMENT;
+    if (stored_error == FT_ERR_SUCCESSS)
+        stored_error = FT_ERR_INTERNAL;
+    cmp_set_error_code(error_code_out, stored_error);
     return (-1);
 }
 
-int cmp_file_copy(const char *source_path, const char *destination_path)
+int cmp_file_copy(const char *source_path, const char *destination_path, int *error_code_out)
 {
     DWORD last_error;
 
     if (source_path == ft_nullptr || destination_path == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        cmp_set_error_code(error_code_out, FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (CopyFileA(source_path, destination_path, 0))
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        cmp_set_error_code(error_code_out, FT_ERR_SUCCESSS);
         return (0);
     }
     last_error = GetLastError();
     if (last_error != 0)
-        ft_errno = cmp_map_system_error_to_ft(static_cast<int>(last_error));
+        cmp_set_error_code(error_code_out, cmp_map_system_error_to_ft(static_cast<int>(last_error)));
     else
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        cmp_set_error_code(error_code_out, FT_ERR_INVALID_ARGUMENT);
     return (-1);
 }
 
-int cmp_file_create_directory(const char *path, mode_t mode)
+int cmp_file_create_directory(const char *path, mode_t mode, int *error_code_out)
 {
     (void)mode;
     DWORD last_error;
 
     if (path == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        cmp_set_error_code(error_code_out, FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (CreateDirectoryA(path, ft_nullptr))
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        cmp_set_error_code(error_code_out, FT_ERR_SUCCESSS);
         return (0);
     }
     last_error = GetLastError();
     if (last_error != 0)
-        ft_errno = cmp_map_system_error_to_ft(static_cast<int>(last_error));
+        cmp_set_error_code(error_code_out, cmp_map_system_error_to_ft(static_cast<int>(last_error)));
     else
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        cmp_set_error_code(error_code_out, FT_ERR_INVALID_ARGUMENT);
     return (-1);
 }
 
-int cmp_file_get_permissions(const char *path, mode_t *mode_out)
+int cmp_file_get_permissions(const char *path, mode_t *mode_out, int *error_code_out)
 {
     struct _stat file_info;
 
     if (path == ft_nullptr || mode_out == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        cmp_set_error_code(error_code_out, FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (_stat(path, &file_info) == 0)
     {
         *mode_out = static_cast<mode_t>(file_info.st_mode);
-        ft_errno = FT_ERR_SUCCESSS;
+        cmp_set_error_code(error_code_out, FT_ERR_SUCCESSS);
         return (0);
     }
     if (errno != 0)
-        ft_errno = cmp_map_system_error_to_ft(errno);
+        cmp_set_error_code(error_code_out, cmp_map_system_error_to_ft(errno));
     else
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        cmp_set_error_code(error_code_out, FT_ERR_INVALID_ARGUMENT);
     return (-1);
 }
 
@@ -201,45 +223,45 @@ void cmp_set_force_cross_device_move(int force_cross_device_move)
     return ;
 }
 
-int cmp_file_exists(const char *path)
+int cmp_file_exists(const char *path, int *error_code_out)
 {
     struct stat stat_buffer;
     if (path == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        cmp_set_error_code(error_code_out, FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
     if (stat(path, &stat_buffer) == 0)
     {
         if (S_ISREG(stat_buffer.st_mode))
         {
-            ft_errno = FT_ERR_SUCCESSS;
+            cmp_set_error_code(error_code_out, FT_ERR_SUCCESSS);
             return (1);
         }
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        cmp_set_error_code(error_code_out, FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
-    ft_errno = cmp_map_system_error_to_ft(errno);
+    cmp_set_error_code(error_code_out, cmp_map_system_error_to_ft(errno));
     return (0);
 }
 
-int cmp_file_delete(const char *path)
+int cmp_file_delete(const char *path, int *error_code_out)
 {
     if (path == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        cmp_set_error_code(error_code_out, FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (unlink(path) == 0)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        cmp_set_error_code(error_code_out, FT_ERR_SUCCESSS);
         return (0);
     }
-    ft_errno = cmp_map_system_error_to_ft(errno);
+    cmp_set_error_code(error_code_out, cmp_map_system_error_to_ft(errno));
     return (-1);
 }
 
-int cmp_file_move(const char *source_path, const char *destination_path)
+int cmp_file_move(const char *source_path, const char *destination_path, int *error_code_out)
 {
     std::error_code copy_error_code;
     std::error_code directory_error_code;
@@ -250,7 +272,7 @@ int cmp_file_move(const char *source_path, const char *destination_path)
     {
         if (source_path == ft_nullptr || destination_path == ft_nullptr)
         {
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
+            cmp_set_error_code(error_code_out, FT_ERR_INVALID_ARGUMENT);
             return (-1);
         }
         if (global_force_cross_device_move != false)
@@ -259,12 +281,12 @@ int cmp_file_move(const char *source_path, const char *destination_path)
         {
             if (rename(source_path, destination_path) == 0)
             {
-                ft_errno = FT_ERR_SUCCESSS;
+                cmp_set_error_code(error_code_out, FT_ERR_SUCCESSS);
                 return (0);
             }
             if (errno != EXDEV)
             {
-                ft_errno = cmp_map_system_error_to_ft(errno);
+                cmp_set_error_code(error_code_out, cmp_map_system_error_to_ft(errno));
                 return (-1);
             }
         }
@@ -274,12 +296,13 @@ int cmp_file_move(const char *source_path, const char *destination_path)
             && directory_error_code.value()
                 != static_cast<int>(std::errc::not_a_directory))
         {
-            ft_errno = cmp_map_system_error_to_ft(directory_error_code.value());
+            cmp_set_error_code(error_code_out,
+                cmp_map_system_error_to_ft(directory_error_code.value()));
             return (-1);
         }
         if (destination_is_directory != false)
         {
-            ft_errno = FT_ERR_INVALID_OPERATION;
+            cmp_set_error_code(error_code_out, FT_ERR_INVALID_OPERATION);
             return (-1);
         }
         std::filesystem::copy_file(source_path, destination_path,
@@ -288,14 +311,14 @@ int cmp_file_move(const char *source_path, const char *destination_path)
         {
             if (unlink(source_path) == 0)
             {
-                ft_errno = FT_ERR_SUCCESSS;
+                cmp_set_error_code(error_code_out, FT_ERR_SUCCESSS);
                 return (0);
             }
             delete_errno = errno;
             std::error_code remove_error_code;
 
             std::filesystem::remove(destination_path, remove_error_code);
-            ft_errno = cmp_map_system_error_to_ft(delete_errno);
+            cmp_set_error_code(error_code_out, cmp_map_system_error_to_ft(delete_errno));
             return (-1);
         }
         if (copy_error_code.value() != 0)
@@ -303,27 +326,27 @@ int cmp_file_move(const char *source_path, const char *destination_path)
             int copy_value;
 
             copy_value = copy_error_code.value();
-            ft_errno = cmp_map_system_error_to_ft(copy_value);
+            cmp_set_error_code(error_code_out, cmp_map_system_error_to_ft(copy_value));
         }
     }
     catch (const std::bad_alloc &)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        cmp_set_error_code(error_code_out, FT_ERR_NO_MEMORY);
     }
     catch (...)
     {
-        ft_errno = FT_ERR_INTERNAL;
+        cmp_set_error_code(error_code_out, FT_ERR_INTERNAL);
     }
     return (-1);
 }
 
-int cmp_file_copy(const char *source_path, const char *destination_path)
+int cmp_file_copy(const char *source_path, const char *destination_path, int *error_code_out)
 {
     std::error_code copy_error_code;
 
     if (source_path == ft_nullptr || destination_path == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        cmp_set_error_code(error_code_out, FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     try
@@ -332,7 +355,7 @@ int cmp_file_copy(const char *source_path, const char *destination_path)
             std::filesystem::copy_options::overwrite_existing, copy_error_code);
         if (copy_error_code.value() == 0)
         {
-            ft_errno = FT_ERR_SUCCESSS;
+            cmp_set_error_code(error_code_out, FT_ERR_SUCCESSS);
             return (0);
         }
         if (copy_error_code.value() != 0)
@@ -340,52 +363,52 @@ int cmp_file_copy(const char *source_path, const char *destination_path)
             int copy_value;
 
             copy_value = copy_error_code.value();
-            ft_errno = cmp_map_system_error_to_ft(copy_value);
+            cmp_set_error_code(error_code_out, cmp_map_system_error_to_ft(copy_value));
         }
     }
     catch (const std::bad_alloc &)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        cmp_set_error_code(error_code_out, FT_ERR_NO_MEMORY);
     }
     catch (...)
     {
-        ft_errno = FT_ERR_INTERNAL;
+        cmp_set_error_code(error_code_out, FT_ERR_INTERNAL);
     }
     return (-1);
 }
 
-int cmp_file_create_directory(const char *path, mode_t mode)
+int cmp_file_create_directory(const char *path, mode_t mode, int *error_code_out)
 {
     if (path == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        cmp_set_error_code(error_code_out, FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (mkdir(path, mode) == 0)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        cmp_set_error_code(error_code_out, FT_ERR_SUCCESSS);
         return (0);
     }
-    ft_errno = cmp_map_system_error_to_ft(errno);
+    cmp_set_error_code(error_code_out, cmp_map_system_error_to_ft(errno));
     return (-1);
 }
 
-int cmp_file_get_permissions(const char *path, mode_t *mode_out)
+int cmp_file_get_permissions(const char *path, mode_t *mode_out, int *error_code_out)
 {
     struct stat file_info;
 
     if (path == ft_nullptr || mode_out == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        cmp_set_error_code(error_code_out, FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (stat(path, &file_info) == 0)
     {
         *mode_out = file_info.st_mode;
-        ft_errno = FT_ERR_SUCCESSS;
+        cmp_set_error_code(error_code_out, FT_ERR_SUCCESSS);
         return (0);
     }
-    ft_errno = cmp_map_system_error_to_ft(errno);
+    cmp_set_error_code(error_code_out, cmp_map_system_error_to_ft(errno));
     return (-1);
 }
 
