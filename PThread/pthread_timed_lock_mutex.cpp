@@ -41,6 +41,7 @@ int pt_mutex::try_lock_until(pthread_t thread_id, const struct timespec &absolut
 {
     pt_mutex_vector owned_mutexes;
     int mutex_error;
+    int tracking_error;
 
     this->set_error(FT_ERR_SUCCESSS);
     if (!this->ensure_native_mutex())
@@ -51,24 +52,35 @@ int pt_mutex::try_lock_until(pthread_t thread_id, const struct timespec &absolut
         return (FT_SUCCESS);
     }
     owned_mutexes = pt_lock_tracking::get_owned_mutexes(thread_id);
-    if (ft_errno != FT_ERR_SUCCESSS)
+    tracking_error = ft_global_error_stack_pop_newest();
+    if (tracking_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
+        this->set_error(tracking_error);
         return (FT_SUCCESS);
     }
     if (!pt_lock_tracking::notify_wait(thread_id, &this->_native_mutex, owned_mutexes))
     {
-        int tracker_error;
-
-        tracker_error = ft_errno;
+        tracking_error = ft_global_error_stack_pop_newest();
         pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
-        this->set_error(tracker_error);
+        ft_global_error_stack_pop_newest();
+        if (tracking_error == FT_ERR_SUCCESSS)
+            tracking_error = FT_ERR_INVALID_STATE;
+        this->set_error(tracking_error);
+        return (FT_SUCCESS);
+    }
+    tracking_error = ft_global_error_stack_pop_newest();
+    if (tracking_error != FT_ERR_SUCCESSS)
+    {
+        pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
+        ft_global_error_stack_pop_newest();
+        this->set_error(tracking_error);
         return (FT_SUCCESS);
     }
     mutex_error = pthread_mutex_timedlock(&this->_native_mutex, &absolute_time);
     if (mutex_error != 0)
     {
         pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
+        ft_global_error_stack_pop_newest();
         if (mutex_error == ETIMEDOUT)
         {
             this->set_error(FT_ERR_SUCCESSS);
@@ -80,7 +92,11 @@ int pt_mutex::try_lock_until(pthread_t thread_id, const struct timespec &absolut
     this->_owner.store(thread_id, std::memory_order_relaxed);
     this->_lock = true;
     pt_lock_tracking::notify_acquired(thread_id, &this->_native_mutex);
-    this->set_error(FT_ERR_SUCCESSS);
+    tracking_error = ft_global_error_stack_pop_newest();
+    if (tracking_error != FT_ERR_SUCCESSS)
+        this->set_error(tracking_error);
+    else
+        this->set_error(FT_ERR_SUCCESSS);
     return (FT_SUCCESS);
 }
 
@@ -96,4 +112,3 @@ int pt_mutex::try_lock_for(pthread_t thread_id, const struct timespec &relative_
     }
     return (this->try_lock_until(thread_id, absolute_time));
 }
-

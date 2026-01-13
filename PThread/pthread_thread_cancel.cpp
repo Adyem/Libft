@@ -1,6 +1,7 @@
 #include "pthread.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
+#include <errno.h>
 
 int pt_thread_cancel(pthread_t thread)
 {
@@ -10,7 +11,10 @@ int pt_thread_cancel(pthread_t thread)
     return_value = cmp_thread_cancel(thread);
     if (return_value != 0)
     {
-        error_code = ft_errno;
+        if (return_value < 0)
+            error_code = ft_map_system_error(errno);
+        else
+            error_code = ft_map_system_error(return_value);
         ft_global_error_stack_push(error_code);
         return (return_value);
     }

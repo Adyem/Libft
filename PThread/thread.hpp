@@ -97,10 +97,18 @@ ft_thread::ft_thread(FunctionType function, Args... args)
         this->_start_payload.reset();
         return ;
     }
-    if (pt_thread_create(&this->_thread, ft_nullptr,
-            &ft_thread::start_routine, shared_capsule) != 0)
+    int create_result;
+
+    create_result = pt_thread_create(&this->_thread, ft_nullptr,
+            &ft_thread::start_routine, shared_capsule);
+    if (create_result != 0)
     {
-        this->set_error(ft_errno);
+        int create_error;
+
+        create_error = ft_global_error_stack_pop_newest();
+        if (create_error == FT_ERR_SUCCESSS)
+            create_error = ft_map_system_error(create_result);
+        this->set_error(create_error);
         delete shared_capsule;
         this->_start_payload.reset();
         return ;

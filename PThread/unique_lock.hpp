@@ -3,6 +3,7 @@
 
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include <atomic>
 #include "mutex.hpp"
 
@@ -25,11 +26,13 @@ class ft_unique_lock
         mutable std::atomic<int> _error_code;
         mutable std::atomic<int> _system_error_code;
         mutable pt_mutex _state_mutex;
+        static thread_local ft_operation_error_stack _operation_errors;
 
         void set_error(int error) const noexcept;
         void set_error_no_errno(int error) const noexcept;
         void set_system_error(int error) const noexcept;
         void set_system_error_no_errno(int error) const noexcept;
+        static void record_error(ft_operation_error_stack &error_stack, int error);
 
     public:
         ft_unique_lock();
@@ -55,7 +58,8 @@ template <typename MutexType>
 void ft_unique_lock<MutexType>::set_error(int error) const noexcept
 {
     this->_error_code.store(error, std::memory_order_relaxed);
-    ft_errno = error;
+    ft_unique_lock<MutexType>::record_error(ft_unique_lock<MutexType>::_operation_errors, error);
+    ft_global_error_stack_push(error);
     return ;
 }
 
@@ -63,6 +67,7 @@ template <typename MutexType>
 void ft_unique_lock<MutexType>::set_error_no_errno(int error) const noexcept
 {
     this->_error_code.store(error, std::memory_order_relaxed);
+    ft_unique_lock<MutexType>::record_error(ft_unique_lock<MutexType>::_operation_errors, error);
     return ;
 }
 
@@ -70,7 +75,6 @@ template <typename MutexType>
 void ft_unique_lock<MutexType>::set_system_error(int error) const noexcept
 {
     this->_system_error_code.store(error, std::memory_order_relaxed);
-    ft_sys_errno = error;
     return ;
 }
 
@@ -78,6 +82,28 @@ template <typename MutexType>
 void ft_unique_lock<MutexType>::set_system_error_no_errno(int error) const noexcept
 {
     this->_system_error_code.store(error, std::memory_order_relaxed);
+    return ;
+}
+
+template <typename MutexType>
+void ft_unique_lock<MutexType>::record_error(ft_operation_error_stack &error_stack, int error)
+{
+    ft_size_t index;
+    ft_size_t shift_index;
+
+    if (error_stack.count < 20)
+        error_stack.count++;
+    if (error_stack.count > 0)
+        shift_index = error_stack.count - 1;
+    else
+        shift_index = 0;
+    index = shift_index;
+    while (index > 0)
+    {
+        error_stack.errors[index] = error_stack.errors[index - 1];
+        index--;
+    }
+    error_stack.errors[0] = error;
     return ;
 }
 
@@ -498,5 +524,8 @@ const char *ft_unique_lock<MutexType>::get_error_str() const
         return (ft_strerror(system_error));
     return (ft_strerror(FT_ERR_SUCCESSS));
 }
+
+template <typename MutexType>
+thread_local ft_operation_error_stack ft_unique_lock<MutexType>::_operation_errors = {{}, 0};
 
 #endif
