@@ -11,7 +11,7 @@ cma_alloc_limit_guard::cma_alloc_limit_guard(ft_size_t new_limit)
     {
         this->_previous_limit = g_cma_alloc_limit;
         cma_set_alloc_limit(new_limit);
-        set_limit_error = ft_errno;
+        set_limit_error = ft_global_error_stack_pop_newest();
         if (set_limit_error != FT_ERR_SUCCESSS)
         {
             this->_active = false;
@@ -24,7 +24,7 @@ cma_alloc_limit_guard::cma_alloc_limit_guard(ft_size_t new_limit)
     }
     this->_previous_limit = g_cma_alloc_limit;
     g_cma_alloc_limit = new_limit;
-    set_limit_error = ft_errno;
+    set_limit_error = FT_ERR_SUCCESSS;
     allocator_guard.unlock();
     this->_active = true;
     this->set_error(FT_ERR_SUCCESSS);
@@ -46,13 +46,13 @@ cma_alloc_limit_guard::~cma_alloc_limit_guard()
         if (!allocator_guard.is_active())
         {
             cma_set_alloc_limit(this->_previous_limit);
-            restore_error = ft_errno;
+            restore_error = ft_global_error_stack_pop_newest();
             this->_active = false;
             this->set_error(restore_error);
             return ;
         }
         g_cma_alloc_limit = this->_previous_limit;
-        restore_error = ft_errno;
+        restore_error = FT_ERR_SUCCESSS;
         allocator_guard.unlock();
     }
     this->_active = false;
@@ -80,7 +80,7 @@ cma_alloc_limit_guard &cma_alloc_limit_guard::operator=(cma_alloc_limit_guard &&
         if (this->_active)
         {
             cma_set_alloc_limit(this->_previous_limit);
-            restore_error = ft_errno;
+            restore_error = ft_global_error_stack_pop_newest();
             if (restore_error != FT_ERR_SUCCESSS)
             {
                 this->_active = false;
@@ -103,7 +103,6 @@ cma_alloc_limit_guard &cma_alloc_limit_guard::operator=(cma_alloc_limit_guard &&
 void cma_alloc_limit_guard::set_error(int error_code) const
 {
     this->_error_code = error_code;
-    ft_errno = error_code;
     return ;
 }
 
@@ -117,7 +116,7 @@ void cma_alloc_limit_guard::reset(ft_size_t new_limit)
         if (this->_active)
         {
             cma_set_alloc_limit(this->_previous_limit);
-            operation_error = ft_errno;
+            operation_error = ft_global_error_stack_pop_newest();
             if (operation_error != FT_ERR_SUCCESSS)
             {
                 this->_active = false;
@@ -127,7 +126,7 @@ void cma_alloc_limit_guard::reset(ft_size_t new_limit)
         }
         this->_previous_limit = g_cma_alloc_limit;
         cma_set_alloc_limit(new_limit);
-        operation_error = ft_errno;
+        operation_error = ft_global_error_stack_pop_newest();
         if (operation_error != FT_ERR_SUCCESSS)
         {
             this->_active = false;
@@ -144,7 +143,7 @@ void cma_alloc_limit_guard::reset(ft_size_t new_limit)
     }
     this->_previous_limit = g_cma_alloc_limit;
     g_cma_alloc_limit = new_limit;
-    operation_error = ft_errno;
+    operation_error = FT_ERR_SUCCESSS;
     allocator_guard.unlock();
     this->_active = true;
     this->set_error(FT_ERR_SUCCESSS);

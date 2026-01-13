@@ -133,8 +133,7 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
         {
             void *memory_pointer;
 
-            memory_pointer = cma_backend_reallocate(ptr, new_size);
-            error_code = ft_global_error_stack_pop_newest();
+            memory_pointer = cma_backend_reallocate(ptr, new_size, &error_code);
             ft_global_error_stack_push(error_code);
             return (memory_pointer);
         }
