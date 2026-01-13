@@ -13,6 +13,7 @@ int    ft_memcmp(const void *pointer1, const void *pointer2, size_t size)
     const unsigned char    *string1;
     const unsigned char    *string2;
     size_t                index;
+    int                   error_code;
 
     if (size == 0)
         return (report_memcmp_result(FT_ERR_SUCCESSS, 0));
@@ -26,10 +27,12 @@ int    ft_memcmp(const void *pointer1, const void *pointer2, size_t size)
     {
         if (string1[index] != string2[index])
         {
-            return (report_memcmp_result(FT_ERR_SUCCESSS,
+            error_code = FT_ERR_SUCCESSS;
+            return (report_memcmp_result(error_code,
                 string1[index] - string2[index]));
         }
         index++;
     }
-    return (report_memcmp_result(FT_ERR_SUCCESSS, 0));
+    error_code = FT_ERR_SUCCESSS;
+    return (report_memcmp_result(error_code, 0));
 }

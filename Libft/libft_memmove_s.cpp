@@ -38,7 +38,8 @@ int ft_memmove_s(void *destination, size_t destination_size, const void *source,
 
     if (number_of_bytes == 0)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        error_code = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(error_code);
         return (0);
     }
     if (destination == ft_nullptr || source == ft_nullptr)
@@ -54,7 +55,8 @@ int ft_memmove_s(void *destination, size_t destination_size, const void *source,
     if (move_result == ft_nullptr)
         return (report_move_error(destination, destination_size,
             FT_ERR_INVALID_ARGUMENT));
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    error_code = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
     return (0);
 }
 #endif

@@ -2,11 +2,15 @@
 
 int ft_isalnum(int character)
 {
+    int error_code;
+
     if (ft_isdigit(character) || ft_isalpha(character))
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        error_code = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(error_code);
         return (1);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    error_code = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
     return (0);
 }

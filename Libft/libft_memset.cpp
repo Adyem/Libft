@@ -10,10 +10,15 @@ static void *report_memset_result(int error_code, void *result)
 
 void *ft_memset(void *destination, int value, size_t number_of_bytes)
 {
+    int error_code;
+
     if (destination == ft_nullptr)
     {
         if (number_of_bytes == 0)
-            return (report_memset_result(FT_ERR_SUCCESSS, ft_nullptr));
+        {
+            error_code = FT_ERR_SUCCESSS;
+            return (report_memset_result(error_code, ft_nullptr));
+        }
         return (report_memset_result(FT_ERR_INVALID_ARGUMENT, ft_nullptr));
     }
     unsigned char *destination_pointer = static_cast<unsigned char *>(destination);
@@ -26,5 +31,6 @@ void *ft_memset(void *destination, int value, size_t number_of_bytes)
         number_of_bytes--;
     }
 
-    return (report_memset_result(FT_ERR_SUCCESSS, destination));
+    error_code = FT_ERR_SUCCESSS;
+    return (report_memset_result(error_code, destination));
 }

@@ -33,7 +33,8 @@ int ft_fclose(FILE *stream)
             error_code = FT_ERR_INVALID_HANDLE;
         return (report_close_error(error_code));
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    error_code = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
     return (FT_SUCCESS);
 }
 #endif

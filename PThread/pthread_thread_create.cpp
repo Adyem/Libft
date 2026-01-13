@@ -8,15 +8,15 @@ int pt_thread_create(pthread_t *thread, const pthread_attr_t *attr,
                 void *(*start_routine)(void *), void *arg)
 {
     int return_value;
+    int error_code;
 
     return_value = pthread_create(thread, attr, start_routine, arg);
     if (return_value != 0)
     {
-        ft_errno = ft_map_system_error(return_value);
-        ft_global_error_stack_push(ft_errno);
+        error_code = ft_map_system_error(return_value);
+        ft_global_error_stack_push(error_code);
         return (return_value);
     }
-    ft_errno = FT_ERR_SUCCESSS;
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (return_value);
 }

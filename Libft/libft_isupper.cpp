@@ -2,11 +2,15 @@
 
 int ft_isupper(int character)
 {
+    int error_code;
+
     if (character >= 'A' && character <= 'Z')
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        error_code = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(error_code);
         return (1);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    error_code = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
     return (0);
 }

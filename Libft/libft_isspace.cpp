@@ -3,10 +3,12 @@
 int ft_isspace(int character)
 {
     int result = 0;
+    int error_code;
 
     if (character == ' ' || character == '\f' || character == '\n' ||
         character == '\r' || character == '\t' || character == '\v')
         result = 1;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    error_code = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
     return (result);
 }

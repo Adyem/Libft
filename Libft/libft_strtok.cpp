@@ -25,6 +25,7 @@ char    *ft_strtok(char *string, const char *delimiters)
     size_t          new_delimiters_length;
     size_t          new_delimiters_hash;
     unsigned char   delimiter_character_value;
+    int             error_code;
 
     if (string != ft_nullptr)
     {
@@ -37,7 +38,10 @@ char    *ft_strtok(char *string, const char *delimiters)
     if (delimiters == ft_nullptr)
         return (report_strtok_result(FT_ERR_INVALID_ARGUMENT, ft_nullptr));
     if (saved_string == ft_nullptr)
-        return (report_strtok_result(FT_ERR_SUCCESSS, ft_nullptr));
+    {
+        error_code = FT_ERR_SUCCESSS;
+        return (report_strtok_result(error_code, ft_nullptr));
+    }
     new_delimiters_hash = 5381;
     delimiter_index = 0;
     while (delimiters[delimiter_index] != '\0')
@@ -84,7 +88,8 @@ char    *ft_strtok(char *string, const char *delimiters)
     if (*current_pointer == '\0')
     {
         saved_string = ft_nullptr;
-        return (report_strtok_result(FT_ERR_SUCCESSS, ft_nullptr));
+        error_code = FT_ERR_SUCCESSS;
+        return (report_strtok_result(error_code, ft_nullptr));
     }
     token_start = current_pointer;
     while (*current_pointer != '\0')
@@ -101,5 +106,6 @@ char    *ft_strtok(char *string, const char *delimiters)
         *current_pointer = '\0';
         saved_string = current_pointer + 1;
     }
-    return (report_strtok_result(FT_ERR_SUCCESSS, token_start));
+    error_code = FT_ERR_SUCCESSS;
+    return (report_strtok_result(error_code, token_start));
 }
