@@ -27,6 +27,7 @@ int rl_initialize_state(readline_state_t *state)
     bool thread_safety_created;
     bool thread_safety_was_enabled;
     int  index;
+    int error_code;
 
     if (state == ft_nullptr)
     {
@@ -59,17 +60,40 @@ int rl_initialize_state(readline_state_t *state)
     if (state->buffer != ft_nullptr)
     {
         cma_free(state->buffer);
+        error_code = ft_global_error_stack_pop_newest();
+        if (error_code != FT_ERR_SUCCESSS)
+        {
+            rl_state_unlock(state, lock_acquired);
+            rl_disable_raw_mode();
+            if (thread_safety_created == true)
+                rl_state_teardown_thread_safety(state);
+            ft_errno = error_code;
+            return (1);
+        }
         state->buffer = ft_nullptr;
     }
     state->bufsize = INITIAL_BUFFER_SIZE;
     state->buffer = static_cast<char *>(cma_calloc(state->bufsize, sizeof(char)));
     if (!state->buffer)
     {
+        error_code = ft_global_error_stack_pop_newest();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_NO_MEMORY;
         rl_state_unlock(state, lock_acquired);
         rl_disable_raw_mode();
         if (thread_safety_created == true)
             rl_state_teardown_thread_safety(state);
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_errno = error_code;
+        return (1);
+    }
+    error_code = ft_global_error_stack_pop_newest();
+    if (error_code != FT_ERR_SUCCESSS)
+    {
+        rl_state_unlock(state, lock_acquired);
+        rl_disable_raw_mode();
+        if (thread_safety_created == true)
+            rl_state_teardown_thread_safety(state);
+        ft_errno = error_code;
         return (1);
     }
     state->pos = 0;

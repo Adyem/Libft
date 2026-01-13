@@ -69,28 +69,39 @@ static void cma_backend_track_free(ft_size_t allocation_size)
 
 int cma_set_backend(const cma_backend_hooks *hooks)
 {
+    int error_code;
+
     if (!hooks || !hooks->allocate || !hooks->deallocate
         || !hooks->get_allocation_size || !hooks->owns_allocation)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        error_code = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     g_cma_backend_hooks = *hooks;
     g_cma_backend_enabled = true;
-    ft_errno = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
     return (0);
 }
 
 void cma_clear_backend(void)
 {
+    int error_code;
+
     std::memset(&g_cma_backend_hooks, 0, sizeof(g_cma_backend_hooks));
     g_cma_backend_enabled = false;
-    ft_errno = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
     return ;
 }
 
 int cma_backend_is_enabled(void)
 {
+    int error_code;
+
+    error_code = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
     if (g_cma_backend_enabled)
         return (1);
     return (0);
@@ -242,39 +253,64 @@ void *cma_backend_reallocate(void *memory_pointer, ft_size_t size)
 
 ft_size_t cma_backend_block_size(const void *memory_pointer)
 {
+    int error_code;
+
     if (!g_cma_backend_enabled)
+    {
+        error_code = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(error_code);
         return (0);
+    }
     if (!memory_pointer)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        error_code = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(error_code);
         return (0);
     }
     if (!cma_backend_query_ownership(memory_pointer))
+    {
+        error_code = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(error_code);
         return (0);
+    }
     ft_size_t allocation_size = cma_backend_query_size(memory_pointer);
-    ft_errno = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
     return (allocation_size);
 }
 
 int cma_backend_checked_block_size(const void *memory_pointer,
         ft_size_t *block_size)
 {
+    int error_code;
+
     if (!block_size)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        error_code = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     *block_size = 0;
     if (!g_cma_backend_enabled)
+    {
+        error_code = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(error_code);
         return (-1);
+    }
     if (!memory_pointer)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        error_code = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     if (!cma_backend_query_ownership(memory_pointer))
+    {
+        error_code = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(error_code);
         return (-1);
+    }
     *block_size = cma_backend_query_size(memory_pointer);
-    ft_errno = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
     return (0);
 }

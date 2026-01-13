@@ -7,16 +7,21 @@
 void rl_clear_history()
 {
     int    index;
+    int    error_code;
+    int    final_error;
 
     index = 0;
+    final_error = FT_ERR_SUCCESSS;
     while (index < history_count)
     {
         cma_free(history[index]);
+        error_code = ft_global_error_stack_pop_newest();
+        if (error_code != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
+            final_error = error_code;
         history[index] = ft_nullptr;
         index++;
     }
     history_count = 0;
-    ft_errno = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(ft_errno);
+    ft_global_error_stack_push(final_error);
     return ;
 }

@@ -176,29 +176,48 @@ void cma_leak_tracker_record_free(void *memory_pointer)
 
 void cma_leak_detection_enable(void)
 {
+    int error_code;
+
     g_cma_leak_detection_enabled = true;
     g_cma_leak_detection_error = false;
-    ft_errno = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
     return ;
 }
 
 void cma_leak_detection_disable(void)
 {
+    int error_code;
+
     g_cma_leak_detection_enabled = false;
-    ft_errno = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
     return ;
 }
 
 void cma_leak_detection_clear(void)
 {
+    int error_code;
+
     if (!cma_leak_tracker_clear_records(true))
+    {
+        error_code = ft_errno;
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_INTERNAL;
+        ft_global_error_stack_push(error_code);
         return ;
-    ft_errno = FT_ERR_SUCCESSS;
+    }
+    error_code = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
     return ;
 }
 
 bool cma_leak_detection_is_enabled(void)
 {
+    int error_code;
+
+    error_code = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
     if (!g_cma_leak_detection_enabled)
         return (false);
     if (g_cma_leak_detection_error)
@@ -209,16 +228,21 @@ bool cma_leak_detection_is_enabled(void)
 ft_size_t cma_leak_detection_outstanding_allocations(void)
 {
     ft_size_t allocation_count;
+    int error_code;
+
     allocation_count = static_cast<ft_size_t>(g_cma_leak_records.size());
-    ft_errno = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
     return (allocation_count);
 }
 
 ft_size_t cma_leak_detection_outstanding_bytes(void)
 {
     ft_size_t outstanding_bytes;
+
     outstanding_bytes = g_cma_leak_outstanding_bytes;
-    ft_errno = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
     return (outstanding_bytes);
 }
 
@@ -231,6 +255,8 @@ ft_string cma_leak_detection_report(bool clear_after)
     size_t record_index;
     bool was_enabled;
     bool error_state;
+    int error_code;
+
     was_enabled = g_cma_leak_detection_enabled;
     error_state = g_cma_leak_detection_error;
     g_cma_leak_detection_enabled = false;
@@ -238,19 +264,22 @@ ft_string cma_leak_detection_report(bool clear_after)
     if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
         cma_leak_tracker_resume(was_enabled, error_state);
-        ft_errno = ft_string::last_operation_error();
+        error_code = ft_string::last_operation_error();
+        ft_global_error_stack_push(error_code);
         return (report);
     }
     if (!cma_leak_report_append(report, "cma leak detection status:\n"))
     {
         cma_leak_tracker_resume(was_enabled, error_state);
-        ft_errno = ft_string::last_operation_error();
+        error_code = ft_string::last_operation_error();
+        ft_global_error_stack_push(error_code);
         return (report);
     }
     if (!cma_leak_report_append(report, "active: "))
     {
         cma_leak_tracker_resume(was_enabled, error_state);
-        ft_errno = ft_string::last_operation_error();
+        error_code = ft_string::last_operation_error();
+        ft_global_error_stack_push(error_code);
         return (report);
     }
     if (was_enabled && !error_state)
@@ -258,7 +287,8 @@ ft_string cma_leak_detection_report(bool clear_after)
         if (!cma_leak_report_append(report, "true\n"))
         {
             cma_leak_tracker_resume(was_enabled, error_state);
-            ft_errno = ft_string::last_operation_error();
+            error_code = ft_string::last_operation_error();
+            ft_global_error_stack_push(error_code);
             return (report);
         }
     }
@@ -267,7 +297,8 @@ ft_string cma_leak_detection_report(bool clear_after)
         if (!cma_leak_report_append(report, "false\n"))
         {
             cma_leak_tracker_resume(was_enabled, error_state);
-            ft_errno = ft_string::last_operation_error();
+            error_code = ft_string::last_operation_error();
+            ft_global_error_stack_push(error_code);
             return (report);
         }
     }
@@ -275,50 +306,58 @@ ft_string cma_leak_detection_report(bool clear_after)
     if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
         cma_leak_tracker_resume(was_enabled, error_state);
-        ft_errno = ft_string::last_operation_error();
+        error_code = ft_string::last_operation_error();
+        ft_global_error_stack_push(error_code);
         return (report);
     }
     if (!cma_leak_report_append(report, "outstanding allocations: "))
     {
         cma_leak_tracker_resume(was_enabled, error_state);
-        ft_errno = ft_string::last_operation_error();
+        error_code = ft_string::last_operation_error();
+        ft_global_error_stack_push(error_code);
         return (report);
     }
     if (!cma_leak_report_append_string(report, allocation_count_string))
     {
         cma_leak_tracker_resume(was_enabled, error_state);
-        ft_errno = ft_string::last_operation_error();
+        error_code = ft_string::last_operation_error();
+        ft_global_error_stack_push(error_code);
         return (report);
     }
     if (!cma_leak_report_append(report, "\n"))
     {
         cma_leak_tracker_resume(was_enabled, error_state);
-        ft_errno = ft_string::last_operation_error();
+        error_code = ft_string::last_operation_error();
+        ft_global_error_stack_push(error_code);
         return (report);
     }
     allocation_bytes_string = ft_to_string(g_cma_leak_outstanding_bytes);
     if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
         cma_leak_tracker_resume(was_enabled, error_state);
-        ft_errno = ft_string::last_operation_error();
+        error_code = ft_string::last_operation_error();
+        ft_global_error_stack_push(error_code);
         return (report);
     }
     if (!cma_leak_report_append(report, "outstanding bytes: "))
     {
         cma_leak_tracker_resume(was_enabled, error_state);
-        ft_errno = ft_string::last_operation_error();
+        error_code = ft_string::last_operation_error();
+        ft_global_error_stack_push(error_code);
         return (report);
     }
     if (!cma_leak_report_append_string(report, allocation_bytes_string))
     {
         cma_leak_tracker_resume(was_enabled, error_state);
-        ft_errno = ft_string::last_operation_error();
+        error_code = ft_string::last_operation_error();
+        ft_global_error_stack_push(error_code);
         return (report);
     }
     if (!cma_leak_report_append(report, "\n"))
     {
         cma_leak_tracker_resume(was_enabled, error_state);
-        ft_errno = ft_string::last_operation_error();
+        error_code = ft_string::last_operation_error();
+        ft_global_error_stack_push(error_code);
         return (report);
     }
     record_count = g_cma_leak_records.size();
@@ -327,7 +366,8 @@ ft_string cma_leak_detection_report(bool clear_after)
         if (!cma_leak_report_append(report, "allocations:\n"))
         {
             cma_leak_tracker_resume(was_enabled, error_state);
-            ft_errno = ft_string::last_operation_error();
+            error_code = ft_string::last_operation_error();
+            ft_global_error_stack_push(error_code);
             return (report);
         }
         record_index = 0;
@@ -342,50 +382,59 @@ ft_string cma_leak_detection_report(bool clear_after)
             {
                 cma_leak_tracker_handle_error(g_cma_leak_records.get_error());
                 cma_leak_tracker_resume(false, true);
+                error_code = g_cma_leak_records.get_error();
+                ft_global_error_stack_push(error_code);
                 return (report);
             }
             index_string = ft_to_string(record_index);
             if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
             {
                 cma_leak_tracker_resume(was_enabled, error_state);
-                ft_errno = ft_string::last_operation_error();
+                error_code = ft_string::last_operation_error();
+                ft_global_error_stack_push(error_code);
                 return (report);
             }
             size_string = ft_to_string(static_cast<unsigned long>(record.size));
             if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
             {
                 cma_leak_tracker_resume(was_enabled, error_state);
-                ft_errno = ft_string::last_operation_error();
+                error_code = ft_string::last_operation_error();
+                ft_global_error_stack_push(error_code);
                 return (report);
             }
             if (!cma_leak_report_append(report, "  ["))
             {
                 cma_leak_tracker_resume(was_enabled, error_state);
-                ft_errno = ft_string::last_operation_error();
+                error_code = ft_string::last_operation_error();
+                ft_global_error_stack_push(error_code);
                 return (report);
             }
             if (!cma_leak_report_append_string(report, index_string))
             {
                 cma_leak_tracker_resume(was_enabled, error_state);
-                ft_errno = ft_string::last_operation_error();
+                error_code = ft_string::last_operation_error();
+                ft_global_error_stack_push(error_code);
                 return (report);
             }
             if (!cma_leak_report_append(report, "] "))
             {
                 cma_leak_tracker_resume(was_enabled, error_state);
-                ft_errno = ft_string::last_operation_error();
+                error_code = ft_string::last_operation_error();
+                ft_global_error_stack_push(error_code);
                 return (report);
             }
             if (!cma_leak_report_append_string(report, size_string))
             {
                 cma_leak_tracker_resume(was_enabled, error_state);
-                ft_errno = ft_string::last_operation_error();
+                error_code = ft_string::last_operation_error();
+                ft_global_error_stack_push(error_code);
                 return (report);
             }
             if (!cma_leak_report_append(report, " bytes\n"))
             {
                 cma_leak_tracker_resume(was_enabled, error_state);
-                ft_errno = ft_string::last_operation_error();
+                error_code = ft_string::last_operation_error();
+                ft_global_error_stack_push(error_code);
                 return (report);
             }
             record_index += 1;
@@ -394,7 +443,13 @@ ft_string cma_leak_detection_report(bool clear_after)
     if (clear_after)
     {
         if (!cma_leak_tracker_clear_records(true))
+        {
+            error_code = ft_errno;
+            if (error_code == FT_ERR_SUCCESSS)
+                error_code = FT_ERR_INTERNAL;
+            ft_global_error_stack_push(error_code);
             return (report);
+        }
         if (was_enabled)
             g_cma_leak_detection_enabled = true;
         else
@@ -402,6 +457,7 @@ ft_string cma_leak_detection_report(bool clear_after)
     }
     else
         cma_leak_tracker_resume(was_enabled, error_state);
-    ft_errno = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
     return (report);
 }
