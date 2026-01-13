@@ -19,8 +19,9 @@
 static void remove_directory_if_present(const char *directory_path)
 {
     int directory_exists;
+    int error_code;
 
-    directory_exists = cmp_directory_exists(directory_path);
+    directory_exists = cmp_directory_exists(directory_path, &error_code);
     if (directory_exists != 1)
         return ;
 #if defined(_WIN32) || defined(_WIN64)
@@ -35,7 +36,6 @@ static void cleanup_paths(const char *directory_path, const char *file_path)
 {
     file_delete(file_path);
     remove_directory_if_present(directory_path);
-    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -110,11 +110,10 @@ FT_TEST(test_kv_store_flush_propagates_json_writer_errno, "kv_store flush propag
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, store.get_error());
     FT_ASSERT_EQ(0, file_delete(file_path));
     remove_directory_if_present(directory_path);
-    ft_errno = FT_ERR_SUCCESSS;
     flush_result = store.kv_flush();
     FT_ASSERT_EQ(-1, flush_result);
     expected_error = FT_ERR_IO;
-    FT_ASSERT_EQ(expected_error, ft_errno);
+    FT_ASSERT_EQ(expected_error, ft_global_error_stack_pop_newest());
     FT_ASSERT_EQ(expected_error, store.get_error());
     cleanup_paths(directory_path, file_path);
     return (1);
@@ -437,4 +436,3 @@ FT_TEST(test_kv_store_loads_legacy_format, "kv_store loads legacy format")
     cleanup_paths(directory_path, file_path);
     return (1);
 }
-

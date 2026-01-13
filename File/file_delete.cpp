@@ -7,8 +7,7 @@ int file_delete(const char *path)
     int result;
     int error_code;
 
-    result = cmp_file_delete(path);
-    error_code = ft_errno;
+    result = cmp_file_delete(path, &error_code);
     if (result != 0 && error_code == FT_ERR_SUCCESSS)
         error_code = FT_ERR_INTERNAL;
     if (result == 0)

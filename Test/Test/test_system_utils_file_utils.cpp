@@ -41,25 +41,32 @@ static int su_write_text_file(const char *path, const char *contents)
 
     file_stream = su_fopen(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (file_stream == ft_nullptr)
+    {
+        ft_global_error_stack_pop_newest();
         return (-1);
+    }
+    ft_global_error_stack_pop_newest();
     text_length = std::strlen(contents);
     if (text_length == 0)
     {
-        ft_errno = FT_ERR_SUCCESSS;
         su_fclose(file_stream);
+        ft_global_error_stack_pop_newest();
         return (0);
     }
     written = su_fwrite(contents, 1, text_length, file_stream);
+    ft_global_error_stack_pop_newest();
     if (written != text_length)
     {
         su_fclose(file_stream);
-        if (ft_errno == FT_ERR_SUCCESSS)
-            ft_errno = FT_ERR_IO;
+        ft_global_error_stack_pop_newest();
         return (-1);
     }
     if (su_fclose(file_stream) != 0)
+    {
+        ft_global_error_stack_pop_newest();
         return (-1);
-    ft_errno = FT_ERR_SUCCESSS;
+    }
+    ft_global_error_stack_pop_newest();
     return (0);
 }
 
@@ -68,14 +75,20 @@ static ft_string su_read_text_file(const char *path)
     su_file *file_stream;
     char buffer[128];
     ft_string result;
+    int error_code;
 
     file_stream = su_fopen(path, O_RDONLY);
     if (file_stream == ft_nullptr)
-        return (ft_string(ft_errno));
+    {
+        error_code = ft_global_error_stack_pop_newest();
+        return (ft_string(error_code));
+    }
+    ft_global_error_stack_pop_newest();
     result = ft_string();
     if (result.get_error())
     {
         su_fclose(file_stream);
+        ft_global_error_stack_pop_newest();
         return (result);
     }
     while (true)
@@ -83,11 +96,13 @@ static ft_string su_read_text_file(const char *path)
         size_t bytes_read = su_fread(buffer, 1, sizeof(buffer), file_stream);
         if (bytes_read == 0)
         {
-            if (ft_errno == FT_ERR_SUCCESSS)
+            error_code = ft_global_error_stack_pop_newest();
+            if (error_code == FT_ERR_SUCCESSS)
                 break;
-            result = ft_string(ft_errno);
+            result = ft_string(error_code);
             break;
         }
+        ft_global_error_stack_pop_newest();
         size_t index = 0;
         while (index < bytes_read)
         {
@@ -100,13 +115,16 @@ static ft_string su_read_text_file(const char *path)
             break;
     }
     su_fclose(file_stream);
+    ft_global_error_stack_pop_newest();
     return (result);
 }
 
 static void su_prepare_directory_fixture(void)
 {
-    cmp_file_create_directory("su_copy_dir_source", 0755);
-    cmp_file_create_directory("su_copy_dir_source/nested", 0755);
+    int error_code = FT_ERR_SUCCESSS;
+
+    cmp_file_create_directory("su_copy_dir_source", 0755, &error_code);
+    cmp_file_create_directory("su_copy_dir_source/nested", 0755, &error_code);
     su_write_text_file("su_copy_dir_source/root.txt", "root payload\n");
     su_write_text_file("su_copy_dir_source/nested/item.txt", "nested payload\n");
     return ;
@@ -180,19 +198,16 @@ FT_TEST(test_su_inspect_permissions_reports_mode_bits, "su_inspect_permissions r
 
 FT_TEST(test_su_copy_directory_handles_invalid_arguments, "su_copy_directory_recursive validates inputs")
 {
-    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(-1, su_copy_directory_recursive(ft_nullptr, "target"));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
-    ft_errno = FT_ERR_SUCCESSS;
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_global_error_stack_pop_newest());
     FT_ASSERT_EQ(-1, su_copy_directory_recursive("missing", "target"));
-    FT_ASSERT(ft_errno != FT_ERR_SUCCESSS);
+    FT_ASSERT(ft_global_error_stack_pop_newest() != FT_ERR_SUCCESSS);
     return (1);
 }
 
 FT_TEST(test_su_inspect_permissions_rejects_null_output, "su_inspect_permissions rejects missing destination")
 {
-    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(-1, su_inspect_permissions("any", ft_nullptr));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_global_error_stack_pop_newest());
     return (1);
 }

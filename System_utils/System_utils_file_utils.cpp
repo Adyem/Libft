@@ -50,29 +50,50 @@ static ft_string su_join_paths(const char *left_path, const char *right_path)
     return (joined);
 }
 
-static int su_copy_file_streams(su_file *source_stream, su_file *destination_stream)
+static int su_copy_file_streams(su_file *source_stream, su_file *destination_stream,
+    int *error_code_out)
 {
     char buffer[8192];
     int result = 0;
+    int error_code = FT_ERR_SUCCESSS;
 
     while (result == 0)
     {
         size_t bytes_read = su_fread(buffer, 1, sizeof(buffer), source_stream);
+        int read_error = ft_global_error_stack_pop_newest();
         if (bytes_read == 0)
         {
-            if (ft_errno == FT_ERR_SUCCESSS)
+            if (read_error == FT_ERR_SUCCESSS)
                 break;
+            error_code = read_error;
+            result = -1;
+            break;
+        }
+        if (read_error != FT_ERR_SUCCESSS)
+        {
+            error_code = read_error;
             result = -1;
             break;
         }
         size_t bytes_written = su_fwrite(buffer, 1, bytes_read, destination_stream);
+        int write_error = ft_global_error_stack_pop_newest();
         if (bytes_written != bytes_read)
         {
-            if (ft_errno == FT_ERR_SUCCESSS)
-                ft_errno = FT_ERR_IO;
+            if (write_error == FT_ERR_SUCCESSS)
+                write_error = FT_ERR_IO;
+            error_code = write_error;
             result = -1;
+            break;
+        }
+        if (write_error != FT_ERR_SUCCESSS)
+        {
+            error_code = write_error;
+            result = -1;
+            break;
         }
     }
+    if (error_code_out != 0)
+        *error_code_out = error_code;
     return (result);
 }
 
@@ -82,69 +103,131 @@ int su_copy_file(const char *source_path, const char *destination_path)
     su_file *destination_stream;
     int result;
     int close_error;
+    int error_code;
 
     if (source_path == ft_nullptr || destination_path == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     source_stream = su_fopen(source_path, O_RDONLY);
     if (source_stream == ft_nullptr)
+    {
+        error_code = ft_global_error_stack_pop_newest();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_FILE_OPEN_FAILED;
+        ft_global_error_stack_push(error_code);
         return (-1);
+    }
+    ft_global_error_stack_pop_newest();
     destination_stream = su_fopen(destination_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (destination_stream == ft_nullptr)
     {
         su_fclose(source_stream);
+        ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_pop_newest();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_FILE_OPEN_FAILED;
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
-    result = su_copy_file_streams(source_stream, destination_stream);
+    ft_global_error_stack_pop_newest();
+    result = su_copy_file_streams(source_stream, destination_stream, &error_code);
     close_error = su_fclose(source_stream);
-    if (close_error != 0 && result == 0)
-        result = -1;
+    if (close_error != 0)
+    {
+        int close_error_code = ft_global_error_stack_pop_newest();
+
+        if (result == 0)
+        {
+            if (close_error_code == FT_ERR_SUCCESSS)
+                close_error_code = FT_ERR_IO;
+            error_code = close_error_code;
+            result = -1;
+        }
+    }
+    else
+        ft_global_error_stack_pop_newest();
     close_error = su_fclose(destination_stream);
-    if (close_error != 0 && result == 0)
-        result = -1;
+    if (close_error != 0)
+    {
+        int close_error_code = ft_global_error_stack_pop_newest();
+
+        if (result == 0)
+        {
+            if (close_error_code == FT_ERR_SUCCESSS)
+                close_error_code = FT_ERR_IO;
+            error_code = close_error_code;
+            result = -1;
+        }
+    }
+    else
+        ft_global_error_stack_pop_newest();
     if (result == 0)
-        ft_errno = FT_ERR_SUCCESSS;
+        error_code = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
     return (result);
 }
 
-static int su_ensure_directory_exists(const char *path)
+static int su_ensure_directory_exists(const char *path, int *error_code_out)
 {
     int directory_status;
+    int error_code;
 
-    directory_status = cmp_directory_exists(path);
+    directory_status = cmp_directory_exists(path, &error_code);
     if (directory_status == 1)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        if (error_code_out != 0)
+            *error_code_out = FT_ERR_SUCCESSS;
         return (0);
     }
-    if (directory_status == 0 && ft_errno == FT_ERR_SUCCESSS)
+    if (directory_status == 0 && error_code == FT_ERR_SUCCESSS)
     {
-        ft_errno = FT_ERR_ALREADY_EXISTS;
+        if (error_code_out != 0)
+            *error_code_out = FT_ERR_ALREADY_EXISTS;
         return (-1);
     }
-    if (cmp_file_create_directory(path, 0755) != 0)
+    if (directory_status != 0)
+    {
+        if (error_code_out != 0)
+            *error_code_out = error_code;
         return (-1);
-    ft_errno = FT_ERR_SUCCESSS;
+    }
+    if (cmp_file_create_directory(path, 0755, &error_code) != 0)
+    {
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_INTERNAL;
+        if (error_code_out != 0)
+            *error_code_out = error_code;
+        return (-1);
+    }
+    if (error_code_out != 0)
+        *error_code_out = FT_ERR_SUCCESSS;
     return (0);
 }
 
-static int su_copy_directory_contents(const char *source_path, const char *destination_path)
+static int su_copy_directory_contents(const char *source_path, const char *destination_path,
+    int *error_code_out)
 {
     file_dir *directory_stream;
     int result;
+    int error_code;
 
-    directory_stream = cmp_dir_open(source_path);
+    directory_stream = cmp_dir_open(source_path, &error_code);
     if (directory_stream == ft_nullptr)
+    {
+        if (error_code_out != 0)
+            *error_code_out = error_code;
         return (-1);
+    }
     result = 0;
+    error_code = FT_ERR_SUCCESSS;
     while (result == 0)
     {
-        file_dirent *directory_entry = cmp_dir_read(directory_stream);
+        file_dirent *directory_entry = cmp_dir_read(directory_stream, &error_code);
         if (directory_entry == ft_nullptr)
         {
-            if (ft_errno == FT_ERR_SUCCESSS)
+            if (error_code == FT_ERR_SUCCESSS)
                 break;
             result = -1;
             break;
@@ -154,42 +237,44 @@ static int su_copy_directory_contents(const char *source_path, const char *desti
         ft_string source_child = su_join_paths(source_path, directory_entry->d_name);
         if (source_child.get_error())
         {
-            ft_errno = source_child.get_error();
+            error_code = source_child.get_error();
             result = -1;
             break;
         }
         ft_string destination_child = su_join_paths(destination_path, directory_entry->d_name);
         if (destination_child.get_error())
         {
-            ft_errno = destination_child.get_error();
+            error_code = destination_child.get_error();
             result = -1;
             break;
         }
-        int child_is_directory = cmp_directory_exists(source_child.c_str());
+        int child_is_directory = cmp_directory_exists(source_child.c_str(), &error_code);
         if (child_is_directory == 1)
         {
-            int destination_status = cmp_directory_exists(destination_child.c_str());
+            int destination_status = cmp_directory_exists(destination_child.c_str(), &error_code);
             if (destination_status == 0)
             {
-                if (ft_errno == FT_ERR_SUCCESSS)
+                if (error_code == FT_ERR_SUCCESSS)
                 {
-                    ft_errno = FT_ERR_ALREADY_EXISTS;
+                    error_code = FT_ERR_ALREADY_EXISTS;
                     result = -1;
                     break;
                 }
-                if (cmp_file_create_directory(destination_child.c_str(), 0755) != 0)
+                if (cmp_file_create_directory(destination_child.c_str(), 0755, &error_code) != 0)
                 {
+                    if (error_code == FT_ERR_SUCCESSS)
+                        error_code = FT_ERR_INTERNAL;
                     result = -1;
                     break;
                 }
-                ft_errno = FT_ERR_SUCCESSS;
             }
             else if (destination_status != 1)
             {
                 result = -1;
                 break;
             }
-            if (su_copy_directory_contents(source_child.c_str(), destination_child.c_str()) != 0)
+            if (su_copy_directory_contents(source_child.c_str(),
+                    destination_child.c_str(), &error_code) != 0)
             {
                 result = -1;
                 break;
@@ -197,16 +282,18 @@ static int su_copy_directory_contents(const char *source_path, const char *desti
         }
         else if (child_is_directory == 0)
         {
-            if (ft_errno != FT_ERR_SUCCESSS)
+            if (error_code != FT_ERR_SUCCESSS)
             {
                 result = -1;
                 break;
             }
             if (su_copy_file(source_child.c_str(), destination_child.c_str()) != 0)
             {
+                error_code = ft_global_error_stack_pop_newest();
                 result = -1;
                 break;
             }
+            ft_global_error_stack_pop_newest();
         }
         else
         {
@@ -214,41 +301,74 @@ static int su_copy_directory_contents(const char *source_path, const char *desti
             break;
         }
     }
-    cmp_dir_close(directory_stream);
+    {
+        int close_error_code;
+        int close_result;
+
+        close_result = cmp_dir_close(directory_stream, &close_error_code);
+        if (close_result != 0 && result == 0)
+        {
+            error_code = close_error_code;
+            result = -1;
+        }
+    }
+    if (result != 0 && error_code == FT_ERR_SUCCESSS)
+        error_code = FT_ERR_INTERNAL;
     if (result == 0)
-        ft_errno = FT_ERR_SUCCESSS;
+        error_code = FT_ERR_SUCCESSS;
+    if (error_code_out != 0)
+        *error_code_out = error_code;
     return (result);
 }
 
 int su_copy_directory_recursive(const char *source_path, const char *destination_path)
 {
+    int error_code;
+
     if (source_path == ft_nullptr || destination_path == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
-    if (cmp_directory_exists(source_path) != 1)
+    if (cmp_directory_exists(source_path, &error_code) != 1)
+    {
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(error_code);
         return (-1);
-    if (su_ensure_directory_exists(destination_path) != 0)
+    }
+    if (su_ensure_directory_exists(destination_path, &error_code) != 0)
+    {
+        ft_global_error_stack_push(error_code);
         return (-1);
-    if (su_copy_directory_contents(source_path, destination_path) != 0)
+    }
+    if (su_copy_directory_contents(source_path, destination_path, &error_code) != 0)
+    {
+        ft_global_error_stack_push(error_code);
         return (-1);
-    ft_errno = FT_ERR_SUCCESSS;
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
 int su_inspect_permissions(const char *path, mode_t *permissions_out)
 {
     mode_t permissions;
+    int error_code;
 
     if (path == ft_nullptr || permissions_out == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
-    if (cmp_file_get_permissions(path, &permissions) != 0)
+    if (cmp_file_get_permissions(path, &permissions, &error_code) != 0)
+    {
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_INTERNAL;
+        ft_global_error_stack_push(error_code);
         return (-1);
+    }
     *permissions_out = permissions;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }

@@ -56,41 +56,43 @@ static void write_test_file(const char *path)
 
 FT_TEST(test_cmp_file_exists_null_pointer_sets_errno, "cmp_file_exists reports FT_ERR_INVALID_ARGUMENT for null path")
 {
-    ft_errno = FT_ERR_SUCCESSS;
-    FT_ASSERT_EQ(0, cmp_file_exists(ft_nullptr));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    int error_code = FT_ERR_SUCCESSS;
+
+    FT_ASSERT_EQ(0, cmp_file_exists(ft_nullptr, &error_code));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_code);
     return (1);
 }
 
 FT_TEST(test_cmp_file_exists_missing_path_sets_errno, "cmp_file_exists reports FT_ERR_IO for missing file")
 {
     const char *missing_path = "cmp_file_exists_missing_path.txt";
+    int error_code = FT_ERR_SUCCESSS;
 
     remove_file_if_present(missing_path);
-    ft_errno = FT_ERR_SUCCESSS;
-    FT_ASSERT_EQ(0, cmp_file_exists(missing_path));
-    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
+    FT_ASSERT_EQ(0, cmp_file_exists(missing_path, &error_code));
+    FT_ASSERT_EQ(FT_ERR_IO, error_code);
     return (1);
 }
 
 FT_TEST(test_cmp_file_exists_success_clears_errno, "cmp_file_exists clears errno on success")
 {
     const char *path = "cmp_file_exists_success.txt";
+    int error_code = FT_ERR_INVALID_ARGUMENT;
 
     remove_file_if_present(path);
     write_test_file(path);
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
-    FT_ASSERT_EQ(1, cmp_file_exists(path));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(1, cmp_file_exists(path, &error_code));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, error_code);
     remove_file_if_present(path);
     return (1);
 }
 
 FT_TEST(test_cmp_file_delete_null_pointer_sets_errno, "cmp_file_delete reports FT_ERR_INVALID_ARGUMENT for null path")
 {
-    ft_errno = FT_ERR_SUCCESSS;
-    FT_ASSERT_EQ(-1, cmp_file_delete(ft_nullptr));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    int error_code = FT_ERR_SUCCESSS;
+
+    FT_ASSERT_EQ(-1, cmp_file_delete(ft_nullptr, &error_code));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_code);
     return (1);
 }
 
@@ -98,6 +100,7 @@ FT_TEST(test_cmp_file_delete_permission_error_sets_errno, "cmp_file_delete repor
 {
     const char *directory_path = "cmp_file_delete_permission_dir";
     const char *file_path = "cmp_file_delete_permission_dir/file.txt";
+    int error_code = FT_ERR_SUCCESSS;
 
     remove_file_if_present(file_path);
     remove_directory_if_present(directory_path);
@@ -109,10 +112,9 @@ FT_TEST(test_cmp_file_delete_permission_error_sets_errno, "cmp_file_delete repor
 #endif
     );
     write_test_file(file_path);
-    ft_errno = FT_ERR_SUCCESSS;
-    FT_ASSERT_EQ(-1, cmp_file_delete(directory_path));
-    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, ft_errno);
-    cmp_file_delete(file_path);
+    FT_ASSERT_EQ(-1, cmp_file_delete(directory_path, &error_code));
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, error_code);
+    cmp_file_delete(file_path, &error_code);
     remove_directory_if_present(directory_path);
     return (1);
 }
@@ -120,20 +122,22 @@ FT_TEST(test_cmp_file_delete_permission_error_sets_errno, "cmp_file_delete repor
 FT_TEST(test_cmp_file_delete_success_clears_errno, "cmp_file_delete clears errno on success")
 {
     const char *path = "cmp_file_delete_success.txt";
+    int error_code = FT_ERR_INVALID_ARGUMENT;
 
     remove_file_if_present(path);
     write_test_file(path);
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
-    FT_ASSERT_EQ(0, cmp_file_delete(path));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(0, cmp_file_delete(path, &error_code));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, error_code);
     return (1);
 }
 
 FT_TEST(test_cmp_file_move_null_pointer_sets_errno, "cmp_file_move reports FT_ERR_INVALID_ARGUMENT for null source")
 {
-    ft_errno = FT_ERR_SUCCESSS;
-    FT_ASSERT_EQ(-1, cmp_file_move(ft_nullptr, "cmp_file_move_null_pointer_destination.txt"));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    int error_code = FT_ERR_SUCCESSS;
+
+    FT_ASSERT_EQ(-1,
+        cmp_file_move(ft_nullptr, "cmp_file_move_null_pointer_destination.txt", &error_code));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_code);
     return (1);
 }
 
@@ -141,12 +145,12 @@ FT_TEST(test_cmp_file_move_missing_source_sets_errno, "cmp_file_move reports FT_
 {
     const char *source_path = "cmp_file_move_missing_source.txt";
     const char *destination_path = "cmp_file_move_missing_destination.txt";
+    int error_code = FT_ERR_SUCCESSS;
 
     remove_file_if_present(source_path);
     remove_file_if_present(destination_path);
-    ft_errno = FT_ERR_SUCCESSS;
-    FT_ASSERT_EQ(-1, cmp_file_move(source_path, destination_path));
-    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
+    FT_ASSERT_EQ(-1, cmp_file_move(source_path, destination_path, &error_code));
+    FT_ASSERT_EQ(FT_ERR_IO, error_code);
     return (1);
 }
 
@@ -155,6 +159,7 @@ FT_TEST(test_cmp_file_move_cross_device_copy_failure_sets_errno, "cmp_file_move 
     const char *source_path = "cmp_file_move_cross_device_failure_source.txt";
     const char *destination_directory = "cmp_file_move_cross_device_failure_dir";
     const char *stale_destination_path = "cmp_file_move_cross_device_failure_dir/destination.txt";
+    int error_code = FT_ERR_CONFIGURATION;
 
     remove_file_if_present(source_path);
     remove_file_if_present(stale_destination_path);
@@ -166,10 +171,9 @@ FT_TEST(test_cmp_file_move_cross_device_copy_failure_sets_errno, "cmp_file_move 
     FT_ASSERT_EQ(0, ::mkdir(destination_directory, 0700));
 #endif
     cmp_set_force_cross_device_move(1);
-    ft_errno = FT_ERR_CONFIGURATION;
-    FT_ASSERT_EQ(-1, cmp_file_move(source_path, destination_directory));
-    FT_ASSERT_NE(FT_ERR_CONFIGURATION, ft_errno);
-    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, ft_errno);
+    FT_ASSERT_EQ(-1, cmp_file_move(source_path, destination_directory, &error_code));
+    FT_ASSERT_NE(FT_ERR_CONFIGURATION, error_code);
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, error_code);
     cmp_set_force_cross_device_move(0);
     remove_file_if_present(source_path);
     remove_directory_if_present(destination_directory);
@@ -183,6 +187,7 @@ FT_TEST(test_cmp_file_move_cross_device_directory_destination_sets_errno, "cmp_f
     const char *destination_directory = "cmp_file_move_cross_device_directory_destination_dir";
     const char *stale_destination_path = "cmp_file_move_cross_device_directory_destination_dir/destination.txt";
     FILE *file_pointer;
+    int error_code = FT_ERR_CONFIGURATION;
 
     remove_file_if_present(source_path);
     remove_file_if_present(stale_destination_path);
@@ -194,9 +199,8 @@ FT_TEST(test_cmp_file_move_cross_device_directory_destination_sets_errno, "cmp_f
     FT_ASSERT_EQ(0, ::mkdir(destination_directory, 0700));
 #endif
     cmp_set_force_cross_device_move(1);
-    ft_errno = FT_ERR_CONFIGURATION;
-    FT_ASSERT_EQ(-1, cmp_file_move(source_path, destination_directory));
-    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, ft_errno);
+    FT_ASSERT_EQ(-1, cmp_file_move(source_path, destination_directory, &error_code));
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, error_code);
     cmp_set_force_cross_device_move(0);
     file_pointer = std::fopen(source_path, "r");
     FT_ASSERT_NE(ft_nullptr, file_pointer);
@@ -214,9 +218,10 @@ FT_TEST(test_cmp_file_move_cross_device_directory_destination_sets_errno, "cmp_f
 
 FT_TEST(test_cmp_file_copy_null_pointer_sets_errno, "cmp_file_copy reports FT_ERR_INVALID_ARGUMENT for null source")
 {
-    ft_errno = FT_ERR_SUCCESSS;
-    FT_ASSERT_EQ(-1, cmp_file_copy(ft_nullptr, "cmp_file_copy_null_pointer_destination.txt"));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    int error_code = FT_ERR_SUCCESSS;
+
+    FT_ASSERT_EQ(-1, cmp_file_copy(ft_nullptr, "cmp_file_copy_null_pointer_destination.txt", &error_code));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_code);
     return (1);
 }
 
@@ -225,6 +230,7 @@ FT_TEST(test_cmp_file_copy_permission_error_sets_errno, "cmp_file_copy reports p
     const char *source_path = "cmp_file_copy_permission_source.txt";
     const char *destination_directory = "cmp_file_copy_permission_dir";
     const char *stale_destination_path = "cmp_file_copy_permission_dir/destination.txt";
+    int error_code = FT_ERR_SUCCESSS;
 
     remove_file_if_present(source_path);
     remove_file_if_present(stale_destination_path);
@@ -235,9 +241,8 @@ FT_TEST(test_cmp_file_copy_permission_error_sets_errno, "cmp_file_copy reports p
 #else
     FT_ASSERT_EQ(0, ::mkdir(destination_directory, 0700));
 #endif
-    ft_errno = FT_ERR_SUCCESSS;
-    FT_ASSERT_EQ(-1, cmp_file_copy(source_path, destination_directory));
-    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, ft_errno);
+    FT_ASSERT_EQ(-1, cmp_file_copy(source_path, destination_directory, &error_code));
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, error_code);
     remove_file_if_present(source_path);
     remove_directory_if_present(destination_directory);
     remove_file_if_present(stale_destination_path);
@@ -248,23 +253,24 @@ FT_TEST(test_cmp_file_copy_success_clears_errno, "cmp_file_copy clears errno on 
 {
     const char *source_path = "cmp_file_copy_success_source.txt";
     const char *destination_path = "cmp_file_copy_success_destination.txt";
+    int error_code = FT_ERR_INVALID_ARGUMENT;
 
     remove_file_if_present(source_path);
     remove_file_if_present(destination_path);
     write_test_file(source_path);
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
-    FT_ASSERT_EQ(0, cmp_file_copy(source_path, destination_path));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
-    cmp_file_delete(source_path);
-    cmp_file_delete(destination_path);
+    FT_ASSERT_EQ(0, cmp_file_copy(source_path, destination_path, &error_code));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, error_code);
+    cmp_file_delete(source_path, &error_code);
+    cmp_file_delete(destination_path, &error_code);
     return (1);
 }
 
 FT_TEST(test_cmp_file_create_directory_null_pointer_sets_errno, "cmp_file_create_directory reports FT_ERR_INVALID_ARGUMENT for null path")
 {
-    ft_errno = FT_ERR_SUCCESSS;
-    FT_ASSERT_EQ(-1, cmp_file_create_directory(ft_nullptr, 0700));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    int error_code = FT_ERR_SUCCESSS;
+
+    FT_ASSERT_EQ(-1, cmp_file_create_directory(ft_nullptr, 0700, &error_code));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_code);
     return (1);
 }
 
@@ -272,13 +278,13 @@ FT_TEST(test_cmp_file_create_directory_permission_error_sets_errno, "cmp_file_cr
 {
     const char *parent_file = "cmp_file_create_directory_permission_parent_file.txt";
     const char *child_directory = "cmp_file_create_directory_permission_parent_file.txt/child";
+    int error_code = FT_ERR_SUCCESSS;
 
     remove_directory_if_present(child_directory);
     remove_file_if_present(parent_file);
     write_test_file(parent_file);
-    ft_errno = FT_ERR_SUCCESSS;
-    FT_ASSERT_EQ(-1, cmp_file_create_directory(child_directory, 0700));
-    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
+    FT_ASSERT_EQ(-1, cmp_file_create_directory(child_directory, 0700, &error_code));
+    FT_ASSERT_EQ(FT_ERR_IO, error_code);
     remove_directory_if_present(child_directory);
     remove_file_if_present(parent_file);
     return (1);
@@ -287,6 +293,7 @@ FT_TEST(test_cmp_file_create_directory_permission_error_sets_errno, "cmp_file_cr
 FT_TEST(test_cmp_file_create_directory_existing_path_sets_errno, "cmp_file_create_directory reports EEXIST")
 {
     const char *directory_path = "cmp_file_create_directory_existing";
+    int error_code = FT_ERR_SUCCESSS;
 
     remove_directory_if_present(directory_path);
 #if defined(_WIN32) || defined(_WIN64)
@@ -294,9 +301,8 @@ FT_TEST(test_cmp_file_create_directory_existing_path_sets_errno, "cmp_file_creat
 #else
     FT_ASSERT_EQ(0, ::mkdir(directory_path, 0700));
 #endif
-    ft_errno = FT_ERR_SUCCESSS;
-    FT_ASSERT_EQ(-1, cmp_file_create_directory(directory_path, 0700));
-    FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, ft_errno);
+    FT_ASSERT_EQ(-1, cmp_file_create_directory(directory_path, 0700, &error_code));
+    FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, error_code);
     remove_directory_if_present(directory_path);
     return (1);
 }
@@ -304,11 +310,11 @@ FT_TEST(test_cmp_file_create_directory_existing_path_sets_errno, "cmp_file_creat
 FT_TEST(test_cmp_file_create_directory_success_clears_errno, "cmp_file_create_directory clears errno on success")
 {
     const char *directory_path = "cmp_file_create_directory_success";
+    int error_code = FT_ERR_INVALID_ARGUMENT;
 
     remove_directory_if_present(directory_path);
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
-    FT_ASSERT_EQ(0, cmp_file_create_directory(directory_path, 0700));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(0, cmp_file_create_directory(directory_path, 0700, &error_code));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, error_code);
     remove_directory_if_present(directory_path);
     return (1);
 }

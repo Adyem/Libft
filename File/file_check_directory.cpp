@@ -23,8 +23,7 @@ int file_dir_exists(const char *rel_path)
         ft_global_error_stack_push(error_code);
         return (-1);
     }
-    result = cmp_directory_exists(path.c_str());
-    error_code = ft_errno;
+    result = cmp_directory_exists(path.c_str(), &error_code);
     ft_global_error_stack_push(error_code);
     return (result);
 }

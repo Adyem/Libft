@@ -65,18 +65,18 @@ ssize_t cmp_write(int file_descriptor, const void *buffer, size_t count);
 int cmp_close(int file_descriptor);
 void cmp_initialize_standard_file_descriptors();
 
-file_dir *cmp_dir_open(const char *directory_path);
-file_dirent *cmp_dir_read(file_dir *directory_stream);
-int cmp_dir_close(file_dir *directory_stream);
-int cmp_directory_exists(const char *path);
+file_dir *cmp_dir_open(const char *directory_path, int *error_code_out);
+file_dirent *cmp_dir_read(file_dir *directory_stream, int *error_code_out);
+int cmp_dir_close(file_dir *directory_stream, int *error_code_out);
+int cmp_directory_exists(const char *path, int *error_code_out);
 char cmp_path_separator(void);
 void cmp_normalize_slashes(char *data);
-int cmp_file_exists(const char *path);
-int cmp_file_delete(const char *path);
-int cmp_file_move(const char *source_path, const char *destination_path);
-int cmp_file_copy(const char *source_path, const char *destination_path);
-int cmp_file_create_directory(const char *path, mode_t mode);
-int cmp_file_get_permissions(const char *path, mode_t *mode_out);
+int cmp_file_exists(const char *path, int *error_code_out);
+int cmp_file_delete(const char *path, int *error_code_out);
+int cmp_file_move(const char *source_path, const char *destination_path, int *error_code_out);
+int cmp_file_copy(const char *source_path, const char *destination_path, int *error_code_out);
+int cmp_file_create_directory(const char *path, mode_t mode, int *error_code_out);
+int cmp_file_get_permissions(const char *path, mode_t *mode_out, int *error_code_out);
 
 int cmp_thread_equal(pthread_t thread1, pthread_t thread2);
 int cmp_thread_cancel(pthread_t thread);

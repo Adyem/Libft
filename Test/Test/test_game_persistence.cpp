@@ -17,10 +17,11 @@ FT_TEST(test_game_world_persistence_round_trip,
     "Game world save/load integrates kv_store persistence backends")
 {
     const char *store_path = "./Test/world_persistence_store.json";
-    int file_status = cmp_file_exists(store_path);
+    int error_code = FT_ERR_SUCCESSS;
+    int file_status = cmp_file_exists(store_path, &error_code);
     if (file_status == 1)
     {
-        int delete_status = cmp_file_delete(store_path);
+        int delete_status = cmp_file_delete(store_path, &error_code);
         (void)delete_status;
     }
     su_file *store_file = su_fopen(store_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
@@ -88,7 +89,7 @@ FT_TEST(test_game_world_persistence_round_trip,
     FT_ASSERT(restored_events[0].get() != ft_nullptr);
     FT_ASSERT_EQ(restored_events[0]->get_id(), scheduled_event->get_id());
 
-    FT_ASSERT_EQ(cmp_file_delete(store_path), 0);
+    FT_ASSERT_EQ(cmp_file_delete(store_path, &error_code), 0);
 
     return (1);
 }
