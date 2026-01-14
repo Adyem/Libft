@@ -7,7 +7,6 @@
 
 void kv_store_entry::set_error_unlocked(int error_code) const noexcept
 {
-    ft_errno = error_code;
     this->_error_code = error_code;
     return ;
 }
@@ -31,11 +30,9 @@ int kv_store_entry::lock_entry(ft_unique_lock<pt_mutex> &guard) const noexcept
 
     if (local_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = local_guard.get_error();
         guard = ft_unique_lock<pt_mutex>();
         return (local_guard.get_error());
     }
-    ft_errno = FT_ERR_SUCCESSS;
     guard = ft_move(local_guard);
     return (FT_ERR_SUCCESSS);
 }

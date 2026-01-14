@@ -197,7 +197,6 @@ ft_world_replay_session &ft_world_replay_session::operator=(ft_world_replay_sess
 
 void ft_world_replay_session::set_error(int error_code) const noexcept
 {
-    ft_errno = error_code;
     this->_error_code = error_code;
     return ;
 }

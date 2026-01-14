@@ -1,5 +1,6 @@
 #include "class_fd_istream.hpp"
 #include "../Template/move.hpp"
+#include "../Errno/errno.hpp"
 
 ft_fd_istream::ft_fd_istream(int fd) noexcept
     : _fd(fd)
@@ -73,11 +74,9 @@ int ft_fd_istream::lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept
     if (local_guard.get_error() != FT_ERR_SUCCESSS)
     {
         guard = ft_unique_lock<pt_mutex>();
-        ft_errno = local_guard.get_error();
         return (local_guard.get_error());
     }
     guard = ft_move(local_guard);
-    ft_errno = FT_ERR_SUCCESSS;
     return (FT_ERR_SUCCESSS);
 }
 
@@ -208,13 +207,18 @@ std::size_t ft_fd_istream::do_read(char *buffer, std::size_t count)
         return (0);
     }
     result = su_read(descriptor, buffer, count);
+    int read_error;
+
+    read_error = ft_global_error_stack_pop_newest();
     if (result < 0)
     {
-        int read_error;
-
-        read_error = ft_errno;
         if (read_error == FT_ERR_SUCCESSS)
             read_error = FT_ERR_INVALID_HANDLE;
+        this->set_error(read_error);
+        return (0);
+    }
+    if (read_error != FT_ERR_SUCCESSS)
+    {
         this->set_error(read_error);
         return (0);
     }

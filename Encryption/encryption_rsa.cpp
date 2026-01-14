@@ -83,7 +83,7 @@ int rsa_generate_key_pair(uint64_t *public_key, uint64_t *private_key, uint64_t 
 {
     if (!public_key || !private_key || !modulus)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (1);
     }
     uint64_t limit_value = 1ULL << (bit_size / 2);
@@ -107,12 +107,12 @@ int rsa_generate_key_pair(uint64_t *public_key, uint64_t *private_key, uint64_t 
         private_exponent = rsa_mod_inverse(public_exponent, phi_value);
     if (private_exponent == 0)
     {
-        ft_errno = FT_ERR_TERMINATED;
+        ft_global_error_stack_push(FT_ERR_TERMINATED);
         return (1);
     }
     *public_key = public_exponent;
     *private_key = private_exponent;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -131,4 +131,3 @@ uint64_t rsa_decrypt(uint64_t cipher, uint64_t private_key, uint64_t modulus)
 {
     return (rsa_mod_pow(cipher, private_key, modulus));
 }
-

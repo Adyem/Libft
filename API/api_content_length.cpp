@@ -33,16 +33,13 @@ bool api_append_content_length_header(ft_string &request, size_t content_length)
     request_error = ft_string::last_operation_error();
     if (request_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = request_error;
         return (false);
     }
     request += content_length_buffer;
     request_error = ft_string::last_operation_error();
     if (request_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = request_error;
         return (false);
     }
-    ft_errno = FT_ERR_SUCCESSS;
     return (true);
 }

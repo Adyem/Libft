@@ -32,7 +32,7 @@ int hmac_sha256_stream_init(hmac_sha256_stream &stream, const unsigned char *key
 
     if (key_length > 0 && key == NULL)
     {
-        ft_errno = FT_ERR_INVALID_POINTER;
+        ft_global_error_stack_push(FT_ERR_INVALID_POINTER);
         return (-1);
     }
     hmac_sha256_stream_reset_state(stream);
@@ -46,14 +46,14 @@ int hmac_sha256_stream_init(hmac_sha256_stream &stream, const unsigned char *key
     stream.mac = EVP_MAC_fetch(NULL, "HMAC", NULL);
     if (stream.mac == NULL)
     {
-        ft_errno = FT_ERR_INITIALIZATION_FAILED;
+        ft_global_error_stack_push(FT_ERR_INITIALIZATION_FAILED);
         return (-1);
     }
     stream.context = EVP_MAC_CTX_new(stream.mac);
     if (stream.context == NULL)
     {
         hmac_sha256_stream_release(stream);
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (-1);
     }
     parameters[0] = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST,
@@ -62,12 +62,12 @@ int hmac_sha256_stream_init(hmac_sha256_stream &stream, const unsigned char *key
     if (EVP_MAC_init(stream.context, key, key_length, parameters) != 1)
     {
         hmac_sha256_stream_release(stream);
-        ft_errno = FT_ERR_INITIALIZATION_FAILED;
+        ft_global_error_stack_push(FT_ERR_INITIALIZATION_FAILED);
         return (-1);
     }
     stream.initialized = true;
     stream.finished = false;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -76,31 +76,31 @@ int hmac_sha256_stream_update(hmac_sha256_stream &stream, const void *data,
 {
     if (stream.initialized == false || stream.context == NULL)
     {
-        ft_errno = FT_ERR_INVALID_STATE;
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return (-1);
     }
     if (stream.finished != false)
     {
-        ft_errno = FT_ERR_INVALID_STATE;
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return (-1);
     }
     if (length == 0)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (0);
     }
     if (data == NULL)
     {
-        ft_errno = FT_ERR_INVALID_POINTER;
+        ft_global_error_stack_push(FT_ERR_INVALID_POINTER);
         return (-1);
     }
     if (EVP_MAC_update(stream.context,
             static_cast<const unsigned char *>(data), length) != 1)
     {
-        ft_errno = FT_ERR_INTERNAL;
+        ft_global_error_stack_push(FT_ERR_INTERNAL);
         return (-1);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -111,39 +111,39 @@ int hmac_sha256_stream_final(hmac_sha256_stream &stream, unsigned char *digest,
 
     if (stream.initialized == false || stream.context == NULL)
     {
-        ft_errno = FT_ERR_INVALID_STATE;
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return (-1);
     }
     if (stream.finished != false)
     {
-        ft_errno = FT_ERR_INVALID_STATE;
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return (-1);
     }
     if (digest == NULL)
     {
-        ft_errno = FT_ERR_INVALID_POINTER;
+        ft_global_error_stack_push(FT_ERR_INVALID_POINTER);
         return (-1);
     }
     if (digest_length < 32)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     output_length = digest_length;
     if (EVP_MAC_final(stream.context, digest, &output_length, digest_length) != 1)
     {
-        ft_errno = FT_ERR_INTERNAL;
+        ft_global_error_stack_push(FT_ERR_INTERNAL);
         return (-1);
     }
     if (output_length != 32)
     {
-        ft_errno = FT_ERR_INTERNAL;
+        ft_global_error_stack_push(FT_ERR_INTERNAL);
         return (-1);
     }
     hmac_sha256_stream_release(stream);
     stream.initialized = false;
     stream.finished = true;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -159,20 +159,32 @@ void hmac_sha256(const unsigned char *key, size_t key_len, const void *data,
     size_t len, unsigned char *digest)
 {
     hmac_sha256_stream    stream;
+    int error_code;
 
     if (hmac_sha256_stream_init(stream, key, key_len) != 0)
+    {
+        error_code = ft_global_error_stack_pop_newest();
+        ft_global_error_stack_push(error_code);
         return ;
+    }
+    ft_global_error_stack_pop_newest();
     if (hmac_sha256_stream_update(stream, data, len) != 0)
     {
         hmac_sha256_stream_cleanup(stream);
+        error_code = ft_global_error_stack_pop_newest();
+        ft_global_error_stack_push(error_code);
         return ;
     }
+    ft_global_error_stack_pop_newest();
     if (hmac_sha256_stream_final(stream, digest, 32) != 0)
     {
         hmac_sha256_stream_cleanup(stream);
+        error_code = ft_global_error_stack_pop_newest();
+        ft_global_error_stack_push(error_code);
         return ;
     }
+    ft_global_error_stack_pop_newest();
     hmac_sha256_stream_cleanup(stream);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }

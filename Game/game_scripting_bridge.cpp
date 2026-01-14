@@ -36,7 +36,6 @@ static void trim_whitespace(ft_string &target) noexcept
 
 void ft_game_script_context::set_error(int error) const noexcept
 {
-    ft_errno = error;
     this->_error_code = error;
     return ;
 }
@@ -210,7 +209,6 @@ const char *ft_game_script_context::get_error_str() const noexcept
 
 void ft_game_script_bridge::set_error(int error) const noexcept
 {
-    ft_errno = error;
     this->_error_code = error;
     return ;
 }

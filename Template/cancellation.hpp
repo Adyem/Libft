@@ -98,7 +98,6 @@ namespace ft_cancellation_detail
 {
     inline void ft_cancellation_state::set_error(int error_code) const
     {
-        ft_errno = error_code;
         this->_error_code = error_code;
         return ;
     }
@@ -239,7 +238,6 @@ namespace ft_cancellation_detail
 
     inline int ft_cancellation_state::get_error() const noexcept
     {
-        ft_errno = this->_error_code;
         return (this->_error_code);
     }
 
@@ -251,7 +249,6 @@ namespace ft_cancellation_detail
 
 inline void ft_cancellation_token::set_error(int error_code) const noexcept
 {
-    ft_errno = error_code;
     this->_error_code = error_code;
     return ;
 }
@@ -332,7 +329,6 @@ inline bool ft_cancellation_token::is_cancellation_requested() const noexcept
 
 inline int ft_cancellation_token::get_error() const noexcept
 {
-    ft_errno = this->_error_code;
     return (this->_error_code);
 }
 
@@ -367,7 +363,6 @@ inline int ft_cancellation_token::register_callback(const ft_function<void()> &c
 
 inline void ft_cancellation_source::set_error(int error_code) const noexcept
 {
-    ft_errno = error_code;
     this->_error_code = error_code;
     return ;
 }
@@ -502,7 +497,6 @@ inline bool ft_cancellation_source::is_cancellation_requested() const noexcept
 
 inline int ft_cancellation_source::get_error() const noexcept
 {
-    ft_errno = this->_error_code;
     return (this->_error_code);
 }
 

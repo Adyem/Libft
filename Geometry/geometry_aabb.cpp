@@ -346,7 +346,6 @@ int aabb::get_error() const
         return (guard.get_error());
     }
     error_code = this->_error_code;
-    ft_errno = FT_ERR_SUCCESSS;
     return (error_code);
 }
 
@@ -363,14 +362,12 @@ const char  *aabb::get_error_str() const
     }
     error_code = this->_error_code;
     error_string = ft_strerror(error_code);
-    ft_errno = FT_ERR_SUCCESSS;
     return (error_string);
 }
 
 void    aabb::set_error(int error_code) const
 {
     this->_error_code = error_code;
-    ft_errno = error_code;
     return ;
 }
 

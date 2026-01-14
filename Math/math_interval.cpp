@@ -10,7 +10,6 @@ static ft_interval ft_interval_error(int error_code)
     interval.lower = 0.0;
     interval.upper = 0.0;
     interval._error_code = error_code;
-    ft_errno = error_code;
     return (interval);
 }
 
@@ -23,7 +22,6 @@ static ft_interval ft_interval_propagate_input_error(const ft_interval &left_int
         interval.lower = left_interval.lower;
         interval.upper = left_interval.upper;
         interval._error_code = left_interval._error_code;
-        ft_errno = interval._error_code;
         return (interval);
     }
     if (right_interval._error_code != FT_ERR_SUCCESSS)
@@ -33,10 +31,14 @@ static ft_interval ft_interval_propagate_input_error(const ft_interval &left_int
         interval.lower = right_interval.lower;
         interval.upper = right_interval.upper;
         interval._error_code = right_interval._error_code;
-        ft_errno = interval._error_code;
         return (interval);
     }
-    return (ft_interval_create(0.0, 0.0));
+    ft_interval interval;
+
+    interval.lower = 0.0;
+    interval.upper = 0.0;
+    interval._error_code = FT_ERR_SUCCESSS;
+    return (interval);
 }
 
 ft_interval ft_interval_create(double lower, double upper) noexcept
@@ -47,10 +49,18 @@ ft_interval ft_interval_create(double lower, double upper) noexcept
     interval.upper = upper;
     interval._error_code = FT_ERR_SUCCESSS;
     if (std::isnan(lower) || std::isnan(upper))
-        return (ft_interval_error(FT_ERR_INVALID_ARGUMENT));
+    {
+        interval = ft_interval_error(FT_ERR_INVALID_ARGUMENT);
+        ft_global_error_stack_push(interval._error_code);
+        return (interval);
+    }
     if (lower > upper)
-        return (ft_interval_error(FT_ERR_INVALID_ARGUMENT));
-    ft_errno = FT_ERR_SUCCESSS;
+    {
+        interval = ft_interval_error(FT_ERR_INVALID_ARGUMENT);
+        ft_global_error_stack_push(interval._error_code);
+        return (interval);
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (interval);
 }
 
@@ -59,11 +69,20 @@ ft_interval ft_interval_from_measurement(double value, double absolute_error) no
     ft_interval interval;
 
     if (std::isnan(value) || std::isnan(absolute_error))
-        return (ft_interval_error(FT_ERR_INVALID_ARGUMENT));
+    {
+        interval = ft_interval_error(FT_ERR_INVALID_ARGUMENT);
+        ft_global_error_stack_push(interval._error_code);
+        return (interval);
+    }
     if (absolute_error < 0.0)
-        return (ft_interval_error(FT_ERR_INVALID_ARGUMENT));
+    {
+        interval = ft_interval_error(FT_ERR_INVALID_ARGUMENT);
+        ft_global_error_stack_push(interval._error_code);
+        return (interval);
+    }
     interval = ft_interval_create(value - absolute_error, value + absolute_error);
-    ft_errno = interval._error_code;
+    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_push(interval._error_code);
     return (interval);
 }
 
@@ -74,10 +93,14 @@ ft_interval ft_interval_add(const ft_interval &left_interval, const ft_interval 
 
     input_error = ft_interval_propagate_input_error(left_interval, right_interval);
     if (input_error._error_code != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(input_error._error_code);
         return (input_error);
+    }
     result = ft_interval_create(left_interval.lower + right_interval.lower,
             left_interval.upper + right_interval.upper);
-    ft_errno = result._error_code;
+    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_push(result._error_code);
     return (result);
 }
 
@@ -88,10 +111,14 @@ ft_interval ft_interval_subtract(const ft_interval &left_interval, const ft_inte
 
     input_error = ft_interval_propagate_input_error(left_interval, right_interval);
     if (input_error._error_code != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(input_error._error_code);
         return (input_error);
+    }
     result = ft_interval_create(left_interval.lower - right_interval.upper,
             left_interval.upper - right_interval.lower);
-    ft_errno = result._error_code;
+    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_push(result._error_code);
     return (result);
 }
 
@@ -130,7 +157,10 @@ ft_interval ft_interval_multiply(const ft_interval &left_interval, const ft_inte
 
     input_error = ft_interval_propagate_input_error(left_interval, right_interval);
     if (input_error._error_code != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(input_error._error_code);
         return (input_error);
+    }
     products[0] = left_interval.lower * right_interval.lower;
     products[1] = left_interval.lower * right_interval.upper;
     products[2] = left_interval.upper * right_interval.lower;
@@ -156,7 +186,8 @@ ft_interval ft_interval_multiply(const ft_interval &left_interval, const ft_inte
         product_index++;
     }
     result = ft_interval_create(minimum_value, maximum_value);
-    ft_errno = result._error_code;
+    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_push(result._error_code);
     return (result);
 }
 
@@ -167,16 +198,30 @@ ft_interval ft_interval_divide(const ft_interval &left_interval, const ft_interv
 
     input_error = ft_interval_propagate_input_error(left_interval, right_interval);
     if (input_error._error_code != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(input_error._error_code);
         return (input_error);
+    }
     if (right_interval.lower <= 0.0 && right_interval.upper >= 0.0)
-        return (ft_interval_error(FT_ERR_INVALID_ARGUMENT));
+    {
+        ft_interval interval_error;
+
+        interval_error = ft_interval_error(FT_ERR_INVALID_ARGUMENT);
+        ft_global_error_stack_push(interval_error._error_code);
+        return (interval_error);
+    }
     reciprocal = ft_interval_create(0.0, 0.0);
+    ft_global_error_stack_pop_newest();
     if (right_interval.lower > 0.0)
         reciprocal = ft_interval_create(1.0 / right_interval.upper, 1.0 / right_interval.lower);
     else
         reciprocal = ft_interval_create(1.0 / right_interval.upper, 1.0 / right_interval.lower);
+    ft_global_error_stack_pop_newest();
     if (reciprocal._error_code != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(reciprocal._error_code);
         return (reciprocal);
+    }
     return (ft_interval_multiply(left_interval, reciprocal));
 }
 
@@ -187,14 +232,19 @@ ft_interval ft_interval_widen(const ft_interval &interval, double absolute_error
     if (interval._error_code != FT_ERR_SUCCESSS)
     {
         result = interval;
-        ft_errno = result._error_code;
+        ft_global_error_stack_push(result._error_code);
         return (result);
     }
     if (std::isnan(absolute_error) || absolute_error < 0.0)
-        return (ft_interval_error(FT_ERR_INVALID_ARGUMENT));
+    {
+        result = ft_interval_error(FT_ERR_INVALID_ARGUMENT);
+        ft_global_error_stack_push(result._error_code);
+        return (result);
+    }
     result = ft_interval_create(interval.lower - absolute_error,
             interval.upper + absolute_error);
-    ft_errno = result._error_code;
+    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_push(result._error_code);
     return (result);
 }
 
@@ -208,7 +258,11 @@ ft_interval ft_interval_propagate_linear(const ft_interval *components,
     double maximum_sum;
 
     if (components == ft_nullptr || sensitivities == ft_nullptr)
-        return (ft_interval_error(FT_ERR_INVALID_ARGUMENT));
+    {
+        result = ft_interval_error(FT_ERR_INVALID_ARGUMENT);
+        ft_global_error_stack_push(result._error_code);
+        return (result);
+    }
     minimum_sum = 0.0;
     maximum_sum = 0.0;
     index = 0;
@@ -222,7 +276,11 @@ ft_interval ft_interval_propagate_linear(const ft_interval *components,
         current_component = &components[index];
         sensitivity = sensitivities[index];
         if (current_component->_error_code != FT_ERR_SUCCESSS)
-            return (ft_interval_error(current_component->_error_code));
+        {
+            result = ft_interval_error(current_component->_error_code);
+            ft_global_error_stack_push(result._error_code);
+            return (result);
+        }
         if (sensitivity >= 0.0)
         {
             contribution_lower = sensitivity * current_component->lower;
@@ -238,7 +296,8 @@ ft_interval ft_interval_propagate_linear(const ft_interval *components,
         index++;
     }
     result = ft_interval_create(minimum_sum, maximum_sum);
-    ft_errno = result._error_code;
+    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_push(result._error_code);
     return (result);
 }
 
@@ -246,10 +305,10 @@ int ft_interval_get_error(const ft_interval *interval) noexcept
 {
     if (interval == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (FT_ERR_INVALID_ARGUMENT);
     }
-    ft_errno = interval->_error_code;
+    ft_global_error_stack_push(interval->_error_code);
     return (interval->_error_code);
 }
 
@@ -265,10 +324,10 @@ double ft_interval_midpoint(const ft_interval &interval) noexcept
 {
     if (interval._error_code != FT_ERR_SUCCESSS)
     {
-        ft_errno = interval._error_code;
+        ft_global_error_stack_push(interval._error_code);
         return (0.0);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ((interval.lower + interval.upper) / 2.0);
 }
 
@@ -276,10 +335,10 @@ double ft_interval_radius(const ft_interval &interval) noexcept
 {
     if (interval._error_code != FT_ERR_SUCCESSS)
     {
-        ft_errno = interval._error_code;
+        ft_global_error_stack_push(interval._error_code);
         return (0.0);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ((interval.upper - interval.lower) / 2.0);
 }
 
@@ -287,19 +346,19 @@ int ft_interval_contains(const ft_interval &interval, double value) noexcept
 {
     if (interval._error_code != FT_ERR_SUCCESSS)
     {
-        ft_errno = interval._error_code;
+        ft_global_error_stack_push(interval._error_code);
         return (0);
     }
     if (value < interval.lower)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (0);
     }
     if (value > interval.upper)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (0);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (1);
 }

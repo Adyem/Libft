@@ -1,4 +1,5 @@
 #include "game_behavior_table.hpp"
+#include "../Errno/errno.hpp"
 #include "../Template/move.hpp"
 
 int ft_behavior_table::lock_pair(const ft_behavior_table &first, const ft_behavior_table &second,
@@ -15,12 +16,12 @@ int ft_behavior_table::lock_pair(const ft_behavior_table &first, const ft_behavi
 
         if (single_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = single_guard.get_error();
+            ft_global_error_stack_push(single_guard.get_error());
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (FT_ERR_SUCCESSS);
     }
     ordered_first = &first;
@@ -41,7 +42,7 @@ int ft_behavior_table::lock_pair(const ft_behavior_table &first, const ft_behavi
 
         if (lower_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = lower_guard.get_error();
+            ft_global_error_stack_push(lower_guard.get_error());
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
@@ -57,12 +58,12 @@ int ft_behavior_table::lock_pair(const ft_behavior_table &first, const ft_behavi
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = FT_ERR_SUCCESSS;
+            ft_global_error_stack_push(FT_ERR_SUCCESSS);
             return (FT_ERR_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            ft_errno = upper_guard.get_error();
+            ft_global_error_stack_push(upper_guard.get_error());
             return (upper_guard.get_error());
         }
         if (lower_guard.owns_lock())
@@ -93,20 +94,17 @@ int ft_behavior_table::clone_profiles_from(const ft_behavior_table &other) noexc
     if (other._profiles.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other._profiles.get_error());
-        ft_errno = other._profiles.get_error();
         return (other._profiles.get_error());
     }
     if (profiles_copy.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(profiles_copy.get_error());
-        ft_errno = profiles_copy.get_error();
         return (profiles_copy.get_error());
     }
     other_end = other._profiles.end();
     if (other_end == ft_nullptr && profile_count != 0)
     {
         this->set_error(FT_ERR_INTERNAL);
-        ft_errno = FT_ERR_INTERNAL;
         return (FT_ERR_INTERNAL);
     }
     if (profile_count == 0)
@@ -136,13 +134,12 @@ int ft_behavior_table::clone_profiles_from(const ft_behavior_table &other) noexc
         if (profiles_copy.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(profiles_copy.get_error());
-            ft_errno = profiles_copy.get_error();
             return (profiles_copy.get_error());
         }
         ++entry;
     }
     this->_profiles = ft_move(profiles_copy);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);
 }
 
@@ -153,13 +150,12 @@ ft_behavior_table::ft_behavior_table(const ft_behavior_table &other) noexcept
     if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
-        ft_errno = other_guard.get_error();
         return ;
     }
     this->_error_code = other._error_code;
     if (this->clone_profiles_from(other) != FT_ERR_SUCCESSS)
         return ;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -175,13 +171,16 @@ ft_behavior_table &ft_behavior_table::operator=(const ft_behavior_table &other) 
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        ft_errno = lock_error;
         return (*this);
     }
     this->_error_code = other._error_code;
-    ft_errno = this->clone_profiles_from(other);
-    if (ft_errno != FT_ERR_SUCCESSS)
-        return (*this);
+    {
+        int clone_error;
+
+        clone_error = this->clone_profiles_from(other);
+        if (clone_error != FT_ERR_SUCCESSS)
+            return (*this);
+    }
     return (*this);
 }
 
@@ -192,12 +191,10 @@ ft_behavior_table::ft_behavior_table(ft_behavior_table &&other) noexcept
     if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
-        ft_errno = other_guard.get_error();
         return ;
     }
     this->_error_code = other._error_code;
-    ft_errno = this->clone_profiles_from(other);
-    if (ft_errno != FT_ERR_SUCCESSS)
+    if (this->clone_profiles_from(other) != FT_ERR_SUCCESSS)
         return ;
     other._profiles.clear();
     other._error_code = FT_ERR_SUCCESSS;
@@ -217,7 +214,6 @@ ft_behavior_table &ft_behavior_table::operator=(ft_behavior_table &&other) noexc
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        ft_errno = lock_error;
         return (*this);
     }
     this->_error_code = other._error_code;
@@ -234,12 +230,14 @@ ft_behavior_table &ft_behavior_table::operator=(ft_behavior_table &&other) noexc
 ft_map<int, ft_behavior_profile> &ft_behavior_table::get_profiles() noexcept
 {
     this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (this->_profiles);
 }
 
 const ft_map<int, ft_behavior_profile> &ft_behavior_table::get_profiles() const noexcept
 {
     const_cast<ft_behavior_table *>(this)->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (this->_profiles);
 }
 
@@ -251,7 +249,6 @@ void ft_behavior_table::set_profiles(const ft_map<int, ft_behavior_profile> &pro
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        ft_errno = guard.get_error();
         return ;
     }
     this->_profiles = profiles;
@@ -267,19 +264,16 @@ int ft_behavior_table::register_profile(const ft_behavior_profile &profile) noex
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        ft_errno = guard.get_error();
         return (guard.get_error());
     }
     if (this->_profiles.find(profile.get_profile_id()) != this->_profiles.end())
     {
         this->set_error(FT_ERR_ALREADY_EXISTS);
-        ft_errno = FT_ERR_ALREADY_EXISTS;
         return (FT_ERR_ALREADY_EXISTS);
     }
     if (profile.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(profile.get_error());
-        ft_errno = profile.get_error();
         return (profile.get_error());
     }
     identifier = profile.get_profile_id();
@@ -287,7 +281,6 @@ int ft_behavior_table::register_profile(const ft_behavior_profile &profile) noex
     if (this->_profiles.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_profiles.get_error());
-        ft_errno = this->_profiles.get_error();
         return (this->_profiles.get_error());
     }
     this->set_error(FT_ERR_SUCCESSS);
@@ -347,7 +340,7 @@ int ft_behavior_table::get_error() const noexcept
         return (guard.get_error());
     }
     error_code = this->_error_code;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
     return (error_code);
 }
 
@@ -356,13 +349,12 @@ const char *ft_behavior_table::get_error_str() const noexcept
     int error_code;
 
     error_code = this->get_error();
-    ft_errno = FT_ERR_SUCCESSS;
     return (ft_strerror(error_code));
 }
 
 void ft_behavior_table::set_error(int error_code) const noexcept
 {
     this->_error_code = error_code;
-    ft_errno = error_code;
+    ft_global_error_stack_push(error_code);
     return ;
 }

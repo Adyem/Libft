@@ -157,7 +157,6 @@ template <typename T>
 void ft_optional<T>::set_error(int error) const
 {
     this->_error_code = error;
-    ft_errno = error;
     return ;
 }
 
@@ -253,10 +252,8 @@ int ft_optional<T>::lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept
     guard = ft_unique_lock<pt_mutex>(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = guard.get_error();
         return (guard.get_error());
     }
-    ft_errno = FT_ERR_SUCCESSS;
     return (FT_ERR_SUCCESSS);
 }
 
@@ -275,12 +272,10 @@ int ft_optional<T>::lock_pair(ft_optional &first, ft_optional &second,
 
         if (single_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ERR_SUCCESSS;
         return (FT_ERR_SUCCESSS);
     }
     ordered_first = &first;
@@ -301,7 +296,6 @@ int ft_optional<T>::lock_pair(ft_optional &first, ft_optional &second,
 
         if (lower_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
@@ -317,12 +311,10 @@ int ft_optional<T>::lock_pair(ft_optional &first, ft_optional &second,
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = FT_ERR_SUCCESSS;
             return (FT_ERR_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            ft_errno = upper_guard.get_error();
             return (upper_guard.get_error());
         }
         if (lower_guard.owns_lock())

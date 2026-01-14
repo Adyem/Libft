@@ -132,7 +132,6 @@ template <typename EventType, typename... Args>
 void ft_event_emitter<EventType, Args...>::set_error_unlocked(int error) const
 {
     this->_error_code = error;
-    ft_errno = error;
     return ;
 }
 

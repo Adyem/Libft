@@ -1,6 +1,7 @@
 #include "game_dialogue_table.hpp"
+#include "../Errno/errno.hpp"
 
-static void game_dialogue_table_unlock_set_errno(ft_unique_lock<pt_mutex> &guard, int target_errno)
+static void game_dialogue_table_unlock_set_errno(ft_unique_lock<pt_mutex> &guard, int target_error)
 {
     int unlock_error;
 
@@ -12,10 +13,10 @@ static void game_dialogue_table_unlock_set_errno(ft_unique_lock<pt_mutex> &guard
     }
     if (unlock_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = unlock_error;
+        ft_global_error_stack_push(unlock_error);
         return ;
     }
-    ft_errno = target_errno;
+    ft_global_error_stack_push(target_error);
     return ;
 }
 
@@ -35,7 +36,7 @@ int ft_dialogue_table::clone_from(const ft_dialogue_table &other) noexcept
     }
     this->_error_code = FT_ERR_SUCCESSS;
     this->set_error(this->_error_code);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);
 }
 
@@ -247,14 +248,14 @@ int ft_dialogue_table::fetch_script(int script_id, ft_dialogue_script &out_scrip
 ft_map<int, ft_dialogue_line> &ft_dialogue_table::get_lines() noexcept
 {
     this->set_error(FT_ERR_SUCCESSS);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (this->_lines);
 }
 
 const ft_map<int, ft_dialogue_line> &ft_dialogue_table::get_lines() const noexcept
 {
     const_cast<ft_dialogue_table *>(this)->set_error(FT_ERR_SUCCESSS);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (this->_lines);
 }
 
@@ -275,14 +276,14 @@ void ft_dialogue_table::set_lines(const ft_map<int, ft_dialogue_line> &lines) no
 ft_map<int, ft_dialogue_script> &ft_dialogue_table::get_scripts() noexcept
 {
     this->set_error(FT_ERR_SUCCESSS);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (this->_scripts);
 }
 
 const ft_map<int, ft_dialogue_script> &ft_dialogue_table::get_scripts() const noexcept
 {
     const_cast<ft_dialogue_table *>(this)->set_error(FT_ERR_SUCCESSS);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (this->_scripts);
 }
 
@@ -306,7 +307,7 @@ int ft_dialogue_table::get_error() const noexcept
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = guard.get_error();
+        ft_global_error_stack_push(guard.get_error());
         return (guard.get_error());
     }
     error_code = this->_error_code;
@@ -325,6 +326,6 @@ const char *ft_dialogue_table::get_error_str() const noexcept
 void ft_dialogue_table::set_error(int error_code) const noexcept
 {
     this->_error_code = error_code;
-    ft_errno = error_code;
+    ft_global_error_stack_push(error_code);
     return ;
 }
