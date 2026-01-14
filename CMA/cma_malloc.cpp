@@ -15,7 +15,7 @@
 
 void* cma_malloc(ft_size_t size)
 {
-    int error_code;
+    int error_code = 0;
 
     if (size > FT_SYSTEM_SIZE_MAX)
     {
@@ -75,8 +75,6 @@ void* cma_malloc(ft_size_t size)
 
         if (!page)
         {
-            int error_code;
-
             error_code = FT_ERR_NO_MEMORY;
             allocator_guard.unlock();
             ft_global_error_stack_push(error_code);

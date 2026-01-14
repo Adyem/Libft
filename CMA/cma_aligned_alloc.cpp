@@ -216,8 +216,6 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
     instrumented_size = cma_debug_allocation_size(request_size);
     if (instrumented_size < request_size)
     {
-        int error_code;
-
         error_code = FT_ERR_NO_MEMORY;
         ft_global_error_stack_push(error_code);
         return (ft_nullptr);
@@ -255,8 +253,6 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
         page_request = compute_extended_page_request(aligned_size, alignment);
         if (page_request == 0)
         {
-            int error_code;
-
             error_code = FT_ERR_OUT_OF_RANGE;
             allocator_guard.unlock();
             ft_global_error_stack_push(error_code);
@@ -265,8 +261,6 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
         page = create_page(page_request);
         if (!page)
         {
-            int error_code;
-
             error_code = FT_ERR_NO_MEMORY;
             allocator_guard.unlock();
             ft_global_error_stack_push(error_code);
@@ -278,8 +272,6 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
     }
     if (normalize_alignment_padding(&padding) == 0)
     {
-        int error_code;
-
         error_code = FT_ERR_OUT_OF_RANGE;
         allocator_guard.unlock();
         ft_global_error_stack_push(error_code);
@@ -294,8 +286,6 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
         block = prefix_block->next;
         if (!block)
         {
-            int error_code;
-
             error_code = FT_ERR_NO_MEMORY;
             allocator_guard.unlock();
             ft_global_error_stack_push(error_code);

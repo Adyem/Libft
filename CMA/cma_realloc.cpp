@@ -113,7 +113,7 @@ static void release_block_locked(Block *block)
 
 void *cma_realloc(void* ptr, ft_size_t new_size)
 {
-    int error_code;
+    int error_code = 0;
 
     if (new_size > FT_SYSTEM_SIZE_MAX)
     {
@@ -191,8 +191,6 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
     ft_size_t instrumented_size = cma_debug_allocation_size(new_size);
     if (instrumented_size < new_size)
     {
-        int error_code;
-
         error_code = FT_ERR_OUT_OF_RANGE;
         allocator_guard.unlock();
         ft_global_error_stack_push(error_code);
@@ -202,8 +200,6 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
     Block *block = cma_find_block_for_pointer(ptr);
     if (!block)
     {
-        int error_code;
-
         error_code = FT_ERR_INVALID_POINTER;
         allocator_guard.unlock();
         ft_global_error_stack_push(error_code);
@@ -245,8 +241,6 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
     void *new_ptr = allocate_block_locked(aligned_size, new_size);
     if (!new_ptr)
     {
-        int error_code;
-
         error_code = ft_global_error_stack_pop_newest();
         allocator_guard.unlock();
         ft_global_error_stack_push(error_code);

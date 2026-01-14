@@ -4,7 +4,12 @@
 #define FT_SUCCESS 0
 #define FT_FAILURE 1
 
+#ifndef FT_TYPES_HPP
+# define FT_TYPES_HPP
+
 typedef unsigned long long ft_size_t;
+
+#endif
 
 #include "libft_config.hpp"
 #include <cstddef>

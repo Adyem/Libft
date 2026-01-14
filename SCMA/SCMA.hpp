@@ -2,12 +2,9 @@
 # define SCMA_HPP
 
 #include <cstddef>
-#include <cstdint>
 #include <type_traits>
-#include <utility>
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
-#include "../Libft/libft.hpp"
 #include "../Libft/limits.hpp"
 #include "../PThread/mutex.hpp"
 

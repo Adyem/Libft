@@ -80,8 +80,6 @@ int cma_checked_block_size(const void *memory_pointer, ft_size_t *block_size)
         || block->magic != MAGIC_NUMBER_ALLOCATED
         || cma_block_is_free(block))
     {
-        int error_code;
-
         error_code = FT_ERR_INVALID_POINTER;
         allocator_guard.unlock();
         ft_global_error_stack_push(error_code);
