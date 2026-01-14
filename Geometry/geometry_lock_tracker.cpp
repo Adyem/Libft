@@ -28,7 +28,7 @@ static bool geometry_lock_tracker_register_wait(pt_thread_id_type thread_identif
 
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = guard.get_error();
+        ft_global_error_stack_push(guard.get_error());
         return (false);
     }
     size_t index;
@@ -64,11 +64,11 @@ static bool geometry_lock_tracker_register_wait(pt_thread_id_type thread_identif
                 guard.unlock();
                 if (guard.get_error() != FT_ERR_SUCCESSS)
                 {
-                    ft_errno = guard.get_error();
+                    ft_global_error_stack_push(guard.get_error());
                     return (false);
                 }
             }
-            ft_errno = FT_ERR_NO_MEMORY;
+            ft_global_error_stack_push(FT_ERR_NO_MEMORY);
             return (false);
         }
     }
@@ -92,11 +92,11 @@ static bool geometry_lock_tracker_register_wait(pt_thread_id_type thread_identif
         guard.unlock();
         if (guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = guard.get_error();
+            ft_global_error_stack_push(guard.get_error());
             return (false);
         }
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);
 }
 
@@ -106,7 +106,7 @@ static void geometry_lock_tracker_clear_wait(pt_thread_id_type thread_identifier
 
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = guard.get_error();
+        ft_global_error_stack_push(guard.get_error());
         return ;
     }
     size_t index;
@@ -135,11 +135,11 @@ static void geometry_lock_tracker_clear_wait(pt_thread_id_type thread_identifier
         guard.unlock();
         if (guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = guard.get_error();
+            ft_global_error_stack_push(guard.get_error());
             return ;
         }
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -165,12 +165,7 @@ static void geometry_lock_tracker_sleep_backoff(bool cycle_detected)
         generator_initialized = true;
     }
     delay_ms = distribution(generator);
-    if (cycle_detected)
-        ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
-    else
-        ft_errno = FT_ERR_SUCCESSS;
     pt_thread_sleep(static_cast<unsigned int>(delay_ms));
-    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -185,12 +180,12 @@ int geometry_lock_tracker_lock_pair(const void *first_object, const void *second
 
         if (single_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = single_guard.get_error();
+            ft_global_error_stack_push(single_guard.get_error());
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (FT_ERR_SUCCESSS);
     }
     const void *ordered_first_object;
@@ -224,7 +219,7 @@ int geometry_lock_tracker_lock_pair(const void *first_object, const void *second
 
         if (lower_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = lower_guard.get_error();
+            ft_global_error_stack_push(lower_guard.get_error());
             return (lower_guard.get_error());
         }
         bool cycle_detected;
@@ -233,13 +228,16 @@ int geometry_lock_tracker_lock_pair(const void *first_object, const void *second
         if (!geometry_lock_tracker_register_wait(THREAD_ID, ordered_first_object,
                 ordered_second_object, cycle_detected))
         {
+            int wait_error;
+
+            wait_error = ft_global_error_stack_pop_newest();
             if (lower_guard.owns_lock())
             {
                 lower_guard.unlock();
                 if (lower_guard.get_error() != FT_ERR_SUCCESSS)
                     return (lower_guard.get_error());
             }
-            return (ft_errno);
+            return (wait_error);
         }
         ft_unique_lock<pt_mutex> upper_guard(*ordered_second_mutex);
 
@@ -256,12 +254,12 @@ int geometry_lock_tracker_lock_pair(const void *first_object, const void *second
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = FT_ERR_SUCCESSS;
+            ft_global_error_stack_push(FT_ERR_SUCCESSS);
             return (FT_ERR_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            ft_errno = upper_guard.get_error();
+            ft_global_error_stack_push(upper_guard.get_error());
             if (lower_guard.owns_lock())
             {
                 lower_guard.unlock();
@@ -275,7 +273,7 @@ int geometry_lock_tracker_lock_pair(const void *first_object, const void *second
             lower_guard.unlock();
             if (lower_guard.get_error() != FT_ERR_SUCCESSS)
             {
-                ft_errno = lower_guard.get_error();
+                ft_global_error_stack_push(lower_guard.get_error());
                 return (lower_guard.get_error());
             }
         }

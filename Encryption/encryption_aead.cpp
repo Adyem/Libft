@@ -43,7 +43,6 @@ encryption_aead_context::~encryption_aead_context()
 void    encryption_aead_context::set_error_unlocked(int error_code) const
 {
     this->_error_code = error_code;
-    ft_errno = error_code;
     return ;
 }
 
@@ -445,31 +444,48 @@ bool    encryption_aead_encrypt(const unsigned char *key, size_t key_length,
 {
     encryption_aead_context context;
     size_t output_length;
+    int error_code;
 
     if (context.initialize_encrypt(key, key_length, iv, iv_length) != FT_ERR_SUCCESSS)
+    {
+        error_code = context.get_error();
+        ft_global_error_stack_push(error_code);
         return (false);
+    }
     if (context.update_aad(aad, aad_length) != FT_ERR_SUCCESSS)
+    {
+        error_code = context.get_error();
+        ft_global_error_stack_push(error_code);
         return (false);
+    }
     output_length = 0;
     if (plaintext_length > 0)
     {
         if (ciphertext == NULL)
         {
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
+            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
             return (false);
         }
         if (context.update(plaintext, plaintext_length, ciphertext,
                 output_length) != FT_ERR_SUCCESSS)
+        {
+            error_code = context.get_error();
+            ft_global_error_stack_push(error_code);
             return (false);
+        }
         if (output_length != plaintext_length)
         {
-            ft_errno = FT_ERR_INTERNAL;
+            ft_global_error_stack_push(FT_ERR_INTERNAL);
             return (false);
         }
     }
     if (context.finalize(tag, tag_length) != FT_ERR_SUCCESSS)
+    {
+        error_code = context.get_error();
+        ft_global_error_stack_push(error_code);
         return (false);
-    ft_errno = FT_ERR_SUCCESSS;
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);
 }
 
@@ -482,32 +498,53 @@ bool    encryption_aead_decrypt(const unsigned char *key, size_t key_length,
 {
     encryption_aead_context context;
     size_t output_length;
+    int error_code;
 
     if (context.initialize_decrypt(key, key_length, iv, iv_length) != FT_ERR_SUCCESSS)
+    {
+        error_code = context.get_error();
+        ft_global_error_stack_push(error_code);
         return (false);
+    }
     if (context.set_tag(tag, tag_length) != FT_ERR_SUCCESSS)
+    {
+        error_code = context.get_error();
+        ft_global_error_stack_push(error_code);
         return (false);
+    }
     if (context.update_aad(aad, aad_length) != FT_ERR_SUCCESSS)
+    {
+        error_code = context.get_error();
+        ft_global_error_stack_push(error_code);
         return (false);
+    }
     output_length = 0;
     if (ciphertext_length > 0)
     {
         if (plaintext == NULL)
         {
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
+            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
             return (false);
         }
         if (context.update(ciphertext, ciphertext_length, plaintext,
                 output_length) != FT_ERR_SUCCESSS)
+        {
+            error_code = context.get_error();
+            ft_global_error_stack_push(error_code);
             return (false);
+        }
         if (output_length != ciphertext_length)
         {
-            ft_errno = FT_ERR_INTERNAL;
+            ft_global_error_stack_push(FT_ERR_INTERNAL);
             return (false);
         }
     }
     if (context.finalize(NULL, 0) != FT_ERR_SUCCESSS)
+    {
+        error_code = context.get_error();
+        ft_global_error_stack_push(error_code);
         return (false);
-    ft_errno = FT_ERR_SUCCESSS;
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);
 }

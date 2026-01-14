@@ -89,9 +89,15 @@ int kv_store::encrypt_value(const ft_string &plain_string, ft_string &encoded_st
     encoded_buffer = ft_base64_encode(reinterpret_cast<const unsigned char *>(output_buffer.data()), output_buffer.size(), &encoded_size);
     if (encoded_buffer == ft_nullptr)
     {
-        this->set_error(ft_errno);
+        int error_code;
+
+        error_code = ft_global_error_stack_pop_newest();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_NO_MEMORY;
+        this->set_error(error_code);
         return (-1);
     }
+    ft_global_error_stack_pop_newest();
     encoded_string.clear();
     if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
@@ -149,9 +155,15 @@ int kv_store::decrypt_value(const ft_string &encoded_string, ft_string &plain_st
     decoded_buffer = ft_base64_decode(reinterpret_cast<const unsigned char *>(encoded_string.c_str()), encoded_string.size(), &decoded_size);
     if (decoded_buffer == ft_nullptr)
     {
-        this->set_error(ft_errno);
+        int error_code;
+
+        error_code = ft_global_error_stack_pop_newest();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_NO_MEMORY;
+        this->set_error(error_code);
         return (-1);
     }
+    ft_global_error_stack_pop_newest();
     if (decoded_size == 0)
     {
         plain_string.clear();

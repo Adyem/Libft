@@ -17,8 +17,6 @@ void ft_world_registry::copy_registry_unlocked(const ft_world_registry &other) n
     this->_world_regions = other._world_regions;
     this->_error_code = other._error_code;
     this->set_error(this->_error_code);
-    if (this->_error_code == FT_ERR_SUCCESSS)
-        ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -277,6 +275,5 @@ const char *ft_world_registry::get_error_str() const noexcept
 void ft_world_registry::set_error(int error_code) const noexcept
 {
     this->_error_code = error_code;
-    ft_errno = error_code;
     return ;
 }

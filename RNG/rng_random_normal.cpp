@@ -29,21 +29,34 @@ float ft_random_normal(void)
         ft_global_error_stack_push(error_code);
         return (0.0f);
     }
-    radius = static_cast<float>(math_sqrt(-2.0 * math_log(uniform_one)));
-    if (ft_errno != FT_ERR_SUCCESSS)
+    double log_value;
+    double sqrt_value;
+    double cosine_value;
+
+    log_value = math_log(uniform_one);
+    error_code = ft_global_error_stack_pop_newest();
+    if (error_code != FT_ERR_SUCCESSS)
     {
-        error_code = ft_errno;
         ft_global_error_stack_push(error_code);
         return (0.0f);
     }
+    sqrt_value = math_sqrt(-2.0 * log_value);
+    error_code = ft_global_error_stack_pop_newest();
+    if (error_code != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(error_code);
+        return (0.0f);
+    }
+    radius = static_cast<float>(sqrt_value);
     angle = 2.0f * pi_value * uniform_two;
-    result = radius * static_cast<float>(math_cos(angle));
-    if (ft_errno != FT_ERR_SUCCESSS)
+    cosine_value = math_cos(angle);
+    error_code = ft_global_error_stack_pop_newest();
+    if (error_code != FT_ERR_SUCCESSS)
     {
-        error_code = ft_errno;
         ft_global_error_stack_push(error_code);
         return (0.0f);
     }
+    result = radius * static_cast<float>(cosine_value);
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }

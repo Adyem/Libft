@@ -34,7 +34,7 @@ void sha1_hash(const void *data, size_t length, unsigned char *digest)
     message = static_cast<unsigned char *>(cma_malloc(padded_length + 8));
     if (!message)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return ;
     }
     byte_data = static_cast<const unsigned char *>(data);
@@ -146,6 +146,6 @@ void sha1_hash(const void *data, size_t length, unsigned char *digest)
         length_index++;
     }
     cma_free(message);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }

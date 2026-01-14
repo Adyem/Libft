@@ -1,4 +1,5 @@
 #include "ft_rarity_band.hpp"
+#include "../Errno/errno.hpp"
 #include "../Template/move.hpp"
 
 int ft_rarity_band::lock_pair(const ft_rarity_band &first, const ft_rarity_band &second,
@@ -15,12 +16,12 @@ int ft_rarity_band::lock_pair(const ft_rarity_band &first, const ft_rarity_band 
 
         if (single_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = single_guard.get_error();
+            ft_global_error_stack_push(single_guard.get_error());
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (FT_ERR_SUCCESSS);
     }
     ordered_first = &first;
@@ -41,7 +42,7 @@ int ft_rarity_band::lock_pair(const ft_rarity_band &first, const ft_rarity_band 
 
         if (lower_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = lower_guard.get_error();
+            ft_global_error_stack_push(lower_guard.get_error());
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
@@ -57,12 +58,12 @@ int ft_rarity_band::lock_pair(const ft_rarity_band &first, const ft_rarity_band 
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = FT_ERR_SUCCESSS;
+            ft_global_error_stack_push(FT_ERR_SUCCESSS);
             return (FT_ERR_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            ft_errno = upper_guard.get_error();
+            ft_global_error_stack_push(upper_guard.get_error());
             return (upper_guard.get_error());
         }
         if (lower_guard.owns_lock())
@@ -89,7 +90,6 @@ ft_rarity_band::ft_rarity_band(const ft_rarity_band &other) noexcept
     ft_unique_lock<pt_mutex> self_guard;
     ft_unique_lock<pt_mutex> other_guard;
 
-    ft_errno = FT_ERR_SUCCESSS;
     if (ft_rarity_band::lock_pair(*this, other, self_guard, other_guard) != FT_ERR_SUCCESSS)
     {
         this->set_error(self_guard.get_error());
@@ -109,7 +109,6 @@ ft_rarity_band &ft_rarity_band::operator=(const ft_rarity_band &other) noexcept
 
     if (this == &other)
         return (*this);
-    ft_errno = FT_ERR_SUCCESSS;
     if (ft_rarity_band::lock_pair(*this, other, self_guard, other_guard) != FT_ERR_SUCCESSS)
     {
         this->set_error(self_guard.get_error());
@@ -128,7 +127,6 @@ ft_rarity_band::ft_rarity_band(ft_rarity_band &&other) noexcept
     ft_unique_lock<pt_mutex> self_guard;
     ft_unique_lock<pt_mutex> other_guard;
 
-    ft_errno = FT_ERR_SUCCESSS;
     if (ft_rarity_band::lock_pair(*this, other, self_guard, other_guard) != FT_ERR_SUCCESSS)
     {
         this->set_error(self_guard.get_error());
@@ -152,7 +150,6 @@ ft_rarity_band &ft_rarity_band::operator=(ft_rarity_band &&other) noexcept
 
     if (this == &other)
         return (*this);
-    ft_errno = FT_ERR_SUCCESSS;
     if (ft_rarity_band::lock_pair(*this, other, self_guard, other_guard) != FT_ERR_SUCCESSS)
     {
         this->set_error(self_guard.get_error());
@@ -173,7 +170,6 @@ int ft_rarity_band::get_rarity() const noexcept
 {
     int rarity_value;
 
-    ft_errno = FT_ERR_SUCCESSS;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
@@ -187,7 +183,6 @@ int ft_rarity_band::get_rarity() const noexcept
 
 void ft_rarity_band::set_rarity(int rarity) noexcept
 {
-    ft_errno = FT_ERR_SUCCESSS;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
@@ -203,7 +198,6 @@ double ft_rarity_band::get_value_multiplier() const noexcept
 {
     double multiplier;
 
-    ft_errno = FT_ERR_SUCCESSS;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
@@ -217,7 +211,6 @@ double ft_rarity_band::get_value_multiplier() const noexcept
 
 void ft_rarity_band::set_value_multiplier(double value_multiplier) noexcept
 {
-    ft_errno = FT_ERR_SUCCESSS;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
@@ -233,7 +226,6 @@ int ft_rarity_band::get_error() const noexcept
 {
     int error_value;
 
-    ft_errno = FT_ERR_SUCCESSS;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
@@ -255,7 +247,7 @@ const char *ft_rarity_band::get_error_str() const noexcept
 
 void ft_rarity_band::set_error(int error_code) const noexcept
 {
-    ft_errno = error_code;
     this->_error_code = error_code;
+    ft_global_error_stack_push(error_code);
     return ;
 }

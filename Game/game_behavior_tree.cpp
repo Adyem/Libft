@@ -79,7 +79,6 @@ ft_behavior_node &ft_behavior_node::operator=(const ft_behavior_node &other) noe
 
 void ft_behavior_node::set_error(int error_code) const noexcept
 {
-    ft_errno = error_code;
     this->_error_code = error_code;
     return ;
 }
@@ -425,7 +424,6 @@ ft_behavior_tree &ft_behavior_tree::operator=(const ft_behavior_tree &other) noe
 
 void ft_behavior_tree::set_error(int error_code) const noexcept
 {
-    ft_errno = error_code;
     this->_error_code = error_code;
     return ;
 }

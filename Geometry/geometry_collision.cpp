@@ -19,7 +19,7 @@ bool    intersect_aabb(const aabb &first, const aabb &second)
         {
             const_cast<aabb &>(first).set_error(lock_error);
             const_cast<aabb &>(second).set_error(lock_error);
-            ft_errno = lock_error;
+            ft_global_error_stack_push(lock_error);
             return (false);
         }
         separated = false;
@@ -37,7 +37,7 @@ bool    intersect_aabb(const aabb &first, const aabb &second)
         if (separated)
             result = false;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     if (result)
         return (true);
     return (false);
@@ -62,7 +62,7 @@ bool    intersect_circle(const circle &first, const circle &second)
         {
             const_cast<circle &>(first).set_error(lock_error);
             const_cast<circle &>(second).set_error(lock_error);
-            ft_errno = lock_error;
+            ft_global_error_stack_push(lock_error);
             return (false);
         }
         delta_x = first._center_x - second._center_x;
@@ -75,7 +75,7 @@ bool    intersect_circle(const circle &first, const circle &second)
         if (distance_squared > radius_sum * radius_sum)
             result = false;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     if (result)
         return (true);
     return (false);
@@ -101,7 +101,7 @@ bool    intersect_sphere(const sphere &first, const sphere &second)
         {
             const_cast<sphere &>(first).set_error(lock_error);
             const_cast<sphere &>(second).set_error(lock_error);
-            ft_errno = lock_error;
+            ft_global_error_stack_push(lock_error);
             return (false);
         }
         delta_x = first._center_x - second._center_x;
@@ -115,7 +115,7 @@ bool    intersect_sphere(const sphere &first, const sphere &second)
         if (distance_squared > radius_sum * radius_sum)
             result = false;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     if (result)
         return (true);
     return (false);

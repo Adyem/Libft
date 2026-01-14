@@ -30,19 +30,37 @@ int ft_socket::setup_client(const SocketConfig &config)
     lock_acquired = false;
     if (socket_config_prepare_thread_safety(mutable_config) != 0)
     {
-        this->set_error(ft_errno);
+        int error_code;
+
+        error_code = ft_global_error_stack_pop_newest();
+        this->set_error(error_code);
         return (this->_error_code);
     }
+    ft_global_error_stack_pop_newest();
     if (socket_config_lock(mutable_config, &lock_acquired) != 0)
     {
-        this->set_error(ft_errno);
+        int error_code;
+
+        error_code = ft_global_error_stack_pop_newest();
+        this->set_error(error_code);
         return (this->_error_code);
     }
+    ft_global_error_stack_pop_newest();
     non_blocking = mutable_config->_non_blocking;
     has_timeout = (mutable_config->_recv_timeout > 0 || mutable_config->_send_timeout > 0);
     has_multicast = (mutable_config->_multicast_group.empty() == false);
     address_family = mutable_config->_address_family;
     socket_config_unlock(mutable_config, lock_acquired);
+    {
+        int unlock_error;
+
+        unlock_error = ft_global_error_stack_pop_newest();
+        if (unlock_error != FT_ERR_SUCCESSS)
+        {
+            this->set_error(unlock_error);
+            return (this->_error_code);
+        }
+    }
     if (this->create_socket(config) != FT_ERR_SUCCESSS)
         return (this->_error_code);
     if (non_blocking)

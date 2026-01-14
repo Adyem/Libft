@@ -140,7 +140,6 @@ bool api_retry_circuit_allow(const api_connection_pool_handle &handle,
     if (state->open_until_ms > now_ms)
     {
         error_code = FT_ERR_API_CIRCUIT_OPEN;
-        ft_errno = error_code;
         return (false);
     }
     if (state->open_until_ms != 0 && state->open_until_ms <= now_ms)

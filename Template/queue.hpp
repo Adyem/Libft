@@ -94,7 +94,7 @@ ft_queue<ElementType>::ft_queue(ft_queue&& other) noexcept
     other_lock_acquired = false;
     if (other.lock_internal(&other_lock_acquired) != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(other.get_error());
         return ;
     }
     this->_front = other._front;
@@ -130,7 +130,7 @@ ft_queue<ElementType>& ft_queue<ElementType>::operator=(ft_queue&& other) noexce
     other_lock_acquired = false;
     if (other.lock_internal(&other_lock_acquired) != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(other.get_error());
         return (*this);
     }
     this->_front = other._front;
@@ -157,44 +157,49 @@ template <typename ElementType>
 void ft_queue<ElementType>::set_error(int error) const
 {
     this->_error_code = error;
-    ft_errno = error;
     return ;
 }
 
 template <typename ElementType>
 int ft_queue<ElementType>::lock_internal(bool *lock_acquired) const
 {
+    int mutex_error;
+
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || this->_mutex == ft_nullptr)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        this->set_error(FT_ERR_SUCCESSS);
         return (0);
     }
     this->_mutex->lock(THREAD_ID);
-    if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
+    mutex_error = this->_mutex->get_error();
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = this->_mutex->get_error();
+        this->set_error(mutex_error);
         return (-1);
     }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    ft_errno = FT_ERR_SUCCESSS;
+    this->set_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
 template <typename ElementType>
 void ft_queue<ElementType>::unlock_internal(bool lock_acquired) const
 {
+    int mutex_error;
+
     if (!lock_acquired || this->_mutex == ft_nullptr)
         return ;
     this->_mutex->unlock(THREAD_ID);
-    if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
+    mutex_error = this->_mutex->get_error();
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = this->_mutex->get_error();
+        this->set_error(mutex_error);
         return ;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -270,7 +275,7 @@ int ft_queue<ElementType>::lock(bool *lock_acquired) const
 
     result = this->lock_internal(lock_acquired);
     if (result != 0)
-        const_cast<ft_queue<ElementType> *>(this)->set_error(ft_errno);
+        const_cast<ft_queue<ElementType> *>(this)->set_error(this->get_error());
     else
         const_cast<ft_queue<ElementType> *>(this)->set_error(FT_ERR_SUCCESSS);
     return (result);
@@ -283,10 +288,7 @@ void ft_queue<ElementType>::unlock(bool lock_acquired) const
     if (this->_mutex != ft_nullptr && this->_mutex->get_error() != FT_ERR_SUCCESSS)
         const_cast<ft_queue<ElementType> *>(this)->set_error(this->_mutex->get_error());
     else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
         const_cast<ft_queue<ElementType> *>(this)->set_error(FT_ERR_SUCCESSS);
-    }
     return ;
 }
 
@@ -299,7 +301,7 @@ void ft_queue<ElementType>::enqueue(const ElementType& value)
     lock_acquired = false;
     if (this->lock_internal(&lock_acquired) != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(this->get_error());
         return ;
     }
     node = static_cast<QueueNode *>(cma_malloc(sizeof(QueueNode)));
@@ -336,7 +338,7 @@ void ft_queue<ElementType>::enqueue(ElementType&& value)
     lock_acquired = false;
     if (this->lock_internal(&lock_acquired) != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(this->get_error());
         return ;
     }
     node = static_cast<QueueNode *>(cma_malloc(sizeof(QueueNode)));
@@ -374,7 +376,7 @@ ElementType ft_queue<ElementType>::dequeue()
     lock_acquired = false;
     if (this->lock_internal(&lock_acquired) != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(this->get_error());
         return (ElementType());
     }
     if (this->_front == ft_nullptr)
@@ -406,7 +408,7 @@ ElementType& ft_queue<ElementType>::front()
     lock_acquired = false;
     if (this->lock_internal(&lock_acquired) != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(this->get_error());
         return (error_element);
     }
     if (this->_front == ft_nullptr)
@@ -431,7 +433,7 @@ const ElementType& ft_queue<ElementType>::front() const
     lock_acquired = false;
     if (this->lock_internal(&lock_acquired) != 0)
     {
-        const_cast<ft_queue<ElementType> *>(this)->set_error(ft_errno);
+        const_cast<ft_queue<ElementType> *>(this)->set_error(this->get_error());
         return (error_element);
     }
     if (this->_front == ft_nullptr)
@@ -455,7 +457,7 @@ size_t ft_queue<ElementType>::size() const
     lock_acquired = false;
     if (this->lock_internal(&lock_acquired) != 0)
     {
-        const_cast<ft_queue<ElementType> *>(this)->set_error(ft_errno);
+        const_cast<ft_queue<ElementType> *>(this)->set_error(this->get_error());
         return (0);
     }
     current_size = this->_size;
@@ -473,7 +475,7 @@ bool ft_queue<ElementType>::empty() const
     lock_acquired = false;
     if (this->lock_internal(&lock_acquired) != 0)
     {
-        const_cast<ft_queue<ElementType> *>(this)->set_error(ft_errno);
+        const_cast<ft_queue<ElementType> *>(this)->set_error(this->get_error());
         return (true);
     }
     is_empty = (this->_size == 0);
@@ -503,7 +505,7 @@ void ft_queue<ElementType>::clear()
     lock_acquired = false;
     if (this->lock_internal(&lock_acquired) != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(this->get_error());
         return ;
     }
     while (this->_front != ft_nullptr)

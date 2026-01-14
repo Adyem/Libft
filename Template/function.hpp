@@ -72,7 +72,6 @@ template <typename ReturnType, typename... Args>
 void ft_function<ReturnType(Args...)>::set_error(int error) const
 {
     this->_error_code = error;
-    ft_errno = error;
     return ;
 }
 
@@ -173,7 +172,7 @@ ft_function<ReturnType(Args...)>::ft_function(const ft_function &other)
     new_callable = ft_nullptr;
     if (other.lock_internal(&other_lock_acquired) != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(this->get_error());
         return ;
     }
     if (other._callable != ft_nullptr)
@@ -230,7 +229,7 @@ ft_function<ReturnType(Args...)>::ft_function(ft_function &&other)
     other_lock_acquired = false;
     if (other.lock_internal(&other_lock_acquired) != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(this->get_error());
         return ;
     }
     transferred_callable = other._callable;
@@ -300,14 +299,14 @@ ft_function<ReturnType(Args...)> &ft_function<ReturnType(Args...)>::operator=(co
     this_lock_acquired = false;
     if (this->lock_internal(&this_lock_acquired) != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(this->get_error());
         return (*this);
     }
     other_lock_acquired = false;
     if (other.lock_internal(&other_lock_acquired) != 0)
     {
         this->unlock_internal(this_lock_acquired);
-        this->set_error(ft_errno);
+        this->set_error(this->get_error());
         return (*this);
     }
     new_callable = ft_nullptr;
@@ -381,14 +380,14 @@ ft_function<ReturnType(Args...)> &ft_function<ReturnType(Args...)>::operator=(ft
     this_lock_acquired = false;
     if (this->lock_internal(&this_lock_acquired) != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(this->get_error());
         return (*this);
     }
     other_lock_acquired = false;
     if (other.lock_internal(&other_lock_acquired) != 0)
     {
         this->unlock_internal(this_lock_acquired);
-        this->set_error(ft_errno);
+        this->set_error(this->get_error());
         return (*this);
     }
     this->clear_callable_unlocked();
@@ -449,7 +448,7 @@ ReturnType ft_function<ReturnType(Args...)>::operator()(Args... args) const
     lock_acquired = false;
     if (this->lock_internal(&lock_acquired) != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(this->get_error());
         if constexpr (std::is_void<ReturnType>::value)
         {
             return ;
@@ -488,7 +487,7 @@ ft_function<ReturnType(Args...)>::operator bool() const
     lock_acquired = false;
     if (this->lock_internal(&lock_acquired) != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(this->get_error());
         return (false);
     }
     if (this->_callable && this->_invoke)
@@ -575,14 +574,13 @@ int ft_function<ReturnType(Args...)>::lock(bool *lock_acquired) const
 {
     int result;
 
-    ft_errno = FT_ERR_SUCCESSS;
     result = this->lock_internal(lock_acquired);
     if (result != 0)
     {
-        const_cast<ft_function<ReturnType(Args...)> *>(this)->set_error(ft_errno);
+        const_cast<ft_function<ReturnType(Args...)> *>(this)->set_error(this->get_error());
         return (result);
     }
-    this->_error_code = FT_ERR_SUCCESSS;
+    this->set_error(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -591,11 +589,10 @@ void ft_function<ReturnType(Args...)>::unlock(bool lock_acquired) const
 {
     int mutex_error;
 
-    ft_errno = FT_ERR_SUCCESSS;
     this->unlock_internal(lock_acquired);
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
     {
-        this->_error_code = FT_ERR_SUCCESSS;
+        this->set_error(FT_ERR_SUCCESSS);
         return ;
     }
     mutex_error = this->_state_mutex->get_error();
@@ -604,51 +601,55 @@ void ft_function<ReturnType(Args...)>::unlock(bool lock_acquired) const
         const_cast<ft_function<ReturnType(Args...)> *>(this)->set_error(mutex_error);
         return ;
     }
-    this->_error_code = FT_ERR_SUCCESSS;
-    ft_errno = FT_ERR_SUCCESSS;
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
 template <typename ReturnType, typename... Args>
 int ft_function<ReturnType(Args...)>::lock_internal(bool *lock_acquired) const
 {
-    ft_errno = FT_ERR_SUCCESSS;
+    int mutex_error;
+
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || this->_state_mutex == ft_nullptr)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        this->set_error(FT_ERR_SUCCESSS);
         return (0);
     }
     if (this->_state_mutex->is_owned_by_thread(THREAD_ID))
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        this->set_error(FT_ERR_SUCCESSS);
         return (0);
     }
     this->_state_mutex->lock(THREAD_ID);
-    if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
+    mutex_error = this->_state_mutex->get_error();
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = this->_state_mutex->get_error();
+        this->set_error(mutex_error);
         return (-1);
     }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    ft_errno = FT_ERR_SUCCESSS;
+    this->set_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
 template <typename ReturnType, typename... Args>
 void ft_function<ReturnType(Args...)>::unlock_internal(bool lock_acquired) const
 {
+    int mutex_error;
+
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
         return ;
-    ft_errno = FT_ERR_SUCCESSS;
     this->_state_mutex->unlock(THREAD_ID);
-    if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
+    mutex_error = this->_state_mutex->get_error();
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = this->_state_mutex->get_error();
+        this->set_error(mutex_error);
         return ;
     }
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 

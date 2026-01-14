@@ -55,7 +55,6 @@ template <typename KeyType, typename ValueType>
 void Pair<KeyType, ValueType>::set_error(int error) const
 {
     this->_error_code = error;
-    ft_errno = error;
     return ;
 }
 
@@ -96,7 +95,7 @@ Pair<KeyType, ValueType>::Pair(const Pair &other)
     other_lock_acquired = false;
     if (other.lock_internal(&other_lock_acquired) != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(this->get_error());
         return ;
     }
     this->key = other.key;
@@ -122,7 +121,7 @@ Pair<KeyType, ValueType>::Pair(Pair &&other)
     other_thread_safe = false;
     if (other.lock_internal(&other_lock_acquired) != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(this->get_error());
         return ;
     }
     this->key = ft_move(other.key);
@@ -173,14 +172,14 @@ Pair<KeyType, ValueType> &Pair<KeyType, ValueType>::operator=(const Pair &other)
     this_lock_acquired = false;
     if (this->lock_internal(&this_lock_acquired) != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(this->get_error());
         return (*this);
     }
     other_lock_acquired = false;
     if (other.lock_internal(&other_lock_acquired) != 0)
     {
         this->unlock_internal(this_lock_acquired);
-        this->set_error(ft_errno);
+        this->set_error(this->get_error());
         return (*this);
     }
     this->key = other.key;
@@ -217,14 +216,14 @@ Pair<KeyType, ValueType> &Pair<KeyType, ValueType>::operator=(Pair &&other)
     this_lock_acquired = false;
     if (this->lock_internal(&this_lock_acquired) != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(this->get_error());
         return (*this);
     }
     other_lock_acquired = false;
     if (other.lock_internal(&other_lock_acquired) != 0)
     {
         this->unlock_internal(this_lock_acquired);
-        this->set_error(ft_errno);
+        this->set_error(this->get_error());
         return (*this);
     }
     other_mutex = ft_nullptr;
@@ -318,7 +317,7 @@ int Pair<KeyType, ValueType>::lock(bool *lock_acquired) const
 
     result = this->lock_internal(lock_acquired);
     if (result != 0)
-        const_cast<Pair<KeyType, ValueType> *>(this)->set_error(ft_errno);
+        const_cast<Pair<KeyType, ValueType> *>(this)->set_error(this->get_error());
     else
         const_cast<Pair<KeyType, ValueType> *>(this)->set_error(FT_ERR_SUCCESSS);
     return (result);
@@ -330,11 +329,10 @@ void Pair<KeyType, ValueType>::unlock(bool lock_acquired) const
     this->unlock_internal(lock_acquired);
     if (this->_mutex != ft_nullptr && this->_mutex->get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = this->_mutex->get_error();
         const_cast<Pair<KeyType, ValueType> *>(this)->set_error(this->_mutex->get_error());
         return ;
     }
-    const_cast<Pair<KeyType, ValueType> *>(this)->set_error(ft_errno);
+    const_cast<Pair<KeyType, ValueType> *>(this)->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -347,7 +345,7 @@ KeyType Pair<KeyType, ValueType>::get_key() const
     lock_acquired = false;
     if (this->lock_internal(&lock_acquired) != 0)
     {
-        const_cast<Pair<KeyType, ValueType> *>(this)->set_error(ft_errno);
+        const_cast<Pair<KeyType, ValueType> *>(this)->set_error(this->get_error());
         return (KeyType());
     }
     key_copy = this->key;
@@ -365,7 +363,7 @@ ValueType Pair<KeyType, ValueType>::get_value() const
     lock_acquired = false;
     if (this->lock_internal(&lock_acquired) != 0)
     {
-        const_cast<Pair<KeyType, ValueType> *>(this)->set_error(ft_errno);
+        const_cast<Pair<KeyType, ValueType> *>(this)->set_error(this->get_error());
         return (ValueType());
     }
     value_copy = this->value;
@@ -382,7 +380,7 @@ void Pair<KeyType, ValueType>::set_key(const KeyType &input_key)
     lock_acquired = false;
     if (this->lock_internal(&lock_acquired) != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(this->get_error());
         return ;
     }
     this->key = input_key;
@@ -399,7 +397,7 @@ void Pair<KeyType, ValueType>::set_key(KeyType &&input_key)
     lock_acquired = false;
     if (this->lock_internal(&lock_acquired) != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(this->get_error());
         return ;
     }
     this->key = ft_move(input_key);
@@ -416,7 +414,7 @@ void Pair<KeyType, ValueType>::set_value(const ValueType &input_value)
     lock_acquired = false;
     if (this->lock_internal(&lock_acquired) != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(this->get_error());
         return ;
     }
     this->value = input_value;
@@ -433,7 +431,7 @@ void Pair<KeyType, ValueType>::set_value(ValueType &&input_value)
     lock_acquired = false;
     if (this->lock_internal(&lock_acquired) != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(this->get_error());
         return ;
     }
     this->value = ft_move(input_value);
@@ -457,40 +455,46 @@ const char *Pair<KeyType, ValueType>::get_error_str() const
 template <typename KeyType, typename ValueType>
 int Pair<KeyType, ValueType>::lock_internal(bool *lock_acquired) const
 {
+    int mutex_error;
+
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || this->_mutex == ft_nullptr)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        this->set_error(FT_ERR_SUCCESSS);
         return (0);
     }
     this->_mutex->lock(THREAD_ID);
-    if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
+    mutex_error = this->_mutex->get_error();
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = this->_mutex->get_error();
+        this->set_error(mutex_error);
         return (-1);
     }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    ft_errno = FT_ERR_SUCCESSS;
+    this->set_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
 template <typename KeyType, typename ValueType>
 void Pair<KeyType, ValueType>::unlock_internal(bool lock_acquired) const
 {
+    int mutex_error;
+
     if (!lock_acquired || this->_mutex == ft_nullptr)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        this->set_error(FT_ERR_SUCCESSS);
         return ;
     }
     this->_mutex->unlock(THREAD_ID);
-    if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
+    mutex_error = this->_mutex->get_error();
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = this->_mutex->get_error();
+        this->set_error(mutex_error);
         return ;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
