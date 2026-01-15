@@ -4,7 +4,12 @@
 #include <stddef.h>
 #include <mutex>
 
-typedef size_t  ft_size_t;
+#ifndef FT_TYPES_HPP
+# define FT_TYPES_HPP
+
+typedef unsigned long long ft_size_t;
+
+#endif
 
 enum ft_render_error
 {

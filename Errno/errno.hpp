@@ -18,6 +18,8 @@ int ft_global_error_stack_pop_newest(void);
 void ft_global_error_stack_pop_all(void);
 int ft_global_error_stack_error_at(ft_size_t index);
 int ft_global_error_stack_last_error(void);
+unsigned long long ft_global_error_stack_get_id_at(ft_size_t index);
+ft_size_t ft_global_error_stack_find_by_id(unsigned long long id);
 const char *ft_global_error_stack_error_str_at(ft_size_t index);
 const char *ft_global_error_stack_last_error_str(void);
 

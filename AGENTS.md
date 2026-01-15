@@ -34,6 +34,10 @@ unlocking the mutex to verify proper use.
 Class and non-class error handling must use the shared error-stack types from the Errno module.
 Classes must push errors to both the thread-local error stack and their class-only error stack.
 
+When a class method pushes an error, it must generate a single error entry containing a unique identifier.
+This same error entry must be pushed to both the thread-local error stack and the class-only error stack
+to ensure that the same operation has the same ID across both stacks.
+
 When publishing or reading class error codes or error stacks, do not lock the class mutex; use
 `std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());` instead.
 

@@ -1,8 +1,9 @@
 #if !defined(_WIN32) && !defined(__APPLE__)
 
-#include "ft_render_internal.hpp"
+#include "dumb_render_internal.hpp"
 
 #include <X11/Xlib.h>
+#include <X11/Xutil.h>
 #include <X11/Xatom.h>
 #include <errno.h>
 #include <stdlib.h>
