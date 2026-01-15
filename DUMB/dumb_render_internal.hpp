@@ -6,22 +6,6 @@
 
 typedef size_t  ft_size_t;
 
-/*
-** Provided by you:
-*/
-int         ft_map_system_error(int error_code);
-void        ft_global_error_stack_push(int error_code);
-int         ft_global_error_stack_pop_last(void);
-int         ft_global_error_stack_pop_newest(void);
-void        ft_global_error_stack_pop_all(void);
-int         ft_global_error_stack_error_at(ft_size_t index);
-int         ft_global_error_stack_last_error(void);
-const char  *ft_global_error_stack_error_str_at(ft_size_t index);
-const char  *ft_global_error_stack_last_error_str(void);
-
-/*
-** Renderer error codes (library-level).
-*/
 enum ft_render_error
 {
     ft_render_ok = 0,
@@ -59,11 +43,6 @@ struct ft_render_screen_size
     int             height;
 };
 
-/*
-** Public function requested:
-** Returns the primary screen size (width/height).
-** Pushes success/error to the global error stack.
-*/
 ft_render_screen_size  ft_render_get_primary_screen_size(void);
 
 class ft_render_window
