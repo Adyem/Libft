@@ -1,52 +1,129 @@
-NAME = dumb.a
+TARGET := dumb.a
+DEBUG_TARGET := dumb_debug.a
 
-SRCS = dumb_io.cpp \
-       dumb_sound.cpp \
-       dumb_render.cpp \
-       dumb_sound_clip.cpp \
-       dumb_console.cpp
+SRCS := dumb_io.cpp \
+    dumb_sound.cpp \
+    dumb_render.cpp \
+    dumb_sound_clip.cpp \
+    dumb_console.cpp
 
-OBJS_DIR = objs
-OBJS = $(addprefix $(OBJS_DIR)/, $(SRCS:.cpp=.o))
+MODULE_NAME := $(notdir $(CURDIR))
+TOTAL_SRCS := $(words $(SRCS))
 
-CXX = c++
-CXXFLAGS = -Wall -Wextra -Werror -I.. -g -std=c++17
+ifeq ($(OS),Windows_NT)
+    MKDIR   = mkdir
+    RM      = del /F /Q
+else
+    MKDIR   = mkdir -p
+    RM      = rm -f
+endif
 
-ifeq ($(OS), Windows_NT)
-    SRCS += dumb_sound_win32.cpp
-    CXXFLAGS += -D_WIN32
-    LIBS = -lwinmm
+ifdef COMPILE_FLAGS
+    CFLAGS := $(COMPILE_FLAGS)
+endif
+
+CXX       := g++
+AR        := ar
+ARFLAGS   := rcs
+
+OBJDIR         := objs
+DEBUG_OBJDIR   := objs_debug
+
+CPP_OBJS       := $(patsubst %.cpp,$(OBJDIR)/%.o,$(filter %.cpp,$(SRCS)))
+MM_OBJS        := $(patsubst %.mm,$(OBJDIR)/%.o,$(filter %.mm,$(SRCS)))
+DEBUG_CPP_OBJS := $(patsubst %.cpp,$(DEBUG_OBJDIR)/%.o,$(filter %.cpp,$(SRCS)))
+DEBUG_MM_OBJS  := $(patsubst %.mm,$(DEBUG_OBJDIR)/%.o,$(filter %.mm,$(SRCS)))
+
+OBJS       := $(CPP_OBJS) $(MM_OBJS)
+DEBUG_OBJS := $(DEBUG_CPP_OBJS) $(DEBUG_MM_OBJS)
+
+CFLAGS   ?= -Wall -Wextra -Werror -g -O0 -std=c++17 -Wuseless-cast
+MMFLAGS  := $(CFLAGS)
+
+ifeq ($(OS),Windows_NT)
+    SRCS += dumb_sound_win32.cpp \
+        dumb_render_win32.cpp
 else
     UNAME_S := $(shell uname -s)
-    ifeq ($(UNAME_S), Darwin)
-        SRCS += dumb_sound_macos_coreaudio.cpp dumb_render_platform_macos.mm
-        CXXFLAGS += -x objective-c++
-        FRAMEWORKS = -framework Cocoa -framework AudioToolbox
+    ifeq ($(UNAME_S),Darwin)
+        SRCS += dumb_sound_macos_coreaudio.cpp \
+            dumb_render_platform_macos.mm
+        MMFLAGS += -x objective-c++
     else
-        SRCS += dumb_sound_linux_alsa.cpp dumb_render_linux_x11.cpp
-        LIBS = -lX11 -lasound
+        SRCS += dumb_sound_linux_alsa.cpp \
+            dumb_render_linux_x11.cpp
     endif
 endif
 
-.PHONY: all clean fclean re
+all: $(TARGET)
 
-all: $(NAME)
+$(TARGET): $(OBJS)
+	@$(AR) $(ARFLAGS) $@ $^
+	@printf '        [%s] Module archive ready (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS)
 
-$(NAME): $(OBJS)
-	ar rcs $(NAME) $(OBJS)
+$(OBJDIR)/%.o: %.cpp $(HEADERS) | $(OBJDIR)
+	@$(CXX) $(CFLAGS) -c $< -o $@
+	@count=$$(find $(OBJDIR) -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
+	    printf '        [%s] Files built: %d/%d\n' "$(MODULE_NAME)" $$count $(TOTAL_SRCS)
 
-$(OBJS_DIR)/%.o: %.cpp
-	@mkdir -p $(OBJS_DIR)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+$(OBJDIR)/%.o: %.mm $(HEADERS) | $(OBJDIR)
+	@$(CXX) $(MMFLAGS) -c $< -o $@
+	@count=$$(find $(OBJDIR) -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
+	    printf '        [%s] Files built: %d/%d\n' "$(MODULE_NAME)" $$count $(TOTAL_SRCS)
 
-$(OBJS_DIR)/%.o: %.mm
-	@mkdir -p $(OBJS_DIR)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+debug: CXXFLAGS += -DDEBUG=1
+debug: $(DEBUG_TARGET)
+
+$(DEBUG_TARGET): $(DEBUG_OBJS)
+	@$(AR) $(ARFLAGS) $@ $^
+	@printf '        [%s Debug] Module archive ready (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS)
+
+$(DEBUG_OBJDIR)/%.o: %.cpp $(HEADERS) | $(DEBUG_OBJDIR)
+	@$(CXX) $(CFLAGS) -c $< -o $@
+	@count=$$(find $(DEBUG_OBJDIR) -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
+	    printf '        [%s Debug] Files built: %d/%d\n' "$(MODULE_NAME)" $$count $(TOTAL_SRCS)
+
+$(DEBUG_OBJDIR)/%.o: %.mm $(HEADERS) | $(DEBUG_OBJDIR)
+	@$(CXX) $(MMFLAGS) -c $< -o $@
+	@count=$$(find $(DEBUG_OBJDIR) -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
+	    printf '        [%s Debug] Files built: %d/%d\n' "$(MODULE_NAME)" $$count $(TOTAL_SRCS)
+
+$(OBJDIR) $(DEBUG_OBJDIR):
+	@$(MKDIR) $@
+
+CLEAN_OBJS := $(wildcard $(OBJDIR)/*.o) $(wildcard $(DEBUG_OBJDIR)/*.o)
+
+ifeq ($(OS),Windows_NT)
+    CLEAN_FILES := $(subst /,\\,$(CLEAN_OBJS))
+else
+    CLEAN_FILES := $(CLEAN_OBJS)
+endif
 
 clean:
-	rm -rf $(OBJS_DIR)
+	@if $(RM) $(CLEAN_FILES); then \
+		printf '        [%s] clean: success\n' "$(MODULE_NAME)"; \
+	else \
+		printf '        [%s] clean: failed\n' "$(MODULE_NAME)"; \
+		exit 1; \
+	fi
 
-fclean: clean
-	rm -f $(NAME)
+fclean:
+	@status=0; \
+	if ! $(RM) $(CLEAN_FILES); then \
+		status=1; \
+	fi; \
+	if ! $(RM) $(TARGET) $(DEBUG_TARGET); then \
+		status=1; \
+	fi; \
+	if [ $$status -eq 0 ]; then \
+		printf '        [%s] fclean: success\n' "$(MODULE_NAME)"; \
+	else \
+		printf '        [%s] fclean: failed\n' "$(MODULE_NAME)"; \
+		exit 1; \
+	fi
 
 re: fclean all
+
+both: all debug
+
+.PHONY: all clean fclean re debug both

@@ -24,13 +24,6 @@ static void zero_buffer(void *buffer, size_t buffer_size)
     return ;
 }
 
-static int report_move_error(void *destination, size_t destination_size, int error_code)
-{
-    zero_buffer(destination, destination_size);
-    ft_global_error_stack_push(error_code);
-    return (-1);
-}
-
 int ft_memmove_s(void *destination, size_t destination_size, const void *source, size_t number_of_bytes)
 {
     void *move_result;
@@ -43,18 +36,31 @@ int ft_memmove_s(void *destination, size_t destination_size, const void *source,
         return (0);
     }
     if (destination == ft_nullptr || source == ft_nullptr)
-        return (report_move_error(destination, destination_size,
-            FT_ERR_INVALID_ARGUMENT));
+    {
+        zero_buffer(destination, destination_size);
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
+        return (-1);
+    }
     if (destination_size < number_of_bytes)
-        return (report_move_error(destination, destination_size,
-            FT_ERR_OUT_OF_RANGE));
+    {
+        zero_buffer(destination, destination_size);
+        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
+        return (-1);
+    }
     move_result = ft_memmove(destination, source, number_of_bytes);
     error_code = ft_global_error_stack_pop_newest();
     if (error_code != FT_ERR_SUCCESSS)
-        return (report_move_error(destination, destination_size, error_code));
+    {
+        zero_buffer(destination, destination_size);
+        ft_global_error_stack_push(error_code);
+        return (-1);
+    }
     if (move_result == ft_nullptr)
-        return (report_move_error(destination, destination_size,
-            FT_ERR_INVALID_ARGUMENT));
+    {
+        zero_buffer(destination, destination_size);
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
+        return (-1);
+    }
     error_code = FT_ERR_SUCCESSS;
     ft_global_error_stack_push(error_code);
     return (0);

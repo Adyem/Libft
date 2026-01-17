@@ -62,6 +62,7 @@ SUBDIRS :=  CMA \
             SCMA \
             GetNextLine \
             Libft \
+            DUMB \
             Math \
             Geometry \
             Game \
@@ -85,6 +86,7 @@ LIB_BASES := \
   SCMA/SCMA \
   GetNextLine/GetNextLine \
   Libft/LibFT \
+  DUMB/dumb \
   Math/Math \
   Geometry/geometry \
   Game/Game \

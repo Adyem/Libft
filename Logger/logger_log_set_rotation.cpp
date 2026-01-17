@@ -2,7 +2,6 @@
 
 static int log_rotation_report(int error_code, int return_value)
 {
-    ft_errno = error_code;
     ft_global_error_stack_push(error_code);
     return (return_value);
 }
@@ -13,15 +12,18 @@ int ft_log_set_rotation(size_t max_size, size_t retention_count, unsigned int ma
     size_t index;
     bool   updated;
     int    final_error;
+    int    lock_error;
 
-    if (logger_lock_sinks() != 0)
-        return (log_rotation_report(ft_errno, -1));
+    lock_error = logger_lock_sinks();
+    if (lock_error != FT_ERR_SUCCESSS)
+        return (log_rotation_report(lock_error, -1));
     sink_count = g_sinks.size();
     if (g_sinks.get_error() != FT_ERR_SUCCESSS)
     {
         final_error = g_sinks.get_error();
-        if (logger_unlock_sinks() != 0)
-            return (log_rotation_report(ft_errno, -1));
+        lock_error = logger_unlock_sinks();
+        if (lock_error != FT_ERR_SUCCESSS)
+            return (log_rotation_report(lock_error, -1));
         return (log_rotation_report(final_error, -1));
     }
     index = 0;
@@ -34,26 +36,31 @@ int ft_log_set_rotation(size_t max_size, size_t retention_count, unsigned int ma
         if (g_sinks.get_error() != FT_ERR_SUCCESSS)
         {
             final_error = g_sinks.get_error();
-            if (logger_unlock_sinks() != 0)
-                return (log_rotation_report(ft_errno, -1));
+            lock_error = logger_unlock_sinks();
+            if (lock_error != FT_ERR_SUCCESSS)
+                return (log_rotation_report(lock_error, -1));
             return (log_rotation_report(final_error, -1));
         }
         s_log_sink &stored_entry = g_sinks[index];
         bool        sink_lock_acquired;
+        int         sink_lock_error;
 
         if (g_sinks.get_error() != FT_ERR_SUCCESSS)
         {
             final_error = g_sinks.get_error();
-            if (logger_unlock_sinks() != 0)
-                return (log_rotation_report(ft_errno, -1));
+            lock_error = logger_unlock_sinks();
+            if (lock_error != FT_ERR_SUCCESSS)
+                return (log_rotation_report(lock_error, -1));
             return (log_rotation_report(final_error, -1));
         }
         sink_lock_acquired = false;
-        if (log_sink_lock(&stored_entry, &sink_lock_acquired) != 0)
+        sink_lock_error = log_sink_lock(&stored_entry, &sink_lock_acquired);
+        if (sink_lock_error != FT_ERR_SUCCESSS)
         {
-            final_error = ft_errno;
-            if (logger_unlock_sinks() != 0)
-                return (log_rotation_report(ft_errno, -1));
+            final_error = sink_lock_error;
+            lock_error = logger_unlock_sinks();
+            if (lock_error != FT_ERR_SUCCESSS)
+                return (log_rotation_report(lock_error, -1));
             return (log_rotation_report(final_error, -1));
         }
         entry = stored_entry;
@@ -65,15 +72,18 @@ int ft_log_set_rotation(size_t max_size, size_t retention_count, unsigned int ma
             if (file_sink)
             {
                 bool file_sink_lock_acquired;
+                int  file_lock_error;
 
                 file_sink_lock_acquired = false;
-                if (file_sink_lock(file_sink, &file_sink_lock_acquired) != 0)
+                file_lock_error = file_sink_lock(file_sink, &file_sink_lock_acquired);
+                if (file_lock_error != FT_ERR_SUCCESSS)
                 {
-                    final_error = ft_errno;
+                    final_error = file_lock_error;
                     if (sink_lock_acquired)
                         log_sink_unlock(&stored_entry, sink_lock_acquired);
-                    if (logger_unlock_sinks() != 0)
-                        return (log_rotation_report(ft_errno, -1));
+                    lock_error = logger_unlock_sinks();
+                    if (lock_error != FT_ERR_SUCCESSS)
+                        return (log_rotation_report(lock_error, -1));
                     return (log_rotation_report(final_error, -1));
                 }
                 file_sink->max_size = max_size;
@@ -88,8 +98,9 @@ int ft_log_set_rotation(size_t max_size, size_t retention_count, unsigned int ma
             log_sink_unlock(&stored_entry, sink_lock_acquired);
         index += 1;
     }
-    if (logger_unlock_sinks() != 0)
-        return (log_rotation_report(ft_errno, -1));
+    lock_error = logger_unlock_sinks();
+    if (lock_error != FT_ERR_SUCCESSS)
+        return (log_rotation_report(lock_error, -1));
     if (!updated)
         return (log_rotation_report(FT_ERR_NOT_FOUND, -1));
     return (log_rotation_report(FT_ERR_SUCCESSS, 0));
@@ -100,17 +111,20 @@ int ft_log_get_rotation(size_t *max_size, size_t *retention_count, unsigned int 
     size_t sink_count;
     size_t index;
     int    final_error;
+    int    lock_error;
 
     if (!max_size || !retention_count || !max_age_seconds)
         return (log_rotation_report(FT_ERR_INVALID_ARGUMENT, -1));
-    if (logger_lock_sinks() != 0)
-        return (log_rotation_report(ft_errno, -1));
+    lock_error = logger_lock_sinks();
+    if (lock_error != FT_ERR_SUCCESSS)
+        return (log_rotation_report(lock_error, -1));
     sink_count = g_sinks.size();
     if (g_sinks.get_error() != FT_ERR_SUCCESSS)
     {
         final_error = g_sinks.get_error();
-        if (logger_unlock_sinks() != 0)
-            return (log_rotation_report(ft_errno, -1));
+        lock_error = logger_unlock_sinks();
+        if (lock_error != FT_ERR_SUCCESSS)
+            return (log_rotation_report(lock_error, -1));
         return (log_rotation_report(final_error, -1));
     }
     index = 0;
@@ -122,26 +136,31 @@ int ft_log_get_rotation(size_t *max_size, size_t *retention_count, unsigned int 
         if (g_sinks.get_error() != FT_ERR_SUCCESSS)
         {
             final_error = g_sinks.get_error();
-            if (logger_unlock_sinks() != 0)
-                return (log_rotation_report(ft_errno, -1));
+            lock_error = logger_unlock_sinks();
+            if (lock_error != FT_ERR_SUCCESSS)
+                return (log_rotation_report(lock_error, -1));
             return (log_rotation_report(final_error, -1));
         }
         s_log_sink &stored_entry = g_sinks[index];
         bool        sink_lock_acquired;
+        int         sink_lock_error;
 
         if (g_sinks.get_error() != FT_ERR_SUCCESSS)
         {
             final_error = g_sinks.get_error();
-            if (logger_unlock_sinks() != 0)
-                return (log_rotation_report(ft_errno, -1));
+            lock_error = logger_unlock_sinks();
+            if (lock_error != FT_ERR_SUCCESSS)
+                return (log_rotation_report(lock_error, -1));
             return (log_rotation_report(final_error, -1));
         }
         sink_lock_acquired = false;
-        if (log_sink_lock(&stored_entry, &sink_lock_acquired) != 0)
+        sink_lock_error = log_sink_lock(&stored_entry, &sink_lock_acquired);
+        if (sink_lock_error != FT_ERR_SUCCESSS)
         {
-            final_error = ft_errno;
-            if (logger_unlock_sinks() != 0)
-                return (log_rotation_report(ft_errno, -1));
+            final_error = sink_lock_error;
+            lock_error = logger_unlock_sinks();
+            if (lock_error != FT_ERR_SUCCESSS)
+                return (log_rotation_report(lock_error, -1));
             return (log_rotation_report(final_error, -1));
         }
         entry = stored_entry;
@@ -153,15 +172,18 @@ int ft_log_get_rotation(size_t *max_size, size_t *retention_count, unsigned int 
             if (file_sink)
             {
                 bool file_sink_lock_acquired;
+                int  file_lock_error;
 
                 file_sink_lock_acquired = false;
-                if (file_sink_lock(file_sink, &file_sink_lock_acquired) != 0)
+                file_lock_error = file_sink_lock(file_sink, &file_sink_lock_acquired);
+                if (file_lock_error != FT_ERR_SUCCESSS)
                 {
-                    final_error = ft_errno;
+                    final_error = file_lock_error;
                     if (sink_lock_acquired)
                         log_sink_unlock(&stored_entry, sink_lock_acquired);
-                    if (logger_unlock_sinks() != 0)
-                        return (log_rotation_report(ft_errno, -1));
+                    lock_error = logger_unlock_sinks();
+                    if (lock_error != FT_ERR_SUCCESSS)
+                        return (log_rotation_report(lock_error, -1));
                     return (log_rotation_report(final_error, -1));
                 }
                 *max_size = file_sink->max_size;
@@ -171,8 +193,9 @@ int ft_log_get_rotation(size_t *max_size, size_t *retention_count, unsigned int 
                     file_sink_unlock(file_sink, file_sink_lock_acquired);
                 if (sink_lock_acquired)
                     log_sink_unlock(&stored_entry, sink_lock_acquired);
-                if (logger_unlock_sinks() != 0)
-                    return (log_rotation_report(ft_errno, -1));
+                lock_error = logger_unlock_sinks();
+                if (lock_error != FT_ERR_SUCCESSS)
+                    return (log_rotation_report(lock_error, -1));
                 return (log_rotation_report(FT_ERR_SUCCESSS, 0));
             }
         }
@@ -180,7 +203,8 @@ int ft_log_get_rotation(size_t *max_size, size_t *retention_count, unsigned int 
             log_sink_unlock(&stored_entry, sink_lock_acquired);
         index += 1;
     }
-    if (logger_unlock_sinks() != 0)
-        return (log_rotation_report(ft_errno, -1));
+    lock_error = logger_unlock_sinks();
+    if (lock_error != FT_ERR_SUCCESSS)
+        return (log_rotation_report(lock_error, -1));
     return (log_rotation_report(FT_ERR_NOT_FOUND, -1));
 }

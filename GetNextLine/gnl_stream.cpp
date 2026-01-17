@@ -5,16 +5,20 @@
 # include <winsock2.h>
 #endif
 
-static ssize_t gnl_stream_default_fd_read(void *user_data, char *buffer, size_t max_size) noexcept
+static ssize_t gnl_stream_default_fd_read(void *user_data, char *buffer, size_t max_size,
+    int *error_code)
 {
     int file_descriptor;
 
     file_descriptor = -1;
+    if (error_code)
+        *error_code = FT_ERR_SUCCESSS;
     if (user_data)
         file_descriptor = *(static_cast<int *>(user_data));
     if (file_descriptor < 0 || !buffer || max_size == 0)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        if (error_code)
+            *error_code = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     ssize_t read_result;
@@ -27,27 +31,35 @@ static ssize_t gnl_stream_default_fd_read(void *user_data, char *buffer, size_t 
 
         last_error = WSAGetLastError();
         if (last_error != 0)
-            ft_errno = ft_map_system_error(last_error);
+            if (error_code)
+                *error_code = ft_map_system_error(last_error);
         else
-            ft_errno = FT_ERR_IO;
+            if (error_code)
+                *error_code = FT_ERR_IO;
 #else
         if (errno != 0)
-            ft_errno = ft_map_system_error(errno);
+            if (error_code)
+                *error_code = ft_map_system_error(errno);
         else
-            ft_errno = FT_ERR_IO;
+            if (error_code)
+                *error_code = FT_ERR_IO;
 #endif
     }
     return (read_result);
 }
 
-static ssize_t gnl_stream_default_file_read(void *user_data, char *buffer, size_t max_size) noexcept
+static ssize_t gnl_stream_default_file_read(void *user_data, char *buffer, size_t max_size,
+    int *error_code) noexcept
 {
     FILE *file_handle;
 
     file_handle = static_cast<FILE *>(user_data);
+    if (error_code)
+        *error_code = FT_ERR_SUCCESSS;
     if (!file_handle || !buffer || max_size == 0)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        if (error_code)
+            *error_code = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     size_t read_count;
@@ -57,7 +69,8 @@ static ssize_t gnl_stream_default_file_read(void *user_data, char *buffer, size_
     {
         if (ferror(file_handle))
         {
-            ft_errno = FT_ERR_IO;
+            if (error_code)
+                *error_code = FT_ERR_IO;
             return (-1);
         }
     }
@@ -67,7 +80,6 @@ static ssize_t gnl_stream_default_file_read(void *user_data, char *buffer, size_
 void gnl_stream::set_error_unlocked(int error_code) const noexcept
 {
     this->_error_code = error_code;
-    ft_errno = error_code;
     return ;
 }
 
@@ -83,7 +95,7 @@ void gnl_stream::set_error(int error_code) const noexcept
     if (guard.owns_lock())
         guard.unlock();
     if (guard.get_error() != FT_ERR_SUCCESSS)
-        ft_errno = guard.get_error();
+        this->set_error_unlocked(guard.get_error());
     return ;
 }
 
@@ -93,11 +105,9 @@ int gnl_stream::lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept
     if (local_guard.get_error() != FT_ERR_SUCCESSS)
     {
         guard = ft_unique_lock<pt_mutex>();
-        ft_errno = local_guard.get_error();
-        return (ft_errno);
+        return (local_guard.get_error());
     }
     guard = ft_move(local_guard);
-    ft_errno = FT_ERR_SUCCESSS;
     return (FT_ERR_SUCCESSS);
 }
 
@@ -123,14 +133,26 @@ gnl_stream::~gnl_stream() noexcept
 ssize_t gnl_stream::read_from_descriptor(int file_descriptor, char *buffer, size_t max_size) const noexcept
 {
     int descriptor_copy;
+    int error_code;
 
     descriptor_copy = file_descriptor;
-    return (gnl_stream_default_fd_read(&descriptor_copy, buffer, max_size));
+    error_code = FT_ERR_SUCCESSS;
+    ssize_t read_result = gnl_stream_default_fd_read(&descriptor_copy, buffer, max_size, &error_code);
+    if (read_result < 0)
+        this->set_error_unlocked(error_code);
+    return (read_result);
 }
 
 ssize_t gnl_stream::read_from_file(FILE *file_handle, char *buffer, size_t max_size) const noexcept
 {
-    return (gnl_stream_default_file_read(file_handle, buffer, max_size));
+    int error_code;
+    ssize_t read_result;
+
+    error_code = FT_ERR_SUCCESSS;
+    read_result = gnl_stream_default_file_read(file_handle, buffer, max_size, &error_code);
+    if (read_result < 0)
+        this->set_error_unlocked(error_code);
+    return (read_result);
 }
 
 int gnl_stream::init_from_fd(int file_descriptor) noexcept
@@ -147,7 +169,7 @@ int gnl_stream::init_from_fd(int file_descriptor) noexcept
         if (guard.owns_lock())
             guard.unlock();
         if (guard.get_error() != FT_ERR_SUCCESSS)
-            ft_errno = guard.get_error();
+            this->set_error_unlocked(guard.get_error());
         return (this->_error_code);
     }
     this->_file_descriptor = file_descriptor;
@@ -159,7 +181,7 @@ int gnl_stream::init_from_fd(int file_descriptor) noexcept
     if (guard.owns_lock())
         guard.unlock();
     if (guard.get_error() != FT_ERR_SUCCESSS)
-        ft_errno = guard.get_error();
+        this->set_error_unlocked(guard.get_error());
     return (FT_ERR_SUCCESSS);
 }
 
@@ -177,7 +199,7 @@ int gnl_stream::init_from_file(FILE *file_handle, bool close_on_reset) noexcept
         if (guard.owns_lock())
             guard.unlock();
         if (guard.get_error() != FT_ERR_SUCCESSS)
-            ft_errno = guard.get_error();
+            this->set_error_unlocked(guard.get_error());
         return (this->_error_code);
     }
     this->_file_handle = file_handle;
@@ -189,7 +211,7 @@ int gnl_stream::init_from_file(FILE *file_handle, bool close_on_reset) noexcept
     if (guard.owns_lock())
         guard.unlock();
     if (guard.get_error() != FT_ERR_SUCCESSS)
-        ft_errno = guard.get_error();
+        this->set_error_unlocked(guard.get_error());
     return (FT_ERR_SUCCESSS);
 }
 
@@ -208,7 +230,7 @@ int gnl_stream::init_from_callback(ssize_t (*callback)(void *user_data, char *bu
         if (guard.owns_lock())
             guard.unlock();
         if (guard.get_error() != FT_ERR_SUCCESSS)
-            ft_errno = guard.get_error();
+            this->set_error_unlocked(guard.get_error());
         return (this->_error_code);
     }
     this->_read_callback = callback;
@@ -220,7 +242,7 @@ int gnl_stream::init_from_callback(ssize_t (*callback)(void *user_data, char *bu
     if (guard.owns_lock())
         guard.unlock();
     if (guard.get_error() != FT_ERR_SUCCESSS)
-        ft_errno = guard.get_error();
+        this->set_error_unlocked(guard.get_error());
     return (FT_ERR_SUCCESSS);
 }
 
@@ -245,7 +267,7 @@ void gnl_stream::reset() noexcept
     if (guard.owns_lock())
         guard.unlock();
     if (guard.get_error() != FT_ERR_SUCCESSS)
-        ft_errno = guard.get_error();
+        this->set_error_unlocked(guard.get_error());
     return ;
 }
 
@@ -264,12 +286,24 @@ ssize_t gnl_stream::read(char *buffer, size_t max_size) noexcept
         if (guard.owns_lock())
             guard.unlock();
         if (guard.get_error() != FT_ERR_SUCCESSS)
-            ft_errno = guard.get_error();
+            this->set_error_unlocked(guard.get_error());
         return (-1);
     }
     read_result = -1;
     if (this->_read_callback)
+    {
+        this->set_error_unlocked(FT_ERR_SUCCESSS);
         read_result = this->_read_callback(this->_user_data, buffer, max_size);
+        if (read_result < 0)
+        {
+            int callback_error;
+
+            callback_error = ft_global_error_stack_pop_newest();
+            if (callback_error == FT_ERR_SUCCESSS)
+                callback_error = FT_ERR_IO;
+            this->set_error_unlocked(callback_error);
+        }
+    }
     else if (this->_file_descriptor >= 0)
         read_result = this->read_from_descriptor(this->_file_descriptor, buffer, max_size);
     else if (this->_file_handle)
@@ -280,14 +314,14 @@ ssize_t gnl_stream::read(char *buffer, size_t max_size) noexcept
         if (guard.owns_lock())
             guard.unlock();
         if (guard.get_error() != FT_ERR_SUCCESSS)
-            ft_errno = guard.get_error();
+            this->set_error_unlocked(guard.get_error());
         return (-1);
     }
     if (read_result < 0)
     {
         int read_error;
 
-        read_error = ft_errno;
+        read_error = this->_error_code;
         if (read_error == FT_ERR_SUCCESSS)
             read_error = FT_ERR_IO;
         else if (read_error == FT_ERR_INVALID_HANDLE)
@@ -296,14 +330,14 @@ ssize_t gnl_stream::read(char *buffer, size_t max_size) noexcept
         if (guard.owns_lock())
             guard.unlock();
         if (guard.get_error() != FT_ERR_SUCCESSS)
-            ft_errno = guard.get_error();
+            this->set_error_unlocked(guard.get_error());
         return (-1);
     }
     this->set_error_unlocked(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
     if (guard.get_error() != FT_ERR_SUCCESSS)
-        ft_errno = guard.get_error();
+        this->set_error_unlocked(guard.get_error());
     return (read_result);
 }
 
@@ -320,9 +354,7 @@ int gnl_stream::get_error() const noexcept
     if (guard.owns_lock())
         guard.unlock();
     if (guard.get_error() != FT_ERR_SUCCESSS)
-        ft_errno = guard.get_error();
-    else
-        ft_errno = FT_ERR_SUCCESSS;
+        return (guard.get_error());
     return (error_code);
 }
 

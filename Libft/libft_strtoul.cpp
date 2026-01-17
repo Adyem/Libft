@@ -14,12 +14,6 @@ static int ft_digit_value(char character)
     return (-1);
 }
 
-static unsigned long report_strtoul_error(int error_code, unsigned long return_value)
-{
-    ft_global_error_stack_push(error_code);
-    return (return_value);
-}
-
 unsigned long ft_strtoul(const char *input_string, char **end_pointer, int numeric_base)
 {
     const char *current_character = input_string;
@@ -36,13 +30,15 @@ unsigned long ft_strtoul(const char *input_string, char **end_pointer, int numer
     {
         if (end_pointer != ft_nullptr)
             *end_pointer = ft_nullptr;
-        return (report_strtoul_error(FT_ERR_INVALID_ARGUMENT, 0UL));
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
+        return (0UL);
     }
     if (numeric_base != 0 && (numeric_base < 2 || numeric_base > 36))
     {
         if (end_pointer != ft_nullptr)
             *end_pointer = const_cast<char *>(input_string);
-        return (report_strtoul_error(FT_ERR_INVALID_ARGUMENT, 0UL));
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
+        return (0UL);
     }
     while (*current_character == ' ' || (*current_character >= '\t'
                 && *current_character <= '\r'))
@@ -102,7 +98,8 @@ unsigned long ft_strtoul(const char *input_string, char **end_pointer, int numer
     {
         if (end_pointer != ft_nullptr)
             *end_pointer = const_cast<char *>(input_string);
-        return (report_strtoul_error(FT_ERR_INVALID_ARGUMENT, 0UL));
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
+        return (0UL);
     }
     if (end_pointer)
         *end_pointer = const_cast<char *>(current_character);
@@ -112,10 +109,13 @@ unsigned long ft_strtoul(const char *input_string, char **end_pointer, int numer
     {
         if (overflow_detected)
         {
-            return (report_strtoul_error(error_code, limit_value));
+            ft_global_error_stack_push(error_code);
+            return (limit_value);
         }
         unsigned long negated_value = 0UL - accumulated_value;
-        return (report_strtoul_error(error_code, negated_value));
+        ft_global_error_stack_push(error_code);
+        return (negated_value);
     }
-    return (report_strtoul_error(error_code, accumulated_value));
+    ft_global_error_stack_push(error_code);
+    return (accumulated_value);
 }

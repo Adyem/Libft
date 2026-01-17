@@ -1,21 +1,21 @@
 #Coding Guidelines
 
-Use return ; for void functions. Include a space before the semicolon.
+Use return ; for void functions. Include a space before the semicolon and always place a return ; at the end of every void function.
 Use return (value); for non-void returns. Include a space before the opening parenthesis.
 Do not use for loops, ternary operators, or switch statements.
 Indent code using 4 spaces per level.
-After declaring a class, indent access specifiers (private, public, protected) by 4 spaces and indent member declarations within them by 8 spaces.
+After declaring a class, indent access specifiers (private, public, protected) by 4 spaces and indent member declarations within them by 8 spaces. This does not apply to structs.
 In class declarations, place private members above public members and separate the sections with an empty line.
 Function and variable names must use snake_case.
-Use full variable names instead of short ones or single letters, dont use s or str use string.
+Use full variable names instead of short ones or single letters, dont use s or str use string. Use names like file_descriptor and index; if multiple file descriptors or indexes are used, name each of them like file_descriptor_input, file_descriptor_output, index_height, index_width.
 
 Use Allman style braces (opening brace on a new line).
 In classes, member variable names must start with an underscore (_).
 Within class member functions, access members and other methods using the this keyword.
 Template classes may define member functions in the same file as the class declaration, but
-other classes must split declarations into .hpp files and definitions into .cpp files.
+other classes must split declarations into .hpp files and definitions into .cpp files. Inline and constexpr are allowed in headers for templates. For template classes, declare all member functions in the class declaration, then place the definitions below the class declaration in the same header.
 Do not define member function bodies inside the class declaration; place all definitions outside the class.
-Every class must declare and define a constructor and destructor, even if they simply contain return ;.
+Every class must declare and define a constructor and destructor, even if they simply contain return ;. Do not use = default; explicitly define the bodies.
 
 #Class Mutex Requirements
 
@@ -44,7 +44,7 @@ When publishing or reading class error codes or error stacks, do not lock the cl
 Errors and successful completions are reported by pushing entries onto the appropriate error stack.
 A function that pushes an entry must leave it on the stack.
 The function that checks the entry is responsible for popping it.
-Functions marked strictly for internal use must not push any errors on the stack.
+Functions marked strictly for internal use must not push any errors on the stack. Internal functions are typically marked static or declared in internal headers (headers with "internal" in their name).
 When a function returns an error value, check that return value alone. Use the error stack only to
 determine the error type (still pop the newest value when required).
 If a function returns an error value and the popped error entry is success, do not publish or set
@@ -71,13 +71,13 @@ pop newest, pop all, and fetch by index (1-based). The newest error is always at
 and helpers must also support retrieving the most recent error and error string values using the
 same ordering rules.
 
-Only .cpp files must be prefixed with the name of the module they belong to.
+Only .cpp files must be prefixed with the name of the module they belong to. Nested modules must contain both the original module name followed by the nested module name.
 For .hpp files, prefix only those meant for internal use with the module name.
 Generic headers may use the module's name, while class headers should use the class name as the filename.
 
 Update README.md only when the change is important for the end user, such as improved functionality or unavoidable undefined behavior. Bug fixes alone do not require README updates.
 
-Code that relies on platform-specific features must place only the platform-dependent portions into helper functions in the Compatebility module.
+Code that relies on platform-specific features must place only the platform-dependent portions into helper functions in the Compatebility module. Platform-specific means the code cannot run on all of Linux, Windows, and macOS.
 
 #Build and Test Timing
 

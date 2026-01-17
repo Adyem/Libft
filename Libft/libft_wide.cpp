@@ -54,7 +54,8 @@ size_t ft_wstrlen(const wchar_t *string)
 }
 
 static int ft_utf16_decode_unit(const char16_t *input, size_t length,
-        size_t index, uint32_t *code_point_pointer, size_t *advance)
+        size_t index, uint32_t *code_point_pointer, size_t *advance,
+        int *error_code)
 {
     char16_t first_unit;
 
@@ -63,7 +64,7 @@ static int ft_utf16_decode_unit(const char16_t *input, size_t length,
     {
         if (index + 1 >= length)
         {
-            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
+            *error_code = FT_ERR_INVALID_ARGUMENT;
             return (FT_FAILURE);
         }
         char16_t second_unit;
@@ -71,24 +72,24 @@ static int ft_utf16_decode_unit(const char16_t *input, size_t length,
         second_unit = input[index + 1];
         if (second_unit < 0xDC00 || second_unit > 0xDFFF)
         {
-            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
+            *error_code = FT_ERR_INVALID_ARGUMENT;
             return (FT_FAILURE);
         }
         *code_point_pointer = 0x10000;
         *code_point_pointer += static_cast<uint32_t>(first_unit - 0xD800) << 10;
         *code_point_pointer += static_cast<uint32_t>(second_unit - 0xDC00);
         *advance = 2;
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        *error_code = FT_ERR_SUCCESSS;
         return (FT_SUCCESS);
     }
     if (first_unit >= 0xDC00 && first_unit <= 0xDFFF)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
+        *error_code = FT_ERR_INVALID_ARGUMENT;
         return (FT_FAILURE);
     }
     *code_point_pointer = static_cast<uint32_t>(first_unit);
     *advance = 1;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    *error_code = FT_ERR_SUCCESSS;
     return (FT_SUCCESS);
 }
 
@@ -113,16 +114,8 @@ ft_string ft_utf16_to_utf8(const char16_t *input, size_t input_length)
         char encoded_buffer[5];
         size_t encoded_length;
 
-        if (ft_utf16_decode_unit(input, length, index, &code_point, &advance) != FT_SUCCESS)
-        {
-            error_code = ft_global_error_stack_pop_newest();
-            if (error_code == FT_ERR_SUCCESSS)
-                error_code = FT_ERR_INVALID_ARGUMENT;
-            ft_global_error_stack_push(error_code);
-            return (ft_string(error_code));
-        }
-        error_code = ft_global_error_stack_pop_newest();
-        if (error_code != FT_ERR_SUCCESSS)
+        if (ft_utf16_decode_unit(input, length, index, &code_point, &advance,
+                &error_code) != FT_SUCCESS)
         {
             ft_global_error_stack_push(error_code);
             return (ft_string(error_code));
@@ -214,18 +207,18 @@ ft_string ft_utf32_to_utf8(const char32_t *input, size_t input_length)
     return (result);
 }
 
-static char16_t *ft_allocate_utf16(size_t code_unit_count)
+static char16_t *ft_allocate_utf16(size_t code_unit_count, int *error_code)
 {
     char16_t *buffer;
 
     buffer = static_cast<char16_t *>(cma_malloc((code_unit_count + 1) * sizeof(char16_t)));
     if (buffer == ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
+        *error_code = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     buffer[code_unit_count] = static_cast<char16_t>(0);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    *error_code = FT_ERR_SUCCESSS;
     return (buffer);
 }
 
@@ -296,17 +289,11 @@ char16_t *ft_utf8_to_utf16(const char *input, size_t input_length, size_t *outpu
         }
         index = working_index;
     }
-    result = ft_allocate_utf16(code_unit_count);
+    result = ft_allocate_utf16(code_unit_count, &error_code);
     if (result == ft_nullptr)
     {
-        error_code = ft_global_error_stack_pop_newest();
-        if (error_code != FT_ERR_SUCCESSS)
-            ft_global_error_stack_push(error_code);
-        return (ft_nullptr);
-    }
-    error_code = ft_global_error_stack_pop_newest();
-    if (error_code != FT_ERR_SUCCESSS)
-    {
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_NO_MEMORY;
         ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }

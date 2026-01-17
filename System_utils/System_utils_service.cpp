@@ -71,10 +71,11 @@ static void su_service_signal_dispatch(int signal_number)
 void    su_service_force_no_fork(bool enable)
 {
     g_su_service_force_no_fork = enable;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
-static int  su_service_redirect_standard_streams(void)
+static int  su_service_redirect_standard_streams(int *error_code)
 {
 #if defined(_WIN32) || defined(_WIN64)
     const char  *null_path;
@@ -91,36 +92,60 @@ static int  su_service_redirect_standard_streams(void)
     stream = std::freopen(null_path, "r", stdin);
     if (!stream)
     {
-        ft_set_errno_from_system_error(errno);
+        int local_error_code;
+
+        if (errno != 0)
+            local_error_code = ft_map_system_error(errno);
+        else
+            local_error_code = FT_ERR_IO;
+        if (error_code != ft_nullptr)
+            *error_code = local_error_code;
         return (-1);
     }
     stream = std::freopen(null_path, "w", stdout);
     if (!stream)
     {
-        ft_set_errno_from_system_error(errno);
+        int local_error_code;
+
+        if (errno != 0)
+            local_error_code = ft_map_system_error(errno);
+        else
+            local_error_code = FT_ERR_IO;
+        if (error_code != ft_nullptr)
+            *error_code = local_error_code;
         return (-1);
     }
     stream = std::freopen(null_path, "w", stderr);
     if (!stream)
     {
-        ft_set_errno_from_system_error(errno);
+        int local_error_code;
+
+        if (errno != 0)
+            local_error_code = ft_map_system_error(errno);
+        else
+            local_error_code = FT_ERR_IO;
+        if (error_code != ft_nullptr)
+            *error_code = local_error_code;
         return (-1);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    if (error_code != ft_nullptr)
+        *error_code = FT_ERR_SUCCESSS;
     return (0);
 }
 
-static int  su_service_write_pid_file(const char *pid_file_path)
+static int  su_service_write_pid_file(const char *pid_file_path, int *error_code)
 {
     char    buffer[64];
     int     file_descriptor;
     size_t  length;
     ssize_t bytes_written;
     int     close_error;
+    int     local_error_code;
 
     if (!pid_file_path)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        if (error_code != ft_nullptr)
+            *error_code = FT_ERR_SUCCESSS;
         return (0);
     }
 #if defined(_WIN32) || defined(_WIN64)
@@ -140,42 +165,78 @@ static int  su_service_write_pid_file(const char *pid_file_path)
 #endif
     length = std::strlen(buffer);
     file_descriptor = su_open(pid_file_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    local_error_code = ft_global_error_stack_pop_newest();
     if (file_descriptor < 0)
+    {
+        if (local_error_code == FT_ERR_SUCCESSS)
+            local_error_code = FT_ERR_FILE_OPEN_FAILED;
+        if (error_code != ft_nullptr)
+            *error_code = local_error_code;
         return (-1);
+    }
     bytes_written = su_write(file_descriptor, buffer, length);
+    local_error_code = ft_global_error_stack_pop_newest();
     if (bytes_written < 0 || static_cast<size_t>(bytes_written) != length)
     {
-        if (ft_errno == FT_ERR_SUCCESSS)
-            ft_errno = FT_ERR_IO;
+        if (local_error_code == FT_ERR_SUCCESSS)
+            local_error_code = FT_ERR_IO;
         su_close(file_descriptor);
+        ft_global_error_stack_pop_newest();
+        if (error_code != ft_nullptr)
+            *error_code = local_error_code;
         return (-1);
     }
     close_error = su_close(file_descriptor);
+    local_error_code = ft_global_error_stack_pop_newest();
     if (close_error != 0)
+    {
+        if (local_error_code == FT_ERR_SUCCESSS)
+            local_error_code = FT_ERR_IO;
+        if (error_code != ft_nullptr)
+            *error_code = local_error_code;
         return (-1);
-    ft_errno = FT_ERR_SUCCESSS;
+    }
+    if (error_code != ft_nullptr)
+        *error_code = FT_ERR_SUCCESSS;
     return (0);
 }
 
 int su_service_daemonize(const char *working_directory, const char *pid_file_path,
                          bool redirect_standard_streams)
 {
+    int error_code;
+
 #if defined(_WIN32) || defined(_WIN64)
     if (working_directory && working_directory[0] != '\0')
     {
         if (!SetCurrentDirectoryA(working_directory))
         {
-            ft_set_errno_from_system_error(GetLastError());
+            DWORD last_error;
+
+            last_error = GetLastError();
+            if (last_error != 0)
+                error_code = ft_map_system_error(static_cast<int>(last_error));
+            else
+                error_code = FT_ERR_IO;
+            ft_global_error_stack_push(error_code);
             return (-1);
         }
     }
     if (redirect_standard_streams)
     {
-        if (su_service_redirect_standard_streams() != 0)
+        error_code = FT_ERR_SUCCESSS;
+        if (su_service_redirect_standard_streams(&error_code) != 0)
+        {
+            ft_global_error_stack_push(error_code);
             return (-1);
+        }
     }
-    if (su_service_write_pid_file(pid_file_path) != 0)
+    error_code = FT_ERR_SUCCESSS;
+    if (su_service_write_pid_file(pid_file_path, &error_code) != 0)
+    {
+        ft_global_error_stack_push(error_code);
         return (-1);
+    }
     if (!FreeConsole())
     {
         DWORD   console_error;
@@ -183,11 +244,15 @@ int su_service_daemonize(const char *working_directory, const char *pid_file_pat
         console_error = GetLastError();
         if (console_error != ERROR_INVALID_HANDLE)
         {
-            ft_set_errno_from_system_error(console_error);
+            if (console_error != 0)
+                error_code = ft_map_system_error(static_cast<int>(console_error));
+            else
+                error_code = FT_ERR_IO;
+            ft_global_error_stack_push(error_code);
             return (-1);
         }
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 #else
     if (!g_su_service_force_no_fork)
@@ -197,23 +262,35 @@ int su_service_daemonize(const char *working_directory, const char *pid_file_pat
         process_id = fork();
         if (process_id < 0)
         {
-            ft_set_errno_from_system_error(errno);
+            if (errno != 0)
+                error_code = ft_map_system_error(errno);
+            else
+                error_code = FT_ERR_IO;
+            ft_global_error_stack_push(error_code);
             return (-1);
         }
         if (process_id > 0)
         {
-            ft_errno = FT_ERR_SUCCESSS;
+            ft_global_error_stack_push(FT_ERR_SUCCESSS);
             return (1);
         }
         if (setsid() < 0)
         {
-            ft_set_errno_from_system_error(errno);
+            if (errno != 0)
+                error_code = ft_map_system_error(errno);
+            else
+                error_code = FT_ERR_IO;
+            ft_global_error_stack_push(error_code);
             return (-1);
         }
         process_id = fork();
         if (process_id < 0)
         {
-            ft_set_errno_from_system_error(errno);
+            if (errno != 0)
+                error_code = ft_map_system_error(errno);
+            else
+                error_code = FT_ERR_IO;
+            ft_global_error_stack_push(error_code);
             return (-1);
         }
         if (process_id > 0)
@@ -224,18 +301,30 @@ int su_service_daemonize(const char *working_directory, const char *pid_file_pat
     {
         if (chdir(working_directory) != 0)
         {
-            ft_set_errno_from_system_error(errno);
+            if (errno != 0)
+                error_code = ft_map_system_error(errno);
+            else
+                error_code = FT_ERR_IO;
+            ft_global_error_stack_push(error_code);
             return (-1);
         }
     }
     if (redirect_standard_streams)
     {
-        if (su_service_redirect_standard_streams() != 0)
+        error_code = FT_ERR_SUCCESSS;
+        if (su_service_redirect_standard_streams(&error_code) != 0)
+        {
+            ft_global_error_stack_push(error_code);
             return (-1);
+        }
     }
-    if (su_service_write_pid_file(pid_file_path) != 0)
+    error_code = FT_ERR_SUCCESSS;
+    if (su_service_write_pid_file(pid_file_path, &error_code) != 0)
+    {
+        ft_global_error_stack_push(error_code);
         return (-1);
-    ft_errno = FT_ERR_SUCCESSS;
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 #endif
 }
@@ -243,12 +332,15 @@ int su_service_daemonize(const char *working_directory, const char *pid_file_pat
 int su_service_install_signal_handlers(t_su_service_signal_handler handler,
                                        void *user_context)
 {
+    int error_code;
+
     if (!handler)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     su_service_clear_signal_handlers();
+    ft_global_error_stack_pop_newest();
     g_su_service_signal_handler = handler;
     g_su_service_signal_context = user_context;
 #if defined(_WIN32) || defined(_WIN64)
@@ -256,9 +348,13 @@ int su_service_install_signal_handlers(t_su_service_signal_handler handler,
     g_su_service_previous_sigint = std::signal(SIGINT, su_service_c_signal_dispatch);
     if (g_su_service_previous_sigint == SIG_ERR)
     {
-        ft_set_errno_from_system_error(errno);
+        if (errno != 0)
+            error_code = ft_map_system_error(errno);
+        else
+            error_code = FT_ERR_IO;
         g_su_service_signal_handler = ft_nullptr;
         g_su_service_signal_context = ft_nullptr;
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     errno = 0;
@@ -268,7 +364,11 @@ int su_service_install_signal_handlers(t_su_service_signal_handler handler,
         std::signal(SIGINT, g_su_service_previous_sigint);
         g_su_service_signal_handler = ft_nullptr;
         g_su_service_signal_context = ft_nullptr;
-        ft_set_errno_from_system_error(errno);
+        if (errno != 0)
+            error_code = ft_map_system_error(errno);
+        else
+            error_code = FT_ERR_IO;
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     if (!SetConsoleCtrlHandler(su_service_console_handler, TRUE))
@@ -280,7 +380,11 @@ int su_service_install_signal_handlers(t_su_service_signal_handler handler,
         std::signal(SIGTERM, g_su_service_previous_sigterm);
         g_su_service_signal_handler = ft_nullptr;
         g_su_service_signal_context = ft_nullptr;
-        ft_set_errno_from_system_error(console_error);
+        if (console_error != 0)
+            error_code = ft_map_system_error(static_cast<int>(console_error));
+        else
+            error_code = FT_ERR_IO;
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     g_su_service_console_handler_installed = true;
@@ -294,7 +398,11 @@ int su_service_install_signal_handlers(t_su_service_signal_handler handler,
     {
         g_su_service_signal_handler = ft_nullptr;
         g_su_service_signal_context = ft_nullptr;
-        ft_set_errno_from_system_error(errno);
+        if (errno != 0)
+            error_code = ft_map_system_error(errno);
+        else
+            error_code = FT_ERR_IO;
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     g_su_service_sigint_installed = true;
@@ -304,7 +412,11 @@ int su_service_install_signal_handlers(t_su_service_signal_handler handler,
         g_su_service_sigint_installed = false;
         g_su_service_signal_handler = ft_nullptr;
         g_su_service_signal_context = ft_nullptr;
-        ft_set_errno_from_system_error(errno);
+        if (errno != 0)
+            error_code = ft_map_system_error(errno);
+        else
+            error_code = FT_ERR_IO;
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     g_su_service_sigterm_installed = true;
@@ -317,13 +429,17 @@ int su_service_install_signal_handlers(t_su_service_signal_handler handler,
         g_su_service_sigint_installed = false;
         g_su_service_signal_handler = ft_nullptr;
         g_su_service_signal_context = ft_nullptr;
-        ft_set_errno_from_system_error(errno);
+        if (errno != 0)
+            error_code = ft_map_system_error(errno);
+        else
+            error_code = FT_ERR_IO;
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     g_su_service_sighup_installed = true;
 #endif
 #endif
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -362,5 +478,6 @@ void    su_service_clear_signal_handlers(void)
 #endif
     g_su_service_signal_handler = ft_nullptr;
     g_su_service_signal_context = ft_nullptr;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }

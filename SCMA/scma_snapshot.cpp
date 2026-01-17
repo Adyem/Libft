@@ -16,13 +16,11 @@ void    *scma_snapshot(scma_handle handle, ft_size_t *size)
     snapshot_result = ft_nullptr;
     if (scma_mutex_lock() != 0)
     {
-        ft_errno = FT_ERR_SYS_MUTEX_LOCK_FAILED;
         ft_global_error_stack_push(FT_ERR_SYS_MUTEX_LOCK_FAILED);
         return (ft_nullptr);
     }
     if (!scma_validate_handle(handle, &block))
     {
-        ft_errno = FT_ERR_INVALID_HANDLE;
         ft_global_error_stack_push(FT_ERR_INVALID_HANDLE);
         return (scma_unlock_and_return_pointer(ft_nullptr));
     }
@@ -33,18 +31,15 @@ void    *scma_snapshot(scma_handle handle, ft_size_t *size)
         scma_reset_live_snapshot();
         if (scma_mutex_unlock() != 0)
         {
-            ft_errno = FT_ERR_SYS_MUTEX_UNLOCK_FAILED;
             ft_global_error_stack_push(FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
             return (ft_nullptr);
         }
-        ft_errno = FT_ERR_SUCCESSS;
         ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (ft_nullptr);
     }
     copy = std::malloc(static_cast<size_t>(block->size));
     if (!copy)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
         ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         scma_reset_live_snapshot();
         return (scma_unlock_and_return_pointer(ft_nullptr));
@@ -63,7 +58,6 @@ void    *scma_snapshot(scma_handle handle, ft_size_t *size)
         std::free(copy);
     if (scma_mutex_unlock() != 0)
     {
-        ft_errno = FT_ERR_SYS_MUTEX_UNLOCK_FAILED;
         ft_global_error_stack_push(FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
         if (snapshot_result)
         {
@@ -72,7 +66,6 @@ void    *scma_snapshot(scma_handle handle, ft_size_t *size)
         }
         return (ft_nullptr);
     }
-    ft_errno = FT_ERR_SUCCESSS;
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (snapshot_result);
 }
@@ -85,13 +78,11 @@ int    scma_release_snapshot(void *snapshot_buffer)
     release_result = 0;
     if (scma_mutex_lock() != 0)
     {
-        ft_errno = FT_ERR_SYS_MUTEX_LOCK_FAILED;
         ft_global_error_stack_push(FT_ERR_SYS_MUTEX_LOCK_FAILED);
         return (0);
     }
     if (!scma_initialized_ref())
     {
-        ft_errno = FT_ERR_INVALID_STATE;
         ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return (scma_unlock_and_return_int(0));
     }
@@ -99,24 +90,20 @@ int    scma_release_snapshot(void *snapshot_buffer)
     {
         if (snapshot_buffer != ft_nullptr)
         {
-            ft_errno = FT_ERR_INVALID_POINTER;
             ft_global_error_stack_push(FT_ERR_INVALID_POINTER);
             return (scma_unlock_and_return_int(0));
         }
         scma_reset_live_snapshot();
-        ft_errno = FT_ERR_SUCCESSS;
         ft_global_error_stack_push(FT_ERR_SUCCESSS);
         release_result = 1;
         return (scma_unlock_and_return_int(release_result));
     }
     if (snapshot_buffer != snapshot.data)
     {
-        ft_errno = FT_ERR_INVALID_POINTER;
         ft_global_error_stack_push(FT_ERR_INVALID_POINTER);
         return (scma_unlock_and_return_int(0));
     }
     scma_reset_live_snapshot();
-    ft_errno = FT_ERR_SUCCESSS;
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     release_result = 1;
     return (scma_unlock_and_return_int(release_result));

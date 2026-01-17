@@ -16,35 +16,30 @@ int    scma_write(scma_handle handle, ft_size_t offset,
     if (scma_mutex_lock() != 0)
     {
         error_code = FT_ERR_SYS_MUTEX_LOCK_FAILED;
-        ft_errno = error_code;
         ft_global_error_stack_push(error_code);
         return (0);
     }
     if (!scma_validate_handle(handle, &block))
     {
         error_code = FT_ERR_INVALID_HANDLE;
-        ft_errno = error_code;
         ft_global_error_stack_push(error_code);
         return (scma_unlock_and_return_int(0));
     }
     if (!source)
     {
         error_code = FT_ERR_INVALID_POINTER;
-        ft_errno = error_code;
         ft_global_error_stack_push(error_code);
         return (scma_unlock_and_return_int(0));
     }
     if (offset > block->size)
     {
         error_code = FT_ERR_OUT_OF_RANGE;
-        ft_errno = error_code;
         ft_global_error_stack_push(error_code);
         return (scma_unlock_and_return_int(0));
     }
     if (size > block->size - offset)
     {
         error_code = FT_ERR_OUT_OF_RANGE;
-        ft_errno = error_code;
         ft_global_error_stack_push(error_code);
         return (scma_unlock_and_return_int(0));
     }
@@ -54,7 +49,6 @@ int    scma_write(scma_handle handle, ft_size_t offset,
         static_cast<size_t>(size));
     scma_update_tracked_snapshot(handle, offset, source, size);
     error_code = FT_ERR_SUCCESSS;
-    ft_errno = error_code;
     ft_global_error_stack_push(error_code);
     write_result = 1;
     return (scma_unlock_and_return_int(write_result));
@@ -72,35 +66,30 @@ int    scma_read(scma_handle handle, ft_size_t offset,
     if (scma_mutex_lock() != 0)
     {
         error_code = FT_ERR_SYS_MUTEX_LOCK_FAILED;
-        ft_errno = error_code;
         ft_global_error_stack_push(error_code);
         return (0);
     }
     if (!scma_validate_handle(handle, &block))
     {
         error_code = FT_ERR_INVALID_HANDLE;
-        ft_errno = error_code;
         ft_global_error_stack_push(error_code);
         return (scma_unlock_and_return_int(0));
     }
     if (!destination)
     {
         error_code = FT_ERR_INVALID_POINTER;
-        ft_errno = error_code;
         ft_global_error_stack_push(error_code);
         return (scma_unlock_and_return_int(0));
     }
     if (offset > block->size)
     {
         error_code = FT_ERR_OUT_OF_RANGE;
-        ft_errno = error_code;
         ft_global_error_stack_push(error_code);
         return (scma_unlock_and_return_int(0));
     }
     if (size > block->size - offset)
     {
         error_code = FT_ERR_OUT_OF_RANGE;
-        ft_errno = error_code;
         ft_global_error_stack_push(error_code);
         return (scma_unlock_and_return_int(0));
     }
@@ -109,7 +98,6 @@ int    scma_read(scma_handle handle, ft_size_t offset,
         heap_data + static_cast<size_t>(block->offset + offset),
         static_cast<size_t>(size));
     error_code = FT_ERR_SUCCESSS;
-    ft_errno = error_code;
     ft_global_error_stack_push(error_code);
     read_result = 1;
     return (scma_unlock_and_return_int(read_result));

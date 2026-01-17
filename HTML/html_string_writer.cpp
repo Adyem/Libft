@@ -18,17 +18,19 @@ static void html_append_literal(char *destination, size_t *output_index, const c
     return ;
 }
 
-static char *html_escape_attribute_value(const char *value)
+static char *html_escape_attribute_value(const char *value, int *error_code)
 {
     size_t  input_length;
     size_t  input_index;
     size_t  output_length;
     char    *escaped_value;
     size_t  output_index;
+    int     local_error;
 
     if (!value)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        if (error_code != ft_nullptr)
+            *error_code = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     input_length = ft_strlen(value);
@@ -50,9 +52,13 @@ static char *html_escape_attribute_value(const char *value)
         input_index += 1;
     }
     escaped_value = static_cast<char *>(cma_malloc(output_length + 1));
+    local_error = ft_global_error_stack_pop_newest();
     if (!escaped_value)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        if (local_error == FT_ERR_SUCCESSS)
+            local_error = FT_ERR_NO_MEMORY;
+        if (error_code != ft_nullptr)
+            *error_code = local_error;
         return (ft_nullptr);
     }
     input_index = 0;
@@ -80,18 +86,24 @@ static char *html_escape_attribute_value(const char *value)
         input_index += 1;
     }
     escaped_value[output_index] = '\0';
-    ft_errno = FT_ERR_SUCCESSS;
+    if (error_code != ft_nullptr)
+        *error_code = FT_ERR_SUCCESSS;
     return (escaped_value);
 }
 
-static char *html_attrs_to_string(html_attr *attribute)
+static char *html_attrs_to_string(html_attr *attribute, int *error_code)
 {
     char *result;
+    int  local_error;
 
     result = cma_strdup("");
+    local_error = ft_global_error_stack_pop_newest();
     if (!result)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        if (local_error == FT_ERR_SUCCESSS)
+            local_error = FT_ERR_NO_MEMORY;
+        if (error_code != ft_nullptr)
+            *error_code = local_error;
         return (ft_nullptr);
     }
     while (attribute)
@@ -106,78 +118,126 @@ static char *html_attrs_to_string(html_attr *attribute)
 
         lock_acquired = false;
         lock_status = html_attr_lock(attribute, &lock_acquired);
+        local_error = ft_global_error_stack_pop_newest();
         if (lock_status != 0)
         {
             cma_free(result);
+            ft_global_error_stack_pop_newest();
+            if (error_code != ft_nullptr)
+                *error_code = local_error;
             return (ft_nullptr);
         }
         if (!attribute->key || !attribute->value)
         {
             html_attr_unlock(attribute, lock_acquired);
+            ft_global_error_stack_pop_newest();
             cma_free(result);
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
+            ft_global_error_stack_pop_newest();
+            if (error_code != ft_nullptr)
+                *error_code = FT_ERR_INVALID_ARGUMENT;
             return (ft_nullptr);
         }
         key_copy = cma_strdup(attribute->key);
+        local_error = ft_global_error_stack_pop_newest();
         if (!key_copy)
         {
             html_attr_unlock(attribute, lock_acquired);
+            ft_global_error_stack_pop_newest();
             cma_free(result);
-            ft_errno = FT_ERR_NO_MEMORY;
+            ft_global_error_stack_pop_newest();
+            if (local_error == FT_ERR_SUCCESSS)
+                local_error = FT_ERR_NO_MEMORY;
+            if (error_code != ft_nullptr)
+                *error_code = local_error;
             return (ft_nullptr);
         }
         value_copy = cma_strdup(attribute->value);
+        local_error = ft_global_error_stack_pop_newest();
         if (!value_copy)
         {
             cma_free(key_copy);
+            ft_global_error_stack_pop_newest();
             html_attr_unlock(attribute, lock_acquired);
+            ft_global_error_stack_pop_newest();
             cma_free(result);
-            ft_errno = FT_ERR_NO_MEMORY;
+            ft_global_error_stack_pop_newest();
+            if (local_error == FT_ERR_SUCCESSS)
+                local_error = FT_ERR_NO_MEMORY;
+            if (error_code != ft_nullptr)
+                *error_code = local_error;
             return (ft_nullptr);
         }
         next_attribute = attribute->next;
         html_attr_unlock(attribute, lock_acquired);
-        escaped_value = html_escape_attribute_value(value_copy);
+        ft_global_error_stack_pop_newest();
+        escaped_value = html_escape_attribute_value(value_copy, &local_error);
         cma_free(value_copy);
+        ft_global_error_stack_pop_newest();
         if (!escaped_value)
         {
             cma_free(key_copy);
+            ft_global_error_stack_pop_newest();
             cma_free(result);
+            ft_global_error_stack_pop_newest();
+            if (error_code != ft_nullptr)
+                *error_code = local_error;
             return (ft_nullptr);
         }
         attr = cma_strjoin_multiple(5, " ", key_copy, "=\"", escaped_value, "\"");
+        local_error = ft_global_error_stack_pop_newest();
         cma_free(key_copy);
+        ft_global_error_stack_pop_newest();
         cma_free(escaped_value);
+        ft_global_error_stack_pop_newest();
         if (!attr)
         {
             cma_free(result);
-            ft_errno = FT_ERR_NO_MEMORY;
+            ft_global_error_stack_pop_newest();
+            if (local_error == FT_ERR_SUCCESSS)
+                local_error = FT_ERR_NO_MEMORY;
+            if (error_code != ft_nullptr)
+                *error_code = local_error;
             return (ft_nullptr);
         }
         char *tmp;
 
         tmp = cma_strjoin(result, attr);
+        local_error = ft_global_error_stack_pop_newest();
         cma_free(result);
+        ft_global_error_stack_pop_newest();
         cma_free(attr);
+        ft_global_error_stack_pop_newest();
         if (!tmp)
         {
-            ft_errno = FT_ERR_NO_MEMORY;
+            if (local_error == FT_ERR_SUCCESSS)
+                local_error = FT_ERR_NO_MEMORY;
+            if (error_code != ft_nullptr)
+                *error_code = local_error;
             return (ft_nullptr);
         }
         result = tmp;
         attribute = next_attribute;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    if (error_code != ft_nullptr)
+        *error_code = FT_ERR_SUCCESSS;
     return (result);
 }
 
-static char *html_indent(int indent)
+static char *html_indent(int indent, int *error_code)
 {
-    int spaces = indent * 2;
-    char *result = static_cast<char*>(cma_calloc(spaces + 1, sizeof(char)));
+    int spaces;
+    char *result;
+    int local_error;
+
+    spaces = indent * 2;
+    result = static_cast<char*>(cma_calloc(spaces + 1, sizeof(char)));
+    local_error = ft_global_error_stack_pop_newest();
     if (!result)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        if (local_error == FT_ERR_SUCCESSS)
+            local_error = FT_ERR_NO_MEMORY;
+        if (error_code != ft_nullptr)
+            *error_code = local_error;
         return (ft_nullptr);
     }
     int index = 0;
@@ -186,114 +246,182 @@ static char *html_indent(int indent)
         result[index] = ' ';
         ++index;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    if (error_code != ft_nullptr)
+        *error_code = FT_ERR_SUCCESSS;
     return (result);
 }
 
-static char *html_node_to_string(html_node *node, int indent)
+static char *html_node_to_string(html_node *node, int indent, int *error_code)
 {
     bool node_lock_acquired;
     int  lock_status;
     char *result;
+    int  local_error;
 
     node_lock_acquired = false;
     lock_status = html_node_lock(node, &node_lock_acquired);
+    local_error = ft_global_error_stack_pop_newest();
     if (lock_status != 0)
-        return (ft_nullptr);
-    result = cma_strdup("");
-    if (!result)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
-        html_node_unlock(node, node_lock_acquired);
+        if (error_code != ft_nullptr)
+            *error_code = local_error;
         return (ft_nullptr);
     }
-    char *pad = html_indent(indent);
+    result = cma_strdup("");
+    local_error = ft_global_error_stack_pop_newest();
+    if (!result)
+    {
+        html_node_unlock(node, node_lock_acquired);
+        ft_global_error_stack_pop_newest();
+        if (local_error == FT_ERR_SUCCESSS)
+            local_error = FT_ERR_NO_MEMORY;
+        if (error_code != ft_nullptr)
+            *error_code = local_error;
+        return (ft_nullptr);
+    }
+    char *pad = html_indent(indent, &local_error);
     if (!pad)
     {
         cma_free(result);
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_pop_newest();
         html_node_unlock(node, node_lock_acquired);
+        ft_global_error_stack_pop_newest();
+        if (error_code != ft_nullptr)
+            *error_code = local_error;
         return (ft_nullptr);
     }
     char *tmp = cma_strjoin(result, pad);
+    local_error = ft_global_error_stack_pop_newest();
     cma_free(result);
+    ft_global_error_stack_pop_newest();
     cma_free(pad);
+    ft_global_error_stack_pop_newest();
     if (!tmp)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
         html_node_unlock(node, node_lock_acquired);
+        ft_global_error_stack_pop_newest();
+        if (local_error == FT_ERR_SUCCESSS)
+            local_error = FT_ERR_NO_MEMORY;
+        if (error_code != ft_nullptr)
+            *error_code = local_error;
         return (ft_nullptr);
     }
     result = tmp;
-    char *attrs = html_attrs_to_string(node->attributes);
+    char *attrs = html_attrs_to_string(node->attributes, &local_error);
     if (!attrs)
     {
         cma_free(result);
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_pop_newest();
         html_node_unlock(node, node_lock_acquired);
+        ft_global_error_stack_pop_newest();
+        if (error_code != ft_nullptr)
+            *error_code = local_error;
         return (ft_nullptr);
     }
     char *open = cma_strjoin_multiple(3, "<", node->tag, attrs);
+    local_error = ft_global_error_stack_pop_newest();
     cma_free(attrs);
+    ft_global_error_stack_pop_newest();
     if (!open)
     {
         cma_free(result);
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_pop_newest();
         html_node_unlock(node, node_lock_acquired);
+        ft_global_error_stack_pop_newest();
+        if (local_error == FT_ERR_SUCCESSS)
+            local_error = FT_ERR_NO_MEMORY;
+        if (error_code != ft_nullptr)
+            *error_code = local_error;
         return (ft_nullptr);
     }
     if (!node->text && !node->children)
     {
         char *line = cma_strjoin_multiple(3, open, "/>", "\n");
+        local_error = ft_global_error_stack_pop_newest();
         cma_free(open);
+        ft_global_error_stack_pop_newest();
         if (!line)
         {
             cma_free(result);
-            ft_errno = FT_ERR_NO_MEMORY;
+            ft_global_error_stack_pop_newest();
             html_node_unlock(node, node_lock_acquired);
+            ft_global_error_stack_pop_newest();
+            if (local_error == FT_ERR_SUCCESSS)
+                local_error = FT_ERR_NO_MEMORY;
+            if (error_code != ft_nullptr)
+                *error_code = local_error;
             return (ft_nullptr);
         }
         tmp = cma_strjoin(result, line);
+        local_error = ft_global_error_stack_pop_newest();
         cma_free(result);
+        ft_global_error_stack_pop_newest();
         cma_free(line);
+        ft_global_error_stack_pop_newest();
         if (!tmp)
         {
-            ft_errno = FT_ERR_NO_MEMORY;
             html_node_unlock(node, node_lock_acquired);
+            ft_global_error_stack_pop_newest();
+            if (local_error == FT_ERR_SUCCESSS)
+                local_error = FT_ERR_NO_MEMORY;
+            if (error_code != ft_nullptr)
+                *error_code = local_error;
             return (ft_nullptr);
         }
         result = tmp;
-        ft_errno = FT_ERR_SUCCESSS;
         html_node_unlock(node, node_lock_acquired);
+        ft_global_error_stack_pop_newest();
+        if (error_code != ft_nullptr)
+            *error_code = FT_ERR_SUCCESSS;
         return (result);
     }
     tmp = cma_strjoin_multiple(2, open, ">");
+    local_error = ft_global_error_stack_pop_newest();
     cma_free(open);
+    ft_global_error_stack_pop_newest();
     if (!tmp)
     {
         cma_free(result);
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_pop_newest();
         html_node_unlock(node, node_lock_acquired);
+        ft_global_error_stack_pop_newest();
+        if (local_error == FT_ERR_SUCCESSS)
+            local_error = FT_ERR_NO_MEMORY;
+        if (error_code != ft_nullptr)
+            *error_code = local_error;
         return (ft_nullptr);
     }
     char *joined = cma_strjoin(result, tmp);
+    local_error = ft_global_error_stack_pop_newest();
     cma_free(result);
+    ft_global_error_stack_pop_newest();
     cma_free(tmp);
+    ft_global_error_stack_pop_newest();
     if (!joined)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
         html_node_unlock(node, node_lock_acquired);
+        ft_global_error_stack_pop_newest();
+        if (local_error == FT_ERR_SUCCESSS)
+            local_error = FT_ERR_NO_MEMORY;
+        if (error_code != ft_nullptr)
+            *error_code = local_error;
         return (ft_nullptr);
     }
     result = joined;
     if (node->text)
     {
         tmp = cma_strjoin(result, node->text);
+        local_error = ft_global_error_stack_pop_newest();
         cma_free(result);
+        ft_global_error_stack_pop_newest();
         if (!tmp)
         {
-            ft_errno = FT_ERR_NO_MEMORY;
             html_node_unlock(node, node_lock_acquired);
+            ft_global_error_stack_pop_newest();
+            if (local_error == FT_ERR_SUCCESSS)
+                local_error = FT_ERR_NO_MEMORY;
+            if (error_code != ft_nullptr)
+                *error_code = local_error;
             return (ft_nullptr);
         }
         result = tmp;
@@ -301,94 +429,148 @@ static char *html_node_to_string(html_node *node, int indent)
     if (node->children)
     {
         tmp = cma_strjoin(result, "\n");
+        local_error = ft_global_error_stack_pop_newest();
         cma_free(result);
+        ft_global_error_stack_pop_newest();
         if (!tmp)
         {
-            ft_errno = FT_ERR_NO_MEMORY;
             html_node_unlock(node, node_lock_acquired);
+            ft_global_error_stack_pop_newest();
+            if (local_error == FT_ERR_SUCCESSS)
+                local_error = FT_ERR_NO_MEMORY;
+            if (error_code != ft_nullptr)
+                *error_code = local_error;
             return (ft_nullptr);
         }
         result = tmp;
         html_node *child = node->children;
         while (child)
         {
-            char *child_str = html_node_to_string(child, indent + 1);
+            char *child_str = html_node_to_string(child, indent + 1, &local_error);
             if (!child_str)
             {
                 cma_free(result);
-                ft_errno = FT_ERR_NO_MEMORY;
+                ft_global_error_stack_pop_newest();
                 html_node_unlock(node, node_lock_acquired);
+                ft_global_error_stack_pop_newest();
+                if (error_code != ft_nullptr)
+                    *error_code = local_error;
                 return (ft_nullptr);
             }
             tmp = cma_strjoin(result, child_str);
+            local_error = ft_global_error_stack_pop_newest();
             cma_free(result);
+            ft_global_error_stack_pop_newest();
             cma_free(child_str);
+            ft_global_error_stack_pop_newest();
             if (!tmp)
             {
-                ft_errno = FT_ERR_NO_MEMORY;
                 html_node_unlock(node, node_lock_acquired);
+                ft_global_error_stack_pop_newest();
+                if (local_error == FT_ERR_SUCCESSS)
+                    local_error = FT_ERR_NO_MEMORY;
+                if (error_code != ft_nullptr)
+                    *error_code = local_error;
                 return (ft_nullptr);
             }
             result = tmp;
             child = child->next;
         }
-        pad = html_indent(indent);
+        pad = html_indent(indent, &local_error);
         if (!pad)
         {
             cma_free(result);
-            ft_errno = FT_ERR_NO_MEMORY;
+            ft_global_error_stack_pop_newest();
             html_node_unlock(node, node_lock_acquired);
+            ft_global_error_stack_pop_newest();
+            if (error_code != ft_nullptr)
+                *error_code = local_error;
             return (ft_nullptr);
         }
         tmp = cma_strjoin(result, pad);
+        local_error = ft_global_error_stack_pop_newest();
         cma_free(result);
+        ft_global_error_stack_pop_newest();
         cma_free(pad);
+        ft_global_error_stack_pop_newest();
         if (!tmp)
         {
-            ft_errno = FT_ERR_NO_MEMORY;
             html_node_unlock(node, node_lock_acquired);
+            ft_global_error_stack_pop_newest();
+            if (local_error == FT_ERR_SUCCESSS)
+                local_error = FT_ERR_NO_MEMORY;
+            if (error_code != ft_nullptr)
+                *error_code = local_error;
             return (ft_nullptr);
         }
         result = tmp;
     }
     char *close_start = cma_strjoin_multiple(2, "</", node->tag);
+    local_error = ft_global_error_stack_pop_newest();
     if (!close_start)
     {
         cma_free(result);
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_pop_newest();
         html_node_unlock(node, node_lock_acquired);
+        ft_global_error_stack_pop_newest();
+        if (local_error == FT_ERR_SUCCESSS)
+            local_error = FT_ERR_NO_MEMORY;
+        if (error_code != ft_nullptr)
+            *error_code = local_error;
         return (ft_nullptr);
     }
     char *close = cma_strjoin_multiple(3, close_start, ">", "\n");
+    local_error = ft_global_error_stack_pop_newest();
     cma_free(close_start);
+    ft_global_error_stack_pop_newest();
     if (!close)
     {
         cma_free(result);
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_pop_newest();
         html_node_unlock(node, node_lock_acquired);
+        ft_global_error_stack_pop_newest();
+        if (local_error == FT_ERR_SUCCESSS)
+            local_error = FT_ERR_NO_MEMORY;
+        if (error_code != ft_nullptr)
+            *error_code = local_error;
         return (ft_nullptr);
     }
     tmp = cma_strjoin(result, close);
+    local_error = ft_global_error_stack_pop_newest();
     cma_free(result);
+    ft_global_error_stack_pop_newest();
     cma_free(close);
+    ft_global_error_stack_pop_newest();
     if (!tmp)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
         html_node_unlock(node, node_lock_acquired);
+        ft_global_error_stack_pop_newest();
+        if (local_error == FT_ERR_SUCCESSS)
+            local_error = FT_ERR_NO_MEMORY;
+        if (error_code != ft_nullptr)
+            *error_code = local_error;
         return (ft_nullptr);
     }
     result = tmp;
-    ft_errno = FT_ERR_SUCCESSS;
     html_node_unlock(node, node_lock_acquired);
+    ft_global_error_stack_pop_newest();
+    if (error_code != ft_nullptr)
+        *error_code = FT_ERR_SUCCESSS;
     return (result);
 }
 
 char *html_write_to_string(html_node *nodeList)
 {
-    char *result = cma_strdup("");
+    char *result;
+    int error_code;
+
+    result = cma_strdup("");
+    error_code = ft_global_error_stack_pop_newest();
     if (!result)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }
     html_node *current = nodeList;
@@ -400,32 +582,41 @@ char *html_write_to_string(html_node *nodeList)
 
         node_lock_acquired = false;
         lock_status = html_node_lock(current, &node_lock_acquired);
+        ft_global_error_stack_pop_newest();
         if (lock_status == 0 && node_lock_acquired)
         {
             next_node = current->next;
             html_node_unlock(current, node_lock_acquired);
+            ft_global_error_stack_pop_newest();
         }
         else
             next_node = current->next;
-        char *node_str = html_node_to_string(current, 0);
+        char *node_str = html_node_to_string(current, 0, &error_code);
         if (!node_str)
         {
             cma_free(result);
-            ft_errno = FT_ERR_NO_MEMORY;
+            ft_global_error_stack_pop_newest();
+            if (error_code == FT_ERR_SUCCESSS)
+                error_code = FT_ERR_NO_MEMORY;
+            ft_global_error_stack_push(error_code);
             return (ft_nullptr);
         }
         char *tmp = cma_strjoin(result, node_str);
+        error_code = ft_global_error_stack_pop_newest();
         cma_free(result);
+        ft_global_error_stack_pop_newest();
         cma_free(node_str);
+        ft_global_error_stack_pop_newest();
         if (!tmp)
         {
-            ft_errno = FT_ERR_NO_MEMORY;
+            if (error_code == FT_ERR_SUCCESSS)
+                error_code = FT_ERR_NO_MEMORY;
+            ft_global_error_stack_push(error_code);
             return (ft_nullptr);
         }
         result = tmp;
         current = next_node;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
-

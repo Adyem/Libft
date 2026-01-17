@@ -252,9 +252,12 @@ static int logger_snapshot_network_sinks(ft_vector<s_network_sink_snapshot> &sna
             return (-1);
         }
         log_sink_lock_acquired = false;
-        if (log_sink_lock(&stored_entry, &log_sink_lock_acquired) != 0)
+        int log_sink_lock_error;
+
+        log_sink_lock_error = log_sink_lock(&stored_entry, &log_sink_lock_acquired);
+        if (log_sink_lock_error != FT_ERR_SUCCESSS)
         {
-            final_error = ft_errno;
+            final_error = log_sink_lock_error;
             if (logger_unlock_sinks() != 0)
                 return (-1);
             ft_errno = final_error;
@@ -274,9 +277,12 @@ static int logger_snapshot_network_sinks(ft_vector<s_network_sink_snapshot> &sna
             network_lock_acquired = false;
             if (network_sink)
             {
-                if (network_sink_lock(network_sink, &network_lock_acquired) != 0)
+                int network_lock_error;
+
+                network_lock_error = network_sink_lock(network_sink, &network_lock_acquired);
+                if (network_lock_error != FT_ERR_SUCCESSS)
                 {
-                    final_error = ft_errno;
+                    final_error = network_lock_error;
                     if (network_lock_acquired)
                         network_sink_unlock(network_sink, network_lock_acquired);
                     if (log_sink_lock_acquired)

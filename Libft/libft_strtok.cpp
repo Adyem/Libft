@@ -2,12 +2,6 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 
-static char *report_strtok_result(int error_code, char *result)
-{
-    ft_global_error_stack_push(error_code);
-    return (result);
-}
-
 char    *ft_strtok(char *string, const char *delimiters)
 {
     static thread_local char *saved_string = ft_nullptr;
@@ -36,11 +30,15 @@ char    *ft_strtok(char *string, const char *delimiters)
         cached_delimiters_hash = 0;
     }
     if (delimiters == ft_nullptr)
-        return (report_strtok_result(FT_ERR_INVALID_ARGUMENT, ft_nullptr));
+    {
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
+        return (ft_nullptr);
+    }
     if (saved_string == ft_nullptr)
     {
         error_code = FT_ERR_SUCCESSS;
-        return (report_strtok_result(error_code, ft_nullptr));
+        ft_global_error_stack_push(error_code);
+        return (ft_nullptr);
     }
     new_delimiters_hash = 5381;
     delimiter_index = 0;
@@ -89,7 +87,8 @@ char    *ft_strtok(char *string, const char *delimiters)
     {
         saved_string = ft_nullptr;
         error_code = FT_ERR_SUCCESSS;
-        return (report_strtok_result(error_code, ft_nullptr));
+        ft_global_error_stack_push(error_code);
+        return (ft_nullptr);
     }
     token_start = current_pointer;
     while (*current_pointer != '\0')
@@ -107,5 +106,6 @@ char    *ft_strtok(char *string, const char *delimiters)
         saved_string = current_pointer + 1;
     }
     error_code = FT_ERR_SUCCESSS;
-    return (report_strtok_result(error_code, token_start));
+    ft_global_error_stack_push(error_code);
+    return (token_start);
 }

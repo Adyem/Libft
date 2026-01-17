@@ -8,19 +8,16 @@
 #include <cerrno>
 #include <cstdio>
 
-static FILE *report_open_error(int error_code)
-{
-    ft_global_error_stack_push(error_code);
-    return (ft_nullptr);
-}
-
 FILE *ft_fopen(const char *filename, const char *mode)
 {
     FILE *file_handle;
     int error_code;
 
     if (filename == ft_nullptr || mode == ft_nullptr)
-        return (report_open_error(FT_ERR_INVALID_ARGUMENT));
+    {
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
+        return (ft_nullptr);
+    }
     file_handle = std::fopen(filename, mode);
     if (file_handle == ft_nullptr)
     {
@@ -36,7 +33,8 @@ FILE *ft_fopen(const char *filename, const char *mode)
         }
         else
             error_code = FT_ERR_INVALID_HANDLE;
-        return (report_open_error(error_code));
+        ft_global_error_stack_push(error_code);
+        return (ft_nullptr);
     }
     error_code = FT_ERR_SUCCESSS;
     ft_global_error_stack_push(error_code);

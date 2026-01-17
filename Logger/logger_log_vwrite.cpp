@@ -421,11 +421,13 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
         }
         bool sink_lock_acquired;
         int sink_error;
+        int sink_lock_error;
 
         sink_lock_acquired = false;
         sink_error = FT_ERR_SUCCESSS;
-        if (log_sink_lock(&entry, &sink_lock_acquired) != 0)
-            sink_error = ft_errno;
+        sink_lock_error = log_sink_lock(&entry, &sink_lock_acquired);
+        if (sink_lock_error != FT_ERR_SUCCESSS)
+            sink_error = sink_lock_error;
         else
         {
             bool rotate_for_size_pre;

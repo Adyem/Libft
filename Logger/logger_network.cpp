@@ -11,10 +11,11 @@ int ft_log_set_remote_sink(const char *host, unsigned short port, bool use_tcp)
     struct sockaddr_in address;
     int socket_fd;
     int socket_type;
+    int error_code;
 
     if (!host)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     socket_type = SOCK_DGRAM;
@@ -23,8 +24,7 @@ int ft_log_set_remote_sink(const char *host, unsigned short port, bool use_tcp)
     socket_fd = nw_socket(AF_INET, socket_type, 0);
     if (socket_fd < 0)
     {
-        if (ft_errno == FT_ERR_SUCCESSS)
-            ft_errno = FT_ERR_SOCKET_CREATION_FAILED;
+        ft_global_error_stack_push(FT_ERR_SOCKET_CREATION_FAILED);
         return (-1);
     }
     ft_memset(&address, 0, sizeof(address));
@@ -33,7 +33,7 @@ int ft_log_set_remote_sink(const char *host, unsigned short port, bool use_tcp)
     if (nw_inet_pton(AF_INET, host, &address.sin_addr) != 1)
     {
         su_close(socket_fd);
-        ft_errno = FT_ERR_INVALID_IP_FORMAT;
+        ft_global_error_stack_push(FT_ERR_INVALID_IP_FORMAT);
         return (-1);
     }
     if (use_tcp)
@@ -41,8 +41,7 @@ int ft_log_set_remote_sink(const char *host, unsigned short port, bool use_tcp)
         if (nw_connect(socket_fd, reinterpret_cast<struct sockaddr *>(&address), sizeof(address)) != 0)
         {
             su_close(socket_fd);
-            if (ft_errno == FT_ERR_SUCCESSS)
-                ft_errno = FT_ERR_SOCKET_CONNECT_FAILED;
+            ft_global_error_stack_push(FT_ERR_SOCKET_CONNECT_FAILED);
             return (-1);
         }
     }
@@ -54,7 +53,7 @@ int ft_log_set_remote_sink(const char *host, unsigned short port, bool use_tcp)
     if (!sink)
     {
         su_close(socket_fd);
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (-1);
     }
     sink->socket_fd = socket_fd;
@@ -66,29 +65,29 @@ int ft_log_set_remote_sink(const char *host, unsigned short port, bool use_tcp)
     {
         su_close(socket_fd);
         delete sink;
-        ft_errno = sink->host.get_error();
+        ft_global_error_stack_push(sink->host.get_error());
         return (-1);
     }
-    if (network_sink_prepare_thread_safety(sink) != 0)
+    error_code = network_sink_prepare_thread_safety(sink);
+    if (error_code != FT_ERR_SUCCESSS)
     {
-        int prepare_error;
-
-        prepare_error = ft_errno;
         su_close(socket_fd);
         delete sink;
-        ft_errno = prepare_error;
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     if (ft_log_add_sink(ft_network_sink, sink) != 0)
     {
+        error_code = ft_global_error_stack_pop_newest();
         su_close(socket_fd);
         network_sink_teardown_thread_safety(sink);
         delete sink;
-        if (ft_errno == FT_ERR_SUCCESSS)
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -140,7 +139,6 @@ void ft_network_sink(const char *message, void *user_data)
     final_errno = FT_ERR_SUCCESSS;
 
 cleanup:
-    ft_errno = final_errno;
     if (lock_acquired)
         network_sink_unlock(sink, lock_acquired);
     return ;

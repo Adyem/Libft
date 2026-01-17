@@ -24,23 +24,20 @@ static void ft_log_process_message(const ft_string &message)
 {
     size_t sink_count;
     ft_vector<s_log_sink> sinks_snapshot;
-    int    final_error;
+    int    lock_error;
 
-    if (logger_lock_sinks() != 0)
+    lock_error = logger_lock_sinks();
+    if (lock_error != FT_ERR_SUCCESSS)
         return ;
     sink_count = g_sinks.size();
     if (g_sinks.get_error() != FT_ERR_SUCCESSS)
     {
-        final_error = g_sinks.get_error();
-        if (logger_unlock_sinks() != 0)
-            return ;
-        ft_errno = final_error;
+        logger_unlock_sinks();
         return ;
     }
     if (sink_count == 0)
     {
-        if (logger_unlock_sinks() != 0)
-            return ;
+        logger_unlock_sinks();
         ssize_t write_result;
         write_result = write(1, message.c_str(), message.size());
         (void)write_result;
@@ -54,27 +51,18 @@ static void ft_log_process_message(const ft_string &message)
         entry = g_sinks[index];
         if (g_sinks.get_error() != FT_ERR_SUCCESSS)
         {
-            final_error = g_sinks.get_error();
-            if (logger_unlock_sinks() != 0)
-            {
-                return ;
-            }
-            ft_errno = final_error;
+            logger_unlock_sinks();
             return ;
         }
         sinks_snapshot.push_back(entry);
         if (sinks_snapshot.get_error() != FT_ERR_SUCCESSS)
         {
-            final_error = sinks_snapshot.get_error();
-            if (logger_unlock_sinks() != 0)
-                return ;
-            ft_errno = final_error;
+            logger_unlock_sinks();
             return ;
         }
         index++;
     }
-    if (logger_unlock_sinks() != 0)
-        return ;
+    logger_unlock_sinks();
     index = 0;
     while (index < sink_count)
     {
@@ -82,20 +70,15 @@ static void ft_log_process_message(const ft_string &message)
 
         entry = sinks_snapshot[index];
         if (sinks_snapshot.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = sinks_snapshot.get_error();
             return ;
-        }
         bool sink_lock_acquired;
         int  sink_error;
+        int  sink_lock_error;
 
         sink_lock_acquired = false;
-        sink_error = FT_ERR_SUCCESSS;
-        if (log_sink_lock(&entry, &sink_lock_acquired) != 0)
-        {
-            sink_error = ft_errno;
-        }
-        else
+        sink_lock_error = log_sink_lock(&entry, &sink_lock_acquired);
+        sink_error = sink_lock_error;
+        if (sink_error == FT_ERR_SUCCESSS)
         {
             bool        rotate_for_size_pre;
             bool        rotate_for_age_pre;
@@ -108,7 +91,7 @@ static void ft_log_process_message(const ft_string &message)
             {
                 file_sink = static_cast<s_file_sink *>(entry.user_data);
                 if (logger_prepare_rotation(file_sink, &rotate_for_size_pre, &rotate_for_age_pre) != 0)
-                    sink_error = ft_errno;
+                    sink_error = FT_ERR_INVALID_OPERATION;
             }
             if (sink_error == FT_ERR_SUCCESSS)
                 entry.function(message.c_str(), entry.user_data);
@@ -120,22 +103,17 @@ static void ft_log_process_message(const ft_string &message)
                 rotate_for_size_post = false;
                 rotate_for_age_post = false;
                 if (logger_prepare_rotation(file_sink, &rotate_for_size_post, &rotate_for_age_post) != 0)
-                    sink_error = ft_errno;
+                    sink_error = FT_ERR_INVALID_OPERATION;
                 else if (rotate_for_size_pre || rotate_for_age_pre || rotate_for_size_post || rotate_for_age_post)
                 {
                     logger_execute_rotation(file_sink);
-                    if (ft_errno != FT_ERR_SUCCESSS)
-                        sink_error = ft_errno;
                 }
             }
         }
         if (sink_lock_acquired)
             log_sink_unlock(&entry, sink_lock_acquired);
         if (sink_error != FT_ERR_SUCCESSS)
-        {
-            ft_errno = sink_error;
             return ;
-        }
         index++;
     }
     return ;
@@ -149,10 +127,7 @@ static void *ft_log_worker(void *argument)
 
     (void)argument;
     if (pthread_mutex_lock(&g_condition_mutex) != 0)
-    {
-        ft_errno = ft_map_system_error(errno);
         return (ft_nullptr);
-    }
     while (1)
     {
         queue_is_empty = g_log_queue.empty();
@@ -178,10 +153,7 @@ static void *ft_log_worker(void *argument)
             if (queue_error == FT_ERR_SUCCESSS)
                 ft_log_process_message(message);
             if (pthread_mutex_lock(&g_condition_mutex) != 0)
-            {
-                ft_errno = ft_map_system_error(errno);
                 return (ft_nullptr);
-            }
         }
     }
     pthread_mutex_unlock(&g_condition_mutex);
@@ -192,7 +164,7 @@ void ft_log_enable_async(bool enable)
 {
     if (pthread_mutex_lock(&g_condition_mutex) != 0)
     {
-        ft_errno = ft_map_system_error(errno);
+        ft_global_error_stack_push(ft_map_system_error(errno));
         return ;
     }
     if (enable)
@@ -200,7 +172,7 @@ void ft_log_enable_async(bool enable)
         if (g_async_running)
         {
             pthread_mutex_unlock(&g_condition_mutex);
-            ft_errno = FT_ERR_SUCCESSS;
+            ft_global_error_stack_push(FT_ERR_SUCCESSS);
             return ;
         }
         g_async_running = true;
@@ -212,21 +184,21 @@ void ft_log_enable_async(bool enable)
         {
             if (pthread_mutex_lock(&g_condition_mutex) != 0)
             {
-                ft_errno = ft_map_system_error(errno);
+                ft_global_error_stack_push(ft_map_system_error(errno));
                 return ;
             }
             g_async_running = false;
             pthread_mutex_unlock(&g_condition_mutex);
         }
         else
-            ft_errno = FT_ERR_SUCCESSS;
+            ft_global_error_stack_push(FT_ERR_SUCCESSS);
     }
     else
     {
         if (!g_async_running)
         {
             pthread_mutex_unlock(&g_condition_mutex);
-            ft_errno = FT_ERR_SUCCESSS;
+            ft_global_error_stack_push(FT_ERR_SUCCESSS);
             return ;
         }
         g_async_running = false;
@@ -240,7 +212,7 @@ void ft_log_enable_async(bool enable)
             g_async_pending_messages = 0;
             pthread_mutex_unlock(&g_condition_mutex);
         }
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
     }
     return ;
 }
@@ -254,19 +226,20 @@ void ft_log_enqueue(t_log_level level, const char *fmt, va_list args)
     int queue_error;
     int signal_result;
     int unlock_result;
-    int final_error;
     int format_error;
     char message_buffer[1024];
     va_list args_copy;
+    int lock_error;
+    int redaction_error;
 
     if (!fmt)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     if (level < g_level)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return ;
     }
     va_copy(args_copy, args);
@@ -276,34 +249,50 @@ void ft_log_enqueue(t_log_level level, const char *fmt, va_list args)
     if (formatted_length < 0)
     {
         if (format_error != FT_ERR_SUCCESSS)
-            ft_errno = format_error;
+            ft_global_error_stack_push(format_error);
         return ;
     }
     message_text = ft_string(message_buffer);
     if (message_text.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = message_text.get_error();
+        ft_global_error_stack_push(message_text.get_error());
         return ;
     }
-    if (logger_lock_sinks() != 0)
-        return ;
-    if (logger_copy_redaction_rules(redaction_snapshot) != 0)
+    lock_error = logger_lock_sinks();
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        final_error = ft_errno;
-        if (logger_unlock_sinks() != 0)
-            return ;
-        ft_errno = final_error;
+        ft_global_error_stack_push(lock_error);
         return ;
     }
-    if (logger_unlock_sinks() != 0)
+    redaction_error = logger_copy_redaction_rules(redaction_snapshot);
+    if (redaction_error != FT_ERR_SUCCESSS)
+    {
+        lock_error = logger_unlock_sinks();
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(lock_error);
+            return ;
+        }
+        ft_global_error_stack_push(redaction_error);
         return ;
-    if (logger_apply_redactions(message_text, redaction_snapshot) != 0)
+    }
+    lock_error = logger_unlock_sinks();
+    if (lock_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(lock_error);
         return ;
+    }
+    redaction_error = logger_apply_redactions(message_text, redaction_snapshot);
+    if (redaction_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(redaction_error);
+        return ;
+    }
     if (logger_context_format_flat(context_fragment) != 0)
         return ;
     if (context_fragment.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = context_fragment.get_error();
+        ft_global_error_stack_push(context_fragment.get_error());
         return ;
     }
     if (context_fragment.size() > 0)
@@ -315,12 +304,12 @@ void ft_log_enqueue(t_log_level level, const char *fmt, va_list args)
         return ;
     if (final_message.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = final_message.get_error();
+        ft_global_error_stack_push(final_message.get_error());
         return ;
     }
     if (pthread_mutex_lock(&g_condition_mutex) != 0)
     {
-        ft_errno = ft_map_system_error(errno);
+        ft_global_error_stack_push(ft_map_system_error(errno));
         return ;
     }
     if (g_async_queue_limit > 0 && g_async_pending_messages >= g_async_queue_limit)
@@ -328,10 +317,10 @@ void ft_log_enqueue(t_log_level level, const char *fmt, va_list args)
         g_async_dropped_messages += 1;
         if (pthread_mutex_unlock(&g_condition_mutex) != 0)
         {
-            ft_errno = ft_map_system_error(errno);
+            ft_global_error_stack_push(ft_map_system_error(errno));
             return ;
         }
-        ft_errno = FT_ERR_FULL;
+        ft_global_error_stack_push(FT_ERR_FULL);
         return ;
     }
     g_log_queue.enqueue(final_message);
@@ -348,17 +337,17 @@ void ft_log_enqueue(t_log_level level, const char *fmt, va_list args)
     unlock_result = pthread_mutex_unlock(&g_condition_mutex);
     if (unlock_result != 0)
     {
-        ft_errno = ft_map_system_error(errno);
+        ft_global_error_stack_push(ft_map_system_error(errno));
         return ;
     }
     if (queue_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = queue_error;
+        ft_global_error_stack_push(queue_error);
         return ;
     }
     if (signal_result != 0)
         return ;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -366,7 +355,7 @@ void ft_log_set_async_queue_limit(size_t limit)
 {
     if (pthread_mutex_lock(&g_condition_mutex) != 0)
     {
-        ft_errno = ft_map_system_error(errno);
+        ft_global_error_stack_push(ft_map_system_error(errno));
         return ;
     }
     g_async_queue_limit = limit;
@@ -386,10 +375,10 @@ void ft_log_set_async_queue_limit(size_t limit)
             {
                 if (pthread_mutex_unlock(&g_condition_mutex) != 0)
                 {
-                    ft_errno = ft_map_system_error(errno);
+                    ft_global_error_stack_push(ft_map_system_error(errno));
                     return ;
                 }
-                ft_errno = drop_error;
+                ft_global_error_stack_push(drop_error);
                 return ;
             }
             if (g_async_pending_messages > 0)
@@ -400,10 +389,10 @@ void ft_log_set_async_queue_limit(size_t limit)
     }
     if (pthread_mutex_unlock(&g_condition_mutex) != 0)
     {
-        ft_errno = ft_map_system_error(errno);
+        ft_global_error_stack_push(ft_map_system_error(errno));
         return ;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -413,16 +402,16 @@ size_t ft_log_get_async_queue_limit()
 
     if (pthread_mutex_lock(&g_condition_mutex) != 0)
     {
-        ft_errno = ft_map_system_error(errno);
+        ft_global_error_stack_push(ft_map_system_error(errno));
         return (0);
     }
     limit = g_async_queue_limit;
     if (pthread_mutex_unlock(&g_condition_mutex) != 0)
     {
-        ft_errno = ft_map_system_error(errno);
+        ft_global_error_stack_push(ft_map_system_error(errno));
         return (0);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (limit);
 }
 
@@ -432,16 +421,19 @@ int ft_log_get_async_metrics(s_log_async_metrics *metrics)
 
     if (!metrics)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     metrics_lock_acquired = false;
     if (log_async_metrics_lock(metrics, &metrics_lock_acquired) != 0)
+    {
+        ft_global_error_stack_push(FT_ERR_SYS_MUTEX_LOCK_FAILED);
         return (-1);
+    }
     if (pthread_mutex_lock(&g_condition_mutex) != 0)
     {
         log_async_metrics_unlock(metrics, metrics_lock_acquired);
-        ft_errno = ft_map_system_error(errno);
+        ft_global_error_stack_push(ft_map_system_error(errno));
         return (-1);
     }
     metrics->pending_messages = g_async_pending_messages;
@@ -450,11 +442,11 @@ int ft_log_get_async_metrics(s_log_async_metrics *metrics)
     if (pthread_mutex_unlock(&g_condition_mutex) != 0)
     {
         log_async_metrics_unlock(metrics, metrics_lock_acquired);
-        ft_errno = ft_map_system_error(errno);
+        ft_global_error_stack_push(ft_map_system_error(errno));
         return (-1);
     }
     log_async_metrics_unlock(metrics, metrics_lock_acquired);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -462,16 +454,16 @@ void ft_log_reset_async_metrics()
 {
     if (pthread_mutex_lock(&g_condition_mutex) != 0)
     {
-        ft_errno = ft_map_system_error(errno);
+        ft_global_error_stack_push(ft_map_system_error(errno));
         return ;
     }
     g_async_peak_pending = g_async_pending_messages;
     g_async_dropped_messages = 0;
     if (pthread_mutex_unlock(&g_condition_mutex) != 0)
     {
-        ft_errno = ft_map_system_error(errno);
+        ft_global_error_stack_push(ft_map_system_error(errno));
         return ;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }

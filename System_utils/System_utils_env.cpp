@@ -6,17 +6,20 @@
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
 #include <cstdlib>
+#include <cerrno>
 #include <utility>
 #include "../Template/move.hpp"
+#if defined(_WIN32) || defined(_WIN64)
+# include <windows.h>
+#endif
 
 static pt_mutex g_env_mutex;
 
 static int su_environment_unlock_with_error(int error_code)
 {
     if (g_env_mutex.unlock(THREAD_ID) != FT_SUCCESS)
-        return (-1);
-    ft_errno = error_code;
-    return (-1);
+        return (FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
+    return (error_code);
 }
 
 static int su_environment_snapshot_contains(
@@ -30,20 +33,17 @@ static int su_environment_snapshot_contains(
 
     if (snapshot == ft_nullptr || is_present == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     snapshot_count = snapshot->entries.size();
     if (snapshot->entries.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = snapshot->entries.get_error();
-        return (-1);
+        return (snapshot->entries.get_error());
     }
     target_length = name.size();
     if (name.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = name.get_error();
-        return (-1);
+        return (name.get_error());
     }
     index = 0;
     while (index < snapshot_count)
@@ -55,8 +55,7 @@ static int su_environment_snapshot_contains(
 
         if (entry.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = entry.get_error();
-            return (-1);
+            return (entry.get_error());
         }
         entry_data = entry.c_str();
         equals_location = ft_strchr(entry_data, '=');
@@ -68,14 +67,12 @@ static int su_environment_snapshot_contains(
             && ft_strncmp(entry_data, name.c_str(), target_length) == 0)
         {
             *is_present = 1;
-            ft_errno = FT_ERR_SUCCESSS;
-            return (0);
+            return (FT_ERR_SUCCESSS);
         }
         index += 1;
     }
     *is_present = 0;
-    ft_errno = FT_ERR_SUCCESSS;
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
 static int su_environment_split_entry(
@@ -89,83 +86,141 @@ static int su_environment_split_entry(
 
     if (entry == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     equals_location = ft_strchr(entry, '=');
     if (equals_location == ft_nullptr)
     {
         name.assign(entry, ft_strlen_size_t(entry));
         if (name.get_error() != FT_ERR_SUCCESSS)
-            return (-1);
+            return (name.get_error());
         value.clear();
         if (value.get_error() != FT_ERR_SUCCESSS)
-            return (-1);
+            return (value.get_error());
         if (has_value != ft_nullptr)
             *has_value = 0;
-        ft_errno = FT_ERR_SUCCESSS;
-        return (0);
+        return (FT_ERR_SUCCESSS);
     }
     name_length = static_cast<size_t>(equals_location - entry);
     name.assign(entry, name_length);
     if (name.get_error() != FT_ERR_SUCCESSS)
-        return (-1);
+        return (name.get_error());
     value.assign(equals_location + 1,
         ft_strlen_size_t(equals_location + 1));
     if (value.get_error() != FT_ERR_SUCCESSS)
-        return (-1);
+        return (value.get_error());
     if (has_value != ft_nullptr)
         *has_value = 1;
-    ft_errno = FT_ERR_SUCCESSS;
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
 char    *su_getenv(const char *name)
 {
     char    *result;
+    int     error_code;
 
     if (g_env_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        ft_global_error_stack_push(FT_ERR_SYS_MUTEX_LOCK_FAILED);
         return (ft_nullptr);
+    }
     result = ft_getenv(name);
+    error_code = ft_global_error_stack_pop_newest();
     if (g_env_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+    {
+        ft_global_error_stack_push(FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
         return (ft_nullptr);
+    }
+    if (error_code != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(error_code);
+        return (ft_nullptr);
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
 
 int su_setenv(const char *name, const char *value, int overwrite)
 {
     int result;
+    int error_code;
 
     if (g_env_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        ft_global_error_stack_push(FT_ERR_SYS_MUTEX_LOCK_FAILED);
         return (-1);
+    }
     result = ft_setenv(name, value, overwrite);
+    error_code = ft_global_error_stack_pop_newest();
     if (g_env_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+    {
+        ft_global_error_stack_push(FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
         return (-1);
+    }
+    if (result != 0)
+    {
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(error_code);
+        return (-1);
+    }
+    if (error_code != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(error_code);
+        return (-1);
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
 
 int su_putenv(char *string)
 {
     int result;
-    int cmp_error_code;
+    int error_code;
 
     if (string == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (g_env_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        ft_global_error_stack_push(FT_ERR_SYS_MUTEX_LOCK_FAILED);
         return (-1);
-    cmp_error_code = FT_ERR_SUCCESSS;
+    }
+    error_code = FT_ERR_SUCCESSS;
+    errno = 0;
     result = cmp_putenv(string);
     if (result != 0)
-        cmp_error_code = ft_errno;
+    {
+#if defined(_WIN32) || defined(_WIN64)
+        DWORD last_error;
+
+        last_error = GetLastError();
+        if (last_error != 0)
+            error_code = ft_map_system_error(static_cast<int>(last_error));
+        else if (errno != 0)
+            error_code = ft_map_system_error(errno);
+        else
+            error_code = FT_ERR_INVALID_ARGUMENT;
+#else
+        if (errno != 0)
+            error_code = ft_map_system_error(errno);
+        else
+            error_code = FT_ERR_INVALID_ARGUMENT;
+#endif
+    }
     if (g_env_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+    {
+        ft_global_error_stack_push(FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
         return (-1);
-    if (result == 0)
-        ft_errno = FT_ERR_SUCCESSS;
-    else
-        ft_errno = cmp_error_code;
+    }
+    if (result != 0)
+    {
+        ft_global_error_stack_push(error_code);
+        return (-1);
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -173,20 +228,25 @@ int su_environment_snapshot_capture(t_su_environment_snapshot *snapshot)
 {
     char    **environment_entries;
     size_t  index;
+    int     error_code;
 
     if (snapshot == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     snapshot->entries.clear();
     if (snapshot->entries.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = snapshot->entries.get_error();
+        error_code = snapshot->entries.get_error();
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     if (g_env_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        ft_global_error_stack_push(FT_ERR_SYS_MUTEX_LOCK_FAILED);
         return (-1);
+    }
     environment_entries = cmp_get_environ_entries();
     index = 0;
     if (environment_entries != ft_nullptr)
@@ -196,16 +256,27 @@ int su_environment_snapshot_capture(t_su_environment_snapshot *snapshot)
             ft_string entry_copy(environment_entries[index]);
 
             if (entry_copy.get_error() != FT_ERR_SUCCESSS)
-                return (su_environment_unlock_with_error(entry_copy.get_error()));
+            {
+                error_code = su_environment_unlock_with_error(entry_copy.get_error());
+                ft_global_error_stack_push(error_code);
+                return (-1);
+            }
             snapshot->entries.push_back(ft_move(entry_copy));
             if (snapshot->entries.get_error() != FT_ERR_SUCCESSS)
-                return (su_environment_unlock_with_error(snapshot->entries.get_error()));
+            {
+                error_code = su_environment_unlock_with_error(snapshot->entries.get_error());
+                ft_global_error_stack_push(error_code);
+                return (-1);
+            }
             index += 1;
         }
     }
     if (g_env_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+    {
+        ft_global_error_stack_push(FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
         return (-1);
-    ft_errno = FT_ERR_SUCCESSS;
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -214,19 +285,24 @@ int su_environment_snapshot_restore(const t_su_environment_snapshot *snapshot)
     ft_vector<ft_string>    current_environment(4);
     char                    **environment_entries;
     size_t                  index;
+    int                     error_code;
 
     if (snapshot == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (snapshot->entries.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = snapshot->entries.get_error();
+        error_code = snapshot->entries.get_error();
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     if (g_env_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        ft_global_error_stack_push(FT_ERR_SYS_MUTEX_LOCK_FAILED);
         return (-1);
+    }
     environment_entries = cmp_get_environ_entries();
     index = 0;
     if (environment_entries != ft_nullptr)
@@ -236,16 +312,28 @@ int su_environment_snapshot_restore(const t_su_environment_snapshot *snapshot)
             ft_string entry_copy(environment_entries[index]);
 
             if (entry_copy.get_error() != FT_ERR_SUCCESSS)
-                return (su_environment_unlock_with_error(entry_copy.get_error()));
+            {
+                error_code = su_environment_unlock_with_error(entry_copy.get_error());
+                ft_global_error_stack_push(error_code);
+                return (-1);
+            }
             current_environment.push_back(ft_move(entry_copy));
             if (current_environment.get_error() != FT_ERR_SUCCESSS)
-                return (su_environment_unlock_with_error(current_environment.get_error()));
+            {
+                error_code = su_environment_unlock_with_error(current_environment.get_error());
+                ft_global_error_stack_push(error_code);
+                return (-1);
+            }
             index += 1;
         }
     }
     size_t current_count = current_environment.size();
     if (current_environment.get_error() != FT_ERR_SUCCESSS)
-        return (su_environment_unlock_with_error(current_environment.get_error()));
+    {
+        error_code = su_environment_unlock_with_error(current_environment.get_error());
+        ft_global_error_stack_push(error_code);
+        return (-1);
+    }
     index = 0;
     while (index < current_count)
     {
@@ -255,23 +343,53 @@ int su_environment_snapshot_restore(const t_su_environment_snapshot *snapshot)
         int       is_present;
 
         if (entry.get_error() != FT_ERR_SUCCESSS)
-            return (su_environment_unlock_with_error(entry.get_error()));
-        if (su_environment_split_entry(entry.c_str(), name, value, ft_nullptr) != 0)
-            return (su_environment_unlock_with_error(ft_errno));
+        {
+            error_code = su_environment_unlock_with_error(entry.get_error());
+            ft_global_error_stack_push(error_code);
+            return (-1);
+        }
+        error_code = su_environment_split_entry(entry.c_str(), name, value, ft_nullptr);
+        if (error_code != FT_ERR_SUCCESSS)
+        {
+            error_code = su_environment_unlock_with_error(error_code);
+            ft_global_error_stack_push(error_code);
+            return (-1);
+        }
         if (name.get_error() != FT_ERR_SUCCESSS)
-            return (su_environment_unlock_with_error(name.get_error()));
-        if (su_environment_snapshot_contains(snapshot, name, &is_present) != 0)
-            return (su_environment_unlock_with_error(ft_errno));
+        {
+            error_code = su_environment_unlock_with_error(name.get_error());
+            ft_global_error_stack_push(error_code);
+            return (-1);
+        }
+        error_code = su_environment_snapshot_contains(snapshot, name, &is_present);
+        if (error_code != FT_ERR_SUCCESSS)
+        {
+            error_code = su_environment_unlock_with_error(error_code);
+            ft_global_error_stack_push(error_code);
+            return (-1);
+        }
         if (is_present == 0)
         {
             if (ft_unsetenv(name.c_str()) != 0)
-                return (su_environment_unlock_with_error(ft_errno));
+            {
+                error_code = ft_global_error_stack_pop_newest();
+                if (error_code == FT_ERR_SUCCESSS)
+                    error_code = FT_ERR_INVALID_ARGUMENT;
+                error_code = su_environment_unlock_with_error(error_code);
+                ft_global_error_stack_push(error_code);
+                return (-1);
+            }
+            ft_global_error_stack_pop_newest();
         }
         index += 1;
     }
     size_t snapshot_count = snapshot->entries.size();
     if (snapshot->entries.get_error() != FT_ERR_SUCCESSS)
-        return (su_environment_unlock_with_error(snapshot->entries.get_error()));
+    {
+        error_code = su_environment_unlock_with_error(snapshot->entries.get_error());
+        ft_global_error_stack_push(error_code);
+        return (-1);
+    }
     index = 0;
     while (index < snapshot_count)
     {
@@ -281,59 +399,116 @@ int su_environment_snapshot_restore(const t_su_environment_snapshot *snapshot)
         int              has_value;
 
         if (entry.get_error() != FT_ERR_SUCCESSS)
-            return (su_environment_unlock_with_error(entry.get_error()));
-        if (su_environment_split_entry(entry.c_str(), name, value, &has_value) != 0)
-            return (su_environment_unlock_with_error(ft_errno));
+        {
+            error_code = su_environment_unlock_with_error(entry.get_error());
+            ft_global_error_stack_push(error_code);
+            return (-1);
+        }
+        error_code = su_environment_split_entry(entry.c_str(), name, value, &has_value);
+        if (error_code != FT_ERR_SUCCESSS)
+        {
+            error_code = su_environment_unlock_with_error(error_code);
+            ft_global_error_stack_push(error_code);
+            return (-1);
+        }
         if (name.get_error() != FT_ERR_SUCCESSS)
-            return (su_environment_unlock_with_error(name.get_error()));
+        {
+            error_code = su_environment_unlock_with_error(name.get_error());
+            ft_global_error_stack_push(error_code);
+            return (-1);
+        }
         if (has_value != 0)
         {
             if (ft_setenv(name.c_str(), value.c_str(), 1) != 0)
-                return (su_environment_unlock_with_error(ft_errno));
+            {
+                error_code = ft_global_error_stack_pop_newest();
+                if (error_code == FT_ERR_SUCCESSS)
+                    error_code = FT_ERR_INVALID_ARGUMENT;
+                error_code = su_environment_unlock_with_error(error_code);
+                ft_global_error_stack_push(error_code);
+                return (-1);
+            }
+            ft_global_error_stack_pop_newest();
         }
         else
         {
             if (ft_unsetenv(name.c_str()) != 0)
-                return (su_environment_unlock_with_error(ft_errno));
+            {
+                error_code = ft_global_error_stack_pop_newest();
+                if (error_code == FT_ERR_SUCCESSS)
+                    error_code = FT_ERR_INVALID_ARGUMENT;
+                error_code = su_environment_unlock_with_error(error_code);
+                ft_global_error_stack_push(error_code);
+                return (-1);
+            }
+            ft_global_error_stack_pop_newest();
         }
         index += 1;
     }
     if (g_env_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+    {
+        ft_global_error_stack_push(FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
         return (-1);
-    ft_errno = FT_ERR_SUCCESSS;
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
 void su_environment_snapshot_dispose(t_su_environment_snapshot *snapshot)
 {
     if (snapshot == ft_nullptr)
+    {
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return ;
+    }
     snapshot->entries.clear();
     if (snapshot->entries.get_error() != FT_ERR_SUCCESSS)
-        ft_errno = snapshot->entries.get_error();
+        ft_global_error_stack_push(snapshot->entries.get_error());
     else
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
 int su_environment_sandbox_begin(t_su_environment_snapshot *snapshot)
 {
-    return (su_environment_snapshot_capture(snapshot));
+    int capture_result;
+    int error_code;
+
+    capture_result = su_environment_snapshot_capture(snapshot);
+    error_code = ft_global_error_stack_pop_newest();
+    if (capture_result != 0)
+    {
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(error_code);
+        return (-1);
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return (0);
 }
 
 int su_environment_sandbox_end(t_su_environment_snapshot *snapshot)
 {
     int restore_result;
-    int restore_errno;
+    int restore_error;
+    int dispose_error;
 
     restore_result = su_environment_snapshot_restore(snapshot);
-    restore_errno = ft_errno;
+    restore_error = ft_global_error_stack_pop_newest();
     su_environment_snapshot_dispose(snapshot);
+    dispose_error = ft_global_error_stack_pop_newest();
     if (restore_result != 0)
     {
-        ft_errno = restore_errno;
+        if (restore_error == FT_ERR_SUCCESSS)
+            restore_error = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(restore_error);
         return (-1);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    if (dispose_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(dispose_error);
+        return (-1);
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }

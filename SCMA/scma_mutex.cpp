@@ -29,7 +29,6 @@ int    scma_mutex_lock(void)
     if (lock_depth == static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX))
     {
         error_code = FT_ERR_NO_MEMORY;
-        ft_errno = error_code;
         ft_global_error_stack_push(error_code);
         return (-1);
     }
@@ -41,14 +40,12 @@ int    scma_mutex_lock(void)
         if (mutex.get_error() != FT_ERR_SUCCESSS)
         {
             error_code = mutex.get_error();
-            ft_errno = error_code;
             ft_global_error_stack_push(error_code);
             return (-1);
         }
     }
     lock_depth = lock_depth + 1;
     error_code = FT_ERR_SUCCESSS;
-    ft_errno = error_code;
     ft_global_error_stack_push(error_code);
     return (0);
 }
@@ -61,13 +58,9 @@ int    scma_mutex_unlock(void)
     if (lock_depth == 0)
     {
         error_code = FT_ERR_INVALID_STATE;
-        ft_errno = error_code;
         ft_global_error_stack_push(error_code);
         return (-1);
     }
-    int previous_errno;
-
-    previous_errno = ft_errno;
     lock_depth = lock_depth - 1;
     if (lock_depth == 0)
     {
@@ -77,12 +70,10 @@ int    scma_mutex_unlock(void)
         if (mutex.get_error() != FT_ERR_SUCCESSS)
         {
             error_code = mutex.get_error();
-            ft_errno = error_code;
             ft_global_error_stack_push(error_code);
             return (-1);
         }
     }
-    ft_errno = previous_errno;
     error_code = FT_ERR_SUCCESSS;
     ft_global_error_stack_push(error_code);
     return (0);
@@ -96,25 +87,20 @@ int    scma_mutex_close(void)
     if (lock_depth == 0)
     {
         error_code = FT_ERR_INVALID_STATE;
-        ft_errno = error_code;
         ft_global_error_stack_push(error_code);
         return (-1);
     }
-    int previous_errno;
-
-    previous_errno = ft_errno;
     while (lock_depth > 0)
     {
         if (scma_mutex_unlock() != 0)
         {
-            error_code = ft_errno;
+            error_code = ft_global_error_stack_pop_newest();
             if (error_code == FT_ERR_SUCCESSS)
                 error_code = FT_ERR_SYS_MUTEX_UNLOCK_FAILED;
             ft_global_error_stack_push(error_code);
             return (-1);
         }
     }
-    ft_errno = previous_errno;
     error_code = FT_ERR_SUCCESSS;
     ft_global_error_stack_push(error_code);
     return (0);

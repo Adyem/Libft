@@ -51,7 +51,7 @@ long    time_fps::get_frames_per_second()
             final_error = this->_error_code;
         }
     }
-    ft_errno = final_error;
+    ft_global_error_stack_push(final_error);
     return (frames_per_second_value);
 }
 
@@ -90,7 +90,7 @@ int     time_fps::set_frames_per_second(long frames_per_second)
             result = 0;
         }
     }
-    ft_errno = final_error;
+    ft_global_error_stack_push(final_error);
     return (result);
 }
 
@@ -128,13 +128,12 @@ void    time_fps::sleep_to_next_frame()
             final_error = this->_error_code;
         }
     }
-    ft_errno = final_error;
+    ft_global_error_stack_push(final_error);
     return ;
 }
 
 void    time_fps::set_error(int error_code)
 {
-    ft_errno = error_code;
     this->_error_code = error_code;
     return ;
 }
@@ -161,7 +160,7 @@ int     time_fps::get_error() const
             final_error = this->_error_code;
         }
     }
-    ft_errno = final_error;
+    ft_global_error_stack_push(final_error);
     return (error_code_value);
 }
 
@@ -187,6 +186,6 @@ const char  *time_fps::get_error_str() const
             final_error = this->_error_code;
         }
     }
-    ft_errno = final_error;
+    ft_global_error_stack_push(final_error);
     return (error_string);
 }

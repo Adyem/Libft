@@ -14,12 +14,6 @@ static int ft_digit_value(char character)
     return (-1);
 }
 
-static long report_strtol_error(int error_code, long return_value)
-{
-    ft_global_error_stack_push(error_code);
-    return (return_value);
-}
-
 long ft_strtol(const char *input_string, char **end_pointer, int numeric_base)
 {
     const char *current_character = input_string;
@@ -37,13 +31,15 @@ long ft_strtol(const char *input_string, char **end_pointer, int numeric_base)
     {
         if (end_pointer != ft_nullptr)
             *end_pointer = ft_nullptr;
-        return (report_strtol_error(FT_ERR_INVALID_ARGUMENT, 0L));
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
+        return (0L);
     }
     if (numeric_base != 0 && (numeric_base < 2 || numeric_base > 36))
     {
         if (end_pointer != ft_nullptr)
             *end_pointer = const_cast<char *>(input_string);
-        return (report_strtol_error(FT_ERR_INVALID_ARGUMENT, 0L));
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
+        return (0L);
     }
     while (*current_character == ' ' || (*current_character >= '\t'
                 && *current_character <= '\r'))
@@ -112,7 +108,8 @@ long ft_strtol(const char *input_string, char **end_pointer, int numeric_base)
     {
         if (end_pointer != ft_nullptr)
             *end_pointer = const_cast<char *>(input_string);
-        return (report_strtol_error(FT_ERR_INVALID_ARGUMENT, 0L));
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
+        return (0L);
     }
     if (end_pointer)
         *end_pointer = const_cast<char *>(current_character);
@@ -122,11 +119,14 @@ long ft_strtol(const char *input_string, char **end_pointer, int numeric_base)
     {
         if (accumulated_value > positive_limit)
         {
-            return (report_strtol_error(error_code, FT_LONG_MIN));
+            ft_global_error_stack_push(error_code);
+            return (FT_LONG_MIN);
         }
         long result = static_cast<long>(accumulated_value);
-        return (report_strtol_error(error_code, -result));
+        ft_global_error_stack_push(error_code);
+        return (-result);
     }
     long result = static_cast<long>(accumulated_value);
-    return (report_strtol_error(error_code, result));
+    ft_global_error_stack_push(error_code);
+    return (result);
 }

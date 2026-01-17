@@ -210,34 +210,28 @@ int    scma_validate_handle(scma_handle handle, scma_block **out_block)
         return (0);
     if (!scma_initialized_ref())
     {
-        ft_errno = FT_ERR_INVALID_STATE;
         return (scma_unlock_and_return_int(0));
     }
     if (scma_handle_is_invalid(handle))
     {
-        ft_errno = FT_ERR_INVALID_HANDLE;
         return (scma_unlock_and_return_int(0));
     }
     span = scma_get_block_span();
     if (handle.index >= span.count)
     {
-        ft_errno = FT_ERR_INVALID_HANDLE;
         return (scma_unlock_and_return_int(0));
     }
     block = &span.data[static_cast<size_t>(handle.index)];
     if (!block->in_use)
     {
-        ft_errno = FT_ERR_INVALID_HANDLE;
         return (scma_unlock_and_return_int(0));
     }
     if (block->generation != handle.generation)
     {
-        ft_errno = FT_ERR_INVALID_HANDLE;
         return (scma_unlock_and_return_int(0));
     }
     if (out_block)
         *out_block = block;
-    ft_errno = FT_ERR_SUCCESSS;
     validation_result = 1;
     return (scma_unlock_and_return_int(validation_result));
 }
@@ -269,19 +263,16 @@ int    scma_ensure_block_capacity(ft_size_t required_count)
     }
     if (new_capacity > static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX))
     {
-        ft_errno = FT_ERR_NO_MEMORY;
         return (0);
     }
     if (new_capacity > static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX) / static_cast<ft_size_t>(sizeof(scma_block)))
     {
-        ft_errno = FT_ERR_NO_MEMORY;
         return (0);
     }
     allocation_size = static_cast<size_t>(new_capacity) * sizeof(scma_block);
     new_data = std::realloc(blocks_data, allocation_size);
     if (!new_data)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
         return (0);
     }
     blocks_data = static_cast<scma_block *>(new_data);
@@ -315,13 +306,11 @@ int    scma_ensure_capacity(ft_size_t required_size)
     }
     if (new_capacity > static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX))
     {
-        ft_errno = FT_ERR_NO_MEMORY;
         return (0);
     }
     new_data = std::realloc(heap_data, static_cast<size_t>(new_capacity));
     if (!new_data)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
         return (0);
     }
     heap_data = static_cast<unsigned char *>(new_data);

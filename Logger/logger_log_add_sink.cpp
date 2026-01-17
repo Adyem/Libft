@@ -192,17 +192,25 @@ int ft_log_add_sink(t_log_sink sink, void *user_data)
 {
     if (!sink)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     s_log_sink entry;
     int final_error;
+    int prepare_error;
+    int lock_error;
 
-    if (log_sink_prepare_thread_safety(&entry) != 0)
+    prepare_error = log_sink_prepare_thread_safety(&entry);
+    if (prepare_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(prepare_error);
         return (-1);
-    if (logger_lock_sinks() != 0)
+    }
+    lock_error = logger_lock_sinks();
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         log_sink_teardown_thread_safety(&entry);
+        ft_global_error_stack_push(lock_error);
         return (-1);
     }
     entry.function = sink;
@@ -212,19 +220,23 @@ int ft_log_add_sink(t_log_sink sink, void *user_data)
     {
         final_error = g_sinks.get_error();
         log_sink_teardown_thread_safety(&entry);
-        if (logger_unlock_sinks() != 0)
+        lock_error = logger_unlock_sinks();
+        if (lock_error != FT_ERR_SUCCESSS)
         {
+            ft_global_error_stack_push(lock_error);
             return (-1);
         }
-        ft_errno = final_error;
+        ft_global_error_stack_push(final_error);
         return (-1);
     }
     final_error = FT_ERR_SUCCESSS;
-    if (logger_unlock_sinks() != 0)
+    lock_error = logger_unlock_sinks();
+    if (lock_error != FT_ERR_SUCCESSS)
     {
+        ft_global_error_stack_push(lock_error);
         return (-1);
     }
-    ft_errno = final_error;
+    ft_global_error_stack_push(final_error);
     return (0);
 }
 

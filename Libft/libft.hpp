@@ -111,7 +111,7 @@ int                ft_atoi(const char *string);
 int             ft_validate_int(const char *input);
 void            ft_bzero(void *string, size_t size);
 void            *ft_memchr(const void *pointer, int character, size_t size);
-void            *ft_memcpy(void* destination, const void* source, size_t num);
+void            *ft_memcpy(void* destination, const void* source, size_t size);
 #if LIBFT_HAS_BOUNDS_CHECKED_HELPERS
 int             ft_memcpy_s(void *destination, size_t destination_size, const void *source, size_t number_of_bytes);
 #endif
@@ -119,13 +119,13 @@ void            *ft_memmove(void *destination, const void *source, size_t size);
 #if LIBFT_HAS_BOUNDS_CHECKED_HELPERS
 int             ft_memmove_s(void *destination, size_t destination_size, const void *source, size_t number_of_bytes);
 #endif
-size_t            ft_strlcat(char *destination, const char *source, size_t bufferSize);
-size_t            ft_strlcpy(char *destination, const char *source, size_t bufferSize);
+size_t            ft_strlcat(char *destination, const char *source, size_t buffer_size);
+size_t            ft_strlcpy(char *destination, const char *source, size_t buffer_size);
 size_t            ft_strnlen(const char *string, size_t maximum_length);
 char            *ft_strrchr(const char *string, int char_to_find);
-char            *ft_strnstr(const char *haystack, const char *needle, size_t length);
+char            *ft_strnstr(const char *haystack, const char *needle, size_t maximum_length);
 char            *ft_strstr(const char *haystack, const char *needle);
-int                ft_strncmp(const char *string_1, const char *string_2, size_t max_len);
+int                ft_strncmp(const char *string_1, const char *string_2, size_t maximum_length);
 int                ft_memcmp(const void *pointer1, const void *pointer2, size_t size);
 int                ft_isdigit(int character);
 int             ft_isalpha(int character);
@@ -134,17 +134,17 @@ int             ft_isprint(int character);
 int             ft_islower(int character);
 int             ft_isupper(int character);
 long            ft_atol(const char *string);
-long            ft_strtol(const char *nptr, char **endptr, int base);
-unsigned long   ft_strtoul(const char *nptr, char **endptr, int base);
+long            ft_strtol(const char *input_string, char **end_pointer, int numeric_base);
+unsigned long   ft_strtoul(const char *input_string, char **end_pointer, int numeric_base);
 int                ft_strcmp(const char *string1, const char *string2);
 void            ft_to_lower(char *string);
 void            ft_to_upper(char *string);
 char             *ft_strncpy(char *destination, const char *source, size_t number_of_characters);
 #if LIBFT_HAS_BOUNDS_CHECKED_HELPERS
 int             ft_strcpy_s(char *destination, size_t destination_size, const char *source);
-int             ft_strncpy_s(char *destination, size_t destination_size, const char *source, size_t max_copy_length);
+int             ft_strncpy_s(char *destination, size_t destination_size, const char *source, size_t maximum_copy_length);
 int             ft_strcat_s(char *destination, size_t destination_size, const char *source);
-int             ft_strncat_s(char *destination, size_t destination_size, const char *source, size_t max_append_length);
+int             ft_strncat_s(char *destination, size_t destination_size, const char *source, size_t maximum_append_length);
 #endif
 char            *ft_span_dup(const char *buffer, size_t length);
 ft_string        ft_span_to_string(const char *buffer, size_t length);

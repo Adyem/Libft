@@ -204,10 +204,9 @@ bool    time_parse_iso8601(const char *string_input, std::tm *time_output, t_tim
     if (timestamp_output)
     {
         epoch_time = cmp_timegm(&parsed_time);
-        if (epoch_time == static_cast<std::time_t>(-1)
-            && ft_errno != FT_ERR_SUCCESSS)
+        if (epoch_time == static_cast<std::time_t>(-1))
         {
-            ft_global_error_stack_push(ft_errno);
+            ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
             return (false);
         }
         adjusted_epoch = epoch_time - static_cast<std::time_t>(offset_seconds);
@@ -216,10 +215,9 @@ bool    time_parse_iso8601(const char *string_input, std::tm *time_output, t_tim
     else
     {
         epoch_time = cmp_timegm(&parsed_time);
-        if (epoch_time == static_cast<std::time_t>(-1)
-            && ft_errno != FT_ERR_SUCCESSS)
+        if (epoch_time == static_cast<std::time_t>(-1))
         {
-            ft_global_error_stack_push(ft_errno);
+            ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
             return (false);
         }
         adjusted_epoch = epoch_time - static_cast<std::time_t>(offset_seconds);
@@ -264,10 +262,9 @@ bool    time_parse_custom(const char *string_input, const char *format, std::tm 
     if (interpret_as_utc)
     {
         epoch_time = cmp_timegm(&parsed_time);
-        if (epoch_time == static_cast<std::time_t>(-1)
-            && ft_errno != FT_ERR_SUCCESSS)
+        if (epoch_time == static_cast<std::time_t>(-1))
         {
-            ft_global_error_stack_push(ft_errno);
+            ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
             return (false);
         }
     }

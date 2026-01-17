@@ -28,7 +28,6 @@ void ft_file_sink(const char *message, void *user_data)
 
 static int log_set_file_report(int error_code, int return_value)
 {
-    ft_errno = error_code;
     ft_global_error_stack_push(error_code);
     return (return_value);
 }
@@ -37,6 +36,7 @@ int ft_log_set_file(const char *path, size_t max_size)
 {
     s_file_sink *sink;
     int          file_descriptor;
+    int          prepare_error;
 
     if (!path)
         return (log_set_file_report(FT_ERR_INVALID_ARGUMENT, -1));
@@ -73,11 +73,9 @@ int ft_log_set_file(const char *path, size_t max_size)
         delete sink;
         return (log_set_file_report(error_code, -1));
     }
-    if (file_sink_prepare_thread_safety(sink) != 0)
+    prepare_error = file_sink_prepare_thread_safety(sink);
+    if (prepare_error != FT_ERR_SUCCESSS)
     {
-        int prepare_error;
-
-        prepare_error = ft_errno;
         close(file_descriptor);
         delete sink;
         return (log_set_file_report(prepare_error, -1));
@@ -86,9 +84,7 @@ int ft_log_set_file(const char *path, size_t max_size)
     {
         int error_code;
 
-        error_code = ft_errno;
-        if (error_code == FT_ERR_SUCCESSS)
-            error_code = FT_ERR_INVALID_ARGUMENT;
+        error_code = FT_ERR_INVALID_ARGUMENT;
         close(file_descriptor);
         file_sink_teardown_thread_safety(sink);
         delete sink;

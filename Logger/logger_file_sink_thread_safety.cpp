@@ -9,23 +9,15 @@ int file_sink_prepare_thread_safety(s_file_sink *sink)
 {
     pt_mutex *mutex_pointer;
     void     *memory;
+    int      error_code;
 
     if (!sink)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (-1);
-    }
+        return (FT_ERR_INVALID_ARGUMENT);
     if (sink->thread_safe_enabled && sink->mutex)
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-        return (0);
-    }
+        return (FT_ERR_SUCCESSS);
     memory = std::malloc(sizeof(pt_mutex));
     if (!memory)
-    {
-        ft_errno = FT_ERR_NO_MEMORY;
-        return (-1);
-    }
+        return (FT_ERR_NO_MEMORY);
     mutex_pointer = new(memory) pt_mutex();
     if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
     {
@@ -34,13 +26,12 @@ int file_sink_prepare_thread_safety(s_file_sink *sink)
         mutex_error = mutex_pointer->get_error();
         mutex_pointer->~pt_mutex();
         std::free(memory);
-        ft_errno = mutex_error;
-        return (-1);
+        return (mutex_error);
     }
     sink->mutex = mutex_pointer;
     sink->thread_safe_enabled = true;
-    ft_errno = FT_ERR_SUCCESSS;
-    return (0);
+    error_code = FT_ERR_SUCCESSS;
+    return (error_code);
 }
 
 void file_sink_teardown_thread_safety(s_file_sink *sink)
@@ -60,30 +51,22 @@ void file_sink_teardown_thread_safety(s_file_sink *sink)
 int file_sink_lock(const s_file_sink *sink, bool *lock_acquired)
 {
     s_file_sink *mutable_sink;
+    int error_code;
 
     if (lock_acquired)
         *lock_acquired = false;
     if (!sink)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (-1);
-    }
+        return (FT_ERR_INVALID_ARGUMENT);
     mutable_sink = const_cast<s_file_sink *>(sink);
     if (!mutable_sink->thread_safe_enabled || !mutable_sink->mutex)
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-        return (0);
-    }
+        return (FT_ERR_SUCCESSS);
     mutable_sink->mutex->lock(THREAD_ID);
     if (mutable_sink->mutex->get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = mutable_sink->mutex->get_error();
-        return (-1);
-    }
+        return (mutable_sink->mutex->get_error());
     if (lock_acquired)
         *lock_acquired = true;
-    ft_errno = FT_ERR_SUCCESSS;
-    return (0);
+    error_code = FT_ERR_SUCCESSS;
+    return (error_code);
 }
 
 void file_sink_unlock(const s_file_sink *sink, bool lock_acquired)
@@ -91,27 +74,14 @@ void file_sink_unlock(const s_file_sink *sink, bool lock_acquired)
     s_file_sink *mutable_sink;
 
     if (!sink)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
-    }
     if (!lock_acquired)
-    {
-        ft_errno = FT_ERR_SUCCESSS;
         return ;
-    }
     mutable_sink = const_cast<s_file_sink *>(sink);
     if (!mutable_sink->mutex)
-    {
-        ft_errno = FT_ERR_SUCCESSS;
         return ;
-    }
     mutable_sink->mutex->unlock(THREAD_ID);
     if (mutable_sink->mutex->get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = mutable_sink->mutex->get_error();
         return ;
-    }
-    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }

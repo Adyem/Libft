@@ -189,7 +189,7 @@ scma_handle    scma_allocate(ft_size_t size)
     }
     if (!scma_ensure_capacity(required_size))
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = FT_ERR_NO_MEMORY;
         ft_global_error_stack_push(error_code);
         return (scma_unlock_and_return_handle(result_handle));
     }
@@ -215,7 +215,7 @@ scma_handle    scma_allocate(ft_size_t size)
 
         if (!scma_ensure_block_capacity(block_count + 1))
         {
-            error_code = ft_global_error_stack_pop_newest();
+            error_code = FT_ERR_NO_MEMORY;
             ft_global_error_stack_push(error_code);
             return (scma_unlock_and_return_handle(result_handle));
         }
@@ -262,7 +262,7 @@ int    scma_free(scma_handle handle)
     }
     if (!scma_validate_handle(handle, &block))
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = FT_ERR_INVALID_HANDLE;
         ft_global_error_stack_push(error_code);
         return (scma_unlock_and_return_int(0));
     }
@@ -307,7 +307,7 @@ int    scma_resize(scma_handle handle, ft_size_t new_size)
     }
     if (!scma_validate_handle(handle, &block))
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = FT_ERR_INVALID_HANDLE;
         ft_global_error_stack_push(error_code);
         return (scma_unlock_and_return_int(0));
     }
@@ -366,7 +366,7 @@ int    scma_resize(scma_handle handle, ft_size_t new_size)
     required_size = base_size + new_size;
     if (!scma_ensure_capacity(required_size))
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = FT_ERR_NO_MEMORY;
         ft_global_error_stack_push(error_code);
         if (temp_buffer)
         {
@@ -423,7 +423,7 @@ ft_size_t    scma_get_size(scma_handle handle)
     }
     if (!scma_validate_handle(handle, &block))
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = FT_ERR_INVALID_HANDLE;
         ft_global_error_stack_push(error_code);
         return (scma_unlock_and_return_size(0));
     }
@@ -452,7 +452,7 @@ int    scma_handle_is_valid(scma_handle handle)
         ft_global_error_stack_push(error_code);
         return (scma_unlock_and_return_int(valid));
     }
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = FT_ERR_INVALID_HANDLE;
     ft_global_error_stack_push(error_code);
     return (scma_unlock_and_return_int(valid));
 }

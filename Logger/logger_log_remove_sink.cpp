@@ -7,18 +7,27 @@ void ft_log_remove_sink(t_log_sink sink, void *user_data)
     bool   removed;
     size_t sink_count;
     int    final_error;
+    int    lock_error;
 
-    if (logger_lock_sinks() != 0)
+    lock_error = logger_lock_sinks();
+    if (lock_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(lock_error);
         return ;
+    }
     index = 0;
     removed = false;
     sink_count = g_sinks.size();
     if (g_sinks.get_error() != FT_ERR_SUCCESSS)
     {
         final_error = g_sinks.get_error();
-        if (logger_unlock_sinks() != 0)
+        lock_error = logger_unlock_sinks();
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(lock_error);
             return ;
-        ft_errno = final_error;
+        }
+        ft_global_error_stack_push(final_error);
         return ;
     }
     while (index < sink_count)
@@ -29,31 +38,45 @@ void ft_log_remove_sink(t_log_sink sink, void *user_data)
         if (g_sinks.get_error() != FT_ERR_SUCCESSS)
         {
             final_error = g_sinks.get_error();
-            if (logger_unlock_sinks() != 0)
+            lock_error = logger_unlock_sinks();
+            if (lock_error != FT_ERR_SUCCESSS)
+            {
+                ft_global_error_stack_push(lock_error);
                 return ;
-            ft_errno = final_error;
+            }
+            ft_global_error_stack_push(final_error);
             return ;
         }
         if (entry.function == sink && entry.user_data == user_data)
         {
             s_log_sink &stored_entry = g_sinks[index];
             bool        sink_lock_acquired;
+            int         sink_lock_error;
 
             if (g_sinks.get_error() != FT_ERR_SUCCESSS)
             {
                 final_error = g_sinks.get_error();
-                if (logger_unlock_sinks() != 0)
+                lock_error = logger_unlock_sinks();
+                if (lock_error != FT_ERR_SUCCESSS)
+                {
+                    ft_global_error_stack_push(lock_error);
                     return ;
-                ft_errno = final_error;
+                }
+                ft_global_error_stack_push(final_error);
                 return ;
             }
             sink_lock_acquired = false;
-            if (log_sink_lock(&stored_entry, &sink_lock_acquired) != 0)
+            sink_lock_error = log_sink_lock(&stored_entry, &sink_lock_acquired);
+            if (sink_lock_error != FT_ERR_SUCCESSS)
             {
-                final_error = ft_errno;
-                if (logger_unlock_sinks() != 0)
+                final_error = sink_lock_error;
+                lock_error = logger_unlock_sinks();
+                if (lock_error != FT_ERR_SUCCESSS)
+                {
+                    ft_global_error_stack_push(lock_error);
                     return ;
-                ft_errno = final_error;
+                }
+                ft_global_error_stack_push(final_error);
                 return ;
             }
             s_log_sink locked_entry;
@@ -65,9 +88,13 @@ void ft_log_remove_sink(t_log_sink sink, void *user_data)
                 final_error = g_sinks.get_error();
                 if (sink_lock_acquired)
                     log_sink_unlock(&locked_entry, sink_lock_acquired);
-                if (logger_unlock_sinks() != 0)
+                lock_error = logger_unlock_sinks();
+                if (lock_error != FT_ERR_SUCCESSS)
+                {
+                    ft_global_error_stack_push(lock_error);
                     return ;
-                ft_errno = final_error;
+                }
+                ft_global_error_stack_push(final_error);
                 return ;
             }
             if (sink_lock_acquired)
@@ -82,8 +109,12 @@ void ft_log_remove_sink(t_log_sink sink, void *user_data)
         final_error = FT_ERR_INVALID_ARGUMENT;
     else
         final_error = FT_ERR_SUCCESSS;
-    if (logger_unlock_sinks() != 0)
+    lock_error = logger_unlock_sinks();
+    if (lock_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(lock_error);
         return ;
-    ft_errno = final_error;
+    }
+    ft_global_error_stack_push(final_error);
     return ;
 }

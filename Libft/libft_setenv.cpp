@@ -12,12 +12,6 @@
 #include <cstdlib>
 #include <cerrno>
 
-static int report_env_error(int error_code, int return_value)
-{
-    ft_global_error_stack_push(error_code);
-    return (return_value);
-}
-
 int ft_setenv(const char *name, const char *value, int overwrite)
 {
     int result;
@@ -26,21 +20,29 @@ int ft_setenv(const char *name, const char *value, int overwrite)
     int unlock_error;
 
     if (name == ft_nullptr || value == ft_nullptr || *name == '\0')
-        return (report_env_error(FT_ERR_INVALID_ARGUMENT, -1));
+    {
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
+        return (-1);
+    }
     invalid_character = ft_strchr(name, '=');
     error_code = ft_global_error_stack_pop_newest();
     if (error_code != FT_ERR_SUCCESSS)
     {
-        return (report_env_error(error_code, -1));
+        ft_global_error_stack_push(error_code);
+        return (-1);
     }
     if (invalid_character != ft_nullptr)
-        return (report_env_error(FT_ERR_INVALID_ARGUMENT, -1));
+    {
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
+        return (-1);
+    }
     if (ft_environment_lock() != 0)
     {
         error_code = ft_global_error_stack_pop_newest();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_MUTEX_ALREADY_LOCKED;
-        return (report_env_error(error_code, -1));
+        ft_global_error_stack_push(error_code);
+        return (-1);
     }
     ft_global_error_stack_pop_newest();
     error_code = FT_ERR_SUCCESSS;
@@ -82,14 +84,17 @@ int ft_setenv(const char *name, const char *value, int overwrite)
             unlock_error = FT_ERR_MUTEX_NOT_OWNER;
         if (result == 0)
         {
-            return (report_env_error(unlock_error, -1));
+            ft_global_error_stack_push(unlock_error);
+            return (-1);
         }
-        return (report_env_error(error_code, result));
+        ft_global_error_stack_push(error_code);
+        return (result);
     }
     ft_global_error_stack_pop_newest();
     if (result != 0)
     {
-        return (report_env_error(error_code, result));
+        ft_global_error_stack_push(error_code);
+        return (result);
     }
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);

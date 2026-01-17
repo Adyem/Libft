@@ -5,7 +5,6 @@
 
 static void log_close_report(int error_code)
 {
-    ft_errno = error_code;
     ft_global_error_stack_push(error_code);
     return ;
 }
@@ -18,19 +17,22 @@ void ft_log_close()
     size_t sink_count;
     int    clear_error;
     int    final_error;
+    int    lock_error;
 
-    if (logger_lock_sinks() != 0)
+    lock_error = logger_lock_sinks();
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        log_close_report(ft_errno);
+        log_close_report(lock_error);
         return ;
     }
     sink_count = g_sinks.size();
     if (g_sinks.get_error() != FT_ERR_SUCCESSS)
     {
         final_error = g_sinks.get_error();
-        if (logger_unlock_sinks() != 0)
+        lock_error = logger_unlock_sinks();
+        if (lock_error != FT_ERR_SUCCESSS)
         {
-            log_close_report(ft_errno);
+            log_close_report(lock_error);
             return ;
         }
         log_close_report(final_error);
@@ -45,9 +47,10 @@ void ft_log_close()
         if (g_sinks.get_error() != FT_ERR_SUCCESSS)
         {
             final_error = g_sinks.get_error();
-            if (logger_unlock_sinks() != 0)
+            lock_error = logger_unlock_sinks();
+            if (lock_error != FT_ERR_SUCCESSS)
             {
-                log_close_report(ft_errno);
+                log_close_report(lock_error);
                 return ;
             }
             log_close_report(final_error);
@@ -57,9 +60,10 @@ void ft_log_close()
         if (sinks_snapshot.get_error() != FT_ERR_SUCCESSS)
         {
             final_error = sinks_snapshot.get_error();
-            if (logger_unlock_sinks() != 0)
+            lock_error = logger_unlock_sinks();
+            if (lock_error != FT_ERR_SUCCESSS)
             {
-                log_close_report(ft_errno);
+                log_close_report(lock_error);
                 return ;
             }
             log_close_report(final_error);
@@ -69,9 +73,10 @@ void ft_log_close()
     }
     g_sinks.clear();
     clear_error = g_sinks.get_error();
-    if (logger_unlock_sinks() != 0)
+    lock_error = logger_unlock_sinks();
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        log_close_report(ft_errno);
+        log_close_report(lock_error);
         return ;
     }
     if (clear_error != FT_ERR_SUCCESSS)
@@ -100,21 +105,25 @@ void ft_log_close()
         }
         bool sink_lock_acquired;
         int  sink_error;
+        int  sink_lock_error;
 
         sink_lock_acquired = false;
         sink_error = FT_ERR_SUCCESSS;
-        if (log_sink_lock(&entry, &sink_lock_acquired) != 0)
-            sink_error = ft_errno;
+        sink_lock_error = log_sink_lock(&entry, &sink_lock_acquired);
+        if (sink_lock_error != FT_ERR_SUCCESSS)
+            sink_error = sink_lock_error;
         else if (entry.function == ft_file_sink)
         {
             s_file_sink *sink;
             bool         file_sink_lock_acquired;
+            int          file_lock_error;
 
             sink = static_cast<s_file_sink *>(entry.user_data);
             if (sink)
             {
                 file_sink_lock_acquired = false;
-                if (file_sink_lock(sink, &file_sink_lock_acquired) != 0)
+                file_lock_error = file_sink_lock(sink, &file_sink_lock_acquired);
+                if (file_lock_error != FT_ERR_SUCCESSS)
                     file_sink_lock_acquired = false;
                 close(sink->fd);
                 sink->fd = -1;
@@ -130,12 +139,14 @@ void ft_log_close()
         {
             s_network_sink *sink;
             bool            network_lock_acquired;
+            int             network_lock_error;
 
             sink = static_cast<s_network_sink *>(entry.user_data);
             if (sink)
             {
                 network_lock_acquired = false;
-                if (network_sink_lock(sink, &network_lock_acquired) != 0)
+                network_lock_error = network_sink_lock(sink, &network_lock_acquired);
+                if (network_lock_error != FT_ERR_SUCCESSS)
                     network_lock_acquired = false;
                 cmp_close(sink->socket_fd);
                 sink->socket_fd = -1;

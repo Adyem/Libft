@@ -45,7 +45,7 @@ void    time_timer::start(long duration_ms) noexcept
             final_error = this->_error_code;
         }
     }
-    ft_errno = final_error;
+    ft_global_error_stack_push(final_error);
     return ;
 }
 
@@ -93,7 +93,7 @@ long time_timer::update() noexcept
             }
         }
     }
-    ft_errno = final_error;
+    ft_global_error_stack_push(final_error);
     return (remaining);
 }
 
@@ -148,7 +148,7 @@ long time_timer::add_time(long amount_ms) noexcept
             }
         }
     }
-    ft_errno = final_error;
+    ft_global_error_stack_push(final_error);
     return (result);
 }
 
@@ -198,7 +198,7 @@ long time_timer::remove_time(long amount_ms) noexcept
             }
         }
     }
-    ft_errno = final_error;
+    ft_global_error_stack_push(final_error);
     return (result);
 }
 
@@ -246,7 +246,7 @@ void    time_timer::sleep_remaining() noexcept
     }
     if (remaining > 0)
         time_sleep_ms(static_cast<unsigned int>(remaining));
-    ft_errno = final_error;
+    ft_global_error_stack_push(final_error);
     return ;
 }
 
@@ -272,7 +272,7 @@ int time_timer::get_error() const noexcept
             final_error = this->_error_code;
         }
     }
-    ft_errno = final_error;
+    ft_global_error_stack_push(final_error);
     return (error_code_value);
 }
 
@@ -298,13 +298,12 @@ const char  *time_timer::get_error_str() const noexcept
             final_error = this->_error_code;
         }
     }
-    ft_errno = final_error;
+    ft_global_error_stack_push(final_error);
     return (error_string);
 }
 
 void    time_timer::set_error(int error_code) const noexcept
 {
     this->_error_code = error_code;
-    ft_errno = error_code;
     return ;
 }
