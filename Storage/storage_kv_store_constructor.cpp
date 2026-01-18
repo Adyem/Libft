@@ -33,8 +33,6 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
     json_item *item_pointer;
     ft_map<ft_string, long long> ttl_metadata;
     size_t ttl_prefix_length;
-    int current_error;
-
     if (file_path == ft_nullptr)
     {
         this->_file_path.clear();
@@ -86,13 +84,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
     group_head = json_read_from_file(file_path);
     if (group_head == ft_nullptr)
     {
-        current_error = ft_errno;
-        if (current_error == FT_ERR_SUCCESSS)
-        {
-            this->set_error(FT_ERR_SUCCESSS);
-            return ;
-        }
-        this->set_error(current_error);
+        this->set_error(FT_ERR_IO);
         return ;
     }
     store_group = json_find_group(group_head, "kv_store");
@@ -279,4 +271,3 @@ kv_store::~kv_store()
     this->stop_background_compaction();
     return ;
 }
-

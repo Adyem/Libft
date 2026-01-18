@@ -24,7 +24,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
     kqueue_descriptor = kqueue();
     if (kqueue_descriptor == -1)
     {
-        ft_errno = ft_map_system_error(errno);
+        ft_global_error_stack_push(ft_map_system_error(errno));
         return (-1);
     }
     index = 0;
@@ -37,7 +37,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
 
             last_error = errno;
             close(kqueue_descriptor);
-            ft_errno = ft_map_system_error(last_error);
+            ft_global_error_stack_push(ft_map_system_error(last_error));
             return (-1);
         }
         index++;
@@ -52,7 +52,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
 
             last_error = errno;
             close(kqueue_descriptor);
-            ft_errno = ft_map_system_error(last_error);
+            ft_global_error_stack_push(ft_map_system_error(last_error));
             return (-1);
         }
         index++;
@@ -61,15 +61,14 @@ int nw_poll(int *read_file_descriptors, int read_count,
     if (maximum_events == 0)
     {
         close(kqueue_descriptor);
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (0);
     }
     event_list = static_cast<struct kevent *>(cma_malloc(sizeof(struct kevent) * maximum_events));
     if (!event_list)
     {
         close(kqueue_descriptor);
-        if (ft_errno == FT_ERR_SUCCESSS)
-            ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (-1);
     }
     timeout.tv_sec = timeout_milliseconds / 1000;
@@ -83,9 +82,9 @@ int nw_poll(int *read_file_descriptors, int read_count,
         cma_free(event_list);
         close(kqueue_descriptor);
         if (ready_descriptors == 0)
-            ft_errno = FT_ERR_SUCCESSS;
+            ft_global_error_stack_push(FT_ERR_SUCCESSS);
         else
-            ft_errno = ft_map_system_error(wait_error);
+            ft_global_error_stack_push(ft_map_system_error(wait_error));
         return (ready_descriptors);
     }
     ready_index = 0;
@@ -114,6 +113,6 @@ int nw_poll(int *read_file_descriptors, int read_count,
     }
     cma_free(event_list);
     close(kqueue_descriptor);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (ready_descriptors);
 }

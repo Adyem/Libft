@@ -7,16 +7,18 @@
 static DWORD g_orig_mode;
 static bool g_raw_mode_active;
 
-static void cmp_set_errno_from_last_error()
+static int cmp_set_errno_from_last_error()
 {
     DWORD last_error;
+    int error_code;
 
     last_error = GetLastError();
     if (last_error == 0)
-        ft_errno = FT_ERR_TERMINATED;
+        error_code = FT_ERR_TERMINATED;
     else
-        ft_errno = ft_map_system_error(static_cast<int>(last_error));
-    return ;
+        error_code = ft_map_system_error(static_cast<int>(last_error));
+    ft_errno = error_code;
+    return (error_code);
 }
 
 int cmp_readline_enable_raw_mode()
@@ -27,8 +29,9 @@ int cmp_readline_enable_raw_mode()
     handle = GetStdHandle(STD_INPUT_HANDLE);
     if (handle == INVALID_HANDLE_VALUE)
     {
-        cmp_set_errno_from_last_error();
-        if (ft_errno == FT_ERR_INVALID_HANDLE)
+        int error_code = cmp_set_errno_from_last_error();
+
+        if (error_code == FT_ERR_INVALID_HANDLE)
         {
             g_raw_mode_active = false;
             ft_errno = FT_ERR_SUCCESSS;
@@ -38,8 +41,9 @@ int cmp_readline_enable_raw_mode()
     }
     if (!GetConsoleMode(handle, &mode))
     {
-        cmp_set_errno_from_last_error();
-        if (ft_errno == FT_ERR_INVALID_HANDLE)
+        int error_code = cmp_set_errno_from_last_error();
+
+        if (error_code == FT_ERR_INVALID_HANDLE)
         {
             g_raw_mode_active = false;
             ft_errno = FT_ERR_SUCCESSS;
@@ -51,8 +55,9 @@ int cmp_readline_enable_raw_mode()
     mode &= ~(ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT);
     if (!SetConsoleMode(handle, mode))
     {
-        cmp_set_errno_from_last_error();
-        if (ft_errno == FT_ERR_INVALID_HANDLE)
+        int error_code = cmp_set_errno_from_last_error();
+
+        if (error_code == FT_ERR_INVALID_HANDLE)
         {
             g_raw_mode_active = false;
             ft_errno = FT_ERR_SUCCESSS;
@@ -140,13 +145,16 @@ int cmp_readline_terminal_width()
 static termios g_orig_termios;
 static bool g_raw_mode_active;
 
-static void cmp_set_errno_from_errno()
+static int cmp_set_errno_from_errno()
 {
+    int error_code;
+
     if (errno == 0)
-        ft_errno = FT_ERR_TERMINATED;
+        error_code = FT_ERR_TERMINATED;
     else
-        ft_errno = ft_map_system_error(errno);
-    return ;
+        error_code = ft_map_system_error(errno);
+    ft_errno = error_code;
+    return (error_code);
 }
 
 int cmp_readline_enable_raw_mode()

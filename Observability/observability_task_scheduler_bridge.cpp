@@ -211,9 +211,17 @@ int observability_task_scheduler_bridge_initialize(ft_otel_span_exporter exporte
         g_observability_bridge_exporter = exporter;
         observability_bridge_set_error(FT_ERR_SUCCESSS);
     }
-    if (task_scheduler_register_trace_sink(&observability_task_scheduler_bridge_trace_sink) != 0)
+    int register_result;
+
+    register_result = task_scheduler_register_trace_sink(&observability_task_scheduler_bridge_trace_sink);
+    int register_error;
+    register_error = ft_global_error_stack_pop_newest();
+    if (register_result != 0)
     {
-        error_code = ft_errno;
+        if (register_error == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_INTERNAL;
+        else
+            error_code = register_error;
         observability_bridge_set_error(error_code);
         {
             ft_lock_guard<pt_mutex> guard(g_observability_bridge_mutex);
@@ -292,9 +300,17 @@ int observability_task_scheduler_bridge_shutdown(void)
             return (0);
         }
     }
-    if (task_scheduler_unregister_trace_sink(&observability_task_scheduler_bridge_trace_sink) != 0)
+    int unregister_result;
+    int unregister_error;
+
+    unregister_result = task_scheduler_unregister_trace_sink(&observability_task_scheduler_bridge_trace_sink);
+    unregister_error = ft_global_error_stack_pop_newest();
+    if (unregister_result != 0)
     {
-        error_code = ft_errno;
+        if (unregister_error == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_INTERNAL;
+        else
+            error_code = unregister_error;
         observability_bridge_set_error(error_code);
         ft_global_error_stack_push(error_code);
         return (-1);

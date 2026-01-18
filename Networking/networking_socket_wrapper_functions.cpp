@@ -348,39 +348,33 @@ ssize_t nw_recvfrom(int sockfd, void *buf, size_t len, int flags,
 int nw_close(int sockfd)
 {
 #ifdef _WIN32
-    int previous_error;
+    int close_error;
 
-    previous_error = ft_errno;
     if (closesocket(static_cast<SOCKET>(sockfd)) == SOCKET_ERROR)
     {
-        ft_errno = ft_map_system_error(WSAGetLastError());
-        if (ft_errno == FT_ERR_SUCCESSS)
-        {
-            ft_errno = FT_ERR_SOCKET_CLOSE_FAILED;
-        }
+        close_error = ft_map_system_error(WSAGetLastError());
+        if (close_error == FT_ERR_SUCCESSS)
+            close_error = FT_ERR_SOCKET_CLOSE_FAILED;
+        ft_global_error_stack_push(close_error);
         return (-1);
     }
     ft_socket_runtime_release();
-    if (ft_errno != FT_ERR_SUCCESSS)
-    {
+    if (ft_global_error_stack_last_error() != FT_ERR_SUCCESSS)
         return (-1);
-    }
-    ft_errno = previous_error;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 #else
-    int previous_error;
+    int close_error;
 
-    previous_error = ft_errno;
     if (close(sockfd) == -1)
     {
-        ft_errno = ft_map_system_error(errno);
-        if (ft_errno == FT_ERR_SUCCESSS)
-        {
-            ft_errno = FT_ERR_SOCKET_CLOSE_FAILED;
-        }
+        close_error = ft_map_system_error(errno);
+        if (close_error == FT_ERR_SUCCESSS)
+            close_error = FT_ERR_SOCKET_CLOSE_FAILED;
+        ft_global_error_stack_push(close_error);
         return (-1);
     }
-    ft_errno = previous_error;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 #endif
 }

@@ -30,12 +30,12 @@ static int config_handle_write_failure(FILE *file)
 {
     int error_code;
 
-    error_code = ft_errno;
+    error_code = ft_global_error_stack_last_error();
     if (file)
         ft_fclose(file);
     if (error_code == FT_ERR_SUCCESSS)
         error_code = FT_ERR_IO;
-    ft_errno = error_code;
+    ft_global_error_stack_push(error_code);
     return (-1);
 }
 
@@ -90,7 +90,7 @@ static int config_write_ini(const cnfg_config *config, const char *filename)
     }
     if (ft_fclose(file) == EOF)
         return (-1);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -101,7 +101,7 @@ static json_group *config_find_or_create_group(json_group **groups_head, const c
 
     if (!groups_head)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     name = section_name;
@@ -141,7 +141,7 @@ static int config_write_json(const cnfg_config *config, const char *filename)
         const cnfg_entry *entry = &config->entries[entry_index];
         if (!entry->key || !entry->value)
         {
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
+            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
             json_free_groups(groups);
             return (-1);
         }
@@ -177,18 +177,18 @@ int config_write_file(const cnfg_config *config, const char *filename)
 
     if (!config || !filename)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     lock_error = cnfg_config_lock_if_enabled(const_cast<cnfg_config*>(config), mutex_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = lock_error;
+        ft_global_error_stack_push(lock_error);
         return (-1);
     }
     if (config->entry_count && !config->entries)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         cnfg_config_unlock_guard(mutex_guard);
         return (-1);
     }
@@ -207,4 +207,3 @@ int config_write_file(const cnfg_config *config, const char *filename)
     cnfg_config_unlock_guard(mutex_guard);
     return (write_result);
 }
-

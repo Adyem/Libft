@@ -35,17 +35,29 @@ static void kv_store_finalize_lock(ft_unique_lock<pt_mutex> &guard) noexcept
     return ;
 }
 
+static int kv_store_operation_error(const kv_store_operation &operation)
+{
+    int error_code;
+
+    error_code = operation._key.get_error();
+    if (error_code == FT_ERR_SUCCESSS)
+        error_code = operation._value.get_error();
+    if (error_code == FT_ERR_SUCCESSS)
+        error_code = FT_ERR_INVALID_ARGUMENT;
+    return (error_code);
+}
+
 int kv_store::lock_replication(ft_unique_lock<pt_mutex> &guard) const noexcept
 {
     ft_unique_lock<pt_mutex> local_guard(this->_replication_mutex);
+    int lock_error;
 
-    if (local_guard.get_error() != FT_ERR_SUCCESSS)
+    lock_error = local_guard.get_error();
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = local_guard.get_error();
         guard = ft_unique_lock<pt_mutex>();
-        return (ft_errno);
+        return (lock_error);
     }
-    ft_errno = FT_ERR_SUCCESSS;
     guard = ft_move(local_guard);
     return (FT_ERR_SUCCESSS);
 }
@@ -76,7 +88,6 @@ int kv_store::dispatch_snapshot_to_sink(kv_store_replication_snapshot_callback s
     if (callback_error != 0)
     {
         mutable_this->set_error(callback_error);
-        ft_errno = callback_error;
         return (-1);
     }
     mutable_this->set_error(FT_ERR_SUCCESSS);
@@ -176,7 +187,6 @@ int kv_store::notify_replication_listeners(const ft_vector<kv_store_operation> &
             if (callback_error != 0)
             {
                 mutable_this->set_error(callback_error);
-                ft_errno = callback_error;
                 return (-1);
             }
         }
@@ -509,7 +519,6 @@ int kv_store::parse_json_groups(json_group *group_head, ft_vector<kv_store_snaps
 int kv_store::load_json_entries(const char *location, ft_vector<kv_store_snapshot_entry> &out_entries)
 {
     json_group *group_head;
-    int current_error;
 
     if (location == ft_nullptr)
     {
@@ -525,13 +534,7 @@ int kv_store::load_json_entries(const char *location, ft_vector<kv_store_snapsho
     group_head = json_read_from_file(location);
     if (group_head == ft_nullptr)
     {
-        current_error = ft_errno;
-        if (current_error == FT_ERR_SUCCESSS)
-        {
-            this->set_error(FT_ERR_SUCCESSS);
-            return (1);
-        }
-        this->set_error(current_error);
+        this->set_error(FT_ERR_IO);
         return (-1);
     }
     if (this->parse_json_groups(group_head, out_entries) != 0)
@@ -670,14 +673,8 @@ int kv_store::flush_json_entries(const ft_vector<kv_store_snapshot_entry> &entri
     json_append_group(&head_group, store_group);
     if (json_write_to_file(this->_file_path.c_str(), head_group) != 0)
     {
-        int stored_error;
-
-        stored_error = ft_errno;
         json_free_groups(head_group);
-        if (stored_error != FT_ERR_SUCCESSS)
-            mutable_this->set_error_unlocked(stored_error);
-        else
-            mutable_this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
+        mutable_this->set_error_unlocked(FT_ERR_IO);
         return (-1);
     }
     json_free_groups(head_group);
@@ -907,11 +904,10 @@ int kv_store::load_json_lines_entries(const char *location, ft_vector<kv_store_s
         return (-1);
     }
     read_result = ft_open_and_read_file(location, lines, 8192);
+    int stored_error = ft_global_error_stack_last_error();
+    ft_global_error_stack_pop_newest();
     if (read_result != 0)
     {
-        int stored_error;
-
-        stored_error = ft_errno;
         if (stored_error == ft_map_system_error(ENOENT))
         {
             this->set_error(FT_ERR_SUCCESSS);
@@ -943,7 +939,7 @@ int kv_store::load_json_lines_entries(const char *location, ft_vector<kv_store_s
         line_groups = json_read_from_string(line_value.c_str());
         if (!line_groups)
         {
-            this->set_error(ft_errno == FT_ERR_SUCCESSS ? FT_ERR_INVALID_ARGUMENT : ft_errno);
+            this->set_error(FT_ERR_INVALID_ARGUMENT);
             return (-1);
         }
         metadata_group = json_find_group(line_groups, "metadata");
@@ -1732,7 +1728,7 @@ int kv_store::load_memory_mapped_entries(const char *location, ft_vector<kv_stor
     cma_free(buffer_pointer);
     if (!group_head)
     {
-        this->set_error(ft_errno == FT_ERR_SUCCESSS ? FT_ERR_INVALID_ARGUMENT : ft_errno);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
 #else
@@ -1788,7 +1784,7 @@ int kv_store::load_memory_mapped_entries(const char *location, ft_vector<kv_stor
     cma_free(buffer_pointer);
     if (!group_head)
     {
-        this->set_error(ft_errno == FT_ERR_SUCCESSS ? FT_ERR_INVALID_ARGUMENT : ft_errno);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
 #endif
@@ -2093,7 +2089,7 @@ int kv_store::read_snapshot(ft_document_source &source)
     group_head = json_read_from_string(content.c_str());
     if (!group_head)
     {
-        this->set_error(ft_errno == FT_ERR_SUCCESSS ? FT_ERR_INVALID_ARGUMENT : ft_errno);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     entries = ft_vector<kv_store_snapshot_entry>();
@@ -2127,20 +2123,17 @@ int kv_store_init_set_operation(kv_store_operation &operation, const char *key_s
 {
     if (key_string == ft_nullptr || value_string == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     operation._type = KV_STORE_OPERATION_TYPE_SET;
     operation._key = key_string;
     if (operation._key.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = operation._key.get_error();
         return (-1);
     }
     operation._value = value_string;
     if (operation._value.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = operation._value.get_error();
         return (-1);
     }
     operation._has_value = true;
@@ -2154,7 +2147,6 @@ int kv_store_init_set_operation(kv_store_operation &operation, const char *key_s
         operation._has_ttl = false;
         operation._ttl_seconds = -1;
     }
-    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -2162,27 +2154,23 @@ int kv_store_init_delete_operation(kv_store_operation &operation, const char *ke
 {
     if (key_string == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     operation._type = KV_STORE_OPERATION_TYPE_DELETE;
     operation._key = key_string;
     if (operation._key.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = operation._key.get_error();
         return (-1);
     }
     operation._value.clear();
     operation._has_value = false;
     operation._has_ttl = false;
     operation._ttl_seconds = -1;
-    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
 void kv_store::set_error_unlocked(int error_code) const noexcept
 {
-    ft_errno = error_code;
     this->_error_code = error_code;
     return ;
 }
@@ -2192,11 +2180,10 @@ void kv_store::set_error(int error_code) const noexcept
     ft_unique_lock<pt_mutex> guard;
     int lock_error;
 
-    ft_errno = FT_ERR_SUCCESSS;
     lock_error = this->lock_store(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = lock_error;
+        this->set_error_unlocked(lock_error);
         return ;
     }
     this->set_error_unlocked(error_code);
@@ -2204,10 +2191,9 @@ void kv_store::set_error(int error_code) const noexcept
         guard.unlock();
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = guard.get_error();
+        this->set_error_unlocked(guard.get_error());
         return ;
     }
-    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -2217,12 +2203,10 @@ int kv_store::lock_store(ft_unique_lock<pt_mutex> &guard) const noexcept
 
     if (local_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = local_guard.get_error();
         guard = ft_unique_lock<pt_mutex>();
         return (local_guard.get_error());
     }
     guard = ft_move(local_guard);
-    ft_errno = FT_ERR_SUCCESSS;
     return (FT_ERR_SUCCESSS);
 }
 
@@ -2230,12 +2214,13 @@ void kv_store::unlock_store_guard(ft_unique_lock<pt_mutex> &guard, int error_cod
 {
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    int guard_error = guard.get_error();
+    if (guard_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = guard.get_error();
+        this->set_error_unlocked(guard_error);
         return ;
     }
-    ft_errno = error_code;
+    this->set_error_unlocked(error_code);
     return ;
 }
 
@@ -2334,14 +2319,15 @@ int kv_store::lock_background(ft_unique_lock<pt_mutex> &guard) const noexcept
 {
     ft_unique_lock<pt_mutex> local_guard(this->_background_mutex);
 
-    if (local_guard.get_error() != FT_ERR_SUCCESSS)
+    int lock_error;
+
+    lock_error = local_guard.get_error();
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = local_guard.get_error();
         guard = ft_unique_lock<pt_mutex>();
-        return (local_guard.get_error());
+        return (lock_error);
     }
     guard = ft_move(local_guard);
-    ft_errno = FT_ERR_SUCCESSS;
     return (FT_ERR_SUCCESSS);
 }
 
@@ -2409,10 +2395,8 @@ void kv_store::background_compaction_worker(kv_store *store) noexcept
         if (guard.get_error() != FT_ERR_SUCCESSS)
         {
             store->set_error_unlocked(guard.get_error());
-            ft_errno = guard.get_error();
             return ;
         }
-        ft_errno = FT_ERR_SUCCESSS;
         if (stop_requested)
             break;
         if (interval_seconds <= 0)
@@ -2427,7 +2411,6 @@ void kv_store::background_compaction_worker(kv_store *store) noexcept
         pt_thread_sleep(static_cast<unsigned int>(sleep_milliseconds));
         store->prune_expired();
         store->set_error_unlocked(FT_ERR_SUCCESSS);
-        ft_errno = FT_ERR_SUCCESSS;
     }
     return ;
 }
@@ -2450,7 +2433,6 @@ int kv_store::prune_expired()
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(guard.get_error());
-        ft_errno = guard.get_error();
         return (-1);
     }
     if (prune_result == 0)
@@ -2574,7 +2556,7 @@ int kv_store::kv_set(const char *key_string, const char *value_string, long long
     }
     if (kv_store_init_set_operation(operation, key_string, value_string, ttl_seconds) != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(kv_store_operation_error(operation));
         return (-1);
     }
     operations.push_back(operation);
@@ -2643,7 +2625,6 @@ const char *kv_store::kv_get(const char *key_string) const
     }
     mutable_this->set_error_unlocked(FT_ERR_SUCCESSS);
     mutable_this->record_get_hit();
-    ft_errno = FT_ERR_SUCCESSS;
     return (value_pointer);
 }
 
@@ -2665,7 +2646,7 @@ int kv_store::kv_delete(const char *key_string)
     }
     if (kv_store_init_delete_operation(operation, key_string) != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(kv_store_operation_error(operation));
         return (-1);
     }
     operations.push_back(operation);
@@ -2683,7 +2664,6 @@ int kv_store::kv_flush() const
     ft_unique_lock<pt_mutex> guard;
     int lock_error;
     int flush_result;
-    int flush_error;
 
     mutable_this = const_cast<kv_store *>(this);
     lock_error = this->lock_store(guard);
@@ -2699,7 +2679,6 @@ int kv_store::kv_flush() const
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         mutable_this->set_error(guard.get_error());
-        ft_errno = guard.get_error();
         return (-1);
     }
     flush_result = 0;
@@ -2716,16 +2695,10 @@ int kv_store::kv_flush() const
         if (mutable_this->export_snapshot(entries) != 0)
             return (-1);
         flush_result = this->flush_backend_entries(entries);
-        if (flush_result != 0)
-            flush_error = ft_errno;
     }
     if (flush_result != 0)
-    {
-        ft_errno = flush_error;
         return (flush_result);
-    }
     mutable_this->set_error(FT_ERR_SUCCESSS);
-    ft_errno = FT_ERR_SUCCESSS;
     return (flush_result);
 }
 int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
@@ -2737,7 +2710,6 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
     size_t metrics_set_count;
     size_t metrics_delete_count;
     int lock_error;
-    int operation_error;
 
     if (operations.get_error() != FT_ERR_SUCCESSS)
     {
@@ -2753,7 +2725,7 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
     }
     if (this->prune_expired_locked(guard) != 0)
     {
-        operation_error = ft_errno;
+        operation_error = this->get_error();
         kv_store::unlock_store_guard(guard, operation_error);
         return (-1);
     }
@@ -2852,7 +2824,7 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
             {
                 if (this->compute_expiration(operation._ttl_seconds, has_expiration, expiration_timestamp) != 0)
                 {
-                    operation_error = ft_errno;
+                    operation_error = this->get_error();
                     kv_store::unlock_store_guard(guard, operation_error);
                     return (-1);
                 }
@@ -2982,7 +2954,7 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
     }
     this->set_error_unlocked(FT_ERR_SUCCESSS);
     kv_store::unlock_store_guard(guard, FT_ERR_SUCCESSS);
-    return (ft_errno == FT_ERR_SUCCESSS ? 0 : -1);
+    return (0);
 }
 
 int kv_store::kv_compare_and_swap(const char *key_string, const char *expected_value, const char *new_value, long long ttl_seconds)
@@ -3021,7 +2993,7 @@ int kv_store::kv_compare_and_swap(const char *key_string, const char *expected_v
     }
     if (this->prune_expired_locked(guard) != 0)
     {
-        operation_error = ft_errno;
+        operation_error = this->get_error();
         kv_store::unlock_store_guard(guard, operation_error);
         return (-1);
     }
@@ -3100,7 +3072,7 @@ int kv_store::kv_compare_and_swap(const char *key_string, const char *expected_v
             }
             if (kv_store_init_delete_operation(replication_operation, key_string) != 0)
             {
-                this->set_error(ft_errno);
+                this->set_error(kv_store_operation_error(replication_operation));
                 return (-1);
             }
             replication_operations.push_back(replication_operation);
@@ -3118,7 +3090,7 @@ int kv_store::kv_compare_and_swap(const char *key_string, const char *expected_v
     {
         if (this->compute_expiration(ttl_seconds, has_expiration, expiration_timestamp) != 0)
         {
-            operation_error = ft_errno;
+            operation_error = this->get_error();
             kv_store::unlock_store_guard(guard, operation_error);
             return (-1);
         }
@@ -3194,7 +3166,7 @@ int kv_store::kv_compare_and_swap(const char *key_string, const char *expected_v
                 }
                 if (kv_store_init_delete_operation(replication_operation, key_string) != 0)
                 {
-                    this->set_error(ft_errno);
+                    this->set_error(kv_store_operation_error(replication_operation));
                     return (-1);
                 }
                 replication_operations.push_back(replication_operation);
@@ -3281,7 +3253,7 @@ int kv_store::kv_compare_and_swap(const char *key_string, const char *expected_v
         }
         if (kv_store_init_set_operation(replication_operation, key_string, new_value, replication_ttl_seconds) != 0)
         {
-            this->set_error(ft_errno);
+            this->set_error(kv_store_operation_error(replication_operation));
             return (-1);
         }
         replication_operations.push_back(replication_operation);
@@ -3332,10 +3304,7 @@ int kv_store::get_metrics(kv_store_metrics &out_metrics) const
     mutable_this = const_cast<kv_store *>(this);
     mutable_this->set_error_unlocked(FT_ERR_SUCCESSS);
     kv_store::unlock_store_guard(guard, FT_ERR_SUCCESSS);
-    operation_error = ft_errno;
-    if (operation_error != FT_ERR_SUCCESSS)
-        return (-1);
-    return (0);
+    return (this->get_error() == FT_ERR_SUCCESSS ? 0 : -1);
 }
 
 int kv_store::export_snapshot(ft_vector<kv_store_snapshot_entry> &out_entries) const
@@ -3358,7 +3327,7 @@ int kv_store::export_snapshot(ft_vector<kv_store_snapshot_entry> &out_entries) c
     }
     if (mutable_this->prune_expired_locked(guard) != 0)
     {
-        kv_store::unlock_store_guard(guard, ft_errno);
+        kv_store::unlock_store_guard(guard, this->get_error());
         return (-1);
     }
     out_entries.clear();
@@ -3450,7 +3419,7 @@ int kv_store::export_snapshot(ft_vector<kv_store_snapshot_entry> &out_entries) c
     }
     mutable_this->set_error_unlocked(FT_ERR_SUCCESSS);
     kv_store::unlock_store_guard(guard, FT_ERR_SUCCESSS);
-    return (ft_errno == FT_ERR_SUCCESSS ? 0 : -1);
+    return (0);
 }
 
 int kv_store::export_snapshot_to_file(const char *file_path) const
@@ -3464,7 +3433,6 @@ int kv_store::export_snapshot_to_file(const char *file_path) const
     kv_store_snapshot_entry *entry_cursor;
     json_item *value_item;
     int write_result;
-    int error_code;
 
     mutable_this = const_cast<kv_store *>(this);
     if (file_path == ft_nullptr)
@@ -3558,14 +3526,10 @@ int kv_store::export_snapshot_to_file(const char *file_path) const
     head_group = ft_nullptr;
     json_append_group(&head_group, snapshot_group);
     write_result = json_write_to_file(file_path, head_group);
-    error_code = ft_errno;
     json_free_groups(head_group);
     if (write_result != 0)
     {
-        if (error_code != FT_ERR_SUCCESSS)
-            mutable_this->set_error(error_code);
-        else
-            mutable_this->set_error(FT_ERR_INVALID_ARGUMENT);
+        mutable_this->set_error(FT_ERR_IO);
         return (-1);
     }
     mutable_this->set_error(FT_ERR_SUCCESSS);
@@ -3668,12 +3632,12 @@ int kv_store::import_snapshot(const ft_vector<kv_store_snapshot_entry> &entries)
     }
     if (this->apply_snapshot_locked(entries) != 0)
     {
-        operation_error = ft_errno;
+        operation_error = this->get_error();
         kv_store::unlock_store_guard(guard, operation_error);
         return (-1);
     }
     kv_store::unlock_store_guard(guard, FT_ERR_SUCCESSS);
-    return (ft_errno == FT_ERR_SUCCESSS ? 0 : -1);
+    return (0);
 }
 
 int kv_store::start_background_compaction(long long interval_seconds)
@@ -3692,7 +3656,12 @@ int kv_store::start_background_compaction(long long interval_seconds)
         return (-1);
     }
     start_result = mutable_this->start_background_thread_locked(interval_seconds);
-    kv_store::unlock_store_guard(guard, start_result == 0 ? FT_ERR_SUCCESSS : ft_errno);
+    int unlock_result;
+    if (start_result == 0)
+        unlock_result = FT_ERR_SUCCESSS;
+    else
+        unlock_result = mutable_this->get_error();
+    kv_store::unlock_store_guard(guard, unlock_result);
     if (start_result != 0)
         return (-1);
     return (0);
@@ -3704,7 +3673,6 @@ int kv_store::stop_background_compaction()
     kv_store *mutable_this;
     ft_thread thread_holder;
     int lock_error;
-    int operation_error;
 
     mutable_this = this;
     lock_error = this->lock_background(guard);
@@ -3735,8 +3703,5 @@ int kv_store::stop_background_compaction()
     this->_background_stop_requested = false;
     mutable_this->set_error_unlocked(FT_ERR_SUCCESSS);
     kv_store::unlock_store_guard(guard, FT_ERR_SUCCESSS);
-    operation_error = ft_errno;
-    if (operation_error != FT_ERR_SUCCESSS)
-        return (-1);
     return (0);
 }

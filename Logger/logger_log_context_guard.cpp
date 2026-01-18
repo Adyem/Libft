@@ -20,9 +20,16 @@ ft_log_context_guard::ft_log_context_guard(const s_log_field *fields,
     {
         this->_active = false;
         this->_pushed_count = 0;
-        this->set_error(ft_errno);
+        int push_error;
+
+        push_error = ft_global_error_stack_pop_newest();
+        if (push_error == FT_ERR_SUCCESSS)
+            push_error = FT_ERR_INTERNAL;
+        this->set_error(push_error);
         return ;
     }
+    else
+        ft_global_error_stack_pop_newest();
     this->_pushed_count = pushed_count;
     if (pushed_count != 0)
         this->_active = true;
@@ -37,10 +44,13 @@ ft_log_context_guard::~ft_log_context_guard() noexcept
     if (this->_active)
     {
         logger_context_pop(this->_pushed_count);
-        if (ft_errno != FT_ERR_SUCCESSS)
+        int pop_error;
+
+        pop_error = ft_global_error_stack_pop_newest();
+        if (pop_error != FT_ERR_SUCCESSS)
         {
             this->_active = false;
-            this->set_error(ft_errno);
+            this->set_error(pop_error);
             return ;
         }
     }
@@ -67,10 +77,13 @@ ft_log_context_guard &ft_log_context_guard::operator=(ft_log_context_guard &&oth
         if (this->_active)
         {
             logger_context_pop(this->_pushed_count);
-            if (ft_errno != FT_ERR_SUCCESSS)
+            int pop_error;
+
+            pop_error = ft_global_error_stack_pop_newest();
+            if (pop_error != FT_ERR_SUCCESSS)
             {
                 this->_active = false;
-                this->set_error(ft_errno);
+                this->set_error(pop_error);
                 return (*this);
             }
         }
@@ -89,7 +102,7 @@ ft_log_context_guard &ft_log_context_guard::operator=(ft_log_context_guard &&oth
 void ft_log_context_guard::set_error(int error_code) const
 {
     this->_error_code = error_code;
-    ft_errno = error_code;
+    ft_global_error_stack_push(error_code);
     return ;
 }
 
@@ -101,10 +114,13 @@ void ft_log_context_guard::release() noexcept
         return ;
     }
     logger_context_pop(this->_pushed_count);
-    if (ft_errno != FT_ERR_SUCCESSS)
+    int pop_error;
+
+    pop_error = ft_global_error_stack_pop_newest();
+    if (pop_error != FT_ERR_SUCCESSS)
     {
         this->_active = false;
-        this->set_error(ft_errno);
+        this->set_error(pop_error);
         return ;
     }
     this->_active = false;
@@ -130,4 +146,3 @@ const char *ft_log_context_guard::get_error_str() const
 {
     return (ft_strerror(this->_error_code));
 }
-

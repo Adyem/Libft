@@ -49,21 +49,21 @@ bool    networking_tls_export_aead_keys(SSL *ssl_session, bool outbound,
 
     if (ssl_session == NULL)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
     cipher = SSL_get_current_cipher(ssl_session);
     evp_cipher = networking_tls_resolve_cipher(cipher);
     if (evp_cipher == NULL)
     {
-        ft_errno = FT_ERR_UNSUPPORTED_TYPE;
+        ft_global_error_stack_push(FT_ERR_UNSUPPORTED_TYPE);
         return (false);
     }
     key_length_value = EVP_CIPHER_key_length(evp_cipher);
     iv_length_value = EVP_CIPHER_iv_length(evp_cipher);
     if (key_length_value <= 0 || iv_length_value <= 0)
     {
-        ft_errno = FT_ERR_INVALID_STATE;
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return (false);
     }
     key_length = static_cast<size_t>(key_length_value);
@@ -71,7 +71,7 @@ bool    networking_tls_export_aead_keys(SSL *ssl_session, bool outbound,
     material_length = (key_length + iv_length) * 2;
     if (!networking_tls_prepare_buffer(material, material_length))
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (false);
     }
     if (material.size() > 0)
@@ -85,28 +85,28 @@ bool    networking_tls_export_aead_keys(SSL *ssl_session, bool outbound,
         if (SSL_export_keying_material(ssl_session, material_data, material_length,
                 label, label_length, NULL, 0, 0) != 1)
         {
-            ft_errno = FT_ERR_INTERNAL;
+            ft_global_error_stack_push(FT_ERR_INTERNAL);
             return (false);
         }
     }
     if (!networking_tls_prepare_buffer(send_key, key_length))
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (false);
     }
     if (!networking_tls_prepare_buffer(send_iv, iv_length))
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (false);
     }
     if (!networking_tls_prepare_buffer(receive_key, key_length))
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (false);
     }
     if (!networking_tls_prepare_buffer(receive_iv, iv_length))
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (false);
     }
     const unsigned char *cursor;
@@ -146,7 +146,7 @@ bool    networking_tls_export_aead_keys(SSL *ssl_session, bool outbound,
             ft_memcpy(receive_iv.begin(), first_iv, iv_length);
         }
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);
 }
 
@@ -164,12 +164,12 @@ bool    networking_tls_initialize_aead_contexts(SSL *ssl_session, bool outbound,
         return (false);
     if (send_key.size() == 0 || receive_key.size() == 0)
     {
-        ft_errno = FT_ERR_INVALID_STATE;
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return (false);
     }
     if (send_iv.size() == 0 || receive_iv.size() == 0)
     {
-        ft_errno = FT_ERR_INVALID_STATE;
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return (false);
     }
     if (send_context.initialize_encrypt(send_key.begin(), send_key.size(),
@@ -178,6 +178,6 @@ bool    networking_tls_initialize_aead_contexts(SSL *ssl_session, bool outbound,
     if (receive_context.initialize_decrypt(receive_key.begin(),
             receive_key.size(), receive_iv.begin(), receive_iv.size()) != FT_ERR_SUCCESSS)
         return (false);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);
 }

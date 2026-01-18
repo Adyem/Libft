@@ -11,7 +11,7 @@ void event_loop_init(event_loop *loop)
 {
     if (!loop)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     loop->read_file_descriptors = ft_nullptr;
@@ -63,7 +63,7 @@ int event_loop_add_socket(event_loop *loop, int socket_fd, bool is_write)
 
     if (!loop)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (event_loop_prepare_thread_safety(loop) != 0)
@@ -85,7 +85,7 @@ int event_loop_add_socket(event_loop *loop, int socket_fd, bool is_write)
                                                sizeof(int) * (*descriptor_count + 1)));
     if (!new_array)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         result = -1;
     }
     else
@@ -94,7 +94,7 @@ int event_loop_add_socket(event_loop *loop, int socket_fd, bool is_write)
         current_count = *descriptor_count;
         new_array[current_count] = socket_fd;
         *descriptor_count = current_count + 1;
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         result = 0;
     }
     event_loop_unlock(loop, lock_acquired);
@@ -111,7 +111,7 @@ int event_loop_remove_socket(event_loop *loop, int socket_fd, bool is_write)
 
     if (!loop)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (event_loop_prepare_thread_safety(loop) != 0)
@@ -138,7 +138,7 @@ int event_loop_remove_socket(event_loop *loop, int socket_fd, bool is_write)
     }
     if (index == *descriptor_count)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         result = -1;
     }
     else
@@ -149,7 +149,7 @@ int event_loop_remove_socket(event_loop *loop, int socket_fd, bool is_write)
             index++;
         }
         *descriptor_count = *descriptor_count - 1;
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         result = 0;
     }
     event_loop_unlock(loop, lock_acquired);
@@ -163,7 +163,7 @@ int event_loop_run(event_loop *loop, int timeout_milliseconds)
 
     if (!loop)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (event_loop_prepare_thread_safety(loop) != 0)
@@ -185,18 +185,18 @@ int event_loop_prepare_thread_safety(event_loop *loop)
 
     if (!loop)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (loop->thread_safe_enabled && loop->mutex)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (0);
     }
     memory = std::malloc(sizeof(pt_mutex));
     if (!memory)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (-1);
     }
     mutex_pointer = new(memory) pt_mutex();
@@ -207,12 +207,12 @@ int event_loop_prepare_thread_safety(event_loop *loop)
         mutex_error = mutex_pointer->get_error();
         mutex_pointer->~pt_mutex();
         std::free(memory);
-        ft_errno = mutex_error;
+        ft_global_error_stack_push(mutex_error);
         return (-1);
     }
     loop->mutex = mutex_pointer;
     loop->thread_safe_enabled = true;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -236,23 +236,23 @@ int event_loop_lock(event_loop *loop, bool *lock_acquired)
         *lock_acquired = false;
     if (!loop)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (!loop->thread_safe_enabled || !loop->mutex)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (0);
     }
     loop->mutex->lock(THREAD_ID);
     if (loop->mutex->get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = loop->mutex->get_error();
+        ft_global_error_stack_push(loop->mutex->get_error());
         return (-1);
     }
     if (lock_acquired)
         *lock_acquired = true;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -260,20 +260,20 @@ void event_loop_unlock(event_loop *loop, bool lock_acquired)
 {
     if (!loop)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     if (!lock_acquired || !loop->mutex)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return ;
     }
     loop->mutex->unlock(THREAD_ID);
     if (loop->mutex->get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = loop->mutex->get_error();
+        ft_global_error_stack_push(loop->mutex->get_error());
         return ;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }

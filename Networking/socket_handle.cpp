@@ -34,8 +34,8 @@ static bool &ft_socket_runtime_initialized()
 
 void ft_socket_handle::set_error(int error_code) const noexcept
 {
-    ft_errno = error_code;
     this->_error_code = error_code;
+    ft_global_error_stack_push(error_code);
     return ;
 }
 
@@ -115,7 +115,7 @@ bool ft_socket_handle::close()
     {
         int close_error;
 
-        close_error = ft_errno;
+        close_error = ft_global_error_stack_last_error();
         if (close_error == FT_ERR_SUCCESSS)
         {
             close_error = FT_ERR_SOCKET_CLOSE_FAILED;
@@ -162,12 +162,15 @@ int ft_socket_runtime_acquire()
         WSADATA data;
         if (WSAStartup(MAKEWORD(2, 2), &data) != 0)
         {
-            ft_errno = ft_map_system_error(WSAGetLastError());
-            if (ft_errno == FT_ERR_SUCCESSS)
+            int runtime_error;
+
+            runtime_error = ft_map_system_error(WSAGetLastError());
+            if (runtime_error == FT_ERR_SUCCESSS)
             {
-                ft_errno = FT_ERR_INITIALIZATION_FAILED;
+                runtime_error = FT_ERR_INITIALIZATION_FAILED;
             }
-            return (ft_errno);
+            ft_global_error_stack_push(runtime_error);
+            return (runtime_error);
         }
         ft_socket_runtime_initialized() = true;
     }
@@ -177,7 +180,7 @@ int ft_socket_runtime_acquire()
     }
     reference_count++;
 #endif
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);
 }
 
@@ -194,21 +197,24 @@ void ft_socket_runtime_release()
         {
             if (WSACleanup() != 0)
             {
-                ft_errno = ft_map_system_error(WSAGetLastError());
-                if (ft_errno == FT_ERR_SUCCESSS)
+                int cleanup_error;
+
+                cleanup_error = ft_map_system_error(WSAGetLastError());
+                if (cleanup_error == FT_ERR_SUCCESSS)
                 {
-                    ft_errno = FT_ERR_INTERNAL;
+                    cleanup_error = FT_ERR_INTERNAL;
                 }
+                ft_global_error_stack_push(cleanup_error);
             }
             else
             {
-                ft_errno = FT_ERR_SUCCESSS;
+                ft_global_error_stack_push(FT_ERR_SUCCESSS);
             }
             initialized = false;
             return ;
         }
     }
 #endif
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }

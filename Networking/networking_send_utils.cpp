@@ -20,7 +20,7 @@ int networking_check_socket_after_send(int socket_fd)
 
     if (socket_fd < 0)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     attempt_limit = 3;
@@ -47,14 +47,14 @@ int networking_check_socket_after_send(int socket_fd)
                 attempt_count++;
                 continue ;
             }
-            ft_errno = ft_map_system_error(last_error);
+            ft_global_error_stack_push(ft_map_system_error(last_error));
 #else
             if (errno == EINTR)
             {
                 attempt_count++;
                 continue ;
             }
-            ft_errno = ft_map_system_error(errno);
+            ft_global_error_stack_push(ft_map_system_error(errno));
 #endif
             return (-1);
         }
@@ -81,14 +81,14 @@ int networking_check_socket_after_send(int socket_fd)
                 attempt_count++;
                 continue ;
             }
-            ft_errno = ft_map_system_error(last_error);
+            ft_global_error_stack_push(ft_map_system_error(last_error));
 #else
             if (errno == EWOULDBLOCK || errno == EAGAIN || errno == EINTR)
             {
                 attempt_count++;
                 continue ;
             }
-            ft_errno = ft_map_system_error(errno);
+            ft_global_error_stack_push(ft_map_system_error(errno));
 #endif
             return (-1);
         }
@@ -106,7 +106,7 @@ int networking_check_socket_after_send(int socket_fd)
                    reinterpret_cast<char*>(&socket_error),
                    &option_length) == SOCKET_ERROR)
     {
-        ft_errno = ft_map_system_error(WSAGetLastError());
+        ft_global_error_stack_push(ft_map_system_error(WSAGetLastError()));
         return (-1);
     }
 #else
@@ -120,21 +120,21 @@ int networking_check_socket_after_send(int socket_fd)
                    &socket_error,
                    &option_length) < 0)
     {
-        ft_errno = ft_map_system_error(errno);
+        ft_global_error_stack_push(ft_map_system_error(errno));
         return (-1);
     }
 #endif
     if (socket_error != 0)
     {
-        ft_errno = ft_map_system_error(socket_error);
+        ft_global_error_stack_push(ft_map_system_error(socket_error));
         return (-1);
     }
     if (disconnect_detected)
     {
-        ft_errno = FT_ERR_SOCKET_SEND_FAILED;
+        ft_global_error_stack_push(FT_ERR_SOCKET_SEND_FAILED);
         return (-1);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -146,7 +146,7 @@ int networking_check_ssl_after_send(SSL *ssl_connection)
 
     if (ssl_connection == NULL)
     {
-        ft_errno = FT_ERR_SOCKET_SEND_FAILED;
+        ft_global_error_stack_push(FT_ERR_SOCKET_SEND_FAILED);
         return (-1);
     }
     attempt_limit = 3;
@@ -154,7 +154,7 @@ int networking_check_ssl_after_send(SSL *ssl_connection)
     socket_fd = SSL_get_fd(ssl_connection);
     if (socket_fd < 0)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (0);
     }
     while (attempt_count < attempt_limit)
@@ -179,14 +179,14 @@ int networking_check_ssl_after_send(SSL *ssl_connection)
                 attempt_count++;
                 continue ;
             }
-            ft_errno = ft_map_system_error(last_error);
+            ft_global_error_stack_push(ft_map_system_error(last_error));
 #else
             if (errno == EINTR)
             {
                 attempt_count++;
                 continue ;
             }
-            ft_errno = ft_map_system_error(errno);
+            ft_global_error_stack_push(ft_map_system_error(errno));
 #endif
             return (-1);
         }
@@ -201,7 +201,7 @@ int networking_check_ssl_after_send(SSL *ssl_connection)
             break;
         if (peek_result == 0)
         {
-            ft_errno = FT_ERR_SOCKET_SEND_FAILED;
+            ft_global_error_stack_push(FT_ERR_SOCKET_SEND_FAILED);
             return (-1);
         }
         ssl_error = SSL_get_error(ssl_connection, peek_result);
@@ -212,7 +212,7 @@ int networking_check_ssl_after_send(SSL *ssl_connection)
         }
         if (ssl_error == SSL_ERROR_ZERO_RETURN)
         {
-            ft_errno = FT_ERR_SOCKET_SEND_FAILED;
+            ft_global_error_stack_push(FT_ERR_SOCKET_SEND_FAILED);
             return (-1);
         }
 #ifdef _WIN32
@@ -227,9 +227,9 @@ int networking_check_ssl_after_send(SSL *ssl_connection)
                 continue ;
             }
             if (last_error != 0)
-                ft_errno = ft_map_system_error(last_error);
+                ft_global_error_stack_push(ft_map_system_error(last_error));
             else
-                ft_errno = FT_ERR_SOCKET_SEND_FAILED;
+                ft_global_error_stack_push(FT_ERR_SOCKET_SEND_FAILED);
             return (-1);
         }
 #else
@@ -241,17 +241,17 @@ int networking_check_ssl_after_send(SSL *ssl_connection)
                 continue ;
             }
             if (errno != 0)
-                ft_errno = ft_map_system_error(errno);
+                ft_global_error_stack_push(ft_map_system_error(errno));
             else
-                ft_errno = FT_ERR_SOCKET_SEND_FAILED;
+                ft_global_error_stack_push(FT_ERR_SOCKET_SEND_FAILED);
             return (-1);
         }
 #endif
-        ft_errno = FT_ERR_SOCKET_SEND_FAILED;
+        ft_global_error_stack_push(FT_ERR_SOCKET_SEND_FAILED);
         return (-1);
     }
     if (networking_check_socket_after_send(socket_fd) != 0)
         return (-1);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }

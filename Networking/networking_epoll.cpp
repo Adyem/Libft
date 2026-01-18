@@ -27,7 +27,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
     epoll_descriptor = epoll_create1(0);
     if (epoll_descriptor == -1)
     {
-        ft_errno = ft_map_system_error(errno);
+        ft_global_error_stack_push(ft_map_system_error(errno));
         return (-1);
     }
     index = 0;
@@ -44,7 +44,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
 
                 last_error = errno;
                 close(epoll_descriptor);
-                ft_errno = ft_map_system_error(last_error);
+                ft_global_error_stack_push(ft_map_system_error(last_error));
                 return (-1);
             }
             valid_read_count++;
@@ -65,7 +65,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
 
                 last_error = errno;
                 close(epoll_descriptor);
-                ft_errno = ft_map_system_error(last_error);
+                ft_global_error_stack_push(ft_map_system_error(last_error));
                 return (-1);
             }
             valid_write_count++;
@@ -88,15 +88,14 @@ int nw_poll(int *read_file_descriptors, int read_count,
             index++;
         }
         close(epoll_descriptor);
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (0);
     }
     events = static_cast<epoll_event *>(cma_malloc(sizeof(epoll_event) * maximum_events));
     if (!events)
     {
         close(epoll_descriptor);
-        if (ft_errno == FT_ERR_SUCCESSS)
-            ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (-1);
     }
     read_ready_flags = ft_nullptr;
@@ -108,8 +107,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
         {
             cma_free(events);
             close(epoll_descriptor);
-            if (ft_errno == FT_ERR_SUCCESSS)
-                ft_errno = FT_ERR_NO_MEMORY;
+            ft_global_error_stack_push(FT_ERR_NO_MEMORY);
             return (-1);
         }
         index = 0;
@@ -128,6 +126,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
                 cma_free(read_ready_flags);
             cma_free(events);
             close(epoll_descriptor);
+            ft_global_error_stack_push(FT_ERR_NO_MEMORY);
             return (-1);
         }
         index = 0;
@@ -150,9 +149,9 @@ int nw_poll(int *read_file_descriptors, int read_count,
         cma_free(events);
         close(epoll_descriptor);
         if (ready_descriptors == 0)
-            ft_errno = FT_ERR_SUCCESSS;
+            ft_global_error_stack_push(FT_ERR_SUCCESSS);
         else
-            ft_errno = ft_map_system_error(wait_error);
+            ft_global_error_stack_push(ft_map_system_error(wait_error));
         return (ready_descriptors);
     }
     ready_index = 0;
@@ -207,6 +206,6 @@ int nw_poll(int *read_file_descriptors, int read_count,
     if (write_ready_flags)
         cma_free(write_ready_flags);
     close(epoll_descriptor);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (ready_descriptors);
 }
