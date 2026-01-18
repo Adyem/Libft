@@ -55,16 +55,21 @@ int pf_unregister_custom_specifier(char specifier)
     return (0);
 }
 
-int pf_try_format_custom_specifier(char specifier, va_list *args, ft_string &output)
+int pf_try_format_custom_specifier(char specifier, va_list *args, ft_string &output, bool *handled)
 {
     unsigned char               index;
     t_pf_custom_formatter       handler;
     void                        *context;
+    int                         error_code;
 
+    if (handled == ft_nullptr)
+    {
+        return (FT_ERR_INVALID_ARGUMENT);
+    }
+    *handled = false;
     if (args == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_POINTER;
-        return (-1);
+        return (FT_ERR_INVALID_POINTER);
     }
     index = static_cast<unsigned char>(specifier);
     {
@@ -73,21 +78,18 @@ int pf_try_format_custom_specifier(char specifier, va_list *args, ft_string &out
         context = g_pf_custom_specifiers[index].context;
     }
     if (handler == ft_nullptr)
-        return (1);
+        return (FT_ERR_SUCCESSS);
     output.clear();
-    ft_errno = FT_ERR_SUCCESSS;
+    *handled = true;
     if (handler(args, output, context) != 0)
     {
-        if (ft_errno == FT_ERR_SUCCESSS)
-            ft_errno = FT_ERR_INTERNAL;
-        return (-1);
+        error_code = output.get_error();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_INTERNAL;
+        return (error_code);
     }
-    int output_error = output.get_error();
-    if (output_error != FT_ERR_SUCCESSS)
-    {
-        if (ft_errno == FT_ERR_SUCCESSS)
-            ft_errno = output_error;
-        return (-1);
-    }
-    return (0);
+    error_code = output.get_error();
+    if (error_code != FT_ERR_SUCCESSS)
+        return (error_code);
+    return (FT_ERR_SUCCESSS);
 }

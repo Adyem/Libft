@@ -48,8 +48,7 @@ struct api_request_metrics_guard
             port_string = cma_itoa(static_cast<int>(port));
             if (!port_string)
             {
-                if (ft_errno != FT_ERR_SUCCESSS)
-                    _enabled = false;
+                _enabled = false;
                 return ;
             }
             _endpoint.append(':');

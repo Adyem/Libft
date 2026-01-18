@@ -50,22 +50,17 @@ int pf_flush_stream(FILE *stream)
     int saved_errno;
 
     if (stream == ft_nullptr)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (-1);
-    }
+        return (FT_ERR_INVALID_ARGUMENT);
     errno = 0;
     flush_status = g_pf_fflush_function(stream);
     if (flush_status != 0)
     {
         saved_errno = errno;
         if (saved_errno != 0)
-            ft_errno = ft_map_system_error(saved_errno);
-        else
-            ft_errno = FT_ERR_IO;
-        return (-1);
+            return (ft_map_system_error(saved_errno));
+        return (FT_ERR_IO);
     }
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
 void pf_set_ftell_function(t_pf_ftell_function function)
@@ -116,9 +111,9 @@ int pf_vsnprintf(char *string, size_t size, const char *format, va_list args)
             ft_global_error_stack_push(error_code);
         return (printed);
     }
-    if (pf_flush_stream(stream) != 0)
+    error_code = pf_flush_stream(stream);
+    if (error_code != FT_ERR_SUCCESSS)
     {
-        error_code = ft_errno;
         fclose(stream);
         if (string != ft_nullptr && size > 0)
             string[0] = '\0';

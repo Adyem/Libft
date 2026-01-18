@@ -24,7 +24,7 @@ void ft_putfloat_fd(double number, int fd, size_t *count, int precision);
 void ft_putscientific_fd(double number, bool uppercase, int fd, size_t *count, int precision);
 void ft_putgeneral_fd(double number, bool uppercase, int fd, size_t *count, int precision);
 int pf_printf_fd_v(int fd, const char *format, va_list args);
-int pf_try_format_custom_specifier(char specifier, va_list *args, ft_string &output);
+int pf_try_format_custom_specifier(char specifier, va_list *args, ft_string &output, bool *handled);
 void pf_write_ft_string_fd(const ft_string &output, int fd, size_t *count);
 void pf_write_ft_string_stream(const ft_string &output, FILE *stream, size_t *count);
 int pf_flush_stream(FILE *stream);

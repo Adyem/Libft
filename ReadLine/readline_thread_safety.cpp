@@ -13,20 +13,20 @@ int rl_state_prepare_thread_safety(readline_state_t *state)
     if (state == ft_nullptr)
     {
         error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_errno = error_code;
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     if (state->thread_safe_enabled == true && state->mutex != ft_nullptr)
     {
         error_code = FT_ERR_SUCCESSS;
-        ft_errno = error_code;
+        ft_global_error_stack_push(error_code);
         return (0);
     }
     mutex_pointer = new (std::nothrow) pt_mutex();
     if (mutex_pointer == ft_nullptr)
     {
         error_code = FT_ERR_NO_MEMORY;
-        ft_errno = error_code;
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
@@ -35,13 +35,13 @@ int rl_state_prepare_thread_safety(readline_state_t *state)
 
         mutex_error = mutex_pointer->get_error();
         delete mutex_pointer;
-        ft_errno = mutex_error;
+        ft_global_error_stack_push(mutex_error);
         return (-1);
     }
     state->mutex = mutex_pointer;
     state->thread_safe_enabled = true;
     error_code = FT_ERR_SUCCESSS;
-    ft_errno = error_code;
+    ft_global_error_stack_push(error_code);
     return (0);
 }
 
@@ -67,26 +67,26 @@ int rl_state_lock(readline_state_t *state, bool *lock_acquired)
     if (state == ft_nullptr)
     {
         error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_errno = error_code;
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     if (state->thread_safe_enabled == false || state->mutex == ft_nullptr)
     {
         error_code = FT_ERR_SUCCESSS;
-        ft_errno = error_code;
+        ft_global_error_stack_push(error_code);
         return (0);
     }
     state->mutex->lock(THREAD_ID);
     if (state->mutex->get_error() != FT_ERR_SUCCESSS)
     {
         error_code = state->mutex->get_error();
-        ft_errno = error_code;
+        ft_global_error_stack_push(error_code);
         return (-1);
     }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
     error_code = FT_ERR_SUCCESSS;
-    ft_errno = error_code;
+    ft_global_error_stack_push(error_code);
     return (0);
 }
 
@@ -97,23 +97,23 @@ void rl_state_unlock(readline_state_t *state, bool lock_acquired)
     if (state == ft_nullptr || lock_acquired == false)
     {
         error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_errno = error_code;
+        ft_global_error_stack_push(error_code);
         return ;
     }
     if (state->mutex == ft_nullptr)
     {
         error_code = FT_ERR_INVALID_STATE;
-        ft_errno = error_code;
+        ft_global_error_stack_push(error_code);
         return ;
     }
     state->mutex->unlock(THREAD_ID);
     if (state->mutex->get_error() != FT_ERR_SUCCESSS)
     {
         error_code = state->mutex->get_error();
-        ft_errno = error_code;
+        ft_global_error_stack_push(error_code);
         return ;
     }
     error_code = FT_ERR_SUCCESSS;
-    ft_errno = error_code;
+    ft_global_error_stack_push(error_code);
     return ;
 }

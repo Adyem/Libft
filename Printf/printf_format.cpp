@@ -17,28 +17,23 @@ static int pf_fd_writer(const char *data_pointer, size_t data_length, void *cont
 
     writer_context = static_cast<pf_fd_writer_context*>(context);
     if (!writer_context || !written_count)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (-1);
-    }
+        return (FT_ERR_INVALID_ARGUMENT);
     if (data_length == 0)
-        return (0);
+        return (FT_ERR_SUCCESSS);
     if (*written_count > SIZE_MAX - data_length)
     {
-        ft_errno = FT_ERR_OUT_OF_RANGE;
         *written_count = SIZE_MAX;
-        return (-1);
+        return (FT_ERR_OUT_OF_RANGE);
     }
     ssize_t written_result;
     written_result = su_write(writer_context->file_descriptor, data_pointer, data_length);
     if (written_result != static_cast<ssize_t>(data_length))
     {
-        ft_errno = FT_ERR_IO;
         *written_count = SIZE_MAX;
-        return (-1);
+        return (FT_ERR_IO);
     }
     *written_count += data_length;
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
 int pf_printf_fd_v(int fd, const char *format, va_list args)
@@ -57,12 +52,10 @@ int pf_printf_fd_v(int fd, const char *format, va_list args)
     written_count = 0;
     va_list current_args;
     va_copy(current_args, args);
-    if (pf_engine_format(format, current_args, pf_fd_writer, &context, &written_count) != 0)
+    error_code = pf_engine_format(format, current_args, pf_fd_writer, &context, &written_count);
+    if (error_code != FT_ERR_SUCCESSS)
     {
         va_end(current_args);
-        error_code = ft_errno;
-        if (error_code == FT_ERR_SUCCESSS)
-            error_code = FT_ERR_IO;
         ft_global_error_stack_push(error_code);
         return (-1);
     }

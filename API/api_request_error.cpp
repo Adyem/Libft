@@ -7,102 +7,70 @@
 # include <ws2tcpip.h>
 #endif
 
-void api_request_set_resolve_error(int resolver_status)
+int api_request_set_resolve_error(int resolver_status)
 {
+    int error_code = FT_ERR_SOCKET_RESOLVE_FAILED;
+
 #ifdef EAI_BADFLAGS
     if (resolver_status == EAI_BADFLAGS)
-    {
-        ft_errno = FT_ERR_SOCKET_RESOLVE_BAD_FLAGS;
-        return ;
-    }
+        return (FT_ERR_SOCKET_RESOLVE_BAD_FLAGS);
 #endif
 #ifdef EAI_AGAIN
     if (resolver_status == EAI_AGAIN)
-    {
-        ft_errno = FT_ERR_SOCKET_RESOLVE_AGAIN;
-        return ;
-    }
+        return (FT_ERR_SOCKET_RESOLVE_AGAIN);
 #endif
 #ifdef EAI_FAIL
     if (resolver_status == EAI_FAIL)
-    {
-        ft_errno = FT_ERR_SOCKET_RESOLVE_FAIL;
-        return ;
-    }
+        return (FT_ERR_SOCKET_RESOLVE_FAIL);
 #endif
 #ifdef EAI_FAMILY
     if (resolver_status == EAI_FAMILY)
-    {
-        ft_errno = FT_ERR_SOCKET_RESOLVE_FAMILY;
-        return ;
-    }
+        return (FT_ERR_SOCKET_RESOLVE_FAMILY);
 #endif
 #ifdef EAI_ADDRFAMILY
     if (resolver_status == EAI_ADDRFAMILY)
-    {
-        ft_errno = FT_ERR_SOCKET_RESOLVE_FAMILY;
-        return ;
-    }
+        return (FT_ERR_SOCKET_RESOLVE_FAMILY);
 #endif
 #ifdef EAI_SOCKTYPE
     if (resolver_status == EAI_SOCKTYPE)
-    {
-        ft_errno = FT_ERR_SOCKET_RESOLVE_SOCKTYPE;
-        return ;
-    }
+        return (FT_ERR_SOCKET_RESOLVE_SOCKTYPE);
 #endif
 #ifdef EAI_SERVICE
     if (resolver_status == EAI_SERVICE)
-    {
-        ft_errno = FT_ERR_SOCKET_RESOLVE_SERVICE;
-        return ;
-    }
+        return (FT_ERR_SOCKET_RESOLVE_SERVICE);
 #endif
 #ifdef EAI_MEMORY
     if (resolver_status == EAI_MEMORY)
-    {
-        ft_errno = FT_ERR_SOCKET_RESOLVE_MEMORY;
-        return ;
-    }
+        return (FT_ERR_SOCKET_RESOLVE_MEMORY);
 #endif
 #ifdef EAI_NONAME
     if (resolver_status == EAI_NONAME)
-    {
-        ft_errno = FT_ERR_SOCKET_RESOLVE_NO_NAME;
-        return ;
-    }
+        return (FT_ERR_SOCKET_RESOLVE_NO_NAME);
 #endif
 #ifdef EAI_NODATA
     if (resolver_status == EAI_NODATA)
-    {
-        ft_errno = FT_ERR_SOCKET_RESOLVE_NO_NAME;
-        return ;
-    }
+        return (FT_ERR_SOCKET_RESOLVE_NO_NAME);
 #endif
 #ifdef EAI_OVERFLOW
     if (resolver_status == EAI_OVERFLOW)
-    {
-        ft_errno = FT_ERR_SOCKET_RESOLVE_OVERFLOW;
-        return ;
-    }
+        return (FT_ERR_SOCKET_RESOLVE_OVERFLOW);
 #endif
 #ifdef EAI_SYSTEM
     if (resolver_status == EAI_SYSTEM)
     {
 #ifdef _WIN32
-        ft_errno = ft_map_system_error(WSAGetLastError());
+        return (ft_map_system_error(WSAGetLastError()));
 #else
-        if (errno != 0)
-            ft_errno = ft_map_system_error(errno);
-        else
-            ft_errno = FT_ERR_SOCKET_RESOLVE_FAIL;
+        int system_error = errno;
+
+        if (system_error != 0)
+            return (ft_map_system_error(system_error));
+        return (FT_ERR_SOCKET_RESOLVE_FAIL);
 #endif
-        return ;
     }
 #endif
     (void)resolver_status;
-    ft_errno = FT_ERR_SOCKET_RESOLVE_FAILED;
-    return ;
+    return (error_code);
 }
 
 bool api_is_configuration_socket_error(int error_code)

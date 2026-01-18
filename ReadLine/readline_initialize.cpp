@@ -31,7 +31,7 @@ int rl_initialize_state(readline_state_t *state)
 
     if (state == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (1);
     }
     lock_acquired = false;
@@ -67,7 +67,7 @@ int rl_initialize_state(readline_state_t *state)
             rl_disable_raw_mode();
             if (thread_safety_created == true)
                 rl_state_teardown_thread_safety(state);
-            ft_errno = error_code;
+            ft_global_error_stack_push(error_code);
             return (1);
         }
         state->buffer = ft_nullptr;
@@ -83,7 +83,7 @@ int rl_initialize_state(readline_state_t *state)
         rl_disable_raw_mode();
         if (thread_safety_created == true)
             rl_state_teardown_thread_safety(state);
-        ft_errno = error_code;
+        ft_global_error_stack_push(error_code);
         return (1);
     }
     error_code = ft_global_error_stack_pop_newest();
@@ -93,7 +93,7 @@ int rl_initialize_state(readline_state_t *state)
         rl_disable_raw_mode();
         if (thread_safety_created == true)
             rl_state_teardown_thread_safety(state);
-        ft_errno = error_code;
+        ft_global_error_stack_push(error_code);
         return (1);
     }
     state->pos = 0;
@@ -113,6 +113,5 @@ int rl_initialize_state(readline_state_t *state)
     }
     rl_open_log_file(state);
     rl_state_unlock(state, lock_acquired);
-    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }

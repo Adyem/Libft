@@ -266,12 +266,8 @@ const char *json_item_get_error_str(const json_item *item)
 void json_schema_field_set_error_unlocked(json_schema_field *field, int error_code)
 {
     if (field == ft_nullptr)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
-    }
     field->_error_code = error_code;
-    ft_errno = error_code;
     return ;
 }
 
@@ -281,58 +277,49 @@ void json_schema_field_set_error(json_schema_field *field, int error_code)
     int lock_error;
 
     if (field == ft_nullptr)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
-    }
     lock_error = json_schema_field_lock(field, guard);
     if (lock_error != FT_ERR_SUCCESSS)
-    {
-        ft_errno = lock_error;
         return ;
-    }
     json_schema_field_set_error_unlocked(field, error_code);
     if (guard.owns_lock())
         guard.unlock();
-    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
 int json_schema_field_enable_thread_safety(json_schema_field *field)
 {
     if (field == ft_nullptr)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (-1);
-    }
+        return (FT_ERR_INVALID_ARGUMENT);
     json_schema_field_initialize_error(field);
     json_schema_field_set_error_unlocked(field, FT_ERR_SUCCESSS);
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
 int json_schema_field_lock(json_schema_field *field, ft_unique_lock<pt_mutex> &guard)
 {
     ft_unique_lock<pt_mutex> local_guard;
+    int enable_error;
+    int mutex_error;
 
     if (field == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
         guard = ft_unique_lock<pt_mutex>();
         return (FT_ERR_INVALID_ARGUMENT);
     }
-    if (json_schema_field_enable_thread_safety(field) != 0)
+    enable_error = json_schema_field_enable_thread_safety(field);
+    if (enable_error != FT_ERR_SUCCESSS)
     {
         guard = ft_unique_lock<pt_mutex>();
-        return (ft_errno);
+        return (enable_error);
     }
     local_guard = ft_unique_lock<pt_mutex>(field->_mutex);
-    if (local_guard.get_error() != FT_ERR_SUCCESSS)
+    mutex_error = local_guard.get_error();
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = local_guard.get_error();
         guard = ft_unique_lock<pt_mutex>();
-        return (local_guard.get_error());
+        return (mutex_error);
     }
-    ft_errno = FT_ERR_SUCCESSS;
     guard = ft_move(local_guard);
     return (FT_ERR_SUCCESSS);
 }
@@ -340,11 +327,7 @@ int json_schema_field_lock(json_schema_field *field, ft_unique_lock<pt_mutex> &g
 int json_schema_field_get_error(const json_schema_field *field)
 {
     if (field == ft_nullptr)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (FT_ERR_INVALID_ARGUMENT);
-    }
-    ft_errno = FT_ERR_SUCCESSS;
     return (field->_error_code);
 }
 
@@ -359,12 +342,8 @@ const char *json_schema_field_get_error_str(const json_schema_field *field)
 void json_schema_set_error_unlocked(json_schema *schema, int error_code)
 {
     if (schema == ft_nullptr)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
-    }
     schema->_error_code = error_code;
-    ft_errno = error_code;
     return ;
 }
 
@@ -374,59 +353,49 @@ void json_schema_set_error(json_schema *schema, int error_code)
     int lock_error;
 
     if (schema == ft_nullptr)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
-    }
     lock_error = json_schema_lock(schema, guard);
     if (lock_error != FT_ERR_SUCCESSS)
-    {
-        ft_errno = lock_error;
         return ;
-    }
     json_schema_set_error_unlocked(schema, error_code);
     if (guard.owns_lock())
         guard.unlock();
-    if (ft_errno == FT_ERR_SUCCESSS)
-        ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
 int json_schema_enable_thread_safety(json_schema *schema)
 {
     if (schema == ft_nullptr)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (-1);
-    }
+        return (FT_ERR_INVALID_ARGUMENT);
     json_schema_initialize_error(schema);
     json_schema_set_error_unlocked(schema, FT_ERR_SUCCESSS);
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
 int json_schema_lock(json_schema *schema, ft_unique_lock<pt_mutex> &guard)
 {
     ft_unique_lock<pt_mutex> local_guard;
+    int enable_error;
+    int mutex_error;
 
     if (schema == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
         guard = ft_unique_lock<pt_mutex>();
         return (FT_ERR_INVALID_ARGUMENT);
     }
-    if (json_schema_enable_thread_safety(schema) != 0)
+    enable_error = json_schema_enable_thread_safety(schema);
+    if (enable_error != FT_ERR_SUCCESSS)
     {
         guard = ft_unique_lock<pt_mutex>();
-        return (ft_errno);
+        return (enable_error);
     }
     local_guard = ft_unique_lock<pt_mutex>(schema->_mutex);
-    if (local_guard.get_error() != FT_ERR_SUCCESSS)
+    mutex_error = local_guard.get_error();
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = local_guard.get_error();
         guard = ft_unique_lock<pt_mutex>();
-        return (local_guard.get_error());
+        return (mutex_error);
     }
-    ft_errno = FT_ERR_SUCCESSS;
     guard = ft_move(local_guard);
     return (FT_ERR_SUCCESSS);
 }
@@ -434,11 +403,7 @@ int json_schema_lock(json_schema *schema, ft_unique_lock<pt_mutex> &guard)
 int json_schema_get_error(const json_schema *schema)
 {
     if (schema == ft_nullptr)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (FT_ERR_INVALID_ARGUMENT);
-    }
-    ft_errno = FT_ERR_SUCCESSS;
     return (schema->_error_code);
 }
 

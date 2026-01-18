@@ -1,7 +1,6 @@
 #include "class_file_stream.hpp"
 
 #include "../CMA/CMA.hpp"
-#include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include <climits>
 
@@ -14,19 +13,16 @@ static int ft_file_allocate_transfer_buffer(char **buffer_pointer, size_t buffer
 {
     if (buffer_pointer == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     if (buffer_size == 0)
     {
         *buffer_pointer = ft_nullptr;
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     *buffer_pointer = static_cast<char *>(cma_malloc(buffer_size));
     if (*buffer_pointer == ft_nullptr)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
         return (-1);
     }
     return (0);
@@ -79,6 +75,5 @@ int ft_file_stream_copy(ft_file &source_file, ft_file &destination_file, size_t 
         }
     }
     ft_file_release_transfer_buffer(transfer_buffer);
-    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }

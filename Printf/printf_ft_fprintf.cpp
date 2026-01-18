@@ -19,32 +19,26 @@ static int pf_stream_writer(const char *data_pointer, size_t data_length, void *
 
     writer_context = static_cast<pf_stream_writer_context*>(context);
     if (!writer_context || !writer_context->stream || !written_count)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (-1);
-    }
+        return (FT_ERR_INVALID_ARGUMENT);
     if (data_length == 0)
-        return (0);
+        return (FT_ERR_SUCCESSS);
     if (*written_count > SIZE_MAX - data_length)
     {
-        ft_errno = FT_ERR_OUT_OF_RANGE;
         *written_count = SIZE_MAX;
-        return (-1);
+        return (FT_ERR_OUT_OF_RANGE);
     }
     size_t written;
     errno = 0;
     written = fwrite(data_pointer, 1, data_length, writer_context->stream);
     if (written != data_length)
     {
-        if (errno != 0)
-            ft_errno = ft_map_system_error(errno);
-        else
-            ft_errno = FT_ERR_IO;
         *written_count = SIZE_MAX;
-        return (-1);
+        if (errno != 0)
+            return (ft_map_system_error(errno));
+        return (FT_ERR_IO);
     }
     *written_count += data_length;
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
 int ft_vfprintf(FILE *stream, const char *format, va_list args)
@@ -65,19 +59,16 @@ int ft_vfprintf(FILE *stream, const char *format, va_list args)
     va_copy(current_args, args);
     int engine_status;
     engine_status = pf_engine_format(format, current_args, pf_stream_writer, &context, &written_count);
-    if (engine_status != 0)
+    if (engine_status != FT_ERR_SUCCESSS)
     {
-        int format_error;
-
-        format_error = ft_errno;
         va_end(current_args);
-        ft_global_error_stack_push(format_error);
+        ft_global_error_stack_push(engine_status);
         return (-1);
     }
     va_end(current_args);
-    if (pf_flush_stream(stream) != 0)
+    error_code = pf_flush_stream(stream);
+    if (error_code != FT_ERR_SUCCESSS)
     {
-        error_code = ft_errno;
         ft_global_error_stack_push(error_code);
         return (-1);
     }

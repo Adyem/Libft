@@ -7,12 +7,11 @@ char    *cnfg_parse_flags(int argument_count, char **argument_values)
 {
     if (argument_count <= 1)
     {
-        ft_errno = FT_ERR_SUCCESSS;
         return (ft_nullptr);
     }
     if (!argument_values)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     char   *flags = ft_nullptr;
@@ -37,7 +36,7 @@ char    *cnfg_parse_flags(int argument_count, char **argument_values)
                     char *new_flags = static_cast<char*>(cma_realloc(flags, length + 2));
                     if (!new_flags)
                     {
-                        ft_errno = FT_ERR_NO_MEMORY;
+                        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
                         cma_free(flags);
                         return (ft_nullptr);
                     }
@@ -50,7 +49,6 @@ char    *cnfg_parse_flags(int argument_count, char **argument_values)
         }
         ++argument_index;
     }
-    ft_errno = FT_ERR_SUCCESSS;
     return (flags);
 }
 
@@ -58,12 +56,11 @@ char    **cnfg_parse_long_flags(int argument_count, char **argument_values)
 {
     if (argument_count <= 1)
     {
-        ft_errno = FT_ERR_SUCCESSS;
         return (ft_nullptr);
     }
     if (!argument_values)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     char  **flags = ft_nullptr;
@@ -97,7 +94,7 @@ char    **cnfg_parse_long_flags(int argument_count, char **argument_values)
         char **new_flags = static_cast<char**>(cma_realloc(flags, (count + 2) * sizeof(char*)));
         if (!new_flags)
         {
-            ft_errno = FT_ERR_NO_MEMORY;
+            ft_global_error_stack_push(FT_ERR_NO_MEMORY);
             size_t free_index = 0;
             while (free_index < count)
             {
@@ -111,7 +108,7 @@ char    **cnfg_parse_long_flags(int argument_count, char **argument_values)
         flags[count] = cma_strdup(flag_string);
         if (!flags[count])
         {
-            ft_errno = FT_ERR_NO_MEMORY;
+            ft_global_error_stack_push(FT_ERR_NO_MEMORY);
             size_t free_index = 0;
             while (free_index < count)
             {
@@ -125,7 +122,5 @@ char    **cnfg_parse_long_flags(int argument_count, char **argument_values)
         flags[count] = ft_nullptr;
         ++argument_index;
     }
-    ft_errno = FT_ERR_SUCCESSS;
     return (flags);
 }
-
