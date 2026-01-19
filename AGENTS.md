@@ -100,6 +100,8 @@ Every class and module that tracks its own errors must reuse the `ft_operation_e
 - Every class should expose helper functions that let callers inspect and push/pull from its local stack in the same way they already expose the recursive mutex helper.
 - During error handling, continue using `std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());` whenever the global stack is involved so the class mutex is not re-entered unintentionally.
 
+_Note: `ft_nullptr_t` is a stateless sentinel and does not track errors via a per-class stack or push entries to the global stack; it never alters any error stacks._
+
 Public CMA and SCMA entry points (see their dedicated modules for the authorized function lists) also maintain module-local `ft_operation_error_stack` instances. They follow the same pattern as class stacks: each public function pushes to both the Errno global stack and the module stack using the shared operation ID so that the error ID stays consistent across both stacks. Internal helpers inside CMA and SCMA remain on their dedicated stacks and communicate with callers via the local stack without touching the global Errno stack directly.
 
 Only .cpp files must be prefixed with the name of the module they belong to. Nested modules must contain both the original module name followed by the nested module name.
