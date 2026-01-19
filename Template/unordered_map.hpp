@@ -15,6 +15,12 @@
 #include <utility>
 #include "move.hpp"
 
+static inline int ft_unordered_map_last_global_error() noexcept
+{
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    return (ft_global_error_stack_last_error());
+}
+
 template <typename Key, typename MappedType>
 struct ft_pair
 {
@@ -40,7 +46,6 @@ class ft_unordered_map
 
         void    resize(size_t new_capacity);
         size_t  find_index(const Key& key) const;
-        void    set_error(int error) const;
         size_t  hash_key(const Key& key) const;
         void    insert_internal(const Key& key, const MappedType& value);
         bool    has_storage() const;

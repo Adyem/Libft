@@ -370,3 +370,10 @@ pt_recursive_mutex *ft_istream::get_mutex_for_validation() const noexcept
 {
     return (&this->_mutex);
 }
+
+#ifdef LIBFT_TEST_BUILD
+pt_recursive_mutex *ft_istream::get_mutex_for_testing() noexcept
+{
+    return (&this->_mutex);
+}
+#endif

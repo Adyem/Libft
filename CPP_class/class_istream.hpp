@@ -48,6 +48,9 @@ class ft_istream
         static int pop_oldest_operation_error() noexcept;
         static int operation_error_index() noexcept;
         pt_recursive_mutex *get_mutex_for_validation() const noexcept;
+#ifdef LIBFT_TEST_BUILD
+        pt_recursive_mutex *get_mutex_for_testing() noexcept;
+#endif
 };
 
 #endif

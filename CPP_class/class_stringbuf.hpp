@@ -2,7 +2,8 @@
 #define FT_STRINGBUF_HPP
 
 #include "class_string.hpp"
-#include "../PThread/mutex.hpp"
+#include "../Errno/errno_internal.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "../PThread/unique_lock.hpp"
 
 class ft_stringbuf
@@ -11,12 +12,16 @@ class ft_stringbuf
         ft_string _storage;
         std::size_t _position;
         mutable int _error_code;
-        mutable pt_mutex _mutex;
+        mutable pt_recursive_mutex _mutex;
+        static thread_local ft_operation_error_stack _operation_errors;
 
         void set_error_unlocked(int error_code) const noexcept;
+        static void record_operation_error(int error_code) noexcept;
         void set_error(int error_code) const noexcept;
-        int lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept;
-        static void finalize_lock(ft_unique_lock<pt_mutex> &guard) noexcept;
+        int lock_self(ft_unique_lock<pt_recursive_mutex> &guard) const noexcept;
+        static int lock_pair(const ft_stringbuf &first, const ft_stringbuf &second,
+            ft_unique_lock<pt_recursive_mutex> &first_guard,
+            ft_unique_lock<pt_recursive_mutex> &second_guard) noexcept;
 
     public:
         ft_stringbuf(const ft_string &string) noexcept;
@@ -31,6 +36,17 @@ class ft_stringbuf
         int get_error() const noexcept;
         const char *get_error_str() const noexcept;
         ft_string str() const;
+        static const char *last_operation_error_str() noexcept;
+        static const char *operation_error_str_at(ft_size_t index) noexcept;
+        static int last_operation_error() noexcept;
+        static int operation_error_at(ft_size_t index) noexcept;
+        static void pop_operation_errors() noexcept;
+        static int pop_oldest_operation_error() noexcept;
+        static int operation_error_index() noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
+#ifdef LIBFT_TEST_BUILD
+        pt_recursive_mutex *get_mutex_for_testing() noexcept;
+#endif
 };
 
 #endif

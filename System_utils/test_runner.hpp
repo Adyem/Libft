@@ -129,11 +129,44 @@ int ft_run_registered_tests(void);
         } \
     } while (0)
 
+#define FT_ASSERT_SINGLE_ERROR_GCOUNT(result_variable, stream) \
+    do \
+    { \
+        ft_size_t ft_error_stack_depth_before = ft_global_error_stack_depth(); \
+        result_variable = (stream).gcount(); \
+        ft_size_t ft_error_stack_depth_after = ft_global_error_stack_depth(); \
+        if (ft_error_stack_depth_after != ft_error_stack_depth_before + 1) \
+        { \
+            ft_test_fail("FT_ASSERT_SINGLE_ERROR_GCOUNT failed", __FILE__, __LINE__); \
+            return (0); \
+        } \
+    } while (0)
+
+#define FT_ASSERT_SINGLE_ERROR_STR(result_variable, stream) \
+    do \
+    { \
+        ft_size_t ft_error_stack_depth_before = ft_global_error_stack_depth(); \
+        result_variable = (stream).str(); \
+        ft_size_t ft_error_stack_depth_after = ft_global_error_stack_depth(); \
+        if (ft_error_stack_depth_after != ft_error_stack_depth_before + 1) \
+        { \
+            ft_test_fail("FT_ASSERT_SINGLE_ERROR_STR failed", __FILE__, __LINE__); \
+            return (0); \
+        } \
+    } while (0)
+
 #define FT_ASSERT_STREAM_BAD_FALSE(stream) \
     do \
     { \
         bool ft_stream_bad_result__ = false; \
-        FT_ASSERT_SINGLE_ERROR_BAD(ft_stream_bad_result__, (stream)); \
+        ft_size_t ft_error_stack_depth_before__ = ft_global_error_stack_depth(); \
+        ft_stream_bad_result__ = (stream).bad(); \
+        ft_size_t ft_error_stack_depth_after__ = ft_global_error_stack_depth(); \
+        if (ft_error_stack_depth_after__ != ft_error_stack_depth_before__ + 1) \
+        { \
+            ft_test_fail("FT_ASSERT_STREAM_BAD_FALSE failed", __FILE__, __LINE__); \
+            return (0); \
+        } \
         FT_ASSERT_EQ(false, ft_stream_bad_result__); \
     } while (0)
 
