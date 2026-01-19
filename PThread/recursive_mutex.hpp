@@ -15,15 +15,14 @@ class pt_recursive_mutex
         mutable std::atomic<pthread_t>    _owner;
         mutable std::atomic<bool>         _lock;
         mutable std::atomic<std::size_t>  _lock_depth;
-        mutable int                       _error;
         mutable pthread_mutex_t           _native_mutex;
         mutable bool                      _native_initialized;
         mutable pt_mutex                  *_state_mutex;
+        static thread_local ft_operation_error_stack _operation_errors;
 
-        void    set_error(int error) const;
         bool    ensure_native_mutex() const;
         int     lock_internal(bool *lock_acquired) const;
-        void    unlock_internal(bool lock_acquired) const;
+        int     unlock_internal(bool lock_acquired) const;
         void    teardown_thread_safety();
 
         pt_recursive_mutex(const pt_recursive_mutex&) = delete;
@@ -52,6 +51,21 @@ class pt_recursive_mutex
 
         int     get_error() const;
         const char *get_error_str() const;
+
+        static unsigned long long operation_error_push_entry(int error_code);
+        static unsigned long long operation_error_push_entry_with_id(int error_code,
+                unsigned long long operation_id);
+        static void operation_error_push(int error_code);
+        static int operation_error_pop_last();
+        static int operation_error_pop_newest();
+        static void operation_error_pop_all();
+        static int operation_error_error_at(ft_size_t index);
+        static int operation_error_last_error();
+        static ft_size_t operation_error_depth();
+        static unsigned long long operation_error_get_id_at(ft_size_t index);
+        static ft_size_t operation_error_find_by_id(unsigned long long operation_id);
+        static const char *operation_error_error_str_at(ft_size_t index);
+        static const char *operation_error_last_error_str();
 };
 
 static_assert(!std::is_copy_constructible<pt_recursive_mutex>::value, "pt_recursive_mutex cannot be copied");

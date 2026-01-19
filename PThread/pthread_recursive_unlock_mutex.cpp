@@ -19,7 +19,7 @@ int pt_recursive_mutex::unlock(pthread_t thread_id) const
     int lock_error;
     int tracking_error;
 
-    this->set_error(FT_ERR_SUCCESSS);
+    pt_recursive_mutex::operation_error_push(FT_ERR_SUCCESSS);
     tracking_reports_owned = false;
     should_notify_release = false;
     result = FT_SUCCESS;
@@ -31,19 +31,19 @@ int pt_recursive_mutex::unlock(pthread_t thread_id) const
     lock_error = this->lock_internal(&state_lock_acquired);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(lock_error);
+        pt_recursive_mutex::operation_error_push(lock_error);
         goto cleanup;
     }
     native_initialized = this->_native_initialized;
     lock_error = this->unlock_internal(state_lock_acquired);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(lock_error);
+        pt_recursive_mutex::operation_error_push(lock_error);
         goto cleanup;
     }
     if (!native_initialized)
     {
-        this->set_error(FT_ERR_INVALID_STATE);
+        pt_recursive_mutex::operation_error_push(FT_ERR_INVALID_STATE);
         goto cleanup;
     }
     if (this->_lock.load(std::memory_order_acquire))
@@ -57,7 +57,7 @@ int pt_recursive_mutex::unlock(pthread_t thread_id) const
             tracking_error = ft_global_error_stack_pop_newest();
             if (tracking_error != FT_ERR_SUCCESSS)
             {
-                this->set_error(tracking_error);
+                pt_recursive_mutex::operation_error_push(tracking_error);
                 goto cleanup;
             }
             ft_size_t index;
@@ -75,13 +75,13 @@ int pt_recursive_mutex::unlock(pthread_t thread_id) const
             }
             if (!tracking_reports_owned)
             {
-                this->set_error(FT_ERR_INVALID_ARGUMENT);
+                pt_recursive_mutex::operation_error_push(FT_ERR_INVALID_ARGUMENT);
                 su_abort();
             }
         }
         else if (!pt_thread_equal(owner, thread_id))
         {
-            this->set_error(FT_ERR_INVALID_ARGUMENT);
+            pt_recursive_mutex::operation_error_push(FT_ERR_INVALID_ARGUMENT);
             su_abort();
         }
         else
@@ -98,7 +98,7 @@ int pt_recursive_mutex::unlock(pthread_t thread_id) const
         tracking_error = ft_global_error_stack_pop_newest();
         if (tracking_error != FT_ERR_SUCCESSS)
         {
-            this->set_error(tracking_error);
+            pt_recursive_mutex::operation_error_push(tracking_error);
             goto cleanup;
         }
         index = 0;
@@ -115,7 +115,7 @@ int pt_recursive_mutex::unlock(pthread_t thread_id) const
     }
     if (!tracking_reports_owned)
     {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        pt_recursive_mutex::operation_error_push(FT_ERR_INVALID_ARGUMENT);
         su_abort();
     }
     std::size_t current_depth;
@@ -124,7 +124,7 @@ int pt_recursive_mutex::unlock(pthread_t thread_id) const
     if (current_depth > 1)
     {
         this->_lock_depth.store(current_depth - 1, std::memory_order_relaxed);
-        this->set_error(FT_ERR_SUCCESSS);
+        pt_recursive_mutex::operation_error_push(FT_ERR_SUCCESSS);
         fully_release = false;
         goto cleanup;
     }
@@ -138,15 +138,15 @@ int pt_recursive_mutex::unlock(pthread_t thread_id) const
             pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
             tracking_error = ft_global_error_stack_pop_newest();
             if (tracking_error != FT_ERR_SUCCESSS)
-                this->set_error(tracking_error);
+                pt_recursive_mutex::operation_error_push(tracking_error);
         }
         if (mutex_error == EPERM || mutex_error == EINVAL)
         {
-            this->set_error(FT_ERR_INVALID_ARGUMENT);
+            pt_recursive_mutex::operation_error_push(FT_ERR_INVALID_ARGUMENT);
         }
         else
         {
-            this->set_error(FT_ERR_INVALID_STATE);
+            pt_recursive_mutex::operation_error_push(FT_ERR_INVALID_STATE);
         }
         bool reset_lock_acquired;
 
@@ -167,11 +167,11 @@ int pt_recursive_mutex::unlock(pthread_t thread_id) const
         tracking_error = ft_global_error_stack_pop_newest();
         if (tracking_error != FT_ERR_SUCCESSS)
         {
-            this->set_error(tracking_error);
+            pt_recursive_mutex::operation_error_push(tracking_error);
             goto cleanup;
         }
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    pt_recursive_mutex::operation_error_push(FT_ERR_SUCCESSS);
 
 cleanup:
     if (fully_release)

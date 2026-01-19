@@ -5,48 +5,159 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "pthread_lock_tracking.hpp"
 
+thread_local ft_operation_error_stack pt_recursive_mutex::_operation_errors = {{}, {}, 0};
+
+unsigned long long pt_recursive_mutex::operation_error_push_entry_with_id(int error_code,
+        unsigned long long operation_id)
+{
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
+    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
+    ft_operation_error_stack_push(pt_recursive_mutex::_operation_errors, error_code, operation_id);
+    return (operation_id);
+}
+
+unsigned long long pt_recursive_mutex::operation_error_push_entry(int error_code)
+{
+    unsigned long long operation_id;
+
+    operation_id = ft_errno_next_operation_id();
+    pt_recursive_mutex::operation_error_push_entry_with_id(error_code, operation_id);
+    return (operation_id);
+}
+
+void pt_recursive_mutex::operation_error_push(int error_code)
+{
+    pt_recursive_mutex::operation_error_push_entry(error_code);
+    return ;
+}
+
+int pt_recursive_mutex::operation_error_pop_last()
+{
+    int error_value;
+
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    error_value = ft_operation_error_stack_pop_last(pt_recursive_mutex::_operation_errors);
+    if (error_value != FT_ERR_SUCCESSS)
+        ft_global_error_stack_pop_last();
+    return (error_value);
+}
+
+int pt_recursive_mutex::operation_error_pop_newest()
+{
+    int error_value;
+
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    error_value = ft_operation_error_stack_pop_newest(pt_recursive_mutex::_operation_errors);
+    if (error_value != FT_ERR_SUCCESSS)
+        ft_global_error_stack_pop_newest();
+    return (error_value);
+}
+
+void pt_recursive_mutex::operation_error_pop_all()
+{
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
+    ft_operation_error_stack_pop_all(pt_recursive_mutex::_operation_errors);
+    ft_global_error_stack_pop_all();
+    return ;
+}
+
+int pt_recursive_mutex::operation_error_error_at(ft_size_t index)
+{
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
+    return (ft_operation_error_stack_error_at(pt_recursive_mutex::_operation_errors, index));
+}
+
+int pt_recursive_mutex::operation_error_last_error()
+{
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
+    return (ft_operation_error_stack_last_error(pt_recursive_mutex::_operation_errors));
+}
+
+ft_size_t pt_recursive_mutex::operation_error_depth()
+{
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
+    return (pt_recursive_mutex::_operation_errors.count);
+}
+
+unsigned long long pt_recursive_mutex::operation_error_get_id_at(ft_size_t index)
+{
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
+    if (index == 0 || index > pt_recursive_mutex::_operation_errors.count)
+        return (0);
+    return (pt_recursive_mutex::_operation_errors.op_ids[index - 1]);
+}
+
+ft_size_t pt_recursive_mutex::operation_error_find_by_id(unsigned long long operation_id)
+{
+    ft_size_t index;
+
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    index = 0;
+    while (index < pt_recursive_mutex::_operation_errors.count)
+    {
+        if (pt_recursive_mutex::_operation_errors.op_ids[index] == operation_id)
+            return (index + 1);
+        index += 1;
+    }
+    return (0);
+}
+
+const char *pt_recursive_mutex::operation_error_error_str_at(ft_size_t index)
+{
+    int error_value;
+    const char *error_string;
+
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    error_value = ft_operation_error_stack_error_at(pt_recursive_mutex::_operation_errors, index);
+    error_string = ft_strerror(error_value);
+    if (!error_string)
+        error_string = "unknown error";
+    return (error_string);
+}
+
+const char *pt_recursive_mutex::operation_error_last_error_str()
+{
+    int error_value;
+    const char *error_string;
+
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    error_value = ft_operation_error_stack_last_error(pt_recursive_mutex::_operation_errors);
+    error_string = ft_strerror(error_value);
+    if (!error_string)
+        error_string = "unknown error";
+    return (error_string);
+}
+
 pt_recursive_mutex::pt_recursive_mutex()
-    : _owner(0), _lock(false), _lock_depth(0), _error(FT_ERR_SUCCESSS),
+    : _owner(0), _lock(false), _lock_depth(0),
     _native_initialized(false), _state_mutex(ft_nullptr)
 {
-    int previous_errno;
-
-    previous_errno = ft_errno;
     ft_bzero(&this->_native_mutex, sizeof(pthread_mutex_t));
     if (pthread_mutex_init(&this->_native_mutex, ft_nullptr) != 0)
     {
         this->_native_initialized = false;
-        this->set_error(FT_ERR_INVALID_STATE);
-        ft_set_errno_locked(previous_errno);
+        pt_recursive_mutex::operation_error_push(FT_ERR_INVALID_STATE);
         return ;
     }
     this->_native_initialized = true;
-    this->set_error(FT_ERR_SUCCESSS);
-    ft_set_errno_locked(previous_errno);
+    pt_recursive_mutex::operation_error_push(FT_ERR_SUCCESSS);
     return ;
 }
 
 pt_recursive_mutex::~pt_recursive_mutex()
 {
-    int previous_errno;
-
-    previous_errno = ft_errno;
     if (this->_native_initialized)
     {
         pthread_mutex_destroy(&this->_native_mutex);
         this->_native_initialized = false;
     }
     this->teardown_thread_safety();
-    ft_set_errno_locked(previous_errno);
-    return ;
-}
-
-void    pt_recursive_mutex::set_error(int error) const
-{
-    ft_errno_mutex().lock();
-    this->_error = error;
-    ft_sys_errno = error;
-    ft_errno_mutex().unlock();
     return ;
 }
 
@@ -68,7 +179,7 @@ bool pt_recursive_mutex::ensure_native_mutex() const
     {
         this->_native_initialized = false;
         this->unlock_internal(lock_acquired);
-        this->set_error(FT_ERR_INVALID_STATE);
+        pt_recursive_mutex::operation_error_push(FT_ERR_INVALID_STATE);
         return (false);
     }
     this->_native_initialized = true;
@@ -86,37 +197,25 @@ int pt_recursive_mutex::lock_internal(bool *lock_acquired) const
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (this->_state_mutex == ft_nullptr)
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-        return (0);
-    }
+        return (FT_ERR_SUCCESSS);
     this->_state_mutex->lock(THREAD_ID);
-    if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = this->_state_mutex->get_error();
-        return (-1);
-    }
+    int state_error = this->_state_mutex->get_error();
+    if (state_error != FT_ERR_SUCCESSS)
+        return (state_error);
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    ft_errno = FT_ERR_SUCCESSS;
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
-void pt_recursive_mutex::unlock_internal(bool lock_acquired) const
+int pt_recursive_mutex::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-        return ;
-    }
+        return (FT_ERR_SUCCESSS);
     this->_state_mutex->unlock(THREAD_ID);
-    if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = this->_state_mutex->get_error();
-        return ;
-    }
-    ft_errno = FT_ERR_SUCCESSS;
-    return ;
+    int state_error = this->_state_mutex->get_error();
+    if (state_error != FT_ERR_SUCCESSS)
+        return (state_error);
+    return (FT_ERR_SUCCESSS);
 }
 
 void pt_recursive_mutex::teardown_thread_safety()
@@ -132,22 +231,26 @@ void pt_recursive_mutex::teardown_thread_safety()
 int pt_recursive_mutex::lock_state(bool *lock_acquired) const
 {
     int result;
+    int lock_error;
 
-    result = this->lock_internal(lock_acquired);
-    if (result != 0)
-        const_cast<pt_recursive_mutex *>(this)->set_error(ft_errno);
+    lock_error = this->lock_internal(lock_acquired);
+    result = (lock_error == FT_ERR_SUCCESSS ? 0 : -1);
+    if (lock_error != FT_ERR_SUCCESSS)
+        pt_recursive_mutex::operation_error_push(lock_error);
     else
-        const_cast<pt_recursive_mutex *>(this)->set_error(FT_ERR_SUCCESSS);
+        pt_recursive_mutex::operation_error_push(FT_ERR_SUCCESSS);
     return (result);
 }
 
 void pt_recursive_mutex::unlock_state(bool lock_acquired) const
 {
-    this->unlock_internal(lock_acquired);
-    if (this->_state_mutex != ft_nullptr && this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
-        const_cast<pt_recursive_mutex *>(this)->set_error(this->_state_mutex->get_error());
+    int unlock_error;
+
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESSS)
+        pt_recursive_mutex::operation_error_push(unlock_error);
     else
-        const_cast<pt_recursive_mutex *>(this)->set_error(FT_ERR_SUCCESSS);
+        pt_recursive_mutex::operation_error_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -158,7 +261,6 @@ bool pt_recursive_mutex::is_owned_by_thread(pthread_t thread_id) const
     ft_size_t index;
     bool lock_flag;
 
-    ft_errno = FT_ERR_SUCCESSS;
     lock_flag = this->_lock.load(std::memory_order_acquire);
     if (!lock_flag)
     {
@@ -170,34 +272,24 @@ bool pt_recursive_mutex::is_owned_by_thread(pthread_t thread_id) const
         bool matches_owner;
 
         matches_owner = (pt_thread_equal(owner_thread, thread_id) != 0);
-        ft_errno = FT_ERR_SUCCESSS;
         return (matches_owner);
     }
     owned_mutexes = pt_lock_tracking::get_owned_mutexes(thread_id);
-    if (ft_errno != FT_ERR_SUCCESSS)
-        return (false);
     index = 0;
     while (index < owned_mutexes.size())
     {
         if (owned_mutexes[index] == &this->_native_mutex)
         {
-            ft_errno = FT_ERR_SUCCESSS;
             return (true);
         }
         index += 1;
     }
-    ft_errno = FT_ERR_SUCCESSS;
     return (false);
 }
 
 int pt_recursive_mutex::get_error() const
 {
-    int error_value;
-
-    ft_errno_mutex().lock();
-    error_value = this->_error;
-    ft_errno_mutex().unlock();
-    return (error_value);
+    return (pt_recursive_mutex::operation_error_last_error());
 }
 
 const char *pt_recursive_mutex::get_error_str() const
@@ -212,6 +304,6 @@ pthread_mutex_t   *pt_recursive_mutex::get_native_mutex() const
 {
     if (!this->ensure_native_mutex())
         return (ft_nullptr);
-    this->set_error(FT_ERR_SUCCESSS);
+    pt_recursive_mutex::operation_error_push(FT_ERR_SUCCESSS);
     return (&this->_native_mutex);
 }
