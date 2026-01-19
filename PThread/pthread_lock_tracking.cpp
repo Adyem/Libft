@@ -4,33 +4,24 @@
 #include "../Time/time.hpp"
 
 static thread_local bool g_registry_mutex_owned = false;
-thread_local ft_operation_error_stack pt_lock_tracking::_operation_errors = {{}, 0};
+thread_local ft_operation_error_stack pt_lock_tracking::_operation_errors = {{}, {}, 0};
 
-void pt_lock_tracking::record_error(ft_operation_error_stack &error_stack, int error_code)
+void pt_lock_tracking::record_error(ft_operation_error_stack &error_stack, int error_code,
+        bool push_global)
 {
-    ft_size_t index;
-    ft_size_t shift_index;
+    unsigned long long operation_id;
 
-    if (error_stack.count < 20)
-        error_stack.count++;
-    if (error_stack.count > 0)
-        shift_index = error_stack.count - 1;
+    if (push_global)
+        operation_id = ft_global_error_stack_push_entry(error_code);
     else
-        shift_index = 0;
-    index = shift_index;
-    while (index > 0)
-    {
-        error_stack.errors[index] = error_stack.errors[index - 1];
-        index--;
-    }
-    error_stack.errors[0] = error_code;
+        operation_id = 0;
+    ft_operation_error_stack_push(error_stack, error_code, operation_id);
     return ;
 }
 
 void pt_lock_tracking::set_error(int error_code)
 {
-    pt_lock_tracking::record_error(pt_lock_tracking::_operation_errors, error_code);
-    ft_global_error_stack_push(error_code);
+    pt_lock_tracking::record_error(pt_lock_tracking::_operation_errors, error_code, true);
     return ;
 }
 

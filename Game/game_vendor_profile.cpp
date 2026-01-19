@@ -1,5 +1,18 @@
 #include "ft_vendor_profile.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../Template/move.hpp"
+
+thread_local ft_operation_error_stack ft_vendor_profile::_operation_errors = {{}, {}, 0};
+
+void ft_vendor_profile::record_operation_error_unlocked(int error_code)
+{
+    unsigned long long operation_id;
+
+    operation_id = ft_global_error_stack_push_entry(error_code);
+    ft_operation_error_stack_push(ft_vendor_profile::_operation_errors,
+            error_code, operation_id);
+    return ;
+}
 
 int ft_vendor_profile::lock_pair(const ft_vendor_profile &first, const ft_vendor_profile &second,
         ft_unique_lock<pt_mutex> &first_guard,
@@ -15,12 +28,10 @@ int ft_vendor_profile::lock_pair(const ft_vendor_profile &first, const ft_vendor
 
         if (single_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ERR_SUCCESSS;
         return (FT_ERR_SUCCESSS);
     }
     ordered_first = &first;
@@ -41,7 +52,6 @@ int ft_vendor_profile::lock_pair(const ft_vendor_profile &first, const ft_vendor
 
         if (lower_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
@@ -57,12 +67,10 @@ int ft_vendor_profile::lock_pair(const ft_vendor_profile &first, const ft_vendor
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = FT_ERR_SUCCESSS;
             return (FT_ERR_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            ft_errno = upper_guard.get_error();
             return (upper_guard.get_error());
         }
         if (lower_guard.owns_lock())
@@ -319,7 +327,9 @@ const char *ft_vendor_profile::get_error_str() const noexcept
 
 void ft_vendor_profile::set_error(int error_code) const noexcept
 {
-    ft_errno = error_code;
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
     this->_error_code = error_code;
+    ft_vendor_profile::record_operation_error_unlocked(error_code);
     return ;
 }

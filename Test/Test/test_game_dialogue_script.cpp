@@ -224,6 +224,18 @@ FT_TEST(test_dialogue_script_getters_reset_errno, "getters reset errno to succes
     return (1);
 }
 
+FT_TEST(test_dialogue_script_set_lines_single_global_error,
+    "set_lines records a single error stack entry")
+{
+    ft_dialogue_script script;
+    ft_vector<ft_dialogue_line> lines;
+    ft_dialogue_line line(2, ft_string("hero"), ft_string("hello"), ft_vector<int>());
+
+    lines.push_back(line);
+    FT_ASSERT_SINGLE_GLOBAL_ERROR(script.set_lines(lines));
+    return (1);
+}
+
 FT_TEST(test_dialogue_script_non_const_lines_reference, "non-const lines getter allows updates and resets errno")
 {
     ft_vector<ft_dialogue_line> lines;

@@ -167,6 +167,24 @@ FT_TEST(test_rarity_band_move_assignment_sets_errno_and_resets_source, "Rarity b
     return (1);
 }
 
+FT_TEST(test_currency_rate_set_currency_id_single_global_error,
+    "set_currency_id records exactly one error stack entry")
+{
+    ft_currency_rate rate;
+
+    FT_ASSERT_SINGLE_GLOBAL_ERROR(rate.set_currency_id(7));
+    return (1);
+}
+
+FT_TEST(test_rarity_band_set_multiplier_single_global_error,
+    "set_value_multiplier records exactly one global error entry")
+{
+    ft_rarity_band band;
+
+    FT_ASSERT_SINGLE_GLOBAL_ERROR(band.set_value_multiplier(3.45));
+    return (1);
+}
+
 
 FT_TEST(test_rarity_band_get_error_str_reports_success_message, "Rarity band get_error_str returns success message")
 {

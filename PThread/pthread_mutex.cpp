@@ -4,26 +4,18 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "pthread_lock_tracking.hpp"
 
-thread_local ft_operation_error_stack pt_mutex::_operation_errors = {{}, 0};
+thread_local ft_operation_error_stack pt_mutex::_operation_errors = {{}, {}, 0};
 
-void pt_mutex::record_error(ft_operation_error_stack &error_stack, int error_code)
+void pt_mutex::record_error(ft_operation_error_stack &error_stack, int error_code,
+        bool push_global)
 {
-    ft_size_t index;
-    ft_size_t shift_index;
+    unsigned long long operation_id;
 
-    if (error_stack.count < 20)
-        error_stack.count++;
-    if (error_stack.count > 0)
-        shift_index = error_stack.count - 1;
+    if (push_global)
+        operation_id = ft_global_error_stack_push_entry(error_code);
     else
-        shift_index = 0;
-    index = shift_index;
-    while (index > 0)
-    {
-        error_stack.errors[index] = error_stack.errors[index - 1];
-        index--;
-    }
-    error_stack.errors[0] = error_code;
+        operation_id = 0;
+    ft_operation_error_stack_push(error_stack, error_code, operation_id);
     return ;
 }
 
@@ -63,13 +55,11 @@ void    pt_mutex::set_error(int error) const
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        pt_mutex::record_error(pt_mutex::_operation_errors, error);
-        ft_global_error_stack_push(error);
+        pt_mutex::record_error(pt_mutex::_operation_errors, error, true);
         return ;
     }
     this->_error = error;
-    pt_mutex::record_error(pt_mutex::_operation_errors, error);
-    ft_global_error_stack_push(error);
+    pt_mutex::record_error(pt_mutex::_operation_errors, error, true);
     this->unlock_internal(lock_acquired);
     return ;
 }

@@ -67,3 +67,14 @@ FT_TEST(test_progress_tracker_over_advance_error, "advancing beyond quest phases
     FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, tracker.get_error());
     return (1);
 }
+
+FT_TEST(test_progress_tracker_register_achievement_single_global_error,
+    "register_achievement pushes one global error entry")
+{
+    ft_progress_tracker tracker;
+    int register_result;
+
+    FT_ASSERT_SINGLE_GLOBAL_ERROR(register_result = tracker.register_achievement(make_achievement_with_goal(2, 1, 3)));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, register_result);
+    return (1);
+}

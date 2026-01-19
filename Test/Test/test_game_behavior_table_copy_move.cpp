@@ -18,8 +18,10 @@ FT_TEST(test_behavior_table_move_semantics, "move constructor and assignment tra
     ft_behavior_profile fetched;
     ft_behavior_table moved;
     ft_behavior_table reassigned;
+    int register_result;
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, register_profile(source, 20, 0.7, 0.3));
+    FT_ASSERT_SINGLE_GLOBAL_ERROR(register_result = register_profile(source, 20, 0.7, 0.3));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, register_result);
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, source.fetch_profile(20, fetched));
     FT_ASSERT_EQ(20, fetched.get_profile_id());
 

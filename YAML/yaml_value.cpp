@@ -5,22 +5,15 @@
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread.hpp"
 
-thread_local ft_operation_error_stack yaml_value::_operation_errors = {{}, 0};
+thread_local ft_operation_error_stack yaml_value::_operation_errors = {{}, {}, 0};
 
 void yaml_value::record_operation_error_unlocked(int error_code) noexcept
 {
-    size_t index;
+    unsigned long long operation_id;
 
-    if (yaml_value::_operation_errors.count < 20)
-        yaml_value::_operation_errors.count++;
-    index = yaml_value::_operation_errors.count;
-    while (index > 0)
-    {
-        yaml_value::_operation_errors.errors[index] =
-            yaml_value::_operation_errors.errors[index - 1];
-        index--;
-    }
-    yaml_value::_operation_errors.errors[0] = error_code;
+    operation_id = ft_global_error_stack_push_entry(error_code);
+    ft_operation_error_stack_push(yaml_value::_operation_errors,
+            error_code, operation_id);
     return ;
 }
 
@@ -158,7 +151,6 @@ void yaml_value::set_error(int error_code) const noexcept
 
     this->_error_code = error_code;
     yaml_value::record_operation_error_unlocked(error_code);
-    ft_global_error_stack_push(error_code);
     return ;
 }
 

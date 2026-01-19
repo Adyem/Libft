@@ -111,23 +111,16 @@ class ft_vector
 };
 
 template <typename ElementType>
-thread_local ft_operation_error_stack ft_vector<ElementType>::_operation_errors = {{}, 0};
+thread_local ft_operation_error_stack ft_vector<ElementType>::_operation_errors = {{}, {}, 0};
 
 template <typename ElementType>
 void ft_vector<ElementType>::record_operation_error_unlocked(int error_code)
 {
-    size_t index;
+    unsigned long long operation_id;
 
-    if (ft_vector<ElementType>::_operation_errors.count < 20)
-        ft_vector<ElementType>::_operation_errors.count++;
-    index = ft_vector<ElementType>::_operation_errors.count;
-    while (index > 0)
-    {
-        ft_vector<ElementType>::_operation_errors.errors[index] =
-            ft_vector<ElementType>::_operation_errors.errors[index - 1];
-        index--;
-    }
-    ft_vector<ElementType>::_operation_errors.errors[0] = error_code;
+    operation_id = ft_global_error_stack_push_entry(error_code);
+    ft_operation_error_stack_push(ft_vector<ElementType>::_operation_errors,
+            error_code, operation_id);
     return ;
 }
 
@@ -424,7 +417,6 @@ void ft_vector<ElementType>::set_error(int error_code) const
 
     this->_error_code = error_code;
     ft_vector<ElementType>::record_operation_error_unlocked(error_code);
-    ft_global_error_stack_push(error_code);
     return ;
 }
 

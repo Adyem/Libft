@@ -5,6 +5,8 @@
 #include <cmath>
 #include <cstring>
 
+#include "../Errno/errno.hpp"
+
 typedef int (*t_test_func)(void);
 #ifndef TEST_MODULE
 #define TEST_MODULE "Libft"
@@ -83,7 +85,20 @@ int ft_run_registered_tests(void);
         const char *ft_actual_value = (actual); \
         if (std::strcmp(ft_expected_value, ft_actual_value) != 0) \
         { \
-            ft_test_fail(#expected " == " #actual, __FILE__, __LINE__); \
+        ft_test_fail(#expected " == " #actual, __FILE__, __LINE__); \
+        return (0); \
+    } \
+    } while (0)
+
+#define FT_ASSERT_SINGLE_GLOBAL_ERROR(expression) \
+    do \
+    { \
+        ft_size_t ft_error_stack_depth_before = ft_global_error_stack_depth(); \
+        expression; \
+        ft_size_t ft_error_stack_depth_after = ft_global_error_stack_depth(); \
+        if (ft_error_stack_depth_after != ft_error_stack_depth_before + 1) \
+        { \
+            ft_test_fail("FT_ASSERT_SINGLE_GLOBAL_ERROR failed", __FILE__, __LINE__); \
             return (0); \
         } \
     } while (0)

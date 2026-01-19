@@ -54,4 +54,7 @@ scma_handle    scma_unlock_and_return_handle(scma_handle value);
 void    *scma_unlock_and_return_pointer(void *value);
 void    scma_unlock_and_return_void(void);
 
+unsigned long long    scma_record_operation_error(int error_code);
+int     scma_pop_operation_error(void);
+
 #endif

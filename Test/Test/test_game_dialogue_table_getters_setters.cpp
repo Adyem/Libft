@@ -27,7 +27,9 @@ FT_TEST(test_dialogue_table_register_line_sets_success, "register line stores en
 
     build_dialogue_entries(line, script);
     ft_errno = FT_ERR_INVALID_STATE;
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.register_line(line));
+    int register_line_result;
+    FT_ASSERT_SINGLE_GLOBAL_ERROR(register_line_result = table.register_line(line));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, register_line_result);
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.fetch_line(3, fetched));
@@ -44,7 +46,9 @@ FT_TEST(test_dialogue_table_register_script_sets_success, "register script store
 
     build_dialogue_entries(line, script);
     ft_errno = FT_ERR_INVALID_STATE;
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.register_script(script));
+    int register_script_result;
+    FT_ASSERT_SINGLE_GLOBAL_ERROR(register_script_result = table.register_script(script));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, register_script_result);
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.fetch_script(6, fetched));

@@ -71,6 +71,37 @@ pop newest, pop all, and fetch by index (1-based). The newest error is always at
 and helpers must also support retrieving the most recent error and error string values using the
 same ordering rules.
 
+## Errno Module Global Stack API
+
+The Errno module owns the thread-local global error stack. Every interaction with that stack
+must happen while holding the Errno mutex wrapper so unrelated classes or helpers cannot race
+when reporting. The mutex and helper layers live in `Errno/errno_internal.hpp`.
+
+- `ft_errno_mutex()`: wraps the recursive mutex guarding the error stack.
+- `ft_errno_next_operation_id()`: produces the next unique operation identifier.
+- `ft_global_error_stack_push_entry(int error_code)` / `ft_global_error_stack_push_entry_with_id(int error_code, unsigned long long op_id)`: push an entry and optionally reuse the provided ID so multiple stacks share the same entry.
+- `ft_global_error_stack_push(int error_code)`: convenience when the ID does not matter.
+- `ft_global_error_stack_pop_last()` / `ft_global_error_stack_pop_newest()` / `ft_global_error_stack_pop_all()`: remove entries either from the oldest, newest, or entire stack.
+- `ft_global_error_stack_error_at(ft_size_t index)` / `ft_global_error_stack_last_error()`: inspect recorded error codes without modifying the stack.
+- `ft_global_error_stack_depth()` / `ft_global_error_stack_get_id_at(ft_size_t index)` / `ft_global_error_stack_find_by_id(unsigned long long id)`: query stack depth and locate entries by index or operation ID.
+- `ft_global_error_stack_error_str_at(ft_size_t index)` / `ft_global_error_stack_last_error_str()`: retrieve the human-readable string for recorded entries.
+
+All callers that push or pop entries from the global stack must leave the newest entry untouched if they did not push it themselves. If a caller pops an entry that it pushed, it must re-push either the same error or a success entry before returning, depending on the outcome.
+
+## Local Operation Stacks (classes, CMA, SCMA)
+
+Every class and module that tracks its own errors must reuse the `ft_operation_error_stack` model exported by the Errno module:
+
+- Declare a thread-local `ft_operation_error_stack` instance dedicated to that class or module.
+- Document a low-level helper that exposes direct access to the stack so callers writing low-level checks can manually lock, inspect, and unlock it during constructor validation.
+- When reporting an error, first call `ft_errno_next_operation_id()` to reserve a unique identifier; then, while holding `ft_errno_mutex_wrapper`, push the entry on the Errno global stack with `ft_global_error_stack_push_entry_with_id(error_code, operation_id)` and immediately push the same (error_code, operation_id) tuple onto the class/module stack via `ft_operation_error_stack_push(stack, error_code, operation_id)`. This keeps both stacks synchronized on a single entry ID.
+- When removing entries, use `ft_operation_error_stack_pop_last`, `_pop_newest`, or `_pop_all` before or after mirroring the removal on the global stack so that a popped entry is discarded from both locations.
+- Inspect local stacks with `ft_operation_error_stack_error_at`, `_last_error`, and `_last_id` instead of duplicating logic.
+- Every class should expose helper functions that let callers inspect and push/pull from its local stack in the same way they already expose the recursive mutex helper.
+- During error handling, continue using `std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());` whenever the global stack is involved so the class mutex is not re-entered unintentionally.
+
+Public CMA and SCMA entry points (see their dedicated modules for the authorized function lists) also maintain module-local `ft_operation_error_stack` instances. They follow the same pattern as class stacks: each public function pushes to both the Errno global stack and the module stack using the shared operation ID so that the error ID stays consistent across both stacks. Internal helpers inside CMA and SCMA remain on their dedicated stacks and communicate with callers via the local stack without touching the global Errno stack directly.
+
 Only .cpp files must be prefixed with the name of the module they belong to. Nested modules must contain both the original module name followed by the nested module name.
 For .hpp files, prefix only those meant for internal use with the module name.
 Generic headers may use the module's name, while class headers should use the class name as the filename.

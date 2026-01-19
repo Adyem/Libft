@@ -40,7 +40,11 @@ struct api_pooled_connection
 
         pointer = cma_malloc(size);
         if (!pointer)
-            ft_errno = FT_ERR_NO_MEMORY;
+        {
+            ft_global_error_stack_push(FT_ERR_NO_MEMORY);
+            return (pointer);
+        }
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (pointer);
     }
 
@@ -53,7 +57,7 @@ struct api_pooled_connection
     {
         if (pointer)
             cma_free(pointer);
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return ;
     }
 
@@ -136,27 +140,26 @@ static bool api_connection_pool_socket_is_alive(ft_socket &socket)
     ssize_t peek_result;
     int socket_error;
 
-    ft_errno = FT_ERR_SUCCESSS;
     poll_descriptor = socket.get_fd();
     if (poll_descriptor < 0)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
     poll_result = nw_poll(&poll_descriptor, 1, ft_nullptr, 0, 50);
     if (poll_result < 0)
     {
-        ft_errno = ft_set_errno_from_system_error(errno);
+        ft_set_errno_from_system_error(errno);
         return (false);
     }
     if (poll_result == 0)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (true);
     }
     if (poll_descriptor == -1)
     {
-        ft_errno = FT_ERR_INVALID_HANDLE;
+        ft_global_error_stack_push(FT_ERR_INVALID_HANDLE);
         return (false);
     }
     peek_byte = 0;
@@ -168,19 +171,19 @@ static bool api_connection_pool_socket_is_alive(ft_socket &socket)
     socket_error = socket.get_error();
     if (peek_result > 0)
     {
-        ft_errno = FT_ERR_INVALID_STATE;
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return (false);
     }
     if (peek_result == 0)
     {
-        ft_errno = FT_ERR_END_OF_FILE;
+        ft_global_error_stack_push(FT_ERR_END_OF_FILE);
         return (false);
     }
 #ifdef _WIN32
     if (socket_error == ft_map_system_error(WSAEWOULDBLOCK)
         || socket_error == ft_map_system_error(WSAEINTR))
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (true);
     }
 #else
@@ -188,11 +191,11 @@ static bool api_connection_pool_socket_is_alive(ft_socket &socket)
         || socket_error == ft_map_system_error(EAGAIN)
         || socket_error == ft_map_system_error(EINTR))
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (true);
     }
 #endif
-    ft_errno = socket_error;
+    ft_global_error_stack_push(socket_error);
     return (false);
 }
 
@@ -394,7 +397,7 @@ static void api_connection_pool_dispose_entry(api_pooled_connection &entry)
     if (!socket_cleanup_allowed)
     {
         if (socket_error != FT_ERR_SUCCESSS)
-            ft_errno = socket_error;
+            ft_global_error_stack_push(socket_error);
     }
     else if (socket_has_clients)
     {
@@ -403,7 +406,7 @@ static void api_connection_pool_dispose_entry(api_pooled_connection &entry)
         if (socket_error != FT_ERR_SUCCESSS)
         {
             socket_cleanup_allowed = false;
-            ft_errno = socket_error;
+            ft_global_error_stack_push(socket_error);
         }
     }
     if (entry.uses_tls && entry.tls_session)
@@ -794,7 +797,7 @@ void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
     new_entry = new (std::nothrow) api_pooled_connection();
     if (!new_entry)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         handle.unlock(handle_lock_acquired);
         api_connection_pool_evict(handle);
         return ;
@@ -974,4 +977,3 @@ size_t api_debug_get_connection_pool_misses(void)
 {
     return (g_api_connection_pool_acquire_misses);
 }
-

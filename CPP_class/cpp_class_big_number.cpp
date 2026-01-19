@@ -46,7 +46,7 @@ static const ft_big_number_digit_entry g_big_number_digit_to_value_table[] =
 static const char g_big_number_value_to_digit_table[] = "0123456789ABCDEF";
 
 thread_local ft_error_stack ft_big_number::_error_stack = {{}, 0, 1, FT_ERR_SUCCESSS, 0};
-thread_local ft_operation_error_stack ft_big_number::_operation_errors = {{}, 0};
+thread_local ft_operation_error_stack ft_big_number::_operation_errors = {{}, {}, 0};
 
 class ft_big_number::error_scope
 {
@@ -192,23 +192,11 @@ int ft_big_number::error_for(uint32_t operation_id) noexcept
 
 void ft_big_number::record_operation_error(int error_code) noexcept
 {
-    ft_size_t index;
-    ft_size_t shift_index;
+    unsigned long long operation_id;
 
-    if (ft_big_number::_operation_errors.count < 20)
-        ft_big_number::_operation_errors.count++;
-    if (ft_big_number::_operation_errors.count > 0)
-        shift_index = ft_big_number::_operation_errors.count - 1;
-    else
-        shift_index = 0;
-    index = shift_index;
-    while (index > 0)
-    {
-        ft_big_number::_operation_errors.errors[index] =
-            ft_big_number::_operation_errors.errors[index - 1];
-        index--;
-    }
-    ft_big_number::_operation_errors.errors[0] = error_code;
+    operation_id = ft_global_error_stack_push_entry(error_code);
+    ft_operation_error_stack_push(ft_big_number::_operation_errors,
+            error_code, operation_id);
     return ;
 }
 
@@ -216,40 +204,29 @@ int ft_big_number::last_operation_error() noexcept
 {
     std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
-    if (ft_big_number::_operation_errors.count == 0)
-        return (FT_ERR_SUCCESSS);
-    return (ft_big_number::_operation_errors.errors[0]);
+    return (ft_operation_error_stack_last_error(ft_big_number::_operation_errors));
 }
 
 int ft_big_number::operation_error_at(ft_size_t index) noexcept
 {
     std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
-    if (index == 0 || index > ft_big_number::_operation_errors.count)
-        return (FT_ERR_SUCCESSS);
-    return (ft_big_number::_operation_errors.errors[index - 1]);
+    return (ft_operation_error_stack_error_at(ft_big_number::_operation_errors, index));
 }
 
 void ft_big_number::pop_operation_errors() noexcept
 {
     std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
-    ft_big_number::_operation_errors.count = 0;
+    ft_operation_error_stack_pop_last(ft_big_number::_operation_errors);
     return ;
 }
 
 int ft_big_number::pop_oldest_operation_error() noexcept
 {
-    int popped_error;
-
     std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
-    if (ft_big_number::_operation_errors.count == 0)
-        return (FT_ERR_SUCCESSS);
-    popped_error = ft_big_number::_operation_errors
-        .errors[ft_big_number::_operation_errors.count - 1];
-    ft_big_number::_operation_errors.count--;
-    return (popped_error);
+    return (ft_operation_error_stack_pop_last(ft_big_number::_operation_errors));
 }
 
 int ft_big_number::operation_error_index() noexcept

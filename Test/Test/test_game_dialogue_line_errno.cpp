@@ -163,3 +163,11 @@ FT_TEST(test_dialogue_line_getters_reset_errno_to_success, "getters reset errno 
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, line.get_error());
     return (1);
 }
+
+FT_TEST(test_dialogue_line_set_text_single_global_error, "set_text pushes exactly one stack entry")
+{
+    ft_dialogue_line line;
+
+    FT_ASSERT_SINGLE_GLOBAL_ERROR(line.set_text(ft_string("updated")));
+    return (1);
+}

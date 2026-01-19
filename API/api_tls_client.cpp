@@ -1,6 +1,8 @@
 #include "tls_client.hpp"
 #include "api_internal.hpp"
 #include "../Printf/printf.hpp"
+#include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../Networking/socket_class.hpp"
 #include "../Networking/ssl_wrapper.hpp"
 #include "../Networking/networking.hpp"
@@ -30,6 +32,17 @@
 #include <utility>
 
 static const size_t TLS_STRING_NPOS = static_cast<size_t>(-1);
+
+thread_local ft_operation_error_stack api_tls_client::_operation_errors = {{}, {}, 0};
+
+void api_tls_client::record_operation_error_unlocked(int error_code) noexcept
+{
+    unsigned long long operation_id;
+
+    operation_id = ft_global_error_stack_push_entry(error_code);
+    ft_operation_error_stack_push(api_tls_client::_operation_errors, error_code, operation_id);
+    return ;
+}
 
 static char tls_string_char_at(const ft_string &value, size_t index)
 {
@@ -208,7 +221,8 @@ static ssize_t ssl_send_all(SSL *ssl, const void *data, size_t size)
         }
         if (sent < 0)
             return (-1);
-        if (ft_errno == FT_ERR_SSL_WANT_READ || ft_errno == FT_ERR_SSL_WANT_WRITE)
+        int last_error = ft_global_error_stack_pop_newest();
+        if (last_error == FT_ERR_SSL_WANT_READ || last_error == FT_ERR_SSL_WANT_WRITE)
         {
             if (ssl_pointer_supports_network_checks(ssl))
             {
@@ -232,20 +246,28 @@ static bool tls_copy_bio_to_string(BIO *memory, ft_string &output)
         return (false);
     if (memory == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
     memory_length = BIO_get_mem_data(memory, &memory_data);
     if (memory_length < 0)
     {
-        ft_errno = FT_ERR_CONFIGURATION;
+        ft_global_error_stack_push(FT_ERR_CONFIGURATION);
         return (false);
     }
     if (memory_length == 0)
+    {
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (true);
+    }
     output.append(memory_data, static_cast<size_t>(memory_length));
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    int string_error = ft_string::last_operation_error();
+    if (string_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(string_error);
         return (false);
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);
 }
 
@@ -257,28 +279,32 @@ static bool tls_extract_x509_name(X509_NAME *name, ft_string &output)
     if (name == ft_nullptr)
     {
         output.clear();
-        return (ft_string::last_operation_error() == FT_ERR_SUCCESSS);
+        int string_error = ft_string::last_operation_error();
+        ft_global_error_stack_push(string_error);
+        return (string_error == FT_ERR_SUCCESSS);
     }
     memory = BIO_new(BIO_s_mem());
     if (memory == ft_nullptr)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (false);
     }
     if (X509_NAME_print_ex(memory, name, 0, XN_FLAG_RFC2253) < 0)
     {
         BIO_free(memory);
-        ft_errno = FT_ERR_CONFIGURATION;
+        ft_global_error_stack_push(FT_ERR_CONFIGURATION);
         return (false);
     }
     copy_result = tls_copy_bio_to_string(memory, output);
     BIO_free(memory);
     if (!copy_result)
     {
-        if (ft_errno == FT_ERR_SUCCESSS)
-            ft_errno = FT_ERR_CONFIGURATION;
+        int last_error = ft_global_error_stack_pop_newest();
+        if (last_error == FT_ERR_SUCCESSS)
+            ft_global_error_stack_push(FT_ERR_CONFIGURATION);
         return (false);
     }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);
 }
 
@@ -290,28 +316,32 @@ static bool tls_extract_asn1_time(const ASN1_TIME *time_value, ft_string &output
     if (time_value == ft_nullptr)
     {
         output.clear();
-        return (ft_string::last_operation_error() == FT_ERR_SUCCESSS);
+        int string_error = ft_string::last_operation_error();
+        ft_global_error_stack_push(string_error);
+        return (string_error == FT_ERR_SUCCESSS);
     }
     memory = BIO_new(BIO_s_mem());
     if (memory == ft_nullptr)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (false);
     }
     if (ASN1_TIME_print(memory, time_value) != 1)
     {
         BIO_free(memory);
-        ft_errno = FT_ERR_CONFIGURATION;
+        ft_global_error_stack_push(FT_ERR_CONFIGURATION);
         return (false);
     }
     copy_result = tls_copy_bio_to_string(memory, output);
     BIO_free(memory);
     if (!copy_result)
     {
-        if (ft_errno == FT_ERR_SUCCESSS)
-            ft_errno = FT_ERR_CONFIGURATION;
+        int last_error = ft_global_error_stack_pop_newest();
+        if (last_error == FT_ERR_SUCCESSS)
+            ft_global_error_stack_push(FT_ERR_CONFIGURATION);
         return (false);
     }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);
 }
 
@@ -324,28 +354,32 @@ static bool tls_extract_serial_number(const ASN1_INTEGER *serial_value,
     if (serial_value == ft_nullptr)
     {
         output.clear();
-        return (ft_string::last_operation_error() == FT_ERR_SUCCESSS);
+        int string_error = ft_string::last_operation_error();
+        ft_global_error_stack_push(string_error);
+        return (string_error == FT_ERR_SUCCESSS);
     }
     memory = BIO_new(BIO_s_mem());
     if (memory == ft_nullptr)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (false);
     }
     if (i2a_ASN1_INTEGER(memory, const_cast<ASN1_INTEGER*>(serial_value)) <= 0)
     {
         BIO_free(memory);
-        ft_errno = FT_ERR_CONFIGURATION;
+        ft_global_error_stack_push(FT_ERR_CONFIGURATION);
         return (false);
     }
     copy_result = tls_copy_bio_to_string(memory, output);
     BIO_free(memory);
     if (!copy_result)
     {
-        if (ft_errno == FT_ERR_SUCCESSS)
-            ft_errno = FT_ERR_CONFIGURATION;
+        int last_error = ft_global_error_stack_pop_newest();
+        if (last_error == FT_ERR_SUCCESSS)
+            ft_global_error_stack_push(FT_ERR_CONFIGURATION);
         return (false);
     }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);
 }
 
@@ -359,15 +393,19 @@ static bool tls_compute_certificate_fingerprint(X509 *certificate,
 
     output.clear();
     if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    {
+        int string_error = ft_string::last_operation_error();
+        ft_global_error_stack_push(string_error);
         return (false);
+    }
     if (certificate == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
     if (X509_digest(certificate, EVP_sha256(), digest, &digest_length) != 1)
     {
-        ft_errno = FT_ERR_CONFIGURATION;
+        ft_global_error_stack_push(FT_ERR_CONFIGURATION);
         return (false);
     }
     index = 0;
@@ -376,20 +414,29 @@ static bool tls_compute_certificate_fingerprint(X509 *certificate,
         if (pf_snprintf(byte_buffer, sizeof(byte_buffer), "%02X",
                 digest[index]) < 0)
         {
-            ft_errno = FT_ERR_CONFIGURATION;
+            ft_global_error_stack_push(FT_ERR_CONFIGURATION);
             return (false);
         }
         output.append(byte_buffer, 2);
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        int string_error = ft_string::last_operation_error();
+        if (string_error != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(string_error);
             return (false);
+        }
         if (index + 1 < digest_length)
         {
             output.append(':');
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            int separator_error = ft_string::last_operation_error();
+            if (separator_error != FT_ERR_SUCCESSS)
+            {
+                ft_global_error_stack_push(separator_error);
                 return (false);
+            }
         }
         index++;
     }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);
 }
 
@@ -402,7 +449,7 @@ static bool tls_fill_certificate_diagnostic(X509 *certificate,
 
     if (certificate == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
     if (!tls_extract_x509_name(X509_get_subject_name(certificate),
@@ -423,6 +470,7 @@ static bool tls_fill_certificate_diagnostic(X509 *certificate,
     if (!tls_compute_certificate_fingerprint(certificate,
             diagnostic.fingerprint_sha256))
         return (false);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);
 }
 
@@ -440,12 +488,13 @@ static bool tls_append_certificate_diagnostic(
     size_after = diagnostics.certificates.size();
     if (size_after < size_before + 1)
     {
-        if (diagnostics.certificates.get_error() == FT_ERR_SUCCESSS)
-            ft_errno = FT_ERR_NO_MEMORY;
-        else
-            ft_errno = diagnostics.certificates.get_error();
+        int vector_error = diagnostics.certificates.get_error();
+        if (vector_error == FT_ERR_SUCCESSS)
+            vector_error = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(vector_error);
         return (false);
     }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);
 }
 
@@ -605,7 +654,7 @@ api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms
 
         diagnostics_error = this->_error_code;
         if (diagnostics_error == FT_ERR_SUCCESSS)
-            diagnostics_error = ft_errno;
+            diagnostics_error = ft_global_error_stack_pop_newest();
         error_message = ft_strerror(diagnostics_error);
         if (ft_log_get_api_logging())
         {
@@ -744,7 +793,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
         char *temporary_string = json_write_to_string(payload);
         if (!temporary_string)
         {
-            int json_error = ft_errno;
+            int json_error = ft_global_error_stack_pop_newest();
             if (json_error == FT_ERR_SUCCESSS)
                 json_error = FT_ERR_NO_MEMORY;
             this->set_error(json_error);
@@ -833,9 +882,9 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
 
             header_value_cstr = header_value.c_str();
             header_parse_end = ft_nullptr;
-            ft_errno = FT_ERR_SUCCESSS;
+            ft_global_error_stack_push(FT_ERR_SUCCESSS);
             parsed_length = ft_strtoul(header_value_cstr, &header_parse_end, 10);
-            parse_error = ft_errno;
+            parse_error = ft_global_error_stack_pop_newest();
             if (parse_error != FT_ERR_SUCCESSS)
             {
                 this->set_error(parse_error);
@@ -935,9 +984,9 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
                 size_string.erase(size_trim - 1, 1);
                 size_trim--;
             }
-            ft_errno = FT_ERR_SUCCESSS;
+            ft_global_error_stack_push(FT_ERR_SUCCESSS);
             unsigned long chunk_length = ft_strtoul(size_string.c_str(), ft_nullptr, 16);
-            int chunk_error = ft_errno;
+            int chunk_error = ft_global_error_stack_pop_newest();
             if (chunk_error != FT_ERR_SUCCESSS)
             {
                 this->set_error(chunk_error);
@@ -1058,7 +1107,7 @@ json_group *api_tls_client::request_json(const char *method, const char *path,
     cma_free(body);
     if (!result)
     {
-        int json_error = ft_errno;
+        int json_error = ft_global_error_stack_pop_newest();
         if (json_error == FT_ERR_SUCCESSS)
             json_error = FT_ERR_NO_MEMORY;
         this->set_error(json_error);
@@ -1171,7 +1220,6 @@ int api_tls_client::get_error() const noexcept
     int value;
 
     value = this->_error_code.load(std::memory_order_relaxed);
-    ft_errno = value;
     return (value);
 }
 
@@ -1185,8 +1233,10 @@ const char *api_tls_client::get_error_str() const noexcept
 
 void api_tls_client::set_error(int error_code) const noexcept
 {
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
     this->_error_code.store(error_code, std::memory_order_relaxed);
-    ft_errno = error_code;
+    api_tls_client::record_operation_error_unlocked(error_code);
     return ;
 }
 
@@ -1275,7 +1325,7 @@ bool api_tls_client::populate_handshake_diagnostics()
                 {
                     vector_error = this->_handshake_diagnostics.certificates.get_error();
                     if (vector_error == FT_ERR_SUCCESSS)
-                        vector_error = ft_errno;
+                        vector_error = ft_global_error_stack_pop_newest();
                     if (vector_error == FT_ERR_SUCCESSS)
                         vector_error = FT_ERR_CONFIGURATION;
                     this->set_error(vector_error);
@@ -1298,7 +1348,7 @@ bool api_tls_client::populate_handshake_diagnostics()
         {
             vector_error = this->_handshake_diagnostics.certificates.get_error();
             if (vector_error == FT_ERR_SUCCESSS)
-                vector_error = ft_errno;
+                vector_error = ft_global_error_stack_pop_newest();
             if (vector_error == FT_ERR_SUCCESSS)
                 vector_error = FT_ERR_CONFIGURATION;
             this->set_error(vector_error);

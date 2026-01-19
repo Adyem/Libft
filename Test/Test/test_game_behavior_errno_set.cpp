@@ -163,6 +163,15 @@ FT_TEST(test_behavior_action_move_assignment_resets_errno,
     return (1);
 }
 
+FT_TEST(test_behavior_action_set_action_id_single_global_error,
+    "set_action_id records exactly one error stack entry")
+{
+    ft_behavior_action action;
+
+    FT_ASSERT_SINGLE_GLOBAL_ERROR(action.set_action_id(55));
+    return (1);
+}
+
 FT_TEST(test_behavior_profile_default_construction_resets_errno_to_success,
     "default constructed behavior profile resets errno to success")
 {

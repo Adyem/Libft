@@ -1,5 +1,6 @@
 #include "game_crafting.hpp"
 #include <utility>
+#include "../Errno/errno_internal.hpp"
 #include "../Template/move.hpp"
 #include "../PThread/pthread.hpp"
 
@@ -24,12 +25,10 @@ int ft_crafting_ingredient::lock_pair(const ft_crafting_ingredient &first,
 
         if (single_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ERR_SUCCESSS;
         return (FT_ERR_SUCCESSS);
     }
     ordered_first = &first;
@@ -50,7 +49,6 @@ int ft_crafting_ingredient::lock_pair(const ft_crafting_ingredient &first,
 
         if (lower_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
@@ -66,12 +64,10 @@ int ft_crafting_ingredient::lock_pair(const ft_crafting_ingredient &first,
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = FT_ERR_SUCCESSS;
             return (FT_ERR_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            ft_errno = upper_guard.get_error();
             return (upper_guard.get_error());
         }
         if (lower_guard.owns_lock())
@@ -329,12 +325,10 @@ int ft_crafting::lock_pair(const ft_crafting &first, const ft_crafting &second,
 
         if (single_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ERR_SUCCESSS;
         return (FT_ERR_SUCCESSS);
     }
     ordered_first = &first;
@@ -355,7 +349,6 @@ int ft_crafting::lock_pair(const ft_crafting &first, const ft_crafting &second,
 
         if (lower_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
@@ -371,12 +364,10 @@ int ft_crafting::lock_pair(const ft_crafting &first, const ft_crafting &second,
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = FT_ERR_SUCCESSS;
             return (FT_ERR_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            ft_errno = upper_guard.get_error();
             return (upper_guard.get_error());
         }
         if (lower_guard.owns_lock())
@@ -807,4 +798,3 @@ int ft_crafting::craft_item(ft_inventory &inventory, int recipe_id,
     this->set_error(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);
 }
-

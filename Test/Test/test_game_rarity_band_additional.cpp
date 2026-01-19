@@ -179,3 +179,12 @@ FT_TEST(test_rarity_band_self_move_assignment_noop, "Game: self move assignment 
     FT_ASSERT_EQ(9.9, rarity_band.get_value_multiplier());
     return (1);
 }
+
+FT_TEST(test_rarity_band_set_rarity_single_global_error,
+    "set_rarity records exactly one global error entry")
+{
+    ft_rarity_band band;
+
+    FT_ASSERT_SINGLE_GLOBAL_ERROR(band.set_rarity(8));
+    return (1);
+}

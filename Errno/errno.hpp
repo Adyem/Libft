@@ -12,12 +12,16 @@ typedef unsigned long long ft_size_t;
 
 int ft_map_system_error(int error_code);
 int ft_set_errno_from_system_error(int error_code);
+unsigned long long ft_errno_next_operation_id(void);
+unsigned long long ft_global_error_stack_push_entry(int error_code);
+void ft_global_error_stack_push_entry_with_id(int error_code, unsigned long long op_id);
 void ft_global_error_stack_push(int error_code);
 int ft_global_error_stack_pop_last(void);
 int ft_global_error_stack_pop_newest(void);
 void ft_global_error_stack_pop_all(void);
 int ft_global_error_stack_error_at(ft_size_t index);
 int ft_global_error_stack_last_error(void);
+ft_size_t ft_global_error_stack_depth(void);
 unsigned long long ft_global_error_stack_get_id_at(ft_size_t index);
 ft_size_t ft_global_error_stack_find_by_id(unsigned long long id);
 const char *ft_global_error_stack_error_str_at(ft_size_t index);
@@ -96,6 +100,10 @@ enum PTErrorCode
     FT_ERR_HTTP_PROTOCOL_MISMATCH = 2006,
     FT_ERR_API_CIRCUIT_OPEN = 2007,
 };
+
+// Alignment with legacy naming for system error caches.
+#define FT_SYS_ERR_SUCCESS FT_ERR_SUCCESSS
+#define FT_SYS_ERR_NO_MEMORY FT_ERR_SYS_NO_MEMORY
 
 const char* ft_strerror(int error_code);
 void        ft_perror(const char *error_msg);

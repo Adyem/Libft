@@ -4,6 +4,7 @@
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../Libft/libft.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread.hpp"
@@ -31,6 +32,7 @@ class ft_trie
 
         int insert_helper(const char *key, int unset_value, ValueType *value_pointer);
         void set_error(int error) const;
+        static void record_operation_error_unlocked(int error_code) noexcept;
         void set_success_preserve_errno() const;
         int lock_internal(bool *lock_acquired) const;
         void unlock_internal(bool lock_acquired) const;
@@ -252,11 +254,21 @@ void ft_trie<ValueType>::set_error(int error) const
 {
     this->_last_error = error;
     if (error == FT_ERR_SUCCESSS)
-    {
         this->_error_code = FT_ERR_SUCCESSS;
-        return ;
-    }
-    this->_error_code = 1;
+    else
+        this->_error_code = 1;
+    ft_trie<ValueType>::record_operation_error_unlocked(error);
+    return ;
+}
+
+template <typename ValueType>
+void ft_trie<ValueType>::record_operation_error_unlocked(int error_code) noexcept
+{
+    static thread_local ft_operation_error_stack operation_errors = {{}, {}, 0};
+    unsigned long long operation_id;
+
+    operation_id = ft_global_error_stack_push_entry(error_code);
+    ft_operation_error_stack_push(operation_errors, error_code, operation_id);
     return ;
 }
 

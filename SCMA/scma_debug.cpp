@@ -16,19 +16,19 @@ int    scma_get_stats(scma_stats *out_stats)
     if (scma_mutex_lock() != 0)
     {
         error_code = FT_ERR_SYS_MUTEX_LOCK_FAILED;
-        ft_global_error_stack_push(error_code);
+        scma_record_operation_error(error_code);
         return (0);
     }
     if (!scma_initialized_ref())
     {
         error_code = FT_ERR_INVALID_STATE;
-        ft_global_error_stack_push(error_code);
+        scma_record_operation_error(error_code);
         return (scma_unlock_and_return_int(0));
     }
     if (!out_stats)
     {
         error_code = FT_ERR_INVALID_POINTER;
-        ft_global_error_stack_push(error_code);
+        scma_record_operation_error(error_code);
         return (scma_unlock_and_return_int(0));
     }
     stats.block_count = block_count;
@@ -40,7 +40,7 @@ int    scma_get_stats(scma_stats *out_stats)
         stats.snapshot_active = 0;
     *out_stats = stats;
     error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(error_code);
+    scma_record_operation_error(error_code);
     return (scma_unlock_and_return_int(1));
 }
 
@@ -56,13 +56,13 @@ void    scma_debug_dump(void)
     if (scma_mutex_lock() != 0)
     {
         error_code = FT_ERR_SYS_MUTEX_LOCK_FAILED;
-        ft_global_error_stack_push(error_code);
+        scma_record_operation_error(error_code);
         return ;
     }
     if (!scma_initialized_ref())
     {
         error_code = FT_ERR_INVALID_STATE;
-        ft_global_error_stack_push(error_code);
+        scma_record_operation_error(error_code);
         std::printf("[scma] not initialized\n");
         scma_unlock_and_return_void();
         return ;
@@ -88,7 +88,7 @@ void    scma_debug_dump(void)
         index++;
     }
     error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(error_code);
+    scma_record_operation_error(error_code);
     scma_unlock_and_return_void();
     return ;
 }

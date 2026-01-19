@@ -2,6 +2,7 @@
 # define CMA_INTERNAL_HPP
 
 #include "../PThread/pthread_lock_tracking.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../Libft/libft.hpp"
 #include "cma_guard_vector.hpp"
 #include <cstdint>
@@ -41,6 +42,10 @@ extern ft_size_t    g_cma_free_count;
 extern ft_size_t    g_cma_current_bytes;
 extern ft_size_t    g_cma_peak_bytes;
 extern unsigned long long    g_cma_metadata_access_depth;
+extern thread_local ft_operation_error_stack g_cma_operation_errors;
+
+void    cma_record_operation_error(int error_code);
+void    cma_record_internal_operation_error(int error_code);
 
 class cma_allocator_guard
 {

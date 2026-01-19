@@ -3,6 +3,7 @@
 #include "../Libft/limits.hpp"
 #include "../PThread/pthread.hpp"
 #include "SCMA.hpp"
+#include "scma_internal.hpp"
 
 static pt_mutex g_scma_mutex;
 static thread_local ft_size_t g_scma_lock_depth = 0;
@@ -12,7 +13,7 @@ pt_mutex    &scma_runtime_mutex(void)
     int error_code;
 
     error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(error_code);
+    scma_record_operation_error(error_code);
     return (g_scma_mutex);
 }
 
@@ -29,7 +30,7 @@ int    scma_mutex_lock(void)
     if (lock_depth == static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX))
     {
         error_code = FT_ERR_NO_MEMORY;
-        ft_global_error_stack_push(error_code);
+        scma_record_operation_error(error_code);
         return (-1);
     }
     if (lock_depth == 0)
@@ -40,13 +41,13 @@ int    scma_mutex_lock(void)
         if (mutex.get_error() != FT_ERR_SUCCESSS)
         {
             error_code = mutex.get_error();
-            ft_global_error_stack_push(error_code);
+            scma_record_operation_error(error_code);
             return (-1);
         }
     }
     lock_depth = lock_depth + 1;
     error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(error_code);
+    scma_record_operation_error(error_code);
     return (0);
 }
 
@@ -58,7 +59,7 @@ int    scma_mutex_unlock(void)
     if (lock_depth == 0)
     {
         error_code = FT_ERR_INVALID_STATE;
-        ft_global_error_stack_push(error_code);
+        scma_record_operation_error(error_code);
         return (-1);
     }
     lock_depth = lock_depth - 1;
@@ -70,12 +71,12 @@ int    scma_mutex_unlock(void)
         if (mutex.get_error() != FT_ERR_SUCCESSS)
         {
             error_code = mutex.get_error();
-            ft_global_error_stack_push(error_code);
+            scma_record_operation_error(error_code);
             return (-1);
         }
     }
     error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(error_code);
+    scma_record_operation_error(error_code);
     return (0);
 }
 
@@ -87,22 +88,22 @@ int    scma_mutex_close(void)
     if (lock_depth == 0)
     {
         error_code = FT_ERR_INVALID_STATE;
-        ft_global_error_stack_push(error_code);
+        scma_record_operation_error(error_code);
         return (-1);
     }
     while (lock_depth > 0)
     {
         if (scma_mutex_unlock() != 0)
         {
-            error_code = ft_global_error_stack_pop_newest();
+            error_code = scma_pop_operation_error();
             if (error_code == FT_ERR_SUCCESSS)
                 error_code = FT_ERR_SYS_MUTEX_UNLOCK_FAILED;
-            ft_global_error_stack_push(error_code);
+            scma_record_operation_error(error_code);
             return (-1);
         }
     }
     error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(error_code);
+    scma_record_operation_error(error_code);
     return (0);
 }
 
@@ -113,6 +114,6 @@ ft_size_t    scma_mutex_lock_count(void)
 
     lock_depth = scma_runtime_lock_depth();
     error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(error_code);
+    scma_record_operation_error(error_code);
     return (lock_depth);
 }

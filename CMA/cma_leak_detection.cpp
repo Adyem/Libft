@@ -16,7 +16,7 @@ static thread_local bool g_cma_leak_detection_enabled = false;
 static thread_local bool g_cma_leak_detection_error = false;
 static thread_local cma_guard_vector<s_cma_leak_record> g_cma_leak_records;
 static thread_local ft_size_t g_cma_leak_outstanding_bytes = 0;
-static thread_local ft_operation_error_stack g_cma_leak_errors = {{}, 0};
+static thread_local ft_operation_error_stack g_cma_leak_errors = {{}, {}, 0};
 
 static void cma_leak_tracker_set_error(int error_code)
 {

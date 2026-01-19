@@ -5,6 +5,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "api_request_signing.hpp"
 #include <cstdint>
 #include <cstddef>
@@ -31,6 +32,8 @@ class api_streaming_handler
             const api_streaming_handler &second,
             ft_unique_lock<pt_mutex> &first_guard,
             ft_unique_lock<pt_mutex> &second_guard) noexcept;
+        static thread_local ft_operation_error_stack _operation_errors;
+        static void record_operation_error_unlocked(int error_code) noexcept;
 
     public:
         api_streaming_handler() noexcept;
@@ -73,6 +76,8 @@ class api_retry_policy
             const api_retry_policy &second,
             ft_unique_lock<pt_mutex> &first_guard,
             ft_unique_lock<pt_mutex> &second_guard) noexcept;
+        static thread_local ft_operation_error_stack _operation_errors;
+        static void record_operation_error_unlocked(int error_code) noexcept;
 
     public:
         api_retry_policy() noexcept;

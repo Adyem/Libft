@@ -1,6 +1,19 @@
 #include "ft_dialogue_script.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../Template/move.hpp"
+
+thread_local ft_operation_error_stack ft_dialogue_script::_operation_errors = {{}, {}, 0};
+
+void ft_dialogue_script::record_operation_error_unlocked(int error_code)
+{
+    unsigned long long operation_id;
+
+    operation_id = ft_global_error_stack_push_entry(error_code);
+    ft_operation_error_stack_push(ft_dialogue_script::_operation_errors,
+            error_code, operation_id);
+    return ;
+}
 
 static void game_dialogue_copy_line_vector(const ft_vector<ft_dialogue_line> &source,
         ft_vector<ft_dialogue_line> &destination)
@@ -16,7 +29,7 @@ static void game_dialogue_copy_line_vector(const ft_vector<ft_dialogue_line> &so
         destination.push_back(*entry);
         ++entry;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_dialogue_script::record_operation_error_unlocked(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -34,12 +47,12 @@ int ft_dialogue_script::lock_pair(const ft_dialogue_script &first, const ft_dial
 
         if (single_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_global_error_stack_push(single_guard.get_error());
+            ft_dialogue_script::record_operation_error_unlocked(single_guard.get_error());
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_dialogue_script::record_operation_error_unlocked(FT_ERR_SUCCESSS);
         return (FT_ERR_SUCCESSS);
     }
     ordered_first = &first;
@@ -60,7 +73,7 @@ int ft_dialogue_script::lock_pair(const ft_dialogue_script &first, const ft_dial
 
         if (lower_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_global_error_stack_push(lower_guard.get_error());
+            ft_dialogue_script::record_operation_error_unlocked(lower_guard.get_error());
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
@@ -76,12 +89,12 @@ int ft_dialogue_script::lock_pair(const ft_dialogue_script &first, const ft_dial
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
+            ft_dialogue_script::record_operation_error_unlocked(FT_ERR_SUCCESSS);
             return (FT_ERR_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            ft_global_error_stack_push(upper_guard.get_error());
+            ft_dialogue_script::record_operation_error_unlocked(upper_guard.get_error());
             return (upper_guard.get_error());
         }
         if (lower_guard.owns_lock())
@@ -206,7 +219,7 @@ ft_dialogue_script &ft_dialogue_script::operator=(ft_dialogue_script &&other) no
     other._start_line_id = 0;
     other._lines.clear();
     other._error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_dialogue_script::record_operation_error_unlocked(FT_ERR_SUCCESSS);
     return (*this);
 }
 
@@ -356,7 +369,7 @@ void ft_dialogue_script::set_lines(const ft_vector<ft_dialogue_line> &lines) noe
     }
     game_dialogue_copy_line_vector(lines, this->_lines);
     this->_error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_dialogue_script::record_operation_error_unlocked(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -367,11 +380,11 @@ int ft_dialogue_script::get_error() const noexcept
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_global_error_stack_push(guard.get_error());
+        ft_dialogue_script::record_operation_error_unlocked(guard.get_error());
         return (guard.get_error());
     }
     error_code = this->_error_code;
-    ft_global_error_stack_push(error_code);
+    ft_dialogue_script::record_operation_error_unlocked(error_code);
     return (error_code);
 }
 
@@ -386,6 +399,6 @@ const char *ft_dialogue_script::get_error_str() const noexcept
 void ft_dialogue_script::set_error(int error_code) const noexcept
 {
     this->_error_code = error_code;
-    ft_global_error_stack_push(error_code);
+    ft_dialogue_script::record_operation_error_unlocked(error_code);
     return ;
 }

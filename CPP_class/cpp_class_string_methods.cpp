@@ -8,7 +8,7 @@
 #include "class_nullptr.hpp"
 #include <climits>
 
-thread_local ft_operation_error_stack ft_string::_operation_errors = {{}, 0};
+thread_local ft_operation_error_stack ft_string::_operation_errors = {{}, {}, 0};
 
 static int ft_string_current_error() noexcept
 {
@@ -103,7 +103,6 @@ void ft_string::push_error_unlocked(int error_code) const noexcept
     std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
     ft_string::record_operation_error(error_code);
-    this->set_error_unlocked(error_code);
     return ;
 }
 
@@ -124,23 +123,6 @@ void ft_string::set_system_error_unlocked(int error_code) const noexcept
 void ft_string::set_system_error(int error_code) const noexcept
 {
     this->set_system_error_unlocked(error_code);
-    return ;
-}
-
-void ft_string::set_error_unlocked(int error_code) const noexcept
-{
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
-
-    this->_error_code = error_code;
-    ft_errno = error_code;
-    return ;
-}
-
-void ft_string::set_error(int error_code) const noexcept
-{
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
-
-    this->set_error_unlocked(error_code);
     return ;
 }
 
@@ -231,20 +213,12 @@ int ft_string::lock_pair(const ft_string &first, const ft_string &second,
 
 void ft_string::record_operation_error(int error_code) noexcept
 {
-    size_t index;
-
+    unsigned long long operation_id;
+    operation_id = ft_errno_next_operation_id();
     std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
-
-    if (ft_string::_operation_errors.count < 20)
-        ft_string::_operation_errors.count++;
-    index = ft_string::_operation_errors.count;
-    while (index > 0)
-    {
-        ft_string::_operation_errors.errors[index] =
-            ft_string::_operation_errors.errors[index - 1];
-        index--;
-    }
-    ft_string::_operation_errors.errors[0] = error_code;
+    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
+    ft_operation_error_stack_push(ft_string::_operation_errors,
+            error_code, operation_id);
     return ;
 }
 
@@ -252,40 +226,29 @@ int ft_string::last_operation_error() noexcept
 {
     std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
-    if (ft_string::_operation_errors.count == 0)
-        return (FT_ERR_SUCCESSS);
-    return (ft_string::_operation_errors.errors[0]);
+    return (ft_operation_error_stack_last_error(ft_string::_operation_errors));
 }
 
 int ft_string::operation_error_at(size_t index) noexcept
 {
     std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
-    if (index == 0 || index > ft_string::_operation_errors.count)
-        return (FT_ERR_SUCCESSS);
-    return (ft_string::_operation_errors.errors[index - 1]);
+    return (ft_operation_error_stack_error_at(ft_string::_operation_errors, index));
 }
 
 void ft_string::pop_operation_errors() noexcept
 {
     std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
-    ft_string::_operation_errors.count = 0;
+    ft_operation_error_stack_pop_last(ft_string::_operation_errors);
     return ;
 }
 
 int ft_string::pop_oldest_operation_error() noexcept
 {
-    int popped_error;
-
     std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
-    if (ft_string::_operation_errors.count == 0)
-        return (FT_ERR_SUCCESSS);
-    popped_error = ft_string::_operation_errors
-        .errors[ft_string::_operation_errors.count - 1];
-    ft_string::_operation_errors.count--;
-    return (popped_error);
+    return (ft_operation_error_stack_pop_last(ft_string::_operation_errors));
 }
 
 int ft_string::operation_error_index() noexcept
@@ -846,27 +809,21 @@ int ft_string::get_error() const noexcept
 {
     int error_value;
 
-    {
-        std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
-        error_value = this->_error_code;
-        ft_errno = error_value;
-    }
+    error_value = ft_operation_error_stack_last_error(ft_string::_operation_errors);
     return (error_value);
 }
 
 const char *ft_string::get_error_str() const noexcept
 {
-    const char *error_string;
     int error_value;
+    const char *error_string;
 
-    {
-        std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
-
-        error_value = this->_error_code;
-        ft_errno = error_value;
-    }
+    error_value = this->get_error();
     error_string = ft_strerror(error_value);
+    if (!error_string)
+        error_string = "unknown error";
     return (error_string);
 }
 

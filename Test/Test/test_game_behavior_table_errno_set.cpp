@@ -16,7 +16,9 @@ FT_TEST(test_behavior_table_default_state_success, "default behavior table start
     ft_behavior_table table;
 
     FT_ASSERT_EQ(true, table.get_profiles().empty());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.get_error());
+    int error_result;
+    FT_ASSERT_SINGLE_GLOBAL_ERROR(error_result = table.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, error_result);
     FT_ASSERT_STR_EQ("Success", table.get_error_str());
     return (1);
 }

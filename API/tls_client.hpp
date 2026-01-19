@@ -6,6 +6,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/thread.hpp"
 #include "../PThread/mutex.hpp"
+#include "../Errno/errno_internal.hpp"
 #include <atomic>
 #include <openssl/ssl.h>
 #include <cstdint>
@@ -46,6 +47,8 @@ class api_tls_client
 
         void set_error(int error_code) const noexcept;
         bool populate_handshake_diagnostics();
+        static thread_local ft_operation_error_stack _operation_errors;
+        static void record_operation_error_unlocked(int error_code) noexcept;
 
     public:
         api_tls_client(const char *host, uint16_t port, int timeout = 60000);

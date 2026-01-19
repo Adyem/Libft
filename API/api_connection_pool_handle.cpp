@@ -1,6 +1,7 @@
 #include "api_internal.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../PThread/pthread.hpp"
 #include "../Template/move.hpp"
 
@@ -34,7 +35,7 @@ api_connection_pool_handle::api_connection_pool_handle(
     other_lock_acquired = false;
     if (other.lock_internal(&other_lock_acquired) != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(other.get_error());
         return ;
     }
     this->key = ft_move(other.key);
@@ -95,14 +96,14 @@ api_connection_pool_handle &api_connection_pool_handle::operator=(
     this_lock_acquired = false;
     if (this->lock_internal(&this_lock_acquired) != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(this->get_error());
         return (*this);
     }
     other_lock_acquired = false;
     if (other.lock_internal(&other_lock_acquired) != 0)
     {
         this->unlock_internal(this_lock_acquired);
-        this->set_error(ft_errno);
+        this->set_error(other.get_error());
         return (*this);
     }
     this->key = ft_move(other.key);
@@ -184,17 +185,12 @@ int api_connection_pool_handle::lock(bool *lock_acquired) const
     int result;
 
     result = this->lock_internal(lock_acquired);
-    if (result != 0)
-        const_cast<api_connection_pool_handle *>(this)->set_error(ft_errno);
-    else
-        const_cast<api_connection_pool_handle *>(this)->set_error(FT_ERR_SUCCESSS);
     return (result);
 }
 
 void api_connection_pool_handle::unlock(bool lock_acquired) const
 {
     this->unlock_internal(lock_acquired);
-    const_cast<api_connection_pool_handle *>(this)->set_error(ft_errno);
     return ;
 }
 
@@ -208,10 +204,24 @@ const char *api_connection_pool_handle::get_error_str() const
     return (ft_strerror(this->_error_code));
 }
 
+thread_local ft_operation_error_stack api_connection_pool_handle::_operation_errors = {{}, {}, 0};
+
+void api_connection_pool_handle::record_operation_error_unlocked(int error_code)
+{
+    unsigned long long operation_id;
+
+    operation_id = ft_global_error_stack_push_entry(error_code);
+    ft_operation_error_stack_push(api_connection_pool_handle::_operation_errors,
+            error_code, operation_id);
+    return ;
+}
+
 void api_connection_pool_handle::set_error(int error) const
 {
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
     this->_error_code = error;
-    ft_errno = error;
+    api_connection_pool_handle::record_operation_error_unlocked(error);
     return ;
 }
 
@@ -221,18 +231,18 @@ int api_connection_pool_handle::lock_internal(bool *lock_acquired) const
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || this->_mutex == ft_nullptr)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        this->set_error(FT_ERR_SUCCESSS);
         return (0);
     }
     this->_mutex->lock(THREAD_ID);
     if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = this->_mutex->get_error();
+        this->set_error(this->_mutex->get_error());
         return (-1);
     }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    ft_errno = FT_ERR_SUCCESSS;
+    this->set_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -240,16 +250,16 @@ void api_connection_pool_handle::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || this->_mutex == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->_mutex->unlock(THREAD_ID);
     if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = this->_mutex->get_error();
+        this->set_error(this->_mutex->get_error());
         return ;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -285,4 +295,3 @@ bool api_connection_pool_handle_lock_guard::is_locked() const
         return (false);
     return (this->_lock_acquired);
 }
-

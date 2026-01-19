@@ -3,10 +3,16 @@
 
 #include <cstddef>
 #include <type_traits>
+#include <mutex>
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../Libft/limits.hpp"
-#include "../PThread/mutex.hpp"
+
+class pt_mutex;
+
+unsigned long long scma_record_operation_error(int error_code);
+int scma_pop_operation_error(void);
 
 struct scma_handle
 {
@@ -61,6 +67,9 @@ class scma_handle_accessor
     private:
         scma_handle _handle;
         mutable int _error_code;
+
+        static thread_local ft_operation_error_stack _operation_errors;
+        static void record_operation_error(int error_code) noexcept;
 
         void    set_error(int error_code) const;
 
@@ -124,15 +133,15 @@ inline scma_handle_accessor<TValue>::scma_handle_accessor(const scma_handle_acce
     }
     if (scma_mutex_lock() != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(scma_pop_operation_error());
         return ;
     }
     if (!scma_handle_is_valid(other._handle))
     {
-        this->set_error(ft_errno);
+        this->set_error(scma_pop_operation_error());
         if (scma_mutex_unlock() != 0)
         {
-            this->set_error(ft_errno);
+            this->set_error(scma_pop_operation_error());
         }
         return ;
     }
@@ -140,7 +149,7 @@ inline scma_handle_accessor<TValue>::scma_handle_accessor(const scma_handle_acce
     this->set_error(other._error_code);
     if (scma_mutex_unlock() != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(scma_pop_operation_error());
     }
     return ;
 }
@@ -153,7 +162,7 @@ inline scma_handle_accessor<TValue>::scma_handle_accessor(scma_handle_accessor &
     this->_error_code = FT_ERR_SUCCESSS;
     if (scma_mutex_lock() != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(scma_pop_operation_error());
         return ;
     }
     if (!other.is_bound())
@@ -163,18 +172,18 @@ inline scma_handle_accessor<TValue>::scma_handle_accessor(scma_handle_accessor &
         other._handle.generation = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
         if (scma_mutex_unlock() != 0)
         {
-            this->set_error(ft_errno);
+            this->set_error(scma_pop_operation_error());
         }
         return ;
     }
     if (!scma_handle_is_valid(other._handle))
     {
-        this->set_error(ft_errno);
+        this->set_error(scma_pop_operation_error());
         other._handle.index = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
         other._handle.generation = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
         if (scma_mutex_unlock() != 0)
         {
-            this->set_error(ft_errno);
+            this->set_error(scma_pop_operation_error());
         }
         return ;
     }
@@ -185,7 +194,7 @@ inline scma_handle_accessor<TValue>::scma_handle_accessor(scma_handle_accessor &
     other._error_code = FT_ERR_SUCCESSS;
     if (scma_mutex_unlock() != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(scma_pop_operation_error());
     }
     return ;
 }
@@ -200,7 +209,7 @@ template <typename TValue>
 inline void    scma_handle_accessor<TValue>::set_error(int error_code) const
 {
     this->_error_code = error_code;
-    ft_errno = error_code;
+    scma_handle_accessor<TValue>::record_operation_error(error_code);
     return ;
 }
 
@@ -212,12 +221,12 @@ inline int    scma_handle_accessor<TValue>::bind(scma_handle handle)
     bind_result = 0;
     if (scma_mutex_lock() != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(scma_pop_operation_error());
         return (0);
     }
     if (!scma_handle_is_valid(handle))
     {
-        this->set_error(ft_errno);
+        this->set_error(scma_pop_operation_error());
     }
     else
     {
@@ -227,7 +236,7 @@ inline int    scma_handle_accessor<TValue>::bind(scma_handle handle)
     }
     if (scma_mutex_unlock() != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(scma_pop_operation_error());
         bind_result = 0;
     }
     return (bind_result);
@@ -318,7 +327,7 @@ inline int    scma_handle_accessor_validate_target(scma_handle handle, ft_size_t
     block_size = scma_get_size(handle);
     if (block_size < required_size)
     {
-        ft_errno = FT_ERR_OUT_OF_RANGE;
+        scma_record_operation_error(FT_ERR_OUT_OF_RANGE);
         goto cleanup;
     }
     if (out_size)
@@ -341,7 +350,7 @@ inline int    scma_handle_accessor<TValue>::read_struct(TValue &destination) con
     read_result = 0;
     if (scma_mutex_lock() != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(scma_pop_operation_error());
         return (0);
     }
     if (!std::is_trivially_copyable<TValue>::value)
@@ -363,12 +372,12 @@ inline int    scma_handle_accessor<TValue>::read_struct(TValue &destination) con
     required_size = static_cast<ft_size_t>(host_size);
     if (!scma_handle_accessor_validate_target<TValue>(this->_handle, required_size, ft_nullptr))
     {
-        this->set_error(ft_errno);
+        this->set_error(scma_pop_operation_error());
         goto cleanup;
     }
     if (!scma_read(this->_handle, 0, &destination, required_size))
     {
-        this->set_error(ft_errno);
+        this->set_error(scma_pop_operation_error());
         goto cleanup;
     }
     this->set_error(FT_ERR_SUCCESSS);
@@ -377,7 +386,7 @@ inline int    scma_handle_accessor<TValue>::read_struct(TValue &destination) con
 cleanup:
     if (scma_mutex_unlock() != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(scma_pop_operation_error());
         read_result = 0;
     }
     return (read_result);
@@ -393,7 +402,7 @@ inline int    scma_handle_accessor<TValue>::write_struct(const TValue &source) c
     write_result = 0;
     if (scma_mutex_lock() != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(scma_pop_operation_error());
         return (0);
     }
     if (!std::is_trivially_copyable<TValue>::value)
@@ -415,12 +424,12 @@ inline int    scma_handle_accessor<TValue>::write_struct(const TValue &source) c
     required_size = static_cast<ft_size_t>(host_size);
     if (!scma_handle_accessor_validate_target<TValue>(this->_handle, required_size, ft_nullptr))
     {
-        this->set_error(ft_errno);
+        this->set_error(scma_pop_operation_error());
         goto cleanup;
     }
     if (!scma_write(this->_handle, 0, &source, required_size))
     {
-        this->set_error(ft_errno);
+        this->set_error(scma_pop_operation_error());
         goto cleanup;
     }
     this->set_error(FT_ERR_SUCCESSS);
@@ -429,7 +438,7 @@ inline int    scma_handle_accessor<TValue>::write_struct(const TValue &source) c
 cleanup:
     if (scma_mutex_unlock() != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(scma_pop_operation_error());
         write_result = 0;
     }
     return (write_result);
@@ -447,7 +456,7 @@ inline int    scma_handle_accessor<TValue>::read_at(TValue &destination, ft_size
     read_result = 0;
     if (scma_mutex_lock() != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(scma_pop_operation_error());
         return (0);
     }
     if (!std::is_trivially_copyable<TValue>::value)
@@ -481,12 +490,12 @@ inline int    scma_handle_accessor<TValue>::read_at(TValue &destination, ft_size
     required_size = offset + element_size;
     if (!scma_handle_accessor_validate_target<TValue>(this->_handle, required_size, ft_nullptr))
     {
-        this->set_error(ft_errno);
+        this->set_error(scma_pop_operation_error());
         goto cleanup;
     }
     if (!scma_read(this->_handle, offset, &destination, element_size))
     {
-        this->set_error(ft_errno);
+        this->set_error(scma_pop_operation_error());
         goto cleanup;
     }
     this->set_error(FT_ERR_SUCCESSS);
@@ -495,7 +504,7 @@ inline int    scma_handle_accessor<TValue>::read_at(TValue &destination, ft_size
 cleanup:
     if (scma_mutex_unlock() != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(scma_pop_operation_error());
         read_result = 0;
     }
     return (read_result);
@@ -513,7 +522,7 @@ inline int    scma_handle_accessor<TValue>::write_at(const TValue &source, ft_si
     write_result = 0;
     if (scma_mutex_lock() != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(scma_pop_operation_error());
         return (0);
     }
     if (!std::is_trivially_copyable<TValue>::value)
@@ -547,12 +556,12 @@ inline int    scma_handle_accessor<TValue>::write_at(const TValue &source, ft_si
     required_size = offset + element_size;
     if (!scma_handle_accessor_validate_target<TValue>(this->_handle, required_size, ft_nullptr))
     {
-        this->set_error(ft_errno);
+        this->set_error(scma_pop_operation_error());
         goto cleanup;
     }
     if (!scma_write(this->_handle, offset, &source, element_size))
     {
-        this->set_error(ft_errno);
+        this->set_error(scma_pop_operation_error());
         goto cleanup;
     }
     this->set_error(FT_ERR_SUCCESSS);
@@ -561,7 +570,7 @@ inline int    scma_handle_accessor<TValue>::write_at(const TValue &source, ft_si
 cleanup:
     if (scma_mutex_unlock() != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(scma_pop_operation_error());
         write_result = 0;
     }
     return (write_result);
@@ -578,7 +587,7 @@ inline ft_size_t    scma_handle_accessor<TValue>::get_count(void) const
     element_count = 0;
     if (scma_mutex_lock() != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(scma_pop_operation_error());
         return (0);
     }
     if (!std::is_trivially_copyable<TValue>::value)
@@ -600,7 +609,7 @@ inline ft_size_t    scma_handle_accessor<TValue>::get_count(void) const
     element_size = static_cast<ft_size_t>(host_size);
     if (!scma_handle_accessor_validate_target<TValue>(this->_handle, 0, &block_size))
     {
-        this->set_error(ft_errno);
+        this->set_error(scma_pop_operation_error());
         goto cleanup;
     }
     if (element_size == 0)
@@ -614,7 +623,7 @@ inline ft_size_t    scma_handle_accessor<TValue>::get_count(void) const
 cleanup:
     if (scma_mutex_unlock() != 0)
     {
-        this->set_error(ft_errno);
+        this->set_error(scma_pop_operation_error());
         element_count = 0;
     }
     return (element_count);
@@ -633,6 +642,23 @@ inline const char  *scma_handle_accessor<TValue>::get_error_str(void) const
 }
 
 template <typename TValue>
+thread_local ft_operation_error_stack scma_handle_accessor<TValue>::_operation_errors = {{}, {}, 0};
+
+template <typename TValue>
+void scma_handle_accessor<TValue>::record_operation_error(int error_code) noexcept
+{
+    unsigned long long operation_id;
+
+    operation_id = scma_record_operation_error(error_code);
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    ft_operation_error_stack_push(
+        scma_handle_accessor<TValue>::_operation_errors,
+        error_code,
+        operation_id);
+    return ;
+}
+
+template <typename TValue>
 class scma_handle_accessor_element_proxy
 {
     private:
@@ -642,6 +668,8 @@ class scma_handle_accessor_element_proxy
         int _should_write_back;
         mutable int _error_code;
 
+        static thread_local ft_operation_error_stack _operation_errors;
+        static void record_operation_error(int error_code) noexcept;
         void    set_error(int error_code) const;
 
     public:
@@ -670,6 +698,8 @@ class scma_handle_accessor_const_element_proxy
         mutable TValue _value;
         mutable int _error_code;
 
+        static thread_local ft_operation_error_stack _operation_errors;
+        static void record_operation_error(int error_code) noexcept;
         void    set_error(int error_code) const;
 
     public:
@@ -692,7 +722,7 @@ template <typename TValue>
 inline void    scma_handle_accessor_element_proxy<TValue>::set_error(int error_code) const
 {
     this->_error_code = error_code;
-    ft_errno = error_code;
+    scma_handle_accessor_element_proxy<TValue>::record_operation_error(error_code);
     return ;
 }
 
@@ -815,7 +845,7 @@ template <typename TValue>
 inline void    scma_handle_accessor_const_element_proxy<TValue>::set_error(int error_code) const
 {
     this->_error_code = error_code;
-    ft_errno = error_code;
+    scma_handle_accessor_const_element_proxy<TValue>::record_operation_error(error_code);
     return ;
 }
 
@@ -897,6 +927,40 @@ template <typename TValue>
 inline const char  *scma_handle_accessor_const_element_proxy<TValue>::get_error_str(void) const
 {
     return (ft_strerror(this->_error_code));
+}
+
+template <typename TValue>
+thread_local ft_operation_error_stack scma_handle_accessor_element_proxy<TValue>::_operation_errors = {{}, {}, 0};
+
+template <typename TValue>
+void scma_handle_accessor_element_proxy<TValue>::record_operation_error(int error_code) noexcept
+{
+    unsigned long long operation_id;
+
+    operation_id = scma_record_operation_error(error_code);
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    ft_operation_error_stack_push(
+        scma_handle_accessor_element_proxy<TValue>::_operation_errors,
+        error_code,
+        operation_id);
+    return ;
+}
+
+template <typename TValue>
+thread_local ft_operation_error_stack scma_handle_accessor_const_element_proxy<TValue>::_operation_errors = {{}, {}, 0};
+
+template <typename TValue>
+void scma_handle_accessor_const_element_proxy<TValue>::record_operation_error(int error_code) noexcept
+{
+    unsigned long long operation_id;
+
+    operation_id = scma_record_operation_error(error_code);
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    ft_operation_error_stack_push(
+        scma_handle_accessor_const_element_proxy<TValue>::_operation_errors,
+        error_code,
+        operation_id);
+    return ;
 }
 
 

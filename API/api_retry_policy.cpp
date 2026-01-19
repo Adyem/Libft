@@ -1,5 +1,6 @@
 #include "api.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../Libft/libft.hpp"
 #include "../Template/move.hpp"
 #include "../PThread/pthread.hpp"
@@ -10,10 +11,24 @@ static void api_retry_policy_sleep_backoff() noexcept
     return ;
 }
 
+thread_local ft_operation_error_stack api_retry_policy::_operation_errors = {{}, {}, 0};
+
+void api_retry_policy::record_operation_error_unlocked(int error_code) noexcept
+{
+    unsigned long long operation_id;
+
+    operation_id = ft_global_error_stack_push_entry(error_code);
+    ft_operation_error_stack_push(api_retry_policy::_operation_errors,
+            error_code, operation_id);
+    return ;
+}
+
 void api_retry_policy::set_error(int error) const noexcept
 {
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
     this->_error_code = error;
-    ft_errno = error;
+    api_retry_policy::record_operation_error_unlocked(error);
     return ;
 }
 
@@ -32,12 +47,10 @@ int api_retry_policy::lock_pair(const api_retry_policy &first,
 
         if (single_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ERR_SUCCESSS;
         return (FT_ERR_SUCCESSS);
     }
     ordered_first = &first;
@@ -53,14 +66,13 @@ int api_retry_policy::lock_pair(const api_retry_policy &first,
         swapped = true;
     }
     while (true)
-    {
-        ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
-
-        if (lower_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = lower_guard.get_error();
-            return (lower_guard.get_error());
-        }
+            ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
+
+            if (lower_guard.get_error() != FT_ERR_SUCCESSS)
+            {
+                return (lower_guard.get_error());
+            }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
         if (upper_guard.get_error() == FT_ERR_SUCCESSS)
         {
@@ -74,12 +86,10 @@ int api_retry_policy::lock_pair(const api_retry_policy &first,
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = FT_ERR_SUCCESSS;
             return (FT_ERR_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            ft_errno = upper_guard.get_error();
             return (upper_guard.get_error());
         }
         if (lower_guard.owns_lock())

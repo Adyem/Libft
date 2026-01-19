@@ -1,8 +1,21 @@
 #include "game_progress_tracker.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../Template/move.hpp"
 #include "../Template/pair.hpp"
 #include "../PThread/pthread.hpp"
+
+thread_local ft_operation_error_stack ft_progress_tracker::_operation_errors = {{}, {}, 0};
+
+void ft_progress_tracker::record_operation_error_unlocked(int error_code)
+{
+    unsigned long long operation_id;
+
+    operation_id = ft_global_error_stack_push_entry(error_code);
+    ft_operation_error_stack_push(ft_progress_tracker::_operation_errors,
+            error_code, operation_id);
+    return ;
+}
 
 static void game_progress_tracker_sleep_backoff()
 {
@@ -24,12 +37,10 @@ int ft_progress_tracker::lock_pair(const ft_progress_tracker &first, const ft_pr
 
         if (single_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ERR_SUCCESSS;
         return (FT_ERR_SUCCESSS);
     }
     ordered_first = &first;
@@ -50,7 +61,6 @@ int ft_progress_tracker::lock_pair(const ft_progress_tracker &first, const ft_pr
 
         if (lower_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
@@ -66,12 +76,10 @@ int ft_progress_tracker::lock_pair(const ft_progress_tracker &first, const ft_pr
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = FT_ERR_SUCCESSS;
             return (FT_ERR_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            ft_errno = upper_guard.get_error();
             return (upper_guard.get_error());
         }
         if (lower_guard.owns_lock())
@@ -499,7 +507,9 @@ const char *ft_progress_tracker::get_error_str() const noexcept
 
 void ft_progress_tracker::set_error(int error) const noexcept
 {
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
     const_cast<ft_progress_tracker *>(this)->_error_code = error;
-    ft_errno = error;
+    ft_progress_tracker::record_operation_error_unlocked(error);
     return ;
 }

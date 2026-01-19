@@ -25,7 +25,7 @@ class ft_lock_guard
         static thread_local ft_operation_error_stack _operation_errors;
 
         void set_error(int error) const;
-        static void record_error(ft_operation_error_stack &error_stack, int error);
+        static void record_error(ft_operation_error_stack &error_stack, int error, bool push_global = true);
 
     public:
         explicit ft_lock_guard(MutexType &mutex);
@@ -42,30 +42,22 @@ template <typename MutexType>
 void ft_lock_guard<MutexType>::set_error(int error) const
 {
     this->_error_code = error;
-    ft_lock_guard<MutexType>::record_error(ft_lock_guard<MutexType>::_operation_errors, error);
-    ft_global_error_stack_push(error);
+    ft_lock_guard<MutexType>::record_error(ft_lock_guard<MutexType>::_operation_errors,
+            error, true);
     return ;
 }
 
 template <typename MutexType>
-void ft_lock_guard<MutexType>::record_error(ft_operation_error_stack &error_stack, int error)
+void ft_lock_guard<MutexType>::record_error(ft_operation_error_stack &error_stack,
+        int error, bool push_global)
 {
-    ft_size_t index;
-    ft_size_t shift_index;
+    unsigned long long operation_id;
 
-    if (error_stack.count < 20)
-        error_stack.count++;
-    if (error_stack.count > 0)
-        shift_index = error_stack.count - 1;
+    if (push_global)
+        operation_id = ft_global_error_stack_push_entry(error);
     else
-        shift_index = 0;
-    index = shift_index;
-    while (index > 0)
-    {
-        error_stack.errors[index] = error_stack.errors[index - 1];
-        index--;
-    }
-    error_stack.errors[0] = error;
+        operation_id = 0;
+    ft_operation_error_stack_push(error_stack, error, operation_id);
     return ;
 }
 
@@ -119,6 +111,6 @@ const char *ft_lock_guard<MutexType>::get_error_str() const
 }
 
 template <typename MutexType>
-thread_local ft_operation_error_stack ft_lock_guard<MutexType>::_operation_errors = {{}, 0};
+thread_local ft_operation_error_stack ft_lock_guard<MutexType>::_operation_errors = {{}, {}, 0};
 
 #endif

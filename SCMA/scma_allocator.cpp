@@ -21,14 +21,14 @@ int    scma_initialize(ft_size_t initial_capacity)
     initialization_result = 0;
     if (scma_mutex_lock() != 0)
     {
-        error_code = ft_global_error_stack_pop_newest();
-        ft_global_error_stack_push(error_code);
+        error_code = scma_pop_operation_error();
+        scma_record_operation_error(error_code);
         return (0);
     }
     if (initialized)
     {
         error_code = FT_ERR_ALREADY_INITIALIZED;
-        ft_global_error_stack_push(error_code);
+        scma_record_operation_error(error_code);
         return (scma_unlock_and_return_int(0));
     }
     if (initial_capacity == 0)
@@ -36,7 +36,7 @@ int    scma_initialize(ft_size_t initial_capacity)
     if (initial_capacity > static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX))
     {
         error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_global_error_stack_push(error_code);
+        scma_record_operation_error(error_code);
         return (scma_unlock_and_return_int(0));
     }
     if (heap_data)
@@ -49,7 +49,7 @@ int    scma_initialize(ft_size_t initial_capacity)
     if (!heap_data)
     {
         error_code = FT_ERR_NO_MEMORY;
-        ft_global_error_stack_push(error_code);
+        scma_record_operation_error(error_code);
         return (scma_unlock_and_return_int(0));
     }
     heap_capacity = initial_capacity;
@@ -64,7 +64,7 @@ int    scma_initialize(ft_size_t initial_capacity)
     initialized = 1;
     scma_reset_live_snapshot();
     error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(error_code);
+    scma_record_operation_error(error_code);
     initialization_result = 1;
     return (scma_unlock_and_return_int(initialization_result));
 }
@@ -82,14 +82,14 @@ void    scma_shutdown(void)
 
     if (scma_mutex_lock() != 0)
     {
-        error_code = ft_global_error_stack_pop_newest();
-        ft_global_error_stack_push(error_code);
+        error_code = scma_pop_operation_error();
+        scma_record_operation_error(error_code);
         return ;
     }
     if (!initialized)
     {
         error_code = FT_ERR_SUCCESSS;
-        ft_global_error_stack_push(error_code);
+        scma_record_operation_error(error_code);
         scma_unlock_and_return_void();
         return ;
     }
@@ -110,7 +110,7 @@ void    scma_shutdown(void)
     initialized = 0;
     scma_reset_live_snapshot();
     error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(error_code);
+    scma_record_operation_error(error_code);
     scma_unlock_and_return_void();
     return ;
 }
@@ -123,8 +123,8 @@ int    scma_is_initialized(void)
     initialized = 0;
     if (scma_mutex_lock() != 0)
     {
-        error_code = ft_global_error_stack_pop_newest();
-        ft_global_error_stack_push(error_code);
+        error_code = scma_pop_operation_error();
+        scma_record_operation_error(error_code);
         return (0);
     }
     if (scma_initialized_ref())
@@ -132,7 +132,7 @@ int    scma_is_initialized(void)
         initialized = 1;
     }
     error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(error_code);
+    scma_record_operation_error(error_code);
     return (scma_unlock_and_return_int(initialized));
 }
 
@@ -151,46 +151,46 @@ scma_handle    scma_allocate(ft_size_t size)
     result_handle = scma_invalid_handle();
     if (scma_mutex_lock() != 0)
     {
-        error_code = ft_global_error_stack_pop_newest();
-        ft_global_error_stack_push(error_code);
+        error_code = scma_pop_operation_error();
+        scma_record_operation_error(error_code);
         return (result_handle);
     }
     if (!scma_initialized_ref())
     {
         error_code = FT_ERR_INVALID_STATE;
-        ft_global_error_stack_push(error_code);
+        scma_record_operation_error(error_code);
         return (scma_unlock_and_return_handle(result_handle));
     }
     if (size == 0)
     {
         error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_global_error_stack_push(error_code);
+        scma_record_operation_error(error_code);
         return (scma_unlock_and_return_handle(result_handle));
     }
     scma_compact();
     if (size > static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX))
     {
         error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_global_error_stack_push(error_code);
+        scma_record_operation_error(error_code);
         return (scma_unlock_and_return_handle(result_handle));
     }
     required_size = used_size + size;
     if (required_size < used_size)
     {
         error_code = FT_ERR_NO_MEMORY;
-        ft_global_error_stack_push(error_code);
+        scma_record_operation_error(error_code);
         return (scma_unlock_and_return_handle(result_handle));
     }
     if (required_size > static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX))
     {
         error_code = FT_ERR_NO_MEMORY;
-        ft_global_error_stack_push(error_code);
+        scma_record_operation_error(error_code);
         return (scma_unlock_and_return_handle(result_handle));
     }
     if (!scma_ensure_capacity(required_size))
     {
         error_code = FT_ERR_NO_MEMORY;
-        ft_global_error_stack_push(error_code);
+        scma_record_operation_error(error_code);
         return (scma_unlock_and_return_handle(result_handle));
     }
     span = scma_get_block_span();
@@ -216,7 +216,7 @@ scma_handle    scma_allocate(ft_size_t size)
         if (!scma_ensure_block_capacity(block_count + 1))
         {
             error_code = FT_ERR_NO_MEMORY;
-            ft_global_error_stack_push(error_code);
+            scma_record_operation_error(error_code);
             return (scma_unlock_and_return_handle(result_handle));
         }
         new_index = block_count;
@@ -230,7 +230,7 @@ scma_handle    scma_allocate(ft_size_t size)
         result_handle.index = new_index;
         result_handle.generation = block->generation;
         error_code = FT_ERR_SUCCESSS;
-        ft_global_error_stack_push(error_code);
+        scma_record_operation_error(error_code);
         return (scma_unlock_and_return_handle(result_handle));
     }
     block = &span.data[static_cast<size_t>(index)];
@@ -242,7 +242,7 @@ scma_handle    scma_allocate(ft_size_t size)
     result_handle.generation = block->generation;
     used_size += size;
     error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(error_code);
+    scma_record_operation_error(error_code);
     return (scma_unlock_and_return_handle(result_handle));
 }
 
@@ -256,14 +256,14 @@ int    scma_free(scma_handle handle)
     free_result = 0;
     if (scma_mutex_lock() != 0)
     {
-        error_code = ft_global_error_stack_pop_newest();
-        ft_global_error_stack_push(error_code);
+        error_code = scma_pop_operation_error();
+        scma_record_operation_error(error_code);
         return (0);
     }
     if (!scma_validate_handle(handle, &block))
     {
         error_code = FT_ERR_INVALID_HANDLE;
-        ft_global_error_stack_push(error_code);
+        scma_record_operation_error(error_code);
         return (scma_unlock_and_return_int(0));
     }
     block->in_use = 0;
@@ -274,7 +274,7 @@ int    scma_free(scma_handle handle)
         scma_reset_live_snapshot();
     scma_compact();
     error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(error_code);
+    scma_record_operation_error(error_code);
     free_result = 1;
     return (scma_unlock_and_return_int(free_result));
 }
@@ -295,20 +295,20 @@ int    scma_resize(scma_handle handle, ft_size_t new_size)
     temp_buffer = ft_nullptr;
     if (scma_mutex_lock() != 0)
     {
-        error_code = ft_global_error_stack_pop_newest();
-        ft_global_error_stack_push(error_code);
+        error_code = scma_pop_operation_error();
+        scma_record_operation_error(error_code);
         return (0);
     }
     if (new_size == 0)
     {
         error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_global_error_stack_push(error_code);
+        scma_record_operation_error(error_code);
         return (scma_unlock_and_return_int(0));
     }
     if (!scma_validate_handle(handle, &block))
     {
         error_code = FT_ERR_INVALID_HANDLE;
-        ft_global_error_stack_push(error_code);
+        scma_record_operation_error(error_code);
         return (scma_unlock_and_return_int(0));
     }
     old_size = block->size;
@@ -317,7 +317,7 @@ int    scma_resize(scma_handle handle, ft_size_t new_size)
     if (old_size != 0 && !temp_buffer)
     {
         error_code = FT_ERR_NO_MEMORY;
-        ft_global_error_stack_push(error_code);
+        scma_record_operation_error(error_code);
         return (scma_unlock_and_return_int(0));
     }
     if (old_size != 0)
@@ -332,7 +332,7 @@ int    scma_resize(scma_handle handle, ft_size_t new_size)
     if (new_size > static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX))
     {
         error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_global_error_stack_push(error_code);
+        scma_record_operation_error(error_code);
         if (temp_buffer)
         {
             std::free(temp_buffer);
@@ -343,7 +343,7 @@ int    scma_resize(scma_handle handle, ft_size_t new_size)
     if (used_size < old_size)
     {
         error_code = FT_ERR_INVALID_STATE;
-        ft_global_error_stack_push(error_code);
+        scma_record_operation_error(error_code);
         if (temp_buffer)
         {
             std::free(temp_buffer);
@@ -355,7 +355,7 @@ int    scma_resize(scma_handle handle, ft_size_t new_size)
     if (base_size > static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX) - new_size)
     {
         error_code = FT_ERR_NO_MEMORY;
-        ft_global_error_stack_push(error_code);
+        scma_record_operation_error(error_code);
         if (temp_buffer)
         {
             std::free(temp_buffer);
@@ -367,7 +367,7 @@ int    scma_resize(scma_handle handle, ft_size_t new_size)
     if (!scma_ensure_capacity(required_size))
     {
         error_code = FT_ERR_NO_MEMORY;
-        ft_global_error_stack_push(error_code);
+        scma_record_operation_error(error_code);
         if (temp_buffer)
         {
             std::free(temp_buffer);
@@ -403,7 +403,7 @@ int    scma_resize(scma_handle handle, ft_size_t new_size)
         temp_buffer = ft_nullptr;
     }
     error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(error_code);
+    scma_record_operation_error(error_code);
     resize_result = 1;
     return (scma_unlock_and_return_int(resize_result));
 }
@@ -417,19 +417,19 @@ ft_size_t    scma_get_size(scma_handle handle)
     size_result = 0;
     if (scma_mutex_lock() != 0)
     {
-        error_code = ft_global_error_stack_pop_newest();
-        ft_global_error_stack_push(error_code);
+        error_code = scma_pop_operation_error();
+        scma_record_operation_error(error_code);
         return (0);
     }
     if (!scma_validate_handle(handle, &block))
     {
         error_code = FT_ERR_INVALID_HANDLE;
-        ft_global_error_stack_push(error_code);
+        scma_record_operation_error(error_code);
         return (scma_unlock_and_return_size(0));
     }
     size_result = block->size;
     error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(error_code);
+    scma_record_operation_error(error_code);
     return (scma_unlock_and_return_size(size_result));
 }
 
@@ -441,18 +441,18 @@ int    scma_handle_is_valid(scma_handle handle)
     valid = 0;
     if (scma_mutex_lock() != 0)
     {
-        error_code = ft_global_error_stack_pop_newest();
-        ft_global_error_stack_push(error_code);
+        error_code = scma_pop_operation_error();
+        scma_record_operation_error(error_code);
         return (0);
     }
     if (scma_validate_handle(handle, ft_nullptr))
     {
         valid = 1;
         error_code = FT_ERR_SUCCESSS;
-        ft_global_error_stack_push(error_code);
+        scma_record_operation_error(error_code);
         return (scma_unlock_and_return_int(valid));
     }
     error_code = FT_ERR_INVALID_HANDLE;
-    ft_global_error_stack_push(error_code);
+    scma_record_operation_error(error_code);
     return (scma_unlock_and_return_int(valid));
 }

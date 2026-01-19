@@ -22,7 +22,7 @@ class pt_mutex
         bool    ensure_native_mutex() const;
         int     lock_internal(bool *lock_acquired) const;
         int     unlock_internal(bool lock_acquired) const;
-        static void record_error(ft_operation_error_stack &error_stack, int error_code);
+        static void record_error(ft_operation_error_stack &error_stack, int error_code, bool push_global = true);
         void    teardown_thread_safety();
 
         pt_mutex(const pt_mutex&) = delete;

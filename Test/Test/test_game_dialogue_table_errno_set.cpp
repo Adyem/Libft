@@ -178,3 +178,15 @@ FT_TEST(test_dialogue_table_copy_assignment_sets_errno_success, "copy assignment
     return (1);
 }
 
+FT_TEST(test_dialogue_table_register_line_single_global_error,
+    "register_line adds exactly one global stack entry")
+{
+    ft_dialogue_table table;
+    ft_vector<int> next_lines;
+    ft_dialogue_line line(15, ft_string("npc"), ft_string("hi"), next_lines);
+    int register_result;
+
+    FT_ASSERT_SINGLE_GLOBAL_ERROR(register_result = table.register_line(line));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, register_result);
+    return (1);
+}

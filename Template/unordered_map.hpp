@@ -3,10 +3,12 @@
 
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "constructor.hpp"
 #include <cstddef>
 #include <functional>
+#include <mutex>
 #include "../Libft/libft.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread.hpp"
@@ -33,6 +35,8 @@ class ft_unordered_map
         mutable int                _error;
         mutable pt_mutex*          _mutex;
         bool                       _thread_safe_enabled;
+        static thread_local ft_operation_error_stack _operation_errors;
+        static void record_operation_error(int error_code) noexcept;
 
         void    resize(size_t new_capacity);
         size_t  find_index(const Key& key) const;
@@ -56,6 +60,8 @@ class ft_unordered_map
                 mutable int               _error_code;
                 mutable pt_mutex*         _mutex;
                 bool                      _thread_safe_enabled;
+                static thread_local ft_operation_error_stack _operation_errors;
+                static void record_operation_error(int error_code) noexcept;
 
                 void                      set_error(int error) const;
                 void                      advance_to_valid_index_unlocked();
@@ -94,6 +100,8 @@ class ft_unordered_map
                 mutable int                     _error_code;
                 mutable pt_mutex*               _mutex;
                 bool                            _thread_safe_enabled;
+                static thread_local ft_operation_error_stack _operation_errors;
+                static void record_operation_error(int error_code) noexcept;
 
                 void                            set_error(int error) const;
                 void                            advance_to_valid_index_unlocked();
@@ -1518,6 +1526,21 @@ void ft_unordered_map<Key, MappedType>::resize(size_t new_capacity)
 }
 
 template <typename Key, typename MappedType>
+thread_local ft_operation_error_stack ft_unordered_map<Key, MappedType>::_operation_errors = {{}, {}, 0};
+
+template <typename Key, typename MappedType>
+void ft_unordered_map<Key, MappedType>::record_operation_error(int error_code) noexcept
+{
+    unsigned long long operation_id;
+
+    operation_id = ft_global_error_stack_push_entry(error_code);
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    ft_operation_error_stack_push(ft_unordered_map<Key, MappedType>::_operation_errors,
+            error_code, operation_id);
+    return ;
+}
+
+template <typename Key, typename MappedType>
 void ft_unordered_map<Key, MappedType>::insert_internal(const Key& key, const MappedType& value)
 {
     if (_capacity == 0)
@@ -1718,8 +1741,38 @@ bool ft_unordered_map<Key, MappedType>::empty() const
     if (this->lock_internal(&lock_acquired) != 0)
     {
         const_cast<ft_unordered_map<Key, MappedType> *>(this)->set_error(ft_errno);
-        return (true);
-    }
+    return (true);
+}
+
+template <typename Key, typename MappedType>
+thread_local ft_operation_error_stack ft_unordered_map<Key, MappedType>::iterator::_operation_errors = {{}, {}, 0};
+
+template <typename Key, typename MappedType>
+void ft_unordered_map<Key, MappedType>::iterator::record_operation_error(int error_code) noexcept
+{
+    unsigned long long operation_id;
+
+    operation_id = ft_global_error_stack_push_entry(error_code);
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    ft_operation_error_stack_push(ft_unordered_map<Key, MappedType>::iterator::_operation_errors,
+            error_code, operation_id);
+    return ;
+}
+
+template <typename Key, typename MappedType>
+thread_local ft_operation_error_stack ft_unordered_map<Key, MappedType>::const_iterator::_operation_errors = {{}, {}, 0};
+
+template <typename Key, typename MappedType>
+void ft_unordered_map<Key, MappedType>::const_iterator::record_operation_error(int error_code) noexcept
+{
+    unsigned long long operation_id;
+
+    operation_id = ft_global_error_stack_push_entry(error_code);
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    ft_operation_error_stack_push(ft_unordered_map<Key, MappedType>::const_iterator::_operation_errors,
+            error_code, operation_id);
+    return ;
+}
     is_empty = (this->_size == 0);
     const_cast<ft_unordered_map<Key, MappedType> *>(this)->set_error(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);

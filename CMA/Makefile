@@ -11,6 +11,7 @@ SRCS := cma_alloc_limit_guard.cpp \
         cma_malloc.cpp \
         cma_free.cpp \
         cma_free_checked.cpp \
+        cma_error_stack.cpp \
         cma_realloc.cpp \
         cma_aligned_alloc.cpp \
         cma_alloc_size.cpp \

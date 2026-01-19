@@ -3,6 +3,7 @@
 
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/condition.hpp"
 
@@ -37,6 +38,7 @@ class ft_thread_pool
         bool                          _thread_safe_enabled;
 
         void set_error(int error) const;
+        static void record_operation_error_unlocked(int error_code) noexcept;
         void worker();
         int  lock_internal(bool *lock_acquired) const;
         void unlock_internal(bool lock_acquired) const;
@@ -144,6 +146,7 @@ inline void ft_thread_pool::worker()
 inline void ft_thread_pool::set_error(int error) const
 {
     this->_error_code.store(error, std::memory_order_relaxed);
+    ft_thread_pool::record_operation_error_unlocked(error);
 }
 
 inline ft_thread_pool::ft_thread_pool(size_t thread_count, size_t max_tasks)
@@ -505,4 +508,14 @@ inline void ft_thread_pool::teardown_thread_safety()
     return ;
 }
 
-#endif 
+inline void ft_thread_pool::record_operation_error_unlocked(int error_code) noexcept
+{
+    static thread_local ft_operation_error_stack operation_errors = {{}, {}, 0};
+    unsigned long long operation_id;
+
+    operation_id = ft_global_error_stack_push_entry(error_code);
+    ft_operation_error_stack_push(operation_errors, error_code, operation_id);
+    return ;
+}
+
+#endif

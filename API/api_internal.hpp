@@ -4,6 +4,7 @@
 #include "../CPP_class/class_string.hpp"
 #include "../Networking/socket_class.hpp"
 #include "../PThread/mutex.hpp"
+#include "../Errno/errno_internal.hpp"
 #include <cstddef>
 #include <cstdint>
 
@@ -29,6 +30,8 @@ class api_connection_pool_handle
         int lock_internal(bool *lock_acquired) const;
         void unlock_internal(bool lock_acquired) const;
         void teardown_thread_safety();
+        static thread_local ft_operation_error_stack _operation_errors;
+        static void record_operation_error_unlocked(int error_code);
 
     public:
         ft_string key;

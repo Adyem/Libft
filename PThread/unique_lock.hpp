@@ -32,7 +32,7 @@ class ft_unique_lock
         void set_error_no_errno(int error) const noexcept;
         void set_system_error(int error) const noexcept;
         void set_system_error_no_errno(int error) const noexcept;
-        static void record_error(ft_operation_error_stack &error_stack, int error);
+        static void record_error(ft_operation_error_stack &error_stack, int error, bool push_global = true);
 
     public:
         ft_unique_lock();
@@ -58,8 +58,8 @@ template <typename MutexType>
 void ft_unique_lock<MutexType>::set_error(int error) const noexcept
 {
     this->_error_code.store(error, std::memory_order_relaxed);
-    ft_unique_lock<MutexType>::record_error(ft_unique_lock<MutexType>::_operation_errors, error);
-    ft_global_error_stack_push(error);
+    ft_unique_lock<MutexType>::record_error(ft_unique_lock<MutexType>::_operation_errors,
+            error, true);
     return ;
 }
 
@@ -67,7 +67,8 @@ template <typename MutexType>
 void ft_unique_lock<MutexType>::set_error_no_errno(int error) const noexcept
 {
     this->_error_code.store(error, std::memory_order_relaxed);
-    ft_unique_lock<MutexType>::record_error(ft_unique_lock<MutexType>::_operation_errors, error);
+    ft_unique_lock<MutexType>::record_error(ft_unique_lock<MutexType>::_operation_errors,
+            error, false);
     return ;
 }
 
@@ -86,24 +87,16 @@ void ft_unique_lock<MutexType>::set_system_error_no_errno(int error) const noexc
 }
 
 template <typename MutexType>
-void ft_unique_lock<MutexType>::record_error(ft_operation_error_stack &error_stack, int error)
+void ft_unique_lock<MutexType>::record_error(ft_operation_error_stack &error_stack,
+        int error, bool push_global)
 {
-    ft_size_t index;
-    ft_size_t shift_index;
+    unsigned long long operation_id;
 
-    if (error_stack.count < 20)
-        error_stack.count++;
-    if (error_stack.count > 0)
-        shift_index = error_stack.count - 1;
+    if (push_global)
+        operation_id = ft_global_error_stack_push_entry(error);
     else
-        shift_index = 0;
-    index = shift_index;
-    while (index > 0)
-    {
-        error_stack.errors[index] = error_stack.errors[index - 1];
-        index--;
-    }
-    error_stack.errors[0] = error;
+        operation_id = 0;
+    ft_operation_error_stack_push(error_stack, error, operation_id);
     return ;
 }
 
@@ -526,6 +519,6 @@ const char *ft_unique_lock<MutexType>::get_error_str() const
 }
 
 template <typename MutexType>
-thread_local ft_operation_error_stack ft_unique_lock<MutexType>::_operation_errors = {{}, 0};
+thread_local ft_operation_error_stack ft_unique_lock<MutexType>::_operation_errors = {{}, {}, 0};
 
 #endif

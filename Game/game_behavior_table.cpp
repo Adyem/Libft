@@ -1,6 +1,19 @@
 #include "game_behavior_table.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../Template/move.hpp"
+
+thread_local ft_operation_error_stack ft_behavior_table::_operation_errors = {{}, {}, 0};
+
+void ft_behavior_table::record_operation_error_unlocked(int error_code)
+{
+    unsigned long long operation_id;
+
+    operation_id = ft_global_error_stack_push_entry(error_code);
+    ft_operation_error_stack_push(ft_behavior_table::_operation_errors,
+            error_code, operation_id);
+    return ;
+}
 
 int ft_behavior_table::lock_pair(const ft_behavior_table &first, const ft_behavior_table &second,
         ft_unique_lock<pt_mutex> &first_guard,
@@ -16,12 +29,12 @@ int ft_behavior_table::lock_pair(const ft_behavior_table &first, const ft_behavi
 
         if (single_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_global_error_stack_push(single_guard.get_error());
+            ft_behavior_table::record_operation_error_unlocked(single_guard.get_error());
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_behavior_table::record_operation_error_unlocked(FT_ERR_SUCCESSS);
         return (FT_ERR_SUCCESSS);
     }
     ordered_first = &first;
@@ -42,7 +55,7 @@ int ft_behavior_table::lock_pair(const ft_behavior_table &first, const ft_behavi
 
         if (lower_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_global_error_stack_push(lower_guard.get_error());
+            ft_behavior_table::record_operation_error_unlocked(lower_guard.get_error());
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
@@ -58,12 +71,12 @@ int ft_behavior_table::lock_pair(const ft_behavior_table &first, const ft_behavi
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
+            ft_behavior_table::record_operation_error_unlocked(FT_ERR_SUCCESSS);
             return (FT_ERR_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            ft_global_error_stack_push(upper_guard.get_error());
+            ft_behavior_table::record_operation_error_unlocked(upper_guard.get_error());
             return (upper_guard.get_error());
         }
         if (lower_guard.owns_lock())
@@ -139,7 +152,7 @@ int ft_behavior_table::clone_profiles_from(const ft_behavior_table &other) noexc
         ++entry;
     }
     this->_profiles = ft_move(profiles_copy);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_behavior_table::record_operation_error_unlocked(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);
 }
 
@@ -155,7 +168,7 @@ ft_behavior_table::ft_behavior_table(const ft_behavior_table &other) noexcept
     this->_error_code = other._error_code;
     if (this->clone_profiles_from(other) != FT_ERR_SUCCESSS)
         return ;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_behavior_table::record_operation_error_unlocked(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -230,14 +243,14 @@ ft_behavior_table &ft_behavior_table::operator=(ft_behavior_table &&other) noexc
 ft_map<int, ft_behavior_profile> &ft_behavior_table::get_profiles() noexcept
 {
     this->set_error(FT_ERR_SUCCESSS);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_behavior_table::record_operation_error_unlocked(FT_ERR_SUCCESSS);
     return (this->_profiles);
 }
 
 const ft_map<int, ft_behavior_profile> &ft_behavior_table::get_profiles() const noexcept
 {
     const_cast<ft_behavior_table *>(this)->set_error(FT_ERR_SUCCESSS);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_behavior_table::record_operation_error_unlocked(FT_ERR_SUCCESSS);
     return (this->_profiles);
 }
 
@@ -340,7 +353,7 @@ int ft_behavior_table::get_error() const noexcept
         return (guard.get_error());
     }
     error_code = this->_error_code;
-    ft_global_error_stack_push(error_code);
+    ft_behavior_table::record_operation_error_unlocked(error_code);
     return (error_code);
 }
 
@@ -355,6 +368,6 @@ const char *ft_behavior_table::get_error_str() const noexcept
 void ft_behavior_table::set_error(int error_code) const noexcept
 {
     this->_error_code = error_code;
-    ft_global_error_stack_push(error_code);
+    ft_behavior_table::record_operation_error_unlocked(error_code);
     return ;
 }

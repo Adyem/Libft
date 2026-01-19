@@ -158,3 +158,12 @@ FT_TEST(test_game_vendor_profile_self_move_assignment_no_change, "Self move assi
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, profile.get_error());
     return (1);
 }
+
+FT_TEST(test_game_vendor_profile_setters_single_global_error,
+    "set_buy_markup records exactly one global error entry")
+{
+    ft_vendor_profile profile;
+
+    FT_ASSERT_SINGLE_GLOBAL_ERROR(profile.set_buy_markup(2.25));
+    return (1);
+}

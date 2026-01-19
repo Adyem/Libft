@@ -4,6 +4,7 @@
 #include "ft_dialogue_line.hpp"
 #include "../Template/vector.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
 
@@ -17,8 +18,10 @@ class ft_dialogue_script
         ft_vector<ft_dialogue_line> _lines;
         mutable int _error_code;
         mutable pt_mutex _mutex;
+        static thread_local ft_operation_error_stack _operation_errors;
 
         void set_error(int error_code) const noexcept;
+        static void record_operation_error_unlocked(int error_code);
         static int lock_pair(const ft_dialogue_script &first, const ft_dialogue_script &second,
                 ft_unique_lock<pt_mutex> &first_guard,
                 ft_unique_lock<pt_mutex> &second_guard);
