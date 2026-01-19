@@ -7,6 +7,7 @@
 #include <chrono>
 #include <thread>
 #include <unistd.h>
+#include <cstddef>
 
 class ft_test_timed_istream : public ft_istream
 {
@@ -82,7 +83,7 @@ static long measure_read_duration(ft_istream &stream)
     buffer[0] = '\0';
     buffer[1] = '\0';
     start = std::chrono::steady_clock::now();
-    stream.read(buffer, 1);
+    FT_ASSERT_SINGLE_ERROR_READ(stream, buffer, 1);
     end = std::chrono::steady_clock::now();
     return (std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
 }
@@ -127,13 +128,13 @@ FT_TEST(test_ft_istream_copy_constructor_mutex_is_fresh,
 
         buffer[0] = '\0';
         buffer[1] = '\0';
-        slow_stream.read(buffer, 1);
+        FT_ASSERT_SINGLE_ERROR_READ(slow_stream, buffer, 1);
     });
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
     copy_duration_ms = measure_read_duration(copied_stream);
     worker.join();
     FT_ASSERT(copy_duration_ms < 60);
-    FT_ASSERT_EQ(false, copied_stream.bad());
+    FT_ASSERT_STREAM_BAD_FALSE(copied_stream);
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, copied_stream.get_error());
     return (1);
 }
@@ -152,15 +153,15 @@ FT_TEST(test_ft_istream_move_constructor_mutex_is_fresh,
 
         buffer[0] = '\0';
         buffer[1] = '\0';
-        slow_stream.read(buffer, 1);
+        FT_ASSERT_SINGLE_ERROR_READ(slow_stream, buffer, 1);
     });
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
     copy_duration_ms = measure_read_duration(moved_stream);
     worker.join();
     FT_ASSERT(copy_duration_ms < 60);
-    FT_ASSERT_EQ(false, moved_stream.bad());
+    FT_ASSERT_STREAM_BAD_FALSE(moved_stream);
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, moved_stream.get_error());
-    FT_ASSERT_EQ(false, slow_stream.bad());
+    FT_ASSERT_STREAM_BAD_FALSE(slow_stream);
     return (1);
 }
 
@@ -180,13 +181,13 @@ FT_TEST(test_ft_istream_copy_assignment_mutex_is_fresh,
 
         buffer[0] = '\0';
         buffer[1] = '\0';
-        source_stream.read(buffer, 1);
+        FT_ASSERT_SINGLE_ERROR_READ(source_stream, buffer, 1);
     });
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
     copy_duration_ms = measure_read_duration(target_stream);
     worker.join();
     FT_ASSERT(copy_duration_ms < 60);
-    FT_ASSERT_EQ(false, target_stream.bad());
+    FT_ASSERT_STREAM_BAD_FALSE(target_stream);
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, target_stream.get_error());
     return (1);
 }
@@ -207,15 +208,15 @@ FT_TEST(test_ft_istream_move_assignment_mutex_is_fresh,
 
         buffer[0] = '\0';
         buffer[1] = '\0';
-        source_stream.read(buffer, 1);
+        FT_ASSERT_SINGLE_ERROR_READ(source_stream, buffer, 1);
     });
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
     copy_duration_ms = measure_read_duration(target_stream);
     worker.join();
     FT_ASSERT(copy_duration_ms < 60);
-    FT_ASSERT_EQ(false, target_stream.bad());
+    FT_ASSERT_STREAM_BAD_FALSE(target_stream);
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, target_stream.get_error());
-    FT_ASSERT_EQ(false, source_stream.bad());
+    FT_ASSERT_STREAM_BAD_FALSE(source_stream);
     return (1);
 }
 
@@ -239,7 +240,7 @@ FT_TEST(test_ft_fd_istream_copy_constructor_mutex_is_fresh,
 
         buffer[0] = '\0';
         buffer[1] = '\0';
-        slow_stream.read(buffer, 1);
+        FT_ASSERT_SINGLE_ERROR_READ(slow_stream, buffer, 1);
     });
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
     copy_duration_ms = measure_read_duration(copied_stream);
@@ -247,7 +248,7 @@ FT_TEST(test_ft_fd_istream_copy_constructor_mutex_is_fresh,
     close(write_end);
     close(read_end);
     FT_ASSERT(copy_duration_ms < 60);
-    FT_ASSERT_EQ(false, copied_stream.bad());
+    FT_ASSERT_STREAM_BAD_FALSE(copied_stream);
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, copied_stream.get_error());
     return (1);
 }
@@ -274,7 +275,7 @@ FT_TEST(test_ft_fd_istream_move_constructor_mutex_is_fresh,
 
         buffer[0] = '\0';
         buffer[1] = '\0';
-        slow_stream.read(buffer, 1);
+        FT_ASSERT_SINGLE_ERROR_READ(slow_stream, buffer, 1);
     });
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
     copy_duration_ms = measure_read_duration(moved_stream);
@@ -282,9 +283,9 @@ FT_TEST(test_ft_fd_istream_move_constructor_mutex_is_fresh,
     close(write_end);
     close(read_end);
     FT_ASSERT(copy_duration_ms < 60);
-    FT_ASSERT_EQ(false, moved_stream.bad());
+    FT_ASSERT_STREAM_BAD_FALSE(moved_stream);
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, moved_stream.get_error());
-    FT_ASSERT_EQ(false, slow_stream.bad());
+    FT_ASSERT_STREAM_BAD_FALSE(slow_stream);
     return (1);
 }
 
@@ -312,7 +313,7 @@ FT_TEST(test_ft_fd_istream_copy_assignment_mutex_is_fresh,
 
         buffer[0] = '\0';
         buffer[1] = '\0';
-        source_stream.read(buffer, 1);
+        FT_ASSERT_SINGLE_ERROR_READ(source_stream, buffer, 1);
     });
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
     copy_duration_ms = measure_read_duration(target_stream);
@@ -320,7 +321,7 @@ FT_TEST(test_ft_fd_istream_copy_assignment_mutex_is_fresh,
     close(write_end);
     close(read_end);
     FT_ASSERT(copy_duration_ms < 60);
-    FT_ASSERT_EQ(false, target_stream.bad());
+    FT_ASSERT_STREAM_BAD_FALSE(target_stream);
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, target_stream.get_error());
     return (1);
 }
@@ -350,7 +351,7 @@ FT_TEST(test_ft_fd_istream_move_assignment_mutex_is_fresh,
 
         buffer[0] = '\0';
         buffer[1] = '\0';
-        source_stream.read(buffer, 1);
+        FT_ASSERT_SINGLE_ERROR_READ(source_stream, buffer, 1);
     });
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
     copy_duration_ms = measure_read_duration(target_stream);
@@ -358,8 +359,23 @@ FT_TEST(test_ft_fd_istream_move_assignment_mutex_is_fresh,
     close(write_end);
     close(read_end);
     FT_ASSERT(copy_duration_ms < 60);
-    FT_ASSERT_EQ(false, target_stream.bad());
+    FT_ASSERT_STREAM_BAD_FALSE(target_stream);
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, target_stream.get_error());
-    FT_ASSERT_EQ(false, source_stream.bad());
+    FT_ASSERT_STREAM_BAD_FALSE(source_stream);
+    return (1);
+}
+
+FT_TEST(test_ft_istream_read_and_bad_push_exactly_one_error,
+        "ft_istream read and bad each add exactly one error entry")
+{
+    ft_test_timed_istream stream('z', false);
+    char buffer[2];
+
+    buffer[0] = '\0';
+    buffer[1] = '\0';
+    FT_ASSERT_SINGLE_ERROR_READ(stream, buffer, 1);
+    FT_ASSERT_EQ('z', buffer[0]);
+    FT_ASSERT_STREAM_BAD_FALSE(stream);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, stream.get_error());
     return (1);
 }

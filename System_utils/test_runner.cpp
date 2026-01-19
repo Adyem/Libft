@@ -118,6 +118,8 @@ static int execute_test_function(const s_test_case *test)
     int result;
     int error_code;
 
+    ft_global_error_stack_pop_all();
+
     try
     {
         result = test->func();
