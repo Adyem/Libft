@@ -2,6 +2,7 @@
 #define MATH_AUTODIFF_HPP
 
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../Template/vector.hpp"
 
 class ft_dual_number
@@ -10,6 +11,8 @@ class ft_dual_number
         double          _value;
         double          _derivative;
         mutable int     _error_code;
+        static thread_local ft_operation_error_stack _operation_errors;
+        static void record_operation_error(int error_code) noexcept;
 
         void    set_error(int error_code) const noexcept;
 

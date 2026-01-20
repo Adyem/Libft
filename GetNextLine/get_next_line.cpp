@@ -12,7 +12,7 @@ static bool map_has_new_error(ft_unordered_map<int, char*> &map, int previous_er
 {
     int updated_error;
 
-    updated_error = map.get_error();
+    updated_error = map.last_operation_error();
     if (current_error)
         *current_error = updated_error;
     if (updated_error != FT_ERR_SUCCESSS)
@@ -33,7 +33,7 @@ static bool stream_map_has_new_error(ft_unordered_map<int, gnl_stream*> &map,
 {
     int updated_error;
 
-    updated_error = map.get_error();
+    updated_error = map.last_operation_error();
     if (current_error)
         *current_error = updated_error;
     if (updated_error != FT_ERR_SUCCESSS)
@@ -64,7 +64,7 @@ static gnl_stream *gnl_acquire_stream(int fd, int *stream_error)
             *stream_error = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
-    map_error_before = g_gnl_streams.get_error();
+    map_error_before = g_gnl_streams.last_operation_error();
     stream_it = g_gnl_streams.find(fd);
     if (stream_map_has_new_error(g_gnl_streams, map_error_before, &map_error_after))
     {
@@ -91,7 +91,7 @@ static gnl_stream *gnl_acquire_stream(int fd, int *stream_error)
             *stream_error = init_error;
         return (ft_nullptr);
     }
-    map_error_before = g_gnl_streams.get_error();
+    map_error_before = g_gnl_streams.last_operation_error();
     g_gnl_streams.insert(fd, new_stream);
     if (stream_map_has_new_error(g_gnl_streams, map_error_before, &map_error_after))
     {
@@ -426,7 +426,7 @@ int gnl_clear_stream(int fd)
     ft_unordered_map<int, gnl_stream*>::iterator stream_it = g_gnl_streams.end();
     gnl_stream *stream_pointer;
 
-    map_error_before = g_gnl_leftovers.get_error();
+    map_error_before = g_gnl_leftovers.last_operation_error();
     map_it = g_gnl_leftovers.find(fd);
     if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
     {
@@ -439,7 +439,7 @@ int gnl_clear_stream(int fd)
         return (FT_ERR_SUCCESSS);
     }
     leftover = map_it->second;
-    map_error_before = g_gnl_leftovers.get_error();
+    map_error_before = g_gnl_leftovers.last_operation_error();
     g_gnl_leftovers.erase(fd);
     if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
     {
@@ -450,7 +450,7 @@ int gnl_clear_stream(int fd)
     }
     if (leftover)
         cma_free(leftover);
-    map_error_before = g_gnl_streams.get_error();
+    map_error_before = g_gnl_streams.last_operation_error();
     stream_it = g_gnl_streams.find(fd);
     if (stream_map_has_new_error(g_gnl_streams, map_error_before, &map_error_after))
     {
@@ -460,7 +460,7 @@ int gnl_clear_stream(int fd)
     if (stream_it != g_gnl_streams.end())
     {
         stream_pointer = stream_it->second;
-        map_error_before = g_gnl_streams.get_error();
+        map_error_before = g_gnl_streams.last_operation_error();
         g_gnl_streams.erase(fd);
         if (stream_map_has_new_error(g_gnl_streams, map_error_before, &map_error_after))
         {
@@ -510,7 +510,7 @@ char    *get_next_line(int fd, std::size_t buffer_size)
         ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }
-    map_error_before = g_gnl_leftovers.get_error();
+    map_error_before = g_gnl_leftovers.last_operation_error();
     ft_unordered_map<int, char*>::iterator map_it = g_gnl_leftovers.find(fd);
     if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
     {
@@ -520,7 +520,7 @@ char    *get_next_line(int fd, std::size_t buffer_size)
     if (map_it != g_gnl_leftovers.end())
     {
         combined_buffer = map_it->second;
-        map_error_before = g_gnl_leftovers.get_error();
+        map_error_before = g_gnl_leftovers.last_operation_error();
         g_gnl_leftovers.erase(fd);
         if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
         {
@@ -564,7 +564,7 @@ char    *get_next_line(int fd, std::size_t buffer_size)
     {
         if (leftover_string)
         {
-            map_error_before = g_gnl_leftovers.get_error();
+            map_error_before = g_gnl_leftovers.last_operation_error();
             g_gnl_leftovers.insert(fd, leftover_string);
             if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
             {
@@ -581,7 +581,7 @@ char    *get_next_line(int fd, std::size_t buffer_size)
     }
     if (leftover_string)
     {
-        map_error_before = g_gnl_leftovers.get_error();
+        map_error_before = g_gnl_leftovers.last_operation_error();
         g_gnl_leftovers.insert(fd, leftover_string);
         if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
         {

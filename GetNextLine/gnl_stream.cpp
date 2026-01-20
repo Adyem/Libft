@@ -31,18 +31,26 @@ static ssize_t gnl_stream_default_fd_read(void *user_data, char *buffer, size_t 
 
         last_error = WSAGetLastError();
         if (last_error != 0)
+        {
             if (error_code)
                 *error_code = ft_map_system_error(last_error);
+        }
         else
+        {
             if (error_code)
                 *error_code = FT_ERR_IO;
+        }
 #else
         if (errno != 0)
+        {
             if (error_code)
                 *error_code = ft_map_system_error(errno);
+        }
         else
+        {
             if (error_code)
                 *error_code = FT_ERR_IO;
+        }
 #endif
     }
     return (read_result);

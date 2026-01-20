@@ -30,6 +30,7 @@ int pt_mutex::unlock(pthread_t thread_id) const
     if (lock_error != FT_ERR_SUCCESSS)
     {
         pt_mutex::operation_error_push(lock_error);
+        result = lock_error;
         goto cleanup;
     }
     native_initialized = this->_native_initialized;
@@ -37,12 +38,14 @@ int pt_mutex::unlock(pthread_t thread_id) const
     if (lock_error != FT_ERR_SUCCESSS)
     {
         pt_mutex::operation_error_push(lock_error);
+        result = lock_error;
         goto cleanup;
     }
     if (!native_initialized)
     {
         pt_mutex::operation_error_push(FT_ERR_INVALID_STATE);
-        goto cleanup;
+        result = FT_ERR_INVALID_STATE;
+        su_abort();
     }
     if (this->_lock.load(std::memory_order_acquire))
     {
@@ -56,6 +59,7 @@ int pt_mutex::unlock(pthread_t thread_id) const
             if (tracking_error != FT_ERR_SUCCESSS)
             {
                 pt_mutex::operation_error_push(tracking_error);
+                result = tracking_error;
                 goto cleanup;
             }
             ft_size_t index;
@@ -74,12 +78,14 @@ int pt_mutex::unlock(pthread_t thread_id) const
             if (!tracking_reports_owned)
             {
                 pt_mutex::operation_error_push(FT_ERR_INVALID_ARGUMENT);
+                result = FT_ERR_INVALID_ARGUMENT;
                 su_abort();
             }
         }
         else if (!pt_thread_equal(owner, thread_id))
         {
             pt_mutex::operation_error_push(FT_ERR_INVALID_ARGUMENT);
+            result = FT_ERR_INVALID_ARGUMENT;
             su_abort();
         }
         else
@@ -97,6 +103,7 @@ int pt_mutex::unlock(pthread_t thread_id) const
         if (tracking_error != FT_ERR_SUCCESSS)
         {
             pt_mutex::operation_error_push(tracking_error);
+            result = tracking_error;
             goto cleanup;
         }
         index = 0;
@@ -114,6 +121,7 @@ int pt_mutex::unlock(pthread_t thread_id) const
     if (!tracking_reports_owned)
     {
         pt_mutex::operation_error_push(FT_ERR_INVALID_ARGUMENT);
+        result = FT_ERR_INVALID_ARGUMENT;
         su_abort();
     }
     mutex_error = pthread_mutex_unlock(&this->_native_mutex);
@@ -126,28 +134,23 @@ int pt_mutex::unlock(pthread_t thread_id) const
             pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
             tracking_error = ft_global_error_stack_pop_newest();
             if (tracking_error != FT_ERR_SUCCESSS)
+            {
                 pt_mutex::operation_error_push(tracking_error);
+                result = tracking_error;
+            }
         }
         if (mutex_error == EPERM || mutex_error == EINVAL)
         {
             pt_mutex::operation_error_push(FT_ERR_INVALID_ARGUMENT);
+            result = FT_ERR_INVALID_ARGUMENT;
+            su_abort();
         }
         else
         {
             pt_mutex::operation_error_push(FT_ERR_INVALID_STATE);
+            result = FT_ERR_INVALID_STATE;
+            su_abort();
         }
-        bool reset_lock_acquired;
-
-        reset_lock_acquired = false;
-        lock_error = this->lock_internal(&reset_lock_acquired);
-        if (lock_error == FT_ERR_SUCCESSS && reset_lock_acquired)
-        {
-            this->_native_initialized = false;
-            this->unlock_internal(reset_lock_acquired);
-        }
-        else
-            this->unlock_internal(reset_lock_acquired);
-        goto cleanup;
     }
     if (should_notify_release)
     {

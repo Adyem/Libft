@@ -46,16 +46,16 @@ FT_TEST(test_ft_map_resize_allocation_failure_sets_errno,
 {
     ft_map<int, int> map_instance(1);
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, map_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, map_instance.last_operation_error());
 
     map_instance.insert(1, 1);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, map_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, map_instance.last_operation_error());
 
     cma_set_alloc_limit(1);
     map_instance.insert(2, 2);
     int map_insert_error;
 
-    map_insert_error = map_instance.get_error();
+    map_insert_error = map_instance.last_operation_error();
     cma_set_alloc_limit(0);
 
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, map_insert_error);
@@ -75,14 +75,14 @@ FT_TEST(test_ft_unordered_map_initial_allocation_failure_sets_errno,
 {
     ft_unordered_map<int, int> empty_map(0);
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, empty_map.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, empty_map.last_operation_error());
 
     ft_errno = FT_ERR_SUCCESSS;
     cma_set_alloc_limit(1);
     ft_unordered_map<int, int> limited_map(32);
     int construction_error_code;
 
-    construction_error_code = limited_map.get_error();
+    construction_error_code = limited_map.last_operation_error();
     cma_set_alloc_limit(0);
 
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, construction_error_code);

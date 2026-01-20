@@ -9,11 +9,12 @@ thread_local ft_operation_error_stack pt_mutex::_operation_errors = {{}, {}, 0};
 unsigned long long pt_mutex::operation_error_push_entry_with_id(int error_code,
         unsigned long long operation_id)
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    ft_errno_mutex().lock();
 
     ft_global_error_stack_push_entry_with_id(error_code, operation_id);
     ft_operation_error_stack_push_unlocked(&pt_mutex::_operation_errors,
             error_code, operation_id);
+    ft_errno_mutex().unlock();
     return (operation_id);
 }
 
@@ -36,10 +37,9 @@ int pt_mutex::operation_error_pop_last()
 {
     int error_value;
 
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    ft_errno_mutex().lock();
     error_value = ft_operation_error_stack_pop_last(pt_mutex::_operation_errors);
-    if (error_value != FT_ERR_SUCCESSS)
-        ft_global_error_stack_pop_last();
+    ft_errno_mutex().unlock();
     return (error_value);
 }
 
@@ -47,64 +47,78 @@ int pt_mutex::operation_error_pop_newest()
 {
     int error_value;
 
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    ft_errno_mutex().lock();
     error_value = ft_operation_error_stack_pop_newest(pt_mutex::_operation_errors);
-    if (error_value != FT_ERR_SUCCESSS)
-        ft_global_error_stack_pop_newest();
+    ft_errno_mutex().unlock();
     return (error_value);
 }
 
 void pt_mutex::operation_error_pop_all()
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    ft_errno_mutex().lock();
 
     ft_operation_error_stack_pop_all(pt_mutex::_operation_errors);
     ft_global_error_stack_pop_all();
+    ft_errno_mutex().unlock();
     return ;
 }
 
 int pt_mutex::operation_error_error_at(ft_size_t index)
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    ft_errno_mutex().lock();
+    int error_value = ft_operation_error_stack_error_at(pt_mutex::_operation_errors, index);
 
-    return (ft_operation_error_stack_error_at(pt_mutex::_operation_errors, index));
+    ft_errno_mutex().unlock();
+    return (error_value);
 }
 
 int pt_mutex::operation_error_last_error()
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    ft_errno_mutex().lock();
+    int error_value = ft_operation_error_stack_last_error(pt_mutex::_operation_errors);
 
-    return (ft_operation_error_stack_last_error(pt_mutex::_operation_errors));
+    ft_errno_mutex().unlock();
+    return (error_value);
 }
 
 ft_size_t pt_mutex::operation_error_depth()
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    ft_errno_mutex().lock();
+    ft_size_t depth = pt_mutex::_operation_errors.count;
 
-    return (pt_mutex::_operation_errors.count);
+    ft_errno_mutex().unlock();
+    return (depth);
 }
 
 unsigned long long pt_mutex::operation_error_get_id_at(ft_size_t index)
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
-
+    ft_errno_mutex().lock();
     if (index == 0 || index > pt_mutex::_operation_errors.count)
+    {
+        ft_errno_mutex().unlock();
         return (0);
-    return (pt_mutex::_operation_errors.op_ids[index - 1]);
+    }
+    unsigned long long operation_id = pt_mutex::_operation_errors.op_ids[index - 1];
+
+    ft_errno_mutex().unlock();
+    return (operation_id);
 }
 
 ft_size_t pt_mutex::operation_error_find_by_id(unsigned long long operation_id)
 {
-    ft_size_t index;
-
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
-    index = 0;
-    while (index < pt_mutex::_operation_errors.count)
+    ft_errno_mutex().lock();
+    ft_size_t index = 0;
+    ft_size_t count = pt_mutex::_operation_errors.count;
+    while (index < count)
     {
         if (pt_mutex::_operation_errors.op_ids[index] == operation_id)
+        {
+            ft_errno_mutex().unlock();
             return (index + 1);
+        }
         index += 1;
     }
+    ft_errno_mutex().unlock();
     return (0);
 }
 
@@ -113,11 +127,12 @@ const char *pt_mutex::operation_error_error_str_at(ft_size_t index)
     int error_value;
     const char *error_string;
 
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    ft_errno_mutex().lock();
     error_value = ft_operation_error_stack_error_at(pt_mutex::_operation_errors, index);
     error_string = ft_strerror(error_value);
     if (!error_string)
         error_string = "unknown error";
+    ft_errno_mutex().unlock();
     return (error_string);
 }
 
@@ -126,11 +141,12 @@ const char *pt_mutex::operation_error_last_error_str()
     int error_value;
     const char *error_string;
 
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    ft_errno_mutex().lock();
     error_value = ft_operation_error_stack_last_error(pt_mutex::_operation_errors);
     error_string = ft_strerror(error_value);
     if (!error_string)
         error_string = "unknown error";
+    ft_errno_mutex().unlock();
     return (error_string);
 }
 
@@ -289,19 +305,6 @@ bool pt_mutex::is_owned_by_thread(pthread_t thread_id) const
         index += 1;
     }
     return (false);
-}
-
-int pt_mutex::get_error() const
-{
-    return (pt_mutex::operation_error_last_error());
-}
-
-const char *pt_mutex::get_error_str() const
-{
-    int error_value;
-
-    error_value = this->get_error();
-    return (ft_strerror(error_value));
 }
 
 pthread_mutex_t   *pt_mutex::get_native_mutex() const

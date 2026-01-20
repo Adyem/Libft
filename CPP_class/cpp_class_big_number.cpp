@@ -67,7 +67,6 @@ ft_big_number::error_scope::error_scope() noexcept
     , _operation_id(0)
     , _active(false)
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
     if (ft_big_number::_error_stack.depth >= 32)
     {
@@ -87,7 +86,6 @@ ft_big_number::error_scope::error_scope() noexcept
 
 ft_big_number::error_scope::~error_scope() noexcept
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
     if (!this->_active)
         return ;
@@ -101,7 +99,6 @@ ft_big_number::error_scope::~error_scope() noexcept
 
 void ft_big_number::error_scope::set_error(int error_code) noexcept
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
     if (!this->_active)
         return ;
@@ -154,7 +151,6 @@ void ft_big_number::finalize_errno_keeper(int stored_errno) noexcept
 
 int ft_big_number::last_error() noexcept
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
     if (ft_big_number::_error_stack.depth == 0)
         return (ft_big_number::_error_stack.last_error);
@@ -163,7 +159,6 @@ int ft_big_number::last_error() noexcept
 
 uint32_t ft_big_number::last_op_id() noexcept
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
     if (ft_big_number::_error_stack.depth == 0)
         return (ft_big_number::_error_stack.last_op_id);
@@ -174,7 +169,6 @@ int ft_big_number::error_for(uint32_t operation_id) noexcept
 {
     uint32_t index;
 
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
     if (ft_big_number::_error_stack.depth == 0)
         return (FT_ERR_SUCCESSS);
@@ -195,7 +189,6 @@ void ft_big_number::record_operation_error(int error_code) noexcept
     unsigned long long operation_id;
 
     operation_id = ft_errno_next_operation_id();
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
     ft_global_error_stack_push_entry_with_id(error_code, operation_id);
     ft_operation_error_stack_push(ft_big_number::_operation_errors,
             error_code, operation_id);
@@ -204,21 +197,18 @@ void ft_big_number::record_operation_error(int error_code) noexcept
 
 int ft_big_number::last_operation_error() noexcept
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
     return (ft_operation_error_stack_last_error(ft_big_number::_operation_errors));
 }
 
 int ft_big_number::operation_error_at(ft_size_t index) noexcept
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
     return (ft_operation_error_stack_error_at(ft_big_number::_operation_errors, index));
 }
 
 void ft_big_number::pop_operation_errors() noexcept
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
     ft_operation_error_stack_pop_last(ft_big_number::_operation_errors);
     return ;
@@ -226,7 +216,6 @@ void ft_big_number::pop_operation_errors() noexcept
 
 int ft_big_number::pop_oldest_operation_error() noexcept
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
     return (ft_operation_error_stack_pop_last(ft_big_number::_operation_errors));
 }
@@ -235,7 +224,6 @@ int ft_big_number::operation_error_index() noexcept
 {
     ft_size_t index;
 
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
     index = 0;
     while (index < ft_big_number::_operation_errors.count)
@@ -276,7 +264,6 @@ void ft_big_number::sleep_backoff() noexcept
 
 void ft_big_number::set_error_unlocked(int error_code) const noexcept
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
     ft_big_number::record_operation_error(error_code);
     ft_errno = error_code;
@@ -285,7 +272,6 @@ void ft_big_number::set_error_unlocked(int error_code) const noexcept
 
 void ft_big_number::set_system_error_unlocked(int error_code) const noexcept
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
     if (error_code != FT_SYS_ERR_SUCCESS)
         ft_big_number::record_operation_error(error_code);

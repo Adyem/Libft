@@ -1,7 +1,8 @@
 #ifndef LINEAR_ALGEBRA_QUATERNION_HPP
 # define LINEAR_ALGEBRA_QUATERNION_HPP
 
-#include <mutex>
+#include "../Errno/errno_internal.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 class quaternion
 {
@@ -11,7 +12,9 @@ class quaternion
         double _y;
         double _z;
         mutable int _error_code;
-        mutable std::mutex _mutex;
+        mutable pt_recursive_mutex _mutex;
+        static thread_local ft_operation_error_stack _operation_errors;
+        static void record_operation_error(int error_code) noexcept;
 
         void    set_error(int error_code) const;
 
@@ -34,6 +37,10 @@ class quaternion
         quaternion  normalize() const;
         int         get_error() const;
         const char  *get_error_str() const;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
+#ifdef LIBFT_TEST_BUILD
+        pt_recursive_mutex *get_mutex_for_testing() noexcept;
+#endif
 };
 
 #endif

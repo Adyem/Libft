@@ -38,9 +38,13 @@ int    scma_mutex_lock(void)
         pt_mutex &mutex = scma_runtime_mutex();
 
         mutex.lock(THREAD_ID);
-        if (mutex.get_error() != FT_ERR_SUCCESSS)
+        int mutex_error;
+
+        mutex_error = pt_mutex::operation_error_pop_newest();
+        ft_global_error_stack_pop_newest();
+        if (mutex_error != FT_ERR_SUCCESSS)
         {
-            error_code = mutex.get_error();
+            error_code = mutex_error;
             scma_record_operation_error(error_code);
             return (-1);
         }
@@ -68,9 +72,13 @@ int    scma_mutex_unlock(void)
         pt_mutex &mutex = scma_runtime_mutex();
 
         mutex.unlock(THREAD_ID);
-        if (mutex.get_error() != FT_ERR_SUCCESSS)
+        int mutex_error;
+
+        mutex_error = pt_mutex::operation_error_pop_newest();
+        ft_global_error_stack_pop_newest();
+        if (mutex_error != FT_ERR_SUCCESSS)
         {
-            error_code = mutex.get_error();
+            error_code = mutex_error;
             scma_record_operation_error(error_code);
             return (-1);
         }

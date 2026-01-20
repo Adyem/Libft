@@ -1,8 +1,43 @@
 #include "linear_algebra.hpp"
 #include "math.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../PThread/pthread.hpp"
 #include "../Template/move.hpp"
+
+static thread_local ft_operation_error_stack g_matrix2_operation_errors = {{}, {}, 0};
+static thread_local ft_operation_error_stack g_matrix3_operation_errors = {{}, {}, 0};
+static thread_local ft_operation_error_stack g_matrix4_operation_errors = {{}, {}, 0};
+
+static void matrix2_push_error(int error_code) noexcept
+{
+    unsigned long long operation_id;
+
+    operation_id = ft_errno_next_operation_id();
+    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
+    ft_operation_error_stack_push(g_matrix2_operation_errors, error_code, operation_id);
+    return ;
+}
+
+static void matrix3_push_error(int error_code) noexcept
+{
+    unsigned long long operation_id;
+
+    operation_id = ft_errno_next_operation_id();
+    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
+    ft_operation_error_stack_push(g_matrix3_operation_errors, error_code, operation_id);
+    return ;
+}
+
+static void matrix4_push_error(int error_code) noexcept
+{
+    unsigned long long operation_id;
+
+    operation_id = ft_errno_next_operation_id();
+    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
+    ft_operation_error_stack_push(g_matrix4_operation_errors, error_code, operation_id);
+    return ;
+}
 
 #if defined(__SSE2__)
 # include <immintrin.h>
@@ -14,26 +49,15 @@ static void matrix2_sleep_backoff()
     return ;
 }
 
-static void matrix2_restore_errno(ft_unique_lock<pt_mutex> &guard,
-    int error_code)
-{
-    if (guard.owns_lock())
-        guard.unlock();
-    ft_errno = error_code;
-    return ;
-}
-
 int matrix2::lock_self(ft_unique_lock<pt_mutex> &guard) const
 {
     ft_unique_lock<pt_mutex> local_guard(this->_mutex);
     if (local_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = local_guard.get_error();
         guard = ft_unique_lock<pt_mutex>();
         return (local_guard.get_error());
     }
     guard = ft_move(local_guard);
-    ft_errno = FT_ERR_SUCCESSS;
     return (FT_ERR_SUCCESSS);
 }
 
@@ -51,12 +75,10 @@ int matrix2::lock_pair(const matrix2 &first, const matrix2 &second,
 
         if (single_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ERR_SUCCESSS;
         return (FT_ERR_SUCCESSS);
     }
     ordered_first = &first;
@@ -77,7 +99,6 @@ int matrix2::lock_pair(const matrix2 &first, const matrix2 &second,
 
         if (lower_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
@@ -93,12 +114,10 @@ int matrix2::lock_pair(const matrix2 &first, const matrix2 &second,
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = FT_ERR_SUCCESSS;
             return (FT_ERR_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            ft_errno = upper_guard.get_error();
             return (upper_guard.get_error());
         }
         if (lower_guard.owns_lock())
@@ -109,7 +128,7 @@ int matrix2::lock_pair(const matrix2 &first, const matrix2 &second,
 
 void matrix2::set_error_unlocked(int error_code) const
 {
-    ft_errno = error_code;
+    matrix2_push_error(error_code);
     this->_error_code = error_code;
     return ;
 }
@@ -156,8 +175,6 @@ matrix2 &matrix2::operator=(const matrix2 &other)
     }
     this->_error_code = other._error_code;
     this->set_error_unlocked(other._error_code);
-    matrix2_restore_errno(this_guard, FT_ERR_SUCCESSS);
-    matrix2_restore_errno(other_guard, FT_ERR_SUCCESSS);
     return (*this);
 }
 
@@ -203,8 +220,6 @@ matrix2 &matrix2::operator=(matrix2 &&other)
     this->set_error_unlocked(other._error_code);
     other._error_code = FT_ERR_SUCCESSS;
     other.set_error_unlocked(FT_ERR_SUCCESSS);
-    matrix2_restore_errno(this_guard, FT_ERR_SUCCESSS);
-    matrix2_restore_errno(other_guard, FT_ERR_SUCCESSS);
     return (*this);
 }
 
@@ -229,7 +244,6 @@ vector2 matrix2::transform(const vector2 &vector) const
     result._y = this->_m[1][0] * vector_x + this->_m[1][1] * vector_y;
     result.set_error_unlocked(FT_ERR_SUCCESSS);
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    matrix2_restore_errno(guard, FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -253,8 +267,6 @@ matrix2 matrix2::multiply(const matrix2 &other) const
     result._m[1][1] = this->_m[1][0] * other._m[0][1] + this->_m[1][1] * other._m[1][1];
     result.set_error_unlocked(FT_ERR_SUCCESSS);
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    matrix2_restore_errno(this_guard, FT_ERR_SUCCESSS);
-    matrix2_restore_errno(other_guard, FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -279,7 +291,6 @@ matrix2 matrix2::invert() const
     {
         result.set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        matrix2_restore_errno(guard, FT_ERR_INVALID_ARGUMENT);
         return (result);
     }
     result._m[0][0] = this->_m[1][1] / determinant;
@@ -288,7 +299,6 @@ matrix2 matrix2::invert() const
     result._m[1][1] = this->_m[0][0] / determinant;
     result.set_error_unlocked(FT_ERR_SUCCESSS);
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    matrix2_restore_errno(guard, FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -305,7 +315,6 @@ int matrix2::get_error() const
         return (lock_error);
     }
     error_value = this->_error_code;
-    matrix2_restore_errno(guard, FT_ERR_SUCCESSS);
     return (error_value);
 }
 
@@ -323,26 +332,15 @@ static void matrix3_sleep_backoff()
     return ;
 }
 
-static void matrix3_restore_errno(ft_unique_lock<pt_mutex> &guard,
-    int error_code)
-{
-    if (guard.owns_lock())
-        guard.unlock();
-    ft_errno = error_code;
-    return ;
-}
-
 int matrix3::lock_self(ft_unique_lock<pt_mutex> &guard) const
 {
     ft_unique_lock<pt_mutex> local_guard(this->_mutex);
     if (local_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = local_guard.get_error();
         guard = ft_unique_lock<pt_mutex>();
         return (local_guard.get_error());
     }
     guard = ft_move(local_guard);
-    ft_errno = FT_ERR_SUCCESSS;
     return (FT_ERR_SUCCESSS);
 }
 
@@ -360,12 +358,10 @@ int matrix3::lock_pair(const matrix3 &first, const matrix3 &second,
 
         if (single_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ERR_SUCCESSS;
         return (FT_ERR_SUCCESSS);
     }
     ordered_first = &first;
@@ -386,7 +382,6 @@ int matrix3::lock_pair(const matrix3 &first, const matrix3 &second,
 
         if (lower_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
@@ -402,12 +397,10 @@ int matrix3::lock_pair(const matrix3 &first, const matrix3 &second,
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = FT_ERR_SUCCESSS;
             return (FT_ERR_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            ft_errno = upper_guard.get_error();
             return (upper_guard.get_error());
         }
         if (lower_guard.owns_lock())
@@ -418,7 +411,7 @@ int matrix3::lock_pair(const matrix3 &first, const matrix3 &second,
 
 void matrix3::set_error_unlocked(int error_code) const
 {
-    ft_errno = error_code;
+    matrix3_push_error(error_code);
     this->_error_code = error_code;
     return ;
 }
@@ -465,8 +458,6 @@ matrix3 &matrix3::operator=(const matrix3 &other)
     }
     this->_error_code = other._error_code;
     this->set_error_unlocked(other._error_code);
-    matrix3_restore_errno(this_guard, FT_ERR_SUCCESSS);
-    matrix3_restore_errno(other_guard, FT_ERR_SUCCESSS);
     return (*this);
 }
 
@@ -512,8 +503,6 @@ matrix3 &matrix3::operator=(matrix3 &&other)
     this->set_error_unlocked(other._error_code);
     other._error_code = FT_ERR_SUCCESSS;
     other.set_error_unlocked(FT_ERR_SUCCESSS);
-    matrix3_restore_errno(this_guard, FT_ERR_SUCCESSS);
-    matrix3_restore_errno(other_guard, FT_ERR_SUCCESSS);
     return (*this);
 }
 
@@ -541,7 +530,6 @@ vector3 matrix3::transform(const vector3 &vector) const
     result._z = this->_m[2][0] * vector_x + this->_m[2][1] * vector_y + this->_m[2][2] * vector_z;
     result.set_error_unlocked(FT_ERR_SUCCESSS);
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    matrix3_restore_errno(guard, FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -570,8 +558,6 @@ matrix3 matrix3::multiply(const matrix3 &other) const
     result._m[2][2] = this->_m[2][0] * other._m[0][2] + this->_m[2][1] * other._m[1][2] + this->_m[2][2] * other._m[2][2];
     result.set_error_unlocked(FT_ERR_SUCCESSS);
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    matrix3_restore_errno(this_guard, FT_ERR_SUCCESSS);
-    matrix3_restore_errno(other_guard, FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -597,7 +583,6 @@ matrix3 matrix3::invert() const
     {
         result.set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        matrix3_restore_errno(guard, FT_ERR_INVALID_ARGUMENT);
         return (result);
     }
     inv_det = 1.0 / determinant;
@@ -612,7 +597,6 @@ matrix3 matrix3::invert() const
     result._m[2][2] = (this->_m[0][0] * this->_m[1][1] - this->_m[0][1] * this->_m[1][0]) * inv_det;
     result.set_error_unlocked(FT_ERR_SUCCESSS);
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    matrix3_restore_errno(guard, FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -629,7 +613,6 @@ int matrix3::get_error() const
         return (lock_error);
     }
     error_value = this->_error_code;
-    matrix3_restore_errno(guard, FT_ERR_SUCCESSS);
     return (error_value);
 }
 
@@ -644,15 +627,6 @@ const char *matrix3::get_error_str() const
 static void matrix4_sleep_backoff()
 {
     pt_thread_sleep(1);
-    return ;
-}
-
-static void matrix4_restore_errno(ft_unique_lock<pt_mutex> &guard,
-    int error_code)
-{
-    if (guard.owns_lock())
-        guard.unlock();
-    ft_errno = error_code;
     return ;
 }
 
@@ -701,12 +675,10 @@ int matrix4::lock_self(ft_unique_lock<pt_mutex> &guard) const
     ft_unique_lock<pt_mutex> local_guard(this->_mutex);
     if (local_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = local_guard.get_error();
         guard = ft_unique_lock<pt_mutex>();
         return (local_guard.get_error());
     }
     guard = ft_move(local_guard);
-    ft_errno = FT_ERR_SUCCESSS;
     return (FT_ERR_SUCCESSS);
 }
 
@@ -724,12 +696,10 @@ int matrix4::lock_pair(const matrix4 &first, const matrix4 &second,
 
         if (single_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ERR_SUCCESSS;
         return (FT_ERR_SUCCESSS);
     }
     ordered_first = &first;
@@ -750,7 +720,6 @@ int matrix4::lock_pair(const matrix4 &first, const matrix4 &second,
 
         if (lower_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
@@ -766,12 +735,10 @@ int matrix4::lock_pair(const matrix4 &first, const matrix4 &second,
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = FT_ERR_SUCCESSS;
             return (FT_ERR_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            ft_errno = upper_guard.get_error();
             return (upper_guard.get_error());
         }
         if (lower_guard.owns_lock())
@@ -782,7 +749,7 @@ int matrix4::lock_pair(const matrix4 &first, const matrix4 &second,
 
 void matrix4::set_error_unlocked(int error_code) const
 {
-    ft_errno = error_code;
+    matrix4_push_error(error_code);
     this->_error_code = error_code;
     return ;
 }
@@ -829,8 +796,6 @@ matrix4 &matrix4::operator=(const matrix4 &other)
     }
     this->_error_code = other._error_code;
     this->set_error_unlocked(other._error_code);
-    matrix4_restore_errno(this_guard, FT_ERR_SUCCESSS);
-    matrix4_restore_errno(other_guard, FT_ERR_SUCCESSS);
     return (*this);
 }
 
@@ -876,8 +841,6 @@ matrix4 &matrix4::operator=(matrix4 &&other)
     this->set_error_unlocked(other._error_code);
     other._error_code = FT_ERR_SUCCESSS;
     other.set_error_unlocked(FT_ERR_SUCCESSS);
-    matrix4_restore_errno(this_guard, FT_ERR_SUCCESSS);
-    matrix4_restore_errno(other_guard, FT_ERR_SUCCESSS);
     return (*this);
 }
 
@@ -908,7 +871,6 @@ vector4 matrix4::transform(const vector4 &vector) const
     result._w = this->_m[3][0] * vector_x + this->_m[3][1] * vector_y + this->_m[3][2] * vector_z + this->_m[3][3] * vector_w;
     result.set_error_unlocked(FT_ERR_SUCCESSS);
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    matrix4_restore_errno(guard, FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -947,8 +909,6 @@ matrix4 matrix4::multiply(const matrix4 &other) const
     }
     result.set_error_unlocked(FT_ERR_SUCCESSS);
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    matrix4_restore_errno(this_guard, FT_ERR_SUCCESSS);
-    matrix4_restore_errno(other_guard, FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -999,7 +959,6 @@ matrix4 matrix4::invert() const
         {
             result.set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
             this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-            matrix4_restore_errno(guard, FT_ERR_INVALID_ARGUMENT);
             return (result);
         }
         column = 0;
@@ -1038,7 +997,6 @@ matrix4 matrix4::invert() const
     }
     result.set_error_unlocked(FT_ERR_SUCCESSS);
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    matrix4_restore_errno(guard, FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -1125,7 +1083,6 @@ int matrix4::get_error() const
         return (lock_error);
     }
     error_value = this->_error_code;
-    matrix4_restore_errno(guard, FT_ERR_SUCCESSS);
     return (error_value);
 }
 
@@ -1136,4 +1093,3 @@ const char *matrix4::get_error_str() const
     error_value = this->get_error();
     return (ft_strerror(error_value));
 }
-

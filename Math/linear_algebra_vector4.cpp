@@ -1,12 +1,25 @@
 #include "linear_algebra.hpp"
 #include "math.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../PThread/pthread.hpp"
 #include "../Template/move.hpp"
 
 #if defined(__SSE2__)
 # include <immintrin.h>
 #endif
+
+static thread_local ft_operation_error_stack g_vector4_operation_errors = {{}, {}, 0};
+
+static void vector4_push_error(int error_code) noexcept
+{
+    unsigned long long operation_id;
+
+    operation_id = ft_errno_next_operation_id();
+    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
+    ft_operation_error_stack_push(g_vector4_operation_errors, error_code, operation_id);
+    return ;
+}
 
 static void vector4_sleep_backoff()
 {
@@ -57,12 +70,10 @@ int vector4::lock_self(ft_unique_lock<pt_mutex> &guard) const
     ft_unique_lock<pt_mutex> local_guard(this->_mutex);
     if (local_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = local_guard.get_error();
         guard = ft_unique_lock<pt_mutex>();
         return (local_guard.get_error());
     }
     guard = ft_move(local_guard);
-    ft_errno = FT_ERR_SUCCESSS;
     return (FT_ERR_SUCCESSS);
 }
 
@@ -80,12 +91,10 @@ int vector4::lock_pair(const vector4 &first, const vector4 &second,
 
         if (single_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ERR_SUCCESSS;
         return (FT_ERR_SUCCESSS);
     }
     ordered_first = &first;
@@ -106,7 +115,6 @@ int vector4::lock_pair(const vector4 &first, const vector4 &second,
 
         if (lower_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
@@ -122,12 +130,10 @@ int vector4::lock_pair(const vector4 &first, const vector4 &second,
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = FT_ERR_SUCCESSS;
             return (FT_ERR_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            ft_errno = upper_guard.get_error();
             return (upper_guard.get_error());
         }
         if (lower_guard.owns_lock())
@@ -138,7 +144,7 @@ int vector4::lock_pair(const vector4 &first, const vector4 &second,
 
 void vector4::set_error_unlocked(int error_code) const
 {
-    ft_errno = error_code;
+    vector4_push_error(error_code);
     this->_error_code = error_code;
     return ;
 }
@@ -176,7 +182,6 @@ vector4 &vector4::operator=(const vector4 &other)
     this->_w = other._w;
     this->_error_code = other._error_code;
     this->set_error_unlocked(other._error_code);
-    ft_errno = FT_ERR_SUCCESSS;
     return (*this);
 }
 
@@ -213,7 +218,6 @@ vector4 &vector4::operator=(vector4 &&other)
     other._w = 0.0;
     other._error_code = FT_ERR_SUCCESSS;
     other.set_error_unlocked(FT_ERR_SUCCESSS);
-    ft_errno = FT_ERR_SUCCESSS;
     return (*this);
 }
 
@@ -231,7 +235,6 @@ double vector4::get_x() const
     }
     value = this->_x;
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    ft_errno = FT_ERR_SUCCESSS;
     return (value);
 }
 
@@ -249,7 +252,6 @@ double vector4::get_y() const
     }
     value = this->_y;
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    ft_errno = FT_ERR_SUCCESSS;
     return (value);
 }
 
@@ -267,7 +269,6 @@ double vector4::get_z() const
     }
     value = this->_z;
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    ft_errno = FT_ERR_SUCCESSS;
     return (value);
 }
 
@@ -285,7 +286,6 @@ double vector4::get_w() const
     }
     value = this->_w;
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    ft_errno = FT_ERR_SUCCESSS;
     return (value);
 }
 
@@ -309,7 +309,6 @@ vector4 vector4::add(const vector4 &other) const
     result._w = this->_w + other._w;
     result.set_error_unlocked(FT_ERR_SUCCESSS);
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    ft_errno = FT_ERR_SUCCESSS;
     return (result);
 }
 
@@ -333,7 +332,6 @@ vector4 vector4::subtract(const vector4 &other) const
     result._w = this->_w - other._w;
     result.set_error_unlocked(FT_ERR_SUCCESSS);
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    ft_errno = FT_ERR_SUCCESSS;
     return (result);
 }
 
@@ -353,7 +351,6 @@ double vector4::dot(const vector4 &other) const
     result = vector4_compute_dot(this->_x, this->_y, this->_z, this->_w,
             other._x, other._y, other._z, other._w);
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    ft_errno = FT_ERR_SUCCESSS;
     return (result);
 }
 
@@ -372,7 +369,6 @@ double vector4::length() const
     squared = vector4_compute_dot(this->_x, this->_y, this->_z, this->_w,
             this->_x, this->_y, this->_z, this->_w);
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    ft_errno = FT_ERR_SUCCESSS;
     return (math_sqrt(squared));
 }
 
@@ -408,7 +404,6 @@ vector4 vector4::normalize() const
     result._w = this->_w / length_value;
     result.set_error_unlocked(FT_ERR_SUCCESSS);
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    ft_errno = FT_ERR_SUCCESSS;
     return (result);
 }
 
@@ -425,7 +420,6 @@ int vector4::get_error() const
         return (lock_error);
     }
     error_value = this->_error_code;
-    ft_errno = FT_ERR_SUCCESSS;
     return (error_value);
 }
 

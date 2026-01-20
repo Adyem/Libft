@@ -1,6 +1,21 @@
 #include "linear_algebra_quaternion.hpp"
 #include "math.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
+#include "../PThread/lock_guard.hpp"
+
+thread_local ft_operation_error_stack quaternion::_operation_errors = {{}, {}, 0};
+
+void quaternion::record_operation_error(int error_code) noexcept
+{
+    unsigned long long operation_id;
+
+    operation_id = ft_errno_next_operation_id();
+    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
+    ft_operation_error_stack_push(quaternion::_operation_errors,
+            error_code, operation_id);
+    return ;
+}
 
 #if defined(__SSE2__)
 # include <immintrin.h>
@@ -10,7 +25,6 @@ static double quaternion_compute_dot(double first_w, double first_x,
     double first_y, double first_z,
     double second_w, double second_x,
     double second_y, double second_z);
-
 static void quaternion_compute_product_components(quaternion &result,
     double first_w, double first_x, double first_y, double first_z,
     double second_w, double second_x, double second_y, double second_z)
@@ -38,7 +52,6 @@ quaternion::quaternion()
     this->_x = 0.0;
     this->_y = 0.0;
     this->_z = 0.0;
-    this->_error_code = FT_ERR_SUCCESSS;
     this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
@@ -49,21 +62,19 @@ quaternion::quaternion(double w, double x, double y, double z)
     this->_x = x;
     this->_y = y;
     this->_z = z;
-    this->_error_code = FT_ERR_SUCCESSS;
     this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
 quaternion::quaternion(const quaternion &other)
 {
-    std::lock_guard<std::mutex> other_lock(other._mutex);
+    ft_recursive_lock_guard other_guard(other._mutex);
 
     this->_w = other._w;
     this->_x = other._x;
     this->_y = other._y;
     this->_z = other._z;
-    this->_error_code = other._error_code;
-    ft_errno = FT_ERR_SUCCESSS;
+    this->set_error(other._error_code);
     return ;
 }
 
@@ -71,33 +82,32 @@ quaternion &quaternion::operator=(const quaternion &other)
 {
     if (this == &other)
         return (*this);
-    std::lock(this->_mutex, other._mutex);
-    std::lock_guard<std::mutex> this_lock(this->_mutex, std::adopt_lock);
-    std::lock_guard<std::mutex> other_lock(other._mutex, std::adopt_lock);
+    ft_recursive_mutex_pair_guard pair_guard(this->_mutex, other._mutex);
     this->_w = other._w;
     this->_x = other._x;
     this->_y = other._y;
     this->_z = other._z;
-    this->_error_code = other._error_code;
-    ft_errno = FT_ERR_SUCCESSS;
+    this->set_error(other._error_code);
     return (*this);
 }
 
 quaternion::quaternion(quaternion &&other) noexcept
 {
-    std::lock_guard<std::mutex> other_lock(other._mutex);
+    ft_recursive_lock_guard other_guard(other._mutex);
 
     this->_w = other._w;
     this->_x = other._x;
     this->_y = other._y;
     this->_z = other._z;
-    this->_error_code = other._error_code;
+    int other_error;
+
+    other_error = other._error_code;
     other._w = 1.0;
     other._x = 0.0;
     other._y = 0.0;
     other._z = 0.0;
-    other._error_code = FT_ERR_SUCCESSS;
-    ft_errno = FT_ERR_SUCCESSS;
+    other.set_error(FT_ERR_SUCCESSS);
+    this->set_error(other_error);
     return ;
 }
 
@@ -105,20 +115,20 @@ quaternion &quaternion::operator=(quaternion &&other) noexcept
 {
     if (this == &other)
         return (*this);
-    std::lock(this->_mutex, other._mutex);
-    std::lock_guard<std::mutex> this_lock(this->_mutex, std::adopt_lock);
-    std::lock_guard<std::mutex> other_lock(other._mutex, std::adopt_lock);
+    ft_recursive_mutex_pair_guard pair_guard(this->_mutex, other._mutex);
     this->_w = other._w;
     this->_x = other._x;
     this->_y = other._y;
     this->_z = other._z;
-    this->_error_code = other._error_code;
+    int other_error;
+
+    other_error = other._error_code;
     other._w = 1.0;
     other._x = 0.0;
     other._y = 0.0;
     other._z = 0.0;
-    other._error_code = FT_ERR_SUCCESSS;
-    ft_errno = FT_ERR_SUCCESSS;
+    other.set_error(FT_ERR_SUCCESSS);
+    this->set_error(other_error);
     return (*this);
 }
 
@@ -129,36 +139,36 @@ quaternion::~quaternion()
 
 double  quaternion::get_w() const
 {
-    std::lock_guard<std::mutex> lock_guard(this->_mutex);
     double value;
 
+    ft_recursive_lock_guard guard(this->_mutex);
     value = this->_w;
     return (value);
 }
 
 double  quaternion::get_x() const
 {
-    std::lock_guard<std::mutex> lock_guard(this->_mutex);
     double value;
 
+    ft_recursive_lock_guard guard(this->_mutex);
     value = this->_x;
     return (value);
 }
 
 double  quaternion::get_y() const
 {
-    std::lock_guard<std::mutex> lock_guard(this->_mutex);
     double value;
 
+    ft_recursive_lock_guard guard(this->_mutex);
     value = this->_y;
     return (value);
 }
 
 double  quaternion::get_z() const
 {
-    std::lock_guard<std::mutex> lock_guard(this->_mutex);
     double value;
 
+    ft_recursive_lock_guard guard(this->_mutex);
     value = this->_z;
     return (value);
 }
@@ -169,8 +179,7 @@ quaternion  quaternion::add(const quaternion &other) const
 
     if (&other == this)
     {
-        std::lock_guard<std::mutex> this_lock(this->_mutex);
-
+        ft_recursive_lock_guard guard(this->_mutex);
         result._w = this->_w + this->_w;
         result._x = this->_x + this->_x;
         result._y = this->_y + this->_y;
@@ -178,10 +187,7 @@ quaternion  quaternion::add(const quaternion &other) const
     }
     else
     {
-        std::lock(this->_mutex, other._mutex);
-        std::lock_guard<std::mutex> this_lock(this->_mutex, std::adopt_lock);
-        std::lock_guard<std::mutex> other_lock(other._mutex, std::adopt_lock);
-
+        ft_recursive_mutex_pair_guard guard(this->_mutex, other._mutex);
         result._w = this->_w + other._w;
         result._x = this->_x + other._x;
         result._y = this->_y + other._y;
@@ -198,18 +204,14 @@ quaternion  quaternion::multiply(const quaternion &other) const
 
     if (&other == this)
     {
-        std::lock_guard<std::mutex> this_lock(this->_mutex);
-
+        ft_recursive_lock_guard guard(this->_mutex);
         quaternion_compute_product_components(result,
             this->_w, this->_x, this->_y, this->_z,
             this->_w, this->_x, this->_y, this->_z);
     }
     else
     {
-        std::lock(this->_mutex, other._mutex);
-        std::lock_guard<std::mutex> this_lock(this->_mutex, std::adopt_lock);
-        std::lock_guard<std::mutex> other_lock(other._mutex, std::adopt_lock);
-
+        ft_recursive_mutex_pair_guard guard(this->_mutex, other._mutex);
         quaternion_compute_product_components(result,
             this->_w, this->_x, this->_y, this->_z,
             other._w, other._x, other._y, other._z);
@@ -223,14 +225,11 @@ quaternion  quaternion::conjugate() const
 {
     quaternion result;
 
-    {
-        std::lock_guard<std::mutex> this_lock(this->_mutex);
-
-        result._w = this->_w;
-        result._x = -this->_x;
-        result._y = -this->_y;
-        result._z = -this->_z;
-    }
+    ft_recursive_lock_guard guard(this->_mutex);
+    result._w = this->_w;
+    result._x = -this->_x;
+    result._y = -this->_y;
+    result._z = -this->_z;
     result.set_error(FT_ERR_SUCCESSS);
     this->set_error(FT_ERR_SUCCESSS);
     return (result);
@@ -240,13 +239,10 @@ double  quaternion::length() const
 {
     double length_value;
 
-    {
-        std::lock_guard<std::mutex> lock_guard(this->_mutex);
-
-        length_value = quaternion_compute_dot(this->_w, this->_x,
-            this->_y, this->_z,
-            this->_w, this->_x, this->_y, this->_z);
-    }
+    ft_recursive_lock_guard guard(this->_mutex);
+    length_value = quaternion_compute_dot(this->_w, this->_x,
+        this->_y, this->_z,
+        this->_w, this->_x, this->_y, this->_z);
     this->set_error(FT_ERR_SUCCESSS);
     return (math_sqrt(length_value));
 }
@@ -261,14 +257,11 @@ quaternion  quaternion::normalize() const
     double local_y;
     double local_z;
 
-    {
-        std::lock_guard<std::mutex> lock_guard(this->_mutex);
-
-        local_w = this->_w;
-        local_x = this->_x;
-        local_y = this->_y;
-        local_z = this->_z;
-    }
+    ft_recursive_lock_guard guard(this->_mutex);
+    local_w = this->_w;
+    local_x = this->_x;
+    local_y = this->_y;
+    local_z = this->_z;
     length_value = math_sqrt(local_w * local_w + local_x * local_x
         + local_y * local_y + local_z * local_z);
     epsilon = 0.0000001;
@@ -289,8 +282,7 @@ quaternion  quaternion::normalize() const
 
 void    quaternion::set_error(int error_code) const
 {
-    std::lock_guard<std::mutex> lock_guard(this->_mutex);
-
+    ft_recursive_lock_guard guard(this->_mutex);
     ft_errno = error_code;
     this->_error_code = error_code;
     return ;
@@ -298,9 +290,9 @@ void    quaternion::set_error(int error_code) const
 
 int     quaternion::get_error() const
 {
-    std::lock_guard<std::mutex> lock_guard(this->_mutex);
     int error_code;
 
+    ft_recursive_lock_guard guard(this->_mutex);
     error_code = this->_error_code;
     return (error_code);
 }
@@ -309,11 +301,8 @@ const char  *quaternion::get_error_str() const
 {
     int error_code;
 
-    {
-        std::lock_guard<std::mutex> lock_guard(this->_mutex);
-
-        error_code = this->_error_code;
-    }
+    ft_recursive_lock_guard guard(this->_mutex);
+    error_code = this->_error_code;
     return (ft_strerror(error_code));
 }
 

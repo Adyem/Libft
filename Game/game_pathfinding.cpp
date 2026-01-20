@@ -698,7 +698,6 @@ ft_pathfinding &ft_pathfinding::operator=(ft_pathfinding &&other) noexcept
 
 void ft_pathfinding::set_error(int error) const noexcept
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
     ft_errno = error;
     this->_error_code = error;

@@ -218,7 +218,6 @@ void api_connection_pool_handle::record_operation_error_unlocked(int error_code)
 
 void api_connection_pool_handle::set_error(int error) const
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
     this->_error_code = error;
     api_connection_pool_handle::record_operation_error_unlocked(error);

@@ -11,12 +11,12 @@ FT_TEST(test_ft_unordered_map_iterator_enable_thread_safety_controls,
     ft_unordered_map<int, int> map_instance;
 
     map_instance.insert(1, 10);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, map_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, map_instance.last_operation_error());
     map_instance.insert(2, 20);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, map_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, map_instance.last_operation_error());
 
     ft_unordered_map<int, int>::iterator iterator_instance = map_instance.begin();
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, map_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, map_instance.last_operation_error());
 
     FT_ASSERT_EQ(0, iterator_instance.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, iterator_instance.get_error());
@@ -49,10 +49,10 @@ FT_TEST(test_ft_unordered_map_iterator_lock_blocks_until_release,
     std::thread worker;
 
     map_instance.insert(1, 1);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, map_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, map_instance.last_operation_error());
 
     iterator_instance = map_instance.begin();
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, map_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, map_instance.last_operation_error());
     FT_ASSERT_EQ(0, iterator_instance.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, iterator_instance.get_error());
 
@@ -106,13 +106,13 @@ FT_TEST(test_ft_unordered_map_iterators_inherit_container_thread_safety,
 
     FT_ASSERT_EQ(0, map_instance.enable_thread_safety());
     FT_ASSERT(map_instance.is_thread_safe());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, map_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, map_instance.last_operation_error());
 
     map_instance.insert(42, 100);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, map_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, map_instance.last_operation_error());
 
     ft_unordered_map<int, int>::iterator iterator_instance = map_instance.begin();
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, map_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, map_instance.last_operation_error());
     FT_ASSERT(iterator_instance.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, iterator_instance.get_error());
 
@@ -124,7 +124,7 @@ FT_TEST(test_ft_unordered_map_iterators_inherit_container_thread_safety,
 
     const ft_unordered_map<int, int>& const_map_ref = map_instance;
     ft_unordered_map<int, int>::const_iterator const_iterator_instance = const_map_ref.begin();
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, const_map_ref.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, const_map_ref.last_operation_error());
     FT_ASSERT(const_iterator_instance.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, const_iterator_instance.get_error());
 
@@ -139,6 +139,6 @@ FT_TEST(test_ft_unordered_map_iterators_inherit_container_thread_safety,
     const_iterator_instance.disable_thread_safety();
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, const_iterator_instance.get_error());
     map_instance.disable_thread_safety();
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, map_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, map_instance.last_operation_error());
     return (1);
 }

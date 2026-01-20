@@ -308,7 +308,7 @@ static int xml_parse_attributes(xml_node *node, const char *start,
             }
         }
         node->attributes.insert(attribute_name, attribute_value);
-        int attribute_error = node->attributes.get_error();
+        int attribute_error = node->attributes.last_operation_error();
         if (attribute_error != FT_ERR_SUCCESSS)
         {
             if (attribute_value)
@@ -1221,4 +1221,3 @@ void xml_document::unlock(bool lock_acquired) const noexcept
     ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
-

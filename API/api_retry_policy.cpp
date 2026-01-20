@@ -25,7 +25,6 @@ void api_retry_policy::record_operation_error_unlocked(int error_code) noexcept
 
 void api_retry_policy::set_error(int error) const noexcept
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
     this->_error_code = error;
     api_retry_policy::record_operation_error_unlocked(error);

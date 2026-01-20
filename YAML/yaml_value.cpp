@@ -147,8 +147,6 @@ yaml_value::~yaml_value() noexcept
 
 void yaml_value::set_error(int error_code) const noexcept
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
-
     this->_error_code = error_code;
     yaml_value::record_operation_error_unlocked(error_code);
     return ;
@@ -158,8 +156,6 @@ int yaml_value::get_error() const noexcept
 {
     int error_code;
 
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
-
     error_code = this->_error_code;
     return (error_code);
 }
@@ -168,11 +164,7 @@ const char *yaml_value::get_error_str() const noexcept
 {
     int error_code;
 
-    {
-        std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
-
-        error_code = this->_error_code;
-    }
+    error_code = this->_error_code;
     return (ft_strerror(error_code));
 }
 

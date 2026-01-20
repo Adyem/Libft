@@ -70,8 +70,8 @@ void    scma_debug_dump(void)
     span = scma_get_block_span();
     heap_capacity = static_cast<size_t>(heap_capacity_ref_value);
     std::printf("[scma] blocks=%llu used=%llu capacity=%zu\n",
-        static_cast<unsigned long long>(span.count),
-        static_cast<unsigned long long>(used_size),
+        span.count,
+        used_size,
         heap_capacity);
     index = 0;
     while (index < span.count)
@@ -80,11 +80,11 @@ void    scma_debug_dump(void)
 
         block = &span.data[static_cast<size_t>(index)];
         std::printf("  [%llu] offset=%llu size=%llu in_use=%d generation=%llu\n",
-            static_cast<unsigned long long>(index),
-            static_cast<unsigned long long>(block->offset),
-            static_cast<unsigned long long>(block->size),
+            index,
+            block->offset,
+            block->size,
             block->in_use,
-            static_cast<unsigned long long>(block->generation));
+            block->generation);
         index++;
     }
     error_code = FT_ERR_SUCCESSS;

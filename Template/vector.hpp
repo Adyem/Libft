@@ -51,7 +51,7 @@ class ft_vector
         static thread_local ft_operation_error_stack _operation_errors;
         mutable pt_mutex    *_mutex;
 
-        static void record_operation_error_unlocked(int error_code);
+        static void record_operation_error(int error_code) noexcept;
         void    destroy_elements_unlocked(size_t from, size_t to);
         int     reserve_internal_unlocked(size_t new_capacity);
         ElementType    *small_data();
@@ -114,11 +114,12 @@ template <typename ElementType>
 thread_local ft_operation_error_stack ft_vector<ElementType>::_operation_errors = {{}, {}, 0};
 
 template <typename ElementType>
-void ft_vector<ElementType>::record_operation_error_unlocked(int error_code)
+void ft_vector<ElementType>::record_operation_error(int error_code) noexcept
 {
     unsigned long long operation_id;
 
-    operation_id = ft_global_error_stack_push_entry(error_code);
+    operation_id = ft_errno_next_operation_id();
+    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
     ft_operation_error_stack_push(ft_vector<ElementType>::_operation_errors,
             error_code, operation_id);
     return ;
@@ -143,15 +144,18 @@ ft_vector<ElementType>::ft_vector(size_t initial_capacity)
         return ;
     }
     mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
     {
         int mutex_error;
 
-        mutex_error = mutex_pointer->get_error();
-        mutex_pointer->~pt_mutex();
-        cma_free(memory);
-        this->set_error(mutex_error);
-        return ;
+        mutex_error = pt_mutex::operation_error_pop_newest();
+        ft_global_error_stack_pop_newest();
+        if (mutex_error != FT_ERR_SUCCESSS)
+        {
+            mutex_pointer->~pt_mutex();
+            cma_free(memory);
+            this->set_error(mutex_error);
+            return ;
+        }
     }
     this->_mutex = mutex_pointer;
     if (initial_capacity > SMALL_CAPACITY)
@@ -188,8 +192,9 @@ ft_vector<ElementType>::~ft_vector()
         this->_capacity = 0;
         this->_size = 0;
         this->set_error(FT_ERR_SUCCESSS);
-        if (this->unlock_internal(lock_acquired) != FT_ERR_SUCCESSS)
-            this->set_error(this->_mutex->get_error());
+        int unlock_error = this->unlock_internal(lock_acquired);
+        if (unlock_error != FT_ERR_SUCCESSS)
+            this->set_error(unlock_error);
     }
     else
         this->set_error(lock_error);
@@ -219,15 +224,18 @@ ft_vector<ElementType>::ft_vector(ft_vector<ElementType>&& other) noexcept
             return ;
         }
         mutex_pointer = new(memory) pt_mutex();
-        if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
         {
             int mutex_error;
 
-            mutex_error = mutex_pointer->get_error();
-            mutex_pointer->~pt_mutex();
-            cma_free(memory);
-            this->set_error(mutex_error);
-            return ;
+            mutex_error = pt_mutex::operation_error_pop_newest();
+            ft_global_error_stack_pop_newest();
+            if (mutex_error != FT_ERR_SUCCESSS)
+            {
+                mutex_pointer->~pt_mutex();
+                cma_free(memory);
+                this->set_error(mutex_error);
+                return ;
+            }
         }
         this->_mutex = mutex_pointer;
     }
@@ -277,10 +285,13 @@ ft_vector<ElementType>& ft_vector<ElementType>::operator=(ft_vector<ElementType>
         this->_data = ft_nullptr;
         this->_size = 0;
         this->_capacity = 0;
-        if (this->unlock_internal(lock_acquired) != FT_ERR_SUCCESSS)
         {
-            this->set_error(this->_mutex->get_error());
-            return (*this);
+            int unlock_error = this->unlock_internal(lock_acquired);
+            if (unlock_error != FT_ERR_SUCCESSS)
+            {
+                this->set_error(unlock_error);
+                return (*this);
+            }
         }
         other_thread_safe = (other._mutex != ft_nullptr);
         if (other.using_small_buffer() != false)
@@ -315,15 +326,18 @@ ft_vector<ElementType>& ft_vector<ElementType>::operator=(ft_vector<ElementType>
                 return (*this);
             }
             mutex_pointer = new(memory) pt_mutex();
-            if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
             {
                 int mutex_error;
 
-                mutex_error = mutex_pointer->get_error();
-                mutex_pointer->~pt_mutex();
-                cma_free(memory);
-                this->set_error(mutex_error);
-                return (*this);
+                mutex_error = pt_mutex::operation_error_pop_newest();
+                ft_global_error_stack_pop_newest();
+                if (mutex_error != FT_ERR_SUCCESSS)
+                {
+                    mutex_pointer->~pt_mutex();
+                    cma_free(memory);
+                    this->set_error(mutex_error);
+                    return (*this);
+                }
             }
             this->_mutex = mutex_pointer;
         }
@@ -363,8 +377,11 @@ size_t ft_vector<ElementType>::size() const
     }
     current_size = this->_size;
     const_cast<ft_vector<ElementType> *>(this)->set_error(FT_ERR_SUCCESSS);
-    if (this->unlock_internal(lock_acquired) != FT_ERR_SUCCESSS)
-        const_cast<ft_vector<ElementType> *>(this)->set_error(this->_mutex->get_error());
+    {
+        int unlock_error = this->unlock_internal(lock_acquired);
+        if (unlock_error != FT_ERR_SUCCESSS)
+            const_cast<ft_vector<ElementType> *>(this)->set_error(unlock_error);
+    }
     return (current_size);
 }
 
@@ -384,8 +401,11 @@ size_t ft_vector<ElementType>::capacity() const
     }
     current_capacity = this->_capacity;
     const_cast<ft_vector<ElementType> *>(this)->set_error(FT_ERR_SUCCESSS);
-    if (this->unlock_internal(lock_acquired) != FT_ERR_SUCCESSS)
-        const_cast<ft_vector<ElementType> *>(this)->set_error(this->_mutex->get_error());
+    {
+        int unlock_error = this->unlock_internal(lock_acquired);
+        if (unlock_error != FT_ERR_SUCCESSS)
+            const_cast<ft_vector<ElementType> *>(this)->set_error(unlock_error);
+    }
     return (current_capacity);
 }
 
@@ -405,18 +425,20 @@ bool ft_vector<ElementType>::empty() const
     }
     is_empty = (this->_size == 0);
     const_cast<ft_vector<ElementType> *>(this)->set_error(FT_ERR_SUCCESSS);
-    if (this->unlock_internal(lock_acquired) != FT_ERR_SUCCESSS)
-        const_cast<ft_vector<ElementType> *>(this)->set_error(this->_mutex->get_error());
+    {
+        int unlock_error = this->unlock_internal(lock_acquired);
+        if (unlock_error != FT_ERR_SUCCESSS)
+            const_cast<ft_vector<ElementType> *>(this)->set_error(unlock_error);
+    }
     return (is_empty);
 }
 
 template <typename ElementType>
 void ft_vector<ElementType>::set_error(int error_code) const
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
     this->_error_code = error_code;
-    ft_vector<ElementType>::record_operation_error_unlocked(error_code);
+    ft_vector<ElementType>::record_operation_error(error_code);
     return ;
 }
 
@@ -698,9 +720,13 @@ int ft_vector<ElementType>::lock_internal(bool *lock_acquired) const
         return (FT_ERR_SUCCESSS);
     }
     this->_mutex->lock(THREAD_ID);
-    if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
+    int mutex_error;
+
+    mutex_error = pt_mutex::operation_error_pop_newest();
+    ft_global_error_stack_pop_newest();
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        if (this->_mutex->get_error() == FT_ERR_MUTEX_ALREADY_LOCKED)
+        if (mutex_error == FT_ERR_MUTEX_ALREADY_LOCKED)
         {
             bool state_lock_acquired;
 
@@ -709,7 +735,7 @@ int ft_vector<ElementType>::lock_internal(bool *lock_acquired) const
                 this->_mutex->unlock_state(state_lock_acquired);
             return (FT_ERR_SUCCESSS);
         }
-        return (this->_mutex->get_error());
+        return (mutex_error);
     }
     if (lock_acquired)
         *lock_acquired = true;
@@ -722,10 +748,11 @@ int ft_vector<ElementType>::unlock_internal(bool lock_acquired) const
     if (!lock_acquired || this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESSS);
     this->_mutex->unlock(THREAD_ID);
-    if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
-    {
-        return (this->_mutex->get_error());
-    }
+    int mutex_error;
+
+    mutex_error = pt_mutex::operation_error_pop_newest();
+    ft_global_error_stack_pop_newest();
+    return (mutex_error);
     return (FT_ERR_SUCCESSS);
 }
 
@@ -803,8 +830,11 @@ void ft_vector<ElementType>::reserve(size_t new_capacity)
         this->set_error(reserve_error);
     else
         this->set_error(FT_ERR_SUCCESSS);
-    if (this->unlock_internal(lock_acquired) != FT_ERR_SUCCESSS)
-        this->set_error(this->_mutex->get_error());
+    {
+        int unlock_error = this->unlock_internal(lock_acquired);
+        if (unlock_error != FT_ERR_SUCCESSS)
+            this->set_error(unlock_error);
+    }
     return ;
 }
 

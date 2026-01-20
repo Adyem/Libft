@@ -2,7 +2,19 @@
 
 #include <cmath>
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../Libft/libft.hpp"
+
+static thread_local ft_operation_error_stack g_math_autodiff_operation_errors = {{}, {}, 0};
+
+static void math_autodiff_push_error(int error_code)
+{
+    unsigned long long operation_id = ft_errno_next_operation_id();
+
+    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
+    ft_operation_error_stack_push(g_math_autodiff_operation_errors, error_code, operation_id);
+    return ;
+}
 
 ft_dual_number::ft_dual_number() noexcept
     : _value(0.0)
@@ -69,8 +81,9 @@ ft_dual_number &ft_dual_number::operator=(ft_dual_number &&other) noexcept
 
 void ft_dual_number::set_error(int error_code) const noexcept
 {
-    ft_errno = error_code;
+    ft_global_error_stack_push(error_code);
     this->_error_code = error_code;
+    ft_dual_number::record_operation_error(error_code);
     return ;
 }
 
@@ -235,6 +248,18 @@ const char *ft_dual_number::get_error_str() const noexcept
     return (ft_strerror(this->_error_code));
 }
 
+thread_local ft_operation_error_stack ft_dual_number::_operation_errors = {{}, {}, 0};
+
+void ft_dual_number::record_operation_error(int error_code) noexcept
+{
+    unsigned long long operation_id;
+
+    operation_id = ft_errno_next_operation_id();
+    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
+    ft_operation_error_stack_push(ft_dual_number::_operation_errors, error_code, operation_id);
+    return ;
+}
+
 static int math_autodiff_prepare_inputs(const ft_vector<double> &point,
     size_t active_index, ft_vector<ft_dual_number> &dual_inputs) noexcept
 {
@@ -246,7 +271,7 @@ static int math_autodiff_prepare_inputs(const ft_vector<double> &point,
     dual_inputs.reserve(dimension);
     if (dual_inputs.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = dual_inputs.get_error();
+        math_autodiff_push_error(dual_inputs.get_error());
         return (-1);
     }
     index = 0;
@@ -265,12 +290,12 @@ static int math_autodiff_prepare_inputs(const ft_vector<double> &point,
         dual_inputs.push_back(variable);
         if (dual_inputs.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = dual_inputs.get_error();
+            math_autodiff_push_error(dual_inputs.get_error());
             return (-1);
         }
         index++;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    math_autodiff_push_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -282,19 +307,19 @@ int math_autodiff_univariate(math_autodiff_univariate_function function,
 
     if (function == ft_nullptr || value == ft_nullptr || derivative == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        math_autodiff_push_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     variable = ft_dual_number::variable(point);
     result = function(variable, user_data);
     if (result.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = result.get_error();
+        math_autodiff_push_error(result.get_error());
         return (-1);
     }
     *value = result.value();
     *derivative = result.derivative();
-    ft_errno = FT_ERR_SUCCESSS;
+    math_autodiff_push_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -308,7 +333,7 @@ int math_autodiff_gradient(math_autodiff_multivariate_function function,
 
     if (function == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        math_autodiff_push_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     dimension = point.size();
@@ -316,7 +341,7 @@ int math_autodiff_gradient(math_autodiff_multivariate_function function,
     gradient.reserve(dimension);
     if (gradient.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = gradient.get_error();
+        math_autodiff_push_error(gradient.get_error());
         return (-1);
     }
     index = 0;
@@ -334,7 +359,7 @@ int math_autodiff_gradient(math_autodiff_multivariate_function function,
         result = function(dual_inputs, user_data);
         if (result.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = result.get_error();
+            math_autodiff_push_error(result.get_error());
             gradient.clear();
             return (-1);
         }
@@ -346,12 +371,12 @@ int math_autodiff_gradient(math_autodiff_multivariate_function function,
         gradient.push_back(result.derivative());
         if (gradient.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = gradient.get_error();
+            math_autodiff_push_error(gradient.get_error());
             gradient.clear();
             return (-1);
         }
         index++;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    math_autodiff_push_error(FT_ERR_SUCCESSS);
     return (0);
 }

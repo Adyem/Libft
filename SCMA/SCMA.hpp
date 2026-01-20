@@ -650,7 +650,6 @@ void scma_handle_accessor<TValue>::record_operation_error(int error_code) noexce
     unsigned long long operation_id;
 
     operation_id = scma_record_operation_error(error_code);
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
     ft_operation_error_stack_push(
         scma_handle_accessor<TValue>::_operation_errors,
         error_code,
@@ -938,7 +937,6 @@ void scma_handle_accessor_element_proxy<TValue>::record_operation_error(int erro
     unsigned long long operation_id;
 
     operation_id = scma_record_operation_error(error_code);
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
     ft_operation_error_stack_push(
         scma_handle_accessor_element_proxy<TValue>::_operation_errors,
         error_code,
@@ -955,7 +953,6 @@ void scma_handle_accessor_const_element_proxy<TValue>::record_operation_error(in
     unsigned long long operation_id;
 
     operation_id = scma_record_operation_error(error_code);
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
     ft_operation_error_stack_push(
         scma_handle_accessor_const_element_proxy<TValue>::_operation_errors,
         error_code,

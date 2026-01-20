@@ -42,15 +42,15 @@ static int xml_dom_populate_node_locked(const xml_node *source, ft_dom_node *tar
             return (-1);
     }
     ft_unordered_map<char*, char*>::const_iterator attribute_iterator = source->attributes.begin();
-    if (source->attributes.get_error() != FT_ERR_SUCCESSS)
+    if (source->attributes.last_operation_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = source->attributes.get_error();
+        ft_errno = source->attributes.last_operation_error();
         return (-1);
     }
     ft_unordered_map<char*, char*>::const_iterator attribute_end = source->attributes.end();
-    if (source->attributes.get_error() != FT_ERR_SUCCESSS)
+    if (source->attributes.last_operation_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = source->attributes.get_error();
+        ft_errno = source->attributes.last_operation_error();
         return (-1);
     }
     while (attribute_iterator != attribute_end)

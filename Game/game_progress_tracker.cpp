@@ -507,8 +507,6 @@ const char *ft_progress_tracker::get_error_str() const noexcept
 
 void ft_progress_tracker::set_error(int error) const noexcept
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
-
     const_cast<ft_progress_tracker *>(this)->_error_code = error;
     ft_progress_tracker::record_operation_error_unlocked(error);
     return ;

@@ -34,15 +34,15 @@ int ft_read_file(const char *path, char **out_buffer, size_t *out_size)
         return (ft_io_error_read_failed);
     }
 
-    buffer = (char *)malloc((size_t)file_size);
+    buffer = static_cast<char *>(malloc(static_cast<size_t>(file_size)));
     if (buffer == NULL)
     {
         fclose(file);
         return (ft_io_error_read_failed);
     }
 
-    bytes_read = fread(buffer, 1, (size_t)file_size, file);
-    if (bytes_read != (size_t)file_size)
+    bytes_read = fread(buffer, 1, static_cast<size_t>(file_size), file);
+    if (bytes_read != static_cast<size_t>(file_size))
     {
         free(buffer);
         fclose(file);
@@ -52,7 +52,7 @@ int ft_read_file(const char *path, char **out_buffer, size_t *out_size)
     fclose(file);
 
     *out_buffer = buffer;
-    *out_size = (size_t)file_size;
+    *out_size = static_cast<size_t>(file_size);
 
     return (ft_io_ok);
 }

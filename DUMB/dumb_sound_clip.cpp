@@ -1,6 +1,6 @@
 #include "dumb_sound_clip.hpp"
 #include "dumb_io.hpp"
-#include "CMA/CMA.hpp"
+#include "../CMA/CMA.hpp"
 #include "dumb_sound.hpp"
 #include <string.h>
 
@@ -51,15 +51,15 @@ int ft_sound_clip::load_wav(const char *file_path)
         return (ft_sound_error_invalid_argument);
     }
 
-    uint32_t fmt_size = *(uint32_t *)(buffer + 16);
+    uint32_t fmt_size = *reinterpret_cast<const uint32_t *>(buffer + 16);
     if (fmt_size < 16)
     {
         cma_free(buffer);
         return (ft_sound_error_invalid_argument);
     }
 
-    this->_spec->channels = *(uint16_t *)(buffer + 22);
-    this->_spec->freq = *(uint32_t *)(buffer + 24);
+    this->_spec->channels = *reinterpret_cast<const uint16_t *>(buffer + 22);
+    this->_spec->freq = *reinterpret_cast<const uint32_t *>(buffer + 24);
 
     char *data_chunk = strstr(buffer, "data");
     if (data_chunk == NULL)
@@ -69,7 +69,7 @@ int ft_sound_clip::load_wav(const char *file_path)
     }
 
     size_t data_offset = data_chunk - buffer;
-    uint32_t data_size = *(uint32_t *)(buffer + data_offset + 4);
+    uint32_t data_size = *reinterpret_cast<const uint32_t *>(buffer + data_offset + 4);
 
     _data.assign(buffer + data_offset + 8, buffer + data_offset + 8 + data_size);
 

@@ -487,8 +487,6 @@ float   rng_stream::random_chi_squared(float degrees_of_freedom)
 
 void    rng_stream::set_error(int error_code) const
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock_guard(ft_errno_mutex());
-
     this->_error_code = error_code;
     ft_global_error_stack_push(error_code);
     return ;
@@ -496,7 +494,6 @@ void    rng_stream::set_error(int error_code) const
 
 int rng_stream::get_error() const
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock_guard(ft_errno_mutex());
     int error_code;
 
     error_code = this->_error_code;
@@ -507,10 +504,6 @@ const char  *rng_stream::get_error_str() const
 {
     int error_code;
 
-    {
-        std::lock_guard<ft_errno_mutex_wrapper> lock_guard(ft_errno_mutex());
-
-        error_code = this->_error_code;
-    }
+    error_code = this->_error_code;
     return (ft_strerror(error_code));
 }

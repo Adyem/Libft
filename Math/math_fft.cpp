@@ -2,8 +2,20 @@
 
 #include <cmath>
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 
 static const double FFT_PI = 3.141592653589793238462643383279502884;
+
+static thread_local ft_operation_error_stack g_math_fft_operation_errors = {{}, {}, 0};
+
+static void math_fft_push_error(int error_code)
+{
+    unsigned long long operation_id = ft_errno_next_operation_id();
+
+    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
+    ft_operation_error_stack_push(g_math_fft_operation_errors, error_code, operation_id);
+    return ;
+}
 
 static bool math_fft_is_power_of_two(size_t value) noexcept
 {
@@ -28,7 +40,7 @@ static int math_fft_copy_inputs(const ft_vector<double> &input,
     output.reserve(length);
     if (output.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = output.get_error();
+        math_fft_push_error(output.get_error());
         return (-1);
     }
     index = 0;
@@ -37,13 +49,13 @@ static int math_fft_copy_inputs(const ft_vector<double> &input,
         output.push_back(input[index]);
         if (output.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = output.get_error();
+            math_fft_push_error(output.get_error());
             output.clear();
             return (-1);
         }
         index++;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    math_fft_push_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -95,7 +107,7 @@ static int math_fft_bit_reverse(ft_vector<double> &real,
             math_fft_swap(real, imag, index, reversed);
         index++;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    math_fft_push_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -108,7 +120,7 @@ static int math_fft_iterative(ft_vector<double> &real,
     length = real.size();
     if (length == 0)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        math_fft_push_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     half_size = 1;
@@ -179,7 +191,7 @@ static int math_fft_iterative(ft_vector<double> &real,
             index++;
         }
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    math_fft_push_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -193,13 +205,13 @@ static int math_fft_dispatch(const ft_vector<double> &input_real,
 
     if (input_real.size() != input_imag.size())
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        math_fft_push_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     length = input_real.size();
     if (!math_fft_is_power_of_two(length))
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        math_fft_push_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (math_fft_copy_inputs(input_real, output_real) != 0)
@@ -221,7 +233,7 @@ static int math_fft_dispatch(const ft_vector<double> &input_real,
         output_imag.clear();
         return (-1);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    math_fft_push_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -269,9 +281,9 @@ static int math_fft_prepare_padded(const ft_vector<double> &input,
     if (real.get_error() != FT_ERR_SUCCESSS || imag.get_error() != FT_ERR_SUCCESSS)
     {
         if (real.get_error() != FT_ERR_SUCCESSS)
-            ft_errno = real.get_error();
+            math_fft_push_error(real.get_error());
         else
-            ft_errno = imag.get_error();
+            math_fft_push_error(imag.get_error());
         real.clear();
         imag.clear();
         return (-1);
@@ -289,7 +301,7 @@ static int math_fft_prepare_padded(const ft_vector<double> &input,
         real.push_back(value);
         if (real.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = real.get_error();
+            math_fft_push_error(real.get_error());
             real.clear();
             imag.clear();
             return (-1);
@@ -297,14 +309,14 @@ static int math_fft_prepare_padded(const ft_vector<double> &input,
         imag.push_back(0.0);
         if (imag.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = imag.get_error();
+            math_fft_push_error(imag.get_error());
             real.clear();
             imag.clear();
             return (-1);
         }
         index++;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    math_fft_push_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -319,7 +331,7 @@ static int math_fft_pointwise_multiply(ft_vector<double> &first_real,
     length = first_real.size();
     if (second_real.size() != length || second_imag.size() != length)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        math_fft_push_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     index = 0;
@@ -336,7 +348,7 @@ static int math_fft_pointwise_multiply(ft_vector<double> &first_real,
         first_imag[index] = result_imag;
         index++;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    math_fft_push_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -358,7 +370,7 @@ int math_convolution(const ft_vector<double> &first,
 
     if (first.size() == 0 || second.size() == 0)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        math_fft_push_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     result_length = first.size() + second.size() - 1;
@@ -381,7 +393,7 @@ int math_convolution(const ft_vector<double> &first,
     result.reserve(result_length);
     if (result.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = result.get_error();
+        math_fft_push_error(result.get_error());
         result.clear();
         return (-1);
     }
@@ -396,12 +408,12 @@ int math_convolution(const ft_vector<double> &first,
         result.push_back(value);
         if (result.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = result.get_error();
+            math_fft_push_error(result.get_error());
             result.clear();
             return (-1);
         }
         index++;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    math_fft_push_error(FT_ERR_SUCCESSS);
     return (0);
 }

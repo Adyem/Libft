@@ -12,7 +12,6 @@ void ft_stringbuf::record_operation_error(int error_code) noexcept
     unsigned long long operation_id;
 
     operation_id = ft_errno_next_operation_id();
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
     ft_global_error_stack_push_entry_with_id(error_code, operation_id);
     ft_operation_error_stack_push(ft_stringbuf::_operation_errors,
         error_code, operation_id);
@@ -358,21 +357,18 @@ const char *ft_stringbuf::operation_error_str_at(ft_size_t index) noexcept
 
 int ft_stringbuf::last_operation_error() noexcept
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
     return (ft_operation_error_stack_last_error(ft_stringbuf::_operation_errors));
 }
 
 int ft_stringbuf::operation_error_at(ft_size_t index) noexcept
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
     return (ft_operation_error_stack_error_at(ft_stringbuf::_operation_errors, index));
 }
 
 void ft_stringbuf::pop_operation_errors() noexcept
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
     ft_operation_error_stack_pop_last(ft_stringbuf::_operation_errors);
     return ;
@@ -380,7 +376,6 @@ void ft_stringbuf::pop_operation_errors() noexcept
 
 int ft_stringbuf::pop_oldest_operation_error() noexcept
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
     return (ft_operation_error_stack_pop_last(ft_stringbuf::_operation_errors));
 }
@@ -389,7 +384,6 @@ int ft_stringbuf::operation_error_index() noexcept
 {
     ft_size_t index;
 
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
     index = 0;
     while (index < ft_stringbuf::_operation_errors.count)

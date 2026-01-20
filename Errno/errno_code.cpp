@@ -259,32 +259,35 @@ unsigned long long ft_operation_error_stack_last_id_unlocked(
 
 void ft_set_errno_locked(int error_code)
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    ft_errno_mutex().lock();
     ft_error_stack &error_stack = ft_global_error_stack();
     unsigned long long operation_id;
 
     operation_id = ft_errno_next_operation_id();
     ft_error_stack_push_entry_with_id_unlocked(&error_stack, error_code, operation_id);
+    ft_errno_mutex().unlock();
     return ;
 }
 
 void ft_set_sys_errno_locked(int error_code)
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    ft_errno_mutex().lock();
     ft_error_stack &error_stack = ft_global_error_stack();
     unsigned long long operation_id;
 
     operation_id = ft_errno_next_operation_id();
     ft_error_stack_push_entry_with_id_unlocked(&error_stack, error_code, operation_id);
+    ft_errno_mutex().unlock();
     return ;
 }
 
 unsigned long long ft_global_error_stack_push_entry_with_id(int error_code, unsigned long long op_id)
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    ft_errno_mutex().lock();
     ft_error_stack &error_stack = ft_global_error_stack();
 
     ft_error_stack_push_entry_with_id_unlocked(&error_stack, error_code, op_id);
+    ft_errno_mutex().unlock();
     return (op_id);
 }
 
@@ -305,81 +308,102 @@ void ft_global_error_stack_push(int error_code)
 
 int ft_global_error_stack_pop_last(void)
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    ft_errno_mutex().lock();
     ft_error_stack &error_stack = ft_global_error_stack();
-    return (ft_error_stack_pop_last_unlocked(&error_stack));
+    int error_code = ft_error_stack_pop_last_unlocked(&error_stack);
+
+    ft_errno_mutex().unlock();
+    return (error_code);
 }
 
 int ft_global_error_stack_pop_newest(void)
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    ft_errno_mutex().lock();
     ft_error_stack &error_stack = ft_global_error_stack();
-    return (ft_error_stack_pop_newest_unlocked(&error_stack));
+    int error_code = ft_error_stack_pop_newest_unlocked(&error_stack);
+
+    ft_errno_mutex().unlock();
+    return (error_code);
 }
 
 void ft_global_error_stack_pop_all(void)
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    ft_errno_mutex().lock();
     ft_error_stack &error_stack = ft_global_error_stack();
 
     ft_error_stack_pop_all_unlocked(&error_stack);
+    ft_errno_mutex().unlock();
     return ;
 }
 
 int ft_global_error_stack_error_at(ft_size_t index)
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    ft_errno_mutex().lock();
     ft_error_stack &error_stack = ft_global_error_stack();
+    int error_code = ft_error_stack_error_at_unlocked(&error_stack, index);
 
-    return (ft_error_stack_error_at_unlocked(&error_stack, index));
+    ft_errno_mutex().unlock();
+    return (error_code);
 }
 
 int ft_global_error_stack_last_error(void)
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    ft_errno_mutex().lock();
     ft_error_stack &error_stack = ft_global_error_stack();
+    int error_code = ft_error_stack_last_error_unlocked(&error_stack);
 
-    return (ft_error_stack_last_error_unlocked(&error_stack));
+    ft_errno_mutex().unlock();
+    return (error_code);
 }
 
 ft_size_t ft_global_error_stack_depth(void)
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    ft_errno_mutex().lock();
     ft_error_stack &error_stack = ft_global_error_stack();
+    ft_size_t depth = ft_error_stack_depth_unlocked(&error_stack);
 
-    return (ft_error_stack_depth_unlocked(&error_stack));
+    ft_errno_mutex().unlock();
+    return (depth);
 }
 
 unsigned long long ft_global_error_stack_get_id_at(ft_size_t index)
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    ft_errno_mutex().lock();
     ft_error_stack &error_stack = ft_global_error_stack();
+    unsigned long long op_id = ft_error_stack_get_id_at_unlocked(&error_stack, index);
 
-    return (ft_error_stack_get_id_at_unlocked(&error_stack, index));
+    ft_errno_mutex().unlock();
+    return (op_id);
 }
 
 ft_size_t ft_global_error_stack_find_by_id(unsigned long long id)
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    ft_errno_mutex().lock();
     ft_error_stack &error_stack = ft_global_error_stack();
+    ft_size_t location = ft_error_stack_find_by_id_unlocked(&error_stack, id);
 
-    return (ft_error_stack_find_by_id_unlocked(&error_stack, id));
+    ft_errno_mutex().unlock();
+    return (location);
 }
 
 const char *ft_global_error_stack_error_str_at(ft_size_t index)
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    ft_errno_mutex().lock();
     ft_error_stack &error_stack = ft_global_error_stack();
+    const char *error_string = ft_error_stack_error_str_at_unlocked(&error_stack, index);
 
-    return (ft_error_stack_error_str_at_unlocked(&error_stack, index));
+    ft_errno_mutex().unlock();
+    return (error_string);
 }
 
 const char *ft_global_error_stack_last_error_str(void)
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    ft_errno_mutex().lock();
     ft_error_stack &error_stack = ft_global_error_stack();
+    const char *error_string = ft_error_stack_last_error_str_unlocked(&error_stack);
 
-    return (ft_error_stack_last_error_str_unlocked(&error_stack));
+    ft_errno_mutex().unlock();
+    return (error_string);
 }
 
 void ft_operation_error_stack_push(ft_operation_error_stack &error_stack, int error_code, unsigned long long op_id)

@@ -327,8 +327,6 @@ const char *ft_vendor_profile::get_error_str() const noexcept
 
 void ft_vendor_profile::set_error(int error_code) const noexcept
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
-
     this->_error_code = error_code;
     ft_vendor_profile::record_operation_error_unlocked(error_code);
     return ;

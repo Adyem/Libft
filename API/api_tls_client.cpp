@@ -1233,7 +1233,6 @@ const char *api_tls_client::get_error_str() const noexcept
 
 void api_tls_client::set_error(int error_code) const noexcept
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
     this->_error_code.store(error_code, std::memory_order_relaxed);
     api_tls_client::record_operation_error_unlocked(error_code);

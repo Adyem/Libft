@@ -46,9 +46,6 @@ class pt_mutex
 
         pthread_mutex_t   *get_native_mutex() const;
 
-        int     get_error() const;
-        const char *get_error_str() const;
-
         static unsigned long long operation_error_push_entry(int error_code);
         static unsigned long long operation_error_push_entry_with_id(int error_code,
                 unsigned long long operation_id);

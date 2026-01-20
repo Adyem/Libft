@@ -2,7 +2,21 @@
 
 #include <cmath>
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../Template/move.hpp"
+
+static thread_local ft_operation_error_stack g_math_polynomial_operation_errors = {{}, {}, 0};
+
+static void math_polynomial_push_error(int error_code) noexcept
+{
+    unsigned long long operation_id;
+
+    operation_id = ft_errno_next_operation_id();
+    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
+    ft_operation_error_stack_push(g_math_polynomial_operation_errors, error_code, operation_id);
+    return ;
+}
 
 static void math_polynomial_copy_vector(const ft_vector<double> &source,
     ft_vector<double> &destination,
@@ -79,7 +93,6 @@ const char *ft_cubic_spline::get_error_str() const noexcept
 void ft_cubic_spline::set_error(int error_code) const noexcept
 {
     this->_error_code = error_code;
-    ft_errno = error_code;
     return ;
 }
 
@@ -104,8 +117,8 @@ int math_polynomial_evaluate(const ft_vector<double> &coefficients,
     validation_error = math_polynomial_validate_coefficients(coefficients);
     if (validation_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = validation_error;
         result = 0.0;
+        math_polynomial_push_error(validation_error);
         return (validation_error);
     }
     count = coefficients.size();
@@ -113,7 +126,7 @@ int math_polynomial_evaluate(const ft_vector<double> &coefficients,
     if (count == 1)
     {
         result = value;
-        ft_errno = FT_ERR_SUCCESSS;
+        math_polynomial_push_error(FT_ERR_SUCCESSS);
         return (FT_ERR_SUCCESSS);
     }
     index = count - 1;
@@ -123,7 +136,7 @@ int math_polynomial_evaluate(const ft_vector<double> &coefficients,
         index--;
     }
     result = value;
-    ft_errno = FT_ERR_SUCCESSS;
+    math_polynomial_push_error(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);
 }
 
@@ -139,7 +152,6 @@ static int math_polynomial_evaluate_with_derivative(const ft_vector<double> &coe
     validation_error = math_polynomial_validate_coefficients(coefficients);
     if (validation_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = validation_error;
         value = 0.0;
         derivative = 0.0;
         return (validation_error);
@@ -150,7 +162,6 @@ static int math_polynomial_evaluate_with_derivative(const ft_vector<double> &coe
     if (count == 1)
     {
         derivative = 0.0;
-        ft_errno = FT_ERR_SUCCESSS;
         return (FT_ERR_SUCCESSS);
     }
     index = count - 1;
@@ -160,7 +171,6 @@ static int math_polynomial_evaluate_with_derivative(const ft_vector<double> &coe
         value = value * x + coefficients[index - 1];
         index--;
     }
-    ft_errno = FT_ERR_SUCCESSS;
     return (FT_ERR_SUCCESSS);
 }
 
@@ -180,14 +190,14 @@ int math_polynomial_find_root_newton(const ft_vector<double> &coefficients,
 
     if (tolerance <= 0.0)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
         root = 0.0;
+        math_polynomial_push_error(FT_ERR_INVALID_ARGUMENT);
         return (FT_ERR_INVALID_ARGUMENT);
     }
     if (max_iterations == 0)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
         root = 0.0;
+        math_polynomial_push_error(FT_ERR_INVALID_ARGUMENT);
         return (FT_ERR_INVALID_ARGUMENT);
     }
     current = initial_guess;
@@ -202,12 +212,13 @@ int math_polynomial_find_root_newton(const ft_vector<double> &coefficients,
         if (evaluation_error != FT_ERR_SUCCESSS)
         {
             root = current;
+            math_polynomial_push_error(evaluation_error);
             return (evaluation_error);
         }
         if (std::fabs(derivative) < epsilon)
         {
-            ft_errno = FT_ERR_INVALID_OPERATION;
             root = current;
+            math_polynomial_push_error(FT_ERR_INVALID_OPERATION);
             return (FT_ERR_INVALID_OPERATION);
         }
         current = current - value / derivative;
@@ -215,13 +226,13 @@ int math_polynomial_find_root_newton(const ft_vector<double> &coefficients,
         if (difference <= tolerance)
         {
             root = current;
-            ft_errno = FT_ERR_SUCCESSS;
+            math_polynomial_push_error(FT_ERR_SUCCESSS);
             return (FT_ERR_SUCCESSS);
         }
         iteration++;
     }
-    ft_errno = FT_ERR_INVALID_OPERATION;
     root = current;
+    math_polynomial_push_error(FT_ERR_INVALID_OPERATION);
     return (FT_ERR_INVALID_OPERATION);
 }
 
@@ -241,22 +252,22 @@ int math_polynomial_solve_quadratic(double a,
     {
         if (std::fabs(b) <= epsilon)
         {
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
             root_one = 0.0;
             root_two = 0.0;
+            math_polynomial_push_error(FT_ERR_INVALID_ARGUMENT);
             return (FT_ERR_INVALID_ARGUMENT);
         }
         root_one = -c / b;
         root_two = root_one;
-        ft_errno = FT_ERR_SUCCESSS;
+        math_polynomial_push_error(FT_ERR_SUCCESSS);
         return (FT_ERR_SUCCESSS);
     }
     discriminant = b * b - 4.0 * a * c;
     if (discriminant < 0.0)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
         root_one = 0.0;
         root_two = 0.0;
+        math_polynomial_push_error(FT_ERR_INVALID_ARGUMENT);
         return (FT_ERR_INVALID_ARGUMENT);
     }
     sqrt_discriminant = std::sqrt(discriminant);
@@ -269,7 +280,7 @@ int math_polynomial_solve_quadratic(double a,
         root_two = -b / a;
     else
         root_two = c / q;
-    ft_errno = FT_ERR_SUCCESSS;
+    math_polynomial_push_error(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);
 }
 
@@ -287,20 +298,20 @@ int math_polynomial_lagrange_interpolate(const ft_vector<double> &x_values,
 
     if (x_values.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = x_values.get_error();
         result = 0.0;
+        math_polynomial_push_error(x_values.get_error());
         return (x_values.get_error());
     }
     if (y_values.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = y_values.get_error();
         result = 0.0;
+        math_polynomial_push_error(y_values.get_error());
         return (y_values.get_error());
     }
     if (x_values.size() == 0 || x_values.size() != y_values.size())
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
         result = 0.0;
+        math_polynomial_push_error(FT_ERR_INVALID_ARGUMENT);
         return (FT_ERR_INVALID_ARGUMENT);
     }
     count = x_values.size();
@@ -318,8 +329,8 @@ int math_polynomial_lagrange_interpolate(const ft_vector<double> &x_values,
                 denominator = x_values[index] - x_values[inner_index];
                 if (std::fabs(denominator) <= epsilon)
                 {
-                    ft_errno = FT_ERR_INVALID_ARGUMENT;
                     result = 0.0;
+                    math_polynomial_push_error(FT_ERR_INVALID_ARGUMENT);
                     return (FT_ERR_INVALID_ARGUMENT);
                 }
                 term = term * (x - x_values[inner_index]) / denominator;
@@ -329,7 +340,7 @@ int math_polynomial_lagrange_interpolate(const ft_vector<double> &x_values,
         result += term;
         index++;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    math_polynomial_push_error(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);
 }
 
@@ -345,34 +356,34 @@ int math_bezier_evaluate(const ft_vector<double> &control_points,
 
     if (control_points.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = control_points.get_error();
         result = 0.0;
+        math_polynomial_push_error(control_points.get_error());
         return (control_points.get_error());
     }
     if (control_points.size() == 0)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
         result = 0.0;
+        math_polynomial_push_error(FT_ERR_INVALID_ARGUMENT);
         return (FT_ERR_INVALID_ARGUMENT);
     }
     if (parameter < 0.0 || parameter > 1.0)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
         result = 0.0;
+        math_polynomial_push_error(FT_ERR_INVALID_ARGUMENT);
         return (FT_ERR_INVALID_ARGUMENT);
     }
     count = control_points.size();
     math_polynomial_copy_vector(control_points, working, count, copy_error);
     if (copy_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = copy_error;
         result = 0.0;
+        math_polynomial_push_error(copy_error);
         return (copy_error);
     }
     if (count == 1)
     {
         result = working[0];
-        ft_errno = FT_ERR_SUCCESSS;
+        math_polynomial_push_error(FT_ERR_SUCCESSS);
         return (FT_ERR_SUCCESSS);
     }
     level = count - 1;
@@ -388,7 +399,7 @@ int math_bezier_evaluate(const ft_vector<double> &control_points,
         level--;
     }
     result = working[0];
-    ft_errno = FT_ERR_SUCCESSS;
+    math_polynomial_push_error(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);
 }
 
@@ -404,20 +415,17 @@ static int math_polynomial_extract_coordinates(const ft_vector<vector2> &control
 
     if (control_points.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = control_points.get_error();
         return (control_points.get_error());
     }
     count = control_points.size();
     x_coordinates.resize(count, 0.0);
     if (x_coordinates.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = x_coordinates.get_error();
         return (x_coordinates.get_error());
     }
     y_coordinates.resize(count, 0.0);
     if (y_coordinates.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = y_coordinates.get_error();
         return (y_coordinates.get_error());
     }
     index = 0;
@@ -427,13 +435,11 @@ static int math_polynomial_extract_coordinates(const ft_vector<vector2> &control
         x_value = point.get_x();
         if (point.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = point.get_error();
             return (point.get_error());
         }
         y_value = point.get_y();
         if (point.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = point.get_error();
             return (point.get_error());
         }
         x_coordinates[index] = x_value;
@@ -456,7 +462,7 @@ int math_bezier_evaluate_vector2(const ft_vector<vector2> &control_points,
 
     if (parameter < 0.0 || parameter > 1.0)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        math_polynomial_push_error(FT_ERR_INVALID_ARGUMENT);
         return (FT_ERR_INVALID_ARGUMENT);
     }
     coordinate_error = math_polynomial_extract_coordinates(control_points,
@@ -464,23 +470,32 @@ int math_bezier_evaluate_vector2(const ft_vector<vector2> &control_points,
             y_coordinates);
     if (coordinate_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = coordinate_error;
+        math_polynomial_push_error(coordinate_error);
         return (coordinate_error);
     }
-    math_bezier_evaluate(x_coordinates, parameter, x_value);
-    if (ft_errno != FT_ERR_SUCCESSS)
-        return (ft_errno);
-    math_bezier_evaluate(y_coordinates, parameter, y_value);
-    if (ft_errno != FT_ERR_SUCCESSS)
-        return (ft_errno);
+    int evaluate_error;
+
+    evaluate_error = math_bezier_evaluate(x_coordinates, parameter, x_value);
+    if (evaluate_error != FT_ERR_SUCCESSS)
+    {
+        math_polynomial_push_error(evaluate_error);
+        return (evaluate_error);
+    }
+    evaluate_error = math_bezier_evaluate(y_coordinates, parameter, y_value);
+    if (evaluate_error != FT_ERR_SUCCESSS)
+    {
+        math_polynomial_push_error(evaluate_error);
+        return (evaluate_error);
+    }
     evaluated_point = vector2(x_value, y_value);
     result = evaluated_point;
     if (result.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = result.get_error();
-        return (result.get_error());
+        int point_error = result.get_error();
+        math_polynomial_push_error(point_error);
+        return (point_error);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    math_polynomial_push_error(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);
 }
 
@@ -499,16 +514,19 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
     if (x_values.get_error() != FT_ERR_SUCCESSS)
     {
         spline.set_error(x_values.get_error());
+        math_polynomial_push_error(spline.get_error());
         return (spline);
     }
     if (y_values.get_error() != FT_ERR_SUCCESSS)
     {
         spline.set_error(y_values.get_error());
+        math_polynomial_push_error(spline.get_error());
         return (spline);
     }
     if (x_values.size() < 2 || x_values.size() != y_values.size())
     {
         spline.set_error(FT_ERR_INVALID_ARGUMENT);
+        math_polynomial_push_error(FT_ERR_INVALID_ARGUMENT);
         return (spline);
     }
     count = x_values.size();
@@ -518,42 +536,54 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
     if (error_code != FT_ERR_SUCCESSS)
     {
         spline.set_error(error_code);
+        math_polynomial_push_error(error_code);
         return (spline);
     }
     math_polynomial_copy_vector(y_values, spline.a_coefficients, count, error_code);
     if (error_code != FT_ERR_SUCCESSS)
     {
         spline.set_error(error_code);
+        math_polynomial_push_error(error_code);
         return (spline);
     }
     spline.b_coefficients.resize(segment_count, 0.0);
     if (spline.b_coefficients.get_error() != FT_ERR_SUCCESSS)
     {
-        spline.set_error(spline.b_coefficients.get_error());
+        error_code = spline.b_coefficients.get_error();
+        spline.set_error(error_code);
+        math_polynomial_push_error(error_code);
         return (spline);
     }
     spline.c_coefficients.resize(count, 0.0);
     if (spline.c_coefficients.get_error() != FT_ERR_SUCCESSS)
     {
-        spline.set_error(spline.c_coefficients.get_error());
+        error_code = spline.c_coefficients.get_error();
+        spline.set_error(error_code);
+        math_polynomial_push_error(error_code);
         return (spline);
     }
     spline.d_coefficients.resize(segment_count, 0.0);
     if (spline.d_coefficients.get_error() != FT_ERR_SUCCESSS)
     {
-        spline.set_error(spline.d_coefficients.get_error());
+        error_code = spline.d_coefficients.get_error();
+        spline.set_error(error_code);
+        math_polynomial_push_error(error_code);
         return (spline);
     }
     h.resize(segment_count, 0.0);
     if (h.get_error() != FT_ERR_SUCCESSS)
     {
-        spline.set_error(h.get_error());
+        error_code = h.get_error();
+        spline.set_error(error_code);
+        math_polynomial_push_error(error_code);
         return (spline);
     }
     alpha.resize(count, 0.0);
     if (alpha.get_error() != FT_ERR_SUCCESSS)
     {
-        spline.set_error(alpha.get_error());
+        error_code = alpha.get_error();
+        spline.set_error(error_code);
+        math_polynomial_push_error(error_code);
         return (spline);
     }
     index = 0;
@@ -563,6 +593,7 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
         if (h[index] <= 0.0)
         {
             spline.set_error(FT_ERR_INVALID_ARGUMENT);
+            math_polynomial_push_error(FT_ERR_INVALID_ARGUMENT);
             return (spline);
         }
         index++;
@@ -584,6 +615,7 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
         spline.c_coefficients[1] = 0.0;
         spline.d_coefficients[0] = 0.0;
         spline.set_error(FT_ERR_SUCCESSS);
+        math_polynomial_push_error(FT_ERR_SUCCESSS);
         return (spline);
     }
     if (segment_count == 2)
@@ -594,6 +626,7 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
         if (std::fabs(denominator_two_segments) <= epsilon)
         {
             spline.set_error(FT_ERR_INVALID_ARGUMENT);
+            math_polynomial_push_error(FT_ERR_INVALID_ARGUMENT);
             return (spline);
         }
         spline.c_coefficients[0] = 0.0;
@@ -619,31 +652,41 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
         lower.resize(equation_count, 0.0);
         if (lower.get_error() != FT_ERR_SUCCESSS)
         {
-            spline.set_error(lower.get_error());
+            error_code = lower.get_error();
+            spline.set_error(error_code);
+            math_polynomial_push_error(error_code);
             return (spline);
         }
         diagonal.resize(equation_count, 0.0);
         if (diagonal.get_error() != FT_ERR_SUCCESSS)
         {
-            spline.set_error(diagonal.get_error());
+            error_code = diagonal.get_error();
+            spline.set_error(error_code);
+            math_polynomial_push_error(error_code);
             return (spline);
         }
         upper.resize(equation_count, 0.0);
         if (upper.get_error() != FT_ERR_SUCCESSS)
         {
-            spline.set_error(upper.get_error());
+            error_code = upper.get_error();
+            spline.set_error(error_code);
+            math_polynomial_push_error(error_code);
             return (spline);
         }
         rhs.resize(equation_count, 0.0);
         if (rhs.get_error() != FT_ERR_SUCCESSS)
         {
-            spline.set_error(rhs.get_error());
+            error_code = rhs.get_error();
+            spline.set_error(error_code);
+            math_polynomial_push_error(error_code);
             return (spline);
         }
         interior_c.resize(equation_count, 0.0);
         if (interior_c.get_error() != FT_ERR_SUCCESSS)
         {
-            spline.set_error(interior_c.get_error());
+            error_code = interior_c.get_error();
+            spline.set_error(error_code);
+            math_polynomial_push_error(error_code);
             return (spline);
         }
         diagonal[0] = (h[0] + h[1]) * (h[0] + 2.0 * h[1]);
@@ -672,6 +715,7 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
             if (std::fabs(pivot) <= epsilon)
             {
                 spline.set_error(FT_ERR_INVALID_ARGUMENT);
+                math_polynomial_push_error(FT_ERR_INVALID_ARGUMENT);
                 return (spline);
             }
             factor = lower[equation_index] / pivot;
@@ -689,6 +733,7 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
             if (std::fabs(pivot) <= epsilon)
             {
                 spline.set_error(FT_ERR_INVALID_ARGUMENT);
+                math_polynomial_push_error(FT_ERR_INVALID_ARGUMENT);
                 return (spline);
             }
             value = rhs[current_index];
@@ -716,6 +761,7 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
         index--;
     }
     spline.set_error(FT_ERR_SUCCESSS);
+    math_polynomial_push_error(FT_ERR_SUCCESSS);
     return (spline);
 }
 
@@ -730,12 +776,12 @@ double ft_cubic_spline_evaluate(const ft_cubic_spline &spline,
 
     if (spline.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = spline.get_error();
+        math_polynomial_push_error(spline.get_error());
         return (0.0);
     }
     if (spline.x_values.size() < 2)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        math_polynomial_push_error(FT_ERR_INVALID_ARGUMENT);
         return (0.0);
     }
     clamped_x = x;
@@ -752,7 +798,7 @@ double ft_cubic_spline_evaluate(const ft_cubic_spline &spline,
         + spline.b_coefficients[index] * delta
         + spline.c_coefficients[index] * delta * delta
         + spline.d_coefficients[index] * delta * delta * delta;
-    ft_errno = FT_ERR_SUCCESSS;
+    math_polynomial_push_error(FT_ERR_SUCCESSS);
     return (value);
 }
 
@@ -802,15 +848,15 @@ int math_integrate_trapezoidal(math_unary_function function,
 
     if (function == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
         result = 0.0;
+        math_polynomial_push_error(FT_ERR_INVALID_ARGUMENT);
         return (FT_ERR_INVALID_ARGUMENT);
     }
     epsilon = 0.000000000001;
     if (std::fabs(lower_bound - upper_bound) <= epsilon)
     {
         result = 0.0;
-        ft_errno = FT_ERR_SUCCESSS;
+        math_polynomial_push_error(FT_ERR_SUCCESSS);
         return (FT_ERR_SUCCESSS);
     }
     orientation = 1.0;
@@ -831,12 +877,12 @@ int math_integrate_trapezoidal(math_unary_function function,
             local_result);
     if (step_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = step_error;
         result = 0.0;
+        math_polynomial_push_error(step_error);
         return (step_error);
     }
     result = orientation * local_result;
-    ft_errno = FT_ERR_SUCCESSS;
+    math_polynomial_push_error(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);
 }
 
@@ -896,21 +942,21 @@ int math_integrate_simpson(math_unary_function function,
 
     if (function == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
         result = 0.0;
+        math_polynomial_push_error(FT_ERR_INVALID_ARGUMENT);
         return (FT_ERR_INVALID_ARGUMENT);
     }
     if (tolerance <= 0.0)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
         result = 0.0;
+        math_polynomial_push_error(FT_ERR_INVALID_ARGUMENT);
         return (FT_ERR_INVALID_ARGUMENT);
     }
     epsilon = 0.000000000001;
     if (std::fabs(lower_bound - upper_bound) <= epsilon)
     {
         result = 0.0;
-        ft_errno = FT_ERR_SUCCESSS;
+        math_polynomial_push_error(FT_ERR_SUCCESSS);
         return (FT_ERR_SUCCESSS);
     }
     orientation = 1.0;
@@ -938,8 +984,8 @@ int math_integrate_simpson(math_unary_function function,
                 current);
         if (estimate_error != FT_ERR_SUCCESSS)
         {
-            ft_errno = estimate_error;
             result = 0.0;
+            math_polynomial_push_error(estimate_error);
             return (estimate_error);
         }
         if (refinements > 0)
@@ -948,7 +994,7 @@ int math_integrate_simpson(math_unary_function function,
             if (difference <= tolerance + epsilon)
             {
                 result = orientation * current;
-                ft_errno = FT_ERR_SUCCESSS;
+                math_polynomial_push_error(FT_ERR_SUCCESSS);
                 return (FT_ERR_SUCCESSS);
             }
         }
@@ -956,7 +1002,7 @@ int math_integrate_simpson(math_unary_function function,
         subdivisions *= 2;
         refinements++;
     }
-    ft_errno = FT_ERR_INVALID_OPERATION;
     result = orientation * current;
+    math_polynomial_push_error(FT_ERR_INVALID_OPERATION);
     return (FT_ERR_INVALID_OPERATION);
 }

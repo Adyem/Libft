@@ -25,7 +25,6 @@ void api_streaming_handler::record_operation_error_unlocked(int error_code) noex
 
 void api_streaming_handler::set_error(int error) const noexcept
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
     this->_error_code = error;
     api_streaming_handler::record_operation_error_unlocked(error);

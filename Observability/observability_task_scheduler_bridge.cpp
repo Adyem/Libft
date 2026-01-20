@@ -91,22 +91,22 @@ static void observability_task_scheduler_bridge_trace_sink(const ft_task_trace_e
         }
         ft_otel_span_state new_state;
         ft_unordered_map<unsigned long long, ft_otel_span_state>::iterator iterator(g_observability_span_states.find(event.trace_id));
-        if (g_observability_span_states.get_error() != FT_ERR_SUCCESSS)
+        if (g_observability_span_states.last_operation_error() != FT_ERR_SUCCESSS)
         {
-            observability_bridge_set_error(g_observability_span_states.get_error());
+            observability_bridge_set_error(g_observability_span_states.last_operation_error());
             return ;
         }
         if (iterator == g_observability_span_states.end())
         {
             new_state = observability_span_state_create();
             g_observability_span_states.insert(event.trace_id, new_state);
-            if (g_observability_span_states.get_error() != FT_ERR_SUCCESSS)
+            if (g_observability_span_states.last_operation_error() != FT_ERR_SUCCESSS)
             {
-                observability_bridge_set_error(g_observability_span_states.get_error());
+                observability_bridge_set_error(g_observability_span_states.last_operation_error());
                 return ;
             }
             iterator = g_observability_span_states.find(event.trace_id);
-            if (g_observability_span_states.get_error() != FT_ERR_SUCCESSS || iterator == g_observability_span_states.end())
+            if (g_observability_span_states.last_operation_error() != FT_ERR_SUCCESSS || iterator == g_observability_span_states.end())
             {
                 observability_bridge_set_error(FT_ERR_INTERNAL);
                 return ;
@@ -164,9 +164,9 @@ static void observability_task_scheduler_bridge_trace_sink(const ft_task_trace_e
             if (event.timer_thread)
                 completed_metrics.timer_thread = true;
             g_observability_span_states.erase(event.trace_id);
-            if (g_observability_span_states.get_error() != FT_ERR_SUCCESSS)
+            if (g_observability_span_states.last_operation_error() != FT_ERR_SUCCESSS)
             {
-                observability_bridge_set_error(g_observability_span_states.get_error());
+                observability_bridge_set_error(g_observability_span_states.last_operation_error());
                 return ;
             }
             exporter_copy = g_observability_bridge_exporter;
@@ -251,11 +251,11 @@ int observability_task_scheduler_bridge_initialize(ft_otel_span_exporter exporte
             return (-1);
         }
         g_observability_span_states.clear();
-        if (g_observability_span_states.get_error() != FT_ERR_SUCCESSS)
+        if (g_observability_span_states.last_operation_error() != FT_ERR_SUCCESSS)
         {
             g_observability_bridge_exporter = ft_nullptr;
             g_observability_bridge_initialized = false;
-            error_code = g_observability_span_states.get_error();
+            error_code = g_observability_span_states.last_operation_error();
             observability_bridge_set_error(error_code);
             ft_global_error_stack_push(error_code);
             return (-1);
@@ -287,9 +287,9 @@ int observability_task_scheduler_bridge_shutdown(void)
         {
             g_observability_bridge_exporter = ft_nullptr;
             g_observability_span_states.clear();
-            if (g_observability_span_states.get_error() != FT_ERR_SUCCESSS)
+            if (g_observability_span_states.last_operation_error() != FT_ERR_SUCCESSS)
             {
-                error_code = g_observability_span_states.get_error();
+                error_code = g_observability_span_states.last_operation_error();
                 observability_bridge_set_error(error_code);
                 ft_global_error_stack_push(error_code);
                 return (-1);
@@ -328,9 +328,9 @@ int observability_task_scheduler_bridge_shutdown(void)
         g_observability_bridge_initialized = false;
         g_observability_bridge_exporter = ft_nullptr;
         g_observability_span_states.clear();
-        if (g_observability_span_states.get_error() != FT_ERR_SUCCESSS)
+        if (g_observability_span_states.last_operation_error() != FT_ERR_SUCCESSS)
         {
-            error_code = g_observability_span_states.get_error();
+            error_code = g_observability_span_states.last_operation_error();
             observability_bridge_set_error(error_code);
             ft_global_error_stack_push(error_code);
             return (-1);
