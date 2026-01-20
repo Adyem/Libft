@@ -44,6 +44,33 @@ struct ft_operation_error_stack
     uint32_t    count;
 };
 
+void ft_error_stack_push_entry_with_id_unlocked(ft_error_stack *error_stack,
+        int error_code, unsigned long long op_id);
+int ft_error_stack_pop_last_unlocked(ft_error_stack *error_stack);
+int ft_error_stack_pop_newest_unlocked(ft_error_stack *error_stack);
+void ft_error_stack_pop_all_unlocked(ft_error_stack *error_stack);
+int ft_error_stack_error_at_unlocked(const ft_error_stack *error_stack,
+        ft_size_t index);
+int ft_error_stack_last_error_unlocked(const ft_error_stack *error_stack);
+ft_size_t ft_error_stack_depth_unlocked(const ft_error_stack *error_stack);
+unsigned long long ft_error_stack_get_id_at_unlocked(const ft_error_stack *error_stack,
+        ft_size_t index);
+ft_size_t ft_error_stack_find_by_id_unlocked(const ft_error_stack *error_stack,
+        unsigned long long id);
+const char *ft_error_stack_error_str_at_unlocked(const ft_error_stack *error_stack,
+        ft_size_t index);
+const char *ft_error_stack_last_error_str_unlocked(const ft_error_stack *error_stack);
+
+void ft_operation_error_stack_push_unlocked(ft_operation_error_stack *error_stack,
+        int error_code, unsigned long long op_id);
+int ft_operation_error_stack_pop_last_unlocked(ft_operation_error_stack *error_stack);
+int ft_operation_error_stack_pop_newest_unlocked(ft_operation_error_stack *error_stack);
+void ft_operation_error_stack_pop_all_unlocked(ft_operation_error_stack *error_stack);
+int ft_operation_error_stack_error_at_unlocked(const ft_operation_error_stack *error_stack,
+        ft_size_t index);
+int ft_operation_error_stack_last_error_unlocked(const ft_operation_error_stack *error_stack);
+unsigned long long ft_operation_error_stack_last_id_unlocked(const ft_operation_error_stack *error_stack);
+
 ft_errno_mutex_wrapper &ft_errno_mutex();
 void ft_set_errno_locked(int error_code);
 void ft_set_sys_errno_locked(int error_code);

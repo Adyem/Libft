@@ -13,7 +13,8 @@ unsigned long long pt_recursive_mutex::operation_error_push_entry_with_id(int er
     std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
     ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(pt_recursive_mutex::_operation_errors, error_code, operation_id);
+    ft_operation_error_stack_push_unlocked(&pt_recursive_mutex::_operation_errors,
+            error_code, operation_id);
     return (operation_id);
 }
 
