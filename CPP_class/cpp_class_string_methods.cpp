@@ -257,11 +257,11 @@ int ft_string::operation_error_index() noexcept
 
     std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
 
-    index = 0;
-    while (index < ft_string::_operation_errors.count)
+    index = 1;
+    while (index <= ft_string::_operation_errors.count)
     {
-        if (ft_string::_operation_errors.errors[index] != FT_ERR_SUCCESSS)
-            return (static_cast<int>(index + 1));
+        if (ft_operation_error_stack_error_at(ft_string::_operation_errors, index) != FT_ERR_SUCCESSS)
+            return (static_cast<int>(index));
         index++;
     }
     return (0);

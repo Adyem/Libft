@@ -194,7 +194,9 @@ void ft_big_number::record_operation_error(int error_code) noexcept
 {
     unsigned long long operation_id;
 
-    operation_id = ft_global_error_stack_push_entry(error_code);
+    operation_id = ft_errno_next_operation_id();
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
     ft_operation_error_stack_push(ft_big_number::_operation_errors,
             error_code, operation_id);
     return ;
