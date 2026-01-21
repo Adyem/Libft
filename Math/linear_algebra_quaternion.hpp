@@ -37,6 +37,15 @@ class quaternion
         quaternion  normalize() const;
         int         get_error() const;
         const char  *get_error_str() const;
+        // Low-level error-stack helpers for validation and diagnostics.
+        static ft_operation_error_stack *get_operation_error_stack_for_validation() noexcept;
+        static int  last_operation_error() noexcept;
+        static const char  *last_operation_error_str() noexcept;
+        static int  operation_error_at(ft_size_t index) noexcept;
+        static const char  *operation_error_str_at(ft_size_t index) noexcept;
+        static void pop_operation_errors() noexcept;
+        static int  pop_oldest_operation_error() noexcept;
+        static int  pop_newest_operation_error() noexcept;
         pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex *get_mutex_for_testing() noexcept;

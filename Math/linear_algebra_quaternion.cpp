@@ -3,6 +3,7 @@
 #include "../Errno/errno.hpp"
 #include "../Errno/errno_internal.hpp"
 #include "../PThread/lock_guard.hpp"
+#include <mutex>
 
 thread_local ft_operation_error_stack quaternion::_operation_errors = {{}, {}, 0};
 
@@ -282,9 +283,8 @@ quaternion  quaternion::normalize() const
 
 void    quaternion::set_error(int error_code) const
 {
-    ft_recursive_lock_guard guard(this->_mutex);
-    ft_errno = error_code;
     this->_error_code = error_code;
+    quaternion::record_operation_error(error_code);
     return ;
 }
 
@@ -304,6 +304,76 @@ const char  *quaternion::get_error_str() const
     ft_recursive_lock_guard guard(this->_mutex);
     error_code = this->_error_code;
     return (ft_strerror(error_code));
+}
+
+ft_operation_error_stack *quaternion::get_operation_error_stack_for_validation() noexcept
+{
+    return (&quaternion::_operation_errors);
+}
+
+int quaternion::last_operation_error() noexcept
+{
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
+    return (ft_operation_error_stack_last_error(quaternion::_operation_errors));
+}
+
+const char *quaternion::last_operation_error_str() noexcept
+{
+    int error_code;
+    const char *error_string;
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
+    error_code = ft_operation_error_stack_last_error(quaternion::_operation_errors);
+    error_string = ft_strerror(error_code);
+    if (!error_string)
+        error_string = "unknown error";
+    return (error_string);
+}
+
+int quaternion::operation_error_at(ft_size_t index) noexcept
+{
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
+    return (ft_operation_error_stack_error_at(quaternion::_operation_errors, index));
+}
+
+const char *quaternion::operation_error_str_at(ft_size_t index) noexcept
+{
+    int error_code;
+    const char *error_string;
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
+    error_code = ft_operation_error_stack_error_at(quaternion::_operation_errors, index);
+    error_string = ft_strerror(error_code);
+    if (!error_string)
+        error_string = "unknown error";
+    return (error_string);
+}
+
+void quaternion::pop_operation_errors() noexcept
+{
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
+    ft_operation_error_stack_pop_all(quaternion::_operation_errors);
+    ft_global_error_stack_pop_all();
+    return ;
+}
+
+int quaternion::pop_oldest_operation_error() noexcept
+{
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
+    ft_global_error_stack_pop_last();
+    return (ft_operation_error_stack_pop_last(quaternion::_operation_errors));
+}
+
+int quaternion::pop_newest_operation_error() noexcept
+{
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
+    ft_global_error_stack_pop_newest();
+    return (ft_operation_error_stack_pop_newest(quaternion::_operation_errors));
 }
 
 #if defined(__SSE2__)

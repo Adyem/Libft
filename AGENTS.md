@@ -21,8 +21,7 @@ Every class must declare and define a constructor and destructor, even if they s
 
 Each class must own a recursive mutex that can be locked multiple times and must be unlocked the same number of times.
 
-During error handling, do not lock the class mutex. Use the Errno module mutex wrapper instead via
-`std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());` so error reporting does not re-lock the class mutex.
+During error handling, do not lock the class mutex. Use the Errno module mutex wrapper so error reporting does not re-lock the class mutex.
 
 Every class must expose a helper function that provides direct access to its recursive mutex.
 Document and implement this helper as a dedicated low-level interface intended for cases like
@@ -38,8 +37,7 @@ When a class method pushes an error, it must generate a single error entry conta
 This same error entry must be pushed to both the thread-local error stack and the class-only error stack
 to ensure that the same operation has the same ID across both stacks.
 
-When publishing or reading class error codes or error stacks, do not lock the class mutex; use
-`std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());` instead.
+When publishing or reading class error codes or error stacks, do not lock the class mutex; use the Errno mutex wrapper instead.
 
 Errors and successful completions are reported by pushing entries onto the appropriate error stack.
 A function that pushes an entry must leave it on the stack.
@@ -98,7 +96,7 @@ Every class and module that tracks its own errors must reuse the `ft_operation_e
 - When removing entries, use `ft_operation_error_stack_pop_last`, `_pop_newest`, or `_pop_all` before or after mirroring the removal on the global stack so that a popped entry is discarded from both locations.
 - Inspect local stacks with `ft_operation_error_stack_error_at`, `_last_error`, and `_last_id` instead of duplicating logic.
 - Every class should expose helper functions that let callers inspect and push/pull from its local stack in the same way they already expose the recursive mutex helper.
-- During error handling, continue using `std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());` whenever the global stack is involved so the class mutex is not re-entered unintentionally.
+- During error handling, continue using the Errno mutex wrapper whenever the global stack is involved so the class mutex is not re-entered unintentionally.
 
 _Note: `ft_nullptr_t` is a stateless sentinel and does not track errors via a per-class stack or push entries to the global stack; it never alters any error stacks._
 

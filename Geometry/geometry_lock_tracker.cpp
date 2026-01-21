@@ -143,7 +143,7 @@ static void geometry_lock_tracker_clear_wait(pt_thread_id_type thread_identifier
     return ;
 }
 
-static void geometry_lock_tracker_sleep_backoff(bool cycle_detected)
+static void geometry_lock_tracker_sleep_backoff()
 {
     static thread_local bool generator_initialized = false;
     static thread_local std::minstd_rand generator;
@@ -277,6 +277,6 @@ int geometry_lock_tracker_lock_pair(const void *first_object, const void *second
                 return (lower_guard.get_error());
             }
         }
-        geometry_lock_tracker_sleep_backoff(cycle_detected);
+        geometry_lock_tracker_sleep_backoff();
     }
 }
