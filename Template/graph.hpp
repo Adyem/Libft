@@ -34,9 +34,9 @@ class ft_graph
         mutable int      _error_code;
         mutable pt_mutex *_mutex;
         bool             _thread_safe_enabled;
-        static thread_local ft_operation_error_stack _operation_errors;
+        mutable ft_operation_error_stack _operation_errors;
 
-        static void record_operation_error(int error_code) noexcept;
+        void record_operation_error(int error_code) const noexcept;
 
         void    set_error(int error_code) const;
         bool    ensure_node_capacity(size_t desired);
@@ -71,14 +71,14 @@ class ft_graph
         bool   empty() const;
         int    get_error() const;
         const char* get_error_str() const;
-        static ft_operation_error_stack *get_operation_error_stack_for_validation() noexcept;
-        static int  last_operation_error() noexcept;
-        static const char  *last_operation_error_str() noexcept;
-        static int  operation_error_at(ft_size_t index) noexcept;
-        static const char  *operation_error_str_at(ft_size_t index) noexcept;
-        static void pop_operation_errors() noexcept;
-        static int  pop_oldest_operation_error() noexcept;
-        static int  pop_newest_operation_error() noexcept;
+        ft_operation_error_stack *get_operation_error_stack_for_validation() noexcept;
+        int  last_operation_error() const noexcept;
+        const char  *last_operation_error_str() const noexcept;
+        int  operation_error_at(ft_size_t index) const noexcept;
+        const char  *operation_error_str_at(ft_size_t index) const noexcept;
+        void pop_operation_errors() noexcept;
+        int  pop_oldest_operation_error() noexcept;
+        int  pop_newest_operation_error() noexcept;
         void   clear();
 
         int    enable_thread_safety();
@@ -89,26 +89,21 @@ class ft_graph
 };
 
 template <typename VertexType>
-thread_local ft_operation_error_stack ft_graph<VertexType>::_operation_errors = {{}, {}, 0};
-
-template <typename VertexType>
-void ft_graph<VertexType>::record_operation_error(int error_code) noexcept
+void ft_graph<VertexType>::record_operation_error(int error_code) const noexcept
 {
     unsigned long long operation_id;
 
     operation_id = ft_errno_next_operation_id();
-    ft_errno_mutex().lock();
     ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(ft_graph<VertexType>::_operation_errors,
+    ft_operation_error_stack_push(&this->_operation_errors,
             error_code, operation_id);
-    ft_errno_mutex().unlock();
     return ;
 }
 
 template <typename VertexType>
 ft_graph<VertexType>::ft_graph(size_t initialCapacity)
     : _nodes(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESSS),
-      _mutex(ft_nullptr), _thread_safe_enabled(false)
+      _mutex(ft_nullptr), _thread_safe_enabled(false), _operation_errors({{}, {}, 0})
 {
     if (initialCapacity > 0)
     {
@@ -146,7 +141,7 @@ ft_graph<VertexType>::~ft_graph()
 template <typename VertexType>
 ft_graph<VertexType>::ft_graph(ft_graph&& other) noexcept
     : _nodes(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESSS),
-      _mutex(ft_nullptr), _thread_safe_enabled(false)
+      _mutex(ft_nullptr), _thread_safe_enabled(false), _operation_errors({{}, {}, 0})
 {
     bool   other_lock_acquired;
     bool   other_thread_safe;
@@ -240,7 +235,7 @@ template <typename VertexType>
 void ft_graph<VertexType>::set_error(int error_code) const
 {
     this->_error_code = error_code;
-    ft_graph<VertexType>::record_operation_error(error_code);
+    this->record_operation_error(error_code);
     return ;
 }
 
@@ -626,82 +621,66 @@ void ft_graph<VertexType>::clear()
 template <typename VertexType>
 ft_operation_error_stack *ft_graph<VertexType>::get_operation_error_stack_for_validation() noexcept
 {
-    return (&ft_graph<VertexType>::_operation_errors);
+    return (&this->_operation_errors);
 }
 
 template <typename VertexType>
-int ft_graph<VertexType>::last_operation_error() noexcept
+int ft_graph<VertexType>::last_operation_error() const noexcept
 {
-    ft_errno_mutex().lock();
-    int error_value = ft_operation_error_stack_last_error(ft_graph<VertexType>::_operation_errors);
-    ft_errno_mutex().unlock();
-    return (error_value);
+    return (ft_operation_error_stack_last_error(&this->_operation_errors));
 }
 
 template <typename VertexType>
-const char *ft_graph<VertexType>::last_operation_error_str() noexcept
+const char *ft_graph<VertexType>::last_operation_error_str() const noexcept
 {
-    int error_code;
-    const char *error_string;
-    ft_errno_mutex().lock();
-    error_code = ft_operation_error_stack_last_error(ft_graph<VertexType>::_operation_errors);
-    error_string = ft_strerror(error_code);
+    int error_code = ft_operation_error_stack_last_error(&this->_operation_errors);
+    const char *error_string = ft_strerror(error_code);
     if (!error_string)
         error_string = "unknown error";
-    ft_errno_mutex().unlock();
     return (error_string);
 }
 
 template <typename VertexType>
-int ft_graph<VertexType>::operation_error_at(ft_size_t index) noexcept
+int ft_graph<VertexType>::operation_error_at(ft_size_t index) const noexcept
 {
-    ft_errno_mutex().lock();
-    int error_value = ft_operation_error_stack_error_at(ft_graph<VertexType>::_operation_errors, index);
-    ft_errno_mutex().unlock();
-    return (error_value);
+    return (ft_operation_error_stack_error_at(&this->_operation_errors, index));
 }
 
 template <typename VertexType>
-const char *ft_graph<VertexType>::operation_error_str_at(ft_size_t index) noexcept
+const char *ft_graph<VertexType>::operation_error_str_at(ft_size_t index) const noexcept
 {
-    int error_code;
-    const char *error_string;
-    ft_errno_mutex().lock();
-    error_code = ft_operation_error_stack_error_at(ft_graph<VertexType>::_operation_errors, index);
-    error_string = ft_strerror(error_code);
+    int error_code = ft_operation_error_stack_error_at(&this->_operation_errors, index);
+    const char *error_string = ft_strerror(error_code);
     if (!error_string)
         error_string = "unknown error";
-    ft_errno_mutex().unlock();
     return (error_string);
 }
 
 template <typename VertexType>
 void ft_graph<VertexType>::pop_operation_errors() noexcept
 {
-    ft_errno_mutex().lock();
-    ft_operation_error_stack_pop_all(ft_graph<VertexType>::_operation_errors);
+    ft_operation_error_stack_pop_all(&this->_operation_errors);
     ft_global_error_stack_pop_all();
-    ft_errno_mutex().unlock();
     return ;
 }
 
 template <typename VertexType>
 int ft_graph<VertexType>::pop_oldest_operation_error() noexcept
 {
-    ft_errno_mutex().lock();
+    int error_value = ft_operation_error_stack_pop_last(&this->_operation_errors);
+    if (error_value != FT_ERR_SUCCESSS)
+        return (error_value);
     ft_global_error_stack_pop_last();
-    int error_value = ft_operation_error_stack_pop_last(ft_graph<VertexType>::_operation_errors);
-    ft_errno_mutex().unlock();
     return (error_value);
 }
 
 template <typename VertexType>
 int ft_graph<VertexType>::pop_newest_operation_error() noexcept
 {
-    ft_errno_mutex().lock();
+    int error_value = ft_operation_error_stack_pop_newest(&this->_operation_errors);
+    if (error_value != FT_ERR_SUCCESSS)
+        return (error_value);
     ft_global_error_stack_pop_newest();
-    int error_value = ft_operation_error_stack_pop_newest(ft_graph<VertexType>::_operation_errors);
-    ft_errno_mutex().unlock();
     return (error_value);
 }
 
@@ -723,11 +702,9 @@ int ft_graph<VertexType>::enable_thread_safety()
         return (-1);
     }
     mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
+    int mutex_error = mutex_pointer->operation_error_last_error();
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        int mutex_error;
-
-        mutex_error = mutex_pointer->get_error();
         mutex_pointer->~pt_mutex();
         cma_free(memory);
         this->set_error(mutex_error);
@@ -774,8 +751,8 @@ template <typename VertexType>
 void ft_graph<VertexType>::unlock(bool lock_acquired) const
 {
     this->unlock_internal(lock_acquired);
-    if (this->_mutex != ft_nullptr && this->_mutex->get_error() != FT_ERR_SUCCESSS)
-        const_cast<ft_graph<VertexType> *>(this)->set_error(this->_mutex->get_error());
+    if (this->_mutex != ft_nullptr && this->_mutex->operation_error_last_error() != FT_ERR_SUCCESSS)
+        const_cast<ft_graph<VertexType> *>(this)->set_error(this->_mutex->operation_error_last_error());
     else
     {
         const_cast<ft_graph<VertexType> *>(this)->set_error(FT_ERR_SUCCESSS);
@@ -796,7 +773,7 @@ int ft_graph<VertexType>::lock_internal(bool *lock_acquired) const
         return (0);
     }
     this->_mutex->lock(THREAD_ID);
-    mutex_error = this->_mutex->get_error();
+    mutex_error = this->_mutex->operation_error_last_error();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         this->set_error(mutex_error);
@@ -816,7 +793,7 @@ void ft_graph<VertexType>::unlock_internal(bool lock_acquired) const
     if (!lock_acquired || this->_mutex == ft_nullptr)
         return ;
     this->_mutex->unlock(THREAD_ID);
-    mutex_error = this->_mutex->get_error();
+    mutex_error = this->_mutex->operation_error_last_error();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         this->set_error(mutex_error);

@@ -4,6 +4,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno_internal.hpp"
 #include "../Libft/libft.hpp"
+#include "../PThread/lock_guard.hpp"
 
 static thread_local ft_operation_error_stack g_math_autodiff_operation_errors = {{}, {}, 0};
 
@@ -12,7 +13,7 @@ static void math_autodiff_push_error(int error_code)
     unsigned long long operation_id = ft_errno_next_operation_id();
 
     ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(g_math_autodiff_operation_errors, error_code, operation_id);
+    ft_operation_error_stack_push(&g_math_autodiff_operation_errors, error_code, operation_id);
     return ;
 }
 
@@ -20,6 +21,8 @@ ft_dual_number::ft_dual_number() noexcept
     : _value(0.0)
     , _derivative(0.0)
     , _error_code(FT_ERR_SUCCESSS)
+    , _operation_errors({{}, {}, 0})
+    , _mutex()
 {
     return ;
 }
@@ -28,26 +31,31 @@ ft_dual_number::ft_dual_number(double value, double derivative) noexcept
     : _value(value)
     , _derivative(derivative)
     , _error_code(FT_ERR_SUCCESSS)
+    , _operation_errors({{}, {}, 0})
+    , _mutex()
 {
     return ;
 }
 
 ft_dual_number::ft_dual_number(const ft_dual_number &other) noexcept
-    : _value(other._value)
-    , _derivative(other._derivative)
-    , _error_code(other._error_code)
+    : _value(0.0)
+    , _derivative(0.0)
+    , _error_code(FT_ERR_SUCCESSS)
+    , _operation_errors({{}, {}, 0})
+    , _mutex()
 {
+    *this = other;
     return ;
 }
 
 ft_dual_number::ft_dual_number(ft_dual_number &&other) noexcept
-    : _value(other._value)
-    , _derivative(other._derivative)
-    , _error_code(other._error_code)
+    : _value(0.0)
+    , _derivative(0.0)
+    , _error_code(FT_ERR_SUCCESSS)
+    , _operation_errors({{}, {}, 0})
+    , _mutex()
 {
-    other._value = 0.0;
-    other._derivative = 0.0;
-    other._error_code = FT_ERR_SUCCESSS;
+    *this = ft_move(other);
     return ;
 }
 
@@ -60,9 +68,11 @@ ft_dual_number &ft_dual_number::operator=(const ft_dual_number &other) noexcept
 {
     if (this == &other)
         return (*this);
+    ft_recursive_mutex_pair_guard guard(this->_mutex, other._mutex);
     this->_value = other._value;
     this->_derivative = other._derivative;
-    this->_error_code = other._error_code;
+    this->_operation_errors = {{}, {}, 0};
+    this->set_error(other._error_code);
     return (*this);
 }
 
@@ -70,20 +80,23 @@ ft_dual_number &ft_dual_number::operator=(ft_dual_number &&other) noexcept
 {
     if (this == &other)
         return (*this);
+    ft_recursive_mutex_pair_guard guard(this->_mutex, other._mutex);
     this->_value = other._value;
     this->_derivative = other._derivative;
-    this->_error_code = other._error_code;
+    this->_operation_errors = {{}, {}, 0};
+    int other_error = other._error_code;
     other._value = 0.0;
     other._derivative = 0.0;
-    other._error_code = FT_ERR_SUCCESSS;
+    other.set_error(FT_ERR_SUCCESSS);
+    this->set_error(other_error);
     return (*this);
 }
 
 void ft_dual_number::set_error(int error_code) const noexcept
 {
-    ft_global_error_stack_push(error_code);
+    ft_recursive_lock_guard guard(this->_mutex);
     this->_error_code = error_code;
-    ft_dual_number::record_operation_error(error_code);
+    this->record_operation_error(error_code);
     return ;
 }
 
@@ -105,79 +118,123 @@ ft_dual_number ft_dual_number::variable(double value) noexcept
 
 double ft_dual_number::value() const noexcept
 {
+    ft_recursive_lock_guard guard(this->_mutex);
     return (this->_value);
 }
 
 double ft_dual_number::derivative() const noexcept
 {
+    ft_recursive_lock_guard guard(this->_mutex);
     return (this->_derivative);
 }
 
 ft_dual_number ft_dual_number::operator+(const ft_dual_number &other) const noexcept
 {
     ft_dual_number result;
+    int this_error;
+    int other_error;
 
-    result._value = this->_value + other._value;
-    result._derivative = this->_derivative + other._derivative;
+    {
+        ft_recursive_mutex_pair_guard guard(this->_mutex, other._mutex);
+        result._value = this->_value + other._value;
+        result._derivative = this->_derivative + other._derivative;
+        this_error = this->_error_code;
+        other_error = other._error_code;
+    }
     result._error_code = FT_ERR_SUCCESSS;
-    if (this->_error_code != FT_ERR_SUCCESSS)
-        result.set_error(this->_error_code);
-    if (other._error_code != FT_ERR_SUCCESSS)
-        result.set_error(other._error_code);
+    if (this_error != FT_ERR_SUCCESSS)
+        result.set_error(this_error);
+    if (other_error != FT_ERR_SUCCESSS)
+        result.set_error(other_error);
     return (result);
 }
 
 ft_dual_number ft_dual_number::operator-(const ft_dual_number &other) const noexcept
 {
     ft_dual_number result;
+    int this_error;
+    int other_error;
 
-    result._value = this->_value - other._value;
-    result._derivative = this->_derivative - other._derivative;
+    {
+        ft_recursive_mutex_pair_guard guard(this->_mutex, other._mutex);
+        result._value = this->_value - other._value;
+        result._derivative = this->_derivative - other._derivative;
+        this_error = this->_error_code;
+        other_error = other._error_code;
+    }
     result._error_code = FT_ERR_SUCCESSS;
-    if (this->_error_code != FT_ERR_SUCCESSS)
-        result.set_error(this->_error_code);
-    if (other._error_code != FT_ERR_SUCCESSS)
-        result.set_error(other._error_code);
+    if (this_error != FT_ERR_SUCCESSS)
+        result.set_error(this_error);
+    if (other_error != FT_ERR_SUCCESSS)
+        result.set_error(other_error);
     return (result);
 }
 
 ft_dual_number ft_dual_number::operator*(const ft_dual_number &other) const noexcept
 {
     ft_dual_number result;
+    int this_error;
+    int other_error;
 
-    result._value = this->_value * other._value;
-    result._derivative = this->_value * other._derivative
-        + this->_derivative * other._value;
+    {
+        ft_recursive_mutex_pair_guard guard(this->_mutex, other._mutex);
+        result._value = this->_value * other._value;
+        result._derivative = this->_value * other._derivative
+            + this->_derivative * other._value;
+        this_error = this->_error_code;
+        other_error = other._error_code;
+    }
     result._error_code = FT_ERR_SUCCESSS;
-    if (this->_error_code != FT_ERR_SUCCESSS)
-        result.set_error(this->_error_code);
-    if (other._error_code != FT_ERR_SUCCESSS)
-        result.set_error(other._error_code);
+    if (this_error != FT_ERR_SUCCESSS)
+        result.set_error(this_error);
+    if (other_error != FT_ERR_SUCCESSS)
+        result.set_error(other_error);
     return (result);
 }
 
 ft_dual_number ft_dual_number::operator/(const ft_dual_number &other) const noexcept
 {
     ft_dual_number result;
-    double epsilon;
+    double epsilon = 0.000000000001;
+    int this_error;
+    int other_error;
+    double denominator;
+    double value;
+    double derivative;
+    double other_derivative;
+    bool invalid_divisor = false;
 
-    epsilon = 0.000000000001;
-    if (std::fabs(other._value) <= epsilon)
     {
-        result._value = 0.0;
-        result._derivative = 0.0;
+        ft_recursive_mutex_pair_guard guard(this->_mutex, other._mutex);
+        denominator = other._value;
+        value = this->_value;
+        derivative = this->_derivative;
+        other_derivative = other._derivative;
+        this_error = this->_error_code;
+        other_error = other._error_code;
+        if (std::fabs(denominator) <= epsilon)
+        {
+            invalid_divisor = true;
+            result._value = 0.0;
+            result._derivative = 0.0;
+        }
+        else
+        {
+            result._value = value / denominator;
+            result._derivative = (derivative * denominator - value * other_derivative)
+                / (denominator * denominator);
+        }
+    }
+    if (invalid_divisor)
+    {
         result.set_error(FT_ERR_INVALID_ARGUMENT);
         return (result);
     }
-    result._value = this->_value / other._value;
-    result._derivative = (this->_derivative * other._value
-        - this->_value * other._derivative)
-        / (other._value * other._value);
     result._error_code = FT_ERR_SUCCESSS;
-    if (this->_error_code != FT_ERR_SUCCESSS)
-        result.set_error(this->_error_code);
-    if (other._error_code != FT_ERR_SUCCESSS)
-        result.set_error(other._error_code);
+    if (this_error != FT_ERR_SUCCESSS)
+        result.set_error(this_error);
+    if (other_error != FT_ERR_SUCCESSS)
+        result.set_error(other_error);
     return (result);
 }
 
@@ -185,9 +242,19 @@ ft_dual_number ft_dual_number::apply_sin() const noexcept
 {
     ft_dual_number result;
 
-    result._value = std::sin(this->_value);
-    result._derivative = std::cos(this->_value) * this->_derivative;
-    result._error_code = this->_error_code;
+    double value;
+    double derivative_value;
+    int error_code;
+
+    {
+        ft_recursive_lock_guard guard(this->_mutex);
+        value = this->_value;
+        derivative_value = this->_derivative;
+        error_code = this->_error_code;
+    }
+    result._value = std::sin(value);
+    result._derivative = std::cos(value) * derivative_value;
+    result._error_code = error_code;
     if (result._error_code != FT_ERR_SUCCESSS)
         result.set_error(result._error_code);
     return (result);
@@ -197,9 +264,19 @@ ft_dual_number ft_dual_number::apply_cos() const noexcept
 {
     ft_dual_number result;
 
-    result._value = std::cos(this->_value);
-    result._derivative = -std::sin(this->_value) * this->_derivative;
-    result._error_code = this->_error_code;
+    double value;
+    double derivative_value;
+    int error_code;
+
+    {
+        ft_recursive_lock_guard guard(this->_mutex);
+        value = this->_value;
+        derivative_value = this->_derivative;
+        error_code = this->_error_code;
+    }
+    result._value = std::cos(value);
+    result._derivative = -std::sin(value) * derivative_value;
+    result._error_code = error_code;
     if (result._error_code != FT_ERR_SUCCESSS)
         result.set_error(result._error_code);
     return (result);
@@ -210,10 +287,20 @@ ft_dual_number ft_dual_number::apply_exp() const noexcept
     ft_dual_number result;
     double exponential;
 
-    exponential = std::exp(this->_value);
+    double value;
+    double derivative_value;
+    int error_code;
+
+    {
+        ft_recursive_lock_guard guard(this->_mutex);
+        value = this->_value;
+        derivative_value = this->_derivative;
+        error_code = this->_error_code;
+    }
+    exponential = std::exp(value);
     result._value = exponential;
-    result._derivative = exponential * this->_derivative;
-    result._error_code = this->_error_code;
+    result._derivative = exponential * derivative_value;
+    result._error_code = error_code;
     if (result._error_code != FT_ERR_SUCCESSS)
         result.set_error(result._error_code);
     return (result);
@@ -223,16 +310,26 @@ ft_dual_number ft_dual_number::apply_log() const noexcept
 {
     ft_dual_number result;
 
-    if (this->_value <= 0.0)
+    double value;
+    double derivative_value;
+    int error_code;
+
+    {
+        ft_recursive_lock_guard guard(this->_mutex);
+        value = this->_value;
+        derivative_value = this->_derivative;
+        error_code = this->_error_code;
+    }
+    if (value <= 0.0)
     {
         result._value = 0.0;
         result._derivative = 0.0;
         result.set_error(FT_ERR_INVALID_ARGUMENT);
         return (result);
     }
-    result._value = std::log(this->_value);
-    result._derivative = this->_derivative / this->_value;
-    result._error_code = this->_error_code;
+    result._value = std::log(value);
+    result._derivative = derivative_value / value;
+    result._error_code = error_code;
     if (result._error_code != FT_ERR_SUCCESSS)
         result.set_error(result._error_code);
     return (result);
@@ -240,23 +337,27 @@ ft_dual_number ft_dual_number::apply_log() const noexcept
 
 int ft_dual_number::get_error() const noexcept
 {
+    ft_recursive_lock_guard guard(this->_mutex);
     return (this->_error_code);
 }
 
 const char *ft_dual_number::get_error_str() const noexcept
 {
-    return (ft_strerror(this->_error_code));
+    return (ft_strerror(this->get_error()));
 }
 
-thread_local ft_operation_error_stack ft_dual_number::_operation_errors = {{}, {}, 0};
+pt_recursive_mutex *ft_dual_number::get_mutex_for_validation() const noexcept
+{
+    return (&this->_mutex);
+}
 
-void ft_dual_number::record_operation_error(int error_code) noexcept
+void ft_dual_number::record_operation_error(int error_code) const noexcept
 {
     unsigned long long operation_id;
 
     operation_id = ft_errno_next_operation_id();
     ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(ft_dual_number::_operation_errors, error_code, operation_id);
+    ft_operation_error_stack_push(&this->_operation_errors, error_code, operation_id);
     return ;
 }
 

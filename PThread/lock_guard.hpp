@@ -59,7 +59,7 @@ void ft_lock_guard<MutexType>::record_error(ft_operation_error_stack &error_stac
         operation_id = ft_global_error_stack_push_entry(error);
     else
         operation_id = 0;
-    ft_operation_error_stack_push(error_stack, error, operation_id);
+    ft_operation_error_stack_push(&error_stack, error, operation_id);
     return ;
 }
 

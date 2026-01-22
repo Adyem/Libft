@@ -1564,7 +1564,7 @@ void ft_unordered_map<Key, MappedType>::record_operation_error(int error_code) n
 
     operation_id = ft_errno_next_operation_id();
     ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(ft_unordered_map<Key, MappedType>::_operation_errors,
+    ft_operation_error_stack_push(&ft_unordered_map<Key, MappedType>::_operation_errors,
             error_code, operation_id);
     return ;
 }
@@ -1572,7 +1572,7 @@ void ft_unordered_map<Key, MappedType>::record_operation_error(int error_code) n
 template <typename Key, typename MappedType>
 int ft_unordered_map<Key, MappedType>::last_operation_error() noexcept
 {
-    return (ft_operation_error_stack_last_error(ft_unordered_map<Key, MappedType>::_operation_errors));
+    return (ft_operation_error_stack_last_error(&ft_unordered_map<Key, MappedType>::_operation_errors));
 }
 
 template <typename Key, typename MappedType>
@@ -1584,7 +1584,7 @@ const char* ft_unordered_map<Key, MappedType>::last_operation_error_str() noexce
 template <typename Key, typename MappedType>
 int ft_unordered_map<Key, MappedType>::operation_error_at(ft_size_t index) noexcept
 {
-    return (ft_operation_error_stack_error_at(ft_unordered_map<Key, MappedType>::_operation_errors, index));
+    return (ft_operation_error_stack_error_at(&ft_unordered_map<Key, MappedType>::_operation_errors, index));
 }
 
 template <typename Key, typename MappedType>
@@ -1596,20 +1596,20 @@ const char* ft_unordered_map<Key, MappedType>::operation_error_str_at(ft_size_t 
 template <typename Key, typename MappedType>
 void ft_unordered_map<Key, MappedType>::pop_operation_errors() noexcept
 {
-    ft_operation_error_stack_pop_all(ft_unordered_map<Key, MappedType>::_operation_errors);
+    ft_operation_error_stack_pop_all(&ft_unordered_map<Key, MappedType>::_operation_errors);
     return ;
 }
 
 template <typename Key, typename MappedType>
 int ft_unordered_map<Key, MappedType>::pop_oldest_operation_error() noexcept
 {
-    return (ft_operation_error_stack_pop_last(ft_unordered_map<Key, MappedType>::_operation_errors));
+    return (ft_operation_error_stack_pop_last(&ft_unordered_map<Key, MappedType>::_operation_errors));
 }
 
 template <typename Key, typename MappedType>
 int ft_unordered_map<Key, MappedType>::pop_newest_operation_error() noexcept
 {
-    return (ft_operation_error_stack_pop_newest(ft_unordered_map<Key, MappedType>::_operation_errors));
+    return (ft_operation_error_stack_pop_newest(&ft_unordered_map<Key, MappedType>::_operation_errors));
 }
 
 template <typename Key, typename MappedType>
@@ -1836,7 +1836,7 @@ void ft_unordered_map<Key, MappedType>::iterator::record_operation_error(int err
 
     operation_id = ft_errno_next_operation_id();
     ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(ft_unordered_map<Key, MappedType>::iterator::_operation_errors,
+    ft_operation_error_stack_push(&ft_unordered_map<Key, MappedType>::iterator::_operation_errors,
             error_code, operation_id);
     return ;
 }
@@ -1851,7 +1851,7 @@ void ft_unordered_map<Key, MappedType>::const_iterator::record_operation_error(i
 
     operation_id = ft_errno_next_operation_id();
     ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(ft_unordered_map<Key, MappedType>::const_iterator::_operation_errors,
+    ft_operation_error_stack_push(&ft_unordered_map<Key, MappedType>::const_iterator::_operation_errors,
             error_code, operation_id);
     return ;
 }

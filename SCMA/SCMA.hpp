@@ -651,7 +651,7 @@ void scma_handle_accessor<TValue>::record_operation_error(int error_code) noexce
 
     operation_id = scma_record_operation_error(error_code);
     ft_operation_error_stack_push(
-        scma_handle_accessor<TValue>::_operation_errors,
+        &scma_handle_accessor<TValue>::_operation_errors,
         error_code,
         operation_id);
     return ;
@@ -938,7 +938,7 @@ void scma_handle_accessor_element_proxy<TValue>::record_operation_error(int erro
 
     operation_id = scma_record_operation_error(error_code);
     ft_operation_error_stack_push(
-        scma_handle_accessor_element_proxy<TValue>::_operation_errors,
+        &scma_handle_accessor_element_proxy<TValue>::_operation_errors,
         error_code,
         operation_id);
     return ;
@@ -954,7 +954,7 @@ void scma_handle_accessor_const_element_proxy<TValue>::record_operation_error(in
 
     operation_id = scma_record_operation_error(error_code);
     ft_operation_error_stack_push(
-        scma_handle_accessor_const_element_proxy<TValue>::_operation_errors,
+        &scma_handle_accessor_const_element_proxy<TValue>::_operation_errors,
         error_code,
         operation_id);
     return ;

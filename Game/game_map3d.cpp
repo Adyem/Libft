@@ -33,12 +33,10 @@ int ft_map3d::lock_pair(const ft_map3d &first, const ft_map3d &second,
 
         if (single_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ERR_SUCCESSS;
         return (FT_ERR_SUCCESSS);
     }
     ordered_first = &first;
@@ -59,7 +57,6 @@ int ft_map3d::lock_pair(const ft_map3d &first, const ft_map3d &second,
 
         if (lower_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
@@ -75,12 +72,10 @@ int ft_map3d::lock_pair(const ft_map3d &first, const ft_map3d &second,
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = FT_ERR_SUCCESSS;
             return (FT_ERR_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            ft_errno = upper_guard.get_error();
             return (upper_guard.get_error());
         }
         if (lower_guard.owns_lock())
@@ -91,7 +86,7 @@ int ft_map3d::lock_pair(const ft_map3d &first, const ft_map3d &second,
 
 ft_map3d::ft_map3d(size_t width, size_t height, size_t depth, int value)
     : _data(ft_nullptr), _width(0), _height(0), _depth(0), _error(FT_ERR_SUCCESSS),
-      _mutex()
+      _mutex(), _operation_errors({{}, {}, 0})
 {
     this->allocate(width, height, depth, value);
     if (this->_error == FT_ERR_SUCCESSS)
@@ -117,7 +112,7 @@ ft_map3d::~ft_map3d()
 
 ft_map3d::ft_map3d(const ft_map3d &other)
     : _data(ft_nullptr), _width(0), _height(0), _depth(0), _error(FT_ERR_SUCCESSS),
-      _mutex()
+      _mutex(), _operation_errors({{}, {}, 0})
 {
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
     if (other_guard.get_error() != FT_ERR_SUCCESSS)
@@ -206,7 +201,7 @@ ft_map3d &ft_map3d::operator=(const ft_map3d &other)
 
 ft_map3d::ft_map3d(ft_map3d &&other) noexcept
     : _data(ft_nullptr), _width(0), _height(0), _depth(0), _error(FT_ERR_SUCCESSS),
-      _mutex()
+      _mutex(), _operation_errors({{}, {}, 0})
 {
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
     if (other_guard.get_error() != FT_ERR_SUCCESSS)
@@ -258,6 +253,7 @@ ft_map3d &ft_map3d::operator=(ft_map3d &&other) noexcept
     other._depth = 0;
     this->set_error(this->_error);
     other.set_error(FT_ERR_SUCCESSS);
+    this->_operation_errors = {{}, {}, 0};
     ft_map3d::finalize_lock(this_guard);
     ft_map3d::finalize_lock(other_guard);
     return (*this);
@@ -316,9 +312,75 @@ const char *ft_map3d::get_error_str() const
 
 void ft_map3d::set_error(int err) const noexcept
 {
-    ft_errno = err;
     this->_error = err;
+    this->record_operation_error(err);
     return ;
+}
+
+void ft_map3d::record_operation_error(int error_code) const noexcept
+{
+    unsigned long long operation_id;
+
+    operation_id = ft_errno_next_operation_id();
+    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
+    ft_operation_error_stack_push(&this->_operation_errors, error_code, operation_id);
+    return ;
+}
+
+ft_operation_error_stack *ft_map3d::get_operation_error_stack_for_validation() noexcept
+{
+    return (&this->_operation_errors);
+}
+
+int ft_map3d::last_operation_error() const noexcept
+{
+    return (ft_operation_error_stack_last_error(&this->_operation_errors));
+}
+
+const char *ft_map3d::last_operation_error_str() const noexcept
+{
+    int error_code = ft_operation_error_stack_last_error(&this->_operation_errors);
+
+    return (ft_strerror(error_code));
+}
+
+int ft_map3d::operation_error_at(ft_size_t index) const noexcept
+{
+    return (ft_operation_error_stack_error_at(&this->_operation_errors, index));
+}
+
+const char *ft_map3d::operation_error_str_at(ft_size_t index) const noexcept
+{
+    int error_code = ft_operation_error_stack_error_at(&this->_operation_errors, index);
+
+    return (ft_strerror(error_code));
+}
+
+void ft_map3d::pop_operation_errors() noexcept
+{
+    ft_operation_error_stack_pop_all(&this->_operation_errors);
+    ft_global_error_stack_pop_all();
+    return ;
+}
+
+int ft_map3d::pop_oldest_operation_error() noexcept
+{
+    int error_value = ft_operation_error_stack_pop_last(&this->_operation_errors);
+
+    if (error_value != FT_ERR_SUCCESSS)
+        return (error_value);
+    ft_global_error_stack_pop_last();
+    return (error_value);
+}
+
+int ft_map3d::pop_newest_operation_error() noexcept
+{
+    int error_value = ft_operation_error_stack_pop_newest(&this->_operation_errors);
+
+    if (error_value != FT_ERR_SUCCESSS)
+        return (error_value);
+    ft_global_error_stack_pop_newest();
+    return (error_value);
 }
 
 size_t ft_map3d::index(size_t x, size_t y, size_t z) const

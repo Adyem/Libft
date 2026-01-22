@@ -43,19 +43,19 @@ int pt_mutex::try_lock_until(pthread_t thread_id, const struct timespec &absolut
     int mutex_error;
     int tracking_error;
 
-    pt_mutex::operation_error_push(FT_ERR_SUCCESSS);
+    this->operation_error_push(FT_ERR_SUCCESSS);
     if (!this->ensure_native_mutex())
         return (FT_SUCCESS);
     if (this->_lock && pt_thread_equal(this->_owner.load(std::memory_order_relaxed), thread_id))
     {
-        pt_mutex::operation_error_push(FT_ERR_MUTEX_ALREADY_LOCKED);
+        this->operation_error_push(FT_ERR_MUTEX_ALREADY_LOCKED);
         return (FT_SUCCESS);
     }
     owned_mutexes = pt_lock_tracking::get_owned_mutexes(thread_id);
     tracking_error = ft_global_error_stack_pop_newest();
     if (tracking_error != FT_ERR_SUCCESSS)
     {
-        pt_mutex::operation_error_push(tracking_error);
+        this->operation_error_push(tracking_error);
         return (FT_SUCCESS);
     }
     if (!pt_lock_tracking::notify_wait(thread_id, &this->_native_mutex, owned_mutexes))
@@ -65,7 +65,7 @@ int pt_mutex::try_lock_until(pthread_t thread_id, const struct timespec &absolut
         ft_global_error_stack_pop_newest();
         if (tracking_error == FT_ERR_SUCCESSS)
             tracking_error = FT_ERR_INVALID_STATE;
-        pt_mutex::operation_error_push(tracking_error);
+        this->operation_error_push(tracking_error);
         return (FT_SUCCESS);
     }
     tracking_error = ft_global_error_stack_pop_newest();
@@ -73,7 +73,7 @@ int pt_mutex::try_lock_until(pthread_t thread_id, const struct timespec &absolut
     {
         pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
         ft_global_error_stack_pop_newest();
-        pt_mutex::operation_error_push(tracking_error);
+        this->operation_error_push(tracking_error);
         return (FT_SUCCESS);
     }
     mutex_error = pthread_mutex_timedlock(&this->_native_mutex, &absolute_time);
@@ -83,10 +83,10 @@ int pt_mutex::try_lock_until(pthread_t thread_id, const struct timespec &absolut
         ft_global_error_stack_pop_newest();
         if (mutex_error == ETIMEDOUT)
         {
-            pt_mutex::operation_error_push(FT_ERR_SUCCESSS);
+            this->operation_error_push(FT_ERR_SUCCESSS);
             return (ETIMEDOUT);
         }
-        pt_mutex::operation_error_push(FT_ERR_INVALID_STATE);
+        this->operation_error_push(FT_ERR_INVALID_STATE);
         return (FT_SUCCESS);
     }
     this->_owner.store(thread_id, std::memory_order_relaxed);
@@ -94,9 +94,9 @@ int pt_mutex::try_lock_until(pthread_t thread_id, const struct timespec &absolut
     pt_lock_tracking::notify_acquired(thread_id, &this->_native_mutex);
     tracking_error = ft_global_error_stack_pop_newest();
     if (tracking_error != FT_ERR_SUCCESSS)
-        pt_mutex::operation_error_push(tracking_error);
+        this->operation_error_push(tracking_error);
     else
-        pt_mutex::operation_error_push(FT_ERR_SUCCESSS);
+        this->operation_error_push(FT_ERR_SUCCESSS);
     return (FT_SUCCESS);
 }
 
@@ -107,7 +107,7 @@ int pt_mutex::try_lock_for(pthread_t thread_id, const struct timespec &relative_
 
     if (!compute_absolute_deadline(relative_time, &absolute_time, &conversion_error))
     {
-        pt_mutex::operation_error_push(conversion_error);
+        this->operation_error_push(conversion_error);
         return (FT_SUCCESS);
     }
     return (this->try_lock_until(thread_id, absolute_time));

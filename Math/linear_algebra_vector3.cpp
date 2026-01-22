@@ -5,18 +5,6 @@
 #include "../PThread/pthread.hpp"
 #include "../Template/move.hpp"
 
-static thread_local ft_operation_error_stack g_vector3_operation_errors = {{}, {}, 0};
-
-static void vector3_push_error(int error_code) noexcept
-{
-    unsigned long long operation_id;
-
-    operation_id = ft_errno_next_operation_id();
-    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(g_vector3_operation_errors, error_code, operation_id);
-    return ;
-}
-
 #if defined(__SSE2__)
 # include <immintrin.h>
 #endif
@@ -24,6 +12,16 @@ static void vector3_push_error(int error_code) noexcept
 static void vector3_sleep_backoff()
 {
     pt_thread_sleep(1);
+    return ;
+}
+
+void vector3::record_operation_error(int error_code) const noexcept
+{
+    unsigned long long operation_id;
+
+    operation_id = ft_errno_next_operation_id();
+    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
+    ft_operation_error_stack_push(&this->_operation_errors, error_code, operation_id);
     return ;
 }
 
@@ -60,13 +58,13 @@ static double vector3_compute_dot(double first_x, double first_y, double first_z
 }
 #endif
 
-int vector3::lock_self(ft_unique_lock<pt_mutex> &guard) const
+int vector3::lock_self(ft_unique_lock<pt_recursive_mutex> &guard) const
 {
-    ft_unique_lock<pt_mutex> local_guard(this->_mutex);
+    ft_unique_lock<pt_recursive_mutex> local_guard(this->_mutex);
 
     if (local_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        guard = ft_unique_lock<pt_mutex>();
+        guard = ft_unique_lock<pt_recursive_mutex>();
         return (local_guard.get_error());
     }
     guard = ft_move(local_guard);
@@ -74,8 +72,8 @@ int vector3::lock_self(ft_unique_lock<pt_mutex> &guard) const
 }
 
 int vector3::lock_pair(const vector3 &first, const vector3 &second,
-    ft_unique_lock<pt_mutex> &first_guard,
-    ft_unique_lock<pt_mutex> &second_guard)
+    ft_unique_lock<pt_recursive_mutex> &first_guard,
+    ft_unique_lock<pt_recursive_mutex> &second_guard)
 {
     const vector3 *ordered_first;
     const vector3 *ordered_second;
@@ -83,14 +81,14 @@ int vector3::lock_pair(const vector3 &first, const vector3 &second,
 
     if (&first == &second)
     {
-        ft_unique_lock<pt_mutex> single_guard(first._mutex);
+        ft_unique_lock<pt_recursive_mutex> single_guard(first._mutex);
 
         if (single_guard.get_error() != FT_ERR_SUCCESSS)
         {
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
-        second_guard = ft_unique_lock<pt_mutex>();
+        second_guard = ft_unique_lock<pt_recursive_mutex>();
         return (FT_ERR_SUCCESSS);
     }
     ordered_first = &first;
@@ -107,13 +105,13 @@ int vector3::lock_pair(const vector3 &first, const vector3 &second,
     }
     while (true)
     {
-        ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
+        ft_unique_lock<pt_recursive_mutex> lower_guard(ordered_first->_mutex);
 
         if (lower_guard.get_error() != FT_ERR_SUCCESSS)
         {
             return (lower_guard.get_error());
         }
-        ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
+        ft_unique_lock<pt_recursive_mutex> upper_guard(ordered_second->_mutex);
         if (upper_guard.get_error() == FT_ERR_SUCCESSS)
         {
             if (!swapped)
@@ -140,8 +138,8 @@ int vector3::lock_pair(const vector3 &first, const vector3 &second,
 
 void vector3::set_error_unlocked(int error_code) const
 {
-    vector3_push_error(error_code);
     this->_error_code = error_code;
+    this->record_operation_error(error_code);
     return ;
 }
 
@@ -160,8 +158,8 @@ vector3::vector3(const vector3 &other)
 
 vector3 &vector3::operator=(const vector3 &other)
 {
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
+    ft_unique_lock<pt_recursive_mutex> this_guard;
+    ft_unique_lock<pt_recursive_mutex> other_guard;
     int lock_error;
 
     if (this == &other)
@@ -189,8 +187,8 @@ vector3::vector3(vector3 &&other)
 
 vector3 &vector3::operator=(vector3 &&other)
 {
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
+    ft_unique_lock<pt_recursive_mutex> this_guard;
+    ft_unique_lock<pt_recursive_mutex> other_guard;
     int lock_error;
 
     if (this == &other)
@@ -216,7 +214,7 @@ vector3 &vector3::operator=(vector3 &&other)
 
 double vector3::get_x() const
 {
-    ft_unique_lock<pt_mutex> guard;
+    ft_unique_lock<pt_recursive_mutex> guard;
     int lock_error;
     double value;
 
@@ -233,7 +231,7 @@ double vector3::get_x() const
 
 double vector3::get_y() const
 {
-    ft_unique_lock<pt_mutex> guard;
+    ft_unique_lock<pt_recursive_mutex> guard;
     int lock_error;
     double value;
 
@@ -250,7 +248,7 @@ double vector3::get_y() const
 
 double vector3::get_z() const
 {
-    ft_unique_lock<pt_mutex> guard;
+    ft_unique_lock<pt_recursive_mutex> guard;
     int lock_error;
     double value;
 
@@ -267,8 +265,8 @@ double vector3::get_z() const
 
 vector3 vector3::add(const vector3 &other) const
 {
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
+    ft_unique_lock<pt_recursive_mutex> this_guard;
+    ft_unique_lock<pt_recursive_mutex> other_guard;
     int lock_error;
     vector3 result;
 
@@ -289,8 +287,8 @@ vector3 vector3::add(const vector3 &other) const
 
 vector3 vector3::subtract(const vector3 &other) const
 {
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
+    ft_unique_lock<pt_recursive_mutex> this_guard;
+    ft_unique_lock<pt_recursive_mutex> other_guard;
     int lock_error;
     vector3 result;
 
@@ -311,8 +309,8 @@ vector3 vector3::subtract(const vector3 &other) const
 
 double vector3::dot(const vector3 &other) const
 {
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
+    ft_unique_lock<pt_recursive_mutex> this_guard;
+    ft_unique_lock<pt_recursive_mutex> other_guard;
     int lock_error;
     double result;
 
@@ -330,8 +328,8 @@ double vector3::dot(const vector3 &other) const
 
 vector3 vector3::cross(const vector3 &other) const
 {
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
+    ft_unique_lock<pt_recursive_mutex> this_guard;
+    ft_unique_lock<pt_recursive_mutex> other_guard;
     int lock_error;
     vector3 result;
 
@@ -352,7 +350,7 @@ vector3 vector3::cross(const vector3 &other) const
 
 double vector3::length() const
 {
-    ft_unique_lock<pt_mutex> guard;
+    ft_unique_lock<pt_recursive_mutex> guard;
     int lock_error;
     double squared;
 
@@ -370,7 +368,7 @@ double vector3::length() const
 
 vector3 vector3::normalize() const
 {
-    ft_unique_lock<pt_mutex> guard;
+    ft_unique_lock<pt_recursive_mutex> guard;
     int lock_error;
     vector3 result;
     double squared_length;
@@ -403,7 +401,7 @@ vector3 vector3::normalize() const
 
 int vector3::get_error() const
 {
-    ft_unique_lock<pt_mutex> guard;
+    ft_unique_lock<pt_recursive_mutex> guard;
     int lock_error;
     int error_value;
 
@@ -423,4 +421,9 @@ const char *vector3::get_error_str() const
 
     error_value = this->get_error();
     return (ft_strerror(error_value));
+}
+
+pt_recursive_mutex *vector3::get_mutex_for_validation() const
+{
+    return (&this->_mutex);
 }

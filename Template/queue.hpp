@@ -28,21 +28,22 @@ class ft_queue
             QueueNode*          _rear;
             size_t              _size;
             mutable int         _error_code;
+            mutable ft_operation_error_stack _operation_errors;
             mutable pt_mutex   *_mutex;
         bool                _thread_safe_enabled;
-        static thread_local ft_operation_error_stack _operation_errors;
 
-        static void record_operation_error(int error_code) noexcept;
+        void record_operation_error(int error_code) const noexcept;
+        ft_operation_error_stack *get_operation_error_stack_for_validation() noexcept;
+        const ft_operation_error_stack *get_operation_error_stack_for_validation() const noexcept;
+        int  last_operation_error() const noexcept;
+        const char  *last_operation_error_str() const noexcept;
+        int  operation_error_at(ft_size_t index) const noexcept;
+        const char  *operation_error_str_at(ft_size_t index) const noexcept;
+        void pop_operation_errors() noexcept;
+        int  pop_oldest_operation_error() noexcept;
+        int  pop_newest_operation_error() noexcept;
 
         void    set_error(int error_code) const;
-        static ft_operation_error_stack *get_operation_error_stack_for_validation() noexcept;
-        static int  last_operation_error() noexcept;
-        static const char  *last_operation_error_str() noexcept;
-        static int  operation_error_at(ft_size_t index) noexcept;
-        static const char  *operation_error_str_at(ft_size_t index) noexcept;
-        static void pop_operation_errors() noexcept;
-        static int  pop_oldest_operation_error() noexcept;
-        static int  pop_newest_operation_error() noexcept;
         int     lock_internal(bool *lock_acquired) const;
         int     unlock_internal(bool lock_acquired) const;
         void    teardown_thread_safety();
@@ -80,26 +81,93 @@ class ft_queue
 };
 
 template <typename ElementType>
-thread_local ft_operation_error_stack ft_queue<ElementType>::_operation_errors = {{}, {}, 0};
-
-template <typename ElementType>
-void ft_queue<ElementType>::record_operation_error(int error_code) noexcept
+void ft_queue<ElementType>::record_operation_error(int error_code) const noexcept
 {
     unsigned long long operation_id;
 
     operation_id = ft_errno_next_operation_id();
-    ft_errno_mutex().lock();
     ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(ft_queue<ElementType>::_operation_errors,
+    ft_operation_error_stack_push(&this->_operation_errors,
             error_code, operation_id);
-    ft_errno_mutex().unlock();
     return ;
+}
+
+template <typename ElementType>
+ft_operation_error_stack *ft_queue<ElementType>::get_operation_error_stack_for_validation() noexcept
+{
+    return (&this->_operation_errors);
+}
+
+template <typename ElementType>
+const ft_operation_error_stack *ft_queue<ElementType>::get_operation_error_stack_for_validation() const noexcept
+{
+    return (&this->_operation_errors);
+}
+
+template <typename ElementType>
+int ft_queue<ElementType>::last_operation_error() const noexcept
+{
+    return (ft_operation_error_stack_last_error(&this->_operation_errors));
+}
+
+template <typename ElementType>
+const char *ft_queue<ElementType>::last_operation_error_str() const noexcept
+{
+    int error_code;
+    const char *error_string;
+
+    error_code = ft_operation_error_stack_last_error(&this->_operation_errors);
+    error_string = ft_strerror(error_code);
+    if (!error_string)
+        error_string = "unknown error";
+    return (error_string);
+}
+
+template <typename ElementType>
+int ft_queue<ElementType>::operation_error_at(ft_size_t index) const noexcept
+{
+    return (ft_operation_error_stack_error_at(&this->_operation_errors, index));
+}
+
+template <typename ElementType>
+const char *ft_queue<ElementType>::operation_error_str_at(ft_size_t index) const noexcept
+{
+    int error_code;
+    const char *error_string;
+
+    error_code = ft_operation_error_stack_error_at(&this->_operation_errors, index);
+    error_string = ft_strerror(error_code);
+    if (!error_string)
+        error_string = "unknown error";
+    return (error_string);
+}
+
+template <typename ElementType>
+void ft_queue<ElementType>::pop_operation_errors() noexcept
+{
+    ft_operation_error_stack_pop_all(&this->_operation_errors);
+    ft_global_error_stack_pop_all();
+    return ;
+}
+
+template <typename ElementType>
+int ft_queue<ElementType>::pop_oldest_operation_error() noexcept
+{
+    ft_global_error_stack_pop_last();
+    return (ft_operation_error_stack_pop_last(&this->_operation_errors));
+}
+
+template <typename ElementType>
+int ft_queue<ElementType>::pop_newest_operation_error() noexcept
+{
+    ft_global_error_stack_pop_newest();
+    return (ft_operation_error_stack_pop_newest(&this->_operation_errors));
 }
 
 template <typename ElementType>
 ft_queue<ElementType>::ft_queue()
     : _front(ft_nullptr), _rear(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESSS),
-      _mutex(ft_nullptr), _thread_safe_enabled(false)
+      _operation_errors({{}, {}, 0}), _mutex(ft_nullptr), _thread_safe_enabled(false)
 {
     return ;
 }
@@ -115,7 +183,7 @@ ft_queue<ElementType>::~ft_queue()
 template <typename ElementType>
 ft_queue<ElementType>::ft_queue(ft_queue&& other) noexcept
     : _front(ft_nullptr), _rear(ft_nullptr), _size(0),
-      _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr),
+      _error_code(FT_ERR_SUCCESSS), _operation_errors({{}, {}, 0}), _mutex(ft_nullptr),
       _thread_safe_enabled(false)
 {
     bool other_lock_acquired;
@@ -187,7 +255,7 @@ template <typename ElementType>
 void ft_queue<ElementType>::set_error(int error_code) const
 {
     this->_error_code = error_code;
-    ft_queue<ElementType>::record_operation_error(error_code);
+    this->record_operation_error(error_code);
     return ;
 }
 
@@ -204,7 +272,7 @@ int ft_queue<ElementType>::lock_internal(bool *lock_acquired) const
         return (FT_ERR_SUCCESSS);
     }
     this->_mutex->lock(THREAD_ID);
-    mutex_error = pt_mutex::operation_error_pop_newest();
+    mutex_error = this->_mutex->operation_error_pop_newest();
     ft_global_error_stack_pop_newest();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
@@ -225,7 +293,7 @@ int ft_queue<ElementType>::unlock_internal(bool lock_acquired) const
     this->_mutex->unlock(THREAD_ID);
     int mutex_error;
 
-    mutex_error = pt_mutex::operation_error_pop_newest();
+    mutex_error = this->_mutex->operation_error_pop_newest();
     ft_global_error_stack_pop_newest();
     return (mutex_error);
 }
@@ -258,18 +326,18 @@ int ft_queue<ElementType>::enable_thread_safety()
         this->set_error(FT_ERR_NO_MEMORY);
         return (-1);
     }
-    {
-        int mutex_error;
-
-        mutex_error = pt_mutex::operation_error_pop_newest();
-        ft_global_error_stack_pop_newest();
-        if (mutex_error != FT_ERR_SUCCESSS)
         {
-            delete mutex_pointer;
-            this->set_error(mutex_error);
-            return (-1);
+            int mutex_error;
+
+            mutex_error = mutex_pointer->operation_error_pop_newest();
+            ft_global_error_stack_pop_newest();
+            if (mutex_error != FT_ERR_SUCCESSS)
+            {
+                delete mutex_pointer;
+                this->set_error(mutex_error);
+                return (-1);
+            }
         }
-    }
     this->_mutex = mutex_pointer;
     this->_thread_safe_enabled = true;
     this->set_error(FT_ERR_SUCCESSS);
@@ -546,88 +614,6 @@ void ft_queue<ElementType>::clear()
     this->set_error(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return ;
-}
-
-template <typename ElementType>
-ft_operation_error_stack *ft_queue<ElementType>::get_operation_error_stack_for_validation() noexcept
-{
-    return (&ft_queue<ElementType>::_operation_errors);
-}
-
-template <typename ElementType>
-int ft_queue<ElementType>::last_operation_error() noexcept
-{
-    ft_errno_mutex().lock();
-    int error_value = ft_operation_error_stack_last_error(ft_queue<ElementType>::_operation_errors);
-    ft_errno_mutex().unlock();
-    return (error_value);
-}
-
-template <typename ElementType>
-const char *ft_queue<ElementType>::last_operation_error_str() noexcept
-{
-    int error_code;
-    const char *error_string;
-    ft_errno_mutex().lock();
-    error_code = ft_operation_error_stack_last_error(ft_queue<ElementType>::_operation_errors);
-    error_string = ft_strerror(error_code);
-    if (!error_string)
-        error_string = "unknown error";
-    ft_errno_mutex().unlock();
-    return (error_string);
-}
-
-template <typename ElementType>
-int ft_queue<ElementType>::operation_error_at(ft_size_t index) noexcept
-{
-    ft_errno_mutex().lock();
-    int error_value = ft_operation_error_stack_error_at(ft_queue<ElementType>::_operation_errors, index);
-    ft_errno_mutex().unlock();
-    return (error_value);
-}
-
-template <typename ElementType>
-const char *ft_queue<ElementType>::operation_error_str_at(ft_size_t index) noexcept
-{
-    int error_code;
-    const char *error_string;
-    ft_errno_mutex().lock();
-    error_code = ft_operation_error_stack_error_at(ft_queue<ElementType>::_operation_errors, index);
-    error_string = ft_strerror(error_code);
-    if (!error_string)
-        error_string = "unknown error";
-    ft_errno_mutex().unlock();
-    return (error_string);
-}
-
-template <typename ElementType>
-void ft_queue<ElementType>::pop_operation_errors() noexcept
-{
-    ft_errno_mutex().lock();
-    ft_operation_error_stack_pop_all(ft_queue<ElementType>::_operation_errors);
-    ft_global_error_stack_pop_all();
-    ft_errno_mutex().unlock();
-    return ;
-}
-
-template <typename ElementType>
-int ft_queue<ElementType>::pop_oldest_operation_error() noexcept
-{
-    ft_errno_mutex().lock();
-    ft_global_error_stack_pop_last();
-    int error_value = ft_operation_error_stack_pop_last(ft_queue<ElementType>::_operation_errors);
-    ft_errno_mutex().unlock();
-    return (error_value);
-}
-
-template <typename ElementType>
-int ft_queue<ElementType>::pop_newest_operation_error() noexcept
-{
-    ft_errno_mutex().lock();
-    ft_global_error_stack_pop_newest();
-    int error_value = ft_operation_error_stack_pop_newest(ft_queue<ElementType>::_operation_errors);
-    ft_errno_mutex().unlock();
-    return (error_value);
 }
 
 #endif

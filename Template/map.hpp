@@ -5,6 +5,7 @@
 #include "constructor.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread.hpp"
@@ -15,19 +16,19 @@ template <typename Key, typename MappedType>
 class ft_map
 {
     private:
-        Pair<Key, MappedType>*  _data;
-        size_t                  _capacity;
-        size_t                  _size;
-        mutable int             _error_code;
-        mutable pt_mutex*       _state_mutex;
-        bool                    _thread_safe_enabled;
+        Pair<Key, MappedType>*            _data;
+        size_t                           _capacity;
+        size_t                           _size;
+        mutable ft_operation_error_stack _operation_errors;
+        mutable pt_mutex*                _state_mutex;
+        bool                             _thread_safe_enabled;
 
-        void    set_error(int error) const;
-        void    resize_unlocked(size_t new_capacity);
+        void    record_operation_error(int error_code) const noexcept;
+        int     resize_unlocked(size_t new_capacity);
         size_t  find_index_unlocked(const Key& key) const;
         int     lock_internal(bool *lock_acquired) const;
-        void    unlock_internal(bool lock_acquired) const;
-        void    unlock_mutex(pt_mutex *mutex, bool lock_acquired) const;
+        int     unlock_internal(bool lock_acquired) const;
+        int     unlock_mutex(pt_mutex *mutex, bool lock_acquired) const;
         void    teardown_thread_safety();
         Pair<Key, MappedType>*  get_end_pointer_unlocked();
         const Pair<Key, MappedType>* get_end_pointer_unlocked() const;
@@ -49,8 +50,6 @@ class ft_map
         void        clear();
         size_t      size() const;
         size_t      capacity() const;
-        int         get_error() const;
-        const char* get_error_str() const;
 
         Pair<Key, MappedType>* end();
         const Pair<Key, MappedType>* end() const;
@@ -63,62 +62,134 @@ class ft_map
         int         lock(bool *lock_acquired) const;
         void        unlock(bool lock_acquired) const;
         void*       get_mutex_address_debug() const;
+        int         last_operation_error() const noexcept;
+        const char* last_operation_error_str() const noexcept;
+        int         operation_error_at(ft_size_t index) const noexcept;
+        const char* operation_error_str_at(ft_size_t index) const noexcept;
+        void        pop_operation_errors() noexcept;
+        int         pop_oldest_operation_error() noexcept;
+        int         pop_newest_operation_error() noexcept;
 };
 
 template <typename Key, typename MappedType>
-void ft_map<Key, MappedType>::set_error(int error) const
+void ft_map<Key, MappedType>::record_operation_error(int error_code) const noexcept
 {
-    this->_error_code = error;
-    ft_errno = error;
+    unsigned long long operation_id;
+
+    operation_id = ft_errno_next_operation_id();
+    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
+    ft_operation_error_stack_push(&this->_operation_errors, error_code, operation_id);
     return ;
+}
+
+template <typename Key, typename MappedType>
+int ft_map<Key, MappedType>::last_operation_error() const noexcept
+{
+    return (ft_operation_error_stack_last_error(&this->_operation_errors));
+}
+
+template <typename Key, typename MappedType>
+const char* ft_map<Key, MappedType>::last_operation_error_str() const noexcept
+{
+    int error_code;
+    const char *error_string;
+
+    error_code = this->last_operation_error();
+    error_string = ft_strerror(error_code);
+    if (!error_string)
+        error_string = "unknown error";
+    return (error_string);
+}
+
+template <typename Key, typename MappedType>
+int ft_map<Key, MappedType>::operation_error_at(ft_size_t index) const noexcept
+{
+    return (ft_operation_error_stack_error_at(&this->_operation_errors, index));
+}
+
+template <typename Key, typename MappedType>
+const char* ft_map<Key, MappedType>::operation_error_str_at(ft_size_t index) const noexcept
+{
+    int error_code;
+    const char *error_string;
+
+    error_code = this->operation_error_at(index);
+    error_string = ft_strerror(error_code);
+    if (!error_string)
+        error_string = "unknown error";
+    return (error_string);
+}
+
+template <typename Key, typename MappedType>
+void ft_map<Key, MappedType>::pop_operation_errors() noexcept
+{
+    ft_operation_error_stack_pop_all(&this->_operation_errors);
+    ft_global_error_stack_pop_all();
+    return ;
+}
+
+template <typename Key, typename MappedType>
+int ft_map<Key, MappedType>::pop_oldest_operation_error() noexcept
+{
+    ft_global_error_stack_pop_last();
+    return (ft_operation_error_stack_pop_last(&this->_operation_errors));
+}
+
+template <typename Key, typename MappedType>
+int ft_map<Key, MappedType>::pop_newest_operation_error() noexcept
+{
+    ft_global_error_stack_pop_newest();
+    return (ft_operation_error_stack_pop_newest(&this->_operation_errors));
 }
 
 template <typename Key, typename MappedType>
 ft_map<Key, MappedType>::ft_map(size_t initial_capacity)
     : _data(ft_nullptr), _capacity(initial_capacity), _size(0),
-      _error_code(FT_ERR_SUCCESSS), _state_mutex(ft_nullptr),
+      _operation_errors({{}, {}, 0}), _state_mutex(ft_nullptr),
       _thread_safe_enabled(false)
 {
     void *raw_memory;
 
     if (this->_capacity == 0)
     {
-        this->set_error(FT_ERR_SUCCESSS);
+        this->record_operation_error(FT_ERR_SUCCESSS);
         return ;
     }
     raw_memory = cma_malloc(sizeof(Pair<Key, MappedType>) * this->_capacity);
     if (raw_memory == ft_nullptr)
     {
         this->_capacity = 0;
-        this->set_error(FT_ERR_NO_MEMORY);
+        this->record_operation_error(FT_ERR_NO_MEMORY);
         return ;
     }
     this->_data = static_cast<Pair<Key, MappedType> *>(raw_memory);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->record_operation_error(FT_ERR_SUCCESSS);
     return ;
 }
 
 template <typename Key, typename MappedType>
 ft_map<Key, MappedType>::ft_map(const ft_map<Key, MappedType>& other)
-    : _data(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESSS),
-      _state_mutex(ft_nullptr), _thread_safe_enabled(false)
+    : _data(ft_nullptr), _capacity(0), _size(0),
+      _operation_errors({{}, {}, 0}), _state_mutex(ft_nullptr),
+      _thread_safe_enabled(false)
 {
     bool other_lock_acquired;
     bool other_thread_safe;
     size_t index;
     void *raw_memory;
+    int lock_error;
 
     other_lock_acquired = false;
     other_thread_safe = false;
     raw_memory = ft_nullptr;
-    if (other.lock_internal(&other_lock_acquired) != 0)
+    lock_error = other.lock_internal(&other_lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
+        this->record_operation_error(lock_error);
         return ;
     }
     this->_capacity = other._capacity;
     this->_size = other._size;
-    this->_error_code = other._error_code;
     other_thread_safe = (other._thread_safe_enabled && other._state_mutex != ft_nullptr);
     if (this->_capacity > 0)
     {
@@ -128,7 +199,7 @@ ft_map<Key, MappedType>::ft_map(const ft_map<Key, MappedType>& other)
             other.unlock_internal(other_lock_acquired);
             this->_capacity = 0;
             this->_size = 0;
-            this->set_error(FT_ERR_NO_MEMORY);
+            this->record_operation_error(FT_ERR_NO_MEMORY);
             return ;
         }
         this->_data = static_cast<Pair<Key, MappedType> *>(raw_memory);
@@ -162,7 +233,7 @@ ft_map<Key, MappedType>::ft_map(const ft_map<Key, MappedType>& other)
             return ;
         }
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    this->record_operation_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -176,19 +247,20 @@ ft_map<Key, MappedType>& ft_map<Key, MappedType>::operator=(const ft_map<Key, Ma
     size_t previous_capacity;
     pt_mutex *previous_mutex;
     bool previous_thread_safe;
-    int previous_error;
+    int lock_error;
 
     if (this == &other)
         return (*this);
-    if (copy._error_code != FT_ERR_SUCCESSS)
+    if (copy.last_operation_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(copy._error_code);
+        this->record_operation_error(copy.last_operation_error());
         return (*this);
     }
     this_lock_acquired = false;
-    if (this->lock_internal(&this_lock_acquired) != 0)
+    lock_error = this->lock_internal(&this_lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
+        this->record_operation_error(lock_error);
         return (*this);
     }
     previous_data = this->_data;
@@ -196,50 +268,49 @@ ft_map<Key, MappedType>& ft_map<Key, MappedType>::operator=(const ft_map<Key, Ma
     previous_capacity = this->_capacity;
     previous_mutex = this->_state_mutex;
     previous_thread_safe = this->_thread_safe_enabled;
-    previous_error = this->_error_code;
     this->_data = copy._data;
     this->_size = copy._size;
     this->_capacity = copy._capacity;
-    this->_error_code = copy._error_code;
     this->_state_mutex = copy._state_mutex;
     this->_thread_safe_enabled = copy._thread_safe_enabled;
     copy._data = previous_data;
     copy._size = previous_size;
     copy._capacity = previous_capacity;
-    copy._error_code = previous_error;
     copy._state_mutex = previous_mutex;
     copy._thread_safe_enabled = previous_thread_safe;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->record_operation_error(FT_ERR_SUCCESSS);
     this->unlock_internal(this_lock_acquired);
     return (*this);
 }
 
 template <typename Key, typename MappedType>
 ft_map<Key, MappedType>::ft_map(ft_map<Key, MappedType>&& other) noexcept
-    : _data(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESSS),
-      _state_mutex(ft_nullptr), _thread_safe_enabled(false)
+    : _data(ft_nullptr), _capacity(0), _size(0),
+      _operation_errors({{}, {}, 0}), _state_mutex(ft_nullptr),
+      _thread_safe_enabled(false)
 {
     bool other_lock_acquired;
+    int lock_error;
+
     other_lock_acquired = false;
-    if (other.lock_internal(&other_lock_acquired) != 0)
+    lock_error = other.lock_internal(&other_lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
+        this->record_operation_error(lock_error);
         return ;
     }
     this->_data = other._data;
     this->_capacity = other._capacity;
     this->_size = other._size;
-    this->_error_code = other._error_code;
     this->_state_mutex = other._state_mutex;
     this->_thread_safe_enabled = other._thread_safe_enabled;
     other.unlock_internal(other_lock_acquired);
     other._data = ft_nullptr;
     other._capacity = 0;
     other._size = 0;
-    other._error_code = FT_ERR_SUCCESSS;
     other._state_mutex = ft_nullptr;
     other._thread_safe_enabled = false;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->record_operation_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -255,20 +326,24 @@ ft_map<Key, MappedType>& ft_map<Key, MappedType>::operator=(ft_map<Key, MappedTy
     bool previous_thread_safe;
     bool other_thread_safe;
     bool new_mutex_locked;
+    int lock_error;
+    int other_lock_error;
 
     if (this == &other)
         return (*this);
     this_lock_acquired = false;
-    if (this->lock_internal(&this_lock_acquired) != 0)
+    lock_error = this->lock_internal(&this_lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
+        this->record_operation_error(lock_error);
         return (*this);
     }
     other_lock_acquired = false;
-    if (other.lock_internal(&other_lock_acquired) != 0)
+    other_lock_error = other.lock_internal(&other_lock_acquired);
+    if (other_lock_error != FT_ERR_SUCCESSS)
     {
         this->unlock_internal(this_lock_acquired);
-        this->set_error(ft_errno);
+        this->record_operation_error(other_lock_error);
         return (*this);
     }
     new_mutex_locked = false;
@@ -281,7 +356,6 @@ ft_map<Key, MappedType>& ft_map<Key, MappedType>::operator=(ft_map<Key, MappedTy
     this->_data = other._data;
     this->_capacity = other._capacity;
     this->_size = other._size;
-    this->_error_code = other._error_code;
     this->_state_mutex = other._state_mutex;
     this->_thread_safe_enabled = other._thread_safe_enabled;
     other.unlock_internal(other_lock_acquired);
@@ -289,7 +363,6 @@ ft_map<Key, MappedType>& ft_map<Key, MappedType>::operator=(ft_map<Key, MappedTy
     other._data = ft_nullptr;
     other._capacity = 0;
     other._size = 0;
-    other._error_code = FT_ERR_SUCCESSS;
     other._state_mutex = ft_nullptr;
     other._thread_safe_enabled = false;
     if (previous_data != ft_nullptr && previous_data != this->_data)
@@ -316,15 +389,16 @@ ft_map<Key, MappedType>& ft_map<Key, MappedType>::operator=(ft_map<Key, MappedTy
         if (this->_state_mutex != ft_nullptr)
         {
             this->_state_mutex->lock(THREAD_ID);
-            if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
+            int mutex_error = this->_state_mutex->operation_error_last_error();
+            if (mutex_error != FT_ERR_SUCCESSS)
             {
-                this->set_error(this->_state_mutex->get_error());
+                this->record_operation_error(mutex_error);
                 return (*this);
             }
             new_mutex_locked = true;
         }
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    this->record_operation_error(FT_ERR_SUCCESSS);
     this->unlock_mutex(this->_state_mutex, new_mutex_locked);
     return (*this);
 }
@@ -339,14 +413,24 @@ ft_map<Key, MappedType>::~ft_map()
     lock_acquired = false;
     data_pointer = this->_data;
     stored_size = this->_size;
-    if (this->lock_internal(&lock_acquired) == 0)
+    int lock_error;
+
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error == FT_ERR_SUCCESSS)
     {
         this->_data = ft_nullptr;
         this->_capacity = 0;
         this->_size = 0;
-        this->_error_code = FT_ERR_SUCCESSS;
-        this->unlock_internal(lock_acquired);
+        int unlock_error;
+
+        unlock_error = this->unlock_internal(lock_acquired);
+        if (unlock_error != FT_ERR_SUCCESSS)
+            this->record_operation_error(unlock_error);
+        else
+            this->record_operation_error(FT_ERR_SUCCESSS);
     }
+    else
+        this->record_operation_error(lock_error);
     if (data_pointer != ft_nullptr)
     {
         size_t index;
@@ -370,16 +454,19 @@ void ft_map<Key, MappedType>::insert(const Key& key, const MappedType& value)
     size_t index;
 
     lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
+    int lock_error;
+
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
+        this->record_operation_error(lock_error);
         return ;
     }
     index = this->find_index_unlocked(key);
     if (index != this->_size)
     {
         this->_data[index].value = value;
-        this->set_error(FT_ERR_SUCCESSS);
+        this->record_operation_error(FT_ERR_SUCCESSS);
         this->unlock_internal(lock_acquired);
         return ;
     }
@@ -396,14 +483,16 @@ void ft_map<Key, MappedType>::insert(const Key& key, const MappedType& value)
             doubled_capacity = this->_capacity * 2;
             if (doubled_capacity <= this->_capacity)
             {
-                this->set_error(FT_ERR_NO_MEMORY);
+                this->record_operation_error(FT_ERR_NO_MEMORY);
                 this->unlock_internal(lock_acquired);
                 return ;
             }
             next_capacity = doubled_capacity;
         }
-        this->resize_unlocked(next_capacity);
-        if (this->_error_code != FT_ERR_SUCCESSS)
+        int resize_error;
+
+        resize_error = this->resize_unlocked(next_capacity);
+        if (resize_error != FT_ERR_SUCCESSS)
         {
             this->unlock_internal(lock_acquired);
             return ;
@@ -411,7 +500,7 @@ void ft_map<Key, MappedType>::insert(const Key& key, const MappedType& value)
     }
     construct_at(&this->_data[this->_size], Pair<Key, MappedType>(key, ft_move(value)));
     this->_size++;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->record_operation_error(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -423,16 +512,19 @@ void ft_map<Key, MappedType>::insert(const Key& key, MappedType&& value)
     size_t index;
 
     lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
+    int lock_error;
+
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
+        this->record_operation_error(lock_error);
         return ;
     }
     index = this->find_index_unlocked(key);
     if (index != this->_size)
     {
         this->_data[index].value = ft_move(value);
-        this->set_error(FT_ERR_SUCCESSS);
+        this->record_operation_error(FT_ERR_SUCCESSS);
         this->unlock_internal(lock_acquired);
         return ;
     }
@@ -449,14 +541,16 @@ void ft_map<Key, MappedType>::insert(const Key& key, MappedType&& value)
             doubled_capacity = this->_capacity * 2;
             if (doubled_capacity <= this->_capacity)
             {
-                this->set_error(FT_ERR_NO_MEMORY);
+                this->record_operation_error(FT_ERR_NO_MEMORY);
                 this->unlock_internal(lock_acquired);
                 return ;
             }
             next_capacity = doubled_capacity;
         }
-        this->resize_unlocked(next_capacity);
-        if (this->_error_code != FT_ERR_SUCCESSS)
+        int resize_error;
+
+        resize_error = this->resize_unlocked(next_capacity);
+        if (resize_error != FT_ERR_SUCCESSS)
         {
             this->unlock_internal(lock_acquired);
             return ;
@@ -464,7 +558,7 @@ void ft_map<Key, MappedType>::insert(const Key& key, MappedType&& value)
     }
     construct_at(&this->_data[this->_size], Pair<Key, MappedType>(key, ft_move(value)));
     this->_size++;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->record_operation_error(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -477,9 +571,12 @@ Pair<Key, MappedType>* ft_map<Key, MappedType>::find(const Key& key)
     Pair<Key, MappedType> *result;
 
     lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
+    int lock_error;
+
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
+        this->record_operation_error(lock_error);
         result = this->get_end_pointer_unlocked();
         return (result);
     }
@@ -487,12 +584,12 @@ Pair<Key, MappedType>* ft_map<Key, MappedType>::find(const Key& key)
     if (index == this->_size)
     {
         result = this->get_end_pointer_unlocked();
-        this->set_error(FT_ERR_SUCCESSS);
+        this->record_operation_error(FT_ERR_SUCCESSS);
         this->unlock_internal(lock_acquired);
         return (result);
     }
     result = &this->_data[index];
-    this->set_error(FT_ERR_SUCCESSS);
+    this->record_operation_error(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (result);
 }
@@ -505,9 +602,12 @@ const Pair<Key, MappedType>* ft_map<Key, MappedType>::find(const Key& key) const
     const Pair<Key, MappedType> *result;
 
     lock_acquired = false;
-    if (const_cast<ft_map<Key, MappedType> *>(this)->lock_internal(&lock_acquired) != 0)
+    int lock_error;
+
+    lock_error = const_cast<ft_map<Key, MappedType> *>(this)->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        const_cast<ft_map<Key, MappedType> *>(this)->set_error(ft_errno);
+        const_cast<ft_map<Key, MappedType> *>(this)->record_operation_error(lock_error);
         result = this->get_end_pointer_unlocked();
         return (result);
     }
@@ -515,12 +615,12 @@ const Pair<Key, MappedType>* ft_map<Key, MappedType>::find(const Key& key) const
     if (index == this->_size)
     {
         result = this->get_end_pointer_unlocked();
-        const_cast<ft_map<Key, MappedType> *>(this)->set_error(FT_ERR_SUCCESSS);
+        const_cast<ft_map<Key, MappedType> *>(this)->record_operation_error(FT_ERR_SUCCESSS);
         const_cast<ft_map<Key, MappedType> *>(this)->unlock_internal(lock_acquired);
         return (result);
     }
     result = &this->_data[index];
-    const_cast<ft_map<Key, MappedType> *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_map<Key, MappedType> *>(this)->record_operation_error(FT_ERR_SUCCESSS);
     const_cast<ft_map<Key, MappedType> *>(this)->unlock_internal(lock_acquired);
     return (result);
 }
@@ -532,15 +632,18 @@ void ft_map<Key, MappedType>::remove(const Key& key)
     size_t index;
 
     lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
+    int lock_error;
+
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
+        this->record_operation_error(lock_error);
         return ;
     }
     index = this->find_index_unlocked(key);
     if (index == this->_size)
     {
-        this->set_error(FT_ERR_SUCCESSS);
+        this->record_operation_error(FT_ERR_SUCCESSS);
         this->unlock_internal(lock_acquired);
         return ;
     }
@@ -551,7 +654,7 @@ void ft_map<Key, MappedType>::remove(const Key& key)
         ::destroy_at(&this->_data[this->_size - 1]);
     }
     this->_size--;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->record_operation_error(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -563,13 +666,16 @@ bool ft_map<Key, MappedType>::empty() const
     bool is_empty;
 
     lock_acquired = false;
-    if (const_cast<ft_map<Key, MappedType> *>(this)->lock_internal(&lock_acquired) != 0)
+    int lock_error;
+
+    lock_error = const_cast<ft_map<Key, MappedType> *>(this)->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        const_cast<ft_map<Key, MappedType> *>(this)->set_error(ft_errno);
+        const_cast<ft_map<Key, MappedType> *>(this)->record_operation_error(lock_error);
         return (true);
     }
     is_empty = (this->_size == 0);
-    const_cast<ft_map<Key, MappedType> *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_map<Key, MappedType> *>(this)->record_operation_error(FT_ERR_SUCCESSS);
     const_cast<ft_map<Key, MappedType> *>(this)->unlock_internal(lock_acquired);
     return (is_empty);
 }
@@ -581,9 +687,12 @@ void ft_map<Key, MappedType>::clear()
     size_t index;
 
     lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
+    int lock_error;
+
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
+        this->record_operation_error(lock_error);
         return ;
     }
     index = 0;
@@ -593,7 +702,7 @@ void ft_map<Key, MappedType>::clear()
         index++;
     }
     this->_size = 0;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->record_operation_error(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -605,13 +714,16 @@ size_t ft_map<Key, MappedType>::size() const
     size_t current_size;
 
     lock_acquired = false;
-    if (const_cast<ft_map<Key, MappedType> *>(this)->lock_internal(&lock_acquired) != 0)
+    int lock_error;
+
+    lock_error = const_cast<ft_map<Key, MappedType> *>(this)->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        const_cast<ft_map<Key, MappedType> *>(this)->set_error(ft_errno);
+        const_cast<ft_map<Key, MappedType> *>(this)->record_operation_error(lock_error);
         return (0);
     }
     current_size = this->_size;
-    const_cast<ft_map<Key, MappedType> *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_map<Key, MappedType> *>(this)->record_operation_error(FT_ERR_SUCCESSS);
     const_cast<ft_map<Key, MappedType> *>(this)->unlock_internal(lock_acquired);
     return (current_size);
 }
@@ -623,35 +735,18 @@ size_t ft_map<Key, MappedType>::capacity() const
     size_t current_capacity;
 
     lock_acquired = false;
-    if (const_cast<ft_map<Key, MappedType> *>(this)->lock_internal(&lock_acquired) != 0)
+    int lock_error;
+
+    lock_error = const_cast<ft_map<Key, MappedType> *>(this)->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        const_cast<ft_map<Key, MappedType> *>(this)->set_error(ft_errno);
+        const_cast<ft_map<Key, MappedType> *>(this)->record_operation_error(lock_error);
         return (0);
     }
     current_capacity = this->_capacity;
-    const_cast<ft_map<Key, MappedType> *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_map<Key, MappedType> *>(this)->record_operation_error(FT_ERR_SUCCESSS);
     const_cast<ft_map<Key, MappedType> *>(this)->unlock_internal(lock_acquired);
     return (current_capacity);
-}
-
-template <typename Key, typename MappedType>
-int ft_map<Key, MappedType>::get_error() const
-{
-    int error_value;
-
-    error_value = this->_error_code;
-    const_cast<ft_map<Key, MappedType> *>(this)->set_error(error_value);
-    return (error_value);
-}
-
-template <typename Key, typename MappedType>
-const char* ft_map<Key, MappedType>::get_error_str() const
-{
-    int error_value;
-
-    error_value = this->_error_code;
-    const_cast<ft_map<Key, MappedType> *>(this)->set_error(error_value);
-    return (ft_strerror(error_value));
 }
 
 template <typename Key, typename MappedType>
@@ -661,14 +756,17 @@ Pair<Key, MappedType>* ft_map<Key, MappedType>::end()
     Pair<Key, MappedType> *result;
 
     lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
+    int lock_error;
+
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
+        this->record_operation_error(lock_error);
         result = this->get_end_pointer_unlocked();
         return (result);
     }
     result = this->get_end_pointer_unlocked();
-    this->set_error(FT_ERR_SUCCESSS);
+    this->record_operation_error(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (result);
 }
@@ -680,14 +778,17 @@ const Pair<Key, MappedType>* ft_map<Key, MappedType>::end() const
     const Pair<Key, MappedType> *result;
 
     lock_acquired = false;
-    if (const_cast<ft_map<Key, MappedType> *>(this)->lock_internal(&lock_acquired) != 0)
+    int lock_error;
+
+    lock_error = const_cast<ft_map<Key, MappedType> *>(this)->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        const_cast<ft_map<Key, MappedType> *>(this)->set_error(ft_errno);
+        const_cast<ft_map<Key, MappedType> *>(this)->record_operation_error(lock_error);
         result = this->get_end_pointer_unlocked();
         return (result);
     }
     result = this->get_end_pointer_unlocked();
-    const_cast<ft_map<Key, MappedType> *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_map<Key, MappedType> *>(this)->record_operation_error(FT_ERR_SUCCESSS);
     const_cast<ft_map<Key, MappedType> *>(this)->unlock_internal(lock_acquired);
     return (result);
 }
@@ -712,19 +813,22 @@ MappedType& ft_map<Key, MappedType>::at(const Key& key)
     static MappedType error_value = MappedType();
 
     lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
+    int lock_error;
+
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
+        this->record_operation_error(lock_error);
         return (error_value);
     }
     index = this->find_index_unlocked(key);
     if (this->_size == 0 || index == this->_size)
     {
-        this->set_error(FT_ERR_INTERNAL);
+        this->record_operation_error(FT_ERR_INTERNAL);
         this->unlock_internal(lock_acquired);
         return (error_value);
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    this->record_operation_error(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (this->_data[index].value);
 }
@@ -737,19 +841,22 @@ const MappedType& ft_map<Key, MappedType>::at(const Key& key) const
     static MappedType error_value = MappedType();
 
     lock_acquired = false;
-    if (const_cast<ft_map<Key, MappedType> *>(this)->lock_internal(&lock_acquired) != 0)
+    int lock_error;
+
+    lock_error = const_cast<ft_map<Key, MappedType> *>(this)->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        const_cast<ft_map<Key, MappedType> *>(this)->set_error(ft_errno);
+        const_cast<ft_map<Key, MappedType> *>(this)->record_operation_error(lock_error);
         return (error_value);
     }
     index = this->find_index_unlocked(key);
     if (this->_size == 0 || index == this->_size)
     {
-        const_cast<ft_map<Key, MappedType> *>(this)->set_error(FT_ERR_INTERNAL);
+        const_cast<ft_map<Key, MappedType> *>(this)->record_operation_error(FT_ERR_INTERNAL);
         const_cast<ft_map<Key, MappedType> *>(this)->unlock_internal(lock_acquired);
         return (error_value);
     }
-    const_cast<ft_map<Key, MappedType> *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_map<Key, MappedType> *>(this)->record_operation_error(FT_ERR_SUCCESSS);
     const_cast<ft_map<Key, MappedType> *>(this)->unlock_internal(lock_acquired);
     return (this->_data[index].value);
 }
@@ -762,29 +869,29 @@ int ft_map<Key, MappedType>::enable_thread_safety()
 
     if (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr)
     {
-        this->set_error(FT_ERR_SUCCESSS);
+        this->record_operation_error(FT_ERR_SUCCESSS);
         return (0);
     }
     memory = cma_malloc(sizeof(pt_mutex));
     if (memory == ft_nullptr)
     {
-        this->set_error(FT_ERR_NO_MEMORY);
+        this->record_operation_error(FT_ERR_NO_MEMORY);
         return (-1);
     }
     mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
-    {
-        int mutex_error;
+    int mutex_error;
 
-        mutex_error = mutex_pointer->get_error();
+    mutex_error = mutex_pointer->operation_error_last_error();
+    if (mutex_error != FT_ERR_SUCCESSS)
+    {
         mutex_pointer->~pt_mutex();
         cma_free(memory);
-        this->set_error(mutex_error);
+        this->record_operation_error(mutex_error);
         return (-1);
     }
     this->_state_mutex = mutex_pointer;
     this->_thread_safe_enabled = true;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->record_operation_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -792,7 +899,7 @@ template <typename Key, typename MappedType>
 void ft_map<Key, MappedType>::disable_thread_safety()
 {
     this->teardown_thread_safety();
-    this->set_error(FT_ERR_SUCCESSS);
+    this->record_operation_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -802,37 +909,37 @@ bool ft_map<Key, MappedType>::is_thread_safe_enabled() const
     bool enabled;
 
     enabled = (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr);
-    const_cast<ft_map<Key, MappedType> *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_map<Key, MappedType> *>(this)->record_operation_error(FT_ERR_SUCCESSS);
     return (enabled);
 }
 
 template <typename Key, typename MappedType>
 int ft_map<Key, MappedType>::lock(bool *lock_acquired) const
 {
-    int result;
+    int error_code;
 
-    ft_errno = FT_ERR_SUCCESSS;
-    result = this->lock_internal(lock_acquired);
-    if (result != 0)
+    error_code = this->lock_internal(lock_acquired);
+    if (error_code != FT_ERR_SUCCESSS)
     {
-        const_cast<ft_map<Key, MappedType> *>(this)->set_error(ft_errno);
-        return (result);
+        const_cast<ft_map<Key, MappedType> *>(this)->record_operation_error(error_code);
+        return (-1);
     }
-    this->_error_code = FT_ERR_SUCCESSS;
-    return (result);
+    const_cast<ft_map<Key, MappedType> *>(this)->record_operation_error(FT_ERR_SUCCESSS);
+    return (0);
 }
 
 template <typename Key, typename MappedType>
 void ft_map<Key, MappedType>::unlock(bool lock_acquired) const
 {
-    ft_errno = FT_ERR_SUCCESSS;
-    this->unlock_internal(lock_acquired);
-    if (lock_acquired && this->_state_mutex != ft_nullptr && this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
+    int unlock_error;
+
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESSS)
     {
-        const_cast<ft_map<Key, MappedType> *>(this)->set_error(this->_state_mutex->get_error());
+        const_cast<ft_map<Key, MappedType> *>(this)->record_operation_error(unlock_error);
         return ;
     }
-    this->_error_code = FT_ERR_SUCCESSS;
+    const_cast<ft_map<Key, MappedType> *>(this)->record_operation_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -843,7 +950,7 @@ void* ft_map<Key, MappedType>::get_mutex_address_debug() const
 }
 
 template <typename Key, typename MappedType>
-void ft_map<Key, MappedType>::resize_unlocked(size_t new_capacity)
+int ft_map<Key, MappedType>::resize_unlocked(size_t new_capacity)
 {
     Pair<Key, MappedType> *new_data;
     void *raw_memory;
@@ -852,8 +959,8 @@ void ft_map<Key, MappedType>::resize_unlocked(size_t new_capacity)
     raw_memory = cma_malloc(sizeof(Pair<Key, MappedType>) * new_capacity);
     if (raw_memory == ft_nullptr)
     {
-        this->set_error(FT_ERR_NO_MEMORY);
-        return ;
+        this->record_operation_error(FT_ERR_NO_MEMORY);
+        return (FT_ERR_NO_MEMORY);
     }
     new_data = static_cast<Pair<Key, MappedType> *>(raw_memory);
     index = 0;
@@ -867,8 +974,8 @@ void ft_map<Key, MappedType>::resize_unlocked(size_t new_capacity)
         cma_free(this->_data);
     this->_data = new_data;
     this->_capacity = new_capacity;
-    this->set_error(FT_ERR_SUCCESSS);
-    return ;
+    this->record_operation_error(FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
 }
 
 template <typename Key, typename MappedType>
@@ -889,52 +996,37 @@ size_t ft_map<Key, MappedType>::find_index_unlocked(const Key& key) const
 template <typename Key, typename MappedType>
 int ft_map<Key, MappedType>::lock_internal(bool *lock_acquired) const
 {
-    ft_errno = FT_ERR_SUCCESSS;
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || this->_state_mutex == ft_nullptr)
     {
-        return (0);
+        return (FT_ERR_SUCCESSS);
     }
     this->_state_mutex->lock(THREAD_ID);
-    if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = this->_state_mutex->get_error();
-        return (-1);
-    }
+    int mutex_error = this->_state_mutex->operation_error_last_error();
+    if (mutex_error != FT_ERR_SUCCESSS)
+        return (mutex_error);
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
 template <typename Key, typename MappedType>
-void ft_map<Key, MappedType>::unlock_internal(bool lock_acquired) const
+int ft_map<Key, MappedType>::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
-        return ;
-    ft_errno = FT_ERR_SUCCESSS;
+        return (FT_ERR_SUCCESSS);
     this->_state_mutex->unlock(THREAD_ID);
-    if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = this->_state_mutex->get_error();
-        return ;
-    }
-    return ;
+    return (this->_state_mutex->operation_error_last_error());
 }
 
 template <typename Key, typename MappedType>
-void ft_map<Key, MappedType>::unlock_mutex(pt_mutex *mutex, bool lock_acquired) const
+int ft_map<Key, MappedType>::unlock_mutex(pt_mutex *mutex, bool lock_acquired) const
 {
     if (!lock_acquired || mutex == ft_nullptr)
-        return ;
-    ft_errno = FT_ERR_SUCCESSS;
+        return (FT_ERR_SUCCESSS);
     mutex->unlock(THREAD_ID);
-    if (mutex->get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = mutex->get_error();
-        return ;
-    }
-    return ;
+    return (mutex->operation_error_last_error());
 }
 
 template <typename Key, typename MappedType>

@@ -1,7 +1,8 @@
 #ifndef LINEAR_ALGEBRA_HPP
 # define LINEAR_ALGEBRA_HPP
 
-#include "../PThread/mutex.hpp"
+#include "../Errno/errno_internal.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "../PThread/unique_lock.hpp"
 
 class vector2
@@ -10,16 +11,18 @@ class vector2
         double _x;
         double _y;
         mutable int _error_code;
-        mutable pt_mutex _mutex;
+        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
+        mutable pt_recursive_mutex _mutex;
 
         friend class matrix2;
 
         void    set_error_unlocked(int error_code) const;
         void    set_error(int error_code) const;
-        int     lock_self(ft_unique_lock<pt_mutex> &guard) const;
+        void    record_operation_error(int error_code) const noexcept;
+        int     lock_self(ft_unique_lock<pt_recursive_mutex> &guard) const;
         static int lock_pair(const vector2 &first, const vector2 &second,
-                ft_unique_lock<pt_mutex> &first_guard,
-                ft_unique_lock<pt_mutex> &second_guard);
+                ft_unique_lock<pt_recursive_mutex> &first_guard,
+                ft_unique_lock<pt_recursive_mutex> &second_guard);
 
     public:
         vector2();
@@ -38,6 +41,7 @@ class vector2
         vector2 normalize() const;
         int     get_error() const;
         const char  *get_error_str() const;
+        pt_recursive_mutex *get_mutex_for_validation() const;
 };
 
 class vector3
@@ -47,16 +51,18 @@ class vector3
         double _y;
         double _z;
         mutable int _error_code;
-        mutable pt_mutex _mutex;
+        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
+        mutable pt_recursive_mutex _mutex;
 
         friend class matrix3;
 
         void    set_error_unlocked(int error_code) const;
         void    set_error(int error_code) const;
-        int     lock_self(ft_unique_lock<pt_mutex> &guard) const;
+        void    record_operation_error(int error_code) const noexcept;
+        int     lock_self(ft_unique_lock<pt_recursive_mutex> &guard) const;
         static int lock_pair(const vector3 &first, const vector3 &second,
-                ft_unique_lock<pt_mutex> &first_guard,
-                ft_unique_lock<pt_mutex> &second_guard);
+                ft_unique_lock<pt_recursive_mutex> &first_guard,
+                ft_unique_lock<pt_recursive_mutex> &second_guard);
 
     public:
         vector3();
@@ -77,6 +83,7 @@ class vector3
         vector3 normalize() const;
         int     get_error() const;
         const char  *get_error_str() const;
+        pt_recursive_mutex *get_mutex_for_validation() const;
 };
 
 class vector4
@@ -87,16 +94,18 @@ class vector4
         double _z;
         double _w;
         mutable int _error_code;
-        mutable pt_mutex _mutex;
+        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
+        mutable pt_recursive_mutex _mutex;
 
         friend class matrix4;
 
         void    set_error_unlocked(int error_code) const;
         void    set_error(int error_code) const;
-        int     lock_self(ft_unique_lock<pt_mutex> &guard) const;
+        void    record_operation_error(int error_code) const noexcept;
+        int     lock_self(ft_unique_lock<pt_recursive_mutex> &guard) const;
         static int lock_pair(const vector4 &first, const vector4 &second,
-                ft_unique_lock<pt_mutex> &first_guard,
-                ft_unique_lock<pt_mutex> &second_guard);
+                ft_unique_lock<pt_recursive_mutex> &first_guard,
+                ft_unique_lock<pt_recursive_mutex> &second_guard);
 
     public:
         vector4();
@@ -117,6 +126,7 @@ class vector4
         vector4 normalize() const;
         int     get_error() const;
         const char  *get_error_str() const;
+        pt_recursive_mutex *get_mutex_for_validation() const;
 };
 
 class matrix2
@@ -124,14 +134,16 @@ class matrix2
     private:
         double _m[2][2];
         mutable int _error_code;
-        mutable pt_mutex _mutex;
+        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
+        mutable pt_recursive_mutex _mutex;
 
         void    set_error_unlocked(int error_code) const;
         void    set_error(int error_code) const;
-        int     lock_self(ft_unique_lock<pt_mutex> &guard) const;
+        void    record_operation_error(int error_code) const noexcept;
+        int     lock_self(ft_unique_lock<pt_recursive_mutex> &guard) const;
         static int lock_pair(const matrix2 &first, const matrix2 &second,
-                ft_unique_lock<pt_mutex> &first_guard,
-                ft_unique_lock<pt_mutex> &second_guard);
+                ft_unique_lock<pt_recursive_mutex> &first_guard,
+                ft_unique_lock<pt_recursive_mutex> &second_guard);
 
     public:
         matrix2();
@@ -147,6 +159,7 @@ class matrix2
         matrix2 invert() const;
         int     get_error() const;
         const char  *get_error_str() const;
+        pt_recursive_mutex *get_mutex_for_validation() const;
 };
 
 class matrix3
@@ -154,14 +167,16 @@ class matrix3
     private:
         double _m[3][3];
         mutable int _error_code;
-        mutable pt_mutex _mutex;
+        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
+        mutable pt_recursive_mutex _mutex;
 
         void    set_error_unlocked(int error_code) const;
         void    set_error(int error_code) const;
-        int     lock_self(ft_unique_lock<pt_mutex> &guard) const;
+        void    record_operation_error(int error_code) const noexcept;
+        int     lock_self(ft_unique_lock<pt_recursive_mutex> &guard) const;
         static int lock_pair(const matrix3 &first, const matrix3 &second,
-                ft_unique_lock<pt_mutex> &first_guard,
-                ft_unique_lock<pt_mutex> &second_guard);
+                ft_unique_lock<pt_recursive_mutex> &first_guard,
+                ft_unique_lock<pt_recursive_mutex> &second_guard);
 
     public:
         matrix3();
@@ -178,6 +193,7 @@ class matrix3
         matrix3 invert() const;
         int     get_error() const;
         const char  *get_error_str() const;
+        pt_recursive_mutex *get_mutex_for_validation() const;
 };
 
 class matrix4
@@ -185,14 +201,16 @@ class matrix4
     private:
         double _m[4][4];
         mutable int _error_code;
-        mutable pt_mutex _mutex;
+        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
+        mutable pt_recursive_mutex _mutex;
 
         void    set_error_unlocked(int error_code) const;
         void    set_error(int error_code) const;
-        int     lock_self(ft_unique_lock<pt_mutex> &guard) const;
+        void    record_operation_error(int error_code) const noexcept;
+        int     lock_self(ft_unique_lock<pt_recursive_mutex> &guard) const;
         static int lock_pair(const matrix4 &first, const matrix4 &second,
-                ft_unique_lock<pt_mutex> &first_guard,
-                ft_unique_lock<pt_mutex> &second_guard);
+                ft_unique_lock<pt_recursive_mutex> &first_guard,
+                ft_unique_lock<pt_recursive_mutex> &second_guard);
 
     public:
         matrix4();
@@ -215,6 +233,7 @@ class matrix4
         matrix4 invert() const;
         int     get_error() const;
         const char  *get_error_str() const;
+        pt_recursive_mutex *get_mutex_for_validation() const;
 };
 
 # include "linear_algebra_quaternion.hpp"

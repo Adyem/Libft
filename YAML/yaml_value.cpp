@@ -127,9 +127,9 @@ yaml_value::~yaml_value() noexcept
                             break ;
                         }
                         child = this->_map.at(key);
-                        if (this->_map.get_error() != FT_ERR_SUCCESSS)
+                        if (this->_map.last_operation_error() != FT_ERR_SUCCESSS)
                         {
-                            this->set_error(this->_map.get_error());
+                            this->set_error(this->_map.last_operation_error());
                             break ;
                         }
                         delete child;
@@ -260,9 +260,9 @@ void yaml_value::add_map_item(const ft_string &key, yaml_value *value) noexcept
         return ;
     this->_type = YAML_MAP;
     this->_map.insert(key, value);
-    if (this->_map.get_error() != FT_ERR_SUCCESSS)
+    if (this->_map.last_operation_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(this->_map.get_error());
+        this->set_error(this->_map.last_operation_error());
         return ;
     }
     this->_map_keys.push_back(key);

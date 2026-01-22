@@ -5,6 +5,7 @@
 #include "../Errno/errno.hpp"
 #include "../Errno/errno_internal.hpp"
 #include "../Template/move.hpp"
+#include "../PThread/lock_guard.hpp"
 
 static thread_local ft_operation_error_stack g_math_polynomial_operation_errors = {{}, {}, 0};
 
@@ -14,7 +15,7 @@ static void math_polynomial_push_error(int error_code) noexcept
 
     operation_id = ft_errno_next_operation_id();
     ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(g_math_polynomial_operation_errors, error_code, operation_id);
+    ft_operation_error_stack_push(&g_math_polynomial_operation_errors, error_code, operation_id);
     return ;
 }
 
@@ -43,19 +44,25 @@ static void math_polynomial_copy_vector(const ft_vector<double> &source,
 
 ft_cubic_spline::ft_cubic_spline() noexcept
     : _error_code(FT_ERR_SUCCESSS)
+    , _operation_errors({{}, {}, 0})
+    , _mutex()
 {
     return ;
 }
 
 ft_cubic_spline::ft_cubic_spline(ft_cubic_spline &&other) noexcept
-    : _error_code(other._error_code)
+    : _error_code(FT_ERR_SUCCESSS)
+    , _operation_errors({{}, {}, 0})
+    , _mutex()
 {
+    ft_recursive_lock_guard guard(other._mutex);
     this->x_values = ft_move(other.x_values);
     this->a_coefficients = ft_move(other.a_coefficients);
     this->b_coefficients = ft_move(other.b_coefficients);
     this->c_coefficients = ft_move(other.c_coefficients);
     this->d_coefficients = ft_move(other.d_coefficients);
-    other._error_code = FT_ERR_SUCCESSS;
+    this->set_error(other._error_code);
+    other.set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -76,23 +83,40 @@ ft_cubic_spline &ft_cubic_spline::operator=(ft_cubic_spline &&other) noexcept
 
 ft_cubic_spline::~ft_cubic_spline() noexcept
 {
-    this->_error_code = FT_ERR_SUCCESSS;
     return ;
 }
 
 int ft_cubic_spline::get_error() const noexcept
 {
+    ft_recursive_lock_guard guard(this->_mutex);
     return (this->_error_code);
 }
 
 const char *ft_cubic_spline::get_error_str() const noexcept
 {
-    return (ft_strerror(this->_error_code));
+    return (ft_strerror(this->get_error()));
 }
 
 void ft_cubic_spline::set_error(int error_code) const noexcept
 {
+    ft_recursive_lock_guard guard(this->_mutex);
     this->_error_code = error_code;
+    this->record_operation_error(error_code);
+    return ;
+}
+
+pt_recursive_mutex *ft_cubic_spline::get_mutex_for_validation() const noexcept
+{
+    return (&this->_mutex);
+}
+
+void ft_cubic_spline::record_operation_error(int error_code) const noexcept
+{
+    unsigned long long operation_id;
+
+    operation_id = ft_errno_next_operation_id();
+    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
+    ft_operation_error_stack_push(&this->_operation_errors, error_code, operation_id);
     return ;
 }
 

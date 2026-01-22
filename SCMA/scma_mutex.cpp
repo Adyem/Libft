@@ -40,7 +40,7 @@ int    scma_mutex_lock(void)
         mutex.lock(THREAD_ID);
         int mutex_error;
 
-        mutex_error = pt_mutex::operation_error_pop_newest();
+        mutex_error = mutex.operation_error_pop_newest();
         ft_global_error_stack_pop_newest();
         if (mutex_error != FT_ERR_SUCCESSS)
         {
@@ -74,7 +74,7 @@ int    scma_mutex_unlock(void)
         mutex.unlock(THREAD_ID);
         int mutex_error;
 
-        mutex_error = pt_mutex::operation_error_pop_newest();
+        mutex_error = mutex.operation_error_pop_newest();
         ft_global_error_stack_pop_newest();
         if (mutex_error != FT_ERR_SUCCESSS)
         {

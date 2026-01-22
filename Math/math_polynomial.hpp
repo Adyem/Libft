@@ -3,6 +3,8 @@
 
 # include "../Template/vector.hpp"
 # include "../Errno/errno.hpp"
+# include "../Errno/errno_internal.hpp"
+# include "../PThread/recursive_mutex.hpp"
 # include "linear_algebra.hpp"
 # include <cstddef>
 
@@ -12,6 +14,9 @@ class ft_cubic_spline
 {
     private:
         mutable int _error_code;
+        mutable ft_operation_error_stack _operation_errors;
+        mutable pt_recursive_mutex _mutex;
+        void record_operation_error(int error_code) const noexcept;
 
     public:
         ft_vector<double> x_values;
@@ -29,6 +34,7 @@ class ft_cubic_spline
         int get_error() const noexcept;
         const char *get_error_str() const noexcept;
         void set_error(int error_code) const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 };
 
 int math_polynomial_evaluate(const ft_vector<double> &coefficients,

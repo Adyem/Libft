@@ -9,21 +9,19 @@
 # include <immintrin.h>
 #endif
 
-static thread_local ft_operation_error_stack g_vector4_operation_errors = {{}, {}, 0};
+static void vector4_sleep_backoff()
+{
+    pt_thread_sleep(1);
+    return ;
+}
 
-static void vector4_push_error(int error_code) noexcept
+void vector4::record_operation_error(int error_code) const noexcept
 {
     unsigned long long operation_id;
 
     operation_id = ft_errno_next_operation_id();
     ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(g_vector4_operation_errors, error_code, operation_id);
-    return ;
-}
-
-static void vector4_sleep_backoff()
-{
-    pt_thread_sleep(1);
+    ft_operation_error_stack_push(&this->_operation_errors, error_code, operation_id);
     return ;
 }
 
@@ -65,12 +63,12 @@ static double vector4_compute_dot(double first_x, double first_y,
 }
 #endif
 
-int vector4::lock_self(ft_unique_lock<pt_mutex> &guard) const
+int vector4::lock_self(ft_unique_lock<pt_recursive_mutex> &guard) const
 {
-    ft_unique_lock<pt_mutex> local_guard(this->_mutex);
+    ft_unique_lock<pt_recursive_mutex> local_guard(this->_mutex);
     if (local_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        guard = ft_unique_lock<pt_mutex>();
+        guard = ft_unique_lock<pt_recursive_mutex>();
         return (local_guard.get_error());
     }
     guard = ft_move(local_guard);
@@ -78,8 +76,8 @@ int vector4::lock_self(ft_unique_lock<pt_mutex> &guard) const
 }
 
 int vector4::lock_pair(const vector4 &first, const vector4 &second,
-    ft_unique_lock<pt_mutex> &first_guard,
-    ft_unique_lock<pt_mutex> &second_guard)
+    ft_unique_lock<pt_recursive_mutex> &first_guard,
+    ft_unique_lock<pt_recursive_mutex> &second_guard)
 {
     const vector4 *ordered_first;
     const vector4 *ordered_second;
@@ -87,14 +85,14 @@ int vector4::lock_pair(const vector4 &first, const vector4 &second,
 
     if (&first == &second)
     {
-        ft_unique_lock<pt_mutex> single_guard(first._mutex);
+        ft_unique_lock<pt_recursive_mutex> single_guard(first._mutex);
 
         if (single_guard.get_error() != FT_ERR_SUCCESSS)
         {
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
-        second_guard = ft_unique_lock<pt_mutex>();
+        second_guard = ft_unique_lock<pt_recursive_mutex>();
         return (FT_ERR_SUCCESSS);
     }
     ordered_first = &first;
@@ -111,13 +109,13 @@ int vector4::lock_pair(const vector4 &first, const vector4 &second,
     }
     while (true)
     {
-        ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
+        ft_unique_lock<pt_recursive_mutex> lower_guard(ordered_first->_mutex);
 
         if (lower_guard.get_error() != FT_ERR_SUCCESSS)
         {
             return (lower_guard.get_error());
         }
-        ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
+        ft_unique_lock<pt_recursive_mutex> upper_guard(ordered_second->_mutex);
         if (upper_guard.get_error() == FT_ERR_SUCCESSS)
         {
             if (!swapped)
@@ -144,8 +142,8 @@ int vector4::lock_pair(const vector4 &first, const vector4 &second,
 
 void vector4::set_error_unlocked(int error_code) const
 {
-    vector4_push_error(error_code);
     this->_error_code = error_code;
+    this->record_operation_error(error_code);
     return ;
 }
 
@@ -156,7 +154,8 @@ void vector4::set_error(int error_code) const
 }
 
 vector4::vector4(const vector4 &other)
-    : _x(0.0), _y(0.0), _z(0.0), _w(0.0), _error_code(FT_ERR_SUCCESSS), _mutex()
+    : _x(0.0), _y(0.0), _z(0.0), _w(0.0), _error_code(FT_ERR_SUCCESSS),
+    _operation_errors({{}, {}, 0}), _mutex()
 {
     *this = other;
     return ;
@@ -164,8 +163,8 @@ vector4::vector4(const vector4 &other)
 
 vector4 &vector4::operator=(const vector4 &other)
 {
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
+    ft_unique_lock<pt_recursive_mutex> this_guard;
+    ft_unique_lock<pt_recursive_mutex> other_guard;
     int lock_error;
 
     if (this == &other)
@@ -186,7 +185,8 @@ vector4 &vector4::operator=(const vector4 &other)
 }
 
 vector4::vector4(vector4 &&other)
-    : _x(0.0), _y(0.0), _z(0.0), _w(0.0), _error_code(FT_ERR_SUCCESSS), _mutex()
+    : _x(0.0), _y(0.0), _z(0.0), _w(0.0), _error_code(FT_ERR_SUCCESSS),
+    _operation_errors({{}, {}, 0}), _mutex()
 {
     *this = ft_move(other);
     return ;
@@ -194,8 +194,8 @@ vector4::vector4(vector4 &&other)
 
 vector4 &vector4::operator=(vector4 &&other)
 {
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
+    ft_unique_lock<pt_recursive_mutex> this_guard;
+    ft_unique_lock<pt_recursive_mutex> other_guard;
     int lock_error;
 
     if (this == &other)
@@ -223,7 +223,7 @@ vector4 &vector4::operator=(vector4 &&other)
 
 double vector4::get_x() const
 {
-    ft_unique_lock<pt_mutex> guard;
+    ft_unique_lock<pt_recursive_mutex> guard;
     int lock_error;
     double value;
 
@@ -240,7 +240,7 @@ double vector4::get_x() const
 
 double vector4::get_y() const
 {
-    ft_unique_lock<pt_mutex> guard;
+    ft_unique_lock<pt_recursive_mutex> guard;
     int lock_error;
     double value;
 
@@ -257,7 +257,7 @@ double vector4::get_y() const
 
 double vector4::get_z() const
 {
-    ft_unique_lock<pt_mutex> guard;
+    ft_unique_lock<pt_recursive_mutex> guard;
     int lock_error;
     double value;
 
@@ -274,7 +274,7 @@ double vector4::get_z() const
 
 double vector4::get_w() const
 {
-    ft_unique_lock<pt_mutex> guard;
+    ft_unique_lock<pt_recursive_mutex> guard;
     int lock_error;
     double value;
 
@@ -291,8 +291,8 @@ double vector4::get_w() const
 
 vector4 vector4::add(const vector4 &other) const
 {
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
+    ft_unique_lock<pt_recursive_mutex> this_guard;
+    ft_unique_lock<pt_recursive_mutex> other_guard;
     int lock_error;
     vector4 result;
 
@@ -314,8 +314,8 @@ vector4 vector4::add(const vector4 &other) const
 
 vector4 vector4::subtract(const vector4 &other) const
 {
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
+    ft_unique_lock<pt_recursive_mutex> this_guard;
+    ft_unique_lock<pt_recursive_mutex> other_guard;
     int lock_error;
     vector4 result;
 
@@ -337,8 +337,8 @@ vector4 vector4::subtract(const vector4 &other) const
 
 double vector4::dot(const vector4 &other) const
 {
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
+    ft_unique_lock<pt_recursive_mutex> this_guard;
+    ft_unique_lock<pt_recursive_mutex> other_guard;
     int lock_error;
     double result;
 
@@ -356,7 +356,7 @@ double vector4::dot(const vector4 &other) const
 
 double vector4::length() const
 {
-    ft_unique_lock<pt_mutex> guard;
+    ft_unique_lock<pt_recursive_mutex> guard;
     int lock_error;
     double squared;
 
@@ -374,7 +374,7 @@ double vector4::length() const
 
 vector4 vector4::normalize() const
 {
-    ft_unique_lock<pt_mutex> guard;
+    ft_unique_lock<pt_recursive_mutex> guard;
     int lock_error;
     vector4 result;
     double squared_length;
@@ -409,7 +409,7 @@ vector4 vector4::normalize() const
 
 int vector4::get_error() const
 {
-    ft_unique_lock<pt_mutex> guard;
+    ft_unique_lock<pt_recursive_mutex> guard;
     int lock_error;
     int error_value;
 
@@ -429,4 +429,9 @@ const char *vector4::get_error_str() const
 
     error_value = this->get_error();
     return (ft_strerror(error_value));
+}
+
+pt_recursive_mutex *vector4::get_mutex_for_validation() const
+{
+    return (&this->_mutex);
 }

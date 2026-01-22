@@ -13,7 +13,7 @@ static void math_fft_push_error(int error_code)
     unsigned long long operation_id = ft_errno_next_operation_id();
 
     ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(g_math_fft_operation_errors, error_code, operation_id);
+    ft_operation_error_stack_push(&g_math_fft_operation_errors, error_code, operation_id);
     return ;
 }
 

@@ -20,12 +20,12 @@ class ft_promise
         ValueType _value;
         std::atomic<bool> _ready;
         mutable int _error_code;
-        mutable pt_mutex *_mutex;
         bool _thread_safe_enabled;
-        static thread_local ft_operation_error_stack _operation_errors;
+        mutable ft_operation_error_stack _operation_errors;
+        mutable pt_mutex *_mutex;
 
         void set_error_unlocked(int error) const;
-        static void record_operation_error(int error_code) noexcept;
+        void record_operation_error(int error_code) const noexcept;
         int lock_internal(bool *lock_acquired) const;
         int unlock_internal(bool lock_acquired) const;
         int prepare_thread_safety();
@@ -63,12 +63,12 @@ class ft_promise<void>
     private:
         std::atomic<bool> _ready;
         mutable int _error_code;
-        mutable pt_mutex *_mutex;
         bool _thread_safe_enabled;
-        static thread_local ft_operation_error_stack _operation_errors;
+        mutable ft_operation_error_stack _operation_errors;
+        mutable pt_mutex *_mutex;
 
         void set_error_unlocked(int error) const;
-        static void record_operation_error(int error_code) noexcept;
+        void record_operation_error(int error_code) const noexcept;
         int lock_internal(bool *lock_acquired) const;
         int unlock_internal(bool lock_acquired) const;
         int prepare_thread_safety();
@@ -101,7 +101,7 @@ class ft_promise<void>
 template <typename ValueType>
 ft_promise<ValueType>::ft_promise()
     : _value(), _ready(false), _error_code(FT_ERR_SUCCESSS),
-      _mutex(ft_nullptr), _thread_safe_enabled(false)
+      _thread_safe_enabled(false), _operation_errors({{}, {}, 0}), _mutex(ft_nullptr)
 {
     if (this->prepare_thread_safety() != 0)
         return ;
@@ -119,7 +119,7 @@ ft_promise<ValueType>::~ft_promise()
 
 inline ft_promise<void>::ft_promise()
     : _ready(false), _error_code(FT_ERR_SUCCESSS),
-      _mutex(ft_nullptr), _thread_safe_enabled(false)
+      _thread_safe_enabled(false), _operation_errors({{}, {}, 0}), _mutex(ft_nullptr)
 {
     if (this->prepare_thread_safety() != 0)
         return ;
@@ -166,7 +166,7 @@ void ft_promise<ValueType>::set_error_unlocked(int error) const
 
     mutable_promise = const_cast<ft_promise<ValueType> *>(this);
     mutable_promise->_error_code = error;
-    ft_promise<ValueType>::record_operation_error(error);
+    mutable_promise->record_operation_error(error);
     return ;
 }
 
@@ -176,34 +176,29 @@ inline void ft_promise<void>::set_error_unlocked(int error) const
 
     mutable_promise = const_cast<ft_promise<void> *>(this);
     mutable_promise->_error_code = error;
-    ft_promise<void>::record_operation_error(error);
+    mutable_promise->record_operation_error(error);
     return ;
 }
 
 template <typename ValueType>
-thread_local ft_operation_error_stack ft_promise<ValueType>::_operation_errors = {{}, {}, 0};
-
-template <typename ValueType>
-void ft_promise<ValueType>::record_operation_error(int error_code) noexcept
+void ft_promise<ValueType>::record_operation_error(int error_code) const noexcept
 {
     unsigned long long operation_id;
 
     operation_id = ft_errno_next_operation_id();
     ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(ft_promise<ValueType>::_operation_errors,
+    ft_operation_error_stack_push(&this->_operation_errors,
             error_code, operation_id);
     return ;
 }
 
-inline thread_local ft_operation_error_stack ft_promise<void>::_operation_errors = {{}, {}, 0};
-
-inline void ft_promise<void>::record_operation_error(int error_code) noexcept
+inline void ft_promise<void>::record_operation_error(int error_code) const noexcept
 {
     unsigned long long operation_id;
 
     operation_id = ft_errno_next_operation_id();
     ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(ft_promise<void>::_operation_errors,
+    ft_operation_error_stack_push(&this->_operation_errors,
             error_code, operation_id);
     return ;
 }
@@ -226,19 +221,19 @@ int ft_promise<ValueType>::prepare_thread_safety()
         return (-1);
     }
     mutex_pointer = new(memory_pointer) pt_mutex();
-    {
-        int mutex_error;
-
-        mutex_error = pt_mutex::operation_error_pop_newest();
-        ft_global_error_stack_pop_newest();
-        if (mutex_error != FT_ERR_SUCCESSS)
         {
-            mutex_pointer->~pt_mutex();
-            std::free(memory_pointer);
-            this->set_error_unlocked(mutex_error);
-            return (-1);
+            int mutex_error;
+
+            mutex_error = mutex_pointer->operation_error_pop_newest();
+            ft_global_error_stack_pop_newest();
+            if (mutex_error != FT_ERR_SUCCESSS)
+            {
+                mutex_pointer->~pt_mutex();
+                std::free(memory_pointer);
+                this->set_error_unlocked(mutex_error);
+                return (-1);
+            }
         }
-    }
     this->_mutex = mutex_pointer;
     this->_thread_safe_enabled = true;
     this->set_error_unlocked(FT_ERR_SUCCESSS);
@@ -262,19 +257,19 @@ inline int ft_promise<void>::prepare_thread_safety()
         return (-1);
     }
     mutex_pointer = new(memory_pointer) pt_mutex();
-    {
-        int mutex_error;
-
-        mutex_error = pt_mutex::operation_error_pop_newest();
-        ft_global_error_stack_pop_newest();
-        if (mutex_error != FT_ERR_SUCCESSS)
         {
-            mutex_pointer->~pt_mutex();
-            std::free(memory_pointer);
-            this->set_error_unlocked(mutex_error);
-            return (-1);
+            int mutex_error;
+
+            mutex_error = mutex_pointer->operation_error_pop_newest();
+            ft_global_error_stack_pop_newest();
+            if (mutex_error != FT_ERR_SUCCESSS)
+            {
+                mutex_pointer->~pt_mutex();
+                std::free(memory_pointer);
+                this->set_error_unlocked(mutex_error);
+                return (-1);
+            }
         }
-    }
     this->_mutex = mutex_pointer;
     this->_thread_safe_enabled = true;
     this->set_error_unlocked(FT_ERR_SUCCESSS);
@@ -324,7 +319,7 @@ int ft_promise<ValueType>::lock_internal(bool *lock_acquired) const
     mutable_promise->_mutex->lock(THREAD_ID);
     int mutex_error;
 
-    mutex_error = pt_mutex::operation_error_pop_newest();
+    mutex_error = mutable_promise->_mutex->operation_error_pop_newest();
     ft_global_error_stack_pop_newest();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
@@ -352,7 +347,7 @@ inline int ft_promise<void>::lock_internal(bool *lock_acquired) const
     mutable_promise->_mutex->lock(THREAD_ID);
     int mutex_error;
 
-    mutex_error = pt_mutex::operation_error_pop_newest();
+    mutex_error = mutable_promise->_mutex->operation_error_pop_newest();
     ft_global_error_stack_pop_newest();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
@@ -378,7 +373,7 @@ int ft_promise<ValueType>::unlock_internal(bool lock_acquired) const
     mutable_promise->_mutex->unlock(THREAD_ID);
     int mutex_error;
 
-    mutex_error = pt_mutex::operation_error_pop_newest();
+    mutex_error = mutable_promise->_mutex->operation_error_pop_newest();
     ft_global_error_stack_pop_newest();
     return (mutex_error);
 }
@@ -395,7 +390,7 @@ inline int ft_promise<void>::unlock_internal(bool lock_acquired) const
     mutable_promise->_mutex->unlock(THREAD_ID);
     int mutex_error;
 
-    mutex_error = pt_mutex::operation_error_pop_newest();
+    mutex_error = mutable_promise->_mutex->operation_error_pop_newest();
     ft_global_error_stack_pop_newest();
     return (mutex_error);
 }

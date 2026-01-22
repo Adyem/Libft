@@ -3,6 +3,7 @@
 
 #include "../Errno/errno.hpp"
 #include "../Errno/errno_internal.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "../Template/vector.hpp"
 
 class ft_dual_number
@@ -11,8 +12,9 @@ class ft_dual_number
         double          _value;
         double          _derivative;
         mutable int     _error_code;
-        static thread_local ft_operation_error_stack _operation_errors;
-        static void record_operation_error(int error_code) noexcept;
+        mutable ft_operation_error_stack _operation_errors;
+        mutable pt_recursive_mutex _mutex;
+        void record_operation_error(int error_code) const noexcept;
 
         void    set_error(int error_code) const noexcept;
 
@@ -44,6 +46,7 @@ class ft_dual_number
 
         int     get_error() const noexcept;
         const char  *get_error_str() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 };
 
 typedef ft_dual_number (*math_autodiff_univariate_function)(const ft_dual_number &input, void *user_data);

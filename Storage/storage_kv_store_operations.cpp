@@ -2730,10 +2730,10 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
         return (-1);
     }
     staged_map = ft_map<ft_string, kv_store_entry>(this->_data);
-    if (staged_map.get_error() != FT_ERR_SUCCESSS)
+    if (staged_map.last_operation_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(staged_map.get_error());
-        kv_store::unlock_store_guard(guard, staged_map.get_error());
+        this->set_error_unlocked(staged_map.last_operation_error());
+        kv_store::unlock_store_guard(guard, staged_map.last_operation_error());
         return (-1);
     }
     operation_count = operations.size();
@@ -2756,17 +2756,17 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
             Pair<ft_string, kv_store_entry> *end_pair;
 
             existing_pair = staged_map.find(operation._key);
-            if (staged_map.get_error() != FT_ERR_SUCCESSS)
+            if (staged_map.last_operation_error() != FT_ERR_SUCCESSS)
             {
-                this->set_error_unlocked(staged_map.get_error());
-                kv_store::unlock_store_guard(guard, staged_map.get_error());
+                this->set_error_unlocked(staged_map.last_operation_error());
+                kv_store::unlock_store_guard(guard, staged_map.last_operation_error());
                 return (-1);
             }
             end_pair = staged_map.end();
-            if (staged_map.get_error() != FT_ERR_SUCCESSS)
+            if (staged_map.last_operation_error() != FT_ERR_SUCCESSS)
             {
-                this->set_error_unlocked(staged_map.get_error());
-                kv_store::unlock_store_guard(guard, staged_map.get_error());
+                this->set_error_unlocked(staged_map.last_operation_error());
+                kv_store::unlock_store_guard(guard, staged_map.last_operation_error());
                 return (-1);
             }
             if (existing_pair == end_pair)
@@ -2776,10 +2776,10 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
                 return (-1);
             }
             staged_map.remove(operation._key);
-            if (staged_map.get_error() != FT_ERR_SUCCESSS)
+            if (staged_map.last_operation_error() != FT_ERR_SUCCESSS)
             {
-                this->set_error_unlocked(staged_map.get_error());
-                kv_store::unlock_store_guard(guard, staged_map.get_error());
+                this->set_error_unlocked(staged_map.last_operation_error());
+                kv_store::unlock_store_guard(guard, staged_map.last_operation_error());
                 return (-1);
             }
             metrics_delete_count = metrics_delete_count + 1;
@@ -2805,17 +2805,17 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
                 return (-1);
             }
             existing_pair = staged_map.find(operation._key);
-            if (staged_map.get_error() != FT_ERR_SUCCESSS)
+            if (staged_map.last_operation_error() != FT_ERR_SUCCESSS)
             {
-                this->set_error_unlocked(staged_map.get_error());
-                kv_store::unlock_store_guard(guard, staged_map.get_error());
+                this->set_error_unlocked(staged_map.last_operation_error());
+                kv_store::unlock_store_guard(guard, staged_map.last_operation_error());
                 return (-1);
             }
             end_pair = staged_map.end();
-            if (staged_map.get_error() != FT_ERR_SUCCESSS)
+            if (staged_map.last_operation_error() != FT_ERR_SUCCESSS)
             {
-                this->set_error_unlocked(staged_map.get_error());
-                kv_store::unlock_store_guard(guard, staged_map.get_error());
+                this->set_error_unlocked(staged_map.last_operation_error());
+                kv_store::unlock_store_guard(guard, staged_map.last_operation_error());
                 return (-1);
             }
             has_expiration = false;
@@ -2842,10 +2842,10 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
                     if (expiration_timestamp <= current_time)
                     {
                         staged_map.remove(operation._key);
-                        if (staged_map.get_error() != FT_ERR_SUCCESSS)
+                        if (staged_map.last_operation_error() != FT_ERR_SUCCESSS)
                         {
-                            this->set_error_unlocked(staged_map.get_error());
-                            kv_store::unlock_store_guard(guard, staged_map.get_error());
+                            this->set_error_unlocked(staged_map.last_operation_error());
+                            kv_store::unlock_store_guard(guard, staged_map.last_operation_error());
                             return (-1);
                         }
                         metrics_set_count = metrics_set_count + 1;
@@ -2890,10 +2890,10 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
                 if (expiration_timestamp <= current_time)
                 {
                     staged_map.remove(operation._key);
-                    if (staged_map.get_error() != FT_ERR_SUCCESSS)
+                    if (staged_map.last_operation_error() != FT_ERR_SUCCESSS)
                     {
-                        this->set_error_unlocked(staged_map.get_error());
-                        kv_store::unlock_store_guard(guard, staged_map.get_error());
+                        this->set_error_unlocked(staged_map.last_operation_error());
+                        kv_store::unlock_store_guard(guard, staged_map.last_operation_error());
                         return (-1);
                     }
                     metrics_set_count = metrics_set_count + 1;
@@ -2920,10 +2920,10 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
             else
             {
                 staged_map.insert(operation._key, new_entry);
-                if (staged_map.get_error() != FT_ERR_SUCCESSS)
+                if (staged_map.last_operation_error() != FT_ERR_SUCCESSS)
                 {
-                    this->set_error_unlocked(staged_map.get_error());
-                    kv_store::unlock_store_guard(guard, staged_map.get_error());
+                    this->set_error_unlocked(staged_map.last_operation_error());
+                    kv_store::unlock_store_guard(guard, staged_map.last_operation_error());
                     return (-1);
                 }
             }
@@ -3549,9 +3549,9 @@ int kv_store::apply_snapshot_locked(const ft_vector<kv_store_snapshot_entry> &en
         return (-1);
     }
     staged_map = ft_map<ft_string, kv_store_entry>();
-    if (staged_map.get_error() != FT_ERR_SUCCESSS)
+    if (staged_map.last_operation_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(staged_map.get_error());
+        this->set_error_unlocked(staged_map.last_operation_error());
         return (-1);
     }
     entry_begin = entries.begin();
@@ -3587,9 +3587,9 @@ int kv_store::apply_snapshot_locked(const ft_vector<kv_store_snapshot_entry> &en
             return (-1);
         }
         staged_map.insert(entry_cursor->key, entry_value);
-        if (staged_map.get_error() != FT_ERR_SUCCESSS)
+        if (staged_map.last_operation_error() != FT_ERR_SUCCESSS)
         {
-            this->set_error_unlocked(staged_map.get_error());
+            this->set_error_unlocked(staged_map.last_operation_error());
             return (-1);
         }
         entry_cursor++;

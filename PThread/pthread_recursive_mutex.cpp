@@ -10,12 +10,9 @@ thread_local ft_operation_error_stack pt_recursive_mutex::_operation_errors = {{
 unsigned long long pt_recursive_mutex::operation_error_push_entry_with_id(int error_code,
         unsigned long long operation_id)
 {
-    ft_errno_mutex().lock();
-
     ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push_unlocked(&pt_recursive_mutex::_operation_errors,
+    ft_operation_error_stack_push(&pt_recursive_mutex::_operation_errors,
             error_code, operation_id);
-    ft_errno_mutex().unlock();
     return (operation_id);
 }
 
@@ -36,118 +33,61 @@ void pt_recursive_mutex::operation_error_push(int error_code)
 
 int pt_recursive_mutex::operation_error_pop_last()
 {
-    int error_value;
-
-    ft_errno_mutex().lock();
-    error_value = ft_operation_error_stack_pop_last(pt_recursive_mutex::_operation_errors);
-    ft_errno_mutex().unlock();
-    return (error_value);
+    return (ft_operation_error_stack_pop_last(&pt_recursive_mutex::_operation_errors));
 }
 
 int pt_recursive_mutex::operation_error_pop_newest()
 {
-    int error_value;
-
-    ft_errno_mutex().lock();
-    error_value = ft_operation_error_stack_pop_newest(pt_recursive_mutex::_operation_errors);
-    ft_errno_mutex().unlock();
-    return (error_value);
+    return (ft_operation_error_stack_pop_newest(&pt_recursive_mutex::_operation_errors));
 }
 
 void pt_recursive_mutex::operation_error_pop_all()
 {
-    ft_errno_mutex().lock();
-
-    ft_operation_error_stack_pop_all(pt_recursive_mutex::_operation_errors);
+    ft_operation_error_stack_pop_all(&pt_recursive_mutex::_operation_errors);
     ft_global_error_stack_pop_all();
-    ft_errno_mutex().unlock();
     return ;
 }
 
 int pt_recursive_mutex::operation_error_error_at(ft_size_t index)
 {
-    ft_errno_mutex().lock();
-    int error_value = ft_operation_error_stack_error_at(pt_recursive_mutex::_operation_errors, index);
-
-    ft_errno_mutex().unlock();
-    return (error_value);
+    return (ft_operation_error_stack_error_at(&pt_recursive_mutex::_operation_errors, index));
 }
 
 int pt_recursive_mutex::operation_error_last_error()
 {
-    ft_errno_mutex().lock();
-    int error_value = ft_operation_error_stack_last_error(pt_recursive_mutex::_operation_errors);
-
-    ft_errno_mutex().unlock();
-    return (error_value);
+    return (ft_operation_error_stack_last_error(&pt_recursive_mutex::_operation_errors));
 }
 
 ft_size_t pt_recursive_mutex::operation_error_depth()
 {
-    ft_errno_mutex().lock();
-    ft_size_t depth = pt_recursive_mutex::_operation_errors.count;
-
-    ft_errno_mutex().unlock();
-    return (depth);
+    return (ft_operation_error_stack_depth(&pt_recursive_mutex::_operation_errors));
 }
 
 unsigned long long pt_recursive_mutex::operation_error_get_id_at(ft_size_t index)
 {
-    ft_errno_mutex().lock();
-    if (index == 0 || index > pt_recursive_mutex::_operation_errors.count)
-    {
-        ft_errno_mutex().unlock();
-        return (0);
-    }
-    unsigned long long operation_id = pt_recursive_mutex::_operation_errors.op_ids[index - 1];
-
-    ft_errno_mutex().unlock();
-    return (operation_id);
+    return (ft_operation_error_stack_get_id_at(&pt_recursive_mutex::_operation_errors, index));
 }
 
 ft_size_t pt_recursive_mutex::operation_error_find_by_id(unsigned long long operation_id)
 {
-    ft_errno_mutex().lock();
-    ft_size_t index = 0;
-    ft_size_t count = pt_recursive_mutex::_operation_errors.count;
-    while (index < count)
-    {
-        if (pt_recursive_mutex::_operation_errors.op_ids[index] == operation_id)
-        {
-            ft_errno_mutex().unlock();
-            return (index + 1);
-        }
-        index += 1;
-    }
-    ft_errno_mutex().unlock();
-    return (0);
+    return (ft_operation_error_stack_find_by_id(&pt_recursive_mutex::_operation_errors, operation_id));
 }
 
 const char *pt_recursive_mutex::operation_error_error_str_at(ft_size_t index)
 {
-    int error_value;
-    const char *error_string;
-
-    ft_errno_mutex().lock();
-    error_value = ft_operation_error_stack_error_at(pt_recursive_mutex::_operation_errors, index);
-    error_string = ft_strerror(error_value);
+    int error_value = ft_operation_error_stack_error_at(&pt_recursive_mutex::_operation_errors, index);
+    const char *error_string = ft_strerror(error_value);
     if (!error_string)
         error_string = "unknown error";
-    ft_errno_mutex().unlock();
     return (error_string);
 }
 
 const char *pt_recursive_mutex::operation_error_last_error_str()
 {
-    int error_value;
-    const char *error_string;
-
-    ft_errno_mutex().lock();
-    error_value = ft_operation_error_stack_last_error(pt_recursive_mutex::_operation_errors);
-    error_string = ft_strerror(error_value);
+    int error_value = ft_operation_error_stack_last_error(&pt_recursive_mutex::_operation_errors);
+    const char *error_string = ft_strerror(error_value);
     if (!error_string)
         error_string = "unknown error";
-    ft_errno_mutex().unlock();
     return (error_string);
 }
 

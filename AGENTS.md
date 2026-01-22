@@ -28,6 +28,13 @@ Document and implement this helper as a dedicated low-level interface intended f
 validating constructor error handling immediately after construction by manually locking and
 unlocking the mutex to verify proper use.
 
+## Pair Exception
+
+`Template/pair.hpp` intentionally provides a minimal `Pair` template that exposes `key`/`value`
+directly for compatibility with the rest of the library. That class is exempt from the mutex and
+Errno requirements described above; it must not introduce a recursive mutex, error-stack tracking,
+or the associated helpers. Treat `Pair` as a plain-old-data holder only.
+
 #Errno and Error Stack Rules
 
 Class and non-class error handling must use the shared error-stack types from the Errno module.
@@ -88,18 +95,16 @@ All callers that push or pop entries from the global stack must leave the newest
 
 ## Local Operation Stacks (classes, CMA, SCMA)
 
-Every class and module that tracks its own errors must reuse the `ft_operation_error_stack` model exported by the Errno module:
+Every class and module that tracks its own errors must reuse the `ft_operation_error_stack` model exported by the Errno module, but the stack now lives in the instance instead of being shared thread-locally:
 
-- Declare a thread-local `ft_operation_error_stack` instance dedicated to that class or module.
-- Document a low-level helper that exposes direct access to the stack so callers writing low-level checks can manually lock, inspect, and unlock it during constructor validation.
-- When reporting an error, first call `ft_errno_next_operation_id()` to reserve a unique identifier; then, while holding `ft_errno_mutex_wrapper`, push the entry on the Errno global stack with `ft_global_error_stack_push_entry_with_id(error_code, operation_id)` and immediately push the same (error_code, operation_id) tuple onto the class/module stack via `ft_operation_error_stack_push(stack, error_code, operation_id)`. This keeps both stacks synchronized on a single entry ID.
-- When removing entries, use `ft_operation_error_stack_pop_last`, `_pop_newest`, or `_pop_all` before or after mirroring the removal on the global stack so that a popped entry is discarded from both locations.
-- Inspect local stacks with `ft_operation_error_stack_error_at`, `_last_error`, and `_last_id` instead of duplicating logic.
-- Every class should expose helper functions that let callers inspect and push/pull from its local stack in the same way they already expose the recursive mutex helper.
-- During error handling, continue using the Errno mutex wrapper whenever the global stack is involved so the class mutex is not re-entered unintentionally.
-
-_Note: `ft_nullptr_t` is a stateless sentinel and does not track errors via a per-class stack or push entries to the global stack; it never alters any error stacks._
-
+- Declare a non-static `ft_operation_error_stack` member on each class instance (or module object) so every object keeps its own local stack.
+- Document a low-level helper that exposes direct access to that stack so callers writing low-level checks can manually inspect it before higher-level constructors return.
+- When reporting an error, first call `ft_errno_next_operation_id()` to reserve a unique identifier; then call `ft_global_error_stack_push_entry_with_id(error_code, operation_id)` and `ft_operation_error_stack_push(stack, error_code, operation_id)` in sequence. These helpers lock the Errno mutex automatically, so callers must not reenter the mutex wrapper themselves.
+- When removing entries, call `ft_operation_error_stack_pop_last`, `_pop_newest`, or `_pop_all` and mirror the same operation on the global stack so each entry ID is removed from both places.
+- Inspect local stacks with `ft_operation_error_stack_error_at`, `_last_error`, and `_last_id` rather than duplicating logic.
+- Provide helper functions that expose both the recursive mutex and the local operation stack so that constructor validation or debugger tooling can lock/inspect things in a deterministic way.
+- Errno helpers now lock/unlock internally, so there is no need to manually guard them with `ft_errno_mutex()` when pushing or popping entries.
+Note: `ft_nullptr_t` is a stateless sentinel and does not track errors via a per-class stack or push entries to the global stack; it never alters any error stacks.
 Public CMA and SCMA entry points (see their dedicated modules for the authorized function lists) also maintain module-local `ft_operation_error_stack` instances. They follow the same pattern as class stacks: each public function pushes to both the Errno global stack and the module stack using the shared operation ID so that the error ID stays consistent across both stacks. Internal helpers inside CMA and SCMA remain on their dedicated stacks and communicate with callers via the local stack without touching the global Errno stack directly.
 
 Only .cpp files must be prefixed with the name of the module they belong to. Nested modules must contain both the original module name followed by the nested module name.

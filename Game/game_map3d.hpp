@@ -4,6 +4,7 @@
 #include <cstddef>
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
 
@@ -18,8 +19,10 @@ class ft_map3d
         size_t  _depth;
         mutable int    _error;
         mutable pt_mutex    _mutex;
+        mutable ft_operation_error_stack _operation_errors;
 
         void    set_error(int err) const noexcept;
+        void    record_operation_error(int error_code) const noexcept;
 
         static void finalize_lock(ft_unique_lock<pt_mutex> &guard) noexcept;
         static void sleep_backoff() noexcept;
@@ -49,6 +52,14 @@ class ft_map3d
         size_t  get_depth() const;
         int     get_error() const;
         const char *get_error_str() const;
+        ft_operation_error_stack *get_operation_error_stack_for_validation() noexcept;
+        int     last_operation_error() const noexcept;
+        const char *last_operation_error_str() const noexcept;
+        int     operation_error_at(ft_size_t index) const noexcept;
+        const char *operation_error_str_at(ft_size_t index) const noexcept;
+        void    pop_operation_errors() noexcept;
+        int     pop_oldest_operation_error() noexcept;
+        int     pop_newest_operation_error() noexcept;
 };
 
 #endif
