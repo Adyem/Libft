@@ -4,6 +4,8 @@
 #include <atomic>
 #include <cstdlib>
 
+thread_local int ft_errno = FT_ERR_SUCCESSS;
+
 ft_errno_mutex_wrapper::ft_errno_mutex_wrapper(void)
 {
     return ;
@@ -339,6 +341,28 @@ static unsigned long long ft_operation_error_stack_last_id_internal(
     return (error_stack->op_ids[0]);
 }
 
+static unsigned long long ft_operation_error_stack_get_id_at_internal(
+        const ft_operation_error_stack *error_stack, ft_size_t index)
+{
+    if (index == 0 || index > error_stack->count)
+        return (0);
+    return (error_stack->op_ids[index - 1]);
+}
+
+static ft_size_t ft_operation_error_stack_find_by_id_internal(
+        const ft_operation_error_stack *error_stack, unsigned long long id)
+{
+    ft_size_t index = 0;
+
+    while (index < error_stack->count)
+    {
+        if (error_stack->op_ids[index] == id)
+            return (index + 1);
+        index++;
+    }
+    return (0);
+}
+
 
 void ft_operation_error_stack_push(ft_operation_error_stack *error_stack,
         int error_code, unsigned long long op_id)
@@ -401,6 +425,35 @@ unsigned long long ft_operation_error_stack_last_id(const ft_operation_error_sta
 
     ft_errno_mutex().unlock();
     return (op_id);
+}
+
+unsigned long long ft_operation_error_stack_get_id_at(
+        const ft_operation_error_stack *error_stack, ft_size_t index)
+{
+    ft_errno_mutex().lock();
+    unsigned long long op_id = ft_operation_error_stack_get_id_at_internal(error_stack, index);
+
+    ft_errno_mutex().unlock();
+    return (op_id);
+}
+
+ft_size_t ft_operation_error_stack_find_by_id(
+        const ft_operation_error_stack *error_stack, unsigned long long id)
+{
+    ft_errno_mutex().lock();
+    ft_size_t location = ft_operation_error_stack_find_by_id_internal(error_stack, id);
+
+    ft_errno_mutex().unlock();
+    return (location);
+}
+
+ft_size_t ft_operation_error_stack_depth(const ft_operation_error_stack *error_stack)
+{
+    ft_errno_mutex().lock();
+    ft_size_t depth = error_stack->count;
+
+    ft_errno_mutex().unlock();
+    return (depth);
 }
 
 void ft_set_errno_locked(int error_code)

@@ -23,16 +23,10 @@ class ft_unique_lock
     private:
         MutexType *_mutex;
         bool _owns_lock;
-        mutable std::atomic<int> _error_code;
-        mutable std::atomic<int> _system_error_code;
         mutable pt_mutex _state_mutex;
-        static thread_local ft_operation_error_stack _operation_errors;
+        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
 
-        void set_error(int error) const noexcept;
-        void set_error_no_errno(int error) const noexcept;
-        void set_system_error(int error) const noexcept;
-        void set_system_error_no_errno(int error) const noexcept;
-        static void record_error(ft_operation_error_stack &error_stack, int error, bool push_global = true);
+        void record_error(int error, bool push_global = true) const noexcept;
 
     public:
         ft_unique_lock();
@@ -50,56 +44,18 @@ class ft_unique_lock
 
         bool owns_lock() const;
         MutexType *mutex() const;
-        int get_error() const;
-        const char *get_error_str() const;
+        int last_operation_error() const noexcept;
+        const char *last_operation_error_str() const noexcept;
 };
 
 template <typename MutexType>
-void ft_unique_lock<MutexType>::set_error(int error) const noexcept
-{
-    this->_error_code.store(error, std::memory_order_relaxed);
-    ft_unique_lock<MutexType>::record_error(ft_unique_lock<MutexType>::_operation_errors,
-            error, true);
-    return ;
-}
-
-template <typename MutexType>
-void ft_unique_lock<MutexType>::set_error_no_errno(int error) const noexcept
-{
-    this->_error_code.store(error, std::memory_order_relaxed);
-    ft_unique_lock<MutexType>::record_error(ft_unique_lock<MutexType>::_operation_errors,
-            error, false);
-    return ;
-}
-
-template <typename MutexType>
-void ft_unique_lock<MutexType>::set_system_error(int error) const noexcept
-{
-    this->_system_error_code.store(error, std::memory_order_relaxed);
-    return ;
-}
-
-template <typename MutexType>
-void ft_unique_lock<MutexType>::set_system_error_no_errno(int error) const noexcept
-{
-    this->_system_error_code.store(error, std::memory_order_relaxed);
-    return ;
-}
-
-template <typename MutexType>
-void ft_unique_lock<MutexType>::record_error(ft_operation_error_stack &error_stack,
-        int error, bool push_global)
+void ft_unique_lock<MutexType>::record_error(int error, bool push_global) const noexcept
 {
     unsigned long long operation_id = 0;
 
     if (push_global)
-    {
-        operation_id = ft_errno_next_operation_id();
-        ft_errno_mutex().lock();
-        ft_global_error_stack_push_entry_with_id(error, operation_id);
-        ft_errno_mutex().unlock();
-    }
-    ft_operation_error_stack_push(&error_stack, error, operation_id);
+        operation_id = ft_global_error_stack_push_entry(error);
+    ft_operation_error_stack_push(&this->_operation_errors, error, operation_id);
     return ;
 }
 
@@ -124,11 +80,8 @@ template <typename MutexType>
 ft_unique_lock<MutexType>::ft_unique_lock()
     : _mutex(ft_nullptr)
     , _owns_lock(false)
-    , _error_code(FT_ERR_SUCCESSS)
-    , _system_error_code(FT_SYS_ERR_SUCCESS)
 {
-    this->set_error_no_errno(FT_ERR_SUCCESSS);
-    this->set_system_error_no_errno(FT_SYS_ERR_SUCCESS);
+    this->record_error(FT_ERR_SUCCESSS, false);
     return ;
 }
 
@@ -136,8 +89,6 @@ template <typename MutexType>
 ft_unique_lock<MutexType>::ft_unique_lock(MutexType &mutex)
     : _mutex(&mutex)
     , _owns_lock(false)
-    , _error_code(FT_ERR_SUCCESSS)
-    , _system_error_code(FT_SYS_ERR_SUCCESS)
 {
     this->lock();
     return ;
@@ -154,8 +105,7 @@ ft_unique_lock<MutexType>::~ft_unique_lock()
     state_error = ft_unique_lock_pop_state_mutex_error(this->_state_mutex);
     if (state_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_no_errno(state_error);
-        this->set_system_error(state_error);
+        this->record_error(state_error, false);
         return ;
     }
     if (this->_owns_lock && this->_mutex != ft_nullptr)
@@ -164,19 +114,15 @@ ft_unique_lock<MutexType>::~ft_unique_lock()
     state_error = ft_unique_lock_pop_state_mutex_error(this->_state_mutex);
     if (state_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_no_errno(state_error);
-        this->set_system_error(state_error);
+        this->record_error(state_error, false);
         return ;
     }
     if (needs_unlock)
     {
         this->unlock();
-        if (this->_error_code.load(std::memory_order_relaxed) == FT_ERR_SUCCESSS)
-            this->set_system_error(FT_SYS_ERR_SUCCESS);
         return ;
     }
-    this->set_error_no_errno(FT_ERR_SUCCESSS);
-    this->set_system_error(FT_SYS_ERR_SUCCESS);
+    this->record_error(FT_ERR_SUCCESSS, false);
     return ;
 }
 
@@ -184,49 +130,39 @@ template <typename MutexType>
 ft_unique_lock<MutexType>::ft_unique_lock(ft_unique_lock &&other)
     : _mutex(ft_nullptr)
     , _owns_lock(false)
-    , _error_code(FT_ERR_SUCCESSS)
-    , _system_error_code(FT_SYS_ERR_SUCCESS)
 {
     MutexType *moved_mutex;
     bool moved_owns;
     int moved_error;
-    int moved_system_error;
     int state_error;
 
     moved_mutex = ft_nullptr;
     moved_owns = false;
     moved_error = FT_ERR_SUCCESSS;
-    moved_system_error = FT_SYS_ERR_SUCCESS;
     other._state_mutex.lock(THREAD_ID);
     state_error = ft_unique_lock_pop_state_mutex_error(this->_state_mutex);
     if (state_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_no_errno(state_error);
-        this->set_system_error(state_error);
+        this->record_error(state_error, false);
         return ;
     }
     moved_mutex = other._mutex;
     moved_owns = other._owns_lock;
-    moved_error = other._error_code.load(std::memory_order_relaxed);
-    moved_system_error = other._system_error_code.load(std::memory_order_relaxed);
+    moved_error = other.last_operation_error();
     other._mutex = ft_nullptr;
     other._owns_lock = false;
-    other.set_error_no_errno(FT_ERR_SUCCESSS);
-    other.set_system_error_no_errno(FT_SYS_ERR_SUCCESS);
     other._state_mutex.unlock(THREAD_ID);
     state_error = ft_unique_lock_pop_state_mutex_error(this->_state_mutex);
     if (state_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_no_errno(state_error);
-        this->set_system_error(state_error);
+        this->record_error(state_error, false);
         return ;
     }
     this->_state_mutex.lock(THREAD_ID);
     state_error = ft_unique_lock_pop_state_mutex_error(this->_state_mutex);
     if (state_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_no_errno(state_error);
-        this->set_system_error(state_error);
+        this->record_error(state_error, false);
         return ;
     }
     this->_mutex = moved_mutex;
@@ -235,12 +171,10 @@ ft_unique_lock<MutexType>::ft_unique_lock(ft_unique_lock &&other)
     state_error = ft_unique_lock_pop_state_mutex_error(this->_state_mutex);
     if (state_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_no_errno(state_error);
-        this->set_system_error(state_error);
+        this->record_error(state_error, false);
         return ;
     }
-    this->set_error(moved_error);
-    this->set_system_error(moved_system_error);
+    this->record_error(moved_error, true);
     return ;
 }
 
@@ -265,31 +199,26 @@ ft_unique_lock<MutexType> &ft_unique_lock<MutexType>::operator=(ft_unique_lock &
     state_error = ft_unique_lock_pop_state_mutex_error(this->_state_mutex);
     if (state_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_no_errno(state_error);
-        this->set_system_error(state_error);
+        this->record_error(state_error, false);
         return (*this);
     }
     incoming_mutex = other._mutex;
     incoming_owns = other._owns_lock;
-    incoming_error = other._error_code.load(std::memory_order_relaxed);
+    incoming_error = other.last_operation_error();
     other._mutex = ft_nullptr;
     other._owns_lock = false;
-    other.set_error_no_errno(FT_ERR_SUCCESSS);
-    other.set_system_error_no_errno(FT_SYS_ERR_SUCCESS);
     other._state_mutex.unlock(THREAD_ID);
     state_error = ft_unique_lock_pop_state_mutex_error(this->_state_mutex);
     if (state_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_no_errno(state_error);
-        this->set_system_error(state_error);
+        this->record_error(state_error, false);
         return (*this);
     }
     this->_state_mutex.lock(THREAD_ID);
     state_error = ft_unique_lock_pop_state_mutex_error(this->_state_mutex);
     if (state_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_no_errno(state_error);
-        this->set_system_error(state_error);
+        this->record_error(state_error, false);
         return (*this);
     }
     current_mutex = this->_mutex;
@@ -300,8 +229,7 @@ ft_unique_lock<MutexType> &ft_unique_lock<MutexType>::operator=(ft_unique_lock &
     state_error = ft_unique_lock_pop_state_mutex_error(this->_state_mutex);
     if (state_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_no_errno(state_error);
-        this->set_system_error(state_error);
+        this->record_error(state_error, false);
         return (*this);
     }
     if (current_owns && current_mutex != ft_nullptr)
@@ -324,8 +252,7 @@ ft_unique_lock<MutexType> &ft_unique_lock<MutexType>::operator=(ft_unique_lock &
             }
             else
                 unlock_error = state_error;
-            this->set_error_no_errno(unlock_error);
-            this->set_system_error(unlock_error);
+            this->record_error(unlock_error, false);
             return (*this);
         }
     }
@@ -333,8 +260,7 @@ ft_unique_lock<MutexType> &ft_unique_lock<MutexType>::operator=(ft_unique_lock &
     state_error = ft_unique_lock_pop_state_mutex_error(this->_state_mutex);
     if (state_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_no_errno(state_error);
-        this->set_system_error(state_error);
+        this->record_error(state_error, false);
         return (*this);
     }
     this->_mutex = incoming_mutex;
@@ -343,12 +269,10 @@ ft_unique_lock<MutexType> &ft_unique_lock<MutexType>::operator=(ft_unique_lock &
     state_error = ft_unique_lock_pop_state_mutex_error(this->_state_mutex);
     if (state_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_no_errno(state_error);
-        this->set_system_error(state_error);
+        this->record_error(state_error, false);
         return (*this);
     }
-    this->set_error(incoming_error);
-    this->set_system_error_no_errno(FT_SYS_ERR_SUCCESS);
+    this->record_error(incoming_error, true);
     return (*this);
 }
 
@@ -367,8 +291,7 @@ void ft_unique_lock<MutexType>::lock()
     state_error = ft_unique_lock_pop_state_mutex_error(this->_state_mutex);
     if (state_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_no_errno(state_error);
-        this->set_system_error(state_error);
+        this->record_error(state_error, false);
         return ;
     }
     if (this->_mutex == ft_nullptr)
@@ -384,13 +307,12 @@ void ft_unique_lock<MutexType>::lock()
     state_error = ft_unique_lock_pop_state_mutex_error(this->_state_mutex);
     if (state_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_no_errno(state_error);
-        this->set_system_error(state_error);
+        this->record_error(state_error, false);
         return ;
     }
     if (!perform_lock)
     {
-        this->set_error(final_error);
+        this->record_error(final_error, true);
         return ;
     }
     mutex_pointer->lock(THREAD_ID);
@@ -399,8 +321,7 @@ void ft_unique_lock<MutexType>::lock()
     state_error = ft_unique_lock_pop_state_mutex_error(this->_state_mutex);
     if (state_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_no_errno(state_error);
-        this->set_system_error(state_error);
+        this->record_error(state_error, false);
         return ;
     }
     if (final_error == FT_ERR_SUCCESSS)
@@ -411,8 +332,7 @@ void ft_unique_lock<MutexType>::lock()
     state_error = ft_unique_lock_pop_state_mutex_error(this->_state_mutex);
     if (state_error != FT_ERR_SUCCESSS)
         final_error = state_error;
-    this->set_error(final_error);
-    this->set_system_error_no_errno(FT_SYS_ERR_SUCCESS);
+    this->record_error(final_error, true);
     return ;
 }
 
@@ -431,8 +351,7 @@ void ft_unique_lock<MutexType>::unlock()
     state_error = ft_unique_lock_pop_state_mutex_error(this->_state_mutex);
     if (state_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_no_errno(state_error);
-        this->set_system_error(state_error);
+        this->record_error(state_error, false);
         return ;
     }
     if (this->_mutex == ft_nullptr)
@@ -449,13 +368,12 @@ void ft_unique_lock<MutexType>::unlock()
     state_error = ft_unique_lock_pop_state_mutex_error(this->_state_mutex);
     if (state_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_no_errno(state_error);
-        this->set_system_error(state_error);
+        this->record_error(state_error, false);
         return ;
     }
     if (!perform_unlock)
     {
-        this->set_error(final_error);
+        this->record_error(final_error, true);
         return ;
     }
     mutex_pointer->unlock(THREAD_ID);
@@ -474,12 +392,10 @@ void ft_unique_lock<MutexType>::unlock()
         }
         else
             final_error = state_error;
-        this->set_error_no_errno(final_error);
-        this->set_system_error(final_error);
+        this->record_error(final_error, false);
         return ;
     }
-    this->set_error(final_error);
-    this->set_system_error_no_errno(FT_SYS_ERR_SUCCESS);
+    this->record_error(final_error, true);
     return ;
 }
 
@@ -494,8 +410,7 @@ bool ft_unique_lock<MutexType>::owns_lock() const
     state_error = ft_unique_lock_pop_state_mutex_error(this->_state_mutex);
     if (state_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_no_errno(state_error);
-        this->set_system_error(state_error);
+        this->record_error(state_error, false);
         return (false);
     }
     owns_lock_value = this->_owns_lock;
@@ -503,12 +418,10 @@ bool ft_unique_lock<MutexType>::owns_lock() const
     state_error = ft_unique_lock_pop_state_mutex_error(this->_state_mutex);
     if (state_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_no_errno(state_error);
-        this->set_system_error(state_error);
+        this->record_error(state_error, false);
         return (false);
     }
-    this->set_error_no_errno(FT_ERR_SUCCESSS);
-    this->set_system_error_no_errno(FT_SYS_ERR_SUCCESS);
+    this->record_error(FT_ERR_SUCCESSS, false);
     return (owns_lock_value);
 }
 
@@ -523,8 +436,7 @@ MutexType *ft_unique_lock<MutexType>::mutex() const
     state_error = ft_unique_lock_pop_state_mutex_error(this->_state_mutex);
     if (state_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_no_errno(state_error);
-        this->set_system_error(state_error);
+        this->record_error(state_error, false);
         return (ft_nullptr);
     }
     mutex_pointer = this->_mutex;
@@ -532,46 +444,23 @@ MutexType *ft_unique_lock<MutexType>::mutex() const
     state_error = ft_unique_lock_pop_state_mutex_error(this->_state_mutex);
     if (state_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_no_errno(state_error);
-        this->set_system_error(state_error);
+        this->record_error(state_error, false);
         return (ft_nullptr);
     }
-    this->set_error(FT_ERR_SUCCESSS);
-    this->set_system_error_no_errno(FT_SYS_ERR_SUCCESS);
+    this->record_error(FT_ERR_SUCCESSS, true);
     return (mutex_pointer);
 }
 
 template <typename MutexType>
-int ft_unique_lock<MutexType>::get_error() const
+int ft_unique_lock<MutexType>::last_operation_error() const noexcept
 {
-    int error_code;
-    int system_error;
-
-    error_code = this->_error_code.load(std::memory_order_relaxed);
-    system_error = this->_system_error_code.load(std::memory_order_relaxed);
-    if (error_code != FT_ERR_SUCCESSS)
-        return (error_code);
-    if (system_error != FT_SYS_ERR_SUCCESS)
-        return (system_error);
-    return (FT_ERR_SUCCESSS);
+    return (ft_operation_error_stack_last_error(&this->_operation_errors));
 }
 
 template <typename MutexType>
-const char *ft_unique_lock<MutexType>::get_error_str() const
+const char *ft_unique_lock<MutexType>::last_operation_error_str() const noexcept
 {
-    int error_code;
-    int system_error;
-
-    error_code = this->_error_code.load(std::memory_order_relaxed);
-    system_error = this->_system_error_code.load(std::memory_order_relaxed);
-    if (error_code != FT_ERR_SUCCESSS)
-        return (ft_strerror(error_code));
-    if (system_error != FT_SYS_ERR_SUCCESS)
-        return (ft_strerror(system_error));
-    return (ft_strerror(FT_ERR_SUCCESSS));
+    return (ft_strerror(this->last_operation_error()));
 }
-
-template <typename MutexType>
-thread_local ft_operation_error_stack ft_unique_lock<MutexType>::_operation_errors = {{}, {}, 0};
 
 #endif

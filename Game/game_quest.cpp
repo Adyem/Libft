@@ -1,5 +1,6 @@
 #include "game_quest.hpp"
 #include <utility>
+#include "../Errno/errno_internal.hpp"
 #include "../Template/move.hpp"
 #include "../PThread/pthread.hpp"
 
@@ -30,12 +31,12 @@ int ft_quest::lock_pair(const ft_quest &first, const ft_quest &second,
 
         if (single_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = single_guard.get_error();
-            return (single_guard.get_error());
+            int guard_error = single_guard.get_error();
+            const_cast<ft_quest *>(&first)->record_operation_error(guard_error);
+            return (guard_error);
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ERR_SUCCESSS;
         return (FT_ERR_SUCCESSS);
     }
     ordered_first = &first;
@@ -56,8 +57,9 @@ int ft_quest::lock_pair(const ft_quest &first, const ft_quest &second,
 
         if (lower_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = lower_guard.get_error();
-            return (lower_guard.get_error());
+            int guard_error = lower_guard.get_error();
+            const_cast<ft_quest *>(ordered_first)->record_operation_error(guard_error);
+            return (guard_error);
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
         if (upper_guard.get_error() == FT_ERR_SUCCESSS)
@@ -72,13 +74,13 @@ int ft_quest::lock_pair(const ft_quest &first, const ft_quest &second,
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = FT_ERR_SUCCESSS;
             return (FT_ERR_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            ft_errno = upper_guard.get_error();
-            return (upper_guard.get_error());
+            int guard_error = upper_guard.get_error();
+            const_cast<ft_quest *>(ordered_second)->record_operation_error(guard_error);
+            return (guard_error);
         }
         if (lower_guard.owns_lock())
             lower_guard.unlock();
@@ -916,6 +918,27 @@ const char *ft_quest::get_error_str() const noexcept
 void ft_quest::set_error(int err) const noexcept
 {
     this->_error = err;
-    ft_errno = err;
+    this->record_operation_error(err);
     return ;
+}
+
+void ft_quest::record_operation_error(int error_code) const noexcept
+{
+    unsigned long long operation_id;
+
+    operation_id = ft_errno_next_operation_id();
+    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
+    ft_operation_error_stack_push(&this->_operation_errors,
+            error_code, operation_id);
+    return ;
+}
+
+ft_operation_error_stack *ft_quest::get_operation_error_stack_for_validation() noexcept
+{
+    return (&this->_operation_errors);
+}
+
+const ft_operation_error_stack *ft_quest::get_operation_error_stack_for_validation() const noexcept
+{
+    return (&this->_operation_errors);
 }

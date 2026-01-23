@@ -12,6 +12,33 @@ static bool g_force_file_stream_allocation_failure = false;
 static int g_force_fread_failure_enabled = 0;
 static int g_force_fread_failure_error = FT_ERR_SUCCESSS;
 
+static int su_file_mutex_constructor_error(pt_mutex *mutex_pointer)
+{
+    int mutex_error;
+
+    mutex_error = mutex_pointer->operation_error_last_error();
+    ft_global_error_stack_pop_newest();
+    return (mutex_error);
+}
+
+static int su_file_lock_mutex(pt_mutex *mutex_pointer)
+{
+    int lock_error;
+
+    lock_error = mutex_pointer->lock(THREAD_ID);
+    ft_global_error_stack_pop_newest();
+    return (lock_error);
+}
+
+static int su_file_unlock_mutex(pt_mutex *mutex_pointer)
+{
+    int unlock_error;
+
+    unlock_error = mutex_pointer->unlock(THREAD_ID);
+    ft_global_error_stack_pop_newest();
+    return (unlock_error);
+}
+
 int su_file_prepare_thread_safety(su_file *stream)
 {
     pt_mutex *mutex_pointer;
@@ -34,11 +61,9 @@ int su_file_prepare_thread_safety(su_file *stream)
         return (-1);
     }
     mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
+    int mutex_error = su_file_mutex_constructor_error(mutex_pointer);
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        int mutex_error;
-
-        mutex_error = mutex_pointer->get_error();
         mutex_pointer->~pt_mutex();
         std::free(memory);
         ft_global_error_stack_push(mutex_error);
@@ -82,10 +107,12 @@ int su_file_lock(su_file *stream, bool *lock_acquired)
         ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (0);
     }
-    stream->mutex->lock(THREAD_ID);
-    if (stream->mutex->get_error() != FT_ERR_SUCCESSS)
+    int mutex_error;
+
+    mutex_error = su_file_lock_mutex(stream->mutex);
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        ft_global_error_stack_push(stream->mutex->get_error());
+        ft_global_error_stack_push(mutex_error);
         return (-1);
     }
     if (lock_acquired != ft_nullptr)
@@ -109,10 +136,12 @@ void su_file_unlock(su_file *stream, bool lock_acquired)
         ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return ;
     }
-    stream->mutex->unlock(THREAD_ID);
-    if (stream->mutex->get_error() != FT_ERR_SUCCESSS)
+    int mutex_error;
+
+    mutex_error = su_file_unlock_mutex(stream->mutex);
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        ft_global_error_stack_push(stream->mutex->get_error());
+        ft_global_error_stack_push(mutex_error);
         return ;
     }
     ft_global_error_stack_push(FT_ERR_SUCCESSS);

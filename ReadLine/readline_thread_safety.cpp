@@ -5,44 +5,53 @@
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread.hpp"
 
+static int rl_state_mutex_constructor_error(pt_mutex *mutex_pointer)
+{
+    int mutex_error;
+
+    mutex_error = mutex_pointer->operation_error_last_error();
+    ft_global_error_stack_pop_newest();
+    return (mutex_error);
+}
+
+static int rl_state_lock_mutex(pt_mutex *mutex_pointer)
+{
+    int lock_error;
+
+    lock_error = mutex_pointer->lock(THREAD_ID);
+    lock_error = ft_global_error_stack_pop_newest();
+    return (lock_error);
+}
+
+static int rl_state_unlock_mutex(pt_mutex *mutex_pointer)
+{
+    int unlock_error;
+
+    unlock_error = mutex_pointer->unlock(THREAD_ID);
+    unlock_error = ft_global_error_stack_pop_newest();
+    return (unlock_error);
+}
+
 int rl_state_prepare_thread_safety(readline_state_t *state)
 {
     pt_mutex *mutex_pointer;
-    int error_code;
 
     if (state == ft_nullptr)
-    {
-        error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_global_error_stack_push(error_code);
-        return (-1);
-    }
+        return (FT_ERR_INVALID_ARGUMENT);
     if (state->thread_safe_enabled == true && state->mutex != ft_nullptr)
-    {
-        error_code = FT_ERR_SUCCESSS;
-        ft_global_error_stack_push(error_code);
-        return (0);
-    }
+        return (FT_ERR_SUCCESSS);
     mutex_pointer = new (std::nothrow) pt_mutex();
     if (mutex_pointer == ft_nullptr)
+        return (FT_ERR_NO_MEMORY);
+    int mutex_error = rl_state_mutex_constructor_error(mutex_pointer);
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        error_code = FT_ERR_NO_MEMORY;
-        ft_global_error_stack_push(error_code);
-        return (-1);
-    }
-    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
-    {
-        int mutex_error;
-
-        mutex_error = mutex_pointer->get_error();
         delete mutex_pointer;
-        ft_global_error_stack_push(mutex_error);
-        return (-1);
+        return (mutex_error);
     }
     state->mutex = mutex_pointer;
     state->thread_safe_enabled = true;
-    error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(error_code);
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
 void rl_state_teardown_thread_safety(readline_state_t *state)
@@ -60,60 +69,28 @@ void rl_state_teardown_thread_safety(readline_state_t *state)
 
 int rl_state_lock(readline_state_t *state, bool *lock_acquired)
 {
-    int error_code;
-
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (state == ft_nullptr)
-    {
-        error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_global_error_stack_push(error_code);
-        return (-1);
-    }
+        return (FT_ERR_INVALID_ARGUMENT);
     if (state->thread_safe_enabled == false || state->mutex == ft_nullptr)
-    {
-        error_code = FT_ERR_SUCCESSS;
-        ft_global_error_stack_push(error_code);
-        return (0);
-    }
-    state->mutex->lock(THREAD_ID);
-    if (state->mutex->get_error() != FT_ERR_SUCCESSS)
-    {
-        error_code = state->mutex->get_error();
-        ft_global_error_stack_push(error_code);
-        return (-1);
-    }
+        return (FT_ERR_SUCCESSS);
+    int mutex_error = rl_state_lock_mutex(state->mutex);
+    if (mutex_error != FT_ERR_SUCCESSS)
+        return (mutex_error);
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(error_code);
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
-void rl_state_unlock(readline_state_t *state, bool lock_acquired)
+int rl_state_unlock(readline_state_t *state, bool lock_acquired)
 {
-    int error_code;
-
     if (state == ft_nullptr || lock_acquired == false)
-    {
-        error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_global_error_stack_push(error_code);
-        return ;
-    }
+        return (FT_ERR_INVALID_ARGUMENT);
     if (state->mutex == ft_nullptr)
-    {
-        error_code = FT_ERR_INVALID_STATE;
-        ft_global_error_stack_push(error_code);
-        return ;
-    }
-    state->mutex->unlock(THREAD_ID);
-    if (state->mutex->get_error() != FT_ERR_SUCCESSS)
-    {
-        error_code = state->mutex->get_error();
-        ft_global_error_stack_push(error_code);
-        return ;
-    }
-    error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(error_code);
-    return ;
+        return (FT_ERR_INVALID_STATE);
+    int mutex_error = rl_state_unlock_mutex(state->mutex);
+    if (mutex_error != FT_ERR_SUCCESSS)
+        return (mutex_error);
+    return (FT_ERR_SUCCESSS);
 }

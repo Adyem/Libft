@@ -84,9 +84,9 @@ ft_thread::ft_thread(FunctionType function, Args... args)
         ft_invoke(function, args...);
         return ;
     });
-    if (payload->function.get_error() != FT_ERR_SUCCESSS)
+    if (!payload->function)
     {
-        this->set_error(payload->function.get_error());
+        this->set_error(FT_ERR_NO_MEMORY);
         this->_start_payload.reset();
         return ;
     }

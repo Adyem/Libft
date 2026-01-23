@@ -92,7 +92,7 @@ static int su_copy_file_streams(su_file *source_stream, su_file *destination_str
             break;
         }
     }
-    if (error_code_out != 0)
+    if (error_code_out != ft_nullptr)
         *error_code_out = error_code;
     return (result);
 }
@@ -177,19 +177,19 @@ static int su_ensure_directory_exists(const char *path, int *error_code_out)
     directory_status = cmp_directory_exists(path, &error_code);
     if (directory_status == 1)
     {
-        if (error_code_out != 0)
+        if (error_code_out != ft_nullptr)
             *error_code_out = FT_ERR_SUCCESSS;
         return (0);
     }
     if (directory_status == 0 && error_code == FT_ERR_SUCCESSS)
     {
-        if (error_code_out != 0)
+        if (error_code_out != ft_nullptr)
             *error_code_out = FT_ERR_ALREADY_EXISTS;
         return (-1);
     }
     if (directory_status != 0)
     {
-        if (error_code_out != 0)
+        if (error_code_out != ft_nullptr)
             *error_code_out = error_code;
         return (-1);
     }
@@ -197,11 +197,11 @@ static int su_ensure_directory_exists(const char *path, int *error_code_out)
     {
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_INTERNAL;
-        if (error_code_out != 0)
+        if (error_code_out != ft_nullptr)
             *error_code_out = error_code;
         return (-1);
     }
-    if (error_code_out != 0)
+    if (error_code_out != ft_nullptr)
         *error_code_out = FT_ERR_SUCCESSS;
     return (0);
 }
@@ -216,7 +216,7 @@ static int su_copy_directory_contents(const char *source_path, const char *desti
     directory_stream = cmp_dir_open(source_path, &error_code);
     if (directory_stream == ft_nullptr)
     {
-        if (error_code_out != 0)
+        if (error_code_out != ft_nullptr)
             *error_code_out = error_code;
         return (-1);
     }
@@ -316,7 +316,7 @@ static int su_copy_directory_contents(const char *source_path, const char *desti
         error_code = FT_ERR_INTERNAL;
     if (result == 0)
         error_code = FT_ERR_SUCCESSS;
-    if (error_code_out != 0)
+    if (error_code_out != ft_nullptr)
         *error_code_out = error_code;
     return (result);
 }

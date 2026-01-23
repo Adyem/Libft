@@ -1,6 +1,7 @@
 #include "pthread.hpp"
 #include "mutex.hpp"
 #include "../Errno/errno.hpp"
+#include "../Libft/libft.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "pthread_lock_tracking.hpp"
 
@@ -161,8 +162,9 @@ int pt_mutex::lock_internal(bool *lock_acquired) const
     if (this->_state_mutex == ft_nullptr)
         return (FT_ERR_SUCCESSS);
     this->_state_mutex->lock(THREAD_ID);
-    if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
-        return (this->_state_mutex->get_error());
+    int state_error = this->_state_mutex->operation_error_last_error();
+    if (state_error != FT_ERR_SUCCESSS)
+        return (state_error);
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
     return (FT_ERR_SUCCESSS);
@@ -173,8 +175,9 @@ int pt_mutex::unlock_internal(bool lock_acquired) const
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
         return (FT_ERR_SUCCESSS);
     this->_state_mutex->unlock(THREAD_ID);
-    if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
-        return (this->_state_mutex->get_error());
+    int state_error = this->_state_mutex->operation_error_last_error();
+    if (state_error != FT_ERR_SUCCESSS)
+        return (state_error);
     return (FT_ERR_SUCCESSS);
 }
 

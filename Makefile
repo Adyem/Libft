@@ -58,51 +58,56 @@ else
     RMDIR  = rm -rf
 endif
 
-SUBDIRS :=  CMA \
+SUBDIRS :=  Errno \
+            Compatebility \
+            Libft \
+            CMA \
             SCMA \
             GetNextLine \
-            Libft \
             DUMB \
             Math \
             Geometry \
-            Game \
-            Logger \
-            Observability \
             System_utils \
             Printf \
             ReadLine \
             PThread \
             CPP_class \
-            Errno \
             Config \
+            CrossProcess \
+            Compression \
+            Encryption \
+            RNG \
+            JSon \
+            YAML \
+            File \
+            HTML \
+            Time \
+            XML \
+            Storage \
             Networking \
             API \
-            CrossProcess \
-            Compatebility \
-            Compression Encryption RNG JSon YAML File HTML Time XML Storage Parser
+            Observability \
+            Logger \
+            Parser \
+            Game
 
 LIB_BASES := \
+  Errno/errno \
+  Compatebility/Compatebility \
+  Libft/LibFT \
   CMA/CustomMemoryAllocator \
   SCMA/SCMA \
   GetNextLine/GetNextLine \
-  Libft/LibFT \
   DUMB/dumb \
   Math/Math \
   Geometry/geometry \
-  Game/Game \
-  Logger/Logger \
-  Observability/Observability \
   System_utils/System_utils \
   Printf/Printf \
   ReadLine/ReadLine \
   PThread/PThread \
   CPP_class/CPP_class \
-  Errno/errno \
   Config/config \
-  Networking/networking \
-  API/API \
   CrossProcess/CrossProcess \
-  Compatebility/Compatebility \
   Compression/compression \
   Encryption/encryption \
   RNG/RNG \
@@ -113,7 +118,12 @@ LIB_BASES := \
   Time/time \
   XML/XMLParser \
   Storage/storage \
-  Parser/parser
+  Networking/networking \
+  API/API \
+  Observability/Observability \
+  Logger/Logger \
+  Parser/parser \
+  Game/Game
 
 LIBS       := $(addsuffix .a, $(LIB_BASES))
 DEBUG_LIBS := $(addsuffix _debug.a, $(LIB_BASES))

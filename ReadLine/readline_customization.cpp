@@ -59,33 +59,44 @@ struct rl_history_backend_state
 
 static rl_history_backend_state g_history_backend_state = {ft_nullptr, ft_nullptr, false};
 
+static int rl_customization_lock_mutex(void)
+{
+    int mutex_error;
+
+    g_customization_mutex.lock(THREAD_ID);
+    mutex_error = ft_global_error_stack_pop_newest();
+    return (mutex_error);
+}
+
+static int rl_customization_unlock_mutex(void)
+{
+    int mutex_error;
+
+    g_customization_mutex.unlock(THREAD_ID);
+    mutex_error = ft_global_error_stack_pop_newest();
+    return (mutex_error);
+}
+
 static int rl_customization_lock(bool *lock_acquired)
 {
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    g_customization_mutex.lock(THREAD_ID);
-    if (g_customization_mutex.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = g_customization_mutex.get_error();
-        return (-1);
-    }
+    int mutex_error = rl_customization_lock_mutex();
+    if (mutex_error != FT_ERR_SUCCESSS)
+        return (mutex_error);
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    ft_errno = FT_ERR_SUCCESSS;
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
-static void rl_customization_unlock(bool lock_acquired)
+static int rl_customization_unlock(bool lock_acquired)
 {
     if (lock_acquired == false)
-        return ;
-    g_customization_mutex.unlock(THREAD_ID);
-    if (g_customization_mutex.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = g_customization_mutex.get_error();
-        return ;
-    }
-    return ;
+        return (FT_ERR_SUCCESSS);
+    int mutex_error = rl_customization_unlock_mutex();
+    if (mutex_error != FT_ERR_SUCCESSS)
+        return (mutex_error);
+    return (FT_ERR_SUCCESSS);
 }
 
 static int rl_history_assign_path(char **target_path, const char *location)

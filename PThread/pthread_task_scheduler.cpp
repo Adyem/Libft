@@ -1255,13 +1255,11 @@ void ft_task_scheduler::timer_loop()
             }
             if (task_cancelled)
                 continue;
-            if (expired_task._function.get_error() != FT_ERR_SUCCESSS)
+            if (!expired_task._function)
             {
-                int function_error;
                 ft_function<void()> original_function;
 
-                function_error = expired_task._function.get_error();
-                this->set_error(function_error);
+                this->set_error(FT_ERR_NO_MEMORY);
                 original_function = ft_move(expired_task._function);
                 if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
                 {
@@ -1333,13 +1331,11 @@ void ft_task_scheduler::timer_loop()
             task_queue_entry queue_entry;
 
             queue_entry._function = expired_task._function;
-            if (queue_entry._function.get_error() != FT_ERR_SUCCESSS)
+            if (!queue_entry._function)
             {
-                int copy_error;
                 ft_function<void()> original_function;
 
-                copy_error = queue_entry._function.get_error();
-                this->set_error(copy_error);
+                this->set_error(FT_ERR_NO_MEMORY);
                 original_function = ft_move(expired_task._function);
                 if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
                 {
@@ -1382,7 +1378,6 @@ void ft_task_scheduler::timer_loop()
                     if (should_reschedule)
                     {
                         t_monotonic_time_point updated_time;
-
                         updated_time = time_monotonic_point_add_ms(time_monotonic_point_now(),
                                 expired_task._interval_ms);
                         expired_task._time = updated_time;

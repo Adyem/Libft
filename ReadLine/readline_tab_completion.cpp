@@ -16,21 +16,16 @@ static int rl_find_word_start_and_prefix(readline_state_t *state, char *prefix, 
     state->word_start++;
     *prefix_len = state->pos - state->word_start;
     if (*prefix_len == 0)
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-        return (0);
-    }
+        return (FT_ERR_SUCCESSS);
     if (*prefix_len >= prefix_capacity)
     {
         prefix[0] = '\0';
         *prefix_len = 0;
-        ft_errno = FT_ERR_OUT_OF_RANGE;
-        return (-1);
+        return (FT_ERR_OUT_OF_RANGE);
     }
     ft_memcpy(prefix, &state->buffer[state->word_start], *prefix_len);
     prefix[*prefix_len] = '\0';
-    ft_errno = FT_ERR_SUCCESSS;
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
 static void rl_gather_matching_suggestions(readline_state_t *state, const char *prefix, int prefix_len)
@@ -80,17 +75,14 @@ static int rl_resize_buffer_if_needed(readline_state_t *state, int required_size
         while (required_size >= new_bufsize)
         {
             if (new_bufsize > FT_INT_MAX / 2)
-            {
-                ft_errno = FT_ERR_OUT_OF_RANGE;
-                return (-1);
-            }
+                return (FT_ERR_OUT_OF_RANGE);
             new_bufsize *= 2;
         }
         resized_buffer = rl_resize_buffer(&state->buffer, &state->bufsize, new_bufsize);
         if (resized_buffer == ft_nullptr)
-            return (-1);
+            return (FT_ERR_NO_MEMORY);
     }
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
 static int rl_apply_completion(readline_state_t *state, const char *completion)
@@ -102,24 +94,18 @@ static int rl_apply_completion(readline_state_t *state, const char *completion)
     int required_size;
 
     completion_length = ft_strlen(completion);
-    if (ft_errno != FT_ERR_SUCCESSS)
-        return (-1);
     original_position = state->pos;
     suffix_length = ft_strlen(&state->buffer[original_position]);
-    if (ft_errno != FT_ERR_SUCCESSS)
-        return (-1);
     total_length = static_cast<long long>(state->word_start)
         + static_cast<long long>(completion_length)
         + static_cast<long long>(suffix_length);
     if (total_length > static_cast<long long>(FT_INT_MAX))
-    {
-        ft_errno = FT_ERR_OUT_OF_RANGE;
-        return (-1);
-    }
+        return (FT_ERR_OUT_OF_RANGE);
     state->pos = state->word_start;
     required_size = static_cast<int>(total_length);
-    if (rl_resize_buffer_if_needed(state, required_size) == -1)
-        return (-1);
+    int resize_error = rl_resize_buffer_if_needed(state, required_size);
+    if (resize_error != FT_ERR_SUCCESSS)
+        return (resize_error);
     ft_memmove(&state->buffer[state->pos + completion_length],
         &state->buffer[original_position],
         static_cast<size_t>(suffix_length) + 1);
@@ -127,7 +113,7 @@ static int rl_apply_completion(readline_state_t *state, const char *completion)
         ft_memcpy(&state->buffer[state->pos], completion,
             static_cast<size_t>(completion_length));
     state->pos += completion_length;
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
 static void rl_update_display(const char *prompt, readline_state_t *state)
@@ -151,17 +137,16 @@ int rl_handle_tab_completion(readline_state_t *state, const char *prompt)
     bool        lock_acquired;
     int         result;
     const char *completion;
+    int         lock_result;
 
     if (state == ft_nullptr || prompt == ft_nullptr)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (-1);
-    }
+        return (FT_ERR_INVALID_ARGUMENT);
     lock_acquired = false;
-    result = 0;
+    result = FT_ERR_SUCCESSS;
     completion = ft_nullptr;
-    if (rl_state_lock(state, &lock_acquired) != 0)
-        return (-1);
+    lock_result = rl_state_lock(state, &lock_acquired);
+    if (lock_result != FT_ERR_SUCCESSS)
+        return (lock_result);
     if (!state->in_completion_mode)
     {
         char prefix[INITIAL_BUFFER_SIZE];
@@ -169,16 +154,16 @@ int rl_handle_tab_completion(readline_state_t *state, const char *prompt)
         int prefix_status;
 
         prefix_status = rl_find_word_start_and_prefix(state, prefix, &prefix_len, INITIAL_BUFFER_SIZE);
-        if (prefix_status != 0)
+        if (prefix_status != FT_ERR_SUCCESSS)
         {
-            result = -1;
+            result = prefix_status;
             goto cleanup;
         }
         if (prefix_len == 0)
             goto cleanup_success;
         if (rl_completion_prepare_candidates(state->buffer, state->pos, prefix, prefix_len) != 0)
         {
-            result = -1;
+            result = FT_ERR_INTERNAL;
             goto cleanup;
         }
         rl_gather_matching_suggestions(state, prefix, prefix_len);
@@ -194,17 +179,18 @@ int rl_handle_tab_completion(readline_state_t *state, const char *prompt)
     if (state->in_completion_mode && state->current_match_count > 0)
     {
         completion = state->current_matches[state->current_match_index];
-        if (rl_apply_completion(state, completion))
+        int completion_result = rl_apply_completion(state, completion);
+        if (completion_result != FT_ERR_SUCCESSS)
         {
-            result = -1;
+            result = completion_result;
             goto cleanup;
         }
         rl_update_display(prompt, state);
         state->current_match_index = (state->current_match_index + 1) % state->current_match_count;
     }
 cleanup_success:
-    ft_errno = FT_ERR_SUCCESSS;
+    result = FT_ERR_SUCCESSS;
 cleanup:
-    rl_state_unlock(state, lock_acquired);
+    (void)rl_state_unlock(state, lock_acquired);
     return (result);
 }

@@ -6,6 +6,7 @@
 #include "game_item.hpp"
 #include "../Template/shared_ptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
 
@@ -20,9 +21,13 @@ class ft_quest
         int _reward_experience;
         ft_vector<ft_sharedptr<ft_item> > _reward_items;
         mutable int _error;
+        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
         mutable pt_mutex _mutex;
 
         void set_error(int err) const noexcept;
+        void record_operation_error(int error_code) const noexcept;
+        ft_operation_error_stack *get_operation_error_stack_for_validation() noexcept;
+        const ft_operation_error_stack *get_operation_error_stack_for_validation() const noexcept;
         static int lock_pair(const ft_quest &first, const ft_quest &second,
                 ft_unique_lock<pt_mutex> &first_guard,
                 ft_unique_lock<pt_mutex> &second_guard);

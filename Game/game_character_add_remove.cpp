@@ -132,7 +132,7 @@ int ft_character::add_skill(const ft_skill &skill) noexcept
         return (this->_error);
     }
     this->_skills.insert(skill.get_id(), skill);
-    component_error = this->_skills.get_error();
+    component_error = this->_skills.last_operation_error();
     if (this->handle_component_error(component_error) == true)
     {
         return (this->_error);
@@ -152,7 +152,7 @@ void ft_character::remove_skill(int id) noexcept
         return ;
     }
     this->_skills.remove(id);
-    component_error = this->_skills.get_error();
+    component_error = this->_skills.last_operation_error();
     if (this->handle_component_error(component_error) == true)
     {
         return ;

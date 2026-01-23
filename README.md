@@ -1519,11 +1519,12 @@ internal mutex before running the callback, ensuring that tasks can reschedule
 themselves without deadlocking, and then reschedules or removes the entry based
 on its interval. `pt_mutex` and the templated `ft_unique_lock` keep the
 scheduler on the pthread primitives without depending on `std::unique_lock`,
-and callbacks are stored in `ft_function` instances to keep error reporting
-within the library's conventions. The `ft_unique_lock` template keeps its
-member definitions after the class declaration inside `PThread/unique_lock.hpp`
-so including translation units see a consistent layout without relying on
-in-class implementations.
+and callbacks are stored in `ft_function` instances so every job can be invoked
+through a consistent wrapper. `ft_function` now only holds the callable pointer,
+so error reporting and thread safety are managed by the caller rather than the
+wrapper itself. The `ft_unique_lock` template keeps its member definitions after
+the class declaration inside `PThread/unique_lock.hpp` so including translation
+units see a consistent layout without relying on in-class implementations.
 
 #### Errno
 `Errno/errno.hpp` defines a thread-local `ft_errno` variable and helpers for retrieving messages.

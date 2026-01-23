@@ -1,8 +1,8 @@
 #ifndef GEOMETRY_AABB_HPP
 # define GEOMETRY_AABB_HPP
 
-#include "../PThread/mutex.hpp"
-#include "../PThread/unique_lock.hpp"
+#include "../Errno/errno_internal.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 class aabb
 {
@@ -11,13 +11,13 @@ class aabb
         double          _minimum_y;
         double          _maximum_x;
         double          _maximum_y;
-        mutable int     _error_code;
-        mutable pt_mutex _mutex;
+        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
+        mutable pt_recursive_mutex _mutex;
 
-        void    set_error(int error_code) const;
-        static int lock_pair(const aabb &first, const aabb &second,
-                ft_unique_lock<pt_mutex> &first_guard,
-                ft_unique_lock<pt_mutex> &second_guard);
+        void    record_operation_error(int error_code) const noexcept;
+        int     lock_pair(const aabb &other, const aabb *&lower,
+                const aabb *&upper) const;
+        static void unlock_pair(const aabb *lower, const aabb *upper);
 
     public:
         aabb();
@@ -41,8 +41,12 @@ class aabb
         double  get_minimum_y() const;
         double  get_maximum_x() const;
         double  get_maximum_y() const;
-        int     get_error() const;
-        const char  *get_error_str() const;
+        pt_recursive_mutex *get_mutex_for_validation() const;
+        ft_operation_error_stack *get_operation_error_stack_for_validation() const noexcept;
+
+#ifdef LIBFT_TEST_BUILD
+        pt_recursive_mutex *get_mutex_for_testing() noexcept;
+#endif
 
         friend bool intersect_aabb(const aabb &first, const aabb &second);
 };

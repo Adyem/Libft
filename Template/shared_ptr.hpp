@@ -2,6 +2,7 @@
 #define SHARED_PTR_HPP
 
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "math.hpp"
 #include "swap.hpp"
@@ -24,12 +25,14 @@ class ft_sharedptr
         size_t _arraySize;
         bool _isArrayType;
         mutable int _error_code;
+        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
         mutable pt_mutex *_mutex;
         bool _thread_safe_enabled;
         bool *_shared_thread_safe_flag;
 
         void release_current_locked();
-        void set_error_unlocked(int error) const;
+        void set_error_internal(int error) const;
+        void record_operation_error(int error_code) const noexcept;
         int lock_internal(bool *lock_acquired) const;
         void unlock_internal(bool lock_acquired) const;
         int prepare_thread_safety();
@@ -108,6 +111,9 @@ class ft_sharedptr
         bool is_thread_safe() const;
         int lock(bool *lock_acquired) const;
         void unlock(bool lock_acquired) const;
+        pt_mutex *mutex_handle() const;
+        ft_operation_error_stack *operation_error_stack_handle() noexcept;
+        const ft_operation_error_stack *operation_error_stack_handle() const noexcept;
 };
 
 template <typename LeftType, typename RightType>
@@ -146,7 +152,7 @@ ft_sharedptr<ManagedType>::ft_sharedptr(Args&&... args)
     {
         if (shared_thread_safe_flag)
             delete shared_thread_safe_flag;
-        this->set_error_unlocked(FT_ERR_NO_MEMORY);
+    this->set_error_internal(FT_ERR_NO_MEMORY);
         return ;
     }
     ManagedType* pointer = new (std::nothrow) ManagedType(std::forward<Args>(args)...);
@@ -154,7 +160,7 @@ ft_sharedptr<ManagedType>::ft_sharedptr(Args&&... args)
     {
         delete reference_count;
         delete shared_thread_safe_flag;
-        this->set_error_unlocked(FT_ERR_NO_MEMORY);
+        this->set_error_internal(FT_ERR_NO_MEMORY);
         return ;
     }
     *reference_count = 1;
@@ -164,7 +170,7 @@ ft_sharedptr<ManagedType>::ft_sharedptr(Args&&... args)
     this->_shared_thread_safe_flag = shared_thread_safe_flag;
     this->_arraySize = 1;
     this->_isArrayType = false;
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_error_internal(FT_ERR_SUCCESSS);
     return ;
 }
 #else
@@ -189,7 +195,7 @@ ft_sharedptr<ManagedType>::ft_sharedptr(Args&&... args)
     {
         if (shared_thread_safe_flag)
             delete shared_thread_safe_flag;
-        this->set_error_unlocked(FT_ERR_NO_MEMORY);
+        this->set_error_internal(FT_ERR_NO_MEMORY);
         return ;
     }
     ManagedType* pointer = new (std::nothrow) ManagedType(std::forward<Args>(args)...);
@@ -197,7 +203,7 @@ ft_sharedptr<ManagedType>::ft_sharedptr(Args&&... args)
     {
         delete reference_count;
         delete shared_thread_safe_flag;
-        this->set_error_unlocked(FT_ERR_NO_MEMORY);
+        this->set_error_internal(FT_ERR_NO_MEMORY);
         return ;
     }
     *reference_count = 1;
@@ -207,7 +213,7 @@ ft_sharedptr<ManagedType>::ft_sharedptr(Args&&... args)
     this->_shared_thread_safe_flag = shared_thread_safe_flag;
     this->_arraySize = 1;
     this->_isArrayType = false;
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_error_internal(FT_ERR_SUCCESSS);
     return ;
 }
 #endif
@@ -241,13 +247,13 @@ ft_sharedptr<ManagedType>::ft_sharedptr(ManagedType* pointer, bool isArray, size
                 delete this->_shared_thread_safe_flag;
                 this->_shared_thread_safe_flag = ft_nullptr;
             }
-            this->set_error_unlocked(FT_ERR_NO_MEMORY);
+            this->set_error_internal(FT_ERR_NO_MEMORY);
             return ;
         }
         *this->_referenceCount = 1;
         *this->_shared_thread_safe_flag = false;
     }
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_error_internal(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -262,7 +268,7 @@ ft_sharedptr<ManagedType>::ft_sharedptr()
       _thread_safe_enabled(false),
       _shared_thread_safe_flag(ft_nullptr)
 {
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_error_internal(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -279,7 +285,7 @@ ft_sharedptr<ManagedType>::ft_sharedptr(size_t size)
 {
     if (size == 0)
     {
-        this->set_error_unlocked(FT_ERR_SUCCESSS);
+        this->set_error_internal(FT_ERR_SUCCESSS);
         return ;
     }
     this->_referenceCount = new (std::nothrow) int;
@@ -293,7 +299,7 @@ ft_sharedptr<ManagedType>::ft_sharedptr(size_t size)
             delete this->_shared_thread_safe_flag;
             this->_shared_thread_safe_flag = ft_nullptr;
         }
-        this->set_error_unlocked(FT_ERR_NO_MEMORY);
+        this->set_error_internal(FT_ERR_NO_MEMORY);
         return ;
     }
     this->_managedPointer = new (std::nothrow) ManagedType[size];
@@ -305,12 +311,12 @@ ft_sharedptr<ManagedType>::ft_sharedptr(size_t size)
         this->_shared_thread_safe_flag = ft_nullptr;
         this->_arraySize = 0;
         this->_isArrayType = false;
-        this->set_error_unlocked(FT_ERR_NO_MEMORY);
+        this->set_error_internal(FT_ERR_NO_MEMORY);
         return ;
     }
     *this->_referenceCount = 1;
     *this->_shared_thread_safe_flag = false;
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_error_internal(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -327,12 +333,14 @@ ft_sharedptr<ManagedType>::ft_sharedptr(const ft_sharedptr<ManagedType>& other)
 {
     bool other_lock_acquired;
     bool other_thread_safe;
+    int other_lock_error;
 
     other_lock_acquired = false;
     other_thread_safe = false;
-    if (other.lock_internal(&other_lock_acquired) != 0)
+    other_lock_error = other.lock_internal(&other_lock_acquired);
+    if (other_lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(ft_errno);
+        this->set_error_internal(other_lock_error);
         return ;
     }
     this->_managedPointer = other._managedPointer;
@@ -345,17 +353,16 @@ ft_sharedptr<ManagedType>::ft_sharedptr(const ft_sharedptr<ManagedType>& other)
     if (this->_referenceCount)
     {
         ++(*this->_referenceCount);
-        this->set_error_unlocked(FT_ERR_SUCCESSS);
+        this->set_error_internal(FT_ERR_SUCCESSS);
     }
     else
-        this->set_error_unlocked(other._error_code);
+        this->set_error_internal(other._error_code);
     other.unlock_internal(other_lock_acquired);
     if (other_thread_safe)
     {
         if (this->prepare_thread_safety() != 0)
         {
             this->release_current_locked();
-            this->set_error_unlocked(ft_errno);
             return ;
         }
     }
@@ -378,12 +385,14 @@ ft_sharedptr<ManagedType>::ft_sharedptr(ft_sharedptr<ManagedType>&& other) noexc
 {
     bool other_lock_acquired;
     bool other_thread_safe;
+    int other_lock_error;
 
     other_lock_acquired = false;
     other_thread_safe = false;
-    if (other.lock_internal(&other_lock_acquired) != 0)
+    other_lock_error = other.lock_internal(&other_lock_acquired);
+    if (other_lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(ft_errno);
+        this->set_error_internal(other_lock_error);
         return ;
     }
     this->_managedPointer = other._managedPointer;
@@ -399,16 +408,14 @@ ft_sharedptr<ManagedType>::ft_sharedptr(ft_sharedptr<ManagedType>&& other) noexc
     other._isArrayType = false;
     other._error_code = FT_ERR_SUCCESSS;
     other._shared_thread_safe_flag = ft_nullptr;
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
-    other.set_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_error_internal(FT_ERR_SUCCESSS);
+    other.set_error_internal(FT_ERR_SUCCESSS);
     other.unlock_internal(other_lock_acquired);
     other.teardown_thread_safety();
     if (other_thread_safe)
     {
         if (this->prepare_thread_safety() != 0)
         {
-            this->set_error_unlocked(ft_errno);
-            other.set_error_unlocked(ft_errno);
             return ;
         }
         this->_thread_safe_enabled = true;
@@ -424,13 +431,14 @@ ft_sharedptr<ManagedType>::~ft_sharedptr()
     bool lock_acquired;
 
     lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) == 0)
+    int lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error == FT_ERR_SUCCESSS)
     {
         this->release_current_locked();
         this->unlock_internal(lock_acquired);
     }
     else
-        this->set_error_unlocked(ft_errno);
+        this->set_error_internal(lock_error);
     this->teardown_thread_safety();
     return ;
 }
@@ -471,7 +479,7 @@ void ft_sharedptr<ManagedType>::release_current_locked()
     this->_shared_thread_safe_flag = ft_nullptr;
     this->_arraySize = 0;
     this->_isArrayType = false;
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_error_internal(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -483,13 +491,14 @@ ft_sharedptr<ManagedType>& ft_sharedptr<ManagedType>::operator=(ft_sharedptr<Man
         bool self_lock_acquired;
 
         self_lock_acquired = false;
-        if (this->lock_internal(&self_lock_acquired) == 0)
+        int self_lock_error = this->lock_internal(&self_lock_acquired);
+        if (self_lock_error == FT_ERR_SUCCESSS)
         {
-            this->set_error_unlocked(FT_ERR_SUCCESSS);
+            this->set_error_internal(FT_ERR_SUCCESSS);
             this->unlock_internal(self_lock_acquired);
         }
         else
-            this->set_error_unlocked(ft_errno);
+            this->set_error_internal(self_lock_error);
         return (*this);
     }
     ft_sharedptr<ManagedType> *first;
@@ -509,17 +518,19 @@ ft_sharedptr<ManagedType>& ft_sharedptr<ManagedType>::operator=(ft_sharedptr<Man
         second = temp;
     }
     first_lock_acquired = false;
-    if (first->lock_internal(&first_lock_acquired) != 0)
+    int first_lock_error = first->lock_internal(&first_lock_acquired);
+    if (first_lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(ft_errno);
+        this->set_error_internal(first_lock_error);
         return (*this);
     }
     second_lock_acquired = false;
-    if (second->lock_internal(&second_lock_acquired) != 0)
+    int second_lock_error = second->lock_internal(&second_lock_acquired);
+    if (second_lock_error != FT_ERR_SUCCESSS)
     {
         first->unlock_internal(first_lock_acquired);
-        this->set_error_unlocked(ft_errno);
-        other.set_error_unlocked(ft_errno);
+        this->set_error_internal(second_lock_error);
+        other.set_error_internal(second_lock_error);
         return (*this);
     }
     other_thread_safe = (other._shared_thread_safe_flag && *other._shared_thread_safe_flag);
@@ -546,15 +557,13 @@ ft_sharedptr<ManagedType>& ft_sharedptr<ManagedType>::operator=(ft_sharedptr<Man
     {
         if (this->prepare_thread_safety() != 0)
         {
-            this->set_error_unlocked(ft_errno);
-            other.set_error_unlocked(ft_errno);
             return (*this);
         }
     }
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_error_internal(FT_ERR_SUCCESSS);
     if (this->_shared_thread_safe_flag)
         *this->_shared_thread_safe_flag = other_thread_safe;
-    other.set_error_unlocked(FT_ERR_SUCCESSS);
+    other.set_error_internal(FT_ERR_SUCCESSS);
     return (*this);
 }
 
@@ -566,13 +575,14 @@ ft_sharedptr<ManagedType>& ft_sharedptr<ManagedType>::operator=(const ft_sharedp
         bool self_lock_acquired;
 
         self_lock_acquired = false;
-        if (this->lock_internal(&self_lock_acquired) == 0)
+        int self_lock_error = this->lock_internal(&self_lock_acquired);
+        if (self_lock_error == FT_ERR_SUCCESSS)
         {
-            this->set_error_unlocked(FT_ERR_SUCCESSS);
+            this->set_error_internal(FT_ERR_SUCCESSS);
             this->unlock_internal(self_lock_acquired);
         }
         else
-            this->set_error_unlocked(ft_errno);
+            this->set_error_internal(self_lock_error);
         return (*this);
     }
     bool this_lock_acquired;
@@ -580,16 +590,18 @@ ft_sharedptr<ManagedType>& ft_sharedptr<ManagedType>::operator=(const ft_sharedp
     bool other_thread_safe;
 
     this_lock_acquired = false;
-    if (this->lock_internal(&this_lock_acquired) != 0)
+    int this_lock_error = this->lock_internal(&this_lock_acquired);
+    if (this_lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(ft_errno);
+        this->set_error_internal(this_lock_error);
         return (*this);
     }
     other_lock_acquired = false;
-    if (other.lock_internal(&other_lock_acquired) != 0)
+    int other_lock_error = other.lock_internal(&other_lock_acquired);
+    if (other_lock_error != FT_ERR_SUCCESSS)
     {
         this->unlock_internal(this_lock_acquired);
-        this->set_error_unlocked(ft_errno);
+        this->set_error_internal(other_lock_error);
         return (*this);
     }
     other_thread_safe = (other._shared_thread_safe_flag && *other._shared_thread_safe_flag);
@@ -603,10 +615,10 @@ ft_sharedptr<ManagedType>& ft_sharedptr<ManagedType>::operator=(const ft_sharedp
     if (this->_referenceCount)
     {
         ++(*this->_referenceCount);
-        this->set_error_unlocked(FT_ERR_SUCCESSS);
+        this->set_error_internal(FT_ERR_SUCCESSS);
     }
     else
-        this->set_error_unlocked(other._error_code);
+        this->set_error_internal(other._error_code);
     other.unlock_internal(other_lock_acquired);
     this->unlock_internal(this_lock_acquired);
     this->teardown_thread_safety();
@@ -615,15 +627,13 @@ ft_sharedptr<ManagedType>& ft_sharedptr<ManagedType>::operator=(const ft_sharedp
         if (this->prepare_thread_safety() != 0)
         {
             this->release_current_locked();
-            this->set_error_unlocked(ft_errno);
-            other.set_error_unlocked(ft_errno);
             return (*this);
         }
     }
     this->_thread_safe_enabled = other_thread_safe;
     if (this->_shared_thread_safe_flag)
         *this->_shared_thread_safe_flag = other_thread_safe;
-    other.set_error_unlocked(FT_ERR_SUCCESSS);
+    other.set_error_internal(FT_ERR_SUCCESSS);
     return (*this);
 }
 
@@ -642,11 +652,13 @@ ft_sharedptr<ManagedType>::ft_sharedptr(const ft_sharedptr<Other>& other)
       _shared_thread_safe_flag(ft_nullptr)
 {
     bool other_lock_acquired;
+    int other_lock_error;
 
     other_lock_acquired = false;
-    if (other.lock_internal(&other_lock_acquired) != 0)
+    other_lock_error = other.lock_internal(&other_lock_acquired);
+    if (other_lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(ft_errno);
+        this->set_error_internal(other_lock_error);
         return ;
     }
     this->_managedPointer = other._managedPointer;
@@ -658,10 +670,10 @@ ft_sharedptr<ManagedType>::ft_sharedptr(const ft_sharedptr<Other>& other)
     if (this->_referenceCount)
     {
         ++(*this->_referenceCount);
-        this->set_error_unlocked(FT_ERR_SUCCESSS);
+        this->set_error_internal(FT_ERR_SUCCESSS);
     }
     else
-        this->set_error_unlocked(other._error_code);
+        this->set_error_internal(other._error_code);
     other.unlock_internal(other_lock_acquired);
     return ;
 }
@@ -679,11 +691,13 @@ ft_sharedptr<ManagedType>::ft_sharedptr(const ft_sharedptr<Other>& other)
       _shared_thread_safe_flag(ft_nullptr)
 {
     bool other_lock_acquired;
+    int other_lock_error;
 
     other_lock_acquired = false;
-    if (other.lock_internal(&other_lock_acquired) != 0)
+    other_lock_error = other.lock_internal(&other_lock_acquired);
+    if (other_lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(ft_errno);
+        this->set_error_internal(other_lock_error);
         return ;
     }
     this->_managedPointer = other._managedPointer;
@@ -695,10 +709,10 @@ ft_sharedptr<ManagedType>::ft_sharedptr(const ft_sharedptr<Other>& other)
     if (this->_referenceCount)
     {
         ++(*this->_referenceCount);
-        this->set_error_unlocked(FT_ERR_SUCCESSS);
+        this->set_error_internal(FT_ERR_SUCCESSS);
     }
     else
-        this->set_error_unlocked(other._error_code);
+        this->set_error_internal(other._error_code);
     other.unlock_internal(other_lock_acquired);
     return ;
 }
@@ -719,11 +733,13 @@ ft_sharedptr<ManagedType>::ft_sharedptr(ft_sharedptr<Other>&& other) noexcept
       _shared_thread_safe_flag(ft_nullptr)
 {
     bool other_lock_acquired;
+    int other_lock_error;
 
     other_lock_acquired = false;
-    if (other.lock_internal(&other_lock_acquired) != 0)
+    other_lock_error = other.lock_internal(&other_lock_acquired);
+    if (other_lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(ft_errno);
+        this->set_error_internal(other_lock_error);
         return ;
     }
     this->_managedPointer = other._managedPointer;
@@ -738,8 +754,8 @@ ft_sharedptr<ManagedType>::ft_sharedptr(ft_sharedptr<Other>&& other) noexcept
     other._isArrayType = false;
     other._error_code = FT_ERR_SUCCESSS;
     other._shared_thread_safe_flag = ft_nullptr;
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
-    other.set_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_error_internal(FT_ERR_SUCCESSS);
+    other.set_error_internal(FT_ERR_SUCCESSS);
     other.unlock_internal(other_lock_acquired);
     return ;
 }
@@ -757,11 +773,13 @@ ft_sharedptr<ManagedType>::ft_sharedptr(ft_sharedptr<Other>&& other) noexcept
       _shared_thread_safe_flag(ft_nullptr)
 {
     bool other_lock_acquired;
+    int other_lock_error;
 
     other_lock_acquired = false;
-    if (other.lock_internal(&other_lock_acquired) != 0)
+    other_lock_error = other.lock_internal(&other_lock_acquired);
+    if (other_lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(ft_errno);
+        this->set_error_internal(other_lock_error);
         return ;
     }
     this->_managedPointer = other._managedPointer;
@@ -776,8 +794,8 @@ ft_sharedptr<ManagedType>::ft_sharedptr(ft_sharedptr<Other>&& other) noexcept
     other._isArrayType = false;
     other._error_code = FT_ERR_SUCCESSS;
     other._shared_thread_safe_flag = ft_nullptr;
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
-    other.set_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_error_internal(FT_ERR_SUCCESSS);
+    other.set_error_internal(FT_ERR_SUCCESSS);
     other.unlock_internal(other_lock_acquired);
     return ;
 }
@@ -791,9 +809,10 @@ ManagedType& ft_sharedptr<ManagedType>::operator*()
 
     lock_acquired = false;
     pointer = ft_nullptr;
-    if (this->lock_internal(&lock_acquired) != 0)
+    int lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(ft_errno);
+        this->set_error_internal(lock_error);
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
             static ManagedType default_instance;
@@ -808,7 +827,7 @@ ManagedType& ft_sharedptr<ManagedType>::operator*()
     pointer = this->_managedPointer;
     if (!pointer)
     {
-        this->set_error_unlocked(FT_ERR_INVALID_POINTER);
+        this->set_error_internal(FT_ERR_INVALID_POINTER);
         this->unlock_internal(lock_acquired);
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
@@ -821,7 +840,7 @@ ManagedType& ft_sharedptr<ManagedType>::operator*()
             return (*reinterpret_cast<ManagedType*>(dummy_buffer));
         }
     }
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_error_internal(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (*pointer);
 }
@@ -834,9 +853,10 @@ const ManagedType& ft_sharedptr<ManagedType>::operator*() const
 
     lock_acquired = false;
     pointer = ft_nullptr;
-    if (this->lock_internal(&lock_acquired) != 0)
+    int lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_unlocked(ft_errno);
+        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_internal(lock_error);
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
             static ManagedType default_instance;
@@ -851,7 +871,7 @@ const ManagedType& ft_sharedptr<ManagedType>::operator*() const
     pointer = this->_managedPointer;
     if (!pointer)
     {
-        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_unlocked(FT_ERR_INVALID_POINTER);
+        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_internal(FT_ERR_INVALID_POINTER);
         this->unlock_internal(lock_acquired);
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
@@ -864,7 +884,7 @@ const ManagedType& ft_sharedptr<ManagedType>::operator*() const
             return (*reinterpret_cast<const ManagedType*>(dummy_buffer));
         }
     }
-    const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_unlocked(FT_ERR_SUCCESSS);
+    const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_internal(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (*pointer);
 }
@@ -897,9 +917,10 @@ ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index)
     lock_acquired = false;
     pointer = ft_nullptr;
     element_pointer = ft_nullptr;
-    if (this->lock_internal(&lock_acquired) != 0)
+    int lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(ft_errno);
+        this->set_error_internal(lock_error);
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
             static ManagedType default_instance;
@@ -913,7 +934,7 @@ ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index)
     }
     if (!this->_isArrayType)
     {
-        this->set_error_unlocked(FT_ERR_INVALID_OPERATION);
+        this->set_error_internal(FT_ERR_INVALID_OPERATION);
         this->unlock_internal(lock_acquired);
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
@@ -929,7 +950,7 @@ ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index)
     pointer = this->_managedPointer;
     if (!pointer)
     {
-        this->set_error_unlocked(FT_ERR_INVALID_POINTER);
+        this->set_error_internal(FT_ERR_INVALID_POINTER);
         this->unlock_internal(lock_acquired);
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
@@ -944,7 +965,7 @@ ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index)
     }
     if (index >= this->_arraySize)
     {
-        this->set_error_unlocked(FT_ERR_OUT_OF_RANGE);
+        this->set_error_internal(FT_ERR_OUT_OF_RANGE);
         this->unlock_internal(lock_acquired);
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
@@ -958,7 +979,7 @@ ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index)
         }
     }
     element_pointer = &pointer[index];
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_error_internal(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (*element_pointer);
 }
@@ -973,9 +994,10 @@ const ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index) const
     lock_acquired = false;
     pointer = ft_nullptr;
     element_pointer = ft_nullptr;
-    if (this->lock_internal(&lock_acquired) != 0)
+    int lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_unlocked(ft_errno);
+        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_internal(lock_error);
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
             static ManagedType default_instance;
@@ -989,7 +1011,7 @@ const ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index) const
     }
     if (!this->_isArrayType)
     {
-        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_unlocked(FT_ERR_INVALID_OPERATION);
+        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_internal(FT_ERR_INVALID_OPERATION);
         this->unlock_internal(lock_acquired);
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
@@ -1005,7 +1027,7 @@ const ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index) const
     pointer = this->_managedPointer;
     if (!pointer)
     {
-        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_unlocked(FT_ERR_INVALID_POINTER);
+        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_internal(FT_ERR_INVALID_POINTER);
         this->unlock_internal(lock_acquired);
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
@@ -1020,7 +1042,7 @@ const ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index) const
     }
     if (index >= this->_arraySize)
     {
-        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_unlocked(FT_ERR_OUT_OF_RANGE);
+        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_internal(FT_ERR_OUT_OF_RANGE);
         this->unlock_internal(lock_acquired);
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
@@ -1034,7 +1056,7 @@ const ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index) const
         }
     }
     element_pointer = &pointer[index];
-    const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_unlocked(FT_ERR_SUCCESSS);
+    const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_internal(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (*element_pointer);
 }
@@ -1047,9 +1069,10 @@ int ft_sharedptr<ManagedType>::use_count() const
 
     lock_acquired = false;
     count = 0;
-    if (this->lock_internal(&lock_acquired) != 0)
+    int lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_unlocked(ft_errno);
+        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_internal(lock_error);
         return (0);
     }
     if (this->_referenceCount)
@@ -1058,7 +1081,7 @@ int ft_sharedptr<ManagedType>::use_count() const
         count = 1;
     else
         count = 0;
-    const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_unlocked(FT_ERR_SUCCESSS);
+    const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_internal(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (count);
 }
@@ -1071,14 +1094,15 @@ bool ft_sharedptr<ManagedType>::hasError() const
 
     lock_acquired = false;
     has_error = true;
-    if (this->lock_internal(&lock_acquired) != 0)
+    int lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_unlocked(ft_errno);
+        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_internal(lock_error);
         return (true);
     }
     has_error = (this->_error_code != FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
-    ft_errno = FT_ERR_SUCCESSS;
+    const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_internal(FT_ERR_SUCCESSS);
     return (has_error);
 }
 
@@ -1090,10 +1114,11 @@ int ft_sharedptr<ManagedType>::get_error() const
 
     lock_acquired = false;
     error_code = FT_ERR_SUCCESSS;
-    if (this->lock_internal(&lock_acquired) != 0)
+    int lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_unlocked(ft_errno);
-        return (ft_errno);
+        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_internal(lock_error);
+        return (lock_error);
     }
     error_code = this->_error_code;
     this->unlock_internal(lock_acquired);
@@ -1108,10 +1133,11 @@ const char* ft_sharedptr<ManagedType>::get_error_str() const
 
     lock_acquired = false;
     error_code = FT_ERR_SUCCESSS;
-    if (this->lock_internal(&lock_acquired) != 0)
+    int lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_unlocked(ft_errno);
-        return (ft_strerror(ft_errno));
+        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_internal(lock_error);
+        return (ft_strerror(lock_error));
     }
     error_code = this->_error_code;
     this->unlock_internal(lock_acquired);
@@ -1126,13 +1152,14 @@ ManagedType* ft_sharedptr<ManagedType>::get()
 
     lock_acquired = false;
     pointer = ft_nullptr;
-    if (this->lock_internal(&lock_acquired) != 0)
+    int lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(ft_errno);
+        this->set_error_internal(lock_error);
         return (ft_nullptr);
     }
     pointer = this->_managedPointer;
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_error_internal(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (pointer);
 }
@@ -1145,13 +1172,14 @@ const ManagedType* ft_sharedptr<ManagedType>::get() const
 
     lock_acquired = false;
     pointer = ft_nullptr;
-    if (this->lock_internal(&lock_acquired) != 0)
+    int lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_unlocked(ft_errno);
+        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_internal(lock_error);
         return (ft_nullptr);
     }
     pointer = this->_managedPointer;
-    const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_unlocked(FT_ERR_SUCCESSS);
+    const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_internal(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (pointer);
 }
@@ -1170,14 +1198,15 @@ ft_sharedptr<ManagedType>::operator bool() const noexcept
 
     lock_acquired = false;
     result = false;
-    if (this->lock_internal(&lock_acquired) != 0)
+    int lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_unlocked(ft_errno);
+        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_internal(lock_error);
         return (false);
     }
     result = (this->_managedPointer != ft_nullptr);
     this->unlock_internal(lock_acquired);
-    ft_errno = FT_ERR_SUCCESSS;
+    const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_internal(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -1189,7 +1218,7 @@ void ft_sharedptr<ManagedType>::set_error(int error) const
     lock_acquired = false;
     if (this->lock_internal(&lock_acquired) != 0)
         return ;
-    this->set_error_unlocked(error);
+    this->set_error_internal(error);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -1200,9 +1229,10 @@ void ft_sharedptr<ManagedType>::reset(ManagedType* pointer, size_t size, bool ar
     bool lock_acquired;
 
     lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
+    int lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(ft_errno);
+        this->set_error_internal(lock_error);
         return ;
     }
     this->release_current_locked();
@@ -1217,7 +1247,7 @@ void ft_sharedptr<ManagedType>::reset(ManagedType* pointer, size_t size, bool ar
     if (!pointer)
     {
         this->_referenceCount = ft_nullptr;
-        this->set_error_unlocked(FT_ERR_SUCCESSS);
+        this->set_error_internal(FT_ERR_SUCCESSS);
         this->unlock_internal(lock_acquired);
         return ;
     }
@@ -1231,12 +1261,12 @@ void ft_sharedptr<ManagedType>::reset(ManagedType* pointer, size_t size, bool ar
         this->_managedPointer = ft_nullptr;
         this->_arraySize = 0;
         this->_isArrayType = false;
-        this->set_error_unlocked(FT_ERR_NO_MEMORY);
+        this->set_error_internal(FT_ERR_NO_MEMORY);
         this->unlock_internal(lock_acquired);
         return ;
     }
     *this->_referenceCount = 1;
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_error_internal(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -1260,18 +1290,20 @@ void ft_sharedptr<ManagedType>::swap(ft_sharedptr<ManagedType>& other)
         second = temp_pointer;
     }
     first_lock_acquired = false;
-    if (first->lock_internal(&first_lock_acquired) != 0)
+    int first_lock_error = first->lock_internal(&first_lock_acquired);
+    if (first_lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(ft_errno);
-        other.set_error_unlocked(ft_errno);
+        this->set_error_internal(first_lock_error);
+        other.set_error_internal(first_lock_error);
         return ;
     }
     second_lock_acquired = false;
-    if (second->lock_internal(&second_lock_acquired) != 0)
+    int second_lock_error = second->lock_internal(&second_lock_acquired);
+    if (second_lock_error != FT_ERR_SUCCESSS)
     {
         first->unlock_internal(first_lock_acquired);
-        this->set_error_unlocked(ft_errno);
-        other.set_error_unlocked(ft_errno);
+        this->set_error_internal(second_lock_error);
+        other.set_error_internal(second_lock_error);
         return ;
     }
     ft_swap(this->_managedPointer, other._managedPointer);
@@ -1279,8 +1311,8 @@ void ft_sharedptr<ManagedType>::swap(ft_sharedptr<ManagedType>& other)
     ft_swap(this->_arraySize, other._arraySize);
     ft_swap(this->_isArrayType, other._isArrayType);
     ft_swap(this->_error_code, other._error_code);
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
-    other.set_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_error_internal(FT_ERR_SUCCESSS);
+    other.set_error_internal(FT_ERR_SUCCESSS);
     second->unlock_internal(second_lock_acquired);
     first->unlock_internal(first_lock_acquired);
     return ;
@@ -1290,6 +1322,7 @@ template <typename ManagedType>
 void ft_sharedptr<ManagedType>::add(const ManagedType& element)
 {
     bool lock_acquired;
+    int lock_error;
     ManagedType* previous_array;
     int* previous_reference;
     ManagedType* new_array;
@@ -1298,14 +1331,15 @@ void ft_sharedptr<ManagedType>::add(const ManagedType& element)
     bool detach_required;
 
     lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(ft_errno);
+        this->set_error_internal(lock_error);
         return ;
     }
     if (!this->_isArrayType)
     {
-        this->set_error_unlocked(FT_ERR_INVALID_OPERATION);
+        this->set_error_internal(FT_ERR_INVALID_OPERATION);
         this->unlock_internal(lock_acquired);
         return ;
     }
@@ -1314,7 +1348,7 @@ void ft_sharedptr<ManagedType>::add(const ManagedType& element)
     new_array = new (std::nothrow) ManagedType[this->_arraySize + 1];
     if (!new_array)
     {
-        this->set_error_unlocked(FT_ERR_NO_MEMORY);
+        this->set_error_internal(FT_ERR_NO_MEMORY);
         this->unlock_internal(lock_acquired);
         return ;
     }
@@ -1322,7 +1356,7 @@ void ft_sharedptr<ManagedType>::add(const ManagedType& element)
     if (!new_count)
     {
         delete[] new_array;
-        this->set_error_unlocked(FT_ERR_NO_MEMORY);
+        this->set_error_internal(FT_ERR_NO_MEMORY);
         this->unlock_internal(lock_acquired);
         return ;
     }
@@ -1353,7 +1387,7 @@ void ft_sharedptr<ManagedType>::add(const ManagedType& element)
     this->_referenceCount = new_count;
     this->_arraySize = this->_arraySize + 1;
     this->_isArrayType = true;
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_error_internal(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -1362,6 +1396,7 @@ template <typename ManagedType>
 void ft_sharedptr<ManagedType>::remove(int index)
 {
     bool lock_acquired;
+    int lock_error;
     ManagedType* previous_array;
     int* previous_reference;
     ManagedType* new_array;
@@ -1371,20 +1406,21 @@ void ft_sharedptr<ManagedType>::remove(int index)
     bool detach_required;
 
     lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(ft_errno);
+        this->set_error_internal(lock_error);
         return ;
     }
     if (!this->_isArrayType)
     {
-        this->set_error_unlocked(FT_ERR_INVALID_OPERATION);
+        this->set_error_internal(FT_ERR_INVALID_OPERATION);
         this->unlock_internal(lock_acquired);
         return ;
     }
     if (index < 0 || static_cast<size_t>(index) >= this->_arraySize)
     {
-        this->set_error_unlocked(FT_ERR_OUT_OF_RANGE);
+        this->set_error_internal(FT_ERR_OUT_OF_RANGE);
         this->unlock_internal(lock_acquired);
         return ;
     }
@@ -1398,7 +1434,7 @@ void ft_sharedptr<ManagedType>::remove(int index)
         new_array = new (std::nothrow) ManagedType[new_size];
         if (!new_array)
         {
-            this->set_error_unlocked(FT_ERR_NO_MEMORY);
+            this->set_error_internal(FT_ERR_NO_MEMORY);
             this->unlock_internal(lock_acquired);
             return ;
         }
@@ -1406,7 +1442,7 @@ void ft_sharedptr<ManagedType>::remove(int index)
         if (!new_count)
         {
             delete[] new_array;
-            this->set_error_unlocked(FT_ERR_NO_MEMORY);
+            this->set_error_internal(FT_ERR_NO_MEMORY);
             this->unlock_internal(lock_acquired);
             return ;
         }
@@ -1441,20 +1477,50 @@ void ft_sharedptr<ManagedType>::remove(int index)
     this->_referenceCount = new_count;
     this->_arraySize = new_size;
     this->_isArrayType = true;
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_error_internal(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return ;
 }
 
 template <typename ManagedType>
-void ft_sharedptr<ManagedType>::set_error_unlocked(int error) const
+void ft_sharedptr<ManagedType>::set_error_internal(int error) const
 {
     ft_sharedptr<ManagedType>* mutable_sharedptr;
 
     mutable_sharedptr = const_cast<ft_sharedptr<ManagedType>*>(this);
     mutable_sharedptr->_error_code = error;
-    ft_errno = error;
+    mutable_sharedptr->record_operation_error(error);
     return ;
+}
+
+template <typename ManagedType>
+void ft_sharedptr<ManagedType>::record_operation_error(int error_code) const noexcept
+{
+    unsigned long long operation_id;
+
+    operation_id = ft_errno_next_operation_id();
+    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
+    ft_operation_error_stack_push(&this->_operation_errors,
+            error_code, operation_id);
+    return ;
+}
+
+template <typename ManagedType>
+pt_mutex *ft_sharedptr<ManagedType>::mutex_handle() const
+{
+    return (this->_mutex);
+}
+
+template <typename ManagedType>
+ft_operation_error_stack *ft_sharedptr<ManagedType>::operation_error_stack_handle() noexcept
+{
+    return (&this->_operation_errors);
+}
+
+template <typename ManagedType>
+const ft_operation_error_stack *ft_sharedptr<ManagedType>::operation_error_stack_handle() const noexcept
+{
+    return (&this->_operation_errors);
 }
 
 template <typename ManagedType>
@@ -1463,48 +1529,37 @@ int ft_sharedptr<ManagedType>::lock_internal(bool *lock_acquired) const
     if (lock_acquired)
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || this->_mutex == ft_nullptr)
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-        return (0);
-    }
+        return (FT_ERR_SUCCESSS);
     this->_mutex->lock(THREAD_ID);
-    if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
+    int mutex_error = this->_mutex->operation_error_last_error();
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        if (this->_mutex->get_error() == FT_ERR_MUTEX_ALREADY_LOCKED)
+        if (mutex_error == FT_ERR_MUTEX_ALREADY_LOCKED)
         {
             bool state_lock_acquired;
 
             state_lock_acquired = false;
-            ft_errno = FT_ERR_SUCCESSS;
             if (this->_mutex->lock_state(&state_lock_acquired) == 0)
                 this->_mutex->unlock_state(state_lock_acquired);
-            ft_errno = FT_ERR_SUCCESSS;
-            return (0);
+            return (FT_ERR_SUCCESSS);
         }
-        ft_errno = this->_mutex->get_error();
-        return (-1);
+        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_internal(mutex_error);
+        return (mutex_error);
     }
     if (lock_acquired)
         *lock_acquired = true;
-    ft_errno = FT_ERR_SUCCESSS;
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
 template <typename ManagedType>
 void ft_sharedptr<ManagedType>::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || this->_mutex == ft_nullptr)
-    {
-        ft_errno = FT_ERR_SUCCESSS;
         return ;
-    }
     this->_mutex->unlock(THREAD_ID);
-    if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = this->_mutex->get_error();
-        return ;
-    }
-    ft_errno = FT_ERR_SUCCESSS;
+    int mutex_error = this->_mutex->operation_error_last_error();
+    if (mutex_error != FT_ERR_SUCCESSS)
+        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_internal(mutex_error);
     return ;
 }
 
@@ -1519,37 +1574,35 @@ int ft_sharedptr<ManagedType>::prepare_thread_safety()
         this->_shared_thread_safe_flag = new (std::nothrow) bool;
         if (!this->_shared_thread_safe_flag)
         {
-            this->set_error_unlocked(FT_ERR_NO_MEMORY);
+            this->set_error_internal(FT_ERR_NO_MEMORY);
             return (-1);
         }
         *this->_shared_thread_safe_flag = false;
     }
     if (this->_thread_safe_enabled && this->_mutex != ft_nullptr)
     {
-        this->set_error_unlocked(FT_ERR_SUCCESSS);
+        this->set_error_internal(FT_ERR_SUCCESSS);
         return (0);
     }
     memory_pointer = std::malloc(sizeof(pt_mutex));
     if (memory_pointer == ft_nullptr)
     {
-        this->set_error_unlocked(FT_ERR_NO_MEMORY);
+        this->set_error_internal(FT_ERR_NO_MEMORY);
         return (-1);
     }
     mutex_pointer = new(memory_pointer) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
+    int mutex_error = mutex_pointer->operation_error_last_error();
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        int mutex_error;
-
-        mutex_error = mutex_pointer->get_error();
         mutex_pointer->~pt_mutex();
         std::free(memory_pointer);
-        this->set_error_unlocked(mutex_error);
+        this->set_error_internal(mutex_error);
         return (-1);
     }
     this->_mutex = mutex_pointer;
     this->_thread_safe_enabled = true;
     *this->_shared_thread_safe_flag = true;
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_error_internal(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -1578,7 +1631,7 @@ void ft_sharedptr<ManagedType>::disable_thread_safety()
     this->teardown_thread_safety();
     if (this->_shared_thread_safe_flag)
         *this->_shared_thread_safe_flag = false;
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_error_internal(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -1593,7 +1646,7 @@ bool ft_sharedptr<ManagedType>::is_thread_safe() const
         const_cast<ft_sharedptr<ManagedType>*>(this)->prepare_thread_safety();
     }
     enabled = (this->_thread_safe_enabled && this->_mutex != ft_nullptr);
-    const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_unlocked(FT_ERR_SUCCESSS);
+    const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_internal(FT_ERR_SUCCESSS);
     return (enabled);
 }
 
@@ -1603,10 +1656,8 @@ int ft_sharedptr<ManagedType>::lock(bool *lock_acquired) const
     int result;
 
     result = this->lock_internal(lock_acquired);
-    if (result != 0)
-        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_unlocked(ft_errno);
-    else
-        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_unlocked(FT_ERR_SUCCESSS);
+    if (result == FT_ERR_SUCCESSS)
+        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_internal(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -1614,11 +1665,10 @@ template <typename ManagedType>
 void ft_sharedptr<ManagedType>::unlock(bool lock_acquired) const
 {
     this->unlock_internal(lock_acquired);
-    if (this->_mutex != ft_nullptr && this->_mutex->get_error() != FT_ERR_SUCCESSS)
-        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_unlocked(this->_mutex->get_error());
-    else
+    if (this->_mutex == ft_nullptr
+        || this->_mutex->operation_error_last_error() == FT_ERR_SUCCESSS)
     {
-        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_unlocked(ft_errno);
+        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_internal(FT_ERR_SUCCESSS);
     }
     return ;
 }

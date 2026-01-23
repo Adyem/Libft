@@ -17,7 +17,6 @@ static int cmp_set_errno_from_last_error()
         error_code = FT_ERR_TERMINATED;
     else
         error_code = ft_map_system_error(static_cast<int>(last_error));
-    ft_errno = error_code;
     return (error_code);
 }
 
@@ -34,7 +33,6 @@ int cmp_readline_enable_raw_mode()
         if (error_code == FT_ERR_INVALID_HANDLE)
         {
             g_raw_mode_active = false;
-            ft_errno = FT_ERR_SUCCESSS;
             return (0);
         }
         return (-1);
@@ -46,7 +44,6 @@ int cmp_readline_enable_raw_mode()
         if (error_code == FT_ERR_INVALID_HANDLE)
         {
             g_raw_mode_active = false;
-            ft_errno = FT_ERR_SUCCESSS;
             return (0);
         }
         return (-1);
@@ -60,13 +57,11 @@ int cmp_readline_enable_raw_mode()
         if (error_code == FT_ERR_INVALID_HANDLE)
         {
             g_raw_mode_active = false;
-            ft_errno = FT_ERR_SUCCESSS;
             return (0);
         }
         return (-1);
     }
     g_raw_mode_active = true;
-    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -76,7 +71,6 @@ void cmp_readline_disable_raw_mode()
 
     if (g_raw_mode_active == false)
     {
-        ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
     handle = GetStdHandle(STD_INPUT_HANDLE);
@@ -91,7 +85,6 @@ void cmp_readline_disable_raw_mode()
         return ;
     }
     g_raw_mode_active = false;
-    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -124,7 +117,6 @@ int cmp_readline_terminal_dimensions(unsigned short *rows, unsigned short *cols,
         *x_pixels = 0;
     if (y_pixels != ft_nullptr)
         *y_pixels = 0;
-    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -147,14 +139,9 @@ static bool g_raw_mode_active;
 
 static int cmp_set_errno_from_errno()
 {
-    int error_code;
-
     if (errno == 0)
-        error_code = FT_ERR_TERMINATED;
-    else
-        error_code = ft_map_system_error(errno);
-    ft_errno = error_code;
-    return (error_code);
+        return (FT_ERR_TERMINATED);
+    return (ft_map_system_error(errno));
 }
 
 int cmp_readline_enable_raw_mode()
@@ -164,7 +151,6 @@ int cmp_readline_enable_raw_mode()
     if (isatty(STDIN_FILENO) == 0)
     {
         g_raw_mode_active = false;
-        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     if (tcgetattr(STDIN_FILENO, &raw) == -1)
@@ -179,25 +165,19 @@ int cmp_readline_enable_raw_mode()
         cmp_set_errno_from_errno();
         return (-1);
     }
-    g_raw_mode_active = true;
-    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
 void cmp_readline_disable_raw_mode()
 {
     if (g_raw_mode_active == false)
-    {
-        ft_errno = FT_ERR_SUCCESSS;
         return ;
-    }
     if (tcsetattr(STDIN_FILENO, TCSANOW, &g_orig_termios) == -1)
     {
         cmp_set_errno_from_errno();
         return ;
     }
     g_raw_mode_active = false;
-    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -207,10 +187,7 @@ int cmp_readline_terminal_dimensions(unsigned short *rows, unsigned short *cols,
     struct winsize window_size;
 
     if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &window_size) == -1)
-    {
-        cmp_set_errno_from_errno();
         return (-1);
-    }
     if (rows != ft_nullptr)
         *rows = window_size.ws_row;
     if (cols != ft_nullptr)
@@ -219,7 +196,6 @@ int cmp_readline_terminal_dimensions(unsigned short *rows, unsigned short *cols,
         *x_pixels = window_size.ws_xpixel;
     if (y_pixels != ft_nullptr)
         *y_pixels = window_size.ws_ypixel;
-    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 

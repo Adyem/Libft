@@ -4,6 +4,9 @@
 #include "../Errno/errno_internal.hpp"
 #include "../PThread/recursive_mutex.hpp"
 
+#include "../Errno/errno_internal.hpp"
+#include "../PThread/recursive_mutex.hpp"
+
 class quaternion
 {
     private:
@@ -11,12 +14,9 @@ class quaternion
         double _x;
         double _y;
         double _z;
-        mutable int _error_code;
+        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
         mutable pt_recursive_mutex _mutex;
-        mutable ft_operation_error_stack _operation_errors;
         void record_operation_error(int error_code) const noexcept;
-
-        void    set_error(int error_code) const;
 
     public:
         quaternion();
@@ -35,8 +35,6 @@ class quaternion
         quaternion  conjugate() const;
         double      length() const;
         quaternion  normalize() const;
-        int         get_error() const;
-        const char  *get_error_str() const;
         // Low-level error-stack helpers for validation and diagnostics.
         ft_operation_error_stack *get_operation_error_stack_for_validation() noexcept;
         int  last_operation_error() const noexcept;

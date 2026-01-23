@@ -352,7 +352,7 @@ int ft_unordered_map<Key, MappedType>::iterator::lock_internal(bool *lock_acquir
     this->_mutex->lock(THREAD_ID);
     int mutex_error;
 
-    mutex_error = pt_recursive_mutex::operation_error_pop_newest();
+    mutex_error = this->_mutex->operation_error_pop_newest();
     ft_global_error_stack_pop_newest();
     if (mutex_error != FT_ERR_SUCCESSS)
         return (mutex_error);
@@ -369,7 +369,7 @@ int ft_unordered_map<Key, MappedType>::iterator::unlock_internal(bool lock_acqui
     this->_mutex->unlock(THREAD_ID);
     int mutex_error;
 
-    mutex_error = pt_recursive_mutex::operation_error_pop_newest();
+    mutex_error = this->_mutex->operation_error_pop_newest();
     ft_global_error_stack_pop_newest();
     return (mutex_error);
 }
@@ -528,7 +528,7 @@ int ft_unordered_map<Key, MappedType>::iterator::enable_thread_safety()
     {
         int mutex_error;
 
-        mutex_error = pt_recursive_mutex::operation_error_pop_newest();
+        mutex_error = mutex_pointer->operation_error_pop_newest();
         ft_global_error_stack_pop_newest();
         if (mutex_error != FT_ERR_SUCCESSS)
         {
@@ -764,7 +764,7 @@ int ft_unordered_map<Key, MappedType>::const_iterator::lock_internal(bool *lock_
     this->_mutex->lock(THREAD_ID);
     int mutex_error;
 
-    mutex_error = pt_recursive_mutex::operation_error_pop_newest();
+    mutex_error = this->_mutex->operation_error_pop_newest();
     ft_global_error_stack_pop_newest();
     if (mutex_error != FT_ERR_SUCCESSS)
         return (mutex_error);
@@ -781,7 +781,7 @@ int ft_unordered_map<Key, MappedType>::const_iterator::unlock_internal(bool lock
     this->_mutex->unlock(THREAD_ID);
     int mutex_error;
 
-    mutex_error = pt_recursive_mutex::operation_error_pop_newest();
+    mutex_error = this->_mutex->operation_error_pop_newest();
     ft_global_error_stack_pop_newest();
     return (mutex_error);
 }
@@ -940,7 +940,7 @@ int ft_unordered_map<Key, MappedType>::const_iterator::enable_thread_safety()
     {
         int mutex_error;
 
-        mutex_error = pt_recursive_mutex::operation_error_pop_newest();
+        mutex_error = mutex_pointer->operation_error_pop_newest();
         ft_global_error_stack_pop_newest();
         if (mutex_error != FT_ERR_SUCCESSS)
         {
@@ -1330,7 +1330,7 @@ int ft_unordered_map<Key, MappedType>::enable_thread_safety()
     {
         int mutex_error;
 
-        mutex_error = pt_recursive_mutex::operation_error_pop_newest();
+        mutex_error = mutex_pointer->operation_error_pop_newest();
         ft_global_error_stack_pop_newest();
         if (mutex_error != FT_ERR_SUCCESSS)
         {
@@ -1430,7 +1430,7 @@ int ft_unordered_map<Key, MappedType>::lock_internal(bool *lock_acquired) const
     this->_mutex->lock(THREAD_ID);
     int mutex_error;
 
-    mutex_error = pt_recursive_mutex::operation_error_pop_newest();
+    mutex_error = this->_mutex->operation_error_pop_newest();
     ft_global_error_stack_pop_newest();
     if (mutex_error != FT_ERR_SUCCESSS)
         return (mutex_error);
@@ -1447,7 +1447,7 @@ int ft_unordered_map<Key, MappedType>::unlock_internal(bool lock_acquired) const
     this->_mutex->unlock(THREAD_ID);
     int mutex_error;
 
-    mutex_error = pt_recursive_mutex::operation_error_pop_newest();
+    mutex_error = this->_mutex->operation_error_pop_newest();
     ft_global_error_stack_pop_newest();
     return (mutex_error);
 }

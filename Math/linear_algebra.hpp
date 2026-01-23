@@ -3,26 +3,21 @@
 
 #include "../Errno/errno_internal.hpp"
 #include "../PThread/recursive_mutex.hpp"
-#include "../PThread/unique_lock.hpp"
 
 class vector2
 {
     private:
         double _x;
         double _y;
-        mutable int _error_code;
         mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
         mutable pt_recursive_mutex _mutex;
 
         friend class matrix2;
 
-        void    set_error_unlocked(int error_code) const;
-        void    set_error(int error_code) const;
         void    record_operation_error(int error_code) const noexcept;
-        int     lock_self(ft_unique_lock<pt_recursive_mutex> &guard) const;
         static int lock_pair(const vector2 &first, const vector2 &second,
-                ft_unique_lock<pt_recursive_mutex> &first_guard,
-                ft_unique_lock<pt_recursive_mutex> &second_guard);
+                const vector2 *&lower, const vector2 *&upper);
+        static void unlock_pair(const vector2 *lower, const vector2 *upper);
 
     public:
         vector2();
@@ -39,9 +34,11 @@ class vector2
         double  dot(const vector2 &other) const;
         double  length() const;
         vector2 normalize() const;
-        int     get_error() const;
-        const char  *get_error_str() const;
         pt_recursive_mutex *get_mutex_for_validation() const;
+        ft_operation_error_stack *get_operation_error_stack_for_validation() const noexcept;
+#ifdef LIBFT_TEST_BUILD
+        pt_recursive_mutex *get_mutex_for_testing() noexcept;
+#endif
 };
 
 class vector3
@@ -50,19 +47,15 @@ class vector3
         double _x;
         double _y;
         double _z;
-        mutable int _error_code;
         mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
         mutable pt_recursive_mutex _mutex;
 
         friend class matrix3;
 
-        void    set_error_unlocked(int error_code) const;
-        void    set_error(int error_code) const;
         void    record_operation_error(int error_code) const noexcept;
-        int     lock_self(ft_unique_lock<pt_recursive_mutex> &guard) const;
         static int lock_pair(const vector3 &first, const vector3 &second,
-                ft_unique_lock<pt_recursive_mutex> &first_guard,
-                ft_unique_lock<pt_recursive_mutex> &second_guard);
+                const vector3 *&lower, const vector3 *&upper);
+        static void unlock_pair(const vector3 *lower, const vector3 *upper);
 
     public:
         vector3();
@@ -81,9 +74,11 @@ class vector3
         vector3 cross(const vector3 &other) const;
         double  length() const;
         vector3 normalize() const;
-        int     get_error() const;
-        const char  *get_error_str() const;
         pt_recursive_mutex *get_mutex_for_validation() const;
+        ft_operation_error_stack *get_operation_error_stack_for_validation() const noexcept;
+#ifdef LIBFT_TEST_BUILD
+        pt_recursive_mutex *get_mutex_for_testing() noexcept;
+#endif
 };
 
 class vector4
@@ -93,19 +88,15 @@ class vector4
         double _y;
         double _z;
         double _w;
-        mutable int _error_code;
         mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
         mutable pt_recursive_mutex _mutex;
 
         friend class matrix4;
 
-        void    set_error_unlocked(int error_code) const;
-        void    set_error(int error_code) const;
         void    record_operation_error(int error_code) const noexcept;
-        int     lock_self(ft_unique_lock<pt_recursive_mutex> &guard) const;
         static int lock_pair(const vector4 &first, const vector4 &second,
-                ft_unique_lock<pt_recursive_mutex> &first_guard,
-                ft_unique_lock<pt_recursive_mutex> &second_guard);
+                const vector4 *&lower, const vector4 *&upper);
+        static void unlock_pair(const vector4 *lower, const vector4 *upper);
 
     public:
         vector4();
@@ -124,26 +115,24 @@ class vector4
         double  dot(const vector4 &other) const;
         double  length() const;
         vector4 normalize() const;
-        int     get_error() const;
-        const char  *get_error_str() const;
         pt_recursive_mutex *get_mutex_for_validation() const;
+        ft_operation_error_stack *get_operation_error_stack_for_validation() const noexcept;
+#ifdef LIBFT_TEST_BUILD
+        pt_recursive_mutex *get_mutex_for_testing() noexcept;
+#endif
 };
 
 class matrix2
 {
     private:
         double _m[2][2];
-        mutable int _error_code;
         mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
         mutable pt_recursive_mutex _mutex;
 
-        void    set_error_unlocked(int error_code) const;
-        void    set_error(int error_code) const;
         void    record_operation_error(int error_code) const noexcept;
-        int     lock_self(ft_unique_lock<pt_recursive_mutex> &guard) const;
         static int lock_pair(const matrix2 &first, const matrix2 &second,
-                ft_unique_lock<pt_recursive_mutex> &first_guard,
-                ft_unique_lock<pt_recursive_mutex> &second_guard);
+                const matrix2 *&lower, const matrix2 *&upper);
+        static void unlock_pair(const matrix2 *lower, const matrix2 *upper);
 
     public:
         matrix2();
@@ -157,26 +146,24 @@ class matrix2
         vector2 transform(const vector2 &vector) const;
         matrix2 multiply(const matrix2 &other) const;
         matrix2 invert() const;
-        int     get_error() const;
-        const char  *get_error_str() const;
         pt_recursive_mutex *get_mutex_for_validation() const;
+        ft_operation_error_stack *get_operation_error_stack_for_validation() const noexcept;
+#ifdef LIBFT_TEST_BUILD
+        pt_recursive_mutex *get_mutex_for_testing() noexcept;
+#endif
 };
 
 class matrix3
 {
     private:
         double _m[3][3];
-        mutable int _error_code;
         mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
         mutable pt_recursive_mutex _mutex;
 
-        void    set_error_unlocked(int error_code) const;
-        void    set_error(int error_code) const;
         void    record_operation_error(int error_code) const noexcept;
-        int     lock_self(ft_unique_lock<pt_recursive_mutex> &guard) const;
         static int lock_pair(const matrix3 &first, const matrix3 &second,
-                ft_unique_lock<pt_recursive_mutex> &first_guard,
-                ft_unique_lock<pt_recursive_mutex> &second_guard);
+                const matrix3 *&lower, const matrix3 *&upper);
+        static void unlock_pair(const matrix3 *lower, const matrix3 *upper);
 
     public:
         matrix3();
@@ -191,26 +178,24 @@ class matrix3
         vector3 transform(const vector3 &vector) const;
         matrix3 multiply(const matrix3 &other) const;
         matrix3 invert() const;
-        int     get_error() const;
-        const char  *get_error_str() const;
         pt_recursive_mutex *get_mutex_for_validation() const;
+        ft_operation_error_stack *get_operation_error_stack_for_validation() const noexcept;
+#ifdef LIBFT_TEST_BUILD
+        pt_recursive_mutex *get_mutex_for_testing() noexcept;
+#endif
 };
 
 class matrix4
 {
     private:
         double _m[4][4];
-        mutable int _error_code;
         mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
         mutable pt_recursive_mutex _mutex;
 
-        void    set_error_unlocked(int error_code) const;
-        void    set_error(int error_code) const;
         void    record_operation_error(int error_code) const noexcept;
-        int     lock_self(ft_unique_lock<pt_recursive_mutex> &guard) const;
         static int lock_pair(const matrix4 &first, const matrix4 &second,
-                ft_unique_lock<pt_recursive_mutex> &first_guard,
-                ft_unique_lock<pt_recursive_mutex> &second_guard);
+                const matrix4 *&lower, const matrix4 *&upper);
+        static void unlock_pair(const matrix4 *lower, const matrix4 *upper);
 
     public:
         matrix4();
@@ -231,9 +216,8 @@ class matrix4
         vector4 transform(const vector4 &vector) const;
         matrix4 multiply(const matrix4 &other) const;
         matrix4 invert() const;
-        int     get_error() const;
-        const char  *get_error_str() const;
         pt_recursive_mutex *get_mutex_for_validation() const;
+        ft_operation_error_stack *get_operation_error_stack_for_validation() const noexcept;
 };
 
 # include "linear_algebra_quaternion.hpp"

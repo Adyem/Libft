@@ -13,6 +13,7 @@
 #include "game_equipment.hpp"
 #include "game_experience_table.hpp"
 #include "game_resistance.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
 #include <cstdint>
@@ -77,8 +78,12 @@ class ft_character
         ft_equipment            _equipment;
         mutable int               _error;
         mutable pt_mutex          _mutex;
+        mutable ft_operation_error_stack _operation_errors;
 
         void    set_error(int err) const noexcept;
+        void    record_operation_error(int error_code) const noexcept;
+        ft_operation_error_stack *get_operation_error_stack_for_validation() noexcept;
+        const ft_operation_error_stack *get_operation_error_stack_for_validation() const noexcept;
         void    apply_modifier(const ft_item_modifier &mod, int sign) noexcept;
         void    apply_modifier_internal(const ft_item_modifier &mod, int sign) noexcept;
         long long apply_skill_modifiers(long long damage) const noexcept;

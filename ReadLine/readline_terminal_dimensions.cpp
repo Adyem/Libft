@@ -1,10 +1,38 @@
 #include "readline_internal.hpp"
 #include <new>
 #include "../CPP_class/class_nullptr.hpp"
-#include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
+
+#include "../Errno/errno.hpp"
+
+static int rl_terminal_dimensions_mutex_constructor_error(pt_mutex *mutex_pointer)
+{
+    int mutex_error;
+
+    mutex_error = mutex_pointer->operation_error_last_error();
+    ft_global_error_stack_pop_newest();
+    return (mutex_error);
+}
+
+static int rl_terminal_dimensions_lock_mutex(pt_mutex *mutex_pointer)
+{
+    int lock_error;
+
+    lock_error = mutex_pointer->lock(THREAD_ID);
+    lock_error = ft_global_error_stack_pop_newest();
+    return (lock_error);
+}
+
+static int rl_terminal_dimensions_unlock_mutex(pt_mutex *mutex_pointer)
+{
+    int unlock_error;
+
+    unlock_error = mutex_pointer->unlock(THREAD_ID);
+    unlock_error = ft_global_error_stack_pop_newest();
+    return (unlock_error);
+}
 
 static void rl_terminal_dimensions_clear(terminal_dimensions *dimensions)
 {
@@ -21,41 +49,23 @@ static void rl_terminal_dimensions_clear(terminal_dimensions *dimensions)
 int rl_terminal_dimensions_prepare_thread_safety(terminal_dimensions *dimensions)
 {
     pt_mutex *mutex_pointer;
-    int error_code;
 
     if (dimensions == ft_nullptr)
-    {
-        error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_errno = error_code;
-        return (-1);
-    }
+        return (FT_ERR_INVALID_ARGUMENT);
     if (dimensions->thread_safe_enabled == true && dimensions->mutex != ft_nullptr)
-    {
-        error_code = FT_ERR_SUCCESSS;
-        ft_errno = error_code;
-        return (0);
-    }
+        return (FT_ERR_SUCCESSS);
     mutex_pointer = new (std::nothrow) pt_mutex();
     if (mutex_pointer == ft_nullptr)
+        return (FT_ERR_NO_MEMORY);
+    int mutex_error = rl_terminal_dimensions_mutex_constructor_error(mutex_pointer);
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        error_code = FT_ERR_NO_MEMORY;
-        ft_errno = error_code;
-        return (-1);
-    }
-    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
-    {
-        int mutex_error;
-
-        mutex_error = mutex_pointer->get_error();
         delete mutex_pointer;
-        ft_errno = mutex_error;
-        return (-1);
+        return (mutex_error);
     }
     dimensions->mutex = mutex_pointer;
     dimensions->thread_safe_enabled = true;
-    error_code = FT_ERR_SUCCESSS;
-    ft_errno = error_code;
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
 void rl_terminal_dimensions_teardown_thread_safety(terminal_dimensions *dimensions)
@@ -73,54 +83,30 @@ void rl_terminal_dimensions_teardown_thread_safety(terminal_dimensions *dimensio
 
 int rl_terminal_dimensions_lock(terminal_dimensions *dimensions, bool *lock_acquired)
 {
-    int error_code;
-
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (dimensions == ft_nullptr)
-    {
-        error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_errno = error_code;
-        return (-1);
-    }
+        return (FT_ERR_INVALID_ARGUMENT);
     if (dimensions->thread_safe_enabled == false || dimensions->mutex == ft_nullptr)
-    {
-        error_code = FT_ERR_SUCCESSS;
-        ft_errno = error_code;
-        return (0);
-    }
-    dimensions->mutex->lock(THREAD_ID);
-    if (dimensions->mutex->get_error() != FT_ERR_SUCCESSS)
-    {
-        error_code = dimensions->mutex->get_error();
-        ft_errno = error_code;
-        return (-1);
-    }
+        return (FT_ERR_SUCCESSS);
+    int mutex_error = rl_terminal_dimensions_lock_mutex(dimensions->mutex);
+    if (mutex_error != FT_ERR_SUCCESSS)
+        return (mutex_error);
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    error_code = FT_ERR_SUCCESSS;
-    ft_errno = error_code;
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
-void rl_terminal_dimensions_unlock(terminal_dimensions *dimensions, bool lock_acquired)
+int rl_terminal_dimensions_unlock(terminal_dimensions *dimensions, bool lock_acquired)
 {
-    int error_code;
-
     if (dimensions == ft_nullptr || lock_acquired == false)
-        return ;
+        return (FT_ERR_INVALID_ARGUMENT);
     if (dimensions->mutex == ft_nullptr)
-        return ;
-    dimensions->mutex->unlock(THREAD_ID);
-    if (dimensions->mutex->get_error() != FT_ERR_SUCCESSS)
-    {
-        error_code = dimensions->mutex->get_error();
-        ft_errno = error_code;
-        return ;
-    }
-    error_code = FT_ERR_SUCCESSS;
-    ft_errno = error_code;
-    return ;
+        return (FT_ERR_INVALID_STATE);
+    int mutex_error = rl_terminal_dimensions_unlock_mutex(dimensions->mutex);
+    if (mutex_error != FT_ERR_SUCCESSS)
+        return (mutex_error);
+    return (FT_ERR_SUCCESSS);
 }
 
 int rl_terminal_dimensions_refresh(terminal_dimensions *dimensions)

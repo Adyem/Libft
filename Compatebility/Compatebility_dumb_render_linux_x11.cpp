@@ -1,6 +1,6 @@
 #if !defined(_WIN32) && !defined(__APPLE__)
 
-#include "dumb_render_internal.hpp"
+#include "../DUMB/dumb_render_internal.hpp"
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -39,7 +39,7 @@ static ft_render_platform_result ft_render_x11_create_image(
     bytes_per_pixel = 4;
     bytes_per_row = state->width * bytes_per_pixel;
 
-    data = (char *)malloc((size_t)(bytes_per_row * state->height));
+    data = static_cast<char *>(malloc(static_cast<size_t>(bytes_per_row * state->height)));
     if (data == NULL)
     {
         return ((ft_render_platform_result){ ft_render_error_out_of_memory, 0 });
@@ -52,8 +52,8 @@ static ft_render_platform_result ft_render_x11_create_image(
         ZPixmap,
         0,
         data,
-        (unsigned int)state->width,
-        (unsigned int)state->height,
+        static_cast<unsigned int>(state->width),
+        static_cast<unsigned int>(state->height),
         32,
         bytes_per_row
     );
@@ -66,7 +66,7 @@ static ft_render_platform_result ft_render_x11_create_image(
 
     out_framebuffer->width = state->width;
     out_framebuffer->height = state->height;
-    out_framebuffer->pixels = (uint32_t *)state->image->data;
+    out_framebuffer->pixels = reinterpret_cast<uint32_t *>(state->image->data);
 
     return ((ft_render_platform_result){ ft_render_ok, 0 });
 }
@@ -119,7 +119,7 @@ ft_render_platform_result ft_render_platform_create_window(
         return ((ft_render_platform_result){ ft_render_error_invalid_argument, 0 });
     }
 
-    state = (ft_render_x11_state *)calloc(1, sizeof(ft_render_x11_state));
+    state = static_cast<ft_render_x11_state *>(calloc(1, sizeof(ft_render_x11_state)));
     if (state == NULL)
     {
         return ((ft_render_platform_result){ ft_render_error_out_of_memory, 0 });
@@ -144,8 +144,8 @@ ft_render_platform_result ft_render_platform_create_window(
         RootWindow(state->display, state->screen),
         0,
         0,
-        (unsigned int)state->width,
-        (unsigned int)state->height,
+        static_cast<unsigned int>(state->width),
+        static_cast<unsigned int>(state->height),
         1,
         BlackPixel(state->display, state->screen),
         WhitePixel(state->display, state->screen)
@@ -192,7 +192,7 @@ ft_render_platform_result ft_render_platform_destroy_window(
         return ((ft_render_platform_result){ ft_render_ok, 0 });
     }
 
-    state = (ft_render_x11_state *)(*platform_state);
+    state = static_cast<ft_render_x11_state *>(*platform_state);
 
     if (state->image != NULL)
     {
@@ -234,7 +234,7 @@ ft_render_platform_result ft_render_platform_poll_events(
         return ((ft_render_platform_result){ ft_render_error_invalid_argument, 0 });
     }
 
-    state = (ft_render_x11_state *)platform_state;
+    state = static_cast<ft_render_x11_state *>(platform_state);
     *out_should_close = false;
 
     while (XPending(state->display) > 0)
@@ -243,7 +243,7 @@ ft_render_platform_result ft_render_platform_poll_events(
 
         if (event.type == ClientMessage)
         {
-            if ((Atom)event.xclient.data.l[0] == state->wm_delete_window)
+            if (static_cast<Atom>(event.xclient.data.l[0]) == state->wm_delete_window)
             {
                 *out_should_close = true;
             }
@@ -265,7 +265,7 @@ ft_render_platform_result ft_render_platform_present(
         return ((ft_render_platform_result){ ft_render_error_invalid_argument, 0 });
     }
 
-    state = (ft_render_x11_state *)platform_state;
+    state = static_cast<ft_render_x11_state *>(platform_state);
 
     XPutImage(
         state->display,
@@ -276,8 +276,8 @@ ft_render_platform_result ft_render_platform_present(
         0,
         0,
         0,
-        (unsigned int)framebuffer->width,
-        (unsigned int)framebuffer->height
+        static_cast<unsigned int>(framebuffer->width),
+        static_cast<unsigned int>(framebuffer->height)
     );
 
     XFlush(state->display);
@@ -296,7 +296,7 @@ static void ft_render_x11_send_fullscreen_message(ft_render_x11_state *state, bo
     event.xclient.message_type = state->net_wm_state;
     event.xclient.format = 32;
     event.xclient.data.l[0] = enabled ? 1 : 0;
-    event.xclient.data.l[1] = (long)state->net_wm_state_fullscreen;
+    event.xclient.data.l[1] = static_cast<long>(state->net_wm_state_fullscreen);
     event.xclient.data.l[2] = 0;
     event.xclient.data.l[3] = 1;
 
@@ -324,7 +324,7 @@ ft_render_platform_result ft_render_platform_set_fullscreen(
         return ((ft_render_platform_result){ ft_render_error_invalid_argument, 0 });
     }
 
-    state = (ft_render_x11_state *)platform_state;
+    state = static_cast<ft_render_x11_state *>(platform_state);
 
     if (enabled == true && state->is_fullscreen == false)
     {
@@ -341,4 +341,3 @@ ft_render_platform_result ft_render_platform_set_fullscreen(
 }
 
 #endif
-

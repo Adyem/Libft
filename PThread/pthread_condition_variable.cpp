@@ -122,9 +122,10 @@ int pt_condition_variable::lock_internal(bool *lock_acquired) const
         return (0);
     }
     this->_state_mutex->lock(THREAD_ID);
-    if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
+    int state_error = this->_state_mutex->operation_error_last_error();
+    if (state_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = this->_state_mutex->get_error();
+        ft_errno = state_error;
         return (-1);
     }
     if (lock_acquired != ft_nullptr)
@@ -138,9 +139,10 @@ void pt_condition_variable::unlock_internal(bool lock_acquired) const
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
         return ;
     this->_state_mutex->unlock(THREAD_ID);
-    if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
+    int state_error = this->_state_mutex->operation_error_last_error();
+    if (state_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = this->_state_mutex->get_error();
+        ft_errno = state_error;
         return ;
     }
     ft_errno = FT_ERR_SUCCESSS;
@@ -173,11 +175,9 @@ int pt_condition_variable::enable_thread_safety()
         this->set_error(FT_ERR_NO_MEMORY);
         return (-1);
     }
-    if (state_mutex->get_error() != FT_ERR_SUCCESSS)
+    int mutex_error = state_mutex->operation_error_last_error();
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        int mutex_error;
-
-        mutex_error = state_mutex->get_error();
         delete state_mutex;
         this->set_error(mutex_error);
         return (-1);
@@ -219,8 +219,15 @@ int pt_condition_variable::lock_state(bool *lock_acquired) const
 void pt_condition_variable::unlock_state(bool lock_acquired) const
 {
     this->unlock_internal(lock_acquired);
-    if (this->_state_mutex != ft_nullptr && this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
-        const_cast<pt_condition_variable *>(this)->set_error(this->_state_mutex->get_error());
+    if (this->_state_mutex != ft_nullptr)
+    {
+        int state_error = this->_state_mutex->operation_error_last_error();
+        if (state_error != FT_ERR_SUCCESSS)
+        {
+            const_cast<pt_condition_variable *>(this)->set_error(state_error);
+            return ;
+        }
+    }
     else
         const_cast<pt_condition_variable *>(this)->set_error(FT_ERR_SUCCESSS);
     return ;
@@ -260,7 +267,7 @@ int pt_condition_variable::wait(pt_mutex &mutex)
     {
         int unlock_error;
 
-        unlock_error = mutex.get_error();
+        unlock_error = mutex.operation_error_last_error();
         pthread_mutex_unlock(&this->_mutex);
         this->set_error(unlock_error);
         return (-1);
@@ -275,7 +282,7 @@ int pt_condition_variable::wait(pt_mutex &mutex)
         {
             int relock_error;
 
-            relock_error = mutex.get_error();
+            relock_error = mutex.operation_error_last_error();
             this->set_error(relock_error);
             return (-1);
         }
@@ -291,7 +298,7 @@ int pt_condition_variable::wait(pt_mutex &mutex)
         {
             int relock_error;
 
-            relock_error = mutex.get_error();
+            relock_error = mutex.operation_error_last_error();
             this->set_error(relock_error);
             return (-1);
         }
@@ -302,7 +309,7 @@ int pt_condition_variable::wait(pt_mutex &mutex)
     {
         int relock_error;
 
-        relock_error = mutex.get_error();
+        relock_error = mutex.operation_error_last_error();
         this->set_error(relock_error);
         return (-1);
     }
@@ -358,7 +365,7 @@ int pt_condition_variable::wait_until(pt_mutex &mutex, const struct timespec &ab
     {
         int unlock_error;
 
-        unlock_error = mutex.get_error();
+        unlock_error = mutex.operation_error_last_error();
         pthread_mutex_unlock(&this->_mutex);
         this->set_error(unlock_error);
         return (-1);
@@ -373,7 +380,7 @@ int pt_condition_variable::wait_until(pt_mutex &mutex, const struct timespec &ab
         {
             int relock_error;
 
-            relock_error = mutex.get_error();
+            relock_error = mutex.operation_error_last_error();
             this->set_error(relock_error);
             return (-1);
         }
@@ -384,7 +391,7 @@ int pt_condition_variable::wait_until(pt_mutex &mutex, const struct timespec &ab
     {
         int relock_error;
 
-        relock_error = mutex.get_error();
+        relock_error = mutex.operation_error_last_error();
         this->set_error(relock_error);
         return (-1);
     }

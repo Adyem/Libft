@@ -8,7 +8,6 @@ SRCS := dumb_io.cpp \
     dumb_console.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
-TOTAL_SRCS := $(words $(SRCS))
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
@@ -29,31 +28,26 @@ ARFLAGS   := rcs
 OBJDIR         := objs
 DEBUG_OBJDIR   := objs_debug
 
-CPP_OBJS       := $(patsubst %.cpp,$(OBJDIR)/%.o,$(filter %.cpp,$(SRCS)))
-MM_OBJS        := $(patsubst %.mm,$(OBJDIR)/%.o,$(filter %.mm,$(SRCS)))
-DEBUG_CPP_OBJS := $(patsubst %.cpp,$(DEBUG_OBJDIR)/%.o,$(filter %.cpp,$(SRCS)))
-DEBUG_MM_OBJS  := $(patsubst %.mm,$(DEBUG_OBJDIR)/%.o,$(filter %.mm,$(SRCS)))
-
-OBJS       := $(CPP_OBJS) $(MM_OBJS)
-DEBUG_OBJS := $(DEBUG_CPP_OBJS) $(DEBUG_MM_OBJS)
-
-CFLAGS   ?= -Wall -Wextra -Werror -g -O0 -std=c++17 -Wuseless-cast
-MMFLAGS  := $(CFLAGS)
-
 ifeq ($(OS),Windows_NT)
-    SRCS += dumb_sound_win32.cpp \
-        dumb_render_win32.cpp
+    SRCS += dumb_sound_win32.cpp
 else
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Darwin)
-        SRCS += dumb_sound_macos_coreaudio.cpp \
-            dumb_render_platform_macos.mm
-        MMFLAGS += -x objective-c++
+        SRCS += dumb_sound_macos_coreaudio.cpp
     else
-        SRCS += dumb_sound_linux_alsa.cpp \
-            dumb_render_linux_x11.cpp
+        SRCS += dumb_sound_linux_alsa.cpp
     endif
 endif
+
+CPP_OBJS       := $(patsubst %.cpp,$(OBJDIR)/%.o,$(filter %.cpp,$(SRCS)))
+DEBUG_CPP_OBJS := $(patsubst %.cpp,$(DEBUG_OBJDIR)/%.o,$(filter %.cpp,$(SRCS)))
+
+OBJS       := $(CPP_OBJS)
+DEBUG_OBJS := $(DEBUG_CPP_OBJS)
+
+CFLAGS   ?= -Wall -Wextra -Werror -g -O0 -std=c++17 -Wuseless-cast
+
+TOTAL_SRCS := $(words $(SRCS))
 
 all: $(TARGET)
 
@@ -61,13 +55,8 @@ $(TARGET): $(OBJS)
 	@$(AR) $(ARFLAGS) $@ $^
 	@printf '        [%s] Module archive ready (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS)
 
-$(OBJDIR)/%.o: %.cpp $(HEADERS) | $(OBJDIR)
+$(OBJDIR)/%.o: %.cpp | $(OBJDIR)
 	@$(CXX) $(CFLAGS) -c $< -o $@
-	@count=$$(find $(OBJDIR) -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
-	    printf '        [%s] Files built: %d/%d\n' "$(MODULE_NAME)" $$count $(TOTAL_SRCS)
-
-$(OBJDIR)/%.o: %.mm $(HEADERS) | $(OBJDIR)
-	@$(CXX) $(MMFLAGS) -c $< -o $@
 	@count=$$(find $(OBJDIR) -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
 	    printf '        [%s] Files built: %d/%d\n' "$(MODULE_NAME)" $$count $(TOTAL_SRCS)
 
@@ -78,13 +67,8 @@ $(DEBUG_TARGET): $(DEBUG_OBJS)
 	@$(AR) $(ARFLAGS) $@ $^
 	@printf '        [%s Debug] Module archive ready (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS)
 
-$(DEBUG_OBJDIR)/%.o: %.cpp $(HEADERS) | $(DEBUG_OBJDIR)
+$(DEBUG_OBJDIR)/%.o: %.cpp | $(DEBUG_OBJDIR)
 	@$(CXX) $(CFLAGS) -c $< -o $@
-	@count=$$(find $(DEBUG_OBJDIR) -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
-	    printf '        [%s Debug] Files built: %d/%d\n' "$(MODULE_NAME)" $$count $(TOTAL_SRCS)
-
-$(DEBUG_OBJDIR)/%.o: %.mm $(HEADERS) | $(DEBUG_OBJDIR)
-	@$(CXX) $(MMFLAGS) -c $< -o $@
 	@count=$$(find $(DEBUG_OBJDIR) -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
 	    printf '        [%s Debug] Files built: %d/%d\n' "$(MODULE_NAME)" $$count $(TOTAL_SRCS)
 

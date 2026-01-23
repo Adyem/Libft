@@ -102,18 +102,18 @@ void gnl_stream::set_error(int error_code) const noexcept
     this->set_error_unlocked(error_code);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-        this->set_error_unlocked(guard.get_error());
+    if (guard.last_operation_error() != FT_ERR_SUCCESSS)
+        this->set_error_unlocked(guard.last_operation_error());
     return ;
 }
 
 int gnl_stream::lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept
 {
     ft_unique_lock<pt_mutex> local_guard(this->_mutex);
-    if (local_guard.get_error() != FT_ERR_SUCCESSS)
+    if (local_guard.last_operation_error() != FT_ERR_SUCCESSS)
     {
         guard = ft_unique_lock<pt_mutex>();
-        return (local_guard.get_error());
+        return (local_guard.last_operation_error());
     }
     guard = ft_move(local_guard);
     return (FT_ERR_SUCCESSS);
@@ -176,8 +176,8 @@ int gnl_stream::init_from_fd(int file_descriptor) noexcept
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-            this->set_error_unlocked(guard.get_error());
+        if (guard.last_operation_error() != FT_ERR_SUCCESSS)
+            this->set_error_unlocked(guard.last_operation_error());
         return (this->_error_code);
     }
     this->_file_descriptor = file_descriptor;
@@ -188,8 +188,8 @@ int gnl_stream::init_from_fd(int file_descriptor) noexcept
     this->set_error_unlocked(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-        this->set_error_unlocked(guard.get_error());
+    if (guard.last_operation_error() != FT_ERR_SUCCESSS)
+        this->set_error_unlocked(guard.last_operation_error());
     return (FT_ERR_SUCCESSS);
 }
 
@@ -206,8 +206,8 @@ int gnl_stream::init_from_file(FILE *file_handle, bool close_on_reset) noexcept
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-            this->set_error_unlocked(guard.get_error());
+        if (guard.last_operation_error() != FT_ERR_SUCCESSS)
+            this->set_error_unlocked(guard.last_operation_error());
         return (this->_error_code);
     }
     this->_file_handle = file_handle;
@@ -218,8 +218,8 @@ int gnl_stream::init_from_file(FILE *file_handle, bool close_on_reset) noexcept
     this->set_error_unlocked(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-        this->set_error_unlocked(guard.get_error());
+    if (guard.last_operation_error() != FT_ERR_SUCCESSS)
+        this->set_error_unlocked(guard.last_operation_error());
     return (FT_ERR_SUCCESSS);
 }
 
@@ -237,8 +237,8 @@ int gnl_stream::init_from_callback(ssize_t (*callback)(void *user_data, char *bu
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-            this->set_error_unlocked(guard.get_error());
+        if (guard.last_operation_error() != FT_ERR_SUCCESSS)
+            this->set_error_unlocked(guard.last_operation_error());
         return (this->_error_code);
     }
     this->_read_callback = callback;
@@ -249,8 +249,8 @@ int gnl_stream::init_from_callback(ssize_t (*callback)(void *user_data, char *bu
     this->set_error_unlocked(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-        this->set_error_unlocked(guard.get_error());
+    if (guard.last_operation_error() != FT_ERR_SUCCESSS)
+        this->set_error_unlocked(guard.last_operation_error());
     return (FT_ERR_SUCCESSS);
 }
 
@@ -274,8 +274,8 @@ void gnl_stream::reset() noexcept
     this->set_error_unlocked(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-        this->set_error_unlocked(guard.get_error());
+    if (guard.last_operation_error() != FT_ERR_SUCCESSS)
+        this->set_error_unlocked(guard.last_operation_error());
     return ;
 }
 
@@ -293,8 +293,8 @@ ssize_t gnl_stream::read(char *buffer, size_t max_size) noexcept
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-            this->set_error_unlocked(guard.get_error());
+        if (guard.last_operation_error() != FT_ERR_SUCCESSS)
+            this->set_error_unlocked(guard.last_operation_error());
         return (-1);
     }
     read_result = -1;
@@ -321,8 +321,8 @@ ssize_t gnl_stream::read(char *buffer, size_t max_size) noexcept
         this->set_error_unlocked(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-            this->set_error_unlocked(guard.get_error());
+        if (guard.last_operation_error() != FT_ERR_SUCCESSS)
+            this->set_error_unlocked(guard.last_operation_error());
         return (-1);
     }
     if (read_result < 0)
@@ -337,15 +337,15 @@ ssize_t gnl_stream::read(char *buffer, size_t max_size) noexcept
         this->set_error_unlocked(read_error);
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-            this->set_error_unlocked(guard.get_error());
+        if (guard.last_operation_error() != FT_ERR_SUCCESSS)
+            this->set_error_unlocked(guard.last_operation_error());
         return (-1);
     }
     this->set_error_unlocked(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-        this->set_error_unlocked(guard.get_error());
+    if (guard.last_operation_error() != FT_ERR_SUCCESSS)
+        this->set_error_unlocked(guard.last_operation_error());
     return (read_result);
 }
 
@@ -361,8 +361,8 @@ int gnl_stream::get_error() const noexcept
     error_code = this->_error_code;
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-        return (guard.get_error());
+    if (guard.last_operation_error() != FT_ERR_SUCCESSS)
+        return (guard.last_operation_error());
     return (error_code);
 }
 

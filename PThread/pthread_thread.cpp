@@ -231,11 +231,9 @@ int ft_thread::enable_thread_safety()
         this->set_error(FT_ERR_NO_MEMORY);
         return (-1);
     }
-    if (state_mutex->get_error() != FT_ERR_SUCCESSS)
+    int mutex_error = state_mutex->operation_error_last_error();
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        int mutex_error;
-
-        mutex_error = state_mutex->get_error();
         delete state_mutex;
         this->set_error(mutex_error);
         return (-1);
@@ -289,7 +287,7 @@ void ft_thread::unlock(bool lock_acquired) const
         ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
-    mutex_error = this->_state_mutex->get_error();
+    mutex_error = this->_state_mutex->operation_error_last_error();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         this->_error_code = mutex_error;
@@ -311,9 +309,10 @@ int ft_thread::lock_internal(bool *lock_acquired) const
         return (0);
     }
     this->_state_mutex->lock(THREAD_ID);
-    if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
+    int mutex_error = this->_state_mutex->operation_error_last_error();
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        if (this->_state_mutex->get_error() == FT_ERR_MUTEX_ALREADY_LOCKED)
+        if (mutex_error == FT_ERR_MUTEX_ALREADY_LOCKED)
         {
             bool state_lock_acquired;
 
@@ -324,7 +323,7 @@ int ft_thread::lock_internal(bool *lock_acquired) const
             ft_errno = FT_ERR_SUCCESSS;
             return (0);
         }
-        ft_errno = this->_state_mutex->get_error();
+        ft_errno = mutex_error;
         return (-1);
     }
     if (lock_acquired != ft_nullptr)
@@ -338,9 +337,10 @@ void ft_thread::unlock_internal(bool lock_acquired) const
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
         return ;
     this->_state_mutex->unlock(THREAD_ID);
-    if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
+    int mutex_error = this->_state_mutex->operation_error_last_error();
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = this->_state_mutex->get_error();
+        ft_errno = mutex_error;
         return ;
     }
     ft_errno = FT_ERR_SUCCESSS;

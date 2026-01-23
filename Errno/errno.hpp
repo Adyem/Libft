@@ -10,11 +10,13 @@ typedef unsigned long long ft_size_t;
 
 #endif
 
+extern thread_local int ft_errno;
+
 int ft_map_system_error(int error_code);
 int ft_set_errno_from_system_error(int error_code);
 unsigned long long ft_errno_next_operation_id(void);
 unsigned long long ft_global_error_stack_push_entry(int error_code);
-void ft_global_error_stack_push_entry_with_id(int error_code, unsigned long long op_id);
+unsigned long long ft_global_error_stack_push_entry_with_id(int error_code, unsigned long long op_id);
 void ft_global_error_stack_push(int error_code);
 int ft_global_error_stack_pop_last(void);
 int ft_global_error_stack_pop_newest(void);

@@ -9,6 +9,16 @@
 
 static thread_local ft_operation_error_stack g_math_polynomial_operation_errors = {{}, {}, 0};
 
+static int math_vector2_last_error(const vector2 &subject) noexcept
+{
+    const ft_operation_error_stack *operation_stack;
+
+    operation_stack = subject.get_operation_error_stack_for_validation();
+    if (operation_stack == ft_nullptr)
+        return (FT_ERR_INVALID_POINTER);
+    return (ft_operation_error_stack_last_error(operation_stack));
+}
+
 static void math_polynomial_push_error(int error_code) noexcept
 {
     unsigned long long operation_id;
@@ -457,14 +467,18 @@ static int math_polynomial_extract_coordinates(const ft_vector<vector2> &control
     {
         point = control_points[index];
         x_value = point.get_x();
-        if (point.get_error() != FT_ERR_SUCCESSS)
+        int point_error = math_vector2_last_error(point);
+        if (point_error != FT_ERR_SUCCESSS)
         {
-            return (point.get_error());
+            math_polynomial_push_error(point_error);
+            return (point_error);
         }
         y_value = point.get_y();
-        if (point.get_error() != FT_ERR_SUCCESSS)
+        point_error = math_vector2_last_error(point);
+        if (point_error != FT_ERR_SUCCESSS)
         {
-            return (point.get_error());
+            math_polynomial_push_error(point_error);
+            return (point_error);
         }
         x_coordinates[index] = x_value;
         y_coordinates[index] = y_value;
@@ -513,11 +527,11 @@ int math_bezier_evaluate_vector2(const ft_vector<vector2> &control_points,
     }
     evaluated_point = vector2(x_value, y_value);
     result = evaluated_point;
-    if (result.get_error() != FT_ERR_SUCCESSS)
+    int result_error = math_vector2_last_error(result);
+    if (result_error != FT_ERR_SUCCESSS)
     {
-        int point_error = result.get_error();
-        math_polynomial_push_error(point_error);
-        return (point_error);
+        math_polynomial_push_error(result_error);
+        return (result_error);
     }
     math_polynomial_push_error(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);

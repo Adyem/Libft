@@ -3,7 +3,7 @@
 #import <Cocoa/Cocoa.h>
 #import <CoreGraphics/CoreGraphics.h>
 
-#include "ft_render_internal.hpp"
+#include "../DUMB/dumb_render_internal.hpp"
 #include <stdlib.h>
 
 struct ft_render_macos_state
@@ -272,4 +272,3 @@ ft_render_platform_result ft_render_platform_set_fullscreen(
 }
 
 #endif
-

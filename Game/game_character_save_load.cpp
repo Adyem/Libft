@@ -10,14 +10,14 @@ json_group *serialize_character(const ft_character &character)
     json_group *group = json_create_json_group("character");
     if (!group)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_item *item = json_create_item("hit_points", character.get_hit_points());
     if (!item)
     {
         json_free_groups(group);
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -25,7 +25,7 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -33,7 +33,7 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -41,7 +41,7 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -49,7 +49,7 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -57,7 +57,7 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -65,7 +65,7 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -73,7 +73,7 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -81,7 +81,7 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -89,7 +89,7 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -97,7 +97,7 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -105,7 +105,7 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -113,7 +113,7 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -121,7 +121,7 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -129,7 +129,7 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -137,7 +137,7 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -145,7 +145,7 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -153,22 +153,22 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
     const ft_map<int, ft_skill> &skills = character.get_skills();
-    if (skills.get_error() != FT_ERR_SUCCESSS)
+    if (skills.last_operation_error() != FT_ERR_SUCCESSS)
     {
         json_free_groups(group);
-        ft_errno = FT_ERR_GAME_GENERAL_ERROR;
+        ft_global_error_stack_push(FT_ERR_GAME_GENERAL_ERROR);
         return (ft_nullptr);
     }
     json_item *count = json_create_item("skill_count", static_cast<int>(skills.size()));
     if (!count)
     {
         json_free_groups(group);
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, count);
@@ -178,7 +178,7 @@ json_group *serialize_character(const ft_character &character)
     if (skill_count > 0 && !skills_end)
     {
         json_free_groups(group);
-        ft_errno = FT_ERR_GAME_GENERAL_ERROR;
+        ft_global_error_stack_push(FT_ERR_GAME_GENERAL_ERROR);
         return (ft_nullptr);
     }
     const Pair<int, ft_skill> *skill_start = skills_end;
@@ -190,7 +190,7 @@ json_group *serialize_character(const ft_character &character)
         if (!skill_index_string)
         {
             json_free_groups(group);
-            ft_errno = FT_ERR_NO_MEMORY;
+            ft_global_error_stack_push(FT_ERR_NO_MEMORY);
             return (ft_nullptr);
         }
         ft_string prefix = "skill_";
@@ -202,7 +202,7 @@ json_group *serialize_character(const ft_character &character)
         if (!item)
         {
             json_free_groups(group);
-            ft_errno = FT_ERR_NO_MEMORY;
+            ft_global_error_stack_push(FT_ERR_NO_MEMORY);
             return (ft_nullptr);
         }
         json_add_item_to_group(group, item);
@@ -212,7 +212,7 @@ json_group *serialize_character(const ft_character &character)
         if (!item)
         {
             json_free_groups(group);
-            ft_errno = FT_ERR_NO_MEMORY;
+            ft_global_error_stack_push(FT_ERR_NO_MEMORY);
             return (ft_nullptr);
         }
         json_add_item_to_group(group, item);
@@ -222,7 +222,7 @@ json_group *serialize_character(const ft_character &character)
         if (!item)
         {
             json_free_groups(group);
-            ft_errno = FT_ERR_NO_MEMORY;
+            ft_global_error_stack_push(FT_ERR_NO_MEMORY);
             return (ft_nullptr);
         }
         json_add_item_to_group(group, item);
@@ -232,7 +232,7 @@ json_group *serialize_character(const ft_character &character)
         if (!item)
         {
             json_free_groups(group);
-            ft_errno = FT_ERR_NO_MEMORY;
+            ft_global_error_stack_push(FT_ERR_NO_MEMORY);
             return (ft_nullptr);
         }
         json_add_item_to_group(group, item);
@@ -242,7 +242,7 @@ json_group *serialize_character(const ft_character &character)
         if (!item)
         {
             json_free_groups(group);
-            ft_errno = FT_ERR_NO_MEMORY;
+            ft_global_error_stack_push(FT_ERR_NO_MEMORY);
             return (ft_nullptr);
         }
         json_add_item_to_group(group, item);
@@ -252,7 +252,7 @@ json_group *serialize_character(const ft_character &character)
         if (!item)
         {
             json_free_groups(group);
-            ft_errno = FT_ERR_NO_MEMORY;
+            ft_global_error_stack_push(FT_ERR_NO_MEMORY);
             return (ft_nullptr);
         }
         json_add_item_to_group(group, item);
@@ -262,13 +262,13 @@ json_group *serialize_character(const ft_character &character)
         if (!item)
         {
             json_free_groups(group);
-            ft_errno = FT_ERR_NO_MEMORY;
+            ft_global_error_stack_push(FT_ERR_NO_MEMORY);
             return (ft_nullptr);
         }
         json_add_item_to_group(group, item);
         skill_index++;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (group);
 }
 
@@ -338,7 +338,7 @@ int deserialize_character(ft_character &character, json_group *group)
             char *skill_index_string = cma_itoa(skill_index);
             if (!skill_index_string)
             {
-                ft_errno = FT_ERR_NO_MEMORY;
+                ft_global_error_stack_push(FT_ERR_NO_MEMORY);
                 return (FT_ERR_NO_MEMORY);
             }
             ft_string prefix = "skill_";
@@ -367,7 +367,7 @@ int deserialize_character(ft_character &character, json_group *group)
             json_item *mod4_item = json_find_item(group, key.c_str());
             if (!id_item || !level_item || !cool_item || !mod1_item || !mod2_item || !mod3_item || !mod4_item)
             {
-                ft_errno = FT_ERR_GAME_GENERAL_ERROR;
+                ft_global_error_stack_push(FT_ERR_GAME_GENERAL_ERROR);
                 return (FT_ERR_GAME_GENERAL_ERROR);
             }
             ft_skill skill;
@@ -379,11 +379,14 @@ int deserialize_character(ft_character &character, json_group *group)
             skill.set_modifier3(ft_atoi(mod3_item->value));
             skill.set_modifier4(ft_atoi(mod4_item->value));
             if (character.add_skill(skill) != FT_ERR_SUCCESSS)
-                return (character.get_error());
+            {
+                int add_error = character.get_error();
+                ft_global_error_stack_push(add_error);
+                return (add_error);
+            }
             skill_index++;
         }
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);
 }
-

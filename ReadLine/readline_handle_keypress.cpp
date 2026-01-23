@@ -10,16 +10,15 @@ int rl_handle_backspace(readline_state_t *state, const char *prompt)
 {
     bool lock_acquired;
     int  result;
+    int  lock_error;
 
     if (state == ft_nullptr || prompt == ft_nullptr)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (-1);
-    }
+        return (FT_ERR_INVALID_ARGUMENT);
     lock_acquired = false;
-    result = 0;
-    if (rl_state_lock(state, &lock_acquired) != 0)
-        return (-1);
+    result = FT_ERR_SUCCESSS;
+    lock_error = rl_state_lock(state, &lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
+        return (lock_error);
     if (state->pos > 0)
     {
         int grapheme_start;
@@ -36,15 +35,10 @@ int rl_handle_backspace(readline_state_t *state, const char *prompt)
             ft_memmove(&state->buffer[grapheme_start],
                 &state->buffer[grapheme_end], tail_length);
             state->pos = grapheme_start;
-            if (rl_update_display_metrics(state) != 0)
-            {
-                result = -1;
-                goto cleanup;
-            }
-            if (rl_clear_line(prompt, state->buffer) == -1)
+            if (rl_update_display_metrics(state) != 0 || rl_clear_line(prompt, state->buffer) == -1)
             {
                 state->error_file.printf("clear line failed");
-                result = -1;
+                result = FT_ERR_INTERNAL;
                 goto cleanup;
             }
             pf_printf("%s%s", prompt, state->buffer);
@@ -54,9 +48,8 @@ int rl_handle_backspace(readline_state_t *state, const char *prompt)
             fflush(stdout);
         }
     }
-    ft_errno = FT_ERR_SUCCESSS;
 cleanup:
-    rl_state_unlock(state, lock_acquired);
+    (void)rl_state_unlock(state, lock_acquired);
     return (result);
 }
 
@@ -243,24 +236,26 @@ int rl_handle_escape_sequence(readline_state_t *state, const char *prompt)
 {
     bool lock_acquired;
     int  result;
+    int  lock_error;
     char seq[2];
 
     if (state == ft_nullptr || prompt == ft_nullptr)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (-1);
-    }
+        return (FT_ERR_INVALID_ARGUMENT);
     lock_acquired = false;
-    result = 0;
-    if (rl_state_lock(state, &lock_acquired) != 0)
-        return (-1);
+    result = FT_ERR_SUCCESSS;
+    lock_error = rl_state_lock(state, &lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
+        return (lock_error);
     if (state->in_completion_mode)
         rl_reset_completion_mode_locked(state);
     if (!rl_read_escape_sequence(seq))
+    {
+        result = FT_ERR_INTERNAL;
         goto cleanup;
+    }
     if (seq[0] == '[')
         result = rl_handle_arrow_keys(state, prompt, seq[1]);
 cleanup:
-    rl_state_unlock(state, lock_acquired);
+    (void)rl_state_unlock(state, lock_acquired);
     return (result);
 }

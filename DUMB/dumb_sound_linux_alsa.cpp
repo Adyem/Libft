@@ -1,11 +1,14 @@
 #if !defined(_WIN32) && !defined(__APPLE__)
 
-#include "dumb_sound.hpp"
+#include "dumb_sound_internal.hpp"
 #include <alsa/asoundlib.h>
 #include <pthread.h>
 #include "dumb_sound_clip.hpp"
 #include <unistd.h>
 #include <string.h>
+#include <limits>
+
+ft_sound_device *ft_create_sound_device_alsa(void);
 
 
 class ft_sound_device_alsa : public ft_sound_device
@@ -24,12 +27,12 @@ class ft_sound_device_alsa : public ft_sound_device
 
         static void *sound_thread(void *arg)
         {
-            ft_sound_device_alsa *self = (ft_sound_device_alsa *)arg;
+            ft_sound_device_alsa *self = static_cast<ft_sound_device_alsa *>(arg);
 
             while (self->_is_running && self->_current_clip != NULL && self->_playback_pos < self->_current_clip->get_size())
             {
                 size_t to_copy = self->_current_clip->get_size() - self->_playback_pos;
-                if (to_copy > (size_t)self->_buffer_size)
+                if (to_copy > static_cast<size_t>(self->_buffer_size))
                 {
                     to_copy = self->_buffer_size;
                 }
@@ -89,7 +92,12 @@ class ft_sound_device_alsa : public ft_sound_device
 
             snd_pcm_uframes_t buffer_size = this->_spec.samples;
             snd_pcm_hw_params_set_period_size_near(this->_pcm_handle, hw_params, &buffer_size, NULL);
-            this->_spec.samples = buffer_size;
+            if (buffer_size > static_cast<snd_pcm_uframes_t>(std::numeric_limits<int>::max()))
+            {
+                snd_pcm_close(this->_pcm_handle);
+                return (ft_sound_error_platform_failure);
+            }
+            this->_spec.samples = static_cast<int>(buffer_size);
             
             err = snd_pcm_hw_params(this->_pcm_handle, hw_params);
             if (err < 0)

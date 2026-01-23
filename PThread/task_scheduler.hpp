@@ -885,9 +885,9 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
         return ;
     };
     task_entry._function = ft_function<void()>(task_body);
-    if (task_entry._function.get_error() != FT_ERR_SUCCESSS)
+    if (!task_entry._function)
     {
-        this->set_error(task_entry._function.get_error());
+        this->set_error(FT_ERR_NO_MEMORY);
         task_body();
         return (result_pair);
     }
@@ -979,9 +979,9 @@ ft_scheduled_task_handle ft_task_scheduler::schedule_every(std::chrono::duration
         function(args...);
         return ;
     });
-    if (task_entry._function.get_error() != FT_ERR_SUCCESSS)
+    if (!task_entry._function)
     {
-        this->set_error(task_entry._function.get_error());
+        this->set_error(FT_ERR_NO_MEMORY);
         return (handle_result);
     }
     unsigned long long parent_span;

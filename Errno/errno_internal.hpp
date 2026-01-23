@@ -71,6 +71,12 @@ int ft_operation_error_stack_error_at(const ft_operation_error_stack *error_stac
 int ft_operation_error_stack_last_error(const ft_operation_error_stack *error_stack);
 unsigned long long ft_operation_error_stack_last_id(
         const ft_operation_error_stack *error_stack);
+unsigned long long ft_operation_error_stack_get_id_at(
+        const ft_operation_error_stack *error_stack, ft_size_t index);
+ft_size_t ft_operation_error_stack_find_by_id(
+        const ft_operation_error_stack *error_stack, unsigned long long id);
+ft_size_t ft_operation_error_stack_depth(
+        const ft_operation_error_stack *error_stack);
 
 ft_errno_mutex_wrapper &ft_errno_mutex();
 void ft_set_errno_locked(int error_code);

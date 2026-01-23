@@ -28,12 +28,21 @@ Document and implement this helper as a dedicated low-level interface intended f
 validating constructor error handling immediately after construction by manually locking and
 unlocking the mutex to verify proper use.
 
+## Recursive mutex lock/unlock contract
+Every class that relies on an innate recursive mutex (mutexes should be thread-safe by default) must follow a strict error contract: when the class locks or unlocks its recursive mutex, first store the mutex return value, then pop the newest entry from the global error stack. Only push that entry back if it represents an actual failure; leave it removed when it signals success. The error code reported to `ft_errno` and mirrored on the class stack must prefer the global-stack entry but fall back to the mutex return when the popped entry was success, preventing redundant success entries while keeping real errors available for inspection. Classes that do not require a mutex for thread safety or are never used in a multithreaded environment are exempt.
+
 ## Pair Exception
 
 `Template/pair.hpp` intentionally provides a minimal `Pair` template that exposes `key`/`value`
 directly for compatibility with the rest of the library. That class is exempt from the mutex and
 Errno requirements described above; it must not introduce a recursive mutex, error-stack tracking,
 or the associated helpers. Treat `Pair` as a plain-old-data holder only.
+
+#Template Function Simplification
+
+`Template/function.hpp` defines `ft_function`. Keep this template as a lightweight callable wrapper
+with no recursive mutex, errno helpers, or thread-safety toggles. Any new behavior should leave
+error handling and synchronization to callers rather than reintroducing state inside `ft_function`.
 
 #Errno and Error Stack Rules
 
@@ -131,7 +140,11 @@ All other ReadLine helpers are internal-use and must report errors via existing 
 
 #Compatebility Module Error Stack Rules
 
-Everything in the Compatebility module is internal-use only and must not push to the global error stack directly.
+Everything in the Compatebility module is internal-use only and must not push to the global error stack directly. Instead, Compatebility helpers expose a module-scoped “last error” value that records the most recent failure or success without touching the global stack. Each helper must update that value when it reports an error, and callers are responsible for translating the recorded local error into the appropriate Errno code and pushing it onto the global stack before returning. This keeps the Compatebility code self-contained while ensuring upper layers still publish consistent error identifiers.
+
+#Locking guidelines
+
+No function in the library should rely on RAII helpers such as lock guards or unique locks for locking mutexes; every call should explicitly lock and unlock the underlying mutex so there are no hidden dependencies on guard behavior. Use manual lock/unlock calls surrounding the protected section and handle errors directly—never cache guard objects to perform locking implicitly.
 
 #CMA Error Stack Rules
 

@@ -2,10 +2,11 @@
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 
 static void cmp_set_error_code(int *error_code_out, int error_code)
 {
-    if (error_code_out != 0)
+    if (error_code_out != ft_nullptr)
         *error_code_out = error_code;
     return ;
 }

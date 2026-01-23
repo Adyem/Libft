@@ -1,8 +1,8 @@
 #ifndef GEOMETRY_CIRCLE_HPP
 # define GEOMETRY_CIRCLE_HPP
 
-#include "../PThread/mutex.hpp"
-#include "../PThread/unique_lock.hpp"
+#include "../Errno/errno_internal.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 class circle
 {
@@ -10,13 +10,13 @@ class circle
         double          _center_x;
         double          _center_y;
         double          _radius;
-        mutable int     _error_code;
-        mutable pt_mutex _mutex;
+        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
+        mutable pt_recursive_mutex _mutex;
 
-        void    set_error(int error_code) const;
-        static int lock_pair(const circle &first, const circle &second,
-                ft_unique_lock<pt_mutex> &first_guard,
-                ft_unique_lock<pt_mutex> &second_guard);
+        void    record_operation_error(int error_code) const noexcept;
+        int     lock_pair(const circle &other, const circle *&lower,
+                const circle *&upper) const;
+        static void unlock_pair(const circle *lower, const circle *upper);
 
     public:
         circle();
@@ -34,8 +34,12 @@ class circle
         double  get_center_x() const;
         double  get_center_y() const;
         double  get_radius() const;
-        int     get_error() const;
-        const char  *get_error_str() const;
+        pt_recursive_mutex *get_mutex_for_validation() const;
+        ft_operation_error_stack *get_operation_error_stack_for_validation() const noexcept;
+
+#ifdef LIBFT_TEST_BUILD
+        pt_recursive_mutex *get_mutex_for_testing() noexcept;
+#endif
 
         friend bool intersect_circle(const circle &first, const circle &second);
 };

@@ -121,12 +121,12 @@ int        rl_history_search(const char *query, int start_index,
 int        rl_state_prepare_thread_safety(readline_state_t *state);
 void    rl_state_teardown_thread_safety(readline_state_t *state);
 int        rl_state_lock(readline_state_t *state, bool *lock_acquired);
-void    rl_state_unlock(readline_state_t *state, bool lock_acquired);
+int        rl_state_unlock(readline_state_t *state, bool lock_acquired);
 
 int        rl_terminal_dimensions_prepare_thread_safety(terminal_dimensions *dimensions);
 void    rl_terminal_dimensions_teardown_thread_safety(terminal_dimensions *dimensions);
 int        rl_terminal_dimensions_lock(terminal_dimensions *dimensions, bool *lock_acquired);
-void    rl_terminal_dimensions_unlock(terminal_dimensions *dimensions, bool lock_acquired);
+int        rl_terminal_dimensions_unlock(terminal_dimensions *dimensions, bool lock_acquired);
 int        rl_terminal_dimensions_refresh(terminal_dimensions *dimensions);
 int        rl_terminal_dimensions_get(terminal_dimensions *dimensions,
             unsigned short *rows, unsigned short *cols,

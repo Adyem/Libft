@@ -42,18 +42,24 @@ static char *rl_error(readline_state_t *state)
     return (ft_nullptr);
 }
 
+static int rl_last_error_with_fallback(int fallback_error)
+{
+    if (ft_global_error_stack_depth() == 0)
+        return (fallback_error);
+    int error_code = ft_global_error_stack_pop_newest();
+    if (error_code == FT_ERR_SUCCESSS)
+        return (fallback_error);
+    return (error_code);
+}
+
 char *rl_readline(const char *prompt)
 {
     readline_state_t     state;
     int                 error_code;
 
-    error_code = FT_ERR_SUCCESSS;
-    ft_errno = FT_ERR_SUCCESSS;
     if (rl_initialize_state(&state))
     {
-        error_code = ft_errno;
-        if (error_code == FT_ERR_SUCCESSS)
-            error_code = FT_ERR_INTERNAL;
+        error_code = rl_last_error_with_fallback(FT_ERR_INTERNAL);
         ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }
@@ -65,9 +71,7 @@ char *rl_readline(const char *prompt)
 
         if (key_result == -1)
         {
-            error_code = ft_errno;
-            if (error_code == FT_ERR_SUCCESSS)
-                error_code = FT_ERR_IO;
+            error_code = rl_last_error_with_fallback(FT_ERR_IO);
             rl_error(&state);
             ft_global_error_stack_push(error_code);
             return (ft_nullptr);
@@ -77,9 +81,7 @@ char *rl_readline(const char *prompt)
 
         if (custom_result == -1)
         {
-            error_code = ft_errno;
-            if (error_code == FT_ERR_SUCCESSS)
-                error_code = FT_ERR_INTERNAL;
+            error_code = rl_last_error_with_fallback(FT_ERR_INTERNAL);
             rl_error(&state);
             ft_global_error_stack_push(error_code);
             return (ft_nullptr);
@@ -101,11 +103,10 @@ char *rl_readline(const char *prompt)
         }
         else if (character == 127 || character == '\b')
         {
-            if (rl_handle_backspace(&state, prompt) == -1)
+            int backspace_error = rl_handle_backspace(&state, prompt);
+            if (backspace_error != FT_ERR_SUCCESSS)
             {
-                error_code = ft_errno;
-                if (error_code == FT_ERR_SUCCESSS)
-                    error_code = FT_ERR_INTERNAL;
+                error_code = backspace_error;
                 rl_error(&state);
                 ft_global_error_stack_push(error_code);
                 return (ft_nullptr);
@@ -113,11 +114,10 @@ char *rl_readline(const char *prompt)
         }
         else if (character == 27)
         {
-            if (rl_handle_escape_sequence(&state, prompt) == -1)
+            int escape_error = rl_handle_escape_sequence(&state, prompt);
+            if (escape_error != FT_ERR_SUCCESSS)
             {
-                error_code = ft_errno;
-                if (error_code == FT_ERR_SUCCESSS)
-                    error_code = FT_ERR_INTERNAL;
+                error_code = escape_error;
                 rl_error(&state);
                 ft_global_error_stack_push(error_code);
                 return (ft_nullptr);
@@ -125,11 +125,10 @@ char *rl_readline(const char *prompt)
         }
         else if (character == '\t')
         {
-            if (rl_handle_tab_completion(&state, prompt) == -1)
+            int completion_error = rl_handle_tab_completion(&state, prompt);
+            if (completion_error != FT_ERR_SUCCESSS)
             {
-                error_code = ft_errno;
-                if (error_code == FT_ERR_SUCCESSS)
-                    error_code = FT_ERR_INTERNAL;
+                error_code = completion_error;
                 rl_error(&state);
                 ft_global_error_stack_push(error_code);
                 return (ft_nullptr);
@@ -137,11 +136,10 @@ char *rl_readline(const char *prompt)
         }
         else if (character >= 32 && character <= 126)
         {
-            if (rl_handle_printable_char(&state, character, prompt) == -1)
+            int printable_error = rl_handle_printable_char(&state, character, prompt);
+            if (printable_error != FT_ERR_SUCCESSS)
             {
-                error_code = ft_errno;
-                if (error_code == FT_ERR_SUCCESSS)
-                    error_code = FT_ERR_INTERNAL;
+                error_code = printable_error;
                 rl_error(&state);
                 ft_global_error_stack_push(error_code);
                 return (ft_nullptr);

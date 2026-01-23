@@ -1,6 +1,7 @@
 #include "game_character.hpp"
 #include "../Libft/libft.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 
 int ft_character::get_hit_points() const noexcept
 {
@@ -11,28 +12,12 @@ int ft_character::get_hit_points() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (0);
     }
     hit_points = this->_hit_points;
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (hit_points);
 }
 
@@ -44,28 +29,12 @@ void ft_character::set_hit_points(int hp) noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return ;
     }
     this->_hit_points = hp;
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return ;
 }
 
@@ -78,28 +47,12 @@ bool ft_character::is_alive() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (false);
     }
     alive = this->_hit_points > 0;
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (alive);
 }
 
@@ -112,28 +65,12 @@ int ft_character::get_physical_armor() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (0);
     }
     armor_value = this->_physical_armor;
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (armor_value);
 }
 
@@ -145,28 +82,12 @@ void ft_character::set_physical_armor(int armor) noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return ;
     }
     this->set_physical_armor_internal(armor);
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return ;
 }
 
@@ -179,28 +100,12 @@ int ft_character::get_magic_armor() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (0);
     }
     armor_value = this->_magic_armor;
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (armor_value);
 }
 
@@ -212,28 +117,12 @@ void ft_character::set_magic_armor(int armor) noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return ;
     }
     this->set_magic_armor_internal(armor);
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return ;
 }
 
@@ -246,28 +135,12 @@ int ft_character::get_current_physical_armor() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (0);
     }
     armor_value = this->_current_physical_armor;
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (armor_value);
 }
 
@@ -279,28 +152,12 @@ void ft_character::set_current_physical_armor(int armor) noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return ;
     }
     this->_current_physical_armor = armor;
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return ;
 }
 
@@ -313,28 +170,12 @@ int ft_character::get_current_magic_armor() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (0);
     }
     armor_value = this->_current_magic_armor;
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (armor_value);
 }
 
@@ -346,28 +187,12 @@ void ft_character::set_current_magic_armor(int armor) noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return ;
     }
     this->_current_magic_armor = armor;
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return ;
 }
 
@@ -379,28 +204,12 @@ void ft_character::set_damage_rule(uint8_t rule) noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return ;
     }
     this->_damage_rule = rule;
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return ;
 }
 
@@ -413,28 +222,12 @@ uint8_t ft_character::get_damage_rule() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (FT_DAMAGE_RULE_FLAT);
     }
     rule_value = this->_damage_rule;
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (rule_value);
 }
 
@@ -447,28 +240,12 @@ int ft_character::get_might() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (0);
     }
     attribute = this->_might;
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (attribute);
 }
 
@@ -480,28 +257,12 @@ void ft_character::set_might(int might) noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return ;
     }
     this->_might = might;
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return ;
 }
 
@@ -514,28 +275,12 @@ int ft_character::get_agility() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (0);
     }
     attribute = this->_agility;
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (attribute);
 }
 
@@ -547,28 +292,12 @@ void ft_character::set_agility(int agility) noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return ;
     }
     this->_agility = agility;
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return ;
 }
 
@@ -581,28 +310,12 @@ int ft_character::get_endurance() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (0);
     }
     attribute = this->_endurance;
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (attribute);
 }
 
@@ -614,28 +327,12 @@ void ft_character::set_endurance(int endurance) noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return ;
     }
     this->_endurance = endurance;
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return ;
 }
 
@@ -648,28 +345,12 @@ int ft_character::get_reason() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (0);
     }
     attribute = this->_reason;
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (attribute);
 }
 
@@ -681,28 +362,12 @@ void ft_character::set_reason(int reason) noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return ;
     }
     this->_reason = reason;
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return ;
 }
 
@@ -715,28 +380,12 @@ int ft_character::get_insigh() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (0);
     }
     attribute = this->_insigh;
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (attribute);
 }
 
@@ -748,28 +397,12 @@ void ft_character::set_insigh(int insigh) noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return ;
     }
     this->_insigh = insigh;
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return ;
 }
 
@@ -782,28 +415,12 @@ int ft_character::get_presence() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (0);
     }
     attribute = this->_presence;
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (attribute);
 }
 
@@ -815,28 +432,12 @@ void ft_character::set_presence(int presence) noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return ;
     }
     this->_presence = presence;
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return ;
 }
 
@@ -849,28 +450,12 @@ int ft_character::get_coins() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (0);
     }
     coins_value = this->_coins;
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (coins_value);
 }
 
@@ -882,28 +467,12 @@ void ft_character::set_coins(int coins) noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return ;
     }
     this->_coins = coins;
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return ;
 }
 
@@ -916,28 +485,12 @@ int ft_character::get_valor() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (0);
     }
     valor_value = this->_valor;
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (valor_value);
 }
 
@@ -949,28 +502,12 @@ void ft_character::set_valor(int valor) noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return ;
     }
     this->_valor = valor;
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return ;
 }
 
@@ -983,28 +520,12 @@ int ft_character::get_experience() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (0);
     }
     experience_value = this->_experience;
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (experience_value);
 }
 
@@ -1016,28 +537,12 @@ void ft_character::set_experience(int experience) noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return ;
     }
     this->_experience = experience;
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return ;
 }
 
@@ -1050,28 +555,12 @@ int ft_character::get_x() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (0);
     }
     coordinate = this->_x;
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (coordinate);
 }
 
@@ -1083,28 +572,12 @@ void ft_character::set_x(int x) noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return ;
     }
     this->_x = x;
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return ;
 }
 
@@ -1117,28 +590,12 @@ int ft_character::get_y() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (0);
     }
     coordinate = this->_y;
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (coordinate);
 }
 
@@ -1150,28 +607,12 @@ void ft_character::set_y(int y) noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return ;
     }
     this->_y = y;
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return ;
 }
 
@@ -1184,28 +625,12 @@ int ft_character::get_z() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (0);
     }
     coordinate = this->_z;
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (coordinate);
 }
 
@@ -1217,28 +642,12 @@ void ft_character::set_z(int z) noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return ;
     }
     this->_z = z;
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return ;
 }
 
@@ -1251,14 +660,6 @@ ft_resistance ft_character::get_fire_res() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (ft_resistance());
     }
     resistance_copy = this->_fire_res;
@@ -1267,27 +668,11 @@ ft_resistance ft_character::get_fire_res() const noexcept
         const_cast<ft_character *>(this)->set_error(resistance_copy.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (resistance_copy);
     }
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (resistance_copy);
 }
 
@@ -1300,14 +685,6 @@ void ft_character::set_fire_res(int percent, int flat) noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return ;
     }
     error_code = this->_fire_res.set_values(percent, flat);
@@ -1315,27 +692,11 @@ void ft_character::set_fire_res(int percent, int flat) noexcept
     {
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return ;
     }
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return ;
 }
 
@@ -1348,14 +709,6 @@ ft_resistance ft_character::get_frost_res() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (ft_resistance());
     }
     resistance_copy = this->_frost_res;
@@ -1364,27 +717,11 @@ ft_resistance ft_character::get_frost_res() const noexcept
         const_cast<ft_character *>(this)->set_error(resistance_copy.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (resistance_copy);
     }
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (resistance_copy);
 }
 
@@ -1397,14 +734,6 @@ void ft_character::set_frost_res(int percent, int flat) noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return ;
     }
     error_code = this->_frost_res.set_values(percent, flat);
@@ -1412,27 +741,11 @@ void ft_character::set_frost_res(int percent, int flat) noexcept
     {
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return ;
     }
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return ;
 }
 
@@ -1445,14 +758,6 @@ ft_resistance ft_character::get_lightning_res() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (ft_resistance());
     }
     resistance_copy = this->_lightning_res;
@@ -1461,27 +766,11 @@ ft_resistance ft_character::get_lightning_res() const noexcept
         const_cast<ft_character *>(this)->set_error(resistance_copy.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (resistance_copy);
     }
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (resistance_copy);
 }
 
@@ -1494,14 +783,6 @@ void ft_character::set_lightning_res(int percent, int flat) noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return ;
     }
     error_code = this->_lightning_res.set_values(percent, flat);
@@ -1509,27 +790,11 @@ void ft_character::set_lightning_res(int percent, int flat) noexcept
     {
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return ;
     }
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return ;
 }
 
@@ -1542,14 +807,6 @@ ft_resistance ft_character::get_air_res() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (ft_resistance());
     }
     resistance_copy = this->_air_res;
@@ -1558,27 +815,11 @@ ft_resistance ft_character::get_air_res() const noexcept
         const_cast<ft_character *>(this)->set_error(resistance_copy.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (resistance_copy);
     }
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (resistance_copy);
 }
 
@@ -1591,14 +832,6 @@ void ft_character::set_air_res(int percent, int flat) noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return ;
     }
     error_code = this->_air_res.set_values(percent, flat);
@@ -1606,27 +839,11 @@ void ft_character::set_air_res(int percent, int flat) noexcept
     {
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return ;
     }
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return ;
 }
 
@@ -1639,14 +856,6 @@ ft_resistance ft_character::get_earth_res() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (ft_resistance());
     }
     resistance_copy = this->_earth_res;
@@ -1655,27 +864,11 @@ ft_resistance ft_character::get_earth_res() const noexcept
         const_cast<ft_character *>(this)->set_error(resistance_copy.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (resistance_copy);
     }
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (resistance_copy);
 }
 
@@ -1688,14 +881,6 @@ void ft_character::set_earth_res(int percent, int flat) noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return ;
     }
     error_code = this->_earth_res.set_values(percent, flat);
@@ -1703,27 +888,11 @@ void ft_character::set_earth_res(int percent, int flat) noexcept
     {
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return ;
     }
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return ;
 }
 
@@ -1736,14 +905,6 @@ ft_resistance ft_character::get_chaos_res() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (ft_resistance());
     }
     resistance_copy = this->_chaos_res;
@@ -1752,27 +913,11 @@ ft_resistance ft_character::get_chaos_res() const noexcept
         const_cast<ft_character *>(this)->set_error(resistance_copy.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (resistance_copy);
     }
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (resistance_copy);
 }
 
@@ -1785,14 +930,6 @@ void ft_character::set_chaos_res(int percent, int flat) noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return ;
     }
     error_code = this->_chaos_res.set_values(percent, flat);
@@ -1800,27 +937,11 @@ void ft_character::set_chaos_res(int percent, int flat) noexcept
     {
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return ;
     }
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return ;
 }
 
@@ -1833,14 +954,6 @@ ft_resistance ft_character::get_physical_res() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (ft_resistance());
     }
     resistance_copy = this->_physical_res;
@@ -1849,27 +962,11 @@ ft_resistance ft_character::get_physical_res() const noexcept
         const_cast<ft_character *>(this)->set_error(resistance_copy.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (resistance_copy);
     }
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (resistance_copy);
 }
 
@@ -1882,14 +979,6 @@ void ft_character::set_physical_res(int percent, int flat) noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return ;
     }
     error_code = this->_physical_res.set_values(percent, flat);
@@ -1897,27 +986,11 @@ void ft_character::set_physical_res(int percent, int flat) noexcept
     {
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return ;
     }
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return ;
 }
 
@@ -1929,27 +1002,11 @@ ft_map<int, ft_skill> &ft_character::get_skills() noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (this->_skills);
     }
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (this->_skills);
 }
 
@@ -1961,27 +1018,11 @@ const ft_map<int, ft_skill> &ft_character::get_skills() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (this->_skills);
     }
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (this->_skills);
 }
 
@@ -1995,31 +1036,15 @@ ft_skill *ft_character::get_skill(int id) noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (ft_nullptr);
     }
     found = this->_skills.find(id);
-    component_error = this->_skills.get_error();
+    component_error = this->_skills.last_operation_error();
     if (component_error != FT_ERR_SUCCESSS)
     {
         this->set_error(component_error);
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (ft_nullptr);
     }
     if (found == this->_skills.end())
@@ -2027,27 +1052,11 @@ ft_skill *ft_character::get_skill(int id) noexcept
         this->set_error(FT_ERR_NOT_FOUND);
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (ft_nullptr);
     }
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (&found->value);
 }
 
@@ -2061,31 +1070,15 @@ const ft_skill *ft_character::get_skill(int id) const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (ft_nullptr);
     }
     found = this->_skills.find(id);
-    component_error = this->_skills.get_error();
+    component_error = this->_skills.last_operation_error();
     if (component_error != FT_ERR_SUCCESSS)
     {
         const_cast<ft_character *>(this)->set_error(component_error);
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (ft_nullptr);
     }
     if (found == this->_skills.end())
@@ -2093,27 +1086,11 @@ const ft_skill *ft_character::get_skill(int id) const noexcept
         const_cast<ft_character *>(this)->set_error(FT_ERR_NOT_FOUND);
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (ft_nullptr);
     }
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (&found->value);
 }
 
@@ -2125,27 +1102,11 @@ ft_map<int, ft_buff> &ft_character::get_buffs() noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (this->_buffs);
     }
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (this->_buffs);
 }
 
@@ -2157,27 +1118,11 @@ const ft_map<int, ft_buff> &ft_character::get_buffs() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (this->_buffs);
     }
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (this->_buffs);
 }
 
@@ -2189,27 +1134,11 @@ ft_map<int, ft_debuff> &ft_character::get_debuffs() noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (this->_debuffs);
     }
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (this->_debuffs);
 }
 
@@ -2221,27 +1150,11 @@ const ft_map<int, ft_debuff> &ft_character::get_debuffs() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (this->_debuffs);
     }
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (this->_debuffs);
 }
 
@@ -2253,27 +1166,11 @@ ft_map<int, ft_upgrade> &ft_character::get_upgrades() noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (this->_upgrades);
     }
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (this->_upgrades);
 }
 
@@ -2285,27 +1182,11 @@ const ft_map<int, ft_upgrade> &ft_character::get_upgrades() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (this->_upgrades);
     }
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (this->_upgrades);
 }
 
@@ -2317,27 +1198,11 @@ ft_map<int, ft_quest> &ft_character::get_quests() noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (this->_quests);
     }
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (this->_quests);
 }
 
@@ -2349,27 +1214,11 @@ const ft_map<int, ft_quest> &ft_character::get_quests() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (this->_quests);
     }
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (this->_quests);
 }
 
@@ -2381,27 +1230,11 @@ ft_map<int, ft_achievement> &ft_character::get_achievements() noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (this->_achievements);
     }
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (this->_achievements);
 }
 
@@ -2413,27 +1246,11 @@ const ft_map<int, ft_achievement> &ft_character::get_achievements() const noexce
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (this->_achievements);
     }
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (this->_achievements);
 }
 
@@ -2445,27 +1262,11 @@ ft_reputation &ft_character::get_reputation() noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (this->_reputation);
     }
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (this->_reputation);
 }
 
@@ -2477,27 +1278,11 @@ const ft_reputation &ft_character::get_reputation() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (this->_reputation);
     }
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (this->_reputation);
 }
 
@@ -2509,27 +1294,11 @@ ft_experience_table &ft_character::get_experience_table() noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (this->_experience_table);
     }
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (this->_experience_table);
 }
 
@@ -2541,27 +1310,11 @@ const ft_experience_table &ft_character::get_experience_table() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (this->_experience_table);
     }
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (this->_experience_table);
 }
 
@@ -2575,14 +1328,6 @@ int ft_character::get_level() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (0);
     }
     level_value = this->_experience_table.get_level(this->_experience);
@@ -2592,27 +1337,11 @@ int ft_character::get_level() const noexcept
         const_cast<ft_character *>(this)->set_error(experience_error);
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (0);
     }
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (level_value);
 }
 
@@ -2626,14 +1355,6 @@ ft_sharedptr<ft_item> ft_character::get_equipped_item(int slot) noexcept
         this->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (ft_sharedptr<ft_item>());
     }
     item = this->_equipment.get_item(slot);
@@ -2643,27 +1364,11 @@ ft_sharedptr<ft_item> ft_character::get_equipped_item(int slot) noexcept
         this->handle_component_error(equipment_error);
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (ft_sharedptr<ft_item>());
     }
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (item);
 }
 
@@ -2677,14 +1382,6 @@ ft_sharedptr<ft_item> ft_character::get_equipped_item(int slot) const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (ft_sharedptr<ft_item>());
     }
     item = this->_equipment.get_item(slot);
@@ -2694,27 +1391,11 @@ ft_sharedptr<ft_item> ft_character::get_equipped_item(int slot) const noexcept
         const_cast<ft_character *>(this)->handle_component_error(equipment_error);
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (ft_sharedptr<ft_item>());
     }
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (item);
 }
 
@@ -2727,28 +1408,12 @@ int ft_character::get_error() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (guard.get_error());
     }
     error_code = this->_error;
     const_cast<ft_character *>(this)->set_error(error_code);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (error_code);
 }
 
@@ -2761,28 +1426,12 @@ const char *ft_character::get_error_str() const noexcept
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         if (guard.owns_lock())
             guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = guard.get_error();
-        }
-        else
-        {
-            ft_errno = FT_ERR_SUCCESSS;
-        }
         return (ft_strerror(guard.get_error()));
     }
     error_code = this->_error;
     const_cast<ft_character *>(this)->set_error(error_code);
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-    }
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-    }
     return (ft_strerror(error_code));
 }
 
@@ -2832,8 +1481,28 @@ void ft_character::restore_magic_armor_internal() noexcept
 
 void ft_character::set_error(int err) const noexcept
 {
-    ft_errno = err;
     this->_error = err;
+    this->record_operation_error(err);
     return ;
 }
 
+void ft_character::record_operation_error(int error_code) const noexcept
+{
+    unsigned long long operation_id;
+
+    operation_id = ft_errno_next_operation_id();
+    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
+    ft_operation_error_stack_push(&this->_operation_errors,
+            error_code, operation_id);
+    return ;
+}
+
+ft_operation_error_stack *ft_character::get_operation_error_stack_for_validation() noexcept
+{
+    return (&this->_operation_errors);
+}
+
+const ft_operation_error_stack *ft_character::get_operation_error_stack_for_validation() const noexcept
+{
+    return (&this->_operation_errors);
+}

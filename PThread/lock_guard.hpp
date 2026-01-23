@@ -24,10 +24,10 @@ class ft_lock_guard
         MutexType *_mutex;
         bool _owns_lock;
         mutable int _error_code;
-        static thread_local ft_operation_error_stack _operation_errors;
+        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
 
         void set_error(int error) const;
-        static void record_error(ft_operation_error_stack &error_stack, int error, bool push_global = true);
+        void record_error(int error, bool push_global = true) const;
 
     public:
         explicit ft_lock_guard(MutexType &mutex);
@@ -44,14 +44,12 @@ template <typename MutexType>
 void ft_lock_guard<MutexType>::set_error(int error) const
 {
     this->_error_code = error;
-    ft_lock_guard<MutexType>::record_error(ft_lock_guard<MutexType>::_operation_errors,
-            error, true);
+    this->record_error(error, true);
     return ;
 }
 
 template <typename MutexType>
-void ft_lock_guard<MutexType>::record_error(ft_operation_error_stack &error_stack,
-        int error, bool push_global)
+void ft_lock_guard<MutexType>::record_error(int error, bool push_global) const
 {
     unsigned long long operation_id;
 
@@ -59,7 +57,7 @@ void ft_lock_guard<MutexType>::record_error(ft_operation_error_stack &error_stac
         operation_id = ft_global_error_stack_push_entry(error);
     else
         operation_id = 0;
-    ft_operation_error_stack_push(&error_stack, error, operation_id);
+    ft_operation_error_stack_push(&this->_operation_errors, error, operation_id);
     return ;
 }
 
@@ -111,9 +109,6 @@ const char *ft_lock_guard<MutexType>::get_error_str() const
 {
     return (ft_strerror(this->_error_code));
 }
-
-template <typename MutexType>
-thread_local ft_operation_error_stack ft_lock_guard<MutexType>::_operation_errors = {{}, {}, 0};
 
 #include "recursive_mutex.hpp"
 

@@ -1,6 +1,6 @@
 #if defined(_WIN32)
 
-#include "ft_render_internal.hpp"
+#include "../DUMB/dumb_render_internal.hpp"
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -86,7 +86,7 @@ static ft_render_platform_result ft_render_win32_create_dib(
     out_framebuffer->height = state->height;
     out_framebuffer->pixels = (uint32_t *)pixels;
 
-    return ((ft_render_t platform_result){ ft_render_ok, 0 });
+    return ((ft_render_platform_result){ ft_render_ok, 0 });
 }
 
 ft_render_platform_result ft_render_platform_get_primary_screen_size(ft_render_screen_size *out_size)
@@ -416,4 +416,3 @@ ft_render_platform_result ft_render_platform_set_fullscreen(
 }
 
 #endif
-
