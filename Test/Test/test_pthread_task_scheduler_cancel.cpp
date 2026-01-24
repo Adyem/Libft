@@ -27,7 +27,7 @@ FT_TEST(test_task_scheduler_cancel_after_handle, "ft_task_scheduler cancels dela
     FT_ASSERT(cancel_result);
     int handle_error;
 
-    handle_error = handle_value.get_error();
+    handle_error = handle_value.operation_error_last_error();
     FT_ASSERT_EQ(ft_errno, handle_error);
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, handle_error);
     usleep(150000);
@@ -37,7 +37,7 @@ FT_TEST(test_task_scheduler_cancel_after_handle, "ft_task_scheduler cancels dela
     FT_ASSERT_EQ(0, executed_times);
     int scheduler_error;
 
-    scheduler_error = scheduler_instance.get_error();
+    scheduler_error = scheduler_instance.operation_error_last_error();
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, scheduler_error);
     FT_ASSERT_EQ(ft_errno, scheduler_error);
     return (1);
@@ -62,7 +62,7 @@ FT_TEST(test_task_scheduler_cancel_periodic_handle, "ft_task_scheduler cancels p
     FT_ASSERT(cancel_result);
     int handle_error;
 
-    handle_error = periodic_handle.get_error();
+    handle_error = periodic_handle.operation_error_last_error();
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, handle_error);
     FT_ASSERT_EQ(ft_errno, handle_error);
     usleep(200000);
@@ -72,7 +72,7 @@ FT_TEST(test_task_scheduler_cancel_periodic_handle, "ft_task_scheduler cancels p
     FT_ASSERT_EQ(0, executed_times);
     int scheduler_error;
 
-    scheduler_error = scheduler_instance.get_error();
+    scheduler_error = scheduler_instance.operation_error_last_error();
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, scheduler_error);
     FT_ASSERT_EQ(ft_errno, scheduler_error);
     return (1);
