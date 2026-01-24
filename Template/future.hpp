@@ -69,7 +69,7 @@ class ft_future<void>
         void report_result(int error_code) const;
         bool wait_ready() const;
         int lock_internal(bool *lock_acquired) const;
-        void unlock_internal(bool lock_acquired) const;
+        int unlock_internal(bool lock_acquired) const;
 
     public:
         ft_future();

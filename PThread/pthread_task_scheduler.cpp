@@ -3,7 +3,26 @@
 #include "../System_utils/system_utils.hpp"
 #include <new>
 #include <utility>
-#include "../Template/move.hpp"
+/*
+** ft_scheduled_task_state helpers
+*/
+
+void ft_scheduled_task_state::record_operation_error(int error_code) const noexcept
+{
+    unsigned long long operation_id;
+
+    this->_error_code = error_code;
+    ft_errno = error_code;
+    operation_id = ft_errno_next_operation_id();
+    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
+    ft_operation_error_stack_push(&this->_operation_errors, error_code, operation_id);
+    return ;
+}
+
+pt_mutex *ft_scheduled_task_state::mutex_handle() const
+{
+    return (this->_state_mutex);
+}
 
 ft_scheduled_task_state::ft_scheduled_task_state()
     : _cancelled(false), _error_code(FT_ERR_SUCCESSS), _state_mutex(ft_nullptr),
@@ -22,8 +41,7 @@ ft_scheduled_task_state::~ft_scheduled_task_state()
 
 void ft_scheduled_task_state::set_error(int error) const
 {
-    this->_error_code = error;
-    ft_errno = error;
+    this->record_operation_error(error);
     return ;
 }
 
@@ -75,11 +93,9 @@ int ft_scheduled_task_state::enable_thread_safety()
         this->set_error(FT_ERR_NO_MEMORY);
         return (-1);
     }
-    if (state_mutex->get_error() != FT_ERR_SUCCESSS)
+    int mutex_error = pt_mutex_pop_error(state_mutex);
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        int mutex_error;
-
-        mutex_error = state_mutex->get_error();
         delete state_mutex;
         this->set_error(mutex_error);
         return (-1);
@@ -125,24 +141,22 @@ void ft_scheduled_task_state::unlock(bool lock_acquired) const
 {
     ft_errno = FT_ERR_SUCCESSS;
     this->unlock_internal(lock_acquired);
-    if (this->_state_mutex != ft_nullptr && this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
-    {
-        const_cast<ft_scheduled_task_state *>(this)->set_error(this->_state_mutex->get_error());
-        return ;
-    }
-    const_cast<ft_scheduled_task_state *>(this)->set_error(FT_ERR_SUCCESSS);
-    ft_errno = FT_ERR_SUCCESSS;
+    const_cast<ft_scheduled_task_state *>(this)->set_error(ft_errno);
     return ;
 }
 
 int ft_scheduled_task_state::get_error() const
 {
-    return (this->_error_code);
+    return (ft_operation_error_stack_last_error(&this->_operation_errors));
 }
 
 const char *ft_scheduled_task_state::get_error_str() const
 {
-    return (ft_strerror(this->_error_code));
+    int error_value = ft_operation_error_stack_last_error(&this->_operation_errors);
+    const char *error_string = ft_strerror(error_value);
+    if (!error_string)
+        error_string = "unknown error";
+    return (error_string);
 }
 
 int ft_scheduled_task_state::lock_internal(bool *lock_acquired) const
@@ -155,9 +169,10 @@ int ft_scheduled_task_state::lock_internal(bool *lock_acquired) const
         return (0);
     }
     this->_state_mutex->lock(THREAD_ID);
-    if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
+    int mutex_error = pt_mutex_pop_error(this->_state_mutex);
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        if (this->_state_mutex->get_error() == FT_ERR_MUTEX_ALREADY_LOCKED)
+        if (mutex_error == FT_ERR_MUTEX_ALREADY_LOCKED)
         {
             bool state_lock_acquired;
 
@@ -168,7 +183,7 @@ int ft_scheduled_task_state::lock_internal(bool *lock_acquired) const
             ft_errno = FT_ERR_SUCCESSS;
             return (0);
         }
-        ft_errno = this->_state_mutex->get_error();
+        ft_errno = mutex_error;
         return (-1);
     }
     if (lock_acquired != ft_nullptr)
@@ -185,9 +200,10 @@ void ft_scheduled_task_state::unlock_internal(bool lock_acquired) const
         return ;
     }
     this->_state_mutex->unlock(THREAD_ID);
-    if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
+    int mutex_error = pt_mutex_pop_error(this->_state_mutex);
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = this->_state_mutex->get_error();
+        ft_errno = mutex_error;
         return ;
     }
     ft_errno = FT_ERR_SUCCESSS;
@@ -203,6 +219,27 @@ void ft_scheduled_task_state::teardown_thread_safety()
     }
     this->_thread_safe_enabled = false;
     return ;
+}
+
+/*
+** ft_scheduled_task_handle helpers
+*/
+
+void ft_scheduled_task_handle::record_operation_error(int error_code) const noexcept
+{
+    unsigned long long operation_id;
+
+    this->_error_code = error_code;
+    ft_errno = error_code;
+    operation_id = ft_errno_next_operation_id();
+    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
+    ft_operation_error_stack_push(&this->_operation_errors, error_code, operation_id);
+    return ;
+}
+
+pt_mutex *ft_scheduled_task_handle::mutex_handle() const
+{
+    return (this->_state_mutex);
 }
 
 ft_scheduled_task_handle::ft_scheduled_task_handle()
@@ -337,8 +374,7 @@ ft_scheduled_task_handle::~ft_scheduled_task_handle()
 
 void ft_scheduled_task_handle::set_error(int error) const
 {
-    this->_error_code = error;
-    ft_errno = error;
+    this->record_operation_error(error);
     return ;
 }
 
@@ -415,12 +451,16 @@ ft_sharedptr<ft_scheduled_task_state> ft_scheduled_task_handle::get_state() cons
 
 int ft_scheduled_task_handle::get_error() const
 {
-    return (this->_error_code);
+    return (ft_operation_error_stack_last_error(&this->_operation_errors));
 }
 
 const char *ft_scheduled_task_handle::get_error_str() const
 {
-    return (ft_strerror(this->_error_code));
+    int error_value = ft_operation_error_stack_last_error(&this->_operation_errors);
+    const char *error_string = ft_strerror(error_value);
+    if (!error_string)
+        error_string = "unknown error";
+    return (error_string);
 }
 
 int ft_scheduled_task_handle::enable_thread_safety()
@@ -488,13 +528,7 @@ void ft_scheduled_task_handle::unlock(bool lock_acquired) const
 {
     ft_errno = FT_ERR_SUCCESSS;
     this->unlock_internal(lock_acquired);
-    if (this->_state_mutex != ft_nullptr && this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
-    {
-        const_cast<ft_scheduled_task_handle *>(this)->set_error(this->_state_mutex->get_error());
-        return ;
-    }
-    const_cast<ft_scheduled_task_handle *>(this)->set_error(FT_ERR_SUCCESSS);
-    ft_errno = FT_ERR_SUCCESSS;
+    const_cast<ft_scheduled_task_handle *>(this)->set_error(ft_errno);
     return ;
 }
 
@@ -508,9 +542,10 @@ int ft_scheduled_task_handle::lock_internal(bool *lock_acquired) const
         return (0);
     }
     this->_state_mutex->lock(THREAD_ID);
-    if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
+    int mutex_error = pt_mutex_pop_error(this->_state_mutex);
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        if (this->_state_mutex->get_error() == FT_ERR_MUTEX_ALREADY_LOCKED)
+        if (mutex_error == FT_ERR_MUTEX_ALREADY_LOCKED)
         {
             bool state_lock_acquired;
 
@@ -521,7 +556,7 @@ int ft_scheduled_task_handle::lock_internal(bool *lock_acquired) const
             ft_errno = FT_ERR_SUCCESSS;
             return (0);
         }
-        ft_errno = this->_state_mutex->get_error();
+        ft_errno = mutex_error;
         return (-1);
     }
     if (lock_acquired != ft_nullptr)
@@ -538,9 +573,10 @@ void ft_scheduled_task_handle::unlock_internal(bool lock_acquired) const
         return ;
     }
     this->_state_mutex->unlock(THREAD_ID);
-    if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
+    mutex_error = pt_mutex_pop_error(this->_state_mutex);
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = this->_state_mutex->get_error();
+        ft_errno = mutex_error;
         return ;
     }
     ft_errno = FT_ERR_SUCCESSS;
@@ -556,6 +592,27 @@ void ft_scheduled_task_handle::teardown_thread_safety()
     }
     this->_thread_safe_enabled = false;
     return ;
+}
+
+/*
+** ft_task_scheduler helpers
+*/
+
+void ft_task_scheduler::record_operation_error(int error_code) const noexcept
+{
+    unsigned long long operation_id;
+
+    this->_error_code = error_code;
+    ft_errno = error_code;
+    operation_id = ft_errno_next_operation_id();
+    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
+    ft_operation_error_stack_push(&this->_operation_errors, error_code, operation_id);
+    return ;
+}
+
+pt_mutex *ft_task_scheduler::mutex_handle() const
+{
+    return (this->_state_mutex);
 }
 
 ft_task_scheduler::ft_task_scheduler(size_t thread_count)
@@ -706,27 +763,27 @@ void ft_task_scheduler::set_error(int error) const
     if (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr)
     {
         this->_state_mutex->lock(THREAD_ID);
-        if (this->_state_mutex->get_error() == FT_ERR_SUCCESSS)
+        int mutex_error;
+
+        mutex_error = pt_mutex_pop_error(this->_state_mutex);
+        if (mutex_error == FT_ERR_SUCCESSS)
             state_locked = true;
-        else if (this->_state_mutex->get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
+        else if (mutex_error != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            this->_error_code = error;
-            ft_errno = this->_state_mutex->get_error();
+            this->record_operation_error(mutex_error);
             return ;
         }
     }
-    this->_error_code = error;
-    ft_errno = error;
+    this->record_operation_error(error);
     if (state_locked)
     {
         this->_state_mutex->unlock(THREAD_ID);
-        if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
+        mutex_error = pt_mutex_pop_error(this->_state_mutex);
+        if (mutex_error != FT_ERR_SUCCESSS)
         {
-            ft_errno = this->_state_mutex->get_error();
-            this->_error_code = this->_state_mutex->get_error();
+            this->record_operation_error(mutex_error);
             return ;
         }
-        ft_errno = error;
     }
     return ;
 }
@@ -1587,12 +1644,16 @@ void ft_task_scheduler::trace_emit_event(e_ft_task_trace_phase phase, unsigned l
 
 int ft_task_scheduler::get_error() const
 {
-    return (this->_error_code);
+    return (ft_operation_error_stack_last_error(&this->_operation_errors));
 }
 
 const char *ft_task_scheduler::get_error_str() const
 {
-    return (ft_strerror(this->_error_code));
+    int error_value = ft_operation_error_stack_last_error(&this->_operation_errors);
+    const char *error_string = ft_strerror(error_value);
+    if (!error_string)
+        error_string = "unknown error";
+    return (error_string);
 }
 
 long long ft_task_scheduler::get_queue_size() const
