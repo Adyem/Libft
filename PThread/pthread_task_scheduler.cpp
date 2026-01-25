@@ -1,8 +1,39 @@
 #include "task_scheduler.hpp"
 #include "pthread.hpp"
+#include "recursive_mutex.hpp"
 #include "../System_utils/system_utils.hpp"
 #include <new>
 #include <utility>
+
+static int pt_recursive_mutex_pop_error(const pt_recursive_mutex &mutex)
+{
+    int error_value;
+
+    error_value = mutex.operation_error_pop_newest();
+    ft_global_error_stack_pop_newest();
+    return (error_value);
+}
+
+static int pt_recursive_mutex_pop_error(const pt_recursive_mutex *mutex)
+{
+    if (mutex == ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    return (pt_recursive_mutex_pop_error(*mutex));
+}
+
+static int pt_recursive_mutex_capture_error(const pt_recursive_mutex *mutex,
+        int operation_result)
+{
+    if (mutex == ft_nullptr)
+        return (operation_result);
+    int error_value;
+
+    error_value = pt_recursive_mutex_pop_error(mutex);
+    if (error_value != FT_ERR_SUCCESSS)
+        return (error_value);
+    return (operation_result);
+}
+
 /*
 ** ft_scheduled_task_state helpers
 */
@@ -717,7 +748,7 @@ void ft_scheduled_task_handle::unlock_internal(bool lock_acquired) const
         return ;
     }
     this->_state_mutex->unlock(THREAD_ID);
-    mutex_error = pt_mutex_pop_error(this->_state_mutex);
+    int mutex_error = pt_mutex_pop_error(this->_state_mutex);
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         ft_errno = mutex_error;
@@ -772,7 +803,7 @@ void ft_task_scheduler::operation_error_push(int error_code) const
     return ;
 }
 
-pt_mutex *ft_task_scheduler::mutex_handle() const
+pt_recursive_mutex *ft_task_scheduler::mutex_handle() const
 {
     return (this->_state_mutex);
 }
@@ -889,13 +920,22 @@ ft_task_scheduler::~ft_task_scheduler()
 {
     this->_running.store(false);
     this->_queue.shutdown();
-    if (this->_scheduled_mutex.lock(THREAD_ID) == FT_SUCCESS)
+    int scheduled_mutex_lock_result = this->_scheduled_mutex.lock(THREAD_ID);
+    int scheduled_mutex_lock_error = pt_mutex_capture_error(&this->_scheduled_mutex, scheduled_mutex_lock_result);
+    if (scheduled_mutex_lock_error == FT_ERR_SUCCESSS)
     {
         if (this->_scheduled_condition.broadcast() != 0)
         {
             this->operation_error_push(this->_scheduled_condition.get_error());
         }
-        this->_scheduled_mutex.unlock(THREAD_ID);
+        int scheduled_mutex_unlock_result = this->_scheduled_mutex.unlock(THREAD_ID);
+        int scheduled_mutex_unlock_error = pt_mutex_capture_error(&this->_scheduled_mutex, scheduled_mutex_unlock_result);
+        if (scheduled_mutex_unlock_error != FT_ERR_SUCCESSS)
+            this->operation_error_push(scheduled_mutex_unlock_error);
+    }
+    else
+    {
+        this->operation_error_push(scheduled_mutex_lock_error);
     }
     size_t index;
     size_t worker_count;
@@ -1021,15 +1061,20 @@ void ft_task_scheduler::scheduled_heap_sift_down(size_t index)
 
 bool ft_task_scheduler::update_queue_size(long long delta)
 {
-    if (this->_queue_metrics_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    int queue_metrics_lock_result = this->_queue_metrics_mutex.lock(THREAD_ID);
+    int queue_metrics_error = pt_mutex_capture_error(&this->_queue_metrics_mutex, queue_metrics_lock_result);
+
+    if (queue_metrics_error != FT_ERR_SUCCESSS)
     {
-        this->operation_error_push(this->_queue_metrics_mutex.operation_error_last_error());
+        this->operation_error_push(queue_metrics_error);
         return (false);
     }
     this->_queue_size_counter += delta;
-    if (this->_queue_metrics_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+    int queue_metrics_unlock_result = this->_queue_metrics_mutex.unlock(THREAD_ID);
+    int queue_metrics_unlock_error = pt_mutex_capture_error(&this->_queue_metrics_mutex, queue_metrics_unlock_result);
+    if (queue_metrics_unlock_error != FT_ERR_SUCCESSS)
     {
-        this->operation_error_push(this->_queue_metrics_mutex.operation_error_last_error());
+        this->operation_error_push(queue_metrics_unlock_error);
         return (false);
     }
     return (true);
@@ -1037,16 +1082,21 @@ bool ft_task_scheduler::update_queue_size(long long delta)
 
 bool ft_task_scheduler::update_worker_counters(long long active_delta, long long idle_delta)
 {
-    if (this->_worker_metrics_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    int worker_metrics_lock_result = this->_worker_metrics_mutex.lock(THREAD_ID);
+    int worker_metrics_error = pt_mutex_capture_error(&this->_worker_metrics_mutex, worker_metrics_lock_result);
+
+    if (worker_metrics_error != FT_ERR_SUCCESSS)
     {
-        this->operation_error_push(this->_worker_metrics_mutex.operation_error_last_error());
+        this->operation_error_push(worker_metrics_error);
         return (false);
     }
     this->_worker_active_counter += active_delta;
     this->_worker_idle_counter += idle_delta;
-    if (this->_worker_metrics_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+    int worker_metrics_unlock_result = this->_worker_metrics_mutex.unlock(THREAD_ID);
+    int worker_metrics_unlock_error = pt_mutex_capture_error(&this->_worker_metrics_mutex, worker_metrics_unlock_result);
+    if (worker_metrics_unlock_error != FT_ERR_SUCCESSS)
     {
-        this->operation_error_push(this->_worker_metrics_mutex.operation_error_last_error());
+        this->operation_error_push(worker_metrics_unlock_error);
         return (false);
     }
     return (true);
@@ -1054,9 +1104,12 @@ bool ft_task_scheduler::update_worker_counters(long long active_delta, long long
 
 bool ft_task_scheduler::update_worker_total(long long delta)
 {
-    if (this->_worker_metrics_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    int worker_metrics_lock_result = this->_worker_metrics_mutex.lock(THREAD_ID);
+    int worker_metrics_error = pt_mutex_capture_error(&this->_worker_metrics_mutex, worker_metrics_lock_result);
+
+    if (worker_metrics_error != FT_ERR_SUCCESSS)
     {
-        this->operation_error_push(this->_worker_metrics_mutex.operation_error_last_error());
+        this->operation_error_push(worker_metrics_error);
         return (false);
     }
     if (delta >= 0)
@@ -1071,9 +1124,11 @@ bool ft_task_scheduler::update_worker_total(long long delta)
         else
             this->_worker_total_count -= decrement;
     }
-    if (this->_worker_metrics_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+    int worker_metrics_unlock_result = this->_worker_metrics_mutex.unlock(THREAD_ID);
+    int worker_metrics_unlock_error = pt_mutex_capture_error(&this->_worker_metrics_mutex, worker_metrics_unlock_result);
+    if (worker_metrics_unlock_error != FT_ERR_SUCCESSS)
     {
-        this->operation_error_push(this->_worker_metrics_mutex.operation_error_last_error());
+        this->operation_error_push(worker_metrics_unlock_error);
         return (false);
     }
     return (true);
@@ -1170,6 +1225,10 @@ bool ft_task_scheduler::cancel_task_state(const ft_sharedptr<ft_scheduled_task_s
     const char *cancelled_label;
     bool should_emit_cancel;
     bool scheduler_lock_acquired;
+    int scheduled_mutex_lock_result;
+    int scheduled_mutex_error;
+    int scheduled_mutex_unlock_result;
+    int scheduled_mutex_unlock_error;
 
     scheduler_lock_acquired = false;
     if (this->lock_internal(&scheduler_lock_acquired) != 0)
@@ -1204,9 +1263,12 @@ bool ft_task_scheduler::cancel_task_state(const ft_sharedptr<ft_scheduled_task_s
         this->unlock_internal(scheduler_lock_acquired);
         return (false);
     }
-    if (this->_scheduled_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    scheduled_mutex_lock_result = this->_scheduled_mutex.lock(THREAD_ID);
+    scheduled_mutex_error = pt_mutex_capture_error(&this->_scheduled_mutex, scheduled_mutex_lock_result);
+
+    if (scheduled_mutex_error != FT_ERR_SUCCESSS)
     {
-        this->operation_error_push(this->_scheduled_mutex.operation_error_last_error());
+        this->operation_error_push(scheduled_mutex_error);
         this->unlock_internal(scheduler_lock_acquired);
         return (false);
     }
@@ -1223,9 +1285,11 @@ bool ft_task_scheduler::cancel_task_state(const ft_sharedptr<ft_scheduled_task_s
         size = this->_scheduled.size();
         if (this->_scheduled.get_error() != FT_ERR_SUCCESSS)
         {
-            if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+            scheduled_mutex_unlock_result = this->_scheduled_mutex.unlock(THREAD_ID);
+            scheduled_mutex_unlock_error = pt_mutex_capture_error(&this->_scheduled_mutex, scheduled_mutex_unlock_result);
+            if (scheduled_mutex_unlock_error != FT_ERR_SUCCESSS)
             {
-                this->operation_error_push(this->_scheduled_mutex.operation_error_last_error());
+                this->operation_error_push(scheduled_mutex_unlock_error);
                 this->unlock_internal(scheduler_lock_acquired);
                 return (false);
             }
@@ -1245,9 +1309,11 @@ bool ft_task_scheduler::cancel_task_state(const ft_sharedptr<ft_scheduled_task_s
             cancelled_label = this->_scheduled[index]._label;
             if (!this->scheduled_remove_index(index))
             {
-                if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+                scheduled_mutex_unlock_result = this->_scheduled_mutex.unlock(THREAD_ID);
+                scheduled_mutex_unlock_error = pt_mutex_capture_error(&this->_scheduled_mutex, scheduled_mutex_unlock_result);
+                if (scheduled_mutex_unlock_error != FT_ERR_SUCCESSS)
                 {
-                    this->operation_error_push(this->_scheduled_mutex.operation_error_last_error());
+                    this->operation_error_push(scheduled_mutex_unlock_error);
                     this->unlock_internal(scheduler_lock_acquired);
                     return (false);
                 }
@@ -1264,9 +1330,11 @@ bool ft_task_scheduler::cancel_task_state(const ft_sharedptr<ft_scheduled_task_s
         }
         index++;
     }
-    if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+    scheduled_mutex_unlock_result = this->_scheduled_mutex.unlock(THREAD_ID);
+    scheduled_mutex_unlock_error = pt_mutex_capture_error(&this->_scheduled_mutex, scheduled_mutex_unlock_result);
+    if (scheduled_mutex_unlock_error != FT_ERR_SUCCESSS)
     {
-        this->operation_error_push(this->_scheduled_mutex.operation_error_last_error());
+        this->operation_error_push(scheduled_mutex_unlock_error);
         this->unlock_internal(scheduler_lock_acquired);
         return (false);
     }
@@ -1942,7 +2010,7 @@ size_t ft_task_scheduler::get_worker_total_count() const
 
 int ft_task_scheduler::enable_thread_safety()
 {
-    pt_mutex *state_mutex;
+    pt_recursive_mutex *state_mutex;
 
     if (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr)
     {
@@ -1959,17 +2027,15 @@ int ft_task_scheduler::enable_thread_safety()
         this->operation_error_push(FT_ERR_SUCCESSS);
         return (0);
     }
-    state_mutex = new (std::nothrow) pt_mutex();
+    state_mutex = new (std::nothrow) pt_recursive_mutex();
     if (state_mutex == ft_nullptr)
     {
         this->operation_error_push(FT_ERR_NO_MEMORY);
         return (-1);
     }
-    if (state_mutex->operation_error_last_error() != FT_ERR_SUCCESSS)
+    int mutex_error = pt_recursive_mutex_pop_error(state_mutex);
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        int mutex_error;
-
-        mutex_error = state_mutex->operation_error_last_error();
         delete state_mutex;
         this->operation_error_push(mutex_error);
         return (-1);
@@ -2033,12 +2099,7 @@ void ft_task_scheduler::unlock(bool lock_acquired) const
 {
     ft_errno = FT_ERR_SUCCESSS;
     this->unlock_internal(lock_acquired);
-    if (this->_state_mutex != ft_nullptr && this->_state_mutex->operation_error_last_error() != FT_ERR_SUCCESSS)
-    {
-        const_cast<ft_task_scheduler *>(this)->operation_error_push(this->_state_mutex->operation_error_last_error());
-        return ;
-    }
-    const_cast<ft_task_scheduler *>(this)->operation_error_push(FT_ERR_SUCCESSS);
+    const_cast<ft_task_scheduler *>(this)->operation_error_push(ft_errno);
     ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
@@ -2052,21 +2113,13 @@ int ft_task_scheduler::lock_internal(bool *lock_acquired) const
         ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
-    this->_state_mutex->lock(THREAD_ID);
-    if (this->_state_mutex->operation_error_last_error() != FT_ERR_SUCCESSS)
-    {
-        if (this->_state_mutex->operation_error_last_error() == FT_ERR_MUTEX_ALREADY_LOCKED)
-        {
-            bool state_lock_acquired;
+    int state_lock_result;
 
-            state_lock_acquired = false;
-            ft_errno = FT_ERR_SUCCESSS;
-            if (this->_state_mutex->lock_state(&state_lock_acquired) == 0)
-                this->_state_mutex->unlock_state(state_lock_acquired);
-            ft_errno = FT_ERR_SUCCESSS;
-            return (0);
-        }
-        ft_errno = this->_state_mutex->operation_error_last_error();
+    state_lock_result = this->_state_mutex->lock(THREAD_ID);
+    int state_error = pt_recursive_mutex_capture_error(this->_state_mutex, state_lock_result);
+    if (state_error != FT_ERR_SUCCESSS)
+    {
+        ft_errno = state_error;
         return (-1);
     }
     if (lock_acquired != ft_nullptr)
@@ -2082,13 +2135,10 @@ void ft_task_scheduler::unlock_internal(bool lock_acquired) const
         ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
-    this->_state_mutex->unlock(THREAD_ID);
-    if (this->_state_mutex->operation_error_last_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = this->_state_mutex->operation_error_last_error();
-        return ;
-    }
-    ft_errno = FT_ERR_SUCCESSS;
+    int state_unlock_result;
+
+    state_unlock_result = this->_state_mutex->unlock(THREAD_ID);
+    ft_errno = pt_recursive_mutex_capture_error(this->_state_mutex, state_unlock_result);
     return ;
 }
 

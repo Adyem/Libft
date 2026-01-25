@@ -6,7 +6,7 @@
 static thread_local bool g_registry_mutex_owned = false;
 thread_local ft_operation_error_stack pt_lock_tracking::_operation_errors = {{}, {}, 0};
 
-void pt_lock_tracking::record_error(ft_operation_error_stack &error_stack, int error_code,
+void pt_lock_tracking::record_error(ft_operation_error_stack *error_stack, int error_code,
         bool push_global)
 {
     unsigned long long operation_id;
@@ -21,7 +21,7 @@ void pt_lock_tracking::record_error(ft_operation_error_stack &error_stack, int e
 
 void pt_lock_tracking::set_error(int error_code)
 {
-    pt_lock_tracking::record_error(pt_lock_tracking::_operation_errors, error_code, true);
+    pt_lock_tracking::record_error(&pt_lock_tracking::_operation_errors, error_code, true);
     return ;
 }
 
@@ -272,12 +272,15 @@ bool pt_lock_tracking::vector_contains_thread(const pt_thread_vector &thread_ide
 bool pt_lock_tracking::detect_cycle(const s_pt_thread_lock_info *origin, pthread_mutex_t *requested_mutex, pt_mutex_vector *visited_mutexes, pt_thread_vector *visited_threads)
 {
     std::vector<s_pt_thread_lock_info, pt_system_allocator<s_pt_thread_lock_info> > *thread_infos;
+    int error_code;
+
     if (pt_lock_tracking::vector_contains_mutex(*visited_mutexes, requested_mutex))
         return (false);
     visited_mutexes->push_back(requested_mutex);
     ft_size_t index;
 
-    thread_infos = pt_lock_tracking::get_thread_infos();
+    error_code = FT_ERR_SUCCESSS;
+    thread_infos = pt_lock_tracking::get_thread_infos(&error_code);
     if (thread_infos == ft_nullptr)
         return (false);
     index = 0;
