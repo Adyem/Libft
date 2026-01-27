@@ -34,9 +34,6 @@ static int pt_recursive_mutex_capture_error(const pt_recursive_mutex *mutex,
     return (operation_result);
 }
 
-/*
-** ft_scheduled_task_state helpers
-*/
 
 void ft_scheduled_task_state::record_operation_error(int error_code) const noexcept
 {
@@ -324,9 +321,6 @@ void ft_scheduled_task_state::teardown_thread_safety()
     return ;
 }
 
-/*
-** ft_scheduled_task_handle helpers
-*/
 
 void ft_scheduled_task_handle::record_operation_error(int error_code) const noexcept
 {
@@ -769,9 +763,6 @@ void ft_scheduled_task_handle::teardown_thread_safety()
     return ;
 }
 
-/*
-** ft_task_scheduler helpers
-*/
 
 void ft_task_scheduler::record_operation_error(int error_code) const noexcept
 {

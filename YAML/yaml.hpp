@@ -21,8 +21,8 @@ class yaml_value
     private:
         mutable int _error_code;
         void set_error(int error_code) const noexcept;
-        static thread_local ft_operation_error_stack _operation_errors;
-        static void record_operation_error_unlocked(int error_code) noexcept;
+        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
+        void record_operation_error_unlocked(int error_code) const noexcept;
 
         yaml_type _type;
         ft_string _scalar;

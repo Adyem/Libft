@@ -1,6 +1,7 @@
 #include "encryption_aead.hpp"
 #include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
+#include "../PThread/lock_error_helpers.hpp"
 
 static const EVP_CIPHER *encryption_aead_select_cipher(size_t key_length)
 {
@@ -59,10 +60,14 @@ void    encryption_aead_context::set_error(int error_code) const
 int encryption_aead_context::lock_self(ft_unique_lock<pt_mutex> &guard) const
 {
     guard = ft_unique_lock<pt_mutex>(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(guard.get_error());
-        return (guard.get_error());
+        int lock_error = ft_unique_lock_pop_last_error(guard);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            this->set_error_unlocked(lock_error);
+            return (lock_error);
+        }
     }
     return (FT_ERR_SUCCESSS);
 }

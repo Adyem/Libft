@@ -4,11 +4,13 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread.hpp"
+#include <new>
+#include "../PThread/lock_error_helpers.hpp"
 
 int cnfg_entry_prepare_thread_safety(cnfg_entry *entry)
 {
     pt_mutex *mutex_pointer;
-    void     *memory;
+    pt_mutex *mutex_pointer;
 
     if (!entry)
     {
@@ -19,22 +21,21 @@ int cnfg_entry_prepare_thread_safety(cnfg_entry *entry)
     {
         return (0);
     }
-    memory = cma_malloc(sizeof(pt_mutex));
-    if (!memory)
+    mutex_pointer = new (std::nothrow) pt_mutex();
+    if (mutex_pointer == ft_nullptr)
     {
         ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (-1);
     }
-    mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
     {
-        int mutex_error;
+        int mutex_error = ft_mutex_pop_last_error(mutex_pointer);
 
-        mutex_error = mutex_pointer->get_error();
-        mutex_pointer->~pt_mutex();
-        cma_free(memory);
-        ft_global_error_stack_push(mutex_error);
-        return (-1);
+        if (mutex_error != FT_ERR_SUCCESSS)
+        {
+            delete mutex_pointer;
+            ft_global_error_stack_push(mutex_error);
+            return (-1);
+        }
     }
     entry->mutex = mutex_pointer;
     entry->thread_safe_enabled = true;
@@ -69,10 +70,14 @@ int cnfg_entry_lock(cnfg_entry *entry, bool *lock_acquired)
         return (0);
     }
     entry->mutex->lock(THREAD_ID);
-    if (entry->mutex->get_error() != FT_ERR_SUCCESSS)
     {
-        ft_global_error_stack_push(entry->mutex->get_error());
-        return (-1);
+        int lock_error = ft_mutex_pop_last_error(entry->mutex);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(lock_error);
+            return (-1);
+        }
     }
     if (lock_acquired)
         *lock_acquired = true;
@@ -87,10 +92,14 @@ void cnfg_entry_unlock(cnfg_entry *entry, bool lock_acquired)
         return ;
     }
     entry->mutex->unlock(THREAD_ID);
-    if (entry->mutex->get_error() != FT_ERR_SUCCESSS)
     {
-        ft_global_error_stack_push(entry->mutex->get_error());
-        return ;
+        int unlock_error = ft_mutex_pop_last_error(entry->mutex);
+
+        if (unlock_error != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(unlock_error);
+            return ;
+        }
     }
     return ;
 }

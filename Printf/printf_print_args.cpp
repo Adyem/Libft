@@ -11,6 +11,16 @@
 #include <stddef.h>
 #include <cstdio>
 
+int pf_string_pop_last_error(const ft_string &string_value)
+{
+    unsigned long long operation_id;
+
+    operation_id = string_value.last_operation_id();
+    if (operation_id == 0)
+        return (FT_ERR_SUCCESSS);
+    return (string_value.pop_operation_error(operation_id));
+}
+
 static const char g_decimal_pairs[200] =
 {
     '0', '0', '0', '1', '0', '2', '0', '3', '0', '4', '0', '5', '0', '6', '0', '7', '0', '8', '0', '9',
@@ -376,16 +386,24 @@ static int format_double_output(char specifier, int precision, double number, ft
     if (specifier == character) \
     { \
         int required_length = std::snprintf(ft_nullptr, 0, literal, precision, number); \
+        char *output_buffer = ft_nullptr; \
         if (required_length < 0) \
             return (-1); \
         output.clear(); \
-        output.resize_length(static_cast<size_t>(required_length)); \
-        if (output.get_error() != FT_ERR_SUCCESSS) \
+        if (pf_string_pop_last_error(output) != FT_ERR_SUCCESSS) \
             return (-1); \
-        int written_length = std::snprintf(output.print(), static_cast<size_t>(required_length) + 1, literal, precision, number); \
+        output.resize_length(static_cast<size_t>(required_length)); \
+        if (pf_string_pop_last_error(output) != FT_ERR_SUCCESSS) \
+            return (-1); \
+        output_buffer = output.print(); \
+        if (pf_string_pop_last_error(output) != FT_ERR_SUCCESSS || output_buffer == ft_nullptr) \
+            return (-1); \
+        int written_length = std::snprintf(output_buffer, static_cast<size_t>(required_length) + 1, literal, precision, number); \
         if (written_length < 0) \
             return (-1); \
         output.resize_length(static_cast<size_t>(written_length)); \
+        if (pf_string_pop_last_error(output) != FT_ERR_SUCCESSS) \
+            return (-1); \
         return (0); \
     }
 
@@ -550,18 +568,23 @@ void pf_write_ft_string_fd(const ft_string &output, int fd, size_t *count)
 
     if (count_has_error(count))
         return ;
-    if (output.get_error() != FT_ERR_SUCCESSS)
+    if (pf_string_pop_last_error(output) != FT_ERR_SUCCESSS)
     {
         mark_count_error(count);
         return ;
     }
     buffer = output.c_str();
-    if (buffer == ft_nullptr)
+    if (pf_string_pop_last_error(output) != FT_ERR_SUCCESSS || buffer == ft_nullptr)
     {
         mark_count_error(count);
         return ;
     }
     length = output.size();
+    if (pf_string_pop_last_error(output) != FT_ERR_SUCCESSS)
+    {
+        mark_count_error(count);
+        return ;
+    }
     if (length == 0)
         return ;
     write_buffer_fd(buffer, length, fd, count);

@@ -4,6 +4,7 @@
 #include <immintrin.h>
 #include "../Errno/errno.hpp"
 #include "../PThread/unique_lock.hpp"
+#include "../PThread/lock_error_helpers.hpp"
 
 static void ft_random_store_int_block(int *output_values, const int *generated_values) noexcept
 {
@@ -68,7 +69,7 @@ int ft_random_int_vector(int minimum_value, int maximum_value, int *output_value
     ft_init_random_engine();
     std::uniform_int_distribution<int> distribution(minimum_value, maximum_value);
     ft_unique_lock<pt_mutex> guard(g_random_engine_mutex);
-    int error_code = guard.get_error();
+    int error_code = ft_unique_lock_pop_last_error(guard);
     if (error_code != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(error_code);
@@ -115,7 +116,7 @@ int ft_random_float_vector(float *output_values, size_t output_count)
     ft_init_random_engine();
     std::uniform_real_distribution<float> distribution(0.0f, 1.0f);
     ft_unique_lock<pt_mutex> guard(g_random_engine_mutex);
-    int error_code = guard.get_error();
+    int error_code = ft_unique_lock_pop_last_error(guard);
     if (error_code != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(error_code);

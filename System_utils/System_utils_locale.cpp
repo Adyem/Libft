@@ -152,10 +152,17 @@ int su_locale_casefold(const char *input, const char *locale_name, ft_string &ou
         index++;
     }
     output.assign(transformed_string.c_str(), transformed_string.size());
-    if (output.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_global_error_stack_push(output.get_error());
-        return (-1);
+        unsigned long long operation_id = output.last_operation_id();
+        int output_error = FT_ERR_SUCCESSS;
+
+        if (operation_id != 0)
+            output_error = output.pop_operation_error(operation_id);
+        if (output_error != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(output_error);
+            return (-1);
+        }
     }
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);

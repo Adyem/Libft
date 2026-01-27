@@ -5,6 +5,7 @@
 #include "../JSon/json.hpp"
 #include "../PThread/unique_lock.hpp"
 #include "../PThread/mutex.hpp"
+#include "../PThread/lock_error_helpers.hpp"
 #include <cstdio>
 #include <new>
 
@@ -13,9 +14,7 @@ static int cnfg_config_lock_if_enabled(cnfg_config *config, ft_unique_lock<pt_mu
     if (!config || !config->thread_safe_enabled || !config->mutex)
         return (FT_ERR_SUCCESSS);
     mutex_guard = ft_unique_lock<pt_mutex>(*config->mutex);
-    if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
-        return (mutex_guard.get_error());
-    return (FT_ERR_SUCCESSS);
+    return (ft_unique_lock_pop_last_error(mutex_guard));
 }
 
 static void cnfg_config_unlock_guard(ft_unique_lock<pt_mutex> &mutex_guard)
@@ -48,7 +47,7 @@ cnfg_config *cnfg_config_create()
 int cnfg_config_prepare_thread_safety(cnfg_config *config)
 {
     pt_mutex *mutex_pointer;
-    void     *memory;
+    pt_mutex *mutex_pointer;
 
     if (!config)
     {
@@ -60,22 +59,21 @@ int cnfg_config_prepare_thread_safety(cnfg_config *config)
         ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
-    memory = cma_malloc(sizeof(pt_mutex));
-    if (!memory)
+    mutex_pointer = new (std::nothrow) pt_mutex();
+    if (mutex_pointer == ft_nullptr)
     {
         ft_errno = FT_ERR_NO_MEMORY;
         return (-1);
     }
-    mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
     {
-        int mutex_error;
+        int mutex_error = ft_mutex_pop_last_error(mutex_pointer);
 
-        mutex_error = mutex_pointer->get_error();
-        mutex_pointer->~pt_mutex();
-        cma_free(memory);
-        ft_errno = mutex_error;
-        return (-1);
+        if (mutex_error != FT_ERR_SUCCESSS)
+        {
+            delete mutex_pointer;
+            ft_errno = mutex_error;
+            return (-1);
+        }
     }
     config->mutex = mutex_pointer;
     config->thread_safe_enabled = true;
@@ -89,8 +87,7 @@ void cnfg_config_teardown_thread_safety(cnfg_config *config)
         return ;
     if (config->mutex)
     {
-        config->mutex->~pt_mutex();
-        cma_free(config->mutex);
+        delete config->mutex;
         config->mutex = ft_nullptr;
     }
     config->thread_safe_enabled = false;
@@ -148,8 +145,10 @@ void cnfg_free(cnfg_config *config)
     if (already_owned)
     {
         config->mutex->unlock(THREAD_ID);
-        if (config->mutex->get_error() != FT_ERR_SUCCESSS)
-            ft_errno = config->mutex->get_error();
+        int unlock_error = ft_mutex_pop_last_error(config->mutex);
+
+        if (unlock_error != FT_ERR_SUCCESSS)
+            ft_errno = unlock_error;
         else
             ft_errno = FT_ERR_SUCCESSS;
     }
@@ -537,4 +536,3 @@ cnfg_config *config_load_file(const char *filename)
         ft_errno = FT_ERR_SUCCESSS;
     return (config);
 }
-

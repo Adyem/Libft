@@ -1,192 +1,199 @@
 #include "class_ofstream.hpp"
-#include "class_nullptr.hpp"
 #include "../Template/move.hpp"
 #include <fcntl.h>
 
-ft_ofstream::ft_ofstream() noexcept
-    : _file(), _error_code(FT_ERR_SUCCESSS), _mutex()
+static int ft_ofstream_capture_guard_error() noexcept
 {
+    int error_value;
+
+    error_value = ft_global_error_stack_last_error();
+    ft_global_error_stack_pop_newest();
+    if (error_value != FT_ERR_SUCCESSS)
+        ft_global_error_stack_push(error_value);
+    return (error_value);
+}
+
+ft_ofstream::ft_ofstream() noexcept
+    : _file(), _mutex(), _operation_errors()
+{
+    this->record_operation_error(FT_ERR_SUCCESSS);
     return ;
 }
 
 ft_ofstream::~ft_ofstream() noexcept
 {
+    this->record_operation_error(FT_ERR_SUCCESSS);
     return ;
 }
 
-void ft_ofstream::set_error_unlocked(int error_code) const noexcept
+int ft_ofstream::lock_self(ft_unique_lock<pt_recursive_mutex> &guard) const noexcept
 {
-    ft_errno = error_code;
-    this->_error_code = error_code;
-    return ;
-}
+    ft_unique_lock<pt_recursive_mutex> local_guard(this->_mutex);
 
-void ft_ofstream::set_error(int error_code) const noexcept
-{
-    this->set_error_unlocked(error_code);
-    return ;
-}
-
-int ft_ofstream::lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept
-{
-    ft_unique_lock<pt_mutex> local_guard(this->_mutex);
-
-    if (local_guard.get_error() != FT_ERR_SUCCESSS)
+    int guard_error = ft_ofstream_capture_guard_error();
+    if (guard_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = local_guard.get_error();
-        guard = ft_unique_lock<pt_mutex>();
-        return (local_guard.get_error());
+        guard = ft_unique_lock<pt_recursive_mutex>();
+        return (guard_error);
     }
     guard = ft_move(local_guard);
-    ft_errno = FT_ERR_SUCCESSS;
     return (FT_ERR_SUCCESSS);
 }
 
-void ft_ofstream::finalize_lock(ft_unique_lock<pt_mutex> &guard) noexcept
+int ft_ofstream::finalize_lock(ft_unique_lock<pt_recursive_mutex> &guard) noexcept
 {
-    int operation_errno;
-
-    operation_errno = ft_errno;
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-        return ;
-    }
-    if (operation_errno != FT_ERR_SUCCESSS)
-    {
-        ft_errno = operation_errno;
-        return ;
-    }
-    ft_errno = FT_ERR_SUCCESSS;
-    return ;
+    return (ft_ofstream_capture_guard_error());
 }
 
 int ft_ofstream::open(const char *filename) noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
+    ft_unique_lock<pt_recursive_mutex> guard;
     int lock_error;
-    int open_result;
+    int guard_error;
 
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(lock_error);
-        ft_ofstream::finalize_lock(guard);
+        guard_error = ft_ofstream::finalize_lock(guard);
+        int report_error;
+        if (guard_error != FT_ERR_SUCCESSS)
+            report_error = guard_error;
+        else
+            report_error = lock_error;
+        this->record_operation_error(report_error);
         return (1);
     }
     if (filename == ft_nullptr)
     {
-        this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        ft_ofstream::finalize_lock(guard);
+        guard_error = ft_ofstream::finalize_lock(guard);
+        int report_error;
+        if (guard_error != FT_ERR_SUCCESSS)
+            report_error = guard_error;
+        else
+            report_error = FT_ERR_INVALID_ARGUMENT;
+        this->record_operation_error(report_error);
         return (1);
     }
-    open_result = this->_file.open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    if (open_result != 0)
+    if (this->_file.open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644) != 0)
     {
-        this->set_error_unlocked(this->_file.get_error());
-        ft_ofstream::finalize_lock(guard);
+        int file_error = this->_file.get_error();
+        guard_error = ft_ofstream::finalize_lock(guard);
+        int report_error;
+        if (guard_error != FT_ERR_SUCCESSS)
+            report_error = guard_error;
+        else
+            report_error = file_error;
+        this->record_operation_error(report_error);
         return (1);
     }
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
-    ft_ofstream::finalize_lock(guard);
+    guard_error = ft_ofstream::finalize_lock(guard);
+    if (guard_error != FT_ERR_SUCCESSS)
+    {
+        this->record_operation_error(guard_error);
+        return (1);
+    }
+    this->record_operation_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
 ssize_t ft_ofstream::write(const char *string) noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
+    ft_unique_lock<pt_recursive_mutex> guard;
     int lock_error;
+    int guard_error;
     ssize_t result;
 
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(lock_error);
-        ft_ofstream::finalize_lock(guard);
+        guard_error = ft_ofstream::finalize_lock(guard);
+        int report_error;
+        if (guard_error != FT_ERR_SUCCESSS)
+            report_error = guard_error;
+        else
+            report_error = lock_error;
+        this->record_operation_error(report_error);
         return (-1);
     }
     if (string == ft_nullptr)
     {
-        this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        ft_ofstream::finalize_lock(guard);
+        guard_error = ft_ofstream::finalize_lock(guard);
+        int report_error;
+        if (guard_error != FT_ERR_SUCCESSS)
+            report_error = guard_error;
+        else
+            report_error = FT_ERR_INVALID_ARGUMENT;
+        this->record_operation_error(report_error);
         return (-1);
     }
     result = this->_file.write(string);
     if (result < 0)
     {
-        this->set_error_unlocked(this->_file.get_error());
-        ft_ofstream::finalize_lock(guard);
+        int file_error = this->_file.get_error();
+        guard_error = ft_ofstream::finalize_lock(guard);
+        int report_error;
+        if (guard_error != FT_ERR_SUCCESSS)
+            report_error = guard_error;
+        else
+            report_error = file_error;
+        this->record_operation_error(report_error);
         return (-1);
     }
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
-    ft_ofstream::finalize_lock(guard);
+    guard_error = ft_ofstream::finalize_lock(guard);
+    if (guard_error != FT_ERR_SUCCESSS)
+    {
+        this->record_operation_error(guard_error);
+        return (-1);
+    }
+    this->record_operation_error(FT_ERR_SUCCESSS);
     return (result);
 }
 
 void ft_ofstream::close() noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
+    ft_unique_lock<pt_recursive_mutex> guard;
     int lock_error;
-    int previous_fd;
-    int current_fd;
-    int file_error;
+    int guard_error;
 
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(lock_error);
-        ft_ofstream::finalize_lock(guard);
+        guard_error = ft_ofstream::finalize_lock(guard);
+        int report_error;
+        if (guard_error != FT_ERR_SUCCESSS)
+            report_error = guard_error;
+        else
+            report_error = lock_error;
+        this->record_operation_error(report_error);
         return ;
     }
-    previous_fd = this->_file.get_fd();
+    int previous_fd = this->_file.get_fd();
     this->_file.close();
-    current_fd = this->_file.get_fd();
-    file_error = this->_file.get_error();
+    int current_fd = this->_file.get_fd();
+    int file_error = this->_file.get_error();
+    guard_error = ft_ofstream::finalize_lock(guard);
+    if (guard_error != FT_ERR_SUCCESSS)
+    {
+        this->record_operation_error(guard_error);
+        return ;
+    }
     if (previous_fd >= 0 && current_fd == previous_fd && file_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(file_error);
-        ft_ofstream::finalize_lock(guard);
+        this->record_operation_error(file_error);
         return ;
     }
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
-    ft_ofstream::finalize_lock(guard);
+    this->record_operation_error(FT_ERR_SUCCESSS);
     return ;
 }
 
-int ft_ofstream::get_error() const noexcept
+void ft_ofstream::record_operation_error(int error_code) const noexcept
 {
-    int lock_error;
-    int error_value;
+    unsigned long long operation_id;
 
-    ft_unique_lock<pt_mutex> guard;
-    lock_error = this->lock_self(guard);
-    if (lock_error != FT_ERR_SUCCESSS)
-    {
-        this->set_error(lock_error);
-        ft_ofstream::finalize_lock(guard);
-        return (lock_error);
-    }
-    error_value = this->_error_code;
-    ft_ofstream::finalize_lock(guard);
-    return (error_value);
-}
-
-const char *ft_ofstream::get_error_str() const noexcept
-{
-    int lock_error;
-    const char *error_string;
-
-    ft_unique_lock<pt_mutex> guard;
-    lock_error = this->lock_self(guard);
-    if (lock_error != FT_ERR_SUCCESSS)
-    {
-        this->set_error(lock_error);
-        ft_ofstream::finalize_lock(guard);
-        return (ft_strerror(lock_error));
-    }
-    error_string = ft_strerror(this->_error_code);
-    ft_ofstream::finalize_lock(guard);
-    return (error_string);
+    operation_id = ft_errno_next_operation_id();
+    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
+    ft_operation_error_stack_push(&this->_operation_errors, error_code, operation_id);
+    return ;
 }

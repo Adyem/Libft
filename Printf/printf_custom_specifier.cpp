@@ -80,16 +80,20 @@ int pf_try_format_custom_specifier(char specifier, va_list *args, ft_string &out
     if (handler == ft_nullptr)
         return (FT_ERR_SUCCESSS);
     output.clear();
+    int string_error = pf_string_pop_last_error(output);
+    if (string_error != FT_ERR_SUCCESSS)
+        return (string_error);
     *handled = true;
     if (handler(args, output, context) != 0)
     {
-        error_code = output.get_error();
+        string_error = pf_string_pop_last_error(output);
+        error_code = string_error;
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_INTERNAL;
         return (error_code);
     }
-    error_code = output.get_error();
-    if (error_code != FT_ERR_SUCCESSS)
-        return (error_code);
+    string_error = pf_string_pop_last_error(output);
+    if (string_error != FT_ERR_SUCCESSS)
+        return (string_error);
     return (FT_ERR_SUCCESSS);
 }

@@ -14,7 +14,7 @@ class ft_string
         std::size_t      _length;
         std::size_t      _capacity;
         mutable pt_recursive_mutex  _mutex;
-        static thread_local ft_operation_error_stack _operation_errors;
+        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
 
         class mutex_guard
         {
@@ -39,8 +39,8 @@ class ft_string
         };
 
         void    resize(size_t new_capacity) noexcept;
-        void    push_error_unlocked(int error_code) const noexcept;
-        void    push_error(int error_code) const noexcept;
+        unsigned long long    push_error_unlocked(int error_code) const noexcept;
+        unsigned long long    push_error(int error_code) const noexcept;
         int     lock_self(mutex_guard &guard) const noexcept;
         static int  lock_pair(const ft_string &first, const ft_string &second,
                 mutex_guard &first_guard,
@@ -56,9 +56,7 @@ class ft_string
         void    erase_unlocked(std::size_t index, std::size_t count) noexcept;
         void    resize_length_unlocked(size_t new_length) noexcept;
         void    move_unlocked(ft_string &other) noexcept;
-        void    set_system_error_unlocked(int error_code) const noexcept;
-        void    set_system_error(int error_code) const noexcept;
-        static void record_operation_error(int error_code) noexcept;
+        static void reset_error_owner(const ft_string *owner) noexcept;
 
     public:
         ft_string() noexcept;
@@ -95,16 +93,17 @@ class ft_string
         char*       print() noexcept;
         size_t      size() const noexcept;
         bool        empty() const noexcept;
-        int         get_error() const noexcept;
-        const char *get_error_str() const noexcept;
         static const char *last_operation_error_str() noexcept;
         static const char *operation_error_str_at(size_t index) noexcept;
-        void        reset_system_error() const noexcept;
         static int  last_operation_error() noexcept;
         static int  operation_error_at(size_t index) noexcept;
         static void pop_operation_errors() noexcept;
         static int  pop_oldest_operation_error() noexcept;
         static int  operation_error_index() noexcept;
+        ft_operation_error_stack *operation_error_stack_handle() const noexcept;
+        unsigned long long last_operation_id() const noexcept;
+        int pop_operation_error(unsigned long long operation_id) const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
         void        move(ft_string& other) noexcept;
         void        erase(std::size_t index, std::size_t count) noexcept;
         void        push_back(char character) noexcept;

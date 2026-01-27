@@ -2,6 +2,7 @@
 #include "rng_internal.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/unique_lock.hpp"
+#include "../PThread/lock_error_helpers.hpp"
 #include <random>
 
 float ft_random_chi_squared(float degrees_of_freedom)
@@ -18,7 +19,7 @@ float ft_random_chi_squared(float degrees_of_freedom)
     distribution = std::gamma_distribution<float>(degrees_of_freedom * 0.5f, 2.0f);
     {
         ft_unique_lock<pt_mutex> guard(g_random_engine_mutex);
-        int error_code = guard.get_error();
+        int error_code = ft_unique_lock_pop_last_error(guard);
 
         if (error_code != FT_ERR_SUCCESSS)
         {

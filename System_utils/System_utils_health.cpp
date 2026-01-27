@@ -18,8 +18,17 @@ static std::mutex                          g_su_health_checks_mutex;
 static int  su_health_copy_entry(const s_su_health_check_entry &source, s_su_health_check_entry &destination)
 {
     destination.name = source.name;
-    if (destination.name.get_error() != FT_ERR_SUCCESSS)
-        return (destination.name.get_error());
+    {
+        unsigned long long operation_id = destination.name.last_operation_id();
+
+        if (operation_id != 0)
+        {
+            int name_error = destination.name.pop_operation_error(operation_id);
+
+            if (name_error != FT_ERR_SUCCESSS)
+                return (name_error);
+        }
+    }
     destination.callback = source.callback;
     destination.context = source.context;
     return (FT_ERR_SUCCESSS);
@@ -42,9 +51,13 @@ static int  su_health_execute_entry(const s_su_health_check_entry &entry, t_su_h
     {
         int callback_result;
         int detail_error;
+        unsigned long long detail_id;
 
         callback_result = entry.callback(entry.context, detail);
-        detail_error = detail.get_error();
+        detail_error = FT_ERR_SUCCESSS;
+        detail_id = detail.last_operation_id();
+        if (detail_id != 0)
+            detail_error = detail.pop_operation_error(detail_id);
         if (detail_error != FT_ERR_SUCCESSS)
         {
             healthy = false;
@@ -59,15 +72,29 @@ static int  su_health_execute_entry(const s_su_health_check_entry &entry, t_su_h
     if (result)
     {
         result->name = entry.name;
-        if (result->name.get_error() != FT_ERR_SUCCESSS)
         {
-            return (result->name.get_error());
+            unsigned long long operation_id = result->name.last_operation_id();
+
+            if (operation_id != 0)
+            {
+                int name_error = result->name.pop_operation_error(operation_id);
+
+                if (name_error != FT_ERR_SUCCESSS)
+                    return (name_error);
+            }
         }
         result->healthy = healthy;
         result->detail = detail;
-        if (result->detail.get_error() != FT_ERR_SUCCESSS)
         {
-            return (result->detail.get_error());
+            unsigned long long operation_id = result->detail.last_operation_id();
+
+            if (operation_id != 0)
+            {
+                int detail_error = result->detail.pop_operation_error(operation_id);
+
+                if (detail_error != FT_ERR_SUCCESSS)
+                    return (detail_error);
+            }
         }
         result->error_code = error_code;
     }
@@ -116,11 +143,18 @@ int su_health_register_check(const char *name, t_su_health_check check, void *co
     stored_entry.callback = check;
     stored_entry.context = context;
     stored_entry.name = name;
-    if (stored_entry.name.get_error() != FT_ERR_SUCCESSS)
     {
-        error_code = stored_entry.name.get_error();
-        ft_global_error_stack_push(error_code);
-        return (-1);
+        unsigned long long operation_id = stored_entry.name.last_operation_id();
+        int name_error = FT_ERR_SUCCESSS;
+
+        if (operation_id != 0)
+            name_error = stored_entry.name.pop_operation_error(operation_id);
+        if (name_error != FT_ERR_SUCCESSS)
+        {
+            error_code = name_error;
+            ft_global_error_stack_push(error_code);
+            return (-1);
+        }
     }
     try
     {

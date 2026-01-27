@@ -2,6 +2,7 @@
 #include "rng_internal.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/unique_lock.hpp"
+#include "../PThread/lock_error_helpers.hpp"
 #include <random>
 
 float ft_random_beta(float alpha, float beta)
@@ -23,7 +24,7 @@ float ft_random_beta(float alpha, float beta)
     beta_distribution = std::gamma_distribution<float>(beta, 1.0f);
     {
         ft_unique_lock<pt_mutex> guard(g_random_engine_mutex);
-        int error_code = guard.get_error();
+        int error_code = ft_unique_lock_pop_last_error(guard);
 
         if (error_code != FT_ERR_SUCCESSS)
         {

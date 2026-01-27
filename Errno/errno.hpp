@@ -20,6 +20,7 @@ unsigned long long ft_global_error_stack_push_entry_with_id(int error_code, unsi
 void ft_global_error_stack_push(int error_code);
 int ft_global_error_stack_pop_last(void);
 int ft_global_error_stack_pop_newest(void);
+int ft_global_error_stack_pop_entry_with_id(unsigned long long op_id);
 void ft_global_error_stack_pop_all(void);
 int ft_global_error_stack_error_at(ft_size_t index);
 int ft_global_error_stack_last_error(void);
@@ -103,12 +104,11 @@ enum PTErrorCode
     FT_ERR_API_CIRCUIT_OPEN = 2007,
 };
 
-// Alignment with legacy naming for system error caches.
 #define FT_SYS_ERR_SUCCESS FT_ERR_SUCCESSS
 #define FT_SYS_ERR_NO_MEMORY FT_ERR_SYS_NO_MEMORY
 
 const char* ft_strerror(int error_code);
 void        ft_perror(const char *error_msg);
-void            ft_exit(const char *error_msg, int exit_code);
+void        ft_exit(const char *error_msg, int exit_code);
 
 #endif

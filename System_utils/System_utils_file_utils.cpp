@@ -23,8 +23,18 @@ static bool su_should_skip_directory_entry(const char *entry_name)
 static ft_string su_join_paths(const char *left_path, const char *right_path)
 {
     ft_string joined(left_path);
-    if (joined.get_error())
-        return (joined);
+    int operation_error = FT_ERR_SUCCESSS;
+    {
+        unsigned long long operation_id = joined.last_operation_id();
+
+        if (operation_id != 0)
+            operation_error = joined.pop_operation_error(operation_id);
+        if (operation_error != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(operation_error);
+            return (joined);
+        }
+    }
     char separator = cmp_path_separator();
     if (joined.size() != 0)
     {
@@ -32,8 +42,17 @@ static ft_string su_join_paths(const char *left_path, const char *right_path)
         if (joined_data[joined.size() - 1] != separator)
             joined.append(separator);
     }
-    if (joined.get_error())
-        return (joined);
+    {
+        unsigned long long operation_id = joined.last_operation_id();
+
+        if (operation_id != 0)
+            operation_error = joined.pop_operation_error(operation_id);
+        if (operation_error != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(operation_error);
+            return (joined);
+        }
+    }
     size_t index = 0;
     if (right_path != ft_nullptr)
     {
@@ -42,11 +61,21 @@ static ft_string su_join_paths(const char *left_path, const char *right_path)
         while (right_path[index] != '\0')
         {
             joined.append(right_path[index]);
-            if (joined.get_error())
-                return (joined);
+            {
+                unsigned long long operation_id = joined.last_operation_id();
+
+                if (operation_id != 0)
+                    operation_error = joined.pop_operation_error(operation_id);
+                if (operation_error != FT_ERR_SUCCESSS)
+                {
+                    ft_global_error_stack_push(operation_error);
+                    return (joined);
+                }
+            }
             index += 1;
         }
     }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (joined);
 }
 
@@ -235,18 +264,26 @@ static int su_copy_directory_contents(const char *source_path, const char *desti
         if (su_should_skip_directory_entry(directory_entry->d_name))
             continue;
         ft_string source_child = su_join_paths(source_path, directory_entry->d_name);
-        if (source_child.get_error())
         {
-            error_code = source_child.get_error();
-            result = -1;
-            break;
+            int path_error = ft_global_error_stack_pop_newest();
+
+            if (path_error != FT_ERR_SUCCESSS)
+            {
+                error_code = path_error;
+                result = -1;
+                break;
+            }
         }
         ft_string destination_child = su_join_paths(destination_path, directory_entry->d_name);
-        if (destination_child.get_error())
         {
-            error_code = destination_child.get_error();
-            result = -1;
-            break;
+            int path_error = ft_global_error_stack_pop_newest();
+
+            if (path_error != FT_ERR_SUCCESSS)
+            {
+                error_code = path_error;
+                result = -1;
+                break;
+            }
         }
         int child_is_directory = cmp_directory_exists(source_child.c_str(), &error_code);
         if (child_is_directory == 1)

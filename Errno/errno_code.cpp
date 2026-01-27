@@ -160,6 +160,27 @@ static ft_size_t ft_error_stack_find_by_id_internal(const ft_error_stack *error_
     return (0);
 }
 
+static int ft_error_stack_pop_entry_with_id_internal(ft_error_stack *error_stack,
+        unsigned long long op_id)
+{
+    if (error_stack->depth == 0)
+        return (FT_ERR_SUCCESSS);
+    ft_size_t location = ft_error_stack_find_by_id_internal(error_stack, op_id);
+
+    if (location == 0)
+        return (FT_ERR_SUCCESSS);
+    int error_code = error_stack->frames[location - 1].code;
+    ft_size_t index = location - 1;
+
+    while (index + 1 < error_stack->depth)
+    {
+        error_stack->frames[index] = error_stack->frames[index + 1];
+        index++;
+    }
+    error_stack->depth--;
+    return (error_code);
+}
+
 void ft_error_stack_push_entry_with_id(ft_error_stack *error_stack,
         int error_code, unsigned long long op_id)
 {
@@ -182,6 +203,16 @@ int ft_error_stack_pop_newest(ft_error_stack *error_stack)
 {
     ft_errno_mutex().lock();
     int error_code = ft_error_stack_pop_newest_internal(error_stack);
+
+    ft_errno_mutex().unlock();
+    return (error_code);
+}
+
+int ft_error_stack_pop_entry_with_id(ft_error_stack *error_stack,
+        unsigned long long op_id)
+{
+    ft_errno_mutex().lock();
+    int error_code = ft_error_stack_pop_entry_with_id_internal(error_stack, op_id);
 
     ft_errno_mutex().unlock();
     return (error_code);
@@ -363,6 +394,28 @@ static ft_size_t ft_operation_error_stack_find_by_id_internal(
     return (0);
 }
 
+static int ft_operation_error_stack_pop_by_id_internal(ft_operation_error_stack *error_stack,
+        unsigned long long op_id)
+{
+    if (error_stack->count == 0)
+        return (FT_ERR_SUCCESSS);
+    ft_size_t location = ft_operation_error_stack_find_by_id_internal(error_stack, op_id);
+
+    if (location == 0)
+        return (FT_ERR_SUCCESSS);
+    int error_code = error_stack->errors[location - 1];
+    ft_size_t index = location - 1;
+
+    while (index + 1 < error_stack->count)
+    {
+        error_stack->errors[index] = error_stack->errors[index + 1];
+        error_stack->op_ids[index] = error_stack->op_ids[index + 1];
+        index++;
+    }
+    error_stack->count--;
+    return (error_code);
+}
+
 
 void ft_operation_error_stack_push(ft_operation_error_stack *error_stack,
         int error_code, unsigned long long op_id)
@@ -386,6 +439,16 @@ int ft_operation_error_stack_pop_newest(ft_operation_error_stack *error_stack)
 {
     ft_errno_mutex().lock();
     int error_value = ft_operation_error_stack_pop_newest_internal(error_stack);
+
+    ft_errno_mutex().unlock();
+    return (error_value);
+}
+
+int ft_operation_error_stack_pop_by_id(ft_operation_error_stack *error_stack,
+        unsigned long long op_id)
+{
+    ft_errno_mutex().lock();
+    int error_value = ft_operation_error_stack_pop_by_id_internal(error_stack, op_id);
 
     ft_errno_mutex().unlock();
     return (error_value);
@@ -507,6 +570,11 @@ int ft_global_error_stack_pop_last(void)
 int ft_global_error_stack_pop_newest(void)
 {
     return (ft_error_stack_pop_newest(&ft_global_error_stack()));
+}
+
+int ft_global_error_stack_pop_entry_with_id(unsigned long long op_id)
+{
+    return (ft_error_stack_pop_entry_with_id(&ft_global_error_stack(), op_id));
 }
 
 void ft_global_error_stack_pop_all(void)

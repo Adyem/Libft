@@ -6,6 +6,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/unique_lock.hpp"
+#include "../PThread/lock_error_helpers.hpp"
 #include "rng.hpp"
 #include <climits>
 
@@ -86,12 +87,15 @@ template<typename ElementType>
 int ft_loot_entry<ElementType>::lock_entry(ft_unique_lock<pt_mutex> &guard) const noexcept
 {
     ft_unique_lock<pt_mutex> local_guard(this->_mutex);
-
-    if (local_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        guard = ft_unique_lock<pt_mutex>();
-        ft_errno = local_guard.get_error();
-        return (local_guard.get_error());
+        int lock_error = ft_unique_lock_pop_last_error(local_guard);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            guard = ft_unique_lock<pt_mutex>();
+            ft_errno = lock_error;
+            return (lock_error);
+        }
     }
     guard = ft_move(local_guard);
     ft_errno = FT_ERR_SUCCESSS;
@@ -377,12 +381,15 @@ template<typename ElementType>
 int ft_loot_table<ElementType>::lock_table(ft_unique_lock<pt_mutex> &guard) const noexcept
 {
     ft_unique_lock<pt_mutex> local_guard(this->_mutex);
-
-    if (local_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        guard = ft_unique_lock<pt_mutex>();
-        ft_errno = local_guard.get_error();
-        return (local_guard.get_error());
+        int lock_error = ft_unique_lock_pop_last_error(local_guard);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            guard = ft_unique_lock<pt_mutex>();
+            ft_errno = lock_error;
+            return (lock_error);
+        }
     }
     guard = ft_move(local_guard);
     ft_errno = FT_ERR_SUCCESSS;

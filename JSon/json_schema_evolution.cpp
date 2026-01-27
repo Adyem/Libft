@@ -6,6 +6,7 @@
 #include "../Template/move.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
+#include "../PThread/lock_error_helpers.hpp"
 
 struct json_schema_migration_step
 {
@@ -89,20 +90,24 @@ int json_register_schema_migration(const ft_string &schema_name,
     }
     pt_mutex &mutex = json_schema_registry_mutex();
     ft_unique_lock<pt_mutex> guard(mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
-        int lock_error = guard.get_error();
-        json_schema_unlock(guard);
-        ft_errno = lock_error;
-        return (lock_error);
+        int lock_error = ft_unique_lock_pop_last_error(guard);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            json_schema_unlock(guard);
+            ft_errno = lock_error;
+            return (lock_error);
+        }
     }
     ft_map<ft_string, ft_vector<json_schema_migration_step> > &registry = json_schema_registry();
     Pair<ft_string, ft_vector<json_schema_migration_step> > *entry = registry.find(schema_name);
-    int map_error = registry.get_error();
+    int map_error = registry.pop_newest_operation_error();
     if (map_error != FT_ERR_SUCCESSS)
     {
         json_schema_unlock(guard);
         ft_errno = map_error;
+        ft_global_error_stack_push(map_error);
         return (map_error);
     }
     json_schema_migration_step step;
@@ -110,13 +115,6 @@ int json_register_schema_migration(const ft_string &schema_name,
     step.from_version = from_version;
     step.to_version = to_version;
     step.callback = callback;
-    int callback_error = step.callback.get_error();
-    if (callback_error != FT_ERR_SUCCESSS)
-    {
-        json_schema_unlock(guard);
-        ft_errno = callback_error;
-        return (callback_error);
-    }
     if (!entry)
     {
         ft_vector<json_schema_migration_step> steps;
@@ -130,11 +128,12 @@ int json_register_schema_migration(const ft_string &schema_name,
             return (vector_error);
         }
         registry.insert(schema_name, ft_move(steps));
-        map_error = registry.get_error();
+        map_error = registry.pop_newest_operation_error();
         json_schema_unlock(guard);
         if (map_error != FT_ERR_SUCCESSS)
         {
             ft_errno = map_error;
+            ft_global_error_stack_push(map_error);
             return (map_error);
         }
         ft_errno = FT_ERR_SUCCESSS;
@@ -195,20 +194,24 @@ int json_apply_schema_migrations(json_document &document,
     {
         pt_mutex &mutex = json_schema_registry_mutex();
         ft_unique_lock<pt_mutex> guard(mutex);
-        if (guard.get_error() != FT_ERR_SUCCESSS)
         {
-            int lock_error = guard.get_error();
-            json_schema_unlock(guard);
-            ft_errno = lock_error;
-            return (lock_error);
+            int lock_error = ft_unique_lock_pop_last_error(guard);
+
+            if (lock_error != FT_ERR_SUCCESSS)
+            {
+                json_schema_unlock(guard);
+                ft_errno = lock_error;
+                return (lock_error);
+            }
         }
         ft_map<ft_string, ft_vector<json_schema_migration_step> > &registry = json_schema_registry();
         Pair<ft_string, ft_vector<json_schema_migration_step> > *entry = registry.find(schema_name);
-        int map_error = registry.get_error();
+        int map_error = registry.pop_newest_operation_error();
         if (map_error != FT_ERR_SUCCESSS)
         {
             json_schema_unlock(guard);
             ft_errno = map_error;
+            ft_global_error_stack_push(map_error);
             return (map_error);
         }
         if (!entry)
@@ -250,12 +253,6 @@ int json_apply_schema_migrations(json_document &document,
         }
         int next_version = selected_step.to_version;
         ft_function<int(json_document &)> callback = selected_step.callback;
-        int callback_error = callback.get_error();
-        if (callback_error != FT_ERR_SUCCESSS)
-        {
-            ft_errno = callback_error;
-            return (callback_error);
-        }
         json_schema_unlock(guard);
         if (!callback)
         {
@@ -286,20 +283,24 @@ int json_get_latest_schema_version(const ft_string &schema_name,
         return (ft_errno);
     pt_mutex &mutex = json_schema_registry_mutex();
     ft_unique_lock<pt_mutex> guard(mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
-        int lock_error = guard.get_error();
-        json_schema_unlock(guard);
-        ft_errno = lock_error;
-        return (lock_error);
+        int lock_error = ft_unique_lock_pop_last_error(guard);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            json_schema_unlock(guard);
+            ft_errno = lock_error;
+            return (lock_error);
+        }
     }
     ft_map<ft_string, ft_vector<json_schema_migration_step> > &registry = json_schema_registry();
     Pair<ft_string, ft_vector<json_schema_migration_step> > *entry = registry.find(schema_name);
-    int map_error = registry.get_error();
+    int map_error = registry.pop_newest_operation_error();
     if (map_error != FT_ERR_SUCCESSS)
     {
         json_schema_unlock(guard);
         ft_errno = map_error;
+        ft_global_error_stack_push(map_error);
         return (map_error);
     }
     if (!entry)

@@ -130,9 +130,11 @@ static int write_node(const yaml_value *value, ft_string &output, int indent) no
         {
             const ft_string &key = keys[key_index];
             const yaml_value *child = map_ref.at(key);
-            if (map_ref.get_error() != FT_ERR_SUCCESSS)
             {
-                return (map_ref.get_error());
+                int map_error = map_ref.last_operation_error();
+
+                if (map_error != FT_ERR_SUCCESSS)
+                    return (map_error);
             }
             if (child && child->get_type() == YAML_SCALAR)
             {

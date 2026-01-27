@@ -4,6 +4,19 @@
 #include "../Libft/libft.hpp"
 #include <new>
 
+static int yaml_dom_pop_string_error(const ft_string &string_value) noexcept
+{
+    unsigned long long operation_id;
+
+    operation_id = string_value.last_operation_id();
+    if (operation_id == 0)
+        return (FT_ERR_SUCCESSS);
+    int error_code = string_value.pop_operation_error(operation_id);
+    if (error_code != FT_ERR_SUCCESSS)
+        ft_global_error_stack_push_entry_with_id(error_code, operation_id);
+    return (error_code);
+}
+
 static void yaml_dom_delete_node(ft_dom_node *node) noexcept
 {
     if (!node)
@@ -63,10 +76,14 @@ static int yaml_dom_populate_node(const yaml_value *value, ft_dom_node *node) no
             ft_string index_name;
 
             index_name = ft_to_string(static_cast<long>(index));
-            if (index_name.get_error() != FT_ERR_SUCCESSS)
             {
-                yaml_dom_delete_node(child_node);
-                return (index_name.get_error());
+                int string_error = yaml_dom_pop_string_error(index_name);
+
+                if (string_error != FT_ERR_SUCCESSS)
+                {
+                    yaml_dom_delete_node(child_node);
+                    return (string_error);
+                }
             }
             if (child_node->set_name(index_name) != 0)
             {
@@ -122,8 +139,12 @@ static int yaml_dom_populate_node(const yaml_value *value, ft_dom_node *node) no
             yaml_value *child_value;
 
             child_value = map_reference.at(key);
-            if (map_reference.get_error() != FT_ERR_SUCCESSS)
-                return (map_reference.get_error());
+            {
+                int map_error = map_reference.last_operation_error();
+
+                if (map_error != FT_ERR_SUCCESSS)
+                    return (map_error);
+            }
             ft_dom_node *child_node;
 
             child_node = new(std::nothrow) ft_dom_node();

@@ -4,6 +4,7 @@
 #include <random>
 #include "../Errno/errno.hpp"
 #include "../PThread/unique_lock.hpp"
+#include "../PThread/lock_error_helpers.hpp"
 
 int ft_random_int(void)
 {
@@ -12,7 +13,7 @@ int ft_random_int(void)
     int random_value;
 
     ft_unique_lock<pt_mutex> guard(g_random_engine_mutex);
-    int error_code = guard.get_error();
+    int error_code = ft_unique_lock_pop_last_error(guard);
     if (error_code != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(error_code);

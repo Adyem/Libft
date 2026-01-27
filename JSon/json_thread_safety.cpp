@@ -3,6 +3,7 @@
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Template/move.hpp"
+#include "../PThread/lock_error_helpers.hpp"
 
 static pt_mutex g_json_group_list_mutex;
 
@@ -51,11 +52,15 @@ int json_group_list_lock(ft_unique_lock<pt_mutex> &guard)
     ft_unique_lock<pt_mutex> local_guard;
 
     local_guard = ft_unique_lock<pt_mutex>(g_json_group_list_mutex);
-    if (local_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = local_guard.get_error();
-        guard = ft_unique_lock<pt_mutex>();
-        return (local_guard.get_error());
+        int lock_error = ft_unique_lock_pop_last_error(local_guard);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            ft_errno = lock_error;
+            guard = ft_unique_lock<pt_mutex>();
+            return (lock_error);
+        }
     }
     ft_errno = FT_ERR_SUCCESSS;
     guard = ft_move(local_guard);
@@ -69,9 +74,11 @@ void json_group_list_finalize_lock(ft_unique_lock<pt_mutex> &guard)
     current_errno = ft_errno;
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    int guard_error = ft_unique_lock_pop_last_error(guard);
+
+    if (guard_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = guard.get_error();
+        ft_errno = guard_error;
         return ;
     }
     if (current_errno != FT_ERR_SUCCESSS)
@@ -141,11 +148,15 @@ int json_group_lock(json_group *group, ft_unique_lock<pt_mutex> &guard)
         return (FT_ERR_INVALID_ARGUMENT);
     }
     local_guard = ft_unique_lock<pt_mutex>(group->_mutex);
-    if (local_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = local_guard.get_error();
-        guard = ft_unique_lock<pt_mutex>();
-        return (local_guard.get_error());
+        int lock_error = ft_unique_lock_pop_last_error(local_guard);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            ft_errno = lock_error;
+            guard = ft_unique_lock<pt_mutex>();
+            return (lock_error);
+        }
     }
     ft_errno = FT_ERR_SUCCESSS;
     guard = ft_move(local_guard);
@@ -233,11 +244,15 @@ int json_item_lock(json_item *item, ft_unique_lock<pt_mutex> &guard)
         return (ft_errno);
     }
     local_guard = ft_unique_lock<pt_mutex>(item->_mutex);
-    if (local_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = local_guard.get_error();
-        guard = ft_unique_lock<pt_mutex>();
-        return (local_guard.get_error());
+        int lock_error = ft_unique_lock_pop_last_error(local_guard);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            ft_errno = lock_error;
+            guard = ft_unique_lock<pt_mutex>();
+            return (lock_error);
+        }
     }
     ft_errno = FT_ERR_SUCCESSS;
     guard = ft_move(local_guard);
@@ -314,7 +329,7 @@ int json_schema_field_lock(json_schema_field *field, ft_unique_lock<pt_mutex> &g
         return (enable_error);
     }
     local_guard = ft_unique_lock<pt_mutex>(field->_mutex);
-    mutex_error = local_guard.get_error();
+    mutex_error = ft_unique_lock_pop_last_error(local_guard);
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         guard = ft_unique_lock<pt_mutex>();
@@ -390,7 +405,7 @@ int json_schema_lock(json_schema *schema, ft_unique_lock<pt_mutex> &guard)
         return (enable_error);
     }
     local_guard = ft_unique_lock<pt_mutex>(schema->_mutex);
-    mutex_error = local_guard.get_error();
+    mutex_error = ft_unique_lock_pop_last_error(local_guard);
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         guard = ft_unique_lock<pt_mutex>();
@@ -476,11 +491,15 @@ int json_stream_reader_lock(json_stream_reader *reader, ft_unique_lock<pt_mutex>
         return (ft_errno);
     }
     local_guard = ft_unique_lock<pt_mutex>(reader->_mutex);
-    if (local_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = local_guard.get_error();
-        guard = ft_unique_lock<pt_mutex>();
-        return (local_guard.get_error());
+        int lock_error = ft_unique_lock_pop_last_error(local_guard);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            ft_errno = lock_error;
+            guard = ft_unique_lock<pt_mutex>();
+            return (lock_error);
+        }
     }
     ft_errno = FT_ERR_SUCCESSS;
     guard = ft_move(local_guard);
@@ -495,9 +514,11 @@ void json_stream_reader_finalize_lock(json_stream_reader *reader,
     current_errno = ft_errno;
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    int guard_error = ft_unique_lock_pop_last_error(guard);
+
+    if (guard_error != FT_ERR_SUCCESSS)
     {
-        json_stream_reader_set_error_unlocked(reader, guard.get_error());
+        json_stream_reader_set_error_unlocked(reader, guard_error);
         return ;
     }
     if (current_errno != FT_ERR_SUCCESSS)

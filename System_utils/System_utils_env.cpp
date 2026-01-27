@@ -41,9 +41,14 @@ static int su_environment_snapshot_contains(
         return (snapshot->entries.get_error());
     }
     target_length = name.size();
-    if (name.get_error() != FT_ERR_SUCCESSS)
     {
-        return (name.get_error());
+        int    string_error;
+
+        string_error = name.pop_operation_error(name.last_operation_id());
+        if (string_error != FT_ERR_SUCCESSS)
+        {
+            return (string_error);
+        }
     }
     index = 0;
     while (index < snapshot_count)
@@ -53,10 +58,6 @@ static int su_environment_snapshot_contains(
         const char      *equals_location;
         size_t          entry_length;
 
-        if (entry.get_error() != FT_ERR_SUCCESSS)
-        {
-            return (entry.get_error());
-        }
         entry_data = entry.c_str();
         equals_location = ft_strchr(entry_data, '=');
         if (equals_location != ft_nullptr)
@@ -83,6 +84,7 @@ static int su_environment_split_entry(
 {
     const char  *equals_location;
     size_t      name_length;
+    int         string_error;
 
     if (entry == ft_nullptr)
     {
@@ -92,23 +94,27 @@ static int su_environment_split_entry(
     if (equals_location == ft_nullptr)
     {
         name.assign(entry, ft_strlen_size_t(entry));
-        if (name.get_error() != FT_ERR_SUCCESSS)
-            return (name.get_error());
+        string_error = name.pop_operation_error(name.last_operation_id());
+        if (string_error != FT_ERR_SUCCESSS)
+            return (string_error);
         value.clear();
-        if (value.get_error() != FT_ERR_SUCCESSS)
-            return (value.get_error());
+        string_error = value.pop_operation_error(value.last_operation_id());
+        if (string_error != FT_ERR_SUCCESSS)
+            return (string_error);
         if (has_value != ft_nullptr)
             *has_value = 0;
         return (FT_ERR_SUCCESSS);
     }
     name_length = static_cast<size_t>(equals_location - entry);
     name.assign(entry, name_length);
-    if (name.get_error() != FT_ERR_SUCCESSS)
-        return (name.get_error());
+    string_error = name.pop_operation_error(name.last_operation_id());
+    if (string_error != FT_ERR_SUCCESSS)
+        return (string_error);
     value.assign(equals_location + 1,
         ft_strlen_size_t(equals_location + 1));
-    if (value.get_error() != FT_ERR_SUCCESSS)
-        return (value.get_error());
+    string_error = value.pop_operation_error(value.last_operation_id());
+    if (string_error != FT_ERR_SUCCESSS)
+        return (string_error);
     if (has_value != ft_nullptr)
         *has_value = 1;
     return (FT_ERR_SUCCESSS);
@@ -255,11 +261,16 @@ int su_environment_snapshot_capture(t_su_environment_snapshot *snapshot)
         {
             ft_string entry_copy(environment_entries[index]);
 
-            if (entry_copy.get_error() != FT_ERR_SUCCESSS)
             {
-                error_code = su_environment_unlock_with_error(entry_copy.get_error());
-                ft_global_error_stack_push(error_code);
-                return (-1);
+                int string_error = entry_copy.pop_operation_error(
+                    entry_copy.last_operation_id());
+
+                if (string_error != FT_ERR_SUCCESSS)
+                {
+                    error_code = su_environment_unlock_with_error(string_error);
+                    ft_global_error_stack_push(error_code);
+                    return (-1);
+                }
             }
             snapshot->entries.push_back(ft_move(entry_copy));
             if (snapshot->entries.get_error() != FT_ERR_SUCCESSS)
@@ -311,11 +322,16 @@ int su_environment_snapshot_restore(const t_su_environment_snapshot *snapshot)
         {
             ft_string entry_copy(environment_entries[index]);
 
-            if (entry_copy.get_error() != FT_ERR_SUCCESSS)
             {
-                error_code = su_environment_unlock_with_error(entry_copy.get_error());
-                ft_global_error_stack_push(error_code);
-                return (-1);
+                int string_error = entry_copy.pop_operation_error(
+                    entry_copy.last_operation_id());
+
+                if (string_error != FT_ERR_SUCCESSS)
+                {
+                    error_code = su_environment_unlock_with_error(string_error);
+                    ft_global_error_stack_push(error_code);
+                    return (-1);
+                }
             }
             current_environment.push_back(ft_move(entry_copy));
             if (current_environment.get_error() != FT_ERR_SUCCESSS)
@@ -342,22 +358,10 @@ int su_environment_snapshot_restore(const t_su_environment_snapshot *snapshot)
         ft_string value;
         int       is_present;
 
-        if (entry.get_error() != FT_ERR_SUCCESSS)
-        {
-            error_code = su_environment_unlock_with_error(entry.get_error());
-            ft_global_error_stack_push(error_code);
-            return (-1);
-        }
         error_code = su_environment_split_entry(entry.c_str(), name, value, ft_nullptr);
         if (error_code != FT_ERR_SUCCESSS)
         {
             error_code = su_environment_unlock_with_error(error_code);
-            ft_global_error_stack_push(error_code);
-            return (-1);
-        }
-        if (name.get_error() != FT_ERR_SUCCESSS)
-        {
-            error_code = su_environment_unlock_with_error(name.get_error());
             ft_global_error_stack_push(error_code);
             return (-1);
         }
@@ -398,22 +402,10 @@ int su_environment_snapshot_restore(const t_su_environment_snapshot *snapshot)
         ft_string        value;
         int              has_value;
 
-        if (entry.get_error() != FT_ERR_SUCCESSS)
-        {
-            error_code = su_environment_unlock_with_error(entry.get_error());
-            ft_global_error_stack_push(error_code);
-            return (-1);
-        }
         error_code = su_environment_split_entry(entry.c_str(), name, value, &has_value);
         if (error_code != FT_ERR_SUCCESSS)
         {
             error_code = su_environment_unlock_with_error(error_code);
-            ft_global_error_stack_push(error_code);
-            return (-1);
-        }
-        if (name.get_error() != FT_ERR_SUCCESSS)
-        {
-            error_code = su_environment_unlock_with_error(name.get_error());
             ft_global_error_stack_push(error_code);
             return (-1);
         }

@@ -54,6 +54,7 @@ This same error entry must be pushed to both the thread-local error stack and th
 to ensure that the same operation has the same ID across both stacks.
 
 When publishing or reading class error codes or error stacks, do not lock the class mutex; use the Errno mutex wrapper instead.
+When you need to inspect an error that originated from another class or module, pop the shared entry from the global stack immediately after reading it so the stack stays balanced, unless another layer still needs that entry. If the entry represents an actual failure, push it back so the caller and any later reader see the error, but do not re-push success entries. Do not poke into that class's local error getters—read the thread-local global error stack (e.g., via `ft_global_error_stack_last_error()`) because the same entry was already recorded there. This keeps cross-class error handling consistent and avoids touching another object's internal stack.
 
 Errors and successful completions are reported by pushing entries onto the appropriate error stack.
 A function that pushes an entry must leave it on the stack.

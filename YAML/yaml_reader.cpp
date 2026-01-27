@@ -4,6 +4,20 @@
 #include "../Errno/errno.hpp"
 #include <new>
 
+static int yaml_string_pop_error(const ft_string &string_value) noexcept
+{
+    unsigned long long operation_id;
+    int               error_code;
+
+    operation_id = string_value.last_operation_id();
+    if (operation_id == 0)
+        return (FT_ERR_SUCCESSS);
+    error_code = string_value.pop_operation_error(operation_id);
+    if (error_code != FT_ERR_SUCCESSS)
+        ft_global_error_stack_push_entry_with_id(error_code, operation_id);
+    return (error_code);
+}
+
 static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index, int indent,
     int *error_code_out) noexcept
 {
@@ -46,10 +60,15 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
             error_code = last_error;
             goto error;
         }
-        if (line.get_error() != FT_ERR_SUCCESSS)
         {
-            error_code = line.get_error();
-            goto error;
+            int string_error = yaml_string_pop_error(line);
+
+            if (string_error != FT_ERR_SUCCESSS)
+            {
+                error_code = string_error;
+                ft_global_error_stack_push(string_error);
+                goto error;
+            }
         }
         yaml_trim(line);
         last_error = ft_global_error_stack_pop_newest();
@@ -58,10 +77,14 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
             error_code = last_error;
             goto error;
         }
-        if (line.get_error() != FT_ERR_SUCCESSS)
         {
-            error_code = line.get_error();
-            goto error;
+            int string_error = yaml_string_pop_error(line);
+
+            if (string_error != FT_ERR_SUCCESSS)
+            {
+                error_code = string_error;
+                goto error;
+            }
         }
         const char *line_data = line.c_str();
         if (line.size() >= 1 && line_data[0] == '-')
@@ -91,10 +114,14 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                     error_code = last_error;
                     goto list_cleanup;
                 }
-                if (item_line.get_error() != FT_ERR_SUCCESSS)
                 {
-                    error_code = item_line.get_error();
-                    goto list_cleanup;
+                    int string_error = yaml_string_pop_error(item_line);
+
+                    if (string_error != FT_ERR_SUCCESSS)
+                    {
+                        error_code = string_error;
+                        goto list_cleanup;
+                    }
                 }
                 yaml_trim(item_line);
                 last_error = ft_global_error_stack_pop_newest();
@@ -103,10 +130,14 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                     error_code = last_error;
                     goto list_cleanup;
                 }
-                if (item_line.get_error() != FT_ERR_SUCCESSS)
                 {
-                    error_code = item_line.get_error();
-                    goto list_cleanup;
+                    int string_error = yaml_string_pop_error(item_line);
+
+                    if (string_error != FT_ERR_SUCCESSS)
+                    {
+                        error_code = string_error;
+                        goto list_cleanup;
+                    }
                 }
                 const char *item_data = item_line.c_str();
                 if (item_line.size() == 0 || item_data[0] != '-')
@@ -118,10 +149,14 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                     error_code = last_error;
                     goto list_cleanup;
                 }
-                if (item_line.get_error() != FT_ERR_SUCCESSS)
                 {
-                    error_code = item_line.get_error();
-                    goto list_cleanup;
+                    int string_error = yaml_string_pop_error(item_line);
+
+                    if (string_error != FT_ERR_SUCCESSS)
+                    {
+                        error_code = string_error;
+                        goto list_cleanup;
+                    }
                 }
                 yaml_trim(item_line);
                 last_error = ft_global_error_stack_pop_newest();
@@ -130,10 +165,14 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                     error_code = last_error;
                     goto list_cleanup;
                 }
-                if (item_line.get_error() != FT_ERR_SUCCESSS)
                 {
-                    error_code = item_line.get_error();
-                    goto list_cleanup;
+                    int string_error = yaml_string_pop_error(item_line);
+
+                    if (string_error != FT_ERR_SUCCESSS)
+                    {
+                        error_code = string_error;
+                        goto list_cleanup;
+                    }
                 }
                 if (item_line.size() == 0)
                 {
@@ -201,11 +240,15 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                                     delete map_child;
                                     goto list_cleanup;
                                 }
-                                if (map_line.get_error() != FT_ERR_SUCCESSS)
                                 {
-                                    error_code = map_line.get_error();
-                                    delete map_child;
-                                    goto list_cleanup;
+                                    int string_error = yaml_string_pop_error(map_line);
+
+                                    if (string_error != FT_ERR_SUCCESSS)
+                                    {
+                                        error_code = string_error;
+                                        delete map_child;
+                                        goto list_cleanup;
+                                    }
                                 }
                             }
                             size_t map_colon = yaml_find_char(map_line, ':');
@@ -230,11 +273,15 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                                 delete map_child;
                                 goto list_cleanup;
                             }
-                            if (key.get_error() != FT_ERR_SUCCESSS)
                             {
-                                error_code = key.get_error();
-                                delete map_child;
-                                goto list_cleanup;
+                                int string_error = yaml_string_pop_error(key);
+
+                                if (string_error != FT_ERR_SUCCESSS)
+                                {
+                                    error_code = string_error;
+                                    delete map_child;
+                                    goto list_cleanup;
+                                }
                             }
                             yaml_trim(key);
                             last_error = ft_global_error_stack_pop_newest();
@@ -244,11 +291,15 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                                 delete map_child;
                                 goto list_cleanup;
                             }
-                            if (key.get_error() != FT_ERR_SUCCESSS)
                             {
-                                error_code = key.get_error();
-                                delete map_child;
-                                goto list_cleanup;
+                                int string_error = yaml_string_pop_error(key);
+
+                                if (string_error != FT_ERR_SUCCESSS)
+                                {
+                                    error_code = string_error;
+                                    delete map_child;
+                                    goto list_cleanup;
+                                }
                             }
                             ft_string value_part = yaml_substr_from(map_line, map_colon + 1);
                             last_error = ft_global_error_stack_pop_newest();
@@ -258,11 +309,15 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                                 delete map_child;
                                 goto list_cleanup;
                             }
-                            if (value_part.get_error() != FT_ERR_SUCCESSS)
                             {
-                                error_code = value_part.get_error();
-                                delete map_child;
-                                goto list_cleanup;
+                                int string_error = yaml_string_pop_error(value_part);
+
+                                if (string_error != FT_ERR_SUCCESSS)
+                                {
+                                    error_code = string_error;
+                                    delete map_child;
+                                    goto list_cleanup;
+                                }
                             }
                             yaml_trim(value_part);
                             last_error = ft_global_error_stack_pop_newest();
@@ -272,11 +327,15 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                                 delete map_child;
                                 goto list_cleanup;
                             }
-                            if (value_part.get_error() != FT_ERR_SUCCESSS)
                             {
-                                error_code = value_part.get_error();
-                                delete map_child;
-                                goto list_cleanup;
+                                int string_error = yaml_string_pop_error(value_part);
+
+                                if (string_error != FT_ERR_SUCCESSS)
+                                {
+                                    error_code = string_error;
+                                    delete map_child;
+                                    goto list_cleanup;
+                                }
                             }
                             if (value_part.size() == 0)
                             {
@@ -398,10 +457,14 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                     error_code = last_error;
                     goto map_cleanup;
                 }
-                if (pair_line.get_error() != FT_ERR_SUCCESSS)
                 {
-                    error_code = pair_line.get_error();
-                    goto map_cleanup;
+                    int string_error = yaml_string_pop_error(pair_line);
+
+                    if (string_error != FT_ERR_SUCCESSS)
+                    {
+                        error_code = string_error;
+                        goto map_cleanup;
+                    }
                 }
                 size_t pair_colon = yaml_find_char(pair_line, ':');
                 last_error = ft_global_error_stack_pop_newest();
@@ -419,10 +482,14 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                     error_code = last_error;
                     goto map_cleanup;
                 }
-                if (key.get_error() != FT_ERR_SUCCESSS)
                 {
-                    error_code = key.get_error();
-                    goto map_cleanup;
+                    int string_error = yaml_string_pop_error(key);
+
+                    if (string_error != FT_ERR_SUCCESSS)
+                    {
+                        error_code = string_error;
+                        goto map_cleanup;
+                    }
                 }
                 yaml_trim(key);
                 last_error = ft_global_error_stack_pop_newest();
@@ -431,10 +498,14 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                     error_code = last_error;
                     goto map_cleanup;
                 }
-                if (key.get_error() != FT_ERR_SUCCESSS)
                 {
-                    error_code = key.get_error();
-                    goto map_cleanup;
+                    int string_error = yaml_string_pop_error(key);
+
+                    if (string_error != FT_ERR_SUCCESSS)
+                    {
+                        error_code = string_error;
+                        goto map_cleanup;
+                    }
                 }
                 ft_string value_part = yaml_substr_from(pair_line, pair_colon + 1);
                 last_error = ft_global_error_stack_pop_newest();
@@ -443,10 +514,14 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                     error_code = last_error;
                     goto map_cleanup;
                 }
-                if (value_part.get_error() != FT_ERR_SUCCESSS)
                 {
-                    error_code = value_part.get_error();
-                    goto map_cleanup;
+                    int string_error = yaml_string_pop_error(value_part);
+
+                    if (string_error != FT_ERR_SUCCESSS)
+                    {
+                        error_code = string_error;
+                        goto map_cleanup;
+                    }
                 }
                 yaml_trim(value_part);
                 last_error = ft_global_error_stack_pop_newest();
@@ -455,10 +530,14 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                     error_code = last_error;
                     goto map_cleanup;
                 }
-                if (value_part.get_error() != FT_ERR_SUCCESSS)
                 {
-                    error_code = value_part.get_error();
-                    goto map_cleanup;
+                    int string_error = yaml_string_pop_error(value_part);
+
+                    if (string_error != FT_ERR_SUCCESSS)
+                    {
+                        error_code = string_error;
+                        goto map_cleanup;
+                    }
                 }
                 if (value_part.size() == 0)
                 {
@@ -552,10 +631,11 @@ error:
 
 yaml_value *yaml_read_from_string(const ft_string &content) noexcept
 {
-    if (content.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_global_error_stack_push(content.get_error());
-        return (ft_nullptr);
+        int string_error = yaml_string_pop_error(content);
+
+        if (string_error != FT_ERR_SUCCESSS)
+            return (ft_nullptr);
     }
     yaml_value *root = ft_nullptr;
     int parse_error = FT_ERR_SUCCESSS;
@@ -614,13 +694,14 @@ yaml_value *yaml_read_from_file(const char *file_path) noexcept
         while (buffer_index < read_count)
         {
             content.append(buffer[buffer_index]);
-            if (content.get_error() != FT_ERR_SUCCESSS)
             {
-                int append_error = content.get_error();
-                su_fclose(file);
-                ft_global_error_stack_pop_newest();
-                ft_global_error_stack_push(append_error);
-                return (ft_nullptr);
+                int string_error = yaml_string_pop_error(content);
+
+                if (string_error != FT_ERR_SUCCESSS)
+                {
+                    su_fclose(file);
+                    return (ft_nullptr);
+                }
             }
             buffer_index++;
         }

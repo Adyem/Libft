@@ -60,6 +60,8 @@ ft_size_t ft_error_stack_find_by_id(const ft_error_stack *error_stack,
 const char *ft_error_stack_error_str_at(const ft_error_stack *error_stack,
         ft_size_t index);
 const char *ft_error_stack_last_error_str(const ft_error_stack *error_stack);
+int ft_error_stack_pop_entry_with_id(ft_error_stack *error_stack,
+        unsigned long long op_id);
 
 void ft_operation_error_stack_push(ft_operation_error_stack *error_stack,
         int error_code, unsigned long long op_id);
@@ -77,6 +79,8 @@ ft_size_t ft_operation_error_stack_find_by_id(
         const ft_operation_error_stack *error_stack, unsigned long long id);
 ft_size_t ft_operation_error_stack_depth(
         const ft_operation_error_stack *error_stack);
+int ft_operation_error_stack_pop_by_id(ft_operation_error_stack *error_stack,
+        unsigned long long op_id);
 
 ft_errno_mutex_wrapper &ft_errno_mutex();
 void ft_set_errno_locked(int error_code);

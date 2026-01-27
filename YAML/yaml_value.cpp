@@ -5,14 +5,22 @@
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread.hpp"
 
-thread_local ft_operation_error_stack yaml_value::_operation_errors = {{}, {}, 0};
+static int yaml_value_pop_string_error(const ft_string &string_value) noexcept
+{
+    unsigned long long operation_id;
 
-void yaml_value::record_operation_error_unlocked(int error_code) noexcept
+    operation_id = string_value.last_operation_id();
+    if (operation_id == 0)
+        return (FT_ERR_SUCCESSS);
+    return (string_value.pop_operation_error(operation_id));
+}
+
+void yaml_value::record_operation_error_unlocked(int error_code) const noexcept
 {
     unsigned long long operation_id;
 
     operation_id = ft_global_error_stack_push_entry(error_code);
-    ft_operation_error_stack_push(yaml_value::_operation_errors,
+    ft_operation_error_stack_push(&this->_operation_errors,
             error_code, operation_id);
     return ;
 }
@@ -55,10 +63,14 @@ yaml_value::yaml_value() noexcept
     this->set_error(FT_ERR_SUCCESSS);
     this->_type = YAML_SCALAR;
     this->_scalar = "";
-    if (this->_scalar.get_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(this->_scalar.get_error());
-        return ;
+        int scalar_error = yaml_value_pop_string_error(this->_scalar);
+
+        if (scalar_error != FT_ERR_SUCCESSS)
+        {
+            this->set_error(scalar_error);
+            return ;
+        }
     }
     int prepare_error;
 
@@ -148,7 +160,7 @@ yaml_value::~yaml_value() noexcept
 void yaml_value::set_error(int error_code) const noexcept
 {
     this->_error_code = error_code;
-    yaml_value::record_operation_error_unlocked(error_code);
+    this->record_operation_error_unlocked(error_code);
     return ;
 }
 
@@ -200,10 +212,14 @@ void yaml_value::set_scalar(const ft_string &value) noexcept
         return ;
     this->_type = YAML_SCALAR;
     this->_scalar = value;
-    if (this->_scalar.get_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(this->_scalar.get_error());
-        return ;
+        int scalar_error = yaml_value_pop_string_error(this->_scalar);
+
+        if (scalar_error != FT_ERR_SUCCESSS)
+        {
+            this->set_error(scalar_error);
+            return ;
+        }
     }
     this->set_error(FT_ERR_SUCCESSS);
     return ;
@@ -334,14 +350,15 @@ int yaml_value::prepare_thread_safety() noexcept
         return (FT_ERR_NO_MEMORY);
     }
     mutex_pointer = new(memory_pointer) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
     {
-        int mutex_error;
+        int mutex_error = mutex_pointer->operation_error_last_error();
 
-        mutex_error = mutex_pointer->get_error();
-        mutex_pointer->~pt_mutex();
-        cma_free(memory_pointer);
-        return (mutex_error);
+        if (mutex_error != FT_ERR_SUCCESSS)
+        {
+            mutex_pointer->~pt_mutex();
+            cma_free(memory_pointer);
+            return (mutex_error);
+        }
     }
     this->_mutex = mutex_pointer;
     this->_thread_safe_enabled = true;
@@ -373,7 +390,9 @@ int yaml_value::lock(bool *lock_acquired) const noexcept
         return (FT_ERR_SUCCESSS);
     }
     this->_mutex->lock(THREAD_ID);
-    mutex_error = this->_mutex->get_error();
+    {
+        mutex_error = this->_mutex->operation_error_last_error();
+    }
     if (mutex_error == FT_ERR_SUCCESSS)
     {
         if (lock_acquired)
@@ -394,12 +413,11 @@ int yaml_value::unlock(bool lock_acquired) const noexcept
         return (FT_ERR_SUCCESSS);
     }
     this->_mutex->unlock(THREAD_ID);
-    if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
     {
-        int mutex_error;
+        int mutex_error = this->_mutex->operation_error_last_error();
 
-        mutex_error = this->_mutex->get_error();
-        return (mutex_error);
+        if (mutex_error != FT_ERR_SUCCESSS)
+            return (mutex_error);
     }
     return (FT_ERR_SUCCESSS);
 }

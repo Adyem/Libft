@@ -10,21 +10,21 @@
 #include <sys/stat.h>
 #include <cstring>
 #include <cstddef>
-#include "../PThread/mutex.hpp"
-#include "../PThread/unique_lock.hpp"
+#include "../Errno/errno_internal.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 class ft_file
 {
     private:
         int _fd;
-        mutable int _error_code;
-        mutable pt_mutex _mutex;
+        mutable pt_recursive_mutex _mutex;
+        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
         bool _is_open;
 
-        void        set_error(int error_code) const;
+        void        record_operation_error(int error_code) const;
         static int lock_pair(const ft_file &first, const ft_file &second,
-                ft_unique_lock<pt_mutex> &first_guard,
-                ft_unique_lock<pt_mutex> &second_guard);
+                const ft_file *&lower, const ft_file *&upper);
+        static int unlock_pair(const ft_file *lower, const ft_file *upper);
         static void sleep_backoff();
 
     public:
@@ -56,6 +56,8 @@ class ft_file
         int            copy_to_with_buffer(const char *destination_path, size_t buffer_size) noexcept;
 
         operator int() const;
+        pt_recursive_mutex &recursive_mutex() noexcept;
+        ft_operation_error_stack &operation_error_stack() const noexcept;
 };
 
 #endif

@@ -3,20 +3,21 @@
 
 #include "class_file.hpp"
 #include "../Errno/errno.hpp"
-#include "../PThread/mutex.hpp"
+#include "../Errno/errno_internal.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "../PThread/unique_lock.hpp"
 
 class ft_ofstream
 {
     private:
         ft_file _file;
-        mutable int _error_code;
-        mutable pt_mutex _mutex;
+        mutable pt_recursive_mutex _mutex;
+        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
 
-        void set_error_unlocked(int error_code) const noexcept;
-        void set_error(int error_code) const noexcept;
-        int lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept;
-        static void finalize_lock(ft_unique_lock<pt_mutex> &guard) noexcept;
+        int lock_self(ft_unique_lock<pt_recursive_mutex> &guard) const noexcept;
+        static int finalize_lock(ft_unique_lock<pt_recursive_mutex> &guard) noexcept;
+        static int capture_guard_error() noexcept;
+        void record_operation_error(int error_code) const noexcept;
 
     public:
         ft_ofstream() noexcept;
@@ -25,8 +26,6 @@ class ft_ofstream
         int open(const char *filename) noexcept;
         ssize_t write(const char *string) noexcept;
         void close() noexcept;
-        int get_error() const noexcept;
-        const char *get_error_str() const noexcept;
 };
 
 #endif

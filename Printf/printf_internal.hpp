@@ -28,5 +28,6 @@ int pf_try_format_custom_specifier(char specifier, va_list *args, ft_string &out
 void pf_write_ft_string_fd(const ft_string &output, int fd, size_t *count);
 void pf_write_ft_string_stream(const ft_string &output, FILE *stream, size_t *count);
 int pf_flush_stream(FILE *stream);
+int pf_string_pop_last_error(const ft_string &string_value);
 
 #endif

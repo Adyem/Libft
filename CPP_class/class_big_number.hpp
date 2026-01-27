@@ -14,21 +14,18 @@ typedef ft_unique_lock<pt_recursive_mutex>    ft_big_number_mutex_guard;
 class ft_big_number
 {
     private:
-        class error_scope;
 
         char*           _digits;
         ft_size_t       _size;
         ft_size_t       _capacity;
         bool            _is_negative;
         mutable pt_recursive_mutex    _mutex;
-        static thread_local ft_error_stack _error_stack;
         static thread_local ft_operation_error_stack _operation_errors;
 
         void    reserve(ft_size_t new_capacity) noexcept;
         void    shrink_capacity() noexcept;
-        void    set_error_unlocked(int error_code) const noexcept;
-        void    set_system_error_unlocked(int error_code) const noexcept;
-        void    set_system_error(int error_code) const noexcept;
+        void    push_error_unlocked(int error_code) const noexcept;
+        void    push_error(int error_code) const noexcept;
         int     lock_self(ft_big_number_mutex_guard &guard) const noexcept;
         static int  lock_pair(const ft_big_number &first, const ft_big_number &second,
                 ft_big_number_mutex_guard &first_guard,
@@ -37,8 +34,6 @@ class ft_big_number
         static int  initialize_errno_keeper() noexcept;
         static void update_errno_keeper(int &stored_errno, int new_value) noexcept;
         static void finalize_errno_keeper(int stored_errno) noexcept;
-        static void unlock_guard_preserve_errno(ft_big_number_mutex_guard &guard,
-                int &stored_errno) noexcept;
         static void record_operation_error(int error_code) noexcept;
         void    clear_unlocked() noexcept;
         void    append_digit_unlocked(char digit) noexcept;
@@ -91,8 +86,8 @@ class ft_big_number
         static const char *operation_error_str_at(ft_size_t index) noexcept;
         void        reset_system_error() const noexcept;
         static int  last_error() noexcept;
-        static uint32_t last_op_id() noexcept;
-        static int  error_for(uint32_t operation_id) noexcept;
+        static unsigned long long last_op_id() noexcept;
+        static int  error_for(unsigned long long operation_id) noexcept;
         static int  last_operation_error() noexcept;
         static int  operation_error_at(ft_size_t index) noexcept;
         static void pop_operation_errors() noexcept;

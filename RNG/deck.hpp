@@ -9,6 +9,7 @@
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
 #include "../PThread/pthread.hpp"
+#include "../PThread/lock_error_helpers.hpp"
 #include "rng.hpp"
 #include <climits>
 
@@ -61,11 +62,15 @@ template<typename ElementType>
 int ft_deck<ElementType>::lock_deck(ft_unique_lock<pt_mutex> &guard) const noexcept
 {
     ft_unique_lock<pt_mutex> local_guard(this->_mutex);
-    if (local_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        guard = ft_unique_lock<pt_mutex>();
-        ft_errno = local_guard.get_error();
-        return (local_guard.get_error());
+        int lock_error = ft_unique_lock_pop_last_error(local_guard);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            guard = ft_unique_lock<pt_mutex>();
+            ft_errno = lock_error;
+            return (lock_error);
+        }
     }
     guard = ft_move(local_guard);
     ft_errno = FT_ERR_SUCCESSS;
@@ -92,10 +97,14 @@ int ft_deck<ElementType>::lock_pair(const ft_deck<ElementType> &first, const ft_
     {
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
 
-        if (single_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = single_guard.get_error();
-            return (single_guard.get_error());
+            int lock_error = ft_unique_lock_pop_last_error(single_guard);
+
+            if (lock_error != FT_ERR_SUCCESSS)
+            {
+                ft_errno = lock_error;
+                return (lock_error);
+            }
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
@@ -117,14 +126,16 @@ int ft_deck<ElementType>::lock_pair(const ft_deck<ElementType> &first, const ft_
     while (true)
     {
         ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
+        int lower_error = ft_unique_lock_pop_last_error(lower_guard);
 
-        if (lower_guard.get_error() != FT_ERR_SUCCESSS)
+        if (lower_error != FT_ERR_SUCCESSS)
         {
-            ft_errno = lower_guard.get_error();
-            return (lower_guard.get_error());
+            ft_errno = lower_error;
+            return (lower_error);
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ERR_SUCCESSS)
+        int upper_error = ft_unique_lock_pop_last_error(upper_guard);
+        if (upper_error == FT_ERR_SUCCESSS)
         {
             if (!swapped)
             {
@@ -139,10 +150,10 @@ int ft_deck<ElementType>::lock_pair(const ft_deck<ElementType> &first, const ft_
             ft_errno = FT_ERR_SUCCESSS;
             return (FT_ERR_SUCCESSS);
         }
-        if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
+        if (upper_error != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            ft_errno = upper_guard.get_error();
-            return (upper_guard.get_error());
+            ft_errno = upper_error;
+            return (upper_error);
         }
         if (lower_guard.owns_lock())
             lower_guard.unlock();

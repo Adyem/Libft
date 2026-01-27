@@ -8,8 +8,9 @@
 #include "../CMA/CMA.hpp"
 #include "../Libft/libft.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../PThread/mutex.hpp"
-#include "../PThread/unique_lock.hpp"
+#include "../PThread/pthread.hpp"
 
 class DataBuffer
 {
@@ -17,19 +18,18 @@ class DataBuffer
         ft_vector<uint8_t> _buffer;
         size_t _read_pos;
         bool _ok;
-        mutable int _error_code;
         mutable pt_mutex _mutex;
+        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
 
-        void set_error_unlocked(int error_code) const noexcept;
-        void set_error(int error_code) const noexcept;
-        int lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept;
+        int lock_self() const noexcept;
+        int unlock_self() const noexcept;
         static int lock_pair(const DataBuffer &first, const DataBuffer &second,
-                ft_unique_lock<pt_mutex> &first_guard,
-                ft_unique_lock<pt_mutex> &second_guard) noexcept;
+                const DataBuffer *&lower, const DataBuffer *&upper) noexcept;
+        static int unlock_pair(const DataBuffer *lower, const DataBuffer *upper) noexcept;
         static void sleep_backoff() noexcept;
-        static void finalize_lock(ft_unique_lock<pt_mutex> &guard, int target_errno) noexcept;
         int write_length_locked(size_t len) noexcept;
         int read_length_locked(size_t &len) noexcept;
+        void record_operation_error(int error_code) const;
 
     public:
         DataBuffer() noexcept;
@@ -56,117 +56,113 @@ class DataBuffer
 
         DataBuffer& operator<<(size_t len);
         DataBuffer& operator>>(size_t& len);
-        int get_error() const noexcept;
-        const char *get_error_str() const noexcept;
+#ifdef LIBFT_TEST_BUILD
+        pt_mutex &mutex() noexcept;
+        ft_operation_error_stack &operation_error_stack() const noexcept;
+#endif
 };
 
 template<typename T>
 DataBuffer& DataBuffer::operator<<(const T& value)
 {
     std::ostringstream oss;
-    ft_unique_lock<pt_mutex> guard;
-    int lock_error;
-    char *bytes;
-    size_t len;
-    int length_error;
-    size_t index;
-
     oss << value;
-    lock_error = this->lock_self(guard);
+    int lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(lock_error);
+        this->record_operation_error(lock_error);
         return (*this);
     }
-    bytes = cma_strdup(oss.str().c_str());
-    if (!bytes)
+    int final_error = FT_ERR_SUCCESSS;
+    char *bytes = cma_strdup(oss.str().c_str());
+    if (bytes == ft_nullptr)
     {
         this->_ok = false;
-        this->set_error_unlocked(FT_ERR_NO_MEMORY);
-        DataBuffer::finalize_lock(guard, ft_errno);
-        return (*this);
+        final_error = FT_ERR_NO_MEMORY;
     }
-    len = ft_strlen_size_t(bytes);
-    length_error = this->write_length_locked(len);
-    if (length_error != FT_ERR_SUCCESSS)
+    else
     {
-        this->_ok = false;
-        this->set_error_unlocked(length_error);
-        cma_free(bytes);
-        DataBuffer::finalize_lock(guard, ft_errno);
-        return (*this);
-    }
-    index = 0;
-    while (index < len)
-    {
-        this->_buffer.push_back(static_cast<uint8_t>(bytes[index]));
-        if (this->_buffer.get_error() != FT_ERR_SUCCESSS)
+        size_t len = ft_strlen_size_t(bytes);
+        int length_error = this->write_length_locked(len);
+        if (length_error != FT_ERR_SUCCESSS)
         {
             this->_ok = false;
-            this->set_error_unlocked(this->_buffer.get_error());
-            cma_free(bytes);
-            DataBuffer::finalize_lock(guard, ft_errno);
-            return (*this);
+            final_error = length_error;
         }
-        ++index;
+        else
+        {
+            size_t index = 0;
+            while (index < len)
+            {
+                this->_buffer.push_back(static_cast<uint8_t>(bytes[index]));
+                int buffer_error = ft_global_error_stack_last_error();
+                if (buffer_error != FT_ERR_SUCCESSS)
+                {
+                    this->_ok = false;
+                    final_error = buffer_error;
+                    break ;
+                }
+                ++index;
+            }
+        }
+        cma_free(bytes);
     }
-    cma_free(bytes);
-    this->_ok = true;
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
-    DataBuffer::finalize_lock(guard, FT_ERR_SUCCESSS);
+    this->_ok = (final_error == FT_ERR_SUCCESSS);
+    {
+        int unlock_error = this->unlock_self();
+        if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
+            final_error = unlock_error;
+    }
+    this->record_operation_error(final_error);
     return (*this);
 }
 
 template<typename T>
 DataBuffer& DataBuffer::operator>>(T& value)
 {
-    ft_unique_lock<pt_mutex> guard;
-    int lock_error;
-    size_t len;
-    int length_error;
-    char *bytes;
-
-    lock_error = this->lock_self(guard);
+    int lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(lock_error);
+        this->record_operation_error(lock_error);
         return (*this);
     }
-    length_error = this->read_length_locked(len);
+    int final_error = FT_ERR_SUCCESSS;
+    size_t len = 0;
+    char *bytes = ft_nullptr;
+    int length_error = this->read_length_locked(len);
     if (length_error != FT_ERR_SUCCESSS)
     {
-        this->_ok = false;
-        this->set_error_unlocked(length_error);
-        DataBuffer::finalize_lock(guard, ft_errno);
-        return (*this);
+        final_error = length_error;
     }
-    if (this->_read_pos + len > this->_buffer.size())
+    else if (this->_read_pos + len > this->_buffer.size())
     {
-        this->_ok = false;
-        this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        DataBuffer::finalize_lock(guard, ft_errno);
-        return (*this);
+        final_error = FT_ERR_INVALID_ARGUMENT;
     }
-    bytes = static_cast<char*>(cma_calloc(len + 1, sizeof(char)));
-    if (!bytes)
-    {
-        this->_ok = false;
-        this->set_error_unlocked(FT_ERR_NO_MEMORY);
-        DataBuffer::finalize_lock(guard, ft_errno);
-        return (*this);
-    }
-    ft_memcpy(bytes, this->_buffer.begin() + this->_read_pos, len);
-    this->_read_pos += len;
-    ft_string string_value(bytes);
-    ft_istringstream iss(string_value);
-    iss >> value;
-    cma_free(bytes);
-    this->_ok = (iss.get_error() == FT_ERR_SUCCESSS);
-    if (this->_ok)
-        this->set_error_unlocked(FT_ERR_SUCCESSS);
     else
-        this->set_error_unlocked(iss.get_error());
-    DataBuffer::finalize_lock(guard, FT_ERR_SUCCESSS);
+    {
+        bytes = static_cast<char*>(cma_calloc(len + 1, sizeof(char)));
+        if (bytes == ft_nullptr)
+        {
+            final_error = FT_ERR_NO_MEMORY;
+        }
+        else
+        {
+            ft_memcpy(bytes, this->_buffer.begin() + this->_read_pos, len);
+            this->_read_pos += len;
+            ft_string string_value(bytes);
+            ft_istringstream iss(string_value);
+            iss >> value;
+            final_error = ft_global_error_stack_last_error();
+            cma_free(bytes);
+        }
+    }
+    this->_ok = (final_error == FT_ERR_SUCCESSS);
+    {
+        int unlock_error = this->unlock_self();
+        if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
+            final_error = unlock_error;
+    }
+    this->record_operation_error(final_error);
     return (*this);
 }
 

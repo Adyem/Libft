@@ -601,16 +601,34 @@ static int pf_engine_format_with_snprintf(const ft_string &format_string, t_pf_e
     }
     ft_string output;
     output.resize_length(static_cast<size_t>(required_length));
-    if (output.get_error() != FT_ERR_SUCCESSS)
-        return (output.get_error());
+    int string_error = pf_string_pop_last_error(output);
+    if (string_error != FT_ERR_SUCCESSS)
+        return (string_error);
+    char *output_buffer = output.print();
+    string_error = pf_string_pop_last_error(output);
+    if (string_error != FT_ERR_SUCCESSS)
+        return (string_error);
+    if (output_buffer == ft_nullptr)
+        return (FT_ERR_IO);
     va_start(args, written_count);
     int written_length;
-    written_length = std::vsnprintf(output.print(), static_cast<size_t>(required_length) + 1, format_string.c_str(), args);
+    written_length = std::vsnprintf(output_buffer, static_cast<size_t>(required_length) + 1, format_string.c_str(), args);
     va_end(args);
     if (written_length < 0)
         return (FT_ERR_IO);
     output.resize_length(static_cast<size_t>(written_length));
-    write_error = writer(output.c_str(), output.size(), context, written_count);
+    string_error = pf_string_pop_last_error(output);
+    if (string_error != FT_ERR_SUCCESSS)
+        return (string_error);
+    const char *output_text = output.c_str();
+    string_error = pf_string_pop_last_error(output);
+    if (string_error != FT_ERR_SUCCESSS)
+        return (string_error);
+    size_t output_length = output.size();
+    string_error = pf_string_pop_last_error(output);
+    if (string_error != FT_ERR_SUCCESSS)
+        return (string_error);
+    write_error = writer(output_text, output_length, context, written_count);
     if (write_error != FT_ERR_SUCCESSS)
         return (write_error);
     return (FT_ERR_SUCCESSS);

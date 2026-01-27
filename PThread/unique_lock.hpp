@@ -44,6 +44,9 @@ class ft_unique_lock
 
         bool owns_lock() const;
         MutexType *mutex() const;
+        ft_operation_error_stack *operation_error_stack_handle() const noexcept;
+        unsigned long long last_operation_id() const noexcept;
+        int pop_operation_error(unsigned long long operation_id) const noexcept;
         int last_operation_error() const noexcept;
         const char *last_operation_error_str() const noexcept;
 };
@@ -449,6 +452,28 @@ MutexType *ft_unique_lock<MutexType>::mutex() const
     }
     this->record_error(FT_ERR_SUCCESSS, true);
     return (mutex_pointer);
+}
+
+template <typename MutexType>
+ft_operation_error_stack *ft_unique_lock<MutexType>::operation_error_stack_handle() const noexcept
+{
+    return (&this->_operation_errors);
+}
+
+template <typename MutexType>
+unsigned long long ft_unique_lock<MutexType>::last_operation_id() const noexcept
+{
+    return (ft_operation_error_stack_last_id(&this->_operation_errors));
+}
+
+template <typename MutexType>
+int ft_unique_lock<MutexType>::pop_operation_error(unsigned long long operation_id) const noexcept
+{
+    if (operation_id == 0)
+        return (FT_ERR_SUCCESSS);
+    int error_code = ft_operation_error_stack_pop_by_id(&this->_operation_errors, operation_id);
+    ft_global_error_stack_pop_entry_with_id(operation_id);
+    return (error_code);
 }
 
 template <typename MutexType>

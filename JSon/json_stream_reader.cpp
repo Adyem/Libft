@@ -14,6 +14,21 @@ static const size_t JSON_STREAM_READ_ERROR = static_cast<size_t>(-1);
 #define JSON_STREAM_STATUS_END 1
 #define JSON_STREAM_STATUS_ERROR -1
 
+struct json_stream_reader_error_guard
+{
+    int *code;
+    json_stream_reader_error_guard(int *value)
+        : code(value)
+    {
+        return ;
+    }
+    ~json_stream_reader_error_guard()
+    {
+        ft_global_error_stack_push(*this->code);
+        return ;
+    }
+};
+
 static size_t json_stream_reader_file_callback(void *user_data, char *buffer, size_t max_size)
 {
     FILE *file = static_cast<FILE *>(user_data);

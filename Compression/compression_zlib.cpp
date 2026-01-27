@@ -7,6 +7,15 @@
 
 static const unsigned char g_compression_empty_input = 0;
 
+static int compression_string_pop_error(const ft_string &string_value)
+{
+    unsigned long long operation_id = string_value.last_operation_id();
+
+    if (operation_id == 0)
+        return (FT_ERR_SUCCESSS);
+    return (string_value.pop_operation_error(operation_id));
+}
+
 static int  compression_store_in_vector(ft_vector<unsigned char> &destination, const unsigned char *buffer, std::size_t size)
 {
     int             vector_error;
@@ -208,10 +217,15 @@ int ft_compress_string_to_vector(const ft_string &input, ft_vector<unsigned char
     std::size_t           compressed_size;
     int                   store_status;
 
-    if (input.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = input.get_error();
-        return (1);
+        int string_error = compression_string_pop_error(input);
+
+        if (string_error != FT_ERR_SUCCESSS)
+        {
+            ft_errno = string_error;
+            ft_global_error_stack_push(string_error);
+            return (1);
+        }
     }
     input_length = input.size();
     input_buffer = reinterpret_cast<const unsigned char *>(input.c_str());

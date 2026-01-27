@@ -60,7 +60,7 @@ $(TARGET): $(OBJS)
 $(OBJDIR)/%.o: %.cpp $(HEADERS) | $(OBJDIR)
 	@$(CXX) $(CFLAGS) -c $< -o $@
 	@count=$$(find $(OBJDIR) -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
-	    printf '        [%s] Files built: %d/%d\n' "$(MODULE_NAME)" $$count $(TOTAL_SRCS)
+	    printf '        [%s] Building file %s (%d/%d)\n' "$(MODULE_NAME)" "$<" $$count $(TOTAL_SRCS)
 
 debug: CXXFLAGS += -DDEBUG=1
 debug: $(DEBUG_TARGET)
@@ -72,7 +72,7 @@ $(DEBUG_TARGET): $(DEBUG_OBJS)
 $(DEBUG_OBJDIR)/%.o: %.cpp $(HEADERS) | $(DEBUG_OBJDIR)
 	@$(CXX) $(CFLAGS) -c $< -o $@
 	@count=$$(find $(DEBUG_OBJDIR) -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
-	    printf '        [%s Debug] Files built: %d/%d\n' "$(MODULE_NAME)" $$count $(TOTAL_SRCS)
+	    printf '        [%s Debug] Building file %s (%d/%d)\n' "$(MODULE_NAME)" "$<" $$count $(TOTAL_SRCS)
 
 $(OBJDIR) $(DEBUG_OBJDIR):
 	@$(MKDIR) $@

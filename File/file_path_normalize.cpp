@@ -4,6 +4,20 @@
 #include "../Errno/errno.hpp"
 #include "file_utils.hpp"
 
+static int file_string_error(const ft_string &string_value) noexcept
+{
+    unsigned long long operation_id;
+    int               error_code;
+
+    operation_id = string_value.last_operation_id();
+    if (operation_id == 0)
+        return (FT_ERR_SUCCESSS);
+    error_code = string_value.pop_operation_error(operation_id);
+    if (error_code != FT_ERR_SUCCESSS)
+        ft_global_error_stack_push_entry_with_id(error_code, operation_id);
+    return (error_code);
+}
+
 ft_string file_path_normalize(const char *path)
 {
     ft_string empty_result;
@@ -11,22 +25,16 @@ ft_string file_path_normalize(const char *path)
 
     if (path == ft_nullptr)
     {
-        error_code = empty_result.get_error();
+        error_code = file_string_error(empty_result);
         if (error_code != FT_ERR_SUCCESSS)
-        {
-            ft_global_error_stack_push(error_code);
             return (empty_result);
-        }
         ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (empty_result);
     }
     ft_string original(path);
-    error_code = original.get_error();
+    error_code = file_string_error(original);
     if (error_code != FT_ERR_SUCCESSS)
-    {
-        ft_global_error_stack_push(error_code);
         return (original);
-    }
     char *data = original.print();
     if (!data)
     {
@@ -35,12 +43,9 @@ ft_string file_path_normalize(const char *path)
     }
     cmp_normalize_slashes(data);
     ft_string result;
-    error_code = result.get_error();
+    error_code = file_string_error(result);
     if (error_code != FT_ERR_SUCCESSS)
-    {
-        ft_global_error_stack_push(error_code);
         return (result);
-    }
     size_t index = 0;
     char path_sep = cmp_path_separator();
     while (data[index] != '\0')
@@ -59,12 +64,9 @@ ft_string file_path_normalize(const char *path)
             ++index;
         }
     }
-    error_code = result.get_error();
+    error_code = file_string_error(result);
     if (error_code != FT_ERR_SUCCESSS)
-    {
-        ft_global_error_stack_push(error_code);
         return (result);
-    }
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }

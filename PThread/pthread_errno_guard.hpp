@@ -3,6 +3,7 @@
 
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 
 template <typename GuardType>
 class pt_errno_guard
@@ -29,6 +30,17 @@ pt_errno_guard<GuardType>::pt_errno_guard(GuardType &first_guard,
     return ;
 }
 
+static int pt_errno_guard_capture_error() noexcept
+{
+    int error_value;
+
+    error_value = ft_global_error_stack_last_error();
+    ft_global_error_stack_pop_newest();
+    if (error_value != FT_ERR_SUCCESSS)
+        ft_global_error_stack_push(error_value);
+    return (error_value);
+}
+
 template <typename GuardType>
 pt_errno_guard<GuardType>::~pt_errno_guard() noexcept
 {
@@ -38,14 +50,12 @@ pt_errno_guard<GuardType>::~pt_errno_guard() noexcept
     if (this->_second_guard && this->_second_guard->owns_lock())
     {
         this->_second_guard->unlock();
-        if (this->_second_guard->get_error() != FT_ERR_SUCCESSS)
-            unlock_error = this->_second_guard->get_error();
+        unlock_error = pt_errno_guard_capture_error();
     }
     if (this->_first_guard && this->_first_guard->owns_lock())
     {
         this->_first_guard->unlock();
-        if (this->_first_guard->get_error() != FT_ERR_SUCCESSS)
-            unlock_error = this->_first_guard->get_error();
+        unlock_error = pt_errno_guard_capture_error();
     }
     if (unlock_error != FT_ERR_SUCCESSS)
         ft_global_error_stack_push(unlock_error);

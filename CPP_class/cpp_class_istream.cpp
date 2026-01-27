@@ -75,7 +75,7 @@ void ft_istream::record_operation_error(int error_code) noexcept
 
     operation_id = ft_errno_next_operation_id();
     ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(ft_istream::_operation_errors,
+    ft_operation_error_stack_push(&ft_istream::_operation_errors,
         error_code, operation_id);
     return ;
 }
@@ -97,10 +97,10 @@ int ft_istream::lock_self(ft_unique_lock<pt_recursive_mutex> &guard) const noexc
 {
     ft_unique_lock<pt_recursive_mutex> local_guard(this->_mutex);
 
-    if (local_guard.get_error() != FT_ERR_SUCCESSS)
+    if (local_guard.last_operation_error() != FT_ERR_SUCCESSS)
     {
         guard = ft_unique_lock<pt_recursive_mutex>();
-        return (local_guard.get_error());
+        return (local_guard.last_operation_error());
     }
     guard = ft_move(local_guard);
     return (FT_ERR_SUCCESSS);
@@ -118,10 +118,8 @@ int ft_istream::lock_pair(const ft_istream &first, const ft_istream &second,
     {
         ft_unique_lock<pt_recursive_mutex> single_guard(first._mutex);
 
-        if (single_guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            return (single_guard.get_error());
-        }
+        if (single_guard.last_operation_error() != FT_ERR_SUCCESSS)
+            return (single_guard.last_operation_error());
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_recursive_mutex>();
         return (FT_ERR_SUCCESSS);
@@ -142,12 +140,10 @@ int ft_istream::lock_pair(const ft_istream &first, const ft_istream &second,
     {
         ft_unique_lock<pt_recursive_mutex> lower_guard(ordered_first->_mutex);
 
-        if (lower_guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            return (lower_guard.get_error());
-        }
+        if (lower_guard.last_operation_error() != FT_ERR_SUCCESSS)
+            return (lower_guard.last_operation_error());
         ft_unique_lock<pt_recursive_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ERR_SUCCESSS)
+        if (upper_guard.last_operation_error() == FT_ERR_SUCCESSS)
         {
             if (!swapped)
             {
@@ -161,10 +157,8 @@ int ft_istream::lock_pair(const ft_istream &first, const ft_istream &second,
             }
             return (FT_ERR_SUCCESSS);
         }
-        if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
-        {
-            return (upper_guard.get_error());
-        }
+        if (upper_guard.last_operation_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
+            return (upper_guard.last_operation_error());
         if (lower_guard.owns_lock())
             lower_guard.unlock();
         pt_thread_sleep(1);
@@ -322,26 +316,26 @@ const char *ft_istream::operation_error_str_at(ft_size_t index) noexcept
 int ft_istream::last_operation_error() noexcept
 {
 
-    return (ft_operation_error_stack_last_error(ft_istream::_operation_errors));
+    return (ft_operation_error_stack_last_error(&ft_istream::_operation_errors));
 }
 
 int ft_istream::operation_error_at(ft_size_t index) noexcept
 {
 
-    return (ft_operation_error_stack_error_at(ft_istream::_operation_errors, index));
+    return (ft_operation_error_stack_error_at(&ft_istream::_operation_errors, index));
 }
 
 void ft_istream::pop_operation_errors() noexcept
 {
 
-    ft_operation_error_stack_pop_last(ft_istream::_operation_errors);
+    ft_operation_error_stack_pop_last(&ft_istream::_operation_errors);
     return ;
 }
 
 int ft_istream::pop_oldest_operation_error() noexcept
 {
 
-    return (ft_operation_error_stack_pop_last(ft_istream::_operation_errors));
+    return (ft_operation_error_stack_pop_last(&ft_istream::_operation_errors));
 }
 
 int ft_istream::operation_error_index() noexcept

@@ -6,6 +6,7 @@
 #include "../System_utils/system_utils.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/unique_lock.hpp"
+#include "../PThread/lock_error_helpers.hpp"
 #include "compression.hpp"
 #include "compression_stream_test_hooks.hpp"
 
@@ -70,10 +71,14 @@ int t_compress_stream_options::reset(void)
 {
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
-    if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(mutex_guard.get_error());
-        return (mutex_guard.get_error());
+        int lock_error = ft_unique_lock_pop_last_error(mutex_guard);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            this->set_error(lock_error);
+            return (lock_error);
+        }
     }
     this->_input_buffer_size = 0;
     this->_output_buffer_size = 0;
@@ -93,10 +98,14 @@ int t_compress_stream_options::set_input_buffer_size(std::size_t input_buffer_si
 {
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
-    if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(mutex_guard.get_error());
-        return (mutex_guard.get_error());
+        int lock_error = ft_unique_lock_pop_last_error(mutex_guard);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            this->set_error(lock_error);
+            return (lock_error);
+        }
     }
     this->_input_buffer_size = input_buffer_size;
     this->set_error(FT_ERR_SUCCESSS);
@@ -108,10 +117,14 @@ int t_compress_stream_options::set_output_buffer_size(std::size_t output_buffer_
 {
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
-    if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(mutex_guard.get_error());
-        return (mutex_guard.get_error());
+        int lock_error = ft_unique_lock_pop_last_error(mutex_guard);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            this->set_error(lock_error);
+            return (lock_error);
+        }
     }
     this->_output_buffer_size = output_buffer_size;
     this->set_error(FT_ERR_SUCCESSS);
@@ -123,10 +136,14 @@ int t_compress_stream_options::set_progress_callback(t_compress_stream_progress_
 {
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
-    if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(mutex_guard.get_error());
-        return (mutex_guard.get_error());
+        int lock_error = ft_unique_lock_pop_last_error(mutex_guard);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            this->set_error(lock_error);
+            return (lock_error);
+        }
     }
     this->_progress_callback = callback;
     this->_callback_user_data = user_data;
@@ -139,10 +156,14 @@ int t_compress_stream_options::set_cancel_callback(t_compress_stream_cancel_call
 {
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
-    if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(mutex_guard.get_error());
-        return (mutex_guard.get_error());
+        int lock_error = ft_unique_lock_pop_last_error(mutex_guard);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            this->set_error(lock_error);
+            return (lock_error);
+        }
     }
     this->_cancel_callback = callback;
     this->_callback_user_data = user_data;
@@ -157,10 +178,14 @@ int t_compress_stream_options::set_callbacks(t_compress_stream_progress_callback
 {
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
-    if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(mutex_guard.get_error());
-        return (mutex_guard.get_error());
+        int lock_error = ft_unique_lock_pop_last_error(mutex_guard);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            this->set_error(lock_error);
+            return (lock_error);
+        }
     }
     this->_progress_callback = progress_callback;
     this->_cancel_callback = cancel_callback;
@@ -174,10 +199,14 @@ int t_compress_stream_options::set_compression_level(int compression_level)
 {
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
-    if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(mutex_guard.get_error());
-        return (mutex_guard.get_error());
+        int lock_error = ft_unique_lock_pop_last_error(mutex_guard);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            this->set_error(lock_error);
+            return (lock_error);
+        }
     }
     this->_compression_level = compression_level;
     this->set_error(FT_ERR_SUCCESSS);
@@ -189,10 +218,14 @@ int t_compress_stream_options::set_window_bits(int window_bits)
 {
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
-    if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(mutex_guard.get_error());
-        return (mutex_guard.get_error());
+        int lock_error = ft_unique_lock_pop_last_error(mutex_guard);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            this->set_error(lock_error);
+            return (lock_error);
+        }
     }
     this->_window_bits = window_bits;
     this->set_error(FT_ERR_SUCCESSS);
@@ -204,10 +237,14 @@ int t_compress_stream_options::set_memory_level(int memory_level)
 {
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
-    if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(mutex_guard.get_error());
-        return (mutex_guard.get_error());
+        int lock_error = ft_unique_lock_pop_last_error(mutex_guard);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            this->set_error(lock_error);
+            return (lock_error);
+        }
     }
     this->_memory_level = memory_level;
     this->set_error(FT_ERR_SUCCESSS);
@@ -219,10 +256,14 @@ int t_compress_stream_options::set_strategy(int strategy)
 {
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
-    if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(mutex_guard.get_error());
-        return (mutex_guard.get_error());
+        int lock_error = ft_unique_lock_pop_last_error(mutex_guard);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            this->set_error(lock_error);
+            return (lock_error);
+        }
     }
     this->_strategy = strategy;
     this->set_error(FT_ERR_SUCCESSS);
@@ -235,11 +276,15 @@ std::size_t t_compress_stream_options::get_input_buffer_size() const
     std::size_t input_buffer_size;
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
-    if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        const_cast<t_compress_stream_options *>(this)->set_error(mutex_guard.get_error());
-        ft_errno = mutex_guard.get_error();
-        return (0);
+        int lock_error = ft_unique_lock_pop_last_error(mutex_guard);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            const_cast<t_compress_stream_options *>(this)->set_error(lock_error);
+            ft_errno = lock_error;
+            return (0);
+        }
     }
     input_buffer_size = this->_input_buffer_size;
     ft_errno = FT_ERR_SUCCESSS;
@@ -251,11 +296,15 @@ std::size_t t_compress_stream_options::get_output_buffer_size() const
     std::size_t output_buffer_size;
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
-    if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        const_cast<t_compress_stream_options *>(this)->set_error(mutex_guard.get_error());
-        ft_errno = mutex_guard.get_error();
-        return (0);
+        int lock_error = ft_unique_lock_pop_last_error(mutex_guard);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            const_cast<t_compress_stream_options *>(this)->set_error(lock_error);
+            ft_errno = lock_error;
+            return (0);
+        }
     }
     output_buffer_size = this->_output_buffer_size;
     ft_errno = FT_ERR_SUCCESSS;
@@ -267,11 +316,15 @@ t_compress_stream_progress_callback t_compress_stream_options::get_progress_call
     t_compress_stream_progress_callback progress_callback;
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
-    if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        const_cast<t_compress_stream_options *>(this)->set_error(mutex_guard.get_error());
-        ft_errno = mutex_guard.get_error();
-        return (ft_nullptr);
+        int lock_error = ft_unique_lock_pop_last_error(mutex_guard);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            const_cast<t_compress_stream_options *>(this)->set_error(lock_error);
+            ft_errno = lock_error;
+            return (ft_nullptr);
+        }
     }
     progress_callback = this->_progress_callback;
     ft_errno = FT_ERR_SUCCESSS;
@@ -283,11 +336,15 @@ t_compress_stream_cancel_callback t_compress_stream_options::get_cancel_callback
     t_compress_stream_cancel_callback cancel_callback;
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
-    if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        const_cast<t_compress_stream_options *>(this)->set_error(mutex_guard.get_error());
-        ft_errno = mutex_guard.get_error();
-        return (ft_nullptr);
+        int lock_error = ft_unique_lock_pop_last_error(mutex_guard);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            const_cast<t_compress_stream_options *>(this)->set_error(lock_error);
+            ft_errno = lock_error;
+            return (ft_nullptr);
+        }
     }
     cancel_callback = this->_cancel_callback;
     ft_errno = FT_ERR_SUCCESSS;
@@ -299,11 +356,15 @@ void    *t_compress_stream_options::get_callback_user_data() const
     void *user_data;
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
-    if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        const_cast<t_compress_stream_options *>(this)->set_error(mutex_guard.get_error());
-        ft_errno = mutex_guard.get_error();
-        return (ft_nullptr);
+        int lock_error = ft_unique_lock_pop_last_error(mutex_guard);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            const_cast<t_compress_stream_options *>(this)->set_error(lock_error);
+            ft_errno = lock_error;
+            return (ft_nullptr);
+        }
     }
     user_data = this->_callback_user_data;
     ft_errno = FT_ERR_SUCCESSS;
@@ -315,11 +376,15 @@ int t_compress_stream_options::get_compression_level() const
     int compression_level;
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
-    if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        const_cast<t_compress_stream_options *>(this)->set_error(mutex_guard.get_error());
-        ft_errno = mutex_guard.get_error();
-        return (Z_BEST_COMPRESSION);
+        int lock_error = ft_unique_lock_pop_last_error(mutex_guard);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            const_cast<t_compress_stream_options *>(this)->set_error(lock_error);
+            ft_errno = lock_error;
+            return (Z_BEST_COMPRESSION);
+        }
     }
     compression_level = this->_compression_level;
     ft_errno = FT_ERR_SUCCESSS;
@@ -331,11 +396,15 @@ int t_compress_stream_options::get_window_bits() const
     int window_bits;
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
-    if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        const_cast<t_compress_stream_options *>(this)->set_error(mutex_guard.get_error());
-        ft_errno = mutex_guard.get_error();
-        return (0);
+        int lock_error = ft_unique_lock_pop_last_error(mutex_guard);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            const_cast<t_compress_stream_options *>(this)->set_error(lock_error);
+            ft_errno = lock_error;
+            return (0);
+        }
     }
     window_bits = this->_window_bits;
     ft_errno = FT_ERR_SUCCESSS;
@@ -347,11 +416,15 @@ int t_compress_stream_options::get_memory_level() const
     int memory_level;
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
-    if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        const_cast<t_compress_stream_options *>(this)->set_error(mutex_guard.get_error());
-        ft_errno = mutex_guard.get_error();
-        return (0);
+        int lock_error = ft_unique_lock_pop_last_error(mutex_guard);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            const_cast<t_compress_stream_options *>(this)->set_error(lock_error);
+            ft_errno = lock_error;
+            return (0);
+        }
     }
     memory_level = this->_memory_level;
     ft_errno = FT_ERR_SUCCESSS;
@@ -363,11 +436,15 @@ int t_compress_stream_options::get_strategy() const
     int strategy;
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
-    if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        const_cast<t_compress_stream_options *>(this)->set_error(mutex_guard.get_error());
-        ft_errno = mutex_guard.get_error();
-        return (Z_DEFAULT_STRATEGY);
+        int lock_error = ft_unique_lock_pop_last_error(mutex_guard);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            const_cast<t_compress_stream_options *>(this)->set_error(lock_error);
+            ft_errno = lock_error;
+            return (Z_DEFAULT_STRATEGY);
+        }
     }
     strategy = this->_strategy;
     ft_errno = FT_ERR_SUCCESSS;
@@ -384,11 +461,15 @@ int t_compress_stream_options::snapshot(struct s_compress_stream_options_snapsho
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (FT_ERR_INVALID_ARGUMENT);
     }
-    if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        const_cast<t_compress_stream_options *>(this)->set_error(mutex_guard.get_error());
-        ft_errno = mutex_guard.get_error();
-        return (mutex_guard.get_error());
+        int lock_error = ft_unique_lock_pop_last_error(mutex_guard);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            const_cast<t_compress_stream_options *>(this)->set_error(lock_error);
+            ft_errno = lock_error;
+            return (lock_error);
+        }
     }
     snapshot->input_buffer_size = this->_input_buffer_size;
     snapshot->output_buffer_size = this->_output_buffer_size;
@@ -409,11 +490,15 @@ int t_compress_stream_options::get_error() const
     int error_code;
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
-    if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        const_cast<t_compress_stream_options *>(this)->set_error(mutex_guard.get_error());
-        ft_errno = mutex_guard.get_error();
-        return (mutex_guard.get_error());
+        int lock_error = ft_unique_lock_pop_last_error(mutex_guard);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            const_cast<t_compress_stream_options *>(this)->set_error(lock_error);
+            ft_errno = lock_error;
+            return (lock_error);
+        }
     }
     error_code = this->_error_code;
     ft_errno = FT_ERR_SUCCESSS;
@@ -426,11 +511,15 @@ const char  *t_compress_stream_options::get_error_str() const
     const char *error_string;
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
-    if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        const_cast<t_compress_stream_options *>(this)->set_error(mutex_guard.get_error());
-        ft_errno = mutex_guard.get_error();
-        return (ft_strerror(mutex_guard.get_error()));
+        int lock_error = ft_unique_lock_pop_last_error(mutex_guard);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            const_cast<t_compress_stream_options *>(this)->set_error(lock_error);
+            ft_errno = lock_error;
+            return (ft_strerror(lock_error));
+        }
     }
     error_code = this->_error_code;
     error_string = ft_strerror(error_code);

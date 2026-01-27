@@ -1,6 +1,7 @@
 #include "document.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/lock_error_helpers.hpp"
 #include "../Template/move.hpp"
 
 #include <cstdio>
@@ -67,9 +68,11 @@ static void json_document_finalize_guard(ft_unique_lock<pt_mutex> &guard) noexce
     operation_errno = ft_errno;
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    int guard_error = ft_unique_lock_pop_last_error(guard);
+
+    if (guard_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = guard.get_error();
+        ft_errno = guard_error;
         return ;
     }
     if (operation_errno != FT_ERR_SUCCESSS)
@@ -97,12 +100,15 @@ void json_document::set_error(int error_code) const noexcept
 int json_document::lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept
 {
     ft_unique_lock<pt_mutex> local_guard(this->_mutex);
-
-    if (local_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = local_guard.get_error();
-        guard = ft_unique_lock<pt_mutex>();
-        return (ft_errno);
+        int lock_error = ft_unique_lock_pop_last_error(local_guard);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            ft_errno = lock_error;
+            guard = ft_unique_lock<pt_mutex>();
+            return (lock_error);
+        }
     }
     ft_errno = FT_ERR_SUCCESSS;
     guard = ft_move(local_guard);
