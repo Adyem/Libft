@@ -2,6 +2,8 @@
 #define KV_STORE_HPP
 
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../JSon/json.hpp"
 #include "../CPP_class/class_string.hpp"
@@ -130,6 +132,7 @@ class kv_store
         mutable long long _metrics_total_prune_duration_ms;
         mutable long long _metrics_last_prune_duration_ms;
         ft_vector<kv_store_replication_sink> _replication_sinks;
+        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
         mutable pt_mutex _replication_mutex;
 
         void set_error_unlocked(int error_code) const noexcept;
@@ -147,6 +150,7 @@ class kv_store
         void record_get_hit() const noexcept;
         void record_get_miss() const noexcept;
         void record_prune_metrics(long long removed_entries, long long duration_ms) const noexcept;
+        void record_operation_error(int error_code) const noexcept;
         int lock_background(ft_unique_lock<pt_mutex> &guard) const noexcept;
         int start_background_thread_locked(long long interval_seconds) noexcept;
         void stop_background_thread_locked(ft_thread &thread_holder) noexcept;
@@ -184,6 +188,8 @@ class kv_store
         int kv_compare_and_swap(const char *key_string, const char *expected_value, const char *new_value, long long ttl_seconds = -1);
         int get_error() const;
         const char *get_error_str() const;
+        pt_mutex *get_mutex_for_validation() const noexcept;
+        ft_operation_error_stack *operation_error_stack_handle() const noexcept;
         int get_metrics(kv_store_metrics &out_metrics) const;
         int export_snapshot(ft_vector<kv_store_snapshot_entry> &out_entries) const;
         int export_snapshot_to_file(const char *file_path) const;

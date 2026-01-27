@@ -12,8 +12,10 @@ static void http2_append_raw_byte(ft_string &target, unsigned char value)
 
 http2_header_field::http2_header_field() noexcept
     : _name(), _value(), _error_code(FT_ERR_SUCCESSS),
-      _thread_safe_enabled(false), _mutex(ft_nullptr)
+      _mutex(ft_nullptr)
 {
+    if (this->prepare_thread_safety() != 0)
+        return ;
     return ;
 }
 
@@ -26,8 +28,10 @@ http2_header_field::~http2_header_field() noexcept
 
 http2_header_field::http2_header_field(const http2_header_field &other) noexcept
     : _name(), _value(), _error_code(FT_ERR_SUCCESSS),
-      _thread_safe_enabled(false), _mutex(ft_nullptr)
+      _mutex(ft_nullptr)
 {
+    if (this->prepare_thread_safety() != 0)
+        return ;
     bool lock_acquired;
     bool success_state;
     ft_string other_name;
@@ -70,8 +74,10 @@ http2_header_field::http2_header_field(const http2_header_field &other) noexcept
 
 http2_header_field::http2_header_field(http2_header_field &&other) noexcept
     : _name(), _value(), _error_code(FT_ERR_SUCCESSS),
-      _thread_safe_enabled(false), _mutex(ft_nullptr)
+      _mutex(ft_nullptr)
 {
+    if (this->prepare_thread_safety() != 0)
+        return ;
     bool lock_acquired;
     bool success_state;
 
@@ -194,12 +200,12 @@ http2_header_field &http2_header_field::operator=(http2_header_field &&other) no
     return (*this);
 }
 
-int http2_header_field::enable_thread_safety() noexcept
+int http2_header_field::prepare_thread_safety() noexcept
 {
     void *memory_pointer;
     pt_mutex *mutex_pointer;
 
-    if (this->_thread_safe_enabled && this->_mutex != ft_nullptr)
+    if (this->_mutex != ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESSS);
         return (0);
@@ -222,7 +228,6 @@ int http2_header_field::enable_thread_safety() noexcept
         return (-1);
     }
     this->_mutex = mutex_pointer;
-    this->_thread_safe_enabled = true;
     this->set_error(FT_ERR_SUCCESSS);
     return (0);
 }
@@ -235,22 +240,8 @@ void http2_header_field::teardown_thread_safety() noexcept
         std::free(this->_mutex);
         this->_mutex = ft_nullptr;
     }
-    this->_thread_safe_enabled = false;
     this->set_error(FT_ERR_SUCCESSS);
     return ;
-}
-
-void http2_header_field::disable_thread_safety() noexcept
-{
-    this->teardown_thread_safety();
-    return ;
-}
-
-bool http2_header_field::is_thread_safe() const noexcept
-{
-    if (this->_thread_safe_enabled && this->_mutex != ft_nullptr)
-        return (true);
-    return (false);
 }
 
 int http2_header_field::lock(bool *lock_acquired) const noexcept
@@ -259,7 +250,7 @@ int http2_header_field::lock(bool *lock_acquired) const noexcept
 
     if (lock_acquired)
         *lock_acquired = false;
-    if (!this->_thread_safe_enabled || this->_mutex == ft_nullptr)
+    if (this->_mutex == ft_nullptr)
     {
         ft_errno = FT_ERR_SUCCESSS;
         return (0);
@@ -282,10 +273,17 @@ void http2_header_field::unlock(bool lock_acquired) const noexcept
     http2_header_field *mutable_field;
 
     if (!lock_acquired)
+    {
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
+    }
     mutable_field = const_cast<http2_header_field *>(this);
     if (mutable_field->_mutex == ft_nullptr)
+    {
+        ft_errno = FT_ERR_SUCCESSS;
+        mutable_field->set_error(FT_ERR_SUCCESSS);
         return ;
+    }
     mutable_field->_mutex->unlock(THREAD_ID);
     if (mutable_field->_mutex->get_error() != FT_ERR_SUCCESSS)
     {

@@ -46,8 +46,7 @@ cnfg_config *cnfg_config_create()
 
 int cnfg_config_prepare_thread_safety(cnfg_config *config)
 {
-    pt_mutex *mutex_pointer;
-    pt_mutex *mutex_pointer;
+    pt_mutex *mutex_pointer = ft_nullptr;
 
     if (!config)
     {

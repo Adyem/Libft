@@ -2,6 +2,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../CPP_class/class_string.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/lock_error_helpers.hpp"
 #include "../Libft/libft.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread.hpp"
@@ -26,26 +27,40 @@ ft_string    time_format_iso8601(t_time time_value)
     ft_string formatted;
     static pt_mutex g_gmtime_mutex;
     int mutex_result;
+    int mutex_error;
     size_t strftime_result;
 
     standard_time = static_cast<std::time_t>(time_value);
     mutex_result = g_gmtime_mutex.lock(THREAD_ID);
-    if (mutex_result != FT_SUCCESS)
+    mutex_error = ft_mutex_pop_last_error(&g_gmtime_mutex);
     {
-        return (time_format_failure(g_gmtime_mutex.get_error()));
+        int reported_error = mutex_error != FT_ERR_SUCCESSS ? mutex_error : mutex_result;
+
+        if (reported_error != FT_SUCCESS)
+            return (time_format_failure(reported_error));
     }
     time_pointer = std::gmtime(&standard_time);
     if (!time_pointer)
     {
         mutex_result = g_gmtime_mutex.unlock(THREAD_ID);
-        if (mutex_result != FT_SUCCESS)
-            return (time_format_failure(g_gmtime_mutex.get_error()));
+        mutex_error = ft_mutex_pop_last_error(&g_gmtime_mutex);
+        {
+            int reported_error = mutex_error != FT_ERR_SUCCESSS ? mutex_error : mutex_result;
+
+            if (reported_error != FT_SUCCESS)
+                return (time_format_failure(reported_error));
+        }
         return (time_format_failure(FT_ERR_INVALID_ARGUMENT));
     }
     time_storage = *time_pointer;
     mutex_result = g_gmtime_mutex.unlock(THREAD_ID);
-    if (mutex_result != FT_SUCCESS)
-        return (time_format_failure(g_gmtime_mutex.get_error()));
+    mutex_error = ft_mutex_pop_last_error(&g_gmtime_mutex);
+    {
+        int reported_error = mutex_error != FT_ERR_SUCCESSS ? mutex_error : mutex_result;
+
+        if (reported_error != FT_SUCCESS)
+            return (time_format_failure(reported_error));
+    }
     strftime_result = std::strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%SZ", &time_storage);
     if (strftime_result == 0)
     {
@@ -65,6 +80,7 @@ ft_string    time_format_iso8601_with_offset(t_time time_value, int offset_minut
     ft_string formatted;
     static pt_mutex g_gmtime_mutex;
     int mutex_result;
+    int mutex_error;
     size_t strftime_result;
     long long offset_seconds;
     long long adjusted_epoch;
@@ -83,20 +99,35 @@ ft_string    time_format_iso8601_with_offset(t_time time_value, int offset_minut
         return (time_format_failure(FT_ERR_OUT_OF_RANGE));
     adjusted_time = static_cast<std::time_t>(adjusted_epoch);
     mutex_result = g_gmtime_mutex.lock(THREAD_ID);
-    if (mutex_result != FT_SUCCESS)
-        return (time_format_failure(g_gmtime_mutex.get_error()));
+    mutex_error = ft_mutex_pop_last_error(&g_gmtime_mutex);
+    {
+        int reported_error = mutex_error != FT_ERR_SUCCESSS ? mutex_error : mutex_result;
+
+        if (reported_error != FT_SUCCESS)
+            return (time_format_failure(reported_error));
+    }
     time_pointer = std::gmtime(&adjusted_time);
     if (!time_pointer)
     {
         mutex_result = g_gmtime_mutex.unlock(THREAD_ID);
-        if (mutex_result != FT_SUCCESS)
-            return (time_format_failure(g_gmtime_mutex.get_error()));
+        mutex_error = ft_mutex_pop_last_error(&g_gmtime_mutex);
+        {
+            int reported_error = mutex_error != FT_ERR_SUCCESSS ? mutex_error : mutex_result;
+
+            if (reported_error != FT_SUCCESS)
+                return (time_format_failure(reported_error));
+        }
         return (time_format_failure(FT_ERR_INVALID_ARGUMENT));
     }
     time_storage = *time_pointer;
     mutex_result = g_gmtime_mutex.unlock(THREAD_ID);
-    if (mutex_result != FT_SUCCESS)
-        return (time_format_failure(g_gmtime_mutex.get_error()));
+    mutex_error = ft_mutex_pop_last_error(&g_gmtime_mutex);
+    {
+        int reported_error = mutex_error != FT_ERR_SUCCESSS ? mutex_error : mutex_result;
+
+        if (reported_error != FT_SUCCESS)
+            return (time_format_failure(reported_error));
+    }
     strftime_result = std::strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%S", &time_storage);
     if (strftime_result == 0)
     {

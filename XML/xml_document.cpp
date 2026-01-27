@@ -3,6 +3,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
+#include "../PThread/lock_error_helpers.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread.hpp"
 #include <cstdio>
@@ -1135,27 +1136,22 @@ bool xml_document::is_thread_safe_enabled() const noexcept
 int xml_document::prepare_thread_safety() noexcept
 {
     pt_mutex *mutex_pointer;
-    void     *memory;
 
     if (this->_thread_safe_enabled && this->_mutex)
     {
         this->set_error(FT_ERR_SUCCESSS);
         return (0);
     }
-    memory = cma_malloc(sizeof(pt_mutex));
-    if (!memory)
+    mutex_pointer = new (std::nothrow) pt_mutex();
+    if (!mutex_pointer)
     {
         this->set_error(FT_ERR_NO_MEMORY);
         return (-1);
     }
-    mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
+    int mutex_error = ft_mutex_pop_last_error(mutex_pointer);
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        int mutex_error;
-
-        mutex_error = mutex_pointer->get_error();
-        mutex_pointer->~pt_mutex();
-        cma_free(memory);
+        delete mutex_pointer;
         this->set_error(mutex_error);
         return (-1);
     }
@@ -1172,8 +1168,7 @@ void xml_document::teardown_thread_safety() noexcept
         this->_thread_safe_enabled = false;
         return ;
     }
-    this->_mutex->~pt_mutex();
-    cma_free(this->_mutex);
+    delete this->_mutex;
     this->_mutex = ft_nullptr;
     this->_thread_safe_enabled = false;
     return ;
@@ -1188,14 +1183,13 @@ int xml_document::lock(bool *lock_acquired) const noexcept
         ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
-    this->_mutex->lock(THREAD_ID);
-    if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
+    int mutex_result = this->_mutex->lock(THREAD_ID);
+    int mutex_error = ft_mutex_pop_last_error(this->_mutex);
+    int reported_error = mutex_error != FT_ERR_SUCCESSS ? mutex_error : mutex_result;
+    if (reported_error != FT_ERR_SUCCESSS)
     {
-        int mutex_error;
-
-        mutex_error = this->_mutex->get_error();
-        ft_errno = mutex_error;
-        const_cast<xml_document *>(this)->set_error(mutex_error);
+        ft_errno = reported_error;
+        const_cast<xml_document *>(this)->set_error(reported_error);
         return (-1);
     }
     if (lock_acquired)
@@ -1208,14 +1202,13 @@ void xml_document::unlock(bool lock_acquired) const noexcept
 {
     if (!lock_acquired || !this->_thread_safe_enabled || !this->_mutex)
         return ;
-    this->_mutex->unlock(THREAD_ID);
-    if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
+    int mutex_result = this->_mutex->unlock(THREAD_ID);
+    int mutex_error = ft_mutex_pop_last_error(this->_mutex);
+    int reported_error = mutex_error != FT_ERR_SUCCESSS ? mutex_error : mutex_result;
+    if (reported_error != FT_ERR_SUCCESSS)
     {
-        int mutex_error;
-
-        mutex_error = this->_mutex->get_error();
-        ft_errno = mutex_error;
-        const_cast<xml_document *>(this)->set_error(mutex_error);
+        ft_errno = reported_error;
+        const_cast<xml_document *>(this)->set_error(reported_error);
         return ;
     }
     ft_errno = FT_ERR_SUCCESSS;

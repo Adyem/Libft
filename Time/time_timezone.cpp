@@ -2,6 +2,7 @@
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
+#include "../PThread/lock_error_helpers.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread.hpp"
 #include <ctime>
@@ -12,6 +13,7 @@ static bool load_utc_time(std::time_t standard_time, std::tm *utc_out)
     static pt_mutex g_gmtime_mutex;
     std::tm *utc_pointer;
     int mutex_result;
+    int mutex_error;
 
     if (!utc_out)
     {
@@ -19,29 +21,44 @@ static bool load_utc_time(std::time_t standard_time, std::tm *utc_out)
         return (false);
     }
     mutex_result = g_gmtime_mutex.lock(THREAD_ID);
-    if (mutex_result != FT_SUCCESS)
+    mutex_error = ft_mutex_pop_last_error(&g_gmtime_mutex);
     {
-        ft_global_error_stack_push(g_gmtime_mutex.get_error());
-        return (false);
+        int reported_error = mutex_error != FT_ERR_SUCCESSS ? mutex_error : mutex_result;
+
+        if (reported_error != FT_SUCCESS)
+        {
+            ft_global_error_stack_push(reported_error);
+            return (false);
+        }
     }
     utc_pointer = std::gmtime(&standard_time);
     if (!utc_pointer)
     {
         mutex_result = g_gmtime_mutex.unlock(THREAD_ID);
-        if (mutex_result != FT_SUCCESS)
+        mutex_error = ft_mutex_pop_last_error(&g_gmtime_mutex);
         {
-            ft_global_error_stack_push(g_gmtime_mutex.get_error());
-            return (false);
+            int reported_error = mutex_error != FT_ERR_SUCCESSS ? mutex_error : mutex_result;
+
+            if (reported_error != FT_SUCCESS)
+            {
+                ft_global_error_stack_push(reported_error);
+                return (false);
+            }
         }
         ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
         return (false);
     }
     *utc_out = *utc_pointer;
     mutex_result = g_gmtime_mutex.unlock(THREAD_ID);
-    if (mutex_result != FT_SUCCESS)
+    mutex_error = ft_mutex_pop_last_error(&g_gmtime_mutex);
     {
-        ft_global_error_stack_push(g_gmtime_mutex.get_error());
-        return (false);
+        int reported_error = mutex_error != FT_ERR_SUCCESSS ? mutex_error : mutex_result;
+
+        if (reported_error != FT_SUCCESS)
+        {
+            ft_global_error_stack_push(reported_error);
+            return (false);
+        }
     }
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);

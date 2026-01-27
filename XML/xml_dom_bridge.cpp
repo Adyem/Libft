@@ -2,6 +2,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
+#include "../Errno/errno_internal.hpp"
 #include <new>
 
 static void xml_dom_delete_node(ft_dom_node *node) noexcept
@@ -167,16 +168,33 @@ int xml_document_to_dom(const xml_document &document, ft_dom_document &dom) noex
     return (0);
 }
 
+static int xml_dom_pop_last_string_error(const ft_string &value) noexcept
+{
+    unsigned long long operation_id;
+
+    operation_id = value.last_operation_id();
+    if (operation_id == 0)
+        return (FT_ERR_SUCCESSS);
+    return (value.pop_operation_error(operation_id));
+}
+
+static int xml_dom_check_string_error(const ft_string &value) noexcept
+{
+    int error_code;
+
+    error_code = xml_dom_pop_last_string_error(value);
+    if (error_code != FT_ERR_SUCCESSS)
+        ft_errno = error_code;
+    return (error_code);
+}
+
 static int xml_dom_append_text(ft_string &output, const char *text) noexcept
 {
     if (!text)
         return (0);
     output += text;
-    if (output.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = output.get_error();
+    if (xml_dom_check_string_error(output) != FT_ERR_SUCCESSS)
         return (-1);
-    }
     return (0);
 }
 
@@ -198,17 +216,11 @@ static int xml_dom_serialize_node(ft_dom_node *node, ft_string &output) noexcept
         return (-1);
     }
     output += "<";
-    if (output.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = output.get_error();
+    if (xml_dom_check_string_error(output) != FT_ERR_SUCCESSS)
         return (-1);
-    }
     output += node_name;
-    if (output.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = output.get_error();
+    if (xml_dom_check_string_error(output) != FT_ERR_SUCCESSS)
         return (-1);
-    }
     const ft_vector<ft_string> &attribute_keys = node->get_attribute_keys();
 
     if (node->get_error() != FT_ERR_SUCCESSS)
@@ -244,35 +256,20 @@ static int xml_dom_serialize_node(ft_dom_node *node, ft_string &output) noexcept
             return (-1);
         }
         output += " ";
-        if (output.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = output.get_error();
+        if (xml_dom_check_string_error(output) != FT_ERR_SUCCESSS)
             return (-1);
-        }
         output += attribute_name;
-        if (output.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = output.get_error();
+        if (xml_dom_check_string_error(output) != FT_ERR_SUCCESSS)
             return (-1);
-        }
         output += "=\"";
-        if (output.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = output.get_error();
+        if (xml_dom_check_string_error(output) != FT_ERR_SUCCESSS)
             return (-1);
-        }
         output += attribute_value;
-        if (output.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = output.get_error();
+        if (xml_dom_check_string_error(output) != FT_ERR_SUCCESSS)
             return (-1);
-        }
         output += "\"";
-        if (output.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = output.get_error();
+        if (xml_dom_check_string_error(output) != FT_ERR_SUCCESSS)
             return (-1);
-        }
         attribute_index += 1;
     }
     const ft_vector<ft_dom_node*> &children = node->get_children();
@@ -301,20 +298,14 @@ static int xml_dom_serialize_node(ft_dom_node *node, ft_string &output) noexcept
     }
     if (!has_children && !has_value)
     {
-        output += "/>";
-        if (output.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = output.get_error();
-            return (-1);
-        }
-        return (0);
+    output += "/>";
+    if (xml_dom_check_string_error(output) != FT_ERR_SUCCESSS)
+        return (-1);
+    return (0);
     }
     output += ">";
-    if (output.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = output.get_error();
+    if (xml_dom_check_string_error(output) != FT_ERR_SUCCESSS)
         return (-1);
-    }
     if (has_value)
     {
         if (xml_dom_append_text(output, value.c_str()) != 0)
@@ -339,23 +330,14 @@ static int xml_dom_serialize_node(ft_dom_node *node, ft_string &output) noexcept
         index += 1;
     }
     output += "</";
-    if (output.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = output.get_error();
+    if (xml_dom_check_string_error(output) != FT_ERR_SUCCESSS)
         return (-1);
-    }
     output += node_name;
-    if (output.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = output.get_error();
+    if (xml_dom_check_string_error(output) != FT_ERR_SUCCESSS)
         return (-1);
-    }
     output += ">";
-    if (output.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = output.get_error();
+    if (xml_dom_check_string_error(output) != FT_ERR_SUCCESSS)
         return (-1);
-    }
     return (0);
 }
 
@@ -377,9 +359,9 @@ int xml_document_from_dom(const ft_dom_document &dom, xml_document &document) no
     ft_string serialized;
 
     serialized = "";
-    if (serialized.get_error() != FT_ERR_SUCCESSS)
+    if (xml_dom_check_string_error(serialized) != FT_ERR_SUCCESSS)
     {
-        document.set_manual_error(serialized.get_error());
+        document.set_manual_error(ft_errno);
         return (-1);
     }
     if (xml_dom_serialize_node(root_node, serialized) != 0)
@@ -402,4 +384,3 @@ int xml_document_from_dom(const ft_dom_document &dom, xml_document &document) no
     }
     return (0);
 }
-

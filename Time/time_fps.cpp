@@ -1,6 +1,7 @@
 #include "time.hpp"
 #include "fps.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/lock_error_helpers.hpp"
 #include <chrono>
 
 time_fps::time_fps(long frames_per_second)
@@ -34,9 +35,11 @@ long    time_fps::get_frames_per_second()
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        if (guard.get_error() != FT_ERR_SUCCESSS)
+        int guard_error = ft_unique_lock_pop_last_error(guard);
+
+        if (guard_error != FT_ERR_SUCCESSS)
         {
-            this->set_error(guard.get_error());
+            this->set_error(guard_error);
             final_error = this->_error_code;
         }
         else if (this->_frames_per_second <= 0)
@@ -64,10 +67,11 @@ int     time_fps::set_frames_per_second(long frames_per_second)
     result = -1;
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
+        int guard_error = ft_unique_lock_pop_last_error(guard);
 
-        if (guard.get_error() != FT_ERR_SUCCESSS)
+        if (guard_error != FT_ERR_SUCCESSS)
         {
-            this->set_error(guard.get_error());
+            this->set_error(guard_error);
             final_error = this->_error_code;
             result = -1;
         }
@@ -101,10 +105,11 @@ void    time_fps::sleep_to_next_frame()
     final_error = FT_ERR_SUCCESSS;
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
+        int guard_error = ft_unique_lock_pop_last_error(guard);
 
-        if (guard.get_error() != FT_ERR_SUCCESSS)
+        if (guard_error != FT_ERR_SUCCESSS)
         {
-            this->set_error(guard.get_error());
+            this->set_error(guard_error);
             final_error = this->_error_code;
         }
         else if (this->_frame_duration_ms <= 0.0)
@@ -147,12 +152,13 @@ int     time_fps::get_error() const
     final_error = FT_ERR_SUCCESSS;
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
+        int guard_error = ft_unique_lock_pop_last_error(guard);
 
-        if (guard.get_error() != FT_ERR_SUCCESSS)
+        if (guard_error != FT_ERR_SUCCESSS)
         {
-            const_cast<time_fps *>(this)->set_error(guard.get_error());
-            error_code_value = guard.get_error();
-            final_error = guard.get_error();
+            const_cast<time_fps *>(this)->set_error(guard_error);
+            error_code_value = guard_error;
+            final_error = guard_error;
         }
         else
         {
@@ -173,12 +179,13 @@ const char  *time_fps::get_error_str() const
     final_error = FT_ERR_SUCCESSS;
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
+        int guard_error = ft_unique_lock_pop_last_error(guard);
 
-        if (guard.get_error() != FT_ERR_SUCCESSS)
+        if (guard_error != FT_ERR_SUCCESSS)
         {
-            const_cast<time_fps *>(this)->set_error(guard.get_error());
-            error_string = ft_strerror(guard.get_error());
-            final_error = guard.get_error();
+            const_cast<time_fps *>(this)->set_error(guard_error);
+            error_string = ft_strerror(guard_error);
+            final_error = guard_error;
         }
         else
         {

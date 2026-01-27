@@ -7,24 +7,36 @@
 #include <new>
 #include "../PThread/lock_error_helpers.hpp"
 
+static void cnfg_entry_push_success(void)
+{
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return ;
+}
+
+static void cnfg_entry_push_error(int error_code)
+{
+    ft_global_error_stack_push(error_code);
+    return ;
+}
+
 int cnfg_entry_prepare_thread_safety(cnfg_entry *entry)
 {
-    pt_mutex *mutex_pointer;
     pt_mutex *mutex_pointer;
 
     if (!entry)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
+        cnfg_entry_push_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (entry->thread_safe_enabled && entry->mutex)
     {
+        cnfg_entry_push_success();
         return (0);
     }
     mutex_pointer = new (std::nothrow) pt_mutex();
     if (mutex_pointer == ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
+        cnfg_entry_push_error(FT_ERR_NO_MEMORY);
         return (-1);
     }
     {
@@ -33,12 +45,13 @@ int cnfg_entry_prepare_thread_safety(cnfg_entry *entry)
         if (mutex_error != FT_ERR_SUCCESSS)
         {
             delete mutex_pointer;
-            ft_global_error_stack_push(mutex_error);
+            cnfg_entry_push_error(mutex_error);
             return (-1);
         }
     }
     entry->mutex = mutex_pointer;
     entry->thread_safe_enabled = true;
+    cnfg_entry_push_success();
     return (0);
 }
 
@@ -48,11 +61,11 @@ void cnfg_entry_teardown_thread_safety(cnfg_entry *entry)
         return ;
     if (entry->mutex)
     {
-        entry->mutex->~pt_mutex();
-        cma_free(entry->mutex);
+        delete entry->mutex;
         entry->mutex = ft_nullptr;
     }
     entry->thread_safe_enabled = false;
+    cnfg_entry_push_success();
     return ;
 }
 
@@ -62,11 +75,12 @@ int cnfg_entry_lock(cnfg_entry *entry, bool *lock_acquired)
         *lock_acquired = false;
     if (!entry)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
+        cnfg_entry_push_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (!entry->thread_safe_enabled || !entry->mutex)
     {
+        cnfg_entry_push_success();
         return (0);
     }
     entry->mutex->lock(THREAD_ID);
@@ -75,12 +89,13 @@ int cnfg_entry_lock(cnfg_entry *entry, bool *lock_acquired)
 
         if (lock_error != FT_ERR_SUCCESSS)
         {
-            ft_global_error_stack_push(lock_error);
+            cnfg_entry_push_error(lock_error);
             return (-1);
         }
     }
     if (lock_acquired)
         *lock_acquired = true;
+    cnfg_entry_push_success();
     return (0);
 }
 
@@ -88,7 +103,7 @@ void cnfg_entry_unlock(cnfg_entry *entry, bool lock_acquired)
 {
     if (!entry || !lock_acquired || !entry->mutex)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
+        cnfg_entry_push_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     entry->mutex->unlock(THREAD_ID);
@@ -97,9 +112,10 @@ void cnfg_entry_unlock(cnfg_entry *entry, bool lock_acquired)
 
         if (unlock_error != FT_ERR_SUCCESSS)
         {
-            ft_global_error_stack_push(unlock_error);
+            cnfg_entry_push_error(unlock_error);
             return ;
         }
     }
+    cnfg_entry_push_success();
     return ;
 }

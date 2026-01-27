@@ -5,6 +5,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
+#include "../PThread/lock_error_helpers.hpp"
 #include "../PThread/pthread.hpp"
 
 static void time_duration_ms_disable_thread_safety(t_duration_milliseconds *duration)
@@ -40,14 +41,15 @@ int time_duration_ms_prepare_thread_safety(t_duration_milliseconds *duration)
     if (!memory)
         return (time_duration_ms_report_result(FT_ERR_NO_MEMORY, -1));
     mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
     {
-        int mutex_error;
+        int mutex_error = ft_mutex_pop_last_error(mutex_pointer);
 
-        mutex_error = mutex_pointer->get_error();
-        mutex_pointer->~pt_mutex();
-        std::free(memory);
-        return (time_duration_ms_report_result(mutex_error, -1));
+        if (mutex_error != FT_ERR_SUCCESSS)
+        {
+            mutex_pointer->~pt_mutex();
+            std::free(memory);
+            return (time_duration_ms_report_result(mutex_error, -1));
+        }
     }
     duration->mutex = mutex_pointer;
     duration->thread_safe_enabled = true;
@@ -74,8 +76,12 @@ int time_duration_ms_lock(const t_duration_milliseconds *duration, bool *lock_ac
     if (!mutable_duration->thread_safe_enabled || !mutable_duration->mutex)
         return (time_duration_ms_report_result(FT_ERR_SUCCESSS, 0));
     mutable_duration->mutex->lock(THREAD_ID);
-    if (mutable_duration->mutex->get_error() != FT_ERR_SUCCESSS)
-        return (time_duration_ms_report_result(mutable_duration->mutex->get_error(), -1));
+    {
+        int lock_error = ft_mutex_pop_last_error(mutable_duration->mutex);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+            return (time_duration_ms_report_result(lock_error, -1));
+    }
     if (lock_acquired)
         *lock_acquired = true;
     return (time_duration_ms_report_result(FT_ERR_SUCCESSS, 0));
@@ -102,10 +108,14 @@ void    time_duration_ms_unlock(const t_duration_milliseconds *duration, bool lo
         return ;
     }
     mutable_duration->mutex->unlock(THREAD_ID);
-    if (mutable_duration->mutex->get_error() != FT_ERR_SUCCESSS)
     {
-        ft_global_error_stack_push(mutable_duration->mutex->get_error());
-        return ;
+        int unlock_error = ft_mutex_pop_last_error(mutable_duration->mutex);
+
+        if (unlock_error != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(unlock_error);
+            return ;
+        }
     }
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;

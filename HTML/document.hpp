@@ -1,6 +1,7 @@
 #ifndef HTML_DOCUMENT_HPP
 #define HTML_DOCUMENT_HPP
 
+#include "../Errno/errno_internal.hpp"
 #include "parser.hpp"
 
 class pt_mutex;
@@ -11,9 +12,12 @@ class html_document
         html_node *_root;
         mutable pt_mutex *_mutex;
         mutable bool _thread_safe_enabled;
-        mutable int _error_code;
+        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
 
         void set_error(int error_code) const noexcept;
+        void record_operation_error(int error_code) const noexcept;
+        pt_mutex *get_mutex_for_validation() const noexcept;
+        ft_operation_error_stack *operation_error_stack_handle() const noexcept;
 
         int prepare_thread_safety() noexcept;
         void teardown_thread_safety() noexcept;

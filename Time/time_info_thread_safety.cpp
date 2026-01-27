@@ -5,6 +5,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
+#include "../PThread/lock_error_helpers.hpp"
 #include "../PThread/pthread.hpp"
 
 static void time_info_disable_thread_safety(t_time_info *time_info)
@@ -44,15 +45,16 @@ int time_info_prepare_thread_safety(t_time_info *time_info)
         return (-1);
     }
     mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
     {
-        int mutex_error;
+        int mutex_error = ft_mutex_pop_last_error(mutex_pointer);
 
-        mutex_error = mutex_pointer->get_error();
-        mutex_pointer->~pt_mutex();
-        std::free(memory);
-        ft_global_error_stack_push(mutex_error);
-        return (-1);
+        if (mutex_error != FT_ERR_SUCCESSS)
+        {
+            mutex_pointer->~pt_mutex();
+            std::free(memory);
+            ft_global_error_stack_push(mutex_error);
+            return (-1);
+        }
     }
     time_info->mutex = mutex_pointer;
     time_info->thread_safe_enabled = true;
@@ -72,7 +74,6 @@ void    time_info_teardown_thread_safety(t_time_info *time_info)
 int time_info_lock(const t_time_info *time_info, bool *lock_acquired)
 {
     t_time_info *mutable_info;
-    int error_code;
 
     if (lock_acquired)
         *lock_acquired = false;
@@ -88,11 +89,14 @@ int time_info_lock(const t_time_info *time_info, bool *lock_acquired)
         return (0);
     }
     mutable_info->mutex->lock(THREAD_ID);
-    if (mutable_info->mutex->get_error() != FT_ERR_SUCCESSS)
     {
-        error_code = mutable_info->mutex->get_error();
-        ft_global_error_stack_push(error_code);
-        return (-1);
+        int lock_error = ft_mutex_pop_last_error(mutable_info->mutex);
+
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(lock_error);
+            return (-1);
+        }
     }
     if (lock_acquired)
         *lock_acquired = true;
@@ -103,7 +107,6 @@ int time_info_lock(const t_time_info *time_info, bool *lock_acquired)
 void    time_info_unlock(const t_time_info *time_info, bool lock_acquired)
 {
     t_time_info *mutable_info;
-    int error_code;
 
     if (!time_info)
     {
@@ -122,11 +125,14 @@ void    time_info_unlock(const t_time_info *time_info, bool lock_acquired)
         return ;
     }
     mutable_info->mutex->unlock(THREAD_ID);
-    if (mutable_info->mutex->get_error() != FT_ERR_SUCCESSS)
     {
-        error_code = mutable_info->mutex->get_error();
-        ft_global_error_stack_push(error_code);
-        return ;
+        int unlock_error = ft_mutex_pop_last_error(mutable_info->mutex);
+
+        if (unlock_error != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(unlock_error);
+            return ;
+        }
     }
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;

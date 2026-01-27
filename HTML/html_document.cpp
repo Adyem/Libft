@@ -2,7 +2,9 @@
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../PThread/mutex.hpp"
+#include "../PThread/lock_error_helpers.hpp"
 #include "../PThread/pthread.hpp"
 
 html_document::thread_guard::thread_guard(const html_document *document) noexcept
@@ -36,7 +38,8 @@ bool html_document::thread_guard::lock_acquired() const noexcept
 }
 
 html_document::html_document() noexcept
-    : _root(ft_nullptr), _mutex(ft_nullptr), _thread_safe_enabled(false), _error_code(FT_ERR_SUCCESSS)
+    : _root(ft_nullptr), _mutex(ft_nullptr), _thread_safe_enabled(false),
+      _operation_errors({{}, {}, 0})
 {
     this->set_error(FT_ERR_SUCCESSS);
     if (this->prepare_thread_safety() != 0)
@@ -414,17 +417,16 @@ int html_document::get_error() const noexcept
 
     if (guard.get_status() != 0)
         return (ft_errno);
-    return (this->_error_code);
+    return (ft_operation_error_stack_last_error(&this->_operation_errors));
 }
 
 const char *html_document::get_error_str() const noexcept
 {
-    thread_guard guard(this);
-    const char *message;
+    int error_code = this->get_error();
+    const char *message = ft_strerror(error_code);
 
-    if (guard.get_status() != 0)
-        return (ft_strerror(ft_errno));
-    message = ft_strerror(this->_error_code);
+    if (message == ft_nullptr)
+        message = "unknown error";
     return (message);
 }
 
@@ -460,9 +462,28 @@ bool html_document::is_thread_safe_enabled() const noexcept
 
 void html_document::set_error(int error_code) const noexcept
 {
-    this->_error_code = error_code;
+    this->record_operation_error(error_code);
     ft_errno = error_code;
     return ;
+}
+
+void html_document::record_operation_error(int error_code) const noexcept
+{
+    unsigned long long operation_id = ft_errno_next_operation_id();
+
+    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
+    ft_operation_error_stack_push(&this->_operation_errors, error_code, operation_id);
+    return ;
+}
+
+pt_mutex *html_document::get_mutex_for_validation() const noexcept
+{
+    return (this->_mutex);
+}
+
+ft_operation_error_stack *html_document::operation_error_stack_handle() const noexcept
+{
+    return (&this->_operation_errors);
 }
 
 int html_document::prepare_thread_safety() noexcept
@@ -482,11 +503,10 @@ int html_document::prepare_thread_safety() noexcept
         return (-1);
     }
     mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
-    {
-        int mutex_error;
+    int mutex_error = ft_mutex_pop_last_error(mutex_pointer);
 
-        mutex_error = mutex_pointer->get_error();
+    if (mutex_error != FT_ERR_SUCCESSS)
+    {
         mutex_pointer->~pt_mutex();
         cma_free(memory);
         this->set_error(mutex_error);
@@ -522,11 +542,9 @@ int html_document::lock(bool *lock_acquired) const noexcept
         return (0);
     }
     this->_mutex->lock(THREAD_ID);
-    if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
+    int mutex_error = ft_mutex_pop_last_error(this->_mutex);
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        int mutex_error;
-
-        mutex_error = this->_mutex->get_error();
         ft_errno = mutex_error;
         const_cast<html_document *>(this)->set_error(mutex_error);
         return (-1);
@@ -546,11 +564,9 @@ void html_document::unlock(bool lock_acquired) const noexcept
         return ;
     }
     this->_mutex->unlock(THREAD_ID);
-    if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
+    int mutex_error = ft_mutex_pop_last_error(this->_mutex);
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        int mutex_error;
-
-        mutex_error = this->_mutex->get_error();
         ft_errno = mutex_error;
         const_cast<html_document *>(this)->set_error(mutex_error);
         return ;

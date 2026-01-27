@@ -2,6 +2,7 @@
 # define TIME_TIMER_HPP
 
 #include <chrono>
+#include "../Errno/errno_internal.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
 
@@ -11,10 +12,10 @@ class time_timer
         long    _duration_ms = 0;
         std::chrono::steady_clock::time_point _start_time = std::chrono::steady_clock::time_point();
         bool    _running = false;
-        mutable int _error_code;
         mutable pt_mutex _mutex;
+        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
 
-        void    set_error(int error_code) const noexcept;
+        void    record_operation_error(int error_code) const noexcept;
 
     public:
         time_timer() noexcept;
@@ -26,6 +27,8 @@ class time_timer
         void    sleep_remaining() noexcept;
         int     get_error() const noexcept;
         const char  *get_error_str() const noexcept;
+        pt_mutex    *get_mutex_for_validation() const noexcept;
+        ft_operation_error_stack *operation_error_stack_handle() const noexcept;
 };
 
 #endif

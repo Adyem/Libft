@@ -2,6 +2,7 @@
 #define FILE_WATCH_HPP
 
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../CPP_class/class_string.hpp"
 
@@ -24,8 +25,8 @@ class ft_file_watch
         ft_thread _thread;
         bool _running;
         bool _stopped;
-        mutable int _error_code;
         mutable pt_mutex _mutex;
+        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
 #ifdef __linux__
         int _fd;
         int _watch;
@@ -35,7 +36,7 @@ class ft_file_watch
 #elif defined(_WIN32)
         void *_handle;
 #endif
-        void set_error(int error) const;
+        void record_operation_error(int error_code) const;
         void event_loop();
         void close_handles_locked();
         bool snapshot_callback(void (**callback)(const char *, int, void *),
@@ -54,8 +55,8 @@ class ft_file_watch
 
         int watch_directory(const char *path, void (*callback)(const char *, int, void *), void *user_data);
         void stop();
-        int get_error() const;
-        const char *get_error_str() const;
+        pt_mutex *get_mutex_for_validation() const noexcept;
+        ft_operation_error_stack *operation_error_stack_handle() const noexcept;
 };
 
 #endif

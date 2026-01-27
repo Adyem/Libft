@@ -15,13 +15,13 @@ class http2_header_field
         ft_string           _name;
         ft_string           _value;
         mutable int         _error_code;
-        mutable bool        _thread_safe_enabled;
         mutable pt_mutex   *_mutex;
 
         void    set_error(int error_code) const noexcept;
         int     lock(bool *lock_acquired) const noexcept;
         void    unlock(bool lock_acquired) const noexcept;
         void    teardown_thread_safety() noexcept;
+        int     prepare_thread_safety() noexcept;
 
     public:
         http2_header_field() noexcept;
@@ -31,10 +31,6 @@ class http2_header_field
         http2_header_field(http2_header_field &&other) noexcept;
         http2_header_field &operator=(const http2_header_field &other) noexcept;
         http2_header_field &operator=(http2_header_field &&other) noexcept;
-
-        int     enable_thread_safety() noexcept;
-        void    disable_thread_safety() noexcept;
-        bool    is_thread_safe() const noexcept;
 
         bool    set_name(const ft_string &name_value) noexcept;
         bool    set_name_from_cstr(const char *name_value) noexcept;
