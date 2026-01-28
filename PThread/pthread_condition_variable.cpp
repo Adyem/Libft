@@ -68,7 +68,9 @@ pt_condition_variable::pt_condition_variable()
     }
     if (pt_cond_init(&this->_condition, &condition_attributes) != 0)
     {
-        this->set_error(ft_errno);
+        int condition_error = ft_global_error_stack_last_error();
+
+        this->set_error(condition_error);
         pthread_condattr_destroy(&condition_attributes);
         return ;
     }
@@ -76,7 +78,9 @@ pt_condition_variable::pt_condition_variable()
 #else
     if (pt_cond_init(&this->_condition, ft_nullptr) != 0)
     {
-        this->set_error(ft_errno);
+        int condition_error = ft_global_error_stack_last_error();
+
+        this->set_error(condition_error);
         return ;
     }
 #endif
@@ -101,13 +105,9 @@ void pt_condition_variable::set_error(int error) const
     bool lock_acquired;
 
     lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
-    {
-        ft_errno = error;
+    if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESSS)
         return ;
-    }
     this->_error_code = error;
-    ft_errno = error;
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -117,21 +117,14 @@ int pt_condition_variable::lock_internal(bool *lock_acquired) const
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || this->_state_mutex == ft_nullptr)
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-        return (0);
-    }
+        return (FT_ERR_SUCCESSS);
     this->_state_mutex->lock(THREAD_ID);
     int state_error = this->_state_mutex->operation_error_last_error();
     if (state_error != FT_ERR_SUCCESSS)
-    {
-        ft_errno = state_error;
-        return (-1);
-    }
+        return (state_error);
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    ft_errno = FT_ERR_SUCCESSS;
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
 void pt_condition_variable::unlock_internal(bool lock_acquired) const
@@ -139,13 +132,6 @@ void pt_condition_variable::unlock_internal(bool lock_acquired) const
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
         return ;
     this->_state_mutex->unlock(THREAD_ID);
-    int state_error = this->_state_mutex->operation_error_last_error();
-    if (state_error != FT_ERR_SUCCESSS)
-    {
-        ft_errno = state_error;
-        return ;
-    }
-    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -209,8 +195,8 @@ int pt_condition_variable::lock_state(bool *lock_acquired) const
     int result;
 
     result = this->lock_internal(lock_acquired);
-    if (result != 0)
-        const_cast<pt_condition_variable *>(this)->set_error(ft_errno);
+    if (result != FT_ERR_SUCCESSS)
+        const_cast<pt_condition_variable *>(this)->set_error(result);
     else
         const_cast<pt_condition_variable *>(this)->set_error(FT_ERR_SUCCESSS);
     return (result);
@@ -240,9 +226,10 @@ int pt_condition_variable::wait(pt_mutex &mutex)
     bool mutex_initialized;
 
     lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
+    int lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
+        this->set_error(lock_error);
         return (-1);
     }
     condition_initialized = this->_condition_initialized;
@@ -276,7 +263,7 @@ int pt_condition_variable::wait(pt_mutex &mutex)
     {
         int wait_error;
 
-        wait_error = ft_errno;
+        wait_error = ft_global_error_stack_last_error();
         pthread_mutex_unlock(&this->_mutex);
         if (mutex.lock(THREAD_ID) != FT_SUCCESS)
         {
@@ -338,9 +325,10 @@ int pt_condition_variable::wait_until(pt_mutex &mutex, const struct timespec &ab
     bool mutex_initialized;
 
     lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
+    int lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
+        this->set_error(lock_error);
         return (-1);
     }
     condition_initialized = this->_condition_initialized;
@@ -416,9 +404,10 @@ int pt_condition_variable::signal()
     bool mutex_initialized;
 
     lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
+    int lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
+        this->set_error(lock_error);
         return (-1);
     }
     condition_initialized = this->_condition_initialized;
@@ -438,7 +427,7 @@ int pt_condition_variable::signal()
     {
         int signal_error;
 
-        signal_error = ft_errno;
+        signal_error = ft_global_error_stack_last_error();
         pthread_mutex_unlock(&this->_mutex);
         this->set_error(signal_error);
         return (-1);
@@ -457,11 +446,13 @@ int pt_condition_variable::broadcast()
     bool lock_acquired;
     bool condition_initialized;
     bool mutex_initialized;
+    int lock_error;
 
     lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
+        this->set_error(lock_error);
         return (-1);
     }
     condition_initialized = this->_condition_initialized;
@@ -481,7 +472,7 @@ int pt_condition_variable::broadcast()
     {
         int broadcast_error;
 
-        broadcast_error = ft_errno;
+        broadcast_error = ft_global_error_stack_last_error();
         pthread_mutex_unlock(&this->_mutex);
         this->set_error(broadcast_error);
         return (-1);

@@ -70,7 +70,7 @@ class ft_blocking_queue
 
         void record_operation_error(int error_code) const noexcept;
         int lock_internal(bool *lock_acquired) const;
-        void unlock_internal(bool lock_acquired) const;
+        int unlock_internal(bool lock_acquired) const;
         void teardown_thread_safety();
         pt_mutex *mutex_handle() const;
 
@@ -123,7 +123,7 @@ class ft_scheduled_task_state
 
         void record_operation_error(int error_code) const noexcept;
         int lock_internal(bool *lock_acquired) const;
-        void unlock_internal(bool lock_acquired) const;
+        int unlock_internal(bool lock_acquired) const;
         void teardown_thread_safety();
         pt_mutex *mutex_handle() const;
 
@@ -167,7 +167,7 @@ class ft_scheduled_task_handle
 
         void record_operation_error(int error_code) const noexcept;
         int lock_internal(bool *lock_acquired) const;
-        void unlock_internal(bool lock_acquired) const;
+        int unlock_internal(bool lock_acquired) const;
         void teardown_thread_safety();
         pt_mutex *mutex_handle() const;
 
@@ -261,7 +261,7 @@ class ft_task_scheduler
                 unsigned long long parent_id, const char *label, bool timer_thread);
         bool capture_metrics(ft_task_trace_event &event) const;
         int lock_internal(bool *lock_acquired) const;
-        void unlock_internal(bool lock_acquired) const;
+        int unlock_internal(bool lock_acquired) const;
         void teardown_thread_safety();
 
     public:
@@ -351,7 +351,6 @@ template <typename ElementType>
 unsigned long long ft_blocking_queue<ElementType>::operation_error_push_entry_with_id(
         int error_code, unsigned long long operation_id) const
 {
-    ft_errno = error_code;
     ft_global_error_stack_push_entry_with_id(error_code, operation_id);
     ft_operation_error_stack_push(&this->_operation_errors, error_code, operation_id);
     return (operation_id);
@@ -387,39 +386,33 @@ int ft_blocking_queue<ElementType>::lock_internal(bool *lock_acquired) const
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || this->_state_mutex == ft_nullptr)
     {
-        ft_errno = FT_ERR_SUCCESSS;
-        return (0);
+        return (FT_ERR_SUCCESSS);
     }
     int state_lock_result = this->_state_mutex->lock(THREAD_ID);
     int state_error = pt_mutex_capture_error(this->_state_mutex, state_lock_result);
     if (state_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = state_error;
-        return (-1);
+        return (state_error);
     }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    ft_errno = FT_ERR_SUCCESSS;
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
 template <typename ElementType>
-void ft_blocking_queue<ElementType>::unlock_internal(bool lock_acquired) const
+int ft_blocking_queue<ElementType>::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
     {
-        ft_errno = FT_ERR_SUCCESSS;
-        return ;
+        return (FT_ERR_SUCCESSS);
     }
     int state_unlock_result = this->_state_mutex->unlock(THREAD_ID);
     int state_error = pt_mutex_capture_error(this->_state_mutex, state_unlock_result);
     if (state_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = state_error;
-        return ;
+        return (state_error);
     }
-    ft_errno = FT_ERR_SUCCESSS;
-    return ;
+    return (FT_ERR_SUCCESSS);
 }
 
 template <typename ElementType>
@@ -501,25 +494,22 @@ bool ft_blocking_queue<ElementType>::is_thread_safe_enabled() const
 template <typename ElementType>
 int ft_blocking_queue<ElementType>::lock(bool *lock_acquired) const
 {
-    int result;
+    int operation_result;
 
-    ft_errno = FT_ERR_SUCCESSS;
-    result = this->lock_internal(lock_acquired);
-    if (result != 0)
-    {
-        const_cast<ft_blocking_queue<ElementType> *>(this)->operation_error_push(ft_errno);
-        return (result);
-    }
-    const_cast<ft_blocking_queue<ElementType> *>(this)->operation_error_push(FT_ERR_SUCCESSS);
-    return (result);
+    operation_result = this->lock_internal(lock_acquired);
+    const_cast<ft_blocking_queue<ElementType> *>(this)->operation_error_push(operation_result);
+    if (operation_result != FT_ERR_SUCCESSS)
+        return (-1);
+    return (0);
 }
 
 template <typename ElementType>
 void ft_blocking_queue<ElementType>::unlock(bool lock_acquired) const
 {
-    ft_errno = FT_ERR_SUCCESSS;
-    this->unlock_internal(lock_acquired);
-    const_cast<ft_blocking_queue<ElementType> *>(this)->operation_error_push(ft_errno);
+    int operation_result;
+
+    operation_result = this->unlock_internal(lock_acquired);
+    const_cast<ft_blocking_queue<ElementType> *>(this)->operation_error_push(operation_result);
     return ;
 }
 
@@ -528,11 +518,13 @@ void ft_blocking_queue<ElementType>::push(ElementType &&value)
 {
     bool was_empty;
     bool state_lock_acquired;
+    int state_lock_error;
 
     state_lock_acquired = false;
-    if (this->lock_internal(&state_lock_acquired) != 0)
+    state_lock_error = this->lock_internal(&state_lock_acquired);
+    if (state_lock_error != FT_ERR_SUCCESSS)
     {
-        this->operation_error_push(ft_errno);
+        this->operation_error_push(state_lock_error);
         return ;
     }
     int mutex_lock_result = this->_mutex.lock(THREAD_ID);
@@ -592,9 +584,10 @@ bool ft_blocking_queue<ElementType>::pop(ElementType &result)
     bool state_lock_acquired;
 
     state_lock_acquired = false;
-    if (this->lock_internal(&state_lock_acquired) != 0)
+    int state_lock_error = this->lock_internal(&state_lock_acquired);
+    if (state_lock_error != FT_ERR_SUCCESSS)
     {
-        this->operation_error_push(ft_errno);
+        this->operation_error_push(state_lock_error);
         return (false);
     }
     int mutex_lock_result = this->_mutex.lock(THREAD_ID);
@@ -674,9 +667,10 @@ bool ft_blocking_queue<ElementType>::wait_pop(ElementType &result, const std::at
     bool state_lock_acquired;
 
     state_lock_acquired = false;
-    if (this->lock_internal(&state_lock_acquired) != 0)
+    int state_lock_error = this->lock_internal(&state_lock_acquired);
+    if (state_lock_error != FT_ERR_SUCCESSS)
     {
-        this->operation_error_push(ft_errno);
+        this->operation_error_push(state_lock_error);
         return (false);
     }
     int mutex_lock_result = this->_mutex.lock(THREAD_ID);
@@ -740,11 +734,9 @@ bool ft_blocking_queue<ElementType>::wait_pop(ElementType &result, const std::at
             this->operation_error_push(condition_error);
             return (false);
         }
-        if (this->lock_internal(&state_lock_acquired) != 0)
+        int relock_error = this->lock_internal(&state_lock_acquired);
+        if (relock_error != FT_ERR_SUCCESSS)
         {
-            int state_error;
-
-            state_error = ft_errno;
             mutex_unlock_result = this->_mutex.unlock(THREAD_ID);
             mutex_error = pt_mutex_capture_error(&this->_mutex, mutex_unlock_result);
             if (mutex_error != FT_ERR_SUCCESSS)
@@ -752,7 +744,7 @@ bool ft_blocking_queue<ElementType>::wait_pop(ElementType &result, const std::at
                 this->operation_error_push(mutex_error);
                 return (false);
             }
-            this->operation_error_push(state_error);
+            this->operation_error_push(relock_error);
             return (false);
         }
     }
@@ -791,9 +783,10 @@ void ft_blocking_queue<ElementType>::shutdown()
     bool state_lock_acquired;
 
     state_lock_acquired = false;
-    if (this->lock_internal(&state_lock_acquired) != 0)
+    int state_lock_error = this->lock_internal(&state_lock_acquired);
+    if (state_lock_error != FT_ERR_SUCCESSS)
     {
-        this->operation_error_push(ft_errno);
+        this->operation_error_push(state_lock_error);
         return ;
     }
     int mutex_lock_result = this->_mutex.lock(THREAD_ID);

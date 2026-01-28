@@ -14,6 +14,16 @@
 # include <unistd.h>
 #endif
 
+static int networking_pop_guard_error(const ft_unique_lock<pt_mutex> &guard) noexcept
+{
+    unsigned long long operation_id;
+
+    operation_id = guard.last_operation_id();
+    if (operation_id == 0)
+        return (FT_ERR_SUCCESSS);
+    return (guard.pop_operation_error(operation_id));
+}
+
 #ifdef _WIN32
 static inline int setsockopt_reuse(int fd, int opt)
 {

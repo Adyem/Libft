@@ -6,6 +6,7 @@ SRCS := readline.cpp \
     readline_handle_keypress.cpp \
     readline_suggestions.cpp \
     readline_utilities.cpp \
+    readline_error.cpp \
     readline_customization.cpp \
     readline_tab_completion.cpp \
     readline_printeble_char.cpp \

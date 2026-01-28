@@ -90,6 +90,16 @@ static inline int set_timeout_send(int fd, int ms)
 }
 #endif
 
+static int networking_pop_guard_error(const ft_unique_lock<pt_mutex> &guard) noexcept
+{
+    unsigned long long operation_id;
+
+    operation_id = guard.last_operation_id();
+    if (operation_id == 0)
+        return (FT_ERR_SUCCESSS);
+    return (guard.pop_operation_error(operation_id));
+}
+
 static void networking_finalize_guard(ft_unique_lock<pt_mutex> &guard) noexcept
 {
     int operation_errno;
@@ -97,9 +107,12 @@ static void networking_finalize_guard(ft_unique_lock<pt_mutex> &guard) noexcept
     operation_errno = ft_errno;
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    int guard_error;
+
+    guard_error = networking_pop_guard_error(guard);
+    if (guard_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = guard.get_error();
+        ft_errno = guard_error;
         return ;
     }
     if (operation_errno != FT_ERR_SUCCESSS)
@@ -114,12 +127,14 @@ static void networking_finalize_guard(ft_unique_lock<pt_mutex> &guard) noexcept
 int ft_socket::create_socket(const SocketConfig &config)
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
+    int guard_error;
     SocketConfig *mutable_config;
     bool lock_acquired;
 
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    guard_error = networking_pop_guard_error(guard);
+    if (guard_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = guard.get_error();
+        ft_errno = guard_error;
         return (this->_error_code);
     }
     mutable_config = const_cast<SocketConfig *>(&config);
@@ -152,12 +167,17 @@ int ft_socket::create_socket(const SocketConfig &config)
 }
 
 int ft_socket::set_reuse_address(const SocketConfig &config)
-{    ft_unique_lock<pt_mutex> guard(this->_mutex);
+{
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    int guard_error;
     SocketConfig *mutable_config;
     bool lock_acquired;
-    int opt;    if (guard.get_error() != FT_ERR_SUCCESSS)
+    int opt;
+
+    guard_error = networking_pop_guard_error(guard);
+    if (guard_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = guard.get_error();
+        ft_errno = guard_error;
         return (this->_error_code);
     }
     mutable_config = const_cast<SocketConfig*>(&config);
@@ -198,11 +218,16 @@ int ft_socket::set_reuse_address(const SocketConfig &config)
 }
 
 int ft_socket::set_non_blocking(const SocketConfig &config)
-{    ft_unique_lock<pt_mutex> guard(this->_mutex);
+{
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    int guard_error;
     SocketConfig *mutable_config;
-    bool lock_acquired;    if (guard.get_error() != FT_ERR_SUCCESSS)
+    bool lock_acquired;
+
+    guard_error = networking_pop_guard_error(guard);
+    if (guard_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = guard.get_error();
+        ft_errno = guard_error;
         return (this->_error_code);
     }
     mutable_config = const_cast<SocketConfig*>(&config);
@@ -242,11 +267,16 @@ int ft_socket::set_non_blocking(const SocketConfig &config)
 }
 
 int ft_socket::set_timeouts(const SocketConfig &config)
-{    ft_unique_lock<pt_mutex> guard(this->_mutex);
+{
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    int guard_error;
     SocketConfig *mutable_config;
-    bool lock_acquired;    if (guard.get_error() != FT_ERR_SUCCESSS)
+    bool lock_acquired;
+
+    guard_error = networking_pop_guard_error(guard);
+    if (guard_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = guard.get_error();
+        ft_errno = guard_error;
         return (this->_error_code);
     }
     mutable_config = const_cast<SocketConfig*>(&config);
@@ -294,15 +324,20 @@ int ft_socket::set_timeouts(const SocketConfig &config)
 }
 
 int ft_socket::configure_address(const SocketConfig &config)
-{    ft_unique_lock<pt_mutex> guard(this->_mutex);
+{
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    int guard_error;
     SocketConfig *mutable_config;
     bool lock_acquired;
     ft_string host_copy;
     uint16_t port_value;
     int address_family;
-    int protocol_value;    if (guard.get_error() != FT_ERR_SUCCESSS)
+    int protocol_value;
+
+    guard_error = networking_pop_guard_error(guard);
+    if (guard_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = guard.get_error();
+        ft_errno = guard_error;
         return (this->_error_code);
     }
     mutable_config = const_cast<SocketConfig*>(&config);
@@ -440,10 +475,15 @@ int ft_socket::configure_address(const SocketConfig &config)
 }
 
 int ft_socket::bind_socket(const SocketConfig &config)
-{    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    socklen_t addr_len;    if (guard.get_error() != FT_ERR_SUCCESSS)
+{
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    int guard_error;
+    socklen_t addr_len;
+
+    guard_error = networking_pop_guard_error(guard);
+    if (guard_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = guard.get_error();
+        ft_errno = guard_error;
         return (this->_error_code);
     }
     if (config._address_family == AF_INET)
@@ -473,12 +513,17 @@ int ft_socket::bind_socket(const SocketConfig &config)
 }
 
 int ft_socket::listen_socket(const SocketConfig &config)
-{    ft_unique_lock<pt_mutex> guard(this->_mutex);
+{
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    int guard_error;
     SocketConfig *mutable_config;
     bool lock_acquired;
-    int backlog;    if (guard.get_error() != FT_ERR_SUCCESSS)
+    int backlog;
+
+    guard_error = networking_pop_guard_error(guard);
+    if (guard_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = guard.get_error();
+        ft_errno = guard_error;
         return (this->_error_code);
     }
     mutable_config = const_cast<SocketConfig*>(&config);
@@ -568,11 +613,16 @@ int ft_socket::setup_server(const SocketConfig &config)
 }
 
 int ft_socket::join_multicast_group(const SocketConfig &config)
-{    ft_unique_lock<pt_mutex> guard(this->_mutex);
+{
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    int guard_error;
     SocketConfig *mutable_config;
-    bool lock_acquired;    if (guard.get_error() != FT_ERR_SUCCESSS)
+    bool lock_acquired;
+
+    guard_error = networking_pop_guard_error(guard);
+    if (guard_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = guard.get_error();
+        ft_errno = guard_error;
         return (this->_error_code);
     }
     mutable_config = const_cast<SocketConfig*>(&config);

@@ -31,9 +31,8 @@ endif
 
 COMPILE_FLAGS = -Wall -Werror -Wextra -std=c++17 -Wmissing-declarations \
                 -Wold-style-cast -Wshadow -Wconversion -Wformat=2 -Wundef \
-                -Wfloat-equal -Wconversion -Wodr -Wuseless-cast \
-                -Wzero-as-null-pointer-constant -Wmaybe-uninitialized $(OPT_FLAGS) \
-                $(SANITIZER_FLAGS)
+                -Wfloat-equal -Wodr -Wuseless-cast -Wzero-as-null-pointer-constant \
+				-Wmaybe-uninitialized $(OPT_FLAGS) $(SANITIZER_FLAGS)
 
 export COMPILE_FLAGS
 export SANITIZER_FLAGS
@@ -58,9 +57,9 @@ else
     RMDIR  = rm -rf
 endif
 
-SUBDIRS :=  Errno \
+SUBDIRS :=  Libft \
             Compatebility \
-            Libft \
+            Errno \
             CMA \
             SCMA \
             GetNextLine \
@@ -92,9 +91,9 @@ SUBDIRS :=  Errno \
             Game
 
 LIB_BASES := \
-  Errno/errno \
-  Compatebility/Compatebility \
   Libft/LibFT \
+  Compatebility/Compatebility \
+  Errno/errno \
   CMA/CustomMemoryAllocator \
   SCMA/SCMA \
   GetNextLine/GetNextLine \

@@ -116,12 +116,10 @@ int rl_terminal_dimensions_refresh(terminal_dimensions *dimensions)
     unsigned short x_pixels;
     unsigned short y_pixels;
     bool           lock_acquired;
-    int error_code;
 
     if (dimensions == ft_nullptr)
     {
-        error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_errno = error_code;
+        rl_internal_set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     lock_acquired = false;
@@ -131,11 +129,8 @@ int rl_terminal_dimensions_refresh(terminal_dimensions *dimensions)
     {
         rl_terminal_dimensions_clear(dimensions);
         rl_terminal_dimensions_unlock(dimensions, lock_acquired);
-        if (ft_errno == FT_ERR_SUCCESSS)
-        {
-            error_code = FT_ERR_TERMINATED;
-            ft_errno = error_code;
-        }
+        if (rl_internal_get_error() == FT_ERR_SUCCESSS)
+            rl_internal_set_error(FT_ERR_TERMINATED);
         return (-1);
     }
     dimensions->rows = rows;
@@ -143,13 +138,14 @@ int rl_terminal_dimensions_refresh(terminal_dimensions *dimensions)
     dimensions->x_pixels = x_pixels;
     dimensions->y_pixels = y_pixels;
     dimensions->dimensions_valid = true;
-    error_code = FT_ERR_SUCCESSS;
-    ft_errno = error_code;
-    rl_terminal_dimensions_unlock(dimensions, lock_acquired);
-    if (lock_acquired == true && ft_errno != FT_ERR_SUCCESSS)
+    rl_internal_set_error(FT_ERR_SUCCESSS);
+    int unlock_error = rl_terminal_dimensions_unlock(dimensions, lock_acquired);
+    if (lock_acquired == true && unlock_error != FT_ERR_SUCCESSS)
+    {
+        rl_internal_set_error(unlock_error);
         return (-1);
-    error_code = FT_ERR_SUCCESSS;
-    ft_errno = error_code;
+    }
+    rl_internal_set_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -159,12 +155,10 @@ int rl_terminal_dimensions_get(terminal_dimensions *dimensions,
     bool *dimensions_valid)
 {
     bool lock_acquired;
-    int error_code;
 
     if (dimensions == ft_nullptr)
     {
-        error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_errno = error_code;
+        rl_internal_set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     lock_acquired = false;
@@ -180,12 +174,13 @@ int rl_terminal_dimensions_get(terminal_dimensions *dimensions,
         *y_pixels = dimensions->y_pixels;
     if (dimensions_valid != ft_nullptr)
         *dimensions_valid = dimensions->dimensions_valid;
-    error_code = FT_ERR_SUCCESSS;
-    ft_errno = error_code;
-    rl_terminal_dimensions_unlock(dimensions, lock_acquired);
-    if (lock_acquired == true && ft_errno != FT_ERR_SUCCESSS)
+    rl_internal_set_error(FT_ERR_SUCCESSS);
+    int unlock_error = rl_terminal_dimensions_unlock(dimensions, lock_acquired);
+    if (lock_acquired == true && unlock_error != FT_ERR_SUCCESSS)
+    {
+        rl_internal_set_error(unlock_error);
         return (-1);
-    error_code = FT_ERR_SUCCESSS;
-    ft_errno = error_code;
+    }
+    rl_internal_set_error(FT_ERR_SUCCESSS);
     return (0);
 }

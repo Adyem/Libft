@@ -32,7 +32,7 @@ cnfg_config *cnfg_config_create()
     config = static_cast<cnfg_config*>(cma_calloc(1, sizeof(cnfg_config)));
     if (!config)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     if (cnfg_config_prepare_thread_safety(config) != 0)
@@ -40,7 +40,7 @@ cnfg_config *cnfg_config_create()
         cma_free(config);
         return (ft_nullptr);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (config);
 }
 
@@ -50,18 +50,18 @@ int cnfg_config_prepare_thread_safety(cnfg_config *config)
 
     if (!config)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (config->thread_safe_enabled && config->mutex)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (0);
     }
     mutex_pointer = new (std::nothrow) pt_mutex();
     if (mutex_pointer == ft_nullptr)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (-1);
     }
     {
@@ -70,13 +70,13 @@ int cnfg_config_prepare_thread_safety(cnfg_config *config)
         if (mutex_error != FT_ERR_SUCCESSS)
         {
             delete mutex_pointer;
-            ft_errno = mutex_error;
+            ft_global_error_stack_push(mutex_error);
             return (-1);
         }
     }
     config->mutex = mutex_pointer;
     config->thread_safe_enabled = true;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -110,7 +110,7 @@ void cnfg_free(cnfg_config *config)
 {
     if (!config)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     ft_unique_lock<pt_mutex> mutex_guard;
@@ -147,14 +147,14 @@ void cnfg_free(cnfg_config *config)
         int unlock_error = ft_mutex_pop_last_error(config->mutex);
 
         if (unlock_error != FT_ERR_SUCCESSS)
-            ft_errno = unlock_error;
+            ft_global_error_stack_push(unlock_error);
         else
-            ft_errno = FT_ERR_SUCCESSS;
+            ft_global_error_stack_push(FT_ERR_SUCCESSS);
     }
     else
     {
         cnfg_config_unlock_guard(mutex_guard);
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
     }
     cnfg_config_teardown_thread_safety(config);
     cma_free(config);
@@ -165,7 +165,7 @@ cnfg_config *cnfg_parse(const char *filename)
 {
     if (!filename)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     FILE *file = ft_fopen(filename, "r");
@@ -197,7 +197,7 @@ cnfg_config *cnfg_parse(const char *filename)
                     current_section = cma_strdup(line_string + 1);
                     if (!current_section)
                     {
-                        ft_errno = FT_ERR_NO_MEMORY;
+                        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
                         cnfg_free(config);
                         ft_fclose(file);
                         return (ft_nullptr);
@@ -219,7 +219,7 @@ cnfg_config *cnfg_parse(const char *filename)
                 key = cma_strdup(key_start);
                 if (!key)
                 {
-                    ft_errno = FT_ERR_NO_MEMORY;
+                    ft_global_error_stack_push(FT_ERR_NO_MEMORY);
                     cma_free(value);
                     cnfg_free(config);
                     if (current_section)
@@ -233,7 +233,7 @@ cnfg_config *cnfg_parse(const char *filename)
                 value = cma_strdup(value_start);
                 if (!value)
                 {
-                    ft_errno = FT_ERR_NO_MEMORY;
+                    ft_global_error_stack_push(FT_ERR_NO_MEMORY);
                     cma_free(key);
                     cnfg_free(config);
                     if (current_section)
@@ -251,7 +251,7 @@ cnfg_config *cnfg_parse(const char *filename)
                 key = cma_strdup(key_start);
                 if (!key)
                 {
-                    ft_errno = FT_ERR_NO_MEMORY;
+                    ft_global_error_stack_push(FT_ERR_NO_MEMORY);
                     cnfg_free(config);
                     if (current_section)
                         cma_free(current_section);
@@ -263,7 +263,7 @@ cnfg_config *cnfg_parse(const char *filename)
         cnfg_entry *new_entries = static_cast<cnfg_entry*>(cma_realloc(config->entries, sizeof(cnfg_entry) * (config->entry_count + 1)));
         if (!new_entries)
         {
-            ft_errno = FT_ERR_NO_MEMORY;
+            ft_global_error_stack_push(FT_ERR_NO_MEMORY);
             cma_free(key);
             cma_free(value);
             cnfg_free(config);
@@ -281,7 +281,7 @@ cnfg_config *cnfg_parse(const char *filename)
             new_entry->section = cma_strdup(current_section);
             if (!new_entry->section)
             {
-                ft_errno = FT_ERR_NO_MEMORY;
+                ft_global_error_stack_push(FT_ERR_NO_MEMORY);
                 cma_free(key);
                 cma_free(value);
                 new_entry->key = ft_nullptr;
@@ -316,7 +316,7 @@ cnfg_config *cnfg_parse(const char *filename)
     if (current_section)
         cma_free(current_section);
     ft_fclose(file);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (config);
 }
 
@@ -324,7 +324,7 @@ static cnfg_config *cnfg_parse_json(const char *filename)
 {
     if (!filename)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     FILE *file;
@@ -360,7 +360,7 @@ static cnfg_config *cnfg_parse_json(const char *filename)
         config->entries = static_cast<cnfg_entry*>(cma_calloc(count, sizeof(cnfg_entry)));
         if (!config->entries)
         {
-            ft_errno = FT_ERR_NO_MEMORY;
+            ft_global_error_stack_push(FT_ERR_NO_MEMORY);
             cnfg_config_teardown_thread_safety(config);
             cma_free(config);
             json_free_groups(groups);
@@ -382,7 +382,7 @@ static cnfg_config *cnfg_parse_json(const char *filename)
                 entry->section = cma_strdup(group_pointer->name);
                 if (!entry->section)
                 {
-                    ft_errno = FT_ERR_NO_MEMORY;
+                    ft_global_error_stack_push(FT_ERR_NO_MEMORY);
                     config->entry_count = index;
                     cnfg_free(config);
                     json_free_groups(groups);
@@ -394,7 +394,7 @@ static cnfg_config *cnfg_parse_json(const char *filename)
                 entry->key = cma_strdup(item_pointer->key);
                 if (!entry->key)
                 {
-                    ft_errno = FT_ERR_NO_MEMORY;
+                    ft_global_error_stack_push(FT_ERR_NO_MEMORY);
                     config->entry_count = index + 1;
                     cnfg_free(config);
                     json_free_groups(groups);
@@ -406,7 +406,7 @@ static cnfg_config *cnfg_parse_json(const char *filename)
                 entry->value = cma_strdup(item_pointer->value);
                 if (!entry->value)
                 {
-                    ft_errno = FT_ERR_NO_MEMORY;
+                    ft_global_error_stack_push(FT_ERR_NO_MEMORY);
                     config->entry_count = index + 1;
                     cnfg_free(config);
                     json_free_groups(groups);
@@ -427,7 +427,7 @@ static cnfg_config *cnfg_parse_json(const char *filename)
     }
     config->entry_count = count;
     json_free_groups(groups);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (config);
 }
 
@@ -445,13 +445,13 @@ cnfg_config *config_load_env()
     }
     if (!count)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (config);
     }
     config->entries = static_cast<cnfg_entry*>(cma_calloc(count, sizeof(cnfg_entry)));
     if (!config->entries)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         cnfg_config_teardown_thread_safety(config);
         cma_free(config);
         return (ft_nullptr);
@@ -472,7 +472,7 @@ cnfg_config *config_load_env()
             entry->key = static_cast<char*>(cma_calloc(key_length + 1, sizeof(char)));
             if (!entry->key)
             {
-                ft_errno = FT_ERR_NO_MEMORY;
+                ft_global_error_stack_push(FT_ERR_NO_MEMORY);
                 config->entry_count = index;
                 cnfg_free(config);
                 return (ft_nullptr);
@@ -483,7 +483,7 @@ cnfg_config *config_load_env()
                 entry->value = cma_strdup(equals_sign + 1);
                 if (!entry->value)
                 {
-                    ft_errno = FT_ERR_NO_MEMORY;
+                    ft_global_error_stack_push(FT_ERR_NO_MEMORY);
                     config->entry_count = index + 1;
                     cnfg_free(config);
                     return (ft_nullptr);
@@ -495,7 +495,7 @@ cnfg_config *config_load_env()
             entry->key = cma_strdup(pair);
             if (!entry->key)
             {
-                ft_errno = FT_ERR_NO_MEMORY;
+                ft_global_error_stack_push(FT_ERR_NO_MEMORY);
                 config->entry_count = index;
                 cnfg_free(config);
                 return (ft_nullptr);
@@ -511,7 +511,7 @@ cnfg_config *config_load_env()
         ++index;
     }
     config->entry_count = count;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (config);
 }
 
@@ -519,7 +519,7 @@ cnfg_config *config_load_file(const char *filename)
 {
     if (!filename)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     const char *dot = ft_strrchr(filename, '.');
@@ -527,11 +527,11 @@ cnfg_config *config_load_file(const char *filename)
     {
         cnfg_config *config = cnfg_parse_json(filename);
         if (config)
-            ft_errno = FT_ERR_SUCCESSS;
+            ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (config);
     }
     cnfg_config *config = cnfg_parse(filename);
     if (config)
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (config);
 }

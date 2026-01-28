@@ -44,6 +44,10 @@ static char *rl_error(readline_state_t *state)
 
 static int rl_last_error_with_fallback(int fallback_error)
 {
+    int internal_error = rl_internal_consume_error();
+
+    if (internal_error != FT_ERR_SUCCESSS)
+        return (internal_error);
     if (ft_global_error_stack_depth() == 0)
         return (fallback_error);
     int error_code = ft_global_error_stack_pop_newest();

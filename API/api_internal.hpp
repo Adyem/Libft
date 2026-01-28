@@ -24,12 +24,12 @@ class api_connection_pool_handle
     private:
         mutable int                 _error_code;
         mutable pt_mutex            *_mutex;
-        bool                        _thread_safe_enabled;
 
         void set_error(int error) const;
         int lock_internal(bool *lock_acquired) const;
         void unlock_internal(bool lock_acquired) const;
         void teardown_thread_safety();
+        int initialize_thread_safety();
         static thread_local ft_operation_error_stack _operation_errors;
         static void record_operation_error_unlocked(int error_code);
 
@@ -54,8 +54,6 @@ class api_connection_pool_handle
         api_connection_pool_handle &operator=(const api_connection_pool_handle &other) = delete;
         api_connection_pool_handle &operator=(api_connection_pool_handle &&other);
 
-        int enable_thread_safety();
-        bool is_thread_safe() const;
         int lock(bool *lock_acquired) const;
         void unlock(bool lock_acquired) const;
 

@@ -138,7 +138,7 @@ class kv_store
         void set_error_unlocked(int error_code) const noexcept;
         void set_error(int error_code) const noexcept;
         int lock_store(ft_unique_lock<pt_mutex> &guard) const noexcept;
-        static void unlock_store_guard(ft_unique_lock<pt_mutex> &guard, int error_code) noexcept;
+        void unlock_store_guard(ft_unique_lock<pt_mutex> &guard, int error_code) const noexcept;
         int encrypt_value(const ft_string &plain_string, ft_string &encoded_string) const;
         int decrypt_value(const ft_string &encoded_string, ft_string &plain_string) const;
         int prune_expired_locked(ft_unique_lock<pt_mutex> &guard);

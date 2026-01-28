@@ -44,7 +44,7 @@ static void config_free_entry_contents(cnfg_entry *entry)
 {
     if (!entry)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     bool entry_locked;
@@ -52,7 +52,7 @@ static void config_free_entry_contents(cnfg_entry *entry)
         return ;
     config_free_entry_contents_unlocked(entry);
     cnfg_entry_unlock(entry, entry_locked);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -63,7 +63,7 @@ static int config_duplicate_entry(const cnfg_entry *source, cnfg_entry *destinat
 
     if (!source || !destination)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     destination->mutex = ft_nullptr;
@@ -79,7 +79,7 @@ static int config_duplicate_entry(const cnfg_entry *source, cnfg_entry *destinat
         destination->section = cma_strdup(source->section);
         if (!destination->section)
         {
-            ft_errno = FT_ERR_NO_MEMORY;
+            ft_global_error_stack_push(FT_ERR_NO_MEMORY);
             cnfg_entry_unlock(mutable_source, source_locked);
             config_free_entry_contents(destination);
             return (-1);
@@ -90,7 +90,7 @@ static int config_duplicate_entry(const cnfg_entry *source, cnfg_entry *destinat
         destination->key = cma_strdup(source->key);
         if (!destination->key)
         {
-            ft_errno = FT_ERR_NO_MEMORY;
+            ft_global_error_stack_push(FT_ERR_NO_MEMORY);
             cnfg_entry_unlock(mutable_source, source_locked);
             config_free_entry_contents(destination);
             return (-1);
@@ -101,14 +101,14 @@ static int config_duplicate_entry(const cnfg_entry *source, cnfg_entry *destinat
         destination->value = cma_strdup(source->value);
         if (!destination->value)
         {
-            ft_errno = FT_ERR_NO_MEMORY;
+            ft_global_error_stack_push(FT_ERR_NO_MEMORY);
             cnfg_entry_unlock(mutable_source, source_locked);
             config_free_entry_contents(destination);
             return (-1);
         }
     }
     cnfg_entry_unlock(mutable_source, source_locked);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -129,7 +129,7 @@ static cnfg_entry *config_find_matching_entry(cnfg_config *config, const cnfg_en
 
     if (!config || !entry)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     index = 0;
@@ -145,12 +145,12 @@ static cnfg_entry *config_find_matching_entry(cnfg_config *config, const cnfg_en
         cnfg_entry_unlock(candidate, candidate_locked);
         if (matches)
         {
-            ft_errno = FT_ERR_SUCCESSS;
+            ft_global_error_stack_push(FT_ERR_SUCCESSS);
             return (candidate);
         }
         ++index;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (ft_nullptr);
 }
 
@@ -162,7 +162,7 @@ static int config_append_entry(cnfg_config *destination, const cnfg_entry *sourc
 
     if (!destination || !source)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (config_duplicate_entry(source, &copy) != 0)
@@ -190,6 +190,7 @@ static int config_append_entry(cnfg_config *destination, const cnfg_entry *sourc
         return (-1);
     }
     destination->entry_count++;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -201,7 +202,7 @@ static int config_copy_entries(cnfg_config *destination, const cnfg_config *sour
         return (0);
     if (source->entry_count && !source->entries)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     index = 0;
@@ -211,6 +212,7 @@ static int config_copy_entries(cnfg_config *destination, const cnfg_config *sour
             return (-1);
         ++index;
     }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -225,7 +227,7 @@ cnfg_config *config_merge(const cnfg_config *base_config, const cnfg_config *ove
 
     if (!base_config && !override_config)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     result = cnfg_config_create();
@@ -236,12 +238,12 @@ cnfg_config *config_merge(const cnfg_config *base_config, const cnfg_config *ove
     {
         cnfg_config_unlock_guard(result_guard);
         cnfg_free(result);
-        ft_errno = lock_error;
+        ft_global_error_stack_push(lock_error);
         return (ft_nullptr);
     }
     if (override_config && override_config->entry_count && !override_config->entries)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         cnfg_free(result);
         return (ft_nullptr);
     }
@@ -252,7 +254,7 @@ cnfg_config *config_merge(const cnfg_config *base_config, const cnfg_config *ove
         {
             cnfg_config_unlock_guard(result_guard);
             cnfg_free(result);
-            ft_errno = lock_error;
+            ft_global_error_stack_push(lock_error);
             return (ft_nullptr);
         }
     }
@@ -263,7 +265,7 @@ cnfg_config *config_merge(const cnfg_config *base_config, const cnfg_config *ove
         {
             cnfg_config_unlock_guard(result_guard);
             cnfg_free(result);
-            ft_errno = lock_error;
+            ft_global_error_stack_push(lock_error);
             return (ft_nullptr);
         }
     }
@@ -275,7 +277,7 @@ cnfg_config *config_merge(const cnfg_config *base_config, const cnfg_config *ove
     }
     if (!override_config)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (result);
     }
     index = 0;
@@ -309,7 +311,6 @@ cnfg_config *config_merge(const cnfg_config *base_config, const cnfg_config *ove
             replacement.key = ft_nullptr;
             replacement.value = ft_nullptr;
             cnfg_entry_unlock(existing, existing_locked);
-            ft_errno = FT_ERR_SUCCESSS;
         }
         else
         {
@@ -322,6 +323,6 @@ cnfg_config *config_merge(const cnfg_config *base_config, const cnfg_config *ove
         }
         ++index;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }

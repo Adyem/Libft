@@ -17,12 +17,12 @@ char *rl_resize_buffer(char **buffer_pointer, int *current_size_pointer, int new
 
     if (buffer_pointer == ft_nullptr || current_size_pointer == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        rl_internal_set_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     if (new_size <= 0)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        rl_internal_set_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     old_buffer = *buffer_pointer;
@@ -38,7 +38,7 @@ char *rl_resize_buffer(char **buffer_pointer, int *current_size_pointer, int new
     if (!new_buffer)
     {
         su_write(2, "Allocation error\n", 17);
-        ft_errno = FT_ERR_NO_MEMORY;
+        rl_internal_set_error(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     if (copy_size > 0 && old_buffer != ft_nullptr)
@@ -49,7 +49,7 @@ char *rl_resize_buffer(char **buffer_pointer, int *current_size_pointer, int new
         ft_bzero(new_buffer + copy_size, static_cast<size_t>(new_size) - copy_size);
     *buffer_pointer = new_buffer;
     *current_size_pointer = new_size;
-    ft_errno = FT_ERR_SUCCESSS;
+    rl_internal_set_error(FT_ERR_SUCCESSS);
     return (new_buffer);
 }
 
@@ -61,7 +61,7 @@ int rl_clear_line(const char *prompt, const char *buffer)
 
     if (prompt == ft_nullptr || buffer == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        rl_internal_set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (rl_utf8_compute_columns(prompt, &prompt_length) != 0)
@@ -74,7 +74,7 @@ int rl_clear_line(const char *prompt, const char *buffer)
     if (term_width <= 0)
     {
         term_width = 1;
-        ft_errno = FT_ERR_SUCCESSS;
+        rl_internal_set_error(FT_ERR_SUCCESSS);
     }
     int line_count = (total_length / term_width) + 1;
     int index = 0;
@@ -86,7 +86,7 @@ int rl_clear_line(const char *prompt, const char *buffer)
         index++;
     }
     pf_printf("\r");
-    ft_errno = FT_ERR_SUCCESSS;
+    rl_internal_set_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -100,17 +100,17 @@ int rl_read_key(void)
         bytes_read = su_read(0, &character, 1);
         if (bytes_read == 1)
         {
-            ft_errno = FT_ERR_SUCCESSS;
+            rl_internal_set_error(FT_ERR_SUCCESSS);
             return (character);
         }
         if (bytes_read == 0)
         {
-            ft_errno = FT_ERR_TERMINATED;
+            rl_internal_set_error(FT_ERR_TERMINATED);
             return (-1);
         }
         if (bytes_read < 0)
         {
-            ft_errno = FT_ERR_TERMINATED;
+            rl_internal_set_error(FT_ERR_TERMINATED);
             return (-1);
         }
     }
@@ -178,7 +178,7 @@ int rl_history_search(const char *query, int start_index,
 
     if (query == ft_nullptr || match_index == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        rl_internal_set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     *match_index = -1;
@@ -188,13 +188,13 @@ int rl_history_search(const char *query, int start_index,
     if (query_length == 0)
     {
         cma_free(query_code_points);
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        rl_internal_set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (history_count <= 0)
     {
         cma_free(query_code_points);
-        ft_errno = FT_ERR_NOT_FOUND;
+        rl_internal_set_error(FT_ERR_NOT_FOUND);
         return (-1);
     }
     current_index = 0;
@@ -222,9 +222,9 @@ int rl_history_search(const char *query, int start_index,
             {
                 int conversion_error;
 
-                conversion_error = ft_errno;
+                conversion_error = rl_internal_get_error();
                 cma_free(query_code_points);
-                ft_errno = conversion_error;
+                rl_internal_set_error(conversion_error);
                 return (-1);
             }
             contains_result = rl_history_utf32_contains(entry_code_points,
@@ -233,14 +233,14 @@ int rl_history_search(const char *query, int start_index,
             if (contains_result < 0)
             {
                 cma_free(query_code_points);
-                ft_errno = FT_ERR_INVALID_ARGUMENT;
+                rl_internal_set_error(FT_ERR_INVALID_ARGUMENT);
                 return (-1);
             }
             if (contains_result == 1)
             {
                 *match_index = current_index;
                 cma_free(query_code_points);
-                ft_errno = FT_ERR_SUCCESSS;
+                rl_internal_set_error(FT_ERR_SUCCESSS);
                 return (0);
             }
             current_index -= 1;
@@ -270,9 +270,9 @@ int rl_history_search(const char *query, int start_index,
             {
                 int conversion_error;
 
-                conversion_error = ft_errno;
+                conversion_error = rl_internal_get_error();
                 cma_free(query_code_points);
-                ft_errno = conversion_error;
+                rl_internal_set_error(conversion_error);
                 return (-1);
             }
             contains_result = rl_history_utf32_contains(entry_code_points,
@@ -281,20 +281,20 @@ int rl_history_search(const char *query, int start_index,
             if (contains_result < 0)
             {
                 cma_free(query_code_points);
-                ft_errno = FT_ERR_INVALID_ARGUMENT;
+                rl_internal_set_error(FT_ERR_INVALID_ARGUMENT);
                 return (-1);
             }
             if (contains_result == 1)
             {
                 *match_index = current_index;
                 cma_free(query_code_points);
-                ft_errno = FT_ERR_SUCCESSS;
+                rl_internal_set_error(FT_ERR_SUCCESSS);
                 return (0);
             }
             current_index += 1;
         }
     }
     cma_free(query_code_points);
-    ft_errno = FT_ERR_NOT_FOUND;
+    rl_internal_set_error(FT_ERR_NOT_FOUND);
     return (-1);
 }

@@ -10,8 +10,6 @@ typedef unsigned long long ft_size_t;
 
 #endif
 
-extern thread_local int ft_errno;
-
 int ft_map_system_error(int error_code);
 int ft_set_errno_from_system_error(int error_code);
 unsigned long long ft_errno_next_operation_id(void);

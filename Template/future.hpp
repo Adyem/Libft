@@ -96,7 +96,6 @@ class ft_future<void>
 template <typename ValueType>
 void ft_future<ValueType>::report_result(int error_code) const
 {
-    ft_errno = error_code;
     this->record_operation_error(error_code);
     return ;
 }
@@ -168,9 +167,10 @@ ft_future<ValueType>::ft_future(const ft_future<ValueType> &other)
     this->initialize_mutex_state();
     lock_acquired = false;
     other_promise = ft_nullptr;
-    if (other.lock_internal(&lock_acquired) != 0)
+    int lock_error = other.lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->report_result(ft_errno);
+        this->report_result(lock_error);
         return ;
     }
     other_promise = other._promise;
@@ -195,9 +195,10 @@ ft_future<ValueType>::ft_future(ft_future<ValueType> &&other)
 
     this->initialize_mutex_state();
     other_lock_acquired = false;
-    if (other.lock_internal(&other_lock_acquired) != 0)
+    int lock_error = other.lock_internal(&other_lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->report_result(ft_errno);
+        this->report_result(lock_error);
         return ;
     }
     transferred_promise = other._promise;
@@ -265,16 +266,18 @@ ft_future<ValueType> &ft_future<ValueType>::operator=(const ft_future<ValueType>
         return (*this);
     }
     this_lock_acquired = false;
-    if (this->lock_internal(&this_lock_acquired) != 0)
+    int this_lock_result = this->lock_internal(&this_lock_acquired);
+    if (this_lock_result != FT_ERR_SUCCESSS)
     {
-        this->report_result(ft_errno);
+        this->report_result(this_lock_result);
         return (*this);
     }
     other_lock_acquired = false;
-    if (other.lock_internal(&other_lock_acquired) != 0)
+    int other_lock_result = other.lock_internal(&other_lock_acquired);
+    if (other_lock_result != FT_ERR_SUCCESSS)
     {
         this->unlock_internal(this_lock_acquired);
-        this->report_result(ft_errno);
+        this->report_result(other_lock_result);
         return (*this);
     }
     other_promise = other._promise;
@@ -299,20 +302,21 @@ ft_future<ValueType> &ft_future<ValueType>::operator=(ft_future<ValueType> &&oth
     if (this == &other)
     {
         this->report_result(FT_ERR_SUCCESSS);
-        ft_errno = FT_ERR_SUCCESSS;
         return (*this);
     }
     this_lock_acquired = false;
-    if (this->lock_internal(&this_lock_acquired) != 0)
+    int this_lock_result = this->lock_internal(&this_lock_acquired);
+    if (this_lock_result != FT_ERR_SUCCESSS)
     {
-        this->report_result(ft_errno);
+        this->report_result(this_lock_result);
         return (*this);
     }
     other_lock_acquired = false;
-    if (other.lock_internal(&other_lock_acquired) != 0)
+    int other_lock_result = other.lock_internal(&other_lock_acquired);
+    if (other_lock_result != FT_ERR_SUCCESSS)
     {
         this->unlock_internal(this_lock_acquired);
-        this->report_result(ft_errno);
+        this->report_result(other_lock_result);
         return (*this);
     }
     transferred_promise = other._promise;
@@ -326,7 +330,6 @@ ft_future<ValueType> &ft_future<ValueType>::operator=(ft_future<ValueType> &&oth
     other.report_result(FT_ERR_SUCCESSS);
     this->unlock_internal(this_lock_acquired);
     this->report_result(transferred_error);
-    ft_errno = FT_ERR_SUCCESSS;
     return (*this);
 }
 
@@ -439,7 +442,6 @@ inline void ft_future<void>::record_operation_error(int error_code) const noexce
 
 inline void ft_future<void>::report_result(int error_code) const
 {
-    ft_errno = error_code;
     this->record_operation_error(error_code);
     return ;
 }
@@ -493,9 +495,10 @@ inline ft_future<void>::ft_future(const ft_future<void> &other)
     this->initialize_mutex_state();
     lock_acquired = false;
     other_promise = ft_nullptr;
-    if (other.lock_internal(&lock_acquired) != 0)
+    int lock_result = other.lock_internal(&lock_acquired);
+    if (lock_result != FT_ERR_SUCCESSS)
     {
-        this->report_result(ft_errno);
+        this->report_result(lock_result);
         return ;
     }
     other_promise = other._promise;
@@ -519,9 +522,10 @@ inline ft_future<void>::ft_future(ft_future<void> &&other)
 
     this->initialize_mutex_state();
     lock_acquired = false;
-    if (other.lock_internal(&lock_acquired) != 0)
+    int lock_result = other.lock_internal(&lock_acquired);
+    if (lock_result != FT_ERR_SUCCESSS)
     {
-        this->report_result(ft_errno);
+        this->report_result(lock_result);
         return ;
     }
     transferred_promise = other._promise;
@@ -586,16 +590,18 @@ inline ft_future<void> &ft_future<void>::operator=(const ft_future<void> &other)
         return (*this);
     }
     this_lock_acquired = false;
-    if (this->lock_internal(&this_lock_acquired) != 0)
+    int this_lock_result = this->lock_internal(&this_lock_acquired);
+    if (this_lock_result != FT_ERR_SUCCESSS)
     {
-        this->report_result(ft_errno);
+        this->report_result(this_lock_result);
         return (*this);
     }
     other_lock_acquired = false;
-    if (other.lock_internal(&other_lock_acquired) != 0)
+    int other_lock_result = other.lock_internal(&other_lock_acquired);
+    if (other_lock_result != FT_ERR_SUCCESSS)
     {
         this->unlock_internal(this_lock_acquired);
-        this->report_result(ft_errno);
+        this->report_result(other_lock_result);
         return (*this);
     }
     other_promise = other._promise;
@@ -620,20 +626,21 @@ inline ft_future<void> &ft_future<void>::operator=(ft_future<void> &&other)
     if (this == &other)
     {
         this->report_result(FT_ERR_SUCCESSS);
-        ft_errno = FT_ERR_SUCCESSS;
         return (*this);
     }
     this_lock_acquired = false;
-    if (this->lock_internal(&this_lock_acquired) != 0)
+    int this_lock_result = this->lock_internal(&this_lock_acquired);
+    if (this_lock_result != FT_ERR_SUCCESSS)
     {
-        this->report_result(ft_errno);
+        this->report_result(this_lock_result);
         return (*this);
     }
     other_lock_acquired = false;
-    if (other.lock_internal(&other_lock_acquired) != 0)
+    int other_lock_result = other.lock_internal(&other_lock_acquired);
+    if (other_lock_result != FT_ERR_SUCCESSS)
     {
         this->unlock_internal(this_lock_acquired);
-        this->report_result(ft_errno);
+        this->report_result(other_lock_result);
         return (*this);
     }
     transferred_promise = other._promise;
@@ -647,7 +654,6 @@ inline ft_future<void> &ft_future<void>::operator=(ft_future<void> &&other)
     other.report_result(FT_ERR_SUCCESSS);
     this->unlock_internal(this_lock_acquired);
     this->report_result(transferred_error);
-    ft_errno = FT_ERR_SUCCESSS;
     return (*this);
 }
 
@@ -744,20 +750,13 @@ inline bool ft_future<void>::valid() const
 template <typename ValueType>
 int ft_future<ValueType>::lock(bool *lock_acquired) const
 {
-    int result;
-
-    result = this->lock_internal(lock_acquired);
-    ft_errno = result;
-    return (result);
+    return (this->lock_internal(lock_acquired));
 }
 
 template <typename ValueType>
 void ft_future<ValueType>::unlock(bool lock_acquired) const
 {
-    int result;
-
-    result = this->unlock_internal(lock_acquired);
-    ft_errno = result;
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
@@ -818,19 +817,12 @@ int ft_future<ValueType>::unlock_internal(bool lock_acquired) const
 
 inline int ft_future<void>::lock(bool *lock_acquired) const
 {
-    int result;
-
-    result = this->lock_internal(lock_acquired);
-    ft_errno = result;
-    return (result);
+    return (this->lock_internal(lock_acquired));
 }
 
 inline void ft_future<void>::unlock(bool lock_acquired) const
 {
-    int result;
-
-    result = this->unlock_internal(lock_acquired);
-    ft_errno = result;
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 

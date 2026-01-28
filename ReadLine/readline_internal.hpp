@@ -118,6 +118,10 @@ void    rl_history_notify_updated(void);
 int        rl_history_search(const char *query, int start_index,
             bool search_backward, int *match_index);
 
+void    rl_internal_set_error(int error_code);
+int        rl_internal_get_error(void);
+int        rl_internal_consume_error(void);
+
 int        rl_state_prepare_thread_safety(readline_state_t *state);
 void    rl_state_teardown_thread_safety(readline_state_t *state);
 int        rl_state_lock(readline_state_t *state, bool *lock_acquired);

@@ -6,6 +6,7 @@
 #include "../Template/vector.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
+#include "../PThread/lock_error_helpers.hpp"
 #include "../Libft/libft.hpp"
 #include "../Time/time.hpp"
 #include <climits>
@@ -63,6 +64,20 @@ struct networking_dns_cache_entry
 static ft_map<ft_string, networking_dns_cache_entry>   g_networking_dns_cache;
 static pt_mutex                                        g_networking_dns_cache_mutex;
 static const long                                      g_networking_dns_cache_ttl_ms = 60000;
+
+static int networking_dns_cache_lock(ft_unique_lock<pt_mutex> &cache_lock) noexcept
+{
+    cache_lock = ft_unique_lock<pt_mutex>(g_networking_dns_cache_mutex);
+    return (ft_unique_lock_pop_last_error(cache_lock));
+}
+
+static int networking_dns_cache_unlock(ft_unique_lock<pt_mutex> &cache_lock) noexcept
+{
+    if (!cache_lock.owns_lock())
+        return (FT_ERR_SUCCESSS);
+    cache_lock.unlock();
+    return (ft_unique_lock_pop_last_error(cache_lock));
+}
 
 static bool networking_dns_append_literal(ft_string &target, const char *literal) noexcept
 {
@@ -248,6 +263,7 @@ bool networking_dns_resolve(const char *host, const char *service,
     ft_unique_lock<pt_mutex> cache_lock;
     Pair<ft_string, networking_dns_cache_entry> *cache_entry;
     bool        entry_valid;
+    int         cache_lock_error;
 
     out_addresses.clear();
     if (out_addresses.get_error() != FT_ERR_SUCCESSS)
@@ -320,9 +336,12 @@ bool networking_dns_resolve(const char *host, const char *service,
         lookup_start_valid = false;
         ft_errno = FT_ERR_SUCCESSS;
     }
-    cache_lock = ft_unique_lock<pt_mutex>(g_networking_dns_cache_mutex);
-    if (cache_lock.get_error() != FT_ERR_SUCCESSS)
+    cache_lock_error = networking_dns_cache_lock(cache_lock);
+    if (cache_lock_error != FT_ERR_SUCCESSS)
+    {
+        ft_errno = cache_lock_error;
         return (false);
+    }
     cache_entry = g_networking_dns_cache.find(cache_key);
     if (cache_entry != g_networking_dns_cache.end())
     {
@@ -336,16 +355,35 @@ bool networking_dns_resolve(const char *host, const char *service,
         {
             if (!networking_dns_copy_addresses(cache_entry->value.addresses, out_addresses))
             {
-                cache_lock.unlock();
+                int cache_unlock_error = networking_dns_cache_unlock(cache_lock);
+
+                if (cache_unlock_error != FT_ERR_SUCCESSS)
+                    ft_errno = cache_unlock_error;
                 return (false);
             }
-            cache_lock.unlock();
+            {
+                int cache_unlock_error = networking_dns_cache_unlock(cache_lock);
+
+                if (cache_unlock_error != FT_ERR_SUCCESSS)
+                {
+                    ft_errno = cache_unlock_error;
+                    return (false);
+                }
+            }
             ft_errno = FT_ERR_SUCCESSS;
             return (true);
         }
         g_networking_dns_cache.remove(cache_key);
     }
-    cache_lock.unlock();
+    {
+        int cache_unlock_error = networking_dns_cache_unlock(cache_lock);
+
+        if (cache_unlock_error != FT_ERR_SUCCESSS)
+        {
+            ft_errno = cache_unlock_error;
+            return (false);
+        }
+    }
     service_parameter = ft_nullptr;
     if (service_string[0] != '\0')
         service_parameter = service_string;
@@ -424,13 +462,20 @@ bool networking_dns_resolve(const char *host, const char *service,
         cache_value.expiration_ms = expiration_ms;
         if (networking_dns_copy_addresses(out_addresses, cache_value.addresses))
         {
-            ft_unique_lock<pt_mutex> update_lock(g_networking_dns_cache_mutex);
+            ft_unique_lock<pt_mutex> update_lock;
+            int update_lock_error = networking_dns_cache_lock(update_lock);
 
-            if (update_lock.get_error() == FT_ERR_SUCCESSS)
+            if (update_lock_error == FT_ERR_SUCCESSS)
             {
                 g_networking_dns_cache.remove(cache_key);
                 g_networking_dns_cache.insert(cache_key, ft_move(cache_value));
-                update_lock.unlock();
+                int update_unlock_error = networking_dns_cache_unlock(update_lock);
+
+                if (update_unlock_error != FT_ERR_SUCCESSS)
+                {
+                    ft_errno = update_unlock_error;
+                    return (false);
+                }
             }
         }
     }
@@ -470,11 +515,24 @@ bool networking_dns_resolve_first(const char *host, const char *service,
 
 void networking_dns_clear_cache(void) noexcept
 {
-    ft_unique_lock<pt_mutex> cache_lock(g_networking_dns_cache_mutex);
+    ft_unique_lock<pt_mutex> cache_lock;
+    int cache_lock_error = networking_dns_cache_lock(cache_lock);
 
-    if (cache_lock.get_error() != FT_ERR_SUCCESSS)
+    if (cache_lock_error != FT_ERR_SUCCESSS)
+    {
+        ft_errno = cache_lock_error;
         return ;
+    }
     g_networking_dns_cache.clear();
+    {
+        int cache_unlock_error = networking_dns_cache_unlock(cache_lock);
+
+        if (cache_unlock_error != FT_ERR_SUCCESSS)
+        {
+            ft_errno = cache_unlock_error;
+            return ;
+        }
+    }
     ft_errno = FT_ERR_SUCCESSS;
     return ;
 }

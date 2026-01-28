@@ -89,7 +89,7 @@ void cnfg_flag_parser::free_flags()
         }
     }
     this->free_flags_locked();
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -109,16 +109,22 @@ bool cnfg_flag_parser::parse(int argument_count, char **argument_values)
     this->free_flags_locked();
     this->set_error(FT_ERR_SUCCESSS);
     this->_short_flags = cnfg_parse_flags(argument_count, argument_values);
-    if (ft_errno != FT_ERR_SUCCESSS)
+    if (!this->_short_flags)
     {
-        this->set_error(ft_errno);
+        int short_flag_error = ft_global_error_stack_last_error();
+        ft_global_error_stack_pop_newest();
+        ft_global_error_stack_push(short_flag_error);
+        this->set_error(short_flag_error);
         this->free_flags_locked();
         return (false);
     }
     this->_long_flags = cnfg_parse_long_flags(argument_count, argument_values);
-    if (ft_errno != FT_ERR_SUCCESSS)
+    if (!this->_long_flags)
     {
-        this->set_error(ft_errno);
+        int long_flag_error = ft_global_error_stack_last_error();
+        ft_global_error_stack_pop_newest();
+        ft_global_error_stack_push(long_flag_error);
+        this->set_error(long_flag_error);
         this->free_flags_locked();
         return (false);
     }
@@ -141,6 +147,7 @@ bool cnfg_flag_parser::parse(int argument_count, char **argument_values)
     }
     this->_long_flag_count = long_flag_index;
     this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);
 }
 
@@ -160,11 +167,11 @@ bool cnfg_flag_parser::has_short_flag(char flag)
     }
     if (!this->_short_flags)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (false);
     }
     has_flag = ft_strchr(this->_short_flags, flag) != ft_nullptr;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (has_flag);
 }
 
@@ -184,7 +191,7 @@ bool cnfg_flag_parser::has_long_flag(const char *flag)
     }
     if (!this->_long_flags || !flag)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (false);
     }
     flag_index = 0;
@@ -194,7 +201,7 @@ bool cnfg_flag_parser::has_long_flag(const char *flag)
             return (true);
         ++flag_index;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (false);
 }
 
@@ -213,7 +220,7 @@ size_t cnfg_flag_parser::get_short_flag_count()
         }
     }
     short_flag_count = this->_short_flag_count;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (short_flag_count);
 }
 
@@ -232,7 +239,7 @@ size_t cnfg_flag_parser::get_long_flag_count()
         }
     }
     long_flag_count = this->_long_flag_count;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (long_flag_count);
 }
 
@@ -251,13 +258,12 @@ size_t cnfg_flag_parser::get_total_flag_count()
         }
     }
     total_flag_count = this->_short_flag_count + this->_long_flag_count;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (total_flag_count);
 }
 
 void    cnfg_flag_parser::set_error(int error_code)
 {
-    ft_errno = error_code;
     this->_error_code = error_code;
     return ;
 }
@@ -277,7 +283,7 @@ int     cnfg_flag_parser::get_error() const
         }
     }
     error_code = this->_error_code;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (error_code);
 }
 
@@ -298,7 +304,7 @@ const char  *cnfg_flag_parser::get_error_str() const
     }
     error_code = this->_error_code;
     error_string = ft_strerror(error_code);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (error_string);
 }
 
@@ -311,13 +317,13 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
 
     if (!override_config)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (base_config);
     }
     lock_error = cnfg_config_lock_if_enabled(override_config, override_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = lock_error;
+        ft_global_error_stack_push(lock_error);
         return (ft_nullptr);
     }
     if (base_config)
@@ -326,7 +332,7 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
         if (lock_error != FT_ERR_SUCCESSS)
         {
             cnfg_config_unlock_guard(override_guard);
-            ft_errno = lock_error;
+            ft_global_error_stack_push(lock_error);
             return (ft_nullptr);
         }
     }
@@ -350,7 +356,6 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
         override_key = override_entry->key;
         override_value = override_entry->value;
         cnfg_entry_unlock(override_entry, override_locked);
-        ft_errno = FT_ERR_SUCCESSS;
         size_t base_index = 0;
         if (base_config)
         {
@@ -386,7 +391,7 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
                         if (!base_entry->value)
                         {
                             cnfg_entry_unlock(base_entry, base_locked);
-                            ft_errno = FT_ERR_NO_MEMORY;
+                            ft_global_error_stack_push(FT_ERR_NO_MEMORY);
                             cnfg_config_unlock_guard(base_guard);
                             cnfg_config_unlock_guard(override_guard);
                             cnfg_free(base_config);
@@ -394,12 +399,10 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
                         }
                     }
                     cnfg_entry_unlock(base_entry, base_locked);
-                    ft_errno = FT_ERR_SUCCESSS;
                     replaced = true;
                     break;
                 }
                 cnfg_entry_unlock(base_entry, base_locked);
-                ft_errno = FT_ERR_SUCCESSS;
                 ++base_index;
             }
         }
@@ -419,7 +422,7 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
                 {
                     cnfg_config_unlock_guard(override_guard);
                     cnfg_free(base_config);
-                    ft_errno = lock_error;
+                    ft_global_error_stack_push(lock_error);
                     return (ft_nullptr);
                 }
             }
@@ -428,7 +431,7 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
                 * (base_config->entry_count + 1)));
             if (!new_entries)
             {
-                ft_errno = FT_ERR_NO_MEMORY;
+                ft_global_error_stack_push(FT_ERR_NO_MEMORY);
                 cnfg_config_unlock_guard(base_guard);
                 cnfg_config_unlock_guard(override_guard);
                 cnfg_free(base_config);
@@ -443,7 +446,7 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
                 new_entry->section = cma_strdup(override_section);
                 if (!new_entry->section)
                 {
-                    ft_errno = FT_ERR_NO_MEMORY;
+                    ft_global_error_stack_push(FT_ERR_NO_MEMORY);
                     cnfg_config_unlock_guard(base_guard);
                     cnfg_config_unlock_guard(override_guard);
                     cnfg_free(base_config);
@@ -457,7 +460,7 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
                 new_entry->key = cma_strdup(override_key);
                 if (!new_entry->key)
                 {
-                    ft_errno = FT_ERR_NO_MEMORY;
+                    ft_global_error_stack_push(FT_ERR_NO_MEMORY);
                     cnfg_config_unlock_guard(base_guard);
                     cnfg_config_unlock_guard(override_guard);
                     cnfg_free(base_config);
@@ -471,7 +474,7 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
                 new_entry->value = cma_strdup(override_value);
                 if (!new_entry->value)
                 {
-                    ft_errno = FT_ERR_NO_MEMORY;
+                    ft_global_error_stack_push(FT_ERR_NO_MEMORY);
                     cnfg_config_unlock_guard(base_guard);
                     cnfg_config_unlock_guard(override_guard);
                     cnfg_free(base_config);
@@ -499,7 +502,7 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
     }
     cnfg_config_unlock_guard(base_guard);
     cnfg_config_unlock_guard(override_guard);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (base_config);
 }
 
@@ -513,7 +516,7 @@ static cnfg_config *append_flag_entry(cnfg_config *config, const char *flag)
     entry.value = ft_nullptr;
     if (!entry.key)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         cnfg_free(config);
         return (ft_nullptr);
     }
@@ -536,81 +539,78 @@ cnfg_config *config_merge_sources(int argument_count,
     result = merge_configs(result, env_config);
     if (env_config && result != env_config)
         cnfg_free(env_config);
-    int previous_errno = ft_errno;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_size_t short_flags_depth = ft_global_error_stack_depth();
     char *short_flags = cnfg_parse_flags(argument_count, argument_values);
-    int short_flags_errno = ft_errno;
+    int short_flags_errno = FT_ERR_SUCCESSS;
+    ft_size_t short_flags_new_depth = ft_global_error_stack_depth();
+    if (short_flags_new_depth != short_flags_depth)
+    {
+        short_flags_errno = ft_global_error_stack_last_error();
+        ft_global_error_stack_pop_newest();
+        ft_global_error_stack_push(short_flags_errno);
+    }
     if (!short_flags && short_flags_errno != FT_ERR_SUCCESSS)
     {
         if (result)
             cnfg_free(result);
-        ft_errno = short_flags_errno;
         return (ft_nullptr);
     }
-    if (short_flags_errno == FT_ERR_SUCCESSS)
-        ft_errno = previous_errno;
-    else
-        ft_errno = short_flags_errno;
-    if (short_flags)
+    size_t flag_index = 0;
+    while (short_flags && short_flags[flag_index])
     {
-        size_t flag_index = 0;
-        while (short_flags[flag_index])
+        char key[2];
+        key[0] = short_flags[flag_index];
+        key[1] = '\0';
+        result = append_flag_entry(result, key);
+        if (!result)
         {
-            char key[2];
-            key[0] = short_flags[flag_index];
-            key[1] = '\0';
-            result = append_flag_entry(result, key);
-            if (!result)
-            {
-                cma_free(short_flags);
-                return (ft_nullptr);
-            }
-            ++flag_index;
+            cma_free(short_flags);
+            return (ft_nullptr);
         }
-        cma_free(short_flags);
+        ++flag_index;
     }
-    previous_errno = ft_errno;
-    ft_errno = FT_ERR_SUCCESSS;
+    cma_free(short_flags);
+    ft_size_t long_flags_depth = ft_global_error_stack_depth();
     char **long_flags = cnfg_parse_long_flags(argument_count, argument_values);
-    int long_flags_errno = ft_errno;
+    int long_flags_errno = FT_ERR_SUCCESSS;
+    ft_size_t long_flags_new_depth = ft_global_error_stack_depth();
+    if (long_flags_new_depth != long_flags_depth)
+    {
+        long_flags_errno = ft_global_error_stack_last_error();
+        ft_global_error_stack_pop_newest();
+        ft_global_error_stack_push(long_flags_errno);
+    }
     if (!long_flags && long_flags_errno != FT_ERR_SUCCESSS)
     {
         if (result)
             cnfg_free(result);
-        ft_errno = long_flags_errno;
         return (ft_nullptr);
     }
-    if (long_flags_errno == FT_ERR_SUCCESSS)
-        ft_errno = previous_errno;
-    else
-        ft_errno = long_flags_errno;
-    if (long_flags)
+    flag_index = 0;
+    while (long_flags && long_flags[flag_index])
     {
-        size_t flag_index = 0;
-        while (long_flags[flag_index])
+        result = append_flag_entry(result, long_flags[flag_index]);
+        cma_free(long_flags[flag_index]);
+        if (!result)
         {
-            result = append_flag_entry(result, long_flags[flag_index]);
-            cma_free(long_flags[flag_index]);
-            if (!result)
+            size_t cleanup_index = flag_index + 1;
+            while (long_flags[cleanup_index])
             {
-                size_t cleanup_index = flag_index + 1;
-                while (long_flags[cleanup_index])
-                {
-                    cma_free(long_flags[cleanup_index]);
-                    ++cleanup_index;
-                }
-                cma_free(long_flags);
-                return (ft_nullptr);
+                cma_free(long_flags[cleanup_index]);
+                ++cleanup_index;
             }
-            ++flag_index;
+            cma_free(long_flags);
+            return (ft_nullptr);
         }
-        cma_free(long_flags);
+        ++flag_index;
     }
+    cma_free(long_flags);
     if (!result)
     {
         result = cnfg_config_create();
         if (!result)
             return (ft_nullptr);
     }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
