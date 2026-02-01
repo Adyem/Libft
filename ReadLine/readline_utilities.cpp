@@ -8,7 +8,7 @@
 #include "../Errno/errno.hpp"
 #include "readline_internal.hpp"
 
-char *rl_resize_buffer(char **buffer_pointer, int *current_size_pointer, int new_size)
+int rl_resize_buffer(char **buffer_pointer, int *current_size_pointer, int new_size)
 {
     char *old_buffer;
     int current_size;
@@ -16,15 +16,9 @@ char *rl_resize_buffer(char **buffer_pointer, int *current_size_pointer, int new
     char *new_buffer;
 
     if (buffer_pointer == ft_nullptr || current_size_pointer == ft_nullptr)
-    {
-        rl_internal_set_error(FT_ERR_INVALID_ARGUMENT);
-        return (ft_nullptr);
-    }
+        return (FT_ERR_INVALID_ARGUMENT);
     if (new_size <= 0)
-    {
-        rl_internal_set_error(FT_ERR_INVALID_ARGUMENT);
-        return (ft_nullptr);
-    }
+        return (FT_ERR_INVALID_ARGUMENT);
     old_buffer = *buffer_pointer;
     current_size = *current_size_pointer;
     copy_size = 0;
@@ -35,11 +29,10 @@ char *rl_resize_buffer(char **buffer_pointer, int *current_size_pointer, int new
             copy_size = static_cast<size_t>(new_size);
     }
     new_buffer = static_cast<char *>(cma_malloc(static_cast<ft_size_t>(new_size)));
-    if (!new_buffer)
+    if (new_buffer == ft_nullptr)
     {
         su_write(2, "Allocation error\n", 17);
-        rl_internal_set_error(FT_ERR_NO_MEMORY);
-        return (ft_nullptr);
+        return (FT_ERR_NO_MEMORY);
     }
     if (copy_size > 0 && old_buffer != ft_nullptr)
         ft_memcpy(new_buffer, old_buffer, copy_size);
@@ -49,8 +42,7 @@ char *rl_resize_buffer(char **buffer_pointer, int *current_size_pointer, int new
         ft_bzero(new_buffer + copy_size, static_cast<size_t>(new_size) - copy_size);
     *buffer_pointer = new_buffer;
     *current_size_pointer = new_size;
-    rl_internal_set_error(FT_ERR_SUCCESSS);
-    return (new_buffer);
+    return (FT_ERR_SUCCESSS);
 }
 
 int rl_clear_line(const char *prompt, const char *buffer)
@@ -60,22 +52,18 @@ int rl_clear_line(const char *prompt, const char *buffer)
     int total_length;
 
     if (prompt == ft_nullptr || buffer == ft_nullptr)
-    {
-        rl_internal_set_error(FT_ERR_INVALID_ARGUMENT);
-        return (-1);
-    }
-    if (rl_utf8_compute_columns(prompt, &prompt_length) != 0)
-        return (-1);
-    if (rl_utf8_compute_columns(buffer, &buffer_length) != 0)
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
+    int prompt_columns_error = rl_utf8_compute_columns(prompt, &prompt_length);
+    if (prompt_columns_error != FT_ERR_SUCCESSS)
+        return (prompt_columns_error);
+    int buffer_columns_error = rl_utf8_compute_columns(buffer, &buffer_length);
+    if (buffer_columns_error != FT_ERR_SUCCESSS)
+        return (buffer_columns_error);
     total_length = prompt_length + buffer_length;
     pf_printf("\r");
     int term_width = rl_get_terminal_width();
     if (term_width <= 0)
-    {
         term_width = 1;
-        rl_internal_set_error(FT_ERR_SUCCESSS);
-    }
     int line_count = (total_length / term_width) + 1;
     int index = 0;
     while (index < line_count)
@@ -86,32 +74,32 @@ int rl_clear_line(const char *prompt, const char *buffer)
         index++;
     }
     pf_printf("\r");
-    rl_internal_set_error(FT_ERR_SUCCESSS);
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
-int rl_read_key(void)
+int rl_read_key(char *character_out)
 {
     ssize_t bytes_read;
     char character;
+
+    if (character_out == ft_nullptr)
+        return (FT_ERR_INVALID_ARGUMENT);
 
     while (1)
     {
         bytes_read = su_read(0, &character, 1);
         if (bytes_read == 1)
         {
-            rl_internal_set_error(FT_ERR_SUCCESSS);
-            return (character);
+            *character_out = character;
+            return (FT_ERR_SUCCESSS);
         }
         if (bytes_read == 0)
         {
-            rl_internal_set_error(FT_ERR_TERMINATED);
-            return (-1);
+            return (FT_ERR_TERMINATED);
         }
         if (bytes_read < 0)
         {
-            rl_internal_set_error(FT_ERR_TERMINATED);
-            return (-1);
+            return (FT_ERR_TERMINATED);
         }
     }
 }
@@ -177,25 +165,25 @@ int rl_history_search(const char *query, int start_index,
     int current_index;
 
     if (query == ft_nullptr || match_index == ft_nullptr)
-    {
-        rl_internal_set_error(FT_ERR_INVALID_ARGUMENT);
-        return (-1);
-    }
+        return (FT_ERR_INVALID_ARGUMENT);
     *match_index = -1;
     query_code_points = ft_utf8_to_utf32(query, 0, &query_length);
-    if (query_code_points == ft_nullptr)
-        return (-1);
+    int conversion_error = ft_global_error_stack_pop_newest();
+        if (query_code_points == ft_nullptr)
+        {
+            if (conversion_error == FT_ERR_SUCCESSS)
+                return (FT_ERR_INVALID_ARGUMENT);
+            return (conversion_error);
+        }
     if (query_length == 0)
     {
         cma_free(query_code_points);
-        rl_internal_set_error(FT_ERR_INVALID_ARGUMENT);
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     if (history_count <= 0)
     {
         cma_free(query_code_points);
-        rl_internal_set_error(FT_ERR_NOT_FOUND);
-        return (-1);
+        return (FT_ERR_NOT_FOUND);
     }
     current_index = 0;
     if (search_backward)
@@ -210,6 +198,7 @@ int rl_history_search(const char *query, int start_index,
             char32_t *entry_code_points;
             size_t entry_length;
             int contains_result;
+            int entry_error;
 
             history_entry = history[current_index];
             if (history_entry == ft_nullptr)
@@ -218,14 +207,13 @@ int rl_history_search(const char *query, int start_index,
                 continue ;
             }
             entry_code_points = ft_utf8_to_utf32(history_entry, 0, &entry_length);
+            entry_error = ft_global_error_stack_pop_newest();
             if (entry_code_points == ft_nullptr)
             {
-                int conversion_error;
-
-                conversion_error = rl_internal_get_error();
                 cma_free(query_code_points);
-                rl_internal_set_error(conversion_error);
-                return (-1);
+                if (entry_error == FT_ERR_SUCCESSS)
+                    return (FT_ERR_INVALID_ARGUMENT);
+                return (entry_error);
             }
             contains_result = rl_history_utf32_contains(entry_code_points,
                     entry_length, query_code_points, query_length);
@@ -233,15 +221,13 @@ int rl_history_search(const char *query, int start_index,
             if (contains_result < 0)
             {
                 cma_free(query_code_points);
-                rl_internal_set_error(FT_ERR_INVALID_ARGUMENT);
-                return (-1);
+                return (FT_ERR_INVALID_ARGUMENT);
             }
             if (contains_result == 1)
             {
                 *match_index = current_index;
                 cma_free(query_code_points);
-                rl_internal_set_error(FT_ERR_SUCCESSS);
-                return (0);
+                return (FT_ERR_SUCCESSS);
             }
             current_index -= 1;
         }
@@ -258,6 +244,7 @@ int rl_history_search(const char *query, int start_index,
             char32_t *entry_code_points;
             size_t entry_length;
             int contains_result;
+            int entry_error;
 
             history_entry = history[current_index];
             if (history_entry == ft_nullptr)
@@ -266,14 +253,13 @@ int rl_history_search(const char *query, int start_index,
                 continue ;
             }
             entry_code_points = ft_utf8_to_utf32(history_entry, 0, &entry_length);
+            entry_error = ft_global_error_stack_pop_newest();
             if (entry_code_points == ft_nullptr)
             {
-                int conversion_error;
-
-                conversion_error = rl_internal_get_error();
                 cma_free(query_code_points);
-                rl_internal_set_error(conversion_error);
-                return (-1);
+                if (entry_error == FT_ERR_SUCCESSS)
+                    return (FT_ERR_INVALID_ARGUMENT);
+                return (entry_error);
             }
             contains_result = rl_history_utf32_contains(entry_code_points,
                     entry_length, query_code_points, query_length);
@@ -281,20 +267,17 @@ int rl_history_search(const char *query, int start_index,
             if (contains_result < 0)
             {
                 cma_free(query_code_points);
-                rl_internal_set_error(FT_ERR_INVALID_ARGUMENT);
-                return (-1);
+                return (FT_ERR_INVALID_ARGUMENT);
             }
             if (contains_result == 1)
             {
                 *match_index = current_index;
                 cma_free(query_code_points);
-                rl_internal_set_error(FT_ERR_SUCCESSS);
-                return (0);
+                return (FT_ERR_SUCCESSS);
             }
             current_index += 1;
         }
     }
     cma_free(query_code_points);
-    rl_internal_set_error(FT_ERR_NOT_FOUND);
-    return (-1);
+    return (FT_ERR_NOT_FOUND);
 }

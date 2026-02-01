@@ -53,9 +53,9 @@ static void api_pool_test_server(api_pool_test_server_context *context)
     server_configuration._ip = "127.0.0.1";
     server_configuration._port = g_api_pool_test_port;
     server_socket = ft_socket(server_configuration);
-    if (server_socket.get_error() != FT_ERR_SUCCESSS)
+    if (networking_fetch_last_error() != FT_ERR_SUCCESSS)
     {
-        context->result.store(server_socket.get_error());
+        context->result.store(networking_fetch_last_error());
         context->ready.store(true);
         return ;
     }

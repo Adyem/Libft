@@ -48,7 +48,6 @@ class ft_vector
         size_t          _size;
         size_t          _capacity;
         mutable int     _error_code;
-        mutable ft_operation_error_stack _operation_errors;
         mutable pt_mutex    *_mutex;
 
         void    record_operation_error(int error_code) const noexcept;
@@ -117,8 +116,6 @@ void ft_vector<ElementType>::record_operation_error(int error_code) const noexce
 
     operation_id = ft_errno_next_operation_id();
     ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(&this->_operation_errors,
-            error_code, operation_id);
     return ;
 }
 
@@ -128,7 +125,6 @@ ft_vector<ElementType>::ft_vector(size_t initial_capacity)
       _size(0),
       _capacity(0),
       _error_code(FT_ERR_SUCCESSS),
-      _operation_errors({{}, {}, 0}),
       _mutex(ft_nullptr)
 {
     void     *memory;
@@ -206,7 +202,6 @@ ft_vector<ElementType>::ft_vector(ft_vector<ElementType>&& other) noexcept
       _size(0),
       _capacity(0),
       _error_code(FT_ERR_SUCCESSS),
-      _operation_errors({{}, {}, 0}),
       _mutex(ft_nullptr)
 {
     bool     other_thread_safe;

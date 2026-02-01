@@ -5,7 +5,7 @@
 #include <atomic>
 #include <time.h>
 #include <type_traits>
-#include "../Errno/errno_internal.hpp"
+#include "../Errno/errno.hpp"
 
 class pt_mutex
 {
@@ -15,7 +15,7 @@ class pt_mutex
         mutable pthread_mutex_t           _native_mutex;
         mutable bool                      _native_initialized;
         mutable pt_mutex                  *_state_mutex;
-        mutable ft_operation_error_stack  _operation_errors;
+        mutable std::atomic<bool>        _valid_state;
 
         bool    ensure_native_mutex() const;
         int     lock_internal(bool *lock_acquired) const;

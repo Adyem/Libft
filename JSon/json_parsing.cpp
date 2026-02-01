@@ -68,15 +68,18 @@ void json_item_refresh_numeric_state(json_item *item)
 
     if (!item)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     if (json_item_enable_thread_safety(item) != 0)
+    {
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return ;
+    }
     lock_error = json_item_lock(item, guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = lock_error;
+        ft_global_error_stack_push(lock_error);
         return ;
     }
     result_code = FT_ERR_SUCCESSS;
@@ -112,7 +115,7 @@ void json_item_refresh_numeric_state(json_item *item)
         }
     }
     json_item_set_error_unlocked(item, result_code);
-    ft_errno = result_code;
+    ft_global_error_stack_push(result_code);
     return ;
 }
 
@@ -124,13 +127,13 @@ void json_add_item_to_group(json_group *group, json_item *item)
     if (group == ft_nullptr || item == ft_nullptr)
     {
         json_group_set_error(group, FT_ERR_INVALID_ARGUMENT);
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     lock_error = json_group_lock(group, guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = lock_error;
+        ft_global_error_stack_push(lock_error);
         return ;
     }
     if (!group->items)
@@ -144,7 +147,7 @@ void json_add_item_to_group(json_group *group, json_item *item)
         current_item->next = item;
     }
     json_group_set_error_unlocked(group, FT_ERR_SUCCESSS);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -153,14 +156,14 @@ json_group* json_create_json_group(const char *name)
     json_group *group = new(std::nothrow) json_group;
     if (!group)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     group->name = cma_strdup(name);
     if (!group->name)
     {
         delete group;
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     group->items = ft_nullptr;
@@ -169,9 +172,10 @@ json_group* json_create_json_group(const char *name)
     {
         cma_free(group->name);
         delete group;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (group);
 }
 
@@ -183,13 +187,13 @@ void json_append_group(json_group **head, json_group *new_group)
     if (head == ft_nullptr || new_group == ft_nullptr)
     {
         json_group_set_error(new_group, FT_ERR_INVALID_ARGUMENT);
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     lock_error = json_group_list_lock(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = lock_error;
+        ft_global_error_stack_push(lock_error);
         return ;
     }
     if (!(*head))
@@ -203,7 +207,7 @@ void json_append_group(json_group **head, json_group *new_group)
         current_group->next = new_group;
     }
     json_group_set_error(new_group, FT_ERR_SUCCESSS);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -232,7 +236,7 @@ void json_free_groups(json_group *group)
     lock_error = json_group_list_lock(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = lock_error;
+        ft_global_error_stack_push(lock_error);
         return ;
     }
     while (group)
@@ -245,6 +249,6 @@ void json_free_groups(json_group *group)
         delete group;
         group = next_group;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }

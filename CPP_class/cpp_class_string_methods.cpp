@@ -8,19 +8,17 @@
 #include "class_nullptr.hpp"
 #include <climits>
 
-static thread_local ft_string *g_ft_string_last_error_owner = ft_nullptr;
+static thread_local ft_operation_error_stack *g_ft_string_last_error_stack = ft_nullptr;
 
-static ft_operation_error_stack *ft_string_error_stack_owner(void) noexcept
+ft_operation_error_stack *ft_string_error_stack_owner(void) noexcept
 {
-    if (g_ft_string_last_error_owner == ft_nullptr)
-        return (ft_nullptr);
-    return (g_ft_string_last_error_owner->operation_error_stack_handle());
+    return (g_ft_string_last_error_stack);
 }
 
 void ft_string::reset_error_owner(const ft_string *owner) noexcept
 {
-    if (g_ft_string_last_error_owner == owner)
-        g_ft_string_last_error_owner = ft_nullptr;
+    if (g_ft_string_last_error_stack == &owner->_operation_errors)
+        g_ft_string_last_error_stack = ft_nullptr;
     return ;
 }
 
@@ -120,7 +118,7 @@ unsigned long long ft_string::push_error_unlocked(int error_code) const noexcept
     ft_global_error_stack_push_entry_with_id(error_code, operation_id);
     ft_operation_error_stack_push(&this->_operation_errors,
             error_code, operation_id);
-    g_ft_string_last_error_owner = const_cast<ft_string *>(this);
+    g_ft_string_last_error_stack = &this->_operation_errors;
     return (operation_id);
 }
 
@@ -263,11 +261,6 @@ int ft_string::operation_error_index() noexcept
     return (0);
 }
 
-ft_operation_error_stack *ft_string::operation_error_stack_handle() const noexcept
-{
-    return (&this->_operation_errors);
-}
-
 unsigned long long ft_string::last_operation_id() const noexcept
 {
     return (ft_operation_error_stack_last_id(&this->_operation_errors));
@@ -282,10 +275,17 @@ int ft_string::pop_operation_error(unsigned long long operation_id) const noexce
     return (error_code);
 }
 
+#ifdef LIBFT_TEST_BUILD
+ft_operation_error_stack *ft_string::operation_error_stack_handle() const noexcept
+{
+    return (&this->_operation_errors);
+}
+
 pt_recursive_mutex *ft_string::get_mutex_for_validation() const noexcept
 {
     return (&(this->_mutex));
 }
+#endif
 
 void ft_string::resize_unlocked(size_t new_capacity) noexcept
 {
@@ -1312,10 +1312,3 @@ bool operator>(const char* left_value, const ft_string &right_value) noexcept
     result = ft_strcmp(left_value, right_value.c_str()) > 0;
     return (result);
 }
-
-#ifdef LIBFT_TEST_BUILD
-pt_recursive_mutex* ft_string::get_mutex_for_testing() noexcept
-{
-    return (&(this->_mutex));
-}
-#endif

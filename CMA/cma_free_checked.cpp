@@ -21,11 +21,11 @@ int cma_checked_free(void* ptr)
         ft_global_error_stack_push(error_code);
         return (0);
     }
-    cma_allocator_guard allocator_guard;
+    bool lock_acquired = false;
+    error_code = cma_lock_allocator(&lock_acquired);
 
-    if (!allocator_guard.is_active())
+    if (error_code != FT_ERR_SUCCESSS)
     {
-        error_code = allocator_guard.get_error();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_INVALID_STATE;
         ft_global_error_stack_push(error_code);
@@ -35,7 +35,11 @@ int cma_checked_free(void* ptr)
     if (!found)
     {
         error_code = FT_ERR_INVALID_POINTER;
-        allocator_guard.unlock();
+        if (lock_acquired)
+        {
+            cma_unlock_allocator(lock_acquired);
+            lock_acquired = false;
+        }
         ft_global_error_stack_push(error_code);
         return (-1);
     }
@@ -43,7 +47,11 @@ int cma_checked_free(void* ptr)
     if (static_cast<void *>(cma_block_user_pointer(found)) != ptr)
     {
         error_code = FT_ERR_INVALID_POINTER;
-        allocator_guard.unlock();
+        if (lock_acquired)
+        {
+            cma_unlock_allocator(lock_acquired);
+            lock_acquired = false;
+        }
         ft_global_error_stack_push(error_code);
         return (-1);
     }
@@ -59,7 +67,11 @@ int cma_checked_free(void* ptr)
     else
         g_cma_current_bytes = 0;
     g_cma_free_count++;
-    allocator_guard.unlock();
+    if (lock_acquired)
+    {
+        cma_unlock_allocator(lock_acquired);
+        lock_acquired = false;
+    }
     error_code = FT_ERR_SUCCESSS;
     ft_global_error_stack_push(error_code);
     return (0);

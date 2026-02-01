@@ -6,10 +6,8 @@
 #include <mutex>
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
-#include "../Errno/errno_internal.hpp"
 #include "../Libft/limits.hpp"
-
-class pt_mutex;
+#include "../PThread/recursive_mutex.hpp"
 
 unsigned long long scma_record_operation_error(int error_code);
 int scma_pop_operation_error(void);
@@ -49,7 +47,7 @@ int     scma_get_stats(scma_stats *out_stats);
 
 void    scma_debug_dump(void);
 
-pt_mutex    &scma_runtime_mutex(void);
+pt_recursive_mutex    &scma_runtime_mutex(void);
 int     scma_mutex_lock(void);
 int     scma_mutex_unlock(void);
 int     scma_mutex_close(void);
@@ -67,9 +65,6 @@ class scma_handle_accessor
     private:
         scma_handle _handle;
         mutable int _error_code;
-
-        static thread_local ft_operation_error_stack _operation_errors;
-        static void record_operation_error(int error_code) noexcept;
 
         void    set_error(int error_code) const;
 
@@ -209,7 +204,7 @@ template <typename TValue>
 inline void    scma_handle_accessor<TValue>::set_error(int error_code) const
 {
     this->_error_code = error_code;
-    scma_handle_accessor<TValue>::record_operation_error(error_code);
+    scma_record_operation_error(error_code);
     return ;
 }
 
@@ -295,57 +290,12 @@ inline scma_handle_accessor_const_element_proxy<TValue>    scma_handle_accessor<
 }
 
 template <typename TValue>
-inline ft_size_t    scma_handle_accessor_calculate_offset(ft_size_t element_index)
-{
-    size_t host_size;
-    ft_size_t element_size;
-    ft_size_t offset;
-
-    host_size = sizeof(TValue);
-    if (host_size == 0)
-        return (0);
-    if (host_size > static_cast<size_t>(FT_SYSTEM_SIZE_MAX))
-        return (0);
-    element_size = static_cast<ft_size_t>(host_size);
-    if (element_index > static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX) / element_size)
-        return (0);
-    offset = element_index * element_size;
-    return (offset);
-}
-
-template <typename TValue>
-inline int    scma_handle_accessor_validate_target(scma_handle handle, ft_size_t required_size, ft_size_t *out_size)
-{
-    int validation_result;
-    ft_size_t block_size;
-
-    validation_result = 0;
-    if (scma_mutex_lock() != 0)
-        return (0);
-    if (!scma_handle_is_valid(handle))
-        goto cleanup;
-    block_size = scma_get_size(handle);
-    if (block_size < required_size)
-    {
-        scma_record_operation_error(FT_ERR_OUT_OF_RANGE);
-        goto cleanup;
-    }
-    if (out_size)
-        *out_size = block_size;
-    validation_result = 1;
-
-cleanup:
-    if (scma_mutex_unlock() != 0)
-        validation_result = 0;
-    return (validation_result);
-}
-
-template <typename TValue>
 inline int    scma_handle_accessor<TValue>::read_struct(TValue &destination) const
 {
     int read_result;
     ft_size_t required_size;
     size_t host_size;
+    ft_size_t block_size;
 
     read_result = 0;
     if (scma_mutex_lock() != 0)
@@ -370,8 +320,10 @@ inline int    scma_handle_accessor<TValue>::read_struct(TValue &destination) con
         goto cleanup;
     }
     required_size = static_cast<ft_size_t>(host_size);
-    if (!scma_handle_accessor_validate_target<TValue>(this->_handle, required_size, ft_nullptr))
+    block_size = scma_get_size(this->_handle);
+    if (block_size < required_size)
     {
+        scma_record_operation_error(FT_ERR_OUT_OF_RANGE);
         this->set_error(scma_pop_operation_error());
         goto cleanup;
     }
@@ -398,6 +350,7 @@ inline int    scma_handle_accessor<TValue>::write_struct(const TValue &source) c
     int write_result;
     ft_size_t required_size;
     size_t host_size;
+    ft_size_t block_size;
 
     write_result = 0;
     if (scma_mutex_lock() != 0)
@@ -422,8 +375,10 @@ inline int    scma_handle_accessor<TValue>::write_struct(const TValue &source) c
         goto cleanup;
     }
     required_size = static_cast<ft_size_t>(host_size);
-    if (!scma_handle_accessor_validate_target<TValue>(this->_handle, required_size, ft_nullptr))
+    block_size = scma_get_size(this->_handle);
+    if (block_size < required_size)
     {
+        scma_record_operation_error(FT_ERR_OUT_OF_RANGE);
         this->set_error(scma_pop_operation_error());
         goto cleanup;
     }
@@ -452,6 +407,7 @@ inline int    scma_handle_accessor<TValue>::read_at(TValue &destination, ft_size
     ft_size_t element_size;
     ft_size_t required_size;
     size_t host_size;
+    ft_size_t block_size;
 
     read_result = 0;
     if (scma_mutex_lock() != 0)
@@ -476,8 +432,13 @@ inline int    scma_handle_accessor<TValue>::read_at(TValue &destination, ft_size
         goto cleanup;
     }
     element_size = static_cast<ft_size_t>(host_size);
-    offset = scma_handle_accessor_calculate_offset<TValue>(element_index);
-    if (element_size == 0 || (offset == 0 && element_index != 0))
+    if (element_size == 0 || element_index > static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX) / element_size)
+    {
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        goto cleanup;
+    }
+    offset = element_index * element_size;
+    if (offset == 0 && element_index != 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         goto cleanup;
@@ -488,8 +449,10 @@ inline int    scma_handle_accessor<TValue>::read_at(TValue &destination, ft_size
         goto cleanup;
     }
     required_size = offset + element_size;
-    if (!scma_handle_accessor_validate_target<TValue>(this->_handle, required_size, ft_nullptr))
+    block_size = scma_get_size(this->_handle);
+    if (block_size < required_size)
     {
+        scma_record_operation_error(FT_ERR_OUT_OF_RANGE);
         this->set_error(scma_pop_operation_error());
         goto cleanup;
     }
@@ -518,6 +481,7 @@ inline int    scma_handle_accessor<TValue>::write_at(const TValue &source, ft_si
     ft_size_t element_size;
     ft_size_t required_size;
     size_t host_size;
+    ft_size_t block_size;
 
     write_result = 0;
     if (scma_mutex_lock() != 0)
@@ -542,8 +506,13 @@ inline int    scma_handle_accessor<TValue>::write_at(const TValue &source, ft_si
         goto cleanup;
     }
     element_size = static_cast<ft_size_t>(host_size);
-    offset = scma_handle_accessor_calculate_offset<TValue>(element_index);
-    if (element_size == 0 || (offset == 0 && element_index != 0))
+    if (element_size == 0 || element_index > static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX) / element_size)
+    {
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        goto cleanup;
+    }
+    offset = element_index * element_size;
+    if (offset == 0 && element_index != 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         goto cleanup;
@@ -554,8 +523,10 @@ inline int    scma_handle_accessor<TValue>::write_at(const TValue &source, ft_si
         goto cleanup;
     }
     required_size = offset + element_size;
-    if (!scma_handle_accessor_validate_target<TValue>(this->_handle, required_size, ft_nullptr))
+    block_size = scma_get_size(this->_handle);
+    if (block_size < required_size)
     {
+        scma_record_operation_error(FT_ERR_OUT_OF_RANGE);
         this->set_error(scma_pop_operation_error());
         goto cleanup;
     }
@@ -607,11 +578,7 @@ inline ft_size_t    scma_handle_accessor<TValue>::get_count(void) const
         goto cleanup;
     }
     element_size = static_cast<ft_size_t>(host_size);
-    if (!scma_handle_accessor_validate_target<TValue>(this->_handle, 0, &block_size))
-    {
-        this->set_error(scma_pop_operation_error());
-        goto cleanup;
-    }
+    block_size = scma_get_size(this->_handle);
     if (element_size == 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
@@ -642,22 +609,6 @@ inline const char  *scma_handle_accessor<TValue>::get_error_str(void) const
 }
 
 template <typename TValue>
-thread_local ft_operation_error_stack scma_handle_accessor<TValue>::_operation_errors = {{}, {}, 0};
-
-template <typename TValue>
-void scma_handle_accessor<TValue>::record_operation_error(int error_code) noexcept
-{
-    unsigned long long operation_id;
-
-    operation_id = scma_record_operation_error(error_code);
-    ft_operation_error_stack_push(
-        &scma_handle_accessor<TValue>::_operation_errors,
-        error_code,
-        operation_id);
-    return ;
-}
-
-template <typename TValue>
 class scma_handle_accessor_element_proxy
 {
     private:
@@ -667,8 +618,6 @@ class scma_handle_accessor_element_proxy
         int _should_write_back;
         mutable int _error_code;
 
-        static thread_local ft_operation_error_stack _operation_errors;
-        static void record_operation_error(int error_code) noexcept;
         void    set_error(int error_code) const;
 
     public:
@@ -697,8 +646,6 @@ class scma_handle_accessor_const_element_proxy
         mutable TValue _value;
         mutable int _error_code;
 
-        static thread_local ft_operation_error_stack _operation_errors;
-        static void record_operation_error(int error_code) noexcept;
         void    set_error(int error_code) const;
 
     public:
@@ -721,7 +668,7 @@ template <typename TValue>
 inline void    scma_handle_accessor_element_proxy<TValue>::set_error(int error_code) const
 {
     this->_error_code = error_code;
-    scma_handle_accessor_element_proxy<TValue>::record_operation_error(error_code);
+    scma_record_operation_error(error_code);
     return ;
 }
 
@@ -844,7 +791,7 @@ template <typename TValue>
 inline void    scma_handle_accessor_const_element_proxy<TValue>::set_error(int error_code) const
 {
     this->_error_code = error_code;
-    scma_handle_accessor_const_element_proxy<TValue>::record_operation_error(error_code);
+    scma_record_operation_error(error_code);
     return ;
 }
 
@@ -927,38 +874,5 @@ inline const char  *scma_handle_accessor_const_element_proxy<TValue>::get_error_
 {
     return (ft_strerror(this->_error_code));
 }
-
-template <typename TValue>
-thread_local ft_operation_error_stack scma_handle_accessor_element_proxy<TValue>::_operation_errors = {{}, {}, 0};
-
-template <typename TValue>
-void scma_handle_accessor_element_proxy<TValue>::record_operation_error(int error_code) noexcept
-{
-    unsigned long long operation_id;
-
-    operation_id = scma_record_operation_error(error_code);
-    ft_operation_error_stack_push(
-        &scma_handle_accessor_element_proxy<TValue>::_operation_errors,
-        error_code,
-        operation_id);
-    return ;
-}
-
-template <typename TValue>
-thread_local ft_operation_error_stack scma_handle_accessor_const_element_proxy<TValue>::_operation_errors = {{}, {}, 0};
-
-template <typename TValue>
-void scma_handle_accessor_const_element_proxy<TValue>::record_operation_error(int error_code) noexcept
-{
-    unsigned long long operation_id;
-
-    operation_id = scma_record_operation_error(error_code);
-    ft_operation_error_stack_push(
-        &scma_handle_accessor_const_element_proxy<TValue>::_operation_errors,
-        error_code,
-        operation_id);
-    return ;
-}
-
 
 #endif

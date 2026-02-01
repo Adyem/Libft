@@ -70,7 +70,6 @@ Define multi-window, multi-burn alerts for each SLO. Pair the dashboards with no
 Link the dashboards to the existing runbooks:
 
 - Networking playbooks in `Docs/module_overviews.md`.
-- CMA allocator mitigation steps in `Docs/cma_leak_detection.md`.
 - Logger sink diagnostics in `Docs/logger_logging_flags.md`.
 
 Ensure each dashboard panel description references the relevant runbook section and the owner team channel.

@@ -176,9 +176,9 @@ char *api_request_https(const char *ip, uint16_t port,
     {
         ft_socket new_socket(config);
 
-        if (new_socket.get_error())
+        if (networking_fetch_last_error())
         {
-            error_code = new_socket.get_error();
+            error_code = networking_fetch_last_error();
             return (ft_nullptr);
         }
         connection_handle.socket = ft_move(new_socket);
@@ -358,9 +358,9 @@ char *api_request_https_http2(const char *ip, uint16_t port,
     {
         ft_socket new_socket(config);
 
-        if (new_socket.get_error())
+        if (networking_fetch_last_error())
         {
-            error_code = new_socket.get_error();
+            error_code = networking_fetch_last_error();
             return (ft_nullptr);
         }
         connection_handle.socket = ft_move(new_socket);
@@ -509,9 +509,9 @@ bool api_request_stream_tls(const char *host, uint16_t port,
     {
         ft_socket new_socket(config);
 
-        if (new_socket.get_error())
+        if (networking_fetch_last_error())
         {
-            error_code = new_socket.get_error();
+            error_code = networking_fetch_last_error();
             return (false);
         }
         connection_handle.socket = ft_move(new_socket);
@@ -659,9 +659,9 @@ bool api_request_stream_tls_http2(const char *host, uint16_t port,
     {
         ft_socket new_socket(config);
 
-        if (new_socket.get_error())
+        if (networking_fetch_last_error())
         {
-            error_code = new_socket.get_error();
+            error_code = networking_fetch_last_error();
             return (false);
         }
         connection_handle.socket = ft_move(new_socket);
@@ -816,9 +816,9 @@ char *api_request_string_tls(const char *host, uint16_t port,
     {
         ft_socket new_socket(config);
 
-        if (new_socket.get_error())
+        if (networking_fetch_last_error())
         {
-            error_code = new_socket.get_error();
+            error_code = networking_fetch_last_error();
             return (ft_nullptr);
         }
         connection_handle.socket = ft_move(new_socket);
@@ -975,9 +975,9 @@ char *api_request_string_tls_http2(const char *host, uint16_t port,
     {
         ft_socket new_socket(config);
 
-        if (new_socket.get_error())
+        if (networking_fetch_last_error())
         {
-            error_code = new_socket.get_error();
+            error_code = networking_fetch_last_error();
             return (ft_nullptr);
         }
         connection_handle.socket = ft_move(new_socket);

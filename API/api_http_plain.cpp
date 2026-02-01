@@ -200,7 +200,7 @@ bool api_http_plain_socket_is_alive(api_connection_pool_handle &connection_handl
 #else
     peek_result = connection_handle.socket.receive_data(&peek_byte, 1, MSG_PEEK | MSG_DONTWAIT);
 #endif
-    socket_error = connection_handle.socket.get_error();
+    socket_error = networking_fetch_last_error();
     if (peek_result > 0)
     {
         ft_errno = FT_ERR_SUCCESSS;
@@ -316,11 +316,11 @@ bool api_http_prepare_plain_socket(
     config._recv_timeout = timeout;
     config._send_timeout = timeout;
     ft_socket new_socket(config);
-    if (new_socket.get_error())
+    if (networking_fetch_last_error())
     {
         int socket_error_code;
 
-        socket_error_code = new_socket.get_error();
+        socket_error_code = networking_fetch_last_error();
         if (api_is_configuration_socket_error(socket_error_code))
             error_code = socket_error_code;
         else
@@ -457,8 +457,8 @@ static bool api_http_send_request(ft_socket &socket_wrapper,
     sent = socket_wrapper.send_all(request.c_str(), request.size());
     if (sent < 0)
     {
-        if (socket_wrapper.get_error())
-            error_code = socket_wrapper.get_error();
+        if (networking_fetch_last_error())
+            error_code = networking_fetch_last_error();
         else if (ft_errno != FT_ERR_SUCCESSS)
             error_code = ft_errno;
         else
@@ -888,7 +888,7 @@ static bool api_http_receive_response(api_connection_pool_handle &connection_han
         {
             int socket_error_code;
 
-            socket_error_code = socket_wrapper.get_error();
+            socket_error_code = networking_fetch_last_error();
             if (socket_error_code != FT_ERR_SUCCESSS)
                 error_code = socket_error_code;
             else if (ft_errno != FT_ERR_SUCCESSS)
@@ -1188,9 +1188,9 @@ static char *api_http_execute_plain_once(
         error_code = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
-    if (socket_wrapper.get_error())
+    if (networking_fetch_last_error())
     {
-        error_code = socket_wrapper.get_error();
+        error_code = networking_fetch_last_error();
         return (ft_nullptr);
     }
     if (!api_http_apply_timeouts(socket_wrapper, timeout))
@@ -1361,9 +1361,9 @@ static bool api_http_execute_plain_streaming_once(
     ft_socket &socket_wrapper = connection_handle.socket;
 
     connection_close = false;
-    if (socket_wrapper.get_error())
+    if (networking_fetch_last_error())
     {
-        error_code = socket_wrapper.get_error();
+        error_code = networking_fetch_last_error();
         return (false);
     }
     if (!api_http_apply_timeouts(socket_wrapper, timeout))
@@ -1564,9 +1564,9 @@ static bool api_http_execute_plain_http2_streaming_once(
         error_code = FT_ERR_UNSUPPORTED_TYPE;
         return (false);
     }
-    if (socket_wrapper.get_error())
+    if (networking_fetch_last_error())
     {
-        error_code = socket_wrapper.get_error();
+        error_code = networking_fetch_last_error();
         return (false);
     }
     if (!api_http_apply_timeouts(socket_wrapper, timeout))
@@ -1592,9 +1592,9 @@ static bool api_http_execute_plain_http2_streaming_once(
     if (sent_bytes < 0)
     {
         api_connection_pool_disable_store(connection_handle);
-        if (socket_wrapper.get_error())
+        if (networking_fetch_last_error())
         {
-            error_code = socket_wrapper.get_error();
+            error_code = networking_fetch_last_error();
             if (error_code == FT_ERR_IO)
                 error_code = FT_ERR_SOCKET_SEND_FAILED;
         }
@@ -1652,8 +1652,8 @@ static bool api_http_execute_plain_http2_streaming_once(
     if (sent_bytes < 0)
     {
         api_connection_pool_disable_store(connection_handle);
-        if (socket_wrapper.get_error())
-            error_code = socket_wrapper.get_error();
+        if (networking_fetch_last_error())
+            error_code = networking_fetch_last_error();
         else if (ft_errno != FT_ERR_SUCCESSS)
             error_code = ft_errno;
         else
@@ -1683,8 +1683,8 @@ static bool api_http_execute_plain_http2_streaming_once(
         if (received_bytes <= 0)
         {
             api_connection_pool_disable_store(connection_handle);
-            if (socket_wrapper.get_error())
-                error_code = socket_wrapper.get_error();
+            if (networking_fetch_last_error())
+                error_code = networking_fetch_last_error();
             else if (ft_errno != FT_ERR_SUCCESSS)
                 error_code = ft_errno;
             else
@@ -1805,8 +1805,8 @@ static bool api_http_execute_plain_http2_streaming_once(
                         if (ack_bytes < 0)
                         {
                             api_connection_pool_disable_store(connection_handle);
-                            if (socket_wrapper.get_error())
-                                error_code = socket_wrapper.get_error();
+                            if (networking_fetch_last_error())
+                                error_code = networking_fetch_last_error();
                             else if (ft_errno != FT_ERR_SUCCESSS)
                                 error_code = ft_errno;
                             else
@@ -2001,8 +2001,8 @@ static bool api_http_execute_plain_http2_streaming_once(
     if (sent_bytes < 0)
     {
         api_connection_pool_disable_store(connection_handle);
-        if (socket_wrapper.get_error())
-            error_code = socket_wrapper.get_error();
+        if (networking_fetch_last_error())
+            error_code = networking_fetch_last_error();
         else if (ft_errno != FT_ERR_SUCCESSS)
             error_code = ft_errno;
         else
@@ -2165,8 +2165,8 @@ static bool api_http_execute_plain_http2_streaming_once(
                     if (ack_sent_bytes < 0)
                     {
                         api_connection_pool_disable_store(connection_handle);
-                        if (socket_wrapper.get_error())
-                            error_code = socket_wrapper.get_error();
+                        if (networking_fetch_last_error())
+                            error_code = networking_fetch_last_error();
                         else if (ft_errno != FT_ERR_SUCCESSS)
                             error_code = ft_errno;
                         else
@@ -2225,8 +2225,8 @@ static bool api_http_execute_plain_http2_streaming_once(
                     if (ping_sent_bytes < 0)
                     {
                         api_connection_pool_disable_store(connection_handle);
-                        if (socket_wrapper.get_error())
-                            error_code = socket_wrapper.get_error();
+                        if (networking_fetch_last_error())
+                            error_code = networking_fetch_last_error();
                         else if (ft_errno != FT_ERR_SUCCESSS)
                             error_code = ft_errno;
                         else
@@ -2494,8 +2494,8 @@ static bool api_http_execute_plain_http2_streaming_once(
             if (received_bytes <= 0)
             {
                 api_connection_pool_disable_store(connection_handle);
-                if (socket_wrapper.get_error())
-                    error_code = socket_wrapper.get_error();
+                if (networking_fetch_last_error())
+                    error_code = networking_fetch_last_error();
                 else if (ft_errno != FT_ERR_SUCCESSS)
                     error_code = ft_errno;
                 else
@@ -2865,9 +2865,9 @@ static char *api_http_execute_plain_http2_once(
     (void)headers;
     (void)status;
     (void)port;
-    if (socket_wrapper.get_error())
+    if (networking_fetch_last_error())
     {
-        error_code = socket_wrapper.get_error();
+        error_code = networking_fetch_last_error();
         return (ft_nullptr);
     }
     if (!api_http_apply_timeouts(socket_wrapper, timeout))
@@ -2893,9 +2893,9 @@ static char *api_http_execute_plain_http2_once(
     if (sent_bytes < 0)
     {
         api_connection_pool_disable_store(connection_handle);
-        if (socket_wrapper.get_error())
+        if (networking_fetch_last_error())
         {
-            error_code = socket_wrapper.get_error();
+            error_code = networking_fetch_last_error();
             if (error_code == FT_ERR_IO)
                 error_code = FT_ERR_SOCKET_SEND_FAILED;
         }
@@ -2953,8 +2953,8 @@ static char *api_http_execute_plain_http2_once(
     if (sent_bytes < 0)
     {
         api_connection_pool_disable_store(connection_handle);
-        if (socket_wrapper.get_error())
-            error_code = socket_wrapper.get_error();
+        if (networking_fetch_last_error())
+            error_code = networking_fetch_last_error();
         else if (ft_errno != FT_ERR_SUCCESSS)
             error_code = ft_errno;
         else
@@ -2984,8 +2984,8 @@ static char *api_http_execute_plain_http2_once(
         if (received_bytes <= 0)
         {
             api_connection_pool_disable_store(connection_handle);
-            if (socket_wrapper.get_error())
-                error_code = socket_wrapper.get_error();
+            if (networking_fetch_last_error())
+                error_code = networking_fetch_last_error();
             else if (ft_errno != FT_ERR_SUCCESSS)
                 error_code = ft_errno;
             else
@@ -3106,8 +3106,8 @@ static char *api_http_execute_plain_http2_once(
                         if (ack_bytes < 0)
                         {
                             api_connection_pool_disable_store(connection_handle);
-                            if (socket_wrapper.get_error())
-                                error_code = socket_wrapper.get_error();
+                            if (networking_fetch_last_error())
+                                error_code = networking_fetch_last_error();
                             else if (ft_errno != FT_ERR_SUCCESSS)
                                 error_code = ft_errno;
                             else
@@ -3212,8 +3212,8 @@ static char *api_http_execute_plain_http2_once(
             if (received_bytes < 0)
             {
                 api_connection_pool_disable_store(connection_handle);
-                if (socket_wrapper.get_error())
-                    error_code = socket_wrapper.get_error();
+                if (networking_fetch_last_error())
+                    error_code = networking_fetch_last_error();
                 else if (ft_errno != FT_ERR_SUCCESSS)
                     error_code = ft_errno;
                 else

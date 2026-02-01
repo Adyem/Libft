@@ -23,78 +23,70 @@ static void rl_open_log_file(readline_state_t *state)
 
 int rl_initialize_state(readline_state_t *state)
 {
-    bool lock_acquired;
-    bool thread_safety_created;
-    bool thread_safety_was_enabled;
+    bool lock_acquired = false;
+    bool thread_safety_created = false;
+    bool thread_safety_was_enabled = false;
     int  index;
-    int error_code;
+    int  result;
 
     if (state == ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
-        return (1);
-    }
-    lock_acquired = false;
-    thread_safety_created = false;
-    thread_safety_was_enabled = false;
+        return (FT_ERR_INVALID_ARGUMENT);
     if (state->thread_safe_enabled == true && state->mutex != ft_nullptr)
         thread_safety_was_enabled = true;
-    if (rl_state_prepare_thread_safety(state) != 0)
-        return (1);
+    result = rl_state_prepare_thread_safety(state);
+    if (result != FT_ERR_SUCCESSS)
+        return (result);
     if (thread_safety_was_enabled == false && state->thread_safe_enabled == true
         && state->mutex != ft_nullptr)
         thread_safety_created = true;
-    if (rl_enable_raw_mode() == -1)
+    if (rl_enable_raw_mode() != 0)
     {
         if (thread_safety_created == true)
             rl_state_teardown_thread_safety(state);
-        return (1);
+        return (FT_ERR_TERMINATED);
     }
-    if (rl_state_lock(state, &lock_acquired) != 0)
+    result = rl_state_lock(state, &lock_acquired);
+    if (result != FT_ERR_SUCCESSS)
     {
         rl_disable_raw_mode();
         if (thread_safety_created == true)
             rl_state_teardown_thread_safety(state);
-        return (1);
+        return (result);
     }
     if (state->buffer != ft_nullptr)
     {
         cma_free(state->buffer);
-        error_code = ft_global_error_stack_pop_newest();
-        if (error_code != FT_ERR_SUCCESSS)
+        result = ft_global_error_stack_pop_newest();
+        if (result != FT_ERR_SUCCESSS)
         {
             rl_state_unlock(state, lock_acquired);
             rl_disable_raw_mode();
             if (thread_safety_created == true)
                 rl_state_teardown_thread_safety(state);
-            ft_global_error_stack_push(error_code);
-            return (1);
+            return (result);
         }
         state->buffer = ft_nullptr;
     }
     state->bufsize = INITIAL_BUFFER_SIZE;
     state->buffer = static_cast<char *>(cma_calloc(state->bufsize, sizeof(char)));
-    if (!state->buffer)
+    result = ft_global_error_stack_pop_newest();
+    if (state->buffer == ft_nullptr)
     {
-        error_code = ft_global_error_stack_pop_newest();
-        if (error_code == FT_ERR_SUCCESSS)
-            error_code = FT_ERR_NO_MEMORY;
+        if (result == FT_ERR_SUCCESSS)
+            result = FT_ERR_NO_MEMORY;
         rl_state_unlock(state, lock_acquired);
         rl_disable_raw_mode();
         if (thread_safety_created == true)
             rl_state_teardown_thread_safety(state);
-        ft_global_error_stack_push(error_code);
-        return (1);
+        return (result);
     }
-    error_code = ft_global_error_stack_pop_newest();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (result != FT_ERR_SUCCESSS)
     {
         rl_state_unlock(state, lock_acquired);
         rl_disable_raw_mode();
         if (thread_safety_created == true)
             rl_state_teardown_thread_safety(state);
-        ft_global_error_stack_push(error_code);
-        return (1);
+        return (result);
     }
     state->pos = 0;
     state->prev_buffer_length = 0;
@@ -113,5 +105,5 @@ int rl_initialize_state(readline_state_t *state)
     }
     rl_open_log_file(state);
     rl_state_unlock(state, lock_acquired);
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }

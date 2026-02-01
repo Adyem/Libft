@@ -154,10 +154,11 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
                 return ;
             }
             ttl_metadata.insert(ttl_key, expiration_timestamp);
-            if (storage_kv_pop_newest_error(ttl_metadata) != FT_ERR_SUCCESSS)
+            int ttl_metadata_pop_error = storage_kv_pop_newest_error(ttl_metadata);
+            if (ttl_metadata_pop_error != FT_ERR_SUCCESSS)
             {
                 json_free_groups(group_head);
-                ft_global_error_stack_push(ft_errno);
+                ft_global_error_stack_push(ttl_metadata_pop_error);
                 return ;
             }
             item_pointer = item_pointer->next;
@@ -222,10 +223,11 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
             }
         }
         this->_data.insert(key_storage, entry);
-        if (storage_kv_pop_newest_error(this->_data) != FT_ERR_SUCCESSS)
+        int data_insert_pop_error = storage_kv_pop_newest_error(this->_data);
+        if (data_insert_pop_error != FT_ERR_SUCCESSS)
         {
             json_free_groups(group_head);
-            ft_global_error_stack_push(ft_errno);
+            ft_global_error_stack_push(data_insert_pop_error);
             return ;
         }
         item_pointer = item_pointer->next;
@@ -233,10 +235,11 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
     size_t ttl_size;
 
     ttl_size = ttl_metadata.size();
-    if (storage_kv_pop_newest_error(ttl_metadata) != FT_ERR_SUCCESSS)
+    int ttl_metadata_size_pop_error = storage_kv_pop_newest_error(ttl_metadata);
+    if (ttl_metadata_size_pop_error != FT_ERR_SUCCESSS)
     {
         json_free_groups(group_head);
-        ft_global_error_stack_push(ft_errno);
+        ft_global_error_stack_push(ttl_metadata_size_pop_error);
         return ;
     }
     if (ttl_size > 0)
@@ -246,10 +249,11 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
         size_t ttl_index;
 
         ttl_end = ttl_metadata.end();
-        if (storage_kv_pop_newest_error(ttl_metadata) != FT_ERR_SUCCESSS)
+        int ttl_metadata_range_pop_error = storage_kv_pop_newest_error(ttl_metadata);
+        if (ttl_metadata_range_pop_error != FT_ERR_SUCCESSS)
         {
             json_free_groups(group_head);
-            ft_global_error_stack_push(ft_errno);
+            ft_global_error_stack_push(ttl_metadata_range_pop_error);
             return ;
         }
         ttl_begin = ttl_end - static_cast<std::ptrdiff_t>(ttl_size);
@@ -260,10 +264,11 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
             Pair<ft_string, kv_store_entry> *data_pair;
 
             data_pair = this->_data.find(ttl_entry.key);
-            if (storage_kv_pop_newest_error(this->_data) != FT_ERR_SUCCESSS)
+            int data_iteration_pop_error = storage_kv_pop_newest_error(this->_data);
+            if (data_iteration_pop_error != FT_ERR_SUCCESSS)
             {
                 json_free_groups(group_head);
-                ft_global_error_stack_push(ft_errno);
+                ft_global_error_stack_push(data_iteration_pop_error);
                 return ;
             }
             if (data_pair != ft_nullptr)

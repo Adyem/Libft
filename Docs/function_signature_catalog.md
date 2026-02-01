@@ -481,7 +481,6 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### CMA/CMA.hpp
 
-- `bool cma_leak_detection_is_enabled(void);`
 - `char **cma_split(char const *string, char delimiter) __attribute__ ((warn_unused_result));`
 - `char *cma_itoa(int number) __attribute__ ((warn_unused_result));`
 - `char *cma_itoa_base(int number, int base) __attribute__ ((warn_unused_result));`
@@ -493,9 +492,6 @@ The catalog lists the function declarations and definitions that appear in the C
 - `char *cma_substr(const char *source, unsigned int start, size_t length) __attribute__ ((warn_unused_result));`
 - `ft_size_t cma_alloc_size(const void* ptr) __attribute__ ((warn_unused_result, hot));`
 - `ft_size_t cma_block_size(const void *memory_pointer) __attribute__ ((warn_unused_result, hot));`
-- `ft_size_t cma_leak_detection_outstanding_allocations(void);`
-- `ft_size_t cma_leak_detection_outstanding_bytes(void);`
-- `ft_string cma_leak_detection_report(bool clear_after);`
 - `int *cma_atoi(const char *string) __attribute__ ((warn_unused_result));`
 - `int cma_backend_is_enabled(void) __attribute__ ((warn_unused_result));`
 - `int cma_checked_block_size(const void *memory_pointer, ft_size_t *block_size) __attribute__ ((warn_unused_result, hot));`
@@ -511,9 +507,6 @@ The catalog lists the function declarations and definitions that appear in the C
 - `void cma_free_double(char **content);`
 - `void cma_get_extended_stats(ft_size_t *allocation_count, ft_size_t *free_count, ft_size_t *current_bytes, ft_size_t *peak_bytes);`
 - `void cma_get_stats(ft_size_t *allocation_count, ft_size_t *free_count);`
-- `void cma_leak_detection_clear(void);`
-- `void cma_leak_detection_disable(void);`
-- `void cma_leak_detection_enable(void);`
 - `void cma_set_alloc_limit(ft_size_t limit);`
 - `void cma_set_thread_safety(bool enable);`
 
@@ -636,26 +629,6 @@ The catalog lists the function declarations and definitions that appear in the C
 - `void cma_record_internal_operation_error(int error_code)`
 - `void cma_record_operation_error(int error_code)`
 
-### CMA/cma_guard_vector.hpp
-
-- `template <typename t_element> bool cma_guard_vector<t_element>::empty() const`
-- `template <typename t_element> bool cma_guard_vector<t_element>::reserve(size_t new_capacity)`
-- `template <typename t_element> bool cma_guard_vector<t_element>::reserve_internal(size_t new_capacity)`
-- `template <typename t_element> cma_guard_vector<t_element>::cma_guard_vector(cma_guard_vector<t_element> &&other) noexcept : _data(other._data), _size(other._size), _capacity(other._capacity), _error_code(other._error_code)`
-- `template <typename t_element> cma_guard_vector<t_element>::cma_guard_vector(const cma_guard_vector<t_element> &other) : _data(ft_nullptr), _size(0), _capacity(0), _error_code(FT_ERR_SUCCESSS)`
-- `template <typename t_element> cma_guard_vector<t_element>::cma_guard_vector(size_t initial_capacity) : _data(ft_nullptr), _size(0), _capacity(0), _error_code(FT_ERR_SUCCESSS)`
-- `template <typename t_element> cma_guard_vector<t_element>::~cma_guard_vector()`
-- `template <typename t_element> const char *cma_guard_vector<t_element>::get_error_str() const`
-- `template <typename t_element> int cma_guard_vector<t_element>::get_error() const`
-- `template <typename t_element> size_t cma_guard_vector<t_element>::capacity() const`
-- `template <typename t_element> size_t cma_guard_vector<t_element>::size() const`
-- `template <typename t_element> void cma_guard_vector<t_element>::clear()`
-- `template <typename t_element> void cma_guard_vector<t_element>::destroy_elements(size_t from, size_t to)`
-- `template <typename t_element> void cma_guard_vector<t_element>::pop_back()`
-- `template <typename t_element> void cma_guard_vector<t_element>::push_back(const t_element &value)`
-- `template <typename t_element> void cma_guard_vector<t_element>::push_back(t_element &&value)`
-- `template <typename t_element> void cma_guard_vector<t_element>::set_error(int error_code) const`
-
 ### CMA/cma_internal.hpp
 
 - `Block *cma_find_block_for_pointer(const void *memory_pointer);`
@@ -696,8 +669,6 @@ The catalog lists the function declarations and definitions that appear in the C
 - `void cma_debug_initialize_block(Block *block);`
 - `void cma_debug_prepare_allocation(Block *block, ft_size_t user_size);`
 - `void cma_debug_release_allocation(Block *block, const char *context, const void *user_pointer);`
-- `void cma_leak_tracker_record_allocation(void *memory_pointer, ft_size_t size);`
-- `void cma_leak_tracker_record_free(void *memory_pointer);`
 - `void cma_metadata_make_inaccessible(void);`
 - `void cma_metadata_release_block(Block *block);`
 - `void cma_metadata_reset(void);`
@@ -715,26 +686,6 @@ The catalog lists the function declarations and definitions that appear in the C
 ### CMA/cma_itoa_base.cpp
 
 - `char *cma_itoa_base(int number, int base)`
-
-### CMA/cma_leak_detection.cpp
-
-- `bool cma_leak_detection_is_enabled(void)`
-- `ft_size_t cma_leak_detection_outstanding_allocations(void)`
-- `ft_size_t cma_leak_detection_outstanding_bytes(void)`
-- `ft_string cma_leak_detection_report(bool clear_after)`
-- `static bool cma_leak_report_append(ft_string &target, const char *text)`
-- `static bool cma_leak_report_append_string(ft_string &target, const ft_string &value)`
-- `static bool cma_leak_tracker_clear_records(bool reset_error_flag)`
-- `static bool cma_leak_tracker_is_active()`
-- `static int cma_leak_tracker_last_error()`
-- `static void cma_leak_tracker_handle_error(int error_code)`
-- `static void cma_leak_tracker_resume(bool was_enabled, bool error_state)`
-- `static void cma_leak_tracker_set_error(int error_code)`
-- `void cma_leak_detection_clear(void)`
-- `void cma_leak_detection_disable(void)`
-- `void cma_leak_detection_enable(void)`
-- `void cma_leak_tracker_record_allocation(void *memory_pointer, ft_size_t size)`
-- `void cma_leak_tracker_record_free(void *memory_pointer)`
 
 ### CMA/cma_metadata.cpp
 
@@ -1992,8 +1943,6 @@ The catalog lists the function declarations and definitions that appear in the C
 - `void ft_global_error_stack_push(int error_code)`
 - `void ft_operation_error_stack_pop_all(ft_operation_error_stack *error_stack)`
 - `void ft_operation_error_stack_push(ft_operation_error_stack *error_stack, int error_code, unsigned long long op_id)`
-- `void ft_set_errno_locked(int error_code)`
-- `void ft_set_sys_errno_locked(int error_code)`
 
 ### Errno/errno_internal.hpp
 
@@ -2020,10 +1969,6 @@ The catalog lists the function declarations and definitions that appear in the C
 - `unsigned long long ft_operation_error_stack_last_id( const ft_operation_error_stack *error_stack);`
 - `void ft_error_stack_pop_all(ft_error_stack *error_stack);`
 - `void ft_error_stack_push_entry_with_id(ft_error_stack *error_stack, int error_code, unsigned long long op_id);`
-- `void ft_operation_error_stack_pop_all(ft_operation_error_stack *error_stack);`
-- `void ft_operation_error_stack_push(ft_operation_error_stack *error_stack, int error_code, unsigned long long op_id);`
-- `void ft_set_errno_locked(int error_code);`
-- `void ft_set_sys_errno_locked(int error_code);`
 - `void lock(void);`
 - `void unlock(void);`
 
@@ -7346,13 +7291,12 @@ The catalog lists the function declarations and definitions that appear in the C
 - `int scma_release_snapshot(void *snapshot_buffer);`
 - `int scma_resize(scma_handle handle, ft_size_t new_size);`
 - `int scma_write(scma_handle handle, ft_size_t offset, const void *source, ft_size_t size);`
-- `pt_mutex &scma_runtime_mutex(void);`
+- `pt_recursive_mutex &scma_runtime_mutex(void);`
 - `scma_handle scma_allocate(ft_size_t size);`
 - `template <typename TValue> inline const char *scma_handle_accessor<TValue>::get_error_str(void) const`
 - `template <typename TValue> inline const char *scma_handle_accessor_const_element_proxy<TValue>::get_error_str(void) const`
 - `template <typename TValue> inline const char *scma_handle_accessor_element_proxy<TValue>::get_error_str(void) const`
 - `template <typename TValue> inline ft_size_t scma_handle_accessor<TValue>::get_count(void) const`
-- `template <typename TValue> inline ft_size_t scma_handle_accessor_calculate_offset(ft_size_t element_index)`
 - `template <typename TValue> inline int scma_handle_accessor<TValue>::bind(scma_handle handle)`
 - `template <typename TValue> inline int scma_handle_accessor<TValue>::get_error(void) const`
 - `template <typename TValue> inline int scma_handle_accessor<TValue>::is_bound(void) const`
@@ -7362,7 +7306,6 @@ The catalog lists the function declarations and definitions that appear in the C
 - `template <typename TValue> inline int scma_handle_accessor<TValue>::write_struct(const TValue &source) const`
 - `template <typename TValue> inline int scma_handle_accessor_const_element_proxy<TValue>::get_error(void) const`
 - `template <typename TValue> inline int scma_handle_accessor_element_proxy<TValue>::get_error(void) const`
-- `template <typename TValue> inline int scma_handle_accessor_validate_target(scma_handle handle, ft_size_t required_size, ft_size_t *out_size)`
 - `template <typename TValue> inline scma_handle scma_handle_accessor<TValue>::get_handle(void) const`
 - `template <typename TValue> inline scma_handle_accessor<TValue>::scma_handle_accessor(const scma_handle_accessor &other)`
 - `template <typename TValue> inline scma_handle_accessor<TValue>::scma_handle_accessor(scma_handle handle)`
@@ -7445,7 +7388,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `int scma_mutex_close(void)`
 - `int scma_mutex_lock(void)`
 - `int scma_mutex_unlock(void)`
-- `pt_mutex &scma_runtime_mutex(void)`
+- `pt_recursive_mutex &scma_runtime_mutex(void)`
 - `static ft_size_t &scma_runtime_lock_depth(void)`
 
 ### SCMA/scma_snapshot.cpp
@@ -10614,17 +10557,6 @@ The catalog lists the function declarations and definitions that appear in the C
 
 - `cma_allocator_guard::cma_allocator_guard() : _lock_acquired(false), _active(false), _was_active(false), _error_code(FT_ERR_SUCCESSS), _failure_logged(false), _owned_mutexes(CMA_GUARD_VECTOR_MIN_CAPACITY)`
 
-### CMA/cma_guard_vector.hpp
-
-- `cma_guard_vector() {`
-- `cma_guard_vector();`
-- `cma_guard_vector(cma_guard_vector &&other) noexcept;`
-- `cma_guard_vector(cma_guard_vector<t_element> &&other) noexcept : _data(other._data), _size(other._size), _capacity(other._capacity), _error_code(other._error_code) {`
-- `cma_guard_vector(const cma_guard_vector &other);`
-- `cma_guard_vector(const cma_guard_vector<t_element> &other) : _data(ft_nullptr), _size(0), _capacity(0), _error_code(FT_ERR_SUCCESSS) {`
-- `cma_guard_vector(size_t initial_capacity = 0);`
-- `cma_guard_vector(size_t initial_capacity) : _data(ft_nullptr), _size(0), _capacity(0), _error_code(FT_ERR_SUCCESSS) {`
-
 ### CMA/cma_internal.hpp
 
 - `cma_allocator_guard();`
@@ -12752,13 +12684,6 @@ The catalog lists the function declarations and definitions that appear in the C
 - `void* operator new[](std::size_t size, const std::nothrow_t&) noexcept`
 - `void* operator new[](std::size_t size, std::align_val_t alignment)`
 - `void* operator new[](std::size_t size, std::align_val_t alignment, const std::nothrow_t&) noexcept`
-
-### CMA/cma_guard_vector.hpp
-
-- `template <typename t_element> cma_guard_vector<t_element> &cma_guard_vector<t_element>::operator=(cma_guard_vector<t_element> &&other) noexcept`
-- `template <typename t_element> cma_guard_vector<t_element> &cma_guard_vector<t_element>::operator=(const cma_guard_vector<t_element> &other)`
-- `template <typename t_element> const t_element &cma_guard_vector<t_element>::operator[](size_t index) const`
-- `template <typename t_element> t_element &cma_guard_vector<t_element>::operator[](size_t index)`
 
 ### CPP_class/class_data_buffer.hpp
 

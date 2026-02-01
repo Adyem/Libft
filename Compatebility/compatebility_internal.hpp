@@ -102,6 +102,7 @@ char **cmp_get_environ_entries(void);
 const char *cmp_system_strerror(int error_code);
 int cmp_map_system_error_to_ft(int error_code);
 int cmp_normalize_ft_errno(int error_code);
+void cmp_set_last_error(int error_code);
 int cmp_last_error(void);
 char *cmp_get_home_directory(void);
 unsigned int cmp_get_cpu_count(void);

@@ -4,21 +4,17 @@
 
 void    cma_set_alloc_limit(ft_size_t limit)
 {
-    cma_allocator_guard allocator_guard;
-    int error_code;
+    int error_code = FT_ERR_SUCCESSS;
+    bool lock_acquired = false;
 
-    if (!allocator_guard.is_active())
-    {
+    error_code = cma_lock_allocator(&lock_acquired);
+    if (error_code == FT_ERR_SUCCESSS)
         g_cma_alloc_limit = limit;
-        error_code = allocator_guard.get_error();
-        if (error_code == FT_ERR_SUCCESSS)
-            error_code = FT_ERR_SUCCESSS;
-        ft_global_error_stack_push(error_code);
-        return ;
+    if (lock_acquired)
+    {
+        cma_unlock_allocator(lock_acquired);
+        lock_acquired = false;
     }
-    g_cma_alloc_limit = limit;
-    allocator_guard.unlock();
-    error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(error_code);
+    cma_record_operation_error(error_code);
     return ;
 }

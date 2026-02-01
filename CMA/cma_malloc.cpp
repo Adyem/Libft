@@ -16,36 +16,36 @@
 
 void* cma_malloc(ft_size_t size)
 {
-    int error_code = 0;
+    int error_code = FT_ERR_SUCCESSS;
+    void *result = ft_nullptr;
+    bool lock_acquired = false;
+    ft_size_t request_size = size;
+    ft_size_t instrumented_size = 0;
+    ft_size_t aligned_size = 0;
+    Block *block = ft_nullptr;
 
     if (size > FT_SYSTEM_SIZE_MAX)
     {
         error_code = FT_ERR_INVALID_ARGUMENT;
-        cma_record_operation_error(error_code);
-        return (ft_nullptr);
+        goto cleanup;
     }
-    ft_size_t request_size = size;
     if (size == 0)
         size = 1;
     if (g_cma_alloc_limit != 0 && size > g_cma_alloc_limit)
     {
         error_code = FT_ERR_NO_MEMORY;
-        cma_record_operation_error(error_code);
-        return (ft_nullptr);
+        goto cleanup;
     }
     if (cma_backend_is_enabled())
     {
-        void *memory_pointer;
-
-        memory_pointer = cma_backend_allocate(size, &error_code);
-        cma_record_operation_error(error_code);
-        return (memory_pointer);
+        result = cma_backend_allocate(size, &error_code);
+        goto cleanup;
     }
     if (OFFSWITCH == 1)
     {
-        void *memory_pointer = malloc(static_cast<size_t>(size));
+        result = malloc(static_cast<size_t>(size));
 
-        if (memory_pointer)
+        if (result)
         {
             g_cma_allocation_count++;
             error_code = FT_ERR_SUCCESSS;
@@ -53,23 +53,15 @@ void* cma_malloc(ft_size_t size)
         else
             error_code = FT_ERR_NO_MEMORY;
         if (ft_log_get_alloc_logging())
-        ft_log_debug("cma_malloc %llu -> %p", size, memory_pointer);
-        cma_record_operation_error(error_code);
-        return (memory_pointer);
+            ft_log_debug("cma_malloc %llu -> %p", size, result);
+        goto cleanup;
     }
-    cma_allocator_guard allocator_guard;
-
-    if (!allocator_guard.is_active())
-    {
-        error_code = allocator_guard.get_error();
-        if (error_code == FT_ERR_SUCCESSS)
-            error_code = FT_ERR_INVALID_STATE;
-        cma_record_operation_error(error_code);
-        return (ft_nullptr);
-    }
-    ft_size_t instrumented_size = cma_debug_allocation_size(size);
-    ft_size_t aligned_size = align16(instrumented_size);
-    Block *block = find_free_block(aligned_size);
+    error_code = cma_lock_allocator(&lock_acquired);
+    if (error_code != FT_ERR_SUCCESSS)
+        goto cleanup;
+    instrumented_size = cma_debug_allocation_size(size);
+    aligned_size = align16(instrumented_size);
+    block = find_free_block(aligned_size);
     if (!block)
     {
         Page* page = create_page(aligned_size);
@@ -77,16 +69,15 @@ void* cma_malloc(ft_size_t size)
         if (!page)
         {
             error_code = FT_ERR_NO_MEMORY;
-            allocator_guard.unlock();
-        cma_record_operation_error(error_code);
-        return (ft_nullptr);
-    }
+            goto cleanup;
+        }
         block = page->blocks;
     }
     cma_validate_block(block, "cma_malloc", ft_nullptr);
     if (!cma_block_is_free(block))
     {
-        allocator_guard.unlock();
+        cma_unlock_allocator(lock_acquired);
+        lock_acquired = false;
         su_sigabrt();
     }
     block = split_block(block, aligned_size);
@@ -97,9 +88,9 @@ void* cma_malloc(ft_size_t size)
     if (g_cma_current_bytes > g_cma_peak_bytes)
         g_cma_peak_bytes = g_cma_current_bytes;
     cma_debug_prepare_allocation(block, size);
-    void *result = static_cast<void *>(cma_block_user_pointer(block));
-    cma_leak_tracker_record_allocation(result, cma_block_user_size(block));
-    allocator_guard.unlock();
+    result = static_cast<void *>(cma_block_user_pointer(block));
+    cma_unlock_allocator(lock_acquired);
+    lock_acquired = false;
     error_code = FT_ERR_SUCCESSS;
     if (ft_log_get_alloc_logging())
     {
@@ -109,6 +100,9 @@ void* cma_malloc(ft_size_t size)
             ft_log_debug("cma_malloc %llu (rounded to %llu) -> %p",
                 request_size, aligned_size, result);
     }
+cleanup:
+    if (lock_acquired)
+        cma_unlock_allocator(lock_acquired);
     cma_record_operation_error(error_code);
     return (result);
 }

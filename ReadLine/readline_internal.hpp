@@ -70,7 +70,7 @@ void    rl_disable_raw_mode();
 int        rl_enable_raw_mode();
 
 int        rl_clear_line(const char *prompt, const char *buffer);
-char    *rl_resize_buffer(char **buffer_pointer, int *current_size_pointer, int new_size);
+int        rl_resize_buffer(char **buffer_pointer, int *current_size_pointer, int new_size);
 int        rl_handle_escape_sequence(readline_state_t *state, const char *prompt);
 int        rl_handle_backspace(readline_state_t *state, const char *prompt);
 int        rl_handle_tab_completion(readline_state_t *state, const char *prompt);
@@ -82,7 +82,7 @@ int        rl_utf8_find_previous_grapheme(const char *buffer, int cursor_pos,
 int        rl_utf8_find_next_grapheme(const char *buffer, int cursor_pos,
             int *start_byte, int *end_byte, int *display_width);
 
-int        rl_read_key(void);
+int        rl_read_key(char *character_out);
 int        rl_get_terminal_width(void);
 int        rl_read_escape_sequence(char seq[2]);
 void    rl_update_history(const char *buffer);
@@ -117,10 +117,6 @@ int        rl_history_save(void);
 void    rl_history_notify_updated(void);
 int        rl_history_search(const char *query, int start_index,
             bool search_backward, int *match_index);
-
-void    rl_internal_set_error(int error_code);
-int        rl_internal_get_error(void);
-int        rl_internal_consume_error(void);
 
 int        rl_state_prepare_thread_safety(readline_state_t *state);
 void    rl_state_teardown_thread_safety(readline_state_t *state);

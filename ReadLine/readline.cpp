@@ -42,50 +42,38 @@ static char *rl_error(readline_state_t *state)
     return (ft_nullptr);
 }
 
-static int rl_last_error_with_fallback(int fallback_error)
-{
-    int internal_error = rl_internal_consume_error();
-
-    if (internal_error != FT_ERR_SUCCESSS)
-        return (internal_error);
-    if (ft_global_error_stack_depth() == 0)
-        return (fallback_error);
-    int error_code = ft_global_error_stack_pop_newest();
-    if (error_code == FT_ERR_SUCCESSS)
-        return (fallback_error);
-    return (error_code);
-}
-
 char *rl_readline(const char *prompt)
 {
     readline_state_t     state;
     int                 error_code;
+    int                 init_error;
 
-    if (rl_initialize_state(&state))
+    init_error = rl_initialize_state(&state);
+    if (init_error != FT_ERR_SUCCESSS)
     {
-        error_code = rl_last_error_with_fallback(FT_ERR_INTERNAL);
-        ft_global_error_stack_push(error_code);
+        ft_global_error_stack_push(init_error);
         return (ft_nullptr);
     }
     pf_printf("%s", prompt);
     fflush(stdout);
     while (1)
     {
-        int key_result = rl_read_key();
+        char character;
+        int read_error = rl_read_key(&character);
 
-        if (key_result == -1)
+        if (read_error != FT_ERR_SUCCESSS)
         {
-            error_code = rl_last_error_with_fallback(FT_ERR_IO);
+            error_code = read_error;
             rl_error(&state);
             ft_global_error_stack_push(error_code);
             return (ft_nullptr);
         }
-        char character = static_cast<char>(key_result);
-        int custom_result = rl_dispatch_custom_key(&state, prompt, key_result);
+        int key_code = static_cast<unsigned char>(character);
+        int custom_result = rl_dispatch_custom_key(&state, prompt, key_code);
 
         if (custom_result == -1)
         {
-            error_code = rl_last_error_with_fallback(FT_ERR_INTERNAL);
+            error_code = FT_ERR_INTERNAL;
             rl_error(&state);
             ft_global_error_stack_push(error_code);
             return (ft_nullptr);

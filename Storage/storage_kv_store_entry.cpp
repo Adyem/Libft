@@ -15,8 +15,8 @@ static int storage_kv_capture_string_error(const ft_string &value) noexcept
     int error_code = value.pop_operation_error(operation_id);
 
     if (error_code != FT_ERR_SUCCESSS)
-        ft_errno = error_code;
-    return (error_code);
+        return (error_code);
+    return (FT_ERR_SUCCESSS);
 }
 
 void kv_store_entry::set_error_unlocked(int error_code) const noexcept
@@ -46,7 +46,6 @@ int kv_store_entry::lock_entry(ft_unique_lock<pt_mutex> &guard) const noexcept
     if (guard_error != FT_ERR_SUCCESSS)
     {
         guard = ft_unique_lock<pt_mutex>();
-        ft_errno = guard_error;
         return (guard_error);
     }
     guard = ft_move(local_guard);

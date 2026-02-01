@@ -86,20 +86,12 @@ Each entry lists the class or struct name introduced in that translation unit.
 
 - `cma_allocation_guard`
 
-## CMA/cma_guard_vector.hpp
-
-- `cma_guard_vector`
-
 ## CMA/cma_internal.hpp
 
 - `Block`
 - `Page`
 - `cma_allocator_guard`
 - `s_mutex_entry`
-
-## CMA/cma_leak_detection.cpp
-
-- `s_cma_leak_record`
 
 ## CMA/cma_metadata.cpp
 

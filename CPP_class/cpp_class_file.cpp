@@ -640,6 +640,7 @@ ft_file::operator int() const
     return (this->get_fd());
 }
 
+#ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex &ft_file::recursive_mutex() noexcept
 {
     return (this->_mutex);
@@ -649,6 +650,7 @@ ft_operation_error_stack &ft_file::operation_error_stack() const noexcept
 {
     return (this->_operation_errors);
 }
+#endif
 
 void ft_file::record_operation_error(int error_code) const
 {

@@ -4,6 +4,7 @@
 #include "../CPP_class/class_string.hpp"
 #include "../Template/vector.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 
 class pt_mutex;
@@ -20,17 +21,17 @@ enum ft_dom_node_type
 class ft_dom_node
 {
     private:
-        mutable int _error_code;
         ft_dom_node_type _type;
         ft_string _name;
         ft_string _value;
         ft_vector<ft_dom_node*> _children;
         ft_vector<ft_string> _attribute_keys;
         ft_vector<ft_string> _attribute_values;
+        mutable ft_operation_error_stack _operation_errors;
         mutable pt_mutex *_mutex;
         mutable bool _thread_safe_enabled;
 
-        void set_error(int error_code) const noexcept;
+        void record_operation_error(int error_code) const noexcept;
         int prepare_thread_safety() noexcept;
         void teardown_thread_safety() noexcept;
         int lock(bool *lock_acquired) const noexcept;
@@ -79,6 +80,9 @@ class ft_dom_node
         ft_dom_node *find_child(const ft_string &name) const noexcept;
         bool is_thread_safe_enabled() const noexcept;
         int get_error() const noexcept;
+        pt_mutex *mutex_handle() const noexcept;
+        ft_operation_error_stack *operation_error_stack_handle() noexcept;
+        const ft_operation_error_stack *operation_error_stack_handle() const noexcept;
 };
 
 class ft_dom_document
@@ -87,9 +91,9 @@ class ft_dom_document
         ft_dom_node *_root;
         mutable pt_mutex *_mutex;
         mutable bool _thread_safe_enabled;
-        mutable int _error_code;
+        mutable ft_operation_error_stack _operation_errors;
 
-        void set_error(int error_code) const noexcept;
+        void record_operation_error(int error_code) const noexcept;
         int prepare_thread_safety() noexcept;
         void teardown_thread_safety() noexcept;
         int lock(bool *lock_acquired) const noexcept;
@@ -125,6 +129,9 @@ class ft_dom_document
         int get_error() const noexcept;
         const char *get_error_str() const noexcept;
         bool is_thread_safe_enabled() const noexcept;
+        pt_mutex *mutex_handle() const noexcept;
+        ft_operation_error_stack *operation_error_stack_handle() noexcept;
+        const ft_operation_error_stack *operation_error_stack_handle() const noexcept;
 };
 
 struct ft_dom_schema_rule
@@ -151,9 +158,9 @@ class ft_dom_validation_report
     private:
         bool _valid;
         ft_vector<ft_dom_validation_error> _errors;
-        mutable int _error_code;
+        mutable ft_operation_error_stack _operation_errors;
 
-        void set_error(int error_code) const noexcept;
+        void record_operation_error(int error_code) const noexcept;
 
     public:
         ft_dom_validation_report() noexcept;
@@ -166,15 +173,16 @@ class ft_dom_validation_report
         const char *get_error_str() const noexcept;
         int add_error(const ft_string &path, const ft_string &message) noexcept;
         const ft_vector<ft_dom_validation_error> &errors() const noexcept;
+        const ft_operation_error_stack *operation_error_stack_handle() const noexcept;
 };
 
 class ft_dom_schema
 {
     private:
         ft_vector<ft_dom_schema_rule> _rules;
-        mutable int _error_code;
+        mutable ft_operation_error_stack _operation_errors;
 
-        void set_error(int error_code) const noexcept;
+        void record_operation_error(int error_code) const noexcept;
         int validate_rule(const ft_dom_schema_rule &rule, const ft_dom_node *node,
             const ft_string &base_path, ft_dom_validation_report &report) const noexcept;
 
@@ -184,6 +192,7 @@ class ft_dom_schema
 
         int add_rule(const ft_string &path, ft_dom_node_type type, bool required) noexcept;
         int validate(const ft_dom_document &document, ft_dom_validation_report &report) const noexcept;
+        const ft_operation_error_stack *operation_error_stack_handle() const noexcept;
 };
 
 int ft_dom_find_path(const ft_dom_node *root, const ft_string &path, const ft_dom_node **out_node) noexcept;

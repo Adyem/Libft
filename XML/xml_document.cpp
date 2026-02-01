@@ -10,6 +10,15 @@
 #include <cerrno>
 #include <new>
 
+static int xml_document_consume_last_error(bool repush_failure = true)
+{
+    int last_error = ft_global_error_stack_pop_newest();
+
+    if (repush_failure && last_error != FT_ERR_SUCCESSS)
+        ft_global_error_stack_push(last_error);
+    return (last_error);
+}
+
 struct xml_namespace_entry
 {
     char *prefix;
@@ -21,12 +30,9 @@ struct xml_namespace_entry
 xml_document::thread_guard::thread_guard(const xml_document *document) noexcept
     : _document(document), _lock_acquired(false), _status(0)
 {
-    ft_errno = FT_ERR_SUCCESSS;
     if (!this->_document)
         return ;
     this->_status = this->_document->lock(&this->_lock_acquired);
-    if (this->_status == 0)
-        ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -72,10 +78,7 @@ static char *duplicate_range(const char *start, size_t length)
 {
     char *copy = static_cast<char *>(cma_malloc(length + 1));
     if (!copy)
-    {
-        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
-    }
     size_t index = 0;
     while (index < length)
     {
@@ -111,7 +114,6 @@ static int xml_add_namespace_binding(xml_node *node, const char *prefix,
     entry = new (std::nothrow) xml_namespace_entry();
     if (!entry)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
         return (-1);
     }
     entry->prefix = ft_nullptr;
@@ -161,13 +163,15 @@ static const char *xml_resolve_namespace_uri(
 
 static int xml_parse_attributes(xml_node *node, const char *start,
         const char *end, const xml_namespace_entry *scope_head,
-        const xml_namespace_entry **out_scope)
+        const xml_namespace_entry **out_scope, int *error_code_out)
 {
     const char                *cursor;
     const xml_namespace_entry *active_scope;
 
     cursor = start;
     active_scope = scope_head;
+    if (error_code_out)
+        *error_code_out = FT_ERR_SUCCESSS;
     while (cursor && cursor < end)
     {
         cursor = xml_skip_whitespace_range(cursor, end);
@@ -193,13 +197,18 @@ static int xml_parse_attributes(xml_node *node, const char *start,
             name_end--;
         if (name_end <= name_start)
         {
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
+            if (error_code_out)
+                *error_code_out = FT_ERR_INVALID_ARGUMENT;
             return (-1);
         }
         attribute_name = duplicate_range(name_start,
                 static_cast<size_t>(name_end - name_start));
         if (!attribute_name)
+        {
+            if (error_code_out)
+                *error_code_out = FT_ERR_NO_MEMORY;
             return (-1);
+        }
         cursor = xml_skip_whitespace_range(cursor, end);
         has_value = false;
         attribute_value = ft_nullptr;
@@ -214,7 +223,8 @@ static int xml_parse_attributes(xml_node *node, const char *start,
             if (!cursor || cursor >= end)
             {
                 cma_free(attribute_name);
-                ft_errno = FT_ERR_INVALID_ARGUMENT;
+                if (error_code_out)
+                    *error_code_out = FT_ERR_INVALID_ARGUMENT;
                 return (-1);
             }
             quote_character = '\0';
@@ -241,7 +251,8 @@ static int xml_parse_attributes(xml_node *node, const char *start,
                 if (!cursor || cursor >= end || *cursor != quote_character)
                 {
                     cma_free(attribute_name);
-                    ft_errno = FT_ERR_INVALID_ARGUMENT;
+                    if (error_code_out)
+                        *error_code_out = FT_ERR_INVALID_ARGUMENT;
                     return (-1);
                 }
             }
@@ -250,6 +261,8 @@ static int xml_parse_attributes(xml_node *node, const char *start,
             if (!attribute_value)
             {
                 cma_free(attribute_name);
+                if (error_code_out)
+                    *error_code_out = FT_ERR_NO_MEMORY;
                 return (-1);
             }
             has_value = true;
@@ -286,7 +299,8 @@ static int xml_parse_attributes(xml_node *node, const char *start,
                 cma_free(attribute_name);
                 if (attribute_value)
                     cma_free(attribute_value);
-                ft_errno = FT_ERR_INVALID_ARGUMENT;
+                if (error_code_out)
+                    *error_code_out = FT_ERR_INVALID_ARGUMENT;
                 return (-1);
             }
         }
@@ -297,7 +311,8 @@ static int xml_parse_attributes(xml_node *node, const char *start,
                 cma_free(attribute_name);
                 if (attribute_value)
                     cma_free(attribute_value);
-                ft_errno = FT_ERR_INVALID_ARGUMENT;
+                if (error_code_out)
+                    *error_code_out = FT_ERR_INVALID_ARGUMENT;
                 return (-1);
             }
             if (xml_add_namespace_binding(node, namespace_prefix_pointer,
@@ -305,6 +320,8 @@ static int xml_parse_attributes(xml_node *node, const char *start,
             {
                 cma_free(attribute_name);
                 cma_free(attribute_value);
+                if (error_code_out)
+                    *error_code_out = FT_ERR_NO_MEMORY;
                 return (-1);
             }
         }
@@ -315,11 +332,15 @@ static int xml_parse_attributes(xml_node *node, const char *start,
             if (attribute_value)
                 cma_free(attribute_value);
             cma_free(attribute_name);
-            ft_errno = attribute_error;
+            if (error_code_out)
+                *error_code_out = attribute_error;
             return (-1);
         }
     }
-    *out_scope = active_scope;
+    if (out_scope)
+        *out_scope = active_scope;
+    if (error_code_out)
+        *error_code_out = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -378,12 +399,15 @@ xml_node::~xml_node() noexcept
 }
 
 static const char *parse_node(const char *string, xml_node **out_node,
-        const xml_namespace_entry *scope_head)
+        const xml_namespace_entry *scope_head, int *error_code_out)
 {
+    if (error_code_out)
+        *error_code_out = FT_ERR_SUCCESSS;
     string = skip_whitespace(string);
     if (!string || *string != '<')
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        if (error_code_out)
+            *error_code_out = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     string++;
@@ -393,37 +417,45 @@ static const char *parse_node(const char *string, xml_node **out_node,
     size_t name_length = static_cast<size_t>(string - name_start);
     char *name = duplicate_range(name_start, name_length);
     if (!name)
+    {
+        if (error_code_out)
+            *error_code_out = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
+    }
     xml_node *node = new (std::nothrow) xml_node();
     if (!node)
     {
         cma_free(name);
-        ft_errno = FT_ERR_NO_MEMORY;
+        if (error_code_out)
+            *error_code_out = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     node->name = name;
     const char *colon_position = ft_strchr(node->name, ':');
     if (colon_position)
     {
-        size_t prefix_length;
-
-        prefix_length = static_cast<size_t>(colon_position - node->name);
+        size_t prefix_length = static_cast<size_t>(colon_position - node->name);
         if (prefix_length == 0 || colon_position[1] == '\0')
         {
             delete node;
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
+            if (error_code_out)
+                *error_code_out = FT_ERR_INVALID_ARGUMENT;
             return (ft_nullptr);
         }
         node->namespace_prefix = duplicate_range(node->name, prefix_length);
         if (!node->namespace_prefix)
         {
             delete node;
+            if (error_code_out)
+                *error_code_out = FT_ERR_NO_MEMORY;
             return (ft_nullptr);
         }
         node->local_name = cma_strdup(colon_position + 1);
         if (!node->local_name)
         {
             delete node;
+            if (error_code_out)
+                *error_code_out = FT_ERR_NO_MEMORY;
             return (ft_nullptr);
         }
     }
@@ -434,17 +466,22 @@ static const char *parse_node(const char *string, xml_node **out_node,
         if (!node->local_name)
         {
             delete node;
+            if (error_code_out)
+                *error_code_out = FT_ERR_NO_MEMORY;
             return (ft_nullptr);
         }
     }
-    if (xml_node_prepare_thread_safety(node) != 0)
+    int prepare_result = xml_node_prepare_thread_safety(node);
+    int thread_error = xml_document_consume_last_error();
+    if (prepare_result != 0)
     {
         delete node;
+        if (error_code_out)
+            *error_code_out = thread_error != FT_ERR_SUCCESSS ? thread_error : FT_ERR_INTERNAL;
         return (ft_nullptr);
     }
-    char quote_character;
+    char quote_character = '\0';
 
-    quote_character = '\0';
     while (*string)
     {
         if (*string == '>' && quote_character == '\0')
@@ -461,7 +498,8 @@ static const char *parse_node(const char *string, xml_node **out_node,
     if (*string != '>')
     {
         delete node;
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        if (error_code_out)
+            *error_code_out = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     const char *tag_end = string;
@@ -470,9 +508,8 @@ static const char *parse_node(const char *string, xml_node **out_node,
     const char *attribute_end = tag_end;
     if (attribute_end > attribute_start)
     {
-        const char *trim_cursor;
+        const char *trim_cursor = attribute_end;
 
-        trim_cursor = attribute_end;
         while (trim_cursor > attribute_start && is_xml_whitespace(trim_cursor[-1]))
             trim_cursor--;
         if (trim_cursor > attribute_start && trim_cursor[-1] == '/')
@@ -487,10 +524,15 @@ static const char *parse_node(const char *string, xml_node **out_node,
     const xml_namespace_entry *active_scope = scope_head;
     if (attribute_end > attribute_start)
     {
+        int attribute_error = FT_ERR_SUCCESSS;
+
         if (xml_parse_attributes(node, attribute_start, attribute_end,
-                scope_head, &active_scope) != 0)
+                scope_head, &active_scope, &attribute_error) != 0)
         {
             delete node;
+            if (error_code_out)
+                *error_code_out = attribute_error != FT_ERR_SUCCESSS
+                        ? attribute_error : FT_ERR_INVALID_ARGUMENT;
             return (ft_nullptr);
         }
     }
@@ -501,7 +543,8 @@ static const char *parse_node(const char *string, xml_node **out_node,
         if (!node->namespace_uri)
         {
             delete node;
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
+            if (error_code_out)
+                *error_code_out = FT_ERR_INVALID_ARGUMENT;
             return (ft_nullptr);
         }
     }
@@ -511,20 +554,27 @@ static const char *parse_node(const char *string, xml_node **out_node,
     if (self_closing)
     {
         *out_node = node;
-        ft_errno = FT_ERR_SUCCESSS;
+        if (error_code_out)
+            *error_code_out = FT_ERR_SUCCESSS;
         return (string);
     }
     const char *text_start = string;
-    if (*string == '<' && string[1] == '/');
+    if (*string == '<' && string[1] == '/')
+        ;
     else if (*string == '<')
     {
         while (1)
         {
             xml_node *child = ft_nullptr;
-            string = parse_node(string, &child, active_scope);
+            int child_error = FT_ERR_SUCCESSS;
+
+            string = parse_node(string, &child, active_scope, &child_error);
             if (!string)
             {
                 delete node;
+                if (error_code_out)
+                    *error_code_out = child_error != FT_ERR_SUCCESSS
+                            ? child_error : FT_ERR_INVALID_ARGUMENT;
                 return (ft_nullptr);
             }
             node->children.push_back(child);
@@ -533,12 +583,13 @@ static const char *parse_node(const char *string, xml_node **out_node,
             {
                 delete child;
                 delete node;
-                ft_errno = translate_vector_error(children_error_code);
+                if (error_code_out)
+                    *error_code_out = translate_vector_error(children_error_code);
                 return (ft_nullptr);
             }
             string = skip_whitespace(string);
             if (*string == '<' && string[1] == '/')
-                break;
+                break ;
         }
     }
     else
@@ -550,14 +601,16 @@ static const char *parse_node(const char *string, xml_node **out_node,
         if (!node->text && text_length > 0)
         {
             delete node;
-            ft_errno = FT_ERR_NO_MEMORY;
+            if (error_code_out)
+                *error_code_out = FT_ERR_NO_MEMORY;
             return (ft_nullptr);
         }
     }
     if (*string != '<' || string[1] != '/')
     {
         delete node;
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        if (error_code_out)
+            *error_code_out = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     string += 2;
@@ -570,7 +623,8 @@ static const char *parse_node(const char *string, xml_node **out_node,
     if (closing_name_length != opening_name_length)
     {
         delete node;
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        if (error_code_out)
+            *error_code_out = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     size_t name_index = 0;
@@ -579,7 +633,8 @@ static const char *parse_node(const char *string, xml_node **out_node,
         if (closing_name_start[name_index] != node->name[name_index])
         {
             delete node;
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
+            if (error_code_out)
+                *error_code_out = FT_ERR_INVALID_ARGUMENT;
             return (ft_nullptr);
         }
         name_index++;
@@ -589,7 +644,8 @@ static const char *parse_node(const char *string, xml_node **out_node,
         if (!is_xml_whitespace(*string))
         {
             delete node;
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
+            if (error_code_out)
+                *error_code_out = FT_ERR_INVALID_ARGUMENT;
             return (ft_nullptr);
         }
         string++;
@@ -597,21 +653,24 @@ static const char *parse_node(const char *string, xml_node **out_node,
     if (*string != '>')
     {
         delete node;
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        if (error_code_out)
+            *error_code_out = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     string++;
     *out_node = node;
-    ft_errno = FT_ERR_SUCCESSS;
+    if (error_code_out)
+        *error_code_out = FT_ERR_SUCCESSS;
     return (string);
 }
 
+
 xml_document::xml_document() noexcept
-    : _root(ft_nullptr), _mutex(ft_nullptr), _thread_safe_enabled(false), _error_code(FT_ERR_SUCCESSS)
+    : _root(ft_nullptr), _mutex(ft_nullptr), _thread_safe_enabled(false)
 {
-    this->set_error(FT_ERR_SUCCESSS);
     if (this->prepare_thread_safety() != 0)
         return ;
+    this->record_operation_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -633,27 +692,40 @@ xml_document::~xml_document() noexcept
     return ;
 }
 
-void xml_document::set_error(int error_code) const noexcept
+void xml_document::record_operation_error(int error_code) const noexcept
 {
-    this->_error_code = error_code;
-    ft_errno = error_code;
+    unsigned long long operation_id = ft_errno_next_operation_id();
+
+    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
+    ft_operation_error_stack_push(&this->_operation_errors, error_code, operation_id);
     return ;
+}
+
+pt_mutex *xml_document::get_mutex_for_validation() const noexcept
+{
+    return (this->_mutex);
+}
+
+ft_operation_error_stack *xml_document::operation_error_stack_handle() const noexcept
+{
+    return (&this->_operation_errors);
 }
 
 int xml_document::load_from_string(const char *xml) noexcept
 {
     thread_guard guard(this);
     int          lock_error;
+    int          parse_error;
 
     if (guard.get_status() != 0)
     {
-        lock_error = ft_errno != FT_ERR_SUCCESSS ? ft_errno : FT_ERR_INVALID_STATE;
-        this->set_error(lock_error);
+        lock_error = guard.get_status();
+        this->record_operation_error(lock_error);
         return (lock_error);
     }
     if (!xml)
     {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        this->record_operation_error(FT_ERR_INVALID_ARGUMENT);
         return (FT_ERR_INVALID_ARGUMENT);
     }
     if (this->_root)
@@ -662,24 +734,27 @@ int xml_document::load_from_string(const char *xml) noexcept
         this->_root = ft_nullptr;
     }
     xml_node *node = ft_nullptr;
-    const char *end = parse_node(xml, &node, ft_nullptr);
+    parse_error = FT_ERR_SUCCESSS;
+    const char *end = parse_node(xml, &node, ft_nullptr, &parse_error);
     if (!end)
     {
         int error_code;
 
-        error_code = ft_errno != FT_ERR_SUCCESSS ? ft_errno : FT_ERR_INVALID_ARGUMENT;
-        this->set_error(error_code);
+        error_code = parse_error;
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_INVALID_ARGUMENT;
+        this->record_operation_error(error_code);
         return (error_code);
     }
     const char *remaining = skip_whitespace(end);
     if (remaining && *remaining != '\0')
     {
         delete node;
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        this->record_operation_error(FT_ERR_INVALID_ARGUMENT);
         return (FT_ERR_INVALID_ARGUMENT);
     }
     this->_root = node;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->record_operation_error(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);
 }
 
@@ -690,7 +765,6 @@ static int read_file_content(const char *file_path, char **out_content)
     if (!file)
     {
         int error_code = errno ? ft_map_system_error(errno) : FT_ERR_INVALID_ARGUMENT;
-        ft_errno = error_code;
         return (error_code);
     }
     errno = 0;
@@ -698,14 +772,12 @@ static int read_file_content(const char *file_path, char **out_content)
     {
         int error_code = errno ? ft_map_system_error(errno) : FT_ERR_INVALID_ARGUMENT;
         std::fclose(file);
-        ft_errno = error_code;
         return (error_code);
     }
     long size = std::ftell(file);
     if (size <= 0)
     {
         std::fclose(file);
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (FT_ERR_INVALID_ARGUMENT);
     }
     errno = 0;
@@ -713,14 +785,12 @@ static int read_file_content(const char *file_path, char **out_content)
     {
         int error_code = errno ? ft_map_system_error(errno) : FT_ERR_INVALID_ARGUMENT;
         std::fclose(file);
-        ft_errno = error_code;
         return (error_code);
     }
     char *buffer = static_cast<char *>(cma_malloc(static_cast<size_t>(size) + 1));
     if (!buffer)
     {
         std::fclose(file);
-        ft_errno = FT_ERR_NO_MEMORY;
         return (FT_ERR_NO_MEMORY);
     }
     errno = 0;
@@ -730,12 +800,10 @@ static int read_file_content(const char *file_path, char **out_content)
     {
         cma_free(buffer);
         int error_code = errno ? ft_map_system_error(errno) : FT_ERR_INVALID_ARGUMENT;
-        ft_errno = error_code;
         return (error_code);
     }
     buffer[size] = '\0';
     *out_content = buffer;
-    ft_errno = FT_ERR_SUCCESSS;
     return (FT_ERR_SUCCESSS);
 }
 
@@ -751,13 +819,18 @@ int xml_document::load_from_file(const char *file_path) noexcept
         thread_guard guard(this);
 
         if (guard.get_status() != 0)
-            this->set_error(ft_errno != FT_ERR_SUCCESSS ? ft_errno : result);
+        {
+            int guard_error = guard.get_status();
+            this->record_operation_error(guard_error);
+        }
         else
-            this->set_error(result);
+            this->record_operation_error(result);
         return (result);
     }
     result = this->load_from_string(content);
     cma_free(content);
+    if (result == FT_ERR_SUCCESSS)
+        this->record_operation_error(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -772,9 +845,12 @@ int xml_document::load_from_backend(ft_document_source &source) noexcept
         thread_guard guard(this);
 
         if (guard.get_status() != 0)
-            this->set_error(ft_errno != FT_ERR_SUCCESSS ? ft_errno : read_result);
+        {
+            int guard_error = guard.get_status();
+            this->record_operation_error(guard_error);
+        }
         else
-            this->set_error(read_result);
+            this->record_operation_error(read_result);
         return (read_result);
     }
     return (this->load_from_string(content.c_str()));
@@ -816,18 +892,18 @@ static void append_node_qualified_name(const xml_node *node, ft_vector<char> &bu
 
 static int write_node(const xml_node *node, ft_vector<char> &buffer)
 {
-    bool lock_acquired;
-    int lock_status;
-
     if (!node)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (-1);
-    }
-    lock_acquired = false;
-    lock_status = xml_node_lock(node, &lock_acquired);
+        return (FT_ERR_INVALID_ARGUMENT);
+    bool lock_acquired = false;
+    int lock_status = xml_node_lock(node, &lock_acquired);
+    int lock_error = xml_document_consume_last_error();
+
     if (lock_status != 0)
-        return (-1);
+    {
+        if (lock_error != FT_ERR_SUCCESSS)
+            return (lock_error);
+        return (FT_ERR_INVALID_STATE);
+    }
     buffer.push_back('<');
     append_node_qualified_name(node, buffer);
     buffer.push_back('>');
@@ -837,13 +913,15 @@ static int write_node(const xml_node *node, ft_vector<char> &buffer)
     size_t size = node->children.size();
     while (index < size)
     {
-        int child_status;
+        int child_status = write_node(node->children[index], buffer);
 
-        child_status = write_node(node->children[index], buffer);
-        if (child_status != 0)
+        if (child_status != FT_ERR_SUCCESSS)
         {
             xml_node_unlock(node, lock_acquired);
-            return (-1);
+            int unlock_error = xml_document_consume_last_error();
+            if (child_status != FT_ERR_SUCCESSS)
+                return (child_status);
+            return (unlock_error);
         }
         index++;
     }
@@ -852,24 +930,24 @@ static int write_node(const xml_node *node, ft_vector<char> &buffer)
     append_node_qualified_name(node, buffer);
     buffer.push_back('>');
     xml_node_unlock(node, lock_acquired);
-    ft_errno = FT_ERR_SUCCESSS;
-    return (0);
+    int unlock_error = xml_document_consume_last_error();
+    if (unlock_error != FT_ERR_SUCCESSS)
+        return (unlock_error);
+    return (FT_ERR_SUCCESSS);
 }
 
 char *xml_document::write_to_string() const noexcept
 {
     thread_guard guard(this);
-    int          lock_error;
 
     if (guard.get_status() != 0)
     {
-        lock_error = ft_errno != FT_ERR_SUCCESSS ? ft_errno : FT_ERR_INVALID_STATE;
-        this->set_error(lock_error);
+        this->record_operation_error(guard.get_status());
         return (ft_nullptr);
     }
     if (!this->_root)
     {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        this->record_operation_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     char *result = ft_nullptr;
@@ -880,8 +958,8 @@ char *xml_document::write_to_string() const noexcept
         int buffer_error;
 
         write_status = write_node(this->_root, buffer);
-        if (write_status != 0)
-            error_code = ft_errno != FT_ERR_SUCCESSS ? ft_errno : FT_ERR_INVALID_STATE;
+        if (write_status != FT_ERR_SUCCESSS)
+            error_code = write_status;
         if (error_code == FT_ERR_SUCCESSS)
         {
             buffer_error = buffer.get_error();
@@ -923,10 +1001,10 @@ char *xml_document::write_to_string() const noexcept
     {
         if (result)
             cma_free(result);
-        this->set_error(error_code);
+        this->record_operation_error(error_code);
         return (ft_nullptr);
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    this->record_operation_error(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -938,42 +1016,17 @@ int xml_document::write_to_file(const char *file_path) const noexcept
     content = this->write_to_string();
     if (!content)
     {
-        int current_error;
-
-        current_error = this->get_error();
-        if (current_error == FT_ERR_SUCCESSS)
-        {
-            thread_guard guard(this);
-
-            if (guard.get_status() != 0)
-            {
-                error_code = ft_errno != FT_ERR_SUCCESSS ? ft_errno : FT_ERR_INVALID_ARGUMENT;
-                this->set_error(error_code);
-                return (error_code);
-            }
-            this->set_error(FT_ERR_INVALID_ARGUMENT);
-            return (FT_ERR_INVALID_ARGUMENT);
-        }
-        return (current_error);
+        error_code = this->get_error();
+        this->record_operation_error(error_code);
+        return (error_code);
     }
     errno = 0;
     FILE *file = std::fopen(file_path, "wb");
     if (!file)
     {
         error_code = errno ? ft_map_system_error(errno) : FT_ERR_INVALID_ARGUMENT;
-        {
-            thread_guard guard(this);
-
-            if (guard.get_status() != 0)
-                this->set_error(ft_errno != FT_ERR_SUCCESSS ? ft_errno : error_code);
-            else
-                this->set_error(error_code);
-        }
-        int preserved_errno;
-
-        preserved_errno = ft_errno;
+        this->record_operation_error(error_code);
         cma_free(content);
-        ft_errno = preserved_errno;
         return (error_code);
     }
     size_t length = ft_strlen(content);
@@ -983,51 +1036,20 @@ int xml_document::write_to_file(const char *file_path) const noexcept
     {
         error_code = errno ? ft_map_system_error(errno) : FT_ERR_INVALID_ARGUMENT;
         std::fclose(file);
-        {
-            thread_guard guard(this);
-
-            if (guard.get_status() != 0)
-                this->set_error(ft_errno != FT_ERR_SUCCESSS ? ft_errno : error_code);
-            else
-                this->set_error(error_code);
-        }
-        int preserved_errno;
-
-        preserved_errno = ft_errno;
+        this->record_operation_error(error_code);
         cma_free(content);
-        ft_errno = preserved_errno;
         return (error_code);
     }
     errno = 0;
     if (std::fclose(file) != 0)
     {
         error_code = errno ? ft_map_system_error(errno) : FT_ERR_INVALID_ARGUMENT;
-        {
-            thread_guard guard(this);
-
-            if (guard.get_status() != 0)
-                this->set_error(ft_errno != FT_ERR_SUCCESSS ? ft_errno : error_code);
-            else
-                this->set_error(error_code);
-        }
-        int preserved_errno;
-
-        preserved_errno = ft_errno;
+        this->record_operation_error(error_code);
         cma_free(content);
-        ft_errno = preserved_errno;
         return (error_code);
     }
     cma_free(content);
-    {
-        thread_guard guard(this);
-
-        if (guard.get_status() != 0)
-        {
-            this->set_error(ft_errno != FT_ERR_SUCCESSS ? ft_errno : FT_ERR_SUCCESSS);
-            return (ft_errno != FT_ERR_SUCCESSS ? ft_errno : FT_ERR_SUCCESSS);
-        }
-        this->set_error(FT_ERR_SUCCESSS);
-    }
+    this->record_operation_error(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);
 }
 
@@ -1045,56 +1067,35 @@ int xml_document::write_to_backend(ft_document_sink &sink) const noexcept
     write_result = sink.write_all(content, length);
     sink_error = sink.get_error();
     cma_free(content);
-    if (write_result != FT_ERR_SUCCESSS)
+    int final_error = write_result;
+    if (sink_error != FT_ERR_SUCCESSS)
+        final_error = sink_error;
+    if (final_error != FT_ERR_SUCCESSS)
     {
-        int final_error;
-
-        final_error = write_result;
-        if (sink_error != FT_ERR_SUCCESSS)
-            final_error = sink_error;
-        {
-            thread_guard guard(this);
-
-            if (guard.get_status() != 0)
-            {
-                this->set_error(ft_errno != FT_ERR_SUCCESSS ? ft_errno : final_error);
-                return (ft_errno != FT_ERR_SUCCESSS ? ft_errno : final_error);
-            }
-            this->set_error(final_error);
-        }
+        this->record_operation_error(final_error);
         return (final_error);
     }
-    {
-        thread_guard guard(this);
-
-        if (guard.get_status() != 0)
-        {
-            this->set_error(ft_errno != FT_ERR_SUCCESSS ? ft_errno : FT_ERR_SUCCESSS);
-            return (ft_errno != FT_ERR_SUCCESSS ? ft_errno : FT_ERR_SUCCESSS);
-        }
-        this->set_error(FT_ERR_SUCCESSS);
-    }
+    this->record_operation_error(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);
 }
 
 xml_node *xml_document::get_root() const noexcept
 {
     thread_guard guard(this);
-    int          lock_error;
 
-    if (guard.get_status() != 0)
+    int guard_status = guard.get_status();
+    if (guard_status != 0)
     {
-        lock_error = ft_errno != FT_ERR_SUCCESSS ? ft_errno : FT_ERR_INVALID_STATE;
-        this->set_error(lock_error);
+        this->record_operation_error(guard_status);
         return (ft_nullptr);
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    this->record_operation_error(FT_ERR_SUCCESSS);
     return (this->_root);
 }
 
 void xml_document::set_manual_error(int error_code) noexcept
 {
-    this->set_error(error_code);
+    this->record_operation_error(error_code);
     return ;
 }
 
@@ -1102,19 +1103,19 @@ int xml_document::get_error() const noexcept
 {
     thread_guard guard(this);
 
-    if (guard.get_status() != 0)
-        return (ft_errno != FT_ERR_SUCCESSS ? ft_errno : FT_ERR_INVALID_STATE);
-    return (this->_error_code);
+    int guard_status = guard.get_status();
+    if (guard_status != 0)
+        return (guard_status);
+    return (ft_operation_error_stack_last_error(&this->_operation_errors));
 }
 
 const char *xml_document::get_error_str() const noexcept
 {
-    thread_guard guard(this);
-    const char *message;
+    int error_code = this->get_error();
+    const char *message = ft_strerror(error_code);
 
-    if (guard.get_status() != 0)
-        return (ft_strerror(ft_errno != FT_ERR_SUCCESSS ? ft_errno : FT_ERR_INVALID_STATE));
-    message = ft_strerror(this->_error_code);
+    if (message == ft_nullptr)
+        message = "unknown error";
     return (message);
 }
 
@@ -1126,10 +1127,8 @@ bool xml_document::is_thread_safe_enabled() const noexcept
         return (false);
     if (!this->_thread_safe_enabled || !this->_mutex)
     {
-        this->set_error(FT_ERR_SUCCESSS);
         return (false);
     }
-    this->set_error(FT_ERR_SUCCESSS);
     return (true);
 }
 
@@ -1139,25 +1138,25 @@ int xml_document::prepare_thread_safety() noexcept
 
     if (this->_thread_safe_enabled && this->_mutex)
     {
-        this->set_error(FT_ERR_SUCCESSS);
+        this->record_operation_error(FT_ERR_SUCCESSS);
         return (0);
     }
     mutex_pointer = new (std::nothrow) pt_mutex();
     if (!mutex_pointer)
     {
-        this->set_error(FT_ERR_NO_MEMORY);
+        this->record_operation_error(FT_ERR_NO_MEMORY);
         return (-1);
     }
     int mutex_error = ft_mutex_pop_last_error(mutex_pointer);
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         delete mutex_pointer;
-        this->set_error(mutex_error);
+        this->record_operation_error(mutex_error);
         return (-1);
     }
     this->_mutex = mutex_pointer;
     this->_thread_safe_enabled = true;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->record_operation_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -1180,7 +1179,7 @@ int xml_document::lock(bool *lock_acquired) const noexcept
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || !this->_mutex)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        this->record_operation_error(FT_ERR_SUCCESSS);
         return (0);
     }
     int mutex_result = this->_mutex->lock(THREAD_ID);
@@ -1188,13 +1187,12 @@ int xml_document::lock(bool *lock_acquired) const noexcept
     int reported_error = mutex_error != FT_ERR_SUCCESSS ? mutex_error : mutex_result;
     if (reported_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = reported_error;
-        const_cast<xml_document *>(this)->set_error(reported_error);
+        this->record_operation_error(reported_error);
         return (-1);
     }
     if (lock_acquired)
         *lock_acquired = true;
-    ft_errno = FT_ERR_SUCCESSS;
+    this->record_operation_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -1207,10 +1205,9 @@ void xml_document::unlock(bool lock_acquired) const noexcept
     int reported_error = mutex_error != FT_ERR_SUCCESSS ? mutex_error : mutex_result;
     if (reported_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = reported_error;
-        const_cast<xml_document *>(this)->set_error(reported_error);
+        this->record_operation_error(reported_error);
         return ;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    this->record_operation_error(FT_ERR_SUCCESSS);
     return ;
 }

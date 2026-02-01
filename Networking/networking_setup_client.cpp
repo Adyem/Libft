@@ -5,6 +5,11 @@
 #include <cerrno>
 #include <fcntl.h>
 
+static int networking_consume_thread_error(void) noexcept
+{
+    return (networking_fetch_last_error(false));
+}
+
 #ifdef _WIN32
 # include <winsock2.h>
 # include <ws2tcpip.h>
@@ -28,24 +33,21 @@ int ft_socket::setup_client(const SocketConfig &config)
 
     mutable_config = const_cast<SocketConfig*>(&config);
     lock_acquired = false;
-    if (socket_config_prepare_thread_safety(mutable_config) != 0)
+    int thread_error;
+    thread_error = socket_config_prepare_thread_safety(mutable_config);
+    thread_error = networking_consume_thread_error();
+    if (thread_error != FT_ERR_SUCCESSS)
     {
-        int error_code;
-
-        error_code = ft_global_error_stack_pop_newest();
-        this->set_error(error_code);
+        this->report_operation_result(thread_error);
         return (this->_error_code);
     }
-    ft_global_error_stack_pop_newest();
-    if (socket_config_lock(mutable_config, &lock_acquired) != 0)
+    thread_error = socket_config_lock(mutable_config, &lock_acquired);
+    thread_error = networking_consume_thread_error();
+    if (thread_error != FT_ERR_SUCCESSS)
     {
-        int error_code;
-
-        error_code = ft_global_error_stack_pop_newest();
-        this->set_error(error_code);
+        this->report_operation_result(thread_error);
         return (this->_error_code);
     }
-    ft_global_error_stack_pop_newest();
     non_blocking = mutable_config->_non_blocking;
     has_timeout = (mutable_config->_recv_timeout > 0 || mutable_config->_send_timeout > 0);
     has_multicast = (mutable_config->_multicast_group.empty() == false);
@@ -54,10 +56,10 @@ int ft_socket::setup_client(const SocketConfig &config)
     {
         int unlock_error;
 
-        unlock_error = ft_global_error_stack_pop_newest();
+        unlock_error = networking_consume_thread_error();
         if (unlock_error != FT_ERR_SUCCESSS)
         {
-            this->set_error(unlock_error);
+            this->report_operation_result(unlock_error);
             return (this->_error_code);
         }
     }
@@ -77,7 +79,7 @@ int ft_socket::setup_client(const SocketConfig &config)
         addr_len = sizeof(struct sockaddr_in6);
     else
     {
-        this->set_error(FT_ERR_CONFIGURATION);
+        this->report_operation_result(FT_ERR_CONFIGURATION);
         this->close_socket();
         return (this->_error_code);
     }
@@ -92,9 +94,9 @@ int ft_socket::setup_client(const SocketConfig &config)
         if (!(non_blocking && last_error == WSAEWOULDBLOCK))
         {
             connect_error = ft_map_system_error(last_error);
-            this->set_error(connect_error);
+            this->report_operation_result(connect_error);
             this->close_socket();
-            this->set_error(connect_error);
+            this->report_operation_result(connect_error);
             return (this->_error_code);
         }
 #else
@@ -105,9 +107,9 @@ int ft_socket::setup_client(const SocketConfig &config)
         if (!(non_blocking && (last_error == EINPROGRESS || last_error == EWOULDBLOCK)))
         {
             connect_error = ft_map_system_error(last_error);
-            this->set_error(connect_error);
+            this->report_operation_result(connect_error);
             this->close_socket();
-            this->set_error(connect_error);
+            this->report_operation_result(connect_error);
             return (this->_error_code);
         }
 #endif
@@ -115,6 +117,6 @@ int ft_socket::setup_client(const SocketConfig &config)
     if (has_multicast)
         if (this->join_multicast_group(config) != FT_ERR_SUCCESSS)
             return (this->_error_code);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->report_operation_result(FT_ERR_SUCCESSS);
     return (this->_error_code);
 }

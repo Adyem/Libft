@@ -338,7 +338,7 @@ static void api_request_send_failure_server(void)
     server_configuration._ip = "127.0.0.1";
     server_configuration._port = 54337;
     server_socket = ft_socket(server_configuration);
-    if (server_socket.get_error() != FT_ERR_SUCCESSS)
+    if (networking_fetch_last_error() != FT_ERR_SUCCESSS)
         return ;
     address_length = sizeof(address_storage);
     client_fd = nw_accept(server_socket.get_fd(), reinterpret_cast<struct sockaddr*>(&address_storage), &address_length);
@@ -454,9 +454,9 @@ static void api_request_bearer_server(api_request_bearer_server_context *context
     context->client_fd = -1;
     context->request_data.clear();
     server_socket = ft_socket(server_configuration);
-    if (server_socket.get_error() != FT_ERR_SUCCESSS)
+    if (networking_fetch_last_error() != FT_ERR_SUCCESSS)
     {
-        context->result.store(server_socket.get_error(), std::memory_order_relaxed);
+        context->result.store(networking_fetch_last_error(), std::memory_order_relaxed);
         context->ready.store(true, std::memory_order_release);
         return ;
     }
@@ -514,9 +514,9 @@ static void api_request_basic_server(api_request_basic_server_context *context)
     context->client_fd = -1;
     context->request_data.clear();
     server_socket = ft_socket(server_configuration);
-    if (server_socket.get_error() != FT_ERR_SUCCESSS)
+    if (networking_fetch_last_error() != FT_ERR_SUCCESSS)
     {
-        context->result.store(server_socket.get_error(), std::memory_order_relaxed);
+        context->result.store(networking_fetch_last_error(), std::memory_order_relaxed);
         context->ready.store(true, std::memory_order_release);
         return ;
     }
@@ -579,9 +579,9 @@ static void api_request_success_server(void)
     server_configuration._ip = "127.0.0.1";
     server_configuration._port = 54338;
     server_socket = ft_socket(server_configuration);
-    if (server_socket.get_error() != FT_ERR_SUCCESSS)
+    if (networking_fetch_last_error() != FT_ERR_SUCCESSS)
     {
-        api_request_success_server_signal_ready(server_socket.get_error());
+        api_request_success_server_signal_ready(networking_fetch_last_error());
         return ;
     }
     api_request_success_server_signal_ready(FT_ERR_SUCCESSS);
@@ -630,9 +630,9 @@ static void api_request_stream_large_response_server(void)
     server_configuration._ip = "127.0.0.1";
     server_configuration._port = 54358;
     server_socket = ft_socket(server_configuration);
-    if (server_socket.get_error() != FT_ERR_SUCCESSS)
+    if (networking_fetch_last_error() != FT_ERR_SUCCESSS)
     {
-        api_request_stream_large_server_signal_ready(server_socket.get_error());
+        api_request_stream_large_server_signal_ready(networking_fetch_last_error());
         return ;
     }
     api_request_stream_large_server_signal_ready(FT_ERR_SUCCESSS);
@@ -736,7 +736,7 @@ static void api_request_retry_success_server(void)
     server_configuration._port = 54339;
     server_configuration._non_blocking = true;
     server_socket = ft_socket(server_configuration);
-    if (server_socket.get_error() != FT_ERR_SUCCESSS)
+    if (networking_fetch_last_error() != FT_ERR_SUCCESSS)
         return ;
     accepted_count = 0;
     start_time = std::chrono::steady_clock::now();
@@ -800,7 +800,7 @@ static void api_request_retry_failure_server(void)
     server_configuration._ip = "127.0.0.1";
     server_configuration._port = 54340;
     server_socket = ft_socket(server_configuration);
-    if (server_socket.get_error() != FT_ERR_SUCCESSS)
+    if (networking_fetch_last_error() != FT_ERR_SUCCESSS)
         return ;
     accepted_count = 0;
     start_time = std::chrono::steady_clock::now();
@@ -868,7 +868,7 @@ static void api_request_circuit_success_server(
     server_configuration._ip = "127.0.0.1";
     server_configuration._port = context->port;
     server_socket = ft_socket(server_configuration);
-    if (server_socket.get_error() != FT_ERR_SUCCESSS)
+    if (networking_fetch_last_error() != FT_ERR_SUCCESSS)
     {
         context->ready.store(true, std::memory_order_release);
         return ;
@@ -935,7 +935,7 @@ static void api_request_retry_timeout_server(void)
     server_configuration._ip = "127.0.0.1";
     server_configuration._port = 54341;
     server_socket = ft_socket(server_configuration);
-    if (server_socket.get_error() != FT_ERR_SUCCESSS)
+    if (networking_fetch_last_error() != FT_ERR_SUCCESSS)
         return ;
     accepted_count = 0;
     start_time = std::chrono::steady_clock::now();
@@ -1039,9 +1039,9 @@ static void api_request_stream_chunked_response_server(void)
     server_configuration._ip = "127.0.0.1";
     server_configuration._port = 54359;
     server_socket = ft_socket(server_configuration);
-    if (server_socket.get_error() != FT_ERR_SUCCESSS)
+    if (networking_fetch_last_error() != FT_ERR_SUCCESSS)
     {
-        api_request_stream_chunked_server_signal_ready(server_socket.get_error());
+        api_request_stream_chunked_server_signal_ready(networking_fetch_last_error());
         return ;
     }
     api_request_stream_chunked_server_signal_ready(FT_ERR_SUCCESSS);
@@ -1092,7 +1092,7 @@ static void api_request_async_retry_server(void)
     server_configuration._ip = "127.0.0.1";
     server_configuration._port = 54339;
     server_socket = ft_socket(server_configuration);
-    if (server_socket.get_error() != FT_ERR_SUCCESSS)
+    if (networking_fetch_last_error() != FT_ERR_SUCCESSS)
         return ;
     address_length = sizeof(address_storage);
     client_fd = nw_accept(server_socket.get_fd(),

@@ -199,11 +199,11 @@ static bool api_https_prepare_socket(api_connection_pool_handle &connection_hand
     config._recv_timeout = timeout;
     config._send_timeout = timeout;
     ft_socket new_socket(config);
-    if (new_socket.get_error())
+    if (networking_fetch_last_error())
     {
         int socket_error_code;
 
-        socket_error_code = new_socket.get_error();
+        socket_error_code = networking_fetch_last_error();
         if (api_is_configuration_socket_error(socket_error_code))
             error_code = socket_error_code;
         else
@@ -297,9 +297,9 @@ static bool api_https_ensure_session(
 {
     ft_socket &socket_wrapper = connection_handle.socket;
 
-    if (socket_wrapper.get_error())
+    if (networking_fetch_last_error())
     {
-        error_code = socket_wrapper.get_error();
+        error_code = networking_fetch_last_error();
         return (false);
     }
     if (!api_http_apply_timeouts(socket_wrapper, timeout))

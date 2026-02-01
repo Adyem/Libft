@@ -233,11 +233,12 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
         ft_global_error_stack_push(error_code);
         return (result);
     }
-    cma_allocator_guard allocator_guard;
+    bool lock_acquired = false;
+    int lock_error = cma_lock_allocator(&lock_acquired);
 
-    if (!allocator_guard.is_active())
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        error_code = allocator_guard.get_error();
+        error_code = lock_error;
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_INVALID_STATE;
         ft_global_error_stack_push(error_code);
@@ -254,7 +255,11 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
         if (page_request == 0)
         {
             error_code = FT_ERR_OUT_OF_RANGE;
-            allocator_guard.unlock();
+            if (lock_acquired)
+            {
+                cma_unlock_allocator(lock_acquired);
+                lock_acquired = false;
+            }
             ft_global_error_stack_push(error_code);
             return (ft_nullptr);
         }
@@ -262,7 +267,11 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
         if (!page)
         {
             error_code = FT_ERR_NO_MEMORY;
-            allocator_guard.unlock();
+            if (lock_acquired)
+            {
+                cma_unlock_allocator(lock_acquired);
+                lock_acquired = false;
+            }
             ft_global_error_stack_push(error_code);
             return (ft_nullptr);
         }
@@ -273,7 +282,11 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
     if (normalize_alignment_padding(&padding) == 0)
     {
         error_code = FT_ERR_OUT_OF_RANGE;
-        allocator_guard.unlock();
+        if (lock_acquired)
+        {
+            cma_unlock_allocator(lock_acquired);
+            lock_acquired = false;
+        }
         ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }
@@ -287,7 +300,11 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
         if (!block)
         {
             error_code = FT_ERR_NO_MEMORY;
-            allocator_guard.unlock();
+            if (lock_acquired)
+            {
+                cma_unlock_allocator(lock_acquired);
+                lock_acquired = false;
+            }
             ft_global_error_stack_push(error_code);
             return (ft_nullptr);
         }
@@ -297,7 +314,11 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
     cma_validate_block(block, "cma_aligned_alloc split", ft_nullptr);
     if (!cma_block_is_free(block))
     {
-        allocator_guard.unlock();
+        if (lock_acquired)
+        {
+            cma_unlock_allocator(lock_acquired);
+            lock_acquired = false;
+        }
         su_sigabrt();
     }
     cma_mark_block_allocated(block);
@@ -307,8 +328,11 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
         g_cma_peak_bytes = g_cma_current_bytes;
     cma_debug_prepare_allocation(block, request_size);
     result = static_cast<void *>(cma_block_user_pointer(block));
-    cma_leak_tracker_record_allocation(result, cma_block_user_size(block));
-    allocator_guard.unlock();
+    if (lock_acquired)
+    {
+        cma_unlock_allocator(lock_acquired);
+        lock_acquired = false;
+    }
     error_code = FT_ERR_SUCCESSS;
     if (ft_log_get_alloc_logging())
         ft_log_debug("cma_aligned_alloc %llu (alignment %llu) -> %p",

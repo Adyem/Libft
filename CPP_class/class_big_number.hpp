@@ -20,7 +20,7 @@ class ft_big_number
         ft_size_t       _capacity;
         bool            _is_negative;
         mutable pt_recursive_mutex    _mutex;
-        static thread_local ft_operation_error_stack _operation_errors;
+        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
 
         void    reserve(ft_size_t new_capacity) noexcept;
         void    shrink_capacity() noexcept;
@@ -34,7 +34,8 @@ class ft_big_number
         static int  initialize_errno_keeper() noexcept;
         static void update_errno_keeper(int &stored_errno, int new_value) noexcept;
         static void finalize_errno_keeper(int stored_errno) noexcept;
-        static void record_operation_error(int error_code) noexcept;
+        void    record_operation_error(int error_code) const noexcept;
+        static void reset_error_owner(const ft_big_number *owner) noexcept;
         void    clear_unlocked() noexcept;
         void    append_digit_unlocked(char digit) noexcept;
         void    append_unlocked(const char* digits) noexcept;

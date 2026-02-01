@@ -11,7 +11,7 @@ Each module below has a short purpose statement to clarify its role in the tree.
   API/ exists so other modules can mount services without re-implementing the repeating plumbing and error handling that networking requires.
 
 - `CMA/`: Supplies a unified custom memory allocator layer that tracks statistics, enforces limits, and reports errors consistently across the tree.
-  Every module that allocates through this layer inherits the same mechanisms for leak detection, throttling, and alignment rules.
+Every module that allocates through this layer inherits the same mechanisms for throttling and alignment rules.
   CMA/ centralizes backend selection so switching between allocators or enabling debug instrumentation happens in one place.
   The goal is to shield the rest of the codebase from platform allocator quirks while still exposing enough hooks for tuning.
 

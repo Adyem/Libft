@@ -82,7 +82,7 @@ FT_TEST(test_http_server_get_response, "HTTP server handles GET requests")
     client_configuration._ip = "127.0.0.1";
     client_configuration._port = 54330;
     client_socket = ft_socket(client_configuration);
-    if (client_socket.get_error() != FT_ERR_SUCCESSS)
+    if (networking_fetch_last_error() != FT_ERR_SUCCESSS)
     {
         server_thread.join();
         return (0);
@@ -132,7 +132,7 @@ FT_TEST(test_http_server_short_write_sets_error, "HTTP server detects closed cli
     client_configuration._ip = "127.0.0.1";
     client_configuration._port = 54332;
     client_socket = ft_socket(client_configuration);
-    if (client_socket.get_error() != FT_ERR_SUCCESSS)
+    if (networking_fetch_last_error() != FT_ERR_SUCCESSS)
     {
         server_thread.join();
         return (0);
@@ -177,7 +177,7 @@ FT_TEST(test_http_server_post_echoes_body, "HTTP server echoes POST body")
     client_configuration._ip = "127.0.0.1";
     client_configuration._port = 54331;
     client_socket = ft_socket(client_configuration);
-    if (client_socket.get_error() != FT_ERR_SUCCESSS)
+    if (networking_fetch_last_error() != FT_ERR_SUCCESSS)
     {
         server_thread.join();
         return (0);
@@ -240,7 +240,7 @@ FT_TEST(test_http_server_keep_alive_multiple_requests, "HTTP server handles sequ
     client_configuration._ip = "127.0.0.1";
     client_configuration._port = 54334;
     client_socket = ft_socket(client_configuration);
-    if (client_socket.get_error() != FT_ERR_SUCCESSS)
+    if (networking_fetch_last_error() != FT_ERR_SUCCESSS)
     {
         server_thread.join();
         return (0);
@@ -303,7 +303,7 @@ FT_TEST(test_http_server_thread_safe_get_error, "ft_http_server synchronizes get
     client_configuration._ip = "127.0.0.1";
     client_configuration._port = 54336;
     client_socket = ft_socket(client_configuration);
-    if (client_socket.get_error() != FT_ERR_SUCCESSS)
+    if (networking_fetch_last_error() != FT_ERR_SUCCESSS)
     {
         server_thread.join();
         error_thread.join();

@@ -646,13 +646,6 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `void cma_set_thread_safety(bool enable)`
   - `void cma_get_stats(ft_size_t *allocation_count, ft_size_t *free_count)`
   - `void cma_get_extended_stats(ft_size_t *allocation_count, ft_size_t *free_count, ft_size_t *current_bytes, ft_size_t *peak_bytes)`
-  - `void cma_leak_detection_enable(void)`
-  - `void cma_leak_detection_disable(void)`
-  - `void cma_leak_detection_clear(void)`
-  - `bool cma_leak_detection_is_enabled(void)`
-  - `ft_size_t cma_leak_detection_outstanding_allocations(void)`
-  - `ft_size_t cma_leak_detection_outstanding_bytes(void)`
-  - `ft_string cma_leak_detection_report(bool clear_after)`
 - Defines: _None_
 
 ### CMA/cma_aligned_alloc.cpp
@@ -847,44 +840,6 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Declares: _None_
 - Defines: _None_
 
-### CMA/cma_guard_vector.hpp
-
-- Declares:
-  - `void destroy_elements(size_t from, size_t to)`
-  - `bool reserve_internal(size_t new_capacity)`
-  - `void set_error(int error_code) const`
-  - `size_t size() const`
-  - `size_t capacity() const`
-  - `bool empty() const`
-  - `int get_error() const`
-  - `const char *get_error_str() const`
-  - `void push_back(const t_element &value)`
-  - `void push_back(t_element &&value)`
-  - `void pop_back()`
-  - `void clear()`
-  - `bool reserve(size_t new_capacity)`
-  - `cma_guard_vector<t_element> temp(other)`
-  - `std::free(this->_data)`
-  - `const_cast<cma_guard_vector<t_element> *>(this) ->set_error(FT_ERR_OUT_OF_RANGE)`
-- Defines:
-  - `cma_guard_vector<t_element>::cma_guard_vector(size_t initial_capacity) : _data(ft_nullptr), _size(0), _capacity(0), _error_code(FT_ERR_SUCCESSS)`
-  - `cma_guard_vector<t_element>::~cma_guard_vector()`
-  - `cma_guard_vector<t_element>::cma_guard_vector(const cma_guard_vector<t_element> &other) : _data(ft_nullptr), _size(0), _capacity(0), _error_code(FT_ERR_SUCCESSS)`
-  - `cma_guard_vector<t_element>::cma_guard_vector(cma_guard_vector<t_element> &&other) noexcept : _data(other._data), _size(other._size), _capacity(other._capacity), _error_code(other._error_code)`
-  - `size_t cma_guard_vector<t_element>::size() const`
-  - `size_t cma_guard_vector<t_element>::capacity() const`
-  - `bool cma_guard_vector<t_element>::empty() const`
-  - `int cma_guard_vector<t_element>::get_error() const`
-  - `const char *cma_guard_vector<t_element>::get_error_str() const`
-  - `void cma_guard_vector<t_element>::push_back(const t_element &value)`
-  - `void cma_guard_vector<t_element>::push_back(t_element &&value)`
-  - `void cma_guard_vector<t_element>::pop_back()`
-  - `void cma_guard_vector<t_element>::clear()`
-  - `bool cma_guard_vector<t_element>::reserve(size_t new_capacity)`
-  - `void cma_guard_vector<t_element>::destroy_elements(size_t from, size_t to)`
-  - `bool cma_guard_vector<t_element>::reserve_internal(size_t new_capacity)`
-  - `void cma_guard_vector<t_element>::set_error(int error_code) const`
-
 ### CMA/cma_internal.hpp
 
 - Declares:
@@ -933,8 +888,6 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `Block *cma_metadata_allocate_block(void) __attribute__ ((warn_unused_result))`
   - `void cma_metadata_release_block(Block *block)`
   - `void cma_metadata_reset(void)`
-  - `void cma_leak_tracker_record_allocation(void *memory_pointer, ft_size_t size)`
-  - `void cma_leak_tracker_record_free(void *memory_pointer)`
   - `ft_size_t cma_debug_allocation_size(ft_size_t requested_size)`
   - `void cma_debug_initialize_block(Block *block)`
   - `void cma_debug_prepare_allocation(Block *block, ft_size_t user_size)`
@@ -973,28 +926,6 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Defines:
   - `static int calculate_length(int number, int base)`
   - `char *cma_itoa_base(int number, int base)`
-
-### CMA/cma_leak_detection.cpp
-
-- Declares: _None_
-- Defines:
-  - `static void cma_leak_tracker_set_error(int error_code)`
-  - `static int cma_leak_tracker_last_error()`
-  - `static bool cma_leak_tracker_is_active()`
-  - `static void cma_leak_tracker_handle_error(int error_code)`
-  - `static bool cma_leak_tracker_clear_records(bool reset_error_flag)`
-  - `static bool cma_leak_report_append(ft_string &target, const char *text)`
-  - `static bool cma_leak_report_append_string(ft_string &target, const ft_string &value)`
-  - `static void cma_leak_tracker_resume(bool was_enabled, bool error_state)`
-  - `void cma_leak_tracker_record_allocation(void *memory_pointer, ft_size_t size)`
-  - `void cma_leak_tracker_record_free(void *memory_pointer)`
-  - `void cma_leak_detection_enable(void)`
-  - `void cma_leak_detection_disable(void)`
-  - `void cma_leak_detection_clear(void)`
-  - `bool cma_leak_detection_is_enabled(void)`
-  - `ft_size_t cma_leak_detection_outstanding_allocations(void)`
-  - `ft_size_t cma_leak_detection_outstanding_bytes(void)`
-  - `ft_string cma_leak_detection_report(bool clear_after)`
 
 ### CMA/cma_malloc.cpp
 
@@ -2850,8 +2781,6 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `unsigned long long ft_operation_error_stack_get_id_at(const ft_operation_error_stack *error_stack, ft_size_t index)`
   - `ft_size_t ft_operation_error_stack_find_by_id(const ft_operation_error_stack *error_stack, unsigned long long id)`
   - `ft_size_t ft_operation_error_stack_depth(const ft_operation_error_stack *error_stack)`
-  - `void ft_set_errno_locked(int error_code)`
-  - `void ft_set_sys_errno_locked(int error_code)`
   - `unsigned long long ft_global_error_stack_push_entry_with_id(int error_code, unsigned long long op_id)`
   - `unsigned long long ft_global_error_stack_push_entry(int error_code)`
   - `void ft_global_error_stack_push(int error_code)`
@@ -2902,8 +2831,6 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_size_t ft_operation_error_stack_depth(const ft_operation_error_stack *error_stack)`
   - `int ft_operation_error_stack_pop_by_id(ft_operation_error_stack *error_stack, unsigned long long op_id)`
   - `ft_errno_mutex_wrapper &ft_errno_mutex()`
-  - `void ft_set_errno_locked(int error_code)`
-  - `void ft_set_sys_errno_locked(int error_code)`
 - Defines: _None_
 
 ### Errno/errno_map.cpp
@@ -11082,7 +11009,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `int scma_release_snapshot(void *snapshot_buffer)`
   - `int scma_get_stats(scma_stats *out_stats)`
   - `void scma_debug_dump(void)`
-  - `pt_mutex &scma_runtime_mutex(void)`
+  - `pt_recursive_mutex &scma_runtime_mutex(void)`
   - `int scma_mutex_lock(void)`
   - `int scma_mutex_unlock(void)`
   - `int scma_mutex_close(void)`
@@ -11123,8 +11050,6 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `inline scma_handle_accessor_const_element_proxy<TValue> scma_handle_accessor<TValue>::operator*(void) const`
   - `inline scma_handle_accessor_element_proxy<TValue> scma_handle_accessor<TValue>::operator->(void)`
   - `inline scma_handle_accessor_const_element_proxy<TValue> scma_handle_accessor<TValue>::operator->(void) const`
-  - `inline ft_size_t scma_handle_accessor_calculate_offset(ft_size_t element_index)`
-  - `inline int scma_handle_accessor_validate_target(scma_handle handle, ft_size_t required_size, ft_size_t *out_size)`
   - `inline int scma_handle_accessor<TValue>::read_struct(TValue &destination) const`
   - `inline int scma_handle_accessor<TValue>::write_struct(const TValue &source) const`
   - `inline int scma_handle_accessor<TValue>::read_at(TValue &destination, ft_size_t element_index) const`
@@ -11224,7 +11149,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 
 - Declares: _None_
 - Defines:
-  - `pt_mutex &scma_runtime_mutex(void)`
+  - `pt_recursive_mutex &scma_runtime_mutex(void)`
   - `static ft_size_t &scma_runtime_lock_depth(void)`
   - `int scma_mutex_lock(void)`
   - `int scma_mutex_unlock(void)`
@@ -14006,16 +13931,6 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 ### Test/Test/test_cma_global_new.cpp
 
 - Declares: _None_
-- Defines: _None_
-
-### Test/Test/test_cma_leak_detection.cpp
-
-- Declares:
-  - `FT_ASSERT_EQ(0ull, cma_leak_detection_outstanding_allocations() )`
-  - `FT_ASSERT_EQ(0ull, cma_leak_detection_outstanding_bytes() )`
-  - `FT_ASSERT_EQ(1ull, cma_leak_detection_outstanding_allocations() )`
-  - `FT_ASSERT_EQ(tracked_block_size, cma_leak_detection_outstanding_bytes() )`
-  - `FT_ASSERT_EQ(resized_block_size, cma_leak_detection_outstanding_bytes() )`
 - Defines: _None_
 
 ### Test/Test/test_cma_limits.cpp
@@ -19723,4 +19638,3 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 ## tools
 
 - _No .cpp or .hpp files found in this module._
-

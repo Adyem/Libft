@@ -8,8 +8,10 @@ int    ft_atoi(const char *string)
     int    index = 0;
     int    sign = 1;
     unsigned long long result = 0;
-    const unsigned long long positive_limit = static_cast<unsigned long long>(FT_INT_MAX);
-    const unsigned long long negative_limit = static_cast<unsigned long long>(FT_INT_MAX) + 1ULL;
+    const unsigned long long positive_limit
+        = static_cast<unsigned long long>(FT_INT_MAX);
+    const unsigned long long negative_limit
+        = static_cast<unsigned long long>(FT_INT_MAX) + 1ULL;
     bool    digit_found = false;
     bool    whitespace_found = false;
     int error_code = FT_ERR_SUCCESSS;

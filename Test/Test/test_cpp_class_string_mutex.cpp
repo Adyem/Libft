@@ -16,10 +16,10 @@ FT_TEST(test_ft_string_constructors_unlock_mutex,
     pt_recursive_mutex *assigned_mutex;
 
     assigned_string = init_string;
-    default_mutex = default_string.get_mutex_for_testing();
-    init_mutex = init_string.get_mutex_for_testing();
-    copy_mutex = copy_string.get_mutex_for_testing();
-    assigned_mutex = assigned_string.get_mutex_for_testing();
+    default_mutex = default_string.get_mutex_for_validation();
+    init_mutex = init_string.get_mutex_for_validation();
+    copy_mutex = copy_string.get_mutex_for_validation();
+    assigned_mutex = assigned_string.get_mutex_for_validation();
 
     FT_ASSERT(default_mutex != ft_nullptr);
     FT_ASSERT(init_mutex != ft_nullptr);
@@ -43,32 +43,32 @@ FT_TEST(test_ft_string_mutators_unlock_mutex,
     pt_recursive_mutex *erase_mutex;
 
     string_value.append('X');
-    string_mutex = string_value.get_mutex_for_testing();
+    string_mutex = string_value.get_mutex_for_validation();
     FT_ASSERT(string_mutex != ft_nullptr);
     FT_ASSERT_EQ(false, string_mutex->lockState());
 
     string_value.append("YZ");
-    string_mutex = string_value.get_mutex_for_testing();
+    string_mutex = string_value.get_mutex_for_validation();
     FT_ASSERT(string_mutex != ft_nullptr);
     FT_ASSERT_EQ(false, string_mutex->lockState());
 
     string_value.assign(3, 'a');
-    string_mutex = string_value.get_mutex_for_testing();
+    string_mutex = string_value.get_mutex_for_validation();
     FT_ASSERT(string_mutex != ft_nullptr);
     FT_ASSERT_EQ(false, string_mutex->lockState());
 
     string_value.resize_length(2);
-    string_mutex = string_value.get_mutex_for_testing();
+    string_mutex = string_value.get_mutex_for_validation();
     FT_ASSERT(string_mutex != ft_nullptr);
     FT_ASSERT_EQ(false, string_mutex->lockState());
 
     erase_target.erase(1, 2);
-    erase_mutex = erase_target.get_mutex_for_testing();
+    erase_mutex = erase_target.get_mutex_for_validation();
     FT_ASSERT(erase_mutex != ft_nullptr);
     FT_ASSERT_EQ(false, erase_mutex->lockState());
 
     string_value.clear();
-    string_mutex = string_value.get_mutex_for_testing();
+    string_mutex = string_value.get_mutex_for_validation();
     FT_ASSERT(string_mutex != ft_nullptr);
     FT_ASSERT_EQ(false, string_mutex->lockState());
     ft_errno = FT_ERR_SUCCESSS;
@@ -88,36 +88,36 @@ FT_TEST(test_ft_string_observers_unlock_mutex,
     size_t find_result;
 
     c_string = string_value.c_str();
-    string_mutex = string_value.get_mutex_for_testing();
+    string_mutex = string_value.get_mutex_for_validation();
     FT_ASSERT(string_mutex != ft_nullptr);
     FT_ASSERT(c_string != ft_nullptr);
     FT_ASSERT_EQ(false, string_mutex->lockState());
 
     data_pointer = string_value.data();
-    string_mutex = string_value.get_mutex_for_testing();
+    string_mutex = string_value.get_mutex_for_validation();
     FT_ASSERT(string_mutex != ft_nullptr);
     FT_ASSERT(data_pointer != ft_nullptr);
     FT_ASSERT_EQ(false, string_mutex->lockState());
 
     size_value = string_value.size();
-    string_mutex = string_value.get_mutex_for_testing();
+    string_mutex = string_value.get_mutex_for_validation();
     FT_ASSERT(string_mutex != ft_nullptr);
     FT_ASSERT_EQ(8, size_value);
     FT_ASSERT_EQ(false, string_mutex->lockState());
 
     find_result = string_value.find("ck");
-    string_mutex = string_value.get_mutex_for_testing();
+    string_mutex = string_value.get_mutex_for_validation();
     FT_ASSERT(string_mutex != ft_nullptr);
     FT_ASSERT_EQ(2, find_result);
     FT_ASSERT_EQ(false, string_mutex->lockState());
 
     substring = string_value.substr(0, 4);
-    substring_mutex = substring.get_mutex_for_testing();
+    substring_mutex = substring.get_mutex_for_validation();
     FT_ASSERT(substring_mutex != ft_nullptr);
     FT_ASSERT_EQ(false, substring_mutex->lockState());
 
     FT_ASSERT_EQ(false, string_value.empty());
-    string_mutex = string_value.get_mutex_for_testing();
+    string_mutex = string_value.get_mutex_for_validation();
     FT_ASSERT(string_mutex != ft_nullptr);
     FT_ASSERT_EQ(false, string_mutex->lockState());
     ft_errno = FT_ERR_SUCCESSS;
@@ -131,7 +131,7 @@ FT_TEST(test_ft_string_erase_out_of_range_unlocks_mutex,
     pt_recursive_mutex *string_mutex;
 
     string_value.erase(10, 1);
-    string_mutex = string_value.get_mutex_for_testing();
+    string_mutex = string_value.get_mutex_for_validation();
 
     FT_ASSERT(string_mutex != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_string::last_operation_error());
@@ -149,8 +149,8 @@ FT_TEST(test_ft_string_substr_out_of_range_unlocks_mutex,
     pt_recursive_mutex *substring_mutex;
 
     substring = source_string.substr(20, 3);
-    source_mutex = source_string.get_mutex_for_testing();
-    substring_mutex = substring.get_mutex_for_testing();
+    source_mutex = source_string.get_mutex_for_validation();
+    substring_mutex = substring.get_mutex_for_validation();
 
     FT_ASSERT(source_mutex != ft_nullptr);
     FT_ASSERT(substring_mutex != ft_nullptr);
@@ -170,7 +170,7 @@ FT_TEST(test_ft_string_at_out_of_range_unlocks_mutex,
     pt_recursive_mutex *string_mutex;
 
     result = string_value.at(25);
-    string_mutex = string_value.get_mutex_for_testing();
+    string_mutex = string_value.get_mutex_for_validation();
 
     FT_ASSERT(string_mutex != ft_nullptr);
     FT_ASSERT(result == ft_nullptr);
@@ -187,7 +187,7 @@ FT_TEST(test_ft_string_back_empty_unlocks_mutex,
     char last_character;
 
     last_character = empty_string.back();
-    string_mutex = empty_string.get_mutex_for_testing();
+    string_mutex = empty_string.get_mutex_for_validation();
 
     FT_ASSERT(string_mutex != ft_nullptr);
     FT_ASSERT_EQ('\0', last_character);
@@ -205,7 +205,7 @@ FT_TEST(test_ft_string_find_nullptr_unlocks_mutex,
     size_t find_result;
 
     find_result = string_value.find(ft_nullptr);
-    string_mutex = string_value.get_mutex_for_testing();
+    string_mutex = string_value.get_mutex_for_validation();
 
     FT_ASSERT(string_mutex != ft_nullptr);
     FT_ASSERT_EQ(ft_string::npos, find_result);
@@ -222,7 +222,7 @@ FT_TEST(test_ft_string_append_nullptr_unlocks_mutex,
     pt_recursive_mutex *string_mutex;
 
     string_value.append(ft_nullptr);
-    string_mutex = string_value.get_mutex_for_testing();
+    string_mutex = string_value.get_mutex_for_validation();
 
     FT_ASSERT(string_mutex != ft_nullptr);
     FT_ASSERT_EQ(false, string_mutex->lockState());
@@ -238,7 +238,7 @@ FT_TEST(test_ft_string_push_back_unlocks_mutex,
     pt_recursive_mutex *string_mutex;
 
     string_value.push_back('z');
-    string_mutex = string_value.get_mutex_for_testing();
+    string_mutex = string_value.get_mutex_for_validation();
 
     FT_ASSERT(string_mutex != ft_nullptr);
     FT_ASSERT_EQ(false, string_mutex->lockState());
@@ -259,9 +259,9 @@ FT_TEST(test_ft_string_addition_unlocks_mutex,
     pt_recursive_mutex *combined_mutex;
 
     combined_string = left_string + right_string;
-    left_mutex = left_string.get_mutex_for_testing();
-    right_mutex = right_string.get_mutex_for_testing();
-    combined_mutex = combined_string.get_mutex_for_testing();
+    left_mutex = left_string.get_mutex_for_validation();
+    right_mutex = right_string.get_mutex_for_validation();
+    combined_mutex = combined_string.get_mutex_for_validation();
 
     FT_ASSERT(left_mutex != ft_nullptr);
     FT_ASSERT(right_mutex != ft_nullptr);
@@ -282,7 +282,7 @@ FT_TEST(test_ft_string_assign_length_nullptr_unlocks_mutex,
     pt_recursive_mutex *target_mutex;
 
     target_string.assign(ft_nullptr, 3);
-    target_mutex = target_string.get_mutex_for_testing();
+    target_mutex = target_string.get_mutex_for_validation();
 
     FT_ASSERT(target_mutex != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_string::last_operation_error());
@@ -298,7 +298,7 @@ FT_TEST(test_ft_string_resize_length_expand_unlocks_mutex,
     pt_recursive_mutex *target_mutex;
 
     target_string.resize_length(5);
-    target_mutex = target_string.get_mutex_for_testing();
+    target_mutex = target_string.get_mutex_for_validation();
 
     FT_ASSERT(target_mutex != ft_nullptr);
     FT_ASSERT_EQ(false, target_mutex->lockState());
@@ -315,7 +315,7 @@ FT_TEST(test_ft_string_append_object_unlocks_mutex,
     pt_recursive_mutex *base_mutex;
 
     base_string.append(add_string);
-    base_mutex = base_string.get_mutex_for_testing();
+    base_mutex = base_string.get_mutex_for_validation();
 
     FT_ASSERT(base_mutex != ft_nullptr);
     FT_ASSERT_EQ(false, base_mutex->lockState());
@@ -331,7 +331,7 @@ FT_TEST(test_ft_string_replace_out_of_range_unlocks_mutex,
     pt_recursive_mutex *target_mutex;
 
     target_string.erase(20, 2);
-    target_mutex = target_string.get_mutex_for_testing();
+    target_mutex = target_string.get_mutex_for_validation();
 
     FT_ASSERT(target_mutex != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_string::last_operation_error());
@@ -349,8 +349,8 @@ FT_TEST(test_ft_string_operator_plus_char_unlocks_mutex,
     pt_recursive_mutex *combined_mutex;
 
     combined_string = base_string + '!';
-    base_mutex = base_string.get_mutex_for_testing();
-    combined_mutex = combined_string.get_mutex_for_testing();
+    base_mutex = base_string.get_mutex_for_validation();
+    combined_mutex = combined_string.get_mutex_for_validation();
 
     FT_ASSERT(base_mutex != ft_nullptr);
     FT_ASSERT(combined_mutex != ft_nullptr);
@@ -370,7 +370,7 @@ FT_TEST(test_ft_string_assignment_from_nullptr_unlocks_mutex,
     pt_recursive_mutex *target_mutex;
 
     target_string = ft_nullptr;
-    target_mutex = target_string.get_mutex_for_testing();
+    target_mutex = target_string.get_mutex_for_validation();
 
     FT_ASSERT(target_mutex != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_string::last_operation_error());
@@ -386,7 +386,7 @@ FT_TEST(test_ft_string_operator_plus_equals_cstr_unlocks_mutex,
     pt_recursive_mutex *base_mutex;
 
     base_string += ft_nullptr;
-    base_mutex = base_string.get_mutex_for_testing();
+    base_mutex = base_string.get_mutex_for_validation();
 
     FT_ASSERT(base_mutex != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_string::last_operation_error());
@@ -403,7 +403,7 @@ FT_TEST(test_ft_string_operator_plus_equals_object_unlocks_mutex,
     pt_recursive_mutex *base_mutex;
 
     base_string += append_string;
-    base_mutex = base_string.get_mutex_for_testing();
+    base_mutex = base_string.get_mutex_for_validation();
 
     FT_ASSERT(base_mutex != ft_nullptr);
     FT_ASSERT_EQ(false, base_mutex->lockState());
@@ -420,7 +420,7 @@ FT_TEST(test_ft_string_conversion_operator_unlocks_mutex,
     pt_recursive_mutex *base_mutex;
 
     c_string = static_cast<const char *>(base_string);
-    base_mutex = base_string.get_mutex_for_testing();
+    base_mutex = base_string.get_mutex_for_validation();
 
     FT_ASSERT(base_mutex != ft_nullptr);
     FT_ASSERT(c_string != ft_nullptr);
@@ -438,8 +438,8 @@ FT_TEST(test_ft_string_operator_plus_cstring_left_unlocks_mutex,
     pt_recursive_mutex *combined_mutex;
 
     combined_string = "left" + right_string;
-    right_mutex = right_string.get_mutex_for_testing();
-    combined_mutex = combined_string.get_mutex_for_testing();
+    right_mutex = right_string.get_mutex_for_validation();
+    combined_mutex = combined_string.get_mutex_for_validation();
 
     FT_ASSERT(right_mutex != ft_nullptr);
     FT_ASSERT(combined_mutex != ft_nullptr);

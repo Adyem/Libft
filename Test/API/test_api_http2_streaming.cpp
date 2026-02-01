@@ -260,9 +260,9 @@ static void http2_test_server(http2_test_server_state *state)
     server_configuration._port = g_http2_test_server_port;
     server_configuration._reuse_address = true;
     server_socket = ft_socket(server_configuration);
-    if (server_socket.get_error() != FT_ERR_SUCCESSS)
+    if (networking_fetch_last_error() != FT_ERR_SUCCESSS)
     {
-        state->start_error.store(server_socket.get_error(),
+        state->start_error.store(networking_fetch_last_error(),
             std::memory_order_relaxed);
         state->ready.store(true, std::memory_order_release);
         return ;

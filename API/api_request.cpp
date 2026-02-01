@@ -179,11 +179,11 @@ bool api_request_stream(const char *ip, uint16_t port,
             return (false);
         ft_socket new_socket(config);
 
-        if (new_socket.get_error())
+        if (networking_fetch_last_error())
         {
             int socket_error_code;
 
-            socket_error_code = new_socket.get_error();
+            socket_error_code = networking_fetch_last_error();
             if (api_is_configuration_socket_error(socket_error_code))
                 error_code = socket_error_code;
             else
@@ -300,11 +300,11 @@ bool api_request_stream_http2(const char *ip, uint16_t port,
             return (false);
         ft_socket new_socket(config);
 
-        if (new_socket.get_error())
+        if (networking_fetch_last_error())
         {
             int socket_error_code;
 
-            socket_error_code = new_socket.get_error();
+            socket_error_code = networking_fetch_last_error();
             if (api_is_configuration_socket_error(socket_error_code))
                 error_code = socket_error_code;
             else
@@ -456,11 +456,11 @@ char *api_request_string(const char *ip, uint16_t port,
             return (ft_nullptr);
         ft_socket new_socket(config);
 
-        if (new_socket.get_error())
+        if (networking_fetch_last_error())
         {
             int socket_error_code;
 
-            socket_error_code = new_socket.get_error();
+            socket_error_code = networking_fetch_last_error();
             if (api_is_configuration_socket_error(socket_error_code))
                 error_code = socket_error_code;
             else
@@ -603,11 +603,11 @@ char *api_request_string_http2(const char *ip, uint16_t port,
             return (ft_nullptr);
         ft_socket new_socket(config);
 
-        if (new_socket.get_error())
+        if (networking_fetch_last_error())
         {
             int socket_error_code;
 
-            socket_error_code = new_socket.get_error();
+            socket_error_code = networking_fetch_last_error();
             if (api_is_configuration_socket_error(socket_error_code))
                 error_code = socket_error_code;
             else

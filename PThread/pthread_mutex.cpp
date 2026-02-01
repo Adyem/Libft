@@ -8,10 +8,7 @@
 unsigned long long pt_mutex::operation_error_push_entry_with_id(int error_code,
         unsigned long long operation_id) const
 {
-    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(&this->_operation_errors,
-            error_code, operation_id);
-    return (operation_id);
+    return (ft_global_error_stack_push_entry_with_id(error_code, operation_id));
 }
 
 unsigned long long pt_mutex::operation_error_push_entry(int error_code) const
@@ -19,85 +16,69 @@ unsigned long long pt_mutex::operation_error_push_entry(int error_code) const
     unsigned long long operation_id;
 
     operation_id = ft_errno_next_operation_id();
-    this->operation_error_push_entry_with_id(error_code, operation_id);
-    return (operation_id);
+    return (this->operation_error_push_entry_with_id(error_code, operation_id));
 }
 
 void pt_mutex::operation_error_push(int error_code) const
 {
-    this->operation_error_push_entry(error_code);
+    ft_global_error_stack_push(error_code);
     return ;
 }
 
 int pt_mutex::operation_error_pop_last() const
 {
-    return (ft_operation_error_stack_pop_last(&this->_operation_errors));
+    return (ft_global_error_stack_pop_last());
 }
 
 int pt_mutex::operation_error_pop_newest() const
 {
-    return (ft_operation_error_stack_pop_newest(&this->_operation_errors));
+    return (ft_global_error_stack_pop_newest());
 }
 
 void pt_mutex::operation_error_pop_all() const
 {
-    ft_operation_error_stack_pop_all(&this->_operation_errors);
     ft_global_error_stack_pop_all();
     return ;
 }
 
 int pt_mutex::operation_error_error_at(ft_size_t index) const
 {
-    return (ft_operation_error_stack_error_at(&this->_operation_errors, index));
+    return (ft_global_error_stack_error_at(index));
 }
 
 int pt_mutex::operation_error_last_error() const
 {
-    return (ft_operation_error_stack_last_error(&this->_operation_errors));
+    return (ft_global_error_stack_last_error());
 }
 
 ft_size_t pt_mutex::operation_error_depth() const
 {
-    return (ft_operation_error_stack_depth(&this->_operation_errors));
+    return (ft_global_error_stack_depth());
 }
 
 unsigned long long pt_mutex::operation_error_get_id_at(ft_size_t index) const
 {
-    return (ft_operation_error_stack_get_id_at(&this->_operation_errors, index));
+    return (ft_global_error_stack_get_id_at(index));
 }
 
 ft_size_t pt_mutex::operation_error_find_by_id(unsigned long long operation_id) const
 {
-    return (ft_operation_error_stack_find_by_id(&this->_operation_errors, operation_id));
+    return (ft_global_error_stack_find_by_id(operation_id));
 }
 
 const char *pt_mutex::operation_error_error_str_at(ft_size_t index) const
 {
-    int error_value;
-    const char *error_string;
-
-    error_value = ft_operation_error_stack_error_at(&this->_operation_errors, index);
-    error_string = ft_strerror(error_value);
-    if (!error_string)
-        error_string = "unknown error";
-    return (error_string);
+    return (ft_global_error_stack_error_str_at(index));
 }
 
 const char *pt_mutex::operation_error_last_error_str() const
 {
-    int error_value;
-    const char *error_string;
-
-    error_value = ft_operation_error_stack_last_error(&this->_operation_errors);
-    error_string = ft_strerror(error_value);
-    if (!error_string)
-        error_string = "unknown error";
-    return (error_string);
+    return (ft_global_error_stack_last_error_str());
 }
 
 pt_mutex::pt_mutex()
     : _owner(0), _lock(false), _native_initialized(false),
-    _state_mutex(ft_nullptr), _operation_errors({{}, {}, 0})
+    _state_mutex(ft_nullptr), _valid_state(false)
 {
     ft_bzero(&this->_native_mutex, sizeof(pthread_mutex_t));
     if (pthread_mutex_init(&this->_native_mutex, ft_nullptr) != 0)
@@ -107,12 +88,14 @@ pt_mutex::pt_mutex()
         return ;
     }
     this->_native_initialized = true;
+    this->_valid_state.store(true, std::memory_order_release);
     this->operation_error_push(FT_ERR_SUCCESSS);
     return ;
 }
 
 pt_mutex::~pt_mutex()
 {
+    this->_valid_state.store(false, std::memory_order_release);
     if (this->_native_initialized)
     {
         pthread_mutex_destroy(&this->_native_mutex);
@@ -141,11 +124,13 @@ bool pt_mutex::ensure_native_mutex() const
     if (pthread_mutex_init(&this->_native_mutex, ft_nullptr) != 0)
     {
         this->_native_initialized = false;
+        this->_valid_state.store(false, std::memory_order_release);
         this->unlock_internal(lock_acquired);
         this->operation_error_push(FT_ERR_INVALID_STATE);
         return (false);
     }
     this->_native_initialized = true;
+    this->_valid_state.store(true, std::memory_order_release);
     this->unlock_internal(lock_acquired);
     return (true);
 }

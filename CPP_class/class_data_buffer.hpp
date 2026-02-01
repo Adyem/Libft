@@ -9,7 +9,7 @@
 #include "../Libft/libft.hpp"
 #include "../Errno/errno.hpp"
 #include "../Errno/errno_internal.hpp"
-#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread.hpp"
 
 class DataBuffer
@@ -18,7 +18,7 @@ class DataBuffer
         ft_vector<uint8_t> _buffer;
         size_t _read_pos;
         bool _ok;
-        mutable pt_mutex _mutex;
+        mutable pt_recursive_mutex _mutex;
         mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
 
         int lock_self() const noexcept;
@@ -57,8 +57,8 @@ class DataBuffer
         DataBuffer& operator<<(size_t len);
         DataBuffer& operator>>(size_t& len);
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex &mutex() noexcept;
-        ft_operation_error_stack &operation_error_stack() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
+        ft_operation_error_stack *operation_error_stack_handle() const noexcept;
 #endif
 };
 

@@ -426,9 +426,10 @@ void cma_get_extended_stats(ft_size_t *allocation_count,
         ft_size_t *current_bytes,
         ft_size_t *peak_bytes)
 {
-    cma_allocator_guard allocator_guard;
+    bool lock_acquired = false;
+    int lock_error = cma_lock_allocator(&lock_acquired);
 
-    if (!allocator_guard.is_active())
+    if (lock_error != FT_ERR_SUCCESSS)
         return ;
     if (allocation_count != ft_nullptr)
         *allocation_count = g_cma_allocation_count;
@@ -438,6 +439,7 @@ void cma_get_extended_stats(ft_size_t *allocation_count,
         *current_bytes = g_cma_current_bytes;
     if (peak_bytes != ft_nullptr)
         *peak_bytes = g_cma_peak_bytes;
+    cma_unlock_allocator(lock_acquired);
     return ;
 }
 

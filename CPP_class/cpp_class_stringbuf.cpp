@@ -5,16 +5,22 @@
 #include "../Template/move.hpp"
 #include <mutex>
 
-thread_local ft_operation_error_stack ft_stringbuf::_operation_errors = {{}, {}, 0};
+static thread_local ft_operation_error_stack *g_ft_stringbuf_last_error_stack = ft_nullptr;
 
-void ft_stringbuf::record_operation_error(int error_code) noexcept
+static ft_operation_error_stack *ft_stringbuf_error_stack_owner(void) noexcept
+{
+    return (g_ft_stringbuf_last_error_stack);
+}
+
+void ft_stringbuf::record_operation_error(int error_code) const noexcept
 {
     unsigned long long operation_id;
 
     operation_id = ft_errno_next_operation_id();
     ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(&ft_stringbuf::_operation_errors,
+    ft_operation_error_stack_push(&this->_operation_errors,
         error_code, operation_id);
+    g_ft_stringbuf_last_error_stack = &this->_operation_errors;
     return ;
 }
 
@@ -22,6 +28,13 @@ void ft_stringbuf::set_error_unlocked(int error_code) const noexcept
 {
     this->_error_code = error_code;
     ft_stringbuf::record_operation_error(error_code);
+    return ;
+}
+
+void ft_stringbuf::reset_error_owner(const ft_stringbuf *owner) noexcept
+{
+    if (g_ft_stringbuf_last_error_stack == &owner->_operation_errors)
+        g_ft_stringbuf_last_error_stack = ft_nullptr;
     return ;
 }
 
@@ -236,6 +249,7 @@ ft_stringbuf &ft_stringbuf::operator=(ft_stringbuf &&other) noexcept
 
 ft_stringbuf::~ft_stringbuf() noexcept
 {
+    ft_stringbuf::reset_error_owner(this);
     return ;
 }
 
@@ -356,51 +370,72 @@ const char *ft_stringbuf::operation_error_str_at(ft_size_t index) noexcept
 }
 
 int ft_stringbuf::last_operation_error() noexcept
-{
 
-    return (ft_operation_error_stack_last_error(&ft_stringbuf::_operation_errors));
+{
+    ft_operation_error_stack *operation_stack = ft_stringbuf_error_stack_owner();
+
+    if (operation_stack == ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    return (ft_operation_error_stack_last_error(operation_stack));
 }
 
 int ft_stringbuf::operation_error_at(ft_size_t index) noexcept
-{
 
-    return (ft_operation_error_stack_error_at(&ft_stringbuf::_operation_errors, index));
+{
+    ft_operation_error_stack *operation_stack = ft_stringbuf_error_stack_owner();
+
+    if (operation_stack == ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    return (ft_operation_error_stack_error_at(operation_stack, index));
 }
 
 void ft_stringbuf::pop_operation_errors() noexcept
 {
 
-    ft_operation_error_stack_pop_last(&ft_stringbuf::_operation_errors);
+    ft_operation_error_stack *operation_stack = ft_stringbuf_error_stack_owner();
+
+    if (operation_stack == ft_nullptr)
+        return ;
+    ft_operation_error_stack_pop_last(operation_stack);
     return ;
 }
 
 int ft_stringbuf::pop_oldest_operation_error() noexcept
 {
 
-    return (ft_operation_error_stack_pop_last(&ft_stringbuf::_operation_errors));
+    ft_operation_error_stack *operation_stack = ft_stringbuf_error_stack_owner();
+
+    if (operation_stack == ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    return (ft_operation_error_stack_pop_last(operation_stack));
 }
 
 int ft_stringbuf::operation_error_index() noexcept
 {
+    ft_operation_error_stack *operation_stack = ft_stringbuf_error_stack_owner();
+    ft_size_t count;
     ft_size_t index;
 
 
-    index = 0;
-    while (index < ft_stringbuf::_operation_errors.count)
+    if (operation_stack == ft_nullptr)
+        return (0);
+    count = ft_operation_error_stack_depth(operation_stack);
+    index = 1;
+    while (index <= count)
     {
-        if (ft_stringbuf::_operation_errors.errors[index] != FT_ERR_SUCCESSS)
-            return (static_cast<int>(index + 1));
+        if (ft_operation_error_stack_error_at(operation_stack, index) != FT_ERR_SUCCESSS)
+            return (static_cast<int>(index));
         index++;
     }
     return (0);
 }
 
+#ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *ft_stringbuf::get_mutex_for_validation() const noexcept
 {
     return (&this->_mutex);
 }
 
-#ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *ft_stringbuf::get_mutex_for_testing() noexcept
 {
     return (&this->_mutex);

@@ -61,9 +61,9 @@ int ft_http_server::start(const char *ip, uint16_t port, int address_family, boo
     configuration._recv_timeout = 5000;
     configuration._send_timeout = 5000;
     this->_server_socket = ft_socket(configuration);
-    if (this->_server_socket.get_error() != FT_ERR_SUCCESSS)
+    if (this->_networking_fetch_last_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(this->_server_socket.get_error());
+        this->set_error(this->_networking_fetch_last_error());
         return (1);
     }
     this->set_error(FT_ERR_SUCCESSS);

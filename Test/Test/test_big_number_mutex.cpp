@@ -482,7 +482,7 @@ FT_TEST(test_big_number_mutex_to_string_valid_unlocks,
     number.assign("256");
     decimal_string = number.to_string_base(10);
     number_mutex = number.get_mutex_for_testing();
-    string_mutex = decimal_string.get_mutex_for_testing();
+    string_mutex = decimal_string.get_mutex_for_validation();
 
     FT_ASSERT(number_mutex != ft_nullptr);
     FT_ASSERT(string_mutex != ft_nullptr);
@@ -625,7 +625,7 @@ FT_TEST(test_big_number_mutex_to_string_negative_base_unlocks,
     number.assign("10");
     result_string = number.to_string_base(-2);
     number_mutex = number.get_mutex_for_testing();
-    string_mutex = result_string.get_mutex_for_testing();
+    string_mutex = result_string.get_mutex_for_validation();
 
     FT_ASSERT(number_mutex != ft_nullptr);
     FT_ASSERT(string_mutex != ft_nullptr);

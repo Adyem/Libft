@@ -386,7 +386,7 @@ static void api_connection_pool_dispose_entry(api_pooled_connection &entry)
     if (socket_is_open)
     {
         client_count = entry.socket.get_client_count();
-        socket_error = entry.socket.get_error();
+        socket_error = networking_fetch_last_error();
         if (socket_error != FT_ERR_SUCCESSS)
         {
             socket_cleanup_allowed = false;
@@ -402,7 +402,7 @@ static void api_connection_pool_dispose_entry(api_pooled_connection &entry)
     else if (socket_has_clients)
     {
         entry.socket.disconnect_all_clients();
-        socket_error = entry.socket.get_error();
+        socket_error = networking_fetch_last_error();
         if (socket_error != FT_ERR_SUCCESSS)
         {
             socket_cleanup_allowed = false;
@@ -740,7 +740,7 @@ void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
         api_connection_pool_evict(handle);
         return ;
     }
-    if (handle.socket.get_error() != FT_ERR_SUCCESSS)
+    if (networking_fetch_last_error() != FT_ERR_SUCCESSS)
     {
         handle.unlock(handle_lock_acquired);
         api_connection_pool_evict(handle);

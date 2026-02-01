@@ -66,7 +66,6 @@ static int rl_resize_buffer_if_needed(readline_state_t *state, int required_size
 {
     if (required_size >= state->bufsize)
     {
-        char *resized_buffer;
         int new_bufsize;
 
         new_bufsize = state->bufsize;
@@ -78,9 +77,9 @@ static int rl_resize_buffer_if_needed(readline_state_t *state, int required_size
                 return (FT_ERR_OUT_OF_RANGE);
             new_bufsize *= 2;
         }
-        resized_buffer = rl_resize_buffer(&state->buffer, &state->bufsize, new_bufsize);
-        if (resized_buffer == ft_nullptr)
-            return (FT_ERR_NO_MEMORY);
+        int resize_error = rl_resize_buffer(&state->buffer, &state->bufsize, new_bufsize);
+        if (resize_error != FT_ERR_SUCCESSS)
+            return (resize_error);
     }
     return (FT_ERR_SUCCESSS);
 }
@@ -120,9 +119,9 @@ static void rl_update_display(const char *prompt, readline_state_t *state)
 {
     int columns_after_cursor;
 
-    if (rl_update_display_metrics(state) != 0)
+    if (rl_update_display_metrics(state) != FT_ERR_SUCCESSS)
         return ;
-    if (rl_clear_line(prompt, state->buffer) == -1)
+    if (rl_clear_line(prompt, state->buffer) != FT_ERR_SUCCESSS)
         return ;
     pf_printf("%s%s", prompt, state->buffer);
     columns_after_cursor = state->prev_display_columns - state->display_pos;

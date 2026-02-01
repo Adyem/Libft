@@ -13,10 +13,22 @@
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
 
+static void json_writer_push_error(int error_code)
+{
+    ft_global_error_stack_push(error_code);
+    return ;
+}
+
+#define JSON_WRITER_ERROR_RETURN(code, value) \
+    do { json_writer_push_error(code); return (value); } while (0)
+
+#define JSON_WRITER_SUCCESS_RETURN(value) \
+    do { json_writer_push_error(FT_ERR_SUCCESSS); return (value); } while (0)
+
 static char *json_writer_return_failure(void)
 {
-    if (ft_errno == FT_ERR_SUCCESSS)
-        ft_errno = FT_ERR_NO_MEMORY;
+    if (ft_global_error_stack_last_error() == FT_ERR_SUCCESSS)
+        json_writer_push_error(FT_ERR_NO_MEMORY);
     return (ft_nullptr);
 }
 
@@ -24,8 +36,7 @@ int json_write_to_file(const char *file_path, json_group *groups)
 {
     if (!file_path)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (-1);
+        JSON_WRITER_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
     }
     int file_descriptor = su_open(file_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (file_descriptor < 0)
@@ -74,8 +85,7 @@ int json_write_to_file(const char *file_path, json_group *groups)
     pf_printf_fd(file_descriptor, "}\n");
     if (cmp_close(file_descriptor) != 0)
         return (-1);
-    ft_errno = FT_ERR_SUCCESSS;
-    return (0);
+    JSON_WRITER_SUCCESS_RETURN(0);
 }
 
 int json_write_to_backend(ft_document_sink &sink, json_group *groups)
@@ -92,12 +102,10 @@ int json_write_to_backend(ft_document_sink &sink, json_group *groups)
     cma_free(serialized_content);
     if (write_result != FT_ERR_SUCCESSS)
     {
-        if (ft_errno == FT_ERR_SUCCESSS)
-            ft_errno = write_result;
+        json_writer_push_error(write_result);
         return (-1);
     }
-    ft_errno = FT_ERR_SUCCESSS;
-    return (0);
+    JSON_WRITER_SUCCESS_RETURN(0);
 }
 
 char *json_write_to_string(json_group *groups)
@@ -186,8 +194,7 @@ char *json_write_to_string(json_group *groups)
     if (!temporary)
         return (json_writer_return_failure());
     result = temporary;
-    ft_errno = FT_ERR_SUCCESSS;
-    return (result);
+    JSON_WRITER_SUCCESS_RETURN(result);
 }
 
 int json_document_write_to_file(const char *file_path, const json_document &document)
@@ -204,4 +211,3 @@ int json_document_write_to_backend(ft_document_sink &sink, const json_document &
 {
     return (document.write_to_backend(sink));
 }
-

@@ -18,7 +18,7 @@ class pt_recursive_mutex
         mutable pthread_mutex_t           _native_mutex;
         mutable bool                      _native_initialized;
         mutable pt_mutex                  *_state_mutex;
-        mutable ft_operation_error_stack  _operation_errors = {{}, {}, 0};
+        mutable std::atomic<bool>         _valid_state;
 
         bool    ensure_native_mutex() const;
         int     lock_internal(bool *lock_acquired) const;

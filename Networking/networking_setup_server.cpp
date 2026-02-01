@@ -90,7 +90,7 @@ static inline int set_timeout_send(int fd, int ms)
 }
 #endif
 
-static int networking_pop_guard_error(const ft_unique_lock<pt_mutex> &guard) noexcept
+static int networking_pop_guard_error(const ft_unique_lock<pt_recursive_mutex> &guard) noexcept
 {
     unsigned long long operation_id;
 
@@ -100,33 +100,14 @@ static int networking_pop_guard_error(const ft_unique_lock<pt_mutex> &guard) noe
     return (guard.pop_operation_error(operation_id));
 }
 
-static void networking_finalize_guard(ft_unique_lock<pt_mutex> &guard) noexcept
+static int networking_consume_thread_error(void) noexcept
 {
-    int operation_errno;
-
-    operation_errno = ft_errno;
-    if (guard.owns_lock())
-        guard.unlock();
-    int guard_error;
-
-    guard_error = networking_pop_guard_error(guard);
-    if (guard_error != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard_error;
-        return ;
-    }
-    if (operation_errno != FT_ERR_SUCCESSS)
-    {
-        ft_errno = operation_errno;
-        return ;
-    }
-    ft_errno = FT_ERR_SUCCESSS;
-    return ;
+    return (networking_fetch_last_error(false));
 }
 
 int ft_socket::create_socket(const SocketConfig &config)
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    ft_unique_lock<pt_recursive_mutex> guard(this->_mutex);
     int guard_error;
     SocketConfig *mutable_config;
     bool lock_acquired;
@@ -134,21 +115,25 @@ int ft_socket::create_socket(const SocketConfig &config)
     guard_error = networking_pop_guard_error(guard);
     if (guard_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = guard_error;
+        this->report_operation_result(guard_error);
         return (this->_error_code);
     }
     mutable_config = const_cast<SocketConfig *>(&config);
     lock_acquired = false;
-    if (socket_config_prepare_thread_safety(mutable_config) != 0)
+    int thread_error = socket_config_prepare_thread_safety(mutable_config);
+    thread_error = networking_consume_thread_error();
+    if (thread_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
-        networking_finalize_guard(guard);
+        this->report_operation_result(thread_error);
+        this->finalize_mutex_guard(guard);
         return (this->_error_code);
     }
-    if (socket_config_lock(mutable_config, &lock_acquired) != 0)
+    thread_error = socket_config_lock(mutable_config, &lock_acquired);
+    thread_error = networking_consume_thread_error();
+    if (thread_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
-        networking_finalize_guard(guard);
+        this->report_operation_result(thread_error);
+        this->finalize_mutex_guard(guard);
         return (this->_error_code);
     }
     this->_socket_fd = nw_socket(mutable_config->_address_family, SOCK_STREAM,
@@ -156,119 +141,104 @@ int ft_socket::create_socket(const SocketConfig &config)
     if (this->_socket_fd < 0)
     {
         socket_config_unlock(mutable_config, lock_acquired);
-        this->set_error(translate_platform_error());
-        networking_finalize_guard(guard);
+        int unlock_error = networking_consume_thread_error();
+        if (unlock_error != FT_ERR_SUCCESSS)
+            this->report_operation_result(unlock_error);
+        else
+            this->report_operation_result(translate_platform_error());
+        this->finalize_mutex_guard(guard);
         return (this->_error_code);
     }
     socket_config_unlock(mutable_config, lock_acquired);
-    this->set_error(FT_ERR_SUCCESSS);
-    networking_finalize_guard(guard);
+    int unlock_error = networking_consume_thread_error();
+    if (unlock_error != FT_ERR_SUCCESSS)
+    {
+        this->report_operation_result(unlock_error);
+        this->finalize_mutex_guard(guard);
+        return (this->_error_code);
+    }
+    this->report_operation_result(FT_ERR_SUCCESSS);
+    this->finalize_mutex_guard(guard);
     return (FT_ERR_SUCCESSS);
 }
 
 int ft_socket::set_reuse_address(const SocketConfig &config)
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    ft_unique_lock<pt_recursive_mutex> guard(this->_mutex);
     int guard_error;
     SocketConfig *mutable_config;
     bool lock_acquired;
     int opt;
+    int thread_error;
 
     guard_error = networking_pop_guard_error(guard);
     if (guard_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = guard_error;
+        this->report_operation_result(guard_error);
         return (this->_error_code);
     }
     mutable_config = const_cast<SocketConfig*>(&config);
     lock_acquired = false;
-    if (socket_config_prepare_thread_safety(mutable_config) != 0)
+    thread_error = socket_config_prepare_thread_safety(mutable_config);
+    thread_error = networking_consume_thread_error();
+    if (thread_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
-        networking_finalize_guard(guard);
+        this->report_operation_result(thread_error);
+        this->finalize_mutex_guard(guard);
         return (this->_error_code);
     }
-    if (socket_config_lock(mutable_config, &lock_acquired) != 0)
+    thread_error = socket_config_lock(mutable_config, &lock_acquired);
+    thread_error = networking_consume_thread_error();
+    if (thread_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
-        networking_finalize_guard(guard);
+        this->report_operation_result(thread_error);
+        this->finalize_mutex_guard(guard);
         return (this->_error_code);
     }
     if (mutable_config->_reuse_address == false)
     {
         socket_config_unlock(mutable_config, lock_acquired);
-        this->set_error(FT_ERR_SUCCESSS);
-        networking_finalize_guard(guard);
+        thread_error = networking_consume_thread_error();
+        if (thread_error != FT_ERR_SUCCESSS)
+        {
+            this->report_operation_result(thread_error);
+            this->finalize_mutex_guard(guard);
+            return (this->_error_code);
+        }
+        this->report_operation_result(FT_ERR_SUCCESSS);
+        this->finalize_mutex_guard(guard);
         return (FT_ERR_SUCCESSS);
     }
     opt = 1;
     if (setsockopt_reuse(this->_socket_fd, opt) < 0)
     {
         socket_config_unlock(mutable_config, lock_acquired);
-        this->set_error(translate_platform_error());
+        thread_error = networking_consume_thread_error();
+        if (thread_error != FT_ERR_SUCCESSS)
+            this->report_operation_result(thread_error);
+        else
+            this->report_operation_result(translate_platform_error());
         nw_close(this->_socket_fd);
         this->_socket_fd = -1;
-        networking_finalize_guard(guard);
+        this->finalize_mutex_guard(guard);
         return (this->_error_code);
     }
     socket_config_unlock(mutable_config, lock_acquired);
-    this->set_error(FT_ERR_SUCCESSS);
-    networking_finalize_guard(guard);
-    return (FT_ERR_SUCCESSS);
-}
-
-int ft_socket::set_non_blocking(const SocketConfig &config)
-{
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    int guard_error;
-    SocketConfig *mutable_config;
-    bool lock_acquired;
-
-    guard_error = networking_pop_guard_error(guard);
-    if (guard_error != FT_ERR_SUCCESSS)
+    thread_error = networking_consume_thread_error();
+    if (thread_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = guard_error;
+        this->report_operation_result(thread_error);
+        this->finalize_mutex_guard(guard);
         return (this->_error_code);
     }
-    mutable_config = const_cast<SocketConfig*>(&config);
-    lock_acquired = false;
-    if (socket_config_prepare_thread_safety(mutable_config) != 0)
-    {
-        this->set_error(ft_errno);
-        networking_finalize_guard(guard);
-        return (this->_error_code);
-    }
-    if (socket_config_lock(mutable_config, &lock_acquired) != 0)
-    {
-        this->set_error(ft_errno);
-        networking_finalize_guard(guard);
-        return (this->_error_code);
-    }
-    if (mutable_config->_non_blocking == false)
-    {
-        socket_config_unlock(mutable_config, lock_acquired);
-        this->set_error(FT_ERR_SUCCESSS);
-        networking_finalize_guard(guard);
-        return (FT_ERR_SUCCESSS);
-    }
-    if (set_nonblocking_platform(this->_socket_fd) != 0)
-    {
-        socket_config_unlock(mutable_config, lock_acquired);
-        this->set_error(translate_platform_error());
-        nw_close(this->_socket_fd);
-        this->_socket_fd = -1;
-        networking_finalize_guard(guard);
-        return (this->_error_code);
-    }
-    socket_config_unlock(mutable_config, lock_acquired);
-    this->set_error(FT_ERR_SUCCESSS);
-    networking_finalize_guard(guard);
+    this->report_operation_result(FT_ERR_SUCCESSS);
+    this->finalize_mutex_guard(guard);
     return (FT_ERR_SUCCESSS);
 }
 
 int ft_socket::set_timeouts(const SocketConfig &config)
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    ft_unique_lock<pt_recursive_mutex> guard(this->_mutex);
     int guard_error;
     SocketConfig *mutable_config;
     bool lock_acquired;
@@ -276,21 +246,26 @@ int ft_socket::set_timeouts(const SocketConfig &config)
     guard_error = networking_pop_guard_error(guard);
     if (guard_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = guard_error;
+        this->report_operation_result(guard_error);
         return (this->_error_code);
     }
     mutable_config = const_cast<SocketConfig*>(&config);
     lock_acquired = false;
-    if (socket_config_prepare_thread_safety(mutable_config) != 0)
+    int thread_error;
+    thread_error = socket_config_prepare_thread_safety(mutable_config);
+    thread_error = networking_consume_thread_error();
+    if (thread_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
-        networking_finalize_guard(guard);
+        this->report_operation_result(thread_error);
+        this->finalize_mutex_guard(guard);
         return (this->_error_code);
     }
-    if (socket_config_lock(mutable_config, &lock_acquired) != 0)
+    thread_error = socket_config_lock(mutable_config, &lock_acquired);
+    thread_error = networking_consume_thread_error();
+    if (thread_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
-        networking_finalize_guard(guard);
+        this->report_operation_result(thread_error);
+        this->finalize_mutex_guard(guard);
         return (this->_error_code);
     }
     if (mutable_config->_recv_timeout > 0)
@@ -298,10 +273,17 @@ int ft_socket::set_timeouts(const SocketConfig &config)
         if (set_timeout_recv(this->_socket_fd, mutable_config->_recv_timeout) < 0)
         {
             socket_config_unlock(mutable_config, lock_acquired);
-            this->set_error(translate_platform_error());
+            thread_error = networking_consume_thread_error();
+            if (thread_error != FT_ERR_SUCCESSS)
+            {
+                this->report_operation_result(thread_error);
+                this->finalize_mutex_guard(guard);
+                return (this->_error_code);
+            }
+            this->report_operation_result(translate_platform_error());
             nw_close(this->_socket_fd);
             this->_socket_fd = -1;
-            networking_finalize_guard(guard);
+            this->finalize_mutex_guard(guard);
             return (this->_error_code);
         }
     }
@@ -310,22 +292,36 @@ int ft_socket::set_timeouts(const SocketConfig &config)
         if (set_timeout_send(this->_socket_fd, mutable_config->_send_timeout) < 0)
         {
             socket_config_unlock(mutable_config, lock_acquired);
-            this->set_error(translate_platform_error());
+            thread_error = networking_consume_thread_error();
+            if (thread_error != FT_ERR_SUCCESSS)
+            {
+                this->report_operation_result(thread_error);
+                this->finalize_mutex_guard(guard);
+                return (this->_error_code);
+            }
+            this->report_operation_result(translate_platform_error());
             nw_close(this->_socket_fd);
             this->_socket_fd = -1;
-            networking_finalize_guard(guard);
+            this->finalize_mutex_guard(guard);
             return (this->_error_code);
         }
     }
     socket_config_unlock(mutable_config, lock_acquired);
-    this->set_error(FT_ERR_SUCCESSS);
-    networking_finalize_guard(guard);
+    thread_error = networking_consume_thread_error();
+    if (thread_error != FT_ERR_SUCCESSS)
+    {
+        this->report_operation_result(thread_error);
+        this->finalize_mutex_guard(guard);
+        return (this->_error_code);
+    }
+    this->report_operation_result(FT_ERR_SUCCESSS);
+    this->finalize_mutex_guard(guard);
     return (FT_ERR_SUCCESSS);
 }
 
 int ft_socket::configure_address(const SocketConfig &config)
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    ft_unique_lock<pt_recursive_mutex> guard(this->_mutex);
     int guard_error;
     SocketConfig *mutable_config;
     bool lock_acquired;
@@ -337,21 +333,26 @@ int ft_socket::configure_address(const SocketConfig &config)
     guard_error = networking_pop_guard_error(guard);
     if (guard_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = guard_error;
+        this->report_operation_result(guard_error);
         return (this->_error_code);
     }
     mutable_config = const_cast<SocketConfig*>(&config);
     lock_acquired = false;
-    if (socket_config_prepare_thread_safety(mutable_config) != 0)
+    int thread_error;
+    thread_error = socket_config_prepare_thread_safety(mutable_config);
+    thread_error = networking_consume_thread_error();
+    if (thread_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
-        networking_finalize_guard(guard);
+        this->report_operation_result(thread_error);
+        this->finalize_mutex_guard(guard);
         return (this->_error_code);
     }
-    if (socket_config_lock(mutable_config, &lock_acquired) != 0)
+    thread_error = socket_config_lock(mutable_config, &lock_acquired);
+    thread_error = networking_consume_thread_error();
+    if (thread_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
-        networking_finalize_guard(guard);
+        this->report_operation_result(thread_error);
+        this->finalize_mutex_guard(guard);
         return (this->_error_code);
     }
     ft_memset(&this->_address, 0, sizeof(this->_address));
@@ -360,12 +361,19 @@ int ft_socket::configure_address(const SocketConfig &config)
     address_family = mutable_config->_address_family;
     protocol_value = mutable_config->_protocol;
     socket_config_unlock(mutable_config, lock_acquired);
+    thread_error = networking_consume_thread_error();
+    if (thread_error != FT_ERR_SUCCESSS)
+    {
+        this->report_operation_result(thread_error);
+        this->finalize_mutex_guard(guard);
+        return (this->_error_code);
+    }
     if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_string::last_operation_error());
+        this->report_operation_result(ft_string::last_operation_error());
         nw_close(this->_socket_fd);
         this->_socket_fd = -1;
-        networking_finalize_guard(guard);
+        this->finalize_mutex_guard(guard);
         return (this->_error_code);
     }
     if (address_family == AF_INET)
@@ -378,14 +386,14 @@ int ft_socket::configure_address(const SocketConfig &config)
         if (host_copy.empty())
         {
             addr_in->sin_addr.s_addr = htonl(INADDR_ANY);
-            this->set_error(FT_ERR_SUCCESSS);
-            networking_finalize_guard(guard);
+            this->report_operation_result(FT_ERR_SUCCESSS);
+            this->finalize_mutex_guard(guard);
             return (FT_ERR_SUCCESSS);
         }
         if (nw_inet_pton(AF_INET, host_copy.c_str(), &addr_in->sin_addr) > 0)
         {
-            this->set_error(FT_ERR_SUCCESSS);
-            networking_finalize_guard(guard);
+            this->report_operation_result(FT_ERR_SUCCESSS);
+            this->finalize_mutex_guard(guard);
             return (FT_ERR_SUCCESSS);
         }
     }
@@ -399,23 +407,23 @@ int ft_socket::configure_address(const SocketConfig &config)
         if (host_copy.empty())
         {
             addr_in6->sin6_addr = in6addr_any;
-            this->set_error(FT_ERR_SUCCESSS);
-            networking_finalize_guard(guard);
+            this->report_operation_result(FT_ERR_SUCCESSS);
+            this->finalize_mutex_guard(guard);
             return (FT_ERR_SUCCESSS);
         }
         if (nw_inet_pton(AF_INET6, host_copy.c_str(), &addr_in6->sin6_addr) > 0)
         {
-            this->set_error(FT_ERR_SUCCESSS);
-            networking_finalize_guard(guard);
+            this->report_operation_result(FT_ERR_SUCCESSS);
+            this->finalize_mutex_guard(guard);
             return (FT_ERR_SUCCESSS);
         }
     }
     else
     {
-        this->set_error(FT_ERR_CONFIGURATION);
+        this->report_operation_result(FT_ERR_CONFIGURATION);
         nw_close(this->_socket_fd);
         this->_socket_fd = -1;
-        networking_finalize_guard(guard);
+        this->finalize_mutex_guard(guard);
         return (this->_error_code);
     }
     ft_string port_string;
@@ -425,31 +433,31 @@ int ft_socket::configure_address(const SocketConfig &config)
     port_string = ft_to_string(static_cast<long>(port_value));
     if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_string::last_operation_error());
+        this->report_operation_result(ft_string::last_operation_error());
         nw_close(this->_socket_fd);
         this->_socket_fd = -1;
-        networking_finalize_guard(guard);
+        this->finalize_mutex_guard(guard);
         return (this->_error_code);
     }
     ft_memset(&resolved_address, 0, sizeof(resolved_address));
     if (!networking_dns_resolve_first(host_copy.c_str(), port_string.c_str(),
             address_family, SOCK_STREAM, protocol_value, 0, resolved_address))
     {
-        resolver_error = ft_errno;
+        resolver_error = networking_fetch_last_error(false);
         if (resolver_error == FT_ERR_SUCCESSS)
             resolver_error = FT_ERR_SOCKET_RESOLVE_FAILED;
-        this->set_error(resolver_error);
+        this->report_operation_result(resolver_error);
         nw_close(this->_socket_fd);
         this->_socket_fd = -1;
-        networking_finalize_guard(guard);
+        this->finalize_mutex_guard(guard);
         return (this->_error_code);
     }
     if (resolved_address.length > sizeof(this->_address))
     {
-        this->set_error(FT_ERR_SOCKET_RESOLVE_FAILED);
+        this->report_operation_result(FT_ERR_SOCKET_RESOLVE_FAILED);
         nw_close(this->_socket_fd);
         this->_socket_fd = -1;
-        networking_finalize_guard(guard);
+        this->finalize_mutex_guard(guard);
         return (this->_error_code);
     }
     ft_memcpy(&this->_address, &resolved_address.address, resolved_address.length);
@@ -469,21 +477,21 @@ int ft_socket::configure_address(const SocketConfig &config)
         addr_in6->sin6_family = AF_INET6;
         addr_in6->sin6_port = htons(port_value);
     }
-    this->set_error(FT_ERR_SUCCESSS);
-    networking_finalize_guard(guard);
+    this->report_operation_result(FT_ERR_SUCCESSS);
+    this->finalize_mutex_guard(guard);
     return (FT_ERR_SUCCESSS);
 }
 
 int ft_socket::bind_socket(const SocketConfig &config)
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    ft_unique_lock<pt_recursive_mutex> guard(this->_mutex);
     int guard_error;
     socklen_t addr_len;
 
     guard_error = networking_pop_guard_error(guard);
     if (guard_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = guard_error;
+        this->report_operation_result(guard_error);
         return (this->_error_code);
     }
     if (config._address_family == AF_INET)
@@ -492,29 +500,29 @@ int ft_socket::bind_socket(const SocketConfig &config)
         addr_len = sizeof(struct sockaddr_in6);
     else
     {
-        this->set_error(FT_ERR_CONFIGURATION);
+        this->report_operation_result(FT_ERR_CONFIGURATION);
         nw_close(this->_socket_fd);
         this->_socket_fd = -1;
-        networking_finalize_guard(guard);
+        this->finalize_mutex_guard(guard);
         return (this->_error_code);
     }
     if (nw_bind(this->_socket_fd,
             reinterpret_cast<const struct sockaddr*>(&this->_address), addr_len) < 0)
     {
-        this->set_error(translate_platform_error());
+        this->report_operation_result(translate_platform_error());
         nw_close(this->_socket_fd);
         this->_socket_fd = -1;
-        networking_finalize_guard(guard);
+        this->finalize_mutex_guard(guard);
         return (this->_error_code);
     }
-    this->set_error(FT_ERR_SUCCESSS);
-    networking_finalize_guard(guard);
+    this->report_operation_result(FT_ERR_SUCCESSS);
+    this->finalize_mutex_guard(guard);
     return (FT_ERR_SUCCESSS);
 }
 
 int ft_socket::listen_socket(const SocketConfig &config)
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    ft_unique_lock<pt_recursive_mutex> guard(this->_mutex);
     int guard_error;
     SocketConfig *mutable_config;
     bool lock_acquired;
@@ -523,43 +531,48 @@ int ft_socket::listen_socket(const SocketConfig &config)
     guard_error = networking_pop_guard_error(guard);
     if (guard_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = guard_error;
+        this->report_operation_result(guard_error);
         return (this->_error_code);
     }
     mutable_config = const_cast<SocketConfig*>(&config);
     lock_acquired = false;
-    if (socket_config_prepare_thread_safety(mutable_config) != 0)
+    int thread_error;
+    thread_error = socket_config_prepare_thread_safety(mutable_config);
+    thread_error = networking_consume_thread_error();
+    if (thread_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
-        networking_finalize_guard(guard);
+        this->report_operation_result(thread_error);
+        this->finalize_mutex_guard(guard);
         return (this->_error_code);
     }
-    if (socket_config_lock(mutable_config, &lock_acquired) != 0)
+    thread_error = socket_config_lock(mutable_config, &lock_acquired);
+    thread_error = networking_consume_thread_error();
+    if (thread_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
-        networking_finalize_guard(guard);
+        this->report_operation_result(thread_error);
+        this->finalize_mutex_guard(guard);
         return (this->_error_code);
     }
     backlog = mutable_config->_backlog;
     socket_config_unlock(mutable_config, lock_acquired);
-    if (nw_listen(this->_socket_fd, backlog) < 0)
+    thread_error = networking_consume_thread_error();
+    if (thread_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(translate_platform_error());
-        nw_close(this->_socket_fd);
-        this->_socket_fd = -1;
-        networking_finalize_guard(guard);
+        this->report_operation_result(thread_error);
+        this->finalize_mutex_guard(guard);
         return (this->_error_code);
     }
-    this->set_error(FT_ERR_SUCCESSS);
-    networking_finalize_guard(guard);
+    if (nw_listen(this->_socket_fd, backlog) < 0)
+    {
+        this->report_operation_result(translate_platform_error());
+        nw_close(this->_socket_fd);
+        this->_socket_fd = -1;
+        this->finalize_mutex_guard(guard);
+        return (this->_error_code);
+    }
+    this->report_operation_result(FT_ERR_SUCCESSS);
+    this->finalize_mutex_guard(guard);
     return (FT_ERR_SUCCESSS);
-}
-
-void ft_socket::set_error(int error_code) const noexcept
-{
-    ft_errno = error_code;
-    this->_error_code = ft_errno;
-    return ;
 }
 
 int ft_socket::setup_server(const SocketConfig &config)
@@ -573,14 +586,19 @@ int ft_socket::setup_server(const SocketConfig &config)
 
     mutable_config = const_cast<SocketConfig*>(&config);
     lock_acquired = false;
-    if (socket_config_prepare_thread_safety(mutable_config) != 0)
+    int thread_error;
+    thread_error = socket_config_prepare_thread_safety(mutable_config);
+    thread_error = networking_consume_thread_error();
+    if (thread_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
+        this->report_operation_result(thread_error);
         return (this->_error_code);
     }
-    if (socket_config_lock(mutable_config, &lock_acquired) != 0)
+    thread_error = socket_config_lock(mutable_config, &lock_acquired);
+    thread_error = networking_consume_thread_error();
+    if (thread_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
+        this->report_operation_result(thread_error);
         return (this->_error_code);
     }
     reuse_address = mutable_config->_reuse_address;
@@ -588,6 +606,12 @@ int ft_socket::setup_server(const SocketConfig &config)
     has_timeout = (mutable_config->_recv_timeout > 0 || mutable_config->_send_timeout > 0);
     has_multicast = (mutable_config->_multicast_group.empty() == false);
     socket_config_unlock(mutable_config, lock_acquired);
+    thread_error = networking_consume_thread_error();
+    if (thread_error != FT_ERR_SUCCESSS)
+    {
+        this->report_operation_result(thread_error);
+        return (this->_error_code);
+    }
     if (this->create_socket(config) != FT_ERR_SUCCESSS)
         return (this->_error_code);
     if (reuse_address)
@@ -608,13 +632,13 @@ int ft_socket::setup_server(const SocketConfig &config)
     if (has_multicast)
         if (this->join_multicast_group(config) != FT_ERR_SUCCESSS)
             return (this->_error_code);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->report_operation_result(FT_ERR_SUCCESSS);
     return (this->_error_code);
 }
 
 int ft_socket::join_multicast_group(const SocketConfig &config)
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    ft_unique_lock<pt_recursive_mutex> guard(this->_mutex);
     int guard_error;
     SocketConfig *mutable_config;
     bool lock_acquired;
@@ -622,28 +646,40 @@ int ft_socket::join_multicast_group(const SocketConfig &config)
     guard_error = networking_pop_guard_error(guard);
     if (guard_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = guard_error;
+        this->report_operation_result(guard_error);
         return (this->_error_code);
     }
     mutable_config = const_cast<SocketConfig*>(&config);
     lock_acquired = false;
-    if (socket_config_prepare_thread_safety(mutable_config) != 0)
+    int thread_error;
+    thread_error = socket_config_prepare_thread_safety(mutable_config);
+    thread_error = networking_consume_thread_error();
+    if (thread_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
-        networking_finalize_guard(guard);
+        this->report_operation_result(thread_error);
+        this->finalize_mutex_guard(guard);
         return (this->_error_code);
     }
-    if (socket_config_lock(mutable_config, &lock_acquired) != 0)
+    thread_error = socket_config_lock(mutable_config, &lock_acquired);
+    thread_error = networking_consume_thread_error();
+    if (thread_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
-        networking_finalize_guard(guard);
+        this->report_operation_result(thread_error);
+        this->finalize_mutex_guard(guard);
         return (this->_error_code);
     }
     if (mutable_config->_multicast_group.empty())
     {
         socket_config_unlock(mutable_config, lock_acquired);
-        this->set_error(FT_ERR_SUCCESSS);
-        networking_finalize_guard(guard);
+        thread_error = networking_consume_thread_error();
+        if (thread_error != FT_ERR_SUCCESSS)
+        {
+            this->report_operation_result(thread_error);
+            this->finalize_mutex_guard(guard);
+            return (this->_error_code);
+        }
+        this->report_operation_result(FT_ERR_SUCCESSS);
+        this->finalize_mutex_guard(guard);
         return (FT_ERR_SUCCESSS);
     }
     if (mutable_config->_address_family == AF_INET)
@@ -655,10 +691,17 @@ int ft_socket::join_multicast_group(const SocketConfig &config)
                 &mreq.imr_multiaddr) <= 0)
         {
             socket_config_unlock(mutable_config, lock_acquired);
-            this->set_error(FT_ERR_CONFIGURATION);
+            thread_error = networking_consume_thread_error();
+            if (thread_error != FT_ERR_SUCCESSS)
+            {
+                this->report_operation_result(thread_error);
+                this->finalize_mutex_guard(guard);
+                return (this->_error_code);
+            }
+            this->report_operation_result(FT_ERR_CONFIGURATION);
             nw_close(this->_socket_fd);
             this->_socket_fd = -1;
-            networking_finalize_guard(guard);
+            this->finalize_mutex_guard(guard);
             return (this->_error_code);
         }
         if (mutable_config->_multicast_interface.empty())
@@ -667,20 +710,34 @@ int ft_socket::join_multicast_group(const SocketConfig &config)
                 mutable_config->_multicast_interface.c_str(), &mreq.imr_interface) <= 0)
         {
             socket_config_unlock(mutable_config, lock_acquired);
-            this->set_error(FT_ERR_CONFIGURATION);
+            thread_error = networking_consume_thread_error();
+            if (thread_error != FT_ERR_SUCCESSS)
+            {
+                this->report_operation_result(thread_error);
+                this->finalize_mutex_guard(guard);
+                return (this->_error_code);
+            }
+            this->report_operation_result(FT_ERR_CONFIGURATION);
             nw_close(this->_socket_fd);
             this->_socket_fd = -1;
-            networking_finalize_guard(guard);
+            this->finalize_mutex_guard(guard);
             return (this->_error_code);
         }
         socket_config_unlock(mutable_config, lock_acquired);
+        thread_error = networking_consume_thread_error();
+        if (thread_error != FT_ERR_SUCCESSS)
+        {
+            this->report_operation_result(thread_error);
+            this->finalize_mutex_guard(guard);
+            return (this->_error_code);
+        }
         if (setsockopt(this->_socket_fd, IPPROTO_IP, IP_ADD_MEMBERSHIP,
                 reinterpret_cast<const char*>(&mreq), sizeof(mreq)) < 0)
         {
-            this->set_error(translate_platform_error());
+            this->report_operation_result(translate_platform_error());
             nw_close(this->_socket_fd);
             this->_socket_fd = -1;
-            networking_finalize_guard(guard);
+            this->finalize_mutex_guard(guard);
             return (this->_error_code);
         }
     }
@@ -693,34 +750,55 @@ int ft_socket::join_multicast_group(const SocketConfig &config)
                 &mreq6.ipv6mr_multiaddr) <= 0)
         {
             socket_config_unlock(mutable_config, lock_acquired);
-            this->set_error(FT_ERR_CONFIGURATION);
+            thread_error = networking_consume_thread_error();
+            if (thread_error != FT_ERR_SUCCESSS)
+            {
+                this->report_operation_result(thread_error);
+                this->finalize_mutex_guard(guard);
+                return (this->_error_code);
+            }
+            this->report_operation_result(FT_ERR_CONFIGURATION);
             nw_close(this->_socket_fd);
             this->_socket_fd = -1;
-            networking_finalize_guard(guard);
+            this->finalize_mutex_guard(guard);
             return (this->_error_code);
         }
         mreq6.ipv6mr_interface = 0;
         socket_config_unlock(mutable_config, lock_acquired);
+        thread_error = networking_consume_thread_error();
+        if (thread_error != FT_ERR_SUCCESSS)
+        {
+            this->report_operation_result(thread_error);
+            this->finalize_mutex_guard(guard);
+            return (this->_error_code);
+        }
         if (setsockopt(this->_socket_fd, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP,
                 reinterpret_cast<const char*>(&mreq6), sizeof(mreq6)) < 0)
         {
-            this->set_error(translate_platform_error());
+            this->report_operation_result(translate_platform_error());
             nw_close(this->_socket_fd);
             this->_socket_fd = -1;
-            networking_finalize_guard(guard);
+            this->finalize_mutex_guard(guard);
             return (this->_error_code);
         }
     }
     else
     {
         socket_config_unlock(mutable_config, lock_acquired);
-        this->set_error(FT_ERR_CONFIGURATION);
+        thread_error = networking_consume_thread_error();
+        if (thread_error != FT_ERR_SUCCESSS)
+        {
+            this->report_operation_result(thread_error);
+            this->finalize_mutex_guard(guard);
+            return (this->_error_code);
+        }
+        this->report_operation_result(FT_ERR_CONFIGURATION);
         nw_close(this->_socket_fd);
         this->_socket_fd = -1;
-        networking_finalize_guard(guard);
+        this->finalize_mutex_guard(guard);
         return (this->_error_code);
     }
-    this->set_error(FT_ERR_SUCCESSS);
-    networking_finalize_guard(guard);
+    this->report_operation_result(FT_ERR_SUCCESSS);
+    this->finalize_mutex_guard(guard);
     return (FT_ERR_SUCCESSS);
 }

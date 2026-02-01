@@ -29,7 +29,7 @@ ft_fd_istream::ft_fd_istream(const ft_fd_istream &other) noexcept
     , _mutex()
     , _operation_errors()
 {
-    ft_unique_lock<pt_mutex> other_guard;
+    ft_unique_lock<pt_recursive_mutex> other_guard;
     int lock_error;
 
     lock_error = other.lock_self(other_guard);
@@ -58,7 +58,7 @@ ft_fd_istream::ft_fd_istream(ft_fd_istream &&other) noexcept
     , _mutex()
     , _operation_errors()
 {
-    ft_unique_lock<pt_mutex> other_guard;
+    ft_unique_lock<pt_recursive_mutex> other_guard;
     int lock_error;
 
     lock_error = other.lock_self(other_guard);
@@ -88,14 +88,14 @@ ft_fd_istream::~ft_fd_istream() noexcept
     return ;
 }
 
-int ft_fd_istream::lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept
+int ft_fd_istream::lock_self(ft_unique_lock<pt_recursive_mutex> &guard) const noexcept
 {
-    ft_unique_lock<pt_mutex> local_guard(this->_mutex);
+    ft_unique_lock<pt_recursive_mutex> local_guard(this->_mutex);
 
     int guard_error = ft_fd_istream_capture_mutex_error();
     if (guard_error != FT_ERR_SUCCESSS)
     {
-        guard = ft_unique_lock<pt_mutex>();
+        guard = ft_unique_lock<pt_recursive_mutex>();
         this->record_operation_error(guard_error);
         return (guard_error);
     }
@@ -106,7 +106,7 @@ int ft_fd_istream::lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept
 
 ft_fd_istream &ft_fd_istream::operator=(const ft_fd_istream &other) noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
+    ft_unique_lock<pt_recursive_mutex> guard;
     int lock_error;
     int descriptor;
 
@@ -139,7 +139,7 @@ ft_fd_istream &ft_fd_istream::operator=(const ft_fd_istream &other) noexcept
 
 ft_fd_istream &ft_fd_istream::operator=(ft_fd_istream &&other) noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
+    ft_unique_lock<pt_recursive_mutex> guard;
     int lock_error;
     int descriptor;
 
@@ -173,7 +173,7 @@ ft_fd_istream &ft_fd_istream::operator=(ft_fd_istream &&other) noexcept
 
 void ft_fd_istream::set_fd(int fd) noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
+    ft_unique_lock<pt_recursive_mutex> guard;
     int lock_error;
 
     lock_error = this->lock_self(guard);
@@ -198,7 +198,7 @@ void ft_fd_istream::set_fd(int fd) noexcept
 
 int ft_fd_istream::get_fd() const noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
+    ft_unique_lock<pt_recursive_mutex> guard;
     int lock_error;
     int descriptor;
 
@@ -224,7 +224,7 @@ int ft_fd_istream::get_fd() const noexcept
 
 std::size_t ft_fd_istream::do_read(char *buffer, std::size_t count)
 {
-    ft_unique_lock<pt_mutex> guard;
+    ft_unique_lock<pt_recursive_mutex> guard;
     int lock_error;
     int descriptor;
     ssize_t result;
@@ -274,3 +274,15 @@ void ft_fd_istream::record_operation_error(int error_code) const noexcept
     ft_operation_error_stack_push(&this->_operation_errors, error_code, operation_id);
     return ;
 }
+
+#ifdef LIBFT_TEST_BUILD
+pt_recursive_mutex *ft_fd_istream::get_mutex_for_validation() const noexcept
+{
+    return (&(this->_mutex));
+}
+
+ft_operation_error_stack *ft_fd_istream::operation_error_stack_handle() const noexcept
+{
+    return (&(this->_operation_errors));
+}
+#endif

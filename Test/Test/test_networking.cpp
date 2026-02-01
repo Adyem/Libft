@@ -179,13 +179,13 @@ FT_TEST(test_network_send_receive_ipv4, "nw_send/nw_recv IPv4")
     server_configuration._port = 54340;
     server_configuration._ip = "127.0.0.1";
     server_socket = ft_socket(server_configuration);
-    if (server_socket.get_error() != FT_ERR_SUCCESSS)
+    if (networking_fetch_last_error() != FT_ERR_SUCCESSS)
         return (0);
     client_configuration._type = SocketType::CLIENT;
     client_configuration._port = 54340;
     client_configuration._ip = "127.0.0.1";
     client_socket = ft_socket(client_configuration);
-    if (client_socket.get_error() != FT_ERR_SUCCESSS)
+    if (networking_fetch_last_error() != FT_ERR_SUCCESSS)
         return (0);
     address_length = sizeof(address_storage);
     client_fd = nw_accept(server_socket.get_fd(), reinterpret_cast<struct sockaddr*>(&address_storage), &address_length);
@@ -287,7 +287,7 @@ FT_TEST(test_network_invalid_ip_address, "invalid IPv4 address returns error")
     configuration._ip = "256.1.1.1";
     configuration._port = 54342;
     server_socket = ft_socket(configuration);
-    if (server_socket.get_error() == FT_ERR_SUCCESSS)
+    if (networking_fetch_last_error() == FT_ERR_SUCCESSS)
         return (0);
     return (1);
 }
@@ -313,14 +313,14 @@ FT_TEST(test_network_poll_ipv6_ready, "nw_poll detects IPv6 readiness")
     server_configuration._address_family = AF_INET6;
     server_configuration._port = 54343;
     server_socket = ft_socket(server_configuration);
-    if (server_socket.get_error() != FT_ERR_SUCCESSS)
+    if (networking_fetch_last_error() != FT_ERR_SUCCESSS)
         return (0);
     client_configuration._type = SocketType::CLIENT;
     client_configuration._ip = "::1";
     client_configuration._address_family = AF_INET6;
     client_configuration._port = 54343;
     client_socket = ft_socket(client_configuration);
-    if (client_socket.get_error() != FT_ERR_SUCCESSS)
+    if (networking_fetch_last_error() != FT_ERR_SUCCESSS)
         return (0);
     address_length = sizeof(address_storage);
     client_fd = nw_accept(server_socket.get_fd(), reinterpret_cast<struct sockaddr*>(&address_storage), &address_length);
@@ -375,7 +375,7 @@ FT_TEST(test_http_client_streaming_chunks, "http_get_stream handles chunked resp
     server_configuration._ip = "127.0.0.1";
     server_configuration._port = 0;
     server_socket = ft_socket(server_configuration);
-    if (server_socket.get_error() != FT_ERR_SUCCESSS)
+    if (networking_fetch_last_error() != FT_ERR_SUCCESSS)
         return (0);
     if (get_socket_port_string(server_socket, port_string) == false)
         return (0);
@@ -426,7 +426,7 @@ FT_TEST(test_server_config_ipv4_any_address, "server accepts empty IPv4 address 
     configuration._port = 0;
     configuration._ip = "";
     server_socket = ft_socket(configuration);
-    if (server_socket.get_error() != FT_ERR_SUCCESSS)
+    if (networking_fetch_last_error() != FT_ERR_SUCCESSS)
         return (0);
     address = &server_socket.get_address();
     address_ipv4 = reinterpret_cast<const struct sockaddr_in*>(address);
@@ -447,7 +447,7 @@ FT_TEST(test_server_config_ipv6_any_address, "server accepts empty IPv6 address 
     configuration._port = 0;
     configuration._ip = "";
     server_socket = ft_socket(configuration);
-    if (server_socket.get_error() != FT_ERR_SUCCESSS)
+    if (networking_fetch_last_error() != FT_ERR_SUCCESSS)
         return (0);
     address = &server_socket.get_address();
     address_ipv6 = reinterpret_cast<const struct sockaddr_in6*>(address);
@@ -569,13 +569,13 @@ FT_TEST(test_networking_check_socket_after_send_detects_disconnect, "networking_
     server_configuration._port = 54344;
     server_configuration._ip = "127.0.0.1";
     server_socket = ft_socket(server_configuration);
-    if (server_socket.get_error() != FT_ERR_SUCCESSS)
+    if (networking_fetch_last_error() != FT_ERR_SUCCESSS)
         return (0);
     client_configuration._type = SocketType::CLIENT;
     client_configuration._port = 54344;
     client_configuration._ip = "127.0.0.1";
     client_socket = ft_socket(client_configuration);
-    if (client_socket.get_error() != FT_ERR_SUCCESSS)
+    if (networking_fetch_last_error() != FT_ERR_SUCCESSS)
         return (0);
     address_length = sizeof(address_storage);
     accepted_fd = nw_accept(server_socket.get_fd(), reinterpret_cast<struct sockaddr*>(&address_storage), &address_length);
@@ -620,13 +620,13 @@ FT_TEST(test_networking_check_socket_after_send_reports_success, "networking_che
     server_configuration._port = 54345;
     server_configuration._ip = "127.0.0.1";
     server_socket = ft_socket(server_configuration);
-    if (server_socket.get_error() != FT_ERR_SUCCESSS)
+    if (networking_fetch_last_error() != FT_ERR_SUCCESSS)
         return (0);
     client_configuration._type = SocketType::CLIENT;
     client_configuration._port = 54345;
     client_configuration._ip = "127.0.0.1";
     client_socket = ft_socket(client_configuration);
-    if (client_socket.get_error() != FT_ERR_SUCCESSS)
+    if (networking_fetch_last_error() != FT_ERR_SUCCESSS)
         return (0);
     address_length = sizeof(address_storage);
     accepted_fd = nw_accept(server_socket.get_fd(), reinterpret_cast<struct sockaddr*>(&address_storage), &address_length);

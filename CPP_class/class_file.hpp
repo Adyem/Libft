@@ -56,8 +56,10 @@ class ft_file
         int            copy_to_with_buffer(const char *destination_path, size_t buffer_size) noexcept;
 
         operator int() const;
-        pt_recursive_mutex &recursive_mutex() noexcept;
+#ifdef LIBFT_TEST_BUILD
+        ft_recursive_mutex &recursive_mutex() noexcept;
         ft_operation_error_stack &operation_error_stack() const noexcept;
+#endif
 };
 
 #endif

@@ -15,6 +15,7 @@ class ft_string
         std::size_t      _capacity;
         mutable pt_recursive_mutex  _mutex;
         mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
+        friend ft_operation_error_stack *ft_string_error_stack_owner(void) noexcept;
 
         class mutex_guard
         {
@@ -100,10 +101,8 @@ class ft_string
         static void pop_operation_errors() noexcept;
         static int  pop_oldest_operation_error() noexcept;
         static int  operation_error_index() noexcept;
-        ft_operation_error_stack *operation_error_stack_handle() const noexcept;
         unsigned long long last_operation_id() const noexcept;
         int pop_operation_error(unsigned long long operation_id) const noexcept;
-        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
         void        move(ft_string& other) noexcept;
         void        erase(std::size_t index, std::size_t count) noexcept;
         void        push_back(char character) noexcept;
@@ -129,7 +128,8 @@ class ft_string
             const ft_string &right_value) noexcept;
 
 #ifdef LIBFT_TEST_BUILD
-        pt_recursive_mutex    *get_mutex_for_testing() noexcept;
+        ft_operation_error_stack *operation_error_stack_handle() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 

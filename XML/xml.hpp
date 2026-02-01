@@ -4,6 +4,7 @@
 #include "../Template/vector.hpp"
 #include "../Template/unordered_map.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Parser/document_backend.hpp"
 
@@ -39,13 +40,15 @@ class xml_document
         xml_node *_root;
         mutable pt_mutex *_mutex;
         mutable bool _thread_safe_enabled;
-        mutable int _error_code;
+        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
 
-        void set_error(int error_code) const noexcept;
+        void record_operation_error(int error_code) const noexcept;
+        ft_operation_error_stack *operation_error_stack_handle() const noexcept;
         int prepare_thread_safety() noexcept;
         void teardown_thread_safety() noexcept;
         int lock(bool *lock_acquired) const noexcept;
         void unlock(bool lock_acquired) const noexcept;
+        pt_mutex *get_mutex_for_validation() const noexcept;
 
     public:
         class thread_guard

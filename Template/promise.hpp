@@ -3,7 +3,6 @@
 
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
-#include "../Errno/errno_internal.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread.hpp"
 #include <atomic>
@@ -21,7 +20,6 @@ class ft_promise
         std::atomic<bool> _ready;
         mutable int _error_code;
         bool _thread_safe_enabled;
-        mutable ft_operation_error_stack _operation_errors;
         mutable pt_mutex *_mutex;
 
         void set_error_unlocked(int error) const;
@@ -64,7 +62,6 @@ class ft_promise<void>
         std::atomic<bool> _ready;
         mutable int _error_code;
         bool _thread_safe_enabled;
-        mutable ft_operation_error_stack _operation_errors;
         mutable pt_mutex *_mutex;
 
         void set_error_unlocked(int error) const;
@@ -101,7 +98,7 @@ class ft_promise<void>
 template <typename ValueType>
 ft_promise<ValueType>::ft_promise()
     : _value(), _ready(false), _error_code(FT_ERR_SUCCESSS),
-      _thread_safe_enabled(false), _operation_errors({{}, {}, 0}), _mutex(ft_nullptr)
+      _thread_safe_enabled(false), _mutex(ft_nullptr)
 {
     if (this->prepare_thread_safety() != 0)
         return ;
@@ -119,7 +116,7 @@ ft_promise<ValueType>::~ft_promise()
 
 inline ft_promise<void>::ft_promise()
     : _ready(false), _error_code(FT_ERR_SUCCESSS),
-      _thread_safe_enabled(false), _operation_errors({{}, {}, 0}), _mutex(ft_nullptr)
+      _thread_safe_enabled(false), _mutex(ft_nullptr)
 {
     if (this->prepare_thread_safety() != 0)
         return ;
@@ -187,8 +184,6 @@ void ft_promise<ValueType>::record_operation_error(int error_code) const noexcep
 
     operation_id = ft_errno_next_operation_id();
     ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(&this->_operation_errors,
-            error_code, operation_id);
     return ;
 }
 
@@ -198,8 +193,6 @@ inline void ft_promise<void>::record_operation_error(int error_code) const noexc
 
     operation_id = ft_errno_next_operation_id();
     ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(&this->_operation_errors,
-            error_code, operation_id);
     return ;
 }
 

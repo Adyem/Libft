@@ -1,10 +1,8 @@
 #ifndef CMA_INTERNAL_HPP
 # define CMA_INTERNAL_HPP
 
-#include "../PThread/pthread_lock_tracking.hpp"
-#include "../Errno/errno_internal.hpp"
 #include "../Libft/libft.hpp"
-#include "cma_guard_vector.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 #include <cstdint>
 #include <stdint.h>
 
@@ -42,48 +40,9 @@ extern ft_size_t    g_cma_free_count;
 extern ft_size_t    g_cma_current_bytes;
 extern ft_size_t    g_cma_peak_bytes;
 extern unsigned long long    g_cma_metadata_access_depth;
-extern thread_local ft_operation_error_stack g_cma_operation_errors;
 
 void    cma_record_operation_error(int error_code);
 void    cma_record_internal_operation_error(int error_code);
-
-class cma_allocator_guard
-{
-    private:
-        bool _lock_acquired;
-        bool _active;
-        bool _was_active;
-        mutable int _error_code;
-        mutable bool _failure_logged;
-        struct s_mutex_entry
-        {
-            pthread_mutex_t *mutex_pointer;
-            bool lock_acquired;
-        };
-        cma_guard_vector<s_mutex_entry> _owned_mutexes;
-
-        void set_error(int error) const;
-        void log_inactive_guard(void *return_address) const;
-        bool acquire_allocator_mutex();
-        bool acquire_mutex(pthread_mutex_t *mutex_pointer);
-        int release_all_mutexes();
-        bool reacquire_mutexes(const cma_guard_vector<s_mutex_entry> &previous_mutexes);
-        bool track_mutex_acquisition(pthread_mutex_t *mutex_pointer, bool lock_acquired);
-        pt_mutex_vector owned_mutex_pointers() const;
-        cma_guard_vector<s_mutex_entry> snapshot_owned_mutexes() const;
-        bool mutex_vector_contains(const pt_mutex_vector &mutexes, pthread_mutex_t *mutex_pointer) const;
-        void sleep_random_backoff() const;
-
-    public:
-        cma_allocator_guard();
-        ~cma_allocator_guard();
-
-        bool is_active() const;
-        bool lock_acquired() const;
-        void unlock();
-        int get_error() const;
-        const char *get_error_str() const;
-};
 
 struct Block
 {
@@ -149,8 +108,6 @@ bool    cma_metadata_guard_decrement(void);
 Block    *cma_metadata_allocate_block(void) __attribute__ ((warn_unused_result));
 void    cma_metadata_release_block(Block *block);
 void    cma_metadata_reset(void);
-void    cma_leak_tracker_record_allocation(void *memory_pointer, ft_size_t size);
-void    cma_leak_tracker_record_free(void *memory_pointer);
 
 #if DEBUG
 ft_size_t    cma_debug_allocation_size(ft_size_t requested_size);

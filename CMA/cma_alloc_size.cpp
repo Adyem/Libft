@@ -64,29 +64,33 @@ int cma_checked_block_size(const void *memory_pointer, ft_size_t *block_size)
         ft_global_error_stack_push(error_code);
         return (result_code);
     }
-    cma_allocator_guard allocator_guard;
+    bool lock_acquired = false;
+    int lock_error = cma_lock_allocator(&lock_acquired);
 
-    if (!allocator_guard.is_active())
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        error_code = allocator_guard.get_error();
+        error_code = lock_error;
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_INVALID_STATE;
         ft_global_error_stack_push(error_code);
+        if (lock_acquired)
+            cma_unlock_allocator(lock_acquired);
         return (-1);
     }
     Block *block = cma_find_block_for_pointer(memory_pointer);
-
     if (block == ft_nullptr
         || block->magic != MAGIC_NUMBER_ALLOCATED
         || cma_block_is_free(block))
     {
         error_code = FT_ERR_INVALID_POINTER;
-        allocator_guard.unlock();
+        cma_unlock_allocator(lock_acquired);
+        lock_acquired = false;
         ft_global_error_stack_push(error_code);
         return (-1);
     }
     *block_size = cma_block_user_size(block);
-    allocator_guard.unlock();
+    cma_unlock_allocator(lock_acquired);
+    lock_acquired = false;
     error_code = FT_ERR_SUCCESSS;
     ft_global_error_stack_push(error_code);
     return (0);

@@ -3,6 +3,7 @@
 
 #include "../CPP_class/class_string.hpp"
 #include "../Template/vector.hpp"
+#include "../Errno/errno_internal.hpp"
 #include <openssl/ssl.h>
 
 #ifdef _WIN32
@@ -98,6 +99,22 @@ ssize_t udp_event_loop_send(event_loop *loop, udp_socket &socket, const void *da
 int networking_check_socket_after_send(int socket_fd);
 int networking_check_ssl_after_send(SSL *ssl_connection);
 
+static inline int networking_fetch_last_error(bool repush_failure = true)
+{
+    unsigned long long operation_id = ft_global_error_stack_get_id_at(1);
+    int error_code = ft_global_error_stack_last_error();
+
+    ft_global_error_stack_pop_newest();
+    if (repush_failure && error_code != FT_ERR_SUCCESSS)
+    {
+        if (operation_id != 0)
+            ft_global_error_stack_push_entry_with_id(error_code, operation_id);
+        else
+            ft_global_error_stack_push(error_code);
+    }
+    return (error_code);
+}
+
 enum class SocketType
 {
     SERVER,
@@ -111,7 +128,10 @@ class SocketConfig
         mutable int _error_code;
         mutable bool _thread_safe_enabled;
         mutable pt_mutex *_mutex;
-        void set_error(int error_code) noexcept;
+        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
+
+        void record_operation_error(int error_code) const noexcept;
+        void report_operation_result(int error_code) const noexcept;
 
         friend int socket_config_prepare_thread_safety(SocketConfig *config);
         friend void socket_config_teardown_thread_safety(SocketConfig *config);
@@ -139,9 +159,6 @@ class SocketConfig
         SocketConfig(SocketConfig&& other) noexcept;
         SocketConfig& operator=(const SocketConfig& other) noexcept;
         SocketConfig& operator=(SocketConfig&& other) noexcept;
-
-        int get_error();
-        const char *get_error_str();
 };
 
 int socket_config_prepare_thread_safety(SocketConfig *config);

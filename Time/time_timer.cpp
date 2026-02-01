@@ -241,12 +241,11 @@ int time_timer::get_error() const noexcept
     {
         if (guard.owns_lock())
             guard.unlock();
-        ft_errno = mutex_error;
+        this->record_operation_error(mutex_error);
         return (mutex_error);
     }
     int error_code = ft_operation_error_stack_last_error(&this->_operation_errors);
     guard.unlock();
-    ft_errno = FT_ERR_SUCCESSS;
     return (error_code);
 }
 
@@ -266,7 +265,6 @@ void    time_timer::record_operation_error(int error_code) const noexcept
 
     ft_global_error_stack_push_entry_with_id(error_code, operation_id);
     ft_operation_error_stack_push(&this->_operation_errors, error_code, operation_id);
-    ft_errno = error_code;
     return ;
 }
 

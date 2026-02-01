@@ -69,11 +69,4 @@ void    cma_get_extended_stats(ft_size_t *allocation_count,
             ft_size_t *free_count,
             ft_size_t *current_bytes,
             ft_size_t *peak_bytes);
-void    cma_leak_detection_enable(void);
-void    cma_leak_detection_disable(void);
-void    cma_leak_detection_clear(void);
-bool    cma_leak_detection_is_enabled(void);
-ft_size_t    cma_leak_detection_outstanding_allocations(void);
-ft_size_t    cma_leak_detection_outstanding_bytes(void);
-ft_string    cma_leak_detection_report(bool clear_after);
 #endif

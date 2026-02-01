@@ -10,7 +10,7 @@
 
 static thread_local int g_cmp_last_error = FT_ERR_SUCCESSS;
 
-static inline void cmp_set_last_error(int error_code)
+void cmp_set_last_error(int error_code)
 {
     g_cmp_last_error = error_code;
     return ;

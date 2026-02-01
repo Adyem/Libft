@@ -1,9 +1,7 @@
 TARGET         := CustomMemoryAllocator.a
 DEBUG_TARGET   := CustomMemoryAllocator_debug.a
 
-SRCS := cma_alloc_limit_guard.cpp \
-        cma_allocation_guard.cpp \
-        cma_calloc.cpp \
+SRCS := cma_calloc.cpp \
         cma_strdup.cpp \
         cma_strndup.cpp \
         cma_memdup.cpp \
@@ -25,21 +23,18 @@ SRCS := cma_alloc_limit_guard.cpp \
         cma_strtrim.cpp \
         cma_free_double.cpp \
         cma_globals.cpp \
-        cma_allocator_guard.cpp \
+        cma_allocator_lock.cpp \
         cma_metadata.cpp \
         cma_debug.cpp \
         cma_utils.cpp \
         cma_global_overloads.cpp \
         cma_set_alloc_limit.cpp \
-        cma_leak_detection.cpp \
         cma_set_thread_safety.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
 
 HEADERS := CMA.hpp \
-           cma_alloc_limit_guard.hpp \
-           cma_allocation_guard.hpp \
            cma_internal.hpp
 
 ifeq ($(OS),Windows_NT)
@@ -66,23 +61,10 @@ DEBUG_OBJS := $(patsubst %.cpp,$(DEBUG_OBJDIR)/%.o,$(SRCS))
 
 CFLAGS   ?= -Wall -Wextra -Werror -g -O0 -std=c++17 -Wuseless-cast
 
-all: $(TARGET)
-
-$(TARGET): $(OBJS)
-	@$(AR) $(ARFLAGS) $@ $^
-	@printf '        [%s] Module archive ready (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS)
-
 $(OBJDIR)/%.o: %.cpp $(HEADERS) | $(OBJDIR)
 	@$(CXX) $(CFLAGS) -c $< -o $@
 	@count=$$(find $(OBJDIR) -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
 	    printf '        [%s] Building file %s (%d/%d)\n' "$(MODULE_NAME)" "$<" $$count $(TOTAL_SRCS)
-
-debug: CXXFLAGS += -DDEBUG=1
-debug: $(DEBUG_TARGET)
-
-$(DEBUG_TARGET): $(DEBUG_OBJS)
-	@$(AR) $(ARFLAGS) $@ $^
-	@printf '        [%s Debug] Module archive ready (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS)
 
 $(DEBUG_OBJDIR)/%.o: %.cpp $(HEADERS) | $(DEBUG_OBJDIR)
 	@$(CXX) $(CFLAGS) -c $< -o $@
@@ -91,6 +73,19 @@ $(DEBUG_OBJDIR)/%.o: %.cpp $(HEADERS) | $(DEBUG_OBJDIR)
 
 $(OBJDIR) $(DEBUG_OBJDIR):
 	@$(MKDIR) $@
+
+all: $(TARGET)
+
+$(TARGET): $(OBJS)
+	@$(AR) $(ARFLAGS) $@ $^
+	@printf '        [%s] Module archive ready (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS)
+
+debug: CXXFLAGS += -DDEBUG=1
+debug: $(DEBUG_TARGET)
+
+$(DEBUG_TARGET): $(DEBUG_OBJS)
+	@$(AR) $(ARFLAGS) $@ $^
+	@printf '        [%s Debug] Module archive ready (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS)
 
 CLEAN_OBJS := $(wildcard $(OBJDIR)/*.o) $(wildcard $(DEBUG_OBJDIR)/*.o)
 
@@ -128,3 +123,4 @@ re: fclean all
 both: all debug
 
 .PHONY: all clean fclean re debug both
+

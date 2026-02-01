@@ -12,7 +12,6 @@ int rl_handle_printable_char(readline_state_t *state, char c, const char *prompt
     int  result;
     int  lock_error;
     int  new_bufsize;
-    char *resized_buffer;
     int  length_after_cursor;
 
     if (state == ft_nullptr || prompt == ft_nullptr)
@@ -31,10 +30,10 @@ int rl_handle_printable_char(readline_state_t *state, char c, const char *prompt
         if (state->bufsize > INT_MAX / 2)
             goto cleanup;
         new_bufsize = state->bufsize * 2;
-        resized_buffer = rl_resize_buffer(&state->buffer, &state->bufsize, new_bufsize);
-        if (resized_buffer == ft_nullptr)
+        int resize_error = rl_resize_buffer(&state->buffer, &state->bufsize, new_bufsize);
+        if (resize_error != FT_ERR_SUCCESSS)
         {
-            result = FT_ERR_NO_MEMORY;
+            result = resize_error;
             goto cleanup;
         }
     }
@@ -42,9 +41,10 @@ int rl_handle_printable_char(readline_state_t *state, char c, const char *prompt
                ft_strlen(&state->buffer[state->pos]) + 1);
     state->buffer[state->pos] = c;
     state->pos++;
-    if (rl_update_display_metrics(state) != 0)
+    if (rl_update_display_metrics(state) != FT_ERR_SUCCESSS)
         goto cleanup;
-    rl_clear_line(prompt, state->buffer);
+    if (rl_clear_line(prompt, state->buffer) != FT_ERR_SUCCESSS)
+        goto cleanup;
     pf_printf("%s%s", prompt, state->buffer);
     length_after_cursor = state->prev_display_columns - state->display_pos;
     if (length_after_cursor > 0)

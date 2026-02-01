@@ -14,6 +14,23 @@ static const size_t JSON_STREAM_READ_ERROR = static_cast<size_t>(-1);
 #define JSON_STREAM_STATUS_END 1
 #define JSON_STREAM_STATUS_ERROR -1
 
+static void json_stream_push_error(int error_code)
+{
+    ft_global_error_stack_push(error_code);
+    return ;
+}
+
+static int json_stream_pop_error(void)
+{
+    return (ft_global_error_stack_pop_newest());
+}
+
+#define JSON_STREAM_ERROR_RETURN(code, value) \
+    do { json_stream_push_error(code); return (value); } while (0)
+
+#define JSON_STREAM_SUCCESS_RETURN(value) \
+    do { json_stream_push_error(FT_ERR_SUCCESSS); return (value); } while (0)
+
 struct json_stream_reader_error_guard
 {
     int *code;
@@ -28,6 +45,11 @@ struct json_stream_reader_error_guard
         return ;
     }
 };
+
+static int json_stream_last_error(void)
+{
+    return (ft_global_error_stack_last_error());
+}
 
 static size_t json_stream_reader_file_callback(void *user_data, char *buffer, size_t max_size)
 {
@@ -47,93 +69,113 @@ static size_t json_stream_reader_file_callback(void *user_data, char *buffer, si
 static int json_stream_reader_fill(json_stream_reader *reader)
 {
     if (!reader)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (JSON_STREAM_STATUS_ERROR);
-    }
+        JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, JSON_STREAM_STATUS_ERROR);
     if (reader->buffer_index < reader->buffer_size)
-        return (JSON_STREAM_STATUS_OK);
+        JSON_STREAM_SUCCESS_RETURN(JSON_STREAM_STATUS_OK);
     if (reader->end_of_stream)
-        return (JSON_STREAM_STATUS_END);
+        JSON_STREAM_SUCCESS_RETURN(JSON_STREAM_STATUS_END);
     size_t bytes_read = reader->read_callback(reader->user_data, reader->buffer, reader->buffer_capacity);
     if (bytes_read == JSON_STREAM_READ_ERROR)
     {
         reader->error_code = FT_ERR_IO;
-        ft_errno = FT_ERR_IO;
-        return (JSON_STREAM_STATUS_ERROR);
+        JSON_STREAM_ERROR_RETURN(FT_ERR_IO, JSON_STREAM_STATUS_ERROR);
     }
     if (bytes_read == 0)
     {
         reader->end_of_stream = true;
-        return (JSON_STREAM_STATUS_END);
+        JSON_STREAM_SUCCESS_RETURN(JSON_STREAM_STATUS_END);
     }
     reader->buffer_index = 0;
     reader->buffer_size = bytes_read;
-    return (JSON_STREAM_STATUS_OK);
+    JSON_STREAM_SUCCESS_RETURN(JSON_STREAM_STATUS_OK);
 }
 
 static int json_stream_reader_peek(json_stream_reader *reader, char *out_char)
 {
     if (!reader || !out_char)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (JSON_STREAM_STATUS_ERROR);
-    }
+        JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, JSON_STREAM_STATUS_ERROR);
     int status = json_stream_reader_fill(reader);
-    if (status != JSON_STREAM_STATUS_OK)
+    int fill_error = json_stream_pop_error();
+    if (fill_error != FT_ERR_SUCCESSS)
+    {
+        json_stream_push_error(fill_error);
         return (status);
+    }
+    if (status != JSON_STREAM_STATUS_OK)
+        JSON_STREAM_SUCCESS_RETURN(status);
     *out_char = reader->buffer[reader->buffer_index];
-    return (JSON_STREAM_STATUS_OK);
+    JSON_STREAM_SUCCESS_RETURN(JSON_STREAM_STATUS_OK);
 }
 
 static int json_stream_reader_consume(json_stream_reader *reader, char *out_char)
 {
     int status = json_stream_reader_peek(reader, out_char);
-    if (status != JSON_STREAM_STATUS_OK)
+    int peek_error = json_stream_pop_error();
+    if (peek_error != FT_ERR_SUCCESSS)
+    {
+        json_stream_push_error(peek_error);
         return (status);
+    }
+    if (status != JSON_STREAM_STATUS_OK)
+        JSON_STREAM_SUCCESS_RETURN(status);
     reader->buffer_index += 1;
-    return (JSON_STREAM_STATUS_OK);
+    JSON_STREAM_SUCCESS_RETURN(JSON_STREAM_STATUS_OK);
 }
 
 static int json_stream_reader_expect(json_stream_reader *reader, char expected_char)
 {
     char current_char;
     int status = json_stream_reader_consume(reader, &current_char);
-    if (status != JSON_STREAM_STATUS_OK)
+    int consume_error = json_stream_pop_error();
+    if (consume_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        json_stream_push_error(consume_error);
         return (-1);
     }
-    if (current_char != expected_char)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (-1);
-    }
-    return (0);
+    if (status != JSON_STREAM_STATUS_OK || current_char != expected_char)
+        JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
+    JSON_STREAM_SUCCESS_RETURN(0);
 }
 
 static int json_stream_skip_whitespace(json_stream_reader *reader)
 {
     char current_char;
     int status = json_stream_reader_peek(reader, &current_char);
+    int peek_error = json_stream_pop_error();
+    if (peek_error != FT_ERR_SUCCESSS)
+    {
+        json_stream_push_error(peek_error);
+        return (status);
+    }
     while (status == JSON_STREAM_STATUS_OK
         && ft_isspace(static_cast<unsigned char>(current_char)))
     {
-        json_stream_reader_consume(reader, &current_char);
+        int consume_status = json_stream_reader_consume(reader, &current_char);
+        int consume_error = json_stream_pop_error();
+        if (consume_error != FT_ERR_SUCCESSS)
+        {
+            json_stream_push_error(consume_error);
+            return (consume_status);
+        }
+        if (consume_status != JSON_STREAM_STATUS_OK)
+            JSON_STREAM_SUCCESS_RETURN(consume_status);
         status = json_stream_reader_peek(reader, &current_char);
+        peek_error = json_stream_pop_error();
+        if (peek_error != FT_ERR_SUCCESSS)
+        {
+            json_stream_push_error(peek_error);
+            return (status);
+        }
     }
-    return (status);
+    JSON_STREAM_SUCCESS_RETURN(status);
 }
 
 static int json_stream_ensure_capacity(char **buffer, size_t *capacity, size_t minimum)
 {
     if (!buffer || !capacity)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (-1);
-    }
+        JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
     if (*capacity > minimum)
-        return (0);
+        JSON_STREAM_SUCCESS_RETURN(0);
     size_t new_capacity = *capacity;
     if (new_capacity == 0)
         new_capacity = 1;
@@ -145,14 +187,16 @@ static int json_stream_ensure_capacity(char **buffer, size_t *capacity, size_t m
         new_capacity = next_capacity;
     }
     char *resized_buffer = static_cast<char *>(cma_realloc(*buffer, new_capacity));
+    int realloc_error = json_stream_pop_error();
     if (!resized_buffer)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
-        return (-1);
+        if (realloc_error == FT_ERR_SUCCESSS)
+            realloc_error = FT_ERR_NO_MEMORY;
+        JSON_STREAM_ERROR_RETURN(realloc_error, -1);
     }
     *buffer = resized_buffer;
     *capacity = new_capacity;
-    return (0);
+    JSON_STREAM_SUCCESS_RETURN(0);
 }
 
 static int json_stream_hex_value(char character, unsigned int &value) noexcept
@@ -181,44 +225,61 @@ static int json_stream_append_utf8(char **buffer,
     unsigned int code_point) noexcept
 {
     if (!buffer || !capacity || !length)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (-1);
-    }
+        JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
     if (code_point <= 0x7F)
     {
-        if (json_stream_ensure_capacity(buffer, capacity, *length + 1) != 0)
-            return (-1);
+        int ensure_status = json_stream_ensure_capacity(buffer, capacity, *length + 1);
+        int ensure_error = json_stream_pop_error();
+        if (ensure_error != FT_ERR_SUCCESSS)
+        {
+            json_stream_push_error(ensure_error);
+            return (ensure_status);
+        }
         (*buffer)[*length] = static_cast<char>(code_point);
         *length += 1;
-        return (0);
+        JSON_STREAM_SUCCESS_RETURN(0);
     }
     if (code_point <= 0x7FF)
     {
-        if (json_stream_ensure_capacity(buffer, capacity, *length + 2) != 0)
-            return (-1);
+        int ensure_status = json_stream_ensure_capacity(buffer, capacity, *length + 2);
+        int ensure_error = json_stream_pop_error();
+        if (ensure_error != FT_ERR_SUCCESSS)
+        {
+            json_stream_push_error(ensure_error);
+            return (ensure_status);
+        }
         (*buffer)[*length] = static_cast<char>(0xC0 | (code_point >> 6));
         *length += 1;
         (*buffer)[*length] = static_cast<char>(0x80 | (code_point & 0x3F));
         *length += 1;
-        return (0);
+        JSON_STREAM_SUCCESS_RETURN(0);
     }
     if (code_point <= 0xFFFF)
     {
-        if (json_stream_ensure_capacity(buffer, capacity, *length + 3) != 0)
-            return (-1);
+        int ensure_status = json_stream_ensure_capacity(buffer, capacity, *length + 3);
+        int ensure_error = json_stream_pop_error();
+        if (ensure_error != FT_ERR_SUCCESSS)
+        {
+            json_stream_push_error(ensure_error);
+            return (ensure_status);
+        }
         (*buffer)[*length] = static_cast<char>(0xE0 | (code_point >> 12));
         *length += 1;
         (*buffer)[*length] = static_cast<char>(0x80 | ((code_point >> 6) & 0x3F));
         *length += 1;
         (*buffer)[*length] = static_cast<char>(0x80 | (code_point & 0x3F));
         *length += 1;
-        return (0);
+        JSON_STREAM_SUCCESS_RETURN(0);
     }
     if (code_point <= 0x10FFFF)
     {
-        if (json_stream_ensure_capacity(buffer, capacity, *length + 4) != 0)
-            return (-1);
+        int ensure_status = json_stream_ensure_capacity(buffer, capacity, *length + 4);
+        int ensure_error = json_stream_pop_error();
+        if (ensure_error != FT_ERR_SUCCESSS)
+        {
+            json_stream_push_error(ensure_error);
+            return (ensure_status);
+        }
         (*buffer)[*length] = static_cast<char>(0xF0 | (code_point >> 18));
         *length += 1;
         (*buffer)[*length] = static_cast<char>(0x80 | ((code_point >> 12) & 0x3F));
@@ -227,10 +288,9 @@ static int json_stream_append_utf8(char **buffer,
         *length += 1;
         (*buffer)[*length] = static_cast<char>(0x80 | (code_point & 0x3F));
         *length += 1;
-        return (0);
+        JSON_STREAM_SUCCESS_RETURN(0);
     }
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
-    return (-1);
+    JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
 }
 
 static int json_stream_parse_code_unit(json_stream_reader *reader, unsigned int &code_unit)
@@ -241,21 +301,24 @@ static int json_stream_parse_code_unit(json_stream_reader *reader, unsigned int 
     {
         char current_char;
         int status = json_stream_reader_consume(reader, &current_char);
-        if (status != JSON_STREAM_STATUS_OK)
+        int consume_error = json_stream_pop_error();
+        if (consume_error != FT_ERR_SUCCESSS)
         {
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
+            json_stream_push_error(consume_error);
             return (-1);
         }
+        if (status != JSON_STREAM_STATUS_OK)
+            JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
         unsigned int digit_value = 0;
         if (json_stream_hex_value(current_char, digit_value) != 0)
         {
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
+            JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
             return (-1);
         }
         code_unit = (code_unit << 4) | digit_value;
         digit_index += 1;
     }
-    return (0);
+    JSON_STREAM_SUCCESS_RETURN(0);
 }
 
 static int json_stream_append_escape(json_stream_reader *reader,
@@ -265,11 +328,14 @@ static int json_stream_append_escape(json_stream_reader *reader,
 {
     char escape_char;
     int status = json_stream_reader_consume(reader, &escape_char);
-    if (status != JSON_STREAM_STATUS_OK)
+    int consume_error = json_stream_pop_error();
+    if (consume_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (-1);
+        json_stream_push_error(consume_error);
+        return (status);
     }
+    if (status != JSON_STREAM_STATUS_OK)
+        JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
     if (escape_char == '"' || escape_char == '\\' || escape_char == '/')
     {
         if (json_stream_ensure_capacity(buffer, capacity, *length + 1) != 0)
@@ -289,10 +355,7 @@ static int json_stream_append_escape(json_stream_reader *reader,
     if (escape_char == 't')
         return (json_stream_append_utf8(buffer, capacity, length, '\t'));
     if (escape_char != 'u')
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (-1);
-    }
+        JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
     unsigned int code_unit = 0;
     if (json_stream_parse_code_unit(reader, code_unit) != 0)
         return (-1);
@@ -302,39 +365,36 @@ static int json_stream_append_escape(json_stream_reader *reader,
         char next_char;
         status = json_stream_reader_peek(reader, &next_char);
         if (status != JSON_STREAM_STATUS_OK || next_char != '\\')
-        {
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
-            return (-1);
-        }
+            JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
         status = json_stream_reader_consume(reader, &next_char);
+        consume_error = json_stream_pop_error();
+        if (consume_error != FT_ERR_SUCCESSS)
+        {
+            json_stream_push_error(consume_error);
+            return (status);
+        }
         if (status != JSON_STREAM_STATUS_OK)
-        {
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
-            return (-1);
-        }
+            JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
         status = json_stream_reader_consume(reader, &next_char);
-        if (status != JSON_STREAM_STATUS_OK || next_char != 'u')
+        consume_error = json_stream_pop_error();
+        if (consume_error != FT_ERR_SUCCESSS)
         {
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
-            return (-1);
+            json_stream_push_error(consume_error);
+            return (status);
         }
+        if (status != JSON_STREAM_STATUS_OK || next_char != 'u')
+            JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
         unsigned int low_unit = 0;
         if (json_stream_parse_code_unit(reader, low_unit) != 0)
             return (-1);
         if (low_unit < 0xDC00 || low_unit > 0xDFFF)
-        {
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
-            return (-1);
-        }
+            JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
         code_point = 0x10000;
         code_point = code_point + ((code_unit - 0xD800) << 10);
         code_point = code_point + (low_unit - 0xDC00);
     }
     else if (code_unit >= 0xDC00 && code_unit <= 0xDFFF)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (-1);
-    }
+        JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
     return (json_stream_append_utf8(buffer, capacity, length, code_point));
 }
 
@@ -347,19 +407,24 @@ static char *json_stream_parse_string(json_stream_reader *reader)
     char *result = static_cast<char *>(cma_malloc(capacity));
     if (!result)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
-        return (ft_nullptr);
+        JSON_STREAM_ERROR_RETURN(FT_ERR_NO_MEMORY, ft_nullptr);
     }
     bool closed = false;
     while (!closed)
     {
         char current_char;
         int status = json_stream_reader_consume(reader, &current_char);
+        int consume_error = json_stream_pop_error();
+        if (consume_error != FT_ERR_SUCCESSS)
+        {
+            cma_free(result);
+            json_stream_push_error(consume_error);
+            return (ft_nullptr);
+        }
         if (status != JSON_STREAM_STATUS_OK)
         {
             cma_free(result);
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
-            return (ft_nullptr);
+            JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, ft_nullptr);
         }
         if (current_char == '"')
         {
@@ -378,8 +443,7 @@ static char *json_stream_parse_string(json_stream_reader *reader)
         if (static_cast<unsigned char>(current_char) < 0x20)
         {
             cma_free(result);
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
-            return (ft_nullptr);
+            JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, ft_nullptr);
         }
         if (json_stream_ensure_capacity(&result, &capacity, length + 1) != 0)
         {
@@ -392,8 +456,7 @@ static char *json_stream_parse_string(json_stream_reader *reader)
     if (!closed)
     {
         cma_free(result);
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (ft_nullptr);
+        JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, ft_nullptr);
     }
     if (json_stream_ensure_capacity(&result, &capacity, length + 1) != 0)
     {
@@ -401,8 +464,7 @@ static char *json_stream_parse_string(json_stream_reader *reader)
         return (ft_nullptr);
     }
     result[length] = '\0';
-    ft_errno = FT_ERR_SUCCESSS;
-    return (result);
+    JSON_STREAM_SUCCESS_RETURN(result);
 }
 
 static int json_stream_match_literal(json_stream_reader *reader, const char *literal)
@@ -412,20 +474,19 @@ static int json_stream_match_literal(json_stream_reader *reader, const char *lit
     {
         char current_char;
         int status = json_stream_reader_consume(reader, &current_char);
+        int consume_error = json_stream_pop_error();
+        if (consume_error != FT_ERR_SUCCESSS)
+        {
+            json_stream_push_error(consume_error);
+            return (status);
+        }
         if (status != JSON_STREAM_STATUS_OK)
-        {
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
-            return (-1);
-        }
+            JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
         if (current_char != literal[index])
-        {
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
-            return (-1);
-        }
+            JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
         index += 1;
     }
-    ft_errno = FT_ERR_SUCCESSS;
-    return (0);
+    JSON_STREAM_SUCCESS_RETURN(0);
 }
 
 static char *json_stream_parse_number(json_stream_reader *reader)
@@ -435,8 +496,7 @@ static char *json_stream_parse_number(json_stream_reader *reader)
     char *number = static_cast<char *>(cma_malloc(capacity));
     if (!number)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
-        return (ft_nullptr);
+        JSON_STREAM_ERROR_RETURN(FT_ERR_NO_MEMORY, ft_nullptr);
     }
     bool has_digits = false;
     char current_char;
@@ -444,8 +504,7 @@ static char *json_stream_parse_number(json_stream_reader *reader)
     if (status != JSON_STREAM_STATUS_OK)
     {
         cma_free(number);
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (ft_nullptr);
+        JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, ft_nullptr);
     }
     if (current_char == '-' || current_char == '+')
     {
@@ -540,8 +599,7 @@ static char *json_stream_parse_number(json_stream_reader *reader)
     if (!has_digits)
     {
         cma_free(number);
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (ft_nullptr);
+        JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, ft_nullptr);
     }
     if (json_stream_ensure_capacity(&number, &capacity, length + 1) != 0)
     {
@@ -549,25 +607,18 @@ static char *json_stream_parse_number(json_stream_reader *reader)
         return (ft_nullptr);
     }
     number[length] = '\0';
-    ft_errno = FT_ERR_SUCCESSS;
-    return (number);
+    JSON_STREAM_SUCCESS_RETURN(number);
 }
 
 static char *json_stream_parse_value(json_stream_reader *reader)
 {
     int status = json_stream_skip_whitespace(reader);
     if (status != JSON_STREAM_STATUS_OK)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (ft_nullptr);
-    }
+        JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, ft_nullptr);
     char current_char;
     status = json_stream_reader_peek(reader, &current_char);
     if (status != JSON_STREAM_STATUS_OK)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (ft_nullptr);
-    }
+        JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, ft_nullptr);
     if (current_char == '"')
         return (json_stream_parse_string(reader));
     if (current_char == 't')
@@ -577,11 +628,9 @@ static char *json_stream_parse_value(json_stream_reader *reader)
         char *value = cma_strdup("true");
         if (!value)
         {
-            ft_errno = FT_ERR_NO_MEMORY;
-            return (ft_nullptr);
+            JSON_STREAM_ERROR_RETURN(FT_ERR_NO_MEMORY, ft_nullptr);
         }
-        ft_errno = FT_ERR_SUCCESSS;
-        return (value);
+        JSON_STREAM_SUCCESS_RETURN(value);
     }
     if (current_char == 'f')
     {
@@ -590,26 +639,20 @@ static char *json_stream_parse_value(json_stream_reader *reader)
         char *value = cma_strdup("false");
         if (!value)
         {
-            ft_errno = FT_ERR_NO_MEMORY;
-            return (ft_nullptr);
+            JSON_STREAM_ERROR_RETURN(FT_ERR_NO_MEMORY, ft_nullptr);
         }
-        ft_errno = FT_ERR_SUCCESSS;
-        return (value);
+        JSON_STREAM_SUCCESS_RETURN(value);
     }
     if (ft_isdigit(static_cast<unsigned char>(current_char))
         || current_char == '-' || current_char == '+')
         return (json_stream_parse_number(reader));
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
-    return (ft_nullptr);
+    JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, ft_nullptr);
 }
 
 static json_item *json_stream_parse_items(json_stream_reader *reader)
 {
     if (json_stream_skip_whitespace(reader) != JSON_STREAM_STATUS_OK)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (ft_nullptr);
-    }
+        JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, ft_nullptr);
     if (json_stream_reader_expect(reader, '{') != 0)
         return (ft_nullptr);
     json_item *head = ft_nullptr;
@@ -621,16 +664,14 @@ static json_item *json_stream_parse_items(json_stream_reader *reader)
         if (status != JSON_STREAM_STATUS_OK)
         {
             json_free_items(head);
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
-            return (ft_nullptr);
+            JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, ft_nullptr);
         }
         char current_char;
         status = json_stream_reader_peek(reader, &current_char);
         if (status != JSON_STREAM_STATUS_OK)
         {
             json_free_items(head);
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
-            return (ft_nullptr);
+            JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, ft_nullptr);
         }
         if (current_char == '}')
         {
@@ -648,8 +689,7 @@ static json_item *json_stream_parse_items(json_stream_reader *reader)
         {
             cma_free(key);
             json_free_items(head);
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
-            return (ft_nullptr);
+            JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, ft_nullptr);
         }
         if (json_stream_reader_expect(reader, ':') != 0)
         {
@@ -661,8 +701,7 @@ static json_item *json_stream_parse_items(json_stream_reader *reader)
         {
             cma_free(key);
             json_free_items(head);
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
-            return (ft_nullptr);
+            JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, ft_nullptr);
         }
         char *value = json_stream_parse_value(reader);
         if (!value)
@@ -693,15 +732,13 @@ static json_item *json_stream_parse_items(json_stream_reader *reader)
         if (status != JSON_STREAM_STATUS_OK)
         {
             json_free_items(head);
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
-            return (ft_nullptr);
+            JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, ft_nullptr);
         }
         status = json_stream_reader_peek(reader, &current_char);
         if (status != JSON_STREAM_STATUS_OK)
         {
             json_free_items(head);
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
-            return (ft_nullptr);
+            JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, ft_nullptr);
         }
         if (current_char == ',')
         {
@@ -711,17 +748,14 @@ static json_item *json_stream_parse_items(json_stream_reader *reader)
         if (current_char == '}')
             continue;
         json_free_items(head);
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (ft_nullptr);
+        JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, ft_nullptr);
     }
     if (!object_closed)
     {
         json_free_items(head);
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (ft_nullptr);
+        JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, ft_nullptr);
     }
-    ft_errno = FT_ERR_SUCCESSS;
-    return (head);
+    JSON_STREAM_SUCCESS_RETURN(head);
 }
 
 static int json_stream_dispatch_event(json_stream_event_callback callback,
@@ -754,14 +788,12 @@ static int json_stream_dispatch_event(json_stream_event_callback callback,
             cma_free(string_value);
         if (callback_status != 0)
         {
-            ft_errno = FT_ERR_INVALID_OPERATION;
-            return (-1);
+            JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_OPERATION, -1);
         }
     }
     else if (string_value != ft_nullptr)
         cma_free(string_value);
-    ft_errno = FT_ERR_SUCCESSS;
-    return (0);
+    JSON_STREAM_SUCCESS_RETURN(0);
 }
 
 static int json_stream_read_value(json_stream_reader *reader,
@@ -804,8 +836,7 @@ static int json_stream_read_array(json_stream_reader *reader,
             {
                 if (current_char != ',')
                 {
-                    ft_errno = FT_ERR_INVALID_ARGUMENT;
-                    return (-1);
+                    JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
                 }
                 json_stream_reader_consume(reader, &current_char);
                 status = json_stream_skip_whitespace(reader);
@@ -816,8 +847,7 @@ static int json_stream_read_array(json_stream_reader *reader,
                     return (-1);
                 if (current_char == ']')
                 {
-                    ft_errno = FT_ERR_INVALID_ARGUMENT;
-                    return (-1);
+                    JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
                 }
             }
             if (json_stream_read_value(reader, callback, user_data) != 0)
@@ -826,16 +856,10 @@ static int json_stream_read_array(json_stream_reader *reader,
             continue ;
         }
         if (status == JSON_STREAM_STATUS_END)
-        {
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
-            return (-1);
-        }
+            JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
     }
     if (!finished)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (-1);
-    }
+        JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
     return (json_stream_dispatch_event(callback,
         user_data,
         JSON_STREAM_EVENT_END_ARRAY,
@@ -879,8 +903,7 @@ static int json_stream_read_object(json_stream_reader *reader,
             {
                 if (current_char != ',')
                 {
-                    ft_errno = FT_ERR_INVALID_ARGUMENT;
-                    return (-1);
+                    JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
                 }
                 json_stream_reader_consume(reader, &current_char);
                 status = json_stream_skip_whitespace(reader);
@@ -891,8 +914,7 @@ static int json_stream_read_object(json_stream_reader *reader,
                     return (-1);
                 if (current_char == '}' || current_char == ',')
                 {
-                    ft_errno = FT_ERR_INVALID_ARGUMENT;
-                    return (-1);
+                    JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
                 }
             }
             char *key = json_stream_parse_string(reader);
@@ -915,16 +937,10 @@ static int json_stream_read_object(json_stream_reader *reader,
             continue ;
         }
         if (status == JSON_STREAM_STATUS_END)
-        {
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
-            return (-1);
-        }
+            JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
     }
     if (!finished)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (-1);
-    }
+        JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
     return (json_stream_dispatch_event(callback,
         user_data,
         JSON_STREAM_EVENT_END_OBJECT,
@@ -1029,14 +1045,14 @@ int json_stream_reader_traverse(json_stream_reader *reader,
             ft_nullptr,
             false) != 0)
     {
-        reader->error_code = error_code = ft_errno;
+        reader->error_code = error_code = json_stream_last_error();
         json_stream_reader_finalize_lock(reader, guard);
         return (-1);
     }
     if (json_stream_read_value(reader, callback, user_data) != 0)
     {
         if (reader->error_code == FT_ERR_SUCCESSS)
-            reader->error_code = error_code = ft_errno;
+            reader->error_code = error_code = json_stream_last_error();
         json_stream_reader_finalize_lock(reader, guard);
         return (-1);
     }
@@ -1044,7 +1060,7 @@ int json_stream_reader_traverse(json_stream_reader *reader,
     if (status == JSON_STREAM_STATUS_ERROR)
     {
         if (reader->error_code == FT_ERR_SUCCESSS)
-            reader->error_code = error_code = ft_errno;
+            reader->error_code = error_code = json_stream_last_error();
         json_stream_reader_finalize_lock(reader, guard);
         return (-1);
     }
@@ -1062,7 +1078,7 @@ int json_stream_reader_traverse(json_stream_reader *reader,
             false) != 0)
     {
         if (reader->error_code == FT_ERR_SUCCESSS)
-            reader->error_code = error_code = ft_errno;
+            reader->error_code = error_code = json_stream_last_error();
         json_stream_reader_finalize_lock(reader, guard);
         return (-1);
     }
@@ -1206,7 +1222,7 @@ json_group *json_stream_reader_parse(json_stream_reader *reader)
         if (!group_name)
         {
             json_free_groups(head);
-            error_code = ft_errno;
+            error_code = json_stream_last_error();
             reader->error_code = error_code;
             json_stream_reader_finalize_lock(reader, guard);
             return (ft_nullptr);
@@ -1233,7 +1249,7 @@ json_group *json_stream_reader_parse(json_stream_reader *reader)
             cma_free(group_name);
             json_free_groups(head);
             reader->error_code = FT_ERR_INVALID_ARGUMENT;
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
+            json_stream_push_error(FT_ERR_INVALID_ARGUMENT);
             json_stream_reader_finalize_lock(reader, guard);
             return (ft_nullptr);
         }
@@ -1242,7 +1258,7 @@ json_group *json_stream_reader_parse(json_stream_reader *reader)
         {
             cma_free(group_name);
             json_free_groups(head);
-            error_code = ft_errno;
+            error_code = json_stream_last_error();
             reader->error_code = error_code;
             json_stream_reader_finalize_lock(reader, guard);
             return (ft_nullptr);
@@ -1253,7 +1269,7 @@ json_group *json_stream_reader_parse(json_stream_reader *reader)
         {
             json_free_items(items);
             json_free_groups(head);
-            error_code = ft_errno;
+            error_code = json_stream_last_error();
             reader->error_code = error_code;
             json_stream_reader_finalize_lock(reader, guard);
             return (ft_nullptr);
@@ -1309,7 +1325,7 @@ json_group *json_stream_reader_parse(json_stream_reader *reader)
         return (ft_nullptr);
     }
     reader->error_code = FT_ERR_SUCCESSS;
-    ft_errno = FT_ERR_SUCCESSS;
+    json_stream_push_error(FT_ERR_SUCCESSS);
     json_stream_reader_finalize_lock(reader, guard);
     return (head);
 }
@@ -1321,16 +1337,13 @@ int json_stream_reader_init_callback(json_stream_reader *reader, json_stream_rea
     char *new_buffer;
 
     if (!reader || !callback || buffer_capacity == 0)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (-1);
-    }
+        JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
     if (json_stream_reader_enable_thread_safety(reader) != 0)
         return (-1);
     lock_error = json_stream_reader_lock(reader, guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = lock_error;
+        json_stream_push_error(lock_error);
         return (-1);
     }
     new_buffer = static_cast<char *>(cma_malloc(buffer_capacity));
@@ -1338,7 +1351,7 @@ int json_stream_reader_init_callback(json_stream_reader *reader, json_stream_rea
     {
         reader->error_code = FT_ERR_NO_MEMORY;
         json_stream_reader_set_error_unlocked(reader, FT_ERR_NO_MEMORY);
-        ft_errno = FT_ERR_NO_MEMORY;
+        json_stream_push_error(FT_ERR_NO_MEMORY);
         json_stream_reader_finalize_lock(reader, guard);
         return (-1);
     }
@@ -1360,10 +1373,7 @@ int json_stream_reader_init_callback(json_stream_reader *reader, json_stream_rea
 int json_stream_reader_init_file(json_stream_reader *reader, FILE *file, size_t buffer_capacity)
 {
     if (!file)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (-1);
-    }
+        JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
     return (json_stream_reader_init_callback(reader, json_stream_reader_file_callback, file, buffer_capacity));
 }
 
@@ -1379,7 +1389,7 @@ void json_stream_reader_destroy(json_stream_reader *reader)
     lock_error = json_stream_reader_lock(reader, guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = lock_error;
+        json_stream_push_error(lock_error);
         return ;
     }
     if (reader->buffer)
@@ -1400,10 +1410,7 @@ void json_stream_reader_destroy(json_stream_reader *reader)
 json_group *json_read_from_file_stream(FILE *file, size_t buffer_capacity)
 {
     if (!file)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (ft_nullptr);
-    }
+        JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, ft_nullptr);
     json_group *groups;
     int result_errno;
 
@@ -1420,7 +1427,7 @@ json_group *json_read_from_file_stream(FILE *file, size_t buffer_capacity)
             int parse_errno;
             int error_code;
 
-            parse_errno = ft_errno;
+            parse_errno = json_stream_last_error();
             error_code = reader.error_code;
             result_errno = error_code;
             if (result_errno == FT_ERR_SUCCESSS)
@@ -1430,18 +1437,15 @@ json_group *json_read_from_file_stream(FILE *file, size_t buffer_capacity)
         }
         json_stream_reader_destroy(&reader);
     }
-    if (!groups)
-        ft_errno = result_errno;
+        if (!groups)
+            json_stream_push_error(result_errno);
     return (groups);
 }
 
 json_group *json_read_from_stream(json_stream_read_callback callback, void *user_data, size_t buffer_capacity)
 {
     if (!callback || buffer_capacity == 0)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (ft_nullptr);
-    }
+        JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, ft_nullptr);
     json_group *groups;
     int result_errno;
 
@@ -1458,7 +1462,7 @@ json_group *json_read_from_stream(json_stream_read_callback callback, void *user
             int parse_errno;
             int error_code;
 
-            parse_errno = ft_errno;
+            parse_errno = json_stream_last_error();
             error_code = reader.error_code;
             result_errno = error_code;
             if (result_errno == FT_ERR_SUCCESSS)
@@ -1468,7 +1472,7 @@ json_group *json_read_from_stream(json_stream_read_callback callback, void *user
         }
         json_stream_reader_destroy(&reader);
     }
-    if (!groups)
-        ft_errno = result_errno;
+        if (!groups)
+            json_stream_push_error(result_errno);
     return (groups);
 }

@@ -17,16 +17,37 @@ other classes must split declarations into .hpp files and definitions into .cpp 
 Do not define member function bodies inside the class declaration; place all definitions outside the class.
 Every class must declare and define a constructor and destructor, even if they simply contain return ;. Do not use = default; explicitly define the bodies.
 
+## Class Validity Flag
+
+Every class must expose a private `std::atomic<bool>` named `_is_valid` that indicates whether the object currently holds a usable state. Initialize `_is_valid` to `false` and leave it `false` while the constructor performs initialization steps; only store `true` once the constructor finishes successfully. Immediately before any destructor work begins (or as soon as a fatal error is detected), set `_is_valid` back to `false` so external observers know the instance is no longer valid. Update `_is_valid` only while holding the class mutex, and check it with an acquire load before any public entry point touches guarded members. This lightweight flag replaces per-instance error stacks while still giving callers a quick health check. `ft_promise` and `ft_unique_lock` are exempt from this requirement because they already track readiness/error state through `_ready`/`_error_code` or depend solely on the wrapped mutex state so adding `_is_valid` would not add meaningful value.
+
+## Optional Thread-safety Contract
+
+When a class exposes optional thread safety—as `ft_promise` does with `_thread_safe_enabled`/ `_mutex`—keep the same fields and contract in every class that follows the pattern (note: `ft_unique_lock` purposely opts out of this contract because it never enables per-instance thread safety, it simply proxies the wrapped mutex):
+- Always declare `bool _thread_safe_enabled` and the associated pointer(s) (`pt_mutex *_mutex`, etc.) in the private section so they stay together with the rest of the synchronization state.
+- Initialize `_thread_safe_enabled` to `false` and `_mutex` to `ft_nullptr`. Do not flip `_thread_safe_enabled` to `true` unless `prepare_thread_safety()` succeeds, and only allocate the mutex when it is needed.
+- `prepare_thread_safety()` should allocate the mutex, check its error state immediately (via `operation_error_pop_newest()` / `ft_global_error_stack_pop_newest()`), set `_thread_safe_enabled = true` on success, and set `_thread_safe_enabled = false` plus release any resources on failure.
+- Guard every lock/unlock helper with `_thread_safe_enabled`: if thread safety is disabled, return success without touching `_mutex`. When enabled, acquire/release `_mutex`, pop the newest error from the global stack, and propagate the real error value.
+- `teardown_thread_safety()` must destroy/free `_mutex`, reset `_thread_safe_enabled` to `false`, and leave `_mutex = ft_nullptr` so repeated enable/disable cycles behave the same.
+- Always call `prepare_thread_safety()` from constructors or enabling helpers before setting `_thread_safe_enabled = true`, and call `teardown_thread_safety()` from the destructor or disabling helpers before the object is destroyed so no dangling mutex remains.
+
+Keeping this contract identical across classes makes it easy to reason about optional thread safety and prevents subtle bugs when enabling or disabling synchronization support.
+
 #Class Mutex Requirements
 
 Each class must own a recursive mutex that can be locked multiple times and must be unlocked the same number of times.
 
-During error handling, do not lock the class mutex. Use the Errno module mutex wrapper so error reporting does not re-lock the class mutex.
+All class definitions must be thread-safe by default; their internal state must be guarded by the class mutex so callers do not need to wrap instances in additional synchronization to get correct behavior.
+
+During error handling, do not lock the class mutex. Report errors directly to the thread-local global error stack instead of re-locking any mutex for Errno bookkeeping.
 
 Every class must expose a helper function that provides direct access to its recursive mutex.
 Document and implement this helper as a dedicated low-level interface intended for cases like
 validating constructor error handling immediately after construction by manually locking and
 unlocking the mutex to verify proper use.
+Because these helpers are only intended for testing and validation, guard their declarations
+and definitions behind `LIBFT_TEST_BUILD` (or another dedicated testing-only macro); production
+builds must never expose the recursive mutex or operation-stack handles publicly.
 
 ## Recursive mutex lock/unlock contract
 Every class that relies on an innate recursive mutex (mutexes should be thread-safe by default) must follow a strict error contract: when the class locks or unlocks its recursive mutex, first store the mutex return value, then pop the newest entry from the global error stack. Only push that entry back if it represents an actual failure; leave it removed when it signals success. The error code reported to `ft_errno` and mirrored on the class stack must prefer the global-stack entry but fall back to the mutex return when the popped entry was success, preventing redundant success entries while keeping real errors available for inspection. Classes that do not require a mutex for thread safety or are never used in a multithreaded environment are exempt.
@@ -44,78 +65,30 @@ or the associated helpers. Treat `Pair` as a plain-old-data holder only.
 with no recursive mutex, errno helpers, or thread-safety toggles. Any new behavior should leave
 error handling and synchronization to callers rather than reintroducing state inside `ft_function`.
 
-#Errno and Error Stack Rules
-
-Class and non-class error handling must use the shared error-stack types from the Errno module.
-Classes must push errors to both the thread-local error stack and their class-only error stack.
-
-When a class method pushes an error, it must generate a single error entry containing a unique identifier.
-This same error entry must be pushed to both the thread-local error stack and the class-only error stack
-to ensure that the same operation has the same ID across both stacks.
-
-When publishing or reading class error codes or error stacks, do not lock the class mutex; use the Errno mutex wrapper instead.
-When you need to inspect an error that originated from another class or module, pop the shared entry from the global stack immediately after reading it so the stack stays balanced, unless another layer still needs that entry. If the entry represents an actual failure, push it back so the caller and any later reader see the error, but do not re-push success entries. Do not poke into that class's local error getters—read the thread-local global error stack (e.g., via `ft_global_error_stack_last_error()`) because the same entry was already recorded there. This keeps cross-class error handling consistent and avoids touching another object's internal stack.
-
-Errors and successful completions are reported by pushing entries onto the appropriate error stack.
-A function that pushes an entry must leave it on the stack.
-The function that checks the entry is responsible for popping it.
-Functions marked strictly for internal use must not push any errors on the stack. Internal functions are typically marked static or declared in internal headers (headers with "internal" in their name).
-When a function returns an error value, check that return value alone. Use the error stack only to
-determine the error type (still pop the newest value when required).
-If a function returns an error value and the popped error entry is success, do not publish or set
-an error code from that success value.
-
-If a function completes with an error entry still present on the stack,
-it must not push a success entry.
-
-If an error entry was reported and then popped because it was handled,
-the function must push a success entry to report that it completed successfully.
-
-If a function completes successfully without having pushed any entry,
-it must push exactly one success entry.
-
-Functions that report error text or terminate the process (such as ft_strerror, ft_perror, ft_exit, or any helper that exits)
-must not modify the error stack.
 
 #Errno Global Error Stack
 
-Define and use a global error stack in the Errno module so non-class functions can record errors
-without overwriting prior state, preserving older errors in the stack. Use helper functions for
-all global stack access; do not touch the stack directly. Helpers must provide push, pop last,
-pop newest, pop all, and fetch by index (1-based). The newest error is always at the lowest index,
-and helpers must also support retrieving the most recent error and error string values using the
-same ordering rules.
+Define and use a global error stack in the Errno module so non-class functions can record errors without overwriting prior state. All helpers operate on this per-thread stack; there is no additional locking requirement.
 
 ## Errno Module Global Stack API
 
-The Errno module owns the thread-local global error stack. Every interaction with that stack
-must happen while holding the Errno mutex wrapper so unrelated classes or helpers cannot race
-when reporting. The mutex and helper layers live in `Errno/errno_internal.hpp`.
+The helper entries live in `Errno/errno.hpp`.
 
-- `ft_errno_mutex()`: wraps the recursive mutex guarding the error stack.
-- `ft_errno_next_operation_id()`: produces the next unique operation identifier.
-- `ft_global_error_stack_push_entry(int error_code)` / `ft_global_error_stack_push_entry_with_id(int error_code, unsigned long long op_id)`: push an entry and optionally reuse the provided ID so multiple stacks share the same entry.
-- `ft_global_error_stack_push(int error_code)`: convenience when the ID does not matter.
-- `ft_global_error_stack_pop_last()` / `ft_global_error_stack_pop_newest()` / `ft_global_error_stack_pop_all()`: remove entries either from the oldest, newest, or entire stack.
-- `ft_global_error_stack_error_at(ft_size_t index)` / `ft_global_error_stack_last_error()`: inspect recorded error codes without modifying the stack.
-- `ft_global_error_stack_depth()` / `ft_global_error_stack_get_id_at(ft_size_t index)` / `ft_global_error_stack_find_by_id(unsigned long long id)`: query stack depth and locate entries by index or operation ID.
-- `ft_global_error_stack_error_str_at(ft_size_t index)` / `ft_global_error_stack_last_error_str()`: retrieve the human-readable string for recorded entries.
+- `ft_errno_next_operation_id()` produces the next unique operation identifier.
+- `ft_global_error_stack_push_entry(int error_code)` / `ft_global_error_stack_push_entry_with_id(int error_code, unsigned long long op_id)` push an entry and optionally reuse the provided ID so multiple stacks share the same entry.
+- `ft_global_error_stack_push(int error_code)` pushes without caring about the ID.
+- `ft_global_error_stack_pop_last()` / `ft_global_error_stack_pop_newest()` / `ft_global_error_stack_pop_all()` remove entries from oldest, newest, or the whole stack.
+- `ft_global_error_stack_error_at(ft_size_t index)` / `ft_global_error_stack_last_error()` inspect recorded error codes without modifying the stack.
+- `ft_global_error_stack_depth()` / `ft_global_error_stack_get_id_at(ft_size_t index)` / `ft_global_error_stack_find_by_id(unsigned long long id)` query the stack depth and locate entries by index or operation ID.
+- `ft_global_error_stack_error_str_at(ft_size_t index)` / `ft_global_error_stack_last_error_str()` retrieve the human-readable string for recorded entries.
 
-All callers that push or pop entries from the global stack must leave the newest entry untouched if they did not push it themselves. If a caller pops an entry that it pushed, it must re-push either the same error or a success entry before returning, depending on the outcome.
+All callers that touch the global stack must leave the newest entry untouched if they did not push it themselves. If a caller pops an entry it pushed, it must re-push the same error or a success entry before returning so the stack remains consistent.
 
-## Local Operation Stacks (classes, CMA, SCMA)
+## Operation Stack Usage
 
-Every class and module that tracks its own errors must reuse the `ft_operation_error_stack` model exported by the Errno module, but the stack now lives in the instance instead of being shared thread-locally:
+Every class and module must rely solely on the thread-local `ft_global_error_stack` exported by the Errno module; do not track per-instance error histories in `ft_operation_error_stack`. This keeps all error state centralized and avoids duplicating identifiers.
 
-- Declare a non-static `ft_operation_error_stack` member on each class instance (or module object) so every object keeps its own local stack.
-- Document a low-level helper that exposes direct access to that stack so callers writing low-level checks can manually inspect it before higher-level constructors return.
-- When reporting an error, first call `ft_errno_next_operation_id()` to reserve a unique identifier; then call `ft_global_error_stack_push_entry_with_id(error_code, operation_id)` and `ft_operation_error_stack_push(stack, error_code, operation_id)` in sequence. These helpers lock the Errno mutex automatically, so callers must not reenter the mutex wrapper themselves.
-- When removing entries, call `ft_operation_error_stack_pop_last`, `_pop_newest`, or `_pop_all` and mirror the same operation on the global stack so each entry ID is removed from both places.
-- Inspect local stacks with `ft_operation_error_stack_error_at`, `_last_error`, and `_last_id` rather than duplicating logic.
-- Provide helper functions that expose both the recursive mutex and the local operation stack so that constructor validation or debugger tooling can lock/inspect things in a deterministic way.
-- Errno helpers now lock/unlock internally, so there is no need to manually guard them with `ft_errno_mutex()` when pushing or popping entries.
-Note: `ft_nullptr_t` is a stateless sentinel and does not track errors via a per-class stack or push entries to the global stack; it never alters any error stacks.
-Public CMA and SCMA entry points (see their dedicated modules for the authorized function lists) also maintain module-local `ft_operation_error_stack` instances. They follow the same pattern as class stacks: each public function pushes to both the Errno global stack and the module stack using the shared operation ID so that the error ID stays consistent across both stacks. Internal helpers inside CMA and SCMA remain on their dedicated stacks and communicate with callers via the local stack without touching the global Errno stack directly.
+If a public API needs to maintain module-local operation IDs (like CMA or SCMA), it must still correlate those identifiers with the global stack using helper functions such as `ft_global_error_stack_push_entry_with_id()`/`ft_global_error_stack_pop_entry_with_id()` so the same entry remains discoverable everywhere.
 
 Only .cpp files must be prefixed with the name of the module they belong to. Nested modules must contain both the original module name followed by the nested module name.
 For .hpp files, prefix only those meant for internal use with the module name.
@@ -178,13 +151,6 @@ Within the CMA module, only public-facing entry points that callers use directly
 - cma_set_thread_safety
 - cma_get_stats
 - cma_get_extended_stats
-- cma_leak_detection_enable
-- cma_leak_detection_disable
-- cma_leak_detection_clear
-- cma_leak_detection_is_enabled
-- cma_leak_detection_outstanding_allocations
-- cma_leak_detection_outstanding_bytes
-- cma_leak_detection_report
 
 All other CMA helpers are internal-use and must report errors via existing internal mechanisms without pushing to the global error stack.
 

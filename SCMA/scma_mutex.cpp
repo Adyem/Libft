@@ -2,13 +2,14 @@
 #include "../Errno/errno.hpp"
 #include "../Libft/limits.hpp"
 #include "../PThread/pthread.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "SCMA.hpp"
 #include "scma_internal.hpp"
 
-static pt_mutex g_scma_mutex;
+static pt_recursive_mutex g_scma_mutex;
 static thread_local ft_size_t g_scma_lock_depth = 0;
 
-pt_mutex    &scma_runtime_mutex(void)
+pt_recursive_mutex    &scma_runtime_mutex(void)
 {
     int error_code;
 
@@ -35,13 +36,12 @@ int    scma_mutex_lock(void)
     }
     if (lock_depth == 0)
     {
-        pt_mutex &mutex = scma_runtime_mutex();
+        pt_recursive_mutex &mutex = scma_runtime_mutex();
 
         mutex.lock(THREAD_ID);
         int mutex_error;
 
         mutex_error = mutex.operation_error_pop_newest();
-        ft_global_error_stack_pop_newest();
         if (mutex_error != FT_ERR_SUCCESSS)
         {
             error_code = mutex_error;
@@ -69,13 +69,12 @@ int    scma_mutex_unlock(void)
     lock_depth = lock_depth - 1;
     if (lock_depth == 0)
     {
-        pt_mutex &mutex = scma_runtime_mutex();
+        pt_recursive_mutex &mutex = scma_runtime_mutex();
 
         mutex.unlock(THREAD_ID);
         int mutex_error;
 
         mutex_error = mutex.operation_error_pop_newest();
-        ft_global_error_stack_pop_newest();
         if (mutex_error != FT_ERR_SUCCESSS)
         {
             error_code = mutex_error;

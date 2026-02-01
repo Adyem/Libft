@@ -4,14 +4,14 @@
 #include "../Template/move.hpp"
 #include "../PThread/pthread.hpp"
 
-static int data_buffer_lock_mutex(const pt_mutex &mutex)
+static int data_buffer_lock_mutex(const pt_recursive_mutex &mutex)
 {
     int error = mutex.lock(THREAD_ID);
     ft_global_error_stack_pop_newest();
     return (error);
 }
 
-static int data_buffer_unlock_mutex(const pt_mutex &mutex)
+static int data_buffer_unlock_mutex(const pt_recursive_mutex &mutex)
 {
     int error = mutex.unlock(THREAD_ID);
     ft_global_error_stack_pop_newest();
@@ -477,13 +477,13 @@ DataBuffer &DataBuffer::operator>>(size_t &len)
 }
 
 #ifdef LIBFT_TEST_BUILD
-pt_mutex &DataBuffer::mutex() noexcept
+pt_recursive_mutex *DataBuffer::get_mutex_for_validation() const noexcept
 {
-    return (this->_mutex);
+    return (&(this->_mutex));
 }
 
-ft_operation_error_stack &DataBuffer::operation_error_stack() const noexcept
+ft_operation_error_stack *DataBuffer::operation_error_stack_handle() const noexcept
 {
-    return (this->_operation_errors);
+    return (&(this->_operation_errors));
 }
 #endif

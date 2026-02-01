@@ -125,13 +125,13 @@ static int rl_copy_history_entry_to_buffer(readline_state_t *state, const char *
             new_bufsize = 1;
         while (new_bufsize < required_size)
             new_bufsize *= 2;
-        char *resized_buffer = rl_resize_buffer(&state->buffer, &state->bufsize, new_bufsize);
+        int resize_error = rl_resize_buffer(&state->buffer, &state->bufsize, new_bufsize);
 
-        if (!resized_buffer)
-            return (-1);
+        if (resize_error != FT_ERR_SUCCESSS)
+            return (resize_error);
     }
     ft_strlcpy(state->buffer, history_entry, state->bufsize);
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
 static void rl_reset_completion_mode_locked(readline_state_t *state)
@@ -176,8 +176,9 @@ static int rl_handle_up_arrow(readline_state_t *state, const char *prompt)
         if (rl_clear_line(prompt, state->buffer) == -1)
             return (-1);
         state->pos = 0;
-        if (rl_copy_history_entry_to_buffer(state, history[state->history_index]) == -1)
-            return (-1);
+        int copy_error = rl_copy_history_entry_to_buffer(state, history[state->history_index]);
+        if (copy_error != FT_ERR_SUCCESSS)
+            return (copy_error);
         pf_printf("%s%s", prompt, state->buffer);
         state->pos = ft_strlen(state->buffer);
         if (rl_update_display_metrics(state) != 0)
@@ -195,8 +196,9 @@ static int rl_handle_down_arrow(readline_state_t *state, const char *prompt)
         if (rl_clear_line(prompt, state->buffer) == -1)
             return (-1);
         state->pos = 0;
-        if (rl_copy_history_entry_to_buffer(state, history[state->history_index]) == -1)
-            return (-1);
+        int copy_error = rl_copy_history_entry_to_buffer(state, history[state->history_index]);
+        if (copy_error != FT_ERR_SUCCESSS)
+            return (copy_error);
         pf_printf("%s%s", prompt, state->buffer);
         state->pos = ft_strlen(state->buffer);
         if (rl_update_display_metrics(state) != 0)

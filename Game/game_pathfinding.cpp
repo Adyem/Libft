@@ -377,15 +377,15 @@ int ft_path_step::get_error() const noexcept
     game_pathfinding_finalize_lock(guard);
     if (error_code != FT_ERR_SUCCESSS)
     {
-        ft_set_errno_locked(error_code);
+        ft_global_error_stack_push_entry(error_code);
         return (error_code);
     }
     if (system_error != FT_SYS_ERR_SUCCESS)
     {
-        ft_set_errno_locked(system_error);
+        ft_global_error_stack_push_entry(system_error);
         return (system_error);
     }
-    ft_set_errno_locked(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push_entry(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);
 }
 
@@ -414,23 +414,23 @@ const char *ft_path_step::get_error_str() const noexcept
     else
         error_string = ft_strerror(FT_ERR_SUCCESSS);
     if (error_code != FT_ERR_SUCCESSS)
-        ft_set_errno_locked(error_code);
+        ft_global_error_stack_push_entry(error_code);
     else
-        ft_set_errno_locked(system_error);
+        ft_global_error_stack_push_entry(system_error);
     return (error_string);
 }
 
 void ft_path_step::set_error(int error) const noexcept
 {
     this->_error_code = error;
-    ft_set_errno_locked(error);
+    ft_global_error_stack_push_entry(error);
     return ;
 }
 
 void ft_path_step::set_system_error(int error) const noexcept
 {
     this->_system_error_code = error;
-    ft_set_sys_errno_locked(error);
+    ft_global_error_stack_push_entry(error);
     return ;
 }
 
@@ -445,7 +445,7 @@ void ft_path_step::reset_system_error() const noexcept
         return ;
     }
     this->_system_error_code = FT_SYS_ERR_SUCCESS;
-    ft_set_sys_errno_locked(FT_SYS_ERR_SUCCESS);
+    ft_global_error_stack_push_entry(FT_SYS_ERR_SUCCESS);
     game_pathfinding_finalize_lock(guard);
     return ;
 }
