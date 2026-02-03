@@ -1,7 +1,6 @@
 #include "linear_algebra.hpp"
 #include "math.hpp"
 #include "../Errno/errno.hpp"
-#include "../Errno/errno_internal.hpp"
 #include "../PThread/pthread.hpp"
 #include "../Template/move.hpp"
 
@@ -15,32 +14,26 @@ static void vector4_sleep_backoff()
     return ;
 }
 
-static int math_vector4_lock_mutex(const pt_recursive_mutex &mutex)
+int vector4::lock_mutex() const noexcept
 {
     int error;
 
-    error = mutex.lock(THREAD_ID);
+    if (!this->is_thread_safe_enabled())
+        return (FT_ERR_SUCCESSS);
+    error = this->_mutex.lock(THREAD_ID);
     ft_global_error_stack_pop_newest();
     return (error);
 }
 
-static int math_vector4_unlock_mutex(const pt_recursive_mutex &mutex)
+int vector4::unlock_mutex() const noexcept
 {
     int error;
 
-    error = mutex.unlock(THREAD_ID);
+    if (!this->is_thread_safe_enabled())
+        return (FT_ERR_SUCCESSS);
+    error = this->_mutex.unlock(THREAD_ID);
     ft_global_error_stack_pop_newest();
     return (error);
-}
-
-void vector4::record_operation_error(int error_code) const noexcept
-{
-    unsigned long long operation_id;
-
-    operation_id = ft_errno_next_operation_id();
-    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(&this->_operation_errors, error_code, operation_id);
-    return ;
 }
 
 #if defined(__SSE2__)
@@ -91,7 +84,7 @@ int vector4::lock_pair(const vector4 &first, const vector4 &second,
     {
         lower = &first;
         upper = &first;
-        return (math_vector4_lock_mutex(first._mutex));
+        return (first.lock_mutex());
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -107,22 +100,22 @@ int vector4::lock_pair(const vector4 &first, const vector4 &second,
     upper = ordered_second;
     while (true)
     {
-        int lower_error = math_vector4_lock_mutex(lower->_mutex);
+        int lower_error = lower->lock_mutex();
         if (lower_error != FT_ERR_SUCCESSS)
         {
             return (lower_error);
         }
-        int upper_error = math_vector4_lock_mutex(upper->_mutex);
+        int upper_error = upper->lock_mutex();
         if (upper_error == FT_ERR_SUCCESSS)
         {
             return (FT_ERR_SUCCESSS);
         }
         if (upper_error != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            math_vector4_unlock_mutex(lower->_mutex);
+            lower->unlock_mutex();
             return (upper_error);
         }
-        math_vector4_unlock_mutex(lower->_mutex);
+        lower->unlock_mutex();
         vector4_sleep_backoff();
     }
 }
@@ -130,15 +123,15 @@ int vector4::lock_pair(const vector4 &first, const vector4 &second,
 void vector4::unlock_pair(const vector4 *lower, const vector4 *upper)
 {
     if (upper != ft_nullptr)
-        math_vector4_unlock_mutex(upper->_mutex);
+        upper->unlock_mutex();
     if (lower != ft_nullptr && lower != upper)
-        math_vector4_unlock_mutex(lower->_mutex);
+        lower->unlock_mutex();
     return ;
 }
 
 vector4::vector4(const vector4 &other)
     : _x(0.0), _y(0.0), _z(0.0), _w(0.0),
-    _operation_errors({{}, {}, 0}), _mutex()
+    _mutex()
 {
     *this = other;
     return ;
@@ -155,7 +148,7 @@ vector4 &vector4::operator=(const vector4 &other)
     lock_error = this->lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (*this);
     }
     this->_x = other._x;
@@ -163,13 +156,13 @@ vector4 &vector4::operator=(const vector4 &other)
     this->_z = other._z;
     this->_w = other._w;
     this->unlock_pair(lower, upper);
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (*this);
 }
 
 vector4::vector4(vector4 &&other)
     : _x(0.0), _y(0.0), _z(0.0), _w(0.0),
-    _operation_errors({{}, {}, 0}), _mutex()
+    _mutex()
 {
     *this = ft_move(other);
     return ;
@@ -186,7 +179,7 @@ vector4 &vector4::operator=(vector4 &&other)
     lock_error = this->lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (*this);
     }
     this->_x = other._x;
@@ -198,8 +191,8 @@ vector4 &vector4::operator=(vector4 &&other)
     other._y = 0.0;
     other._z = 0.0;
     other._w = 0.0;
-    this->record_operation_error(FT_ERR_SUCCESSS);
-    other.record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (*this);
 }
 
@@ -209,20 +202,20 @@ double vector4::get_x() const
     double value;
     int unlock_error;
 
-    lock_error = math_vector4_lock_mutex(this->_mutex);
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (0.0);
     }
     value = this->_x;
-    unlock_error = math_vector4_unlock_mutex(this->_mutex);
+    unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(unlock_error);
+        ft_global_error_stack_push(unlock_error);
         return (value);
     }
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (value);
 }
 
@@ -232,20 +225,20 @@ double vector4::get_y() const
     double value;
     int unlock_error;
 
-    lock_error = math_vector4_lock_mutex(this->_mutex);
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (0.0);
     }
     value = this->_y;
-    unlock_error = math_vector4_unlock_mutex(this->_mutex);
+    unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(unlock_error);
+        ft_global_error_stack_push(unlock_error);
         return (value);
     }
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (value);
 }
 
@@ -255,20 +248,20 @@ double vector4::get_z() const
     double value;
     int unlock_error;
 
-    lock_error = math_vector4_lock_mutex(this->_mutex);
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (0.0);
     }
     value = this->_z;
-    unlock_error = math_vector4_unlock_mutex(this->_mutex);
+    unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(unlock_error);
+        ft_global_error_stack_push(unlock_error);
         return (value);
     }
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (value);
 }
 
@@ -278,20 +271,20 @@ double vector4::get_w() const
     double value;
     int unlock_error;
 
-    lock_error = math_vector4_lock_mutex(this->_mutex);
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (0.0);
     }
     value = this->_w;
-    unlock_error = math_vector4_unlock_mutex(this->_mutex);
+    unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(unlock_error);
+        ft_global_error_stack_push(unlock_error);
         return (value);
     }
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (value);
 }
 
@@ -305,8 +298,8 @@ vector4 vector4::add(const vector4 &other) const
     lock_error = this->lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        result.record_operation_error(lock_error);
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (result);
     }
     result._x = this->_x + other._x;
@@ -314,8 +307,8 @@ vector4 vector4::add(const vector4 &other) const
     result._z = this->_z + other._z;
     result._w = this->_w + other._w;
     this->unlock_pair(lower, upper);
-    result.record_operation_error(FT_ERR_SUCCESSS);
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -329,8 +322,8 @@ vector4 vector4::subtract(const vector4 &other) const
     lock_error = this->lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        result.record_operation_error(lock_error);
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (result);
     }
     result._x = this->_x - other._x;
@@ -338,8 +331,8 @@ vector4 vector4::subtract(const vector4 &other) const
     result._z = this->_z - other._z;
     result._w = this->_w - other._w;
     this->unlock_pair(lower, upper);
-    result.record_operation_error(FT_ERR_SUCCESSS);
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -353,13 +346,13 @@ double vector4::dot(const vector4 &other) const
     lock_error = this->lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (0.0);
     }
     result = vector4_compute_dot(this->_x, this->_y, this->_z, this->_w,
             other._x, other._y, other._z, other._w);
     this->unlock_pair(lower, upper);
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -370,22 +363,22 @@ double vector4::length() const
     double result_value;
     int unlock_error;
 
-    lock_error = math_vector4_lock_mutex(this->_mutex);
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (0.0);
     }
     squared = vector4_compute_dot(this->_x, this->_y, this->_z, this->_w,
             this->_x, this->_y, this->_z, this->_w);
     result_value = math_sqrt(squared);
-    unlock_error = math_vector4_unlock_mutex(this->_mutex);
+    unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(unlock_error);
+        ft_global_error_stack_push(unlock_error);
         return (result_value);
     }
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result_value);
 }
 
@@ -398,11 +391,11 @@ vector4 vector4::normalize() const
     double epsilon;
     int unlock_error;
 
-    lock_error = math_vector4_lock_mutex(this->_mutex);
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        result.record_operation_error(lock_error);
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (result);
     }
     squared_length = this->_x * this->_x + this->_y * this->_y
@@ -411,41 +404,48 @@ vector4 vector4::normalize() const
     epsilon = 0.0000001;
     if (math_absdiff(length_value, 0.0) <= epsilon)
     {
-        unlock_error = math_vector4_unlock_mutex(this->_mutex);
+        unlock_error = this->unlock_mutex();
         if (unlock_error != FT_ERR_SUCCESSS)
         {
-            result.record_operation_error(unlock_error);
-            this->record_operation_error(unlock_error);
+            ft_global_error_stack_push(unlock_error);
+            ft_global_error_stack_push(unlock_error);
             return (result);
         }
-        result.record_operation_error(FT_ERR_INVALID_ARGUMENT);
-        this->record_operation_error(FT_ERR_INVALID_ARGUMENT);
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (result);
     }
     result._x = this->_x / length_value;
     result._y = this->_y / length_value;
     result._z = this->_z / length_value;
     result._w = this->_w / length_value;
-    unlock_error = math_vector4_unlock_mutex(this->_mutex);
+    unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESSS)
     {
-        result.record_operation_error(unlock_error);
-        this->record_operation_error(unlock_error);
+        ft_global_error_stack_push(unlock_error);
+        ft_global_error_stack_push(unlock_error);
         return (result);
     }
-    result.record_operation_error(FT_ERR_SUCCESSS);
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
 
-pt_recursive_mutex *vector4::get_mutex_for_validation() const
+int vector4::enable_thread_safety() noexcept
 {
-    return (&this->_mutex);
+    this->_thread_safe_enabled = true;
+    return (FT_ERR_SUCCESSS);
 }
 
-ft_operation_error_stack *vector4::get_operation_error_stack_for_validation() const noexcept
+void vector4::disable_thread_safety() noexcept
 {
-    return (&this->_operation_errors);
+    this->_thread_safe_enabled = false;
+    return ;
+}
+
+bool vector4::is_thread_safe_enabled() const noexcept
+{
+    return (this->_thread_safe_enabled);
 }
 
 #ifdef LIBFT_TEST_BUILD

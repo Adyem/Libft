@@ -2,12 +2,11 @@
 #define SHARED_PTR_HPP
 
 #include "../Errno/errno.hpp"
-#include "../Errno/errno_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "math.hpp"
 #include "swap.hpp"
 #include "template_concepts.hpp"
-#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread.hpp"
 #include <stdint.h>
 #include <cstddef>
@@ -25,8 +24,7 @@ class ft_sharedptr
         size_t _arraySize;
         bool _isArrayType;
         mutable int _error_code;
-        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
-        mutable pt_mutex *_mutex;
+        mutable pt_recursive_mutex *_mutex;
         bool _thread_safe_enabled;
         bool *_shared_thread_safe_flag;
 
@@ -111,9 +109,7 @@ class ft_sharedptr
         bool is_thread_safe() const;
         int lock(bool *lock_acquired) const;
         void unlock(bool lock_acquired) const;
-        pt_mutex *mutex_handle() const;
-        ft_operation_error_stack *operation_error_stack_handle() noexcept;
-        const ft_operation_error_stack *operation_error_stack_handle() const noexcept;
+        pt_recursive_mutex *mutex_handle() const;
 };
 
 template <typename LeftType, typename RightType>
@@ -1500,51 +1496,37 @@ void ft_sharedptr<ManagedType>::record_operation_error(int error_code) const noe
 
     operation_id = ft_errno_next_operation_id();
     ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(&this->_operation_errors,
-            error_code, operation_id);
     return ;
 }
 
 template <typename ManagedType>
-pt_mutex *ft_sharedptr<ManagedType>::mutex_handle() const
+pt_recursive_mutex *ft_sharedptr<ManagedType>::mutex_handle() const
 {
     return (this->_mutex);
 }
 
 template <typename ManagedType>
-ft_operation_error_stack *ft_sharedptr<ManagedType>::operation_error_stack_handle() noexcept
-{
-    return (&this->_operation_errors);
-}
-
-template <typename ManagedType>
-const ft_operation_error_stack *ft_sharedptr<ManagedType>::operation_error_stack_handle() const noexcept
-{
-    return (&this->_operation_errors);
-}
-
-template <typename ManagedType>
 int ft_sharedptr<ManagedType>::lock_internal(bool *lock_acquired) const
 {
+    int mutex_result;
+    int global_error;
+    int operation_error;
+
     if (lock_acquired)
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESSS);
-    this->_mutex->lock(THREAD_ID);
-    int mutex_error = this->_mutex->operation_error_last_error();
-    if (mutex_error != FT_ERR_SUCCESSS)
+    mutex_result = this->_mutex->lock(THREAD_ID);
+    global_error = ft_global_error_stack_pop_newest();
+    operation_error = global_error;
+    if (global_error == FT_ERR_SUCCESSS)
+        operation_error = mutex_result;
+    else
+        ft_global_error_stack_push(global_error);
+    if (operation_error != FT_ERR_SUCCESSS)
     {
-        if (mutex_error == FT_ERR_MUTEX_ALREADY_LOCKED)
-        {
-            bool state_lock_acquired;
-
-            state_lock_acquired = false;
-            if (this->_mutex->lock_state(&state_lock_acquired) == 0)
-                this->_mutex->unlock_state(state_lock_acquired);
-            return (FT_ERR_SUCCESSS);
-        }
-        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_internal(mutex_error);
-        return (mutex_error);
+        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_internal(operation_error);
+        return (operation_error);
     }
     if (lock_acquired)
         *lock_acquired = true;
@@ -1554,12 +1536,21 @@ int ft_sharedptr<ManagedType>::lock_internal(bool *lock_acquired) const
 template <typename ManagedType>
 void ft_sharedptr<ManagedType>::unlock_internal(bool lock_acquired) const
 {
+    int mutex_result;
+    int global_error;
+    int operation_error;
+
     if (!lock_acquired || this->_mutex == ft_nullptr)
         return ;
-    this->_mutex->unlock(THREAD_ID);
-    int mutex_error = this->_mutex->operation_error_last_error();
-    if (mutex_error != FT_ERR_SUCCESSS)
-        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_internal(mutex_error);
+    mutex_result = this->_mutex->unlock(THREAD_ID);
+    global_error = ft_global_error_stack_pop_newest();
+    operation_error = global_error;
+    if (global_error == FT_ERR_SUCCESSS)
+        operation_error = mutex_result;
+    else
+        ft_global_error_stack_push(global_error);
+    if (operation_error != FT_ERR_SUCCESSS)
+        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_internal(operation_error);
     return ;
 }
 
@@ -1567,7 +1558,7 @@ template <typename ManagedType>
 int ft_sharedptr<ManagedType>::prepare_thread_safety()
 {
     void *memory_pointer;
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
 
     if (!this->_shared_thread_safe_flag)
     {
@@ -1584,17 +1575,17 @@ int ft_sharedptr<ManagedType>::prepare_thread_safety()
         this->set_error_internal(FT_ERR_SUCCESSS);
         return (0);
     }
-    memory_pointer = std::malloc(sizeof(pt_mutex));
+    memory_pointer = std::malloc(sizeof(pt_recursive_mutex));
     if (memory_pointer == ft_nullptr)
     {
         this->set_error_internal(FT_ERR_NO_MEMORY);
         return (-1);
     }
-    mutex_pointer = new(memory_pointer) pt_mutex();
-    int mutex_error = mutex_pointer->operation_error_last_error();
+    mutex_pointer = new(memory_pointer) pt_recursive_mutex();
+    int mutex_error = ft_global_error_stack_last_error();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
-        mutex_pointer->~pt_mutex();
+        mutex_pointer->~pt_recursive_mutex();
         std::free(memory_pointer);
         this->set_error_internal(mutex_error);
         return (-1);
@@ -1611,7 +1602,7 @@ void ft_sharedptr<ManagedType>::teardown_thread_safety()
 {
     if (this->_mutex != ft_nullptr)
     {
-        this->_mutex->~pt_mutex();
+        this->_mutex->~pt_recursive_mutex();
         std::free(this->_mutex);
         this->_mutex = ft_nullptr;
     }
@@ -1666,7 +1657,7 @@ void ft_sharedptr<ManagedType>::unlock(bool lock_acquired) const
 {
     this->unlock_internal(lock_acquired);
     if (this->_mutex == ft_nullptr
-        || this->_mutex->operation_error_last_error() == FT_ERR_SUCCESSS)
+        || this->ft_global_error_stack_last_error() == FT_ERR_SUCCESSS)
     {
         const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_internal(FT_ERR_SUCCESSS);
     }

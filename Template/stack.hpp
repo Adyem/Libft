@@ -173,7 +173,7 @@ int ft_stack<ElementType>::lock_internal(bool *lock_acquired) const
         return (0);
     }
     this->_mutex->lock(THREAD_ID);
-    mutex_error = this->_mutex->operation_error_last_error();
+    mutex_error = this->ft_global_error_stack_last_error();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         this->record_operation_error(mutex_error);
@@ -193,7 +193,7 @@ void ft_stack<ElementType>::unlock_internal(bool lock_acquired) const
     if (!lock_acquired || this->_mutex == ft_nullptr)
         return ;
     this->_mutex->unlock(THREAD_ID);
-    mutex_error = this->_mutex->operation_error_last_error();
+    mutex_error = this->ft_global_error_stack_last_error();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         this->record_operation_error(mutex_error);
@@ -234,7 +234,7 @@ int ft_stack<ElementType>::enable_thread_safety()
         return (-1);
     }
     mutex_pointer = new(memory) pt_mutex();
-    int mutex_error = mutex_pointer->operation_error_last_error();
+    int mutex_error = ft_global_error_stack_last_error();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         mutex_pointer->~pt_mutex();
@@ -285,7 +285,7 @@ void ft_stack<ElementType>::unlock(bool lock_acquired) const
     this->unlock_internal(lock_acquired);
     int mutex_error = FT_ERR_SUCCESSS;
     if (this->_mutex != ft_nullptr && lock_acquired)
-        mutex_error = this->_mutex->operation_error_last_error();
+        mutex_error = this->ft_global_error_stack_last_error();
     if (mutex_error != FT_ERR_SUCCESSS)
         this->record_operation_error(mutex_error);
     else

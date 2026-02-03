@@ -10,7 +10,7 @@ static inline int ft_mutex_pop_last_error(pt_mutex *mutex)
 {
     if (mutex == ft_nullptr)
         return (FT_ERR_SUCCESSS);
-    int error_code = mutex->operation_error_pop_newest();
+    int error_code = ft_global_error_stack_pop_newest();
 
     ft_global_error_stack_pop_newest();
     return (error_code);

@@ -1,10 +1,7 @@
 #ifndef LINEAR_ALGEBRA_QUATERNION_HPP
 # define LINEAR_ALGEBRA_QUATERNION_HPP
 
-#include "../Errno/errno_internal.hpp"
-#include "../PThread/recursive_mutex.hpp"
-
-#include "../Errno/errno_internal.hpp"
+#include "../Errno/errno.hpp"
 #include "../PThread/recursive_mutex.hpp"
 
 class quaternion
@@ -14,9 +11,16 @@ class quaternion
         double _x;
         double _y;
         double _z;
-        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
         mutable pt_recursive_mutex _mutex;
-        void record_operation_error(int error_code) const noexcept;
+        mutable bool _thread_safe_enabled = false;
+
+        static int lock_pair(const quaternion &first, const quaternion &second,
+                const quaternion *&lower, const quaternion *&upper);
+        static void unlock_pair(const quaternion *lower, const quaternion *upper);
+
+    protected:
+        int lock_mutex() const noexcept;
+        int unlock_mutex() const noexcept;
 
     public:
         quaternion();
@@ -35,16 +39,9 @@ class quaternion
         quaternion  conjugate() const;
         double      length() const;
         quaternion  normalize() const;
-        // Low-level error-stack helpers for validation and diagnostics.
-        ft_operation_error_stack *get_operation_error_stack_for_validation() noexcept;
-        int  last_operation_error() const noexcept;
-        const char  *last_operation_error_str() const noexcept;
-        int  operation_error_at(ft_size_t index) const noexcept;
-        const char  *operation_error_str_at(ft_size_t index) const noexcept;
-        void pop_operation_errors() noexcept;
-        int  pop_oldest_operation_error() noexcept;
-        int  pop_newest_operation_error() noexcept;
-        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
+        int  enable_thread_safety() noexcept;
+        void disable_thread_safety() noexcept;
+        bool is_thread_safe_enabled() const noexcept;
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex *get_mutex_for_testing() noexcept;
 #endif

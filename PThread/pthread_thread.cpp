@@ -238,7 +238,7 @@ int ft_thread::enable_thread_safety()
         this->set_error(FT_ERR_NO_MEMORY);
         return (-1);
     }
-    int mutex_error = state_mutex->operation_error_last_error();
+    int mutex_error = ft_global_error_stack_last_error();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         delete state_mutex;
@@ -286,7 +286,7 @@ void ft_thread::unlock(bool lock_acquired) const
         this->_error_code = FT_ERR_SUCCESSS;
         return ;
     }
-    mutex_error = this->_state_mutex->operation_error_last_error();
+    mutex_error = this->ft_global_error_stack_last_error();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         this->_error_code = mutex_error;
@@ -303,7 +303,7 @@ int ft_thread::lock_internal(bool *lock_acquired) const
     if (!this->_thread_safe_enabled || this->_state_mutex == ft_nullptr)
         return (FT_ERR_SUCCESSS);
     this->_state_mutex->lock(THREAD_ID);
-    int mutex_error = this->_state_mutex->operation_error_last_error();
+    int mutex_error = this->ft_global_error_stack_last_error();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         if (mutex_error == FT_ERR_MUTEX_ALREADY_LOCKED)

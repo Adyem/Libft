@@ -18,8 +18,8 @@ bool    intersect_aabb(const aabb &first, const aabb &second)
         lock_error = first.lock_pair(second, lower, upper);
         if (lock_error != FT_ERR_SUCCESSS)
         {
-            first_ref.record_operation_error(lock_error);
-            second_ref.record_operation_error(lock_error);
+            ft_global_error_stack_push(lock_error);
+            ft_global_error_stack_push(lock_error);
             ft_global_error_stack_push(lock_error);
             return (false);
         }
@@ -32,8 +32,8 @@ bool    intersect_aabb(const aabb &first, const aabb &second)
             separated = true;
         else if (first._minimum_y > second._maximum_y)
             separated = true;
-        first_ref.record_operation_error(FT_ERR_SUCCESSS);
-        second_ref.record_operation_error(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         first.unlock_pair(lower, upper);
         result = true;
         if (separated)
@@ -62,8 +62,8 @@ bool    intersect_circle(const circle &first, const circle &second)
     lock_error = first.lock_pair(second, lower, upper);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        first_ref.record_operation_error(lock_error);
-        second_ref.record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
+        ft_global_error_stack_push(lock_error);
         ft_global_error_stack_push(lock_error);
         return (false);
     }
@@ -71,8 +71,8 @@ bool    intersect_circle(const circle &first, const circle &second)
     delta_y = first._center_y - second._center_y;
     radius_sum = first._radius + second._radius;
     distance_squared = delta_x * delta_x + delta_y * delta_y;
-    first_ref.record_operation_error(FT_ERR_SUCCESSS);
-    second_ref.record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     first.unlock_pair(lower, upper);
     result = true;
     if (distance_squared > radius_sum * radius_sum)
@@ -101,8 +101,8 @@ bool    intersect_sphere(const sphere &first, const sphere &second)
     lock_error = first.lock_pair(second, lower, upper);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        first_ref.record_operation_error(lock_error);
-        second_ref.record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
+        ft_global_error_stack_push(lock_error);
         ft_global_error_stack_push(lock_error);
         return (false);
     }
@@ -111,8 +111,8 @@ bool    intersect_sphere(const sphere &first, const sphere &second)
     delta_z = first._center_z - second._center_z;
     radius_sum = first._radius + second._radius;
     distance_squared = delta_x * delta_x + delta_y * delta_y + delta_z * delta_z;
-    first_ref.record_operation_error(FT_ERR_SUCCESSS);
-    second_ref.record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     first.unlock_pair(lower, upper);
     result = true;
     if (distance_squared > radius_sum * radius_sum)

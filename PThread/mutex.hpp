@@ -45,21 +45,6 @@ class pt_mutex
         bool    is_owned_by_thread(pthread_t thread_id) const;
 
         pthread_mutex_t   *get_native_mutex() const;
-
-        unsigned long long operation_error_push_entry_with_id(int error_code,
-                unsigned long long operation_id) const;
-        unsigned long long operation_error_push_entry(int error_code) const;
-        void operation_error_push(int error_code) const;
-        int operation_error_pop_last() const;
-        int operation_error_pop_newest() const;
-        void operation_error_pop_all() const;
-        int operation_error_error_at(ft_size_t index) const;
-        int operation_error_last_error() const;
-        ft_size_t operation_error_depth() const;
-        unsigned long long operation_error_get_id_at(ft_size_t index) const;
-        ft_size_t operation_error_find_by_id(unsigned long long operation_id) const;
-        const char *operation_error_error_str_at(ft_size_t index) const;
-        const char *operation_error_last_error_str() const;
 };
 
 static_assert(!std::is_copy_constructible<pt_mutex>::value, "pt_mutex cannot be copied");

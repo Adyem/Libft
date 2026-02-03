@@ -41,7 +41,7 @@ int    scma_mutex_lock(void)
         mutex.lock(THREAD_ID);
         int mutex_error;
 
-        mutex_error = mutex.operation_error_pop_newest();
+        mutex_error = ft_global_error_stack_pop_newest();
         if (mutex_error != FT_ERR_SUCCESSS)
         {
             error_code = mutex_error;
@@ -74,7 +74,7 @@ int    scma_mutex_unlock(void)
         mutex.unlock(THREAD_ID);
         int mutex_error;
 
-        mutex_error = mutex.operation_error_pop_newest();
+        mutex_error = ft_global_error_stack_pop_newest();
         if (mutex_error != FT_ERR_SUCCESSS)
         {
             error_code = mutex_error;

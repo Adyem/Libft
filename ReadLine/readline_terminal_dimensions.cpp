@@ -11,7 +11,7 @@ static int rl_terminal_dimensions_mutex_constructor_error(pt_mutex *mutex_pointe
 {
     int mutex_error;
 
-    mutex_error = mutex_pointer->operation_error_last_error();
+    mutex_error = ft_global_error_stack_last_error();
     ft_global_error_stack_pop_newest();
     return (mutex_error);
 }

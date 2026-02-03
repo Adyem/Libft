@@ -2,35 +2,33 @@
 #include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
 #include "../PThread/pthread.hpp"
-#include "geometry_lock_tracker.hpp"
 
-
-static int sphere_lock_mutex(const pt_recursive_mutex &mutex)
+static void sphere_sleep_backoff()
 {
-    int error;
-
-    error = mutex.lock(THREAD_ID);
-    ft_global_error_stack_pop_newest();
-    return (error);
-}
-
-static int sphere_unlock_mutex(const pt_recursive_mutex &mutex)
-{
-    int error;
-
-    error = mutex.unlock(THREAD_ID);
-    ft_global_error_stack_pop_newest();
-    return (error);
-}
-
-void sphere::record_operation_error(int error_code) const noexcept
-{
-    unsigned long long operation_id;
-
-    operation_id = ft_errno_next_operation_id();
-    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(&this->_operation_errors, error_code, operation_id);
+    pt_thread_sleep(1);
     return ;
+}
+
+int sphere::lock_mutex() const noexcept
+{
+    int error;
+
+    if (!this->is_thread_safe_enabled())
+        return (FT_ERR_SUCCESSS);
+    error = this->_mutex.lock(THREAD_ID);
+    ft_global_error_stack_pop_newest();
+    return (error);
+}
+
+int sphere::unlock_mutex() const noexcept
+{
+    int error;
+
+    if (!this->is_thread_safe_enabled())
+        return (FT_ERR_SUCCESSS);
+    error = this->_mutex.unlock(THREAD_ID);
+    ft_global_error_stack_pop_newest();
+    return (error);
 }
 
 sphere::sphere()
@@ -39,7 +37,7 @@ sphere::sphere()
     this->_center_y = 0.0;
     this->_center_z = 0.0;
     this->_radius = 0.0;
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -50,7 +48,7 @@ sphere::sphere(double center_x, double center_y, double center_z,
     this->_center_y = center_y;
     this->_center_z = center_z;
     this->_radius = radius;
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -64,7 +62,7 @@ sphere::sphere(const sphere &other)
     lock_error = this->lock_pair(other, lower, upper);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return ;
     }
     this->_center_x = other._center_x;
@@ -72,7 +70,7 @@ sphere::sphere(const sphere &other)
     this->_center_z = other._center_z;
     this->_radius = other._radius;
     this->unlock_pair(lower, upper);
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -87,7 +85,7 @@ sphere &sphere::operator=(const sphere &other)
     lock_error = this->lock_pair(other, lower, upper);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (*this);
     }
     this->_center_x = other._center_x;
@@ -95,7 +93,7 @@ sphere &sphere::operator=(const sphere &other)
     this->_center_z = other._center_z;
     this->_radius = other._radius;
     this->unlock_pair(lower, upper);
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (*this);
 }
 
@@ -109,7 +107,7 @@ sphere::sphere(sphere &&other) noexcept
     lock_error = this->lock_pair(other, lower, upper);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return ;
     }
     this->_center_x = other._center_x;
@@ -121,7 +119,7 @@ sphere::sphere(sphere &&other) noexcept
     other._center_z = 0.0;
     other._radius = 0.0;
     this->unlock_pair(lower, upper);
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -136,7 +134,7 @@ sphere &sphere::operator=(sphere &&other) noexcept
     lock_error = this->lock_pair(other, lower, upper);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (*this);
     }
     this->_center_x = other._center_x;
@@ -148,7 +146,7 @@ sphere &sphere::operator=(sphere &&other) noexcept
     other._center_z = 0.0;
     other._radius = 0.0;
     this->unlock_pair(lower, upper);
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (*this);
 }
 
@@ -162,22 +160,22 @@ int sphere::set_center(double center_x, double center_y, double center_z)
     int lock_error;
     int unlock_error;
 
-    lock_error = sphere_lock_mutex(this->_mutex);
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (lock_error);
     }
     this->_center_x = center_x;
     this->_center_y = center_y;
     this->_center_z = center_z;
-    unlock_error = sphere_unlock_mutex(this->_mutex);
+    unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(unlock_error);
+        ft_global_error_stack_push(unlock_error);
         return (unlock_error);
     }
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);
 }
 
@@ -186,20 +184,20 @@ int sphere::set_center_x(double center_x)
     int lock_error;
     int unlock_error;
 
-    lock_error = sphere_lock_mutex(this->_mutex);
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (lock_error);
     }
     this->_center_x = center_x;
-    unlock_error = sphere_unlock_mutex(this->_mutex);
+    unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(unlock_error);
+        ft_global_error_stack_push(unlock_error);
         return (unlock_error);
     }
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);
 }
 
@@ -208,20 +206,20 @@ int sphere::set_center_y(double center_y)
     int lock_error;
     int unlock_error;
 
-    lock_error = sphere_lock_mutex(this->_mutex);
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (lock_error);
     }
     this->_center_y = center_y;
-    unlock_error = sphere_unlock_mutex(this->_mutex);
+    unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(unlock_error);
+        ft_global_error_stack_push(unlock_error);
         return (unlock_error);
     }
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);
 }
 
@@ -230,20 +228,20 @@ int sphere::set_center_z(double center_z)
     int lock_error;
     int unlock_error;
 
-    lock_error = sphere_lock_mutex(this->_mutex);
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (lock_error);
     }
     this->_center_z = center_z;
-    unlock_error = sphere_unlock_mutex(this->_mutex);
+    unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(unlock_error);
+        ft_global_error_stack_push(unlock_error);
         return (unlock_error);
     }
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);
 }
 
@@ -252,20 +250,20 @@ int sphere::set_radius(double radius)
     int lock_error;
     int unlock_error;
 
-    lock_error = sphere_lock_mutex(this->_mutex);
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (lock_error);
     }
     this->_radius = radius;
-    unlock_error = sphere_unlock_mutex(this->_mutex);
+    unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(unlock_error);
+        ft_global_error_stack_push(unlock_error);
         return (unlock_error);
     }
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);
 }
 
@@ -275,20 +273,20 @@ double  sphere::get_center_x() const
     double value;
     int unlock_error;
 
-    lock_error = sphere_lock_mutex(this->_mutex);
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (0.0);
     }
     value = this->_center_x;
-    unlock_error = sphere_unlock_mutex(this->_mutex);
+    unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(unlock_error);
+        ft_global_error_stack_push(unlock_error);
         return (value);
     }
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (value);
 }
 
@@ -298,20 +296,20 @@ double  sphere::get_center_y() const
     double value;
     int unlock_error;
 
-    lock_error = sphere_lock_mutex(this->_mutex);
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (0.0);
     }
     value = this->_center_y;
-    unlock_error = sphere_unlock_mutex(this->_mutex);
+    unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(unlock_error);
+        ft_global_error_stack_push(unlock_error);
         return (value);
     }
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (value);
 }
 
@@ -321,20 +319,20 @@ double  sphere::get_center_z() const
     double value;
     int unlock_error;
 
-    lock_error = sphere_lock_mutex(this->_mutex);
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (0.0);
     }
     value = this->_center_z;
-    unlock_error = sphere_unlock_mutex(this->_mutex);
+    unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(unlock_error);
+        ft_global_error_stack_push(unlock_error);
         return (value);
     }
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (value);
 }
 
@@ -344,20 +342,20 @@ double  sphere::get_radius() const
     double value;
     int unlock_error;
 
-    lock_error = sphere_lock_mutex(this->_mutex);
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (0.0);
     }
     value = this->_radius;
-    unlock_error = sphere_unlock_mutex(this->_mutex);
+    unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(unlock_error);
+        ft_global_error_stack_push(unlock_error);
         return (value);
     }
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (value);
 }
 
@@ -371,9 +369,9 @@ int sphere::lock_pair(const sphere &other, const sphere *&lower,
     {
         lower = this;
         upper = this;
-        int self_error = sphere_lock_mutex(this->_mutex);
+        int self_error = this->lock_mutex();
         if (self_error != FT_ERR_SUCCESSS)
-            this->record_operation_error(self_error);
+            ft_global_error_stack_push(self_error);
         return (self_error);
     }
     if (ordered_first > ordered_second)
@@ -383,35 +381,52 @@ int sphere::lock_pair(const sphere &other, const sphere *&lower,
     }
     lower = ordered_first;
     upper = ordered_second;
-    int lock_error;
-
-    lock_error = geometry_lock_tracker_lock_pair(lower, upper,
-            lower->_mutex, upper->_mutex);
-    if (lock_error != FT_ERR_SUCCESSS)
+    while (true)
     {
-        this->record_operation_error(lock_error);
-        return (lock_error);
+        int lower_error = lower->lock_mutex();
+        if (lower_error != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(lower_error);
+            return (lower_error);
+        }
+        int upper_error = upper->lock_mutex();
+        if (upper_error == FT_ERR_SUCCESSS)
+            return (FT_ERR_SUCCESSS);
+        if (upper_error != FT_ERR_MUTEX_ALREADY_LOCKED)
+        {
+            lower->unlock_mutex();
+            ft_global_error_stack_push(upper_error);
+            return (upper_error);
+        }
+        lower->unlock_mutex();
+        sphere_sleep_backoff();
     }
-    return (FT_ERR_SUCCESSS);
 }
 
 void sphere::unlock_pair(const sphere *lower, const sphere *upper)
 {
     if (upper != ft_nullptr)
-        sphere_unlock_mutex(upper->_mutex);
+        upper->unlock_mutex();
     if (lower != ft_nullptr && lower != upper)
-        sphere_unlock_mutex(lower->_mutex);
+        lower->unlock_mutex();
     return ;
 }
 
-pt_recursive_mutex *sphere::get_mutex_for_validation() const
+int sphere::enable_thread_safety() noexcept
 {
-    return (&this->_mutex);
+    this->_thread_safe_enabled = true;
+    return (FT_ERR_SUCCESSS);
 }
 
-ft_operation_error_stack *sphere::get_operation_error_stack_for_validation() const noexcept
+void sphere::disable_thread_safety() noexcept
 {
-    return (&this->_operation_errors);
+    this->_thread_safe_enabled = false;
+    return ;
+}
+
+bool sphere::is_thread_safe_enabled() const noexcept
+{
+    return (this->_thread_safe_enabled);
 }
 
 #ifdef LIBFT_TEST_BUILD

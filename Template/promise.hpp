@@ -217,7 +217,7 @@ int ft_promise<ValueType>::prepare_thread_safety()
         {
             int mutex_error;
 
-            mutex_error = mutex_pointer->operation_error_pop_newest();
+            mutex_error = ft_global_error_stack_pop_newest();
             ft_global_error_stack_pop_newest();
             if (mutex_error != FT_ERR_SUCCESSS)
             {
@@ -253,7 +253,7 @@ inline int ft_promise<void>::prepare_thread_safety()
         {
             int mutex_error;
 
-            mutex_error = mutex_pointer->operation_error_pop_newest();
+            mutex_error = ft_global_error_stack_pop_newest();
             ft_global_error_stack_pop_newest();
             if (mutex_error != FT_ERR_SUCCESSS)
             {
@@ -312,7 +312,7 @@ int ft_promise<ValueType>::lock_internal(bool *lock_acquired) const
     mutable_promise->_mutex->lock(THREAD_ID);
     int mutex_error;
 
-    mutex_error = mutable_promise->_mutex->operation_error_pop_newest();
+    mutex_error = ft_global_error_stack_pop_newest();
     ft_global_error_stack_pop_newest();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
@@ -340,7 +340,7 @@ inline int ft_promise<void>::lock_internal(bool *lock_acquired) const
     mutable_promise->_mutex->lock(THREAD_ID);
     int mutex_error;
 
-    mutex_error = mutable_promise->_mutex->operation_error_pop_newest();
+    mutex_error = ft_global_error_stack_pop_newest();
     ft_global_error_stack_pop_newest();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
@@ -366,7 +366,7 @@ int ft_promise<ValueType>::unlock_internal(bool lock_acquired) const
     mutable_promise->_mutex->unlock(THREAD_ID);
     int mutex_error;
 
-    mutex_error = mutable_promise->_mutex->operation_error_pop_newest();
+    mutex_error = ft_global_error_stack_pop_newest();
     ft_global_error_stack_pop_newest();
     return (mutex_error);
 }
@@ -383,7 +383,7 @@ inline int ft_promise<void>::unlock_internal(bool lock_acquired) const
     mutable_promise->_mutex->unlock(THREAD_ID);
     int mutex_error;
 
-    mutex_error = mutable_promise->_mutex->operation_error_pop_newest();
+    mutex_error = ft_global_error_stack_pop_newest();
     ft_global_error_stack_pop_newest();
     return (mutex_error);
 }

@@ -17,10 +17,6 @@ other classes must split declarations into .hpp files and definitions into .cpp 
 Do not define member function bodies inside the class declaration; place all definitions outside the class.
 Every class must declare and define a constructor and destructor, even if they simply contain return ;. Do not use = default; explicitly define the bodies.
 
-## Class Validity Flag
-
-Every class must expose a private `std::atomic<bool>` named `_is_valid` that indicates whether the object currently holds a usable state. Initialize `_is_valid` to `false` and leave it `false` while the constructor performs initialization steps; only store `true` once the constructor finishes successfully. Immediately before any destructor work begins (or as soon as a fatal error is detected), set `_is_valid` back to `false` so external observers know the instance is no longer valid. Update `_is_valid` only while holding the class mutex, and check it with an acquire load before any public entry point touches guarded members. This lightweight flag replaces per-instance error stacks while still giving callers a quick health check. `ft_promise` and `ft_unique_lock` are exempt from this requirement because they already track readiness/error state through `_ready`/`_error_code` or depend solely on the wrapped mutex state so adding `_is_valid` would not add meaningful value.
-
 ## Optional Thread-safety Contract
 
 When a class exposes optional thread safety—as `ft_promise` does with `_thread_safe_enabled`/ `_mutex`—keep the same fields and contract in every class that follows the pattern (note: `ft_unique_lock` purposely opts out of this contract because it never enables per-instance thread safety, it simply proxies the wrapped mutex):

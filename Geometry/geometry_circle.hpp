@@ -1,7 +1,7 @@
 #ifndef GEOMETRY_CIRCLE_HPP
 # define GEOMETRY_CIRCLE_HPP
 
-#include "../Errno/errno_internal.hpp"
+#include "../Errno/errno.hpp"
 #include "../PThread/recursive_mutex.hpp"
 
 class circle
@@ -10,10 +10,11 @@ class circle
         double          _center_x;
         double          _center_y;
         double          _radius;
-        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
         mutable pt_recursive_mutex _mutex;
+        mutable bool    _thread_safe_enabled = false;
 
-        void    record_operation_error(int error_code) const noexcept;
+        int     lock_mutex() const noexcept;
+        int     unlock_mutex() const noexcept;
         int     lock_pair(const circle &other, const circle *&lower,
                 const circle *&upper) const;
         static void unlock_pair(const circle *lower, const circle *upper);
@@ -34,8 +35,9 @@ class circle
         double  get_center_x() const;
         double  get_center_y() const;
         double  get_radius() const;
-        pt_recursive_mutex *get_mutex_for_validation() const;
-        ft_operation_error_stack *get_operation_error_stack_for_validation() const noexcept;
+        int     enable_thread_safety() noexcept;
+        void    disable_thread_safety() noexcept;
+        bool    is_thread_safe_enabled() const noexcept;
 
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex *get_mutex_for_testing() noexcept;

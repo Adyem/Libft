@@ -33,7 +33,7 @@ static int pt_mutex_pop_error(const pt_mutex &mutex)
 {
     int error_value;
 
-    error_value = mutex.operation_error_pop_newest();
+    error_value = ft_global_error_stack_pop_newest();
     ft_global_error_stack_pop_newest();
     return (error_value);
 }

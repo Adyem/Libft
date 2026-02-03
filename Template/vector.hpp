@@ -3,7 +3,6 @@
 
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
-#include "../Errno/errno_internal.hpp"
 #include "../CMA/CMA.hpp"
 #include "constructor.hpp"
 #include <cstddef>
@@ -33,7 +32,6 @@ struct ft_vector_inline_storage<Type, InlineCapacity, true>
 {
     alignas(Type) unsigned char buffer[sizeof(Type) * InlineCapacity];
 };
-#include "../Libft/libft.hpp"
 #include "move.hpp"
 
 template <typename ElementType>
@@ -140,8 +138,7 @@ ft_vector<ElementType>::ft_vector(size_t initial_capacity)
     mutex_pointer = new(memory) pt_mutex();
     {
         int mutex_error;
-
-        mutex_error = mutex_pointer->operation_error_pop_newest();
+        mutex_error = ft_global_error_stack_pop_newest();
         ft_global_error_stack_pop_newest();
         if (mutex_error != FT_ERR_SUCCESSS)
         {
@@ -221,7 +218,7 @@ ft_vector<ElementType>::ft_vector(ft_vector<ElementType>&& other) noexcept
             {
                 int mutex_error;
 
-                mutex_error = mutex_pointer->operation_error_pop_newest();
+                mutex_error = ft_global_error_stack_pop_newest();
                 ft_global_error_stack_pop_newest();
                 if (mutex_error != FT_ERR_SUCCESSS)
                 {
@@ -323,7 +320,7 @@ ft_vector<ElementType>& ft_vector<ElementType>::operator=(ft_vector<ElementType>
             {
                 int mutex_error;
 
-                mutex_error = mutex_pointer->operation_error_pop_newest();
+                mutex_error = ft_global_error_stack_pop_newest();
                 ft_global_error_stack_pop_newest();
                 if (mutex_error != FT_ERR_SUCCESSS)
                 {
@@ -716,7 +713,7 @@ int ft_vector<ElementType>::lock_internal(bool *lock_acquired) const
     this->_mutex->lock(THREAD_ID);
     int mutex_error;
 
-    mutex_error = this->_mutex->operation_error_pop_newest();
+    mutex_error = this->ft_global_error_stack_pop_newest();
     ft_global_error_stack_pop_newest();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
@@ -744,7 +741,7 @@ int ft_vector<ElementType>::unlock_internal(bool lock_acquired) const
     this->_mutex->unlock(THREAD_ID);
     int mutex_error;
 
-    mutex_error = this->_mutex->operation_error_pop_newest();
+    mutex_error = this->ft_global_error_stack_pop_newest();
     ft_global_error_stack_pop_newest();
     return (mutex_error);
     return (FT_ERR_SUCCESSS);

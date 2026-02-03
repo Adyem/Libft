@@ -1,7 +1,7 @@
 #ifndef LINEAR_ALGEBRA_HPP
 # define LINEAR_ALGEBRA_HPP
 
-#include "../Errno/errno_internal.hpp"
+#include "../Errno/errno.hpp"
 #include "../PThread/recursive_mutex.hpp"
 
 class vector2
@@ -9,12 +9,14 @@ class vector2
     private:
         double _x;
         double _y;
-        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
         mutable pt_recursive_mutex _mutex;
+        mutable bool _thread_safe_enabled = false;
 
         friend class matrix2;
 
-        void    record_operation_error(int error_code) const noexcept;
+        int lock_mutex() const noexcept;
+        int unlock_mutex() const noexcept;
+
         static int lock_pair(const vector2 &first, const vector2 &second,
                 const vector2 *&lower, const vector2 *&upper);
         static void unlock_pair(const vector2 *lower, const vector2 *upper);
@@ -34,11 +36,12 @@ class vector2
         double  dot(const vector2 &other) const;
         double  length() const;
         vector2 normalize() const;
-        pt_recursive_mutex *get_mutex_for_validation() const;
-        ft_operation_error_stack *get_operation_error_stack_for_validation() const noexcept;
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex *get_mutex_for_testing() noexcept;
 #endif
+        int  enable_thread_safety() noexcept;
+        void disable_thread_safety() noexcept;
+        bool is_thread_safe_enabled() const noexcept;
 };
 
 class vector3
@@ -47,12 +50,14 @@ class vector3
         double _x;
         double _y;
         double _z;
-        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
         mutable pt_recursive_mutex _mutex;
+        mutable bool _thread_safe_enabled = false;
 
         friend class matrix3;
 
-        void    record_operation_error(int error_code) const noexcept;
+        int lock_mutex() const noexcept;
+        int unlock_mutex() const noexcept;
+
         static int lock_pair(const vector3 &first, const vector3 &second,
                 const vector3 *&lower, const vector3 *&upper);
         static void unlock_pair(const vector3 *lower, const vector3 *upper);
@@ -74,11 +79,12 @@ class vector3
         vector3 cross(const vector3 &other) const;
         double  length() const;
         vector3 normalize() const;
-        pt_recursive_mutex *get_mutex_for_validation() const;
-        ft_operation_error_stack *get_operation_error_stack_for_validation() const noexcept;
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex *get_mutex_for_testing() noexcept;
 #endif
+        int  enable_thread_safety() noexcept;
+        void disable_thread_safety() noexcept;
+        bool is_thread_safe_enabled() const noexcept;
 };
 
 class vector4
@@ -88,12 +94,14 @@ class vector4
         double _y;
         double _z;
         double _w;
-        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
         mutable pt_recursive_mutex _mutex;
+        mutable bool _thread_safe_enabled = false;
 
         friend class matrix4;
 
-        void    record_operation_error(int error_code) const noexcept;
+        int lock_mutex() const noexcept;
+        int unlock_mutex() const noexcept;
+
         static int lock_pair(const vector4 &first, const vector4 &second,
                 const vector4 *&lower, const vector4 *&upper);
         static void unlock_pair(const vector4 *lower, const vector4 *upper);
@@ -115,21 +123,24 @@ class vector4
         double  dot(const vector4 &other) const;
         double  length() const;
         vector4 normalize() const;
-        pt_recursive_mutex *get_mutex_for_validation() const;
-        ft_operation_error_stack *get_operation_error_stack_for_validation() const noexcept;
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex *get_mutex_for_testing() noexcept;
 #endif
+        int  enable_thread_safety() noexcept;
+        void disable_thread_safety() noexcept;
+        bool is_thread_safe_enabled() const noexcept;
 };
 
 class matrix2
 {
     private:
         double _m[2][2];
-        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
         mutable pt_recursive_mutex _mutex;
+        mutable bool _thread_safe_enabled = false;
 
-        void    record_operation_error(int error_code) const noexcept;
+        int lock_mutex() const noexcept;
+        int unlock_mutex() const noexcept;
+
         static int lock_pair(const matrix2 &first, const matrix2 &second,
                 const matrix2 *&lower, const matrix2 *&upper);
         static void unlock_pair(const matrix2 *lower, const matrix2 *upper);
@@ -146,21 +157,24 @@ class matrix2
         vector2 transform(const vector2 &vector) const;
         matrix2 multiply(const matrix2 &other) const;
         matrix2 invert() const;
-        pt_recursive_mutex *get_mutex_for_validation() const;
-        ft_operation_error_stack *get_operation_error_stack_for_validation() const noexcept;
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex *get_mutex_for_testing() noexcept;
 #endif
+        int  enable_thread_safety() noexcept;
+        void disable_thread_safety() noexcept;
+        bool is_thread_safe_enabled() const noexcept;
 };
 
 class matrix3
 {
     private:
         double _m[3][3];
-        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
         mutable pt_recursive_mutex _mutex;
+        mutable bool _thread_safe_enabled = false;
 
-        void    record_operation_error(int error_code) const noexcept;
+        int lock_mutex() const noexcept;
+        int unlock_mutex() const noexcept;
+
         static int lock_pair(const matrix3 &first, const matrix3 &second,
                 const matrix3 *&lower, const matrix3 *&upper);
         static void unlock_pair(const matrix3 *lower, const matrix3 *upper);
@@ -178,21 +192,24 @@ class matrix3
         vector3 transform(const vector3 &vector) const;
         matrix3 multiply(const matrix3 &other) const;
         matrix3 invert() const;
-        pt_recursive_mutex *get_mutex_for_validation() const;
-        ft_operation_error_stack *get_operation_error_stack_for_validation() const noexcept;
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex *get_mutex_for_testing() noexcept;
 #endif
+        int  enable_thread_safety() noexcept;
+        void disable_thread_safety() noexcept;
+        bool is_thread_safe_enabled() const noexcept;
 };
 
 class matrix4
 {
     private:
         double _m[4][4];
-        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
         mutable pt_recursive_mutex _mutex;
+        mutable bool _thread_safe_enabled = false;
 
-        void    record_operation_error(int error_code) const noexcept;
+        int lock_mutex() const noexcept;
+        int unlock_mutex() const noexcept;
+
         static int lock_pair(const matrix4 &first, const matrix4 &second,
                 const matrix4 *&lower, const matrix4 *&upper);
         static void unlock_pair(const matrix4 *lower, const matrix4 *upper);
@@ -216,8 +233,12 @@ class matrix4
         vector4 transform(const vector4 &vector) const;
         matrix4 multiply(const matrix4 &other) const;
         matrix4 invert() const;
-        pt_recursive_mutex *get_mutex_for_validation() const;
-        ft_operation_error_stack *get_operation_error_stack_for_validation() const noexcept;
+#ifdef LIBFT_TEST_BUILD
+        pt_recursive_mutex *get_mutex_for_testing() noexcept;
+#endif
+        int  enable_thread_safety() noexcept;
+        void disable_thread_safety() noexcept;
+        bool is_thread_safe_enabled() const noexcept;
 };
 
 # include "linear_algebra_quaternion.hpp"

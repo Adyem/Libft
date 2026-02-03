@@ -39,6 +39,8 @@ class ft_unique_lock
 
         bool owns_lock() const;
         MutexType *mutex() const;
+        int last_operation_error() const noexcept;
+        const char *last_operation_error_str() const noexcept;
 };
 
 template <typename MutexType>
@@ -169,6 +171,18 @@ MutexType *ft_unique_lock<MutexType>::mutex() const
     mutex_pointer = this->_mutex;
     this->push_result(FT_ERR_SUCCESSS);
     return (mutex_pointer);
+}
+
+template <typename MutexType>
+int ft_unique_lock<MutexType>::last_operation_error() const noexcept
+{
+    return (ft_global_error_stack_last_error());
+}
+
+template <typename MutexType>
+const char *ft_unique_lock<MutexType>::last_operation_error_str() const noexcept
+{
+    return (ft_global_error_stack_last_error_str());
 }
 
 #endif

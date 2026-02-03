@@ -3,7 +3,6 @@
 
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
-#include "../Errno/errno_internal.hpp"
 #include <cstdint>
 #include <memory>
 
@@ -24,10 +23,8 @@ class ft_lock_guard
         MutexType *_mutex;
         bool _owns_lock;
         mutable int _error_code;
-        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
 
         void set_error(int error) const;
-        void record_error(int error, bool push_global = true) const;
 
     public:
         explicit ft_lock_guard(MutexType &mutex);
@@ -44,20 +41,7 @@ template <typename MutexType>
 void ft_lock_guard<MutexType>::set_error(int error) const
 {
     this->_error_code = error;
-    this->record_error(error, true);
-    return ;
-}
-
-template <typename MutexType>
-void ft_lock_guard<MutexType>::record_error(int error, bool push_global) const
-{
-    unsigned long long operation_id;
-
-    if (push_global)
-        operation_id = ft_global_error_stack_push_entry(error);
-    else
-        operation_id = 0;
-    ft_operation_error_stack_push(&this->_operation_errors, error, operation_id);
+    ft_global_error_stack_push_entry(error);
     return ;
 }
 

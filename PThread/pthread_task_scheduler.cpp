@@ -9,7 +9,7 @@ static int pt_recursive_mutex_pop_error(const pt_recursive_mutex &mutex)
 {
     int error_value;
 
-    error_value = mutex.operation_error_pop_newest();
+    error_value = ft_global_error_stack_pop_newest();
     ft_global_error_stack_pop_newest();
     return (error_value);
 }
@@ -637,11 +637,11 @@ int ft_scheduled_task_handle::enable_thread_safety()
         this->operation_error_push(FT_ERR_NO_MEMORY);
         return (-1);
     }
-    if (state_mutex->operation_error_last_error() != FT_ERR_SUCCESSS)
+    if (ft_global_error_stack_last_error() != FT_ERR_SUCCESSS)
     {
         int mutex_error;
 
-        mutex_error = state_mutex->operation_error_last_error();
+        mutex_error = ft_global_error_stack_last_error();
         delete state_mutex;
         this->operation_error_push(mutex_error);
         return (-1);

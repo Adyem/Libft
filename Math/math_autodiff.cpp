@@ -2,18 +2,12 @@
 
 #include <cmath>
 #include "../CPP_class/class_nullptr.hpp"
-#include "../Errno/errno_internal.hpp"
 #include "../Libft/libft.hpp"
 #include "../PThread/lock_guard.hpp"
 
-static thread_local ft_operation_error_stack g_math_autodiff_operation_errors = {{}, {}, 0};
-
 static void math_autodiff_push_error(int error_code)
 {
-    unsigned long long operation_id = ft_errno_next_operation_id();
-
-    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(&g_math_autodiff_operation_errors, error_code, operation_id);
+    ft_global_error_stack_push(error_code);
     return ;
 }
 
@@ -21,7 +15,6 @@ ft_dual_number::ft_dual_number() noexcept
     : _value(0.0)
     , _derivative(0.0)
     , _error_code(FT_ERR_SUCCESSS)
-    , _operation_errors({{}, {}, 0})
     , _mutex()
 {
     return ;
@@ -31,7 +24,6 @@ ft_dual_number::ft_dual_number(double value, double derivative) noexcept
     : _value(value)
     , _derivative(derivative)
     , _error_code(FT_ERR_SUCCESSS)
-    , _operation_errors({{}, {}, 0})
     , _mutex()
 {
     return ;
@@ -41,7 +33,6 @@ ft_dual_number::ft_dual_number(const ft_dual_number &other) noexcept
     : _value(0.0)
     , _derivative(0.0)
     , _error_code(FT_ERR_SUCCESSS)
-    , _operation_errors({{}, {}, 0})
     , _mutex()
 {
     *this = other;
@@ -52,7 +43,6 @@ ft_dual_number::ft_dual_number(ft_dual_number &&other) noexcept
     : _value(0.0)
     , _derivative(0.0)
     , _error_code(FT_ERR_SUCCESSS)
-    , _operation_errors({{}, {}, 0})
     , _mutex()
 {
     *this = ft_move(other);
@@ -71,7 +61,6 @@ ft_dual_number &ft_dual_number::operator=(const ft_dual_number &other) noexcept
     ft_recursive_mutex_pair_guard guard(this->_mutex, other._mutex);
     this->_value = other._value;
     this->_derivative = other._derivative;
-    this->_operation_errors = {{}, {}, 0};
     this->set_error(other._error_code);
     return (*this);
 }
@@ -83,7 +72,6 @@ ft_dual_number &ft_dual_number::operator=(ft_dual_number &&other) noexcept
     ft_recursive_mutex_pair_guard guard(this->_mutex, other._mutex);
     this->_value = other._value;
     this->_derivative = other._derivative;
-    this->_operation_errors = {{}, {}, 0};
     int other_error = other._error_code;
     other._value = 0.0;
     other._derivative = 0.0;
@@ -96,7 +84,7 @@ void ft_dual_number::set_error(int error_code) const noexcept
 {
     ft_recursive_lock_guard guard(this->_mutex);
     this->_error_code = error_code;
-    this->record_operation_error(error_code);
+    ft_global_error_stack_push(error_code);
     return ;
 }
 
@@ -349,16 +337,6 @@ const char *ft_dual_number::get_error_str() const noexcept
 pt_recursive_mutex *ft_dual_number::get_mutex_for_validation() const noexcept
 {
     return (&this->_mutex);
-}
-
-void ft_dual_number::record_operation_error(int error_code) const noexcept
-{
-    unsigned long long operation_id;
-
-    operation_id = ft_errno_next_operation_id();
-    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(&this->_operation_errors, error_code, operation_id);
-    return ;
 }
 
 static int math_autodiff_prepare_inputs(const ft_vector<double> &point,

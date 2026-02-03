@@ -3,29 +3,12 @@
 #include <cmath>
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
-#include "../Errno/errno_internal.hpp"
 #include "../Template/move.hpp"
 #include "../PThread/lock_guard.hpp"
 
-static thread_local ft_operation_error_stack g_math_polynomial_operation_errors = {{}, {}, 0};
-
-static int math_vector2_last_error(const vector2 &subject) noexcept
-{
-    const ft_operation_error_stack *operation_stack;
-
-    operation_stack = subject.get_operation_error_stack_for_validation();
-    if (operation_stack == ft_nullptr)
-        return (FT_ERR_INVALID_POINTER);
-    return (ft_operation_error_stack_last_error(operation_stack));
-}
-
 static void math_polynomial_push_error(int error_code) noexcept
 {
-    unsigned long long operation_id;
-
-    operation_id = ft_errno_next_operation_id();
-    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(&g_math_polynomial_operation_errors, error_code, operation_id);
+    ft_global_error_stack_push(error_code);
     return ;
 }
 
@@ -54,7 +37,6 @@ static void math_polynomial_copy_vector(const ft_vector<double> &source,
 
 ft_cubic_spline::ft_cubic_spline() noexcept
     : _error_code(FT_ERR_SUCCESSS)
-    , _operation_errors({{}, {}, 0})
     , _mutex()
 {
     return ;
@@ -62,7 +44,6 @@ ft_cubic_spline::ft_cubic_spline() noexcept
 
 ft_cubic_spline::ft_cubic_spline(ft_cubic_spline &&other) noexcept
     : _error_code(FT_ERR_SUCCESSS)
-    , _operation_errors({{}, {}, 0})
     , _mutex()
 {
     ft_recursive_lock_guard guard(other._mutex);
@@ -111,23 +92,13 @@ void ft_cubic_spline::set_error(int error_code) const noexcept
 {
     ft_recursive_lock_guard guard(this->_mutex);
     this->_error_code = error_code;
-    this->record_operation_error(error_code);
+    ft_global_error_stack_push(error_code);
     return ;
 }
 
 pt_recursive_mutex *ft_cubic_spline::get_mutex_for_validation() const noexcept
 {
     return (&this->_mutex);
-}
-
-void ft_cubic_spline::record_operation_error(int error_code) const noexcept
-{
-    unsigned long long operation_id;
-
-    operation_id = ft_errno_next_operation_id();
-    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(&this->_operation_errors, error_code, operation_id);
-    return ;
 }
 
 static int math_polynomial_validate_coefficients(const ft_vector<double> &coefficients) noexcept
@@ -467,14 +438,14 @@ static int math_polynomial_extract_coordinates(const ft_vector<vector2> &control
     {
         point = control_points[index];
         x_value = point.get_x();
-        int point_error = math_vector2_last_error(point);
+        int point_error = ft_global_error_stack_last_error();
         if (point_error != FT_ERR_SUCCESSS)
         {
             math_polynomial_push_error(point_error);
             return (point_error);
         }
         y_value = point.get_y();
-        point_error = math_vector2_last_error(point);
+        point_error = ft_global_error_stack_last_error();
         if (point_error != FT_ERR_SUCCESSS)
         {
             math_polynomial_push_error(point_error);
@@ -527,7 +498,7 @@ int math_bezier_evaluate_vector2(const ft_vector<vector2> &control_points,
     }
     evaluated_point = vector2(x_value, y_value);
     result = evaluated_point;
-    int result_error = math_vector2_last_error(result);
+    int result_error = ft_global_error_stack_last_error();
     if (result_error != FT_ERR_SUCCESSS)
     {
         math_polynomial_push_error(result_error);

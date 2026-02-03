@@ -119,7 +119,7 @@ int pt_condition_variable::lock_internal(bool *lock_acquired) const
     if (!this->_thread_safe_enabled || this->_state_mutex == ft_nullptr)
         return (FT_ERR_SUCCESSS);
     this->_state_mutex->lock(THREAD_ID);
-    int state_error = this->_state_mutex->operation_error_last_error();
+    int state_error = this->ft_global_error_stack_last_error();
     if (state_error != FT_ERR_SUCCESSS)
         return (state_error);
     if (lock_acquired != ft_nullptr)
@@ -161,7 +161,7 @@ int pt_condition_variable::enable_thread_safety()
         this->set_error(FT_ERR_NO_MEMORY);
         return (-1);
     }
-    int mutex_error = state_mutex->operation_error_last_error();
+    int mutex_error = ft_global_error_stack_last_error();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         delete state_mutex;
@@ -207,7 +207,7 @@ void pt_condition_variable::unlock_state(bool lock_acquired) const
     this->unlock_internal(lock_acquired);
     if (this->_state_mutex != ft_nullptr)
     {
-        int state_error = this->_state_mutex->operation_error_last_error();
+        int state_error = this->ft_global_error_stack_last_error();
         if (state_error != FT_ERR_SUCCESSS)
         {
             const_cast<pt_condition_variable *>(this)->set_error(state_error);
@@ -254,7 +254,7 @@ int pt_condition_variable::wait(pt_mutex &mutex)
     {
         int unlock_error;
 
-        unlock_error = mutex.operation_error_last_error();
+        unlock_error = ft_global_error_stack_last_error();
         pthread_mutex_unlock(&this->_mutex);
         this->set_error(unlock_error);
         return (-1);
@@ -269,7 +269,7 @@ int pt_condition_variable::wait(pt_mutex &mutex)
         {
             int relock_error;
 
-            relock_error = mutex.operation_error_last_error();
+            relock_error = ft_global_error_stack_last_error();
             this->set_error(relock_error);
             return (-1);
         }
@@ -285,7 +285,7 @@ int pt_condition_variable::wait(pt_mutex &mutex)
         {
             int relock_error;
 
-            relock_error = mutex.operation_error_last_error();
+            relock_error = ft_global_error_stack_last_error();
             this->set_error(relock_error);
             return (-1);
         }
@@ -296,7 +296,7 @@ int pt_condition_variable::wait(pt_mutex &mutex)
     {
         int relock_error;
 
-        relock_error = mutex.operation_error_last_error();
+        relock_error = ft_global_error_stack_last_error();
         this->set_error(relock_error);
         return (-1);
     }
@@ -353,7 +353,7 @@ int pt_condition_variable::wait_until(pt_mutex &mutex, const struct timespec &ab
     {
         int unlock_error;
 
-        unlock_error = mutex.operation_error_last_error();
+        unlock_error = ft_global_error_stack_last_error();
         pthread_mutex_unlock(&this->_mutex);
         this->set_error(unlock_error);
         return (-1);
@@ -368,7 +368,7 @@ int pt_condition_variable::wait_until(pt_mutex &mutex, const struct timespec &ab
         {
             int relock_error;
 
-            relock_error = mutex.operation_error_last_error();
+            relock_error = ft_global_error_stack_last_error();
             this->set_error(relock_error);
             return (-1);
         }
@@ -379,7 +379,7 @@ int pt_condition_variable::wait_until(pt_mutex &mutex, const struct timespec &ab
     {
         int relock_error;
 
-        relock_error = mutex.operation_error_last_error();
+        relock_error = ft_global_error_stack_last_error();
         this->set_error(relock_error);
         return (-1);
     }
