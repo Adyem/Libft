@@ -3,7 +3,6 @@
 
 #include <cstddef>
 #include <type_traits>
-#include <mutex>
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../Libft/limits.hpp"
@@ -64,7 +63,6 @@ class scma_handle_accessor
 {
     private:
         scma_handle _handle;
-        mutable int _error_code;
 
         void    set_error(int error_code) const;
 
@@ -101,7 +99,6 @@ inline scma_handle_accessor<TValue>::scma_handle_accessor(void)
 {
     this->_handle.index = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
     this->_handle.generation = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
-    this->_error_code = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -110,7 +107,6 @@ inline scma_handle_accessor<TValue>::scma_handle_accessor(scma_handle handle)
 {
     this->_handle.index = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
     this->_handle.generation = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
-    this->_error_code = FT_ERR_SUCCESSS;
     this->bind(handle);
     return ;
 }
@@ -120,10 +116,9 @@ inline scma_handle_accessor<TValue>::scma_handle_accessor(const scma_handle_acce
 {
     this->_handle.index = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
     this->_handle.generation = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
-    this->_error_code = FT_ERR_SUCCESSS;
     if (!other.is_bound())
     {
-        this->set_error(other._error_code);
+        this->set_error(other.get_error());
         return ;
     }
     if (scma_mutex_lock() != 0)
@@ -141,7 +136,7 @@ inline scma_handle_accessor<TValue>::scma_handle_accessor(const scma_handle_acce
         return ;
     }
     this->_handle = other._handle;
-    this->set_error(other._error_code);
+    this->set_error(other.get_error());
     if (scma_mutex_unlock() != 0)
     {
         this->set_error(scma_pop_operation_error());
@@ -154,7 +149,6 @@ inline scma_handle_accessor<TValue>::scma_handle_accessor(scma_handle_accessor &
 {
     this->_handle.index = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
     this->_handle.generation = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
-    this->_error_code = FT_ERR_SUCCESSS;
     if (scma_mutex_lock() != 0)
     {
         this->set_error(scma_pop_operation_error());
@@ -162,7 +156,7 @@ inline scma_handle_accessor<TValue>::scma_handle_accessor(scma_handle_accessor &
     }
     if (!other.is_bound())
     {
-        this->set_error(other._error_code);
+        this->set_error(other.get_error());
         other._handle.index = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
         other._handle.generation = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
         if (scma_mutex_unlock() != 0)
@@ -183,10 +177,9 @@ inline scma_handle_accessor<TValue>::scma_handle_accessor(scma_handle_accessor &
         return ;
     }
     this->_handle = other._handle;
-    this->set_error(other._error_code);
+    this->set_error(other.get_error());
     other._handle.index = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
     other._handle.generation = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
-    other._error_code = FT_ERR_SUCCESSS;
     if (scma_mutex_unlock() != 0)
     {
         this->set_error(scma_pop_operation_error());
@@ -203,7 +196,6 @@ inline scma_handle_accessor<TValue>::~scma_handle_accessor(void)
 template <typename TValue>
 inline void    scma_handle_accessor<TValue>::set_error(int error_code) const
 {
-    this->_error_code = error_code;
     scma_record_operation_error(error_code);
     return ;
 }
@@ -599,13 +591,13 @@ cleanup:
 template <typename TValue>
 inline int    scma_handle_accessor<TValue>::get_error(void) const
 {
-    return (this->_error_code);
+    return (ft_global_error_stack_last_error());
 }
 
 template <typename TValue>
 inline const char  *scma_handle_accessor<TValue>::get_error_str(void) const
 {
-    return (ft_strerror(this->_error_code));
+    return (ft_strerror(ft_global_error_stack_last_error()));
 }
 
 template <typename TValue>
@@ -616,7 +608,6 @@ class scma_handle_accessor_element_proxy
         ft_size_t _index;
         TValue _value;
         int _should_write_back;
-        mutable int _error_code;
 
         void    set_error(int error_code) const;
 
@@ -644,7 +635,6 @@ class scma_handle_accessor_const_element_proxy
         const scma_handle_accessor<TValue> *_parent;
         ft_size_t _index;
         mutable TValue _value;
-        mutable int _error_code;
 
         void    set_error(int error_code) const;
 
@@ -667,7 +657,6 @@ class scma_handle_accessor_const_element_proxy
 template <typename TValue>
 inline void    scma_handle_accessor_element_proxy<TValue>::set_error(int error_code) const
 {
-    this->_error_code = error_code;
     scma_record_operation_error(error_code);
     return ;
 }
@@ -678,7 +667,6 @@ inline scma_handle_accessor_element_proxy<TValue>::scma_handle_accessor_element_
     this->_parent = parent;
     this->_index = element_index;
     this->_should_write_back = 0;
-    this->_error_code = FT_ERR_SUCCESSS;
     if (!this->_parent)
         return ;
     if (!this->_parent->read_at(this->_value, this->_index))
@@ -699,10 +687,8 @@ inline scma_handle_accessor_element_proxy<TValue>::scma_handle_accessor_element_
     this->_index = other._index;
     this->_value = other._value;
     this->_should_write_back = other._should_write_back;
-    this->_error_code = other._error_code;
     other._parent = ft_nullptr;
     other._should_write_back = 0;
-    other._error_code = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -715,10 +701,8 @@ inline scma_handle_accessor_element_proxy<TValue>    &scma_handle_accessor_eleme
     this->_index = other._index;
     this->_value = other._value;
     this->_should_write_back = other._should_write_back;
-    this->_error_code = other._error_code;
     other._parent = ft_nullptr;
     other._should_write_back = 0;
-    other._error_code = FT_ERR_SUCCESSS;
     return (*this);
 }
 
@@ -776,21 +760,8 @@ inline scma_handle_accessor_element_proxy<TValue>::operator TValue(void) const
 }
 
 template <typename TValue>
-inline int    scma_handle_accessor_element_proxy<TValue>::get_error(void) const
-{
-    return (this->_error_code);
-}
-
-template <typename TValue>
-inline const char  *scma_handle_accessor_element_proxy<TValue>::get_error_str(void) const
-{
-    return (ft_strerror(this->_error_code));
-}
-
-template <typename TValue>
 inline void    scma_handle_accessor_const_element_proxy<TValue>::set_error(int error_code) const
 {
-    this->_error_code = error_code;
     scma_record_operation_error(error_code);
     return ;
 }
@@ -800,7 +771,6 @@ inline scma_handle_accessor_const_element_proxy<TValue>::scma_handle_accessor_co
 {
     this->_parent = parent;
     this->_index = element_index;
-    this->_error_code = FT_ERR_SUCCESSS;
     if (!this->_parent)
         return ;
     if (!this->_parent->read_at(this->_value, this->_index))
@@ -819,9 +789,7 @@ inline scma_handle_accessor_const_element_proxy<TValue>::scma_handle_accessor_co
     this->_parent = other._parent;
     this->_index = other._index;
     this->_value = other._value;
-    this->_error_code = other._error_code;
     other._parent = ft_nullptr;
-    other._error_code = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -833,9 +801,7 @@ inline scma_handle_accessor_const_element_proxy<TValue>    &scma_handle_accessor
     this->_parent = other._parent;
     this->_index = other._index;
     this->_value = other._value;
-    this->_error_code = other._error_code;
     other._parent = ft_nullptr;
-    other._error_code = FT_ERR_SUCCESSS;
     return (*this);
 }
 
@@ -861,18 +827,6 @@ template <typename TValue>
 inline scma_handle_accessor_const_element_proxy<TValue>::operator TValue(void) const
 {
     return (this->_value);
-}
-
-template <typename TValue>
-inline int    scma_handle_accessor_const_element_proxy<TValue>::get_error(void) const
-{
-    return (this->_error_code);
-}
-
-template <typename TValue>
-inline const char  *scma_handle_accessor_const_element_proxy<TValue>::get_error_str(void) const
-{
-    return (ft_strerror(this->_error_code));
 }
 
 #endif
