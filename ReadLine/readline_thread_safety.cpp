@@ -5,15 +5,6 @@
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread.hpp"
 
-static int rl_state_mutex_constructor_error(pt_mutex *mutex_pointer)
-{
-    int mutex_error;
-
-    mutex_error = ft_global_error_stack_last_error();
-    ft_global_error_stack_pop_newest();
-    return (mutex_error);
-}
-
 static int rl_state_lock_mutex(pt_mutex *mutex_pointer)
 {
     int lock_error;
@@ -43,7 +34,10 @@ int rl_state_prepare_thread_safety(readline_state_t *state)
     mutex_pointer = new (std::nothrow) pt_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
-    int mutex_error = rl_state_mutex_constructor_error(mutex_pointer);
+    int mutex_error;
+
+    mutex_error = ft_global_error_stack_last_error();
+    ft_global_error_stack_pop_newest();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         delete mutex_pointer;

@@ -366,9 +366,6 @@ double  circle::get_radius() const
 bool    intersect_circle(const circle &first, const circle &second)
 {
     bool result;
-
-    circle &first_ref = const_cast<circle &>(first);
-    circle &second_ref = const_cast<circle &>(second);
     const circle *lower;
     const circle *upper;
     int lock_error;

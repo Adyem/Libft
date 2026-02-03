@@ -6319,9 +6319,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `int pt_mutex::unlock_internal(bool lock_acquired) const`
 - `pthread_mutex_t *pt_mutex::get_native_mutex() const`
 - `unsigned long long pt_mutex::operation_error_get_id_at(ft_size_t index) const`
-- `unsigned long long pt_mutex::operation_error_push_entry(int error_code) const`
-- `void pt_mutex::operation_error_pop_all() const`
-- `void pt_mutex::operation_error_push(int error_code) const`
+  - `void pt_mutex::operation_error_pop_all() const`
 - `void pt_mutex::teardown_thread_safety()`
 - `void pt_mutex::unlock_state(bool lock_acquired) const`
 
@@ -7556,7 +7554,6 @@ The catalog lists the function declarations and definitions that appear in the C
 - `size_t su_fread(void *buffer, size_t size, size_t count, su_file *stream)`
 - `size_t su_fwrite(const void *buffer, size_t size, size_t count, su_file *stream)`
 - `static int su_file_lock_mutex(pt_mutex *mutex_pointer)`
-- `static int su_file_mutex_constructor_error(pt_mutex *mutex_pointer)`
 - `static int su_file_unlock_mutex(pt_mutex *mutex_pointer)`
 - `static su_file *create_file_stream(int file_descriptor, int *error_code)`
 - `su_file *su_fopen(const char *path_name)`

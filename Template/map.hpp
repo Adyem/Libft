@@ -389,7 +389,7 @@ ft_map<Key, MappedType>& ft_map<Key, MappedType>::operator=(ft_map<Key, MappedTy
         if (this->_state_mutex != ft_nullptr)
         {
             this->_state_mutex->lock(THREAD_ID);
-            int mutex_error = this->ft_global_error_stack_last_error();
+            int mutex_error = ft_global_error_stack_last_error();
             if (mutex_error != FT_ERR_SUCCESSS)
             {
                 this->record_operation_error(mutex_error);
@@ -1003,7 +1003,7 @@ int ft_map<Key, MappedType>::lock_internal(bool *lock_acquired) const
         return (FT_ERR_SUCCESSS);
     }
     this->_state_mutex->lock(THREAD_ID);
-    int mutex_error = this->ft_global_error_stack_last_error();
+    int mutex_error = ft_global_error_stack_last_error();
     if (mutex_error != FT_ERR_SUCCESSS)
         return (mutex_error);
     if (lock_acquired != ft_nullptr)
@@ -1017,7 +1017,7 @@ int ft_map<Key, MappedType>::unlock_internal(bool lock_acquired) const
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
         return (FT_ERR_SUCCESSS);
     this->_state_mutex->unlock(THREAD_ID);
-    return (this->ft_global_error_stack_last_error());
+    return (ft_global_error_stack_last_error());
 }
 
 template <typename Key, typename MappedType>

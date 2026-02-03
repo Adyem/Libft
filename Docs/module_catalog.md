@@ -9518,9 +9518,6 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 
 - Declares: _None_
 - Defines:
-  - `unsigned long long pt_mutex::operation_error_push_entry_with_id(int error_code, unsigned long long operation_id) const`
-  - `unsigned long long pt_mutex::operation_error_push_entry(int error_code) const`
-  - `void pt_mutex::operation_error_push(int error_code) const`
   - `int pt_mutex::operation_error_pop_last() const`
   - `int pt_mutex::operation_error_pop_newest() const`
   - `void pt_mutex::operation_error_pop_all() const`
@@ -10941,7 +10938,6 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 
 - Declares: _None_
 - Defines:
-  - `static int rl_terminal_dimensions_mutex_constructor_error(pt_mutex *mutex_pointer)`
   - `static int rl_terminal_dimensions_lock_mutex(pt_mutex *mutex_pointer)`
   - `static int rl_terminal_dimensions_unlock_mutex(pt_mutex *mutex_pointer)`
   - `static void rl_terminal_dimensions_clear(terminal_dimensions *dimensions)`
@@ -10956,7 +10952,6 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 
 - Declares: _None_
 - Defines:
-  - `static int rl_state_mutex_constructor_error(pt_mutex *mutex_pointer)`
   - `static int rl_state_lock_mutex(pt_mutex *mutex_pointer)`
   - `static int rl_state_unlock_mutex(pt_mutex *mutex_pointer)`
   - `int rl_state_prepare_thread_safety(readline_state_t *state)`
@@ -11424,7 +11419,6 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 
 - Declares: _None_
 - Defines:
-  - `static int su_file_mutex_constructor_error(pt_mutex *mutex_pointer)`
   - `static int su_file_lock_mutex(pt_mutex *mutex_pointer)`
   - `static int su_file_unlock_mutex(pt_mutex *mutex_pointer)`
   - `int su_file_prepare_thread_safety(su_file *stream)`

@@ -45,9 +45,11 @@ class pt_mutex
         bool    is_owned_by_thread(pthread_t thread_id) const;
 
         pthread_mutex_t   *get_native_mutex() const;
+
 };
 
 static_assert(!std::is_copy_constructible<pt_mutex>::value, "pt_mutex cannot be copied");
 static_assert(!std::is_copy_assignable<pt_mutex>::value, "pt_mutex cannot be copy assigned");
+
 
 #endif

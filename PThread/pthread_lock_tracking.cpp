@@ -4,24 +4,10 @@
 #include "../Time/time.hpp"
 
 static thread_local bool g_registry_mutex_owned = false;
-thread_local ft_operation_error_stack pt_lock_tracking::_operation_errors = {{}, {}, 0};
-
-void pt_lock_tracking::record_error(ft_operation_error_stack *error_stack, int error_code,
-        bool push_global)
-{
-    unsigned long long operation_id;
-
-    if (push_global)
-        operation_id = ft_global_error_stack_push_entry(error_code);
-    else
-        operation_id = 0;
-    ft_operation_error_stack_push(error_stack, error_code, operation_id);
-    return ;
-}
 
 void pt_lock_tracking::set_error(int error_code)
 {
-    pt_lock_tracking::record_error(&pt_lock_tracking::_operation_errors, error_code, true);
+    ft_global_error_stack_push(error_code);
     return ;
 }
 

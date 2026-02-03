@@ -12,15 +12,6 @@ static bool g_force_file_stream_allocation_failure = false;
 static int g_force_fread_failure_enabled = 0;
 static int g_force_fread_failure_error = FT_ERR_SUCCESSS;
 
-static int su_file_mutex_constructor_error(pt_mutex *mutex_pointer)
-{
-    int mutex_error;
-
-    mutex_error = ft_global_error_stack_last_error();
-    ft_global_error_stack_pop_newest();
-    return (mutex_error);
-}
-
 static int su_file_lock_mutex(pt_mutex *mutex_pointer)
 {
     int lock_error;
@@ -61,7 +52,10 @@ int su_file_prepare_thread_safety(su_file *stream)
         return (-1);
     }
     mutex_pointer = new(memory) pt_mutex();
-    int mutex_error = su_file_mutex_constructor_error(mutex_pointer);
+    int mutex_error;
+
+    mutex_error = ft_global_error_stack_last_error();
+    ft_global_error_stack_pop_newest();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         mutex_pointer->~pt_mutex();

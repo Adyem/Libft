@@ -1657,7 +1657,7 @@ void ft_sharedptr<ManagedType>::unlock(bool lock_acquired) const
 {
     this->unlock_internal(lock_acquired);
     if (this->_mutex == ft_nullptr
-        || this->ft_global_error_stack_last_error() == FT_ERR_SUCCESSS)
+        || ft_global_error_stack_last_error() == FT_ERR_SUCCESSS)
     {
         const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_internal(FT_ERR_SUCCESSS);
     }

@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <cstring>
 #include <climits>
-#include "../Errno/errno_internal.hpp"
+#include "../Errno/errno.hpp"
 #include "../PThread/recursive_mutex.hpp"
 
 class ft_string

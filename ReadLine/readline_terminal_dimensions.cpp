@@ -7,15 +7,6 @@
 
 #include "../Errno/errno.hpp"
 
-static int rl_terminal_dimensions_mutex_constructor_error(pt_mutex *mutex_pointer)
-{
-    int mutex_error;
-
-    mutex_error = ft_global_error_stack_last_error();
-    ft_global_error_stack_pop_newest();
-    return (mutex_error);
-}
-
 static int rl_terminal_dimensions_lock_mutex(pt_mutex *mutex_pointer)
 {
     int lock_error;
@@ -57,7 +48,10 @@ int rl_terminal_dimensions_prepare_thread_safety(terminal_dimensions *dimensions
     mutex_pointer = new (std::nothrow) pt_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
-    int mutex_error = rl_terminal_dimensions_mutex_constructor_error(mutex_pointer);
+    int mutex_error;
+
+    mutex_error = ft_global_error_stack_last_error();
+    ft_global_error_stack_pop_newest();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         delete mutex_pointer;

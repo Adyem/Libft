@@ -186,7 +186,7 @@ int ft_queue<ElementType>::lock_internal(bool *lock_acquired) const
         return (FT_ERR_SUCCESSS);
     }
     this->_mutex->lock(THREAD_ID);
-    mutex_error = this->ft_global_error_stack_pop_newest();
+    mutex_error = ft_global_error_stack_pop_newest();
     ft_global_error_stack_pop_newest();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
@@ -207,7 +207,7 @@ int ft_queue<ElementType>::unlock_internal(bool lock_acquired) const
     this->_mutex->unlock(THREAD_ID);
     int mutex_error;
 
-    mutex_error = this->ft_global_error_stack_pop_newest();
+    mutex_error = ft_global_error_stack_pop_newest();
     ft_global_error_stack_pop_newest();
     return (mutex_error);
 }

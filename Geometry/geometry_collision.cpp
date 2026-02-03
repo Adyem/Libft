@@ -5,9 +5,6 @@ bool    intersect_aabb(const aabb &first, const aabb &second)
 {
     bool result;
 
-    aabb &first_ref = const_cast<aabb &>(first);
-    aabb &second_ref = const_cast<aabb &>(second);
-
     result = false;
     {
         const aabb *lower;
@@ -48,8 +45,6 @@ bool    intersect_aabb(const aabb &first, const aabb &second)
 bool    intersect_circle(const circle &first, const circle &second)
 {
     bool result;
-    circle &first_ref = const_cast<circle &>(first);
-    circle &second_ref = const_cast<circle &>(second);
     const circle *lower;
     const circle *upper;
     int lock_error;
@@ -86,8 +81,6 @@ bool    intersect_circle(const circle &first, const circle &second)
 bool    intersect_sphere(const sphere &first, const sphere &second)
 {
     bool result;
-    sphere &first_ref = const_cast<sphere &>(first);
-    sphere &second_ref = const_cast<sphere &>(second);
     const sphere *lower;
     const sphere *upper;
     int lock_error;

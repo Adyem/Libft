@@ -119,7 +119,7 @@ int pt_condition_variable::lock_internal(bool *lock_acquired) const
     if (!this->_thread_safe_enabled || this->_state_mutex == ft_nullptr)
         return (FT_ERR_SUCCESSS);
     this->_state_mutex->lock(THREAD_ID);
-    int state_error = this->ft_global_error_stack_last_error();
+    int state_error = ft_global_error_stack_last_error();
     if (state_error != FT_ERR_SUCCESSS)
         return (state_error);
     if (lock_acquired != ft_nullptr)
@@ -207,7 +207,7 @@ void pt_condition_variable::unlock_state(bool lock_acquired) const
     this->unlock_internal(lock_acquired);
     if (this->_state_mutex != ft_nullptr)
     {
-        int state_error = this->ft_global_error_stack_last_error();
+        int state_error = ft_global_error_stack_last_error();
         if (state_error != FT_ERR_SUCCESSS)
         {
             const_cast<pt_condition_variable *>(this)->set_error(state_error);

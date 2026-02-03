@@ -391,7 +391,7 @@ int yaml_value::lock(bool *lock_acquired) const noexcept
     }
     this->_mutex->lock(THREAD_ID);
     {
-        mutex_error = this->ft_global_error_stack_last_error();
+        mutex_error = ft_global_error_stack_last_error();
     }
     if (mutex_error == FT_ERR_SUCCESSS)
     {
@@ -414,7 +414,7 @@ int yaml_value::unlock(bool lock_acquired) const noexcept
     }
     this->_mutex->unlock(THREAD_ID);
     {
-        int mutex_error = this->ft_global_error_stack_last_error();
+        int mutex_error = ft_global_error_stack_last_error();
 
         if (mutex_error != FT_ERR_SUCCESSS)
             return (mutex_error);

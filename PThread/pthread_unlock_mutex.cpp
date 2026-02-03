@@ -18,7 +18,7 @@ int pt_mutex::unlock(pthread_t thread_id) const
     int lock_error;
     int tracking_error;
 
-    this->operation_error_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     tracking_reports_owned = false;
     should_notify_release = false;
     result = FT_SUCCESS;
@@ -29,7 +29,7 @@ int pt_mutex::unlock(pthread_t thread_id) const
     lock_error = this->lock_internal(&state_lock_acquired);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->operation_error_push(lock_error);
+        ft_global_error_stack_push(lock_error);
         result = lock_error;
         goto cleanup;
     }
@@ -37,13 +37,13 @@ int pt_mutex::unlock(pthread_t thread_id) const
     lock_error = this->unlock_internal(state_lock_acquired);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->operation_error_push(lock_error);
+        ft_global_error_stack_push(lock_error);
         result = lock_error;
         goto cleanup;
     }
     if (!native_initialized)
     {
-        this->operation_error_push(FT_ERR_INVALID_STATE);
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         result = FT_ERR_INVALID_STATE;
         su_abort();
     }
@@ -58,7 +58,7 @@ int pt_mutex::unlock(pthread_t thread_id) const
             tracking_error = ft_global_error_stack_pop_newest();
             if (tracking_error != FT_ERR_SUCCESSS)
             {
-                this->operation_error_push(tracking_error);
+                ft_global_error_stack_push(tracking_error);
                 result = tracking_error;
                 goto cleanup;
             }
@@ -77,14 +77,14 @@ int pt_mutex::unlock(pthread_t thread_id) const
             }
             if (!tracking_reports_owned)
             {
-                this->operation_error_push(FT_ERR_INVALID_ARGUMENT);
+                ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
                 result = FT_ERR_INVALID_ARGUMENT;
                 su_abort();
             }
         }
         else if (!pt_thread_equal(owner, thread_id))
         {
-            this->operation_error_push(FT_ERR_INVALID_ARGUMENT);
+            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
             result = FT_ERR_INVALID_ARGUMENT;
             su_abort();
         }
@@ -102,7 +102,7 @@ int pt_mutex::unlock(pthread_t thread_id) const
         tracking_error = ft_global_error_stack_pop_newest();
         if (tracking_error != FT_ERR_SUCCESSS)
         {
-            this->operation_error_push(tracking_error);
+            ft_global_error_stack_push(tracking_error);
             result = tracking_error;
             goto cleanup;
         }
@@ -120,7 +120,7 @@ int pt_mutex::unlock(pthread_t thread_id) const
     }
     if (!tracking_reports_owned)
     {
-        this->operation_error_push(FT_ERR_INVALID_ARGUMENT);
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         result = FT_ERR_INVALID_ARGUMENT;
         su_abort();
     }
@@ -135,19 +135,19 @@ int pt_mutex::unlock(pthread_t thread_id) const
             tracking_error = ft_global_error_stack_pop_newest();
             if (tracking_error != FT_ERR_SUCCESSS)
             {
-                this->operation_error_push(tracking_error);
+                ft_global_error_stack_push(tracking_error);
                 result = tracking_error;
             }
         }
         if (mutex_error == EPERM || mutex_error == EINVAL)
         {
-            this->operation_error_push(FT_ERR_INVALID_ARGUMENT);
+            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
             result = FT_ERR_INVALID_ARGUMENT;
             su_abort();
         }
         else
         {
-            this->operation_error_push(FT_ERR_INVALID_STATE);
+            ft_global_error_stack_push(FT_ERR_INVALID_STATE);
             result = FT_ERR_INVALID_STATE;
             su_abort();
         }
@@ -158,11 +158,11 @@ int pt_mutex::unlock(pthread_t thread_id) const
         tracking_error = ft_global_error_stack_pop_newest();
         if (tracking_error != FT_ERR_SUCCESSS)
         {
-            this->operation_error_push(tracking_error);
+            ft_global_error_stack_push(tracking_error);
             goto cleanup;
         }
     }
-    this->operation_error_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
 
 cleanup:
     this->_lock.store(false, std::memory_order_release);

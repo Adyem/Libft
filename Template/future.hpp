@@ -175,7 +175,7 @@ void ft_future<ValueType>::initialize_mutex_state() const
 
     if (this->_state_mutex == ft_nullptr)
         return ;
-    mutex_error = this->_stateft_global_error_stack_pop_newest();
+    mutex_error = ft_global_error_stack_pop_newest();
     if (mutex_error != FT_ERR_SUCCESSS)
         this->report_result(mutex_error);
     return ;
@@ -572,7 +572,7 @@ inline void ft_future<void>::initialize_mutex_state() const
 
     if (this->_state_mutex == ft_nullptr)
         return ;
-    mutex_error = this->_stateft_global_error_stack_pop_newest();
+    mutex_error = ft_global_error_stack_pop_newest();
     if (mutex_error != FT_ERR_SUCCESSS)
         this->report_result(mutex_error);
     return ;

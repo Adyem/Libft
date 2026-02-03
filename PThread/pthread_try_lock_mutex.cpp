@@ -14,7 +14,7 @@ int pt_mutex::try_lock(pthread_t thread_id) const
     int mutex_error;
     int tracking_error;
 
-    this->operation_error_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     if (!this->ensure_native_mutex())
         return (FT_SUCCESS);
     if (this->_lock && pt_thread_equal(this->_owner.load(std::memory_order_relaxed), thread_id))
@@ -25,7 +25,7 @@ int pt_mutex::try_lock(pthread_t thread_id) const
         tracking_error = ft_global_error_stack_pop_newest();
         if (tracking_error != FT_ERR_SUCCESSS)
         {
-            this->operation_error_push(tracking_error);
+            ft_global_error_stack_push(tracking_error);
             return (FT_SUCCESS);
         }
         retry_count = 0;
@@ -38,7 +38,7 @@ int pt_mutex::try_lock(pthread_t thread_id) const
                 ft_global_error_stack_pop_newest();
                 if (tracking_error == FT_ERR_SUCCESSS)
                     tracking_error = FT_ERR_INVALID_STATE;
-                this->operation_error_push(tracking_error);
+                ft_global_error_stack_push(tracking_error);
                 return (FT_SUCCESS);
             }
             tracking_error = ft_global_error_stack_pop_newest();
@@ -46,7 +46,7 @@ int pt_mutex::try_lock(pthread_t thread_id) const
             {
                 pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
                 ft_global_error_stack_pop_newest();
-                this->operation_error_push(tracking_error);
+                ft_global_error_stack_push(tracking_error);
                 return (FT_SUCCESS);
             }
             pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
@@ -58,14 +58,14 @@ int pt_mutex::try_lock(pthread_t thread_id) const
             nanosleep(&retry_sleep, ft_nullptr);
             retry_count++;
         }
-        this->operation_error_push(FT_ERR_MUTEX_ALREADY_LOCKED);
+        ft_global_error_stack_push(FT_ERR_MUTEX_ALREADY_LOCKED);
         return (FT_SUCCESS);
     }
     owned_mutexes = pt_lock_tracking::get_owned_mutexes(thread_id);
     tracking_error = ft_global_error_stack_pop_newest();
     if (tracking_error != FT_ERR_SUCCESSS)
     {
-        this->operation_error_push(tracking_error);
+        ft_global_error_stack_push(tracking_error);
         return (FT_SUCCESS);
     }
     if (!pt_lock_tracking::notify_wait(thread_id, &this->_native_mutex, owned_mutexes))
@@ -75,7 +75,7 @@ int pt_mutex::try_lock(pthread_t thread_id) const
         ft_global_error_stack_pop_newest();
         if (tracking_error == FT_ERR_SUCCESSS)
             tracking_error = FT_ERR_INVALID_STATE;
-        this->operation_error_push(tracking_error);
+        ft_global_error_stack_push(tracking_error);
         return (FT_SUCCESS);
     }
     tracking_error = ft_global_error_stack_pop_newest();
@@ -83,7 +83,7 @@ int pt_mutex::try_lock(pthread_t thread_id) const
     {
         pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
         ft_global_error_stack_pop_newest();
-        this->operation_error_push(tracking_error);
+        ft_global_error_stack_push(tracking_error);
         return (FT_SUCCESS);
     }
     mutex_error = pthread_mutex_trylock(&this->_native_mutex);
@@ -105,7 +105,7 @@ int pt_mutex::try_lock(pthread_t thread_id) const
                     ft_global_error_stack_pop_newest();
                     if (tracking_error == FT_ERR_SUCCESSS)
                         tracking_error = FT_ERR_INVALID_STATE;
-                    this->operation_error_push(tracking_error);
+                    ft_global_error_stack_push(tracking_error);
                     return (FT_SUCCESS);
                 }
                 tracking_error = ft_global_error_stack_pop_newest();
@@ -113,7 +113,7 @@ int pt_mutex::try_lock(pthread_t thread_id) const
                 {
                     pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
                     ft_global_error_stack_pop_newest();
-                    this->operation_error_push(tracking_error);
+                    ft_global_error_stack_push(tracking_error);
                     return (FT_SUCCESS);
                 }
                 mutex_error = pthread_mutex_trylock(&this->_native_mutex);
@@ -126,14 +126,14 @@ int pt_mutex::try_lock(pthread_t thread_id) const
                     pt_lock_tracking::notify_acquired(thread_id, &this->_native_mutex);
                     tracking_error = ft_global_error_stack_pop_newest();
                     if (tracking_error != FT_ERR_SUCCESSS)
-                        this->operation_error_push(tracking_error);
+                        ft_global_error_stack_push(tracking_error);
                     else
-                        this->operation_error_push(FT_ERR_SUCCESSS);
+                        ft_global_error_stack_push(FT_ERR_SUCCESSS);
                     return (FT_SUCCESS);
                 }
                 if (mutex_error != EBUSY)
                 {
-                    this->operation_error_push(FT_ERR_INVALID_STATE);
+                    ft_global_error_stack_push(FT_ERR_INVALID_STATE);
                     return (FT_SUCCESS);
                 }
                 struct timespec retry_sleep;
@@ -143,12 +143,12 @@ int pt_mutex::try_lock(pthread_t thread_id) const
                 nanosleep(&retry_sleep, ft_nullptr);
                 retry_count++;
             }
-            this->operation_error_push(FT_ERR_MUTEX_ALREADY_LOCKED);
+            ft_global_error_stack_push(FT_ERR_MUTEX_ALREADY_LOCKED);
             return (FT_SUCCESS);
         }
         pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
         ft_global_error_stack_pop_newest();
-        this->operation_error_push(FT_ERR_INVALID_STATE);
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return (FT_SUCCESS);
     }
     this->_owner.store(thread_id, std::memory_order_relaxed);
@@ -156,8 +156,8 @@ int pt_mutex::try_lock(pthread_t thread_id) const
     pt_lock_tracking::notify_acquired(thread_id, &this->_native_mutex);
     tracking_error = ft_global_error_stack_pop_newest();
     if (tracking_error != FT_ERR_SUCCESSS)
-        this->operation_error_push(tracking_error);
+        ft_global_error_stack_push(tracking_error);
     else
-        this->operation_error_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (FT_SUCCESS);
 }

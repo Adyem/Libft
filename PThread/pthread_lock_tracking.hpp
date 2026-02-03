@@ -78,9 +78,7 @@ class pt_lock_tracking
         static bool vector_contains_mutex(const pt_mutex_vector &mutexes, pthread_mutex_t *mutex_pointer);
         static bool vector_contains_thread(const pt_thread_vector &thread_identifiers, pt_thread_id_type thread_identifier);
         static bool detect_cycle(const s_pt_thread_lock_info *origin, pthread_mutex_t *requested_mutex, pt_mutex_vector *visited_mutexes, pt_thread_vector *visited_threads);
-        static void record_error(ft_operation_error_stack *error_stack, int error_code, bool push_global = true);
         static void set_error(int error_code);
-        static thread_local ft_operation_error_stack _operation_errors;
 
     public:
         pt_lock_tracking();

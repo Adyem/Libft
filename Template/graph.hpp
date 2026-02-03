@@ -751,8 +751,8 @@ template <typename VertexType>
 void ft_graph<VertexType>::unlock(bool lock_acquired) const
 {
     this->unlock_internal(lock_acquired);
-    if (this->_mutex != ft_nullptr && this->ft_global_error_stack_last_error() != FT_ERR_SUCCESSS)
-        const_cast<ft_graph<VertexType> *>(this)->set_error(this->ft_global_error_stack_last_error());
+    if (this->_mutex != ft_nullptr && ft_global_error_stack_last_error() != FT_ERR_SUCCESSS)
+        const_cast<ft_graph<VertexType> *>(this)->set_error(ft_global_error_stack_last_error());
     else
     {
         const_cast<ft_graph<VertexType> *>(this)->set_error(FT_ERR_SUCCESSS);
@@ -773,7 +773,7 @@ int ft_graph<VertexType>::lock_internal(bool *lock_acquired) const
         return (0);
     }
     this->_mutex->lock(THREAD_ID);
-    mutex_error = this->ft_global_error_stack_last_error();
+    mutex_error = ft_global_error_stack_last_error();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         this->set_error(mutex_error);
@@ -793,7 +793,7 @@ void ft_graph<VertexType>::unlock_internal(bool lock_acquired) const
     if (!lock_acquired || this->_mutex == ft_nullptr)
         return ;
     this->_mutex->unlock(THREAD_ID);
-    mutex_error = this->ft_global_error_stack_last_error();
+    mutex_error = ft_global_error_stack_last_error();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         this->set_error(mutex_error);
