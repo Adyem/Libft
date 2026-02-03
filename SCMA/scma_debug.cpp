@@ -7,7 +7,6 @@
 int    scma_get_stats(scma_stats *out_stats)
 {
     scma_stats stats;
-    scma_live_snapshot &snapshot = scma_live_snapshot_ref();
     ft_size_t &block_count = scma_block_count_ref();
     ft_size_t &used_size = scma_used_size_ref();
     ft_size_t &heap_capacity = scma_heap_capacity_ref();
@@ -34,10 +33,6 @@ int    scma_get_stats(scma_stats *out_stats)
     stats.block_count = block_count;
     stats.used_size = used_size;
     stats.heap_capacity = heap_capacity;
-    if (snapshot.active)
-        stats.snapshot_active = 1;
-    else
-        stats.snapshot_active = 0;
     *out_stats = stats;
     error_code = FT_ERR_SUCCESSS;
     scma_record_operation_error(error_code);

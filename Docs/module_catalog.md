@@ -11005,8 +11005,6 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `int scma_handle_is_valid(scma_handle handle)`
   - `int scma_write(scma_handle handle, ft_size_t offset, const void *source, ft_size_t size)`
   - `int scma_read(scma_handle handle, ft_size_t offset, void *destination, ft_size_t size)`
-  - `void *scma_snapshot(scma_handle handle, ft_size_t *size)`
-  - `int scma_release_snapshot(void *snapshot_buffer)`
   - `int scma_get_stats(scma_stats *out_stats)`
   - `void scma_debug_dump(void)`
   - `pt_recursive_mutex &scma_runtime_mutex(void)`
@@ -11116,14 +11114,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_size_t &scma_block_count_ref(void)`
   - `ft_size_t &scma_used_size_ref(void)`
   - `int &scma_initialized_ref(void)`
-  - `scma_live_snapshot &scma_live_snapshot_ref(void)`
   - `scma_block_span scma_get_block_span(void)`
   - `unsigned char *scma_get_heap_data(void)`
   - `scma_handle scma_invalid_handle(void)`
   - `int scma_handle_is_invalid(scma_handle handle)`
-  - `void scma_reset_live_snapshot(void)`
-  - `void scma_track_live_snapshot(scma_handle handle, unsigned char *data, ft_size_t size, int active)`
-  - `void scma_update_tracked_snapshot(scma_handle handle, ft_size_t offset, const void *source, ft_size_t size)`
   - `void scma_compact(void)`
   - `int scma_validate_handle(scma_handle handle, scma_block **out_block)`
   - `int scma_ensure_block_capacity(ft_size_t required_count)`
@@ -11156,13 +11150,6 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `int scma_mutex_close(void)`
   - `ft_size_t scma_mutex_lock_count(void)`
 
-### SCMA/scma_snapshot.cpp
-
-- Declares: _None_
-- Defines:
-  - `void *scma_snapshot(scma_handle handle, ft_size_t *size)`
-  - `int scma_release_snapshot(void *snapshot_buffer)`
-
 ### SCMA/scma_state.cpp
 
 - Declares: _None_
@@ -11175,14 +11162,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_size_t &scma_block_count_ref(void)`
   - `ft_size_t &scma_used_size_ref(void)`
   - `int &scma_initialized_ref(void)`
-  - `scma_live_snapshot &scma_live_snapshot_ref(void)`
   - `scma_block_span scma_get_block_span(void)`
   - `unsigned char *scma_get_heap_data(void)`
   - `scma_handle scma_invalid_handle(void)`
   - `int scma_handle_is_invalid(scma_handle handle)`
-  - `void scma_reset_live_snapshot(void)`
-  - `void scma_track_live_snapshot(scma_handle handle, unsigned char *data, ft_size_t size, int active)`
-  - `void scma_update_tracked_snapshot(scma_handle handle, ft_size_t offset, const void *source, ft_size_t size)`
   - `void scma_compact(void)`
   - `int scma_validate_handle(scma_handle handle, scma_block **out_block)`
   - `int scma_ensure_block_capacity(ft_size_t required_count)`
@@ -17556,22 +17539,6 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Defines:
   - `static inline void scma_test_reset(void)`
   - `static inline int scma_test_initialize(ft_size_t capacity)`
-
-### Test/Test/test_scma_snapshot.cpp
-
-- Declares:
-  - `FT_ASSERT_EQ(1, scma_test_initialize(static_cast<ft_size_t>(sizeof(scma_test_pair))) )`
-  - `FT_ASSERT_EQ(1, scma_handle_is_valid(handle) )`
-  - `FT_ASSERT_EQ(1, scma_write(handle, 0, &pair_value, static_cast<ft_size_t>(sizeof(scma_test_pair))) )`
-  - `FT_ASSERT_EQ( static_cast<ft_size_t>(sizeof(scma_test_pair)) , snapshot_size)`
-  - `FT_ASSERT_EQ(1, scma_write(handle, 0, &updated_value, static_cast<ft_size_t>(sizeof(scma_test_pair))) )`
-  - `FT_ASSERT_EQ(1, scma_release_snapshot(snapshot_buffer) )`
-  - `std::free(snapshot_buffer)`
-  - `FT_ASSERT_EQ(1, scma_release_snapshot(ft_nullptr) )`
-  - `FT_ASSERT_EQ(0, scma_release_snapshot(foreign_buffer) )`
-  - `std::free(foreign_buffer)`
-  - `FT_ASSERT_EQ(1, scma_get_stats(&stats) )`
-- Defines: _None_
 
 ### Test/Test/test_storage_kv_store.cpp
 

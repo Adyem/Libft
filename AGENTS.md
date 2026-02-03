@@ -163,8 +163,6 @@ Within the SCMA module, only public-facing entry points that callers use directl
 - scma_handle_is_valid
 - scma_write
 - scma_read
-- scma_snapshot
-- scma_release_snapshot
 - scma_get_stats
 - scma_debug_dump
 - scma_runtime_mutex

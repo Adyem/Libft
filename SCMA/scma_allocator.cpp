@@ -62,7 +62,6 @@ int    scma_initialize(ft_size_t initial_capacity)
     block_count = 0;
     used_size = 0;
     initialized = 1;
-    scma_reset_live_snapshot();
     error_code = FT_ERR_SUCCESSS;
     scma_record_operation_error(error_code);
     initialization_result = 1;
@@ -108,7 +107,6 @@ void    scma_shutdown(void)
     block_count = 0;
     used_size = 0;
     initialized = 0;
-    scma_reset_live_snapshot();
     error_code = FT_ERR_SUCCESSS;
     scma_record_operation_error(error_code);
     scma_unlock_and_return_void();
@@ -250,7 +248,6 @@ int    scma_free(scma_handle handle)
 {
     int free_result;
     scma_block *block;
-    scma_live_snapshot &snapshot = scma_live_snapshot_ref();
     int error_code;
 
     free_result = 0;
@@ -269,9 +266,6 @@ int    scma_free(scma_handle handle)
     block->in_use = 0;
     block->size = 0;
     block->generation = scma_next_generation(block->generation);
-    if (snapshot.active && snapshot.handle.index == handle.index
-        && snapshot.handle.generation == handle.generation)
-        scma_reset_live_snapshot();
     scma_compact();
     error_code = FT_ERR_SUCCESSS;
     scma_record_operation_error(error_code);
@@ -288,7 +282,6 @@ int    scma_resize(scma_handle handle, ft_size_t new_size)
     ft_size_t base_size;
     ft_size_t required_size;
     ft_size_t &used_size = scma_used_size_ref();
-    scma_live_snapshot &snapshot = scma_live_snapshot_ref();
     int error_code;
 
     resize_result = 0;
@@ -381,9 +374,6 @@ int    scma_resize(scma_handle handle, ft_size_t new_size)
     block->size = new_size;
     block->in_use = 1;
     used_size += new_size;
-    if (snapshot.active && snapshot.handle.index == handle.index
-        && snapshot.handle.generation == handle.generation)
-        scma_reset_live_snapshot();
     if (temp_buffer)
     {
         ft_size_t copy_size;

@@ -14,6 +14,11 @@ static ft_size_t g_scma_block_count = 0;
 static ft_size_t g_scma_used_size = 0;
 static int g_scma_initialized = 0;
 
+int    &scma_initialized_ref(void)
+{
+    return (g_scma_initialized);
+}
+
 static scma_handle    scma_create_invalid_handle(void)
 {
     scma_handle handle;
@@ -22,8 +27,6 @@ static scma_handle    scma_create_invalid_handle(void)
     handle.generation = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
     return (handle);
 }
-
-static scma_live_snapshot g_scma_live_snapshot = { ft_nullptr, 0, scma_create_invalid_handle(), 0 };
 
 unsigned char    *&scma_heap_data_ref(void)
 {
@@ -53,16 +56,6 @@ ft_size_t    &scma_block_count_ref(void)
 ft_size_t    &scma_used_size_ref(void)
 {
     return (g_scma_used_size);
-}
-
-int    &scma_initialized_ref(void)
-{
-    return (g_scma_initialized);
-}
-
-scma_live_snapshot    &scma_live_snapshot_ref(void)
-{
-    return (g_scma_live_snapshot);
 }
 
 scma_block_span    scma_get_block_span(void)
@@ -101,55 +94,6 @@ int    scma_handle_is_invalid(scma_handle handle)
     if (handle.generation == static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX))
         return (1);
     return (0);
-}
-
-void    scma_reset_live_snapshot(void)
-{
-    scma_live_snapshot &snapshot = scma_live_snapshot_ref();
-
-    snapshot.data = ft_nullptr;
-    snapshot.size = 0;
-    snapshot.handle = scma_invalid_handle();
-    snapshot.active = 0;
-    return ;
-}
-
-void    scma_track_live_snapshot(scma_handle handle, unsigned char *data, ft_size_t size, int active)
-{
-    scma_live_snapshot &snapshot = scma_live_snapshot_ref();
-
-    if (!active)
-    {
-        scma_reset_live_snapshot();
-        return ;
-    }
-    snapshot.data = data;
-    snapshot.size = size;
-    snapshot.handle = handle;
-    snapshot.active = 1;
-    return ;
-}
-
-void    scma_update_tracked_snapshot(scma_handle handle, ft_size_t offset, const void *source, ft_size_t size)
-{
-    scma_live_snapshot &snapshot = scma_live_snapshot_ref();
-
-    if (!snapshot.active)
-        return ;
-    if (!snapshot.data)
-        return ;
-    if (handle.index != snapshot.handle.index)
-        return ;
-    if (handle.generation != snapshot.handle.generation)
-        return ;
-    if (offset > snapshot.size)
-        return ;
-    if (size > snapshot.size - offset)
-        return ;
-    std::memcpy(snapshot.data + static_cast<size_t>(offset),
-        source,
-        static_cast<size_t>(size));
-    return ;
 }
 
 void    scma_compact(void)

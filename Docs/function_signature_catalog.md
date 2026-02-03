@@ -7288,7 +7288,6 @@ The catalog lists the function declarations and definitions that appear in the C
 - `int scma_mutex_unlock(void);`
 - `int scma_pop_operation_error(void);`
 - `int scma_read(scma_handle handle, ft_size_t offset, void *destination, ft_size_t size);`
-- `int scma_release_snapshot(void *snapshot_buffer);`
 - `int scma_resize(scma_handle handle, ft_size_t new_size);`
 - `int scma_write(scma_handle handle, ft_size_t offset, const void *source, ft_size_t size);`
 - `pt_recursive_mutex &scma_runtime_mutex(void);`
@@ -7325,7 +7324,6 @@ The catalog lists the function declarations and definitions that appear in the C
 - `template <typename TValue> void scma_handle_accessor_const_element_proxy<TValue>::record_operation_error(int error_code) noexcept`
 - `template <typename TValue> void scma_handle_accessor_element_proxy<TValue>::record_operation_error(int error_code) noexcept`
 - `unsigned long long scma_record_operation_error(int error_code);`
-- `void *scma_snapshot(scma_handle handle, ft_size_t *size);`
 - `void scma_debug_dump(void);`
 - `void scma_shutdown(void);`
 
@@ -7367,16 +7365,12 @@ The catalog lists the function declarations and definitions that appear in the C
 - `scma_block_span scma_get_block_span(void);`
 - `scma_handle scma_invalid_handle(void);`
 - `scma_handle scma_unlock_and_return_handle(scma_handle value);`
-- `scma_live_snapshot &scma_live_snapshot_ref(void);`
 - `unsigned char *&scma_heap_data_ref(void);`
 - `unsigned char *scma_get_heap_data(void);`
 - `unsigned long long scma_record_operation_error(int error_code);`
 - `void *scma_unlock_and_return_pointer(void *value);`
 - `void scma_compact(void);`
-- `void scma_reset_live_snapshot(void);`
-- `void scma_track_live_snapshot(scma_handle handle, unsigned char *data, ft_size_t size, int active);`
 - `void scma_unlock_and_return_void(void);`
-- `void scma_update_tracked_snapshot(scma_handle handle, ft_size_t offset, const void *source, ft_size_t size);`
 
 ### SCMA/scma_io.cpp
 
@@ -7390,10 +7384,6 @@ The catalog lists the function declarations and definitions that appear in the C
 - `int scma_mutex_unlock(void)`
 - `pt_recursive_mutex &scma_runtime_mutex(void)`
 - `static ft_size_t &scma_runtime_lock_depth(void)`
-
-### SCMA/scma_snapshot.cpp
-
-- `int scma_release_snapshot(void *snapshot_buffer)`
 
 ### SCMA/scma_state.cpp
 
@@ -7413,16 +7403,12 @@ The catalog lists the function declarations and definitions that appear in the C
 - `scma_block_span scma_get_block_span(void)`
 - `scma_handle scma_invalid_handle(void)`
 - `scma_handle scma_unlock_and_return_handle(scma_handle value)`
-- `scma_live_snapshot &scma_live_snapshot_ref(void)`
 - `static scma_handle scma_create_invalid_handle(void)`
 - `unsigned char *&scma_heap_data_ref(void)`
 - `unsigned char *scma_get_heap_data(void)`
 - `void *scma_unlock_and_return_pointer(void *value)`
 - `void scma_compact(void)`
-- `void scma_reset_live_snapshot(void)`
-- `void scma_track_live_snapshot(scma_handle handle, unsigned char *data, ft_size_t size, int active)`
 - `void scma_unlock_and_return_void(void)`
-- `void scma_update_tracked_snapshot(scma_handle handle, ft_size_t offset, const void *source, ft_size_t size)`
 
 ### Storage/kv_store.hpp
 

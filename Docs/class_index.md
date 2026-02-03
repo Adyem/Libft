@@ -834,7 +834,6 @@ Each entry lists the class or struct name introduced in that translation unit.
 
 - `scma_block`
 - `scma_block_span`
-- `scma_live_snapshot`
 
 ## Storage/kv_store.hpp
 

@@ -6,7 +6,6 @@ scma_debug.cpp \
 scma_error_stack.cpp \
 scma_io.cpp \
 scma_mutex.cpp \
-scma_snapshot.cpp \
 scma_state.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
@@ -100,4 +99,3 @@ re: fclean all
 both: all debug
 
 .PHONY: all clean fclean re debug both
-

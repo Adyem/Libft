@@ -217,48 +217,6 @@ FT_TEST(test_scma_resize_rejects_zero_size, "scma resize rejects requests to shr
     return (1);
 }
 
-FT_TEST(test_scma_snapshot_returns_independent_copy, "scma snapshot duplicates payload")
-{
-    scma_handle handle;
-    int values[3];
-    ft_size_t index;
-    void *snapshot;
-    ft_size_t snapshot_size;
-    int *snapshot_values;
-
-    FT_ASSERT_EQ(1, scma_test_initialize(static_cast<ft_size_t>(sizeof(int) * 3)));
-    handle = scma_allocate(static_cast<ft_size_t>(sizeof(int) * 3));
-    FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
-    index = 0;
-    while (index < 3)
-    {
-        ft_size_t offset;
-
-        values[static_cast<size_t>(index)] = static_cast<int>(index * 10 + 1);
-        offset = static_cast<ft_size_t>(sizeof(int));
-        if (offset != 0)
-            offset = offset * index;
-        FT_ASSERT_EQ(1, scma_write(handle,
-                offset,
-                &values[static_cast<size_t>(index)],
-                static_cast<ft_size_t>(sizeof(int))));
-        index = index + 1;
-    }
-    snapshot = scma_snapshot(handle, &snapshot_size);
-    FT_ASSERT_EQ(0, snapshot == ft_nullptr);
-    FT_ASSERT_EQ(static_cast<ft_size_t>(sizeof(int) * 3), snapshot_size);
-    snapshot_values = static_cast<int *>(snapshot);
-    FT_ASSERT_EQ(values[0], snapshot_values[0]);
-    FT_ASSERT_EQ(values[1], snapshot_values[1]);
-    FT_ASSERT_EQ(values[2], snapshot_values[2]);
-    values[0] = 101;
-    FT_ASSERT_EQ(1, scma_write(handle, 0, &values[0], static_cast<ft_size_t>(sizeof(int))));
-    FT_ASSERT_EQ(values[0], snapshot_values[0]);
-    std::free(snapshot);
-    scma_shutdown();
-    return (1);
-}
-
 FT_TEST(test_scma_write_and_read_reject_null_pointers, "scma read and write protect against null pointers")
 {
     scma_handle handle;
@@ -309,39 +267,6 @@ FT_TEST(test_scma_read_bounds_checks, "scma read enforces offset boundaries")
     FT_ASSERT_EQ(1, scma_write(handle, 0, &value, static_cast<ft_size_t>(sizeof(int))));
     FT_ASSERT_EQ(0, scma_read(handle, static_cast<ft_size_t>(sizeof(int)), &value, static_cast<ft_size_t>(sizeof(int))));
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
-    scma_shutdown();
-    return (1);
-}
-
-FT_TEST(test_scma_snapshot_allows_null_size_pointer, "scma snapshot succeeds without size output")
-{
-    scma_handle handle;
-    unsigned char payload[3];
-    void *copy;
-    unsigned char *copied_bytes;
-    ft_size_t index;
-
-    FT_ASSERT_EQ(1, scma_test_initialize(3));
-    handle = scma_allocate(3);
-    FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
-    index = 0;
-    while (index < 3)
-    {
-        payload[static_cast<size_t>(index)] = static_cast<unsigned char>(index + 4);
-        index = index + 1;
-    }
-    FT_ASSERT_EQ(1, scma_write(handle, 0, payload, 3));
-    copy = scma_snapshot(handle, ft_nullptr);
-    FT_ASSERT(copy != ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
-    copied_bytes = static_cast<unsigned char *>(copy);
-    FT_ASSERT_EQ(payload[0], copied_bytes[0]);
-    FT_ASSERT_EQ(payload[1], copied_bytes[1]);
-    FT_ASSERT_EQ(payload[2], copied_bytes[2]);
-    payload[0] = 99;
-    FT_ASSERT_EQ(1, scma_write(handle, 0, payload, 3));
-    FT_ASSERT_EQ(static_cast<unsigned char>(4), copied_bytes[0]);
-    std::free(copy);
     scma_shutdown();
     return (1);
 }

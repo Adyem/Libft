@@ -31,15 +31,12 @@ int     scma_write(scma_handle handle, ft_size_t offset,
             const void *source, ft_size_t size);
 int     scma_read(scma_handle handle, ft_size_t offset,
             void *destination, ft_size_t size);
-void    *scma_snapshot(scma_handle handle, ft_size_t *size);
-int     scma_release_snapshot(void *snapshot_buffer);
 
 struct scma_stats
 {
     ft_size_t    block_count;
     ft_size_t    used_size;
     ft_size_t    heap_capacity;
-    int          snapshot_active;
 };
 
 int     scma_get_stats(scma_stats *out_stats);

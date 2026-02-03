@@ -47,7 +47,6 @@ int    scma_write(scma_handle handle, ft_size_t offset,
     std::memcpy(heap_data + static_cast<size_t>(block->offset + offset),
         source,
         static_cast<size_t>(size));
-    scma_update_tracked_snapshot(handle, offset, source, size);
     error_code = FT_ERR_SUCCESSS;
     scma_record_operation_error(error_code);
     write_result = 1;
