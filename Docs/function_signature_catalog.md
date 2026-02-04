@@ -904,7 +904,7 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### CPP_class/class_stringbuf.hpp
 
-- `bool is_bad() const noexcept;`
+- `bool is_valid() const noexcept;`
 - `const char *get_error_str() const noexcept;`
 - `ft_string str() const;`
 - `int get_error() const noexcept;`
@@ -1136,7 +1136,7 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### CPP_class/cpp_class_stringbuf.cpp
 
-- `bool ft_stringbuf::is_bad() const noexcept`
+- `bool ft_stringbuf::is_valid() const noexcept`
 - `const char *ft_stringbuf::get_error_str() const noexcept`
 - `const char *ft_stringbuf::last_operation_error_str() noexcept`
 - `const char *ft_stringbuf::operation_error_str_at(ft_size_t index) noexcept`
@@ -6156,10 +6156,6 @@ The catalog lists the function declarations and definitions that appear in the C
 - `int pt_cond_init(pthread_cond_t *condition, const pthread_condattr_t *attributes);`
 - `int pt_cond_signal(pthread_cond_t *condition);`
 - `int pt_cond_wait(pthread_cond_t *condition, pthread_mutex_t *mutex);`
-
-### PThread/lock_error_helpers.hpp
-
-- `static inline int ft_unique_lock_pop_last_error(const ft_unique_lock<pt_mutex> &mutex_guard)`
 
 ### PThread/lock_guard.hpp
 

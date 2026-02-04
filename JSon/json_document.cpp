@@ -1,7 +1,6 @@
 #include "document.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
-#include "../PThread/lock_error_helpers.hpp"
 #include "../Template/move.hpp"
 
 #include <cstdio>
@@ -75,7 +74,7 @@ static void json_document_finalize_guard(ft_unique_lock<pt_mutex> &guard) noexce
 
     if (guard.owns_lock())
         guard.unlock();
-    int guard_error = ft_unique_lock_pop_last_error(guard);
+    int guard_error = ft_global_error_stack_pop_newest();
 
     if (guard_error != FT_ERR_SUCCESSS)
     {
@@ -108,7 +107,7 @@ int json_document::lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept
 {
     ft_unique_lock<pt_mutex> local_guard(this->_mutex);
     {
-        int lock_error = ft_unique_lock_pop_last_error(local_guard);
+        int lock_error = ft_global_error_stack_pop_newest();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {

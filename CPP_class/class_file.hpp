@@ -10,7 +10,6 @@
 #include <sys/stat.h>
 #include <cstring>
 #include <cstddef>
-#include "../Errno/errno_internal.hpp"
 #include "../PThread/recursive_mutex.hpp"
 
 class ft_file
@@ -18,10 +17,8 @@ class ft_file
     private:
         int _fd;
         mutable pt_recursive_mutex _mutex;
-        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
         bool _is_open;
 
-        void        record_operation_error(int error_code) const;
         static int lock_pair(const ft_file &first, const ft_file &second,
                 const ft_file *&lower, const ft_file *&upper);
         static int unlock_pair(const ft_file *lower, const ft_file *upper);
@@ -58,7 +55,6 @@ class ft_file
         operator int() const;
 #ifdef LIBFT_TEST_BUILD
         ft_recursive_mutex &recursive_mutex() noexcept;
-        ft_operation_error_stack &operation_error_stack() const noexcept;
 #endif
 };
 

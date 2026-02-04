@@ -233,7 +233,6 @@ ft_string::~ft_string()
     this->_data = ft_nullptr;
     this->_length = 0;
     this->_capacity = 0;
-    ft_string::reset_error_owner(this);
     return ;
 }
 

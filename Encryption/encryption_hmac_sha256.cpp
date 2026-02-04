@@ -1,3 +1,6 @@
+#include "../Networking/openssl_support.hpp"
+
+#if NETWORKING_HAS_OPENSSL
 #include <openssl/evp.h>
 #include <openssl/core_names.h>
 #include <openssl/params.h>
@@ -188,3 +191,5 @@ void hmac_sha256(const unsigned char *key, size_t key_len, const void *data,
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
+
+#endif

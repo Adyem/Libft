@@ -27,7 +27,7 @@ void sha256_hash(const void *data, size_t length, unsigned char *digest)
         0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,
         0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19
     };
-    uint64_t bit_length = static_cast<uint64_t>(length) * 8;
+    uint64_t bit_length = length * 8;
     size_t padded_length = length + 1;
     while (padded_length % 64 != 56)
     {

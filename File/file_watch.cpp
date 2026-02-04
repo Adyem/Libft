@@ -1,6 +1,5 @@
 #include "file_watch.hpp"
 #include "../PThread/unique_lock.hpp"
-#include "../PThread/lock_error_helpers.hpp"
 #include "../Template/move.hpp"
 
 #ifdef __linux__
@@ -41,7 +40,7 @@ int ft_file_watch::watch_directory(const char *path, void (*callback)(const char
     {
         ft_thread new_thread;
         ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
-        int mutex_error = ft_unique_lock_pop_last_error(mutex_guard);
+        int mutex_error = ft_global_error_stack_pop_newest();
 
         if (mutex_error != FT_ERR_SUCCESSS)
         {
@@ -58,7 +57,7 @@ int ft_file_watch::watch_directory(const char *path, void (*callback)(const char
                 mutex_guard.unlock();
                 this->stop();
                 mutex_guard = ft_unique_lock<pt_mutex>(this->_mutex);
-                int relock_error = ft_unique_lock_pop_last_error(mutex_guard);
+                int relock_error = ft_global_error_stack_pop_newest();
 
                 if (relock_error != FT_ERR_SUCCESSS)
                     status = relock_error;
@@ -175,7 +174,7 @@ void ft_file_watch::stop()
     {
         ft_thread thread_to_join;
         ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
-        int mutex_error = ft_unique_lock_pop_last_error(mutex_guard);
+        int mutex_error = ft_global_error_stack_pop_newest();
 
         if (mutex_error != FT_ERR_SUCCESSS)
         {
@@ -236,7 +235,7 @@ bool ft_file_watch::snapshot_callback(void (**callback)(const char *, int, void 
     bool running;
 
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
-    int mutex_error = ft_unique_lock_pop_last_error(mutex_guard);
+    int mutex_error = ft_global_error_stack_pop_newest();
 
     if (mutex_error != FT_ERR_SUCCESSS)
     {
@@ -267,7 +266,7 @@ bool ft_file_watch::get_linux_handles(int &fd) const
 {
     bool running;
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
-    int mutex_error = ft_unique_lock_pop_last_error(mutex_guard);
+    int mutex_error = ft_global_error_stack_pop_newest();
 
     if (mutex_error != FT_ERR_SUCCESSS)
         return (false);
@@ -286,7 +285,7 @@ bool ft_file_watch::get_bsd_handles(int &kqueue_handle, int &fd) const
 {
     bool running;
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
-    int mutex_error = ft_unique_lock_pop_last_error(mutex_guard);
+    int mutex_error = ft_global_error_stack_pop_newest();
 
     if (mutex_error != FT_ERR_SUCCESSS)
         return (false);
@@ -306,7 +305,7 @@ bool ft_file_watch::get_windows_handle(void *&handle) const
 {
     bool running;
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
-    int mutex_error = ft_unique_lock_pop_last_error(mutex_guard);
+    int mutex_error = ft_global_error_stack_pop_newest();
 
     if (mutex_error != FT_ERR_SUCCESSS)
         return (false);

@@ -3,18 +3,13 @@
 
 #include "class_istream.hpp"
 #include "../System_utils/system_utils.hpp"
-#include "../Errno/errno_internal.hpp"
 
 class ft_fd_istream : public ft_istream
 {
     private:
         int _fd;
         mutable pt_recursive_mutex _mutex;
-        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
-
         int lock_self(ft_unique_lock<pt_recursive_mutex> &guard) const noexcept;
-        void record_operation_error(int error_code) const noexcept;
-
     public:
         ft_fd_istream(int fd) noexcept;
         ft_fd_istream(const ft_fd_istream &other) noexcept;
@@ -29,7 +24,6 @@ class ft_fd_istream : public ft_istream
 
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex *get_mutex_for_validation() const noexcept;
-        ft_operation_error_stack *operation_error_stack_handle() const noexcept;
 #endif
 
     protected:

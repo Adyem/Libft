@@ -95,14 +95,6 @@ void DataBuffer::sleep_backoff() noexcept
     return ;
 }
 
-void DataBuffer::record_operation_error(int error_code) const
-{
-    unsigned long long operation_id = ft_errno_next_operation_id();
-
-    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(&this->_operation_errors, error_code, operation_id);
-}
-
 int DataBuffer::write_length_locked(size_t len) noexcept
 {
     const uint8_t *ptr = reinterpret_cast<const uint8_t*>(&len);
@@ -131,7 +123,7 @@ int DataBuffer::read_length_locked(size_t &len) noexcept
 DataBuffer::DataBuffer() noexcept
     : _buffer(), _read_pos(0), _ok(true), _mutex()
 {
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -146,7 +138,7 @@ DataBuffer::DataBuffer(const DataBuffer &other) noexcept
     lock_error = DataBuffer::lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return ;
     }
     size_t other_size = other._buffer.size();
@@ -171,7 +163,7 @@ DataBuffer::DataBuffer(const DataBuffer &other) noexcept
     int unlock_error = DataBuffer::unlock_pair(lower, upper);
     if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
         final_error = unlock_error;
-    this->record_operation_error(final_error);
+    ft_global_error_stack_push(final_error);
     return ;
 }
 
@@ -186,7 +178,7 @@ DataBuffer::DataBuffer(DataBuffer&& other) noexcept
     lock_error = DataBuffer::lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return ;
     }
     this->_buffer = ft_move(other._buffer);
@@ -198,7 +190,7 @@ DataBuffer::DataBuffer(DataBuffer&& other) noexcept
     int unlock_error = DataBuffer::unlock_pair(lower, upper);
     if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
         final_error = unlock_error;
-    this->record_operation_error(final_error);
+    ft_global_error_stack_push(final_error);
     return ;
 }
 
@@ -206,7 +198,7 @@ DataBuffer &DataBuffer::operator=(const DataBuffer &other) noexcept
 {
     if (this == &other)
     {
-        this->record_operation_error(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (*this);
     }
     int lock_error;
@@ -217,7 +209,7 @@ DataBuffer &DataBuffer::operator=(const DataBuffer &other) noexcept
     lock_error = DataBuffer::lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (*this);
     }
     this->_buffer.clear();
@@ -243,7 +235,7 @@ DataBuffer &DataBuffer::operator=(const DataBuffer &other) noexcept
     int unlock_error = DataBuffer::unlock_pair(lower, upper);
     if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
         final_error = unlock_error;
-    this->record_operation_error(final_error);
+    ft_global_error_stack_push(final_error);
     return (*this);
 }
 
@@ -251,7 +243,7 @@ DataBuffer &DataBuffer::operator=(DataBuffer &&other) noexcept
 {
     if (this == &other)
     {
-        this->record_operation_error(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (*this);
     }
     int lock_error;
@@ -262,7 +254,7 @@ DataBuffer &DataBuffer::operator=(DataBuffer &&other) noexcept
     lock_error = DataBuffer::lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (*this);
     }
     this->_buffer = ft_move(other._buffer);
@@ -274,13 +266,13 @@ DataBuffer &DataBuffer::operator=(DataBuffer &&other) noexcept
     int unlock_error = DataBuffer::unlock_pair(lower, upper);
     if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
         final_error = unlock_error;
-    this->record_operation_error(final_error);
+    ft_global_error_stack_push(final_error);
     return (*this);
 }
 
 DataBuffer::~DataBuffer() noexcept
 {
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -289,7 +281,7 @@ void DataBuffer::clear() noexcept
     int lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return ;
     }
     this->_buffer.clear();
@@ -299,7 +291,7 @@ void DataBuffer::clear() noexcept
     int final_error = FT_ERR_SUCCESSS;
     if (unlock_error != FT_ERR_SUCCESSS)
         final_error = unlock_error;
-    this->record_operation_error(final_error);
+    ft_global_error_stack_push(final_error);
     return ;
 }
 
@@ -308,7 +300,7 @@ size_t DataBuffer::size() const noexcept
     int lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (0);
     }
     size_t result = this->_buffer.size();
@@ -316,7 +308,7 @@ size_t DataBuffer::size() const noexcept
     int final_error = FT_ERR_SUCCESSS;
     if (unlock_error != FT_ERR_SUCCESSS)
         final_error = unlock_error;
-    this->record_operation_error(final_error);
+    ft_global_error_stack_push(final_error);
     return (result);
 }
 
@@ -325,7 +317,7 @@ const ft_vector<uint8_t>& DataBuffer::data() const noexcept
     int lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (this->_buffer);
     }
     const ft_vector<uint8_t> *buffer_reference = &this->_buffer;
@@ -333,7 +325,7 @@ const ft_vector<uint8_t>& DataBuffer::data() const noexcept
     int final_error = FT_ERR_SUCCESSS;
     if (unlock_error != FT_ERR_SUCCESSS)
         final_error = unlock_error;
-    this->record_operation_error(final_error);
+    ft_global_error_stack_push(final_error);
     return (*buffer_reference);
 }
 
@@ -342,7 +334,7 @@ size_t DataBuffer::tell() const noexcept
     int lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (0);
     }
     size_t position = this->_read_pos;
@@ -350,7 +342,7 @@ size_t DataBuffer::tell() const noexcept
     int final_error = FT_ERR_SUCCESSS;
     if (unlock_error != FT_ERR_SUCCESSS)
         final_error = unlock_error;
-    this->record_operation_error(final_error);
+    ft_global_error_stack_push(final_error);
     return (position);
 }
 
@@ -359,7 +351,7 @@ bool DataBuffer::seek(size_t pos) noexcept
     int lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (false);
     }
     bool result;
@@ -381,7 +373,7 @@ bool DataBuffer::seek(size_t pos) noexcept
     int unlock_error = data_buffer_unlock_mutex(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
         final_error = unlock_error;
-    this->record_operation_error(final_error);
+    ft_global_error_stack_push(final_error);
     return (result);
 }
 
@@ -390,7 +382,7 @@ DataBuffer::operator bool() const noexcept
     int lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (false);
     }
     bool state = this->_ok;
@@ -398,7 +390,7 @@ DataBuffer::operator bool() const noexcept
     int unlock_error = data_buffer_unlock_mutex(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
         final_error = unlock_error;
-    this->record_operation_error(final_error);
+    ft_global_error_stack_push(final_error);
     return (state);
 }
 
@@ -407,7 +399,7 @@ bool DataBuffer::good() const noexcept
     int lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (false);
     }
     bool state = this->_ok;
@@ -415,7 +407,7 @@ bool DataBuffer::good() const noexcept
     int unlock_error = data_buffer_unlock_mutex(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
         final_error = unlock_error;
-    this->record_operation_error(final_error);
+    ft_global_error_stack_push(final_error);
     return (state);
 }
 
@@ -424,7 +416,7 @@ bool DataBuffer::bad() const noexcept
     int lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (true);
     }
     bool result = !this->_ok;
@@ -432,7 +424,7 @@ bool DataBuffer::bad() const noexcept
     int unlock_error = data_buffer_unlock_mutex(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
         final_error = unlock_error;
-    this->record_operation_error(final_error);
+    ft_global_error_stack_push(final_error);
     return (result);
 }
 
@@ -441,7 +433,7 @@ DataBuffer &DataBuffer::operator<<(size_t len)
     int lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (*this);
     }
     int final_error = this->write_length_locked(len);
@@ -452,7 +444,7 @@ DataBuffer &DataBuffer::operator<<(size_t len)
     int unlock_error = data_buffer_unlock_mutex(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
         final_error = unlock_error;
-    this->record_operation_error(final_error);
+    ft_global_error_stack_push(final_error);
     return (*this);
 }
 
@@ -461,7 +453,7 @@ DataBuffer &DataBuffer::operator>>(size_t &len)
     int lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (*this);
     }
     int final_error = this->read_length_locked(len);
@@ -472,7 +464,7 @@ DataBuffer &DataBuffer::operator>>(size_t &len)
     int unlock_error = data_buffer_unlock_mutex(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
         final_error = unlock_error;
-    this->record_operation_error(final_error);
+    ft_global_error_stack_push(final_error);
     return (*this);
 }
 
@@ -480,10 +472,5 @@ DataBuffer &DataBuffer::operator>>(size_t &len)
 pt_recursive_mutex *DataBuffer::get_mutex_for_validation() const noexcept
 {
     return (&(this->_mutex));
-}
-
-ft_operation_error_stack *DataBuffer::operation_error_stack_handle() const noexcept
-{
-    return (&(this->_operation_errors));
 }
 #endif

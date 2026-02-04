@@ -3,7 +3,6 @@
 #include <new>
 
 #include "../Libft/libft.hpp"
-#include "../PThread/lock_error_helpers.hpp"
 #include "../Template/move.hpp"
 
 static int storage_kv_capture_string_error(const ft_string &value) noexcept
@@ -41,7 +40,7 @@ void kv_store_entry::reinitialize_mutex() noexcept
 int kv_store_entry::lock_entry(ft_unique_lock<pt_mutex> &guard) const noexcept
 {
     ft_unique_lock<pt_mutex> local_guard(this->_mutex);
-    int guard_error = ft_unique_lock_pop_last_error(local_guard);
+    int guard_error = ft_global_error_stack_pop_newest();
 
     if (guard_error != FT_ERR_SUCCESSS)
     {

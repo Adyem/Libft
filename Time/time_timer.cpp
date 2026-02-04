@@ -3,7 +3,6 @@
 #include <chrono>
 #include <climits>
 #include "../Errno/errno.hpp"
-#include "../PThread/lock_error_helpers.hpp"
 
 time_timer::time_timer() noexcept
     : _duration_ms(0), _start_time(std::chrono::steady_clock::time_point()), _running(false)
@@ -25,7 +24,7 @@ void    time_timer::start(long duration_ms) noexcept
     final_error = FT_ERR_SUCCESSS;
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
-        int guard_error = ft_unique_lock_pop_last_error(guard);
+        int guard_error = ft_global_error_stack_pop_newest();
 
         if (guard_error != FT_ERR_SUCCESSS)
             final_error = guard_error;
@@ -55,7 +54,7 @@ long time_timer::update() noexcept
     final_error = FT_ERR_SUCCESSS;
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
-        int guard_error = ft_unique_lock_pop_last_error(guard);
+        int guard_error = ft_global_error_stack_pop_newest();
 
         if (guard_error != FT_ERR_SUCCESSS)
         {
@@ -100,7 +99,7 @@ long time_timer::add_time(long amount_ms) noexcept
     final_error = FT_ERR_SUCCESSS;
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
-        int guard_error = ft_unique_lock_pop_last_error(guard);
+        int guard_error = ft_global_error_stack_pop_newest();
 
         if (guard_error != FT_ERR_SUCCESSS)
         {
@@ -152,7 +151,7 @@ long time_timer::remove_time(long amount_ms) noexcept
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        int guard_error = ft_unique_lock_pop_last_error(guard);
+        int guard_error = ft_global_error_stack_pop_newest();
 
         if (guard_error != FT_ERR_SUCCESSS)
         {
@@ -200,7 +199,7 @@ void    time_timer::sleep_remaining() noexcept
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        int guard_error = ft_unique_lock_pop_last_error(guard);
+        int guard_error = ft_global_error_stack_pop_newest();
 
         if (guard_error != FT_ERR_SUCCESSS)
             final_error = guard_error;
@@ -235,7 +234,7 @@ void    time_timer::sleep_remaining() noexcept
 int time_timer::get_error() const noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    int mutex_error = ft_unique_lock_pop_last_error(guard);
+    int mutex_error = ft_global_error_stack_pop_newest();
 
     if (mutex_error != FT_ERR_SUCCESSS)
     {

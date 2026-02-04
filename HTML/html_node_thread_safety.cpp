@@ -3,7 +3,6 @@
 #include "parser.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
-#include "../PThread/lock_error_helpers.hpp"
 #include "../PThread/pthread.hpp"
 
 int html_node_prepare_thread_safety(html_node *node)
@@ -27,7 +26,7 @@ int html_node_prepare_thread_safety(html_node *node)
         return (-1);
     }
     {
-        int mutex_error = ft_mutex_pop_last_error(mutex_pointer);
+        int mutex_error = (((mutex_pointer) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
 
         if (mutex_error != FT_ERR_SUCCESSS)
         {
@@ -75,7 +74,7 @@ int html_node_lock(const html_node *node, bool *lock_acquired)
     }
     mutable_node->mutex->lock(THREAD_ID);
     {
-        int lock_error = ft_mutex_pop_last_error(mutable_node->mutex);
+        int lock_error = (((mutable_node->mutex) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
 
         if (lock_error != FT_ERR_SUCCESSS)
         {
@@ -103,7 +102,7 @@ void html_node_unlock(const html_node *node, bool lock_acquired)
         return ;
     mutable_node->mutex->unlock(THREAD_ID);
     {
-        int unlock_error = ft_mutex_pop_last_error(mutable_node->mutex);
+        int unlock_error = (((mutable_node->mutex) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
 
         if (unlock_error != FT_ERR_SUCCESSS)
         {

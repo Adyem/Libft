@@ -25,11 +25,11 @@ class ft_test_simple_istream : public ft_istream
         {
             if (buffer == ft_nullptr || count == 0)
             {
-                this->set_error(FT_ERR_INVALID_ARGUMENT);
+                ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
                 return (0);
             }
             buffer[0] = this->_fill_character;
-            this->set_error(FT_ERR_SUCCESSS);
+            ft_global_error_stack_push(FT_ERR_SUCCESSS);
             return (1);
         }
 };
@@ -44,7 +44,7 @@ FT_TEST(test_ft_istream_read_unlocks_mutex,
     buffer[0] = '\0';
     buffer[1] = '\0';
     FT_ASSERT_SINGLE_ERROR_READ(stream, buffer, 1);
-    mutex = stream.get_mutex_for_testing();
+    mutex = stream.get_mutex_for_validation();
     FT_ASSERT(mutex != ft_nullptr);
     FT_ASSERT_EQ(false, mutex->lockState());
     FT_ASSERT_EQ('r', buffer[0]);
@@ -60,7 +60,7 @@ FT_TEST(test_ft_istream_bad_unlocks_mutex,
     pt_recursive_mutex *mutex;
 
     FT_ASSERT_SINGLE_ERROR_BAD(bad_result, stream);
-    mutex = stream.get_mutex_for_testing();
+    mutex = stream.get_mutex_for_validation();
     FT_ASSERT(mutex != ft_nullptr);
     FT_ASSERT_EQ(false, mutex->lockState());
     FT_ASSERT_EQ(false, bad_result);
@@ -80,7 +80,7 @@ FT_TEST(test_ft_istream_gcount_unlocks_mutex,
     buffer[1] = '\0';
     FT_ASSERT_SINGLE_ERROR_READ(stream, buffer, 1);
     FT_ASSERT_SINGLE_ERROR_GCOUNT(count_value, stream);
-    mutex = stream.get_mutex_for_testing();
+    mutex = stream.get_mutex_for_validation();
     FT_ASSERT(mutex != ft_nullptr);
     FT_ASSERT_EQ(false, mutex->lockState());
     FT_ASSERT_EQ(1, count_value);
@@ -108,19 +108,19 @@ FT_TEST(test_ft_stringbuf_read_unlocks_mutex,
     return (1);
 }
 
-FT_TEST(test_ft_stringbuf_is_bad_unlocks_mutex,
-        "ft_stringbuf is_bad unlocks its mutex")
+FT_TEST(test_ft_stringbuf_is_valid_unlocks_mutex,
+        "ft_stringbuf is_valid unlocks its mutex")
 {
     ft_string source("mutex");
     ft_stringbuf buffer(source);
-    bool bad_result;
+    bool valid_result;
     pt_recursive_mutex *mutex;
 
-    FT_ASSERT_SINGLE_GLOBAL_ERROR(bad_result = buffer.is_bad());
+    FT_ASSERT_SINGLE_GLOBAL_ERROR(valid_result = buffer.is_valid());
     mutex = buffer.get_mutex_for_testing();
     FT_ASSERT(mutex != ft_nullptr);
     FT_ASSERT_EQ(false, mutex->lockState());
-    FT_ASSERT_EQ(false, bad_result);
+    FT_ASSERT_EQ(true, valid_result);
     ft_errno = FT_ERR_SUCCESSS;
     return (1);
 }
@@ -149,10 +149,11 @@ FT_TEST(test_ft_istream_read_invalid_argument_unlocks_mutex,
     pt_recursive_mutex *mutex;
 
     FT_ASSERT_SINGLE_GLOBAL_ERROR(stream.read(ft_nullptr, 1));
-    mutex = stream.get_mutex_for_testing();
+    int read_error = ft_global_error_stack_last_error();
+    mutex = stream.get_mutex_for_validation();
     FT_ASSERT(mutex != ft_nullptr);
     FT_ASSERT_EQ(false, mutex->lockState());
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, stream.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, read_error);
     ft_errno = FT_ERR_SUCCESSS;
     return (1);
 }
@@ -165,10 +166,11 @@ FT_TEST(test_ft_stringbuf_read_invalid_argument_unlocks_mutex,
     pt_recursive_mutex *mutex;
 
     FT_ASSERT_SINGLE_GLOBAL_ERROR(buffer.read(ft_nullptr, 1));
+    int read_error = ft_global_error_stack_last_error();
     mutex = buffer.get_mutex_for_testing();
     FT_ASSERT(mutex != ft_nullptr);
     FT_ASSERT_EQ(false, mutex->lockState());
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, buffer.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, read_error);
     ft_errno = FT_ERR_SUCCESSS;
     return (1);
 }
@@ -182,30 +184,30 @@ FT_TEST(test_ft_istream_gcount_after_error_unlocks_mutex,
 
     FT_ASSERT_SINGLE_GLOBAL_ERROR(stream.read(ft_nullptr, 1));
     FT_ASSERT_SINGLE_ERROR_GCOUNT(count_value, stream);
-    mutex = stream.get_mutex_for_testing();
+    mutex = stream.get_mutex_for_validation();
     FT_ASSERT(mutex != ft_nullptr);
     FT_ASSERT_EQ(false, mutex->lockState());
     FT_ASSERT_EQ(0, count_value);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, stream.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_global_error_stack_last_error());
     ft_errno = FT_ERR_SUCCESSS;
     return (1);
 }
 
-FT_TEST(test_ft_stringbuf_is_bad_after_error_unlocks_mutex,
-        "ft_stringbuf is_bad unlocks its mutex after an error")
+FT_TEST(test_ft_stringbuf_is_valid_after_error_unlocks_mutex,
+        "ft_stringbuf is_valid unlocks its mutex after an error")
 {
     ft_string source("mutex");
     ft_stringbuf buffer(source);
     pt_recursive_mutex *mutex;
-    bool bad_result;
+    bool valid_result;
 
     FT_ASSERT_SINGLE_GLOBAL_ERROR(buffer.read(ft_nullptr, 1));
-    FT_ASSERT_SINGLE_GLOBAL_ERROR(bad_result = buffer.is_bad());
+    FT_ASSERT_SINGLE_GLOBAL_ERROR(valid_result = buffer.is_valid());
     mutex = buffer.get_mutex_for_testing();
     FT_ASSERT(mutex != ft_nullptr);
     FT_ASSERT_EQ(false, mutex->lockState());
-    FT_ASSERT_EQ(true, bad_result);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, buffer.get_error());
+    FT_ASSERT_EQ(false, valid_result);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_global_error_stack_last_error());
     ft_errno = FT_ERR_SUCCESSS;
     return (1);
 }
@@ -239,7 +241,7 @@ FT_TEST(test_ft_istream_read_twice_unlocks_mutex,
     buffer[1] = '\0';
     FT_ASSERT_SINGLE_ERROR_READ(stream, buffer, 1);
     FT_ASSERT_SINGLE_ERROR_READ(stream, buffer, 1);
-    mutex = stream.get_mutex_for_testing();
+    mutex = stream.get_mutex_for_validation();
     FT_ASSERT(mutex != ft_nullptr);
     FT_ASSERT_EQ(false, mutex->lockState());
     FT_ASSERT_EQ('t', buffer[0]);
@@ -259,7 +261,7 @@ FT_TEST(test_ft_istream_bad_after_read_unlocks_mutex,
     buffer[1] = '\0';
     FT_ASSERT_SINGLE_ERROR_READ(stream, buffer, 1);
     FT_ASSERT_SINGLE_ERROR_BAD(bad_result, stream);
-    mutex = stream.get_mutex_for_testing();
+    mutex = stream.get_mutex_for_validation();
     FT_ASSERT(mutex != ft_nullptr);
     FT_ASSERT_EQ(false, mutex->lockState());
     FT_ASSERT_EQ(false, bad_result);
@@ -279,7 +281,7 @@ FT_TEST(test_ft_istream_gcount_after_success_unlocks_mutex,
     buffer[1] = '\0';
     FT_ASSERT_SINGLE_ERROR_READ(stream, buffer, 1);
     FT_ASSERT_SINGLE_ERROR_GCOUNT(count_value, stream);
-    mutex = stream.get_mutex_for_testing();
+    mutex = stream.get_mutex_for_validation();
     FT_ASSERT(mutex != ft_nullptr);
     FT_ASSERT_EQ(false, mutex->lockState());
     FT_ASSERT_EQ(1, count_value);
@@ -298,7 +300,7 @@ FT_TEST(test_ft_istream_read_zero_count_unlocks_mutex,
     buffer[0] = '\0';
     FT_ASSERT_SINGLE_ERROR_READ(stream, buffer, 0);
     FT_ASSERT_SINGLE_ERROR_GCOUNT(count_value, stream);
-    mutex = stream.get_mutex_for_testing();
+    mutex = stream.get_mutex_for_validation();
     FT_ASSERT(mutex != ft_nullptr);
     FT_ASSERT_EQ(false, mutex->lockState());
     FT_ASSERT_EQ(0, count_value);
@@ -344,8 +346,8 @@ FT_TEST(test_ft_stringbuf_read_zero_count_unlocks_mutex,
     return (1);
 }
 
-FT_TEST(test_ft_stringbuf_is_bad_after_read_unlocks_mutex,
-        "ft_stringbuf is_bad after read unlocks its mutex")
+FT_TEST(test_ft_stringbuf_is_valid_after_read_unlocks_mutex,
+        "ft_stringbuf is_valid after read unlocks its mutex")
 {
     ft_string source("mutex");
     ft_stringbuf buffer(source);

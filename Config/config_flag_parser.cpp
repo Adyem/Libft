@@ -5,14 +5,13 @@
 #include "../Libft/libft.hpp"
 #include "../PThread/unique_lock.hpp"
 #include "../PThread/mutex.hpp"
-#include "../PThread/lock_error_helpers.hpp"
 
 static int cnfg_config_lock_if_enabled(cnfg_config *config, ft_unique_lock<pt_mutex> &mutex_guard)
 {
     if (!config || !config->thread_safe_enabled || !config->mutex)
         return (FT_ERR_SUCCESSS);
     mutex_guard = ft_unique_lock<pt_mutex>(*config->mutex);
-    return (ft_unique_lock_pop_last_error(mutex_guard));
+    return (ft_global_error_stack_pop_newest());
 }
 
 static void cnfg_config_unlock_guard(ft_unique_lock<pt_mutex> &mutex_guard)
@@ -80,7 +79,7 @@ void cnfg_flag_parser::free_flags()
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
     {
-        int lock_error = ft_unique_lock_pop_last_error(mutex_guard);
+        int lock_error = ft_global_error_stack_pop_newest();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {
@@ -98,7 +97,7 @@ bool cnfg_flag_parser::parse(int argument_count, char **argument_values)
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
     {
-        int lock_error = ft_unique_lock_pop_last_error(mutex_guard);
+        int lock_error = ft_global_error_stack_pop_newest();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {
@@ -157,7 +156,7 @@ bool cnfg_flag_parser::has_short_flag(char flag)
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
     {
-        int lock_error = ft_unique_lock_pop_last_error(mutex_guard);
+        int lock_error = ft_global_error_stack_pop_newest();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {
@@ -181,7 +180,7 @@ bool cnfg_flag_parser::has_long_flag(const char *flag)
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
     {
-        int lock_error = ft_unique_lock_pop_last_error(mutex_guard);
+        int lock_error = ft_global_error_stack_pop_newest();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {
@@ -211,7 +210,7 @@ size_t cnfg_flag_parser::get_short_flag_count()
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
     {
-        int lock_error = ft_unique_lock_pop_last_error(mutex_guard);
+        int lock_error = ft_global_error_stack_pop_newest();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {
@@ -230,7 +229,7 @@ size_t cnfg_flag_parser::get_long_flag_count()
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
     {
-        int lock_error = ft_unique_lock_pop_last_error(mutex_guard);
+        int lock_error = ft_global_error_stack_pop_newest();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {
@@ -249,7 +248,7 @@ size_t cnfg_flag_parser::get_total_flag_count()
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
     {
-        int lock_error = ft_unique_lock_pop_last_error(mutex_guard);
+        int lock_error = ft_global_error_stack_pop_newest();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {
@@ -274,7 +273,7 @@ int     cnfg_flag_parser::get_error() const
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
     {
-        int lock_error = ft_unique_lock_pop_last_error(mutex_guard);
+        int lock_error = ft_global_error_stack_pop_newest();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {
@@ -294,7 +293,7 @@ const char  *cnfg_flag_parser::get_error_str() const
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
     {
-        int lock_error = ft_unique_lock_pop_last_error(mutex_guard);
+        int lock_error = ft_global_error_stack_pop_newest();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {

@@ -14,15 +14,15 @@ static int ft_ofstream_capture_guard_error() noexcept
 }
 
 ft_ofstream::ft_ofstream() noexcept
-    : _file(), _mutex(), _operation_errors()
+    : _file(), _mutex()
 {
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
 ft_ofstream::~ft_ofstream() noexcept
 {
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -62,7 +62,7 @@ int ft_ofstream::open(const char *filename) noexcept
             report_error = guard_error;
         else
             report_error = lock_error;
-        this->record_operation_error(report_error);
+        ft_global_error_stack_push(report_error);
         return (1);
     }
     if (filename == ft_nullptr)
@@ -73,7 +73,7 @@ int ft_ofstream::open(const char *filename) noexcept
             report_error = guard_error;
         else
             report_error = FT_ERR_INVALID_ARGUMENT;
-        this->record_operation_error(report_error);
+        ft_global_error_stack_push(report_error);
         return (1);
     }
     if (this->_file.open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644) != 0)
@@ -85,16 +85,16 @@ int ft_ofstream::open(const char *filename) noexcept
             report_error = guard_error;
         else
             report_error = file_error;
-        this->record_operation_error(report_error);
+        ft_global_error_stack_push(report_error);
         return (1);
     }
     guard_error = ft_ofstream::finalize_lock(guard);
     if (guard_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(guard_error);
+        ft_global_error_stack_push(guard_error);
         return (1);
     }
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -114,7 +114,7 @@ ssize_t ft_ofstream::write(const char *string) noexcept
             report_error = guard_error;
         else
             report_error = lock_error;
-        this->record_operation_error(report_error);
+        ft_global_error_stack_push(report_error);
         return (-1);
     }
     if (string == ft_nullptr)
@@ -125,7 +125,7 @@ ssize_t ft_ofstream::write(const char *string) noexcept
             report_error = guard_error;
         else
             report_error = FT_ERR_INVALID_ARGUMENT;
-        this->record_operation_error(report_error);
+        ft_global_error_stack_push(report_error);
         return (-1);
     }
     result = this->_file.write(string);
@@ -138,16 +138,16 @@ ssize_t ft_ofstream::write(const char *string) noexcept
             report_error = guard_error;
         else
             report_error = file_error;
-        this->record_operation_error(report_error);
+        ft_global_error_stack_push(report_error);
         return (-1);
     }
     guard_error = ft_ofstream::finalize_lock(guard);
     if (guard_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(guard_error);
+        ft_global_error_stack_push(guard_error);
         return (-1);
     }
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -166,7 +166,7 @@ void ft_ofstream::close() noexcept
             report_error = guard_error;
         else
             report_error = lock_error;
-        this->record_operation_error(report_error);
+        ft_global_error_stack_push(report_error);
         return ;
     }
     int previous_fd = this->_file.get_fd();
@@ -176,24 +176,14 @@ void ft_ofstream::close() noexcept
     guard_error = ft_ofstream::finalize_lock(guard);
     if (guard_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(guard_error);
+        ft_global_error_stack_push(guard_error);
         return ;
     }
     if (previous_fd >= 0 && current_fd == previous_fd && file_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(file_error);
+        ft_global_error_stack_push(file_error);
         return ;
     }
-    this->record_operation_error(FT_ERR_SUCCESSS);
-    return ;
-}
-
-void ft_ofstream::record_operation_error(int error_code) const noexcept
-{
-    unsigned long long operation_id;
-
-    operation_id = ft_errno_next_operation_id();
-    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(&this->_operation_errors, error_code, operation_id);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }

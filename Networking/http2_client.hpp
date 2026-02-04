@@ -7,7 +7,9 @@
 #include "../PThread/mutex.hpp"
 #include <cstdint>
 #include <cstddef>
-#include <openssl/ssl.h>
+#include "openssl_support.hpp"
+
+#if NETWORKING_HAS_OPENSSL
 
 class http2_header_field
 {
@@ -232,4 +234,5 @@ bool    http2_decompress_headers(const ft_string &block,
 bool    http2_select_alpn_protocol(SSL *ssl_session, bool &selected_http2,
             int &error_code) noexcept;
 
+#endif
 #endif

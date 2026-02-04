@@ -1,6 +1,9 @@
 #include "http2_client.hpp"
 #include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
+#include "openssl_support.hpp"
+
+#if NETWORKING_HAS_OPENSSL
 #include <openssl/ssl.h>
 #include <cstdlib>
 
@@ -2724,3 +2727,5 @@ bool http2_select_alpn_protocol(SSL *ssl_session, bool &selected_http2,
     error_code = FT_ERR_SUCCESSS;
     return (true);
 }
+
+#endif

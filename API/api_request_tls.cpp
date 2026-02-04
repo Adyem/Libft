@@ -5,6 +5,7 @@
 #include "../Networking/socket_class.hpp"
 #include "../Networking/ssl_wrapper.hpp"
 #include "../Networking/networking.hpp"
+#include "../Networking/openssl_support.hpp"
 #include "../CPP_class/class_string.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
@@ -27,10 +28,16 @@
 # include <fcntl.h>
 # include <sys/select.h>
 #endif
+
+#
+#if NETWORKING_HAS_OPENSSL
 #include <openssl/err.h>
 #include <cstdint>
 #include <climits>
 #include <utility>
+#endif
+
+#if NETWORKING_HAS_OPENSSL
 
 static int api_request_capture_network_error()
 {
@@ -1647,3 +1654,5 @@ bool    api_request_json_tls_async(const char *host, uint16_t port,
     ft_errno = FT_ERR_SUCCESSS;
     return (true);
 }
+
+#endif

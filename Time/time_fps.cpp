@@ -1,7 +1,6 @@
 #include "time.hpp"
 #include "fps.hpp"
 #include "../Errno/errno.hpp"
-#include "../PThread/lock_error_helpers.hpp"
 #include <chrono>
 
 time_fps::time_fps(long frames_per_second)
@@ -35,7 +34,7 @@ long    time_fps::get_frames_per_second()
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        int guard_error = ft_unique_lock_pop_last_error(guard);
+        int guard_error = ft_global_error_stack_pop_newest();
 
         if (guard_error != FT_ERR_SUCCESSS)
         {
@@ -67,7 +66,7 @@ int     time_fps::set_frames_per_second(long frames_per_second)
     result = -1;
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
-        int guard_error = ft_unique_lock_pop_last_error(guard);
+        int guard_error = ft_global_error_stack_pop_newest();
 
         if (guard_error != FT_ERR_SUCCESSS)
         {
@@ -105,7 +104,7 @@ void    time_fps::sleep_to_next_frame()
     final_error = FT_ERR_SUCCESSS;
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
-        int guard_error = ft_unique_lock_pop_last_error(guard);
+        int guard_error = ft_global_error_stack_pop_newest();
 
         if (guard_error != FT_ERR_SUCCESSS)
         {
@@ -152,7 +151,7 @@ int     time_fps::get_error() const
     final_error = FT_ERR_SUCCESSS;
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
-        int guard_error = ft_unique_lock_pop_last_error(guard);
+        int guard_error = ft_global_error_stack_pop_newest();
 
         if (guard_error != FT_ERR_SUCCESSS)
         {
@@ -179,7 +178,7 @@ const char  *time_fps::get_error_str() const
     final_error = FT_ERR_SUCCESSS;
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
-        int guard_error = ft_unique_lock_pop_last_error(guard);
+        int guard_error = ft_global_error_stack_pop_newest();
 
         if (guard_error != FT_ERR_SUCCESSS)
         {

@@ -5,7 +5,6 @@
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread.hpp"
 #include <new>
-#include "../PThread/lock_error_helpers.hpp"
 
 static void cnfg_entry_push_success(void)
 {
@@ -40,7 +39,7 @@ int cnfg_entry_prepare_thread_safety(cnfg_entry *entry)
         return (-1);
     }
     {
-        int mutex_error = ft_mutex_pop_last_error(mutex_pointer);
+        int mutex_error = (((mutex_pointer) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
 
         if (mutex_error != FT_ERR_SUCCESSS)
         {
@@ -85,7 +84,7 @@ int cnfg_entry_lock(cnfg_entry *entry, bool *lock_acquired)
     }
     entry->mutex->lock(THREAD_ID);
     {
-        int lock_error = ft_mutex_pop_last_error(entry->mutex);
+        int lock_error = (((entry->mutex) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
 
         if (lock_error != FT_ERR_SUCCESSS)
         {
@@ -108,7 +107,7 @@ void cnfg_entry_unlock(cnfg_entry *entry, bool lock_acquired)
     }
     entry->mutex->unlock(THREAD_ID);
     {
-        int unlock_error = ft_mutex_pop_last_error(entry->mutex);
+        int unlock_error = (((entry->mutex) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
 
         if (unlock_error != FT_ERR_SUCCESSS)
         {

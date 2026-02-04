@@ -5,6 +5,7 @@
 #include "../Networking/ssl_wrapper.hpp"
 #include "../Networking/networking.hpp"
 #include "../Networking/http2_client.hpp"
+#include "../Networking/openssl_support.hpp"
 #include "../CPP_class/class_string.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
@@ -25,10 +26,15 @@
 # include <sys/time.h>
 # include <unistd.h>
 #endif
+
+#if NETWORKING_HAS_OPENSSL
 #include <openssl/err.h>
 #include <cstdint>
 #include <climits>
 #include <utility>
+#endif
+
+#if NETWORKING_HAS_OPENSSL
 
 static bool api_https_prepare_request(const char *method, const char *path,
     const char *host_header, json_group *payload, const char *headers,
@@ -1465,3 +1471,5 @@ static char *api_https_execute_http2_once(
     error_code = FT_ERR_SUCCESSS;
     return (http_response);
 }
+
+#endif

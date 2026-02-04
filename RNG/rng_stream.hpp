@@ -4,17 +4,13 @@
 #include <random>
 #include <cstdint>
 
-#include "../Errno/errno_internal.hpp"
 #include "../PThread/recursive_mutex.hpp"
 
 class rng_stream
 {
     private:
         std::mt19937 _engine;
-        mutable ft_operation_error_stack _operation_errors;
         mutable pt_recursive_mutex _mutex;
-
-        void    record_operation_error(int error_code) const noexcept;
         int     lock_internal(bool *lock_acquired) const;
         int     unlock_internal(bool lock_acquired) const;
         int     random_int_unlocked();
@@ -46,8 +42,6 @@ class rng_stream
 
         pt_recursive_mutex   *mutex_handle();
         const pt_recursive_mutex   *mutex_handle() const;
-        ft_operation_error_stack *operation_error_stack_handle();
-        const ft_operation_error_stack *operation_error_stack_handle() const;
 };
 
 #endif

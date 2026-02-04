@@ -4,7 +4,7 @@
 #include "../CPP_class/class_string.hpp"
 #include "../Template/vector.hpp"
 #include "../Errno/errno_internal.hpp"
-#include <openssl/ssl.h>
+#include "openssl_support.hpp"
 
 #ifdef _WIN32
 # include <winsock2.h>
@@ -65,6 +65,10 @@ void networking_dns_clear_cache(void) noexcept;
 
 void networking_dns_set_error(int resolver_status) noexcept;
 
+#if NETWORKING_HAS_OPENSSL
+int networking_check_ssl_after_send(SSL *ssl_connection);
+#endif
+
 struct event_loop
 {
     int *read_file_descriptors;
@@ -97,7 +101,6 @@ ssize_t udp_event_loop_send(event_loop *loop, udp_socket &socket, const void *da
                             socklen_t address_length, int timeout_milliseconds);
 
 int networking_check_socket_after_send(int socket_fd);
-int networking_check_ssl_after_send(SSL *ssl_connection);
 
 static inline int networking_fetch_last_error(bool repush_failure = true)
 {

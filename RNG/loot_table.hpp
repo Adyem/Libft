@@ -6,7 +6,6 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/unique_lock.hpp"
-#include "../PThread/lock_error_helpers.hpp"
 #include "rng.hpp"
 #include <climits>
 
@@ -88,7 +87,7 @@ int ft_loot_entry<ElementType>::lock_entry(ft_unique_lock<pt_mutex> &guard) cons
 {
     ft_unique_lock<pt_mutex> local_guard(this->_mutex);
     {
-        int lock_error = ft_unique_lock_pop_last_error(local_guard);
+        int lock_error = ft_global_error_stack_pop_newest();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {
@@ -382,7 +381,7 @@ int ft_loot_table<ElementType>::lock_table(ft_unique_lock<pt_mutex> &guard) cons
 {
     ft_unique_lock<pt_mutex> local_guard(this->_mutex);
     {
-        int lock_error = ft_unique_lock_pop_last_error(local_guard);
+        int lock_error = ft_global_error_stack_pop_newest();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {

@@ -1,6 +1,9 @@
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <sqlite3.h>
+#include "../sqlite_support.hpp"
+#if SQLITE3_AVAILABLE
+# include <sqlite3.h>
+#endif
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../CPP_class/class_file.hpp"
@@ -35,12 +38,14 @@ struct rl_history_path_context
     char *path;
 };
 
+#if SQLITE3_AVAILABLE
 struct rl_history_sqlite_context
 {
     char *path;
     sqlite3 *database;
 };
 
+#endif
 typedef struct s_rl_history_backend
 {
     const char *name;
@@ -356,6 +361,7 @@ static int rl_history_json_save(void *context_pointer)
     return (0);
 }
 
+#if SQLITE3_AVAILABLE
 static int rl_history_sqlite_configure(void **context_pointer, const char *location)
 {
     rl_history_sqlite_context *sqlite_context;
@@ -554,6 +560,15 @@ static int rl_history_sqlite_save(void *context_pointer)
     return (0);
 }
 
+static rl_history_backend g_history_sqlite_backend = {
+    "sqlite",
+    rl_history_sqlite_configure,
+    rl_history_sqlite_shutdown,
+    rl_history_sqlite_load,
+    rl_history_sqlite_save
+};
+#endif
+
 static rl_history_backend g_history_plain_backend = {
     "plain-text",
     rl_history_plain_configure,
@@ -570,18 +585,12 @@ static rl_history_backend g_history_json_backend = {
     rl_history_json_save
 };
 
-static rl_history_backend g_history_sqlite_backend = {
-    "sqlite",
-    rl_history_sqlite_configure,
-    rl_history_sqlite_shutdown,
-    rl_history_sqlite_load,
-    rl_history_sqlite_save
-};
-
 static const rl_history_backend *g_history_backend_catalog[] = {
     &g_history_plain_backend,
     &g_history_json_backend,
+#if SQLITE3_AVAILABLE
     &g_history_sqlite_backend
+#endif
 };
 
 static const rl_history_backend *rl_history_find_backend(const char *backend_name)

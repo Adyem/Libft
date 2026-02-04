@@ -2,7 +2,7 @@
 #define FT_BIG_NUMBER_HPP
 
 #include "../Libft/libft.hpp"
-#include "../Errno/errno_internal.hpp"
+#include "../Errno/errno.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/unique_lock.hpp"
 #include <cstdint>
@@ -20,7 +20,6 @@ class ft_big_number
         ft_size_t       _capacity;
         bool            _is_negative;
         mutable pt_recursive_mutex    _mutex;
-        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
 
         void    reserve(ft_size_t new_capacity) noexcept;
         void    shrink_capacity() noexcept;
@@ -34,8 +33,6 @@ class ft_big_number
         static int  initialize_errno_keeper() noexcept;
         static void update_errno_keeper(int &stored_errno, int new_value) noexcept;
         static void finalize_errno_keeper(int stored_errno) noexcept;
-        void    record_operation_error(int error_code) const noexcept;
-        static void reset_error_owner(const ft_big_number *owner) noexcept;
         void    clear_unlocked() noexcept;
         void    append_digit_unlocked(char digit) noexcept;
         void    append_unlocked(const char* digits) noexcept;

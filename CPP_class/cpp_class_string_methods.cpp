@@ -2,25 +2,10 @@
 #include "../CMA/CMA.hpp"
 #include "../Libft/libft.hpp"
 #include "../Errno/errno.hpp"
-#include "../Errno/errno_internal.hpp"
 #include "../Template/move.hpp"
 #include "../PThread/pthread.hpp"
 #include "class_nullptr.hpp"
 #include <climits>
-
-static thread_local ft_operation_error_stack *g_ft_string_last_error_stack = ft_nullptr;
-
-ft_operation_error_stack *ft_string_error_stack_owner(void) noexcept
-{
-    return (g_ft_string_last_error_stack);
-}
-
-void ft_string::reset_error_owner(const ft_string *owner) noexcept
-{
-    if (g_ft_string_last_error_stack == &owner->_operation_errors)
-        g_ft_string_last_error_stack = ft_nullptr;
-    return ;
-}
 
 static int ft_string_current_error() noexcept
 {
@@ -110,21 +95,16 @@ int ft_string::mutex_guard::get_error() const noexcept
     return (this->_error_code);
 }
 
-unsigned long long ft_string::push_error_unlocked(int error_code) const noexcept
+void ft_string::push_error_unlocked(int error_code) const noexcept
 {
-    unsigned long long operation_id;
-
-    operation_id = ft_errno_next_operation_id();
-    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(&this->_operation_errors,
-            error_code, operation_id);
-    g_ft_string_last_error_stack = &this->_operation_errors;
-    return (operation_id);
+    ft_global_error_stack_push(error_code);
+    return ;
 }
 
-unsigned long long ft_string::push_error(int error_code) const noexcept
+void ft_string::push_error(int error_code) const noexcept
 {
-    return (this->push_error_unlocked(error_code));
+    this->push_error_unlocked(error_code);
+    return ;
 }
 
 int ft_string::lock_self(mutex_guard &guard) const noexcept
@@ -206,55 +186,35 @@ int ft_string::lock_pair(const ft_string &first, const ft_string &second,
 
 int ft_string::last_operation_error() noexcept
 {
-    ft_operation_error_stack *operation_stack = ft_string_error_stack_owner();
-
-    if (operation_stack == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
-    return (ft_operation_error_stack_last_error(operation_stack));
+    return (ft_global_error_stack_last_error());
 }
 
 int ft_string::operation_error_at(size_t index) noexcept
 {
-    ft_operation_error_stack *operation_stack = ft_string_error_stack_owner();
-
-    if (operation_stack == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
-    return (ft_operation_error_stack_error_at(operation_stack, index));
+    return (ft_global_error_stack_error_at(index));
 }
 
 void ft_string::pop_operation_errors() noexcept
 {
-    ft_operation_error_stack *operation_stack = ft_string_error_stack_owner();
-
-    if (operation_stack == ft_nullptr)
-        return ;
-    ft_operation_error_stack_pop_last(operation_stack);
+    ft_global_error_stack_pop_all();
     return ;
 }
 
 int ft_string::pop_oldest_operation_error() noexcept
 {
-    ft_operation_error_stack *operation_stack = ft_string_error_stack_owner();
-
-    if (operation_stack == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
-    return (ft_operation_error_stack_pop_last(operation_stack));
+    return (ft_global_error_stack_pop_last());
 }
 
 int ft_string::operation_error_index() noexcept
 {
-    ft_operation_error_stack *operation_stack = ft_string_error_stack_owner();
-    ft_size_t count;
+    ft_size_t depth;
     ft_size_t index;
 
-
-    if (operation_stack == ft_nullptr)
-        return (0);
-    count = ft_operation_error_stack_depth(operation_stack);
+    depth = ft_global_error_stack_depth();
     index = 1;
-    while (index <= count)
+    while (index <= depth)
     {
-        if (ft_operation_error_stack_error_at(operation_stack, index) != FT_ERR_SUCCESSS)
+        if (ft_global_error_stack_error_at(index) != FT_ERR_SUCCESSS)
             return (static_cast<int>(index));
         index++;
     }
@@ -263,24 +223,19 @@ int ft_string::operation_error_index() noexcept
 
 unsigned long long ft_string::last_operation_id() const noexcept
 {
-    return (ft_operation_error_stack_last_id(&this->_operation_errors));
+    if (ft_global_error_stack_depth() == 0)
+        return (0);
+    return (ft_global_error_stack_get_id_at(1));
 }
 
 int ft_string::pop_operation_error(unsigned long long operation_id) const noexcept
 {
     if (operation_id == 0)
         return (FT_ERR_SUCCESSS);
-    int error_code = ft_operation_error_stack_pop_by_id(&this->_operation_errors, operation_id);
-    ft_global_error_stack_pop_entry_with_id(operation_id);
-    return (error_code);
+    return (ft_global_error_stack_pop_entry_with_id(operation_id));
 }
 
 #ifdef LIBFT_TEST_BUILD
-ft_operation_error_stack *ft_string::operation_error_stack_handle() const noexcept
-{
-    return (&this->_operation_errors);
-}
-
 pt_recursive_mutex *ft_string::get_mutex_for_validation() const noexcept
 {
     return (&(this->_mutex));
@@ -816,22 +771,12 @@ bool ft_string::empty() const noexcept
 
 const char* ft_string::last_operation_error_str() noexcept
 {
-    const char *error_string;
-
-    error_string = ft_strerror(ft_string::last_operation_error());
-    if (!error_string)
-        error_string = "unknown error";
-    return (error_string);
+    return (ft_global_error_stack_last_error_str());
 }
 
 const char* ft_string::operation_error_str_at(size_t index) noexcept
 {
-    const char *error_string;
-
-    error_string = ft_strerror(ft_string::operation_error_at(index));
-    if (!error_string)
-        error_string = "unknown error";
-    return (error_string);
+    return (ft_global_error_stack_error_str_at(index));
 }
 
 void ft_string::move(ft_string& other) noexcept

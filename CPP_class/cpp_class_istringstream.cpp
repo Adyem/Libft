@@ -17,8 +17,6 @@ std::size_t ft_istringstream::do_read(char *buffer, std::size_t count)
     std::size_t result;
 
     result = this->_buffer.read(buffer, count);
-    if (this->_buffer.is_bad())
-        this->set_error(this->_buffer.get_error());
     return (result);
 }
 

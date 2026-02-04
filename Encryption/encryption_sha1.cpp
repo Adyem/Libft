@@ -25,7 +25,7 @@ void sha1_hash(const void *data, size_t length, unsigned char *digest)
     hash_values[2] = 0x98BADCFE;
     hash_values[3] = 0x10325476;
     hash_values[4] = 0xC3D2E1F0;
-    bit_length = static_cast<uint64_t>(length) * 8;
+    bit_length = length * 8;
     padded_length = length + 1;
     while ((padded_length % 64) != 56)
     {

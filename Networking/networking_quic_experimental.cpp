@@ -1,4 +1,7 @@
 #include "networking_quic_experimental.hpp"
+#include "openssl_support.hpp"
+
+#if NETWORKING_HAS_OPENSSL
 
 #include <atomic>
 
@@ -363,3 +366,5 @@ const char  *quic_experimental_session::get_error_str() const noexcept
 {
     return (ft_strerror(this->_error_code));
 }
+
+#endif

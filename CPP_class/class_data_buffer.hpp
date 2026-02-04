@@ -8,7 +8,6 @@
 #include "../CMA/CMA.hpp"
 #include "../Libft/libft.hpp"
 #include "../Errno/errno.hpp"
-#include "../Errno/errno_internal.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread.hpp"
 
@@ -19,7 +18,6 @@ class DataBuffer
         size_t _read_pos;
         bool _ok;
         mutable pt_recursive_mutex _mutex;
-        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
 
         int lock_self() const noexcept;
         int unlock_self() const noexcept;
@@ -29,8 +27,6 @@ class DataBuffer
         static void sleep_backoff() noexcept;
         int write_length_locked(size_t len) noexcept;
         int read_length_locked(size_t &len) noexcept;
-        void record_operation_error(int error_code) const;
-
     public:
         DataBuffer() noexcept;
         DataBuffer(const DataBuffer& other) noexcept;
@@ -58,7 +54,6 @@ class DataBuffer
         DataBuffer& operator>>(size_t& len);
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex *get_mutex_for_validation() const noexcept;
-        ft_operation_error_stack *operation_error_stack_handle() const noexcept;
 #endif
 };
 
@@ -70,7 +65,7 @@ DataBuffer& DataBuffer::operator<<(const T& value)
     int lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (*this);
     }
     int final_error = FT_ERR_SUCCESSS;
@@ -113,7 +108,7 @@ DataBuffer& DataBuffer::operator<<(const T& value)
         if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
             final_error = unlock_error;
     }
-    this->record_operation_error(final_error);
+    ft_global_error_stack_push(final_error);
     return (*this);
 }
 
@@ -123,7 +118,7 @@ DataBuffer& DataBuffer::operator>>(T& value)
     int lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (*this);
     }
     int final_error = FT_ERR_SUCCESSS;
@@ -162,7 +157,7 @@ DataBuffer& DataBuffer::operator>>(T& value)
         if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
             final_error = unlock_error;
     }
-    this->record_operation_error(final_error);
+    ft_global_error_stack_push(final_error);
     return (*this);
 }
 

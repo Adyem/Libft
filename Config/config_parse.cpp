@@ -5,7 +5,6 @@
 #include "../JSon/json.hpp"
 #include "../PThread/unique_lock.hpp"
 #include "../PThread/mutex.hpp"
-#include "../PThread/lock_error_helpers.hpp"
 #include <cstdio>
 #include <new>
 
@@ -14,7 +13,7 @@ static int cnfg_config_lock_if_enabled(cnfg_config *config, ft_unique_lock<pt_mu
     if (!config || !config->thread_safe_enabled || !config->mutex)
         return (FT_ERR_SUCCESSS);
     mutex_guard = ft_unique_lock<pt_mutex>(*config->mutex);
-    return (ft_unique_lock_pop_last_error(mutex_guard));
+    return (ft_global_error_stack_pop_newest());
 }
 
 static void cnfg_config_unlock_guard(ft_unique_lock<pt_mutex> &mutex_guard)
@@ -65,7 +64,7 @@ int cnfg_config_prepare_thread_safety(cnfg_config *config)
         return (-1);
     }
     {
-        int mutex_error = ft_mutex_pop_last_error(mutex_pointer);
+        int mutex_error = (((mutex_pointer) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
 
         if (mutex_error != FT_ERR_SUCCESSS)
         {
@@ -144,7 +143,7 @@ void cnfg_free(cnfg_config *config)
     if (already_owned)
     {
         config->mutex->unlock(THREAD_ID);
-        int unlock_error = ft_mutex_pop_last_error(config->mutex);
+        int unlock_error = (((config->mutex) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
 
         if (unlock_error != FT_ERR_SUCCESSS)
             ft_global_error_stack_push(unlock_error);

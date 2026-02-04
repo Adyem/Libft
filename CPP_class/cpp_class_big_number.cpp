@@ -1,6 +1,5 @@
 #include "class_big_number.hpp"
 #include "../Errno/errno.hpp"
-#include "../Errno/errno_internal.hpp"
 #include "class_nullptr.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Libft/libft.hpp"
@@ -81,30 +80,6 @@ void ft_big_number::finalize_errno_keeper(int stored_errno) noexcept
     return ;
 }
 
-void ft_big_number::record_operation_error(int error_code) const noexcept
-{
-    unsigned long long operation_id;
-
-    operation_id = ft_errno_next_operation_id();
-    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(&this->_operation_errors,
-            error_code, operation_id);
-    ft_operation_error_stack_set_owner(&this->_operation_errors);
-    return ;
-}
-
-void ft_big_number::reset_error_owner(const ft_big_number *owner) noexcept
-{
-    const ft_operation_error_stack *operation_stack;
-
-    if (owner == ft_nullptr)
-        operation_stack = ft_nullptr;
-    else
-        operation_stack = &owner->_operation_errors;
-    ft_operation_error_stack_reset_owner(operation_stack);
-    return ;
-}
-
 int ft_big_number::last_error() noexcept
 {
 
@@ -113,85 +88,55 @@ int ft_big_number::last_error() noexcept
 
 unsigned long long ft_big_number::last_op_id() noexcept
 {
-    ft_operation_error_stack *operation_stack;
+    ft_size_t depth = ft_global_error_stack_depth();
 
-    operation_stack = ft_operation_error_stack_get_owner();
-    if (operation_stack == ft_nullptr)
+    if (depth == 0)
         return (0);
-    return (ft_operation_error_stack_last_id(operation_stack));
+    return (ft_global_error_stack_get_id_at(depth));
 }
 
 int ft_big_number::error_for(unsigned long long operation_id) noexcept
 {
-    ft_operation_error_stack *operation_stack;
     ft_size_t index;
 
     if (operation_id == 0)
         return (FT_ERR_SUCCESSS);
-    operation_stack = ft_operation_error_stack_get_owner();
-    if (operation_stack == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
-    index = ft_operation_error_stack_find_by_id(operation_stack, operation_id);
+    index = ft_global_error_stack_find_by_id(operation_id);
     if (index == 0)
         return (FT_ERR_SUCCESSS);
-    return (ft_operation_error_stack_error_at(operation_stack, index));
+    return (ft_global_error_stack_error_at(index));
 }
 
 int ft_big_number::last_operation_error() noexcept
 {
-    ft_operation_error_stack *operation_stack;
-
-    operation_stack = ft_operation_error_stack_get_owner();
-    if (operation_stack == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
-    return (ft_operation_error_stack_last_error(operation_stack));
+    return (ft_global_error_stack_last_error());
 }
 
 int ft_big_number::operation_error_at(ft_size_t index) noexcept
 {
-    ft_operation_error_stack *operation_stack;
-
-    operation_stack = ft_operation_error_stack_get_owner();
-    if (operation_stack == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
-    return (ft_operation_error_stack_error_at(operation_stack, index));
+    return (ft_global_error_stack_error_at(index));
 }
 
 void ft_big_number::pop_operation_errors() noexcept
 {
-    ft_operation_error_stack *operation_stack;
-
-    operation_stack = ft_operation_error_stack_get_owner();
-    if (operation_stack == ft_nullptr)
-        return ;
-    ft_operation_error_stack_pop_last(operation_stack);
-    return ;
+    ft_global_error_stack_pop_last();
 }
 
 int ft_big_number::pop_oldest_operation_error() noexcept
 {
-    ft_operation_error_stack *operation_stack;
-
-    operation_stack = ft_operation_error_stack_get_owner();
-    if (operation_stack == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
-    return (ft_operation_error_stack_pop_last(operation_stack));
+    return (ft_global_error_stack_pop_last());
 }
 
 int ft_big_number::operation_error_index() noexcept
 {
-    ft_operation_error_stack *operation_stack;
     ft_size_t count;
     ft_size_t index;
 
-    operation_stack = ft_operation_error_stack_get_owner();
-    if (operation_stack == ft_nullptr)
-        return (0);
-    count = ft_operation_error_stack_depth(operation_stack);
+    count = ft_global_error_stack_depth();
     index = 1;
     while (index <= count)
     {
-        if (ft_operation_error_stack_error_at(operation_stack, index) != FT_ERR_SUCCESSS)
+        if (ft_global_error_stack_error_at(index) != FT_ERR_SUCCESSS)
             return (static_cast<int>(index));
         index++;
     }
@@ -206,7 +151,7 @@ void ft_big_number::sleep_backoff() noexcept
 
 void ft_big_number::push_error_unlocked(int error_code) const noexcept
 {
-    ft_big_number::record_operation_error(error_code);
+    ft_global_error_stack_push(error_code);
     return ;
 }
 
@@ -2171,20 +2116,18 @@ ft_big_number ft_big_number::mod_pow(const ft_big_number& exponent, const ft_big
 
 const char* ft_big_number::last_operation_error_str() noexcept
 {
-    const char* error_string;
+    const char* error_string = ft_global_error_stack_last_error_str();
 
-    error_string = ft_strerror(ft_big_number::last_operation_error());
-    if (!error_string)
+    if (!error_string || error_string[0] == '\0')
         error_string = "unknown error";
     return (error_string);
 }
 
 const char* ft_big_number::operation_error_str_at(ft_size_t index) noexcept
 {
-    const char* error_string;
+    const char* error_string = ft_global_error_stack_error_str_at(index);
 
-    error_string = ft_strerror(ft_big_number::operation_error_at(index));
-    if (!error_string)
+    if (!error_string || error_string[0] == '\0')
         error_string = "unknown error";
     return (error_string);
 }

@@ -120,7 +120,7 @@ int ft_run_registered_tests(void);
     do \
     { \
         ft_size_t ft_error_stack_depth_before = ft_global_error_stack_depth(); \
-        result_variable = (stream).bad(); \
+        result_variable = !(stream).is_valid(); \
         ft_size_t ft_error_stack_depth_after = ft_global_error_stack_depth(); \
         if (ft_error_stack_depth_after != ft_error_stack_depth_before + 1) \
         { \
@@ -160,7 +160,7 @@ int ft_run_registered_tests(void);
     { \
         bool ft_stream_bad_result__ = false; \
         ft_size_t ft_error_stack_depth_before__ = ft_global_error_stack_depth(); \
-        ft_stream_bad_result__ = (stream).bad(); \
+        ft_stream_bad_result__ = !(stream).is_valid(); \
         ft_size_t ft_error_stack_depth_after__ = ft_global_error_stack_depth(); \
         if (ft_error_stack_depth_after__ != ft_error_stack_depth_before__ + 1) \
         { \

@@ -140,6 +140,7 @@ int networking_check_socket_after_send(int socket_fd)
 
 int networking_check_ssl_after_send(SSL *ssl_connection)
 {
+#if NETWORKING_HAS_OPENSSL
     int attempt_count;
     int attempt_limit;
     int socket_fd;
@@ -254,4 +255,9 @@ int networking_check_ssl_after_send(SSL *ssl_connection)
         return (-1);
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
+#else
+    (void)ssl_connection;
+    ft_global_error_stack_push(FT_ERR_UNSUPPORTED_TYPE);
+    return (-1);
+#endif
 }

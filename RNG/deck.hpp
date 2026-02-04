@@ -9,7 +9,6 @@
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
 #include "../PThread/pthread.hpp"
-#include "../PThread/lock_error_helpers.hpp"
 #include "rng.hpp"
 #include <climits>
 
@@ -63,7 +62,7 @@ int ft_deck<ElementType>::lock_deck(ft_unique_lock<pt_mutex> &guard) const noexc
 {
     ft_unique_lock<pt_mutex> local_guard(this->_mutex);
     {
-        int lock_error = ft_unique_lock_pop_last_error(local_guard);
+        int lock_error = ft_global_error_stack_pop_newest();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {
@@ -98,7 +97,7 @@ int ft_deck<ElementType>::lock_pair(const ft_deck<ElementType> &first, const ft_
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
 
         {
-            int lock_error = ft_unique_lock_pop_last_error(single_guard);
+            int lock_error = ft_global_error_stack_pop_newest();
 
             if (lock_error != FT_ERR_SUCCESSS)
             {
@@ -126,7 +125,7 @@ int ft_deck<ElementType>::lock_pair(const ft_deck<ElementType> &first, const ft_
     while (true)
     {
         ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
-        int lower_error = ft_unique_lock_pop_last_error(lower_guard);
+        int lower_error = ft_global_error_stack_pop_newest();
 
         if (lower_error != FT_ERR_SUCCESSS)
         {
@@ -134,7 +133,7 @@ int ft_deck<ElementType>::lock_pair(const ft_deck<ElementType> &first, const ft_
             return (lower_error);
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        int upper_error = ft_unique_lock_pop_last_error(upper_guard);
+        int upper_error = ft_global_error_stack_pop_newest();
         if (upper_error == FT_ERR_SUCCESSS)
         {
             if (!swapped)

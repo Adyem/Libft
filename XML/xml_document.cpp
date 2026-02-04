@@ -3,7 +3,6 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
-#include "../PThread/lock_error_helpers.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread.hpp"
 #include <cstdio>
@@ -1147,7 +1146,7 @@ int xml_document::prepare_thread_safety() noexcept
         this->record_operation_error(FT_ERR_NO_MEMORY);
         return (-1);
     }
-    int mutex_error = ft_mutex_pop_last_error(mutex_pointer);
+    int mutex_error = (((mutex_pointer) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         delete mutex_pointer;
@@ -1183,7 +1182,7 @@ int xml_document::lock(bool *lock_acquired) const noexcept
         return (0);
     }
     int mutex_result = this->_mutex->lock(THREAD_ID);
-    int mutex_error = ft_mutex_pop_last_error(this->_mutex);
+    int mutex_error = (((this->_mutex) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
     int reported_error = mutex_error != FT_ERR_SUCCESSS ? mutex_error : mutex_result;
     if (reported_error != FT_ERR_SUCCESSS)
     {
@@ -1201,7 +1200,7 @@ void xml_document::unlock(bool lock_acquired) const noexcept
     if (!lock_acquired || !this->_thread_safe_enabled || !this->_mutex)
         return ;
     int mutex_result = this->_mutex->unlock(THREAD_ID);
-    int mutex_error = ft_mutex_pop_last_error(this->_mutex);
+    int mutex_error = (((this->_mutex) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
     int reported_error = mutex_error != FT_ERR_SUCCESSS ? mutex_error : mutex_result;
     if (reported_error != FT_ERR_SUCCESSS)
     {

@@ -5,7 +5,6 @@
 #include "constructor.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
-#include "../Errno/errno_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread.hpp"
@@ -19,7 +18,6 @@ class ft_map
         Pair<Key, MappedType>*            _data;
         size_t                           _capacity;
         size_t                           _size;
-        mutable ft_operation_error_stack _operation_errors;
         mutable pt_mutex*                _state_mutex;
         bool                             _thread_safe_enabled;
 
@@ -74,28 +72,21 @@ class ft_map
 template <typename Key, typename MappedType>
 void ft_map<Key, MappedType>::record_operation_error(int error_code) const noexcept
 {
-    unsigned long long operation_id;
-
-    operation_id = ft_errno_next_operation_id();
-    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(&this->_operation_errors, error_code, operation_id);
+    ft_global_error_stack_push(error_code);
     return ;
 }
 
 template <typename Key, typename MappedType>
 int ft_map<Key, MappedType>::last_operation_error() const noexcept
 {
-    return (ft_operation_error_stack_last_error(&this->_operation_errors));
+    return (ft_global_error_stack_last_error());
 }
 
 template <typename Key, typename MappedType>
 const char* ft_map<Key, MappedType>::last_operation_error_str() const noexcept
 {
-    int error_code;
-    const char *error_string;
-
-    error_code = this->last_operation_error();
-    error_string = ft_strerror(error_code);
+    int error_code = this->last_operation_error();
+    const char *error_string = ft_strerror(error_code);
     if (!error_string)
         error_string = "unknown error";
     return (error_string);
@@ -104,17 +95,14 @@ const char* ft_map<Key, MappedType>::last_operation_error_str() const noexcept
 template <typename Key, typename MappedType>
 int ft_map<Key, MappedType>::operation_error_at(ft_size_t index) const noexcept
 {
-    return (ft_operation_error_stack_error_at(&this->_operation_errors, index));
+    return (ft_global_error_stack_error_at(index));
 }
 
 template <typename Key, typename MappedType>
 const char* ft_map<Key, MappedType>::operation_error_str_at(ft_size_t index) const noexcept
 {
-    int error_code;
-    const char *error_string;
-
-    error_code = this->operation_error_at(index);
-    error_string = ft_strerror(error_code);
+    int error_code = this->operation_error_at(index);
+    const char *error_string = ft_strerror(error_code);
     if (!error_string)
         error_string = "unknown error";
     return (error_string);
@@ -123,7 +111,6 @@ const char* ft_map<Key, MappedType>::operation_error_str_at(ft_size_t index) con
 template <typename Key, typename MappedType>
 void ft_map<Key, MappedType>::pop_operation_errors() noexcept
 {
-    ft_operation_error_stack_pop_all(&this->_operation_errors);
     ft_global_error_stack_pop_all();
     return ;
 }
@@ -131,22 +118,19 @@ void ft_map<Key, MappedType>::pop_operation_errors() noexcept
 template <typename Key, typename MappedType>
 int ft_map<Key, MappedType>::pop_oldest_operation_error() noexcept
 {
-    ft_global_error_stack_pop_last();
-    return (ft_operation_error_stack_pop_last(&this->_operation_errors));
+    return (ft_global_error_stack_pop_last());
 }
 
 template <typename Key, typename MappedType>
 int ft_map<Key, MappedType>::pop_newest_operation_error() noexcept
 {
-    ft_global_error_stack_pop_newest();
-    return (ft_operation_error_stack_pop_newest(&this->_operation_errors));
+    return (ft_global_error_stack_pop_newest());
 }
 
 template <typename Key, typename MappedType>
 ft_map<Key, MappedType>::ft_map(size_t initial_capacity)
     : _data(ft_nullptr), _capacity(initial_capacity), _size(0),
-      _operation_errors({{}, {}, 0}), _state_mutex(ft_nullptr),
-      _thread_safe_enabled(false)
+      _state_mutex(ft_nullptr), _thread_safe_enabled(false)
 {
     void *raw_memory;
 
@@ -170,8 +154,7 @@ ft_map<Key, MappedType>::ft_map(size_t initial_capacity)
 template <typename Key, typename MappedType>
 ft_map<Key, MappedType>::ft_map(const ft_map<Key, MappedType>& other)
     : _data(ft_nullptr), _capacity(0), _size(0),
-      _operation_errors({{}, {}, 0}), _state_mutex(ft_nullptr),
-      _thread_safe_enabled(false)
+      _state_mutex(ft_nullptr), _thread_safe_enabled(false)
 {
     bool other_lock_acquired;
     bool other_thread_safe;
@@ -286,8 +269,7 @@ ft_map<Key, MappedType>& ft_map<Key, MappedType>::operator=(const ft_map<Key, Ma
 template <typename Key, typename MappedType>
 ft_map<Key, MappedType>::ft_map(ft_map<Key, MappedType>&& other) noexcept
     : _data(ft_nullptr), _capacity(0), _size(0),
-      _operation_errors({{}, {}, 0}), _state_mutex(ft_nullptr),
-      _thread_safe_enabled(false)
+      _state_mutex(ft_nullptr), _thread_safe_enabled(false)
 {
     bool other_lock_acquired;
     int lock_error;

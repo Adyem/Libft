@@ -8,9 +8,11 @@
 #include "../PThread/mutex.hpp"
 #include "../Errno/errno_internal.hpp"
 #include <atomic>
-#include <openssl/ssl.h>
+#include "../Networking/openssl_support.hpp"
+#if NETWORKING_HAS_OPENSSL
 #include <cstdint>
 #include "../Template/vector.hpp"
+#endif
 
 typedef void (*api_callback)(char *body, int status, void *user_data);
 
@@ -31,6 +33,7 @@ struct api_tls_handshake_diagnostics
     ft_vector<api_tls_certificate_diagnostics> certificates;
 };
 
+#if NETWORKING_HAS_OPENSSL
 class api_tls_client
 {
     private:
@@ -75,5 +78,6 @@ class api_tls_client
         bool refresh_handshake_diagnostics();
         const api_tls_handshake_diagnostics &get_handshake_diagnostics() const noexcept;
 };
+#endif
 
 #endif

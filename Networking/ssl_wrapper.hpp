@@ -1,7 +1,9 @@
 #ifndef NETWORKING_SSL_WRAPPER_HPP
 #define NETWORKING_SSL_WRAPPER_HPP
 
-#include <openssl/ssl.h>
+#include "openssl_support.hpp"
+
+#if NETWORKING_HAS_OPENSSL
 #include <cstddef>
 
 #ifdef _WIN32
@@ -21,6 +23,8 @@ ssize_t nw_ssl_read(SSL *ssl, void *buf, size_t len);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif

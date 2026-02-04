@@ -1,3 +1,6 @@
+#include "../Networking/openssl_support.hpp"
+
+#if NETWORKING_HAS_OPENSSL
 #include <openssl/evp.h>
 #include "../Errno/errno.hpp"
 #include "encryption_blake2.hpp"
@@ -83,3 +86,5 @@ void blake2s_hash(const void *data, size_t length, unsigned char *digest,
     ft_global_error_stack_push(error_code);
     return ;
 }
+
+#endif

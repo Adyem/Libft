@@ -1,8 +1,8 @@
 #include "encryption_aead.hpp"
 #include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
-#include "../PThread/lock_error_helpers.hpp"
 
+#if NETWORKING_HAS_OPENSSL
 static const EVP_CIPHER *encryption_aead_select_cipher(size_t key_length)
 {
     if (key_length == 16)
@@ -61,7 +61,7 @@ int encryption_aead_context::lock_self(ft_unique_lock<pt_mutex> &guard) const
 {
     guard = ft_unique_lock<pt_mutex>(this->_mutex);
     {
-        int lock_error = ft_unique_lock_pop_last_error(guard);
+        int lock_error = ft_global_error_stack_pop_newest();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {
@@ -495,11 +495,11 @@ bool    encryption_aead_encrypt(const unsigned char *key, size_t key_length,
 }
 
 bool    encryption_aead_decrypt(const unsigned char *key, size_t key_length,
-        const unsigned char *iv, size_t iv_length,
-        const unsigned char *aad, size_t aad_length,
-        const unsigned char *ciphertext, size_t ciphertext_length,
-        const unsigned char *tag, size_t tag_length,
-        unsigned char *plaintext)
+            const unsigned char *iv, size_t iv_length,
+            const unsigned char *aad, size_t aad_length,
+            const unsigned char *ciphertext, size_t ciphertext_length,
+            const unsigned char *tag, size_t tag_length,
+            unsigned char *plaintext)
 {
     encryption_aead_context context;
     size_t output_length;
@@ -553,3 +553,5 @@ bool    encryption_aead_decrypt(const unsigned char *key, size_t key_length,
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);
 }
+
+#endif // NETWORKING_HAS_OPENSSL

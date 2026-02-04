@@ -17,7 +17,10 @@
 # include <unistd.h>
 #endif
 
-#include <sqlite3.h>
+#include "../sqlite_support.hpp"
+#if SQLITE3_AVAILABLE
+# include <sqlite3.h>
+#endif
 
 #include "../Libft/libft.hpp"
 #include "../Template/move.hpp"
@@ -1157,6 +1160,7 @@ int kv_store::load_json_lines_entries(const char *location, ft_vector<kv_store_s
     return (0);
 }
 
+#if SQLITE3_AVAILABLE
 int kv_store::flush_sqlite_entries(const ft_vector<kv_store_snapshot_entry> &entries) const
 {
     sqlite3 *database_handle;
@@ -1367,6 +1371,9 @@ int kv_store::flush_sqlite_entries(const ft_vector<kv_store_snapshot_entry> &ent
     return (0);
 }
 
+#endif
+
+#if SQLITE3_AVAILABLE
 int kv_store::load_sqlite_entries(const char *location, ft_vector<kv_store_snapshot_entry> &out_entries)
 {
     sqlite3 *database_handle;
@@ -1516,6 +1523,8 @@ int kv_store::load_sqlite_entries(const char *location, ft_vector<kv_store_snaps
     this->record_operation_error(FT_ERR_SUCCESSS);
     return (0);
 }
+
+#endif
 
 int kv_store::flush_memory_mapped_entries(const ft_vector<kv_store_snapshot_entry> &entries) const
 {
@@ -1904,8 +1913,10 @@ int kv_store::flush_backend_entries(const ft_vector<kv_store_snapshot_entry> &en
         return (this->flush_json_entries(entries));
     if (this->_backend_type == KV_STORE_BACKEND_JSON_LINES)
         return (this->flush_json_lines_entries(entries));
+#if SQLITE3_AVAILABLE
     if (this->_backend_type == KV_STORE_BACKEND_SQLITE)
         return (this->flush_sqlite_entries(entries));
+#endif
     if (this->_backend_type == KV_STORE_BACKEND_MEMORY_MAPPED)
         return (this->flush_memory_mapped_entries(entries));
     const_cast<kv_store *>(this)->record_operation_error(FT_ERR_INVALID_ARGUMENT);
@@ -1918,8 +1929,10 @@ int kv_store::load_backend_entries(kv_store_backend_type backend_type, const cha
         return (this->load_json_entries(location, out_entries));
     if (backend_type == KV_STORE_BACKEND_JSON_LINES)
         return (this->load_json_lines_entries(location, out_entries));
+#if SQLITE3_AVAILABLE
     if (backend_type == KV_STORE_BACKEND_SQLITE)
         return (this->load_sqlite_entries(location, out_entries));
+#endif
     if (backend_type == KV_STORE_BACKEND_MEMORY_MAPPED)
         return (this->load_memory_mapped_entries(location, out_entries));
     this->record_operation_error(FT_ERR_INVALID_ARGUMENT);

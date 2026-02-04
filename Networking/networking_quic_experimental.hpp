@@ -8,10 +8,9 @@
 #include "../Libft/libft.hpp"
 #include "../Errno/errno.hpp"
 #include "../Encryption/encryption_aead.hpp"
+#include "openssl_support.hpp"
 
-#include <openssl/ssl.h>
-#include <cstddef>
-#include <cstdint>
+#if NETWORKING_HAS_OPENSSL
 
 struct quic_feature_configuration
 {
@@ -79,4 +78,5 @@ class quic_experimental_session
         const char  *get_error_str() const noexcept;
 };
 
+#endif
 #endif

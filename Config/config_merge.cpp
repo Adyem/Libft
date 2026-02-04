@@ -6,14 +6,13 @@
 #include <cstddef>
 #include "../PThread/unique_lock.hpp"
 #include "../PThread/mutex.hpp"
-#include "../PThread/lock_error_helpers.hpp"
 
 static int cnfg_config_lock_if_enabled(cnfg_config *config, ft_unique_lock<pt_mutex> &mutex_guard)
 {
     if (!config || !config->thread_safe_enabled || !config->mutex)
         return (FT_ERR_SUCCESSS);
     mutex_guard = ft_unique_lock<pt_mutex>(*config->mutex);
-    return (ft_unique_lock_pop_last_error(mutex_guard));
+    return (ft_global_error_stack_pop_newest());
 }
 
 static void cnfg_config_unlock_guard(ft_unique_lock<pt_mutex> &mutex_guard)

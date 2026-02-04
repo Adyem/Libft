@@ -3,6 +3,9 @@
 #include "socket_class.hpp"
 #include "networking.hpp"
 #include "ssl_wrapper.hpp"
+#include "openssl_support.hpp"
+
+#if NETWORKING_HAS_OPENSSL
 #include <cstring>
 #include <cstdio>
 #include <cerrno>
@@ -1378,3 +1381,4 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
 }
 
 
+#endif

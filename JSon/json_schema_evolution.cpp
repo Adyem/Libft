@@ -6,7 +6,6 @@
 #include "../Template/move.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
-#include "../PThread/lock_error_helpers.hpp"
 
 static void json_schema_push_error(int error_code)
 {
@@ -96,7 +95,7 @@ int json_register_schema_migration(const ft_string &schema_name,
     pt_mutex &mutex = json_schema_registry_mutex();
     ft_unique_lock<pt_mutex> guard(mutex);
     {
-        int lock_error = ft_unique_lock_pop_last_error(guard);
+        int lock_error = ft_global_error_stack_pop_newest();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {
@@ -181,7 +180,7 @@ int json_apply_schema_migrations(json_document &document,
         pt_mutex &mutex = json_schema_registry_mutex();
         ft_unique_lock<pt_mutex> guard(mutex);
         {
-            int lock_error = ft_unique_lock_pop_last_error(guard);
+            int lock_error = ft_global_error_stack_pop_newest();
 
             if (lock_error != FT_ERR_SUCCESSS)
             {
@@ -254,7 +253,7 @@ int json_get_latest_schema_version(const ft_string &schema_name,
     pt_mutex &mutex = json_schema_registry_mutex();
     ft_unique_lock<pt_mutex> guard(mutex);
     {
-        int lock_error = ft_unique_lock_pop_last_error(guard);
+        int lock_error = ft_global_error_stack_pop_newest();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {

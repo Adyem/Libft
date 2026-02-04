@@ -271,7 +271,7 @@ static void write_decimal_from_pairs(uintmax_t number, int fd, size_t *count)
     while (number >= 100)
     {
         uintmax_t chunk = number % 100;
-        size_t pair_index = static_cast<size_t>(chunk) * 2;
+        size_t pair_index = chunk * 2;
 
         number /= 100;
         cursor -= 2;
@@ -285,7 +285,7 @@ static void write_decimal_from_pairs(uintmax_t number, int fd, size_t *count)
     }
     else
     {
-        size_t pair_index = static_cast<size_t>(number) * 2;
+        size_t pair_index = number * 2;
 
         cursor -= 2;
         cursor[0] = g_decimal_pairs[pair_index];

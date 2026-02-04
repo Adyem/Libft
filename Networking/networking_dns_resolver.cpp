@@ -6,7 +6,6 @@
 #include "../Template/vector.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
-#include "../PThread/lock_error_helpers.hpp"
 #include "../Libft/libft.hpp"
 #include "../Time/time.hpp"
 #include <climits>
@@ -82,7 +81,7 @@ static void networking_push_failure(int error_code) noexcept
 static int networking_dns_cache_lock(ft_unique_lock<pt_mutex> &cache_lock) noexcept
 {
     cache_lock = ft_unique_lock<pt_mutex>(g_networking_dns_cache_mutex);
-    return (ft_unique_lock_pop_last_error(cache_lock));
+    return (ft_global_error_stack_pop_newest());
 }
 
 static int networking_dns_cache_unlock(ft_unique_lock<pt_mutex> &cache_lock) noexcept
@@ -90,7 +89,7 @@ static int networking_dns_cache_unlock(ft_unique_lock<pt_mutex> &cache_lock) noe
     if (!cache_lock.owns_lock())
         return (FT_ERR_SUCCESSS);
     cache_lock.unlock();
-    return (ft_unique_lock_pop_last_error(cache_lock));
+    return (ft_global_error_stack_pop_newest());
 }
 
 static bool networking_dns_append_literal(ft_string &target, const char *literal) noexcept

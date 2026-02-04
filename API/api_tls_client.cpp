@@ -6,6 +6,7 @@
 #include "../Networking/socket_class.hpp"
 #include "../Networking/ssl_wrapper.hpp"
 #include "../Networking/networking.hpp"
+#include "../Networking/openssl_support.hpp"
 #include "../Libft/libft.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Logger/logger.hpp"
@@ -22,6 +23,7 @@
 # include <sys/time.h>
 # include <unistd.h>
 #endif
+#if NETWORKING_HAS_OPENSSL
 #include <openssl/err.h>
 #include <openssl/x509v3.h>
 #include <openssl/x509.h>
@@ -30,6 +32,9 @@
 #include <openssl/evp.h>
 #include <cstdint>
 #include <utility>
+#endif
+
+#if NETWORKING_HAS_OPENSSL
 
 static const size_t TLS_STRING_NPOS = static_cast<size_t>(-1);
 
@@ -1397,3 +1402,5 @@ const api_tls_handshake_diagnostics &api_tls_client::get_handshake_diagnostics()
         this->set_error(FT_ERR_SUCCESSS);
     return (this->_handshake_diagnostics);
 }
+
+#endif

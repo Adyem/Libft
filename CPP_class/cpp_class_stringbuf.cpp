@@ -5,45 +5,6 @@
 #include "../Template/move.hpp"
 #include <mutex>
 
-static thread_local ft_operation_error_stack *g_ft_stringbuf_last_error_stack = ft_nullptr;
-
-static ft_operation_error_stack *ft_stringbuf_error_stack_owner(void) noexcept
-{
-    return (g_ft_stringbuf_last_error_stack);
-}
-
-void ft_stringbuf::record_operation_error(int error_code) const noexcept
-{
-    unsigned long long operation_id;
-
-    operation_id = ft_errno_next_operation_id();
-    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(&this->_operation_errors,
-        error_code, operation_id);
-    g_ft_stringbuf_last_error_stack = &this->_operation_errors;
-    return ;
-}
-
-void ft_stringbuf::set_error_unlocked(int error_code) const noexcept
-{
-    this->_error_code = error_code;
-    ft_stringbuf::record_operation_error(error_code);
-    return ;
-}
-
-void ft_stringbuf::reset_error_owner(const ft_stringbuf *owner) noexcept
-{
-    if (g_ft_stringbuf_last_error_stack == &owner->_operation_errors)
-        g_ft_stringbuf_last_error_stack = ft_nullptr;
-    return ;
-}
-
-void ft_stringbuf::set_error(int error_code) const noexcept
-{
-    this->set_error_unlocked(error_code);
-    return ;
-}
-
 int ft_stringbuf::lock_self(ft_unique_lock<pt_recursive_mutex> &guard) const noexcept
 {
     ft_unique_lock<pt_recursive_mutex> local_guard(this->_mutex);
@@ -119,23 +80,21 @@ int ft_stringbuf::lock_pair(const ft_stringbuf &first, const ft_stringbuf &secon
 ft_stringbuf::ft_stringbuf(const ft_string &string) noexcept
     : _storage(string)
     , _position(0)
-    , _error_code(FT_ERR_SUCCESSS)
     , _mutex()
 {
     int storage_error;
 
     storage_error = ft_string::last_operation_error();
     if (storage_error != FT_ERR_SUCCESSS)
-        this->set_error(storage_error);
+        ft_global_error_stack_push(storage_error);
     else
-        this->set_error(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
 ft_stringbuf::ft_stringbuf(const ft_stringbuf &other) noexcept
     : _storage(other._storage)
     , _position(other._position)
-    , _error_code(FT_ERR_SUCCESSS)
     , _mutex()
 {
     ft_unique_lock<pt_recursive_mutex> other_guard;
@@ -145,17 +104,13 @@ ft_stringbuf::ft_stringbuf(const ft_stringbuf &other) noexcept
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->_position = 0;
-        this->set_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return ;
     }
-    this->_error_code = other._error_code;
     int string_error;
 
     string_error = ft_string::last_operation_error();
-    if (string_error != FT_ERR_SUCCESSS)
-        this->set_error(string_error);
-    else
-        this->set_error(this->_error_code);
+    ft_global_error_stack_push(string_error != FT_ERR_SUCCESSS ? string_error : FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -163,7 +118,7 @@ ft_stringbuf &ft_stringbuf::operator=(const ft_stringbuf &other) noexcept
 {
     if (this == &other)
     {
-        this->set_error(this->_error_code);
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (*this);
     }
     ft_unique_lock<pt_recursive_mutex> first_guard;
@@ -173,26 +128,24 @@ ft_stringbuf &ft_stringbuf::operator=(const ft_stringbuf &other) noexcept
     lock_error = ft_stringbuf::lock_pair(*this, other, first_guard, second_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (*this);
     }
     this->_storage = other._storage;
     this->_position = other._position;
-    this->_error_code = other._error_code;
     int string_error;
 
     string_error = ft_string::last_operation_error();
     if (string_error != FT_ERR_SUCCESSS)
-        this->set_error(string_error);
+        ft_global_error_stack_push(string_error);
     else
-        this->set_error(this->_error_code);
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (*this);
 }
 
 ft_stringbuf::ft_stringbuf(ft_stringbuf &&other) noexcept
     : _storage(ft_move(other._storage))
     , _position(other._position)
-    , _error_code(FT_ERR_SUCCESSS)
     , _mutex()
 {
     ft_unique_lock<pt_recursive_mutex> other_guard;
@@ -202,19 +155,17 @@ ft_stringbuf::ft_stringbuf(ft_stringbuf &&other) noexcept
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->_position = 0;
-        this->set_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return ;
     }
-    this->_error_code = other._error_code;
     other._position = 0;
-    other._error_code = FT_ERR_SUCCESSS;
     int string_error;
 
     string_error = ft_string::last_operation_error();
     if (string_error != FT_ERR_SUCCESSS)
-        this->set_error(string_error);
+        ft_global_error_stack_push(string_error);
     else
-        this->set_error(this->_error_code);
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -229,27 +180,21 @@ ft_stringbuf &ft_stringbuf::operator=(ft_stringbuf &&other) noexcept
     lock_error = ft_stringbuf::lock_pair(*this, other, first_guard, second_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (*this);
     }
     this->_storage = ft_move(other._storage);
     this->_position = other._position;
-    this->_error_code = other._error_code;
     other._position = 0;
-    other._error_code = FT_ERR_SUCCESSS;
     int string_error;
 
     string_error = ft_string::last_operation_error();
-    if (string_error != FT_ERR_SUCCESSS)
-        this->set_error(string_error);
-    else
-        this->set_error(this->_error_code);
+    ft_global_error_stack_push(string_error != FT_ERR_SUCCESSS ? string_error : FT_ERR_SUCCESSS);
     return (*this);
 }
 
 ft_stringbuf::~ft_stringbuf() noexcept
 {
-    ft_stringbuf::reset_error_owner(this);
     return ;
 }
 
@@ -263,12 +208,12 @@ std::size_t ft_stringbuf::read(char *buffer, std::size_t count)
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (0);
     }
     if (buffer == ft_nullptr)
     {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
     index = 0;
@@ -280,7 +225,7 @@ std::size_t ft_stringbuf::read(char *buffer, std::size_t count)
         current = this->_storage.at(this->_position);
         if (!current)
         {
-            this->set_error(FT_ERR_INVALID_ARGUMENT);
+            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
             failure_occurred = true;
             break ;
         }
@@ -289,40 +234,24 @@ std::size_t ft_stringbuf::read(char *buffer, std::size_t count)
         this->_position++;
     }
     if (!failure_occurred)
-        this->set_error(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (index);
 }
 
-bool ft_stringbuf::is_bad() const noexcept
+bool ft_stringbuf::is_valid() const noexcept
 {
     ft_unique_lock<pt_recursive_mutex> guard;
     int lock_error;
-    bool result;
 
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(lock_error);
-        return (true);
+        ft_global_error_stack_push(lock_error);
+        return (false);
     }
-    result = (this->_error_code != FT_ERR_SUCCESSS);
-    this->set_error(this->_error_code);
-    return (result);
-}
-
-int ft_stringbuf::get_error() const noexcept
-{
-    return (this->_error_code);
-}
-
-const char *ft_stringbuf::get_error_str() const noexcept
-{
-    const char *error_string;
-
-    error_string = ft_strerror(this->get_error());
-    if (!error_string)
-        error_string = "unknown error";
-    return (error_string);
+    int last_error = ft_global_error_stack_last_error();
+    ft_global_error_stack_push(last_error);
+    return (last_error == FT_ERR_SUCCESSS);
 }
 
 ft_string ft_stringbuf::str() const
@@ -336,98 +265,17 @@ ft_string ft_stringbuf::str() const
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (ft_string(lock_error));
     }
     start = this->_storage.c_str();
     result = ft_string(start + this->_position);
     string_error = ft_string::last_operation_error();
     if (string_error != FT_ERR_SUCCESSS)
-        this->set_error(string_error);
+        ft_global_error_stack_push(string_error);
     else
-        this->set_error(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
-}
-
-const char *ft_stringbuf::last_operation_error_str() noexcept
-{
-    const char *error_string;
-
-    error_string = ft_strerror(ft_stringbuf::last_operation_error());
-    if (!error_string)
-        error_string = "unknown error";
-    return (error_string);
-}
-
-const char *ft_stringbuf::operation_error_str_at(ft_size_t index) noexcept
-{
-    const char *error_string;
-
-    error_string = ft_strerror(ft_stringbuf::operation_error_at(index));
-    if (!error_string)
-        error_string = "unknown error";
-    return (error_string);
-}
-
-int ft_stringbuf::last_operation_error() noexcept
-
-{
-    ft_operation_error_stack *operation_stack = ft_stringbuf_error_stack_owner();
-
-    if (operation_stack == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
-    return (ft_operation_error_stack_last_error(operation_stack));
-}
-
-int ft_stringbuf::operation_error_at(ft_size_t index) noexcept
-
-{
-    ft_operation_error_stack *operation_stack = ft_stringbuf_error_stack_owner();
-
-    if (operation_stack == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
-    return (ft_operation_error_stack_error_at(operation_stack, index));
-}
-
-void ft_stringbuf::pop_operation_errors() noexcept
-{
-
-    ft_operation_error_stack *operation_stack = ft_stringbuf_error_stack_owner();
-
-    if (operation_stack == ft_nullptr)
-        return ;
-    ft_operation_error_stack_pop_last(operation_stack);
-    return ;
-}
-
-int ft_stringbuf::pop_oldest_operation_error() noexcept
-{
-
-    ft_operation_error_stack *operation_stack = ft_stringbuf_error_stack_owner();
-
-    if (operation_stack == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
-    return (ft_operation_error_stack_pop_last(operation_stack));
-}
-
-int ft_stringbuf::operation_error_index() noexcept
-{
-    ft_operation_error_stack *operation_stack = ft_stringbuf_error_stack_owner();
-    ft_size_t count;
-    ft_size_t index;
-
-
-    if (operation_stack == ft_nullptr)
-        return (0);
-    count = ft_operation_error_stack_depth(operation_stack);
-    index = 1;
-    while (index <= count)
-    {
-        if (ft_operation_error_stack_error_at(operation_stack, index) != FT_ERR_SUCCESSS)
-            return (static_cast<int>(index));
-        index++;
-    }
-    return (0);
 }
 
 #ifdef LIBFT_TEST_BUILD

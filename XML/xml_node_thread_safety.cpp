@@ -3,7 +3,6 @@
 #include "xml.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
-#include "../PThread/lock_error_helpers.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread.hpp"
 
@@ -27,7 +26,7 @@ int xml_node_prepare_thread_safety(xml_node *node) noexcept
         ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (-1);
     }
-    int mutex_error_code = ft_mutex_pop_last_error(mutex_pointer);
+    int mutex_error_code = (((mutex_pointer) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
     if (mutex_error_code != FT_ERR_SUCCESSS)
     {
         delete mutex_pointer;
@@ -71,7 +70,7 @@ int xml_node_lock(const xml_node *node, bool *lock_acquired) noexcept
         return (0);
     }
     int mutex_result = mutable_node->mutex->lock(THREAD_ID);
-    int mutex_error_code = ft_mutex_pop_last_error(mutable_node->mutex);
+    int mutex_error_code = (((mutable_node->mutex) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
     {
         int reported_error = mutex_error_code != FT_ERR_SUCCESSS ? mutex_error_code : mutex_result;
 
@@ -106,7 +105,7 @@ void xml_node_unlock(const xml_node *node, bool lock_acquired) noexcept
         return ;
     }
     int mutex_result = mutable_node->mutex->unlock(THREAD_ID);
-    int mutex_error_code = ft_mutex_pop_last_error(mutable_node->mutex);
+    int mutex_error_code = (((mutable_node->mutex) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
     {
         int reported_error = mutex_error_code != FT_ERR_SUCCESSS ? mutex_error_code : mutex_result;
 

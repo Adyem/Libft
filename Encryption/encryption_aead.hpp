@@ -2,6 +2,9 @@
 #define ENCRYPTION_AEAD_HPP
 
 #include <cstddef>
+#include "../Networking/openssl_support.hpp"
+
+#if NETWORKING_HAS_OPENSSL
 #include <openssl/evp.h>
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
@@ -59,5 +62,7 @@ bool    encryption_aead_decrypt(const unsigned char *key, size_t key_length,
             const unsigned char *ciphertext, size_t ciphertext_length,
             const unsigned char *tag, size_t tag_length,
             unsigned char *plaintext);
+
+#endif
 
 #endif

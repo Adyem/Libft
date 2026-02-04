@@ -2,6 +2,8 @@
 #include <climits>
 #include "../Errno/errno.hpp"
 
+#if NETWORKING_HAS_OPENSSL
+
 static ssize_t ssl_translate_result(SSL *ssl, int result, int *error_code)
 {
     int ssl_error;
@@ -88,3 +90,5 @@ extern "C"
         return (ssl_report(error_code, ssl_translate_result(ssl, ret, &error_code)));
     }
 }
+
+#endif

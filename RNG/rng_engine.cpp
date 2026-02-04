@@ -3,7 +3,6 @@
 #include <random>
 #include "../Errno/errno.hpp"
 #include "../PThread/unique_lock.hpp"
-#include "../PThread/lock_error_helpers.hpp"
 
 std::mt19937 g_random_engine;
 pt_mutex g_random_engine_mutex;
@@ -12,7 +11,7 @@ std::atomic<bool> g_random_engine_seeded(false);
 void ft_seed_random_engine(uint32_t seed_value)
 {
     ft_unique_lock<pt_mutex> guard(g_random_engine_mutex);
-    int error_code = ft_unique_lock_pop_last_error(guard);
+    int error_code = ft_global_error_stack_pop_newest();
     if (error_code != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(error_code);

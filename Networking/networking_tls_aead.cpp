@@ -1,6 +1,9 @@
 #include "networking_tls_aead.hpp"
 #include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
+#include "openssl_support.hpp"
+
+#if NETWORKING_HAS_OPENSSL
 
 static const EVP_CIPHER *networking_tls_resolve_cipher(const SSL_CIPHER *cipher)
 {
@@ -181,3 +184,5 @@ bool    networking_tls_initialize_aead_contexts(SSL *ssl_session, bool outbound,
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);
 }
+
+#endif

@@ -3,7 +3,6 @@
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Template/move.hpp"
-#include "../PThread/lock_error_helpers.hpp"
 
 static void json_thread_error_push(int error_code)
 {
@@ -59,7 +58,7 @@ int json_group_list_lock(ft_unique_lock<pt_mutex> &guard)
 
     local_guard = ft_unique_lock<pt_mutex>(g_json_group_list_mutex);
     {
-        int lock_error = ft_unique_lock_pop_last_error(local_guard);
+        int lock_error = ft_global_error_stack_pop_newest();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {
@@ -79,7 +78,7 @@ void json_group_list_finalize_lock(ft_unique_lock<pt_mutex> &guard)
 
     if (guard.owns_lock())
         guard.unlock();
-    int guard_error = ft_unique_lock_pop_last_error(guard);
+    int guard_error = ft_global_error_stack_pop_newest();
 
     if (guard_error != FT_ERR_SUCCESSS)
     {
@@ -147,7 +146,7 @@ int json_group_lock(json_group *group, ft_unique_lock<pt_mutex> &guard)
     }
     local_guard = ft_unique_lock<pt_mutex>(group->_mutex);
     {
-        int lock_error = ft_unique_lock_pop_last_error(local_guard);
+        int lock_error = ft_global_error_stack_pop_newest();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {
@@ -244,7 +243,7 @@ int json_item_lock(json_item *item, ft_unique_lock<pt_mutex> &guard)
     }
     local_guard = ft_unique_lock<pt_mutex>(item->_mutex);
     {
-        int lock_error = ft_unique_lock_pop_last_error(local_guard);
+        int lock_error = ft_global_error_stack_pop_newest();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {
@@ -328,7 +327,7 @@ int json_schema_field_lock(json_schema_field *field, ft_unique_lock<pt_mutex> &g
         return (enable_error);
     }
     local_guard = ft_unique_lock<pt_mutex>(field->_mutex);
-    mutex_error = ft_unique_lock_pop_last_error(local_guard);
+    mutex_error = ft_global_error_stack_pop_newest();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         guard = ft_unique_lock<pt_mutex>();
@@ -404,7 +403,7 @@ int json_schema_lock(json_schema *schema, ft_unique_lock<pt_mutex> &guard)
         return (enable_error);
     }
     local_guard = ft_unique_lock<pt_mutex>(schema->_mutex);
-    mutex_error = ft_unique_lock_pop_last_error(local_guard);
+    mutex_error = ft_global_error_stack_pop_newest();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         guard = ft_unique_lock<pt_mutex>();
@@ -492,7 +491,7 @@ int json_stream_reader_lock(json_stream_reader *reader, ft_unique_lock<pt_mutex>
     }
     local_guard = ft_unique_lock<pt_mutex>(reader->_mutex);
     {
-        int lock_error = ft_unique_lock_pop_last_error(local_guard);
+        int lock_error = ft_global_error_stack_pop_newest();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {
@@ -514,7 +513,7 @@ void json_stream_reader_finalize_lock(json_stream_reader *reader,
     current_errno = ft_global_error_stack_last_error();
     if (guard.owns_lock())
         guard.unlock();
-    int guard_error = ft_unique_lock_pop_last_error(guard);
+    int guard_error = ft_global_error_stack_pop_newest();
 
     if (guard_error != FT_ERR_SUCCESSS)
     {

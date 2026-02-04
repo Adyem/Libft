@@ -1322,7 +1322,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `int lock_self(ft_unique_lock<pt_recursive_mutex> &guard) const noexcept`
   - `static int lock_pair(const ft_stringbuf &first, const ft_stringbuf &second, ft_unique_lock<pt_recursive_mutex> &first_guard, ft_unique_lock<pt_recursive_mutex> &second_guard) noexcept`
   - `std::size_t read(char *buffer, std::size_t count)`
-  - `bool is_bad() const noexcept`
+  - `bool is_valid() const noexcept`
   - `int get_error() const noexcept`
   - `const char *get_error_str() const noexcept`
   - `ft_string str() const`
@@ -1665,7 +1665,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_stringbuf::ft_stringbuf(ft_stringbuf &&other) noexcept : _storage(ft_move(other._storage)) , _position(other._position) , _error_code(FT_ERR_SUCCESSS) , _mutex()`
   - `ft_stringbuf::~ft_stringbuf() noexcept`
   - `std::size_t ft_stringbuf::read(char *buffer, std::size_t count)`
-  - `bool ft_stringbuf::is_bad() const noexcept`
+  - `bool ft_stringbuf::is_valid() const noexcept`
   - `int ft_stringbuf::get_error() const noexcept`
   - `const char *ft_stringbuf::get_error_str() const noexcept`
   - `ft_string ft_stringbuf::str() const`
@@ -9295,13 +9295,6 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `int get_error() const`
   - `const char *get_error_str() const`
 - Defines: _None_
-
-### PThread/lock_error_helpers.hpp
-
-- Declares: _None_
-- Defines:
-  - `static inline int ft_mutex_pop_last_error(pt_mutex *mutex)`
-  - `static inline int ft_unique_lock_pop_last_error(const ft_unique_lock<pt_mutex> &mutex_guard)`
 
 ### PThread/lock_guard.hpp
 

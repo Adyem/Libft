@@ -2,7 +2,6 @@
 #include "rng.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
-#include "../Errno/errno_internal.hpp"
 #include "../Math/math.hpp"
 #include "../PThread/pthread.hpp"
 #include <climits>
@@ -18,16 +17,6 @@ static int rng_stream_capture_math_error(ft_size_t previous_depth)
     if (error_code != FT_ERR_SUCCESSS)
         ft_global_error_stack_push(error_code);
     return (error_code);
-}
-
-void rng_stream::record_operation_error(int error_code) const noexcept
-{
-    unsigned long long operation_id;
-
-    operation_id = ft_errno_next_operation_id();
-    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(&this->_operation_errors, error_code, operation_id);
-    return ;
 }
 
 int rng_stream::lock_internal(bool *lock_acquired) const
@@ -78,29 +67,19 @@ const pt_recursive_mutex *rng_stream::mutex_handle() const
     return (&this->_mutex);
 }
 
-ft_operation_error_stack *rng_stream::operation_error_stack_handle()
-{
-    return (&this->_operation_errors);
-}
-
-const ft_operation_error_stack *rng_stream::operation_error_stack_handle() const
-{
-    return (&this->_operation_errors);
-}
-
 rng_stream::rng_stream()
 {
     std::random_device random_device;
 
     this->_engine.seed(random_device());
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
 rng_stream::rng_stream(uint32_t seed_value)
 {
     this->_engine.seed(static_cast<std::mt19937::result_type>(seed_value));
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -114,12 +93,12 @@ rng_stream::rng_stream(const rng_stream &other)
     lock_error = other.lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return ;
     }
     this->_engine = other._engine;
     unlock_error = other.unlock_internal(lock_acquired);
-    this->record_operation_error(unlock_error);
+    ft_global_error_stack_push(unlock_error);
     return ;
 }
 
@@ -127,7 +106,7 @@ rng_stream &rng_stream::operator=(const rng_stream &other)
 {
     if (this == &other)
     {
-        this->record_operation_error(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (*this);
     }
     bool this_lock_acquired;
@@ -155,7 +134,7 @@ rng_stream &rng_stream::operator=(const rng_stream &other)
             other.unlock_internal(other_lock_acquired);
         if (this_lock_acquired)
             this->unlock_internal(this_lock_acquired);
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (*this);
     }
     this->_engine = other._engine;
@@ -178,7 +157,7 @@ rng_stream &rng_stream::operator=(const rng_stream &other)
         else
             unlock_error = other_unlock_error;
     }
-    this->record_operation_error(unlock_error);
+    ft_global_error_stack_push(unlock_error);
     return (*this);
 }
 
@@ -192,7 +171,7 @@ rng_stream::rng_stream(rng_stream &&other) noexcept
     lock_error = other.lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return ;
     }
     this->_engine = other._engine;
@@ -200,7 +179,7 @@ rng_stream::rng_stream(rng_stream &&other) noexcept
 
     other._engine = default_engine;
     unlock_error = other.unlock_internal(lock_acquired);
-    this->record_operation_error(unlock_error);
+    ft_global_error_stack_push(unlock_error);
     return ;
 }
 
@@ -208,7 +187,7 @@ rng_stream &rng_stream::operator=(rng_stream &&other) noexcept
 {
     if (this == &other)
     {
-        this->record_operation_error(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (*this);
     }
     bool this_lock_acquired;
@@ -236,7 +215,7 @@ rng_stream &rng_stream::operator=(rng_stream &&other) noexcept
             other.unlock_internal(other_lock_acquired);
         if (this_lock_acquired)
             this->unlock_internal(this_lock_acquired);
-        this->record_operation_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (*this);
     }
     this->_engine = other._engine;
@@ -262,7 +241,7 @@ rng_stream &rng_stream::operator=(rng_stream &&other) noexcept
         else
             unlock_error = other_unlock_error;
     }
-    this->record_operation_error(unlock_error);
+    ft_global_error_stack_push(unlock_error);
     return (*this);
 }
 
@@ -284,7 +263,7 @@ void    rng_stream::reseed(uint32_t seed_value)
     unlock_error = this->unlock_internal(lock_acquired);
     if (operation_error == FT_ERR_SUCCESSS)
         operation_error = unlock_error;
-    this->record_operation_error(operation_error);
+    ft_global_error_stack_push(operation_error);
     return ;
 }
 
@@ -292,7 +271,7 @@ void    rng_stream::reseed_from_string(const char *seed_string)
 {
     if (seed_string == ft_nullptr)
     {
-        this->record_operation_error(FT_ERR_INVALID_ARGUMENT);
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     uint32_t derived_seed;
@@ -301,7 +280,7 @@ void    rng_stream::reseed_from_string(const char *seed_string)
     int error_code = ft_global_error_stack_pop_newest();
     if (error_code != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(error_code);
+        ft_global_error_stack_push(error_code);
         return ;
     }
     this->reseed(derived_seed);
@@ -341,7 +320,7 @@ int rng_stream::random_int()
     unlock_error = this->unlock_internal(lock_acquired);
     if (operation_error == FT_ERR_SUCCESSS)
         operation_error = unlock_error;
-    this->record_operation_error(operation_error);
+    ft_global_error_stack_push(operation_error);
     return (value);
 }
 
@@ -349,17 +328,17 @@ int rng_stream::dice_roll(int number, int faces)
 {
     if (faces == 0 && number == 0)
     {
-        this->record_operation_error(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (0);
     }
     if (faces < 1 || number < 1)
     {
-        this->record_operation_error(FT_ERR_INVALID_ARGUMENT);
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (faces == 1)
     {
-        this->record_operation_error(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (number);
     }
     int result;
@@ -396,13 +375,13 @@ int rng_stream::dice_roll(int number, int faces)
         operation_error = unlock_error;
     if (overflowed)
     {
-        this->record_operation_error(operation_error);
+        ft_global_error_stack_push(operation_error);
         return (-1);
     }
     if (operation_error == FT_ERR_SUCCESSS)
-        this->record_operation_error(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
     else
-        this->record_operation_error(operation_error);
+        ft_global_error_stack_push(operation_error);
     return (result);
 }
 
@@ -421,7 +400,7 @@ float   rng_stream::random_float()
     unlock_error = this->unlock_internal(lock_acquired);
     if (operation_error == FT_ERR_SUCCESSS)
         operation_error = unlock_error;
-    this->record_operation_error(operation_error);
+    ft_global_error_stack_push(operation_error);
     return (value);
 }
 
@@ -472,7 +451,7 @@ float   rng_stream::random_normal()
     unlock_error = this->unlock_internal(lock_acquired);
     if (operation_error == FT_ERR_SUCCESSS)
         operation_error = unlock_error;
-    this->record_operation_error(operation_error);
+    ft_global_error_stack_push(operation_error);
     if (operation_error != FT_ERR_SUCCESSS)
         return (0.0f);
     return (result);
@@ -485,7 +464,7 @@ float   rng_stream::random_exponential(float lambda_value)
 
     if (lambda_value <= 0.0f)
     {
-        this->record_operation_error(FT_ERR_INVALID_ARGUMENT);
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0.0f);
     }
     bool lock_acquired;
@@ -511,7 +490,7 @@ float   rng_stream::random_exponential(float lambda_value)
     unlock_error = this->unlock_internal(lock_acquired);
     if (operation_error == FT_ERR_SUCCESSS)
         operation_error = unlock_error;
-    this->record_operation_error(operation_error);
+    ft_global_error_stack_push(operation_error);
     if (operation_error != FT_ERR_SUCCESSS)
         return (0.0f);
     return (result);
@@ -525,7 +504,7 @@ int rng_stream::random_poisson(double lambda_value)
 
     if (lambda_value <= 0.0)
     {
-        this->record_operation_error(FT_ERR_INVALID_ARGUMENT);
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
     ft_size_t exp_depth = ft_global_error_stack_depth();
@@ -533,7 +512,7 @@ int rng_stream::random_poisson(double lambda_value)
     int math_error = rng_stream_capture_math_error(exp_depth);
     if (math_error != FT_ERR_SUCCESSS)
     {
-        this->record_operation_error(math_error);
+        ft_global_error_stack_push(math_error);
         return (0);
     }
     bool lock_acquired;
@@ -558,7 +537,7 @@ int rng_stream::random_poisson(double lambda_value)
     unlock_error = this->unlock_internal(lock_acquired);
     if (operation_error == FT_ERR_SUCCESSS)
         operation_error = unlock_error;
-    this->record_operation_error(operation_error);
+    ft_global_error_stack_push(operation_error);
     if (operation_error != FT_ERR_SUCCESSS)
         return (0);
     return (count_value - 1);
@@ -568,33 +547,33 @@ int rng_stream::random_binomial(int trial_count, double success_probability)
 {
     if (trial_count < 0)
     {
-        this->record_operation_error(FT_ERR_INVALID_ARGUMENT);
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
     if (success_probability < 0.0)
     {
-        this->record_operation_error(FT_ERR_INVALID_ARGUMENT);
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
     if (trial_count == 0)
     {
-        this->record_operation_error(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (0);
     }
     if (success_probability > 1.0)
     {
-        this->record_operation_error(FT_ERR_INVALID_ARGUMENT);
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
     const double probability_epsilon = std::numeric_limits<double>::epsilon();
     if (success_probability <= probability_epsilon)
     {
-        this->record_operation_error(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (0);
     }
     if ((1.0 - success_probability) <= probability_epsilon)
     {
-        this->record_operation_error(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (trial_count);
     }
     int trial_index;
@@ -623,7 +602,7 @@ int rng_stream::random_binomial(int trial_count, double success_probability)
     unlock_error = this->unlock_internal(lock_acquired);
     if (operation_error == FT_ERR_SUCCESSS)
         operation_error = unlock_error;
-    this->record_operation_error(operation_error);
+    ft_global_error_stack_push(operation_error);
     if (operation_error != FT_ERR_SUCCESSS)
         return (0);
     return (success_count);
@@ -633,18 +612,18 @@ int rng_stream::random_geometric(double success_probability)
 {
     if (success_probability <= 0.0)
     {
-        this->record_operation_error(FT_ERR_INVALID_ARGUMENT);
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
     if (success_probability > 1.0)
     {
-        this->record_operation_error(FT_ERR_INVALID_ARGUMENT);
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
     const double probability_epsilon = std::numeric_limits<double>::epsilon();
     if ((1.0 - success_probability) <= probability_epsilon)
     {
-        this->record_operation_error(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (1);
     }
     int trial_count;
@@ -681,7 +660,7 @@ int rng_stream::random_geometric(double success_probability)
         operation_error = unlock_error;
     if (found_success == 0 && operation_error == FT_ERR_SUCCESSS)
         operation_error = FT_ERR_INVALID_STATE;
-    this->record_operation_error(operation_error);
+    ft_global_error_stack_push(operation_error);
     if (operation_error != FT_ERR_SUCCESSS)
         return (0);
     return (result);
@@ -691,7 +670,7 @@ float   rng_stream::random_gamma(float shape, float scale)
 {
     if (shape <= 0.0f || scale <= 0.0f)
     {
-        this->record_operation_error(FT_ERR_INVALID_ARGUMENT);
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0.0f);
     }
     std::gamma_distribution<float> distribution(shape, scale);
@@ -709,7 +688,7 @@ float   rng_stream::random_gamma(float shape, float scale)
     unlock_error = this->unlock_internal(lock_acquired);
     if (operation_error == FT_ERR_SUCCESSS)
         operation_error = unlock_error;
-    this->record_operation_error(operation_error);
+    ft_global_error_stack_push(operation_error);
     if (operation_error != FT_ERR_SUCCESSS)
         return (0.0f);
     return (sample_value);
@@ -719,7 +698,7 @@ float   rng_stream::random_beta(float alpha, float beta)
 {
     if (alpha <= 0.0f || beta <= 0.0f)
     {
-        this->record_operation_error(FT_ERR_INVALID_ARGUMENT);
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0.0f);
     }
     std::gamma_distribution<float> alpha_distribution(alpha, 1.0f);
@@ -760,7 +739,7 @@ float   rng_stream::random_beta(float alpha, float beta)
         if (result > 1.0f)
             result = 1.0f;
     }
-    this->record_operation_error(operation_error);
+    ft_global_error_stack_push(operation_error);
     if (operation_error != FT_ERR_SUCCESSS)
         return (0.0f);
     return (result);
@@ -770,7 +749,7 @@ float   rng_stream::random_chi_squared(float degrees_of_freedom)
 {
     if (degrees_of_freedom <= 0.0f)
     {
-        this->record_operation_error(FT_ERR_INVALID_ARGUMENT);
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0.0f);
     }
     std::gamma_distribution<float> distribution(degrees_of_freedom * 0.5f, 2.0f);
@@ -790,7 +769,7 @@ float   rng_stream::random_chi_squared(float degrees_of_freedom)
         operation_error = unlock_error;
     if (operation_error == FT_ERR_SUCCESSS && sample_value < 0.0f)
         sample_value = 0.0f;
-    this->record_operation_error(operation_error);
+    ft_global_error_stack_push(operation_error);
     if (operation_error != FT_ERR_SUCCESSS)
         return (0.0f);
     return (sample_value);

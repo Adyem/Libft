@@ -3,7 +3,9 @@
 
 #include "../CPP_class/class_string.hpp"
 #include "ssl_wrapper.hpp"
+#include "openssl_support.hpp"
 
+#if NETWORKING_HAS_OPENSSL
 typedef void (*http_response_handler)(int status_code, const ft_string &headers,
     const char *body_chunk, size_t chunk_size, bool finished);
 
@@ -19,5 +21,6 @@ size_t http_client_pool_get_idle_count(void);
 void http_client_pool_debug_reset_counters(void);
 size_t http_client_pool_debug_get_reuse_count(void);
 size_t http_client_pool_debug_get_miss_count(void);
+#endif
 
 #endif

@@ -14,12 +14,15 @@
 #include "../PThread/unique_lock.hpp"
 #include "../PThread/thread.hpp"
 #include "../PThread/pthread.hpp"
+#include "../sqlite_support.hpp"
 
 typedef enum e_kv_store_backend_type
 {
     KV_STORE_BACKEND_JSON,
     KV_STORE_BACKEND_JSON_LINES,
+#if SQLITE3_AVAILABLE
     KV_STORE_BACKEND_SQLITE,
+#endif
     KV_STORE_BACKEND_MEMORY_MAPPED
 }   kv_store_backend_type;
 
@@ -161,8 +164,10 @@ class kv_store
         int flush_json_entries(const ft_vector<kv_store_snapshot_entry> &entries) const;
         int load_json_lines_entries(const char *location, ft_vector<kv_store_snapshot_entry> &out_entries);
         int flush_json_lines_entries(const ft_vector<kv_store_snapshot_entry> &entries) const;
+#if SQLITE3_AVAILABLE
         int load_sqlite_entries(const char *location, ft_vector<kv_store_snapshot_entry> &out_entries);
         int flush_sqlite_entries(const ft_vector<kv_store_snapshot_entry> &entries) const;
+#endif
         int load_memory_mapped_entries(const char *location, ft_vector<kv_store_snapshot_entry> &out_entries);
         int flush_memory_mapped_entries(const ft_vector<kv_store_snapshot_entry> &entries) const;
         int flush_backend_entries(const ft_vector<kv_store_snapshot_entry> &entries) const;

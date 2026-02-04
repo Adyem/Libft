@@ -4,7 +4,6 @@
 #include "../Errno/errno.hpp"
 #include "../Errno/errno_internal.hpp"
 #include "../PThread/mutex.hpp"
-#include "../PThread/lock_error_helpers.hpp"
 #include "../PThread/pthread.hpp"
 
 static int html_document_consume_last_error(bool repush_failure = true)
@@ -485,7 +484,7 @@ int html_document::prepare_thread_safety() noexcept
         return (-1);
     }
     mutex_pointer = new(memory) pt_mutex();
-    int mutex_error = ft_mutex_pop_last_error(mutex_pointer);
+    int mutex_error = (((mutex_pointer) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
 
     if (mutex_error != FT_ERR_SUCCESSS)
     {
@@ -523,7 +522,7 @@ int html_document::lock(bool *lock_acquired) const noexcept
         return (0);
     }
     this->_mutex->lock(THREAD_ID);
-    int mutex_error = ft_mutex_pop_last_error(this->_mutex);
+    int mutex_error = (((this->_mutex) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         const_cast<html_document *>(this)->set_error(mutex_error);
@@ -541,7 +540,7 @@ void html_document::unlock(bool lock_acquired) const noexcept
         return ;
     }
     this->_mutex->unlock(THREAD_ID);
-    int mutex_error = ft_mutex_pop_last_error(this->_mutex);
+    int mutex_error = (((this->_mutex) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         const_cast<html_document *>(this)->set_error(mutex_error);

@@ -33,7 +33,7 @@ class ft_test_counter_istream : public ft_istream
 
             if (buffer == ft_nullptr)
             {
-                this->set_error(FT_ERR_INVALID_ARGUMENT);
+                ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
                 return (0);
             }
             produced = 0;
@@ -45,10 +45,10 @@ class ft_test_counter_istream : public ft_istream
             }
             if (produced == 0)
             {
-                this->set_error(FT_ERR_SUCCESSS);
+                ft_global_error_stack_push(FT_ERR_SUCCESSS);
                 return (0);
             }
-            this->set_error(FT_ERR_SUCCESSS);
+            ft_global_error_stack_push(FT_ERR_SUCCESSS);
             return (produced);
         }
 };
@@ -102,8 +102,8 @@ FT_TEST(test_ft_istream_serializes_concurrent_reads,
     FT_ASSERT_EQ(false, worker_failure.load());
     FT_ASSERT_EQ(true, worker_done.load());
     FT_ASSERT_EQ(400u, total_consumed.load());
-    FT_ASSERT_EQ(false, stream.bad());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, stream.get_error());
+    FT_ASSERT_EQ(true, stream.is_valid());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_global_error_stack_last_error());
     FT_ASSERT_EQ(0u, stream.remaining());
     return (1);
 }
@@ -188,7 +188,7 @@ FT_TEST(test_ft_istringstream_concurrent_reads,
         FT_ASSERT_EQ(repeated.size() / 10, static_cast<std::size_t>(digit_counts[digit_index].load()));
         digit_index++;
     }
-    FT_ASSERT_EQ(false, stream.bad());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, stream.get_error());
+    FT_ASSERT_EQ(true, stream.is_valid());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_global_error_stack_last_error());
     return (1);
 }
