@@ -7,13 +7,13 @@
 time_timer::time_timer() noexcept
     : _duration_ms(0), _start_time(std::chrono::steady_clock::time_point()), _running(false)
 {
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
 time_timer::~time_timer() noexcept
 {
-    this->record_operation_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -41,7 +41,7 @@ void    time_timer::start(long duration_ms) noexcept
             final_error = FT_ERR_SUCCESSS;
         }
     }
-    this->record_operation_error(final_error);
+    ft_global_error_stack_push(final_error);
     return ;
 }
 
@@ -86,7 +86,7 @@ long time_timer::update() noexcept
             }
         }
     }
-    this->record_operation_error(final_error);
+    ft_global_error_stack_push(final_error);
     return (remaining);
 }
 
@@ -137,7 +137,7 @@ long time_timer::add_time(long amount_ms) noexcept
             }
         }
     }
-    this->record_operation_error(final_error);
+    ft_global_error_stack_push(final_error);
     return (result);
 }
 
@@ -185,7 +185,7 @@ long time_timer::remove_time(long amount_ms) noexcept
             }
         }
     }
-    this->record_operation_error(final_error);
+    ft_global_error_stack_push(final_error);
     return (result);
 }
 
@@ -227,52 +227,13 @@ void    time_timer::sleep_remaining() noexcept
     }
     if (remaining > 0)
         time_sleep_ms(static_cast<unsigned int>(remaining));
-    this->record_operation_error(final_error);
+    ft_global_error_stack_push(final_error);
     return ;
 }
 
-int time_timer::get_error() const noexcept
-{
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    int mutex_error = ft_global_error_stack_pop_newest();
-
-    if (mutex_error != FT_ERR_SUCCESSS)
-    {
-        if (guard.owns_lock())
-            guard.unlock();
-        this->record_operation_error(mutex_error);
-        return (mutex_error);
-    }
-    int error_code = ft_operation_error_stack_last_error(&this->_operation_errors);
-    guard.unlock();
-    return (error_code);
-}
-
-const char  *time_timer::get_error_str() const noexcept
-{
-    int error_code = this->get_error();
-    const char *error_string = ft_strerror(error_code);
-
-    if (error_string == ft_nullptr)
-        error_string = "unknown error";
-    return (error_string);
-}
-
-void    time_timer::record_operation_error(int error_code) const noexcept
-{
-    unsigned long long operation_id = ft_errno_next_operation_id();
-
-    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(&this->_operation_errors, error_code, operation_id);
-    return ;
-}
-
+#ifdef LIBFT_TEST_BUILD
 pt_mutex *time_timer::get_mutex_for_validation() const noexcept
 {
     return (&this->_mutex);
 }
-
-ft_operation_error_stack *time_timer::operation_error_stack_handle() const noexcept
-{
-    return (&this->_operation_errors);
-}
+#endif

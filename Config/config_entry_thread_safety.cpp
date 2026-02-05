@@ -39,7 +39,12 @@ int cnfg_entry_prepare_thread_safety(cnfg_entry *entry)
         return (-1);
     }
     {
-        int mutex_error = (((mutex_pointer) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
+        int mutex_error;
+
+        if (mutex_pointer == ft_nullptr)
+            mutex_error = FT_ERR_SUCCESSS;
+        else
+            mutex_error = ft_global_error_stack_pop_newest();
 
         if (mutex_error != FT_ERR_SUCCESSS)
         {
@@ -84,7 +89,12 @@ int cnfg_entry_lock(cnfg_entry *entry, bool *lock_acquired)
     }
     entry->mutex->lock(THREAD_ID);
     {
-        int lock_error = (((entry->mutex) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
+        int lock_error;
+
+        if (entry->mutex == ft_nullptr)
+            lock_error = FT_ERR_SUCCESSS;
+        else
+            lock_error = ft_global_error_stack_pop_newest();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {
@@ -107,7 +117,12 @@ void cnfg_entry_unlock(cnfg_entry *entry, bool lock_acquired)
     }
     entry->mutex->unlock(THREAD_ID);
     {
-        int unlock_error = (((entry->mutex) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
+        int unlock_error;
+
+        if (entry->mutex == ft_nullptr)
+            unlock_error = FT_ERR_SUCCESSS;
+        else
+            unlock_error = ft_global_error_stack_pop_newest();
 
         if (unlock_error != FT_ERR_SUCCESSS)
         {

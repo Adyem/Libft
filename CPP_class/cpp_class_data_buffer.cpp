@@ -386,7 +386,12 @@ DataBuffer::operator bool() const noexcept
         return (false);
     }
     bool state = this->_ok;
-    int final_error = state ? FT_ERR_SUCCESSS : FT_ERR_INTERNAL;
+    int final_error;
+
+    if (state)
+        final_error = FT_ERR_SUCCESSS;
+    else
+        final_error = FT_ERR_INTERNAL;
     int unlock_error = data_buffer_unlock_mutex(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
         final_error = unlock_error;
@@ -403,7 +408,12 @@ bool DataBuffer::good() const noexcept
         return (false);
     }
     bool state = this->_ok;
-    int final_error = state ? FT_ERR_SUCCESSS : FT_ERR_INTERNAL;
+    int final_error;
+
+    if (state)
+        final_error = FT_ERR_SUCCESSS;
+    else
+        final_error = FT_ERR_INTERNAL;
     int unlock_error = data_buffer_unlock_mutex(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
         final_error = unlock_error;

@@ -1,6 +1,7 @@
 #include "compatebility_internal.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
+#include <cerrno>
 
 #if defined(_WIN32) || defined(_WIN64)
 # include "../CPP_class/class_nullptr.hpp"
@@ -308,3 +309,18 @@ void cmp_initialize_standard_file_descriptors()
 }
 
 #endif
+
+int cmp_file_last_error(void)
+{
+#if defined(_WIN32) || defined(_WIN64)
+    DWORD last_error = GetLastError();
+    if (last_error != 0)
+        return (ft_map_system_error(static_cast<int>(last_error)));
+    if (errno != 0)
+        return (ft_map_system_error(errno));
+#else
+    if (errno != 0)
+        return (ft_map_system_error(errno));
+#endif
+    return (FT_ERR_IO);
+}

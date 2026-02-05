@@ -10,9 +10,7 @@ class ft_dual_number
     private:
         double          _value;
         double          _derivative;
-        mutable int     _error_code;
         mutable pt_recursive_mutex _mutex;
-        void    set_error(int error_code) const noexcept;
 
     public:
         ft_dual_number() noexcept;
@@ -40,8 +38,6 @@ class ft_dual_number
         ft_dual_number   apply_exp() const noexcept;
         ft_dual_number   apply_log() const noexcept;
 
-        int     get_error() const noexcept;
-        const char  *get_error_str() const noexcept;
         pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 };
 

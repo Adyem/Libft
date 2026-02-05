@@ -32,14 +32,21 @@ static int yaml_dom_populate_node(const yaml_value *value, ft_dom_node *node) no
     yaml_type type;
 
     type = value->get_type();
-    if (value->get_error() != FT_ERR_SUCCESSS)
-        return (value->get_error());
+    {
+        int yaml_value_error = ft_global_error_stack_pop_newest();
+
+        if (yaml_value_error != FT_ERR_SUCCESSS)
+            return (yaml_value_error);
+    }
     if (type == YAML_SCALAR)
     {
         const ft_string &scalar = value->get_scalar();
+        {
+            int yaml_value_error = ft_global_error_stack_pop_newest();
 
-        if (value->get_error() != FT_ERR_SUCCESSS)
-            return (value->get_error());
+            if (yaml_value_error != FT_ERR_SUCCESSS)
+                return (yaml_value_error);
+        }
         node->set_type(FT_DOM_NODE_VALUE);
         if (node->get_error() != FT_ERR_SUCCESSS)
             return (node->get_error());
@@ -53,9 +60,12 @@ static int yaml_dom_populate_node(const yaml_value *value, ft_dom_node *node) no
         if (node->get_error() != FT_ERR_SUCCESSS)
             return (node->get_error());
         const ft_vector<yaml_value*> &list = value->get_list();
+        {
+            int yaml_value_error = ft_global_error_stack_pop_newest();
 
-        if (value->get_error() != FT_ERR_SUCCESSS)
-            return (value->get_error());
+            if (yaml_value_error != FT_ERR_SUCCESSS)
+                return (yaml_value_error);
+        }
         size_t index;
         size_t count;
 
@@ -113,13 +123,19 @@ static int yaml_dom_populate_node(const yaml_value *value, ft_dom_node *node) no
         if (node->get_error() != FT_ERR_SUCCESSS)
             return (node->get_error());
         const ft_vector<ft_string> &keys = value->get_map_keys();
+        {
+            int yaml_value_error = ft_global_error_stack_pop_newest();
 
-        if (value->get_error() != FT_ERR_SUCCESSS)
-            return (value->get_error());
+            if (yaml_value_error != FT_ERR_SUCCESSS)
+                return (yaml_value_error);
+        }
         const ft_map<ft_string, yaml_value*> &map_reference = value->get_map();
+        {
+            int yaml_value_error = ft_global_error_stack_pop_newest();
 
-        if (value->get_error() != FT_ERR_SUCCESSS)
-            return (value->get_error());
+            if (yaml_value_error != FT_ERR_SUCCESSS)
+                return (yaml_value_error);
+        }
         size_t key_index;
         size_t key_count;
 
@@ -262,26 +278,28 @@ static yaml_value *yaml_dom_build_value(ft_dom_node *node, int *status) noexcept
             return (ft_nullptr);
         }
         result->set_type(YAML_SCALAR);
-        if (result->get_error() != FT_ERR_SUCCESSS)
         {
-            int result_error;
+            int yaml_value_error = ft_global_error_stack_pop_newest();
 
-            result_error = result->get_error();
-            if (status)
-                *status = result_error;
-            delete result;
-            return (ft_nullptr);
+            if (yaml_value_error != FT_ERR_SUCCESSS)
+            {
+                if (status)
+                    *status = yaml_value_error;
+                delete result;
+                return (ft_nullptr);
+            }
         }
         result->set_scalar(scalar);
-        if (result->get_error() != FT_ERR_SUCCESSS)
         {
-            int result_error;
+            int yaml_value_error = ft_global_error_stack_pop_newest();
 
-            result_error = result->get_error();
-            if (status)
-                *status = result_error;
-            delete result;
-            return (ft_nullptr);
+            if (yaml_value_error != FT_ERR_SUCCESSS)
+            {
+                if (status)
+                    *status = yaml_value_error;
+                delete result;
+                return (ft_nullptr);
+            }
         }
         return (result);
     }
@@ -324,16 +342,17 @@ static yaml_value *yaml_dom_build_value(ft_dom_node *node, int *status) noexcept
                 return (ft_nullptr);
             }
             result->add_list_item(child_value);
-            if (result->get_error() != FT_ERR_SUCCESSS)
             {
-                int result_error;
+                int yaml_value_error = ft_global_error_stack_pop_newest();
 
-                result_error = result->get_error();
-                if (status)
-                    *status = result_error;
-                yaml_free(child_value);
-                delete result;
-                return (ft_nullptr);
+                if (yaml_value_error != FT_ERR_SUCCESSS)
+                {
+                    if (status)
+                        *status = yaml_value_error;
+                    yaml_free(child_value);
+                    delete result;
+                    return (ft_nullptr);
+                }
             }
             index += 1;
         }
@@ -387,16 +406,17 @@ static yaml_value *yaml_dom_build_value(ft_dom_node *node, int *status) noexcept
                 return (ft_nullptr);
             }
             result->add_map_item(child_name, child_value);
-            if (result->get_error() != FT_ERR_SUCCESSS)
             {
-                int result_error;
+                int yaml_value_error = ft_global_error_stack_pop_newest();
 
-                result_error = result->get_error();
-                if (status)
-                    *status = result_error;
-                yaml_free(child_value);
-                delete result;
-                return (ft_nullptr);
+                if (yaml_value_error != FT_ERR_SUCCESSS)
+                {
+                    if (status)
+                        *status = yaml_value_error;
+                    yaml_free(child_value);
+                    delete result;
+                    return (ft_nullptr);
+                }
             }
             index += 1;
         }

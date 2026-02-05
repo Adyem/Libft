@@ -27,15 +27,15 @@ static int write_node(const yaml_value *value, ft_string &output, int indent) no
 
     if (guard.get_status() != 0)
         return (guard.get_status());
-    if (value->get_error() != FT_ERR_SUCCESSS)
-    {
-        return (value->get_error());
-    }
     yaml_type value_type;
 
     value_type = value->get_type();
-    if (value->get_error() != FT_ERR_SUCCESSS)
-        return (value->get_error());
+    {
+        int yaml_value_error = ft_global_error_stack_pop_newest();
+
+        if (yaml_value_error != FT_ERR_SUCCESSS)
+            return (yaml_value_error);
+    }
     if (value_type == YAML_SCALAR)
     {
         int indent_error;
@@ -43,7 +43,14 @@ static int write_node(const yaml_value *value, ft_string &output, int indent) no
         indent_error = write_indent(output, indent);
         if (indent_error != FT_ERR_SUCCESSS)
             return (indent_error);
-        output.append(value->get_scalar());
+        const ft_string &scalar = value->get_scalar();
+            {
+                int yaml_value_error = ft_global_error_stack_pop_newest();
+
+                if (yaml_value_error != FT_ERR_SUCCESSS)
+                    return (yaml_value_error);
+            }
+        output.append(scalar);
         if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
         {
             return (ft_string::last_operation_error());
@@ -58,6 +65,12 @@ static int write_node(const yaml_value *value, ft_string &output, int indent) no
     if (value_type == YAML_LIST)
     {
         const ft_vector<yaml_value*> &list_ref = value->get_list();
+        {
+            int yaml_value_error = ft_global_error_stack_pop_newest();
+
+            if (yaml_value_error != FT_ERR_SUCCESSS)
+                return (yaml_value_error);
+        }
         size_t index = 0;
         size_t list_count = list_ref.size();
         if (list_ref.get_error() != FT_ERR_SUCCESSS)
@@ -71,7 +84,20 @@ static int write_node(const yaml_value *value, ft_string &output, int indent) no
             {
                 return (list_ref.get_error());
             }
-            if (item && item->get_type() == YAML_SCALAR)
+            bool item_is_scalar = false;
+            if (item)
+            {
+                yaml_type item_type = item->get_type();
+                {
+                    int yaml_value_error = ft_global_error_stack_pop_newest();
+
+                    if (yaml_value_error != FT_ERR_SUCCESSS)
+                        return (yaml_value_error);
+                }
+                if (item_type == YAML_SCALAR)
+                    item_is_scalar = true;
+            }
+            if (item_is_scalar)
             {
                 int indent_error;
 
@@ -83,7 +109,14 @@ static int write_node(const yaml_value *value, ft_string &output, int indent) no
                 {
                     return (ft_string::last_operation_error());
                 }
-                output.append(item->get_scalar());
+                const ft_string &scalar = item->get_scalar();
+                {
+                    int yaml_value_error = ft_global_error_stack_pop_newest();
+
+                    if (yaml_value_error != FT_ERR_SUCCESSS)
+                        return (yaml_value_error);
+                }
+                output.append(scalar);
                 if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
                 {
                     return (ft_string::last_operation_error());
@@ -119,7 +152,19 @@ static int write_node(const yaml_value *value, ft_string &output, int indent) no
     if (value_type == YAML_MAP)
     {
         const ft_map<ft_string, yaml_value*> &map_ref = value->get_map();
+        {
+            int yaml_value_error = ft_global_error_stack_pop_newest();
+
+            if (yaml_value_error != FT_ERR_SUCCESSS)
+                return (yaml_value_error);
+        }
         const ft_vector<ft_string> &keys = value->get_map_keys();
+        {
+            int yaml_value_error = ft_global_error_stack_pop_newest();
+
+            if (yaml_value_error != FT_ERR_SUCCESSS)
+                return (yaml_value_error);
+        }
         size_t key_index = 0;
         size_t key_count = keys.size();
         if (keys.get_error() != FT_ERR_SUCCESSS)
@@ -136,7 +181,20 @@ static int write_node(const yaml_value *value, ft_string &output, int indent) no
                 if (map_error != FT_ERR_SUCCESSS)
                     return (map_error);
             }
-            if (child && child->get_type() == YAML_SCALAR)
+            bool child_is_scalar = false;
+            if (child)
+            {
+                yaml_type child_type = child->get_type();
+                {
+                    int yaml_value_error = ft_global_error_stack_pop_newest();
+
+                    if (yaml_value_error != FT_ERR_SUCCESSS)
+                        return (yaml_value_error);
+                }
+                if (child_type == YAML_SCALAR)
+                    child_is_scalar = true;
+            }
+            if (child_is_scalar)
             {
                 int indent_error;
 
@@ -153,7 +211,14 @@ static int write_node(const yaml_value *value, ft_string &output, int indent) no
                 {
                     return (ft_string::last_operation_error());
                 }
-                output.append(child->get_scalar());
+                const ft_string &scalar = child->get_scalar();
+                {
+                    int yaml_value_error = ft_global_error_stack_pop_newest();
+
+                    if (yaml_value_error != FT_ERR_SUCCESSS)
+                        return (yaml_value_error);
+                }
+                output.append(scalar);
                 if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
                 {
                     return (ft_string::last_operation_error());

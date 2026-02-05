@@ -111,7 +111,10 @@ int pt_mutex::lock_state(bool *lock_acquired) const
     int lock_error;
 
     lock_error = this->lock_internal(lock_acquired);
-    result = (lock_error == FT_ERR_SUCCESSS ? 0 : -1);
+    if (lock_error == FT_ERR_SUCCESSS)
+        result = 0;
+    else
+        result = -1;
     if (lock_error != FT_ERR_SUCCESSS)
         ft_global_error_stack_push(lock_error);
     else

@@ -131,7 +131,10 @@ bool    quic_experimental_session::derive_keys(SSL *ssl_session, bool outbound) 
         int export_error;
 
         export_error = ft_errno;
-        this->set_error(export_error != FT_ERR_SUCCESSS ? export_error : FT_ERR_INTERNAL);
+        if (export_error != FT_ERR_SUCCESSS)
+            this->set_error(export_error);
+        else
+            this->set_error(FT_ERR_INTERNAL);
         return (false);
     }
     if (this->_send_key.size() == 0 || this->_receive_key.size() == 0)
@@ -281,7 +284,10 @@ bool    quic_experimental_session::encrypt_datagram(const quic_datagram_plaintex
         int encryption_error;
 
         encryption_error = ft_errno;
-        this->set_error(encryption_error != FT_ERR_SUCCESSS ? encryption_error : FT_ERR_INTERNAL);
+        if (encryption_error != FT_ERR_SUCCESSS)
+            this->set_error(encryption_error);
+        else
+            this->set_error(FT_ERR_INTERNAL);
         return (false);
     }
     this->_send_sequence += 1;
@@ -340,7 +346,10 @@ bool    quic_experimental_session::decrypt_datagram(const ft_vector<unsigned cha
         int decryption_error;
 
         decryption_error = ft_errno;
-        this->set_error(decryption_error != FT_ERR_SUCCESSS ? decryption_error : FT_ERR_INTERNAL);
+        if (decryption_error != FT_ERR_SUCCESSS)
+            this->set_error(decryption_error);
+        else
+            this->set_error(FT_ERR_INTERNAL);
         return (false);
     }
     this->_receive_sequence += 1;

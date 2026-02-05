@@ -904,7 +904,13 @@ int kv_store::flush_json_lines_entries(const ft_vector<kv_store_snapshot_entry> 
             return (-1);
         }
         json_add_item_to_group(entry_group, item_pointer);
-        item_pointer = json_create_item("has_expiration", entry_cursor->has_expiration ? "true" : "false");
+        const char *has_expiration_value;
+
+        if (entry_cursor->has_expiration)
+            has_expiration_value = "true";
+        else
+            has_expiration_value = "false";
+        item_pointer = json_create_item("has_expiration", has_expiration_value);
         if (item_pointer == ft_nullptr)
         {
             json_free_groups(entry_group);
@@ -1227,7 +1233,13 @@ int kv_store::flush_sqlite_entries(const ft_vector<kv_store_snapshot_entry> &ent
         mutable_this->record_operation_error(FT_ERR_IO);
         return (-1);
     }
-    if (sqlite3_bind_int(metadata_statement, 1, this->_encryption_enabled ? 1 : 0) != SQLITE_OK)
+    int encryption_flag;
+
+    if (this->_encryption_enabled)
+        encryption_flag = 1;
+    else
+        encryption_flag = 0;
+    if (sqlite3_bind_int(metadata_statement, 1, encryption_flag) != SQLITE_OK)
     {
         sqlite3_finalize(metadata_statement);
         sqlite3_exec(database_handle, "ROLLBACK;", ft_nullptr, ft_nullptr, ft_nullptr);
@@ -1328,7 +1340,13 @@ int kv_store::flush_sqlite_entries(const ft_vector<kv_store_snapshot_entry> &ent
             mutable_this->record_operation_error(FT_ERR_IO);
             return (-1);
         }
-        if (sqlite3_bind_int(insert_statement, 3, entry_cursor->has_expiration ? 1 : 0) != SQLITE_OK)
+        int entry_has_expiration;
+
+        if (entry_cursor->has_expiration)
+            entry_has_expiration = 1;
+        else
+            entry_has_expiration = 0;
+        if (sqlite3_bind_int(insert_statement, 3, entry_has_expiration) != SQLITE_OK)
         {
             sqlite3_finalize(insert_statement);
             sqlite3_exec(database_handle, "ROLLBACK;", ft_nullptr, ft_nullptr, ft_nullptr);
@@ -1507,7 +1525,7 @@ int kv_store::load_sqlite_entries(const char *location, ft_vector<kv_store_snaps
             this->record_operation_error(snapshot_value_error);
             return (-1);
         }
-        snapshot_entry.has_expiration = has_expiration_flag ? true : false;
+        snapshot_entry.has_expiration = has_expiration_flag;
         snapshot_entry.expiration_timestamp = static_cast<long long>(expiration_value);
         out_entries.push_back(ft_move(snapshot_entry));
         if (out_entries.get_error() != FT_ERR_SUCCESSS)
@@ -2173,7 +2191,12 @@ int kv_store::write_snapshot(ft_document_sink &sink) const
     {
         json_free_groups(head_group);
         cma_free(serialized_buffer);
-        mutable_this->record_operation_error(sink.get_error() != FT_ERR_SUCCESSS ? sink.get_error() : FT_ERR_IO);
+        int sink_error_code = sink.get_error();
+
+        if (sink_error_code != FT_ERR_SUCCESSS)
+            mutable_this->record_operation_error(sink_error_code);
+        else
+            mutable_this->record_operation_error(FT_ERR_IO);
         return (-1);
     }
     json_free_groups(head_group);
@@ -3446,7 +3469,9 @@ int kv_store::get_metrics(kv_store_metrics &out_metrics) const
     mutable_this = const_cast<kv_store *>(this);
     mutable_this->record_operation_error(FT_ERR_SUCCESSS);
     this->unlock_store_guard(guard, FT_ERR_SUCCESSS);
-    return (this->get_error() == FT_ERR_SUCCESSS ? 0 : -1);
+    if (this->get_error() == FT_ERR_SUCCESSS)
+        return (0);
+    return (-1);
 }
 
 int kv_store::export_snapshot(ft_vector<kv_store_snapshot_entry> &out_entries) const

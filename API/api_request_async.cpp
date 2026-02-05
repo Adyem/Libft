@@ -515,7 +515,8 @@ bool    api_request_json_async(const char *ip, uint16_t port,
             data, payload, headers, timeout))
     {
         cma_free(data);
-        ft_errno = ft_errno == FT_ERR_SUCCESSS ? FT_ERR_NO_MEMORY : ft_errno;
+        if (ft_errno == FT_ERR_SUCCESSS)
+            ft_errno = FT_ERR_NO_MEMORY;
         return (false);
     }
     ft_errno = FT_ERR_SUCCESSS;

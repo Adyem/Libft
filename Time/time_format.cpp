@@ -31,9 +31,17 @@ ft_string    time_format_iso8601(t_time time_value)
 
     standard_time = static_cast<std::time_t>(time_value);
     mutex_result = g_gmtime_mutex.lock(THREAD_ID);
-    mutex_error = (((&g_gmtime_mutex) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
+    if ((&g_gmtime_mutex) == ft_nullptr)
+        mutex_error = FT_ERR_SUCCESSS;
+    else
+        mutex_error = ft_global_error_stack_pop_newest();
     {
-        int reported_error = mutex_error != FT_ERR_SUCCESSS ? mutex_error : mutex_result;
+        int reported_error;
+
+        if (mutex_error != FT_ERR_SUCCESSS)
+            reported_error = mutex_error;
+        else
+            reported_error = mutex_result;
 
         if (reported_error != FT_SUCCESS)
             return (time_format_failure(reported_error));
@@ -42,9 +50,17 @@ ft_string    time_format_iso8601(t_time time_value)
     if (!time_pointer)
     {
         mutex_result = g_gmtime_mutex.unlock(THREAD_ID);
-        mutex_error = (((&g_gmtime_mutex) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
+        if ((&g_gmtime_mutex) == ft_nullptr)
+            mutex_error = FT_ERR_SUCCESSS;
+        else
+            mutex_error = ft_global_error_stack_pop_newest();
         {
-            int reported_error = mutex_error != FT_ERR_SUCCESSS ? mutex_error : mutex_result;
+            int reported_error;
+
+            if (mutex_error != FT_ERR_SUCCESSS)
+                reported_error = mutex_error;
+            else
+                reported_error = mutex_result;
 
             if (reported_error != FT_SUCCESS)
                 return (time_format_failure(reported_error));
@@ -53,9 +69,17 @@ ft_string    time_format_iso8601(t_time time_value)
     }
     time_storage = *time_pointer;
     mutex_result = g_gmtime_mutex.unlock(THREAD_ID);
-    mutex_error = (((&g_gmtime_mutex) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
+    if ((&g_gmtime_mutex) == ft_nullptr)
+        mutex_error = FT_ERR_SUCCESSS;
+    else
+        mutex_error = ft_global_error_stack_pop_newest();
     {
-        int reported_error = mutex_error != FT_ERR_SUCCESSS ? mutex_error : mutex_result;
+        int reported_error;
+
+        if (mutex_error != FT_ERR_SUCCESSS)
+            reported_error = mutex_error;
+        else
+            reported_error = mutex_result;
 
         if (reported_error != FT_SUCCESS)
             return (time_format_failure(reported_error));
@@ -98,9 +122,17 @@ ft_string    time_format_iso8601_with_offset(t_time time_value, int offset_minut
         return (time_format_failure(FT_ERR_OUT_OF_RANGE));
     adjusted_time = static_cast<std::time_t>(adjusted_epoch);
     mutex_result = g_gmtime_mutex.lock(THREAD_ID);
-    mutex_error = (((&g_gmtime_mutex) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
+    if ((&g_gmtime_mutex) == ft_nullptr)
+        mutex_error = FT_ERR_SUCCESSS;
+    else
+        mutex_error = ft_global_error_stack_pop_newest();
     {
-        int reported_error = mutex_error != FT_ERR_SUCCESSS ? mutex_error : mutex_result;
+        int reported_error;
+
+        if (mutex_error != FT_ERR_SUCCESSS)
+            reported_error = mutex_error;
+        else
+            reported_error = mutex_result;
 
         if (reported_error != FT_SUCCESS)
             return (time_format_failure(reported_error));
@@ -109,9 +141,17 @@ ft_string    time_format_iso8601_with_offset(t_time time_value, int offset_minut
     if (!time_pointer)
     {
         mutex_result = g_gmtime_mutex.unlock(THREAD_ID);
-        mutex_error = (((&g_gmtime_mutex) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
+        if ((&g_gmtime_mutex) == ft_nullptr)
+            mutex_error = FT_ERR_SUCCESSS;
+        else
+            mutex_error = ft_global_error_stack_pop_newest();
         {
-            int reported_error = mutex_error != FT_ERR_SUCCESSS ? mutex_error : mutex_result;
+            int reported_error;
+
+            if (mutex_error != FT_ERR_SUCCESSS)
+                reported_error = mutex_error;
+            else
+                reported_error = mutex_result;
 
             if (reported_error != FT_SUCCESS)
                 return (time_format_failure(reported_error));
@@ -120,9 +160,17 @@ ft_string    time_format_iso8601_with_offset(t_time time_value, int offset_minut
     }
     time_storage = *time_pointer;
     mutex_result = g_gmtime_mutex.unlock(THREAD_ID);
-    mutex_error = (((&g_gmtime_mutex) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
+    if ((&g_gmtime_mutex) == ft_nullptr)
+        mutex_error = FT_ERR_SUCCESSS;
+    else
+        mutex_error = ft_global_error_stack_pop_newest();
     {
-        int reported_error = mutex_error != FT_ERR_SUCCESSS ? mutex_error : mutex_result;
+        int reported_error;
+
+        if (mutex_error != FT_ERR_SUCCESSS)
+            reported_error = mutex_error;
+        else
+            reported_error = mutex_result;
 
         if (reported_error != FT_SUCCESS)
             return (time_format_failure(reported_error));

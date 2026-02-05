@@ -110,7 +110,10 @@ ft_stringbuf::ft_stringbuf(const ft_stringbuf &other) noexcept
     int string_error;
 
     string_error = ft_string::last_operation_error();
-    ft_global_error_stack_push(string_error != FT_ERR_SUCCESSS ? string_error : FT_ERR_SUCCESSS);
+    if (string_error != FT_ERR_SUCCESSS)
+        ft_global_error_stack_push(string_error);
+    else
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -189,7 +192,10 @@ ft_stringbuf &ft_stringbuf::operator=(ft_stringbuf &&other) noexcept
     int string_error;
 
     string_error = ft_string::last_operation_error();
-    ft_global_error_stack_push(string_error != FT_ERR_SUCCESSS ? string_error : FT_ERR_SUCCESSS);
+    if (string_error != FT_ERR_SUCCESSS)
+        ft_global_error_stack_push(string_error);
+    else
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (*this);
 }
 

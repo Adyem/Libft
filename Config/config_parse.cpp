@@ -64,7 +64,12 @@ int cnfg_config_prepare_thread_safety(cnfg_config *config)
         return (-1);
     }
     {
-        int mutex_error = (((mutex_pointer) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
+        int mutex_error;
+
+        if (mutex_pointer == ft_nullptr)
+            mutex_error = FT_ERR_SUCCESSS;
+        else
+            mutex_error = ft_global_error_stack_pop_newest();
 
         if (mutex_error != FT_ERR_SUCCESSS)
         {
@@ -143,7 +148,12 @@ void cnfg_free(cnfg_config *config)
     if (already_owned)
     {
         config->mutex->unlock(THREAD_ID);
-        int unlock_error = (((config->mutex) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
+        int unlock_error;
+
+        if (config->mutex == ft_nullptr)
+            unlock_error = FT_ERR_SUCCESSS;
+        else
+            unlock_error = ft_global_error_stack_pop_newest();
 
         if (unlock_error != FT_ERR_SUCCESSS)
             ft_global_error_stack_push(unlock_error);

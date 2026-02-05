@@ -5,7 +5,6 @@
 #include "../Template/vector.hpp"
 #include "../Template/map.hpp"
 #include "../Parser/document_backend.hpp"
-#include "../Errno/errno_internal.hpp"
 
 class pt_mutex;
 
@@ -19,11 +18,7 @@ enum yaml_type
 class yaml_value
 {
     private:
-        mutable int _error_code;
-        void set_error(int error_code) const noexcept;
-        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
-        void record_operation_error_unlocked(int error_code) const noexcept;
-
+        
         yaml_type _type;
         ft_string _scalar;
         ft_vector<yaml_value*> _list;
@@ -61,9 +56,6 @@ class yaml_value
         yaml_value &operator=(const yaml_value &) = delete;
         yaml_value(yaml_value &&) = delete;
         yaml_value &operator=(yaml_value &&) = delete;
-
-        int get_error() const noexcept;
-        const char *get_error_str() const noexcept;
 
         void set_type(yaml_type type) noexcept;
         yaml_type get_type() const noexcept;

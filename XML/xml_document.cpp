@@ -476,7 +476,15 @@ static const char *parse_node(const char *string, xml_node **out_node,
     {
         delete node;
         if (error_code_out)
-            *error_code_out = thread_error != FT_ERR_SUCCESSS ? thread_error : FT_ERR_INTERNAL;
+        {
+            int reported_error;
+
+            if (thread_error != FT_ERR_SUCCESSS)
+                reported_error = thread_error;
+            else
+                reported_error = FT_ERR_INTERNAL;
+            *error_code_out = reported_error;
+        }
         return (ft_nullptr);
     }
     char quote_character = '\0';
@@ -530,8 +538,15 @@ static const char *parse_node(const char *string, xml_node **out_node,
         {
             delete node;
             if (error_code_out)
-                *error_code_out = attribute_error != FT_ERR_SUCCESSS
-                        ? attribute_error : FT_ERR_INVALID_ARGUMENT;
+            {
+                int reported_error;
+
+                if (attribute_error != FT_ERR_SUCCESSS)
+                    reported_error = attribute_error;
+                else
+                    reported_error = FT_ERR_INVALID_ARGUMENT;
+                *error_code_out = reported_error;
+            }
             return (ft_nullptr);
         }
     }
@@ -572,8 +587,15 @@ static const char *parse_node(const char *string, xml_node **out_node,
             {
                 delete node;
                 if (error_code_out)
-                    *error_code_out = child_error != FT_ERR_SUCCESSS
-                            ? child_error : FT_ERR_INVALID_ARGUMENT;
+                {
+                    int reported_error;
+
+                    if (child_error != FT_ERR_SUCCESSS)
+                        reported_error = child_error;
+                    else
+                        reported_error = FT_ERR_INVALID_ARGUMENT;
+                    *error_code_out = reported_error;
+                }
                 return (ft_nullptr);
             }
             node->children.push_back(child);
@@ -763,13 +785,23 @@ static int read_file_content(const char *file_path, char **out_content)
     FILE *file = std::fopen(file_path, "rb");
     if (!file)
     {
-        int error_code = errno ? ft_map_system_error(errno) : FT_ERR_INVALID_ARGUMENT;
+        int error_code;
+
+        if (errno != 0)
+            error_code = ft_map_system_error(errno);
+        else
+            error_code = FT_ERR_INVALID_ARGUMENT;
         return (error_code);
     }
     errno = 0;
     if (std::fseek(file, 0, SEEK_END) != 0)
     {
-        int error_code = errno ? ft_map_system_error(errno) : FT_ERR_INVALID_ARGUMENT;
+        int error_code;
+
+        if (errno != 0)
+            error_code = ft_map_system_error(errno);
+        else
+            error_code = FT_ERR_INVALID_ARGUMENT;
         std::fclose(file);
         return (error_code);
     }
@@ -782,7 +814,12 @@ static int read_file_content(const char *file_path, char **out_content)
     errno = 0;
     if (std::fseek(file, 0, SEEK_SET) != 0)
     {
-        int error_code = errno ? ft_map_system_error(errno) : FT_ERR_INVALID_ARGUMENT;
+        int error_code;
+
+        if (errno != 0)
+            error_code = ft_map_system_error(errno);
+        else
+            error_code = FT_ERR_INVALID_ARGUMENT;
         std::fclose(file);
         return (error_code);
     }
@@ -798,7 +835,12 @@ static int read_file_content(const char *file_path, char **out_content)
     if (read_size != static_cast<size_t>(size))
     {
         cma_free(buffer);
-        int error_code = errno ? ft_map_system_error(errno) : FT_ERR_INVALID_ARGUMENT;
+        int error_code;
+
+        if (errno != 0)
+            error_code = ft_map_system_error(errno);
+        else
+            error_code = FT_ERR_INVALID_ARGUMENT;
         return (error_code);
     }
     buffer[size] = '\0';
@@ -1023,7 +1065,10 @@ int xml_document::write_to_file(const char *file_path) const noexcept
     FILE *file = std::fopen(file_path, "wb");
     if (!file)
     {
-        error_code = errno ? ft_map_system_error(errno) : FT_ERR_INVALID_ARGUMENT;
+        if (errno != 0)
+            error_code = ft_map_system_error(errno);
+        else
+            error_code = FT_ERR_INVALID_ARGUMENT;
         this->record_operation_error(error_code);
         cma_free(content);
         return (error_code);
@@ -1033,7 +1078,10 @@ int xml_document::write_to_file(const char *file_path) const noexcept
     size_t written = std::fwrite(content, 1, length, file);
     if (written != length)
     {
-        error_code = errno ? ft_map_system_error(errno) : FT_ERR_INVALID_ARGUMENT;
+        if (errno != 0)
+            error_code = ft_map_system_error(errno);
+        else
+            error_code = FT_ERR_INVALID_ARGUMENT;
         std::fclose(file);
         this->record_operation_error(error_code);
         cma_free(content);
@@ -1042,7 +1090,10 @@ int xml_document::write_to_file(const char *file_path) const noexcept
     errno = 0;
     if (std::fclose(file) != 0)
     {
-        error_code = errno ? ft_map_system_error(errno) : FT_ERR_INVALID_ARGUMENT;
+        if (errno != 0)
+            error_code = ft_map_system_error(errno);
+        else
+            error_code = FT_ERR_INVALID_ARGUMENT;
         this->record_operation_error(error_code);
         cma_free(content);
         return (error_code);
@@ -1146,7 +1197,12 @@ int xml_document::prepare_thread_safety() noexcept
         this->record_operation_error(FT_ERR_NO_MEMORY);
         return (-1);
     }
-    int mutex_error = (((mutex_pointer) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
+    int mutex_error;
+
+    if (mutex_pointer == ft_nullptr)
+        mutex_error = FT_ERR_SUCCESSS;
+    else
+        mutex_error = ft_global_error_stack_pop_newest();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         delete mutex_pointer;
@@ -1182,8 +1238,18 @@ int xml_document::lock(bool *lock_acquired) const noexcept
         return (0);
     }
     int mutex_result = this->_mutex->lock(THREAD_ID);
-    int mutex_error = (((this->_mutex) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
-    int reported_error = mutex_error != FT_ERR_SUCCESSS ? mutex_error : mutex_result;
+    int mutex_error;
+
+    if (this->_mutex == ft_nullptr)
+        mutex_error = FT_ERR_SUCCESSS;
+    else
+        mutex_error = ft_global_error_stack_pop_newest();
+    int reported_error;
+
+    if (mutex_error != FT_ERR_SUCCESSS)
+        reported_error = mutex_error;
+    else
+        reported_error = mutex_result;
     if (reported_error != FT_ERR_SUCCESSS)
     {
         this->record_operation_error(reported_error);
@@ -1200,8 +1266,18 @@ void xml_document::unlock(bool lock_acquired) const noexcept
     if (!lock_acquired || !this->_thread_safe_enabled || !this->_mutex)
         return ;
     int mutex_result = this->_mutex->unlock(THREAD_ID);
-    int mutex_error = (((this->_mutex) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
-    int reported_error = mutex_error != FT_ERR_SUCCESSS ? mutex_error : mutex_result;
+    int mutex_error;
+
+    if (this->_mutex == ft_nullptr)
+        mutex_error = FT_ERR_SUCCESSS;
+    else
+        mutex_error = ft_global_error_stack_pop_newest();
+    int reported_error;
+
+    if (mutex_error != FT_ERR_SUCCESSS)
+        reported_error = mutex_error;
+    else
+        reported_error = mutex_result;
     if (reported_error != FT_ERR_SUCCESSS)
     {
         this->record_operation_error(reported_error);

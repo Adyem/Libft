@@ -198,7 +198,13 @@ json_group *serialize_equipment(const ft_character &character)
         return (ft_nullptr);
     }
     ft_sharedptr<ft_item> head = character.get_equipped_item(EQUIP_HEAD);
-    json_item *present = json_create_item("head_present", head ? 1 : 0);
+    int head_present_value;
+
+    if (head)
+        head_present_value = 1;
+    else
+        head_present_value = 0;
+    json_item *present = json_create_item("head_present", head_present_value);
     if (!present)
     {
         json_free_groups(group);
@@ -213,7 +219,13 @@ json_group *serialize_equipment(const ft_character &character)
         return (ft_nullptr);
     }
     ft_sharedptr<ft_item> chest = character.get_equipped_item(EQUIP_CHEST);
-    present = json_create_item("chest_present", chest ? 1 : 0);
+    int chest_present_value;
+
+    if (chest)
+        chest_present_value = 1;
+    else
+        chest_present_value = 0;
+    present = json_create_item("chest_present", chest_present_value);
     if (!present)
     {
         json_free_groups(group);
@@ -228,7 +240,13 @@ json_group *serialize_equipment(const ft_character &character)
         return (ft_nullptr);
     }
     ft_sharedptr<ft_item> weapon = character.get_equipped_item(EQUIP_WEAPON);
-    present = json_create_item("weapon_present", weapon ? 1 : 0);
+    int weapon_present_value;
+
+    if (weapon)
+        weapon_present_value = 1;
+    else
+        weapon_present_value = 0;
+    present = json_create_item("weapon_present", weapon_present_value);
     if (!present)
     {
         json_free_groups(group);
@@ -362,4 +380,3 @@ json_group *serialize_quest(const ft_quest &quest)
     ft_errno = FT_ERR_SUCCESSS;
     return (group);
 }
-

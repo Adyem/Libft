@@ -25,7 +25,12 @@ static void ft_error_stack_shift_frames(ft_error_frame frames[], uint32_t &depth
 {
     if (depth < ft_error_stack_capacity)
         depth++;
-    ft_size_t index = depth > 0 ? depth - 1 : 0;
+    ft_size_t index;
+
+    if (depth > 0)
+        index = depth - 1;
+    else
+        index = 0;
 
     while (index > 0)
     {

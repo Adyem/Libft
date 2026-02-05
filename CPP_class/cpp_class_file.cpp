@@ -320,7 +320,9 @@ int ft_file::open(const char* filename, int flags, mode_t mode) noexcept
     if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
         final_error = unlock_error;
     ft_global_error_stack_push(final_error);
-    return (final_error == FT_ERR_SUCCESSS ? 0 : 1);
+    if (final_error == FT_ERR_SUCCESSS)
+        return (0);
+    return (1);
 }
 
 int ft_file::open(const char* filename, int flags) noexcept
@@ -359,7 +361,9 @@ int ft_file::open(const char* filename, int flags) noexcept
     if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
         final_error = unlock_error;
     ft_global_error_stack_push(final_error);
-    return (final_error == FT_ERR_SUCCESSS ? 0 : 1);
+    if (final_error == FT_ERR_SUCCESSS)
+        return (0);
+    return (1);
 }
 
 int ft_file::get_fd() const

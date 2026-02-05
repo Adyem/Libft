@@ -77,18 +77,10 @@ void    su_service_force_no_fork(bool enable)
 
 static int  su_service_redirect_standard_streams(int *error_code)
 {
-#if defined(_WIN32) || defined(_WIN64)
     const char  *null_path;
-#else
-    const char  *null_path;
-#endif
     FILE        *stream;
 
-#if defined(_WIN32) || defined(_WIN64)
-    null_path = "NUL";
-#else
-    null_path = "/dev/null";
-#endif
+    null_path = cmp_service_null_device_path();
     stream = std::freopen(null_path, "r", stdin);
     if (!stream)
     {
@@ -148,22 +140,14 @@ static int  su_service_write_pid_file(const char *pid_file_path, int *error_code
             *error_code = FT_ERR_SUCCESSS;
         return (0);
     }
-#if defined(_WIN32) || defined(_WIN64)
-    unsigned long pid_value;
-
-    pid_value = static_cast<unsigned long>(_getpid());
-#else
-    pid_t pid_value;
-
-    pid_value = getpid();
-#endif
     std::memset(buffer, 0, sizeof(buffer));
-#if defined(_WIN32) || defined(_WIN64)
-    std::snprintf(buffer, sizeof(buffer), "%lu\n", pid_value);
-#else
-    std::snprintf(buffer, sizeof(buffer), "%ld\n", static_cast<long>(pid_value));
-#endif
-    length = std::strlen(buffer);
+    int pid_error = cmp_service_format_pid_line(buffer, sizeof(buffer), &length);
+    if (pid_error != FT_ERR_SUCCESSS)
+    {
+        if (error_code != ft_nullptr)
+            *error_code = pid_error;
+        return (-1);
+    }
     file_descriptor = su_open(pid_file_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     local_error_code = ft_global_error_stack_pop_newest();
     if (file_descriptor < 0)

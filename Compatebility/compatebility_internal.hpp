@@ -77,6 +77,7 @@ int cmp_file_move(const char *source_path, const char *destination_path, int *er
 int cmp_file_copy(const char *source_path, const char *destination_path, int *error_code_out);
 int cmp_file_create_directory(const char *path, mode_t mode, int *error_code_out);
 int cmp_file_get_permissions(const char *path, mode_t *mode_out, int *error_code_out);
+int cmp_file_last_error(void);
 
 int cmp_thread_equal(pthread_t thread1, pthread_t thread2);
 int cmp_thread_cancel(pthread_t thread);
@@ -111,6 +112,8 @@ std::time_t cmp_timegm(std::tm *time_pointer);
 int cmp_localtime(const std::time_t *time_value, std::tm *output);
 int cmp_time_get_time_of_day(struct timeval *time_value);
 int cmp_high_resolution_time(long long *nanoseconds_out);
+const char *cmp_service_null_device_path(void);
+int cmp_service_format_pid_line(char *buffer, size_t buffer_size, size_t *length_out);
 
 ssize_t cmp_su_write(int file_descriptor, const char *buffer, size_t length);
 ssize_t cmp_socket_send_all(ft_socket *socket_object, const void *buffer,

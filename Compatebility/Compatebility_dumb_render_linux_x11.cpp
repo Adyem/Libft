@@ -295,7 +295,10 @@ static void ft_render_x11_send_fullscreen_message(ft_render_x11_state *state, bo
     event.xclient.window = state->window;
     event.xclient.message_type = state->net_wm_state;
     event.xclient.format = 32;
-    event.xclient.data.l[0] = enabled ? 1 : 0;
+    if (enabled)
+        event.xclient.data.l[0] = 1;
+    else
+        event.xclient.data.l[0] = 0;
     event.xclient.data.l[1] = static_cast<long>(state->net_wm_state_fullscreen);
     event.xclient.data.l[2] = 0;
     event.xclient.data.l[3] = 1;

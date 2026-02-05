@@ -12,7 +12,6 @@ typedef double (*math_unary_function)(double value, void *user_data);
 class ft_cubic_spline
 {
     private:
-        mutable int _error_code;
         mutable pt_recursive_mutex _mutex;
 
     public:
@@ -28,9 +27,6 @@ class ft_cubic_spline
         ft_cubic_spline(const ft_cubic_spline &other) = delete;
         ft_cubic_spline &operator=(const ft_cubic_spline &other) = delete;
         ~ft_cubic_spline() noexcept;
-        int get_error() const noexcept;
-        const char *get_error_str() const noexcept;
-        void set_error(int error_code) const noexcept;
         pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 };
 

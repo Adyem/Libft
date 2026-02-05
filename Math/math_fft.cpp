@@ -127,7 +127,13 @@ static int math_fft_iterative(ft_vector<double> &real,
         size_t block_start;
 
         step = half_size << 1;
-        angle = (inverse ? 2.0 : -2.0) * FFT_PI / static_cast<double>(step);
+        double angle_multiplier;
+
+        if (inverse)
+            angle_multiplier = 2.0;
+        else
+            angle_multiplier = -2.0;
+        angle = angle_multiplier * FFT_PI / static_cast<double>(step);
         phase_step_real = std::cos(angle);
         phase_step_imag = std::sin(angle);
         block_start = 0;

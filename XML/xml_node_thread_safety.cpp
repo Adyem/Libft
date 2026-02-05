@@ -26,7 +26,12 @@ int xml_node_prepare_thread_safety(xml_node *node) noexcept
         ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (-1);
     }
-    int mutex_error_code = (((mutex_pointer) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
+    int mutex_error_code;
+
+    if (mutex_pointer == ft_nullptr)
+        mutex_error_code = FT_ERR_SUCCESSS;
+    else
+        mutex_error_code = ft_global_error_stack_pop_newest();
     if (mutex_error_code != FT_ERR_SUCCESSS)
     {
         delete mutex_pointer;
@@ -70,9 +75,19 @@ int xml_node_lock(const xml_node *node, bool *lock_acquired) noexcept
         return (0);
     }
     int mutex_result = mutable_node->mutex->lock(THREAD_ID);
-    int mutex_error_code = (((mutable_node->mutex) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
+    int mutex_error_code;
+
+    if (mutable_node->mutex == ft_nullptr)
+        mutex_error_code = FT_ERR_SUCCESSS;
+    else
+        mutex_error_code = ft_global_error_stack_pop_newest();
     {
-        int reported_error = mutex_error_code != FT_ERR_SUCCESSS ? mutex_error_code : mutex_result;
+        int reported_error;
+
+        if (mutex_error_code != FT_ERR_SUCCESSS)
+            reported_error = mutex_error_code;
+        else
+            reported_error = mutex_result;
 
         if (reported_error != FT_ERR_SUCCESSS)
         {
@@ -105,9 +120,19 @@ void xml_node_unlock(const xml_node *node, bool lock_acquired) noexcept
         return ;
     }
     int mutex_result = mutable_node->mutex->unlock(THREAD_ID);
-    int mutex_error_code = (((mutable_node->mutex) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
+    int mutex_error_code;
+
+    if (mutable_node->mutex == ft_nullptr)
+        mutex_error_code = FT_ERR_SUCCESSS;
+    else
+        mutex_error_code = ft_global_error_stack_pop_newest();
     {
-        int reported_error = mutex_error_code != FT_ERR_SUCCESSS ? mutex_error_code : mutex_result;
+        int reported_error;
+
+        if (mutex_error_code != FT_ERR_SUCCESSS)
+            reported_error = mutex_error_code;
+        else
+            reported_error = mutex_result;
 
         if (reported_error != FT_ERR_SUCCESSS)
         {

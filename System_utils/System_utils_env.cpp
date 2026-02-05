@@ -9,10 +9,6 @@
 #include <cerrno>
 #include <utility>
 #include "../Template/move.hpp"
-#if defined(_WIN32) || defined(_WIN64)
-# include <windows.h>
-#endif
-
 static pt_mutex g_env_mutex;
 
 static int su_environment_unlock_with_error(int error_code)
@@ -194,33 +190,17 @@ int su_putenv(char *string)
         ft_global_error_stack_push(FT_ERR_SYS_MUTEX_LOCK_FAILED);
         return (-1);
     }
-    error_code = FT_ERR_SUCCESSS;
     errno = 0;
     result = cmp_putenv(string);
     if (result != 0)
     {
-#if defined(_WIN32) || defined(_WIN64)
-        DWORD last_error;
-
-        last_error = GetLastError();
-        if (last_error != 0)
-            error_code = ft_map_system_error(static_cast<int>(last_error));
-        else if (errno != 0)
-            error_code = ft_map_system_error(errno);
-        else
-            error_code = FT_ERR_INVALID_ARGUMENT;
-#else
-        if (errno != 0)
-            error_code = ft_map_system_error(errno);
-        else
-            error_code = FT_ERR_INVALID_ARGUMENT;
-#endif
     }
     if (g_env_mutex.unlock(THREAD_ID) != FT_SUCCESS)
     {
         ft_global_error_stack_push(FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
         return (-1);
     }
+    error_code = cmp_last_error();
     if (result != 0)
     {
         ft_global_error_stack_push(error_code);

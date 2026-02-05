@@ -6,19 +6,11 @@
 #include <ctime>
 #include <cstddef>
 
-#if defined(_WIN32) || defined(_WIN64)
-# include <windows.h>
-#endif
-
 static t_su_write_syscall_hook    g_su_write_syscall_hook = ft_nullptr;
 
 static ssize_t    su_default_write_syscall(int file_descriptor, const void *buffer, size_t count)
 {
-#if defined(_WIN32) || defined(_WIN64)
-    return (cmp_write(file_descriptor, buffer, static_cast<unsigned int>(count)));
-#else
     return (cmp_write(file_descriptor, buffer, count));
-#endif
 }
 
 void    su_set_write_syscall_hook(t_su_write_syscall_hook hook)
@@ -57,17 +49,7 @@ ssize_t su_read(int file_descriptor, void *buffer, size_t count)
             ft_global_error_stack_push(FT_ERR_SUCCESSS);
             return (read_result);
         }
-        error_code = FT_ERR_IO;
-#if defined(_WIN32) || defined(_WIN64)
-        DWORD last_error;
-
-        last_error = GetLastError();
-        if (last_error != 0)
-            error_code = ft_map_system_error(static_cast<int>(last_error));
-#else
-        if (errno != 0)
-            error_code = ft_map_system_error(errno);
-#endif
+        error_code = cmp_file_last_error();
 #if defined(__linux__) || defined(__APPLE__)
         const int max_retries = 10;
         const int retry_delay_ms = 500;
@@ -133,17 +115,7 @@ ssize_t su_write(int file_descriptor, const void *buffer, size_t count)
             }
             int error_code;
 
-            error_code = FT_ERR_IO;
-#if defined(_WIN32) || defined(_WIN64)
-            DWORD last_error;
-
-            last_error = GetLastError();
-            if (last_error != 0)
-                error_code = ft_map_system_error(static_cast<int>(last_error));
-#else
-            if (errno != 0)
-                error_code = ft_map_system_error(errno);
-#endif
+            error_code = cmp_file_last_error();
 #if defined(__linux__) || defined(__APPLE__)
             const int max_retries = 10;
             const int retry_delay_ms = 500;
@@ -187,19 +159,7 @@ int su_close(int file_descriptor)
     close_result = cmp_close(file_descriptor);
     if (close_result != 0)
     {
-        int error_code;
-
-        error_code = FT_ERR_IO;
-#if defined(_WIN32) || defined(_WIN64)
-        DWORD last_error;
-
-        last_error = GetLastError();
-        if (last_error != 0)
-            error_code = ft_map_system_error(static_cast<int>(last_error));
-#else
-        if (errno != 0)
-            error_code = ft_map_system_error(errno);
-#endif
+        int error_code = cmp_file_last_error();
         ft_global_error_stack_push(error_code);
         return (close_result);
     }

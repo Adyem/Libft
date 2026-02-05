@@ -7,6 +7,7 @@
 #include <ctime>
 #include <cerrno>
 #include <cstring>
+#include <cstdio>
 
 static thread_local int g_cmp_last_error = FT_ERR_SUCCESSS;
 
@@ -19,6 +20,35 @@ void cmp_set_last_error(int error_code)
 int cmp_last_error(void)
 {
     return (g_cmp_last_error);
+}
+
+const char *cmp_service_null_device_path(void)
+{
+#if defined(_WIN32) || defined(_WIN64)
+    return ("NUL");
+#else
+    return ("/dev/null");
+#endif
+}
+
+int cmp_service_format_pid_line(char *buffer, size_t buffer_size,
+    size_t *length_out)
+{
+    if (!buffer || buffer_size == 0)
+        return (FT_ERR_INVALID_ARGUMENT);
+#if defined(_WIN32) || defined(_WIN64)
+    unsigned long pid_value = static_cast<unsigned long>(_getpid());
+    int formatted = std::snprintf(buffer, buffer_size, "%lu\n", pid_value);
+#else
+    pid_t pid_value = getpid();
+    int formatted = std::snprintf(buffer, buffer_size, "%ld\n",
+        static_cast<long>(pid_value));
+#endif
+    if (formatted < 0 || static_cast<size_t>(formatted) >= buffer_size)
+        return (FT_ERR_IO);
+    if (length_out != ft_nullptr)
+        *length_out = static_cast<size_t>(formatted);
+    return (FT_ERR_SUCCESSS);
 }
 
 void cmp_set_force_unsetenv_result(int result, int errno_value);
@@ -41,6 +71,7 @@ void cmp_clear_force_total_memory_result(void);
 # include <winsock2.h>
 # include <windows.h>
 # include <sysinfoapi.h>
+# include <process.h>
 #else
 # include <unistd.h>
 # if defined(__APPLE__) && defined(__MACH__)

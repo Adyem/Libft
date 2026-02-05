@@ -2,7 +2,6 @@
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
-#include "../Errno/errno_internal.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread.hpp"
 
@@ -43,8 +42,7 @@ bool html_document::thread_guard::lock_acquired() const noexcept
 }
 
 html_document::html_document() noexcept
-    : _root(ft_nullptr), _mutex(ft_nullptr), _thread_safe_enabled(false),
-      _operation_errors({{}, {}, 0})
+    : _root(ft_nullptr), _mutex(ft_nullptr), _thread_safe_enabled(false)
 {
     this->set_error(FT_ERR_SUCCESSS);
     if (this->prepare_thread_safety() != 0)
@@ -400,7 +398,7 @@ int html_document::get_error() const noexcept
     thread_guard guard(this);
 
     (void)guard;
-    return (ft_operation_error_stack_last_error(&this->_operation_errors));
+    return (ft_global_error_stack_last_error());
 }
 
 const char *html_document::get_error_str() const noexcept
@@ -453,18 +451,12 @@ void html_document::record_operation_error(int error_code) const noexcept
     unsigned long long operation_id = ft_errno_next_operation_id();
 
     ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(&this->_operation_errors, error_code, operation_id);
     return ;
 }
 
 pt_mutex *html_document::get_mutex_for_validation() const noexcept
 {
     return (this->_mutex);
-}
-
-ft_operation_error_stack *html_document::operation_error_stack_handle() const noexcept
-{
-    return (&this->_operation_errors);
 }
 
 int html_document::prepare_thread_safety() noexcept
@@ -484,7 +476,12 @@ int html_document::prepare_thread_safety() noexcept
         return (-1);
     }
     mutex_pointer = new(memory) pt_mutex();
-    int mutex_error = (((mutex_pointer) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
+    int mutex_error;
+
+    if (mutex_pointer == ft_nullptr)
+        mutex_error = FT_ERR_SUCCESSS;
+    else
+        mutex_error = ft_global_error_stack_pop_newest();
 
     if (mutex_error != FT_ERR_SUCCESSS)
     {
@@ -522,7 +519,12 @@ int html_document::lock(bool *lock_acquired) const noexcept
         return (0);
     }
     this->_mutex->lock(THREAD_ID);
-    int mutex_error = (((this->_mutex) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
+    int mutex_error;
+
+    if (this->_mutex == ft_nullptr)
+        mutex_error = FT_ERR_SUCCESSS;
+    else
+        mutex_error = ft_global_error_stack_pop_newest();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         const_cast<html_document *>(this)->set_error(mutex_error);
@@ -540,7 +542,12 @@ void html_document::unlock(bool lock_acquired) const noexcept
         return ;
     }
     this->_mutex->unlock(THREAD_ID);
-    int mutex_error = (((this->_mutex) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
+    int mutex_error;
+
+    if (this->_mutex == ft_nullptr)
+        mutex_error = FT_ERR_SUCCESSS;
+    else
+        mutex_error = ft_global_error_stack_pop_newest();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         const_cast<html_document *>(this)->set_error(mutex_error);

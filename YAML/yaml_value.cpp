@@ -15,16 +15,6 @@ static int yaml_value_pop_string_error(const ft_string &string_value) noexcept
     return (string_value.pop_operation_error(operation_id));
 }
 
-void yaml_value::record_operation_error_unlocked(int error_code) const noexcept
-{
-    unsigned long long operation_id;
-
-    operation_id = ft_global_error_stack_push_entry(error_code);
-    ft_operation_error_stack_push(&this->_operation_errors,
-            error_code, operation_id);
-    return ;
-}
-
 yaml_value::thread_guard::thread_guard(const yaml_value *value) noexcept
     : _value(value), _lock_acquired(false), _status(0)
 {
@@ -42,7 +32,7 @@ yaml_value::thread_guard::~thread_guard() noexcept
 
     unlock_error = this->_value->unlock(this->_lock_acquired);
     if (unlock_error != FT_ERR_SUCCESSS)
-        this->_value->set_error(unlock_error);
+        ft_global_error_stack_push_entry(unlock_error);
     return ;
 }
 
@@ -60,7 +50,7 @@ yaml_value::yaml_value() noexcept
 {
     this->_mutex = ft_nullptr;
     this->_thread_safe_enabled = false;
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push_entry(FT_ERR_SUCCESSS);
     this->_type = YAML_SCALAR;
     this->_scalar = "";
     {
@@ -68,7 +58,7 @@ yaml_value::yaml_value() noexcept
 
         if (scalar_error != FT_ERR_SUCCESSS)
         {
-            this->set_error(scalar_error);
+            ft_global_error_stack_push_entry(scalar_error);
             return ;
         }
     }
@@ -77,10 +67,10 @@ yaml_value::yaml_value() noexcept
     prepare_error = this->prepare_thread_safety();
     if (prepare_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(prepare_error);
+        ft_global_error_stack_push_entry(prepare_error);
         return ;
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push_entry(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -99,7 +89,7 @@ yaml_value::~yaml_value() noexcept
                 list_index = 0;
                 list_size = this->_list.size();
                 if (this->_list.get_error() != FT_ERR_SUCCESSS)
-                    this->set_error(this->_list.get_error());
+                    ft_global_error_stack_push_entry(this->_list.get_error());
                 else
                 {
                     while (list_index < list_size)
@@ -109,7 +99,7 @@ yaml_value::~yaml_value() noexcept
                         child = this->_list[list_index];
                         if (this->_list.get_error() != FT_ERR_SUCCESSS)
                         {
-                            this->set_error(this->_list.get_error());
+                            ft_global_error_stack_push_entry(this->_list.get_error());
                             break ;
                         }
                         delete child;
@@ -125,7 +115,7 @@ yaml_value::~yaml_value() noexcept
                 key_index = 0;
                 key_count = this->_map_keys.size();
                 if (this->_map_keys.get_error() != FT_ERR_SUCCESSS)
-                    this->set_error(this->_map_keys.get_error());
+                    ft_global_error_stack_push_entry(this->_map_keys.get_error());
                 else
                 {
                     while (key_index < key_count)
@@ -135,13 +125,13 @@ yaml_value::~yaml_value() noexcept
 
                         if (this->_map_keys.get_error() != FT_ERR_SUCCESSS)
                         {
-                            this->set_error(this->_map_keys.get_error());
+                            ft_global_error_stack_push_entry(this->_map_keys.get_error());
                             break ;
                         }
                         child = this->_map.at(key);
                         if (this->_map.last_operation_error() != FT_ERR_SUCCESSS)
                         {
-                            this->set_error(this->_map.last_operation_error());
+                            ft_global_error_stack_push_entry(this->_map.last_operation_error());
                             break ;
                         }
                         delete child;
@@ -151,34 +141,12 @@ yaml_value::~yaml_value() noexcept
             }
         }
         else
-            this->set_error(guard.get_status());
+            ft_global_error_stack_push_entry(guard.get_status());
     }
     this->teardown_thread_safety();
     return ;
 }
 
-void yaml_value::set_error(int error_code) const noexcept
-{
-    this->_error_code = error_code;
-    this->record_operation_error_unlocked(error_code);
-    return ;
-}
-
-int yaml_value::get_error() const noexcept
-{
-    int error_code;
-
-    error_code = this->_error_code;
-    return (error_code);
-}
-
-const char *yaml_value::get_error_str() const noexcept
-{
-    int error_code;
-
-    error_code = this->_error_code;
-    return (ft_strerror(error_code));
-}
 
 void yaml_value::set_type(yaml_type type) noexcept
 {
@@ -187,7 +155,7 @@ void yaml_value::set_type(yaml_type type) noexcept
     if (guard.get_status() != 0)
         return ;
     this->_type = type;
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push_entry(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -197,10 +165,10 @@ yaml_type yaml_value::get_type() const noexcept
 
     if (guard.get_status() != 0)
     {
-        const_cast<yaml_value *>(this)->set_error(guard.get_status());
+        ft_global_error_stack_push_entry(guard.get_status());
         return (this->_type);
     }
-    const_cast<yaml_value *>(this)->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push_entry(FT_ERR_SUCCESSS);
     return (this->_type);
 }
 
@@ -217,11 +185,11 @@ void yaml_value::set_scalar(const ft_string &value) noexcept
 
         if (scalar_error != FT_ERR_SUCCESSS)
         {
-            this->set_error(scalar_error);
+            ft_global_error_stack_push_entry(scalar_error);
             return ;
         }
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push_entry(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -231,10 +199,10 @@ const ft_string &yaml_value::get_scalar() const noexcept
 
     if (guard.get_status() != 0)
     {
-        const_cast<yaml_value *>(this)->set_error(guard.get_status());
+        ft_global_error_stack_push_entry(guard.get_status());
         return (this->_scalar);
     }
-    const_cast<yaml_value *>(this)->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push_entry(FT_ERR_SUCCESSS);
     return (this->_scalar);
 }
 
@@ -248,10 +216,10 @@ void yaml_value::add_list_item(yaml_value *item) noexcept
     this->_list.push_back(item);
     if (this->_list.get_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(this->_list.get_error());
+        ft_global_error_stack_push_entry(this->_list.get_error());
         return ;
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push_entry(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -261,10 +229,10 @@ const ft_vector<yaml_value*> &yaml_value::get_list() const noexcept
 
     if (guard.get_status() != 0)
     {
-        const_cast<yaml_value *>(this)->set_error(guard.get_status());
+        ft_global_error_stack_push_entry(guard.get_status());
         return (this->_list);
     }
-    const_cast<yaml_value *>(this)->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push_entry(FT_ERR_SUCCESSS);
     return (this->_list);
 }
 
@@ -278,16 +246,16 @@ void yaml_value::add_map_item(const ft_string &key, yaml_value *value) noexcept
     this->_map.insert(key, value);
     if (this->_map.last_operation_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(this->_map.last_operation_error());
+        ft_global_error_stack_push_entry(this->_map.last_operation_error());
         return ;
     }
     this->_map_keys.push_back(key);
     if (this->_map_keys.get_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(this->_map_keys.get_error());
+        ft_global_error_stack_push_entry(this->_map_keys.get_error());
         return ;
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push_entry(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -297,10 +265,10 @@ const ft_map<ft_string, yaml_value*> &yaml_value::get_map() const noexcept
 
     if (guard.get_status() != 0)
     {
-        const_cast<yaml_value *>(this)->set_error(guard.get_status());
+        ft_global_error_stack_push_entry(guard.get_status());
         return (this->_map);
     }
-    const_cast<yaml_value *>(this)->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push_entry(FT_ERR_SUCCESSS);
     return (this->_map);
 }
 
@@ -310,10 +278,10 @@ const ft_vector<ft_string> &yaml_value::get_map_keys() const noexcept
 
     if (guard.get_status() != 0)
     {
-        const_cast<yaml_value *>(this)->set_error(guard.get_status());
+        ft_global_error_stack_push_entry(guard.get_status());
         return (this->_map_keys);
     }
-    const_cast<yaml_value *>(this)->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push_entry(FT_ERR_SUCCESSS);
     return (this->_map_keys);
 }
 
@@ -323,15 +291,15 @@ bool yaml_value::is_thread_safe_enabled() const noexcept
 
     if (guard.get_status() != 0)
     {
-        const_cast<yaml_value *>(this)->set_error(guard.get_status());
+        ft_global_error_stack_push_entry(guard.get_status());
         return (false);
     }
     if (!this->_thread_safe_enabled || !this->_mutex)
     {
-        const_cast<yaml_value *>(this)->set_error(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push_entry(FT_ERR_SUCCESSS);
         return (false);
     }
-    const_cast<yaml_value *>(this)->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push_entry(FT_ERR_SUCCESSS);
     return (true);
 }
 

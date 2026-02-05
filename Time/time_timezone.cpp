@@ -20,9 +20,17 @@ static bool load_utc_time(std::time_t standard_time, std::tm *utc_out)
         return (false);
     }
     mutex_result = g_gmtime_mutex.lock(THREAD_ID);
-    mutex_error = (((&g_gmtime_mutex) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
+    if ((&g_gmtime_mutex) == ft_nullptr)
+        mutex_error = FT_ERR_SUCCESSS;
+    else
+        mutex_error = ft_global_error_stack_pop_newest();
     {
-        int reported_error = mutex_error != FT_ERR_SUCCESSS ? mutex_error : mutex_result;
+        int reported_error;
+
+        if (mutex_error != FT_ERR_SUCCESSS)
+            reported_error = mutex_error;
+        else
+            reported_error = mutex_result;
 
         if (reported_error != FT_SUCCESS)
         {
@@ -34,9 +42,17 @@ static bool load_utc_time(std::time_t standard_time, std::tm *utc_out)
     if (!utc_pointer)
     {
         mutex_result = g_gmtime_mutex.unlock(THREAD_ID);
-        mutex_error = (((&g_gmtime_mutex) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
+        if ((&g_gmtime_mutex) == ft_nullptr)
+            mutex_error = FT_ERR_SUCCESSS;
+        else
+            mutex_error = ft_global_error_stack_pop_newest();
         {
-            int reported_error = mutex_error != FT_ERR_SUCCESSS ? mutex_error : mutex_result;
+            int reported_error;
+
+            if (mutex_error != FT_ERR_SUCCESSS)
+                reported_error = mutex_error;
+            else
+                reported_error = mutex_result;
 
             if (reported_error != FT_SUCCESS)
             {
@@ -49,9 +65,17 @@ static bool load_utc_time(std::time_t standard_time, std::tm *utc_out)
     }
     *utc_out = *utc_pointer;
     mutex_result = g_gmtime_mutex.unlock(THREAD_ID);
-    mutex_error = (((&g_gmtime_mutex) == ft_nullptr) ? FT_ERR_SUCCESSS : ft_global_error_stack_pop_newest());
+    if ((&g_gmtime_mutex) == ft_nullptr)
+        mutex_error = FT_ERR_SUCCESSS;
+    else
+        mutex_error = ft_global_error_stack_pop_newest();
     {
-        int reported_error = mutex_error != FT_ERR_SUCCESSS ? mutex_error : mutex_result;
+        int reported_error;
+
+        if (mutex_error != FT_ERR_SUCCESSS)
+            reported_error = mutex_error;
+        else
+            reported_error = mutex_result;
 
         if (reported_error != FT_SUCCESS)
         {

@@ -38,7 +38,13 @@ static int xml_dom_populate_node_locked(const xml_node *source, ft_dom_node *tar
 
     node_name = source->name;
     if (!node_name || node_name[0] == '\0')
-        node_name = source->local_name ? source->local_name : "";
+    {
+        const char *local_name = source->local_name;
+
+        if (!local_name)
+            local_name = "";
+        node_name = local_name;
+    }
     if (target->set_name(node_name) != 0)
         return (-1);
     target->set_type(FT_DOM_NODE_ELEMENT);
@@ -73,8 +79,12 @@ static int xml_dom_populate_node_locked(const xml_node *source, ft_dom_node *tar
         const char *attribute_name;
         const char *attribute_value;
 
-        attribute_name = entry.first ? entry.first : "";
-        attribute_value = entry.second ? entry.second : "";
+        attribute_name = entry.first;
+        if (!attribute_name)
+            attribute_name = "";
+        attribute_value = entry.second;
+        if (!attribute_value)
+            attribute_value = "";
         if (target->add_attribute(attribute_name, attribute_value) != 0)
             return (-1);
         ++attribute_iterator;
