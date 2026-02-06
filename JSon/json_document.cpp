@@ -23,7 +23,7 @@ static void json_document_push_error(int error_code)
 
 static int json_document_last_error(void)
 {
-    return (ft_global_error_stack_last_error());
+    return (ft_global_error_stack_peek_last_error());
 }
 
 static char *json_document_unescape_pointer_token(const char *start, size_t length) noexcept
@@ -74,7 +74,7 @@ static void json_document_finalize_guard(ft_unique_lock<pt_mutex> &guard) noexce
 
     if (guard.owns_lock())
         guard.unlock();
-    int guard_error = ft_global_error_stack_pop_newest();
+    int guard_error = ft_global_error_stack_drop_last_error();
 
     if (guard_error != FT_ERR_SUCCESSS)
     {
@@ -107,7 +107,7 @@ int json_document::lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept
 {
     ft_unique_lock<pt_mutex> local_guard(this->_mutex);
     {
-        int lock_error = ft_global_error_stack_pop_newest();
+        int lock_error = ft_global_error_stack_drop_last_error();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {

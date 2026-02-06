@@ -89,7 +89,7 @@ static int su_copy_file_streams(su_file *source_stream, su_file *destination_str
     while (result == 0)
     {
         size_t bytes_read = su_fread(buffer, 1, sizeof(buffer), source_stream);
-        int read_error = ft_global_error_stack_pop_newest();
+        int read_error = ft_global_error_stack_drop_last_error();
         if (bytes_read == 0)
         {
             if (read_error == FT_ERR_SUCCESSS)
@@ -105,7 +105,7 @@ static int su_copy_file_streams(su_file *source_stream, su_file *destination_str
             break;
         }
         size_t bytes_written = su_fwrite(buffer, 1, bytes_read, destination_stream);
-        int write_error = ft_global_error_stack_pop_newest();
+        int write_error = ft_global_error_stack_drop_last_error();
         if (bytes_written != bytes_read)
         {
             if (write_error == FT_ERR_SUCCESSS)
@@ -142,30 +142,30 @@ int su_copy_file(const char *source_path, const char *destination_path)
     source_stream = su_fopen(source_path, O_RDONLY);
     if (source_stream == ft_nullptr)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_FILE_OPEN_FAILED;
         ft_global_error_stack_push(error_code);
         return (-1);
     }
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     destination_stream = su_fopen(destination_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (destination_stream == ft_nullptr)
     {
         su_fclose(source_stream);
-        ft_global_error_stack_pop_newest();
-        error_code = ft_global_error_stack_pop_newest();
+        ft_global_error_stack_drop_last_error();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_FILE_OPEN_FAILED;
         ft_global_error_stack_push(error_code);
         return (-1);
     }
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     result = su_copy_file_streams(source_stream, destination_stream, &error_code);
     close_error = su_fclose(source_stream);
     if (close_error != 0)
     {
-        int close_error_code = ft_global_error_stack_pop_newest();
+        int close_error_code = ft_global_error_stack_drop_last_error();
 
         if (result == 0)
         {
@@ -176,11 +176,11 @@ int su_copy_file(const char *source_path, const char *destination_path)
         }
     }
     else
-        ft_global_error_stack_pop_newest();
+        ft_global_error_stack_drop_last_error();
     close_error = su_fclose(destination_stream);
     if (close_error != 0)
     {
-        int close_error_code = ft_global_error_stack_pop_newest();
+        int close_error_code = ft_global_error_stack_drop_last_error();
 
         if (result == 0)
         {
@@ -191,7 +191,7 @@ int su_copy_file(const char *source_path, const char *destination_path)
         }
     }
     else
-        ft_global_error_stack_pop_newest();
+        ft_global_error_stack_drop_last_error();
     if (result == 0)
         error_code = FT_ERR_SUCCESSS;
     ft_global_error_stack_push(error_code);
@@ -265,7 +265,7 @@ static int su_copy_directory_contents(const char *source_path, const char *desti
             continue;
         ft_string source_child = su_join_paths(source_path, directory_entry->d_name);
         {
-            int path_error = ft_global_error_stack_pop_newest();
+            int path_error = ft_global_error_stack_drop_last_error();
 
             if (path_error != FT_ERR_SUCCESSS)
             {
@@ -276,7 +276,7 @@ static int su_copy_directory_contents(const char *source_path, const char *desti
         }
         ft_string destination_child = su_join_paths(destination_path, directory_entry->d_name);
         {
-            int path_error = ft_global_error_stack_pop_newest();
+            int path_error = ft_global_error_stack_drop_last_error();
 
             if (path_error != FT_ERR_SUCCESSS)
             {
@@ -326,11 +326,11 @@ static int su_copy_directory_contents(const char *source_path, const char *desti
             }
             if (su_copy_file(source_child.c_str(), destination_child.c_str()) != 0)
             {
-                error_code = ft_global_error_stack_pop_newest();
+                error_code = ft_global_error_stack_drop_last_error();
                 result = -1;
                 break;
             }
-            ft_global_error_stack_pop_newest();
+            ft_global_error_stack_drop_last_error();
         }
         else
         {

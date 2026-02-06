@@ -21,7 +21,7 @@ static void json_schema_push_error(int error_code)
 
 static int json_schema_last_error(void)
 {
-    return (ft_global_error_stack_last_error());
+    return (ft_global_error_stack_peek_last_error());
 }
 
 struct json_schema_migration_step
@@ -95,7 +95,7 @@ int json_register_schema_migration(const ft_string &schema_name,
     pt_mutex &mutex = json_schema_registry_mutex();
     ft_unique_lock<pt_mutex> guard(mutex);
     {
-        int lock_error = ft_global_error_stack_pop_newest();
+        int lock_error = ft_global_error_stack_drop_last_error();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {
@@ -180,7 +180,7 @@ int json_apply_schema_migrations(json_document &document,
         pt_mutex &mutex = json_schema_registry_mutex();
         ft_unique_lock<pt_mutex> guard(mutex);
         {
-            int lock_error = ft_global_error_stack_pop_newest();
+            int lock_error = ft_global_error_stack_drop_last_error();
 
             if (lock_error != FT_ERR_SUCCESSS)
             {
@@ -253,7 +253,7 @@ int json_get_latest_schema_version(const ft_string &schema_name,
     pt_mutex &mutex = json_schema_registry_mutex();
     ft_unique_lock<pt_mutex> guard(mutex);
     {
-        int lock_error = ft_global_error_stack_pop_newest();
+        int lock_error = ft_global_error_stack_drop_last_error();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {

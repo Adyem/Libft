@@ -13,7 +13,7 @@ static int cnfg_config_lock_if_enabled(cnfg_config *config, ft_unique_lock<pt_mu
     if (!config || !config->thread_safe_enabled || !config->mutex)
         return (FT_ERR_SUCCESSS);
     mutex_guard = ft_unique_lock<pt_mutex>(*config->mutex);
-    return (ft_global_error_stack_pop_newest());
+    return (ft_global_error_stack_drop_last_error());
 }
 
 static void cnfg_config_unlock_guard(ft_unique_lock<pt_mutex> &mutex_guard)
@@ -28,7 +28,7 @@ static int config_handle_write_failure(FILE *file)
 {
     int error_code;
 
-    error_code = ft_global_error_stack_last_error();
+    error_code = ft_global_error_stack_peek_last_error();
     if (file)
         ft_fclose(file);
     if (error_code == FT_ERR_SUCCESSS)

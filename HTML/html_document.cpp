@@ -7,7 +7,7 @@
 
 static int html_document_consume_last_error(bool repush_failure = true)
 {
-    int last_error = ft_global_error_stack_pop_newest();
+    int last_error = ft_global_error_stack_drop_last_error();
 
     if (repush_failure && last_error != FT_ERR_SUCCESSS)
         ft_global_error_stack_push(last_error);
@@ -398,7 +398,7 @@ int html_document::get_error() const noexcept
     thread_guard guard(this);
 
     (void)guard;
-    return (ft_global_error_stack_last_error());
+    return (ft_global_error_stack_peek_last_error());
 }
 
 const char *html_document::get_error_str() const noexcept
@@ -481,7 +481,7 @@ int html_document::prepare_thread_safety() noexcept
     if (mutex_pointer == ft_nullptr)
         mutex_error = FT_ERR_SUCCESSS;
     else
-        mutex_error = ft_global_error_stack_pop_newest();
+        mutex_error = ft_global_error_stack_drop_last_error();
 
     if (mutex_error != FT_ERR_SUCCESSS)
     {
@@ -524,7 +524,7 @@ int html_document::lock(bool *lock_acquired) const noexcept
     if (this->_mutex == ft_nullptr)
         mutex_error = FT_ERR_SUCCESSS;
     else
-        mutex_error = ft_global_error_stack_pop_newest();
+        mutex_error = ft_global_error_stack_drop_last_error();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         const_cast<html_document *>(this)->set_error(mutex_error);
@@ -547,7 +547,7 @@ void html_document::unlock(bool lock_acquired) const noexcept
     if (this->_mutex == ft_nullptr)
         mutex_error = FT_ERR_SUCCESSS;
     else
-        mutex_error = ft_global_error_stack_pop_newest();
+        mutex_error = ft_global_error_stack_drop_last_error();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         const_cast<html_document *>(this)->set_error(mutex_error);

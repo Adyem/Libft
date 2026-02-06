@@ -25,7 +25,7 @@ int ft_file_watch::watch_directory(const char *path, void (*callback)(const char
     {
         ft_thread new_thread;
         ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
-        int mutex_error = ft_global_error_stack_pop_newest();
+        int mutex_error = ft_global_error_stack_drop_last_error();
 
         if (mutex_error != FT_ERR_SUCCESSS)
         {
@@ -42,7 +42,7 @@ int ft_file_watch::watch_directory(const char *path, void (*callback)(const char
                 mutex_guard.unlock();
                 this->stop();
                 mutex_guard = ft_unique_lock<pt_mutex>(this->_mutex);
-                int relock_error = ft_global_error_stack_pop_newest();
+                int relock_error = ft_global_error_stack_drop_last_error();
 
                 if (relock_error != FT_ERR_SUCCESSS)
                     status = relock_error;
@@ -109,7 +109,7 @@ void ft_file_watch::stop()
     {
         ft_thread thread_to_join;
         ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
-        int mutex_error = ft_global_error_stack_pop_newest();
+        int mutex_error = ft_global_error_stack_drop_last_error();
 
         if (mutex_error != FT_ERR_SUCCESSS)
         {
@@ -152,7 +152,7 @@ bool ft_file_watch::snapshot_callback(void (**callback)(const char *, int, void 
     bool running;
 
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
-    int mutex_error = ft_global_error_stack_pop_newest();
+    int mutex_error = ft_global_error_stack_drop_last_error();
 
     if (mutex_error != FT_ERR_SUCCESSS)
     {

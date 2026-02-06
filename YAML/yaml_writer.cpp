@@ -31,7 +31,7 @@ static int write_node(const yaml_value *value, ft_string &output, int indent) no
 
     value_type = value->get_type();
     {
-        int yaml_value_error = ft_global_error_stack_pop_newest();
+        int yaml_value_error = ft_global_error_stack_drop_last_error();
 
         if (yaml_value_error != FT_ERR_SUCCESSS)
             return (yaml_value_error);
@@ -45,7 +45,7 @@ static int write_node(const yaml_value *value, ft_string &output, int indent) no
             return (indent_error);
         const ft_string &scalar = value->get_scalar();
             {
-                int yaml_value_error = ft_global_error_stack_pop_newest();
+                int yaml_value_error = ft_global_error_stack_drop_last_error();
 
                 if (yaml_value_error != FT_ERR_SUCCESSS)
                     return (yaml_value_error);
@@ -66,7 +66,7 @@ static int write_node(const yaml_value *value, ft_string &output, int indent) no
     {
         const ft_vector<yaml_value*> &list_ref = value->get_list();
         {
-            int yaml_value_error = ft_global_error_stack_pop_newest();
+            int yaml_value_error = ft_global_error_stack_drop_last_error();
 
             if (yaml_value_error != FT_ERR_SUCCESSS)
                 return (yaml_value_error);
@@ -89,7 +89,7 @@ static int write_node(const yaml_value *value, ft_string &output, int indent) no
             {
                 yaml_type item_type = item->get_type();
                 {
-                    int yaml_value_error = ft_global_error_stack_pop_newest();
+                    int yaml_value_error = ft_global_error_stack_drop_last_error();
 
                     if (yaml_value_error != FT_ERR_SUCCESSS)
                         return (yaml_value_error);
@@ -111,7 +111,7 @@ static int write_node(const yaml_value *value, ft_string &output, int indent) no
                 }
                 const ft_string &scalar = item->get_scalar();
                 {
-                    int yaml_value_error = ft_global_error_stack_pop_newest();
+                    int yaml_value_error = ft_global_error_stack_drop_last_error();
 
                     if (yaml_value_error != FT_ERR_SUCCESSS)
                         return (yaml_value_error);
@@ -153,14 +153,14 @@ static int write_node(const yaml_value *value, ft_string &output, int indent) no
     {
         const ft_map<ft_string, yaml_value*> &map_ref = value->get_map();
         {
-            int yaml_value_error = ft_global_error_stack_pop_newest();
+            int yaml_value_error = ft_global_error_stack_drop_last_error();
 
             if (yaml_value_error != FT_ERR_SUCCESSS)
                 return (yaml_value_error);
         }
         const ft_vector<ft_string> &keys = value->get_map_keys();
         {
-            int yaml_value_error = ft_global_error_stack_pop_newest();
+            int yaml_value_error = ft_global_error_stack_drop_last_error();
 
             if (yaml_value_error != FT_ERR_SUCCESSS)
                 return (yaml_value_error);
@@ -186,7 +186,7 @@ static int write_node(const yaml_value *value, ft_string &output, int indent) no
             {
                 yaml_type child_type = child->get_type();
                 {
-                    int yaml_value_error = ft_global_error_stack_pop_newest();
+                    int yaml_value_error = ft_global_error_stack_drop_last_error();
 
                     if (yaml_value_error != FT_ERR_SUCCESSS)
                         return (yaml_value_error);
@@ -213,7 +213,7 @@ static int write_node(const yaml_value *value, ft_string &output, int indent) no
                 }
                 const ft_string &scalar = child->get_scalar();
                 {
-                    int yaml_value_error = ft_global_error_stack_pop_newest();
+                    int yaml_value_error = ft_global_error_stack_drop_last_error();
 
                     if (yaml_value_error != FT_ERR_SUCCESSS)
                         return (yaml_value_error);
@@ -285,7 +285,7 @@ int yaml_write_to_file(const char *file_path, const yaml_value *value) noexcept
         ft_string output = yaml_write_to_string(value);
         int serialize_error;
 
-        serialize_error = ft_global_error_stack_pop_newest();
+        serialize_error = ft_global_error_stack_drop_last_error();
         if (serialize_error != FT_ERR_SUCCESSS)
         {
             final_error = serialize_error;
@@ -296,7 +296,7 @@ int yaml_write_to_file(const char *file_path, const yaml_value *value) noexcept
             su_file *file;
 
             file = su_fopen(file_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-            int open_error = ft_global_error_stack_pop_newest();
+            int open_error = ft_global_error_stack_drop_last_error();
             if (file == ft_nullptr)
             {
                 if (open_error != FT_ERR_SUCCESSS)
@@ -314,13 +314,13 @@ int yaml_write_to_file(const char *file_path, const yaml_value *value) noexcept
                 data = output.c_str();
                 expected_size = output.size();
                 written = su_fwrite(data, 1, expected_size, file);
-                int write_error = ft_global_error_stack_pop_newest();
+                int write_error = ft_global_error_stack_drop_last_error();
                 if (written != expected_size)
                 {
                     int close_error;
 
                     close_error = su_fclose(file);
-                    int close_status = ft_global_error_stack_pop_newest();
+                    int close_status = ft_global_error_stack_drop_last_error();
                     if (close_error != 0 && write_error == FT_ERR_SUCCESSS)
                         write_error = close_status;
                     if (write_error != FT_ERR_SUCCESSS)
@@ -336,7 +336,7 @@ int yaml_write_to_file(const char *file_path, const yaml_value *value) noexcept
                     int close_result;
 
                     close_result = su_fclose(file);
-                    int close_error = ft_global_error_stack_pop_newest();
+                    int close_error = ft_global_error_stack_drop_last_error();
                     if (close_result != 0)
                     {
                         if (close_error != FT_ERR_SUCCESSS)
@@ -362,7 +362,7 @@ int yaml_write_to_backend(ft_document_sink &sink, const yaml_value *value) noexc
     int serialize_error;
 
     serialized = yaml_write_to_string(value);
-    serialize_error = ft_global_error_stack_pop_newest();
+    serialize_error = ft_global_error_stack_drop_last_error();
     if (serialize_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(serialize_error);

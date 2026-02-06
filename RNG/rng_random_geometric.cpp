@@ -29,7 +29,7 @@ int ft_random_geometric(double success_probability)
     while (1)
     {
         random_value = static_cast<double>(ft_random_float());
-        int error_code = ft_global_error_stack_pop_newest();
+        int error_code = ft_global_error_stack_drop_last_error();
         if (error_code != FT_ERR_SUCCESSS)
         {
             ft_global_error_stack_push(error_code);

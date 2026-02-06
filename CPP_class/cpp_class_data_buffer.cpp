@@ -2,44 +2,78 @@
 #include "../Libft/libft.hpp"
 #include <utility>
 #include "../Template/move.hpp"
-#include "../PThread/pthread.hpp"
+#include "../PThread/pthread_internal.hpp"
 
-static int data_buffer_lock_mutex(const pt_recursive_mutex &mutex)
+int DataBuffer::lock_mutex(void) const noexcept
 {
-    int error = mutex.lock(THREAD_ID);
-    ft_global_error_stack_pop_newest();
-    return (error);
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    return (pt_recursive_mutex_lock_with_error(*this->_mutex));
 }
 
-static int data_buffer_unlock_mutex(const pt_recursive_mutex &mutex)
+int DataBuffer::unlock_mutex(void) const noexcept
 {
-    int error = mutex.unlock(THREAD_ID);
-    ft_global_error_stack_pop_newest();
-    return (error);
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    return (pt_recursive_mutex_unlock_with_error(*this->_mutex));
 }
 
-int DataBuffer::lock_self() const noexcept
+int DataBuffer::prepare_thread_safety(void) noexcept
 {
-    return (data_buffer_lock_mutex(this->_mutex));
+    if (this->_mutex != ft_nullptr)
+    {
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESSS);
+    }
+    pt_recursive_mutex *mutex_pointer = ft_nullptr;
+    int mutex_error = pt_recursive_mutex_create_with_error(&mutex_pointer);
+    if (mutex_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(mutex_error);
+        return (mutex_error);
+    }
+    this->_mutex = mutex_pointer;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
 }
 
-int DataBuffer::unlock_self() const noexcept
+void DataBuffer::teardown_thread_safety(void) noexcept
 {
-    return (data_buffer_unlock_mutex(this->_mutex));
+    pt_recursive_mutex_destroy(&this->_mutex);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return ;
+}
+
+int DataBuffer::enable_thread_safety(void) noexcept
+{
+    return (this->prepare_thread_safety());
+}
+
+void DataBuffer::disable_thread_safety(void) noexcept
+{
+    this->teardown_thread_safety();
+    return ;
+}
+
+bool DataBuffer::is_thread_safe_enabled(void) const noexcept
+{
+    return (this->_mutex != ft_nullptr);
 }
 
 int DataBuffer::lock_pair(const DataBuffer &first, const DataBuffer &second,
         const DataBuffer *&lower, const DataBuffer *&upper) noexcept
 {
-    const DataBuffer *ordered_first = &first;
-    const DataBuffer *ordered_second = &second;
+    const DataBuffer *ordered_first;
+    const DataBuffer *ordered_second;
 
     if (&first == &second)
     {
         lower = &first;
         upper = &first;
-        return (data_buffer_lock_mutex(first._mutex));
+        return (first.lock_mutex());
     }
+    ordered_first = &first;
+    ordered_second = &second;
     if (ordered_first > ordered_second)
     {
         const DataBuffer *temporary = ordered_first;
@@ -51,20 +85,20 @@ int DataBuffer::lock_pair(const DataBuffer &first, const DataBuffer &second,
     upper = ordered_second;
     while (true)
     {
-        int lower_error = data_buffer_lock_mutex(lower->_mutex);
+        int lower_error = lower->lock_mutex();
 
         if (lower_error != FT_ERR_SUCCESSS)
             return (lower_error);
-        int upper_error = data_buffer_lock_mutex(upper->_mutex);
+        int upper_error = upper->lock_mutex();
 
         if (upper_error == FT_ERR_SUCCESSS)
             return (FT_ERR_SUCCESSS);
         if (upper_error != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            data_buffer_unlock_mutex(lower->_mutex);
+            lower->unlock_mutex();
             return (upper_error);
         }
-        data_buffer_unlock_mutex(lower->_mutex);
+        lower->unlock_mutex();
         DataBuffer::sleep_backoff();
     }
 }
@@ -76,13 +110,13 @@ int DataBuffer::unlock_pair(const DataBuffer *lower, const DataBuffer *upper) no
 
     if (upper != ft_nullptr)
     {
-        error = data_buffer_unlock_mutex(upper->_mutex);
+        error = upper->unlock_mutex();
         if (error != FT_ERR_SUCCESSS)
             final_error = error;
     }
     if (lower != ft_nullptr && lower != upper)
     {
-        error = data_buffer_unlock_mutex(lower->_mutex);
+        error = lower->unlock_mutex();
         if (error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
             final_error = error;
     }
@@ -103,7 +137,7 @@ int DataBuffer::write_length_locked(size_t len) noexcept
     while (index < sizeof(size_t))
     {
         this->_buffer.push_back(ptr[index]);
-        int buffer_error = ft_global_error_stack_last_error();
+        int buffer_error = ft_global_error_stack_peek_last_error();
         if (buffer_error != FT_ERR_SUCCESSS)
             return (buffer_error);
         ++index;
@@ -121,15 +155,17 @@ int DataBuffer::read_length_locked(size_t &len) noexcept
 }
 
 DataBuffer::DataBuffer() noexcept
-    : _buffer(), _read_pos(0), _ok(true), _mutex()
+    : _buffer(), _read_pos(0), _ok(true), _mutex(ft_nullptr)
 {
+    this->enable_thread_safety();
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
 DataBuffer::DataBuffer(const DataBuffer &other) noexcept
-    : _buffer(), _read_pos(0), _ok(true), _mutex()
+    : _buffer(), _read_pos(0), _ok(true), _mutex(ft_nullptr)
 {
+    this->enable_thread_safety();
     int lock_error;
     const DataBuffer *lower = ft_nullptr;
     const DataBuffer *upper = ft_nullptr;
@@ -146,7 +182,7 @@ DataBuffer::DataBuffer(const DataBuffer &other) noexcept
     while (index < other_size)
     {
         this->_buffer.push_back(other._buffer[index]);
-        int buffer_error = ft_global_error_stack_last_error();
+        int buffer_error = ft_global_error_stack_peek_last_error();
         if (buffer_error != FT_ERR_SUCCESSS)
         {
             this->_ok = false;
@@ -168,8 +204,9 @@ DataBuffer::DataBuffer(const DataBuffer &other) noexcept
 }
 
 DataBuffer::DataBuffer(DataBuffer&& other) noexcept
-    : _buffer(), _read_pos(0), _ok(true), _mutex()
+    : _buffer(), _read_pos(0), _ok(true), _mutex(ft_nullptr)
 {
+    this->enable_thread_safety();
     int lock_error;
     const DataBuffer *lower = ft_nullptr;
     const DataBuffer *upper = ft_nullptr;
@@ -218,7 +255,7 @@ DataBuffer &DataBuffer::operator=(const DataBuffer &other) noexcept
     while (index < other_size)
     {
         this->_buffer.push_back(other._buffer[index]);
-        int buffer_error = ft_global_error_stack_last_error();
+        int buffer_error = ft_global_error_stack_peek_last_error();
         if (buffer_error != FT_ERR_SUCCESSS)
         {
             this->_ok = false;
@@ -272,13 +309,14 @@ DataBuffer &DataBuffer::operator=(DataBuffer &&other) noexcept
 
 DataBuffer::~DataBuffer() noexcept
 {
+    this->disable_thread_safety();
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
 void DataBuffer::clear() noexcept
 {
-    int lock_error = this->lock_self();
+    int lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(lock_error);
@@ -287,7 +325,7 @@ void DataBuffer::clear() noexcept
     this->_buffer.clear();
     this->_read_pos = 0;
     this->_ok = true;
-    int unlock_error = data_buffer_unlock_mutex(this->_mutex);
+    int unlock_error = this->unlock_mutex();
     int final_error = FT_ERR_SUCCESSS;
     if (unlock_error != FT_ERR_SUCCESSS)
         final_error = unlock_error;
@@ -297,14 +335,14 @@ void DataBuffer::clear() noexcept
 
 size_t DataBuffer::size() const noexcept
 {
-    int lock_error = this->lock_self();
+    int lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(lock_error);
         return (0);
     }
     size_t result = this->_buffer.size();
-    int unlock_error = data_buffer_unlock_mutex(this->_mutex);
+    int unlock_error = this->unlock_mutex();
     int final_error = FT_ERR_SUCCESSS;
     if (unlock_error != FT_ERR_SUCCESSS)
         final_error = unlock_error;
@@ -314,14 +352,14 @@ size_t DataBuffer::size() const noexcept
 
 const ft_vector<uint8_t>& DataBuffer::data() const noexcept
 {
-    int lock_error = this->lock_self();
+    int lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(lock_error);
         return (this->_buffer);
     }
     const ft_vector<uint8_t> *buffer_reference = &this->_buffer;
-    int unlock_error = data_buffer_unlock_mutex(this->_mutex);
+    int unlock_error = this->unlock_mutex();
     int final_error = FT_ERR_SUCCESSS;
     if (unlock_error != FT_ERR_SUCCESSS)
         final_error = unlock_error;
@@ -331,14 +369,14 @@ const ft_vector<uint8_t>& DataBuffer::data() const noexcept
 
 size_t DataBuffer::tell() const noexcept
 {
-    int lock_error = this->lock_self();
+    int lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(lock_error);
         return (0);
     }
     size_t position = this->_read_pos;
-    int unlock_error = data_buffer_unlock_mutex(this->_mutex);
+    int unlock_error = this->unlock_mutex();
     int final_error = FT_ERR_SUCCESSS;
     if (unlock_error != FT_ERR_SUCCESSS)
         final_error = unlock_error;
@@ -348,7 +386,7 @@ size_t DataBuffer::tell() const noexcept
 
 bool DataBuffer::seek(size_t pos) noexcept
 {
-    int lock_error = this->lock_self();
+    int lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(lock_error);
@@ -370,7 +408,7 @@ bool DataBuffer::seek(size_t pos) noexcept
         result = false;
         final_error = FT_ERR_INVALID_ARGUMENT;
     }
-    int unlock_error = data_buffer_unlock_mutex(this->_mutex);
+    int unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
         final_error = unlock_error;
     ft_global_error_stack_push(final_error);
@@ -379,7 +417,7 @@ bool DataBuffer::seek(size_t pos) noexcept
 
 DataBuffer::operator bool() const noexcept
 {
-    int lock_error = this->lock_self();
+    int lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(lock_error);
@@ -392,7 +430,7 @@ DataBuffer::operator bool() const noexcept
         final_error = FT_ERR_SUCCESSS;
     else
         final_error = FT_ERR_INTERNAL;
-    int unlock_error = data_buffer_unlock_mutex(this->_mutex);
+    int unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
         final_error = unlock_error;
     ft_global_error_stack_push(final_error);
@@ -401,7 +439,7 @@ DataBuffer::operator bool() const noexcept
 
 bool DataBuffer::good() const noexcept
 {
-    int lock_error = this->lock_self();
+    int lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(lock_error);
@@ -414,7 +452,7 @@ bool DataBuffer::good() const noexcept
         final_error = FT_ERR_SUCCESSS;
     else
         final_error = FT_ERR_INTERNAL;
-    int unlock_error = data_buffer_unlock_mutex(this->_mutex);
+    int unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
         final_error = unlock_error;
     ft_global_error_stack_push(final_error);
@@ -423,7 +461,7 @@ bool DataBuffer::good() const noexcept
 
 bool DataBuffer::bad() const noexcept
 {
-    int lock_error = this->lock_self();
+    int lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(lock_error);
@@ -431,7 +469,7 @@ bool DataBuffer::bad() const noexcept
     }
     bool result = !this->_ok;
     int final_error = FT_ERR_SUCCESSS;
-    int unlock_error = data_buffer_unlock_mutex(this->_mutex);
+    int unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
         final_error = unlock_error;
     ft_global_error_stack_push(final_error);
@@ -440,7 +478,7 @@ bool DataBuffer::bad() const noexcept
 
 DataBuffer &DataBuffer::operator<<(size_t len)
 {
-    int lock_error = this->lock_self();
+    int lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(lock_error);
@@ -451,7 +489,7 @@ DataBuffer &DataBuffer::operator<<(size_t len)
         this->_ok = true;
     else
         this->_ok = false;
-    int unlock_error = data_buffer_unlock_mutex(this->_mutex);
+    int unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
         final_error = unlock_error;
     ft_global_error_stack_push(final_error);
@@ -460,7 +498,7 @@ DataBuffer &DataBuffer::operator<<(size_t len)
 
 DataBuffer &DataBuffer::operator>>(size_t &len)
 {
-    int lock_error = this->lock_self();
+    int lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(lock_error);
@@ -471,7 +509,7 @@ DataBuffer &DataBuffer::operator>>(size_t &len)
         this->_ok = true;
     else
         this->_ok = false;
-    int unlock_error = data_buffer_unlock_mutex(this->_mutex);
+    int unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
         final_error = unlock_error;
     ft_global_error_stack_push(final_error);

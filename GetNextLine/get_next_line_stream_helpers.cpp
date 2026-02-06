@@ -56,7 +56,7 @@ int ft_read_file_lines(int fd, ft_vector<ft_string> &lines, std::size_t buffer_s
         line_pointer = get_next_line(fd, buffer_size);
         if (!line_pointer)
         {
-            error_code = ft_global_error_stack_pop_newest();
+            error_code = ft_global_error_stack_drop_last_error();
             if (error_code == FT_ERR_SUCCESSS || error_code == FT_ERR_END_OF_FILE)
             {
                 finished = true;
@@ -64,7 +64,7 @@ int ft_read_file_lines(int fd, ft_vector<ft_string> &lines, std::size_t buffer_s
             else
             {
                 gnl_clear_stream(fd);
-                ft_global_error_stack_pop_newest();
+                ft_global_error_stack_drop_last_error();
                 ft_global_error_stack_push(error_code);
                 return (-1);
             }
@@ -73,11 +73,11 @@ int ft_read_file_lines(int fd, ft_vector<ft_string> &lines, std::size_t buffer_s
         {
             int line_error;
 
-            line_error = ft_global_error_stack_pop_newest();
+            line_error = ft_global_error_stack_drop_last_error();
             if (line_error != FT_ERR_SUCCESSS)
             {
                 gnl_clear_stream(fd);
-                ft_global_error_stack_pop_newest();
+                ft_global_error_stack_drop_last_error();
                 ft_global_error_stack_push(line_error);
                 if (line_pointer)
                     cma_free(line_pointer);
@@ -87,14 +87,14 @@ int ft_read_file_lines(int fd, ft_vector<ft_string> &lines, std::size_t buffer_s
             if (append_status != FT_ERR_SUCCESSS)
             {
                 gnl_clear_stream(fd);
-                ft_global_error_stack_pop_newest();
+                ft_global_error_stack_drop_last_error();
                 ft_global_error_stack_push(append_status);
                 return (-1);
             }
         }
     }
     clear_status = gnl_clear_stream(fd);
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     if (clear_status != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(clear_status);
@@ -135,7 +135,7 @@ int ft_open_and_read_file(const char *path, ft_vector<ft_string> &lines, std::si
         return (-1);
     }
     read_result = ft_read_file_lines(file_descriptor, lines, buffer_size);
-    read_error = ft_global_error_stack_pop_newest();
+    read_error = ft_global_error_stack_drop_last_error();
     close_result = close(file_descriptor);
     if (close_result != 0)
     {

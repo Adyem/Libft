@@ -3,16 +3,19 @@
 
 #include "../Errno/errno.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 
 class vector2
 {
     private:
         double _x;
         double _y;
-        mutable pt_recursive_mutex _mutex;
-        mutable bool _thread_safe_enabled = false;
+        pt_recursive_mutex *_mutex = ft_nullptr;
 
         friend class matrix2;
+
+        int prepare_thread_safety(void) noexcept;
+        void teardown_thread_safety(void) noexcept;
 
         int lock_mutex() const noexcept;
         int unlock_mutex() const noexcept;
@@ -50,10 +53,12 @@ class vector3
         double _x;
         double _y;
         double _z;
-        mutable pt_recursive_mutex _mutex;
-        mutable bool _thread_safe_enabled = false;
+        pt_recursive_mutex *_mutex = ft_nullptr;
 
         friend class matrix3;
+
+        int prepare_thread_safety(void) noexcept;
+        void teardown_thread_safety(void) noexcept;
 
         int lock_mutex() const noexcept;
         int unlock_mutex() const noexcept;
@@ -94,10 +99,12 @@ class vector4
         double _y;
         double _z;
         double _w;
-        mutable pt_recursive_mutex _mutex;
-        mutable bool _thread_safe_enabled = false;
+        pt_recursive_mutex *_mutex = ft_nullptr;
 
         friend class matrix4;
+
+        int prepare_thread_safety(void) noexcept;
+        void teardown_thread_safety(void) noexcept;
 
         int lock_mutex() const noexcept;
         int unlock_mutex() const noexcept;
@@ -135,8 +142,10 @@ class matrix2
 {
     private:
         double _m[2][2];
-        mutable pt_recursive_mutex _mutex;
-        mutable bool _thread_safe_enabled = false;
+        pt_recursive_mutex *_mutex = ft_nullptr;
+
+        int prepare_thread_safety(void) noexcept;
+        void teardown_thread_safety(void) noexcept;
 
         int lock_mutex() const noexcept;
         int unlock_mutex() const noexcept;
@@ -169,8 +178,10 @@ class matrix3
 {
     private:
         double _m[3][3];
-        mutable pt_recursive_mutex _mutex;
-        mutable bool _thread_safe_enabled = false;
+        pt_recursive_mutex *_mutex = ft_nullptr;
+
+        int prepare_thread_safety(void) noexcept;
+        void teardown_thread_safety(void) noexcept;
 
         int lock_mutex() const noexcept;
         int unlock_mutex() const noexcept;
@@ -204,8 +215,10 @@ class matrix4
 {
     private:
         double _m[4][4];
-        mutable pt_recursive_mutex _mutex;
-        mutable bool _thread_safe_enabled = false;
+        pt_recursive_mutex *_mutex = ft_nullptr;
+
+        int prepare_thread_safety(void) noexcept;
+        void teardown_thread_safety(void) noexcept;
 
         int lock_mutex() const noexcept;
         int unlock_mutex() const noexcept;

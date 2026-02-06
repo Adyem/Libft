@@ -81,7 +81,7 @@ ft_interval ft_interval_from_measurement(double value, double absolute_error) no
         return (interval);
     }
     interval = ft_interval_create(value - absolute_error, value + absolute_error);
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     ft_global_error_stack_push(interval._error_code);
     return (interval);
 }
@@ -99,7 +99,7 @@ ft_interval ft_interval_add(const ft_interval &left_interval, const ft_interval 
     }
     result = ft_interval_create(left_interval.lower + right_interval.lower,
             left_interval.upper + right_interval.upper);
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     ft_global_error_stack_push(result._error_code);
     return (result);
 }
@@ -117,7 +117,7 @@ ft_interval ft_interval_subtract(const ft_interval &left_interval, const ft_inte
     }
     result = ft_interval_create(left_interval.lower - right_interval.upper,
             left_interval.upper - right_interval.lower);
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     ft_global_error_stack_push(result._error_code);
     return (result);
 }
@@ -186,7 +186,7 @@ ft_interval ft_interval_multiply(const ft_interval &left_interval, const ft_inte
         product_index++;
     }
     result = ft_interval_create(minimum_value, maximum_value);
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     ft_global_error_stack_push(result._error_code);
     return (result);
 }
@@ -211,12 +211,12 @@ ft_interval ft_interval_divide(const ft_interval &left_interval, const ft_interv
         return (interval_error);
     }
     reciprocal = ft_interval_create(0.0, 0.0);
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     if (right_interval.lower > 0.0)
         reciprocal = ft_interval_create(1.0 / right_interval.upper, 1.0 / right_interval.lower);
     else
         reciprocal = ft_interval_create(1.0 / right_interval.upper, 1.0 / right_interval.lower);
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     if (reciprocal._error_code != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(reciprocal._error_code);
@@ -243,7 +243,7 @@ ft_interval ft_interval_widen(const ft_interval &interval, double absolute_error
     }
     result = ft_interval_create(interval.lower - absolute_error,
             interval.upper + absolute_error);
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     ft_global_error_stack_push(result._error_code);
     return (result);
 }
@@ -296,7 +296,7 @@ ft_interval ft_interval_propagate_linear(const ft_interval *components,
         index++;
     }
     result = ft_interval_create(minimum_sum, maximum_sum);
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     ft_global_error_stack_push(result._error_code);
     return (result);
 }

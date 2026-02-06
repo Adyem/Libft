@@ -2,6 +2,7 @@
 #include "math.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/pthread.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../Template/move.hpp"
 
 #if defined(__SSE2__)
@@ -16,24 +17,18 @@ static void matrix2_sleep_backoff()
 
 int matrix2::lock_mutex() const noexcept
 {
-    int error;
-
-    if (!this->is_thread_safe_enabled())
-        return (FT_ERR_SUCCESSS);
-    error = this->_mutex.lock(THREAD_ID);
-    ft_global_error_stack_pop_newest();
-    return (error);
+    return (pt_recursive_mutex_lock_if_enabled(
+        this->_mutex,
+        this->_mutex != ft_nullptr
+    ));
 }
 
 int matrix2::unlock_mutex() const noexcept
 {
-    int error;
-
-    if (!this->is_thread_safe_enabled())
-        return (FT_ERR_SUCCESSS);
-    error = this->_mutex.unlock(THREAD_ID);
-    ft_global_error_stack_pop_newest();
-    return (error);
+    return (pt_recursive_mutex_unlock_if_enabled(
+        this->_mutex,
+        this->_mutex != ft_nullptr
+    ));
 }
 
 int matrix2::lock_pair(const matrix2 &first, const matrix2 &second,
@@ -92,7 +87,7 @@ void matrix2::unlock_pair(const matrix2 *lower, const matrix2 *upper)
 }
 
 matrix2::matrix2(const matrix2 &other)
-    : _m(), _mutex()
+    : _m()
 {
     *this = other;
     return ;
@@ -131,7 +126,7 @@ matrix2 &matrix2::operator=(const matrix2 &other)
 }
 
 matrix2::matrix2(matrix2 &&other)
-    : _m(), _mutex()
+    : _m()
 {
     *this = ft_move(other);
     return ;
@@ -278,25 +273,52 @@ matrix2 matrix2::invert() const
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *matrix2::get_mutex_for_testing() noexcept
 {
-    return (&this->_mutex);
+    if (this->_mutex == ft_nullptr)
+        this->prepare_thread_safety();
+    return (this->_mutex);
 }
 #endif
 
 int matrix2::enable_thread_safety() noexcept
 {
-    this->_thread_safe_enabled = true;
-    return (FT_ERR_SUCCESSS);
+    return (this->prepare_thread_safety());
 }
 
 void matrix2::disable_thread_safety() noexcept
 {
-    this->_thread_safe_enabled = false;
+    this->teardown_thread_safety();
     return ;
 }
 
 bool matrix2::is_thread_safe_enabled() const noexcept
 {
-    return (this->_thread_safe_enabled);
+    return (this->_mutex != ft_nullptr);
+}
+
+int matrix2::prepare_thread_safety(void) noexcept
+{
+    if (this->_mutex != ft_nullptr)
+    {
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESSS);
+    }
+    pt_recursive_mutex *mutex_pointer = ft_nullptr;
+    int mutex_error = pt_recursive_mutex_create_with_error(&mutex_pointer);
+    if (mutex_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(mutex_error);
+        return (mutex_error);
+    }
+    this->_mutex = mutex_pointer;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
+}
+
+void matrix2::teardown_thread_safety(void) noexcept
+{
+    pt_recursive_mutex_destroy(&this->_mutex);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return ;
 }
 
 static void matrix3_sleep_backoff()
@@ -307,24 +329,18 @@ static void matrix3_sleep_backoff()
 
 int matrix3::lock_mutex() const noexcept
 {
-    int error;
-
-    if (!this->is_thread_safe_enabled())
-        return (FT_ERR_SUCCESSS);
-    error = this->_mutex.lock(THREAD_ID);
-    ft_global_error_stack_pop_newest();
-    return (error);
+    return (pt_recursive_mutex_lock_if_enabled(
+        this->_mutex,
+        this->_mutex != ft_nullptr
+    ));
 }
 
 int matrix3::unlock_mutex() const noexcept
 {
-    int error;
-
-    if (!this->is_thread_safe_enabled())
-        return (FT_ERR_SUCCESSS);
-    error = this->_mutex.unlock(THREAD_ID);
-    ft_global_error_stack_pop_newest();
-    return (error);
+    return (pt_recursive_mutex_unlock_if_enabled(
+        this->_mutex,
+        this->_mutex != ft_nullptr
+    ));
 }
 
 int matrix3::lock_pair(const matrix3 &first, const matrix3 &second,
@@ -376,7 +392,7 @@ void matrix3::unlock_pair(const matrix3 *lower, const matrix3 *upper)
 }
 
 matrix3::matrix3(const matrix3 &other)
-    : _m(), _mutex()
+    : _m()
 {
     *this = other;
     return ;
@@ -415,7 +431,7 @@ matrix3 &matrix3::operator=(const matrix3 &other)
 }
 
 matrix3::matrix3(matrix3 &&other)
-    : _m(), _mutex()
+    : _m()
 {
     *this = ft_move(other);
     return ;
@@ -577,25 +593,52 @@ matrix3 matrix3::invert() const
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *matrix3::get_mutex_for_testing() noexcept
 {
-    return (&this->_mutex);
+    if (this->_mutex == ft_nullptr)
+        this->prepare_thread_safety();
+    return (this->_mutex);
 }
 #endif
 
 int matrix3::enable_thread_safety() noexcept
 {
-    this->_thread_safe_enabled = true;
-    return (FT_ERR_SUCCESSS);
+    return (this->prepare_thread_safety());
 }
 
 void matrix3::disable_thread_safety() noexcept
 {
-    this->_thread_safe_enabled = false;
+    this->teardown_thread_safety();
     return ;
 }
 
 bool matrix3::is_thread_safe_enabled() const noexcept
 {
-    return (this->_thread_safe_enabled);
+    return (this->_mutex != ft_nullptr);
+}
+
+int matrix3::prepare_thread_safety(void) noexcept
+{
+    if (this->_mutex != ft_nullptr)
+    {
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESSS);
+    }
+    pt_recursive_mutex *mutex_pointer = ft_nullptr;
+    int mutex_error = pt_recursive_mutex_create_with_error(&mutex_pointer);
+    if (mutex_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(mutex_error);
+        return (mutex_error);
+    }
+    this->_mutex = mutex_pointer;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
+}
+
+void matrix3::teardown_thread_safety(void) noexcept
+{
+    pt_recursive_mutex_destroy(&this->_mutex);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return ;
 }
 
 static void matrix4_sleep_backoff()
@@ -606,24 +649,18 @@ static void matrix4_sleep_backoff()
 
 int matrix4::lock_mutex() const noexcept
 {
-    int error;
-
-    if (!this->is_thread_safe_enabled())
-        return (FT_ERR_SUCCESSS);
-    error = this->_mutex.lock(THREAD_ID);
-    ft_global_error_stack_pop_newest();
-    return (error);
+    return (pt_recursive_mutex_lock_if_enabled(
+        this->_mutex,
+        this->_mutex != ft_nullptr
+    ));
 }
 
 int matrix4::unlock_mutex() const noexcept
 {
-    int error;
-
-    if (!this->is_thread_safe_enabled())
-        return (FT_ERR_SUCCESSS);
-    error = this->_mutex.unlock(THREAD_ID);
-    ft_global_error_stack_pop_newest();
-    return (error);
+    return (pt_recursive_mutex_unlock_if_enabled(
+        this->_mutex,
+        this->_mutex != ft_nullptr
+    ));
 }
 
 #if defined(__SSE2__)
@@ -715,7 +752,7 @@ void matrix4::unlock_pair(const matrix4 *lower, const matrix4 *upper)
 }
 
 matrix4::matrix4(const matrix4 &other)
-    : _m(), _mutex()
+    : _m()
 {
     *this = other;
     return ;
@@ -754,7 +791,7 @@ matrix4 &matrix4::operator=(const matrix4 &other)
 }
 
 matrix4::matrix4(matrix4 &&other)
-    : _m(), _mutex()
+    : _m()
 {
     *this = ft_move(other);
     return ;
@@ -1047,23 +1084,50 @@ matrix4 matrix4::make_rotation_z(double angle)
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *matrix4::get_mutex_for_testing() noexcept
 {
-    return (&this->_mutex);
+    if (this->_mutex == ft_nullptr)
+        this->prepare_thread_safety();
+    return (this->_mutex);
 }
 #endif
 
 int matrix4::enable_thread_safety() noexcept
 {
-    this->_thread_safe_enabled = true;
-    return (FT_ERR_SUCCESSS);
+    return (this->prepare_thread_safety());
 }
 
 void matrix4::disable_thread_safety() noexcept
 {
-    this->_thread_safe_enabled = false;
+    this->teardown_thread_safety();
     return ;
 }
 
 bool matrix4::is_thread_safe_enabled() const noexcept
 {
-    return (this->_thread_safe_enabled);
+    return (this->_mutex != ft_nullptr);
+}
+
+int matrix4::prepare_thread_safety(void) noexcept
+{
+    if (this->_mutex != ft_nullptr)
+    {
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESSS);
+    }
+    pt_recursive_mutex *mutex_pointer = ft_nullptr;
+    int mutex_error = pt_recursive_mutex_create_with_error(&mutex_pointer);
+    if (mutex_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(mutex_error);
+        return (mutex_error);
+    }
+    this->_mutex = mutex_pointer;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
+}
+
+void matrix4::teardown_thread_safety(void) noexcept
+{
+    pt_recursive_mutex_destroy(&this->_mutex);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return ;
 }

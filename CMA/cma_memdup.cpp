@@ -11,7 +11,7 @@ void* cma_memdup(const void* source, size_t size)
         void *memory_pointer;
         
         memory_pointer = cma_malloc(0);
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (!memory_pointer)
         {
             ft_global_error_stack_push(error_code);
@@ -30,7 +30,7 @@ void* cma_memdup(const void* source, size_t size)
     void *duplicate;
 
     duplicate = cma_malloc(size);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (duplicate == ft_nullptr)
     {
         ft_global_error_stack_push(error_code);

@@ -2,7 +2,8 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include <mutex>
+#include "../CPP_class/class_nullptr.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 #ifndef FT_TYPES_HPP
 # define FT_TYPES_HPP
@@ -53,19 +54,25 @@ ft_render_screen_size  ft_render_get_primary_screen_size(void);
 class ft_render_window
 {
     private:
-        std::recursive_mutex         _mutex;
+
+        pt_recursive_mutex           *_mutex = ft_nullptr;
+        mutable bool                 _thread_safe_enabled = false;
 
         ft_render_framebuffer        _framebuffer;
         bool                         _is_initialized;
         bool                         _should_close;
 
         void                         *_platform_state;
+        int                          prepare_thread_safety(void) noexcept;
+        void                         teardown_thread_safety(void) noexcept;
 
     public:
         ft_render_window(void);
         ~ft_render_window(void);
 
-        std::recursive_mutex         &runtime_mutex(void);
+#ifdef LIBFT_TEST_BUILD
+        pt_recursive_mutex           *runtime_mutex(void);
+#endif
 
         int                          initialize(const ft_render_window_desc &desc);
         void                         shutdown(void);
@@ -79,6 +86,9 @@ class ft_render_window
 
         int                          set_fullscreen(bool enabled);
 
+        int                          enable_thread_safety() noexcept;
+        void                         disable_thread_safety() noexcept;
+        bool                         is_thread_safe_enabled() const noexcept;
+
         bool                         should_close(void) const;
 };
-

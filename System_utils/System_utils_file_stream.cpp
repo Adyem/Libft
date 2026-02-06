@@ -4,6 +4,7 @@
 #include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include <cstdlib>
 #include <cerrno>
 #include <limits>
@@ -12,59 +13,26 @@ static bool g_force_file_stream_allocation_failure = false;
 static int g_force_fread_failure_enabled = 0;
 static int g_force_fread_failure_error = FT_ERR_SUCCESSS;
 
-static int su_file_lock_mutex(pt_mutex *mutex_pointer)
-{
-    int lock_error;
-
-    lock_error = mutex_pointer->lock(THREAD_ID);
-    ft_global_error_stack_pop_newest();
-    return (lock_error);
-}
-
-static int su_file_unlock_mutex(pt_mutex *mutex_pointer)
-{
-    int unlock_error;
-
-    unlock_error = mutex_pointer->unlock(THREAD_ID);
-    ft_global_error_stack_pop_newest();
-    return (unlock_error);
-}
-
 int su_file_prepare_thread_safety(su_file *stream)
 {
-    pt_mutex *mutex_pointer;
-    void     *memory;
-
     if (stream == ft_nullptr)
     {
         ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
-    if (stream->thread_safe_enabled == true && stream->mutex != ft_nullptr)
+    if (stream->mutex != ft_nullptr)
     {
         ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (0);
     }
-    memory = std::malloc(sizeof(pt_mutex));
-    if (memory == ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
-        return (-1);
-    }
-    mutex_pointer = new(memory) pt_mutex();
-    int mutex_error;
-
-    mutex_error = ft_global_error_stack_last_error();
-    ft_global_error_stack_pop_newest();
+    pt_mutex *mutex_pointer = ft_nullptr;
+    int mutex_error = pt_mutex_create_with_error(&mutex_pointer);
     if (mutex_error != FT_ERR_SUCCESSS)
     {
-        mutex_pointer->~pt_mutex();
-        std::free(memory);
         ft_global_error_stack_push(mutex_error);
         return (-1);
     }
     stream->mutex = mutex_pointer;
-    stream->thread_safe_enabled = true;
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
@@ -76,13 +44,7 @@ void su_file_teardown_thread_safety(su_file *stream)
         ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
-    if (stream->mutex != ft_nullptr)
-    {
-        stream->mutex->~pt_mutex();
-        std::free(stream->mutex);
-        stream->mutex = ft_nullptr;
-    }
-    stream->thread_safe_enabled = false;
+    pt_mutex_destroy(&stream->mutex);
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
@@ -96,14 +58,13 @@ int su_file_lock(su_file *stream, bool *lock_acquired)
         ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
-    if (stream->thread_safe_enabled == false || stream->mutex == ft_nullptr)
+    if (stream->mutex == ft_nullptr)
     {
         ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (0);
     }
-    int mutex_error;
-
-    mutex_error = su_file_lock_mutex(stream->mutex);
+    int mutex_error = pt_mutex_lock_with_error(*stream->mutex);
+    ft_global_error_stack_drop_last_error();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(mutex_error);
@@ -130,9 +91,8 @@ void su_file_unlock(su_file *stream, bool lock_acquired)
         ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return ;
     }
-    int mutex_error;
-
-    mutex_error = su_file_unlock_mutex(stream->mutex);
+    int mutex_error = pt_mutex_unlock_with_error(*stream->mutex);
+    ft_global_error_stack_drop_last_error();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(mutex_error);
@@ -200,11 +160,10 @@ static su_file *create_file_stream(int file_descriptor, int *error_code)
         return (ft_nullptr);
     }
     file_stream->mutex = ft_nullptr;
-    file_stream->thread_safe_enabled = false;
     file_stream->closed = false;
     file_stream->_descriptor = file_descriptor;
     prepared = (su_file_prepare_thread_safety(file_stream) == 0);
-    local_error_code = ft_global_error_stack_pop_newest();
+    local_error_code = ft_global_error_stack_drop_last_error();
     if (prepared == false)
     {
         file_stream->_descriptor = -1;
@@ -236,7 +195,7 @@ su_file *su_fopen(const char *path_name)
         return (ft_nullptr);
     }
     file_descriptor = su_open(path_name);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     stream = create_file_stream(file_descriptor, &error_code);
     if (stream == ft_nullptr)
     {
@@ -263,7 +222,7 @@ su_file *su_fopen(const char *path_name, int flags)
         return (ft_nullptr);
     }
     file_descriptor = su_open(path_name, flags);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     stream = create_file_stream(file_descriptor, &error_code);
     if (stream == ft_nullptr)
     {
@@ -290,7 +249,7 @@ su_file *su_fopen(const char *path_name, int flags, mode_t mode)
         return (ft_nullptr);
     }
     file_descriptor = su_open(path_name, flags, mode);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     stream = create_file_stream(file_descriptor, &error_code);
     if (stream == ft_nullptr)
     {
@@ -320,28 +279,28 @@ int su_fclose(su_file *stream)
     lock_acquired = false;
     if (su_file_lock(stream, &lock_acquired) != 0)
     {
-        lock_error = ft_global_error_stack_pop_newest();
+        lock_error = ft_global_error_stack_drop_last_error();
         if (lock_error == FT_ERR_SUCCESSS)
             lock_error = FT_ERR_SYS_MUTEX_LOCK_FAILED;
         ft_global_error_stack_push(lock_error);
         return (-1);
     }
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     stream->closed = true;
     result = cmp_close(stream->_descriptor);
     if (result == 0)
     {
         su_file_unlock(stream, lock_acquired);
-        ft_global_error_stack_pop_newest();
+        ft_global_error_stack_drop_last_error();
         su_file_teardown_thread_safety(stream);
-        ft_global_error_stack_pop_newest();
+        ft_global_error_stack_drop_last_error();
         std::free(stream);
         ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (0);
     }
     stream->closed = false;
     su_file_unlock(stream, lock_acquired);
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     error_code = FT_ERR_IO;
     if (errno != 0)
         error_code = ft_map_system_error(errno);
@@ -376,18 +335,18 @@ size_t su_fread(void *buffer, size_t size, size_t count, su_file *stream)
     lock_acquired = false;
     if (su_file_lock(stream, &lock_acquired) != 0)
     {
-        lock_error = ft_global_error_stack_pop_newest();
+        lock_error = ft_global_error_stack_drop_last_error();
         if (lock_error == FT_ERR_SUCCESSS)
             lock_error = FT_ERR_SYS_MUTEX_LOCK_FAILED;
         ft_global_error_stack_push(lock_error);
         return (0);
     }
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     if (stream->closed == true)
     {
         error_code = FT_ERR_INVALID_OPERATION;
         su_file_unlock(stream, lock_acquired);
-        ft_global_error_stack_pop_newest();
+        ft_global_error_stack_drop_last_error();
         ft_global_error_stack_push(error_code);
         return (0);
     }
@@ -401,7 +360,7 @@ size_t su_fread(void *buffer, size_t size, size_t count, su_file *stream)
         if (forced_error == FT_ERR_SUCCESSS)
             forced_error = FT_ERR_IO;
         su_file_unlock(stream, lock_acquired);
-        ft_global_error_stack_pop_newest();
+        ft_global_error_stack_drop_last_error();
         ft_global_error_stack_push(forced_error);
         return (0);
     }
@@ -410,7 +369,7 @@ size_t su_fread(void *buffer, size_t size, size_t count, su_file *stream)
     {
         error_code = FT_ERR_OUT_OF_RANGE;
         su_file_unlock(stream, lock_acquired);
-        ft_global_error_stack_pop_newest();
+        ft_global_error_stack_drop_last_error();
         ft_global_error_stack_push(error_code);
         return (0);
     }
@@ -422,7 +381,7 @@ size_t su_fread(void *buffer, size_t size, size_t count, su_file *stream)
     {
         bytes_read = su_read(stream->_descriptor,
             byte_buffer + total_read, total_size - total_read);
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (bytes_read <= 0)
             break;
         total_read += static_cast<size_t>(bytes_read);
@@ -432,7 +391,7 @@ size_t su_fread(void *buffer, size_t size, size_t count, su_file *stream)
     else if (bytes_read < 0 && error_code == FT_ERR_SUCCESSS)
         error_code = FT_ERR_IO;
     su_file_unlock(stream, lock_acquired);
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     ft_global_error_stack_push(error_code);
     return (total_read / size);
 }
@@ -460,18 +419,18 @@ size_t su_fwrite(const void *buffer, size_t size, size_t count, su_file *stream)
     lock_acquired = false;
     if (su_file_lock(stream, &lock_acquired) != 0)
     {
-        lock_error = ft_global_error_stack_pop_newest();
+        lock_error = ft_global_error_stack_drop_last_error();
         if (lock_error == FT_ERR_SUCCESSS)
             lock_error = FT_ERR_SYS_MUTEX_LOCK_FAILED;
         ft_global_error_stack_push(lock_error);
         return (0);
     }
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     if (stream->closed == true)
     {
         error_code = FT_ERR_INVALID_OPERATION;
         su_file_unlock(stream, lock_acquired);
-        ft_global_error_stack_pop_newest();
+        ft_global_error_stack_drop_last_error();
         ft_global_error_stack_push(error_code);
         return (0);
     }
@@ -480,24 +439,24 @@ size_t su_fwrite(const void *buffer, size_t size, size_t count, su_file *stream)
     {
         error_code = FT_ERR_OUT_OF_RANGE;
         su_file_unlock(stream, lock_acquired);
-        ft_global_error_stack_pop_newest();
+        ft_global_error_stack_drop_last_error();
         ft_global_error_stack_push(error_code);
         return (0);
     }
     total_size = size * count;
     bytes_written = su_write(stream->_descriptor, buffer, total_size);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (bytes_written < 0)
     {
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_IO;
         su_file_unlock(stream, lock_acquired);
-        ft_global_error_stack_pop_newest();
+        ft_global_error_stack_drop_last_error();
         ft_global_error_stack_push(error_code);
         return (0);
     }
     su_file_unlock(stream, lock_acquired);
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (static_cast<size_t>(bytes_written) / size);
 }
@@ -518,18 +477,18 @@ int su_fseek(su_file *stream, long offset, int origin)
     lock_acquired = false;
     if (su_file_lock(stream, &lock_acquired) != 0)
     {
-        lock_error = ft_global_error_stack_pop_newest();
+        lock_error = ft_global_error_stack_drop_last_error();
         if (lock_error == FT_ERR_SUCCESSS)
             lock_error = FT_ERR_SYS_MUTEX_LOCK_FAILED;
         ft_global_error_stack_push(lock_error);
         return (-1);
     }
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     if (stream->closed == true)
     {
         error_code = FT_ERR_INVALID_OPERATION;
         su_file_unlock(stream, lock_acquired);
-        ft_global_error_stack_pop_newest();
+        ft_global_error_stack_drop_last_error();
         ft_global_error_stack_push(error_code);
         return (-1);
     }
@@ -542,12 +501,12 @@ int su_fseek(su_file *stream, long offset, int origin)
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_IO;
         su_file_unlock(stream, lock_acquired);
-        ft_global_error_stack_pop_newest();
+        ft_global_error_stack_drop_last_error();
         ft_global_error_stack_push(error_code);
         return (-1);
     }
     su_file_unlock(stream, lock_acquired);
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
@@ -568,18 +527,18 @@ long su_ftell(su_file *stream)
     lock_acquired = false;
     if (su_file_lock(stream, &lock_acquired) != 0)
     {
-        lock_error = ft_global_error_stack_pop_newest();
+        lock_error = ft_global_error_stack_drop_last_error();
         if (lock_error == FT_ERR_SUCCESSS)
             lock_error = FT_ERR_SYS_MUTEX_LOCK_FAILED;
         ft_global_error_stack_push(lock_error);
         return (-1L);
     }
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     if (stream->closed == true)
     {
         error_code = FT_ERR_INVALID_OPERATION;
         su_file_unlock(stream, lock_acquired);
-        ft_global_error_stack_pop_newest();
+        ft_global_error_stack_drop_last_error();
         ft_global_error_stack_push(error_code);
         return (-1L);
     }
@@ -592,12 +551,12 @@ long su_ftell(su_file *stream)
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_IO;
         su_file_unlock(stream, lock_acquired);
-        ft_global_error_stack_pop_newest();
+        ft_global_error_stack_drop_last_error();
         ft_global_error_stack_push(error_code);
         return (-1L);
     }
     su_file_unlock(stream, lock_acquired);
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (position);
 }

@@ -245,7 +245,7 @@ void ft_log_enqueue(t_log_level level, const char *fmt, va_list args)
     va_copy(args_copy, args);
     int formatted_length = pf_vsnprintf(message_buffer, sizeof(message_buffer), fmt, args_copy);
     va_end(args_copy);
-    format_error = ft_global_error_stack_pop_newest();
+    format_error = ft_global_error_stack_drop_last_error();
     if (formatted_length < 0)
     {
         if (format_error != FT_ERR_SUCCESSS)

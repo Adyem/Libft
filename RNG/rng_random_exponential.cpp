@@ -15,7 +15,7 @@ float ft_random_exponential(float lambda_value)
         return (0.0f);
     }
     uniform_value = ft_random_float();
-    int error_code = ft_global_error_stack_pop_newest();
+    int error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(error_code);
@@ -26,7 +26,7 @@ float ft_random_exponential(float lambda_value)
     double log_value;
 
     log_value = math_log(uniform_value);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(error_code);

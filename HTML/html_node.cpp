@@ -55,7 +55,7 @@ html_node *html_create_node(const char *tagName, const char *textContent)
     {
         int thread_safe_error;
 
-        thread_safe_error = ft_global_error_stack_pop_newest();
+        thread_safe_error = ft_global_error_stack_drop_last_error();
         html_release_string(newNode->tag);
         html_release_string(newNode->text);
         delete newNode;
@@ -95,7 +95,7 @@ html_attr *html_create_attr(const char *key, const char *value)
     {
         int thread_safe_error;
 
-        thread_safe_error = ft_global_error_stack_pop_newest();
+        thread_safe_error = ft_global_error_stack_drop_last_error();
         html_release_string(newAttr->key);
         html_release_string(newAttr->value);
         delete newAttr;

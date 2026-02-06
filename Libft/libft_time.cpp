@@ -44,7 +44,7 @@ char *ft_time_format(char *buffer, size_t buffer_size)
     }
     ft_bzero(&time_info, sizeof(time_info));
     current_time = time_now();
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (current_time == static_cast<t_time>(-1) || error_code != FT_ERR_SUCCESSS)
     {
         if (error_code == FT_ERR_SUCCESSS)
@@ -53,14 +53,14 @@ char *ft_time_format(char *buffer, size_t buffer_size)
         return (ft_nullptr);
     }
     time_local(current_time, &time_info);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }
     formatted_length = time_strftime(buffer, buffer_size, "%Y-%m-%d %H:%M:%S", &time_info);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (formatted_length == 0 || error_code != FT_ERR_SUCCESSS)
     {
         if (error_code == FT_ERR_SUCCESSS)

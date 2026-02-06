@@ -40,11 +40,7 @@ static void kv_store_finalize_lock(ft_unique_lock<pt_mutex> &guard) noexcept
 
 static int storage_kv_pop_string_error(ft_string &value) noexcept
 {
-    unsigned long long operation_id = value.last_operation_id();
-
-    if (operation_id == 0)
-        return (FT_ERR_SUCCESSS);
-    return (value.pop_operation_error(operation_id));
+    return (value.last_operation_error());
 }
 
 static int storage_kv_move_string_error(ft_string &value) noexcept
@@ -54,11 +50,7 @@ static int storage_kv_move_string_error(ft_string &value) noexcept
 
 static int storage_kv_pop_guard_error(const ft_unique_lock<pt_mutex> &guard) noexcept
 {
-    unsigned long long operation_id = guard.last_operation_id();
-
-    if (operation_id == 0)
-        return (FT_ERR_SUCCESSS);
-    return (guard.pop_operation_error(operation_id));
+    return (guard.last_operation_error());
 }
 
 template <typename ContainerType>
@@ -71,7 +63,7 @@ static long long storage_kv_parse_long_long(const char *value_string, char **end
 {
     long long parsed_value = static_cast<long long>(ft_strtol(value_string, end_pointer, numeric_base));
 
-    (void)ft_global_error_stack_pop_newest();
+    (void)ft_global_error_stack_drop_last_error();
     return (parsed_value);
 }
 
@@ -79,7 +71,7 @@ static int storage_kv_write_newline(su_file *stream) noexcept
 {
     char newline_character = '\n';
     size_t newline_written = su_fwrite(&newline_character, 1, 1, stream);
-    int write_error = ft_global_error_stack_pop_newest();
+    int write_error = ft_global_error_stack_drop_last_error();
 
     if (write_error != FT_ERR_SUCCESSS)
         return (write_error);
@@ -1000,8 +992,8 @@ int kv_store::load_json_lines_entries(const char *location, ft_vector<kv_store_s
         return (-1);
     }
     read_result = ft_open_and_read_file(location, lines, 8192);
-    int stored_error = ft_global_error_stack_last_error();
-    ft_global_error_stack_pop_newest();
+    int stored_error = ft_global_error_stack_peek_last_error();
+    ft_global_error_stack_drop_last_error();
     if (read_result != 0)
     {
         if (stored_error == ft_map_system_error(ENOENT))
@@ -2359,7 +2351,7 @@ long long kv_store::current_time_seconds() const
     int time_error;
 
     current_time = time_now();
-    time_error = ft_global_error_stack_pop_newest();
+    time_error = ft_global_error_stack_drop_last_error();
     if (time_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(time_error);
@@ -2451,10 +2443,7 @@ void kv_store::record_prune_metrics(long long removed_entries, long long duratio
 
 void kv_store::record_operation_error(int error_code) const noexcept
 {
-    unsigned long long operation_id = ft_errno_next_operation_id();
-
-    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(&this->_operation_errors, error_code, operation_id);
+    ft_global_error_stack_push(error_code);
     this->_error_code = error_code;
     return ;
 }
@@ -3434,7 +3423,7 @@ int kv_store::kv_compare_and_swap(const char *key_string, const char *expected_v
 
 int kv_store::get_error() const
 {
-    return (ft_operation_error_stack_last_error(&this->_operation_errors));
+    return (ft_global_error_stack_peek_last_error());
 }
 
 const char *kv_store::get_error_str() const

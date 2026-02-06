@@ -34,7 +34,7 @@ ft_string    time_format_iso8601(t_time time_value)
     if ((&g_gmtime_mutex) == ft_nullptr)
         mutex_error = FT_ERR_SUCCESSS;
     else
-        mutex_error = ft_global_error_stack_pop_newest();
+        mutex_error = ft_global_error_stack_drop_last_error();
     {
         int reported_error;
 
@@ -53,7 +53,7 @@ ft_string    time_format_iso8601(t_time time_value)
         if ((&g_gmtime_mutex) == ft_nullptr)
             mutex_error = FT_ERR_SUCCESSS;
         else
-            mutex_error = ft_global_error_stack_pop_newest();
+            mutex_error = ft_global_error_stack_drop_last_error();
         {
             int reported_error;
 
@@ -72,7 +72,7 @@ ft_string    time_format_iso8601(t_time time_value)
     if ((&g_gmtime_mutex) == ft_nullptr)
         mutex_error = FT_ERR_SUCCESSS;
     else
-        mutex_error = ft_global_error_stack_pop_newest();
+        mutex_error = ft_global_error_stack_drop_last_error();
     {
         int reported_error;
 
@@ -125,7 +125,7 @@ ft_string    time_format_iso8601_with_offset(t_time time_value, int offset_minut
     if ((&g_gmtime_mutex) == ft_nullptr)
         mutex_error = FT_ERR_SUCCESSS;
     else
-        mutex_error = ft_global_error_stack_pop_newest();
+        mutex_error = ft_global_error_stack_drop_last_error();
     {
         int reported_error;
 
@@ -144,7 +144,7 @@ ft_string    time_format_iso8601_with_offset(t_time time_value, int offset_minut
         if ((&g_gmtime_mutex) == ft_nullptr)
             mutex_error = FT_ERR_SUCCESSS;
         else
-            mutex_error = ft_global_error_stack_pop_newest();
+            mutex_error = ft_global_error_stack_drop_last_error();
         {
             int reported_error;
 
@@ -163,7 +163,7 @@ ft_string    time_format_iso8601_with_offset(t_time time_value, int offset_minut
     if ((&g_gmtime_mutex) == ft_nullptr)
         mutex_error = FT_ERR_SUCCESSS;
     else
-        mutex_error = ft_global_error_stack_pop_newest();
+        mutex_error = ft_global_error_stack_drop_last_error();
     {
         int reported_error;
 

@@ -28,7 +28,7 @@ void rl_add_suggestion(const char *word)
         new_suggestion = cma_strdup(word);
         if (new_suggestion == ft_nullptr)
         {
-            error_code = ft_global_error_stack_pop_newest();
+            error_code = ft_global_error_stack_drop_last_error();
             if (error_code == FT_ERR_SUCCESSS)
                 error_code = FT_ERR_NO_MEMORY;
             ft_global_error_stack_push(error_code);
@@ -55,7 +55,7 @@ void rl_clear_suggestions()
     while (index < suggestion_count)
     {
         cma_free(suggestions[index]);
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code != FT_ERR_SUCCESSS)
         {
             ft_global_error_stack_push(error_code);

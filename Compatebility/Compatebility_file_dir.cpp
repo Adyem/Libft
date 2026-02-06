@@ -3,6 +3,7 @@
 #include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../PThread/pthread_internal.hpp"
 
 static void cmp_set_error_code(int *error_code_out, int error_code)
 {
@@ -106,14 +107,15 @@ file_dirent *cmp_dir_read(file_dir *directory_stream, int *error_code_out)
         cmp_set_error_code(error_code_out, FT_ERR_INVALID_STATE);
         return (ft_nullptr);
     }
-    if (pthread_mutex_lock(&directory_stream->mutex) != 0)
+    int lock_error = pt_pthread_mutex_lock_with_error(&directory_stream->mutex);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        cmp_set_error_code(error_code_out, ft_map_system_error(errno));
+        cmp_set_error_code(error_code_out, lock_error);
         return (ft_nullptr);
     }
     if (directory_stream->closed)
     {
-        pthread_mutex_unlock(&directory_stream->mutex);
+        pt_pthread_mutex_unlock_with_error(&directory_stream->mutex);
         cmp_set_error_code(error_code_out, FT_ERR_INVALID_STATE);
         return (ft_nullptr);
     }
@@ -134,7 +136,7 @@ file_dirent *cmp_dir_read(file_dir *directory_stream, int *error_code_out)
                 cmp_map_system_error_to_ft(static_cast<int>(last_error)));
         else
             cmp_set_error_code(error_code_out, FT_ERR_INVALID_ARGUMENT);
-        pthread_mutex_unlock(&directory_stream->mutex);
+        pt_pthread_mutex_unlock_with_error(&directory_stream->mutex);
         return (ft_nullptr);
     }
     ft_bzero(&directory_stream->entry, sizeof(directory_stream->entry));
@@ -146,7 +148,7 @@ file_dirent *cmp_dir_read(file_dir *directory_stream, int *error_code_out)
     else
         directory_stream->entry.d_type = DT_REG;
     cmp_set_error_code(error_code_out, FT_ERR_SUCCESSS);
-    pthread_mutex_unlock(&directory_stream->mutex);
+    pt_pthread_mutex_unlock_with_error(&directory_stream->mutex);
     return (&directory_stream->entry);
 }
 
@@ -162,20 +164,21 @@ int cmp_dir_close(file_dir *directory_stream, int *error_code_out)
         cmp_set_error_code(error_code_out, FT_ERR_INVALID_STATE);
         return (-1);
     }
-    if (pthread_mutex_lock(&directory_stream->mutex) != 0)
+    int lock_error = pt_pthread_mutex_lock_with_error(&directory_stream->mutex);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        cmp_set_error_code(error_code_out, ft_map_system_error(errno));
+        cmp_set_error_code(error_code_out, lock_error);
         return (-1);
     }
     if (directory_stream->closed)
     {
-        pthread_mutex_unlock(&directory_stream->mutex);
+        pt_pthread_mutex_unlock_with_error(&directory_stream->mutex);
         cmp_set_error_code(error_code_out, FT_ERR_INVALID_STATE);
         return (-1);
     }
     directory_stream->closed = true;
     FindClose(reinterpret_cast<HANDLE>(directory_stream->fd));
-    pthread_mutex_unlock(&directory_stream->mutex);
+    pt_pthread_mutex_unlock_with_error(&directory_stream->mutex);
     pthread_mutex_destroy(&directory_stream->mutex);
     directory_stream->mutex_initialized = false;
     cma_free(directory_stream);
@@ -331,14 +334,15 @@ file_dirent *cmp_dir_read(file_dir *directory_stream, int *error_code_out)
         cmp_set_error_code(error_code_out, FT_ERR_INVALID_STATE);
         return (ft_nullptr);
     }
-    if (pthread_mutex_lock(&directory_stream->mutex) != 0)
+    int lock_error = pt_pthread_mutex_lock_with_error(&directory_stream->mutex);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        cmp_set_error_code(error_code_out, ft_map_system_error(errno));
+        cmp_set_error_code(error_code_out, lock_error);
         return (ft_nullptr);
     }
     if (directory_stream->closed)
     {
-        pthread_mutex_unlock(&directory_stream->mutex);
+        pt_pthread_mutex_unlock_with_error(&directory_stream->mutex);
         cmp_set_error_code(error_code_out, FT_ERR_INVALID_STATE);
         return (ft_nullptr);
     }
@@ -357,7 +361,7 @@ file_dirent *cmp_dir_read(file_dir *directory_stream, int *error_code_out)
                 cmp_set_error_code(error_code_out, cmp_map_system_error_to_ft(errno));
             else
                 cmp_set_error_code(error_code_out, FT_ERR_INVALID_ARGUMENT);
-            pthread_mutex_unlock(&directory_stream->mutex);
+            pt_pthread_mutex_unlock_with_error(&directory_stream->mutex);
             return (ft_nullptr);
         }
         directory_stream->buffer_used = bytes;
@@ -366,7 +370,7 @@ file_dirent *cmp_dir_read(file_dir *directory_stream, int *error_code_out)
     if (raw->d_reclen == 0)
     {
         cmp_set_error_code(error_code_out, FT_ERR_INVALID_ARGUMENT);
-        pthread_mutex_unlock(&directory_stream->mutex);
+        pt_pthread_mutex_unlock_with_error(&directory_stream->mutex);
         return (ft_nullptr);
     }
     ft_bzero(&directory_stream->entry, sizeof(directory_stream->entry));
@@ -375,7 +379,7 @@ file_dirent *cmp_dir_read(file_dir *directory_stream, int *error_code_out)
     ft_strncpy(directory_stream->entry.d_name, raw->d_name, sizeof(directory_stream->entry.d_name) - 1);
     directory_stream->buffer_offset += raw->d_reclen;
     cmp_set_error_code(error_code_out, FT_ERR_SUCCESSS);
-    pthread_mutex_unlock(&directory_stream->mutex);
+    pt_pthread_mutex_unlock_with_error(&directory_stream->mutex);
     return (&directory_stream->entry);
 #else
     if (!directory_stream->mutex_initialized)
@@ -383,14 +387,15 @@ file_dirent *cmp_dir_read(file_dir *directory_stream, int *error_code_out)
         cmp_set_error_code(error_code_out, FT_ERR_INVALID_STATE);
         return (ft_nullptr);
     }
-    if (pthread_mutex_lock(&directory_stream->mutex) != 0)
+    int lock_error = pt_pthread_mutex_lock_with_error(&directory_stream->mutex);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        cmp_set_error_code(error_code_out, ft_map_system_error(errno));
+        cmp_set_error_code(error_code_out, lock_error);
         return (ft_nullptr);
     }
     if (directory_stream->closed)
     {
-        pthread_mutex_unlock(&directory_stream->mutex);
+        pt_pthread_mutex_unlock_with_error(&directory_stream->mutex);
         cmp_set_error_code(error_code_out, FT_ERR_INVALID_STATE);
         return (ft_nullptr);
     }
@@ -402,7 +407,7 @@ file_dirent *cmp_dir_read(file_dir *directory_stream, int *error_code_out)
             cmp_set_error_code(error_code_out, cmp_map_system_error_to_ft(errno));
         else
             cmp_set_error_code(error_code_out, FT_ERR_SUCCESSS);
-        pthread_mutex_unlock(&directory_stream->mutex);
+        pt_pthread_mutex_unlock_with_error(&directory_stream->mutex);
         return (ft_nullptr);
     }
     ft_bzero(&directory_stream->entry, sizeof(directory_stream->entry));
@@ -410,7 +415,7 @@ file_dirent *cmp_dir_read(file_dir *directory_stream, int *error_code_out)
     directory_stream->entry.d_type = entry->d_type;
     ft_strncpy(directory_stream->entry.d_name, entry->d_name, sizeof(directory_stream->entry.d_name) - 1);
     cmp_set_error_code(error_code_out, FT_ERR_SUCCESSS);
-    pthread_mutex_unlock(&directory_stream->mutex);
+    pt_pthread_mutex_unlock_with_error(&directory_stream->mutex);
     return (&directory_stream->entry);
 #endif
 }
@@ -428,21 +433,22 @@ int cmp_dir_close(file_dir *directory_stream, int *error_code_out)
         cmp_set_error_code(error_code_out, FT_ERR_INVALID_STATE);
         return (-1);
     }
-    if (pthread_mutex_lock(&directory_stream->mutex) != 0)
+    int lock_error = pt_pthread_mutex_lock_with_error(&directory_stream->mutex);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        cmp_set_error_code(error_code_out, ft_map_system_error(errno));
+        cmp_set_error_code(error_code_out, lock_error);
         return (-1);
     }
     if (directory_stream->closed)
     {
-        pthread_mutex_unlock(&directory_stream->mutex);
+        pt_pthread_mutex_unlock_with_error(&directory_stream->mutex);
         cmp_set_error_code(error_code_out, FT_ERR_INVALID_STATE);
         return (-1);
     }
     directory_stream->closed = true;
     cmp_close(static_cast<int>(directory_stream->fd));
     cma_free(directory_stream->buffer);
-    pthread_mutex_unlock(&directory_stream->mutex);
+    pt_pthread_mutex_unlock_with_error(&directory_stream->mutex);
     pthread_mutex_destroy(&directory_stream->mutex);
     directory_stream->mutex_initialized = false;
     cma_free(directory_stream);
@@ -459,21 +465,22 @@ int cmp_dir_close(file_dir *directory_stream, int *error_code_out)
         cmp_set_error_code(error_code_out, FT_ERR_INVALID_STATE);
         return (-1);
     }
-    if (pthread_mutex_lock(&directory_stream->mutex) != 0)
+    int lock_error = pt_pthread_mutex_lock_with_error(&directory_stream->mutex);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        cmp_set_error_code(error_code_out, ft_map_system_error(errno));
+        cmp_set_error_code(error_code_out, lock_error);
         return (-1);
     }
     if (directory_stream->closed)
     {
-        pthread_mutex_unlock(&directory_stream->mutex);
+        pt_pthread_mutex_unlock_with_error(&directory_stream->mutex);
         cmp_set_error_code(error_code_out, FT_ERR_INVALID_STATE);
         return (-1);
     }
     directory_stream->closed = true;
     DIR *dir = reinterpret_cast<DIR*>(directory_stream->fd);
     closedir(dir);
-    pthread_mutex_unlock(&directory_stream->mutex);
+    pt_pthread_mutex_unlock_with_error(&directory_stream->mutex);
     pthread_mutex_destroy(&directory_stream->mutex);
     directory_stream->mutex_initialized = false;
     cma_free(directory_stream);

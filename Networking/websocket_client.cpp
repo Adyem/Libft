@@ -45,35 +45,32 @@ static void compute_accept_key(const ft_string &key, ft_string &accept)
     return ;
 }
 
-ft_websocket_client::ft_websocket_client() : _socket(), _error_code(FT_ERR_SUCCESSS), _mutex()
+ft_websocket_client::ft_websocket_client() : _socket(), _mutex()
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    int guard_error = guard.get_error();
+    if (guard_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = guard.get_error();
+        ft_errno = guard_error;
+        ft_global_error_stack_push(guard_error);
         return ;
     }
-    this->_error_code = FT_ERR_SUCCESSS;
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
 ft_websocket_client::~ft_websocket_client()
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    int guard_error = guard.get_error();
+    if (guard_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = guard.get_error();
+        ft_errno = guard_error;
+        ft_global_error_stack_push(guard_error);
         return ;
     }
     this->close_locked(guard);
-    return ;
-}
-
-void ft_websocket_client::set_error(int error_code) const
-{
-    ft_errno = error_code;
-    this->_error_code = error_code;
     return ;
 }
 
@@ -82,19 +79,24 @@ int ft_websocket_client::close_locked(ft_unique_lock<pt_mutex> &guard)
     (void)guard;
     if (!this->_socket.close())
     {
-        this->set_error(this->_socket.get_error());
+        int socket_error = this->_socket.get_error();
+        ft_errno = socket_error;
+        ft_global_error_stack_push(socket_error);
         return (1);
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
 void ft_websocket_client::close()
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    int guard_error = guard.get_error();
+    if (guard_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(guard.get_error());
+        ft_errno = guard_error;
+        ft_global_error_stack_push(guard_error);
         return ;
     }
     this->close_locked(guard);
@@ -124,7 +126,8 @@ int ft_websocket_client::perform_handshake_locked(const char *host, const char *
     socket_fd = this->_socket.get();
     if (socket_fd < 0)
     {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (1);
     }
 
@@ -143,7 +146,8 @@ int ft_websocket_client::perform_handshake_locked(const char *host, const char *
     encoded_key = ft_base64_encode(random_key, 16, &encoded_size);
     if (!encoded_key)
     {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (1);
     }
     key_string.clear();
@@ -173,16 +177,19 @@ int ft_websocket_client::perform_handshake_locked(const char *host, const char *
         if (send_result <= 0)
         {
             if (send_result < 0)
-                this->set_error(ft_errno);
+                ft_errno = ft_errno;
+                ft_global_error_stack_push(ft_errno);
             else
-                this->set_error(FT_ERR_SOCKET_SEND_FAILED);
+                ft_errno = FT_ERR_SOCKET_SEND_FAILED;
+                ft_global_error_stack_push(FT_ERR_SOCKET_SEND_FAILED);
             return (1);
         }
         total_sent += static_cast<size_t>(send_result);
     }
     if (networking_check_socket_after_send(socket_fd) != 0)
     {
-        this->set_error(ft_errno);
+        ft_errno = ft_errno;
+        ft_global_error_stack_push(ft_errno);
         return (1);
     }
     response.clear();
@@ -191,12 +198,14 @@ int ft_websocket_client::perform_handshake_locked(const char *host, const char *
         bytes_received = nw_recv(socket_fd, buffer, sizeof(buffer) - 1, 0);
         if (bytes_received < 0)
         {
-            this->set_error(ft_errno);
+            ft_errno = ft_errno;
+            ft_global_error_stack_push(ft_errno);
             return (1);
         }
         if (bytes_received == 0)
         {
-            this->set_error(FT_ERR_SOCKET_RECEIVE_FAILED);
+            ft_errno = FT_ERR_SOCKET_RECEIVE_FAILED;
+            ft_global_error_stack_push(FT_ERR_SOCKET_RECEIVE_FAILED);
             return (1);
         }
         buffer[bytes_received] = '\0';
@@ -209,7 +218,8 @@ int ft_websocket_client::perform_handshake_locked(const char *host, const char *
     accept_line = ft_strstr(response.c_str(), "Sec-WebSocket-Accept: ");
     if (!accept_line)
     {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (1);
     }
     accept_line += ft_strlen("Sec-WebSocket-Accept: ");
@@ -236,10 +246,12 @@ int ft_websocket_client::perform_handshake_locked(const char *host, const char *
     compute_accept_key(key_string, expected);
     if (!(accept_key == expected))
     {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (1);
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -255,14 +267,17 @@ int ft_websocket_client::connect(const char *host, uint16_t port, const char *pa
     address_hints.ai_socktype = SOCK_STREAM;
     std::snprintf(port_string, sizeof(port_string), "%u", port);
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    int guard_error = guard.get_error();
+    if (guard_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(guard.get_error());
+        ft_errno = guard_error;
+        ft_global_error_stack_push(guard_error);
         return (1);
     }
     if (getaddrinfo(host, port_string, &address_hints, &address_info) != 0)
     {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (1);
     }
     int new_socket_fd;
@@ -272,7 +287,8 @@ int ft_websocket_client::connect(const char *host, uint16_t port, const char *pa
     if (new_socket_fd < 0)
     {
         freeaddrinfo(address_info);
-        this->set_error(ft_errno);
+        ft_errno = ft_errno;
+        ft_global_error_stack_push(ft_errno);
         return (1);
     }
     if (!this->_socket.reset(new_socket_fd))
@@ -282,7 +298,8 @@ int ft_websocket_client::connect(const char *host, uint16_t port, const char *pa
         reset_error = this->_socket.get_error();
         nw_close(new_socket_fd);
         freeaddrinfo(address_info);
-        this->set_error(reset_error);
+        ft_errno = reset_error;
+        ft_global_error_stack_push(reset_error);
         return (1);
     }
     result = nw_connect(this->_socket.get(), address_info->ai_addr, address_info->ai_addrlen);
@@ -291,19 +308,21 @@ int ft_websocket_client::connect(const char *host, uint16_t port, const char *pa
     {
         connect_error = ft_errno;
         this->close_locked(guard);
-        this->set_error(connect_error);
+        ft_errno = connect_error;
+        ft_global_error_stack_push(connect_error);
         return (1);
     }
     if (this->perform_handshake_locked(host, path, guard) != 0)
     {
-        int handshake_error;
+        int handshake_error = ft_global_error_stack_peek_last_error();
 
-        handshake_error = this->_error_code;
         this->close_locked(guard);
-        this->set_error(handshake_error);
+        ft_errno = handshake_error;
+        ft_global_error_stack_push(handshake_error);
         return (1);
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -319,7 +338,8 @@ int ft_websocket_client::send_pong_locked(const unsigned char *payload, std::siz
     socket_fd = this->_socket.get();
     if (socket_fd < 0)
     {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (1);
     }
 
@@ -364,10 +384,12 @@ int ft_websocket_client::send_pong_locked(const unsigned char *payload, std::siz
     }
     if (nw_send(socket_fd, frame.c_str(), frame.size(), 0) < 0)
     {
-        this->set_error(ft_errno);
+        ft_errno = ft_errno;
+        ft_global_error_stack_push(ft_errno);
         return (1);
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -384,7 +406,8 @@ int ft_websocket_client::send_text_locked(const ft_string &message, ft_unique_lo
     socket_fd = this->_socket.get();
     if (socket_fd < 0)
     {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (1);
     }
 
@@ -431,10 +454,12 @@ int ft_websocket_client::send_text_locked(const ft_string &message, ft_unique_lo
     }
     if (nw_send(socket_fd, frame.c_str(), frame.size(), 0) < 0)
     {
-        this->set_error(ft_errno);
+        ft_errno = ft_errno;
+        ft_global_error_stack_push(ft_errno);
         return (1);
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -443,9 +468,11 @@ int ft_websocket_client::send_text(const ft_string &message)
     int result;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    int guard_error = guard.get_error();
+    if (guard_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(guard.get_error());
+        ft_errno = guard_error;
+        ft_global_error_stack_push(guard_error);
         return (1);
     }
     result = this->send_text_locked(message, guard);
@@ -469,7 +496,8 @@ int ft_websocket_client::receive_text_locked(ft_string &message, ft_unique_lock<
     socket_fd = this->_socket.get();
     if (socket_fd < 0)
     {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (1);
     }
     while (true)
@@ -477,7 +505,8 @@ int ft_websocket_client::receive_text_locked(ft_string &message, ft_unique_lock<
         bytes_received = nw_recv(socket_fd, header, 2, 0);
         if (bytes_received <= 0)
         {
-            this->set_error(ft_errno);
+            ft_errno = ft_errno;
+            ft_global_error_stack_push(ft_errno);
             return (1);
         }
         opcode = header[0] & 0x0F;
@@ -489,7 +518,8 @@ int ft_websocket_client::receive_text_locked(ft_string &message, ft_unique_lock<
             bytes_received = nw_recv(socket_fd, extended, 2, 0);
             if (bytes_received <= 0)
             {
-                this->set_error(ft_errno);
+                ft_errno = ft_errno;
+                ft_global_error_stack_push(ft_errno);
                 return (1);
             }
             payload_length = static_cast<std::size_t>((extended[0] << 8) | extended[1]);
@@ -501,7 +531,8 @@ int ft_websocket_client::receive_text_locked(ft_string &message, ft_unique_lock<
             bytes_received = nw_recv(socket_fd, extended, 8, 0);
             if (bytes_received <= 0)
             {
-                this->set_error(ft_errno);
+                ft_errno = ft_errno;
+                ft_global_error_stack_push(ft_errno);
                 return (1);
             }
             payload_length = 0;
@@ -517,14 +548,16 @@ int ft_websocket_client::receive_text_locked(ft_string &message, ft_unique_lock<
             bytes_received = nw_recv(socket_fd, mask_key, 4, 0);
             if (bytes_received <= 0)
             {
-                this->set_error(ft_errno);
+                ft_errno = ft_errno;
+                ft_global_error_stack_push(ft_errno);
                 return (1);
             }
         }
         payload = static_cast<unsigned char *>(cma_malloc(payload_length));
         if (!payload)
         {
-            this->set_error(FT_ERR_INVALID_ARGUMENT);
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
+            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
             return (1);
         }
         index_value = 0;
@@ -534,7 +567,8 @@ int ft_websocket_client::receive_text_locked(ft_string &message, ft_unique_lock<
             if (bytes_received <= 0)
             {
                 cma_free(payload);
-                this->set_error(ft_errno);
+                ft_errno = ft_errno;
+                ft_global_error_stack_push(ft_errno);
                 return (1);
             }
             index_value += static_cast<std::size_t>(bytes_received);
@@ -573,11 +607,13 @@ int ft_websocket_client::receive_text_locked(ft_string &message, ft_unique_lock<
                 index_value++;
             }
             cma_free(payload);
-            this->set_error(FT_ERR_SUCCESSS);
+            ft_errno = FT_ERR_SUCCESSS;
+            ft_global_error_stack_push(FT_ERR_SUCCESSS);
             return (0);
         }
         cma_free(payload);
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (1);
     }
 }
@@ -587,9 +623,11 @@ int ft_websocket_client::receive_text(ft_string &message)
     int result;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    int guard_error = guard.get_error();
+    if (guard_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(guard.get_error());
+        ft_errno = guard_error;
+        ft_global_error_stack_push(guard_error);
         return (1);
     }
     result = this->receive_text_locked(message, guard);

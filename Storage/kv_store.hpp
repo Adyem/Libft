@@ -135,7 +135,6 @@ class kv_store
         mutable long long _metrics_total_prune_duration_ms;
         mutable long long _metrics_last_prune_duration_ms;
         ft_vector<kv_store_replication_sink> _replication_sinks;
-        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
         mutable pt_mutex _replication_mutex;
 
         void set_error_unlocked(int error_code) const noexcept;
@@ -194,7 +193,6 @@ class kv_store
         int get_error() const;
         const char *get_error_str() const;
         pt_mutex *get_mutex_for_validation() const noexcept;
-        ft_operation_error_stack *operation_error_stack_handle() const noexcept;
         int get_metrics(kv_store_metrics &out_metrics) const;
         int export_snapshot(ft_vector<kv_store_snapshot_entry> &out_entries) const;
         int export_snapshot_to_file(const char *file_path) const;

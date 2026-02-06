@@ -22,7 +22,7 @@ Every class must declare and define a constructor and destructor, even if they s
 When a class exposes optional thread safety—as `ft_promise` does with `_thread_safe_enabled`/ `_mutex`—keep the same fields and contract in every class that follows the pattern (note: `ft_unique_lock` purposely opts out of this contract because it never enables per-instance thread safety, it simply proxies the wrapped mutex):
 - Always declare `bool _thread_safe_enabled` and the associated pointer(s) (`pt_mutex *_mutex`, etc.) in the private section so they stay together with the rest of the synchronization state.
 - Initialize `_thread_safe_enabled` to `false` and `_mutex` to `ft_nullptr`. Do not flip `_thread_safe_enabled` to `true` unless `prepare_thread_safety()` succeeds, and only allocate the mutex when it is needed.
-- `prepare_thread_safety()` should allocate the mutex, check its error state immediately (via `operation_error_pop_newest()` / `ft_global_error_stack_pop_newest()`), set `_thread_safe_enabled = true` on success, and set `_thread_safe_enabled = false` plus release any resources on failure.
+- `prepare_thread_safety()` should allocate the mutex, check its error state immediately (via `operation_error_pop_newest()` / `ft_global_error_stack_drop_last_error()`), set `_thread_safe_enabled = true` on success, and set `_thread_safe_enabled = false` plus release any resources on failure.
 - Guard every lock/unlock helper with `_thread_safe_enabled`: if thread safety is disabled, return success without touching `_mutex`. When enabled, acquire/release `_mutex`, pop the newest error from the global stack, and propagate the real error value.
 - `teardown_thread_safety()` must destroy/free `_mutex`, reset `_thread_safe_enabled` to `false`, and leave `_mutex = ft_nullptr` so repeated enable/disable cycles behave the same.
 - Always call `prepare_thread_safety()` from constructors or enabling helpers before setting `_thread_safe_enabled = true`, and call `teardown_thread_safety()` from the destructor or disabling helpers before the object is destroyed so no dangling mutex remains.
@@ -73,10 +73,10 @@ The helper entries live in `Errno/errno.hpp`.
 - `ft_errno_next_operation_id()` produces the next unique operation identifier.
 - `ft_global_error_stack_push_entry(int error_code)` / `ft_global_error_stack_push_entry_with_id(int error_code, unsigned long long op_id)` push an entry and optionally reuse the provided ID so multiple stacks share the same entry.
 - `ft_global_error_stack_push(int error_code)` pushes without caring about the ID.
-- `ft_global_error_stack_pop_last()` / `ft_global_error_stack_pop_newest()` / `ft_global_error_stack_pop_all()` remove entries from oldest, newest, or the whole stack.
-- `ft_global_error_stack_error_at(ft_size_t index)` / `ft_global_error_stack_last_error()` inspect recorded error codes without modifying the stack.
+- `ft_global_error_stack_pop_last()` / `ft_global_error_stack_drop_last_error()` / `ft_global_error_stack_pop_all()` remove entries from oldest, newest, or the whole stack.
+- `ft_global_error_stack_error_at(ft_size_t index)` / `ft_global_error_stack_peek_last_error()` inspect recorded error codes without modifying the stack.
 - `ft_global_error_stack_depth()` / `ft_global_error_stack_get_id_at(ft_size_t index)` / `ft_global_error_stack_find_by_id(unsigned long long id)` query the stack depth and locate entries by index or operation ID.
-- `ft_global_error_stack_error_str_at(ft_size_t index)` / `ft_global_error_stack_last_error_str()` retrieve the human-readable string for recorded entries.
+- `ft_global_error_stack_error_str_at(ft_size_t index)` / `ft_global_error_stack_peek_last_error_str()` retrieve the human-readable string for recorded entries.
 
 All callers that touch the global stack must leave the newest entry untouched if they did not push it themselves. If a caller pops an entry it pushed, it must re-push the same error or a success entry before returning so the stack remains consistent.
 

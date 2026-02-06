@@ -359,7 +359,7 @@ int nw_close(int sockfd)
         return (-1);
     }
     ft_socket_runtime_release();
-    if (ft_global_error_stack_last_error() != FT_ERR_SUCCESSS)
+    if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
         return (-1);
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);

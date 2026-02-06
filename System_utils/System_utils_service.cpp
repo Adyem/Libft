@@ -149,7 +149,7 @@ static int  su_service_write_pid_file(const char *pid_file_path, int *error_code
         return (-1);
     }
     file_descriptor = su_open(pid_file_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    local_error_code = ft_global_error_stack_pop_newest();
+    local_error_code = ft_global_error_stack_drop_last_error();
     if (file_descriptor < 0)
     {
         if (local_error_code == FT_ERR_SUCCESSS)
@@ -159,19 +159,19 @@ static int  su_service_write_pid_file(const char *pid_file_path, int *error_code
         return (-1);
     }
     bytes_written = su_write(file_descriptor, buffer, length);
-    local_error_code = ft_global_error_stack_pop_newest();
+    local_error_code = ft_global_error_stack_drop_last_error();
     if (bytes_written < 0 || static_cast<size_t>(bytes_written) != length)
     {
         if (local_error_code == FT_ERR_SUCCESSS)
             local_error_code = FT_ERR_IO;
         su_close(file_descriptor);
-        ft_global_error_stack_pop_newest();
+        ft_global_error_stack_drop_last_error();
         if (error_code != ft_nullptr)
             *error_code = local_error_code;
         return (-1);
     }
     close_error = su_close(file_descriptor);
-    local_error_code = ft_global_error_stack_pop_newest();
+    local_error_code = ft_global_error_stack_drop_last_error();
     if (close_error != 0)
     {
         if (local_error_code == FT_ERR_SUCCESSS)
@@ -324,7 +324,7 @@ int su_service_install_signal_handlers(t_su_service_signal_handler handler,
         return (-1);
     }
     su_service_clear_signal_handlers();
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     g_su_service_signal_handler = handler;
     g_su_service_signal_context = user_context;
 #if defined(_WIN32) || defined(_WIN64)

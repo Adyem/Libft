@@ -113,7 +113,7 @@ FT_TEST(test_kv_store_flush_propagates_json_writer_errno, "kv_store flush propag
     flush_result = store.kv_flush();
     FT_ASSERT_EQ(-1, flush_result);
     expected_error = FT_ERR_IO;
-    FT_ASSERT_EQ(expected_error, ft_global_error_stack_pop_newest());
+    FT_ASSERT_EQ(expected_error, ft_global_error_stack_drop_last_error());
     FT_ASSERT_EQ(expected_error, store.get_error());
     cleanup_paths(directory_path, file_path);
     return (1);

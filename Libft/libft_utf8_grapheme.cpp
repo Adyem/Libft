@@ -53,13 +53,13 @@ int ft_utf8_next_grapheme(const char *string, size_t string_length,
     if (ft_utf8_next(string, string_length, &current_index,
             &code_point_value, &sequence_length) != FT_SUCCESS)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_INVALID_ARGUMENT;
         ft_global_error_stack_push(error_code);
         return (FT_FAILURE);
     }
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(error_code);
@@ -80,13 +80,13 @@ int ft_utf8_next_grapheme(const char *string, size_t string_length,
         if (ft_utf8_next(string, string_length, &lookahead_index,
                 &lookahead_code_point, &lookahead_length) != FT_SUCCESS)
         {
-            error_code = ft_global_error_stack_pop_newest();
+            error_code = ft_global_error_stack_drop_last_error();
             if (error_code == FT_ERR_SUCCESSS)
                 error_code = FT_ERR_INVALID_ARGUMENT;
             ft_global_error_stack_push(error_code);
             return (FT_FAILURE);
         }
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code != FT_ERR_SUCCESSS)
         {
             ft_global_error_stack_push(error_code);
@@ -125,13 +125,13 @@ int ft_utf8_duplicate_grapheme(const char *string, size_t string_length,
     if (ft_utf8_next_grapheme(string, string_length, &local_index,
             &grapheme_length) != FT_SUCCESS)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_INVALID_ARGUMENT;
         ft_global_error_stack_push(error_code);
         return (FT_FAILURE);
     }
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(error_code);

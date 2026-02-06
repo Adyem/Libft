@@ -31,7 +31,8 @@ SRCS := pthread_lock_mutex.cpp \
         pthread_rwlock.cpp \
         pthread_task_scheduler.cpp \
         pthread_lock_tracking.cpp \
-        pthread_task_scheduler_tracing.cpp
+        pthread_task_scheduler_tracing.cpp \
+        recursive_mutex_helper.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
@@ -124,4 +125,3 @@ re: fclean all
 both: all debug
 
 .PHONY: all clean fclean re debug both
-

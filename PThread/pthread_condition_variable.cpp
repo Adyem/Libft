@@ -1,6 +1,7 @@
 #include "condition.hpp"
 #include "mutex.hpp"
 #include "pthread.hpp"
+#include "pthread_internal.hpp"
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Libft/libft.hpp"
@@ -43,12 +44,12 @@ static bool compute_wait_deadline(const struct timespec &relative_time, struct t
 }
 
 pt_condition_variable::pt_condition_variable()
-    : _condition(), _mutex(), _condition_initialized(false), _mutex_initialized(false), _error_code(FT_ERR_SUCCESSS),
-    _state_mutex(ft_nullptr), _thread_safe_enabled(false)
+    : _condition(), _mutex(), _condition_initialized(false), _mutex_initialized(false),
+    _state_mutex(ft_nullptr)
 {
     if (pthread_mutex_init(&this->_mutex, ft_nullptr) != 0)
     {
-        this->set_error(ft_map_system_error(errno));
+        ft_global_error_stack_push(ft_map_system_error(errno));
         return ;
     }
     this->_mutex_initialized = true;
@@ -57,35 +58,27 @@ pt_condition_variable::pt_condition_variable()
 
     if (pthread_condattr_init(&condition_attributes) != 0)
     {
-        this->set_error(ft_map_system_error(errno));
+        ft_global_error_stack_push(ft_map_system_error(errno));
         return ;
     }
     if (pthread_condattr_setclock(&condition_attributes, CLOCK_MONOTONIC) != 0)
     {
-        this->set_error(ft_map_system_error(errno));
+        ft_global_error_stack_push(ft_map_system_error(errno));
         pthread_condattr_destroy(&condition_attributes);
         return ;
     }
     if (pt_cond_init(&this->_condition, &condition_attributes) != 0)
     {
-        int condition_error = ft_global_error_stack_last_error();
-
-        this->set_error(condition_error);
         pthread_condattr_destroy(&condition_attributes);
         return ;
     }
     pthread_condattr_destroy(&condition_attributes);
 #else
     if (pt_cond_init(&this->_condition, ft_nullptr) != 0)
-    {
-        int condition_error = ft_global_error_stack_last_error();
-
-        this->set_error(condition_error);
         return ;
-    }
 #endif
     this->_condition_initialized = true;
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -96,19 +89,7 @@ pt_condition_variable::~pt_condition_variable()
     if (this->_mutex_initialized)
         pthread_mutex_destroy(&this->_mutex);
     this->teardown_thread_safety();
-    this->set_error(FT_ERR_SUCCESSS);
-    return ;
-}
-
-void pt_condition_variable::set_error(int error) const
-{
-    bool lock_acquired;
-
-    lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESSS)
-        return ;
-    this->_error_code = error;
-    this->unlock_internal(lock_acquired);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -116,12 +97,22 @@ int pt_condition_variable::lock_internal(bool *lock_acquired) const
 {
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (!this->_thread_safe_enabled || this->_state_mutex == ft_nullptr)
+    if (this->_state_mutex == ft_nullptr)
         return (FT_ERR_SUCCESSS);
-    this->_state_mutex->lock(THREAD_ID);
-    int state_error = ft_global_error_stack_last_error();
+    int state_error = pt_mutex_lock_with_error(*this->_state_mutex);
     if (state_error != FT_ERR_SUCCESSS)
+    {
+        if (state_error == FT_ERR_MUTEX_ALREADY_LOCKED)
+        {
+            bool state_lock_acquired;
+
+            state_lock_acquired = false;
+            if (this->_state_mutex->lock_state(&state_lock_acquired) == 0)
+                this->_state_mutex->unlock_state(state_lock_acquired);
+            return (FT_ERR_SUCCESSS);
+        }
         return (state_error);
+    }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
     return (FT_ERR_SUCCESSS);
@@ -131,53 +122,37 @@ void pt_condition_variable::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
         return ;
-    this->_state_mutex->unlock(THREAD_ID);
+    pt_mutex_unlock_with_error(*this->_state_mutex);
     return ;
 }
 
 void pt_condition_variable::teardown_thread_safety()
 {
-    if (this->_state_mutex != ft_nullptr)
-    {
-        delete this->_state_mutex;
-        this->_state_mutex = ft_nullptr;
-    }
-    this->_thread_safe_enabled = false;
+    pt_mutex_destroy(&this->_state_mutex);
     return ;
 }
 
 int pt_condition_variable::enable_thread_safety()
 {
-    pt_mutex *state_mutex;
-
-    if (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr)
+    if (this->_state_mutex != ft_nullptr)
     {
-        this->set_error(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (0);
     }
-    state_mutex = new (std::nothrow) pt_mutex();
-    if (state_mutex == ft_nullptr)
-    {
-        this->set_error(FT_ERR_NO_MEMORY);
-        return (-1);
-    }
-    int mutex_error = ft_global_error_stack_last_error();
+    int mutex_error = pt_mutex_create_with_error(&this->_state_mutex);
     if (mutex_error != FT_ERR_SUCCESSS)
     {
-        delete state_mutex;
-        this->set_error(mutex_error);
+        ft_global_error_stack_push(mutex_error);
         return (-1);
     }
-    this->_state_mutex = state_mutex;
-    this->_thread_safe_enabled = true;
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
 void pt_condition_variable::disable_thread_safety()
 {
     this->teardown_thread_safety();
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -185,8 +160,8 @@ bool pt_condition_variable::is_thread_safe() const
 {
     bool enabled;
 
-    enabled = (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr);
-    const_cast<pt_condition_variable *>(this)->set_error(FT_ERR_SUCCESSS);
+    enabled = (this->_state_mutex != ft_nullptr);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (enabled);
 }
 
@@ -196,9 +171,9 @@ int pt_condition_variable::lock_state(bool *lock_acquired) const
 
     result = this->lock_internal(lock_acquired);
     if (result != FT_ERR_SUCCESSS)
-        const_cast<pt_condition_variable *>(this)->set_error(result);
+        ft_global_error_stack_push(result);
     else
-        const_cast<pt_condition_variable *>(this)->set_error(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -207,15 +182,15 @@ void pt_condition_variable::unlock_state(bool lock_acquired) const
     this->unlock_internal(lock_acquired);
     if (this->_state_mutex != ft_nullptr)
     {
-        int state_error = ft_global_error_stack_last_error();
+        int state_error = ft_global_error_stack_peek_last_error();
         if (state_error != FT_ERR_SUCCESSS)
         {
-            const_cast<pt_condition_variable *>(this)->set_error(state_error);
+            ft_global_error_stack_push(state_error);
             return ;
         }
     }
     else
-        const_cast<pt_condition_variable *>(this)->set_error(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -229,7 +204,7 @@ int pt_condition_variable::wait(pt_mutex &mutex)
     int lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (-1);
     }
     condition_initialized = this->_condition_initialized;
@@ -237,70 +212,37 @@ int pt_condition_variable::wait(pt_mutex &mutex)
     this->unlock_internal(lock_acquired);
     if (!condition_initialized || !mutex_initialized)
     {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (!mutex.lockState())
     {
-        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
+        ft_global_error_stack_push(FT_ERR_MUTEX_NOT_OWNER);
         return (-1);
     }
-    if (pthread_mutex_lock(&this->_mutex) != 0)
-    {
-        this->set_error(ft_map_system_error(errno));
+    if (pt_pthread_mutex_lock_with_error(&this->_mutex) != FT_ERR_SUCCESSS)
         return (-1);
-    }
-    if (mutex.unlock(THREAD_ID) != FT_SUCCESS)
+    if (pt_mutex_unlock_with_error(mutex) != FT_ERR_SUCCESSS)
     {
-        int unlock_error;
-
-        unlock_error = ft_global_error_stack_last_error();
-        pthread_mutex_unlock(&this->_mutex);
-        this->set_error(unlock_error);
+        pt_pthread_mutex_unlock_with_error(&this->_mutex);
         return (-1);
     }
     if (pt_cond_wait(&this->_condition, &this->_mutex) != 0)
     {
-        int wait_error;
-
-        wait_error = ft_global_error_stack_last_error();
-        pthread_mutex_unlock(&this->_mutex);
-        if (mutex.lock(THREAD_ID) != FT_SUCCESS)
-        {
-            int relock_error;
-
-            relock_error = ft_global_error_stack_last_error();
-            this->set_error(relock_error);
+        pt_pthread_mutex_unlock_with_error(&this->_mutex);
+        if (pt_mutex_lock_with_error(mutex) != FT_ERR_SUCCESSS)
             return (-1);
-        }
-        this->set_error(wait_error);
         return (-1);
     }
-    if (pthread_mutex_unlock(&this->_mutex) != 0)
+    if (pt_pthread_mutex_unlock_with_error(&this->_mutex) != FT_ERR_SUCCESSS)
     {
-        int unlock_error;
-
-        unlock_error = ft_map_system_error(errno);
-        if (mutex.lock(THREAD_ID) != FT_SUCCESS)
-        {
-            int relock_error;
-
-            relock_error = ft_global_error_stack_last_error();
-            this->set_error(relock_error);
+        if (pt_mutex_lock_with_error(mutex) != FT_ERR_SUCCESSS)
             return (-1);
-        }
-        this->set_error(unlock_error);
         return (-1);
     }
-    if (mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        int relock_error;
-
-        relock_error = ft_global_error_stack_last_error();
-        this->set_error(relock_error);
+    if (pt_mutex_lock_with_error(mutex) != FT_ERR_SUCCESSS)
         return (-1);
-    }
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -311,7 +253,7 @@ int pt_condition_variable::wait_for(pt_mutex &mutex, const struct timespec &rela
 
     if (!compute_wait_deadline(relative_time, &absolute_time, &conversion_error))
     {
-        this->set_error(conversion_error);
+        ft_global_error_stack_push(conversion_error);
         return (-1);
     }
     return (this->wait_until(mutex, absolute_time));
@@ -328,7 +270,7 @@ int pt_condition_variable::wait_until(pt_mutex &mutex, const struct timespec &ab
     int lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (-1);
     }
     condition_initialized = this->_condition_initialized;
@@ -336,64 +278,41 @@ int pt_condition_variable::wait_until(pt_mutex &mutex, const struct timespec &ab
     this->unlock_internal(lock_acquired);
     if (!condition_initialized || !mutex_initialized)
     {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (!mutex.lockState())
     {
-        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
+        ft_global_error_stack_push(FT_ERR_MUTEX_NOT_OWNER);
         return (-1);
     }
-    if (pthread_mutex_lock(&this->_mutex) != 0)
-    {
-        this->set_error(ft_map_system_error(errno));
+    if (pt_pthread_mutex_lock_with_error(&this->_mutex) != FT_ERR_SUCCESSS)
         return (-1);
-    }
-    if (mutex.unlock(THREAD_ID) != FT_SUCCESS)
+    if (pt_mutex_unlock_with_error(mutex) != FT_ERR_SUCCESSS)
     {
-        int unlock_error;
-
-        unlock_error = ft_global_error_stack_last_error();
-        pthread_mutex_unlock(&this->_mutex);
-        this->set_error(unlock_error);
+        pt_pthread_mutex_unlock_with_error(&this->_mutex);
         return (-1);
     }
     wait_result = pthread_cond_timedwait(&this->_condition, &this->_mutex, &absolute_time);
-    if (pthread_mutex_unlock(&this->_mutex) != 0)
+    if (pt_pthread_mutex_unlock_with_error(&this->_mutex) != FT_ERR_SUCCESSS)
     {
-        int unlock_error;
-
-        unlock_error = ft_map_system_error(errno);
-        if (mutex.lock(THREAD_ID) != FT_SUCCESS)
-        {
-            int relock_error;
-
-            relock_error = ft_global_error_stack_last_error();
-            this->set_error(relock_error);
+        if (pt_mutex_lock_with_error(mutex) != FT_ERR_SUCCESSS)
             return (-1);
-        }
-        this->set_error(unlock_error);
         return (-1);
     }
-    if (mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        int relock_error;
-
-        relock_error = ft_global_error_stack_last_error();
-        this->set_error(relock_error);
+    if (pt_mutex_lock_with_error(mutex) != FT_ERR_SUCCESSS)
         return (-1);
-    }
     if (wait_result == 0)
     {
-        this->set_error(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (0);
     }
     if (wait_result == ETIMEDOUT)
     {
-        this->set_error(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (ETIMEDOUT);
     }
-    this->set_error(ft_map_system_error(wait_result));
+    ft_global_error_stack_push(ft_map_system_error(wait_result));
     return (-1);
 }
 
@@ -407,7 +326,7 @@ int pt_condition_variable::signal()
     int lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (-1);
     }
     condition_initialized = this->_condition_initialized;
@@ -415,29 +334,29 @@ int pt_condition_variable::signal()
     this->unlock_internal(lock_acquired);
     if (!condition_initialized || !mutex_initialized)
     {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (pthread_mutex_lock(&this->_mutex) != 0)
     {
-        this->set_error(ft_map_system_error(errno));
+        ft_global_error_stack_push(ft_map_system_error(errno));
         return (-1);
     }
     if (pt_cond_signal(&this->_condition) != 0)
     {
         int signal_error;
 
-        signal_error = ft_global_error_stack_last_error();
+        signal_error = ft_global_error_stack_peek_last_error();
         pthread_mutex_unlock(&this->_mutex);
-        this->set_error(signal_error);
+        ft_global_error_stack_push(signal_error);
         return (-1);
     }
     if (pthread_mutex_unlock(&this->_mutex) != 0)
     {
-        this->set_error(ft_map_system_error(errno));
+        ft_global_error_stack_push(ft_map_system_error(errno));
         return (-1);
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -452,7 +371,7 @@ int pt_condition_variable::broadcast()
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (-1);
     }
     condition_initialized = this->_condition_initialized;
@@ -460,49 +379,18 @@ int pt_condition_variable::broadcast()
     this->unlock_internal(lock_acquired);
     if (!condition_initialized || !mutex_initialized)
     {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
-    if (pthread_mutex_lock(&this->_mutex) != 0)
-    {
-        this->set_error(ft_map_system_error(errno));
+    if (pt_pthread_mutex_lock_with_error(&this->_mutex) != FT_ERR_SUCCESSS)
         return (-1);
-    }
     if (pt_cond_broadcast(&this->_condition) != 0)
     {
-        int broadcast_error;
-
-        broadcast_error = ft_global_error_stack_last_error();
-        pthread_mutex_unlock(&this->_mutex);
-        this->set_error(broadcast_error);
+        pt_pthread_mutex_unlock_with_error(&this->_mutex);
         return (-1);
     }
-    if (pthread_mutex_unlock(&this->_mutex) != 0)
-    {
-        this->set_error(ft_map_system_error(errno));
+    if (pt_pthread_mutex_unlock_with_error(&this->_mutex) != FT_ERR_SUCCESSS)
         return (-1);
-    }
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
-}
-
-int pt_condition_variable::get_error() const
-{
-    bool lock_acquired;
-    int error_value;
-
-    lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
-        return (this->_error_code);
-    error_value = this->_error_code;
-    this->unlock_internal(lock_acquired);
-    return (error_value);
-}
-
-const char *pt_condition_variable::get_error_str() const
-{
-    int error_value;
-
-    error_value = this->get_error();
-    return (ft_strerror(error_value));
 }

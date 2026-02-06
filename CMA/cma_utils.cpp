@@ -400,9 +400,7 @@ Page *find_page_of_block(Block *block)
 void free_page_if_empty(Page *page)
 {
     if (!page || page->heap == false)
-    {
         return ;
-    }
     if (page->blocks && cma_block_is_free(page->blocks) &&
         page->blocks->next == ft_nullptr &&
         page->blocks->prev == ft_nullptr)

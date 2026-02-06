@@ -13,7 +13,7 @@ static int rng_stream_capture_math_error(ft_size_t previous_depth)
 
     if (current_depth <= previous_depth)
         return (FT_ERR_SUCCESSS);
-    int error_code = ft_global_error_stack_pop_newest();
+    int error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
         ft_global_error_stack_push(error_code);
     return (error_code);
@@ -28,7 +28,7 @@ int rng_stream::lock_internal(bool *lock_acquired) const
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     mutex_result = this->_mutex.lock(THREAD_ID);
-    global_error = ft_global_error_stack_pop_newest();
+    global_error = ft_global_error_stack_drop_last_error();
     operation_error = global_error;
     if (global_error == FT_ERR_SUCCESSS)
         operation_error = mutex_result;
@@ -48,7 +48,7 @@ int rng_stream::unlock_internal(bool lock_acquired) const
     if (!lock_acquired)
         return (FT_ERR_SUCCESSS);
     mutex_result = this->_mutex.unlock(THREAD_ID);
-    global_error = ft_global_error_stack_pop_newest();
+    global_error = ft_global_error_stack_drop_last_error();
     operation_error = global_error;
     if (global_error == FT_ERR_SUCCESSS)
         operation_error = mutex_result;
@@ -277,7 +277,7 @@ void    rng_stream::reseed_from_string(const char *seed_string)
     uint32_t derived_seed;
 
     derived_seed = ft_random_seed(seed_string);
-    int error_code = ft_global_error_stack_pop_newest();
+    int error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(error_code);

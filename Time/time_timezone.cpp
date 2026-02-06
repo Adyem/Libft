@@ -23,7 +23,7 @@ static bool load_utc_time(std::time_t standard_time, std::tm *utc_out)
     if ((&g_gmtime_mutex) == ft_nullptr)
         mutex_error = FT_ERR_SUCCESSS;
     else
-        mutex_error = ft_global_error_stack_pop_newest();
+        mutex_error = ft_global_error_stack_drop_last_error();
     {
         int reported_error;
 
@@ -45,7 +45,7 @@ static bool load_utc_time(std::time_t standard_time, std::tm *utc_out)
         if ((&g_gmtime_mutex) == ft_nullptr)
             mutex_error = FT_ERR_SUCCESSS;
         else
-            mutex_error = ft_global_error_stack_pop_newest();
+            mutex_error = ft_global_error_stack_drop_last_error();
         {
             int reported_error;
 
@@ -68,7 +68,7 @@ static bool load_utc_time(std::time_t standard_time, std::tm *utc_out)
     if ((&g_gmtime_mutex) == ft_nullptr)
         mutex_error = FT_ERR_SUCCESSS;
     else
-        mutex_error = ft_global_error_stack_pop_newest();
+        mutex_error = ft_global_error_stack_drop_last_error();
     {
         int reported_error;
 
@@ -106,7 +106,7 @@ bool    time_get_local_offset(t_time time_value, int *offset_minutes, bool *is_d
     standard_time = static_cast<std::time_t>(time_value);
     if (cmp_localtime(&standard_time, &local_time) != 0)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_INTERNAL;
         ft_global_error_stack_push(error_code);
@@ -114,7 +114,7 @@ bool    time_get_local_offset(t_time time_value, int *offset_minutes, bool *is_d
     }
     if (!load_utc_time(standard_time, &utc_time))
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_INTERNAL;
         ft_global_error_stack_push(error_code);

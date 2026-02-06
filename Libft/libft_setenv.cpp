@@ -25,7 +25,7 @@ int ft_setenv(const char *name, const char *value, int overwrite)
         return (-1);
     }
     invalid_character = ft_strchr(name, '=');
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(error_code);
@@ -38,19 +38,19 @@ int ft_setenv(const char *name, const char *value, int overwrite)
     }
     if (ft_environment_lock() != 0)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_MUTEX_ALREADY_LOCKED;
         ft_global_error_stack_push(error_code);
         return (-1);
     }
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     error_code = FT_ERR_SUCCESSS;
     result = cmp_setenv(name, value, overwrite);
     error_code = cmp_last_error();
     if (ft_environment_unlock() != 0)
     {
-        unlock_error = ft_global_error_stack_pop_newest();
+        unlock_error = ft_global_error_stack_drop_last_error();
         if (unlock_error == FT_ERR_SUCCESSS)
             unlock_error = FT_ERR_MUTEX_NOT_OWNER;
         if (result == 0)
@@ -61,7 +61,7 @@ int ft_setenv(const char *name, const char *value, int overwrite)
         ft_global_error_stack_push(error_code);
         return (result);
     }
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     if (result != 0)
     {
         ft_global_error_stack_push(error_code);

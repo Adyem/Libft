@@ -11,7 +11,7 @@ std::atomic<bool> g_random_engine_seeded(false);
 void ft_seed_random_engine(uint32_t seed_value)
 {
     ft_unique_lock<pt_mutex> guard(g_random_engine_mutex);
-    int error_code = ft_global_error_stack_pop_newest();
+    int error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(error_code);

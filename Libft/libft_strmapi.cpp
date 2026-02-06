@@ -13,7 +13,7 @@ char *ft_strmapi(const char *string, char (*function)(unsigned int, char))
         return (ft_nullptr);
     }
     size_t length = ft_strlen_size_t(string);
-    length_error = ft_global_error_stack_pop_newest();
+    length_error = ft_global_error_stack_drop_last_error();
     if (length_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(length_error);

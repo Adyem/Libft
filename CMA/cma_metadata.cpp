@@ -46,9 +46,7 @@ static ft_size_t cma_metadata_compute_page_size(void)
         return (g_cma_metadata_page_size);
     system_page_size = sysconf(_SC_PAGESIZE);
     if (system_page_size <= 0)
-    {
         return (0);
-    }
     g_cma_metadata_page_size = static_cast<ft_size_t>(system_page_size);
     return (g_cma_metadata_page_size);
 }
@@ -73,9 +71,7 @@ static bool cma_metadata_add_chunk(void)
     chunk_size = chunk_stride_count * stride;
     chunk = static_cast<cma_metadata_chunk *>(std::malloc(sizeof(cma_metadata_chunk)));
     if (chunk == ft_nullptr)
-    {
         return (false);
-    }
     chunk->memory = static_cast<unsigned char *>(mmap(ft_nullptr, chunk_size,
                 PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
     if (chunk->memory == reinterpret_cast<unsigned char *>(MAP_FAILED))
@@ -195,9 +191,7 @@ bool cma_metadata_guard_increment(void)
 bool cma_metadata_guard_decrement(void)
 {
     if (g_cma_metadata_access_depth == 0)
-    {
         return (false);
-    }
     g_cma_metadata_access_depth--;
     if (g_cma_metadata_access_depth == 0)
         cma_metadata_make_inaccessible();
@@ -225,9 +219,7 @@ bool cma_metadata_guard_increment(void)
 bool cma_metadata_guard_decrement(void)
 {
     if (g_cma_metadata_access_depth == 0)
-    {
         return (false);
-    }
     g_cma_metadata_access_depth--;
     return (true);
 }

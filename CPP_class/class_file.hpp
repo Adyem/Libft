@@ -16,13 +16,19 @@ class ft_file
 {
     private:
         int _fd;
-        mutable pt_recursive_mutex _mutex;
-        bool _is_open;
+        mutable pt_recursive_mutex *_mutex;
 
         static int lock_pair(const ft_file &first, const ft_file &second,
                 const ft_file *&lower, const ft_file *&upper);
         static int unlock_pair(const ft_file *lower, const ft_file *upper);
         static void sleep_backoff();
+        int lock_mutex(void) const noexcept;
+        int unlock_mutex(void) const noexcept;
+        int prepare_thread_safety(void) noexcept;
+        void teardown_thread_safety(void) noexcept;
+        int enable_thread_safety(void) noexcept;
+        void disable_thread_safety(void) noexcept;
+        bool is_thread_safe_enabled(void) const noexcept;
 
     public:
         ft_file() noexcept;

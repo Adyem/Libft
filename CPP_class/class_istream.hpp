@@ -3,18 +3,24 @@
 
 #include <cstddef>
 #include "../PThread/recursive_mutex.hpp"
-#include "../PThread/unique_lock.hpp"
 
 class ft_istream
 {
     private:
         std::size_t _gcount;
         bool _is_valid;
-        mutable pt_recursive_mutex _mutex;
-        int lock_self(ft_unique_lock<pt_recursive_mutex> &guard) const noexcept;
+        mutable pt_recursive_mutex *_mutex;
+
+        int lock_mutex(void) const noexcept;
+        int unlock_mutex(void) const noexcept;
+        int prepare_thread_safety(void) noexcept;
+        void teardown_thread_safety(void) noexcept;
+        int enable_thread_safety(void) noexcept;
+        void disable_thread_safety(void) noexcept;
+        bool is_thread_safe_enabled(void) const noexcept;
         static int lock_pair(const ft_istream &first, const ft_istream &second,
-            ft_unique_lock<pt_recursive_mutex> &first_guard,
-            ft_unique_lock<pt_recursive_mutex> &second_guard) noexcept;
+                const ft_istream *&lower, const ft_istream *&upper) noexcept;
+        static int unlock_pair(const ft_istream *lower, const ft_istream *upper) noexcept;
 
     protected:
         ft_istream() noexcept;

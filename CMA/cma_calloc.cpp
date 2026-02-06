@@ -27,7 +27,7 @@ void    *cma_calloc(ft_size_t count, ft_size_t size)
     }
     total_size = count * size;
     memory_pointer = cma_malloc(total_size);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (!memory_pointer)
     {
         ft_global_error_stack_push(error_code);

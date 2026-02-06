@@ -10,7 +10,7 @@ int rng_secure_bytes(unsigned char *buffer, size_t length)
         return (-1);
     }
     int result = cmp_rng_secure_bytes(buffer, length);
-    int error_code = ft_global_error_stack_pop_newest();
+    int error_code = ft_global_error_stack_drop_last_error();
     if (result == 0 && error_code == FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(FT_ERR_SUCCESSS);
@@ -27,13 +27,13 @@ uint32_t ft_random_uint32(void)
     unsigned char byte_buffer[4];
     if (rng_secure_bytes(byte_buffer, 4) != 0)
     {
-        int error_code = ft_global_error_stack_pop_newest();
+        int error_code = ft_global_error_stack_drop_last_error();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_INTERNAL;
         ft_global_error_stack_push(error_code);
         return (0);
     }
-    int error_code = ft_global_error_stack_pop_newest();
+    int error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(error_code);

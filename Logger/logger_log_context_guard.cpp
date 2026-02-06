@@ -22,14 +22,14 @@ ft_log_context_guard::ft_log_context_guard(const s_log_field *fields,
         this->_pushed_count = 0;
         int push_error;
 
-        push_error = ft_global_error_stack_pop_newest();
+        push_error = ft_global_error_stack_drop_last_error();
         if (push_error == FT_ERR_SUCCESSS)
             push_error = FT_ERR_INTERNAL;
         this->set_error(push_error);
         return ;
     }
     else
-        ft_global_error_stack_pop_newest();
+        ft_global_error_stack_drop_last_error();
     this->_pushed_count = pushed_count;
     if (pushed_count != 0)
         this->_active = true;
@@ -46,7 +46,7 @@ ft_log_context_guard::~ft_log_context_guard() noexcept
         logger_context_pop(this->_pushed_count);
         int pop_error;
 
-        pop_error = ft_global_error_stack_pop_newest();
+        pop_error = ft_global_error_stack_drop_last_error();
         if (pop_error != FT_ERR_SUCCESSS)
         {
             this->_active = false;
@@ -79,7 +79,7 @@ ft_log_context_guard &ft_log_context_guard::operator=(ft_log_context_guard &&oth
             logger_context_pop(this->_pushed_count);
             int pop_error;
 
-            pop_error = ft_global_error_stack_pop_newest();
+            pop_error = ft_global_error_stack_drop_last_error();
             if (pop_error != FT_ERR_SUCCESSS)
             {
                 this->_active = false;
@@ -116,7 +116,7 @@ void ft_log_context_guard::release() noexcept
     logger_context_pop(this->_pushed_count);
     int pop_error;
 
-    pop_error = ft_global_error_stack_pop_newest();
+    pop_error = ft_global_error_stack_drop_last_error();
     if (pop_error != FT_ERR_SUCCESSS)
     {
         this->_active = false;

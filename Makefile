@@ -32,7 +32,7 @@ endif
 COMPILE_FLAGS = -Wall -Werror -Wextra -std=c++17 -Wmissing-declarations \
                 -Wold-style-cast -Wshadow -Wconversion -Wformat=2 -Wundef \
                 -Wfloat-equal -Wodr -Wuseless-cast -Wzero-as-null-pointer-constant \
-				-Wmaybe-uninitialized $(OPT_FLAGS) $(SANITIZER_FLAGS)
+                -Wmaybe-uninitialized $(OPT_FLAGS) $(SANITIZER_FLAGS)
 
 export COMPILE_FLAGS
 export SANITIZER_FLAGS
@@ -57,38 +57,38 @@ else
     RMDIR  = rm -rf
 endif
 
-SUBDIRS :=  Libft \
-            Compatebility \
-            Errno \
-            CMA \
-            SCMA \
-            GetNextLine \
-            DUMB \
-            Math \
-            Geometry \
-            System_utils \
-            Printf \
-            ReadLine \
-            PThread \
-            CPP_class \
-            Config \
-            CrossProcess \
-            Compression \
-            Encryption \
-            RNG \
-            JSon \
-            YAML \
-            File \
-            HTML \
-            Time \
-            XML \
-            Storage \
-            Networking \
-            API \
-            Observability \
-            Logger \
-            Parser \
-            Game
+SUBDIRS := Libft \
+           Compatebility \
+           Errno \
+           CMA \
+           SCMA \
+           GetNextLine \
+           DUMB \
+           Math \
+           Geometry \
+           System_utils \
+           Printf \
+           ReadLine \
+           PThread \
+           CPP_class \
+           Config \
+           CrossProcess \
+           Compression \
+           Encryption \
+           RNG \
+           JSon \
+           YAML \
+           File \
+           HTML \
+           Time \
+           XML \
+           Storage \
+           Networking \
+           API \
+           Observability \
+           Logger \
+           Parser \
+           Game
 
 LIB_BASES := \
   Libft/LibFT \
@@ -283,6 +283,7 @@ fclean:
 	if ! $(RM) $(TARGET) $(DEBUG_TARGET); then \
 		status=1; \
 	fi; \
+	printf "DEBUG STATUS=%%d\n" $$status; \
 	if [ $$status -eq 0 ]; then \
 		printf '\033[1;35m[LIBFT FCLEAN] Success\033[0m\n'; \
 	else \

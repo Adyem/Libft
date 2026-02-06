@@ -109,7 +109,7 @@ int ft_trie<ValueType>::insert_helper(const char *key, int unset_value, ValueTyp
     {
         int length_error;
 
-        length_error = ft_global_error_stack_pop_newest();
+        length_error = ft_global_error_stack_drop_last_error();
         if (length_error != FT_ERR_SUCCESSS)
         {
             this->set_error(length_error);

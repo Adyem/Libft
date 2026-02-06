@@ -44,6 +44,9 @@ int     scma_get_stats(scma_stats *out_stats);
 void    scma_debug_dump(void);
 
 pt_recursive_mutex    &scma_runtime_mutex(void);
+int     scma_enable_thread_safety(void);
+void    scma_disable_thread_safety(void);
+bool    scma_is_thread_safe_enabled(void);
 int     scma_mutex_lock(void);
 int     scma_mutex_unlock(void);
 int     scma_mutex_close(void);
@@ -588,13 +591,13 @@ cleanup:
 template <typename TValue>
 inline int    scma_handle_accessor<TValue>::get_error(void) const
 {
-    return (ft_global_error_stack_last_error());
+    return (ft_global_error_stack_peek_last_error());
 }
 
 template <typename TValue>
 inline const char  *scma_handle_accessor<TValue>::get_error_str(void) const
 {
-    return (ft_strerror(ft_global_error_stack_last_error()));
+    return (ft_strerror(ft_global_error_stack_peek_last_error()));
 }
 
 template <typename TValue>

@@ -1,39 +1,45 @@
-#include <cstdlib>
 #include <new>
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/pthread.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "cma_internal.hpp"
 
-static bool initialize_cma_allocator_mutex(pt_recursive_mutex **mutex_storage)
+static pt_recursive_mutex *g_cma_allocator_mutex = ft_nullptr;
+
+int cma_enable_thread_safety(void)
 {
-    void *memory = std::malloc(sizeof(pt_recursive_mutex));
-    if (memory == ft_nullptr)
+    if (g_cma_allocator_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    int mutex_error = pt_recursive_mutex_create_with_error(&g_cma_allocator_mutex);
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        return (false);
+        ft_global_error_stack_push(mutex_error);
+        return (mutex_error);
     }
-    pt_recursive_mutex *mutex_pointer = new(memory) pt_recursive_mutex();
-    *mutex_storage = mutex_pointer;
-    return (true);
+    return (FT_ERR_SUCCESSS);
+}
+
+void cma_disable_thread_safety(void)
+{
+    pt_recursive_mutex_destroy(&g_cma_allocator_mutex);
+    return ;
+}
+
+bool cma_is_thread_safe_enabled(void)
+{
+    return (g_cma_allocator_mutex != ft_nullptr);
 }
 
 static pt_recursive_mutex *cma_allocator_mutex(void)
 {
-    static pt_recursive_mutex *mutex_instance = ft_nullptr;
-    static bool initialization_attempted = false;
-    static bool initialized = false;
-
-    if (!initialization_attempted)
+    if (g_cma_allocator_mutex == ft_nullptr)
     {
-        initialization_attempted = true;
-        initialized = initialize_cma_allocator_mutex(&mutex_instance);
-        if (!initialized)
-            mutex_instance = ft_nullptr;
+        if (cma_enable_thread_safety() != FT_ERR_SUCCESSS)
+            return (ft_nullptr);
     }
-    if (!initialized)
-        return (ft_nullptr);
-    return (mutex_instance);
+    return (g_cma_allocator_mutex);
 }
 
 int cma_lock_allocator(bool *lock_acquired)
@@ -46,20 +52,20 @@ int cma_lock_allocator(bool *lock_acquired)
     {
         return (FT_ERR_INITIALIZATION_FAILED);
     }
-    int mutex_error = mutex_pointer->lock(THREAD_ID);
-    if (mutex_error != 0)
+    int mutex_error = pt_recursive_mutex_lock_with_error(*mutex_pointer);
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
         return (FT_ERR_INVALID_STATE);
     }
     if (cma_metadata_make_writable() != 0)
     {
-        mutex_pointer->unlock(THREAD_ID);
+        pt_recursive_mutex_unlock_with_error(*mutex_pointer);
         return (FT_ERR_INVALID_STATE);
     }
     bool guard_incremented = cma_metadata_guard_increment();
     if (!guard_incremented)
     {
-        mutex_pointer->unlock(THREAD_ID);
+        pt_recursive_mutex_unlock_with_error(*mutex_pointer);
         return (FT_ERR_INVALID_STATE);
     }
     *lock_acquired = true;
@@ -76,10 +82,8 @@ int cma_unlock_allocator(bool lock_acquired)
     {
         return (FT_ERR_INITIALIZATION_FAILED);
     }
-    int mutex_error = mutex_pointer->unlock(THREAD_ID);
-    if (!guard_decremented)
-        return (FT_ERR_INVALID_STATE);
-    if (mutex_error != 0)
+    int mutex_error = pt_recursive_mutex_unlock_with_error(*mutex_pointer);
+    if (!guard_decremented || mutex_error != FT_ERR_SUCCESSS)
         return (FT_ERR_INVALID_STATE);
     return (FT_ERR_SUCCESSS);
 }

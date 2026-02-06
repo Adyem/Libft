@@ -15,7 +15,7 @@ void rl_clear_history()
     while (index < history_count)
     {
         cma_free(history[index]);
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
             final_error = error_code;
         history[index] = ft_nullptr;

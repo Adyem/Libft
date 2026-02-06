@@ -23,7 +23,7 @@ extern int history_count;
 extern char *suggestions[MAX_SUGGESTIONS];
 extern int suggestion_count;
 
-class pt_mutex;
+class pt_recursive_mutex;
 
 struct terminal_dimensions {
     unsigned short rows = 0;
@@ -31,8 +31,7 @@ struct terminal_dimensions {
     unsigned short x_pixels = 0;
     unsigned short y_pixels = 0;
     bool dimensions_valid = false;
-    pt_mutex *mutex = ft_nullptr;
-    bool thread_safe_enabled = false;
+    pt_recursive_mutex *mutex = ft_nullptr;
 };
 
 struct s_readline_state
@@ -53,8 +52,7 @@ struct s_readline_state
     int            word_start;
     char        *current_matches[MAX_SUGGESTIONS];
     ft_file        error_file;
-    pt_mutex    *mutex;
-    bool        thread_safe_enabled;
+    pt_recursive_mutex    *mutex;
 };
 
 typedef struct s_readline_state readline_state_t;

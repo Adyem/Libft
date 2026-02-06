@@ -19,11 +19,8 @@ class pt_condition_variable
         pthread_mutex_t _mutex;
         bool _condition_initialized;
         bool _mutex_initialized;
-        mutable int _error_code;
         mutable pt_mutex *_state_mutex;
-        bool _thread_safe_enabled;
 
-        void set_error(int error) const;
         int lock_internal(bool *lock_acquired) const;
         void unlock_internal(bool lock_acquired) const;
         void teardown_thread_safety();
@@ -46,9 +43,6 @@ class pt_condition_variable
         int wait_until(pt_mutex &mutex, const struct timespec &absolute_time);
         int signal();
         int broadcast();
-
-        int get_error() const;
-        const char *get_error_str() const;
 };
 
 #endif

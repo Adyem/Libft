@@ -70,7 +70,7 @@ FT_TEST(test_ft_stringbuf_copy_constructor_mutex_is_fresh,
     FT_ASSERT(duration_ms < 40);
     FT_ASSERT_EQ('m', character);
     FT_ASSERT_EQ(true, copied.is_valid());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_global_error_stack_last_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_global_error_stack_peek_last_error());
     return (1);
 }
 
@@ -107,7 +107,7 @@ FT_TEST(test_ft_stringbuf_move_constructor_mutex_is_fresh,
     FT_ASSERT(duration_ms < 40);
     FT_ASSERT_EQ('m', character);
     FT_ASSERT_EQ(true, moved.is_valid());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_global_error_stack_last_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_global_error_stack_peek_last_error());
     return (1);
 }
 
@@ -146,7 +146,7 @@ FT_TEST(test_ft_stringbuf_copy_assignment_mutex_is_fresh,
     FT_ASSERT(duration_ms < 40);
     FT_ASSERT_EQ('a', character);
     FT_ASSERT_EQ(true, target.is_valid());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_global_error_stack_last_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_global_error_stack_peek_last_error());
     return (1);
 }
 
@@ -185,6 +185,6 @@ FT_TEST(test_ft_stringbuf_move_assignment_mutex_is_fresh,
     FT_ASSERT(duration_ms < 40);
     FT_ASSERT_EQ('m', character);
     FT_ASSERT_EQ(true, target.is_valid());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_global_error_stack_last_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_global_error_stack_peek_last_error());
     return (1);
 }

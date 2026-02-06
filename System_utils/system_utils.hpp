@@ -68,10 +68,9 @@ int     su_locale_casefold(const char *input, const char *locale_name,
 typedef struct su_file
 {
     pt_mutex    *mutex;
-    bool        thread_safe_enabled;
     bool        closed;
     int         _descriptor;
-} su_file;
+}   su_file;
 
 void    su_force_file_stream_allocation_failure(bool should_fail);
 void    su_force_fread_failure(int error_code);
@@ -89,6 +88,9 @@ int     su_file_prepare_thread_safety(su_file *stream);
 void    su_file_teardown_thread_safety(su_file *stream);
 int     su_file_lock(su_file *stream, bool *lock_acquired);
 void    su_file_unlock(su_file *stream, bool lock_acquired);
+
+int     su_environment_enable_thread_safety(void);
+void    su_environment_disable_thread_safety(void);
 
 int     su_copy_file(const char *source_path, const char *destination_path);
 int     su_copy_directory_recursive(const char *source_path,

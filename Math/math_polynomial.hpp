@@ -12,7 +12,12 @@ typedef double (*math_unary_function)(double value, void *user_data);
 class ft_cubic_spline
 {
     private:
-        mutable pt_recursive_mutex _mutex;
+        mutable pt_recursive_mutex *_mutex = ft_nullptr;
+
+        int                         lock_mutex(void) const noexcept;
+        int                         unlock_mutex(void) const noexcept;
+        int                         prepare_thread_safety(void) const noexcept;
+        void                        teardown_thread_safety(void) const noexcept;
 
     public:
         ft_vector<double> x_values;
@@ -28,6 +33,9 @@ class ft_cubic_spline
         ft_cubic_spline &operator=(const ft_cubic_spline &other) = delete;
         ~ft_cubic_spline() noexcept;
         pt_recursive_mutex *get_mutex_for_validation() const noexcept;
+        int enable_thread_safety() noexcept;
+        void disable_thread_safety() noexcept;
+        bool is_thread_safe_enabled() const noexcept;
 };
 
 int math_polynomial_evaluate(const ft_vector<double> &coefficients,

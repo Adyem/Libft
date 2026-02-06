@@ -46,7 +46,7 @@ int time_duration_ms_prepare_thread_safety(t_duration_milliseconds *duration)
         if (mutex_pointer == ft_nullptr)
             mutex_error = FT_ERR_SUCCESSS;
         else
-            mutex_error = ft_global_error_stack_pop_newest();
+            mutex_error = ft_global_error_stack_drop_last_error();
 
         if (mutex_error != FT_ERR_SUCCESSS)
         {
@@ -86,7 +86,7 @@ int time_duration_ms_lock(const t_duration_milliseconds *duration, bool *lock_ac
         if (mutable_duration->mutex == ft_nullptr)
             lock_error = FT_ERR_SUCCESSS;
         else
-            lock_error = ft_global_error_stack_pop_newest();
+            lock_error = ft_global_error_stack_drop_last_error();
 
         if (lock_error != FT_ERR_SUCCESSS)
             return (time_duration_ms_report_result(lock_error, -1));
@@ -123,7 +123,7 @@ void    time_duration_ms_unlock(const t_duration_milliseconds *duration, bool lo
         if (mutable_duration->mutex == ft_nullptr)
             unlock_error = FT_ERR_SUCCESSS;
         else
-            unlock_error = ft_global_error_stack_pop_newest();
+            unlock_error = ft_global_error_stack_drop_last_error();
 
         if (unlock_error != FT_ERR_SUCCESSS)
         {

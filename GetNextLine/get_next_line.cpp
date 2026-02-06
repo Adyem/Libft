@@ -347,18 +347,14 @@ static char* read_stream(gnl_stream *stream, char* readed_string, std::size_t bu
         return (ft_nullptr);
     }
     if (readed_string && ft_strchr(readed_string, '\n'))
-    {
         return (readed_string);
-    }
     buffer = static_cast<char*>(cma_malloc(buffer_size + 1));
     if (!buffer)
     {
         if (read_error)
             *read_error = FT_ERR_NO_MEMORY;
         if (readed_string)
-        {
             cma_free(readed_string);
-        }
         return (ft_nullptr);
     }
     readed_bytes = 1;
@@ -371,7 +367,7 @@ static char* read_stream(gnl_stream *stream, char* readed_string, std::size_t bu
         {
             int stream_error_code;
 
-            stream_error_code = stream->get_error();
+            stream_error_code = ft_global_error_stack_drop_last_error();
             if (stream_error_code == FT_ERR_SUCCESSS)
                 stream_error_code = FT_ERR_IO;
             cma_free(buffer);
@@ -393,19 +389,17 @@ static char* read_stream(gnl_stream *stream, char* readed_string, std::size_t bu
             readed_string = ft_strjoin_gnl(readed_string, buffer);
             if (!readed_string)
             {
-                error_code = ft_global_error_stack_pop_newest();
+                error_code = ft_global_error_stack_drop_last_error();
                 if (error_code == FT_ERR_SUCCESSS)
                     error_code = FT_ERR_NO_MEMORY;
                 if (previous_string)
-                {
                     cma_free(previous_string);
-                }
                 cma_free(buffer);
                 if (read_error)
                     *read_error = error_code;
                 return (ft_nullptr);
             }
-            ft_global_error_stack_pop_newest();
+            ft_global_error_stack_drop_last_error();
         }
     }
     cma_free(buffer);

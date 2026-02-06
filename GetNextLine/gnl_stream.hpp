@@ -5,8 +5,7 @@
 #include <cstdio>
 #include <unistd.h>
 
-#include "../PThread/mutex.hpp"
-#include "../PThread/unique_lock.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 
@@ -20,14 +19,18 @@ class gnl_stream
         int _file_descriptor;
         FILE *_file_handle;
         bool _close_on_reset;
-        mutable int _error_code;
-        mutable pt_mutex _mutex;
+        mutable pt_recursive_mutex *_mutex = ft_nullptr;
+        mutable bool _thread_safe_enabled = false;
 
-        void set_error_unlocked(int error_code) const noexcept;
-        void set_error(int error_code) const noexcept;
-        int lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept;
-        ssize_t read_from_descriptor(int file_descriptor, char *buffer, size_t max_size) const noexcept;
-        ssize_t read_from_file(FILE *file_handle, char *buffer, size_t max_size) const noexcept;
+        ssize_t read_from_descriptor(int file_descriptor, char *buffer, size_t max_size, int *error_code) const noexcept;
+        ssize_t read_from_file(FILE *file_handle, char *buffer, size_t max_size, int *error_code) const noexcept;
+        int     lock_mutex(void) noexcept;
+        int     unlock_mutex(void) noexcept;
+        int     enable_thread_safety(void) noexcept;
+        void    disable_thread_safety(void) noexcept;
+        bool    is_thread_safe_enabled(void) const noexcept;
+        int     prepare_thread_safety(void) noexcept;
+        void    teardown_thread_safety(void) noexcept;
 
     public:
         gnl_stream() noexcept;
@@ -44,8 +47,6 @@ class gnl_stream
                 void *user_data) noexcept;
         void reset() noexcept;
         ssize_t read(char *buffer, size_t max_size) noexcept;
-        int get_error() const noexcept;
-        const char *get_error_str() const noexcept;
 };
 
 #endif

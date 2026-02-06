@@ -27,7 +27,7 @@ static void json_writer_push_error(int error_code)
 
 static char *json_writer_return_failure(void)
 {
-    if (ft_global_error_stack_last_error() == FT_ERR_SUCCESSS)
+    if (ft_global_error_stack_peek_last_error() == FT_ERR_SUCCESSS)
         json_writer_push_error(FT_ERR_NO_MEMORY);
     return (ft_nullptr);
 }

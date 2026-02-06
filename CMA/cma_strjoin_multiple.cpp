@@ -20,7 +20,7 @@ char *cma_strjoin_multiple(int count, ...)
         return (ft_nullptr);
     }
     size_t *cached_lengths = static_cast<size_t*>(cma_malloc(static_cast<size_t>(count) * sizeof(size_t)));
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (!cached_lengths)
     {
         ft_global_error_stack_push(error_code);
@@ -37,14 +37,14 @@ char *cma_strjoin_multiple(int count, ...)
         if (current_string)
         {
             size_t measured_length = ft_strlen_size_t(current_string);
-            error_code = ft_global_error_stack_pop_newest();
+            error_code = ft_global_error_stack_drop_last_error();
             current_length = measured_length;
             if (total_length > SIZE_MAX - current_length)
             {
                 error_code = FT_ERR_OUT_OF_RANGE;
                 va_end(args);
                 cma_free(cached_lengths);
-                error_code = ft_global_error_stack_pop_newest();
+                error_code = ft_global_error_stack_drop_last_error();
                 if (error_code == FT_ERR_SUCCESSS)
                     error_code = FT_ERR_OUT_OF_RANGE;
                 ft_global_error_stack_push(error_code);
@@ -60,18 +60,18 @@ char *cma_strjoin_multiple(int count, ...)
     {
         error_code = FT_ERR_OUT_OF_RANGE;
         cma_free(cached_lengths);
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_OUT_OF_RANGE;
         ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }
     char *result = static_cast<char*>(cma_malloc(total_length + 1));
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (!result)
     {
         cma_free(cached_lengths);
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }
@@ -94,11 +94,11 @@ char *cma_strjoin_multiple(int count, ...)
     }
     va_end(args);
     cma_free(cached_lengths);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         cma_free(result);
-        ft_global_error_stack_pop_newest();
+        ft_global_error_stack_drop_last_error();
         ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }

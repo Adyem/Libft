@@ -16,7 +16,7 @@ int ft_utf8_count(const char *string, size_t *code_point_count_pointer)
         return (FT_FAILURE);
     }
     string_length = ft_strlen_size_t(string);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(error_code);
@@ -36,7 +36,7 @@ int ft_utf8_count(const char *string, size_t *code_point_count_pointer)
         if (ft_utf8_next(string, string_length, &working_index,
                 &code_point_value, &sequence_length) != FT_SUCCESS)
         {
-            error_code = ft_global_error_stack_pop_newest();
+            error_code = ft_global_error_stack_drop_last_error();
             if (error_code != FT_ERR_SUCCESSS)
             {
                 ft_global_error_stack_push(error_code);
@@ -47,7 +47,7 @@ int ft_utf8_count(const char *string, size_t *code_point_count_pointer)
             }
             return (FT_FAILURE);
         }
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code != FT_ERR_SUCCESSS)
         {
             ft_global_error_stack_push(error_code);

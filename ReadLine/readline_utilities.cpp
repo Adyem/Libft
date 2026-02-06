@@ -168,7 +168,7 @@ int rl_history_search(const char *query, int start_index,
         return (FT_ERR_INVALID_ARGUMENT);
     *match_index = -1;
     query_code_points = ft_utf8_to_utf32(query, 0, &query_length);
-    int conversion_error = ft_global_error_stack_pop_newest();
+    int conversion_error = ft_global_error_stack_drop_last_error();
         if (query_code_points == ft_nullptr)
         {
             if (conversion_error == FT_ERR_SUCCESSS)
@@ -207,7 +207,7 @@ int rl_history_search(const char *query, int start_index,
                 continue ;
             }
             entry_code_points = ft_utf8_to_utf32(history_entry, 0, &entry_length);
-            entry_error = ft_global_error_stack_pop_newest();
+            entry_error = ft_global_error_stack_drop_last_error();
             if (entry_code_points == ft_nullptr)
             {
                 cma_free(query_code_points);
@@ -253,7 +253,7 @@ int rl_history_search(const char *query, int start_index,
                 continue ;
             }
             entry_code_points = ft_utf8_to_utf32(history_entry, 0, &entry_length);
-            entry_error = ft_global_error_stack_pop_newest();
+            entry_error = ft_global_error_stack_drop_last_error();
             if (entry_code_points == ft_nullptr)
             {
                 cma_free(query_code_points);

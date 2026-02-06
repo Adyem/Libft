@@ -14,7 +14,7 @@ static void json_utils_push_error(int error_code)
 
 static int json_utils_pop_error(void)
 {
-    return (ft_global_error_stack_pop_newest());
+    return (ft_global_error_stack_drop_last_error());
 }
 
 static json_item *json_find_item_locked(json_group *group, const char *key)

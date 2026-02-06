@@ -18,7 +18,7 @@ float ft_random_gamma(float shape, float scale)
     distribution = std::gamma_distribution<float>(shape, scale);
     {
         ft_unique_lock<pt_mutex> guard(g_random_engine_mutex);
-        int error_code = ft_global_error_stack_pop_newest();
+        int error_code = ft_global_error_stack_drop_last_error();
 
         if (error_code != FT_ERR_SUCCESSS)
         {

@@ -101,7 +101,7 @@ size_t  time_strftime(char *buffer, size_t size, const char *format, const t_tim
     }
     lock_acquired = false;
     lock_error = time_info_lock(time_info, &lock_acquired);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (lock_error != 0 || error_code != FT_ERR_SUCCESSS)
     {
         if (error_code == FT_ERR_SUCCESSS)
@@ -149,7 +149,7 @@ size_t  time_strftime(char *buffer, size_t size, const char *format, const t_tim
                 else
                     minimum_width = 2;
                 length = format_time_component(number_buffer, sizeof(number_buffer), value, minimum_width);
-                error_code = ft_global_error_stack_pop_newest();
+                error_code = ft_global_error_stack_drop_last_error();
                 if (length == 0 && error_code != FT_ERR_SUCCESSS)
                 {
                     if (output_index < size)
@@ -198,7 +198,7 @@ size_t  time_strftime(char *buffer, size_t size, const char *format, const t_tim
             error_code = FT_ERR_OUT_OF_RANGE;
     }
     time_info_unlock(time_info, lock_acquired);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(error_code);

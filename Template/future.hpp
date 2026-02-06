@@ -124,7 +124,7 @@ int ft_future<ValueType>::prepare_thread_safety() const
     if (memory_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     pt_recursive_mutex *mutex_pointer = new(memory_pointer) pt_recursive_mutex();
-    int mutex_error = ft_global_error_stack_last_error();
+    int mutex_error = ft_global_error_stack_peek_last_error();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         mutex_pointer->~pt_recursive_mutex();
@@ -175,7 +175,7 @@ void ft_future<ValueType>::initialize_mutex_state() const
 
     if (this->_state_mutex == ft_nullptr)
         return ;
-    mutex_error = ft_global_error_stack_pop_newest();
+    mutex_error = ft_global_error_stack_drop_last_error();
     if (mutex_error != FT_ERR_SUCCESSS)
         this->report_result(mutex_error);
     return ;
@@ -184,7 +184,7 @@ void ft_future<ValueType>::initialize_mutex_state() const
 template <typename ValueType>
 int ft_future<ValueType>::last_error_code() const
 {
-    return (ft_global_error_stack_last_error());
+    return (ft_global_error_stack_peek_last_error());
 }
 
 template <typename ValueType>
@@ -520,7 +520,7 @@ inline int ft_future<void>::prepare_thread_safety() const
     if (memory_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     pt_recursive_mutex *mutex_pointer = new(memory_pointer) pt_recursive_mutex();
-    int mutex_error = ft_global_error_stack_last_error();
+    int mutex_error = ft_global_error_stack_peek_last_error();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         mutex_pointer->~pt_recursive_mutex();
@@ -572,7 +572,7 @@ inline void ft_future<void>::initialize_mutex_state() const
 
     if (this->_state_mutex == ft_nullptr)
         return ;
-    mutex_error = ft_global_error_stack_pop_newest();
+    mutex_error = ft_global_error_stack_drop_last_error();
     if (mutex_error != FT_ERR_SUCCESSS)
         this->report_result(mutex_error);
     return ;
@@ -580,7 +580,7 @@ inline void ft_future<void>::initialize_mutex_state() const
 
 inline int ft_future<void>::last_error_code() const
 {
-    return (ft_global_error_stack_last_error());
+    return (ft_global_error_stack_peek_last_error());
 }
 
 inline ft_future<void>::ft_future()
@@ -912,7 +912,7 @@ int ft_future<ValueType>::lock_internal(bool *lock_acquired) const
     if (!this->is_thread_safe())
         return (FT_ERR_SUCCESSS);
     mutex_result = this->_state_mutex->lock(THREAD_ID);
-    global_error = ft_global_error_stack_pop_newest();
+    global_error = ft_global_error_stack_drop_last_error();
     operation_error = global_error;
     if (global_error == FT_ERR_SUCCESSS)
         operation_error = mutex_result;
@@ -942,7 +942,7 @@ int ft_future<ValueType>::unlock_internal(bool lock_acquired) const
         return (FT_ERR_SUCCESSS);
     }
     mutex_result = this->_state_mutex->unlock(THREAD_ID);
-    global_error = ft_global_error_stack_pop_newest();
+    global_error = ft_global_error_stack_drop_last_error();
     operation_error = global_error;
     if (global_error == FT_ERR_SUCCESSS)
         operation_error = mutex_result;
@@ -979,7 +979,7 @@ inline int ft_future<void>::lock_internal(bool *lock_acquired) const
     if (!this->is_thread_safe())
         return (FT_ERR_SUCCESSS);
     mutex_result = this->_state_mutex->lock(THREAD_ID);
-    global_error = ft_global_error_stack_pop_newest();
+    global_error = ft_global_error_stack_drop_last_error();
     operation_error = global_error;
     if (global_error == FT_ERR_SUCCESSS)
         operation_error = mutex_result;
@@ -1008,7 +1008,7 @@ inline int ft_future<void>::unlock_internal(bool lock_acquired) const
         return (FT_ERR_SUCCESSS);
     }
     mutex_result = this->_state_mutex->unlock(THREAD_ID);
-    global_error = ft_global_error_stack_pop_newest();
+    global_error = ft_global_error_stack_drop_last_error();
     operation_error = global_error;
     if (global_error == FT_ERR_SUCCESSS)
         operation_error = mutex_result;

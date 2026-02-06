@@ -217,8 +217,8 @@ int ft_promise<ValueType>::prepare_thread_safety()
         {
             int mutex_error;
 
-            mutex_error = ft_global_error_stack_pop_newest();
-            ft_global_error_stack_pop_newest();
+            mutex_error = ft_global_error_stack_drop_last_error();
+            ft_global_error_stack_drop_last_error();
             if (mutex_error != FT_ERR_SUCCESSS)
             {
                 mutex_pointer->~pt_mutex();
@@ -253,8 +253,8 @@ inline int ft_promise<void>::prepare_thread_safety()
         {
             int mutex_error;
 
-            mutex_error = ft_global_error_stack_pop_newest();
-            ft_global_error_stack_pop_newest();
+            mutex_error = ft_global_error_stack_drop_last_error();
+            ft_global_error_stack_drop_last_error();
             if (mutex_error != FT_ERR_SUCCESSS)
             {
                 mutex_pointer->~pt_mutex();
@@ -312,8 +312,8 @@ int ft_promise<ValueType>::lock_internal(bool *lock_acquired) const
     mutable_promise->_mutex->lock(THREAD_ID);
     int mutex_error;
 
-    mutex_error = ft_global_error_stack_pop_newest();
-    ft_global_error_stack_pop_newest();
+    mutex_error = ft_global_error_stack_drop_last_error();
+    ft_global_error_stack_drop_last_error();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         mutable_promise->set_error_unlocked(mutex_error);
@@ -340,8 +340,8 @@ inline int ft_promise<void>::lock_internal(bool *lock_acquired) const
     mutable_promise->_mutex->lock(THREAD_ID);
     int mutex_error;
 
-    mutex_error = ft_global_error_stack_pop_newest();
-    ft_global_error_stack_pop_newest();
+    mutex_error = ft_global_error_stack_drop_last_error();
+    ft_global_error_stack_drop_last_error();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         mutable_promise->set_error_unlocked(mutex_error);
@@ -366,8 +366,8 @@ int ft_promise<ValueType>::unlock_internal(bool lock_acquired) const
     mutable_promise->_mutex->unlock(THREAD_ID);
     int mutex_error;
 
-    mutex_error = ft_global_error_stack_pop_newest();
-    ft_global_error_stack_pop_newest();
+    mutex_error = ft_global_error_stack_drop_last_error();
+    ft_global_error_stack_drop_last_error();
     return (mutex_error);
 }
 
@@ -383,8 +383,8 @@ inline int ft_promise<void>::unlock_internal(bool lock_acquired) const
     mutable_promise->_mutex->unlock(THREAD_ID);
     int mutex_error;
 
-    mutex_error = ft_global_error_stack_pop_newest();
-    ft_global_error_stack_pop_newest();
+    mutex_error = ft_global_error_stack_drop_last_error();
+    ft_global_error_stack_drop_last_error();
     return (mutex_error);
 }
 

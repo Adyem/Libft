@@ -9,7 +9,6 @@
 #include "../Libft/libft.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/recursive_mutex.hpp"
-#include "../PThread/pthread.hpp"
 
 class DataBuffer
 {
@@ -17,10 +16,15 @@ class DataBuffer
         ft_vector<uint8_t> _buffer;
         size_t _read_pos;
         bool _ok;
-        mutable pt_recursive_mutex _mutex;
+        mutable pt_recursive_mutex *_mutex;
 
-        int lock_self() const noexcept;
-        int unlock_self() const noexcept;
+        int lock_mutex(void) const noexcept;
+        int unlock_mutex(void) const noexcept;
+        int prepare_thread_safety(void) noexcept;
+        void teardown_thread_safety(void) noexcept;
+        int enable_thread_safety(void) noexcept;
+        void disable_thread_safety(void) noexcept;
+        bool is_thread_safe_enabled(void) const noexcept;
         static int lock_pair(const DataBuffer &first, const DataBuffer &second,
                 const DataBuffer *&lower, const DataBuffer *&upper) noexcept;
         static int unlock_pair(const DataBuffer *lower, const DataBuffer *upper) noexcept;
@@ -62,7 +66,7 @@ DataBuffer& DataBuffer::operator<<(const T& value)
 {
     std::ostringstream oss;
     oss << value;
-    int lock_error = this->lock_self();
+    int lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(lock_error);
@@ -90,7 +94,7 @@ DataBuffer& DataBuffer::operator<<(const T& value)
             while (index < len)
             {
                 this->_buffer.push_back(static_cast<uint8_t>(bytes[index]));
-                int buffer_error = ft_global_error_stack_last_error();
+                int buffer_error = ft_global_error_stack_peek_last_error();
                 if (buffer_error != FT_ERR_SUCCESSS)
                 {
                     this->_ok = false;
@@ -104,7 +108,7 @@ DataBuffer& DataBuffer::operator<<(const T& value)
     }
     this->_ok = (final_error == FT_ERR_SUCCESSS);
     {
-        int unlock_error = this->unlock_self();
+        int unlock_error = this->unlock_mutex();
         if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
             final_error = unlock_error;
     }
@@ -115,7 +119,7 @@ DataBuffer& DataBuffer::operator<<(const T& value)
 template<typename T>
 DataBuffer& DataBuffer::operator>>(T& value)
 {
-    int lock_error = this->lock_self();
+    int lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(lock_error);
@@ -147,13 +151,13 @@ DataBuffer& DataBuffer::operator>>(T& value)
             ft_string string_value(bytes);
             ft_istringstream iss(string_value);
             iss >> value;
-            final_error = ft_global_error_stack_last_error();
+            final_error = ft_global_error_stack_peek_last_error();
             cma_free(bytes);
         }
     }
     this->_ok = (final_error == FT_ERR_SUCCESSS);
     {
-        int unlock_error = this->unlock_self();
+        int unlock_error = this->unlock_mutex();
         if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
             final_error = unlock_error;
     }

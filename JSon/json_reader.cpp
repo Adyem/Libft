@@ -25,7 +25,7 @@ static void json_reader_push_error(int error_code)
 
 static int json_reader_pop_error(void)
 {
-    return (ft_global_error_stack_pop_newest());
+    return (ft_global_error_stack_drop_last_error());
 }
 
 static void json_reader_set_io_error(int last_error)

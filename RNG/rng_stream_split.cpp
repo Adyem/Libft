@@ -68,7 +68,7 @@ int rng_stream_seed_from_string(const char *seed_string, uint64_t stream_identif
         return (-1);
     }
     uint32_t base_seed_32 = ft_random_seed(seed_string);
-    int error_code = ft_global_error_stack_pop_newest();
+    int error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(error_code);
@@ -85,7 +85,7 @@ int rng_stream_seed_sequence_from_string(const char *seed_string, uint64_t strea
         return (-1);
     }
     uint32_t base_seed_32 = ft_random_seed(seed_string);
-    int error_code = ft_global_error_stack_pop_newest();
+    int error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(error_code);

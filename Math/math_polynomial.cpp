@@ -3,9 +3,8 @@
 #include <cmath>
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../Template/move.hpp"
-#include "../PThread/lock_guard.hpp"
-
 static void math_polynomial_copy_vector(const ft_vector<double> &source,
     ft_vector<double> &destination,
     size_t count,
@@ -29,21 +28,90 @@ static void math_polynomial_copy_vector(const ft_vector<double> &source,
     return ;
 }
 
+int ft_cubic_spline::lock_mutex() const noexcept
+{
+    return (pt_recursive_mutex_lock_if_enabled(
+        this->_mutex,
+        this->_mutex != ft_nullptr
+    ));
+}
+
+int ft_cubic_spline::unlock_mutex() const noexcept
+{
+    return (pt_recursive_mutex_unlock_if_enabled(
+        this->_mutex,
+        this->_mutex != ft_nullptr
+    ));
+}
+
+int ft_cubic_spline::prepare_thread_safety(void) const noexcept
+{
+    if (this->_mutex != ft_nullptr)
+    {
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESSS);
+    }
+    pt_recursive_mutex *mutex_pointer = ft_nullptr;
+    int mutex_error = pt_recursive_mutex_create_with_error(&mutex_pointer);
+    if (mutex_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(mutex_error);
+        return (mutex_error);
+    }
+    this->_mutex = mutex_pointer;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
+}
+
+void ft_cubic_spline::teardown_thread_safety(void) const noexcept
+{
+    pt_recursive_mutex_destroy(&this->_mutex);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return ;
+}
+
+int ft_cubic_spline::enable_thread_safety() noexcept
+{
+    return (this->prepare_thread_safety());
+}
+
+void ft_cubic_spline::disable_thread_safety() noexcept
+{
+    this->teardown_thread_safety();
+    return ;
+}
+
+bool ft_cubic_spline::is_thread_safe_enabled() const noexcept
+{
+    return (this->_mutex != ft_nullptr);
+}
+
 ft_cubic_spline::ft_cubic_spline() noexcept
-    : _mutex()
+    : _mutex(ft_nullptr)
 {
     return ;
 }
 
 ft_cubic_spline::ft_cubic_spline(ft_cubic_spline &&other) noexcept
-    : _mutex()
+    : _mutex(ft_nullptr)
 {
-    ft_recursive_lock_guard guard(other._mutex);
+    pt_recursive_mutex *moved_mutex = other._mutex;
+    int lock_error = other.lock_mutex();
+    if (lock_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(lock_error);
+        return ;
+    }
     this->x_values = ft_move(other.x_values);
     this->a_coefficients = ft_move(other.a_coefficients);
     this->b_coefficients = ft_move(other.b_coefficients);
     this->c_coefficients = ft_move(other.c_coefficients);
     this->d_coefficients = ft_move(other.d_coefficients);
+    int unlock_error = other.unlock_mutex();
+    if (unlock_error != FT_ERR_SUCCESSS)
+        ft_global_error_stack_push(unlock_error);
+    this->_mutex = moved_mutex;
+    other._mutex = ft_nullptr;
     return ;
 }
 
@@ -51,23 +119,29 @@ ft_cubic_spline &ft_cubic_spline::operator=(ft_cubic_spline &&other) noexcept
 {
     if (this != &other)
     {
+        this->disable_thread_safety();
         this->x_values = ft_move(other.x_values);
         this->a_coefficients = ft_move(other.a_coefficients);
         this->b_coefficients = ft_move(other.b_coefficients);
         this->c_coefficients = ft_move(other.c_coefficients);
         this->d_coefficients = ft_move(other.d_coefficients);
+        this->_mutex = other._mutex;
+        other._mutex = ft_nullptr;
     }
     return (*this);
 }
 
 ft_cubic_spline::~ft_cubic_spline() noexcept
 {
+    this->disable_thread_safety();
     return ;
 }
 
 pt_recursive_mutex *ft_cubic_spline::get_mutex_for_validation() const noexcept
 {
-    return (&this->_mutex);
+    if (this->_mutex == ft_nullptr)
+        this->prepare_thread_safety();
+    return (this->_mutex);
 }
 
 static int math_polynomial_validate_coefficients(const ft_vector<double> &coefficients) noexcept
@@ -407,14 +481,14 @@ static int math_polynomial_extract_coordinates(const ft_vector<vector2> &control
     {
         point = control_points[index];
         x_value = point.get_x();
-        int point_error = ft_global_error_stack_last_error();
+        int point_error = ft_global_error_stack_peek_last_error();
         if (point_error != FT_ERR_SUCCESSS)
         {
             ft_global_error_stack_push(point_error);
             return (point_error);
         }
         y_value = point.get_y();
-        point_error = ft_global_error_stack_last_error();
+        point_error = ft_global_error_stack_peek_last_error();
         if (point_error != FT_ERR_SUCCESSS)
         {
             ft_global_error_stack_push(point_error);
@@ -467,7 +541,7 @@ int math_bezier_evaluate_vector2(const ft_vector<vector2> &control_points,
     }
     evaluated_point = vector2(x_value, y_value);
     result = evaluated_point;
-    int result_error = ft_global_error_stack_last_error();
+    int result_error = ft_global_error_stack_peek_last_error();
     if (result_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(result_error);

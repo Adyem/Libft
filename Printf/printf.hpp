@@ -31,5 +31,7 @@ typedef int (*t_pf_custom_formatter)(va_list *args, ft_string &output, void *con
 
 int pf_register_custom_specifier(char specifier, t_pf_custom_formatter handler, void *context);
 int pf_unregister_custom_specifier(char specifier);
+int pf_enable_thread_safety(void);
+void pf_disable_thread_safety(void);
 
 #endif

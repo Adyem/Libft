@@ -32,7 +32,7 @@ int html_attr_prepare_thread_safety(html_attr *attribute)
         if (mutex_pointer == ft_nullptr)
             mutex_error = FT_ERR_SUCCESSS;
         else
-            mutex_error = ft_global_error_stack_pop_newest();
+            mutex_error = ft_global_error_stack_drop_last_error();
 
         if (mutex_error != FT_ERR_SUCCESSS)
         {
@@ -84,7 +84,7 @@ int html_attr_lock(const html_attr *attribute, bool *lock_acquired)
         if (mutable_attribute->mutex == ft_nullptr)
             lock_error = FT_ERR_SUCCESSS;
         else
-            lock_error = ft_global_error_stack_pop_newest();
+            lock_error = ft_global_error_stack_drop_last_error();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {
@@ -117,7 +117,7 @@ void html_attr_unlock(const html_attr *attribute, bool lock_acquired)
         if (mutable_attribute->mutex == ft_nullptr)
             unlock_error = FT_ERR_SUCCESSS;
         else
-            unlock_error = ft_global_error_stack_pop_newest();
+            unlock_error = ft_global_error_stack_drop_last_error();
 
         if (unlock_error != FT_ERR_SUCCESSS)
         {

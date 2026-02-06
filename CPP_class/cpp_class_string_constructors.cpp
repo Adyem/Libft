@@ -9,9 +9,10 @@ ft_string::ft_string() noexcept
     : _data(ft_nullptr)
     , _length(0)
     , _capacity(0)
-    , _mutex()
+    , _mutex(ft_nullptr)
 {
     this->push_error_unlocked(FT_ERR_SUCCESSS);
+    this->prepare_thread_safety();
     return ;
 }
 
@@ -19,7 +20,7 @@ ft_string::ft_string(const char* initial_string) noexcept
     : _data(ft_nullptr)
     , _length(0)
     , _capacity(0)
-    , _mutex()
+    , _mutex(ft_nullptr)
 {
     this->push_error_unlocked(FT_ERR_SUCCESSS);
     if (initial_string)
@@ -31,7 +32,7 @@ ft_string::ft_string(size_t count, char character) noexcept
     : _data(ft_nullptr)
     , _length(0)
     , _capacity(0)
-    , _mutex()
+    , _mutex(ft_nullptr)
 {
     this->push_error_unlocked(FT_ERR_SUCCESSS);
     this->assign(count, character);
@@ -42,7 +43,7 @@ ft_string::ft_string(const ft_string& other) noexcept
     : _data(ft_nullptr)
     , _length(0)
     , _capacity(0)
-    , _mutex()
+    , _mutex(ft_nullptr)
 {
     ft_string::mutex_guard other_guard;
     int lock_error;
@@ -88,7 +89,7 @@ ft_string::ft_string(ft_string&& other) noexcept
     : _data(ft_nullptr)
     , _length(0)
     , _capacity(0)
-    , _mutex()
+    , _mutex(ft_nullptr)
 {
     ft_string::mutex_guard other_guard;
     int lock_error;
@@ -229,6 +230,7 @@ ft_string& ft_string::operator=(ft_string&& other) noexcept
 
 ft_string::~ft_string()
 {
+    this->disable_thread_safety();
     cma_free(this->_data);
     this->_data = ft_nullptr;
     this->_length = 0;

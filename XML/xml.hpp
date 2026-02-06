@@ -40,10 +40,8 @@ class xml_document
         xml_node *_root;
         mutable pt_mutex *_mutex;
         mutable bool _thread_safe_enabled;
-        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
 
         void record_operation_error(int error_code) const noexcept;
-        ft_operation_error_stack *operation_error_stack_handle() const noexcept;
         int prepare_thread_safety() noexcept;
         void teardown_thread_safety() noexcept;
         int lock(bool *lock_acquired) const noexcept;

@@ -1859,14 +1859,14 @@ The catalog lists the function declarations and definitions that appear in the C
 ### Errno/errno.hpp
 
 - `const char *ft_global_error_stack_error_str_at(ft_size_t index);`
-- `const char *ft_global_error_stack_last_error_str(void);`
+- `const char *ft_global_error_stack_peek_last_error_str(void);`
 - `ft_size_t ft_global_error_stack_depth(void);`
 - `ft_size_t ft_global_error_stack_find_by_id(unsigned long long id);`
 - `int ft_global_error_stack_error_at(ft_size_t index);`
-- `int ft_global_error_stack_last_error(void);`
+- `int ft_global_error_stack_peek_last_error(void);`
 - `int ft_global_error_stack_pop_entry_with_id(unsigned long long op_id);`
 - `int ft_global_error_stack_pop_last(void);`
-- `int ft_global_error_stack_pop_newest(void);`
+- `int ft_global_error_stack_drop_last_error(void);`
 - `int ft_set_errno_from_system_error(int error_code);`
 - `unsigned long long ft_errno_next_operation_id(void);`
 - `unsigned long long ft_global_error_stack_get_id_at(ft_size_t index);`
@@ -1882,7 +1882,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `const char *ft_error_stack_error_str_at(const ft_error_stack *error_stack, ft_size_t index)`
 - `const char *ft_error_stack_last_error_str(const ft_error_stack *error_stack)`
 - `const char *ft_global_error_stack_error_str_at(ft_size_t index)`
-- `const char *ft_global_error_stack_last_error_str(void)`
+- `const char *ft_global_error_stack_peek_last_error_str(void)`
 - `ft_errno_mutex_wrapper &ft_errno_mutex()`
 - `ft_size_t ft_error_stack_depth(const ft_error_stack *error_stack)`
 - `ft_size_t ft_error_stack_find_by_id(const ft_error_stack *error_stack, unsigned long long id)`
@@ -1896,10 +1896,10 @@ The catalog lists the function declarations and definitions that appear in the C
 - `int ft_error_stack_pop_last(ft_error_stack *error_stack)`
 - `int ft_error_stack_pop_newest(ft_error_stack *error_stack)`
 - `int ft_global_error_stack_error_at(ft_size_t index)`
-- `int ft_global_error_stack_last_error(void)`
+- `int ft_global_error_stack_peek_last_error(void)`
 - `int ft_global_error_stack_pop_entry_with_id(unsigned long long op_id)`
 - `int ft_global_error_stack_pop_last(void)`
-- `int ft_global_error_stack_pop_newest(void)`
+- `int ft_global_error_stack_drop_last_error(void)`
 - `int ft_operation_error_stack_error_at(const ft_operation_error_stack *error_stack, ft_size_t index)`
 - `int ft_operation_error_stack_last_error(const ft_operation_error_stack *error_stack)`
 - `int ft_operation_error_stack_pop_by_id(ft_operation_error_stack *error_stack, unsigned long long op_id)`
@@ -6268,7 +6268,7 @@ The catalog lists the function declarations and definitions that appear in the C
 
 - `public: pt_errno_guard(GuardType &first_guard, GuardType &second_guard) noexcept;`
 - `static int pt_errno_guard_capture_error() noexcept`
-- `template <typename GuardType> pt_errno_guard<GuardType>::pt_errno_guard(GuardType &first_guard, GuardType &second_guard) noexcept : _first_guard(&first_guard) , _second_guard(&second_guard) , _previous_error(ft_global_error_stack_last_error())`
+- `template <typename GuardType> pt_errno_guard<GuardType>::pt_errno_guard(GuardType &first_guard, GuardType &second_guard) noexcept : _first_guard(&first_guard) , _second_guard(&second_guard) , _previous_error(ft_global_error_stack_peek_last_error())`
 - `template <typename GuardType> pt_errno_guard<GuardType>::~pt_errno_guard() noexcept`
 - `template <typename GuardType> void pt_errno_guard<GuardType>::dismiss() noexcept`
 - `void dismiss() noexcept;`
@@ -11594,7 +11594,7 @@ The catalog lists the function declarations and definitions that appear in the C
 
 - `pt_errno_guard() noexcept {`
 - `pt_errno_guard() noexcept;`
-- `pt_errno_guard(GuardType &first_guard, GuardType &second_guard) noexcept : _first_guard(&first_guard) , _second_guard(&second_guard) , _previous_error(ft_global_error_stack_last_error()) {`
+- `pt_errno_guard(GuardType &first_guard, GuardType &second_guard) noexcept : _first_guard(&first_guard) , _second_guard(&second_guard) , _previous_error(ft_global_error_stack_peek_last_error()) {`
 - `pt_errno_guard(GuardType &first_guard, GuardType &second_guard) noexcept;`
 
 ### PThread/pthread_lock_tracking.cpp

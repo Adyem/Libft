@@ -4,31 +4,32 @@
 #include "../Libft/libft.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/recursive_mutex.hpp"
-#include "../PThread/unique_lock.hpp"
 #include <cstdint>
-
-class ft_big_number;
-
-typedef ft_unique_lock<pt_recursive_mutex>    ft_big_number_mutex_guard;
 
 class ft_big_number
 {
     private:
-
         char*           _digits;
         ft_size_t       _size;
         ft_size_t       _capacity;
         bool            _is_negative;
-        mutable pt_recursive_mutex    _mutex;
+        mutable pt_recursive_mutex *_mutex;
 
         void    reserve(ft_size_t new_capacity) noexcept;
         void    shrink_capacity() noexcept;
         void    push_error_unlocked(int error_code) const noexcept;
         void    push_error(int error_code) const noexcept;
-        int     lock_self(ft_big_number_mutex_guard &guard) const noexcept;
+        int     lock_mutex(void) const noexcept;
+        int     unlock_mutex(void) const noexcept;
+        int     prepare_thread_safety(void) noexcept;
+        void    teardown_thread_safety(void) noexcept;
+        int     enable_thread_safety(void) noexcept;
+        void    disable_thread_safety(void) noexcept;
+        bool    is_thread_safe_enabled(void) const noexcept;
         static int  lock_pair(const ft_big_number &first, const ft_big_number &second,
-                ft_big_number_mutex_guard &first_guard,
-                ft_big_number_mutex_guard &second_guard) noexcept;
+                const ft_big_number *&lower,
+                const ft_big_number *&upper) noexcept;
+        static int  unlock_pair(const ft_big_number *lower, const ft_big_number *upper) noexcept;
         static void sleep_backoff() noexcept;
         static int  initialize_errno_keeper() noexcept;
         static void update_errno_keeper(int &stored_errno, int new_value) noexcept;

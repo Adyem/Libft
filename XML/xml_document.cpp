@@ -11,7 +11,7 @@
 
 static int xml_document_consume_last_error(bool repush_failure = true)
 {
-    int last_error = ft_global_error_stack_pop_newest();
+    int last_error = ft_global_error_stack_drop_last_error();
 
     if (repush_failure && last_error != FT_ERR_SUCCESSS)
         ft_global_error_stack_push(last_error);
@@ -715,21 +715,13 @@ xml_document::~xml_document() noexcept
 
 void xml_document::record_operation_error(int error_code) const noexcept
 {
-    unsigned long long operation_id = ft_errno_next_operation_id();
-
-    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(&this->_operation_errors, error_code, operation_id);
+    ft_global_error_stack_push(error_code);
     return ;
 }
 
 pt_mutex *xml_document::get_mutex_for_validation() const noexcept
 {
     return (this->_mutex);
-}
-
-ft_operation_error_stack *xml_document::operation_error_stack_handle() const noexcept
-{
-    return (&this->_operation_errors);
 }
 
 int xml_document::load_from_string(const char *xml) noexcept
@@ -1156,7 +1148,7 @@ int xml_document::get_error() const noexcept
     int guard_status = guard.get_status();
     if (guard_status != 0)
         return (guard_status);
-    return (ft_operation_error_stack_last_error(&this->_operation_errors));
+    return (ft_global_error_stack_peek_last_error());
 }
 
 const char *xml_document::get_error_str() const noexcept
@@ -1202,7 +1194,7 @@ int xml_document::prepare_thread_safety() noexcept
     if (mutex_pointer == ft_nullptr)
         mutex_error = FT_ERR_SUCCESSS;
     else
-        mutex_error = ft_global_error_stack_pop_newest();
+        mutex_error = ft_global_error_stack_drop_last_error();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         delete mutex_pointer;
@@ -1243,7 +1235,7 @@ int xml_document::lock(bool *lock_acquired) const noexcept
     if (this->_mutex == ft_nullptr)
         mutex_error = FT_ERR_SUCCESSS;
     else
-        mutex_error = ft_global_error_stack_pop_newest();
+        mutex_error = ft_global_error_stack_drop_last_error();
     int reported_error;
 
     if (mutex_error != FT_ERR_SUCCESSS)
@@ -1271,7 +1263,7 @@ void xml_document::unlock(bool lock_acquired) const noexcept
     if (this->_mutex == ft_nullptr)
         mutex_error = FT_ERR_SUCCESSS;
     else
-        mutex_error = ft_global_error_stack_pop_newest();
+        mutex_error = ft_global_error_stack_drop_last_error();
     int reported_error;
 
     if (mutex_error != FT_ERR_SUCCESSS)

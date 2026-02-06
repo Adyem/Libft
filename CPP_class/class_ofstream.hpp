@@ -4,17 +4,20 @@
 #include "class_file.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/recursive_mutex.hpp"
-#include "../PThread/unique_lock.hpp"
 
 class ft_ofstream
 {
     private:
         ft_file _file;
-        mutable pt_recursive_mutex _mutex;
+        mutable pt_recursive_mutex *_mutex;
 
-        int lock_self(ft_unique_lock<pt_recursive_mutex> &guard) const noexcept;
-        static int finalize_lock(ft_unique_lock<pt_recursive_mutex> &guard) noexcept;
-        static int capture_guard_error() noexcept;
+        int lock_mutex(void) const noexcept;
+        int unlock_mutex(void) const noexcept;
+        int prepare_thread_safety(void) noexcept;
+        void teardown_thread_safety(void) noexcept;
+        int enable_thread_safety(void) noexcept;
+        void disable_thread_safety(void) noexcept;
+        bool is_thread_safe_enabled(void) const noexcept;
     public:
         ft_ofstream() noexcept;
         ~ft_ofstream() noexcept;

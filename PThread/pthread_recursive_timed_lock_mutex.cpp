@@ -56,7 +56,7 @@ int pt_recursive_mutex::try_lock_until(pthread_t thread_id, const struct timespe
         return (FT_SUCCESS);
     }
     owned_mutexes = pt_lock_tracking::get_owned_mutexes(thread_id);
-    tracking_error = ft_global_error_stack_pop_newest();
+    tracking_error = ft_global_error_stack_drop_last_error();
     if (tracking_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(tracking_error);
@@ -64,19 +64,19 @@ int pt_recursive_mutex::try_lock_until(pthread_t thread_id, const struct timespe
     }
     if (!pt_lock_tracking::notify_wait(thread_id, &this->_native_mutex, owned_mutexes))
     {
-        tracking_error = ft_global_error_stack_pop_newest();
+        tracking_error = ft_global_error_stack_drop_last_error();
         pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
-        ft_global_error_stack_pop_newest();
+        ft_global_error_stack_drop_last_error();
         if (tracking_error == FT_ERR_SUCCESSS)
             tracking_error = FT_ERR_INVALID_STATE;
         ft_global_error_stack_push(tracking_error);
         return (FT_SUCCESS);
     }
-    tracking_error = ft_global_error_stack_pop_newest();
+    tracking_error = ft_global_error_stack_drop_last_error();
     if (tracking_error != FT_ERR_SUCCESSS)
     {
         pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
-        ft_global_error_stack_pop_newest();
+        ft_global_error_stack_drop_last_error();
         ft_global_error_stack_push(tracking_error);
         return (FT_SUCCESS);
     }
@@ -84,7 +84,7 @@ int pt_recursive_mutex::try_lock_until(pthread_t thread_id, const struct timespe
     if (mutex_error != 0)
     {
         pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
-        ft_global_error_stack_pop_newest();
+        ft_global_error_stack_drop_last_error();
         if (mutex_error == ETIMEDOUT)
         {
             ft_global_error_stack_push(FT_ERR_SUCCESSS);
@@ -97,7 +97,7 @@ int pt_recursive_mutex::try_lock_until(pthread_t thread_id, const struct timespe
     this->_lock = true;
     this->_lock_depth.store(1, std::memory_order_relaxed);
     pt_lock_tracking::notify_acquired(thread_id, &this->_native_mutex);
-    tracking_error = ft_global_error_stack_pop_newest();
+    tracking_error = ft_global_error_stack_drop_last_error();
     if (tracking_error != FT_ERR_SUCCESSS)
         ft_global_error_stack_push(tracking_error);
     else

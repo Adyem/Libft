@@ -166,27 +166,27 @@ void hmac_sha256(const unsigned char *key, size_t key_len, const void *data,
 
     if (hmac_sha256_stream_init(stream, key, key_len) != 0)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         ft_global_error_stack_push(error_code);
         return ;
     }
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     if (hmac_sha256_stream_update(stream, data, len) != 0)
     {
         hmac_sha256_stream_cleanup(stream);
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         ft_global_error_stack_push(error_code);
         return ;
     }
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     if (hmac_sha256_stream_final(stream, digest, 32) != 0)
     {
         hmac_sha256_stream_cleanup(stream);
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         ft_global_error_stack_push(error_code);
         return ;
     }
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     hmac_sha256_stream_cleanup(stream);
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;

@@ -25,14 +25,14 @@ char    *cma_strtrim(const char *input_string, const char *set)
     }
     size_t start = 0;
     size_t end = ft_strlen_size_t(input_string);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     while (input_string[start] && is_in_set(input_string[start], set))
         ++start;
     while (end > start && is_in_set(input_string[end - 1], set))
         --end;
     size_t length = end - start;
     char *trimmed = static_cast<char *>(cma_malloc(length + 1));
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (!trimmed)
     {
         ft_global_error_stack_push(error_code);

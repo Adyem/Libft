@@ -20,6 +20,7 @@ vector2::vector2(double x, double y)
 
 vector2::~vector2()
 {
+    this->disable_thread_safety();
     return ;
 }
 
@@ -43,6 +44,7 @@ vector3::vector3(double x, double y, double z)
 
 vector3::~vector3()
 {
+    this->disable_thread_safety();
     return ;
 }
 
@@ -68,6 +70,7 @@ vector4::vector4(double x, double y, double z, double w)
 
 vector4::~vector4()
 {
+    this->disable_thread_safety();
     return ;
 }
 
@@ -107,6 +110,7 @@ matrix2::matrix2(double m00, double m01,
 
 matrix2::~matrix2()
 {
+    this->disable_thread_safety();
     return ;
 }
 
@@ -152,6 +156,7 @@ matrix3::matrix3(double m00, double m01, double m02,
 
 matrix3::~matrix3()
 {
+    this->disable_thread_safety();
     return ;
 }
 
@@ -205,5 +210,6 @@ matrix4::matrix4(double m00, double m01, double m02, double m03,
 
 matrix4::~matrix4()
 {
+    this->disable_thread_safety();
     return ;
 }

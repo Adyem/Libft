@@ -20,7 +20,7 @@ static void json_stream_writer_push_error(int error_code)
 
 static int json_stream_writer_last_error(void)
 {
-    return (ft_global_error_stack_last_error());
+    return (ft_global_error_stack_peek_last_error());
 }
 
 static int json_stream_writer_write_chunk(json_stream_writer *writer,

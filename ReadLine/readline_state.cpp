@@ -22,7 +22,6 @@ s_readline_state::s_readline_state(void)
         index++;
     }
     this->mutex = ft_nullptr;
-    this->thread_safe_enabled = false;
     return ;
 }
 
@@ -40,6 +39,5 @@ s_readline_state::~s_readline_state(void)
     this->current_match_index = 0;
     this->word_start = 0;
     this->mutex = ft_nullptr;
-    this->thread_safe_enabled = false;
     return ;
 }

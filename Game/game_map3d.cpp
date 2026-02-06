@@ -379,7 +379,7 @@ int ft_map3d::pop_newest_operation_error() noexcept
 
     if (error_value != FT_ERR_SUCCESSS)
         return (error_value);
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     return (error_value);
 }
 

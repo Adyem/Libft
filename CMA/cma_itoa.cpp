@@ -36,11 +36,9 @@ static char    *convert_int(int number, int is_negative, int *error_code)
 
     length = itoa_length(number);
     result = static_cast<char *>(cma_malloc(length + 1 + is_negative));
-    *error_code = ft_global_error_stack_pop_newest();
+    *error_code = ft_global_error_stack_drop_last_error();
     if (!result)
-    {
         return (ft_nullptr);
-    }
     if (number < 0)
         absolute_value = -number;
     else
@@ -66,7 +64,7 @@ char    *cma_itoa(int number)
     else if (number == -2147483648)
     {
         result = cma_strdup("-2147483648");
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (!result)
         {
             ft_global_error_stack_push(error_code);
@@ -79,7 +77,7 @@ char    *cma_itoa(int number)
     else if (number == 0)
     {
         result = cma_strdup("0");
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (!result)
         {
             ft_global_error_stack_push(error_code);

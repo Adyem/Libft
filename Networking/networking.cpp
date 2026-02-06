@@ -1,14 +1,13 @@
 #include "networking.hpp"
 #include "../Errno/errno.hpp"
-#include "../Errno/errno_internal.hpp"
 #include <cstring>
 
 static int networking_consume_global_error(void) noexcept
 {
     int error_code;
 
-    error_code = ft_global_error_stack_last_error();
-    ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_peek_last_error();
+    ft_global_error_stack_drop_last_error();
     return (error_code);
 }
 
@@ -385,7 +384,6 @@ void SocketConfig::record_operation_error(int error_code) const noexcept
 
     operation_id = ft_errno_next_operation_id();
     ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(&this->_operation_errors, error_code, operation_id);
     return ;
 }
 

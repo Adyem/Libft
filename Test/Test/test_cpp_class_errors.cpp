@@ -195,16 +195,16 @@ FT_TEST(test_ft_ofstream_error_resets, "ft_ofstream resets error state after suc
 
     ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(1, stream.open(ft_nullptr));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_global_error_stack_last_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_global_error_stack_peek_last_error());
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(0, stream.open(filename));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_global_error_stack_last_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_global_error_stack_peek_last_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(5, stream.write("reset"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_global_error_stack_last_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_global_error_stack_peek_last_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     stream.close();
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_global_error_stack_last_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_global_error_stack_peek_last_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     ::unlink(filename);
     return (1);
@@ -234,7 +234,7 @@ FT_TEST(test_ft_fd_istream_error_resets,
     failure_error = ft_errno;
     FT_ASSERT(failure_error != FT_ERR_SUCCESSS);
     FT_ASSERT_NE(FT_ERR_CONFIGURATION, failure_error);
-    FT_ASSERT_EQ(failure_error, ft_global_error_stack_last_error());
+    FT_ASSERT_EQ(failure_error, ft_global_error_stack_peek_last_error());
 
     FT_ASSERT_EQ(0, ::pipe(pipe_descriptors));
     new_read_descriptor = pipe_descriptors[0];
@@ -251,7 +251,7 @@ FT_TEST(test_ft_fd_istream_error_resets,
     FT_ASSERT_EQ(0, ::close(write_descriptor));
 
     stream.read(read_buffer, sizeof(message) - 1);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_global_error_stack_last_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_global_error_stack_peek_last_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(static_cast<std::streamsize>(sizeof(message) - 1), stream.gcount());
     FT_ASSERT_EQ('g', read_buffer[0]);
@@ -268,12 +268,12 @@ FT_TEST(test_ft_istringstream_error_resets,
 
     ft_errno = FT_ERR_SUCCESSS;
     stream.read(ft_nullptr, 1);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_global_error_stack_last_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_global_error_stack_peek_last_error());
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(false, stream.is_valid());
 
     stream.read(read_buffer, 5);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_global_error_stack_last_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_global_error_stack_peek_last_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(true, stream.is_valid());
     FT_ASSERT_EQ(static_cast<std::streamsize>(5), stream.gcount());

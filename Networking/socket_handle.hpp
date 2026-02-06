@@ -10,9 +10,6 @@ class ft_socket_handle
 {
     private:
         int _socket_fd;
-        mutable int _error_code;
-
-        void set_error(int error_code) const noexcept;
 
     public:
         ft_socket_handle();
@@ -29,8 +26,6 @@ class ft_socket_handle
         bool close();
         bool is_valid() const;
         int get() const;
-        int get_error() const;
-        const char *get_error_str() const;
 };
 
 #endif

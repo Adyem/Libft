@@ -90,7 +90,7 @@ int html_write_to_file(const char *file_path, html_node *node_list)
         return (-1);
     }
     file_descriptor = su_open(file_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    open_error = ft_global_error_stack_pop_newest();
+    open_error = ft_global_error_stack_drop_last_error();
     if (file_descriptor < 0)
     {
         if (open_error == FT_ERR_SUCCESSS)
@@ -115,13 +115,13 @@ int html_write_to_file(const char *file_path, html_node *node_list)
     }
     if (su_close(file_descriptor) != 0)
     {
-        close_error = ft_global_error_stack_pop_newest();
+        close_error = ft_global_error_stack_drop_last_error();
         if (close_error == FT_ERR_SUCCESSS)
             close_error = FT_ERR_IO;
         ft_global_error_stack_push(close_error);
         return (-1);
     }
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }

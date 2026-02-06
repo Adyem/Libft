@@ -40,7 +40,7 @@ void kv_store_entry::reinitialize_mutex() noexcept
 int kv_store_entry::lock_entry(ft_unique_lock<pt_mutex> &guard) const noexcept
 {
     ft_unique_lock<pt_mutex> local_guard(this->_mutex);
-    int guard_error = ft_global_error_stack_pop_newest();
+    int guard_error = ft_global_error_stack_drop_last_error();
 
     if (guard_error != FT_ERR_SUCCESSS)
     {

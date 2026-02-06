@@ -25,19 +25,17 @@ int rl_initialize_state(readline_state_t *state)
 {
     bool lock_acquired = false;
     bool thread_safety_created = false;
-    bool thread_safety_was_enabled = false;
+    bool had_mutex = false;
     int  index;
     int  result;
 
     if (state == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
-    if (state->thread_safe_enabled == true && state->mutex != ft_nullptr)
-        thread_safety_was_enabled = true;
+    had_mutex = (state->mutex != ft_nullptr);
     result = rl_state_prepare_thread_safety(state);
     if (result != FT_ERR_SUCCESSS)
         return (result);
-    if (thread_safety_was_enabled == false && state->thread_safe_enabled == true
-        && state->mutex != ft_nullptr)
+    if (!had_mutex && state->mutex != ft_nullptr)
         thread_safety_created = true;
     if (rl_enable_raw_mode() != 0)
     {
@@ -56,7 +54,7 @@ int rl_initialize_state(readline_state_t *state)
     if (state->buffer != ft_nullptr)
     {
         cma_free(state->buffer);
-        result = ft_global_error_stack_pop_newest();
+        result = ft_global_error_stack_drop_last_error();
         if (result != FT_ERR_SUCCESSS)
         {
             rl_state_unlock(state, lock_acquired);
@@ -69,7 +67,7 @@ int rl_initialize_state(readline_state_t *state)
     }
     state->bufsize = INITIAL_BUFFER_SIZE;
     state->buffer = static_cast<char *>(cma_calloc(state->bufsize, sizeof(char)));
-    result = ft_global_error_stack_pop_newest();
+    result = ft_global_error_stack_drop_last_error();
     if (state->buffer == ft_nullptr)
     {
         if (result == FT_ERR_SUCCESSS)

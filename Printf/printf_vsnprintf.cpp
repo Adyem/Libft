@@ -101,7 +101,7 @@ int pf_vsnprintf(char *string, size_t size, const char *format, va_list args)
     va_copy(copy, args);
     int printed = ft_vfprintf(stream, format, copy);
     va_end(copy);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (printed < 0)
     {
         if (string != ft_nullptr && size > 0)

@@ -2,6 +2,7 @@
 #include "math.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/pthread.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../Template/move.hpp"
 
 #if defined(__SSE2__)
@@ -16,24 +17,18 @@ static void vector4_sleep_backoff()
 
 int vector4::lock_mutex() const noexcept
 {
-    int error;
-
-    if (!this->is_thread_safe_enabled())
-        return (FT_ERR_SUCCESSS);
-    error = this->_mutex.lock(THREAD_ID);
-    ft_global_error_stack_pop_newest();
-    return (error);
+    return (pt_recursive_mutex_lock_if_enabled(
+        this->_mutex,
+        this->_mutex != ft_nullptr
+    ));
 }
 
 int vector4::unlock_mutex() const noexcept
 {
-    int error;
-
-    if (!this->is_thread_safe_enabled())
-        return (FT_ERR_SUCCESSS);
-    error = this->_mutex.unlock(THREAD_ID);
-    ft_global_error_stack_pop_newest();
-    return (error);
+    return (pt_recursive_mutex_unlock_if_enabled(
+        this->_mutex,
+        this->_mutex != ft_nullptr
+    ));
 }
 
 #if defined(__SSE2__)
@@ -130,8 +125,7 @@ void vector4::unlock_pair(const vector4 *lower, const vector4 *upper)
 }
 
 vector4::vector4(const vector4 &other)
-    : _x(0.0), _y(0.0), _z(0.0), _w(0.0),
-    _mutex()
+    : _x(0.0), _y(0.0), _z(0.0), _w(0.0)
 {
     *this = other;
     return ;
@@ -161,8 +155,7 @@ vector4 &vector4::operator=(const vector4 &other)
 }
 
 vector4::vector4(vector4 &&other)
-    : _x(0.0), _y(0.0), _z(0.0), _w(0.0),
-    _mutex()
+    : _x(0.0), _y(0.0), _z(0.0), _w(0.0)
 {
     *this = ft_move(other);
     return ;
@@ -433,24 +426,51 @@ vector4 vector4::normalize() const
 
 int vector4::enable_thread_safety() noexcept
 {
-    this->_thread_safe_enabled = true;
-    return (FT_ERR_SUCCESSS);
+    return (this->prepare_thread_safety());
 }
 
 void vector4::disable_thread_safety() noexcept
 {
-    this->_thread_safe_enabled = false;
+    this->teardown_thread_safety();
     return ;
 }
 
 bool vector4::is_thread_safe_enabled() const noexcept
 {
-    return (this->_thread_safe_enabled);
+    return (this->_mutex != ft_nullptr);
+}
+
+int vector4::prepare_thread_safety(void) noexcept
+{
+    if (this->_mutex != ft_nullptr)
+    {
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESSS);
+    }
+    pt_recursive_mutex *mutex_pointer = ft_nullptr;
+    int mutex_error = pt_recursive_mutex_create_with_error(&mutex_pointer);
+    if (mutex_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(mutex_error);
+        return (mutex_error);
+    }
+    this->_mutex = mutex_pointer;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
+}
+
+void vector4::teardown_thread_safety(void) noexcept
+{
+    pt_recursive_mutex_destroy(&this->_mutex);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return ;
 }
 
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *vector4::get_mutex_for_testing() noexcept
 {
-    return (&this->_mutex);
+    if (this->_mutex == ft_nullptr)
+        this->prepare_thread_safety();
+    return (this->_mutex);
 }
 #endif

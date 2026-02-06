@@ -1,7 +1,7 @@
 #include "system_utils.hpp"
 #include "../Libft/libft.hpp"
-#include "../PThread/mutex.hpp"
 #include "../PThread/pthread.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
@@ -9,11 +9,80 @@
 #include <cerrno>
 #include <utility>
 #include "../Template/move.hpp"
-static pt_mutex g_env_mutex;
+
+static pthread_mutex_t *g_env_mutex = ft_nullptr;
+
+static int su_environment_lock_mutex(void)
+{
+    if (g_env_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    int lock_error = pt_pthread_mutex_lock_with_error(g_env_mutex);
+    ft_global_error_stack_drop_last_error();
+    return (lock_error);
+}
+
+static int su_environment_unlock_mutex(void)
+{
+    if (g_env_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    int unlock_error = pt_pthread_mutex_unlock_with_error(g_env_mutex);
+    ft_global_error_stack_drop_last_error();
+    return (unlock_error);
+}
+
+int su_environment_enable_thread_safety(void)
+{
+    if (g_env_mutex != ft_nullptr)
+    {
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESSS);
+    }
+    pthread_mutex_t *mutex_pointer = static_cast<pthread_mutex_t*>(std::malloc(sizeof(pthread_mutex_t)));
+    if (mutex_pointer == ft_nullptr)
+    {
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
+        return (FT_ERR_NO_MEMORY);
+    }
+    int pthread_error = pthread_mutex_init(mutex_pointer, ft_nullptr);
+    if (pthread_error != 0)
+    {
+        int error_code = ft_map_system_error(pthread_error);
+        std::free(mutex_pointer);
+        ft_global_error_stack_push(error_code);
+        return (error_code);
+    }
+    g_env_mutex = mutex_pointer;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
+}
+
+void su_environment_disable_thread_safety(void)
+{
+    if (g_env_mutex == ft_nullptr)
+    {
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        return ;
+    }
+    int pthread_error = pthread_mutex_destroy(g_env_mutex);
+    std::free(g_env_mutex);
+    g_env_mutex = ft_nullptr;
+    if (pthread_error != 0)
+    {
+        ft_global_error_stack_push(ft_map_system_error(pthread_error));
+        return ;
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return ;
+}
+
+static int g_environment_thread_safety_initializer = su_environment_enable_thread_safety();
 
 static int su_environment_unlock_with_error(int error_code)
 {
-    if (g_env_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+    if (g_env_mutex == ft_nullptr)
+        return (error_code);
+    int unlock_error = su_environment_unlock_mutex();
+    if (unlock_error != FT_ERR_SUCCESSS)
         return (FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
     return (error_code);
 }
@@ -120,15 +189,18 @@ char    *su_getenv(const char *name)
 {
     char    *result;
     int     error_code;
+    int     mutex_error;
 
-    if (g_env_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    mutex_error = su_environment_lock_mutex();
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(FT_ERR_SYS_MUTEX_LOCK_FAILED);
         return (ft_nullptr);
     }
     result = ft_getenv(name);
-    error_code = ft_global_error_stack_pop_newest();
-    if (g_env_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+    error_code = ft_global_error_stack_drop_last_error();
+    mutex_error = su_environment_unlock_mutex();
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
         return (ft_nullptr);
@@ -146,15 +218,18 @@ int su_setenv(const char *name, const char *value, int overwrite)
 {
     int result;
     int error_code;
+    int mutex_error;
 
-    if (g_env_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    mutex_error = su_environment_lock_mutex();
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(FT_ERR_SYS_MUTEX_LOCK_FAILED);
         return (-1);
     }
     result = ft_setenv(name, value, overwrite);
-    error_code = ft_global_error_stack_pop_newest();
-    if (g_env_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+    error_code = ft_global_error_stack_drop_last_error();
+    mutex_error = su_environment_unlock_mutex();
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
         return (-1);
@@ -179,13 +254,15 @@ int su_putenv(char *string)
 {
     int result;
     int error_code;
+    int mutex_error;
 
     if (string == ft_nullptr)
     {
         ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
-    if (g_env_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    mutex_error = su_environment_lock_mutex();
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(FT_ERR_SYS_MUTEX_LOCK_FAILED);
         return (-1);
@@ -195,7 +272,8 @@ int su_putenv(char *string)
     if (result != 0)
     {
     }
-    if (g_env_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+    mutex_error = su_environment_unlock_mutex();
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
         return (-1);
@@ -215,6 +293,7 @@ int su_environment_snapshot_capture(t_su_environment_snapshot *snapshot)
     char    **environment_entries;
     size_t  index;
     int     error_code;
+    int     mutex_error;
 
     if (snapshot == ft_nullptr)
     {
@@ -228,7 +307,8 @@ int su_environment_snapshot_capture(t_su_environment_snapshot *snapshot)
         ft_global_error_stack_push(error_code);
         return (-1);
     }
-    if (g_env_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    mutex_error = su_environment_lock_mutex();
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(FT_ERR_SYS_MUTEX_LOCK_FAILED);
         return (-1);
@@ -262,7 +342,8 @@ int su_environment_snapshot_capture(t_su_environment_snapshot *snapshot)
             index += 1;
         }
     }
-    if (g_env_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+    mutex_error = su_environment_unlock_mutex();
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
         return (-1);
@@ -277,6 +358,7 @@ int su_environment_snapshot_restore(const t_su_environment_snapshot *snapshot)
     char                    **environment_entries;
     size_t                  index;
     int                     error_code;
+    int                     mutex_error;
 
     if (snapshot == ft_nullptr)
     {
@@ -289,7 +371,8 @@ int su_environment_snapshot_restore(const t_su_environment_snapshot *snapshot)
         ft_global_error_stack_push(error_code);
         return (-1);
     }
-    if (g_env_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    mutex_error = su_environment_lock_mutex();
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(FT_ERR_SYS_MUTEX_LOCK_FAILED);
         return (-1);
@@ -356,14 +439,14 @@ int su_environment_snapshot_restore(const t_su_environment_snapshot *snapshot)
         {
             if (ft_unsetenv(name.c_str()) != 0)
             {
-                error_code = ft_global_error_stack_pop_newest();
+                error_code = ft_global_error_stack_drop_last_error();
                 if (error_code == FT_ERR_SUCCESSS)
                     error_code = FT_ERR_INVALID_ARGUMENT;
                 error_code = su_environment_unlock_with_error(error_code);
                 ft_global_error_stack_push(error_code);
                 return (-1);
             }
-            ft_global_error_stack_pop_newest();
+            ft_global_error_stack_drop_last_error();
         }
         index += 1;
     }
@@ -393,31 +476,32 @@ int su_environment_snapshot_restore(const t_su_environment_snapshot *snapshot)
         {
             if (ft_setenv(name.c_str(), value.c_str(), 1) != 0)
             {
-                error_code = ft_global_error_stack_pop_newest();
+                error_code = ft_global_error_stack_drop_last_error();
                 if (error_code == FT_ERR_SUCCESSS)
                     error_code = FT_ERR_INVALID_ARGUMENT;
                 error_code = su_environment_unlock_with_error(error_code);
                 ft_global_error_stack_push(error_code);
                 return (-1);
             }
-            ft_global_error_stack_pop_newest();
+            ft_global_error_stack_drop_last_error();
         }
         else
         {
             if (ft_unsetenv(name.c_str()) != 0)
             {
-                error_code = ft_global_error_stack_pop_newest();
+                error_code = ft_global_error_stack_drop_last_error();
                 if (error_code == FT_ERR_SUCCESSS)
                     error_code = FT_ERR_INVALID_ARGUMENT;
                 error_code = su_environment_unlock_with_error(error_code);
                 ft_global_error_stack_push(error_code);
                 return (-1);
             }
-            ft_global_error_stack_pop_newest();
+            ft_global_error_stack_drop_last_error();
         }
         index += 1;
     }
-    if (g_env_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+    mutex_error = su_environment_unlock_mutex();
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
         return (-1);
@@ -447,7 +531,7 @@ int su_environment_sandbox_begin(t_su_environment_snapshot *snapshot)
     int error_code;
 
     capture_result = su_environment_snapshot_capture(snapshot);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (capture_result != 0)
     {
         if (error_code == FT_ERR_SUCCESSS)
@@ -466,9 +550,9 @@ int su_environment_sandbox_end(t_su_environment_snapshot *snapshot)
     int dispose_error;
 
     restore_result = su_environment_snapshot_restore(snapshot);
-    restore_error = ft_global_error_stack_pop_newest();
+    restore_error = ft_global_error_stack_drop_last_error();
     su_environment_snapshot_dispose(snapshot);
-    dispose_error = ft_global_error_stack_pop_newest();
+    dispose_error = ft_global_error_stack_drop_last_error();
     if (restore_result != 0)
     {
         if (restore_error == FT_ERR_SUCCESSS)

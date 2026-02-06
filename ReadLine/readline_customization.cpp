@@ -12,7 +12,8 @@
 #include "../Libft/libft.hpp"
 #include "../JSon/json.hpp"
 #include "../Printf/printf.hpp"
-#include "../PThread/pthread.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "readline_internal.hpp"
 #include "readline.hpp"
 
@@ -25,7 +26,7 @@ struct rl_key_binding_entry
     void *user_data;
 };
 
-static pt_mutex g_customization_mutex;
+static pt_recursive_mutex g_customization_mutex;
 static rl_key_binding_entry g_key_bindings[RL_MAX_KEY_BINDINGS];
 static int g_key_binding_count = 0;
 static t_rl_completion_callback g_completion_callback = ft_nullptr;
@@ -66,20 +67,12 @@ static rl_history_backend_state g_history_backend_state = {ft_nullptr, ft_nullpt
 
 static int rl_customization_lock_mutex(void)
 {
-    int mutex_error;
-
-    g_customization_mutex.lock(THREAD_ID);
-    mutex_error = ft_global_error_stack_pop_newest();
-    return (mutex_error);
+    return (pt_recursive_mutex_lock_with_error(g_customization_mutex));
 }
 
 static int rl_customization_unlock_mutex(void)
 {
-    int mutex_error;
-
-    g_customization_mutex.unlock(THREAD_ID);
-    mutex_error = ft_global_error_stack_pop_newest();
-    return (mutex_error);
+    return (pt_recursive_mutex_unlock_with_error(g_customization_mutex));
 }
 
 static int rl_customization_lock(bool *lock_acquired)
@@ -277,7 +270,7 @@ static int rl_history_json_load(void *context_pointer)
         return (-1);
     }
     group_head = json_read_from_file(path_context->path);
-    int json_error = ft_global_error_stack_pop_newest();
+    int json_error = ft_global_error_stack_pop_last();
     if (group_head == ft_nullptr)
     {
         if (json_error == FT_ERR_NOT_FOUND)
@@ -351,7 +344,7 @@ static int rl_history_json_save(void *context_pointer)
     root_group = ft_nullptr;
     json_append_group(&root_group, history_group);
     int write_result = json_write_to_file(path_context->path, root_group);
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_pop_last();
     if (write_result != 0)
     {
         json_free_groups(root_group);

@@ -11,7 +11,6 @@ class ft_websocket_client
 {
     private:
         ft_socket_handle _socket;
-        mutable int _error_code;
         mutable pt_mutex _mutex;
 
         int close_locked(ft_unique_lock<pt_mutex> &guard);
@@ -19,8 +18,6 @@ class ft_websocket_client
         int send_pong_locked(const unsigned char *payload, std::size_t length, ft_unique_lock<pt_mutex> &guard);
         int send_text_locked(const ft_string &message, ft_unique_lock<pt_mutex> &guard);
         int receive_text_locked(ft_string &message, ft_unique_lock<pt_mutex> &guard);
-        void set_error(int error_code) const;
-
     public:
         ft_websocket_client();
         ~ft_websocket_client();

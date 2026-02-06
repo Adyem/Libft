@@ -1,22 +1,70 @@
 #include "class_fd_istream.hpp"
 #include "../Template/move.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/pthread_internal.hpp"
+#include "class_nullptr.hpp"
 
-static int ft_fd_istream_capture_mutex_error() noexcept
+int ft_fd_istream::lock_mutex(void) const noexcept
 {
-    int error_value;
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    return (pt_recursive_mutex_lock_with_error(*this->_mutex));
+}
 
-    error_value = ft_global_error_stack_last_error();
-    ft_global_error_stack_pop_newest();
-    if (error_value != FT_ERR_SUCCESSS)
-        ft_global_error_stack_push(error_value);
-    return (error_value);
+int ft_fd_istream::unlock_mutex(void) const noexcept
+{
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    return (pt_recursive_mutex_unlock_with_error(*this->_mutex));
+}
+
+int ft_fd_istream::prepare_thread_safety(void) noexcept
+{
+    if (this->_mutex != ft_nullptr)
+    {
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESSS);
+    }
+    pt_recursive_mutex *mutex_pointer = ft_nullptr;
+    int mutex_error = pt_recursive_mutex_create_with_error(&mutex_pointer);
+    if (mutex_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(mutex_error);
+        return (mutex_error);
+    }
+    this->_mutex = mutex_pointer;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
+}
+
+void ft_fd_istream::teardown_thread_safety(void) noexcept
+{
+    pt_recursive_mutex_destroy(&this->_mutex);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return ;
+}
+
+int ft_fd_istream::enable_thread_safety(void) noexcept
+{
+    return (this->prepare_thread_safety());
+}
+
+void ft_fd_istream::disable_thread_safety(void) noexcept
+{
+    this->teardown_thread_safety();
+    return ;
+}
+
+bool ft_fd_istream::is_thread_safe_enabled(void) const noexcept
+{
+    return (this->_mutex != ft_nullptr);
 }
 
 ft_fd_istream::ft_fd_istream(int fd) noexcept
     : _fd(fd)
-    , _mutex()
+    , _mutex(ft_nullptr)
 {
+    this->enable_thread_safety();
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
@@ -24,27 +72,18 @@ ft_fd_istream::ft_fd_istream(int fd) noexcept
 ft_fd_istream::ft_fd_istream(const ft_fd_istream &other) noexcept
     : ft_istream(other)
     , _fd(0)
-    , _mutex()
+    , _mutex(ft_nullptr)
 {
-    ft_unique_lock<pt_recursive_mutex> other_guard;
     int lock_error;
 
-    lock_error = other.lock_self(other_guard);
+    lock_error = other.lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
     }
     this->_fd = other._fd;
-    other_guard.unlock();
-    {
-        int guard_error = ft_fd_istream_capture_mutex_error();
-        if (guard_error != FT_ERR_SUCCESSS)
-        {
-            ft_global_error_stack_push(guard_error);
-            return ;
-        }
-    }
+    other.unlock_mutex();
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
@@ -52,12 +91,11 @@ ft_fd_istream::ft_fd_istream(const ft_fd_istream &other) noexcept
 ft_fd_istream::ft_fd_istream(ft_fd_istream &&other) noexcept
     : ft_istream(ft_move(other))
     , _fd(0)
-    , _mutex()
+    , _mutex(ft_nullptr)
 {
-    ft_unique_lock<pt_recursive_mutex> other_guard;
     int lock_error;
 
-    lock_error = other.lock_self(other_guard);
+    lock_error = other.lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(lock_error);
@@ -65,44 +103,19 @@ ft_fd_istream::ft_fd_istream(ft_fd_istream &&other) noexcept
     }
     this->_fd = other._fd;
     other._fd = -1;
-    other_guard.unlock();
-    {
-        int guard_error = ft_fd_istream_capture_mutex_error();
-        if (guard_error != FT_ERR_SUCCESSS)
-        {
-            ft_global_error_stack_push(guard_error);
-            return ;
-        }
-    }
+    other.unlock_mutex();
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
 ft_fd_istream::~ft_fd_istream() noexcept
 {
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    this->disable_thread_safety();
     return ;
-}
-
-int ft_fd_istream::lock_self(ft_unique_lock<pt_recursive_mutex> &guard) const noexcept
-{
-    ft_unique_lock<pt_recursive_mutex> local_guard(this->_mutex);
-
-    int guard_error = ft_fd_istream_capture_mutex_error();
-    if (guard_error != FT_ERR_SUCCESSS)
-    {
-        guard = ft_unique_lock<pt_recursive_mutex>();
-        ft_global_error_stack_push(guard_error);
-        return (guard_error);
-    }
-    guard = ft_move(local_guard);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
 }
 
 ft_fd_istream &ft_fd_istream::operator=(const ft_fd_istream &other) noexcept
 {
-    ft_unique_lock<pt_recursive_mutex> guard;
     int lock_error;
     int descriptor;
 
@@ -112,7 +125,7 @@ ft_fd_istream &ft_fd_istream::operator=(const ft_fd_istream &other) noexcept
         return (*this);
     }
     ft_istream::operator=(other);
-    lock_error = this->lock_self(guard);
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(lock_error);
@@ -120,22 +133,13 @@ ft_fd_istream &ft_fd_istream::operator=(const ft_fd_istream &other) noexcept
     }
     descriptor = other.get_fd();
     this->_fd = descriptor;
-    guard.unlock();
-    {
-        int guard_error = ft_fd_istream_capture_mutex_error();
-        if (guard_error != FT_ERR_SUCCESSS)
-        {
-            ft_global_error_stack_push(guard_error);
-            return (*this);
-        }
-    }
+    this->unlock_mutex();
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (*this);
 }
 
 ft_fd_istream &ft_fd_istream::operator=(ft_fd_istream &&other) noexcept
 {
-    ft_unique_lock<pt_recursive_mutex> guard;
     int lock_error;
     int descriptor;
 
@@ -145,7 +149,7 @@ ft_fd_istream &ft_fd_istream::operator=(ft_fd_istream &&other) noexcept
         return (*this);
     }
     ft_istream::operator=(ft_move(other));
-    lock_error = this->lock_self(guard);
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(lock_error);
@@ -154,97 +158,60 @@ ft_fd_istream &ft_fd_istream::operator=(ft_fd_istream &&other) noexcept
     descriptor = other.get_fd();
     this->_fd = descriptor;
     other.set_fd(-1);
-    guard.unlock();
-    {
-        int guard_error = ft_fd_istream_capture_mutex_error();
-        if (guard_error != FT_ERR_SUCCESSS)
-        {
-            ft_global_error_stack_push(guard_error);
-            return (*this);
-        }
-    }
+    this->unlock_mutex();
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (*this);
 }
 
 void ft_fd_istream::set_fd(int fd) noexcept
 {
-    ft_unique_lock<pt_recursive_mutex> guard;
     int lock_error;
 
-    lock_error = this->lock_self(guard);
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
     }
     this->_fd = fd;
-    guard.unlock();
-    {
-        int guard_error = ft_fd_istream_capture_mutex_error();
-        if (guard_error != FT_ERR_SUCCESSS)
-        {
-            ft_global_error_stack_push(guard_error);
-            return ;
-        }
-    }
+    this->unlock_mutex();
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
 int ft_fd_istream::get_fd() const noexcept
 {
-    ft_unique_lock<pt_recursive_mutex> guard;
     int lock_error;
     int descriptor;
 
-    lock_error = this->lock_self(guard);
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(lock_error);
         return (-1);
     }
     descriptor = this->_fd;
-    guard.unlock();
-    {
-        int guard_error = ft_fd_istream_capture_mutex_error();
-        if (guard_error != FT_ERR_SUCCESSS)
-        {
-            ft_global_error_stack_push(guard_error);
-            return (-1);
-        }
-    }
+    this->unlock_mutex();
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (descriptor);
 }
 
 std::size_t ft_fd_istream::do_read(char *buffer, std::size_t count)
 {
-    ft_unique_lock<pt_recursive_mutex> guard;
     int lock_error;
     int descriptor;
     ssize_t result;
 
-    lock_error = this->lock_self(guard);
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(lock_error);
         return (0);
     }
     descriptor = this->_fd;
-    guard.unlock();
-    {
-        int guard_error = ft_fd_istream_capture_mutex_error();
-        if (guard_error != FT_ERR_SUCCESSS)
-        {
-            ft_global_error_stack_push(guard_error);
-            return (0);
-        }
-    }
+    this->unlock_mutex();
     result = su_read(descriptor, buffer, count);
-    int read_error;
-
-    read_error = ft_global_error_stack_pop_newest();
+    int read_error = ft_global_error_stack_drop_last_error();
     if (result < 0)
     {
         if (read_error == FT_ERR_SUCCESSS)
@@ -264,6 +231,6 @@ std::size_t ft_fd_istream::do_read(char *buffer, std::size_t count)
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *ft_fd_istream::get_mutex_for_validation() const noexcept
 {
-    return (&(this->_mutex));
+    return (this->_mutex);
 }
 #endif

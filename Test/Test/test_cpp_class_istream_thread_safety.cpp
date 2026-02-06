@@ -103,7 +103,7 @@ FT_TEST(test_ft_istream_serializes_concurrent_reads,
     FT_ASSERT_EQ(true, worker_done.load());
     FT_ASSERT_EQ(400u, total_consumed.load());
     FT_ASSERT_EQ(true, stream.is_valid());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_global_error_stack_last_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_global_error_stack_peek_last_error());
     FT_ASSERT_EQ(0u, stream.remaining());
     return (1);
 }
@@ -189,6 +189,6 @@ FT_TEST(test_ft_istringstream_concurrent_reads,
         digit_index++;
     }
     FT_ASSERT_EQ(true, stream.is_valid());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_global_error_stack_last_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_global_error_stack_peek_last_error());
     return (1);
 }

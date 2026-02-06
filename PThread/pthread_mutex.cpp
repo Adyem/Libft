@@ -1,5 +1,6 @@
 #include "pthread.hpp"
 #include "mutex.hpp"
+#include "pthread_internal.hpp"
 #include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
 #include "../CPP_class/class_nullptr.hpp"
@@ -75,10 +76,20 @@ int pt_mutex::lock_internal(bool *lock_acquired) const
         *lock_acquired = false;
     if (this->_state_mutex == ft_nullptr)
         return (FT_ERR_SUCCESSS);
-    this->_state_mutex->lock(THREAD_ID);
-    int state_error = ft_global_error_stack_last_error();
+    int state_error = pt_mutex_lock_with_error(*this->_state_mutex);
     if (state_error != FT_ERR_SUCCESSS)
+    {
+        if (state_error == FT_ERR_MUTEX_ALREADY_LOCKED)
+        {
+            bool state_lock_acquired;
+
+            state_lock_acquired = false;
+            if (this->_state_mutex->lock_state(&state_lock_acquired) == 0)
+                this->_state_mutex->unlock_state(state_lock_acquired);
+            return (FT_ERR_SUCCESSS);
+        }
         return (state_error);
+    }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
     return (FT_ERR_SUCCESSS);
@@ -88,20 +99,12 @@ int pt_mutex::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
         return (FT_ERR_SUCCESSS);
-    this->_state_mutex->unlock(THREAD_ID);
-    int state_error = ft_global_error_stack_last_error();
-    if (state_error != FT_ERR_SUCCESSS)
-        return (state_error);
-    return (FT_ERR_SUCCESSS);
+    return (pt_mutex_unlock_with_error(*this->_state_mutex));
 }
 
 void pt_mutex::teardown_thread_safety()
 {
-    if (this->_state_mutex != ft_nullptr)
-    {
-        delete this->_state_mutex;
-        this->_state_mutex = ft_nullptr;
-    }
+    pt_mutex_destroy(&this->_state_mutex);
     return ;
 }
 
@@ -156,7 +159,7 @@ bool pt_mutex::is_owned_by_thread(pthread_t thread_id) const
         return (matches_owner);
     }
     owned_mutexes = pt_lock_tracking::get_owned_mutexes(thread_id);
-    tracking_error = ft_global_error_stack_pop_newest();
+    tracking_error = ft_global_error_stack_drop_last_error();
     if (tracking_error != FT_ERR_SUCCESSS)
         return (false);
     index = 0;

@@ -13,7 +13,7 @@ static int cnfg_config_lock_if_enabled(cnfg_config *config, ft_unique_lock<pt_mu
     if (!config || !config->thread_safe_enabled || !config->mutex)
         return (FT_ERR_SUCCESSS);
     mutex_guard = ft_unique_lock<pt_mutex>(*config->mutex);
-    return (ft_global_error_stack_pop_newest());
+    return (ft_global_error_stack_drop_last_error());
 }
 
 static void cnfg_config_unlock_guard(ft_unique_lock<pt_mutex> &mutex_guard)
@@ -69,7 +69,7 @@ int cnfg_config_prepare_thread_safety(cnfg_config *config)
         if (mutex_pointer == ft_nullptr)
             mutex_error = FT_ERR_SUCCESSS;
         else
-            mutex_error = ft_global_error_stack_pop_newest();
+            mutex_error = ft_global_error_stack_drop_last_error();
 
         if (mutex_error != FT_ERR_SUCCESSS)
         {
@@ -153,7 +153,7 @@ void cnfg_free(cnfg_config *config)
         if (config->mutex == ft_nullptr)
             unlock_error = FT_ERR_SUCCESSS;
         else
-            unlock_error = ft_global_error_stack_pop_newest();
+            unlock_error = ft_global_error_stack_drop_last_error();
 
         if (unlock_error != FT_ERR_SUCCESSS)
             ft_global_error_stack_push(unlock_error);

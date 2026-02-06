@@ -3,7 +3,6 @@
 
 #include "../CPP_class/class_string.hpp"
 #include "../Template/vector.hpp"
-#include "../Errno/errno_internal.hpp"
 #include "openssl_support.hpp"
 
 #ifdef _WIN32
@@ -105,9 +104,9 @@ int networking_check_socket_after_send(int socket_fd);
 static inline int networking_fetch_last_error(bool repush_failure = true)
 {
     unsigned long long operation_id = ft_global_error_stack_get_id_at(1);
-    int error_code = ft_global_error_stack_last_error();
+    int error_code = ft_global_error_stack_peek_last_error();
 
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     if (repush_failure && error_code != FT_ERR_SUCCESSS)
     {
         if (operation_id != 0)
@@ -131,7 +130,6 @@ class SocketConfig
         mutable int _error_code;
         mutable bool _thread_safe_enabled;
         mutable pt_mutex *_mutex;
-        mutable ft_operation_error_stack _operation_errors = {{}, {}, 0};
 
         void record_operation_error(int error_code) const noexcept;
         void report_operation_result(int error_code) const noexcept;

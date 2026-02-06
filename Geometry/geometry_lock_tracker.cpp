@@ -2,6 +2,7 @@
 #include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
 #include "../PThread/pthread.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include <chrono>
 #include <functional>
 #include <new>
@@ -24,13 +25,10 @@ static bool geometry_lock_tracker_register_wait(pt_thread_id_type thread_identif
 {
     int lock_error;
 
-    lock_error = g_geometry_tracker_mutex.lock(THREAD_ID);
-    ft_global_error_stack_pop_newest();
+    lock_error = pt_mutex_lock_with_error(g_geometry_tracker_mutex);
     if (lock_error != FT_ERR_SUCCESSS)
-    {
-        ft_global_error_stack_push(lock_error);
         return (false);
-    }
+    ft_global_error_stack_drop_last_error();
     size_t index;
     bool found;
 
@@ -61,13 +59,13 @@ static bool geometry_lock_tracker_register_wait(pt_thread_id_type thread_identif
         {
             int unlock_error;
 
-            unlock_error = g_geometry_tracker_mutex.unlock(THREAD_ID);
-            ft_global_error_stack_pop_newest();
+            unlock_error = pt_mutex_unlock_with_error(g_geometry_tracker_mutex);
             if (unlock_error != FT_ERR_SUCCESSS)
             {
                 ft_global_error_stack_push(unlock_error);
                 return (false);
             }
+            ft_global_error_stack_drop_last_error();
             ft_global_error_stack_push(FT_ERR_NO_MEMORY);
             return (false);
         }
@@ -89,13 +87,10 @@ static bool geometry_lock_tracker_register_wait(pt_thread_id_type thread_identif
     out_cycle_detected = cycle_detected;
     int unlock_error;
 
-    unlock_error = g_geometry_tracker_mutex.unlock(THREAD_ID);
-    ft_global_error_stack_pop_newest();
+    unlock_error = pt_mutex_unlock_with_error(g_geometry_tracker_mutex);
     if (unlock_error != FT_ERR_SUCCESSS)
-    {
-        ft_global_error_stack_push(unlock_error);
         return (false);
-    }
+    ft_global_error_stack_drop_last_error();
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);
 }
@@ -104,13 +99,10 @@ static void geometry_lock_tracker_clear_wait(pt_thread_id_type thread_identifier
 {
     int lock_error;
 
-    lock_error = g_geometry_tracker_mutex.lock(THREAD_ID);
-    ft_global_error_stack_pop_newest();
+    lock_error = pt_mutex_lock_with_error(g_geometry_tracker_mutex);
     if (lock_error != FT_ERR_SUCCESSS)
-    {
-        ft_global_error_stack_push(lock_error);
         return ;
-    }
+    ft_global_error_stack_drop_last_error();
     size_t index;
 
     index = 0;
@@ -134,13 +126,10 @@ static void geometry_lock_tracker_clear_wait(pt_thread_id_type thread_identifier
     }
     int unlock_error;
 
-    unlock_error = g_geometry_tracker_mutex.unlock(THREAD_ID);
-    ft_global_error_stack_pop_newest();
+    unlock_error = pt_mutex_unlock_with_error(g_geometry_tracker_mutex);
     if (unlock_error != FT_ERR_SUCCESSS)
-    {
-        ft_global_error_stack_push(unlock_error);
         return ;
-    }
+    ft_global_error_stack_drop_last_error();
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
@@ -178,13 +167,10 @@ int geometry_lock_tracker_lock_pair(const void *first_object, const void *second
     {
         int self_error;
 
-        self_error = first_mutex.lock(THREAD_ID);
-        ft_global_error_stack_pop_newest();
+        self_error = pt_recursive_mutex_lock_with_error(first_mutex);
         if (self_error != FT_ERR_SUCCESSS)
-        {
-            ft_global_error_stack_push(self_error);
             return (self_error);
-        }
+        ft_global_error_stack_drop_last_error();
         ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (FT_ERR_SUCCESSS);
     }
@@ -214,13 +200,10 @@ int geometry_lock_tracker_lock_pair(const void *first_object, const void *second
     {
         int lower_error;
 
-        lower_error = ordered_first_mutex->lock(THREAD_ID);
-        ft_global_error_stack_pop_newest();
+        lower_error = pt_recursive_mutex_lock_with_error(*ordered_first_mutex);
         if (lower_error != FT_ERR_SUCCESSS)
-        {
-            ft_global_error_stack_push(lower_error);
             return (lower_error);
-        }
+        ft_global_error_stack_drop_last_error();
         bool cycle_detected;
 
         cycle_detected = false;
@@ -230,21 +213,19 @@ int geometry_lock_tracker_lock_pair(const void *first_object, const void *second
             int wait_error;
             int unlock_error;
 
-            wait_error = ft_global_error_stack_pop_newest();
-            unlock_error = ordered_first_mutex->unlock(THREAD_ID);
-            ft_global_error_stack_pop_newest();
+            wait_error = ft_global_error_stack_drop_last_error();
+            unlock_error = pt_recursive_mutex_unlock_with_error(*ordered_first_mutex);
             if (unlock_error != FT_ERR_SUCCESSS)
-            {
-                ft_global_error_stack_push(unlock_error);
                 return (unlock_error);
-            }
+            ft_global_error_stack_drop_last_error();
             ft_global_error_stack_push(wait_error);
             return (wait_error);
         }
         int upper_error;
 
-        upper_error = ordered_second_mutex->lock(THREAD_ID);
-        ft_global_error_stack_pop_newest();
+        upper_error = pt_recursive_mutex_lock_with_error(*ordered_second_mutex);
+        if (upper_error == FT_ERR_SUCCESSS)
+            ft_global_error_stack_drop_last_error();
         (void)cycle_detected;
         geometry_lock_tracker_clear_wait(THREAD_ID);
         if (upper_error == FT_ERR_SUCCESSS)
@@ -256,25 +237,19 @@ int geometry_lock_tracker_lock_pair(const void *first_object, const void *second
         {
             int unlock_error;
 
-            unlock_error = ordered_first_mutex->unlock(THREAD_ID);
-            ft_global_error_stack_pop_newest();
+            unlock_error = pt_recursive_mutex_unlock_with_error(*ordered_first_mutex);
             if (unlock_error != FT_ERR_SUCCESSS)
-            {
-                ft_global_error_stack_push(unlock_error);
                 return (unlock_error);
-            }
+            ft_global_error_stack_drop_last_error();
             ft_global_error_stack_push(upper_error);
             return (upper_error);
         }
         int unlock_error;
 
-        unlock_error = ordered_first_mutex->unlock(THREAD_ID);
-        ft_global_error_stack_pop_newest();
+        unlock_error = pt_recursive_mutex_unlock_with_error(*ordered_first_mutex);
         if (unlock_error != FT_ERR_SUCCESSS)
-        {
-            ft_global_error_stack_push(unlock_error);
             return (unlock_error);
-        }
+        ft_global_error_stack_drop_last_error();
         geometry_lock_tracker_sleep_backoff();
     }
 }

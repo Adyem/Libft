@@ -187,13 +187,13 @@ bool    time_parse_iso8601(const char *string_input, std::tm *time_output, t_tim
     }
     if (!parse_timezone_offset(timezone_buffer, &offset_seconds))
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_INTERNAL;
         ft_global_error_stack_push(error_code);
         return (false);
     }
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     parsed_time.tm_year = year - 1900;
     parsed_time.tm_mon = month - 1;
     parsed_time.tm_mday = day;

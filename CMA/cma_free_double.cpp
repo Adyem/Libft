@@ -13,7 +13,7 @@ void    cma_free_double(char **content)
     if (content)
     {
         pointer_capacity = cma_alloc_size(content);
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code != FT_ERR_SUCCESSS)
             final_error = error_code;
         if (pointer_capacity != 0)
@@ -21,7 +21,7 @@ void    cma_free_double(char **content)
         while (content[index])
         {
             cma_free(content[index]);
-            error_code = ft_global_error_stack_pop_newest();
+            error_code = ft_global_error_stack_drop_last_error();
             if (error_code != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
                 final_error = error_code;
             index++;
@@ -30,7 +30,7 @@ void    cma_free_double(char **content)
                 break ;
         }
         cma_free(content);
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
             final_error = error_code;
     }

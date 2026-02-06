@@ -23,7 +23,7 @@ float ft_random_beta(float alpha, float beta)
     beta_distribution = std::gamma_distribution<float>(beta, 1.0f);
     {
         ft_unique_lock<pt_mutex> guard(g_random_engine_mutex);
-        int error_code = ft_global_error_stack_pop_newest();
+        int error_code = ft_global_error_stack_drop_last_error();
 
         if (error_code != FT_ERR_SUCCESSS)
         {

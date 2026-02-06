@@ -14,7 +14,7 @@ static int normalize_selector_value(char *value_string)
     if (!value_string)
         return (0);
     value_length = ft_strlen_size_t(value_string);
-    length_error = ft_global_error_stack_pop_newest();
+    length_error = ft_global_error_stack_drop_last_error();
     if (length_error != FT_ERR_SUCCESSS)
     {
         return (-1);

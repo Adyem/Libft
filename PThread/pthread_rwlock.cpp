@@ -1,5 +1,6 @@
 #include <pthread.h>
 #include "pthread.hpp"
+#include "pthread_internal.hpp"
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Libft/libft.hpp"
@@ -8,6 +9,14 @@ static int pt_rwlock_report_result(int error_code, int return_value)
 {
     ft_global_error_stack_push(error_code);
     return (return_value);
+}
+
+static int pt_rwlock_report_system_error(int system_error)
+{
+    int mapped_error;
+
+    mapped_error = ft_map_system_error(system_error);
+    return (pt_rwlock_report_result(mapped_error, mapped_error));
 }
 
 int pt_rwlock_init(pthread_rwlock_t *rwlock, const pthread_rwlockattr_t *attributes)
@@ -66,26 +75,9 @@ int pt_rwlock_destroy(pthread_rwlock_t *rwlock)
     return (pt_rwlock_report_result(FT_ERR_SUCCESSS, return_value));
 }
 
-static void pt_rwlock_strategy_set_error(t_pt_rwlock *rwlock, int error_code)
-{
-    if (rwlock != ft_nullptr)
-        rwlock->error_code = error_code;
-    return ;
-}
-
-static int pt_rwlock_strategy_map_error(t_pt_rwlock *rwlock, int system_error)
-{
-    int mapped_error;
-
-    mapped_error = ft_map_system_error(system_error);
-    pt_rwlock_strategy_set_error(rwlock, mapped_error);
-    return (mapped_error);
-}
-
 int pt_rwlock_strategy_init(t_pt_rwlock *rwlock, t_pt_rwlock_strategy strategy)
 {
     int system_error;
-    int mapped_error;
 
     if (rwlock == ft_nullptr)
     {
@@ -94,58 +86,47 @@ int pt_rwlock_strategy_init(t_pt_rwlock *rwlock, t_pt_rwlock_strategy strategy)
     system_error = pthread_mutex_init(&rwlock->mutex, ft_nullptr);
     if (system_error != 0)
     {
-        mapped_error = pt_rwlock_strategy_map_error(rwlock, system_error);
-        return (pt_rwlock_report_result(mapped_error, mapped_error));
+        return (pt_rwlock_report_system_error(system_error));
     }
     system_error = pthread_cond_init(&rwlock->reader_condition, ft_nullptr);
     if (system_error != 0)
     {
         pthread_mutex_destroy(&rwlock->mutex);
-        mapped_error = pt_rwlock_strategy_map_error(rwlock, system_error);
-        return (pt_rwlock_report_result(mapped_error, mapped_error));
+        return (pt_rwlock_report_system_error(system_error));
     }
     system_error = pthread_cond_init(&rwlock->writer_condition, ft_nullptr);
     if (system_error != 0)
     {
         pthread_cond_destroy(&rwlock->reader_condition);
         pthread_mutex_destroy(&rwlock->mutex);
-        mapped_error = pt_rwlock_strategy_map_error(rwlock, system_error);
-        return (pt_rwlock_report_result(mapped_error, mapped_error));
+        return (pt_rwlock_report_system_error(system_error));
     }
     rwlock->active_readers = 0;
     rwlock->waiting_readers = 0;
     rwlock->active_writers = 0;
     rwlock->waiting_writers = 0;
     rwlock->strategy = strategy;
-    pt_rwlock_strategy_set_error(rwlock, FT_ERR_SUCCESSS);
     return (pt_rwlock_report_result(FT_ERR_SUCCESSS, FT_ERR_SUCCESSS));
 }
 
 static int pt_rwlock_strategy_unlock_mutex(t_pt_rwlock *rwlock)
 {
-    int system_error;
-
-    system_error = pthread_mutex_unlock(&rwlock->mutex);
-    if (system_error != 0)
-        return (pt_rwlock_strategy_map_error(rwlock, system_error));
-    return (FT_ERR_SUCCESSS);
+    return (pt_pthread_mutex_unlock_with_error(&rwlock->mutex));
 }
 
 int pt_rwlock_strategy_rdlock(t_pt_rwlock *rwlock)
 {
     int system_error;
-    int mapped_error;
     int unlock_error;
 
     if (rwlock == ft_nullptr)
     {
         return (pt_rwlock_report_result(FT_ERR_INVALID_ARGUMENT, -1));
     }
-    system_error = pthread_mutex_lock(&rwlock->mutex);
-    if (system_error != 0)
+    system_error = pt_pthread_mutex_lock_with_error(&rwlock->mutex);
+    if (system_error != FT_ERR_SUCCESSS)
     {
-        mapped_error = pt_rwlock_strategy_map_error(rwlock, system_error);
-        return (pt_rwlock_report_result(mapped_error, mapped_error));
+        return (pt_rwlock_report_result(system_error, system_error));
     }
     rwlock->waiting_readers++;
     if (rwlock->strategy == PT_RWLOCK_STRATEGY_WRITER_PRIORITY)
@@ -155,9 +136,11 @@ int pt_rwlock_strategy_rdlock(t_pt_rwlock *rwlock)
             system_error = pthread_cond_wait(&rwlock->reader_condition, &rwlock->mutex);
             if (system_error != 0)
             {
+                int mapped_error;
+
                 rwlock->waiting_readers--;
                 pt_rwlock_strategy_unlock_mutex(rwlock);
-                mapped_error = pt_rwlock_strategy_map_error(rwlock, system_error);
+                mapped_error = ft_map_system_error(system_error);
                 return (pt_rwlock_report_result(mapped_error, mapped_error));
             }
         }
@@ -169,9 +152,11 @@ int pt_rwlock_strategy_rdlock(t_pt_rwlock *rwlock)
             system_error = pthread_cond_wait(&rwlock->reader_condition, &rwlock->mutex);
             if (system_error != 0)
             {
+                int mapped_error;
+
                 rwlock->waiting_readers--;
                 pt_rwlock_strategy_unlock_mutex(rwlock);
-                mapped_error = pt_rwlock_strategy_map_error(rwlock, system_error);
+                mapped_error = ft_map_system_error(system_error);
                 return (pt_rwlock_report_result(mapped_error, mapped_error));
             }
         }
@@ -181,25 +166,22 @@ int pt_rwlock_strategy_rdlock(t_pt_rwlock *rwlock)
     unlock_error = pt_rwlock_strategy_unlock_mutex(rwlock);
     if (unlock_error != FT_ERR_SUCCESSS)
         return (pt_rwlock_report_result(unlock_error, unlock_error));
-    pt_rwlock_strategy_set_error(rwlock, FT_ERR_SUCCESSS);
     return (pt_rwlock_report_result(FT_ERR_SUCCESSS, FT_ERR_SUCCESSS));
 }
 
 int pt_rwlock_strategy_wrlock(t_pt_rwlock *rwlock)
 {
     int system_error;
-    int mapped_error;
     int unlock_error;
 
     if (rwlock == ft_nullptr)
     {
         return (pt_rwlock_report_result(FT_ERR_INVALID_ARGUMENT, -1));
     }
-    system_error = pthread_mutex_lock(&rwlock->mutex);
-    if (system_error != 0)
+    system_error = pt_pthread_mutex_lock_with_error(&rwlock->mutex);
+    if (system_error != FT_ERR_SUCCESSS)
     {
-        mapped_error = pt_rwlock_strategy_map_error(rwlock, system_error);
-        return (pt_rwlock_report_result(mapped_error, mapped_error));
+        return (pt_rwlock_report_result(system_error, system_error));
     }
     rwlock->waiting_writers++;
     while (rwlock->active_readers > 0 || rwlock->active_writers > 0)
@@ -207,9 +189,11 @@ int pt_rwlock_strategy_wrlock(t_pt_rwlock *rwlock)
         system_error = pthread_cond_wait(&rwlock->writer_condition, &rwlock->mutex);
         if (system_error != 0)
         {
+            int mapped_error;
+
             rwlock->waiting_writers--;
             pt_rwlock_strategy_unlock_mutex(rwlock);
-            mapped_error = pt_rwlock_strategy_map_error(rwlock, system_error);
+            mapped_error = ft_map_system_error(system_error);
             return (pt_rwlock_report_result(mapped_error, mapped_error));
         }
     }
@@ -218,25 +202,22 @@ int pt_rwlock_strategy_wrlock(t_pt_rwlock *rwlock)
     unlock_error = pt_rwlock_strategy_unlock_mutex(rwlock);
     if (unlock_error != FT_ERR_SUCCESSS)
         return (pt_rwlock_report_result(unlock_error, unlock_error));
-    pt_rwlock_strategy_set_error(rwlock, FT_ERR_SUCCESSS);
     return (pt_rwlock_report_result(FT_ERR_SUCCESSS, FT_ERR_SUCCESSS));
 }
 
 int pt_rwlock_strategy_unlock(t_pt_rwlock *rwlock)
 {
     int system_error;
-    int mapped_error;
     int unlock_error;
 
     if (rwlock == ft_nullptr)
     {
         return (pt_rwlock_report_result(FT_ERR_INVALID_ARGUMENT, -1));
     }
-    system_error = pthread_mutex_lock(&rwlock->mutex);
-    if (system_error != 0)
+    system_error = pt_pthread_mutex_lock_with_error(&rwlock->mutex);
+    if (system_error != FT_ERR_SUCCESSS)
     {
-        mapped_error = pt_rwlock_strategy_map_error(rwlock, system_error);
-        return (pt_rwlock_report_result(mapped_error, mapped_error));
+        return (pt_rwlock_report_result(system_error, system_error));
     }
     if (rwlock->active_writers > 0)
     {
@@ -249,7 +230,7 @@ int pt_rwlock_strategy_unlock(t_pt_rwlock *rwlock)
                 if (system_error != 0)
                 {
                     pt_rwlock_strategy_unlock_mutex(rwlock);
-                    mapped_error = pt_rwlock_strategy_map_error(rwlock, system_error);
+                    int mapped_error = ft_map_system_error(system_error);
                     return (pt_rwlock_report_result(mapped_error, mapped_error));
                 }
             }
@@ -259,7 +240,7 @@ int pt_rwlock_strategy_unlock(t_pt_rwlock *rwlock)
                 if (system_error != 0)
                 {
                     pt_rwlock_strategy_unlock_mutex(rwlock);
-                    mapped_error = pt_rwlock_strategy_map_error(rwlock, system_error);
+                    int mapped_error = ft_map_system_error(system_error);
                     return (pt_rwlock_report_result(mapped_error, mapped_error));
                 }
             }
@@ -272,7 +253,7 @@ int pt_rwlock_strategy_unlock(t_pt_rwlock *rwlock)
                 if (system_error != 0)
                 {
                     pt_rwlock_strategy_unlock_mutex(rwlock);
-                    mapped_error = pt_rwlock_strategy_map_error(rwlock, system_error);
+                    int mapped_error = ft_map_system_error(system_error);
                     return (pt_rwlock_report_result(mapped_error, mapped_error));
                 }
             }
@@ -282,7 +263,7 @@ int pt_rwlock_strategy_unlock(t_pt_rwlock *rwlock)
                 if (system_error != 0)
                 {
                     pt_rwlock_strategy_unlock_mutex(rwlock);
-                    mapped_error = pt_rwlock_strategy_map_error(rwlock, system_error);
+                    int mapped_error = ft_map_system_error(system_error);
                     return (pt_rwlock_report_result(mapped_error, mapped_error));
                 }
             }
@@ -293,7 +274,6 @@ int pt_rwlock_strategy_unlock(t_pt_rwlock *rwlock)
         if (rwlock->active_readers == 0)
         {
             pt_rwlock_strategy_unlock_mutex(rwlock);
-            pt_rwlock_strategy_set_error(rwlock, FT_ERR_INVALID_OPERATION);
             return (pt_rwlock_report_result(FT_ERR_INVALID_OPERATION, FT_ERR_INVALID_OPERATION));
         }
         rwlock->active_readers--;
@@ -303,7 +283,7 @@ int pt_rwlock_strategy_unlock(t_pt_rwlock *rwlock)
             if (system_error != 0)
             {
                 pt_rwlock_strategy_unlock_mutex(rwlock);
-                mapped_error = pt_rwlock_strategy_map_error(rwlock, system_error);
+                int mapped_error = ft_map_system_error(system_error);
                 return (pt_rwlock_report_result(mapped_error, mapped_error));
             }
         }
@@ -311,14 +291,12 @@ int pt_rwlock_strategy_unlock(t_pt_rwlock *rwlock)
     unlock_error = pt_rwlock_strategy_unlock_mutex(rwlock);
     if (unlock_error != FT_ERR_SUCCESSS)
         return (pt_rwlock_report_result(unlock_error, unlock_error));
-    pt_rwlock_strategy_set_error(rwlock, FT_ERR_SUCCESSS);
     return (pt_rwlock_report_result(FT_ERR_SUCCESSS, FT_ERR_SUCCESSS));
 }
 
 int pt_rwlock_strategy_destroy(t_pt_rwlock *rwlock)
 {
     int system_error;
-    int mapped_error;
 
     if (rwlock == ft_nullptr)
     {
@@ -327,43 +305,43 @@ int pt_rwlock_strategy_destroy(t_pt_rwlock *rwlock)
     system_error = pthread_cond_destroy(&rwlock->reader_condition);
     if (system_error != 0)
     {
-        mapped_error = pt_rwlock_strategy_map_error(rwlock, system_error);
-        return (pt_rwlock_report_result(mapped_error, mapped_error));
+        return (pt_rwlock_report_system_error(system_error));
     }
     system_error = pthread_cond_destroy(&rwlock->writer_condition);
     if (system_error != 0)
     {
-        mapped_error = pt_rwlock_strategy_map_error(rwlock, system_error);
-        return (pt_rwlock_report_result(mapped_error, mapped_error));
+        return (pt_rwlock_report_system_error(system_error));
     }
     system_error = pthread_mutex_destroy(&rwlock->mutex);
     if (system_error != 0)
     {
-        mapped_error = pt_rwlock_strategy_map_error(rwlock, system_error);
-        return (pt_rwlock_report_result(mapped_error, mapped_error));
+        return (pt_rwlock_report_system_error(system_error));
     }
-    pt_rwlock_strategy_set_error(rwlock, FT_ERR_SUCCESSS);
     return (pt_rwlock_report_result(FT_ERR_SUCCESSS, FT_ERR_SUCCESSS));
 }
 
 int pt_rwlock_strategy_get_error(const t_pt_rwlock *rwlock)
 {
+    int error_code;
+
     if (rwlock == ft_nullptr)
     {
         ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (FT_ERR_INVALID_ARGUMENT);
     }
-    ft_global_error_stack_push(rwlock->error_code);
-    return (rwlock->error_code);
+    error_code = ft_global_error_stack_peek_last_error();
+    return (error_code);
 }
 
 const char *pt_rwlock_strategy_get_error_str(const t_pt_rwlock *rwlock)
 {
+    int error_code;
+
     if (rwlock == ft_nullptr)
     {
         ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_strerror(FT_ERR_INVALID_ARGUMENT));
     }
-    ft_global_error_stack_push(rwlock->error_code);
-    return (ft_strerror(rwlock->error_code));
+    error_code = ft_global_error_stack_peek_last_error();
+    return (ft_strerror(error_code));
 }

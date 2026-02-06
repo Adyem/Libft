@@ -68,8 +68,8 @@ static int networking_consume_global_error(void) noexcept
 {
     int error_code;
 
-    error_code = ft_global_error_stack_last_error();
-    ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_peek_last_error();
+    ft_global_error_stack_drop_last_error();
     return (error_code);
 }
 
@@ -81,7 +81,7 @@ static void networking_push_failure(int error_code) noexcept
 static int networking_dns_cache_lock(ft_unique_lock<pt_mutex> &cache_lock) noexcept
 {
     cache_lock = ft_unique_lock<pt_mutex>(g_networking_dns_cache_mutex);
-    return (ft_global_error_stack_pop_newest());
+    return (ft_global_error_stack_drop_last_error());
 }
 
 static int networking_dns_cache_unlock(ft_unique_lock<pt_mutex> &cache_lock) noexcept
@@ -89,7 +89,7 @@ static int networking_dns_cache_unlock(ft_unique_lock<pt_mutex> &cache_lock) noe
     if (!cache_lock.owns_lock())
         return (FT_ERR_SUCCESSS);
     cache_lock.unlock();
-    return (ft_global_error_stack_pop_newest());
+    return (ft_global_error_stack_drop_last_error());
 }
 
 static bool networking_dns_append_literal(ft_string &target, const char *literal) noexcept

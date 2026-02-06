@@ -78,7 +78,7 @@ int ft_log_set_remote_sink(const char *host, unsigned short port, bool use_tcp)
     }
     if (ft_log_add_sink(ft_network_sink, sink) != 0)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         su_close(socket_fd);
         network_sink_teardown_thread_safety(sink);
         delete sink;

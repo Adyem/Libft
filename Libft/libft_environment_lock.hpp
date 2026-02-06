@@ -6,6 +6,8 @@
 #if LIBFT_ENABLE_ENVIRONMENT_HELPERS
 int ft_environment_lock(void);
 int ft_environment_unlock(void);
+int ft_environment_enable_thread_safety(void);
+void ft_environment_disable_thread_safety(void);
 void ft_environment_force_lock_failure(int error_code);
 void ft_environment_force_unlock_failure(int error_code);
 void ft_environment_reset_failures(void);

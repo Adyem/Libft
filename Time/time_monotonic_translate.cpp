@@ -14,7 +14,7 @@ bool    time_get_monotonic_wall_anchor(t_monotonic_time_point &anchor_monotonic,
 
     before_sample = time_monotonic_point_now();
     wall_now_ms = time_now_ms();
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(error_code);

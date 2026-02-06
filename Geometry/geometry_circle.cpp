@@ -2,6 +2,7 @@
 #include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
 #include "../PThread/pthread.hpp"
+#include "../PThread/pthread_internal.hpp"
 
 #include <cstddef>
 
@@ -13,24 +14,12 @@ static void circle_sleep_backoff()
 
 int circle::lock_mutex() const noexcept
 {
-    int error;
-
-    if (!this->is_thread_safe_enabled())
-        return (FT_ERR_SUCCESSS);
-    error = this->_mutex.lock(THREAD_ID);
-    ft_global_error_stack_pop_newest();
-    return (error);
+    return (pt_recursive_mutex_lock_if_valid(this->_mutex));
 }
 
 int circle::unlock_mutex() const noexcept
 {
-    int error;
-
-    if (!this->is_thread_safe_enabled())
-        return (FT_ERR_SUCCESSS);
-    error = this->_mutex.unlock(THREAD_ID);
-    ft_global_error_stack_pop_newest();
-    return (error);
+    return (pt_recursive_mutex_unlock_if_valid(this->_mutex));
 }
 
 int circle::lock_pair(const circle &other, const circle *&lower,
@@ -202,6 +191,7 @@ circle &circle::operator=(circle &&other) noexcept
 
 circle::~circle()
 {
+    this->disable_thread_safety();
     return ;
 }
 
@@ -401,24 +391,51 @@ bool    intersect_circle(const circle &first, const circle &second)
 
 int circle::enable_thread_safety() noexcept
 {
-    this->_thread_safe_enabled = true;
-    return (FT_ERR_SUCCESSS);
+    return (this->prepare_thread_safety());
 }
 
 void circle::disable_thread_safety() noexcept
 {
-    this->_thread_safe_enabled = false;
+    this->teardown_thread_safety();
     return ;
 }
 
 bool circle::is_thread_safe_enabled() const noexcept
 {
-    return (this->_thread_safe_enabled);
+    return (this->_mutex != ft_nullptr);
 }
 
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *circle::get_mutex_for_testing() noexcept
 {
-    return (&this->_mutex);
+    if (this->_mutex == ft_nullptr)
+        this->prepare_thread_safety();
+    return (this->_mutex);
 }
 #endif
+
+int circle::prepare_thread_safety(void) noexcept
+{
+    if (this->_mutex != ft_nullptr)
+    {
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESSS);
+    }
+    pt_recursive_mutex *mutex_pointer = ft_nullptr;
+    int mutex_error = pt_recursive_mutex_create_with_error(&mutex_pointer);
+    if (mutex_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(mutex_error);
+        return (mutex_error);
+    }
+    this->_mutex = mutex_pointer;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
+}
+
+void circle::teardown_thread_safety(void) noexcept
+{
+    pt_recursive_mutex_destroy(&this->_mutex);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return ;
+}

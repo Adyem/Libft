@@ -77,7 +77,7 @@ int time_async_sleep_poll(event_loop *loop, t_time_async_sleep *sleep_state)
         return (-1);
     }
     remaining = time_async_sleep_remaining_ms(sleep_state);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(error_code);
@@ -101,7 +101,7 @@ int time_async_sleep_poll(event_loop *loop, t_time_async_sleep *sleep_state)
     if (poll_result == 0)
     {
         remaining = time_async_sleep_remaining_ms(sleep_state);
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code != FT_ERR_SUCCESSS)
         {
             ft_global_error_stack_push(error_code);

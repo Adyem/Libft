@@ -24,7 +24,7 @@ void    time_timer::start(long duration_ms) noexcept
     final_error = FT_ERR_SUCCESSS;
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
-        int guard_error = ft_global_error_stack_pop_newest();
+        int guard_error = ft_global_error_stack_drop_last_error();
 
         if (guard_error != FT_ERR_SUCCESSS)
             final_error = guard_error;
@@ -54,7 +54,7 @@ long time_timer::update() noexcept
     final_error = FT_ERR_SUCCESSS;
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
-        int guard_error = ft_global_error_stack_pop_newest();
+        int guard_error = ft_global_error_stack_drop_last_error();
 
         if (guard_error != FT_ERR_SUCCESSS)
         {
@@ -99,7 +99,7 @@ long time_timer::add_time(long amount_ms) noexcept
     final_error = FT_ERR_SUCCESSS;
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
-        int guard_error = ft_global_error_stack_pop_newest();
+        int guard_error = ft_global_error_stack_drop_last_error();
 
         if (guard_error != FT_ERR_SUCCESSS)
         {
@@ -151,7 +151,7 @@ long time_timer::remove_time(long amount_ms) noexcept
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        int guard_error = ft_global_error_stack_pop_newest();
+        int guard_error = ft_global_error_stack_drop_last_error();
 
         if (guard_error != FT_ERR_SUCCESSS)
         {
@@ -199,7 +199,7 @@ void    time_timer::sleep_remaining() noexcept
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        int guard_error = ft_global_error_stack_pop_newest();
+        int guard_error = ft_global_error_stack_drop_last_error();
 
         if (guard_error != FT_ERR_SUCCESSS)
             final_error = guard_error;

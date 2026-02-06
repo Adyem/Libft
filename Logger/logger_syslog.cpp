@@ -14,7 +14,7 @@ int ft_log_set_syslog(const char *identifier)
         int error_code;
 
         cmp_syslog_close();
-        error_code = ft_global_error_stack_last_error();
+        error_code = ft_global_error_stack_peek_last_error();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_INVALID_ARGUMENT;
         ft_global_error_stack_push(error_code);

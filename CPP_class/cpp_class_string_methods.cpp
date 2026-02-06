@@ -2,8 +2,9 @@
 #include "../CMA/CMA.hpp"
 #include "../Libft/libft.hpp"
 #include "../Errno/errno.hpp"
-#include "../Template/move.hpp"
 #include "../PThread/pthread.hpp"
+#include "../PThread/pthread_internal.hpp"
+#include "../Template/move.hpp"
 #include "class_nullptr.hpp"
 #include <climits>
 
@@ -18,8 +19,64 @@ void ft_string::sleep_backoff() noexcept
     return ;
 }
 
+int ft_string::lock_mutex() const noexcept
+{
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    return (pt_recursive_mutex_lock_with_error(*this->_mutex));
+}
+
+int ft_string::unlock_mutex() const noexcept
+{
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    return (pt_recursive_mutex_unlock_with_error(*this->_mutex));
+}
+
+int ft_string::prepare_thread_safety(void) noexcept
+{
+    if (this->_mutex != ft_nullptr)
+    {
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESSS);
+    }
+    pt_recursive_mutex *mutex_pointer = ft_nullptr;
+    int mutex_error = pt_recursive_mutex_create_with_error(&mutex_pointer);
+    if (mutex_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(mutex_error);
+        return (mutex_error);
+    }
+    this->_mutex = mutex_pointer;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
+}
+
+void ft_string::teardown_thread_safety(void) noexcept
+{
+    pt_recursive_mutex_destroy(&this->_mutex);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return ;
+}
+
+int ft_string::enable_thread_safety() noexcept
+{
+    return (this->prepare_thread_safety());
+}
+
+void ft_string::disable_thread_safety() noexcept
+{
+    this->teardown_thread_safety();
+    return ;
+}
+
+bool ft_string::is_thread_safe_enabled() const noexcept
+{
+    return (this->_mutex != ft_nullptr);
+}
+
 ft_string::mutex_guard::mutex_guard() noexcept
-    : _mutex(ft_nullptr), _owns_lock(false), _error_code(FT_ERR_SUCCESSS)
+    : _mutex(ft_nullptr)
 {
     return ;
 }
@@ -31,11 +88,9 @@ ft_string::mutex_guard::~mutex_guard()
 }
 
 ft_string::mutex_guard::mutex_guard(mutex_guard &&other) noexcept
-    : _mutex(other._mutex), _owns_lock(other._owns_lock), _error_code(other._error_code)
+    : _mutex(other._mutex)
 {
     other._mutex = ft_nullptr;
-    other._owns_lock = false;
-    other._error_code = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -45,54 +100,46 @@ ft_string::mutex_guard &ft_string::mutex_guard::operator=(mutex_guard &&other) n
     {
         this->unlock();
         this->_mutex = other._mutex;
-        this->_owns_lock = other._owns_lock;
-        this->_error_code = other._error_code;
         other._mutex = ft_nullptr;
-        other._owns_lock = false;
-        other._error_code = FT_ERR_SUCCESSS;
     }
     return (*this);
 }
 
-int ft_string::mutex_guard::lock(pt_recursive_mutex &mutex) noexcept
+int ft_string::mutex_guard::lock(pt_recursive_mutex *mutex) noexcept
 {
     int lock_error;
 
     this->unlock();
-    lock_error = mutex.lock(THREAD_ID);
+    if (mutex == ft_nullptr)
+    {
+        this->_mutex = ft_nullptr;
+        return (FT_ERR_SUCCESSS);
+    }
+    lock_error = pt_recursive_mutex_lock_with_error(*mutex);
     if (lock_error == FT_ERR_SUCCESSS)
     {
-        this->_mutex = &mutex;
-        this->_owns_lock = true;
-        this->_error_code = FT_ERR_SUCCESSS;
+        this->_mutex = mutex;
     }
     else
     {
         this->_mutex = ft_nullptr;
-        this->_owns_lock = false;
-        this->_error_code = lock_error;
     }
     return (lock_error);
 }
 
 void ft_string::mutex_guard::unlock() noexcept
 {
-    if (this->_owns_lock && this->_mutex != ft_nullptr)
+    if (this->_mutex != ft_nullptr)
     {
-        this->_mutex->unlock(THREAD_ID);
-        this->_owns_lock = false;
+        pt_recursive_mutex_unlock_with_error(*this->_mutex);
+        this->_mutex = ft_nullptr;
     }
     return ;
 }
 
 bool ft_string::mutex_guard::owns_lock() const noexcept
 {
-    return (this->_owns_lock);
-}
-
-int ft_string::mutex_guard::get_error() const noexcept
-{
-    return (this->_error_code);
+    return (this->_mutex != ft_nullptr);
 }
 
 void ft_string::push_error_unlocked(int error_code) const noexcept
@@ -131,10 +178,11 @@ int ft_string::lock_pair(const ft_string &first, const ft_string &second,
     {
         mutex_guard single_guard;
 
-        if (single_guard.lock(first._mutex) != FT_ERR_SUCCESSS)
-        {
-            return (single_guard.get_error());
-        }
+    int single_lock_error = single_guard.lock(first._mutex);
+    if (single_lock_error != FT_ERR_SUCCESSS)
+    {
+        return (single_lock_error);
+    }
         first_guard = ft_move(single_guard);
         second_guard.unlock();
         return (FT_ERR_SUCCESSS);
@@ -155,12 +203,14 @@ int ft_string::lock_pair(const ft_string &first, const ft_string &second,
     {
         mutex_guard lower_guard;
 
-        if (lower_guard.lock(ordered_first->_mutex) != FT_ERR_SUCCESSS)
+        int lower_lock_error = lower_guard.lock(ordered_first->_mutex);
+        if (lower_lock_error != FT_ERR_SUCCESSS)
         {
-            return (lower_guard.get_error());
+            return (lower_lock_error);
         }
         mutex_guard upper_guard;
-        if (upper_guard.lock(ordered_second->_mutex) == FT_ERR_SUCCESSS)
+        int upper_lock_error = upper_guard.lock(ordered_second->_mutex);
+        if (upper_lock_error == FT_ERR_SUCCESSS)
         {
             if (!swapped)
             {
@@ -174,9 +224,9 @@ int ft_string::lock_pair(const ft_string &first, const ft_string &second,
             }
             return (FT_ERR_SUCCESSS);
         }
-        if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
+        if (upper_lock_error != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            return (upper_guard.get_error());
+            return (upper_lock_error);
         }
         if (lower_guard.owns_lock())
             lower_guard.unlock();
@@ -186,7 +236,7 @@ int ft_string::lock_pair(const ft_string &first, const ft_string &second,
 
 int ft_string::last_operation_error() noexcept
 {
-    return (ft_global_error_stack_last_error());
+    return (ft_global_error_stack_peek_last_error());
 }
 
 int ft_string::operation_error_at(size_t index) noexcept
@@ -771,7 +821,7 @@ bool ft_string::empty() const noexcept
 
 const char* ft_string::last_operation_error_str() noexcept
 {
-    return (ft_global_error_stack_last_error_str());
+    return (ft_global_error_stack_peek_last_error_str());
 }
 
 const char* ft_string::operation_error_str_at(size_t index) noexcept

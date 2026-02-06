@@ -3,6 +3,7 @@
 #include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
 #include "../PThread/mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../PThread/pthread.hpp"
 #include <cerrno>
 #include <ctime>
@@ -24,17 +25,7 @@ static int cmp_lock_pt_mutex(pt_mutex *mutex)
         cmp_set_last_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
-    if (mutex->lock(THREAD_ID) != FT_SUCCESS)
-    {
-        int error_code = ft_global_error_stack_pop_newest();
-
-        if (error_code == FT_ERR_SUCCESSS)
-            error_code = FT_ERR_INVALID_STATE;
-        cmp_set_last_error(error_code);
-        return (-1);
-    }
-    int lock_error = ft_global_error_stack_pop_newest();
-
+    int lock_error = pt_mutex_lock_with_error(*mutex);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         cmp_set_last_error(lock_error);
@@ -50,17 +41,7 @@ static int cmp_unlock_pt_mutex(pt_mutex *mutex)
         cmp_set_last_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
-    if (mutex->unlock(THREAD_ID) != FT_SUCCESS)
-    {
-        int error_code = ft_global_error_stack_pop_newest();
-
-        if (error_code == FT_ERR_SUCCESSS)
-            error_code = FT_ERR_INVALID_STATE;
-        cmp_set_last_error(error_code);
-        return (-1);
-    }
-    int unlock_error = ft_global_error_stack_pop_newest();
-
+    int unlock_error = pt_mutex_unlock_with_error(*mutex);
     if (unlock_error != FT_ERR_SUCCESSS)
     {
         cmp_set_last_error(unlock_error);

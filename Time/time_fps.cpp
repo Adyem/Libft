@@ -30,7 +30,7 @@ long    time_fps::get_frames_per_second()
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        int guard_error = ft_global_error_stack_pop_newest();
+        int guard_error = ft_global_error_stack_drop_last_error();
 
         if (guard_error != FT_ERR_SUCCESSS)
             final_error = guard_error;
@@ -55,7 +55,7 @@ int     time_fps::set_frames_per_second(long frames_per_second)
     result = -1;
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
-        int guard_error = ft_global_error_stack_pop_newest();
+        int guard_error = ft_global_error_stack_drop_last_error();
 
         if (guard_error != FT_ERR_SUCCESSS)
         {
@@ -90,7 +90,7 @@ void    time_fps::sleep_to_next_frame()
     final_error = FT_ERR_SUCCESSS;
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
-        int guard_error = ft_global_error_stack_pop_newest();
+        int guard_error = ft_global_error_stack_drop_last_error();
 
         if (guard_error != FT_ERR_SUCCESSS)
             final_error = guard_error;

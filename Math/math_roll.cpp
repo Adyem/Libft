@@ -92,7 +92,7 @@ int *math_roll(const char *expression)
     result = cma_strdup(expression);
     if (!result)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_NO_MEMORY;
         if (DEBUG == 1)
@@ -101,7 +101,7 @@ int *math_roll(const char *expression)
         }
         return (math_roll_report_error(error_code, ft_nullptr));
     }
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     if (math_roll_validate(result))
     {
         if (DEBUG == 1)
@@ -122,14 +122,14 @@ int *math_roll(const char *expression)
     value = reinterpret_cast<int*>(cma_malloc(sizeof(int)));
     if (!value)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_NO_MEMORY;
         return (math_roll_report_error(error_code, result));
     }
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     *value = ft_atoi(result);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         cma_free(result);

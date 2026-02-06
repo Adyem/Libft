@@ -14,7 +14,7 @@ float ft_random_normal(void)
 
     ft_init_random_engine();
     uniform_one = ft_random_float();
-    int error_code = ft_global_error_stack_pop_newest();
+    int error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(error_code);
@@ -23,7 +23,7 @@ float ft_random_normal(void)
     if (uniform_one < 0.0000000001f)
         uniform_one = 0.0000000001f;
     uniform_two = ft_random_float();
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(error_code);
@@ -34,14 +34,14 @@ float ft_random_normal(void)
     double cosine_value;
 
     log_value = math_log(uniform_one);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(error_code);
         return (0.0f);
     }
     sqrt_value = math_sqrt(-2.0 * log_value);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(error_code);
@@ -50,7 +50,7 @@ float ft_random_normal(void)
     radius = static_cast<float>(sqrt_value);
     angle = 2.0f * pi_value * uniform_two;
     cosine_value = math_cos(angle);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(error_code);

@@ -6,6 +6,7 @@
 #if defined(_WIN32) || defined(_WIN64)
 # include "../CPP_class/class_nullptr.hpp"
 # include "../PThread/mutex.hpp"
+# include "../PThread/pthread_internal.hpp"
 # include "../Libft/libft.hpp"
 # include <windows.h>
 # include <stdio.h>
@@ -45,9 +46,26 @@ static void cmp_clear_handle(int file_descriptor)
     return ;
 }
 
+static int cmp_lock_file_mutex(void)
+{
+    return (pt_mutex_lock_with_error(g_file_mutex));
+}
+
+static int cmp_unlock_file_mutex(void)
+{
+    return (pt_mutex_unlock_with_error(g_file_mutex));
+}
+
 static int cmp_open_internal(const char *path_name, int flags, int mode)
 {
-    g_file_mutex.lock(GetCurrentThreadId());
+    int lock_error;
+
+    lock_error = cmp_lock_file_mutex();
+    if (lock_error != FT_ERR_SUCCESSS)
+    {
+        cmp_set_last_error(lock_error);
+        return (-1);
+    }
     DWORD desired_access = 0;
     DWORD creation_disposition = 0;
     DWORD flags_and_attributes = FILE_ATTRIBUTE_NORMAL;
@@ -85,17 +103,18 @@ static int cmp_open_internal(const char *path_name, int flags, int mode)
     if (file_handle == INVALID_HANDLE_VALUE)
     {
         DWORD last_error = GetLastError();
-        g_file_mutex.unlock(GetCurrentThreadId());
+        cmp_unlock_file_mutex();
+        cmp_set_last_error(ft_map_system_error(static_cast<int>(last_error)));
         return (-1);
     }
     int file_descriptor = cmp_store_handle(file_handle);
     if (file_descriptor < 0)
     {
         CloseHandle(file_handle);
-        g_file_mutex.unlock(GetCurrentThreadId());
+        cmp_unlock_file_mutex();
         return (-1);
     }
-    g_file_mutex.unlock(GetCurrentThreadId());
+    cmp_unlock_file_mutex();
     return (file_descriptor);
 }
 
@@ -116,11 +135,18 @@ int cmp_open(const char *path_name, int flags, int mode)
 
 ssize_t cmp_read(int file_descriptor, void *buffer, unsigned int count)
 {
-    g_file_mutex.lock(GetCurrentThreadId());
+    int lock_error;
+
+    lock_error = cmp_lock_file_mutex();
+    if (lock_error != FT_ERR_SUCCESSS)
+    {
+        cmp_set_last_error(lock_error);
+        return (-1);
+    }
     HANDLE file_handle = cmp_retrieve_handle(file_descriptor);
     if (file_handle == INVALID_HANDLE_VALUE)
     {
-        g_file_mutex.unlock(GetCurrentThreadId());
+        cmp_unlock_file_mutex();
         return (-1);
     }
     BY_HANDLE_FILE_INFORMATION file_info;
@@ -128,13 +154,13 @@ ssize_t cmp_read(int file_descriptor, void *buffer, unsigned int count)
     {
         if (file_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
-            g_file_mutex.unlock(GetCurrentThreadId());
+            cmp_unlock_file_mutex();
             return (-1);
         }
     }
     DWORD bytes_read = 0;
     BOOL ok = ReadFile(file_handle, buffer, count, &bytes_read, ft_nullptr);
-    g_file_mutex.unlock(GetCurrentThreadId());
+    cmp_unlock_file_mutex();
     if (!ok)
     {
         DWORD last_error = GetLastError();
@@ -145,16 +171,23 @@ ssize_t cmp_read(int file_descriptor, void *buffer, unsigned int count)
 
 ssize_t cmp_write(int file_descriptor, const void *buffer, unsigned int count)
 {
-    g_file_mutex.lock(GetCurrentThreadId());
+    int lock_error;
+
+    lock_error = cmp_lock_file_mutex();
+    if (lock_error != FT_ERR_SUCCESSS)
+    {
+        cmp_set_last_error(lock_error);
+        return (-1);
+    }
     HANDLE file_handle = cmp_retrieve_handle(file_descriptor);
     if (file_handle == INVALID_HANDLE_VALUE)
     {
-        g_file_mutex.unlock(GetCurrentThreadId());
+        cmp_unlock_file_mutex();
         return (-1);
     }
     DWORD bytes_written = 0;
     BOOL ok = WriteFile(file_handle, buffer, count, &bytes_written, ft_nullptr);
-    g_file_mutex.unlock(GetCurrentThreadId());
+    cmp_unlock_file_mutex();
     if (!ok)
     {
         DWORD last_error = GetLastError();
@@ -165,21 +198,28 @@ ssize_t cmp_write(int file_descriptor, const void *buffer, unsigned int count)
 
 int cmp_close(int file_descriptor)
 {
-    g_file_mutex.lock(GetCurrentThreadId());
+    int lock_error;
+
+    lock_error = cmp_lock_file_mutex();
+    if (lock_error != FT_ERR_SUCCESSS)
+    {
+        cmp_set_last_error(lock_error);
+        return (-1);
+    }
     HANDLE file_handle = cmp_retrieve_handle(file_descriptor);
     if (file_handle == INVALID_HANDLE_VALUE)
     {
-        g_file_mutex.unlock(GetCurrentThreadId());
+        cmp_unlock_file_mutex();
         return (-1);
     }
     if (!CloseHandle(file_handle))
     {
         DWORD last_error = GetLastError();
-        g_file_mutex.unlock(GetCurrentThreadId());
+        cmp_unlock_file_mutex();
         return (-1);
     }
     cmp_clear_handle(file_descriptor);
-    g_file_mutex.unlock(GetCurrentThreadId());
+    cmp_unlock_file_mutex();
     return (0);
 }
 
@@ -212,11 +252,18 @@ void cmp_initialize_standard_file_descriptors()
         if (file_descriptor_error != -1)
             _dup2(file_descriptor_error, 2);
     }
-    g_file_mutex.lock(GetCurrentThreadId());
+    int lock_error;
+
+    lock_error = cmp_lock_file_mutex();
+    if (lock_error != FT_ERR_SUCCESSS)
+    {
+        cmp_set_last_error(lock_error);
+        return ;
+    }
     g_file_handles[0] = standard_input;
     g_file_handles[1] = standard_output;
     g_file_handles[2] = standard_error;
-    g_file_mutex.unlock(GetCurrentThreadId());
+    cmp_unlock_file_mutex();
     _setmode(0, _O_BINARY);
     _setmode(1, _O_BINARY);
     _setmode(2, _O_BINARY);

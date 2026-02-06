@@ -17,7 +17,7 @@ char    *cma_strndup(const char *string, size_t maximum_length)
     }
     copy_length = ft_strnlen(string, maximum_length);
     duplicate = static_cast<char *>(cma_malloc(copy_length + 1));
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (duplicate == ft_nullptr)
     {
         ft_global_error_stack_push(error_code);

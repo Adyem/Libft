@@ -61,7 +61,7 @@ int encryption_aead_context::lock_self(ft_unique_lock<pt_mutex> &guard) const
 {
     guard = ft_unique_lock<pt_mutex>(this->_mutex);
     {
-        int lock_error = ft_global_error_stack_pop_newest();
+        int lock_error = ft_global_error_stack_drop_last_error();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {

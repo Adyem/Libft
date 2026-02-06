@@ -13,16 +13,6 @@ class ft_unique_lock
         MutexType *_mutex;
         bool _owns_lock;
 
-        void push_result(int error_code) const noexcept
-        {
-            ft_global_error_stack_push(error_code);
-        }
-
-        int consume_mutex_error(void) const noexcept
-        {
-            return (ft_global_error_stack_pop_newest());
-        }
-
     public:
         ft_unique_lock();
         explicit ft_unique_lock(MutexType &mutex);
@@ -39,8 +29,6 @@ class ft_unique_lock
 
         bool owns_lock() const;
         MutexType *mutex() const;
-        int last_operation_error() const noexcept;
-        const char *last_operation_error_str() const noexcept;
 };
 
 template <typename MutexType>
@@ -48,7 +36,7 @@ ft_unique_lock<MutexType>::ft_unique_lock()
     : _mutex(ft_nullptr)
     , _owns_lock(false)
 {
-    this->push_result(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -58,7 +46,6 @@ ft_unique_lock<MutexType>::ft_unique_lock(MutexType &mutex)
     , _owns_lock(false)
 {
     this->lock();
-    this->push_result(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -70,7 +57,7 @@ ft_unique_lock<MutexType>::~ft_unique_lock()
         this->unlock();
         return ;
     }
-    this->push_result(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -81,75 +68,90 @@ ft_unique_lock<MutexType>::ft_unique_lock(ft_unique_lock &&other)
 {
     other._mutex = ft_nullptr;
     other._owns_lock = false;
-    this->push_result(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
 template <typename MutexType>
 ft_unique_lock<MutexType> &ft_unique_lock<MutexType>::operator=(ft_unique_lock &&other)
 {
+    int assignment_error;
+
+    assignment_error = FT_ERR_SUCCESSS;
     if (this != &other)
     {
         if (this->_owns_lock && this->_mutex != ft_nullptr)
+        {
             this->unlock();
+            assignment_error = ft_global_error_stack_drop_last_error();
+            if (assignment_error != FT_ERR_SUCCESSS)
+            {
+                ft_global_error_stack_push(assignment_error);
+                return (*this);
+            }
+        }
         this->_mutex = other._mutex;
         this->_owns_lock = other._owns_lock;
         other._mutex = ft_nullptr;
         other._owns_lock = false;
     }
-    this->push_result(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(assignment_error);
     return (*this);
 }
 
 template <typename MutexType>
 void ft_unique_lock<MutexType>::lock()
 {
+    int mutex_error;
+    int stack_error;
     int final_error;
 
     if (this->_mutex == ft_nullptr)
     {
-        final_error = FT_ERR_INVALID_ARGUMENT;
-        this->push_result(final_error);
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     if (this->_owns_lock)
     {
-        final_error = FT_ERR_MUTEX_ALREADY_LOCKED;
-        this->push_result(final_error);
+        ft_global_error_stack_push(FT_ERR_MUTEX_ALREADY_LOCKED);
         return ;
     }
-    this->_mutex->lock(THREAD_ID);
-    final_error = this->consume_mutex_error();
-    if (final_error == FT_ERR_SUCCESSS)
+    mutex_error = this->_mutex->lock(THREAD_ID);
+    stack_error = ft_global_error_stack_drop_last_error();
+    final_error = stack_error != FT_ERR_SUCCESSS ? stack_error : mutex_error;
+    if (mutex_error == FT_ERR_SUCCESSS)
         this->_owns_lock = true;
     else
         this->_owns_lock = false;
-    this->push_result(final_error);
+    ft_global_error_stack_push(final_error);
     return ;
 }
 
 template <typename MutexType>
 void ft_unique_lock<MutexType>::unlock()
 {
+    int mutex_error;
+    int stack_error;
     int final_error;
 
     if (this->_mutex == ft_nullptr)
     {
-        final_error = FT_ERR_INVALID_ARGUMENT;
-        this->push_result(final_error);
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     if (!this->_owns_lock)
     {
-        final_error = FT_ERR_INVALID_ARGUMENT;
-        this->push_result(final_error);
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
-    this->_mutex->unlock(THREAD_ID);
-    final_error = this->consume_mutex_error();
+    mutex_error = this->_mutex->unlock(THREAD_ID);
+    stack_error = ft_global_error_stack_drop_last_error();
+    final_error = stack_error != FT_ERR_SUCCESSS ? stack_error : mutex_error;
     if (final_error == FT_ERR_SUCCESSS)
         this->_owns_lock = false;
-    this->push_result(final_error);
+    else
+        this->_owns_lock = false;
+    ft_global_error_stack_push(final_error);
     return ;
 }
 
@@ -159,7 +161,7 @@ bool ft_unique_lock<MutexType>::owns_lock() const
     bool owns_value;
 
     owns_value = this->_owns_lock;
-    this->push_result(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (owns_value);
 }
 
@@ -169,20 +171,8 @@ MutexType *ft_unique_lock<MutexType>::mutex() const
     MutexType *mutex_pointer;
 
     mutex_pointer = this->_mutex;
-    this->push_result(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (mutex_pointer);
-}
-
-template <typename MutexType>
-int ft_unique_lock<MutexType>::last_operation_error() const noexcept
-{
-    return (ft_global_error_stack_last_error());
-}
-
-template <typename MutexType>
-const char *ft_unique_lock<MutexType>::last_operation_error_str() const noexcept
-{
-    return (ft_global_error_stack_last_error_str());
 }
 
 #endif

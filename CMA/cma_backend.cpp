@@ -153,9 +153,7 @@ int cma_backend_deallocate(void *memory_pointer)
     if (!g_cma_backend_enabled)
         return (FT_ERR_INVALID_STATE);
     if (!g_cma_backend_hooks.deallocate)
-    {
         return (FT_ERR_INVALID_STATE);
-    }
     ft_size_t allocation_size = cma_backend_query_size(memory_pointer);
     cma_backend_track_free(allocation_size);
     g_cma_backend_hooks.deallocate(memory_pointer, g_cma_backend_hooks.user_data);

@@ -71,7 +71,7 @@ int ft_global_error_stack_pop_last(void)
     return (error_code);
 }
 
-int ft_global_error_stack_pop_newest(void)
+int ft_global_error_stack_drop_last_error(void)
 {
     ft_error_stack &error_stack = ft_global_error_stack();
 
@@ -104,7 +104,7 @@ int ft_global_error_stack_error_at(ft_size_t index)
     return (error_stack.frames[index - 1].code);
 }
 
-int ft_global_error_stack_last_error(void)
+int ft_global_error_stack_peek_last_error(void)
 {
     const ft_error_stack &error_stack = ft_global_error_stack();
 
@@ -128,9 +128,9 @@ const char *ft_global_error_stack_error_str_at(ft_size_t index)
     return (error_string);
 }
 
-const char *ft_global_error_stack_last_error_str(void)
+const char *ft_global_error_stack_peek_last_error_str(void)
 {
-    int error_code = ft_global_error_stack_last_error();
+    int error_code = ft_global_error_stack_peek_last_error();
     const char *error_string = ft_strerror(error_code);
 
     if (!error_string)

@@ -35,12 +35,12 @@ int    *math_eval(const char *expression)
     result = math_roll(expression);
     if (!result)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_INTERNAL;
         return (math_eval_report_error(error_code));
     }
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
         return (math_eval_report_error(error_code));
     ft_global_error_stack_push(FT_ERR_SUCCESSS);

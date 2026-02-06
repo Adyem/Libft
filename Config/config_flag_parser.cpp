@@ -11,7 +11,7 @@ static int cnfg_config_lock_if_enabled(cnfg_config *config, ft_unique_lock<pt_mu
     if (!config || !config->thread_safe_enabled || !config->mutex)
         return (FT_ERR_SUCCESSS);
     mutex_guard = ft_unique_lock<pt_mutex>(*config->mutex);
-    return (ft_global_error_stack_pop_newest());
+    return (ft_global_error_stack_drop_last_error());
 }
 
 static void cnfg_config_unlock_guard(ft_unique_lock<pt_mutex> &mutex_guard)
@@ -79,7 +79,7 @@ void cnfg_flag_parser::free_flags()
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
     {
-        int lock_error = ft_global_error_stack_pop_newest();
+        int lock_error = ft_global_error_stack_drop_last_error();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {
@@ -97,7 +97,7 @@ bool cnfg_flag_parser::parse(int argument_count, char **argument_values)
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
     {
-        int lock_error = ft_global_error_stack_pop_newest();
+        int lock_error = ft_global_error_stack_drop_last_error();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {
@@ -110,8 +110,8 @@ bool cnfg_flag_parser::parse(int argument_count, char **argument_values)
     this->_short_flags = cnfg_parse_flags(argument_count, argument_values);
     if (!this->_short_flags)
     {
-        int short_flag_error = ft_global_error_stack_last_error();
-        ft_global_error_stack_pop_newest();
+        int short_flag_error = ft_global_error_stack_peek_last_error();
+        ft_global_error_stack_drop_last_error();
         ft_global_error_stack_push(short_flag_error);
         this->set_error(short_flag_error);
         this->free_flags_locked();
@@ -120,8 +120,8 @@ bool cnfg_flag_parser::parse(int argument_count, char **argument_values)
     this->_long_flags = cnfg_parse_long_flags(argument_count, argument_values);
     if (!this->_long_flags)
     {
-        int long_flag_error = ft_global_error_stack_last_error();
-        ft_global_error_stack_pop_newest();
+        int long_flag_error = ft_global_error_stack_peek_last_error();
+        ft_global_error_stack_drop_last_error();
         ft_global_error_stack_push(long_flag_error);
         this->set_error(long_flag_error);
         this->free_flags_locked();
@@ -156,7 +156,7 @@ bool cnfg_flag_parser::has_short_flag(char flag)
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
     {
-        int lock_error = ft_global_error_stack_pop_newest();
+        int lock_error = ft_global_error_stack_drop_last_error();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {
@@ -180,7 +180,7 @@ bool cnfg_flag_parser::has_long_flag(const char *flag)
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
     {
-        int lock_error = ft_global_error_stack_pop_newest();
+        int lock_error = ft_global_error_stack_drop_last_error();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {
@@ -210,7 +210,7 @@ size_t cnfg_flag_parser::get_short_flag_count()
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
     {
-        int lock_error = ft_global_error_stack_pop_newest();
+        int lock_error = ft_global_error_stack_drop_last_error();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {
@@ -229,7 +229,7 @@ size_t cnfg_flag_parser::get_long_flag_count()
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
     {
-        int lock_error = ft_global_error_stack_pop_newest();
+        int lock_error = ft_global_error_stack_drop_last_error();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {
@@ -248,7 +248,7 @@ size_t cnfg_flag_parser::get_total_flag_count()
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
     {
-        int lock_error = ft_global_error_stack_pop_newest();
+        int lock_error = ft_global_error_stack_drop_last_error();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {
@@ -273,7 +273,7 @@ int     cnfg_flag_parser::get_error() const
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
     {
-        int lock_error = ft_global_error_stack_pop_newest();
+        int lock_error = ft_global_error_stack_drop_last_error();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {
@@ -293,7 +293,7 @@ const char  *cnfg_flag_parser::get_error_str() const
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
     {
-        int lock_error = ft_global_error_stack_pop_newest();
+        int lock_error = ft_global_error_stack_drop_last_error();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {
@@ -544,8 +544,8 @@ cnfg_config *config_merge_sources(int argument_count,
     ft_size_t short_flags_new_depth = ft_global_error_stack_depth();
     if (short_flags_new_depth != short_flags_depth)
     {
-        short_flags_errno = ft_global_error_stack_last_error();
-        ft_global_error_stack_pop_newest();
+        short_flags_errno = ft_global_error_stack_peek_last_error();
+        ft_global_error_stack_drop_last_error();
         ft_global_error_stack_push(short_flags_errno);
     }
     if (!short_flags && short_flags_errno != FT_ERR_SUCCESSS)
@@ -575,8 +575,8 @@ cnfg_config *config_merge_sources(int argument_count,
     ft_size_t long_flags_new_depth = ft_global_error_stack_depth();
     if (long_flags_new_depth != long_flags_depth)
     {
-        long_flags_errno = ft_global_error_stack_last_error();
-        ft_global_error_stack_pop_newest();
+        long_flags_errno = ft_global_error_stack_peek_last_error();
+        ft_global_error_stack_drop_last_error();
         ft_global_error_stack_push(long_flags_errno);
     }
     if (!long_flags && long_flags_errno != FT_ERR_SUCCESSS)

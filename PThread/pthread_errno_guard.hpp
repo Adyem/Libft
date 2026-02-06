@@ -25,7 +25,7 @@ pt_errno_guard<GuardType>::pt_errno_guard(GuardType &first_guard,
         GuardType &second_guard) noexcept
     : _first_guard(&first_guard)
     , _second_guard(&second_guard)
-    , _previous_error(ft_global_error_stack_last_error())
+    , _previous_error(ft_global_error_stack_peek_last_error())
 {
     return ;
 }
@@ -34,8 +34,8 @@ static int pt_errno_guard_capture_error() noexcept
 {
     int error_value;
 
-    error_value = ft_global_error_stack_last_error();
-    ft_global_error_stack_pop_newest();
+    error_value = ft_global_error_stack_peek_last_error();
+    ft_global_error_stack_drop_last_error();
     if (error_value != FT_ERR_SUCCESSS)
         ft_global_error_stack_push(error_value);
     return (error_value);

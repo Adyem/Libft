@@ -2710,16 +2710,16 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `unsigned long long ft_global_error_stack_push_entry_with_id(int error_code, unsigned long long op_id)`
   - `void ft_global_error_stack_push(int error_code)`
   - `int ft_global_error_stack_pop_last(void)`
-  - `int ft_global_error_stack_pop_newest(void)`
+  - `int ft_global_error_stack_drop_last_error(void)`
   - `int ft_global_error_stack_pop_entry_with_id(unsigned long long op_id)`
   - `void ft_global_error_stack_pop_all(void)`
   - `int ft_global_error_stack_error_at(ft_size_t index)`
-  - `int ft_global_error_stack_last_error(void)`
+  - `int ft_global_error_stack_peek_last_error(void)`
   - `ft_size_t ft_global_error_stack_depth(void)`
   - `unsigned long long ft_global_error_stack_get_id_at(ft_size_t index)`
   - `ft_size_t ft_global_error_stack_find_by_id(unsigned long long id)`
   - `const char *ft_global_error_stack_error_str_at(ft_size_t index)`
-  - `const char *ft_global_error_stack_last_error_str(void)`
+  - `const char *ft_global_error_stack_peek_last_error_str(void)`
   - `const char* ft_strerror(int error_code)`
   - `void ft_perror(const char *error_msg)`
   - `void ft_exit(const char *error_msg, int exit_code)`
@@ -2785,16 +2785,16 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `unsigned long long ft_global_error_stack_push_entry(int error_code)`
   - `void ft_global_error_stack_push(int error_code)`
   - `int ft_global_error_stack_pop_last(void)`
-  - `int ft_global_error_stack_pop_newest(void)`
+  - `int ft_global_error_stack_drop_last_error(void)`
   - `int ft_global_error_stack_pop_entry_with_id(unsigned long long op_id)`
   - `void ft_global_error_stack_pop_all(void)`
   - `int ft_global_error_stack_error_at(ft_size_t index)`
-  - `int ft_global_error_stack_last_error(void)`
+  - `int ft_global_error_stack_peek_last_error(void)`
   - `ft_size_t ft_global_error_stack_depth(void)`
   - `unsigned long long ft_global_error_stack_get_id_at(ft_size_t index)`
   - `ft_size_t ft_global_error_stack_find_by_id(unsigned long long id)`
   - `const char *ft_global_error_stack_error_str_at(ft_size_t index)`
-  - `const char *ft_global_error_stack_last_error_str(void)`
+  - `const char *ft_global_error_stack_peek_last_error_str(void)`
 
 ### Errno/errno_exit.cpp
 
@@ -9450,7 +9450,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Declares:
   - `void dismiss() noexcept`
 - Defines:
-  - `pt_errno_guard<GuardType>::pt_errno_guard(GuardType &first_guard, GuardType &second_guard) noexcept : _first_guard(&first_guard) , _second_guard(&second_guard) , _previous_error(ft_global_error_stack_last_error())`
+  - `pt_errno_guard<GuardType>::pt_errno_guard(GuardType &first_guard, GuardType &second_guard) noexcept : _first_guard(&first_guard) , _second_guard(&second_guard) , _previous_error(ft_global_error_stack_peek_last_error())`
   - `static int pt_errno_guard_capture_error() noexcept`
   - `pt_errno_guard<GuardType>::~pt_errno_guard() noexcept`
   - `void pt_errno_guard<GuardType>::dismiss() noexcept`
@@ -17533,7 +17533,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `FT_ASSERT_EQ(0, file_create_directory(directory_path, 0700) )`
   - `kv_store store(file_path)`
   - `FT_ASSERT_EQ(0, file_delete(file_path) )`
-  - `FT_ASSERT_EQ(expected_error, ft_global_error_stack_pop_newest() )`
+  - `FT_ASSERT_EQ(expected_error, ft_global_error_stack_drop_last_error() )`
   - `kv_store encrypted_store(file_path, encryption_key, true)`
   - `kv_store reloaded_store(file_path, encryption_key, true)`
   - `FT_ASSERT_EQ(0, ft_strcmp(reloaded_store.kv_get("secret"), "value") )`
@@ -18010,9 +18010,9 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `FT_ASSERT_EQ(0, su_inspect_permissions(path, &permissions) )`
   - `#if defined(_WIN32) || defined(_WIN64) FT_ASSERT((permissions & _S_IFREG) != 0)`
   - `FT_ASSERT_EQ(-1, su_copy_directory_recursive(ft_nullptr, "target") )`
-  - `FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_global_error_stack_pop_newest() )`
+  - `FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_global_error_stack_drop_last_error() )`
   - `FT_ASSERT_EQ(-1, su_copy_directory_recursive("missing", "target") )`
-  - `FT_ASSERT( ft_global_error_stack_pop_newest() != FT_ERR_SUCCESSS)`
+  - `FT_ASSERT( ft_global_error_stack_drop_last_error() != FT_ERR_SUCCESSS)`
   - `FT_ASSERT_EQ(-1, su_inspect_permissions("any", ft_nullptr) )`
 - Defines:
   - `#if defined(_WIN32) || defined(_WIN64) # include <direct.h> #else # include <unistd.h> #endif static void su_cleanup_path(const char *path)`

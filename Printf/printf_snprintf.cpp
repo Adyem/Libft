@@ -19,7 +19,7 @@ int pf_snprintf(char *string, size_t size, const char *format, ...)
     va_start(args, format);
     int printed = pf_vsnprintf(string, size, format, args);
     va_end(args);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (printed < 0)
     {
         if (error_code != FT_ERR_SUCCESSS)

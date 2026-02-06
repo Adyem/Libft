@@ -87,7 +87,7 @@ int ft_loot_entry<ElementType>::lock_entry(ft_unique_lock<pt_mutex> &guard) cons
 {
     ft_unique_lock<pt_mutex> local_guard(this->_mutex);
     {
-        int lock_error = ft_global_error_stack_pop_newest();
+        int lock_error = ft_global_error_stack_drop_last_error();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {
@@ -381,7 +381,7 @@ int ft_loot_table<ElementType>::lock_table(ft_unique_lock<pt_mutex> &guard) cons
 {
     ft_unique_lock<pt_mutex> local_guard(this->_mutex);
     {
-        int lock_error = ft_global_error_stack_pop_newest();
+        int lock_error = ft_global_error_stack_drop_last_error();
 
         if (lock_error != FT_ERR_SUCCESSS)
         {

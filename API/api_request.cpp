@@ -96,7 +96,7 @@ bool api_request(const char *ip, uint16_t port,
                 &http2_used_local, retry_policy);
         if (!request_success)
         {
-            error_code = ft_global_error_stack_pop_newest();
+            error_code = ft_global_error_stack_drop_last_error();
             if (error_code == FT_ERR_SUCCESSS)
                 error_code = FT_ERR_IO;
             return (false);
@@ -109,7 +109,7 @@ bool api_request(const char *ip, uint16_t port,
             streaming_handler, payload, headers, timeout, retry_policy);
     if (!request_success)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_IO;
         return (false);
@@ -156,7 +156,7 @@ bool api_request_stream(const char *ip, uint16_t port,
                 streaming_handler, payload, headers, timeout, retry_policy,
                 hooks->user_data);
         if (!hook_result)
-            error_code = ft_global_error_stack_pop_newest();
+            error_code = ft_global_error_stack_drop_last_error();
         return (hook_result);
     }
 
@@ -277,7 +277,7 @@ bool api_request_stream_http2(const char *ip, uint16_t port,
                 streaming_handler, payload, headers, timeout, used_http2,
                 retry_policy, hooks->user_data);
         if (!hook_result)
-            error_code = ft_global_error_stack_pop_newest();
+            error_code = ft_global_error_stack_drop_last_error();
         return (hook_result);
     }
 
@@ -400,7 +400,7 @@ char *api_request_string(const char *ip, uint16_t port,
         bool hook_result = hooks->request_string(ip, port, method, path, payload,
                 headers, status, timeout, retry_policy, hooks->user_data);
         if (!hook_result)
-            error_code = ft_global_error_stack_pop_newest();
+            error_code = ft_global_error_stack_drop_last_error();
         return (hook_result);
     }
     size_t metrics_request_bytes;
@@ -545,7 +545,7 @@ char *api_request_string_http2(const char *ip, uint16_t port,
                 payload, headers, status, timeout, used_http2, retry_policy,
                 hooks->user_data);
         if (!hook_result)
-            error_code = ft_global_error_stack_pop_newest();
+            error_code = ft_global_error_stack_drop_last_error();
         return (hook_result);
     }
     size_t metrics_request_bytes;
@@ -792,7 +792,7 @@ json_group *api_request_json(const char *ip, uint16_t port,
             headers, status, timeout, retry_policy);
     if (!body)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_IO;
         return (ft_nullptr);
@@ -801,7 +801,7 @@ json_group *api_request_json(const char *ip, uint16_t port,
     cma_free(body);
     if (!result)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         return (ft_nullptr);
     }
     error_code = FT_ERR_SUCCESSS;
@@ -825,7 +825,7 @@ json_group *api_request_json_http2(const char *ip, uint16_t port,
         *used_http2 = http2_used_local;
     if (!body)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_IO;
         return (ft_nullptr);
@@ -834,7 +834,7 @@ json_group *api_request_json_http2(const char *ip, uint16_t port,
     cma_free(body);
     if (!result)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         return (ft_nullptr);
     }
     error_code = FT_ERR_SUCCESSS;
@@ -981,7 +981,7 @@ char *api_request_string_host(const char *host, uint16_t port,
                 hooks->user_data);
         if (!hook_result)
         {
-            error_code = ft_global_error_stack_pop_newest();
+            error_code = ft_global_error_stack_drop_last_error();
             if (error_code == FT_ERR_SUCCESSS)
                 error_code = FT_ERR_IO;
         }
@@ -1054,7 +1054,7 @@ char *api_request_string_host(const char *host, uint16_t port,
             headers, status, timeout, retry_policy);
     if (!result)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_IO;
         return (ft_nullptr);
@@ -1074,7 +1074,7 @@ json_group *api_request_json_host(const char *host, uint16_t port,
             headers, status, timeout, retry_policy);
     if (!body)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_IO;
         return (ft_nullptr);
@@ -1083,7 +1083,7 @@ json_group *api_request_json_host(const char *host, uint16_t port,
     cma_free(body);
     if (!result)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         return (ft_nullptr);
     }
     error_code = FT_ERR_SUCCESSS;
@@ -1123,7 +1123,7 @@ json_group *api_request_json_bearer(const char *ip, uint16_t port,
             payload, headers, status, timeout, retry_policy);
     if (!body)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_IO;
         return (ft_nullptr);
@@ -1132,7 +1132,7 @@ json_group *api_request_json_bearer(const char *ip, uint16_t port,
     cma_free(body);
     if (!result)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         return (ft_nullptr);
     }
     error_code = FT_ERR_SUCCESSS;
@@ -1172,7 +1172,7 @@ json_group *api_request_json_basic(const char *ip, uint16_t port,
             payload, headers, status, timeout, retry_policy);
     if (!body)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_IO;
         return (ft_nullptr);
@@ -1181,7 +1181,7 @@ json_group *api_request_json_basic(const char *ip, uint16_t port,
     cma_free(body);
     if (!result)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         return (ft_nullptr);
     }
     error_code = FT_ERR_SUCCESSS;
@@ -1222,7 +1222,7 @@ json_group *api_request_json_host_bearer(const char *host, uint16_t port,
             payload, headers, status, timeout, retry_policy);
     if (!body)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_IO;
         return (ft_nullptr);
@@ -1231,7 +1231,7 @@ json_group *api_request_json_host_bearer(const char *host, uint16_t port,
     cma_free(body);
     if (!result)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         return (ft_nullptr);
     }
     error_code = FT_ERR_SUCCESSS;
@@ -1273,7 +1273,7 @@ json_group *api_request_json_host_basic(const char *host, uint16_t port,
             retry_policy);
     if (!body)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_IO;
         return (ft_nullptr);
@@ -1282,7 +1282,7 @@ json_group *api_request_json_host_basic(const char *host, uint16_t port,
     cma_free(body);
     if (!result)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         return (ft_nullptr);
     }
     error_code = FT_ERR_SUCCESSS;
@@ -1451,7 +1451,7 @@ char *api_request_string_url(const char *url, const char *method,
                 retry_policy);
     if (!result)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_IO;
         return (ft_nullptr);
@@ -1470,7 +1470,7 @@ json_group *api_request_json_url(const char *url, const char *method,
             headers, status, timeout, retry_policy);
     if (!body)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_IO;
         return (ft_nullptr);
@@ -1479,7 +1479,7 @@ json_group *api_request_json_url(const char *url, const char *method,
     cma_free(body);
     if (!result)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         return (ft_nullptr);
     }
     error_code = FT_ERR_SUCCESSS;

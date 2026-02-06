@@ -64,6 +64,9 @@ char    *cma_strtrim(const char *string, const char *set)
 void    cma_free_double(char **content);
 void    cma_set_alloc_limit(ft_size_t limit);
 void    cma_set_thread_safety(bool enable);
+int     cma_enable_thread_safety(void);
+void    cma_disable_thread_safety(void);
+bool    cma_is_thread_safe_enabled(void);
 void    cma_get_stats(ft_size_t *allocation_count, ft_size_t *free_count);
 void    cma_get_extended_stats(ft_size_t *allocation_count,
             ft_size_t *free_count,

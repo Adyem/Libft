@@ -1,29 +1,11 @@
 #include "readline_internal.hpp"
 #include <new>
 #include "../CPP_class/class_nullptr.hpp"
-#include "../PThread/mutex.hpp"
-#include "../PThread/pthread.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 
 #include "../Errno/errno.hpp"
-
-static int rl_terminal_dimensions_lock_mutex(pt_mutex *mutex_pointer)
-{
-    int lock_error;
-
-    lock_error = mutex_pointer->lock(THREAD_ID);
-    lock_error = ft_global_error_stack_pop_newest();
-    return (lock_error);
-}
-
-static int rl_terminal_dimensions_unlock_mutex(pt_mutex *mutex_pointer)
-{
-    int unlock_error;
-
-    unlock_error = mutex_pointer->unlock(THREAD_ID);
-    unlock_error = ft_global_error_stack_pop_newest();
-    return (unlock_error);
-}
 
 static void rl_terminal_dimensions_clear(terminal_dimensions *dimensions)
 {
@@ -36,29 +18,24 @@ static void rl_terminal_dimensions_clear(terminal_dimensions *dimensions)
     dimensions->dimensions_valid = false;
     return ;
 }
-
 int rl_terminal_dimensions_prepare_thread_safety(terminal_dimensions *dimensions)
 {
-    pt_mutex *mutex_pointer;
-
     if (dimensions == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
-    if (dimensions->thread_safe_enabled == true && dimensions->mutex != ft_nullptr)
+    if (dimensions->mutex != ft_nullptr)
+    {
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (FT_ERR_SUCCESSS);
-    mutex_pointer = new (std::nothrow) pt_mutex();
-    if (mutex_pointer == ft_nullptr)
-        return (FT_ERR_NO_MEMORY);
-    int mutex_error;
-
-    mutex_error = ft_global_error_stack_last_error();
-    ft_global_error_stack_pop_newest();
+    }
+    pt_recursive_mutex *mutex_pointer = ft_nullptr;
+    int mutex_error = pt_recursive_mutex_create_with_error(&mutex_pointer);
     if (mutex_error != FT_ERR_SUCCESSS)
     {
-        delete mutex_pointer;
+        ft_global_error_stack_push(mutex_error);
         return (mutex_error);
     }
     dimensions->mutex = mutex_pointer;
-    dimensions->thread_safe_enabled = true;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);
 }
 
@@ -66,12 +43,8 @@ void rl_terminal_dimensions_teardown_thread_safety(terminal_dimensions *dimensio
 {
     if (dimensions == ft_nullptr)
         return ;
-    if (dimensions->mutex != ft_nullptr)
-    {
-        delete dimensions->mutex;
-        dimensions->mutex = ft_nullptr;
-    }
-    dimensions->thread_safe_enabled = false;
+    pt_recursive_mutex_destroy(&dimensions->mutex);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -81,11 +54,15 @@ int rl_terminal_dimensions_lock(terminal_dimensions *dimensions, bool *lock_acqu
         *lock_acquired = false;
     if (dimensions == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
-    if (dimensions->thread_safe_enabled == false || dimensions->mutex == ft_nullptr)
+    if (dimensions->mutex == ft_nullptr)
         return (FT_ERR_SUCCESSS);
-    int mutex_error = rl_terminal_dimensions_lock_mutex(dimensions->mutex);
+    int mutex_error = pt_recursive_mutex_lock_with_error(*dimensions->mutex);
+    int stack_error = ft_global_error_stack_drop_last_error();
     if (mutex_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(stack_error);
         return (mutex_error);
+    }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
     return (FT_ERR_SUCCESSS);
@@ -97,9 +74,13 @@ int rl_terminal_dimensions_unlock(terminal_dimensions *dimensions, bool lock_acq
         return (FT_ERR_INVALID_ARGUMENT);
     if (dimensions->mutex == ft_nullptr)
         return (FT_ERR_INVALID_STATE);
-    int mutex_error = rl_terminal_dimensions_unlock_mutex(dimensions->mutex);
+    int mutex_error = pt_recursive_mutex_unlock_with_error(*dimensions->mutex);
+    int stack_error = ft_global_error_stack_drop_last_error();
     if (mutex_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(stack_error);
         return (mutex_error);
+    }
     return (FT_ERR_SUCCESSS);
 }
 

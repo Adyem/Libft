@@ -1517,7 +1517,7 @@ int ft_sharedptr<ManagedType>::lock_internal(bool *lock_acquired) const
     if (!this->_thread_safe_enabled || this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESSS);
     mutex_result = this->_mutex->lock(THREAD_ID);
-    global_error = ft_global_error_stack_pop_newest();
+    global_error = ft_global_error_stack_drop_last_error();
     operation_error = global_error;
     if (global_error == FT_ERR_SUCCESSS)
         operation_error = mutex_result;
@@ -1543,7 +1543,7 @@ void ft_sharedptr<ManagedType>::unlock_internal(bool lock_acquired) const
     if (!lock_acquired || this->_mutex == ft_nullptr)
         return ;
     mutex_result = this->_mutex->unlock(THREAD_ID);
-    global_error = ft_global_error_stack_pop_newest();
+    global_error = ft_global_error_stack_drop_last_error();
     operation_error = global_error;
     if (global_error == FT_ERR_SUCCESSS)
         operation_error = mutex_result;
@@ -1582,7 +1582,7 @@ int ft_sharedptr<ManagedType>::prepare_thread_safety()
         return (-1);
     }
     mutex_pointer = new(memory_pointer) pt_recursive_mutex();
-    int mutex_error = ft_global_error_stack_last_error();
+    int mutex_error = ft_global_error_stack_peek_last_error();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         mutex_pointer->~pt_recursive_mutex();
@@ -1657,7 +1657,7 @@ void ft_sharedptr<ManagedType>::unlock(bool lock_acquired) const
 {
     this->unlock_internal(lock_acquired);
     if (this->_mutex == ft_nullptr
-        || ft_global_error_stack_last_error() == FT_ERR_SUCCESSS)
+        || ft_global_error_stack_peek_last_error() == FT_ERR_SUCCESSS)
     {
         const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_internal(FT_ERR_SUCCESSS);
     }

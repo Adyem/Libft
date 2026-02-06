@@ -9,7 +9,7 @@ int *cma_atoi(const char *string)
     int validate_result;
 
     validate_result = ft_validate_int(string);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (validate_result != FT_SUCCESS)
     {
         if (error_code == FT_ERR_SUCCESSS)
@@ -18,7 +18,7 @@ int *cma_atoi(const char *string)
         return (ft_nullptr);
     }
     number = static_cast<int *>(cma_malloc(sizeof(int)));
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (!number)
     {
         ft_global_error_stack_push(error_code);

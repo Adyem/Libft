@@ -25,13 +25,13 @@ ft_size_t cma_block_size(const void *memory_pointer)
     block_size = 0;
     if (cma_checked_block_size(memory_pointer, &block_size) != 0)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_INTERNAL;
         ft_global_error_stack_push(error_code);
         return (0);
     }
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     error_code = FT_ERR_SUCCESSS;
     ft_global_error_stack_push(error_code);
     return (block_size);
@@ -58,7 +58,7 @@ int cma_checked_block_size(const void *memory_pointer, ft_size_t *block_size)
     if (cma_backend_is_enabled() && cma_backend_owns_pointer(memory_pointer))
     {
         result_code = cma_backend_checked_block_size(memory_pointer, block_size);
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (result_code != 0 && error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_INTERNAL;
         ft_global_error_stack_push(error_code);
@@ -103,13 +103,13 @@ ft_size_t cma_alloc_size(const void *memory_pointer)
 
     if (cma_checked_block_size(memory_pointer, &block_size) != 0)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_INTERNAL;
         ft_global_error_stack_push(error_code);
         return (0);
     }
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     error_code = FT_ERR_SUCCESSS;
     ft_global_error_stack_push(error_code);
     return (block_size);

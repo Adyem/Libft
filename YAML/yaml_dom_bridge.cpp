@@ -33,7 +33,7 @@ static int yaml_dom_populate_node(const yaml_value *value, ft_dom_node *node) no
 
     type = value->get_type();
     {
-        int yaml_value_error = ft_global_error_stack_pop_newest();
+        int yaml_value_error = ft_global_error_stack_drop_last_error();
 
         if (yaml_value_error != FT_ERR_SUCCESSS)
             return (yaml_value_error);
@@ -42,7 +42,7 @@ static int yaml_dom_populate_node(const yaml_value *value, ft_dom_node *node) no
     {
         const ft_string &scalar = value->get_scalar();
         {
-            int yaml_value_error = ft_global_error_stack_pop_newest();
+            int yaml_value_error = ft_global_error_stack_drop_last_error();
 
             if (yaml_value_error != FT_ERR_SUCCESSS)
                 return (yaml_value_error);
@@ -61,7 +61,7 @@ static int yaml_dom_populate_node(const yaml_value *value, ft_dom_node *node) no
             return (node->get_error());
         const ft_vector<yaml_value*> &list = value->get_list();
         {
-            int yaml_value_error = ft_global_error_stack_pop_newest();
+            int yaml_value_error = ft_global_error_stack_drop_last_error();
 
             if (yaml_value_error != FT_ERR_SUCCESSS)
                 return (yaml_value_error);
@@ -124,14 +124,14 @@ static int yaml_dom_populate_node(const yaml_value *value, ft_dom_node *node) no
             return (node->get_error());
         const ft_vector<ft_string> &keys = value->get_map_keys();
         {
-            int yaml_value_error = ft_global_error_stack_pop_newest();
+            int yaml_value_error = ft_global_error_stack_drop_last_error();
 
             if (yaml_value_error != FT_ERR_SUCCESSS)
                 return (yaml_value_error);
         }
         const ft_map<ft_string, yaml_value*> &map_reference = value->get_map();
         {
-            int yaml_value_error = ft_global_error_stack_pop_newest();
+            int yaml_value_error = ft_global_error_stack_drop_last_error();
 
             if (yaml_value_error != FT_ERR_SUCCESSS)
                 return (yaml_value_error);
@@ -279,7 +279,7 @@ static yaml_value *yaml_dom_build_value(ft_dom_node *node, int *status) noexcept
         }
         result->set_type(YAML_SCALAR);
         {
-            int yaml_value_error = ft_global_error_stack_pop_newest();
+            int yaml_value_error = ft_global_error_stack_drop_last_error();
 
             if (yaml_value_error != FT_ERR_SUCCESSS)
             {
@@ -291,7 +291,7 @@ static yaml_value *yaml_dom_build_value(ft_dom_node *node, int *status) noexcept
         }
         result->set_scalar(scalar);
         {
-            int yaml_value_error = ft_global_error_stack_pop_newest();
+            int yaml_value_error = ft_global_error_stack_drop_last_error();
 
             if (yaml_value_error != FT_ERR_SUCCESSS)
             {
@@ -343,7 +343,7 @@ static yaml_value *yaml_dom_build_value(ft_dom_node *node, int *status) noexcept
             }
             result->add_list_item(child_value);
             {
-                int yaml_value_error = ft_global_error_stack_pop_newest();
+                int yaml_value_error = ft_global_error_stack_drop_last_error();
 
                 if (yaml_value_error != FT_ERR_SUCCESSS)
                 {
@@ -407,7 +407,7 @@ static yaml_value *yaml_dom_build_value(ft_dom_node *node, int *status) noexcept
             }
             result->add_map_item(child_name, child_value);
             {
-                int yaml_value_error = ft_global_error_stack_pop_newest();
+                int yaml_value_error = ft_global_error_stack_drop_last_error();
 
                 if (yaml_value_error != FT_ERR_SUCCESSS)
                 {

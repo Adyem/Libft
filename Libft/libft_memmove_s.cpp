@@ -48,7 +48,7 @@ int ft_memmove_s(void *destination, size_t destination_size, const void *source,
         return (-1);
     }
     move_result = ft_memmove(destination, source, number_of_bytes);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         zero_buffer(destination, destination_size);

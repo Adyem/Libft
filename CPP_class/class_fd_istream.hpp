@@ -3,13 +3,20 @@
 
 #include "class_istream.hpp"
 #include "../System_utils/system_utils.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 class ft_fd_istream : public ft_istream
 {
     private:
         int _fd;
-        mutable pt_recursive_mutex _mutex;
-        int lock_self(ft_unique_lock<pt_recursive_mutex> &guard) const noexcept;
+        mutable pt_recursive_mutex *_mutex;
+        int lock_mutex(void) const noexcept;
+        int unlock_mutex(void) const noexcept;
+        int prepare_thread_safety(void) noexcept;
+        void teardown_thread_safety(void) noexcept;
+        int enable_thread_safety(void) noexcept;
+        void disable_thread_safety(void) noexcept;
+        bool is_thread_safe_enabled(void) const noexcept;
     public:
         ft_fd_istream(int fd) noexcept;
         ft_fd_istream(const ft_fd_istream &other) noexcept;

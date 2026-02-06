@@ -310,14 +310,14 @@ int api_sign_request_hmac_sha256(const api_hmac_signature_input &input,
     if (api_request_signing_build_canonical(input, canonical) != 0)
         return (api_request_signing_finish(-1));
     hmac_sha256(key, key_length, canonical.c_str(), canonical.size(), digest);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         api_request_signing_set_error(error_code);
         return (api_request_signing_finish(-1));
     }
     encoded_buffer = ft_base64_encode(digest, sizeof(digest), &encoded_size);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (!encoded_buffer)
     {
         if (error_code == FT_ERR_SUCCESSS)
@@ -356,7 +356,7 @@ int api_apply_hmac_signature_header(const api_hmac_signature_input &input,
     }
     sign_result = api_sign_request_hmac_sha256(input, key, key_length,
             signature);
-    sign_error = ft_global_error_stack_pop_newest();
+    sign_error = ft_global_error_stack_drop_last_error();
     if (sign_result != 0 || sign_error != FT_ERR_SUCCESSS)
     {
         api_request_signing_set_error(sign_error);
@@ -508,14 +508,14 @@ int api_build_oauth1_authorization_header(
         return (api_request_signing_finish(-1));
     hmac_sha256(reinterpret_cast<const unsigned char *>(signing_key.c_str()),
         signing_key.size(), base_string.c_str(), base_string.size(), digest);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         api_request_signing_set_error(error_code);
         return (api_request_signing_finish(-1));
     }
     encoded_buffer = ft_base64_encode(digest, sizeof(digest), &encoded_size);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (!encoded_buffer)
     {
         if (error_code == FT_ERR_SUCCESSS)

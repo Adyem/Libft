@@ -40,7 +40,7 @@ int ft_strncpy_s(char *destination, size_t destination_size, const char *source,
         return (-1);
     }
     source_length = static_cast<size_t>(ft_strlen(source));
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         zero_buffer(destination, destination_size);
@@ -61,12 +61,12 @@ int ft_strncpy_s(char *destination, size_t destination_size, const char *source,
     }
     if (ft_memcpy(destination, source, source_length + 1) == ft_nullptr)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         zero_buffer(destination, destination_size);
         ft_global_error_stack_push(error_code);
         return (-1);
     }
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         zero_buffer(destination, destination_size);

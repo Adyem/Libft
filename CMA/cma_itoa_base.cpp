@@ -43,7 +43,7 @@ char    *cma_itoa_base(int number, int base)
         absolute_value = static_cast<unsigned int>(number);
     length = calculate_length(number, base);
     result_string = static_cast<char*>(cma_malloc(length + is_negative + 1));
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (!result_string)
     {
         ft_global_error_stack_push(error_code);

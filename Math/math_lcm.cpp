@@ -52,7 +52,7 @@ int math_lcm(int first_number, int second_number)
     int                     error_code;
 
     greatest_common_divisor = math_gcd(first_number, second_number);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
         return (math_lcm_report_result_int(error_code, 0));
     if (greatest_common_divisor == 0)
@@ -82,7 +82,7 @@ long math_lcm(long first_number, long second_number)
     int                     error_code;
 
     greatest_common_divisor = math_gcd(first_number, second_number);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
         return (math_lcm_report_result_long(error_code, 0));
     if (greatest_common_divisor == 0)
@@ -112,7 +112,7 @@ long long   math_lcm(long long first_number, long long second_number)
     int                     error_code;
 
     greatest_common_divisor = math_gcd(first_number, second_number);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
         return (math_lcm_report_result_long_long(error_code, 0));
     if (greatest_common_divisor == 0)

@@ -59,13 +59,13 @@ int su_locale_compare(const char *left, const char *right, const char *locale_na
     }
     if (assign_locale(locale_name, locale_object) != 0)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_CONFIGURATION;
         ft_global_error_stack_push(error_code);
         return (-1);
     }
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(error_code);
@@ -109,13 +109,13 @@ int su_locale_casefold(const char *input, const char *locale_name, ft_string &ou
     }
     if (assign_locale(locale_name, locale_object) != 0)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_CONFIGURATION;
         ft_global_error_stack_push(error_code);
         return (-1);
     }
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(error_code);

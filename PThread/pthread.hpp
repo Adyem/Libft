@@ -11,6 +11,7 @@
 #include <cstddef>
 #include "../Time/time.hpp"
 #include "../Template/move.hpp"
+#include "recursive_mutex.hpp"
 #ifdef _WIN32
     using pt_thread_id_type = DWORD;
     #define THREAD_ID GetCurrentThreadId()

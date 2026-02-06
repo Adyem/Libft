@@ -55,7 +55,7 @@ static double rng_simpson_integral(double start, double end, int segment_total, 
         else
             weight = 4.0;
         value = function(point, context);
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code != FT_ERR_SUCCESSS)
         {
             ft_global_error_stack_push(error_code);
@@ -83,7 +83,7 @@ static double rng_simpson_integral(double start, double end, int segment_total, 
                     adjusted_point = start;
             }
             value = function(adjusted_point, context);
-            error_code = ft_global_error_stack_pop_newest();
+            error_code = ft_global_error_stack_drop_last_error();
             if (error_code != FT_ERR_SUCCESSS)
             {
                 ft_global_error_stack_push(error_code);
@@ -187,7 +187,7 @@ double rng_gamma_cdf(double shape, double scale, double value)
     segment_total = static_cast<int>(normalized_value * 128.0) + 256;
     segment_total = rng_adjust_segment_total(segment_total);
     integral = rng_simpson_integral(0.0, value, segment_total, rng_gamma_pdf_integrand, &context);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(error_code);
@@ -287,7 +287,7 @@ double rng_beta_cdf(double alpha, double beta, double value)
     segment_total = rng_adjust_segment_total(segment_total);
     range_end = value;
     integral = rng_simpson_integral(0.0, range_end, segment_total, rng_beta_pdf_integrand, &context);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(error_code);
@@ -313,7 +313,7 @@ double rng_chi_squared_pdf(double degrees_of_freedom, double value)
         return (0.0);
     }
     result = rng_gamma_pdf(degrees_of_freedom * 0.5, 2.0, value);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(error_code);
@@ -334,7 +334,7 @@ double rng_chi_squared_cdf(double degrees_of_freedom, double value)
         return (0.0);
     }
     result = rng_gamma_cdf(degrees_of_freedom * 0.5, 2.0, value);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(error_code);

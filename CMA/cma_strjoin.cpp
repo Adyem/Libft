@@ -15,7 +15,7 @@ static char    *allocate_new_string(const char *string_1, const char *string_2,
         size_t  string_1_length;
 
         string_1_length = ft_strlen_size_t(string_1);
-        *error_code = ft_global_error_stack_pop_newest();
+        *error_code = ft_global_error_stack_drop_last_error();
         if (string_1_length > SIZE_MAX - 1 - total_length)
         {
             *error_code = FT_ERR_OUT_OF_RANGE;
@@ -28,7 +28,7 @@ static char    *allocate_new_string(const char *string_1, const char *string_2,
         size_t  string_2_length;
 
         string_2_length = ft_strlen_size_t(string_2);
-        *error_code = ft_global_error_stack_pop_newest();
+        *error_code = ft_global_error_stack_drop_last_error();
         if (string_2_length > SIZE_MAX - 1 - total_length)
         {
             *error_code = FT_ERR_OUT_OF_RANGE;
@@ -37,11 +37,9 @@ static char    *allocate_new_string(const char *string_1, const char *string_2,
         total_length += string_2_length;
     }
     new_string = static_cast<char *>(cma_malloc(total_length + 1));
-    *error_code = ft_global_error_stack_pop_newest();
+    *error_code = ft_global_error_stack_drop_last_error();
     if (!new_string)
-    {
         return (ft_nullptr);
-    }
     *error_code = FT_ERR_SUCCESSS;
     return (new_string);
 }

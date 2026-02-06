@@ -90,16 +90,6 @@ static inline int set_timeout_send(int fd, int ms)
 }
 #endif
 
-static int networking_pop_guard_error(const ft_unique_lock<pt_recursive_mutex> &guard) noexcept
-{
-    unsigned long long operation_id;
-
-    operation_id = guard.last_operation_id();
-    if (operation_id == 0)
-        return (FT_ERR_SUCCESSS);
-    return (guard.pop_operation_error(operation_id));
-}
-
 static int networking_consume_thread_error(void) noexcept
 {
     return (networking_fetch_last_error(false));
@@ -112,7 +102,8 @@ int ft_socket::create_socket(const SocketConfig &config)
     SocketConfig *mutable_config;
     bool lock_acquired;
 
-    guard_error = networking_pop_guard_error(guard);
+    guard_error = ft_global_error_stack_peek_last_error();
+    ft_global_error_stack_drop_last_error();
     if (guard_error != FT_ERR_SUCCESSS)
     {
         this->report_operation_result(guard_error);
@@ -171,7 +162,8 @@ int ft_socket::set_reuse_address(const SocketConfig &config)
     int opt;
     int thread_error;
 
-    guard_error = networking_pop_guard_error(guard);
+    guard_error = ft_global_error_stack_peek_last_error();
+    ft_global_error_stack_drop_last_error();
     if (guard_error != FT_ERR_SUCCESSS)
     {
         this->report_operation_result(guard_error);
@@ -243,7 +235,8 @@ int ft_socket::set_timeouts(const SocketConfig &config)
     SocketConfig *mutable_config;
     bool lock_acquired;
 
-    guard_error = networking_pop_guard_error(guard);
+    guard_error = ft_global_error_stack_peek_last_error();
+    ft_global_error_stack_drop_last_error();
     if (guard_error != FT_ERR_SUCCESSS)
     {
         this->report_operation_result(guard_error);
@@ -330,7 +323,8 @@ int ft_socket::configure_address(const SocketConfig &config)
     int address_family;
     int protocol_value;
 
-    guard_error = networking_pop_guard_error(guard);
+    guard_error = ft_global_error_stack_peek_last_error();
+    ft_global_error_stack_drop_last_error();
     if (guard_error != FT_ERR_SUCCESSS)
     {
         this->report_operation_result(guard_error);
@@ -488,7 +482,8 @@ int ft_socket::bind_socket(const SocketConfig &config)
     int guard_error;
     socklen_t addr_len;
 
-    guard_error = networking_pop_guard_error(guard);
+    guard_error = ft_global_error_stack_peek_last_error();
+    ft_global_error_stack_drop_last_error();
     if (guard_error != FT_ERR_SUCCESSS)
     {
         this->report_operation_result(guard_error);
@@ -528,7 +523,8 @@ int ft_socket::listen_socket(const SocketConfig &config)
     bool lock_acquired;
     int backlog;
 
-    guard_error = networking_pop_guard_error(guard);
+    guard_error = ft_global_error_stack_peek_last_error();
+    ft_global_error_stack_drop_last_error();
     if (guard_error != FT_ERR_SUCCESSS)
     {
         this->report_operation_result(guard_error);
@@ -643,7 +639,8 @@ int ft_socket::join_multicast_group(const SocketConfig &config)
     SocketConfig *mutable_config;
     bool lock_acquired;
 
-    guard_error = networking_pop_guard_error(guard);
+    guard_error = ft_global_error_stack_peek_last_error();
+    ft_global_error_stack_drop_last_error();
     if (guard_error != FT_ERR_SUCCESSS)
     {
         this->report_operation_result(guard_error);

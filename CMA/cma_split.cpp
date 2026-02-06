@@ -38,7 +38,7 @@ static char    **ft_malloc_strings(char **strings, const char *string, char deli
             || (string[index] != delimiter && string[index + 1] == '\0'))
         {
             strings[array_index] = static_cast<char *>(cma_malloc(sizeof(char) * (char_count + 1)));
-            *error_code = ft_global_error_stack_pop_newest();
+            *error_code = ft_global_error_stack_drop_last_error();
             if (!strings[array_index])
             {
                 return (ft_nullptr);
@@ -85,12 +85,12 @@ static char    **ft_memory_error(char **strings)
     while (strings[index])
     {
         cma_free(strings[index]);
-        ft_global_error_stack_pop_newest();
+        ft_global_error_stack_drop_last_error();
         strings[index] = ft_nullptr;
         index++;
     }
     cma_free(strings);
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     return (ft_nullptr);
 }
 
@@ -103,7 +103,7 @@ char    **cma_split(char const *string, char delimiter)
     if (!string)
     {
         strings = static_cast<char **>(cma_malloc(sizeof(*strings)));
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (!strings)
         {
             ft_global_error_stack_push(error_code);
@@ -116,7 +116,7 @@ char    **cma_split(char const *string, char delimiter)
     }
     word_count = ft_count_words(string, delimiter);
     strings = static_cast<char **>(cma_malloc(sizeof(*strings) * (word_count + 1)));
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (!strings)
     {
         ft_global_error_stack_push(error_code);

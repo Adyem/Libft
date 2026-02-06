@@ -7,36 +7,68 @@
 #include "../System_utils/system_utils.hpp"
 #include "../Template/move.hpp"
 #include "../PThread/pthread.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "class_nullptr.hpp"
 #include <cerrno>
 #include <cstdarg>
 #include <unistd.h>
 
-namespace
-{
-    static int ft_file_lock_mutex(const pt_recursive_mutex &mutex)
-    {
-        int error;
-
-        error = mutex.lock(THREAD_ID);
-        ft_global_error_stack_pop_newest();
-        return (error);
-    }
-
-    static int ft_file_unlock_mutex(const pt_recursive_mutex &mutex)
-    {
-        int error;
-
-        error = mutex.unlock(THREAD_ID);
-        ft_global_error_stack_pop_newest();
-        return (error);
-    }
-}
-
 void ft_file::sleep_backoff()
 {
     pt_thread_sleep(1);
     return ;
+}
+
+int ft_file::lock_mutex(void) const noexcept
+{
+    return (pt_recursive_mutex_lock_if_valid(this->_mutex));
+}
+
+int ft_file::unlock_mutex(void) const noexcept
+{
+    return (pt_recursive_mutex_unlock_if_valid(this->_mutex));
+}
+
+int ft_file::prepare_thread_safety(void) noexcept
+{
+    if (this->_mutex != ft_nullptr)
+    {
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESSS);
+    }
+    pt_recursive_mutex *mutex_pointer = ft_nullptr;
+    int mutex_error = pt_recursive_mutex_create_with_error(&mutex_pointer);
+    if (mutex_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(mutex_error);
+        return (mutex_error);
+    }
+    this->_mutex = mutex_pointer;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
+}
+
+void ft_file::teardown_thread_safety(void) noexcept
+{
+    pt_recursive_mutex_destroy(&this->_mutex);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return ;
+}
+
+int ft_file::enable_thread_safety(void) noexcept
+{
+    return (this->prepare_thread_safety());
+}
+
+void ft_file::disable_thread_safety(void) noexcept
+{
+    this->teardown_thread_safety();
+    return ;
+}
+
+bool ft_file::is_thread_safe_enabled(void) const noexcept
+{
+    return (this->_mutex != ft_nullptr);
 }
 
 int ft_file::lock_pair(const ft_file &first, const ft_file &second,
@@ -49,7 +81,7 @@ int ft_file::lock_pair(const ft_file &first, const ft_file &second,
     {
         lower = &first;
         upper = &first;
-        return (ft_file_lock_mutex(first._mutex));
+        return (first.lock_mutex());
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -64,20 +96,20 @@ int ft_file::lock_pair(const ft_file &first, const ft_file &second,
     upper = ordered_second;
     while (true)
     {
-        int lower_error = ft_file_lock_mutex(lower->_mutex);
+        int lower_error = lower->lock_mutex();
 
         if (lower_error != FT_ERR_SUCCESSS)
             return (lower_error);
-        int upper_error = ft_file_lock_mutex(upper->_mutex);
+        int upper_error = upper->lock_mutex();
 
         if (upper_error == FT_ERR_SUCCESSS)
             return (FT_ERR_SUCCESSS);
         if (upper_error != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            ft_file_unlock_mutex(lower->_mutex);
+            lower->unlock_mutex();
             return (upper_error);
         }
-        ft_file_unlock_mutex(lower->_mutex);
+        lower->unlock_mutex();
         ft_file::sleep_backoff();
     }
 }
@@ -90,13 +122,13 @@ int ft_file::unlock_pair(const ft_file *lower, const ft_file *upper)
     final_error = FT_ERR_SUCCESSS;
     if (upper != ft_nullptr)
     {
-        error = ft_file_unlock_mutex(upper->_mutex);
+        error = upper->unlock_mutex();
         if (error != FT_ERR_SUCCESSS)
             final_error = error;
     }
     if (lower != ft_nullptr && lower != upper)
     {
-        error = ft_file_unlock_mutex(lower->_mutex);
+        error = lower->unlock_mutex();
         if (error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
             final_error = error;
     }
@@ -104,14 +136,14 @@ int ft_file::unlock_pair(const ft_file *lower, const ft_file *upper)
 }
 
 ft_file::ft_file() noexcept
-    : _fd(-1), _mutex(), _is_open(false)
+    : _fd(-1), _mutex(ft_nullptr)
 {
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
 ft_file::ft_file(const char* filename, int flags, mode_t mode) noexcept
-    : _fd(-1), _mutex(), _is_open(false)
+    : _fd(-1), _mutex(ft_nullptr)
 {
     int result;
     int new_fd;
@@ -125,14 +157,13 @@ ft_file::ft_file(const char* filename, int flags, mode_t mode) noexcept
     else
     {
         this->_fd = new_fd;
-        this->_is_open = true;
     }
     ft_global_error_stack_push(result);
     return ;
 }
 
 ft_file::ft_file(const char* filename, int flags) noexcept
-    : _fd(-1), _mutex(), _is_open(false)
+    : _fd(-1), _mutex(ft_nullptr)
 {
     int result;
     int new_fd;
@@ -144,14 +175,13 @@ ft_file::ft_file(const char* filename, int flags) noexcept
     else
     {
         this->_fd = new_fd;
-        this->_is_open = true;
     }
     ft_global_error_stack_push(result);
     return ;
 }
 
 ft_file::ft_file(int fd) noexcept
-    : _fd(fd), _mutex(), _is_open(fd >= 0)
+    : _fd(fd), _mutex(ft_nullptr)
 {
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
@@ -162,49 +192,44 @@ ft_file::~ft_file() noexcept
     int lock_error;
     int final_error;
 
-    lock_error = ft_file_lock_mutex(this->_mutex);
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(lock_error);
+        this->disable_thread_safety();
         return ;
     }
     final_error = FT_ERR_SUCCESSS;
-    if (this->_is_open && this->_fd >= 0)
+    if (this->_fd >= 0)
     {
         if (su_close(this->_fd) == -1)
-        {
             final_error = ft_map_system_error(errno);
-        }
         else
-        {
             this->_fd = -1;
-            this->_is_open = false;
-        }
     }
-    int unlock_error = ft_file_unlock_mutex(this->_mutex);
+    int unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
         final_error = unlock_error;
+    this->disable_thread_safety();
     ft_global_error_stack_push(final_error);
     return ;
 }
 
 ft_file::ft_file(ft_file&& other) noexcept
-    : _fd(-1), _mutex(), _is_open(false)
+    : _fd(-1), _mutex(ft_nullptr)
 {
     int lock_error;
     int final_error;
 
-    lock_error = ft_file_lock_mutex(other._mutex);
+    lock_error = other.lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
     }
-    this->_fd = other._fd;
-    this->_is_open = other._is_open;
-    other._fd = -1;
-    other._is_open = false;
-    final_error = ft_file_unlock_mutex(other._mutex);
+        this->_fd = other._fd;
+        other._fd = -1;
+        final_error = other.unlock_mutex();
     if (final_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(final_error);
@@ -233,16 +258,14 @@ ft_file& ft_file::operator=(ft_file&& other) noexcept
     int final_error;
 
     final_error = FT_ERR_SUCCESSS;
-    if (this->_is_open && this->_fd >= 0)
+    if (this->_fd >= 0)
     {
         if (su_close(this->_fd) == -1)
             final_error = ft_map_system_error(errno);
     }
     this->_fd = other._fd;
-    this->_is_open = other._is_open;
     other._fd = -1;
-    other._is_open = false;
-    int unlock_error = ft_file::unlock_pair(lower, upper);
+    int unlock_error = this->unlock_pair(lower, upper);
     if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
         final_error = unlock_error;
     ft_global_error_stack_push(final_error);
@@ -255,14 +278,14 @@ void    ft_file::close() noexcept
     int lock_error;
     int final_error;
 
-    lock_error = ft_file_lock_mutex(this->_mutex);
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
     }
     final_error = FT_ERR_SUCCESSS;
-    if (!this->_is_open || this->_fd < 0)
+    if (this->_fd < 0)
     {
         final_error = FT_ERR_INVALID_HANDLE;
     }
@@ -273,9 +296,8 @@ void    ft_file::close() noexcept
     else
     {
         this->_fd = -1;
-        this->_is_open = false;
     }
-    int unlock_error = ft_file_unlock_mutex(this->_mutex);
+    int unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
         final_error = unlock_error;
     ft_global_error_stack_push(final_error);
@@ -288,7 +310,7 @@ int ft_file::open(const char* filename, int flags, mode_t mode) noexcept
     int final_error;
     int new_fd;
 
-    lock_error = ft_file_lock_mutex(this->_mutex);
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(lock_error);
@@ -302,7 +324,7 @@ int ft_file::open(const char* filename, int flags, mode_t mode) noexcept
         final_error = ft_map_system_error(errno);
     else
     {
-        if (this->_is_open && this->_fd >= 0)
+        if (this->_fd >= 0)
         {
             if (su_close(this->_fd) == -1)
             {
@@ -313,10 +335,9 @@ int ft_file::open(const char* filename, int flags, mode_t mode) noexcept
         if (final_error == FT_ERR_SUCCESSS)
         {
             this->_fd = new_fd;
-            this->_is_open = true;
         }
     }
-    int unlock_error = ft_file_unlock_mutex(this->_mutex);
+    int unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
         final_error = unlock_error;
     ft_global_error_stack_push(final_error);
@@ -331,7 +352,7 @@ int ft_file::open(const char* filename, int flags) noexcept
     int final_error;
     int new_fd;
 
-    lock_error = ft_file_lock_mutex(this->_mutex);
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(lock_error);
@@ -343,7 +364,7 @@ int ft_file::open(const char* filename, int flags) noexcept
         final_error = ft_map_system_error(errno);
     else
     {
-        if (this->_is_open && this->_fd >= 0)
+        if (this->_fd >= 0)
         {
             if (su_close(this->_fd) == -1)
             {
@@ -354,10 +375,9 @@ int ft_file::open(const char* filename, int flags) noexcept
         if (final_error == FT_ERR_SUCCESSS)
         {
             this->_fd = new_fd;
-            this->_is_open = true;
         }
     }
-    int unlock_error = ft_file_unlock_mutex(this->_mutex);
+    int unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
         final_error = unlock_error;
     ft_global_error_stack_push(final_error);
@@ -372,7 +392,7 @@ int ft_file::get_fd() const
     int final_error;
     int descriptor;
 
-    lock_error = ft_file_lock_mutex(this->_mutex);
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(lock_error);
@@ -380,11 +400,11 @@ int ft_file::get_fd() const
     }
     final_error = FT_ERR_SUCCESSS;
     descriptor = -1;
-    if (!this->_is_open || this->_fd < 0)
+    if (this->_fd < 0)
         final_error = FT_ERR_INVALID_HANDLE;
     else
         descriptor = this->_fd;
-    int unlock_error = ft_file_unlock_mutex(this->_mutex);
+    int unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
         final_error = unlock_error;
     ft_global_error_stack_push(final_error);
@@ -395,7 +415,7 @@ int ft_file::get_fd() const
 
 int ft_file::get_error() const noexcept
 {
-    return (ft_global_error_stack_last_error());
+    return (ft_global_error_stack_peek_last_error());
 }
 
 const char *ft_file::get_error_str() const noexcept
@@ -414,7 +434,7 @@ ssize_t ft_file::read(char *buffer, int count) noexcept
     int final_error;
     ssize_t bytes_read;
 
-    lock_error = ft_file_lock_mutex(this->_mutex);
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(lock_error);
@@ -424,7 +444,7 @@ ssize_t ft_file::read(char *buffer, int count) noexcept
     bytes_read = -1;
     if (buffer == ft_nullptr || count <= 0)
         final_error = FT_ERR_INVALID_ARGUMENT;
-    else if (!this->_is_open || this->_fd < 0)
+    else if (this->_fd < 0)
         final_error = FT_ERR_INVALID_HANDLE;
     else
     {
@@ -432,7 +452,7 @@ ssize_t ft_file::read(char *buffer, int count) noexcept
         if (bytes_read == -1)
             final_error = ft_map_system_error(errno);
     }
-    int unlock_error = ft_file_unlock_mutex(this->_mutex);
+    int unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
         final_error = unlock_error;
     ft_global_error_stack_push(final_error);
@@ -447,7 +467,7 @@ ssize_t ft_file::write(const char *string) noexcept
     int final_error;
     ssize_t result;
 
-    lock_error = ft_file_lock_mutex(this->_mutex);
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(lock_error);
@@ -457,7 +477,7 @@ ssize_t ft_file::write(const char *string) noexcept
     result = -1;
     if (string == ft_nullptr)
         final_error = FT_ERR_INVALID_ARGUMENT;
-    else if (!this->_is_open || this->_fd < 0)
+    else if (this->_fd < 0)
         final_error = FT_ERR_INVALID_HANDLE;
     else
     {
@@ -465,7 +485,7 @@ ssize_t ft_file::write(const char *string) noexcept
         if (result == -1)
             final_error = ft_map_system_error(errno);
     }
-    int unlock_error = ft_file_unlock_mutex(this->_mutex);
+    int unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
         final_error = unlock_error;
     ft_global_error_stack_push(final_error);
@@ -480,7 +500,7 @@ ssize_t ft_file::write_buffer(const char *buffer, size_t length) noexcept
     int final_error;
     ssize_t result;
 
-    lock_error = ft_file_lock_mutex(this->_mutex);
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(lock_error);
@@ -490,7 +510,7 @@ ssize_t ft_file::write_buffer(const char *buffer, size_t length) noexcept
     result = -1;
     if (buffer == ft_nullptr && length != 0)
         final_error = FT_ERR_INVALID_ARGUMENT;
-    else if (!this->_is_open || this->_fd < 0)
+    else if (this->_fd < 0)
         final_error = FT_ERR_INVALID_HANDLE;
     else if (length == 0)
         result = 0;
@@ -500,7 +520,7 @@ ssize_t ft_file::write_buffer(const char *buffer, size_t length) noexcept
         if (result == -1)
             final_error = ft_map_system_error(errno);
     }
-    int unlock_error = ft_file_unlock_mutex(this->_mutex);
+    int unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
         final_error = unlock_error;
     if (final_error != FT_ERR_SUCCESSS)
@@ -518,14 +538,14 @@ int ft_file::seek(off_t offset, int whence) noexcept
     int final_error;
     off_t result;
 
-    lock_error = ft_file_lock_mutex(this->_mutex);
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(lock_error);
         return (-1);
     }
     final_error = FT_ERR_SUCCESSS;
-    if (!this->_is_open || this->_fd < 0)
+    if (this->_fd < 0)
         final_error = FT_ERR_INVALID_HANDLE;
     else
     {
@@ -533,7 +553,7 @@ int ft_file::seek(off_t offset, int whence) noexcept
         if (result == -1)
             final_error = ft_map_system_error(errno);
     }
-    int unlock_error = ft_file_unlock_mutex(this->_mutex);
+    int unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
         final_error = unlock_error;
     ft_global_error_stack_push(final_error);
@@ -548,7 +568,7 @@ int ft_file::printf(const char *format, ...)
     int final_error;
     int printed_chars;
 
-    lock_error = ft_file_lock_mutex(this->_mutex);
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(lock_error);
@@ -558,7 +578,7 @@ int ft_file::printf(const char *format, ...)
     printed_chars = 0;
     if (format == ft_nullptr)
         final_error = FT_ERR_INVALID_ARGUMENT;
-    else if (!this->_is_open || this->_fd == -1)
+    else if (this->_fd < 0)
         final_error = FT_ERR_INVALID_HANDLE;
     else
     {
@@ -567,7 +587,7 @@ int ft_file::printf(const char *format, ...)
         va_start(args, format);
         printed_chars = pf_printf_fd_v(this->_fd, format, args);
         va_end(args);
-        int printf_error = ft_global_error_stack_pop_newest();
+        int printf_error = ft_global_error_stack_drop_last_error();
 
         if (printed_chars < 0)
         {
@@ -577,7 +597,7 @@ int ft_file::printf(const char *format, ...)
                 final_error = FT_ERR_IO;
         }
     }
-    int unlock_error = ft_file_unlock_mutex(this->_mutex);
+    int unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
         final_error = unlock_error;
     ft_global_error_stack_push(final_error);
@@ -593,7 +613,7 @@ int ft_file::copy_to_with_buffer(const char *destination_path, size_t buffer_siz
         ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
-    if (!this->_is_open || this->_fd < 0)
+    if (this->_fd < 0)
     {
         ft_global_error_stack_push(FT_ERR_INVALID_HANDLE);
         return (-1);

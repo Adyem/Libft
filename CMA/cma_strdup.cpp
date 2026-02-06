@@ -19,7 +19,7 @@ char    *cma_strdup(const char *string)
         return (ft_nullptr);
     }
     measured_length_raw = ft_strlen_size_t(string);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (measured_length_raw >= static_cast<size_t>(FT_SYSTEM_SIZE_MAX))
     {
         error_code = FT_ERR_OUT_OF_RANGE;
@@ -29,7 +29,7 @@ char    *cma_strdup(const char *string)
     length = static_cast<ft_size_t>(measured_length_raw);
     allocation_size = length + static_cast<ft_size_t>(1);
     new_string = static_cast<char *>(cma_malloc(allocation_size));
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (!new_string)
     {
         ft_global_error_stack_push(error_code);

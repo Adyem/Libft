@@ -97,7 +97,7 @@ int ft_fprintf(FILE *stream, const char *format, ...)
     va_start(args, format);
     result = ft_vfprintf(stream, format, args);
     va_end(args);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (result < 0)
     {
         if (error_code != FT_ERR_SUCCESSS)

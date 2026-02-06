@@ -27,7 +27,7 @@ int pt_recursive_mutex::try_lock(pthread_t thread_id) const
         return (FT_SUCCESS);
     }
     owned_mutexes = pt_lock_tracking::get_owned_mutexes(thread_id);
-    tracking_error = ft_global_error_stack_pop_newest();
+    tracking_error = ft_global_error_stack_drop_last_error();
     if (tracking_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(tracking_error);
@@ -35,19 +35,19 @@ int pt_recursive_mutex::try_lock(pthread_t thread_id) const
     }
     if (!pt_lock_tracking::notify_wait(thread_id, &this->_native_mutex, owned_mutexes))
     {
-        tracking_error = ft_global_error_stack_pop_newest();
+        tracking_error = ft_global_error_stack_drop_last_error();
         pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
-        ft_global_error_stack_pop_newest();
+        ft_global_error_stack_drop_last_error();
         if (tracking_error == FT_ERR_SUCCESSS)
             tracking_error = FT_ERR_INVALID_STATE;
         ft_global_error_stack_push(tracking_error);
         return (FT_SUCCESS);
     }
-    tracking_error = ft_global_error_stack_pop_newest();
+    tracking_error = ft_global_error_stack_drop_last_error();
     if (tracking_error != FT_ERR_SUCCESSS)
     {
         pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
-        ft_global_error_stack_pop_newest();
+        ft_global_error_stack_drop_last_error();
         ft_global_error_stack_push(tracking_error);
         return (FT_SUCCESS);
     }
@@ -60,37 +60,37 @@ int pt_recursive_mutex::try_lock(pthread_t thread_id) const
 
             retry_count = 0;
             pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
-            ft_global_error_stack_pop_newest();
+            ft_global_error_stack_drop_last_error();
             while (retry_count < 10)
             {
                 if (!pt_lock_tracking::notify_wait(thread_id, &this->_native_mutex, owned_mutexes))
                 {
-                    tracking_error = ft_global_error_stack_pop_newest();
+                    tracking_error = ft_global_error_stack_drop_last_error();
                     pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
-                    ft_global_error_stack_pop_newest();
+                    ft_global_error_stack_drop_last_error();
                     if (tracking_error == FT_ERR_SUCCESSS)
                         tracking_error = FT_ERR_INVALID_STATE;
                     ft_global_error_stack_push(tracking_error);
                     return (FT_SUCCESS);
                 }
-                tracking_error = ft_global_error_stack_pop_newest();
+                tracking_error = ft_global_error_stack_drop_last_error();
                 if (tracking_error != FT_ERR_SUCCESSS)
                 {
                     pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
-                    ft_global_error_stack_pop_newest();
+                    ft_global_error_stack_drop_last_error();
                     ft_global_error_stack_push(tracking_error);
                     return (FT_SUCCESS);
                 }
                 mutex_error = pthread_mutex_trylock(&this->_native_mutex);
                 pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
-                ft_global_error_stack_pop_newest();
+                ft_global_error_stack_drop_last_error();
                 if (mutex_error == 0)
                 {
                     this->_owner.store(thread_id, std::memory_order_relaxed);
                     this->_lock = true;
                     this->_lock_depth.store(1, std::memory_order_relaxed);
                     pt_lock_tracking::notify_acquired(thread_id, &this->_native_mutex);
-                    tracking_error = ft_global_error_stack_pop_newest();
+                    tracking_error = ft_global_error_stack_drop_last_error();
                     if (tracking_error != FT_ERR_SUCCESSS)
                         ft_global_error_stack_push(tracking_error);
                     else
@@ -113,7 +113,7 @@ int pt_recursive_mutex::try_lock(pthread_t thread_id) const
             return (FT_SUCCESS);
         }
         pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
-        ft_global_error_stack_pop_newest();
+        ft_global_error_stack_drop_last_error();
         ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return (FT_SUCCESS);
     }
@@ -121,7 +121,7 @@ int pt_recursive_mutex::try_lock(pthread_t thread_id) const
     this->_lock = true;
     this->_lock_depth.store(1, std::memory_order_relaxed);
     pt_lock_tracking::notify_acquired(thread_id, &this->_native_mutex);
-    tracking_error = ft_global_error_stack_pop_newest();
+    tracking_error = ft_global_error_stack_drop_last_error();
     if (tracking_error != FT_ERR_SUCCESSS)
         ft_global_error_stack_push(tracking_error);
     else

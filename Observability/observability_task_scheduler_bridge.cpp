@@ -215,7 +215,7 @@ int observability_task_scheduler_bridge_initialize(ft_otel_span_exporter exporte
 
     register_result = task_scheduler_register_trace_sink(&observability_task_scheduler_bridge_trace_sink);
     int register_error;
-    register_error = ft_global_error_stack_pop_newest();
+    register_error = ft_global_error_stack_drop_last_error();
     if (register_result != 0)
     {
         if (register_error == FT_ERR_SUCCESSS)
@@ -304,7 +304,7 @@ int observability_task_scheduler_bridge_shutdown(void)
     int unregister_error;
 
     unregister_result = task_scheduler_unregister_trace_sink(&observability_task_scheduler_bridge_trace_sink);
-    unregister_error = ft_global_error_stack_pop_newest();
+    unregister_error = ft_global_error_stack_drop_last_error();
     if (unregister_result != 0)
     {
         if (unregister_error == FT_ERR_SUCCESSS)

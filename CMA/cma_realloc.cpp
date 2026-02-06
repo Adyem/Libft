@@ -66,9 +66,7 @@ static void *allocate_block_locked(ft_size_t aligned_size, ft_size_t user_size)
     }
     cma_validate_block(block, "cma_realloc allocate", ft_nullptr);
     if (!cma_block_is_free(block))
-    {
         su_sigabrt();
-    }
     block = split_block(block, aligned_size);
     cma_validate_block(block, "cma_realloc allocate split", ft_nullptr);
     cma_mark_block_allocated(block);
@@ -90,9 +88,7 @@ static void release_block_locked(Block *block)
 
     cma_validate_block(block, "cma_realloc release", ft_nullptr);
     if (cma_block_is_free(block))
-    {
         su_sigabrt();
-    }
     freed_size = block->size;
     cma_debug_release_allocation(block, "cma_realloc release",
         cma_block_user_pointer(block));
@@ -177,7 +173,7 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
         void *memory_pointer;
 
         memory_pointer = cma_malloc(new_size);
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         ft_global_error_stack_push(error_code);
         return (memory_pointer);
     }
@@ -189,7 +185,7 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
             lock_acquired = false;
         }
         cma_free(ptr);
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_SUCCESSS;
         ft_global_error_stack_push(error_code);
@@ -258,7 +254,7 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
     void *new_ptr = allocate_block_locked(aligned_size, new_size);
     if (!new_ptr)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (lock_acquired)
         {
             cma_unlock_allocator(lock_acquired);

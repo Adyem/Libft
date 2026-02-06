@@ -680,7 +680,7 @@ int ft_graph<VertexType>::pop_newest_operation_error() noexcept
     int error_value = ft_operation_error_stack_pop_newest(&this->_operation_errors);
     if (error_value != FT_ERR_SUCCESSS)
         return (error_value);
-    ft_global_error_stack_pop_newest();
+    ft_global_error_stack_drop_last_error();
     return (error_value);
 }
 
@@ -702,7 +702,7 @@ int ft_graph<VertexType>::enable_thread_safety()
         return (-1);
     }
     mutex_pointer = new(memory) pt_mutex();
-    int mutex_error = ft_global_error_stack_last_error();
+    int mutex_error = ft_global_error_stack_peek_last_error();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         mutex_pointer->~pt_mutex();
@@ -751,8 +751,8 @@ template <typename VertexType>
 void ft_graph<VertexType>::unlock(bool lock_acquired) const
 {
     this->unlock_internal(lock_acquired);
-    if (this->_mutex != ft_nullptr && ft_global_error_stack_last_error() != FT_ERR_SUCCESSS)
-        const_cast<ft_graph<VertexType> *>(this)->set_error(ft_global_error_stack_last_error());
+    if (this->_mutex != ft_nullptr && ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
+        const_cast<ft_graph<VertexType> *>(this)->set_error(ft_global_error_stack_peek_last_error());
     else
     {
         const_cast<ft_graph<VertexType> *>(this)->set_error(FT_ERR_SUCCESSS);
@@ -773,7 +773,7 @@ int ft_graph<VertexType>::lock_internal(bool *lock_acquired) const
         return (0);
     }
     this->_mutex->lock(THREAD_ID);
-    mutex_error = ft_global_error_stack_last_error();
+    mutex_error = ft_global_error_stack_peek_last_error();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         this->set_error(mutex_error);
@@ -793,7 +793,7 @@ void ft_graph<VertexType>::unlock_internal(bool lock_acquired) const
     if (!lock_acquired || this->_mutex == ft_nullptr)
         return ;
     this->_mutex->unlock(THREAD_ID);
-    mutex_error = ft_global_error_stack_last_error();
+    mutex_error = ft_global_error_stack_peek_last_error();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         this->set_error(mutex_error);

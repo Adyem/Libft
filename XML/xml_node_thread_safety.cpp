@@ -31,7 +31,7 @@ int xml_node_prepare_thread_safety(xml_node *node) noexcept
     if (mutex_pointer == ft_nullptr)
         mutex_error_code = FT_ERR_SUCCESSS;
     else
-        mutex_error_code = ft_global_error_stack_pop_newest();
+        mutex_error_code = ft_global_error_stack_drop_last_error();
     if (mutex_error_code != FT_ERR_SUCCESSS)
     {
         delete mutex_pointer;
@@ -80,7 +80,7 @@ int xml_node_lock(const xml_node *node, bool *lock_acquired) noexcept
     if (mutable_node->mutex == ft_nullptr)
         mutex_error_code = FT_ERR_SUCCESSS;
     else
-        mutex_error_code = ft_global_error_stack_pop_newest();
+        mutex_error_code = ft_global_error_stack_drop_last_error();
     {
         int reported_error;
 
@@ -125,7 +125,7 @@ void xml_node_unlock(const xml_node *node, bool lock_acquired) noexcept
     if (mutable_node->mutex == ft_nullptr)
         mutex_error_code = FT_ERR_SUCCESSS;
     else
-        mutex_error_code = ft_global_error_stack_pop_newest();
+        mutex_error_code = ft_global_error_stack_drop_last_error();
     {
         int reported_error;
 

@@ -3,6 +3,7 @@
 
 #include "../Errno/errno.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 
 class quaternion
 {
@@ -11,12 +12,13 @@ class quaternion
         double _x;
         double _y;
         double _z;
-        mutable pt_recursive_mutex _mutex;
-        mutable bool _thread_safe_enabled = false;
+        pt_recursive_mutex *_mutex = ft_nullptr;
 
         static int lock_pair(const quaternion &first, const quaternion &second,
                 const quaternion *&lower, const quaternion *&upper);
         static void unlock_pair(const quaternion *lower, const quaternion *upper);
+        int prepare_thread_safety(void) noexcept;
+        void teardown_thread_safety(void) noexcept;
 
     protected:
         int lock_mutex() const noexcept;

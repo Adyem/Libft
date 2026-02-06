@@ -26,13 +26,11 @@ class ft_thread
 
         pthread_t _thread;
         bool _joinable;
-        mutable int _error_code;
         std::shared_ptr<start_payload> _start_payload;
         mutable pt_mutex *_state_mutex;
         bool _thread_safe_enabled;
 
         static void *start_routine(void *data);
-        void set_error(int error) const;
         int lock_internal(bool *lock_acquired) const;
         void unlock_internal(bool lock_acquired) const;
         void teardown_thread_safety();
@@ -53,8 +51,6 @@ class ft_thread
         void join();
         void detach();
 
-        int get_error() const;
-        const char *get_error_str() const;
         int enable_thread_safety();
         void disable_thread_safety();
         bool is_thread_safe_enabled() const;
@@ -64,7 +60,7 @@ class ft_thread
 
 template <typename FunctionType, typename... Args>
 ft_thread::ft_thread(FunctionType function, Args... args)
-    : _thread(), _joinable(false), _error_code(FT_ERR_SUCCESSS), _start_payload(),
+    : _thread(), _joinable(false), _start_payload(),
       _state_mutex(ft_nullptr), _thread_safe_enabled(false)
 {
     start_payload *payload_raw;
@@ -74,7 +70,7 @@ ft_thread::ft_thread(FunctionType function, Args... args)
     payload_raw = new (std::nothrow) start_payload();
     if (!payload_raw)
     {
-        this->set_error(FT_ERR_NO_MEMORY);
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return ;
     }
     payload = std::shared_ptr<start_payload>(payload_raw);
@@ -86,14 +82,14 @@ ft_thread::ft_thread(FunctionType function, Args... args)
     });
     if (!payload->function)
     {
-        this->set_error(FT_ERR_NO_MEMORY);
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         this->_start_payload.reset();
         return ;
     }
     shared_capsule = new (std::nothrow) std::shared_ptr<start_payload>(payload);
     if (!shared_capsule)
     {
-        this->set_error(FT_ERR_NO_MEMORY);
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         this->_start_payload.reset();
         return ;
     }
@@ -105,10 +101,10 @@ ft_thread::ft_thread(FunctionType function, Args... args)
     {
         int create_error;
 
-        create_error = ft_global_error_stack_pop_newest();
+        create_error = ft_global_error_stack_drop_last_error();
         if (create_error == FT_ERR_SUCCESSS)
             create_error = ft_map_system_error(create_result);
-        this->set_error(create_error);
+        ft_global_error_stack_push(create_error);
         delete shared_capsule;
         this->_start_payload.reset();
         return ;

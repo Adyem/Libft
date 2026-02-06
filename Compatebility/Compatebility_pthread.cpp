@@ -1,6 +1,7 @@
 #include "compatebility_internal.hpp"
 #include <cerrno>
 #include <atomic>
+#include "../PThread/pthread_internal.hpp"
 
 #if defined(_WIN32) || defined(_WIN64)
 # include <windows.h>
@@ -221,18 +222,18 @@ int cmp_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected_val
         return (-1);
     }
 # else
-    int lock_result;
+    int lock_error;
     cmp_wait_entry *entry;
     int wait_result;
-    int unlock_result;
+    int unlock_error;
     uint32_t current_value;
 
     if (address == ft_nullptr)
     {
         return (-1);
     }
-    lock_result = pthread_mutex_lock(&g_wait_list_mutex);
-    if (lock_result != 0)
+    lock_error = pt_pthread_mutex_lock_with_error(&g_wait_list_mutex);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         return (-1);
     }
@@ -241,7 +242,9 @@ int cmp_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected_val
     {
         if (cmp_wait_create_entry(address, &entry) != 0)
         {
-            pthread_mutex_unlock(&g_wait_list_mutex);
+            unlock_error = pt_pthread_mutex_unlock_with_error(&g_wait_list_mutex);
+            if (unlock_error != FT_ERR_SUCCESSS)
+                return (-1);
             return (-1);
         }
     }
@@ -260,14 +263,14 @@ int cmp_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected_val
             {
                 if (cmp_wait_remove_entry(entry) != 0)
                 {
-                    unlock_result = pthread_mutex_unlock(&g_wait_list_mutex);
-                    if (unlock_result != 0)
+                    unlock_error = pt_pthread_mutex_unlock_with_error(&g_wait_list_mutex);
+                    if (unlock_error != FT_ERR_SUCCESSS)
                         return (-1);
                     return (-1);
                 }
             }
-            unlock_result = pthread_mutex_unlock(&g_wait_list_mutex);
-            if (unlock_result != 0)
+            unlock_error = pt_pthread_mutex_unlock_with_error(&g_wait_list_mutex);
+            if (unlock_error != FT_ERR_SUCCESSS)
             {
                 return (-1);
             }
@@ -280,14 +283,14 @@ int cmp_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected_val
     {
         if (cmp_wait_remove_entry(entry) != 0)
         {
-            unlock_result = pthread_mutex_unlock(&g_wait_list_mutex);
-            if (unlock_result != 0)
+            unlock_error = pt_pthread_mutex_unlock_with_error(&g_wait_list_mutex);
+            if (unlock_error != FT_ERR_SUCCESSS)
                 return (-1);
             return (-1);
         }
     }
-    unlock_result = pthread_mutex_unlock(&g_wait_list_mutex);
-    if (unlock_result != 0)
+    unlock_error = pt_pthread_mutex_unlock_with_error(&g_wait_list_mutex);
+    if (unlock_error != FT_ERR_SUCCESSS)
     {
         return (-1);
     }
@@ -313,17 +316,17 @@ int cmp_thread_wake_one_uint32(std::atomic<uint32_t> *address)
     }
     return (0);
 # else
-    int lock_result;
+    int lock_error;
     cmp_wait_entry *entry;
     int signal_result;
-    int unlock_result;
+    int unlock_error;
 
     if (address == ft_nullptr)
     {
         return (-1);
     }
-    lock_result = pthread_mutex_lock(&g_wait_list_mutex);
-    if (lock_result != 0)
+    lock_error = pt_pthread_mutex_lock_with_error(&g_wait_list_mutex);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         return (-1);
     }
@@ -333,14 +336,14 @@ int cmp_thread_wake_one_uint32(std::atomic<uint32_t> *address)
         signal_result = pthread_cond_signal(&entry->condition);
         if (signal_result != 0)
         {
-            unlock_result = pthread_mutex_unlock(&g_wait_list_mutex);
-            if (unlock_result != 0)
+            unlock_error = pt_pthread_mutex_unlock_with_error(&g_wait_list_mutex);
+            if (unlock_error != FT_ERR_SUCCESSS)
                 return (-1);
             return (-1);
         }
     }
-    unlock_result = pthread_mutex_unlock(&g_wait_list_mutex);
-    if (unlock_result != 0)
+    unlock_error = pt_pthread_mutex_unlock_with_error(&g_wait_list_mutex);
+    if (unlock_error != FT_ERR_SUCCESSS)
     {
         return (-1);
     }

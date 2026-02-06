@@ -11,7 +11,7 @@ bool api_promise::request(const char *ip, uint16_t port,
                                         headers, status, timeout);
     int request_error;
 
-    request_error = ft_global_error_stack_pop_newest();
+    request_error = ft_global_error_stack_drop_last_error();
     if (!resp)
     {
         if (request_error == FT_ERR_SUCCESSS)
@@ -41,7 +41,7 @@ bool api_string_promise::request(const char *ip, uint16_t port,
                                     headers, status, timeout);
     int request_error;
 
-    request_error = ft_global_error_stack_pop_newest();
+    request_error = ft_global_error_stack_drop_last_error();
     if (!resp)
     {
         if (request_error == FT_ERR_SUCCESSS)
@@ -71,7 +71,7 @@ bool api_tls_promise::request(const char *host, uint16_t port,
                                             headers, status, timeout);
     int request_error;
 
-    request_error = ft_global_error_stack_pop_newest();
+    request_error = ft_global_error_stack_drop_last_error();
     if (!resp)
     {
         if (request_error == FT_ERR_SUCCESSS)
@@ -101,7 +101,7 @@ bool api_tls_string_promise::request(const char *host, uint16_t port,
                                         headers, status, timeout);
     int request_error;
 
-    request_error = ft_global_error_stack_pop_newest();
+    request_error = ft_global_error_stack_drop_last_error();
     if (!resp)
     {
         if (request_error == FT_ERR_SUCCESSS)

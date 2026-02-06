@@ -226,7 +226,7 @@ static ssize_t ssl_send_all(SSL *ssl, const void *data, size_t size)
         }
         if (sent < 0)
             return (-1);
-        int last_error = ft_global_error_stack_pop_newest();
+        int last_error = ft_global_error_stack_drop_last_error();
         if (last_error == FT_ERR_SSL_WANT_READ || last_error == FT_ERR_SSL_WANT_WRITE)
         {
             if (ssl_pointer_supports_network_checks(ssl))
@@ -304,7 +304,7 @@ static bool tls_extract_x509_name(X509_NAME *name, ft_string &output)
     BIO_free(memory);
     if (!copy_result)
     {
-        int last_error = ft_global_error_stack_pop_newest();
+        int last_error = ft_global_error_stack_drop_last_error();
         if (last_error == FT_ERR_SUCCESSS)
             ft_global_error_stack_push(FT_ERR_CONFIGURATION);
         return (false);
@@ -341,7 +341,7 @@ static bool tls_extract_asn1_time(const ASN1_TIME *time_value, ft_string &output
     BIO_free(memory);
     if (!copy_result)
     {
-        int last_error = ft_global_error_stack_pop_newest();
+        int last_error = ft_global_error_stack_drop_last_error();
         if (last_error == FT_ERR_SUCCESSS)
             ft_global_error_stack_push(FT_ERR_CONFIGURATION);
         return (false);
@@ -379,7 +379,7 @@ static bool tls_extract_serial_number(const ASN1_INTEGER *serial_value,
     BIO_free(memory);
     if (!copy_result)
     {
-        int last_error = ft_global_error_stack_pop_newest();
+        int last_error = ft_global_error_stack_drop_last_error();
         if (last_error == FT_ERR_SUCCESSS)
             ft_global_error_stack_push(FT_ERR_CONFIGURATION);
         return (false);
@@ -659,7 +659,7 @@ api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms
 
         diagnostics_error = this->_error_code;
         if (diagnostics_error == FT_ERR_SUCCESSS)
-            diagnostics_error = ft_global_error_stack_pop_newest();
+            diagnostics_error = ft_global_error_stack_drop_last_error();
         error_message = ft_strerror(diagnostics_error);
         if (ft_log_get_api_logging())
         {
@@ -798,7 +798,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
         char *temporary_string = json_write_to_string(payload);
         if (!temporary_string)
         {
-            int json_error = ft_global_error_stack_pop_newest();
+            int json_error = ft_global_error_stack_drop_last_error();
             if (json_error == FT_ERR_SUCCESSS)
                 json_error = FT_ERR_NO_MEMORY;
             this->set_error(json_error);
@@ -889,7 +889,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
             header_parse_end = ft_nullptr;
             ft_global_error_stack_push(FT_ERR_SUCCESSS);
             parsed_length = ft_strtoul(header_value_cstr, &header_parse_end, 10);
-            parse_error = ft_global_error_stack_pop_newest();
+            parse_error = ft_global_error_stack_drop_last_error();
             if (parse_error != FT_ERR_SUCCESSS)
             {
                 this->set_error(parse_error);
@@ -991,7 +991,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
             }
             ft_global_error_stack_push(FT_ERR_SUCCESSS);
             unsigned long chunk_length = ft_strtoul(size_string.c_str(), ft_nullptr, 16);
-            int chunk_error = ft_global_error_stack_pop_newest();
+            int chunk_error = ft_global_error_stack_drop_last_error();
             if (chunk_error != FT_ERR_SUCCESSS)
             {
                 this->set_error(chunk_error);
@@ -1112,7 +1112,7 @@ json_group *api_tls_client::request_json(const char *method, const char *path,
     cma_free(body);
     if (!result)
     {
-        int json_error = ft_global_error_stack_pop_newest();
+        int json_error = ft_global_error_stack_drop_last_error();
         if (json_error == FT_ERR_SUCCESSS)
             json_error = FT_ERR_NO_MEMORY;
         this->set_error(json_error);
@@ -1329,7 +1329,7 @@ bool api_tls_client::populate_handshake_diagnostics()
                 {
                     vector_error = this->_handshake_diagnostics.certificates.get_error();
                     if (vector_error == FT_ERR_SUCCESSS)
-                        vector_error = ft_global_error_stack_pop_newest();
+                        vector_error = ft_global_error_stack_drop_last_error();
                     if (vector_error == FT_ERR_SUCCESSS)
                         vector_error = FT_ERR_CONFIGURATION;
                     this->set_error(vector_error);
@@ -1352,7 +1352,7 @@ bool api_tls_client::populate_handshake_diagnostics()
         {
             vector_error = this->_handshake_diagnostics.certificates.get_error();
             if (vector_error == FT_ERR_SUCCESSS)
-                vector_error = ft_global_error_stack_pop_newest();
+                vector_error = ft_global_error_stack_drop_last_error();
             if (vector_error == FT_ERR_SUCCESSS)
                 vector_error = FT_ERR_CONFIGURATION;
             this->set_error(vector_error);

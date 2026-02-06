@@ -19,7 +19,7 @@ static void xml_dom_record_success(void) noexcept
 
 static int xml_dom_last_error(void) noexcept
 {
-    return (ft_global_error_stack_last_error());
+    return (ft_global_error_stack_peek_last_error());
 }
 
 static void xml_dom_delete_node(ft_dom_node *node) noexcept

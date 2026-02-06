@@ -186,8 +186,8 @@ int ft_queue<ElementType>::lock_internal(bool *lock_acquired) const
         return (FT_ERR_SUCCESSS);
     }
     this->_mutex->lock(THREAD_ID);
-    mutex_error = ft_global_error_stack_pop_newest();
-    ft_global_error_stack_pop_newest();
+    mutex_error = ft_global_error_stack_drop_last_error();
+    ft_global_error_stack_drop_last_error();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         this->set_error(mutex_error);
@@ -207,8 +207,8 @@ int ft_queue<ElementType>::unlock_internal(bool lock_acquired) const
     this->_mutex->unlock(THREAD_ID);
     int mutex_error;
 
-    mutex_error = ft_global_error_stack_pop_newest();
-    ft_global_error_stack_pop_newest();
+    mutex_error = ft_global_error_stack_drop_last_error();
+    ft_global_error_stack_drop_last_error();
     return (mutex_error);
 }
 
@@ -243,8 +243,8 @@ int ft_queue<ElementType>::enable_thread_safety()
         {
             int mutex_error;
 
-            mutex_error = ft_global_error_stack_pop_newest();
-            ft_global_error_stack_pop_newest();
+            mutex_error = ft_global_error_stack_drop_last_error();
+            ft_global_error_stack_drop_last_error();
             if (mutex_error != FT_ERR_SUCCESSS)
             {
                 delete mutex_pointer;

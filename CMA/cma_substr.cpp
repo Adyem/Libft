@@ -18,12 +18,12 @@ char    *cma_substr(const char *source, unsigned int start, size_t length)
         return (ft_nullptr);
     }
     source_length = ft_strlen_size_t(source);
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     start_index = static_cast<size_t>(start);
     if (start_index >= source_length)
     {
         substring = cma_strdup("");
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (!substring)
         {
             ft_global_error_stack_push(error_code);
@@ -51,7 +51,7 @@ char    *cma_substr(const char *source, unsigned int start, size_t length)
         return (ft_nullptr);
     }
     substring = static_cast<char *>(cma_malloc(length + 1));
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (!substring)
     {
         ft_global_error_stack_push(error_code);

@@ -2,6 +2,7 @@
 # define GEOMETRY_AABB_HPP
 
 #include "../Errno/errno.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/recursive_mutex.hpp"
 
 class aabb
@@ -11,8 +12,10 @@ class aabb
         double          _minimum_y;
         double          _maximum_x;
         double          _maximum_y;
-        mutable pt_recursive_mutex _mutex;
-        mutable bool    _thread_safe_enabled = false;
+        mutable pt_recursive_mutex *_mutex = ft_nullptr;
+
+        int     prepare_thread_safety(void) noexcept;
+        void    teardown_thread_safety(void) noexcept;
 
         int     lock_mutex() const noexcept;
         int     unlock_mutex() const noexcept;

@@ -2,6 +2,7 @@
 
 #include "compatebility_cross_process.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../PThread/pthread_internal.hpp"
 
 #include <cerrno>
 #include <cstring>
@@ -142,19 +143,15 @@ int cmp_cross_process_lock_mutex(const cross_process_message &message, cmp_cross
 int cmp_cross_process_unlock_mutex(const cross_process_message &message, cmp_cross_process_mapping *mapping, cmp_cross_process_mutex_state *mutex_state)
 {
     pthread_mutex_t *shared_mutex;
-    int unlock_result;
 
     (void)message;
     (void)mapping;
     shared_mutex = reinterpret_cast<pthread_mutex_t *>(mutex_state->platform_mutex);
     if (shared_mutex == ft_nullptr)
         return (0);
-    unlock_result = pthread_mutex_unlock(shared_mutex);
-    if (unlock_result != 0)
-    {
-        errno = unlock_result;
+    int unlock_error = pt_pthread_mutex_unlock_with_error(shared_mutex);
+    if (unlock_error != FT_ERR_SUCCESSS)
         return (-1);
-    }
     mutex_state->platform_mutex = ft_nullptr;
     return (0);
 }

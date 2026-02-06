@@ -22,7 +22,7 @@ static void json_stream_push_error(int error_code)
 
 static int json_stream_pop_error(void)
 {
-    return (ft_global_error_stack_pop_newest());
+    return (ft_global_error_stack_drop_last_error());
 }
 
 #define JSON_STREAM_ERROR_RETURN(code, value) \
@@ -48,7 +48,7 @@ struct json_stream_reader_error_guard
 
 static int json_stream_last_error(void)
 {
-    return (ft_global_error_stack_last_error());
+    return (ft_global_error_stack_peek_last_error());
 }
 
 static size_t json_stream_reader_file_callback(void *user_data, char *buffer, size_t max_size)

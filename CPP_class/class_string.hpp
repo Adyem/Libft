@@ -13,14 +13,12 @@ class ft_string
         char*            _data;
         std::size_t      _length;
         std::size_t      _capacity;
-        mutable pt_recursive_mutex  _mutex;
+        mutable pt_recursive_mutex  *_mutex;
 
         class mutex_guard
         {
             private:
                 pt_recursive_mutex   *_mutex;
-                bool        _owns_lock;
-                int         _error_code;
 
             public:
                 mutex_guard() noexcept;
@@ -31,11 +29,18 @@ class ft_string
                 mutex_guard(mutex_guard &&other) noexcept;
                 mutex_guard &operator=(mutex_guard &&other) noexcept;
 
-                int lock(pt_recursive_mutex &mutex) noexcept;
+                int lock(pt_recursive_mutex *mutex) noexcept;
                 void unlock() noexcept;
                 bool owns_lock() const noexcept;
-                int get_error() const noexcept;
         };
+
+        int     lock_mutex(void) const noexcept;
+        int     unlock_mutex(void) const noexcept;
+        int     prepare_thread_safety(void) noexcept;
+        void    teardown_thread_safety(void) noexcept;
+        int     enable_thread_safety(void) noexcept;
+        void    disable_thread_safety(void) noexcept;
+        bool    is_thread_safe_enabled(void) const noexcept;
 
         void    resize(size_t new_capacity) noexcept;
         void    push_error_unlocked(int error_code) const noexcept;

@@ -16,13 +16,13 @@ int    ft_locale_compare(const char *left, const char *right, const char *locale
     status = su_locale_compare(left, right, locale_name, &comparison_result);
     if (status != 0)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_CONFIGURATION;
         ft_global_error_stack_push(error_code);
         return (-1);
     }
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         if (error_code == FT_ERR_SUCCESSS)
@@ -44,13 +44,13 @@ ft_string    ft_locale_casefold(const char *input, const char *locale_name)
     status = su_locale_casefold(input, locale_name, folded_result);
     if (status != 0)
     {
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_CONFIGURATION;
         ft_global_error_stack_push(error_code);
         return (ft_string(error_code));
     }
-    error_code = ft_global_error_stack_pop_newest();
+    error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {
         if (error_code == FT_ERR_SUCCESSS)

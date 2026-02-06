@@ -1,4 +1,6 @@
 #include "dumb_sound.hpp"
+#include "../Errno/errno.hpp"
+#include "../PThread/pthread_internal.hpp"
 
 ft_sound_device::ft_sound_device(void)
 {
@@ -7,8 +9,60 @@ ft_sound_device::ft_sound_device(void)
 
 ft_sound_device::~ft_sound_device(void)
 {
+    this->disable_thread_safety();
     return ;
 }
+
+int ft_sound_device::prepare_thread_safety(void) noexcept
+{
+    if (this->_thread_safe_enabled && this->_mutex)
+    {
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESSS);
+    }
+    pt_recursive_mutex *mutex_pointer = ft_nullptr;
+    int mutex_error = pt_recursive_mutex_create_with_error(&mutex_pointer);
+    if (mutex_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(mutex_error);
+        return (mutex_error);
+    }
+    this->_mutex = mutex_pointer;
+    this->_thread_safe_enabled = true;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
+}
+
+void ft_sound_device::teardown_thread_safety(void) noexcept
+{
+    pt_recursive_mutex_destroy(&this->_mutex);
+    this->_thread_safe_enabled = false;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return ;
+}
+
+int ft_sound_device::enable_thread_safety() noexcept
+{
+    return (this->prepare_thread_safety());
+}
+
+void ft_sound_device::disable_thread_safety() noexcept
+{
+    this->teardown_thread_safety();
+    return ;
+}
+
+bool ft_sound_device::is_thread_safe_enabled() const noexcept
+{
+    return (this->_thread_safe_enabled);
+}
+
+#ifdef LIBFT_TEST_BUILD
+pt_recursive_mutex *ft_sound_device::runtime_mutex(void)
+{
+    return (this->_mutex);
+}
+#endif
 
 #if defined(_WIN32)
 ft_sound_device *ft_create_sound_device_win32(void);

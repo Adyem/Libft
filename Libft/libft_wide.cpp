@@ -124,13 +124,13 @@ ft_string ft_utf16_to_utf8(const char16_t *input, size_t input_length)
         if (ft_utf8_encode(code_point, encoded_buffer, sizeof(encoded_buffer),
                 &encoded_length) != FT_SUCCESS)
         {
-            error_code = ft_global_error_stack_pop_newest();
+            error_code = ft_global_error_stack_drop_last_error();
             if (error_code == FT_ERR_SUCCESSS)
                 error_code = FT_ERR_INVALID_ARGUMENT;
             ft_global_error_stack_push(error_code);
             return (ft_string(error_code));
         }
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code != FT_ERR_SUCCESSS)
         {
             ft_global_error_stack_push(error_code);
@@ -183,13 +183,13 @@ ft_string ft_utf32_to_utf8(const char32_t *input, size_t input_length)
         if (ft_utf8_encode(code_point, encoded_buffer, sizeof(encoded_buffer),
                 &encoded_length) != FT_SUCCESS)
         {
-            error_code = ft_global_error_stack_pop_newest();
+            error_code = ft_global_error_stack_drop_last_error();
             if (error_code == FT_ERR_SUCCESSS)
                 error_code = FT_ERR_INVALID_ARGUMENT;
             ft_global_error_stack_push(error_code);
             return (ft_string(error_code));
         }
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code != FT_ERR_SUCCESSS)
         {
             ft_global_error_stack_push(error_code);
@@ -241,7 +241,7 @@ char16_t *ft_utf8_to_utf16(const char *input, size_t input_length, size_t *outpu
     if (effective_length == 0 && input != ft_nullptr)
     {
         effective_length = ft_strlen_size_t(input);
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code != FT_ERR_SUCCESSS)
         {
             ft_global_error_stack_push(error_code);
@@ -262,13 +262,13 @@ char16_t *ft_utf8_to_utf16(const char *input, size_t input_length, size_t *outpu
         if (ft_utf8_next(input, effective_length, &working_index, &code_point,
                 &sequence_length) != FT_SUCCESS)
         {
-            error_code = ft_global_error_stack_pop_newest();
+            error_code = ft_global_error_stack_drop_last_error();
             if (error_code == FT_ERR_SUCCESSS)
                 error_code = FT_ERR_INVALID_ARGUMENT;
             ft_global_error_stack_push(error_code);
             return (ft_nullptr);
         }
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code != FT_ERR_SUCCESSS)
         {
             ft_global_error_stack_push(error_code);
@@ -315,14 +315,14 @@ char16_t *ft_utf8_to_utf16(const char *input, size_t input_length, size_t *outpu
         {
             int decode_error;
 
-            decode_error = ft_global_error_stack_pop_newest();
+            decode_error = ft_global_error_stack_drop_last_error();
             if (decode_error == FT_ERR_SUCCESSS)
                 decode_error = FT_ERR_INVALID_ARGUMENT;
             cma_free(result);
             ft_global_error_stack_push(decode_error);
             return (ft_nullptr);
         }
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code != FT_ERR_SUCCESSS)
         {
             cma_free(result);
@@ -377,7 +377,7 @@ char32_t *ft_utf8_to_utf32(const char *input, size_t input_length, size_t *outpu
     if (effective_length == 0 && input != ft_nullptr)
     {
         effective_length = ft_strlen_size_t(input);
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code != FT_ERR_SUCCESSS)
         {
             ft_global_error_stack_push(error_code);
@@ -398,13 +398,13 @@ char32_t *ft_utf8_to_utf32(const char *input, size_t input_length, size_t *outpu
         if (ft_utf8_next(input, effective_length, &working_index, &code_point,
                 &sequence_length) != FT_SUCCESS)
         {
-            error_code = ft_global_error_stack_pop_newest();
+            error_code = ft_global_error_stack_drop_last_error();
             if (error_code == FT_ERR_SUCCESSS)
                 error_code = FT_ERR_INVALID_ARGUMENT;
             ft_global_error_stack_push(error_code);
             return (ft_nullptr);
         }
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code != FT_ERR_SUCCESSS)
         {
             ft_global_error_stack_push(error_code);
@@ -437,14 +437,14 @@ char32_t *ft_utf8_to_utf32(const char *input, size_t input_length, size_t *outpu
         {
             int decode_error;
 
-            decode_error = ft_global_error_stack_pop_newest();
+            decode_error = ft_global_error_stack_drop_last_error();
             if (decode_error == FT_ERR_SUCCESSS)
                 decode_error = FT_ERR_INVALID_ARGUMENT;
             cma_free(result);
             ft_global_error_stack_push(decode_error);
             return (ft_nullptr);
         }
-        error_code = ft_global_error_stack_pop_newest();
+        error_code = ft_global_error_stack_drop_last_error();
         if (error_code != FT_ERR_SUCCESSS)
         {
             cma_free(result);
