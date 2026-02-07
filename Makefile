@@ -71,6 +71,7 @@ SUBDIRS := Libft \
            ReadLine \
            PThread \
            CPP_class \
+           Template \
            Config \
            CrossProcess \
            Compression \
@@ -132,11 +133,17 @@ TOTAL_DEBUG_LIBS := $(words $(DEBUG_LIBS))
 TARGET        := Full_Libft.a
 DEBUG_TARGET  := Full_Libft_debug.a
 
-all: $(TARGET)
+CPP_CLASS_LIB := CPP_class/CPP_class.a
+
+all: $(TARGET) template
 
 debug: $(DEBUG_TARGET)
 
 both: all debug
+
+template: $(CPP_CLASS_LIB)
+	@printf '\033[1;35m[LIBFT BUILD] Running Template verification\033[0m\n'
+	@$(MAKE) -C Template all $(SUBMAKE_OVERRIDES)
 
 tests: $(TARGET)
 	@need_build=0; \
@@ -291,5 +298,5 @@ fclean:
 		exit 1; \
 	fi
 
-.PHONY: all debug both re clean fclean tests format sanitize-clean \
+.PHONY: all debug both template re clean fclean tests format sanitize-clean \
         asan asan-tests ubsan ubsan-tests asan-ubsan asan-ubsan-tests

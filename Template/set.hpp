@@ -6,8 +6,9 @@
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Libft/libft.hpp"
-#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include <cstddef>
 #include <utility>
 #include "move.hpp"
@@ -16,19 +17,17 @@ template <typename ElementType>
 class ft_set
 {
     private:
-        ElementType*         _data;
-        size_t               _capacity;
-        size_t               _size;
-        mutable int          _error_code;
-        mutable pt_mutex*    _mutex;
-        bool                 _thread_safe_enabled;
+        ElementType*                   _data;
+        size_t                         _capacity;
+        size_t                         _size;
+        mutable pt_recursive_mutex*    _mutex;
 
-        void    set_error(int error) const;
         bool    ensure_capacity(size_t desired_capacity);
         size_t  find_index(const ElementType& value) const;
         size_t  lower_bound(const ElementType& value) const;
         int     lock_internal(bool *lock_acquired) const;
-        void    unlock_internal(bool lock_acquired) const;
+        int     unlock_internal(bool lock_acquired) const;
+        int     prepare_thread_safety();
         void    teardown_thread_safety();
 
     public:
@@ -54,27 +53,28 @@ class ft_set
         void remove(const ElementType& value);
         size_t size() const;
         bool empty() const;
-        int get_error() const;
-        const char* get_error_str() const;
         void clear();
+
+    #ifdef LIBFT_TEST_BUILD
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
+    #endif
 };
 
 template <typename ElementType>
 ft_set<ElementType>::ft_set(size_t initial_capacity)
-    : _data(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESSS),
-      _mutex(ft_nullptr), _thread_safe_enabled(false)
+    : _data(ft_nullptr), _capacity(0), _size(0), _mutex(ft_nullptr)
 {
     if (initial_capacity > 0)
     {
         this->_data = static_cast<ElementType*>(cma_malloc(sizeof(ElementType) * initial_capacity));
         if (this->_data == ft_nullptr)
         {
-            this->set_error(FT_ERR_NO_MEMORY);
+            ft_global_error_stack_push(FT_ERR_NO_MEMORY);
             return ;
         }
         this->_capacity = initial_capacity;
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -90,273 +90,334 @@ ft_set<ElementType>::~ft_set()
 
 template <typename ElementType>
 ft_set<ElementType>::ft_set(ft_set&& other) noexcept
-    : _data(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESSS),
-      _mutex(ft_nullptr), _thread_safe_enabled(false)
+    : _data(other._data), _capacity(other._capacity), _size(other._size),
+      _mutex(other._mutex)
 {
-    bool other_lock_acquired;
-    bool other_thread_safe;
-
-    other_lock_acquired = false;
-    if (other.lock_internal(&other_lock_acquired) != 0)
-    {
-        this->set_error(ft_errno);
-        return ;
-    }
-    other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
-    this->_data = other._data;
-    this->_capacity = other._capacity;
-    this->_size = other._size;
-    this->_error_code = other._error_code;
     other._data = ft_nullptr;
     other._capacity = 0;
     other._size = 0;
-    other._error_code = FT_ERR_SUCCESSS;
-    other.unlock_internal(other_lock_acquired);
-    other.teardown_thread_safety();
-    if (other_thread_safe)
-    {
-        if (this->enable_thread_safety() != 0)
-            return ;
-    }
-    this->set_error(FT_ERR_SUCCESSS);
+    other._mutex = ft_nullptr;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
 template <typename ElementType>
 ft_set<ElementType>& ft_set<ElementType>::operator=(ft_set&& other) noexcept
 {
-    bool this_lock_acquired;
-    bool other_lock_acquired;
-    ElementType *previous_data;
-    size_t previous_size;
-    pt_mutex *previous_mutex;
-    bool previous_thread_safe;
-    bool other_thread_safe;
-    pt_mutex *locked_mutex;
-    pt_mutex *new_mutex;
-    bool new_lock_acquired;
-    void *mutex_memory;
-
     if (this == &other)
-        return (*this);
-    this_lock_acquired = false;
-    new_lock_acquired = false;
-    new_mutex = ft_nullptr;
-    locked_mutex = this->_mutex;
-    if (this->lock_internal(&this_lock_acquired) != 0)
     {
-        this->set_error(ft_errno);
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (*this);
     }
-    other_lock_acquired = false;
-    if (other.lock_internal(&other_lock_acquired) != 0)
+    if (this->_data != ft_nullptr)
     {
-        this->unlock_internal(this_lock_acquired);
-        this->set_error(ft_errno);
-        return (*this);
-    }
-    previous_data = this->_data;
-    previous_size = this->_size;
-    previous_mutex = this->_mutex;
-    previous_thread_safe = this->_thread_safe_enabled;
-    other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
-    if (other_thread_safe)
-    {
-        mutex_memory = cma_malloc(sizeof(pt_mutex));
-        if (mutex_memory == ft_nullptr)
-        {
-            other.unlock_internal(other_lock_acquired);
-            this->unlock_internal(this_lock_acquired);
-            this->set_error(FT_ERR_NO_MEMORY);
-            return (*this);
-        }
-        new_mutex = new(mutex_memory) pt_mutex();
-        if (new_mutex->get_error() != FT_ERR_SUCCESSS)
-        {
-            int mutex_error;
+        size_t index = 0;
 
-            mutex_error = new_mutex->get_error();
-            new_mutex->~pt_mutex();
-            cma_free(mutex_memory);
-            other.unlock_internal(other_lock_acquired);
-            this->unlock_internal(this_lock_acquired);
-            this->set_error(mutex_error);
-            return (*this);
-        }
-        new_mutex->lock(THREAD_ID);
-        if (new_mutex->get_error() != FT_ERR_SUCCESSS)
+        while (index < this->_size)
         {
-            int mutex_error;
-
-            mutex_error = new_mutex->get_error();
-            new_mutex->~pt_mutex();
-            cma_free(mutex_memory);
-            other.unlock_internal(other_lock_acquired);
-            this->unlock_internal(this_lock_acquired);
-            this->set_error(mutex_error);
-            return (*this);
+            destroy_at(&this->_data[index]);
+            ++index;
         }
-        new_lock_acquired = true;
+        cma_free(this->_data);
     }
+    this->teardown_thread_safety();
     this->_data = other._data;
     this->_capacity = other._capacity;
     this->_size = other._size;
-    this->_error_code = other._error_code;
-    this->_mutex = new_mutex;
-    this->_thread_safe_enabled = other_thread_safe;
+    this->_mutex = other._mutex;
     other._data = ft_nullptr;
     other._capacity = 0;
     other._size = 0;
-    other._error_code = FT_ERR_SUCCESSS;
-    other.unlock_internal(other_lock_acquired);
-    other.teardown_thread_safety();
-    if (this_lock_acquired && locked_mutex != ft_nullptr)
-    {
-        locked_mutex->unlock(THREAD_ID);
-        if (locked_mutex->get_error() != FT_ERR_SUCCESSS)
-        {
-            if (new_lock_acquired && new_mutex != ft_nullptr)
-                new_mutex->unlock(THREAD_ID);
-            this->set_error(locked_mutex->get_error());
-            return (*this);
-        }
-    }
-    if (previous_data != ft_nullptr && previous_data != this->_data)
-    {
-        size_t index;
-
-        index = 0;
-        while (index < previous_size)
-        {
-            ::destroy_at(&previous_data[index]);
-            index++;
-        }
-        cma_free(previous_data);
-    }
-    if (previous_thread_safe && previous_mutex != ft_nullptr && previous_mutex != this->_mutex)
-    {
-        previous_mutex->~pt_mutex();
-        cma_free(previous_mutex);
-    }
-    if (new_lock_acquired && new_mutex != ft_nullptr)
-    {
-        new_mutex->unlock(THREAD_ID);
-        if (new_mutex->get_error() != FT_ERR_SUCCESSS)
-        {
-            this->set_error(new_mutex->get_error());
-            return (*this);
-        }
-    }
-    this->set_error(FT_ERR_SUCCESSS);
+    other._mutex = ft_nullptr;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (*this);
-}
-
-template <typename ElementType>
-void ft_set<ElementType>::set_error(int error) const
-{
-    this->_error_code = error;
-    ft_errno = error;
-    return ;
 }
 
 template <typename ElementType>
 int ft_set<ElementType>::enable_thread_safety()
 {
-    void     *memory;
-    pt_mutex *mutex_pointer;
-
-    if (this->_thread_safe_enabled && this->_mutex != ft_nullptr)
-    {
-        this->set_error(FT_ERR_SUCCESSS);
-        return (0);
-    }
-    memory = cma_malloc(sizeof(pt_mutex));
-    if (memory == ft_nullptr)
-    {
-        this->set_error(FT_ERR_NO_MEMORY);
-        return (-1);
-    }
-    mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
-    {
-        int mutex_error;
-
-        mutex_error = mutex_pointer->get_error();
-        mutex_pointer->~pt_mutex();
-        cma_free(memory);
-        this->set_error(mutex_error);
-        return (-1);
-    }
-    this->_mutex = mutex_pointer;
-    this->_thread_safe_enabled = true;
-    this->set_error(FT_ERR_SUCCESSS);
-    return (0);
+    int result = this->prepare_thread_safety();
+    ft_global_error_stack_push(result);
+    return (result);
 }
 
 template <typename ElementType>
 void ft_set<ElementType>::disable_thread_safety()
 {
     this->teardown_thread_safety();
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
 template <typename ElementType>
 bool ft_set<ElementType>::is_thread_safe() const
 {
-    bool enabled;
-
-    enabled = (this->_thread_safe_enabled && this->_mutex != ft_nullptr);
-    const_cast<ft_set<ElementType> *>(this)->set_error(FT_ERR_SUCCESSS);
+    bool enabled = (this->_mutex != ft_nullptr);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (enabled);
 }
 
 template <typename ElementType>
 int ft_set<ElementType>::lock(bool *lock_acquired) const
 {
-    int result;
-
-    result = this->lock_internal(lock_acquired);
-    if (result != 0)
-        const_cast<ft_set<ElementType> *>(this)->set_error(ft_errno);
-    else
-        const_cast<ft_set<ElementType> *>(this)->set_error(FT_ERR_SUCCESSS);
+    int result = this->lock_internal(lock_acquired);
+    ft_global_error_stack_push(result);
     return (result);
 }
 
 template <typename ElementType>
 void ft_set<ElementType>::unlock(bool lock_acquired) const
 {
-    this->unlock_internal(lock_acquired);
-    if (this->_mutex != ft_nullptr && this->_mutex->get_error() != FT_ERR_SUCCESSS)
-        const_cast<ft_set<ElementType> *>(this)->set_error(this->_mutex->get_error());
-    else
-        const_cast<ft_set<ElementType> *>(this)->set_error(FT_ERR_SUCCESSS);
+    int result = this->unlock_internal(lock_acquired);
+    ft_global_error_stack_push(result);
     return ;
 }
+
+template <typename ElementType>
+void ft_set<ElementType>::insert(const ElementType& value)
+{
+    bool lock_acquired = false;
+    int lock_result = this->lock_internal(&lock_acquired);
+
+    if (lock_result != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(lock_result);
+        return ;
+    }
+    size_t position = this->lower_bound(value);
+    if (position < this->_size && !(value < this->_data[position]) && !(this->_data[position] < value))
+    {
+        this->unlock_internal(lock_acquired);
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        return ;
+    }
+    if (!this->ensure_capacity(this->_size + 1))
+    {
+        this->unlock_internal(lock_acquired);
+        return ;
+    }
+    size_t index = this->_size;
+
+    while (index > position)
+    {
+        construct_at(&this->_data[index], ft_move(this->_data[index - 1]));
+        destroy_at(&this->_data[index - 1]);
+        --index;
+    }
+    construct_at(&this->_data[position], value);
+    ++this->_size;
+    this->unlock_internal(lock_acquired);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return ;
+}
+
+template <typename ElementType>
+void ft_set<ElementType>::insert(ElementType&& value)
+{
+    bool lock_acquired = false;
+    int lock_result = this->lock_internal(&lock_acquired);
+
+    if (lock_result != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(lock_result);
+        return ;
+    }
+    size_t position = this->lower_bound(value);
+    if (position < this->_size && !(value < this->_data[position]) && !(this->_data[position] < value))
+    {
+        this->unlock_internal(lock_acquired);
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        return ;
+    }
+    if (!this->ensure_capacity(this->_size + 1))
+    {
+        this->unlock_internal(lock_acquired);
+        return ;
+    }
+    size_t index = this->_size;
+
+    while (index > position)
+    {
+        construct_at(&this->_data[index], ft_move(this->_data[index - 1]));
+        destroy_at(&this->_data[index - 1]);
+        --index;
+    }
+    construct_at(&this->_data[position], ft_move(value));
+    ++this->_size;
+    this->unlock_internal(lock_acquired);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return ;
+}
+
+template <typename ElementType>
+ElementType* ft_set<ElementType>::find(const ElementType& value)
+{
+    bool lock_acquired = false;
+    int lock_result = this->lock_internal(&lock_acquired);
+
+    if (lock_result != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(lock_result);
+        return (ft_nullptr);
+    }
+    size_t index = this->find_index(value);
+    if (index == this->_size)
+    {
+        this->unlock_internal(lock_acquired);
+        ft_global_error_stack_push(FT_ERR_NOT_FOUND);
+        return (ft_nullptr);
+    }
+    ElementType *result = &this->_data[index];
+
+    this->unlock_internal(lock_acquired);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return (result);
+}
+
+template <typename ElementType>
+const ElementType* ft_set<ElementType>::find(const ElementType& value) const
+{
+    bool lock_acquired = false;
+    int lock_result = this->lock_internal(&lock_acquired);
+
+    if (lock_result != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(lock_result);
+        return (ft_nullptr);
+    }
+    size_t index = this->find_index(value);
+    if (index == this->_size)
+    {
+        this->unlock_internal(lock_acquired);
+        ft_global_error_stack_push(FT_ERR_NOT_FOUND);
+        return (ft_nullptr);
+    }
+    const ElementType *result = &this->_data[index];
+
+    this->unlock_internal(lock_acquired);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return (result);
+}
+
+template <typename ElementType>
+void ft_set<ElementType>::remove(const ElementType& value)
+{
+    bool lock_acquired = false;
+    int lock_result = this->lock_internal(&lock_acquired);
+
+    if (lock_result != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(lock_result);
+        return ;
+    }
+    size_t index = this->find_index(value);
+    if (index == this->_size)
+    {
+        this->unlock_internal(lock_acquired);
+        ft_global_error_stack_push(FT_ERR_NOT_FOUND);
+        return ;
+    }
+    destroy_at(&this->_data[index]);
+    size_t current_index = index;
+
+    while (current_index + 1 < this->_size)
+    {
+        construct_at(&this->_data[current_index], ft_move(this->_data[current_index + 1]));
+        destroy_at(&this->_data[current_index + 1]);
+        ++current_index;
+    }
+    --this->_size;
+    this->unlock_internal(lock_acquired);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return ;
+}
+
+template <typename ElementType>
+size_t ft_set<ElementType>::size() const
+{
+    bool lock_acquired = false;
+    int lock_result = this->lock_internal(&lock_acquired);
+
+    if (lock_result != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(lock_result);
+        return (0);
+    }
+    size_t current_size = this->_size;
+
+    this->unlock_internal(lock_acquired);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return (current_size);
+}
+
+template <typename ElementType>
+bool ft_set<ElementType>::empty() const
+{
+    bool lock_acquired = false;
+    int lock_result = this->lock_internal(&lock_acquired);
+
+    if (lock_result != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(lock_result);
+        return (true);
+    }
+    bool result = (this->_size == 0);
+
+    this->unlock_internal(lock_acquired);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return (result);
+}
+
+template <typename ElementType>
+void ft_set<ElementType>::clear()
+{
+    bool lock_acquired = false;
+    int lock_result = this->lock_internal(&lock_acquired);
+
+    if (lock_result != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(lock_result);
+        return ;
+    }
+    size_t index = 0;
+
+    while (index < this->_size)
+    {
+        destroy_at(&this->_data[index]);
+        ++index;
+    }
+    this->_size = 0;
+    this->unlock_internal(lock_acquired);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return ;
+}
+
+#ifdef LIBFT_TEST_BUILD
+template <typename ElementType>
+pt_recursive_mutex *ft_set<ElementType>::get_mutex_for_validation() const noexcept
+{
+    return (this->_mutex);
+}
+#endif
 
 template <typename ElementType>
 bool ft_set<ElementType>::ensure_capacity(size_t desired_capacity)
 {
     if (desired_capacity <= this->_capacity)
-    {
-        this->set_error(FT_ERR_SUCCESSS);
         return (true);
-    }
-    size_t new_capacity;
-    if (this->_capacity == 0)
-        new_capacity = 1;
-    else
-        new_capacity = this->_capacity * 2;
+    size_t new_capacity = (this->_capacity == 0) ? 1 : this->_capacity * 2;
+
     while (new_capacity < desired_capacity)
         new_capacity *= 2;
     ElementType* new_data = static_cast<ElementType*>(cma_malloc(sizeof(ElementType) * new_capacity));
+
     if (new_data == ft_nullptr)
     {
-        this->set_error(FT_ERR_NO_MEMORY);
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (false);
     }
     size_t index = 0;
+
     while (index < this->_size)
     {
         construct_at(&new_data[index], ft_move(this->_data[index]));
@@ -367,7 +428,6 @@ bool ft_set<ElementType>::ensure_capacity(size_t desired_capacity)
         cma_free(this->_data);
     this->_data = new_data;
     this->_capacity = new_capacity;
-    this->set_error(FT_ERR_SUCCESSS);
     return (true);
 }
 
@@ -376,9 +436,11 @@ size_t ft_set<ElementType>::find_index(const ElementType& value) const
 {
     size_t left = 0;
     size_t right = this->_size;
+
     while (left < right)
     {
         size_t mid = left + (right - left) / 2;
+
         if (this->_data[mid] < value)
             left = mid + 1;
         else if (value < this->_data[mid])
@@ -394,9 +456,11 @@ size_t ft_set<ElementType>::lower_bound(const ElementType& value) const
 {
     size_t left = 0;
     size_t right = this->_size;
+
     while (left < right)
     {
         size_t mid = left + (right - left) / 2;
+
         if (this->_data[mid] < value)
             left = mid + 1;
         else
@@ -410,288 +474,40 @@ int ft_set<ElementType>::lock_internal(bool *lock_acquired) const
 {
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (!this->_thread_safe_enabled || this->_mutex == ft_nullptr)
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-        return (0);
-    }
-    this->_mutex->lock(THREAD_ID);
-    if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = this->_mutex->get_error();
-        return (-1);
-    }
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    int result = pt_recursive_mutex_lock_with_error(*this->_mutex);
+
+    if (result != FT_ERR_SUCCESSS)
+        return (result);
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    ft_errno = FT_ERR_SUCCESSS;
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
 template <typename ElementType>
-void ft_set<ElementType>::unlock_internal(bool lock_acquired) const
+int ft_set<ElementType>::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || this->_mutex == ft_nullptr)
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-        return ;
-    }
-    this->_mutex->unlock(THREAD_ID);
-    if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = this->_mutex->get_error();
-        return ;
-    }
-    ft_errno = FT_ERR_SUCCESSS;
-    return ;
+        return (FT_ERR_SUCCESSS);
+    return (pt_recursive_mutex_unlock_with_error(*this->_mutex));
+}
+
+template <typename ElementType>
+int ft_set<ElementType>::prepare_thread_safety()
+{
+    if (this->_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    int result = pt_recursive_mutex_create_with_error(&this->_mutex);
+    if (result != FT_ERR_SUCCESSS && this->_mutex != ft_nullptr)
+        pt_recursive_mutex_destroy(&this->_mutex);
+    return (result);
 }
 
 template <typename ElementType>
 void ft_set<ElementType>::teardown_thread_safety()
 {
-    if (this->_mutex != ft_nullptr)
-    {
-        this->_mutex->~pt_mutex();
-        cma_free(this->_mutex);
-        this->_mutex = ft_nullptr;
-    }
-    this->_thread_safe_enabled = false;
-    return ;
-}
-
-template <typename ElementType>
-void ft_set<ElementType>::insert(const ElementType& value)
-{
-    bool   lock_acquired;
-    size_t position;
-    size_t index;
-
-    lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
-    {
-        this->set_error(ft_errno);
-        return ;
-    }
-    position = lower_bound(value);
-    if (position < this->_size && !(value < this->_data[position]) && !(this->_data[position] < value))
-    {
-        this->set_error(FT_ERR_SUCCESSS);
-        this->unlock_internal(lock_acquired);
-        return ;
-    }
-    if (!ensure_capacity(this->_size + 1))
-    {
-        this->unlock_internal(lock_acquired);
-        return ;
-    }
-    index = this->_size;
-    while (index > position)
-    {
-        construct_at(&this->_data[index], ft_move(this->_data[index - 1]));
-        destroy_at(&this->_data[index - 1]);
-        --index;
-    }
-    construct_at(&this->_data[position], value);
-    ++this->_size;
-    this->set_error(FT_ERR_SUCCESSS);
-    this->unlock_internal(lock_acquired);
-    return ;
-}
-
-template <typename ElementType>
-void ft_set<ElementType>::insert(ElementType&& value)
-{
-    bool   lock_acquired;
-    size_t position;
-    size_t index;
-
-    lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
-    {
-        this->set_error(ft_errno);
-        return ;
-    }
-    position = lower_bound(value);
-    if (position < this->_size && !(value < this->_data[position]) && !(this->_data[position] < value))
-    {
-        this->set_error(FT_ERR_SUCCESSS);
-        this->unlock_internal(lock_acquired);
-        return ;
-    }
-    if (!ensure_capacity(this->_size + 1))
-    {
-        this->unlock_internal(lock_acquired);
-        return ;
-    }
-    index = this->_size;
-    while (index > position)
-    {
-        construct_at(&this->_data[index], ft_move(this->_data[index - 1]));
-        destroy_at(&this->_data[index - 1]);
-        --index;
-    }
-    construct_at(&this->_data[position], ft_move(value));
-    ++this->_size;
-    this->set_error(FT_ERR_SUCCESSS);
-    this->unlock_internal(lock_acquired);
-    return ;
-}
-
-template <typename ElementType>
-ElementType* ft_set<ElementType>::find(const ElementType& value)
-{
-    bool        lock_acquired;
-    size_t      index;
-    ElementType *result;
-
-    lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
-    {
-        this->set_error(ft_errno);
-        return (ft_nullptr);
-    }
-    index = find_index(value);
-    if (index == this->_size)
-    {
-        this->set_error(FT_ERR_NOT_FOUND);
-        this->unlock_internal(lock_acquired);
-        return (ft_nullptr);
-    }
-    result = &this->_data[index];
-    this->set_error(FT_ERR_SUCCESSS);
-    this->unlock_internal(lock_acquired);
-    return (result);
-}
-
-template <typename ElementType>
-const ElementType* ft_set<ElementType>::find(const ElementType& value) const
-{
-    bool               lock_acquired;
-    size_t             index;
-    const ElementType *result;
-
-    lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
-    {
-        const_cast<ft_set<ElementType> *>(this)->set_error(ft_errno);
-        return (ft_nullptr);
-    }
-    index = find_index(value);
-    if (index == this->_size)
-    {
-        const_cast<ft_set<ElementType> *>(this)->set_error(FT_ERR_NOT_FOUND);
-        this->unlock_internal(lock_acquired);
-        return (ft_nullptr);
-    }
-    result = &this->_data[index];
-    const_cast<ft_set<ElementType> *>(this)->set_error(FT_ERR_SUCCESSS);
-    this->unlock_internal(lock_acquired);
-    return (result);
-}
-
-template <typename ElementType>
-void ft_set<ElementType>::remove(const ElementType& value)
-{
-    bool   lock_acquired;
-    size_t index;
-    size_t current_index;
-
-    lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
-    {
-        this->set_error(ft_errno);
-        return ;
-    }
-    index = find_index(value);
-    if (index == this->_size)
-    {
-        this->set_error(FT_ERR_NOT_FOUND);
-        this->unlock_internal(lock_acquired);
-        return ;
-    }
-    destroy_at(&this->_data[index]);
-    current_index = index;
-    while (current_index + 1 < this->_size)
-    {
-        construct_at(&this->_data[current_index], ft_move(this->_data[current_index + 1]));
-        destroy_at(&this->_data[current_index + 1]);
-        ++current_index;
-    }
-    --this->_size;
-    this->set_error(FT_ERR_SUCCESSS);
-    this->unlock_internal(lock_acquired);
-    return ;
-}
-
-template <typename ElementType>
-size_t ft_set<ElementType>::size() const
-{
-    bool   lock_acquired;
-    size_t current_size;
-
-    lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
-    {
-        const_cast<ft_set<ElementType> *>(this)->set_error(ft_errno);
-        return (0);
-    }
-    current_size = this->_size;
-    const_cast<ft_set<ElementType> *>(this)->set_error(FT_ERR_SUCCESSS);
-    this->unlock_internal(lock_acquired);
-    return (current_size);
-}
-
-template <typename ElementType>
-bool ft_set<ElementType>::empty() const
-{
-    bool lock_acquired;
-    bool result;
-
-    lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
-    {
-        const_cast<ft_set<ElementType> *>(this)->set_error(ft_errno);
-        return (true);
-    }
-    result = (this->_size == 0);
-    const_cast<ft_set<ElementType> *>(this)->set_error(FT_ERR_SUCCESSS);
-    this->unlock_internal(lock_acquired);
-    return (result);
-}
-
-template <typename ElementType>
-int ft_set<ElementType>::get_error() const
-{
-    return (this->_error_code);
-}
-
-template <typename ElementType>
-const char* ft_set<ElementType>::get_error_str() const
-{
-    return (ft_strerror(this->get_error()));
-}
-
-template <typename ElementType>
-void ft_set<ElementType>::clear()
-{
-    bool   lock_acquired;
-    size_t index;
-
-    lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
-    {
-        this->set_error(ft_errno);
-        return ;
-    }
-    index = 0;
-    while (index < this->_size)
-    {
-        destroy_at(&this->_data[index]);
-        ++index;
-    }
-    this->_size = 0;
-    this->set_error(FT_ERR_SUCCESSS);
-    this->unlock_internal(lock_acquired);
-    return ;
+    pt_recursive_mutex_destroy(&this->_mutex);
 }
 
 #endif

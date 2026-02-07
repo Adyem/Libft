@@ -5,30 +5,30 @@
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
-#include "../Libft/libft.hpp"
-#include "../PThread/mutex.hpp"
-#include "../PThread/unique_lock.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread.hpp"
-#include <utility>
+#include "../PThread/pthread_internal.hpp"
 #include <type_traits>
-#include <new>
-
 #include "move.hpp"
+
 template <typename T>
 class ft_optional
 {
     private:
-        T*          _value;
-        mutable int _error_code;
-        mutable pt_mutex _mutex;
+        T*                      _value;
+        mutable pt_recursive_mutex* _mutex;
 
-        void set_error(int error) const;
         static T &fallback_reference() noexcept;
         static void sleep_backoff() noexcept;
-        int lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept;
+        int  lock_mutex() const noexcept;
+        int  unlock_mutex() const noexcept;
+        int  prepare_thread_safety() noexcept;
+        void teardown_thread_safety() noexcept;
         static int lock_pair(ft_optional &first, ft_optional &second,
-            ft_unique_lock<pt_mutex> &first_guard,
-            ft_unique_lock<pt_mutex> &second_guard) noexcept;
+                const ft_optional *&lower,
+                const ft_optional *&upper) noexcept;
+        static int unlock_pair(const ft_optional *lower,
+                const ft_optional *upper) noexcept;
 
     public:
         ft_optional();
@@ -46,46 +46,49 @@ class ft_optional
         T& value();
         const T& value() const;
         void reset();
+        int enable_thread_safety() noexcept;
+        void disable_thread_safety() noexcept;
 
-        int get_error() const;
-        const char* get_error_str() const;
+    #ifdef LIBFT_TEST_BUILD
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
+    #endif
 };
 
 template <typename T>
 ft_optional<T>::ft_optional()
-    : _value(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex()
+    : _value(ft_nullptr), _mutex(ft_nullptr)
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
 template <typename T>
 ft_optional<T>::ft_optional(const T& value)
-    : _value(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex()
+    : _value(ft_nullptr), _mutex(ft_nullptr)
 {
-    _value = static_cast<T*>(cma_malloc(sizeof(T)));
-    if (_value == ft_nullptr)
-        this->set_error(FT_ERR_NO_MEMORY);
-    else
+    this->_value = static_cast<T*>(cma_malloc(sizeof(T)));
+    if (this->_value == ft_nullptr)
     {
-        construct_at(_value, value);
-        this->set_error(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
+        return ;
     }
+    construct_at(this->_value, value);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
 template <typename T>
 ft_optional<T>::ft_optional(T&& value)
-    : _value(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex()
+    : _value(ft_nullptr), _mutex(ft_nullptr)
 {
-    _value = static_cast<T*>(cma_malloc(sizeof(T)));
-    if (_value == ft_nullptr)
-        this->set_error(FT_ERR_NO_MEMORY);
-    else
+    this->_value = static_cast<T*>(cma_malloc(sizeof(T)));
+    if (this->_value == ft_nullptr)
     {
-        construct_at(_value, ft_move(value));
-        this->set_error(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
+        return ;
     }
+    construct_at(this->_value, ft_move(value));
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -93,49 +96,51 @@ template <typename T>
 ft_optional<T>::~ft_optional()
 {
     this->reset();
+    this->disable_thread_safety();
     return ;
 }
 
 template <typename T>
 ft_optional<T>::ft_optional(ft_optional&& other) noexcept
-    : _value(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex()
+    : _value(ft_nullptr), _mutex(ft_nullptr)
 {
-    ft_unique_lock<pt_mutex> other_guard;
-    int lock_error;
+    const ft_optional *lower = ft_nullptr;
+    const ft_optional *upper = ft_nullptr;
+    int lock_error = ft_optional::lock_pair(*this, other, lower, upper);
 
-    lock_error = other.lock_self(other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->_value = ft_nullptr;
-        this->_error_code = lock_error;
-        this->set_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return ;
     }
     this->_value = other._value;
-    this->_error_code = other._error_code;
     other._value = ft_nullptr;
-    other._error_code = FT_ERR_SUCCESSS;
-    this->set_error(this->_error_code);
-    other.set_error(FT_ERR_SUCCESSS);
+    int unlock_error = ft_optional::unlock_pair(lower, upper);
+
+    if (unlock_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(unlock_error);
+        return ;
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
 template <typename T>
 ft_optional<T>& ft_optional<T>::operator=(ft_optional&& other) noexcept
 {
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
-    int lock_error;
-
     if (this == &other)
     {
-        this->set_error(this->_error_code);
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (*this);
     }
-    lock_error = ft_optional<T>::lock_pair(*this, other, this_guard, other_guard);
+    const ft_optional *lower = ft_nullptr;
+    const ft_optional *upper = ft_nullptr;
+    int lock_error = ft_optional::lock_pair(*this, other, lower, upper);
+
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (*this);
     }
     if (this->_value != ft_nullptr)
@@ -145,83 +150,107 @@ ft_optional<T>& ft_optional<T>::operator=(ft_optional&& other) noexcept
         this->_value = ft_nullptr;
     }
     this->_value = other._value;
-    this->_error_code = other._error_code;
     other._value = ft_nullptr;
-    other._error_code = FT_ERR_SUCCESSS;
-    this->set_error(this->_error_code);
-    other.set_error(FT_ERR_SUCCESSS);
-    return (*this);
-}
+    int unlock_error = ft_optional::unlock_pair(lower, upper);
 
-template <typename T>
-void ft_optional<T>::set_error(int error) const
-{
-    this->_error_code = error;
-    return ;
+    if (unlock_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(unlock_error);
+        return (*this);
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return (*this);
 }
 
 template <typename T>
 bool ft_optional<T>::has_value() const
 {
-    ft_unique_lock<pt_mutex> guard;
-    int lock_error;
-    bool result;
+    int lock_error = this->lock_mutex();
+    bool result = false;
 
-    lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        const_cast<ft_optional*>(this)->set_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (false);
     }
     result = (this->_value != ft_nullptr);
-    const_cast<ft_optional*>(this)->set_error(FT_ERR_SUCCESSS);
+    int unlock_error = this->unlock_mutex();
+
+    if (unlock_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(unlock_error);
+        return (result);
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
 
 template <typename T>
 T& ft_optional<T>::value()
 {
-    ft_unique_lock<pt_mutex> guard;
-    int lock_error;
-    T *reference_pointer;
+    int lock_error = this->lock_mutex();
 
-    lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (ft_optional<T>::fallback_reference());
     }
     if (this->_value == ft_nullptr)
     {
-        this->set_error(FT_ERR_EMPTY);
+        int unlock_error = this->unlock_mutex();
+
+        if (unlock_error != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(unlock_error);
+            return (ft_optional<T>::fallback_reference());
+        }
+        ft_global_error_stack_push(FT_ERR_EMPTY);
         return (ft_optional<T>::fallback_reference());
     }
-    reference_pointer = this->_value;
-    this->set_error(FT_ERR_SUCCESSS);
-    return (*reference_pointer);
+    T &reference = *(this->_value);
+    int unlock_error = this->unlock_mutex();
+
+    if (unlock_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(unlock_error);
+        return (ft_optional<T>::fallback_reference());
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return (reference);
 }
 
 template <typename T>
 const T& ft_optional<T>::value() const
 {
-    ft_unique_lock<pt_mutex> guard;
-    int lock_error;
-    const T *reference_pointer;
+    int lock_error = this->lock_mutex();
 
-    lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        const_cast<ft_optional*>(this)->set_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return (ft_optional<T>::fallback_reference());
     }
     if (this->_value == ft_nullptr)
     {
-        const_cast<ft_optional*>(this)->set_error(FT_ERR_EMPTY);
+        int unlock_error = this->unlock_mutex();
+
+        if (unlock_error != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(unlock_error);
+            return (ft_optional<T>::fallback_reference());
+        }
+        ft_global_error_stack_push(FT_ERR_EMPTY);
         return (ft_optional<T>::fallback_reference());
     }
-    reference_pointer = this->_value;
-    const_cast<ft_optional*>(this)->set_error(FT_ERR_SUCCESSS);
-    return (*reference_pointer);
+    const T &reference = *(this->_value);
+    int unlock_error = this->unlock_mutex();
+
+    if (unlock_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(unlock_error);
+        return (ft_optional<T>::fallback_reference());
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return (reference);
 }
 
 template <typename T>
@@ -247,92 +276,119 @@ void ft_optional<T>::sleep_backoff() noexcept
 }
 
 template <typename T>
-int ft_optional<T>::lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept
+int ft_optional<T>::lock_mutex() const noexcept
 {
-    guard = ft_unique_lock<pt_mutex>(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        return (guard.get_error());
-    }
-    return (FT_ERR_SUCCESSS);
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    return (pt_recursive_mutex_lock_with_error(*this->_mutex));
+}
+
+template <typename T>
+int ft_optional<T>::unlock_mutex() const noexcept
+{
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    return (pt_recursive_mutex_unlock_with_error(*this->_mutex));
+}
+
+template <typename T>
+int ft_optional<T>::prepare_thread_safety() noexcept
+{
+    if (this->_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    int result = pt_recursive_mutex_create_with_error(&this->_mutex);
+    if (result != FT_ERR_SUCCESSS && this->_mutex != ft_nullptr)
+        pt_recursive_mutex_destroy(&this->_mutex);
+    return (result);
+}
+
+template <typename T>
+void ft_optional<T>::teardown_thread_safety() noexcept
+{
+    pt_recursive_mutex_destroy(&this->_mutex);
+}
+
+template <typename T>
+int ft_optional<T>::enable_thread_safety() noexcept
+{
+    int result = this->prepare_thread_safety();
+    ft_global_error_stack_push(result);
+    return (result);
+}
+
+template <typename T>
+void ft_optional<T>::disable_thread_safety() noexcept
+{
+    this->teardown_thread_safety();
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return ;
 }
 
 template <typename T>
 int ft_optional<T>::lock_pair(ft_optional &first, ft_optional &second,
-    ft_unique_lock<pt_mutex> &first_guard,
-    ft_unique_lock<pt_mutex> &second_guard) noexcept
+    const ft_optional *&lower,
+    const ft_optional *&upper) noexcept
 {
-    ft_optional *ordered_first;
-    ft_optional *ordered_second;
-    bool swapped;
-
+    lower = &first;
+    upper = &second;
     if (&first == &second)
+        return (first.lock_mutex());
+    if (lower > upper)
     {
-        ft_unique_lock<pt_mutex> single_guard(first._mutex);
+        const ft_optional *temporary = lower;
 
-        if (single_guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            return (single_guard.get_error());
-        }
-        first_guard = ft_move(single_guard);
-        second_guard = ft_unique_lock<pt_mutex>();
-        return (FT_ERR_SUCCESSS);
-    }
-    ordered_first = &first;
-    ordered_second = &second;
-    swapped = false;
-    if (ordered_first > ordered_second)
-    {
-        ft_optional *temporary;
-
-        temporary = ordered_first;
-        ordered_first = ordered_second;
-        ordered_second = temporary;
-        swapped = true;
+        lower = upper;
+        upper = temporary;
     }
     while (true)
     {
-        ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
+        int lower_error = lower->lock_mutex();
 
-        if (lower_guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            return (lower_guard.get_error());
-        }
-        ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ERR_SUCCESSS)
-        {
-            if (!swapped)
-            {
-                first_guard = ft_move(lower_guard);
-                second_guard = ft_move(upper_guard);
-            }
-            else
-            {
-                first_guard = ft_move(upper_guard);
-                second_guard = ft_move(lower_guard);
-            }
+        if (lower_error != FT_ERR_SUCCESSS)
+            return (lower_error);
+        int upper_error = upper->lock_mutex();
+
+        if (upper_error == FT_ERR_SUCCESSS)
             return (FT_ERR_SUCCESSS);
-        }
-        if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
+        if (upper_error != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            return (upper_guard.get_error());
+            lower->unlock_mutex();
+            return (upper_error);
         }
-        if (lower_guard.owns_lock())
-            lower_guard.unlock();
+        lower->unlock_mutex();
         ft_optional<T>::sleep_backoff();
     }
 }
 
 template <typename T>
+int ft_optional<T>::unlock_pair(const ft_optional *lower, const ft_optional *upper) noexcept
+{
+    int error;
+    int final_error = FT_ERR_SUCCESSS;
+
+    if (upper != ft_nullptr)
+    {
+        error = upper->unlock_mutex();
+        if (error != FT_ERR_SUCCESSS)
+            final_error = error;
+    }
+    if (lower != ft_nullptr && lower != upper)
+    {
+        error = lower->unlock_mutex();
+        if (error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
+            final_error = error;
+    }
+    return (final_error);
+}
+
+template <typename T>
 void ft_optional<T>::reset()
 {
-    ft_unique_lock<pt_mutex> guard;
-    int lock_error;
+    int lock_error = this->lock_mutex();
 
-    lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(lock_error);
+        ft_global_error_stack_push(lock_error);
         return ;
     }
     if (this->_value != ft_nullptr)
@@ -341,46 +397,23 @@ void ft_optional<T>::reset()
         cma_free(this->_value);
         this->_value = ft_nullptr;
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    int unlock_error = this->unlock_mutex();
+
+    if (unlock_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(unlock_error);
+        return ;
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
+#ifdef LIBFT_TEST_BUILD
 template <typename T>
-int ft_optional<T>::get_error() const
+pt_recursive_mutex *ft_optional<T>::get_mutex_for_validation() const noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
-    int lock_error;
-    int error_code;
-
-    lock_error = this->lock_self(guard);
-    if (lock_error != FT_ERR_SUCCESSS)
-    {
-        const_cast<ft_optional*>(this)->set_error(lock_error);
-        return (lock_error);
-    }
-    error_code = this->_error_code;
-    const_cast<ft_optional*>(this)->set_error(error_code);
-    return (error_code);
+    return (this->_mutex);
 }
+#endif
 
-template <typename T>
-const char* ft_optional<T>::get_error_str() const
-{
-    ft_unique_lock<pt_mutex> guard;
-    int lock_error;
-    int error_code;
-    const char *result;
-
-    lock_error = this->lock_self(guard);
-    if (lock_error != FT_ERR_SUCCESSS)
-    {
-        const_cast<ft_optional*>(this)->set_error(lock_error);
-        return (ft_strerror(lock_error));
-    }
-    error_code = this->_error_code;
-    result = ft_strerror(error_code);
-    const_cast<ft_optional*>(this)->set_error(error_code);
-    return (result);
-}
-
-#endif 
+#endif

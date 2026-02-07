@@ -303,11 +303,15 @@ ft_scheduled_task_handle::ft_scheduled_task_handle(ft_task_scheduler *scheduler,
         ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
-    if (state.hasError())
     {
-        this->_scheduler = ft_nullptr;
-        ft_global_error_stack_push(state.get_error());
-        return ;
+        int state_error = ft_global_error_stack_peek_last_error();
+
+        if (state_error != FT_ERR_SUCCESSS)
+        {
+            this->_scheduler = ft_nullptr;
+            ft_global_error_stack_push(state_error);
+            return ;
+        }
     }
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
@@ -328,6 +332,17 @@ ft_scheduled_task_handle::ft_scheduled_task_handle(const ft_scheduled_task_handl
     }
     this->_state = other._state;
     this->_scheduler = other._scheduler;
+    {
+        int state_error = ft_global_error_stack_peek_last_error();
+
+        if (state_error != FT_ERR_SUCCESSS)
+        {
+            this->_scheduler = ft_nullptr;
+            ft_global_error_stack_push(state_error);
+            other.unlock_internal(lock_acquired);
+            return ;
+        }
+    }
     if (other._state_mutex != ft_nullptr)
     {
         if (this->enable_thread_safety() != 0)
@@ -336,13 +351,6 @@ ft_scheduled_task_handle::ft_scheduled_task_handle(const ft_scheduled_task_handl
             other.unlock_internal(lock_acquired);
             return ;
         }
-    }
-    if (this->_state.hasError())
-    {
-        this->_scheduler = ft_nullptr;
-        ft_global_error_stack_push(this->_state.get_error());
-        other.unlock_internal(lock_acquired);
-        return ;
     }
     ft_global_error_stack_push(other.operation_error_last_error());
     other.unlock_internal(lock_acquired);
@@ -376,6 +384,18 @@ ft_scheduled_task_handle &ft_scheduled_task_handle::operator=(const ft_scheduled
     }
     this->_state = other._state;
     this->_scheduler = other._scheduler;
+    {
+        int state_error = ft_global_error_stack_peek_last_error();
+
+        if (state_error != FT_ERR_SUCCESSS)
+        {
+            this->_scheduler = ft_nullptr;
+            ft_global_error_stack_push(state_error);
+            other.unlock_internal(other_lock_acquired);
+            this->unlock_internal(this_lock_acquired);
+            return (*this);
+        }
+    }
     this->teardown_thread_safety();
     if (other._state_mutex != ft_nullptr)
     {
@@ -385,14 +405,6 @@ ft_scheduled_task_handle &ft_scheduled_task_handle::operator=(const ft_scheduled
             this->unlock_internal(this_lock_acquired);
             return (*this);
         }
-    }
-    if (this->_state.hasError())
-    {
-        this->_scheduler = ft_nullptr;
-        ft_global_error_stack_push(this->_state.get_error());
-        other.unlock_internal(other_lock_acquired);
-        this->unlock_internal(this_lock_acquired);
-        return (*this);
     }
     ft_global_error_stack_push(other.operation_error_last_error());
     other.unlock_internal(other_lock_acquired);
@@ -1098,11 +1110,15 @@ bool ft_task_scheduler::cancel_task_state(const ft_sharedptr<ft_scheduled_task_s
         return (false);
     }
     state_copy = state;
-    if (state_copy.hasError())
     {
-        ft_global_error_stack_push(state_copy.get_error());
-        this->unlock_internal(scheduler_lock_acquired);
-        return (false);
+        int state_error = ft_global_error_stack_peek_last_error();
+
+        if (state_error != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(state_error);
+            this->unlock_internal(scheduler_lock_acquired);
+            return (false);
+        }
     }
     state_pointer = state_copy.get();
     if (!state_pointer)

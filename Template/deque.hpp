@@ -5,11 +5,9 @@
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
-#include "../Libft/libft.hpp"
-#include "../PThread/mutex.hpp"
-#include "../PThread/pthread.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include <cstddef>
-#include <utility>
 #include "move.hpp"
 
 template <typename ElementType>
@@ -19,21 +17,20 @@ class ft_deque
         struct DequeNode
         {
             ElementType _data;
-            DequeNode* _prev;
-            DequeNode* _next;
+            DequeNode*  _prev;
+            DequeNode*  _next;
         };
 
-        DequeNode*           _front;
-        DequeNode*           _back;
-        size_t               _size;
-        mutable int          _error_code;
-        mutable pt_mutex*    _mutex;
-        bool                 _thread_safe_enabled;
+        DequeNode* _front;
+        DequeNode* _back;
+        size_t     _size;
+        mutable pt_recursive_mutex* _mutex;
 
-        void    set_error(int error) const;
-        int     lock_internal(bool *lock_acquired) const;
-        void    unlock_internal(bool lock_acquired) const;
-        void    teardown_thread_safety();
+        void destroy_all_unlocked();
+        int  lock_internal(bool *lock_acquired) const;
+        int  unlock_internal(bool lock_acquired) const;
+        int  prepare_thread_safety();
+        void teardown_thread_safety();
 
     public:
         ft_deque();
@@ -45,11 +42,11 @@ class ft_deque
         ft_deque(ft_deque&& other) noexcept;
         ft_deque& operator=(ft_deque&& other) noexcept;
 
-        int     enable_thread_safety();
-        void    disable_thread_safety();
-        bool    is_thread_safe() const;
-        int     lock(bool *lock_acquired) const;
-        void    unlock(bool lock_acquired) const;
+        int  enable_thread_safety();
+        void disable_thread_safety();
+        bool is_thread_safe() const;
+        int  lock(bool *lock_acquired) const;
+        void unlock(bool lock_acquired) const;
 
         void push_front(const ElementType& value);
         void push_front(ElementType&& value);
@@ -66,169 +63,164 @@ class ft_deque
         size_t size() const;
         bool empty() const;
 
-        int get_error() const;
-        const char* get_error_str() const;
-
         void clear();
+
+    #ifdef LIBFT_TEST_BUILD
+        pt_recursive_mutex* get_mutex_for_validation() const noexcept;
+    #endif
 };
 
 template <typename ElementType>
 ft_deque<ElementType>::ft_deque()
-    : _front(ft_nullptr), _back(ft_nullptr), _size(0),
-      _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr),
-      _thread_safe_enabled(false)
+    : _front(ft_nullptr), _back(ft_nullptr), _size(0), _mutex(ft_nullptr)
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
 template <typename ElementType>
 ft_deque<ElementType>::~ft_deque()
 {
-    this->clear();
+    bool lock_acquired = false;
+    int  lock_error = this->lock_internal(&lock_acquired);
+
+    if (lock_error == FT_ERR_SUCCESSS)
+    {
+        this->destroy_all_unlocked();
+        this->_front = ft_nullptr;
+        this->_back = ft_nullptr;
+        this->_size = 0;
+        int unlock_error = this->unlock_internal(lock_acquired);
+        if (unlock_error != FT_ERR_SUCCESSS)
+            ft_global_error_stack_push(unlock_error);
+        else
+            ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    }
+    else
+    {
+        ft_global_error_stack_push(lock_error);
+    }
     this->teardown_thread_safety();
     return ;
 }
 
 template <typename ElementType>
-ft_deque<ElementType>::ft_deque(ft_deque&& other) noexcept
-    : _front(ft_nullptr), _back(ft_nullptr), _size(0),
-      _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr),
-      _thread_safe_enabled(false)
+ft_deque<ElementType>::ft_deque(ft_deque<ElementType>&& other) noexcept
+    : _front(ft_nullptr), _back(ft_nullptr), _size(0), _mutex(ft_nullptr)
 {
-    bool other_lock_acquired;
-    bool other_thread_safe;
-    int  other_error_code;
+    bool                other_thread_safe;
+    bool                lock_acquired;
+    int                 lock_error;
 
-    other_lock_acquired = false;
-    other_thread_safe = false;
-    other_error_code = FT_ERR_SUCCESSS;
-    if (other.lock_internal(&other_lock_acquired) != 0)
+    other_thread_safe = (other._mutex != ft_nullptr);
+    lock_acquired = false;
+    lock_error = other.lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
+        ft_global_error_stack_push(lock_error);
         return ;
     }
-    other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
-    other_error_code = other._error_code;
     this->_front = other._front;
     this->_back = other._back;
     this->_size = other._size;
     other._front = ft_nullptr;
     other._back = ft_nullptr;
     other._size = 0;
-    other._error_code = FT_ERR_SUCCESSS;
-    other.unlock_internal(other_lock_acquired);
+    other.unlock_internal(lock_acquired);
     other.teardown_thread_safety();
     if (other_thread_safe)
     {
-        if (this->enable_thread_safety() != 0)
+        int enable_error;
+
+        enable_error = this->enable_thread_safety();
+        if (enable_error != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(enable_error);
             return ;
+        }
     }
-    this->_error_code = other_error_code;
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
 template <typename ElementType>
-ft_deque<ElementType>& ft_deque<ElementType>::operator=(ft_deque&& other) noexcept
+ft_deque<ElementType>& ft_deque<ElementType>::operator=(ft_deque<ElementType>&& other) noexcept
 {
-    if (this != &other)
+    if (this == &other)
     {
-        bool this_lock_acquired;
-        bool other_lock_acquired;
-        bool other_thread_safe;
-        int  other_error_code;
-
-        this_lock_acquired = false;
-        other_lock_acquired = false;
-        other_thread_safe = false;
-        other_error_code = FT_ERR_SUCCESSS;
-        if (this->lock_internal(&this_lock_acquired) != 0)
-        {
-            this->set_error(ft_errno);
-            return (*this);
-        }
-        this->clear();
-        this->_front = ft_nullptr;
-        this->_back = ft_nullptr;
-        this->_size = 0;
-        this->_error_code = FT_ERR_SUCCESSS;
-        this->unlock_internal(this_lock_acquired);
-        this->teardown_thread_safety();
-        if (other.lock_internal(&other_lock_acquired) != 0)
-        {
-            this->set_error(ft_errno);
-            return (*this);
-        }
-        other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
-        other_error_code = other._error_code;
-        this->_front = other._front;
-        this->_back = other._back;
-        this->_size = other._size;
-        other._front = ft_nullptr;
-        other._back = ft_nullptr;
-        other._size = 0;
-        other._error_code = FT_ERR_SUCCESSS;
-        other.unlock_internal(other_lock_acquired);
-        other.teardown_thread_safety();
-        if (other_thread_safe)
-        {
-            if (this->enable_thread_safety() != 0)
-                return (*this);
-        }
-        this->_error_code = other_error_code;
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        return (*this);
     }
-    this->set_error(FT_ERR_SUCCESSS);
-    return (*this);
-}
+    bool                other_thread_safe;
+    bool                lock_acquired;
+    int                 lock_error;
+    bool                other_lock_acquired;
+    int                 other_lock_error;
 
-template <typename ElementType>
-void ft_deque<ElementType>::set_error(int error) const
-{
-    this->_error_code = error;
-    ft_errno = error;
-    return ;
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(lock_error);
+        return (*this);
+    }
+    this->destroy_all_unlocked();
+    this->_front = ft_nullptr;
+    this->_back = ft_nullptr;
+    this->_size = 0;
+    this->unlock_internal(lock_acquired);
+    this->teardown_thread_safety();
+    other_lock_acquired = false;
+    other_lock_error = other.lock_internal(&other_lock_acquired);
+    if (other_lock_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(other_lock_error);
+        return (*this);
+    }
+    this->_front = other._front;
+    this->_back = other._back;
+    this->_size = other._size;
+    other._front = ft_nullptr;
+    other._back = ft_nullptr;
+    other._size = 0;
+    other.unlock_internal(other_lock_acquired);
+    other_thread_safe = (other._mutex != ft_nullptr);
+    other.teardown_thread_safety();
+    if (other_thread_safe)
+    {
+        int enable_error;
+
+        enable_error = this->enable_thread_safety();
+        if (enable_error != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(enable_error);
+            return (*this);
+        }
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return (*this);
 }
 
 template <typename ElementType>
 int ft_deque<ElementType>::enable_thread_safety()
 {
-    void     *memory;
-    pt_mutex *mutex_pointer;
+    int result;
 
-    if (this->_thread_safe_enabled && this->_mutex != ft_nullptr)
+    if (this->_mutex != ft_nullptr)
     {
-        this->set_error(FT_ERR_SUCCESSS);
-        return (0);
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESSS);
     }
-    memory = cma_malloc(sizeof(pt_mutex));
-    if (memory == ft_nullptr)
-    {
-        this->set_error(FT_ERR_NO_MEMORY);
-        return (-1);
-    }
-    mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
-    {
-        int mutex_error;
-
-        mutex_error = mutex_pointer->get_error();
-        mutex_pointer->~pt_mutex();
-        cma_free(memory);
-        this->set_error(mutex_error);
-        return (-1);
-    }
-    this->_mutex = mutex_pointer;
-    this->_thread_safe_enabled = true;
-    this->set_error(FT_ERR_SUCCESSS);
-    return (0);
+    result = this->prepare_thread_safety();
+    ft_global_error_stack_push(result);
+    return (result);
 }
 
 template <typename ElementType>
 void ft_deque<ElementType>::disable_thread_safety()
 {
     this->teardown_thread_safety();
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -237,8 +229,8 @@ bool ft_deque<ElementType>::is_thread_safe() const
 {
     bool enabled;
 
-    enabled = (this->_thread_safe_enabled && this->_mutex != ft_nullptr);
-    const_cast<ft_deque<ElementType> *>(this)->set_error(FT_ERR_SUCCESSS);
+    enabled = (this->_mutex != ft_nullptr);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (enabled);
 }
 
@@ -248,24 +240,22 @@ int ft_deque<ElementType>::lock(bool *lock_acquired) const
     int result;
 
     result = this->lock_internal(lock_acquired);
-    if (result != 0)
-        const_cast<ft_deque<ElementType> *>(this)->set_error(ft_errno);
-    else
-        const_cast<ft_deque<ElementType> *>(this)->set_error(FT_ERR_SUCCESSS);
-    return (result);
+    if (result != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(result);
+        return (-1);
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return (0);
 }
 
 template <typename ElementType>
 void ft_deque<ElementType>::unlock(bool lock_acquired) const
 {
-    this->unlock_internal(lock_acquired);
-    if (this->_mutex != ft_nullptr && this->_mutex->get_error() != FT_ERR_SUCCESSS)
-        const_cast<ft_deque<ElementType> *>(this)->set_error(this->_mutex->get_error());
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-        const_cast<ft_deque<ElementType> *>(this)->set_error(FT_ERR_SUCCESSS);
-    }
+    int unlock_error;
+
+    unlock_error = this->unlock_internal(lock_acquired);
+    ft_global_error_stack_push(unlock_error);
     return ;
 }
 
@@ -274,17 +264,19 @@ void ft_deque<ElementType>::push_front(const ElementType& value)
 {
     DequeNode* node;
     bool       lock_acquired;
+    int        lock_error;
 
     lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
+        ft_global_error_stack_push(lock_error);
         return ;
     }
     node = static_cast<DequeNode*>(cma_malloc(sizeof(DequeNode)));
     if (node == ft_nullptr)
     {
-        this->set_error(FT_ERR_NO_MEMORY);
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         this->unlock_internal(lock_acquired);
         return ;
     }
@@ -297,7 +289,7 @@ void ft_deque<ElementType>::push_front(const ElementType& value)
         this->_front->_prev = node;
     this->_front = node;
     this->_size += 1;
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -307,17 +299,19 @@ void ft_deque<ElementType>::push_front(ElementType&& value)
 {
     DequeNode* node;
     bool       lock_acquired;
+    int        lock_error;
 
     lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
+        ft_global_error_stack_push(lock_error);
         return ;
     }
     node = static_cast<DequeNode*>(cma_malloc(sizeof(DequeNode)));
     if (node == ft_nullptr)
     {
-        this->set_error(FT_ERR_NO_MEMORY);
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         this->unlock_internal(lock_acquired);
         return ;
     }
@@ -330,7 +324,7 @@ void ft_deque<ElementType>::push_front(ElementType&& value)
         this->_front->_prev = node;
     this->_front = node;
     this->_size += 1;
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -340,17 +334,19 @@ void ft_deque<ElementType>::push_back(const ElementType& value)
 {
     DequeNode* node;
     bool       lock_acquired;
+    int        lock_error;
 
     lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
+        ft_global_error_stack_push(lock_error);
         return ;
     }
     node = static_cast<DequeNode*>(cma_malloc(sizeof(DequeNode)));
     if (node == ft_nullptr)
     {
-        this->set_error(FT_ERR_NO_MEMORY);
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         this->unlock_internal(lock_acquired);
         return ;
     }
@@ -363,7 +359,7 @@ void ft_deque<ElementType>::push_back(const ElementType& value)
         this->_back->_next = node;
     this->_back = node;
     this->_size += 1;
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -373,17 +369,19 @@ void ft_deque<ElementType>::push_back(ElementType&& value)
 {
     DequeNode* node;
     bool       lock_acquired;
+    int        lock_error;
 
     lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
+        ft_global_error_stack_push(lock_error);
         return ;
     }
     node = static_cast<DequeNode*>(cma_malloc(sizeof(DequeNode)));
     if (node == ft_nullptr)
     {
-        this->set_error(FT_ERR_NO_MEMORY);
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         this->unlock_internal(lock_acquired);
         return ;
     }
@@ -396,7 +394,7 @@ void ft_deque<ElementType>::push_back(ElementType&& value)
         this->_back->_next = node;
     this->_back = node;
     this->_size += 1;
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -407,16 +405,18 @@ ElementType ft_deque<ElementType>::pop_front()
     bool        lock_acquired;
     DequeNode  *node;
     ElementType value;
+    int         lock_error;
 
     lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
+        ft_global_error_stack_push(lock_error);
         return (ElementType());
     }
     if (this->_front == ft_nullptr)
     {
-        this->set_error(FT_ERR_EMPTY);
+        ft_global_error_stack_push(FT_ERR_EMPTY);
         this->unlock_internal(lock_acquired);
         return (ElementType());
     }
@@ -430,7 +430,7 @@ ElementType ft_deque<ElementType>::pop_front()
     destroy_at(&node->_data);
     cma_free(node);
     this->_size -= 1;
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (value);
 }
@@ -441,16 +441,18 @@ ElementType ft_deque<ElementType>::pop_back()
     bool        lock_acquired;
     DequeNode  *node;
     ElementType value;
+    int         lock_error;
 
     lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
+        ft_global_error_stack_push(lock_error);
         return (ElementType());
     }
     if (this->_back == ft_nullptr)
     {
-        this->set_error(FT_ERR_EMPTY);
+        ft_global_error_stack_push(FT_ERR_EMPTY);
         this->unlock_internal(lock_acquired);
         return (ElementType());
     }
@@ -464,7 +466,7 @@ ElementType ft_deque<ElementType>::pop_back()
     destroy_at(&node->_data);
     cma_free(node);
     this->_size -= 1;
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (value);
 }
@@ -475,21 +477,23 @@ ElementType& ft_deque<ElementType>::front()
     static ElementType error_element = ElementType();
     bool               lock_acquired;
     ElementType       *value_pointer;
+    int                lock_error;
 
     lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
+        ft_global_error_stack_push(lock_error);
         return (error_element);
     }
     if (this->_front == ft_nullptr)
     {
-        this->set_error(FT_ERR_EMPTY);
+        ft_global_error_stack_push(FT_ERR_EMPTY);
         this->unlock_internal(lock_acquired);
         return (error_element);
     }
     value_pointer = &this->_front->_data;
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (*value_pointer);
 }
@@ -500,21 +504,23 @@ const ElementType& ft_deque<ElementType>::front() const
     static ElementType error_element = ElementType();
     bool               lock_acquired;
     const ElementType *value_pointer;
+    int                lock_error;
 
     lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        const_cast<ft_deque<ElementType> *>(this)->set_error(ft_errno);
+        ft_global_error_stack_push(lock_error);
         return (error_element);
     }
     if (this->_front == ft_nullptr)
     {
-        const_cast<ft_deque<ElementType> *>(this)->set_error(FT_ERR_EMPTY);
+        ft_global_error_stack_push(FT_ERR_EMPTY);
         this->unlock_internal(lock_acquired);
         return (error_element);
     }
     value_pointer = &this->_front->_data;
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (*value_pointer);
 }
@@ -525,21 +531,23 @@ ElementType& ft_deque<ElementType>::back()
     static ElementType error_element = ElementType();
     bool               lock_acquired;
     ElementType       *value_pointer;
+    int                lock_error;
 
     lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
+        ft_global_error_stack_push(lock_error);
         return (error_element);
     }
     if (this->_back == ft_nullptr)
     {
-        this->set_error(FT_ERR_EMPTY);
+        ft_global_error_stack_push(FT_ERR_EMPTY);
         this->unlock_internal(lock_acquired);
         return (error_element);
     }
     value_pointer = &this->_back->_data;
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (*value_pointer);
 }
@@ -550,21 +558,23 @@ const ElementType& ft_deque<ElementType>::back() const
     static ElementType error_element = ElementType();
     bool               lock_acquired;
     const ElementType *value_pointer;
+    int                lock_error;
 
     lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        const_cast<ft_deque<ElementType> *>(this)->set_error(ft_errno);
+        ft_global_error_stack_push(lock_error);
         return (error_element);
     }
     if (this->_back == ft_nullptr)
     {
-        const_cast<ft_deque<ElementType> *>(this)->set_error(FT_ERR_EMPTY);
+        ft_global_error_stack_push(FT_ERR_EMPTY);
         this->unlock_internal(lock_acquired);
         return (error_element);
     }
     value_pointer = &this->_back->_data;
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (*value_pointer);
 }
@@ -574,15 +584,17 @@ size_t ft_deque<ElementType>::size() const
 {
     bool   lock_acquired;
     size_t current_size;
+    int    lock_error;
 
     lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        const_cast<ft_deque<ElementType> *>(this)->set_error(ft_errno);
+        ft_global_error_stack_push(lock_error);
         return (0);
     }
     current_size = this->_size;
-    const_cast<ft_deque<ElementType> *>(this)->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (current_size);
 }
@@ -592,54 +604,53 @@ bool ft_deque<ElementType>::empty() const
 {
     bool lock_acquired;
     bool is_empty;
+    int  lock_error;
 
     lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        const_cast<ft_deque<ElementType> *>(this)->set_error(ft_errno);
+        ft_global_error_stack_push(lock_error);
         return (true);
     }
     is_empty = (this->_size == 0);
-    const_cast<ft_deque<ElementType> *>(this)->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (is_empty);
 }
 
 template <typename ElementType>
-int ft_deque<ElementType>::get_error() const
-{
-    return (this->_error_code);
-}
-
-template <typename ElementType>
-const char* ft_deque<ElementType>::get_error_str() const
-{
-    return (ft_strerror(this->_error_code));
-}
-
-template <typename ElementType>
 void ft_deque<ElementType>::clear()
 {
-    bool       lock_acquired;
-    DequeNode *node;
+    bool lock_acquired;
+    int  lock_error;
 
     lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
+        ft_global_error_stack_push(lock_error);
         return ;
     }
+    this->destroy_all_unlocked();
+    this->_front = ft_nullptr;
+    this->_back = ft_nullptr;
+    this->_size = 0;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    this->unlock_internal(lock_acquired);
+    return ;
+}
+
+template <typename ElementType>
+void ft_deque<ElementType>::destroy_all_unlocked()
+{
     while (this->_front != ft_nullptr)
     {
-        node = this->_front;
+        DequeNode *node = this->_front;
         this->_front = this->_front->_next;
         destroy_at(&node->_data);
         cma_free(node);
     }
-    this->_back = ft_nullptr;
-    this->_size = 0;
-    this->set_error(FT_ERR_SUCCESSS);
-    this->unlock_internal(lock_acquired);
     return ;
 }
 
@@ -648,60 +659,45 @@ int ft_deque<ElementType>::lock_internal(bool *lock_acquired) const
 {
     if (lock_acquired)
         *lock_acquired = false;
-    if (!this->_thread_safe_enabled || this->_mutex == ft_nullptr)
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-        return (0);
-    }
-    this->_mutex->lock(THREAD_ID);
-    if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
-    {
-        if (this->_mutex->get_error() == FT_ERR_MUTEX_ALREADY_LOCKED)
-        {
-            bool state_lock_acquired;
-
-            state_lock_acquired = false;
-            ft_errno = FT_ERR_SUCCESSS;
-            if (this->_mutex->lock_state(&state_lock_acquired) == 0)
-                this->_mutex->unlock_state(state_lock_acquired);
-            ft_errno = FT_ERR_SUCCESSS;
-            return (0);
-        }
-        ft_errno = this->_mutex->get_error();
-        return (-1);
-    }
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    int result = pt_recursive_mutex_lock_with_error(*this->_mutex);
+    if (result != FT_ERR_SUCCESSS)
+        return (result);
     if (lock_acquired)
         *lock_acquired = true;
-    ft_errno = FT_ERR_SUCCESSS;
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
 template <typename ElementType>
-void ft_deque<ElementType>::unlock_internal(bool lock_acquired) const
+int ft_deque<ElementType>::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || this->_mutex == ft_nullptr)
-        return ;
-    this->_mutex->unlock(THREAD_ID);
-    if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = this->_mutex->get_error();
-        return ;
-    }
-    ft_errno = FT_ERR_SUCCESSS;
-    return ;
+        return (FT_ERR_SUCCESSS);
+    return (pt_recursive_mutex_unlock_with_error(*this->_mutex));
+}
+
+template <typename ElementType>
+int ft_deque<ElementType>::prepare_thread_safety()
+{
+    if (this->_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    return (pt_recursive_mutex_create_with_error(&this->_mutex));
 }
 
 template <typename ElementType>
 void ft_deque<ElementType>::teardown_thread_safety()
 {
-    if (this->_mutex != ft_nullptr)
-    {
-        this->_mutex->~pt_mutex();
-        cma_free(this->_mutex);
-        this->_mutex = ft_nullptr;
-    }
-    this->_thread_safe_enabled = false;
+    pt_recursive_mutex_destroy(&this->_mutex);
     return ;
 }
+
+#ifdef LIBFT_TEST_BUILD
+template <typename ElementType>
+pt_recursive_mutex* ft_deque<ElementType>::get_mutex_for_validation() const noexcept
+{
+    return (this->_mutex);
+}
+#endif
 
 #endif

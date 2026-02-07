@@ -3,13 +3,13 @@
 
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
-#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include <atomic>
 #include <utility>
 #include <new>
 #include <cstdlib>
-#include <mutex>
 #include "move.hpp"
 
 template <typename ValueType>
@@ -18,20 +18,13 @@ class ft_promise
     private:
         ValueType _value;
         std::atomic<bool> _ready;
-        mutable int _error_code;
-        bool _thread_safe_enabled;
-        mutable pt_mutex *_mutex;
-
-        void set_error_unlocked(int error) const;
-        void record_operation_error(int error_code) const noexcept;
+        mutable pt_recursive_mutex *_mutex;
         int lock_internal(bool *lock_acquired) const;
         int unlock_internal(bool lock_acquired) const;
         int prepare_thread_safety();
         void teardown_thread_safety();
 
     protected:
-        void set_error(int error) const;
-
     public:
         ft_promise();
         ~ft_promise();
@@ -45,14 +38,15 @@ class ft_promise
         void set_value(ValueType&& value);
         ValueType get() const;
         bool is_ready() const;
-        int get_error() const;
-        const char* get_error_str() const;
 
         int enable_thread_safety();
         void disable_thread_safety();
         bool is_thread_safe() const;
         int lock(bool *lock_acquired) const;
         void unlock(bool lock_acquired) const;
+    #ifdef LIBFT_TEST_BUILD
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
+    #endif
 };
 
 template <>
@@ -60,18 +54,11 @@ class ft_promise<void>
 {
     private:
         std::atomic<bool> _ready;
-        mutable int _error_code;
-        bool _thread_safe_enabled;
-        mutable pt_mutex *_mutex;
-
-        void set_error_unlocked(int error) const;
-        void record_operation_error(int error_code) const noexcept;
+        mutable pt_recursive_mutex *_mutex;
         int lock_internal(bool *lock_acquired) const;
         int unlock_internal(bool lock_acquired) const;
         int prepare_thread_safety();
         void teardown_thread_safety();
-
-        void set_error(int error) const;
 
     public:
         ft_promise();
@@ -85,307 +72,202 @@ class ft_promise<void>
         void set_value();
         void get() const;
         bool is_ready() const;
-        int get_error() const;
-        const char *get_error_str() const;
 
         int enable_thread_safety();
         void disable_thread_safety();
         bool is_thread_safe() const;
         int lock(bool *lock_acquired) const;
         void unlock(bool lock_acquired) const;
+    #ifdef LIBFT_TEST_BUILD
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
+    #endif
 };
 
 template <typename ValueType>
 ft_promise<ValueType>::ft_promise()
-    : _value(), _ready(false), _error_code(FT_ERR_SUCCESSS),
-      _thread_safe_enabled(false), _mutex(ft_nullptr)
+    : _value(), _ready(false), _mutex(ft_nullptr)
 {
-    if (this->prepare_thread_safety() != 0)
-        return ;
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
     return ;
 }
 
 template <typename ValueType>
 ft_promise<ValueType>::~ft_promise()
 {
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
-    this->teardown_thread_safety();
+    this->disable_thread_safety();
     return ;
 }
 
 inline ft_promise<void>::ft_promise()
-    : _ready(false), _error_code(FT_ERR_SUCCESSS),
-      _thread_safe_enabled(false), _mutex(ft_nullptr)
+    : _ready(false), _mutex(ft_nullptr)
 {
-    if (this->prepare_thread_safety() != 0)
-        return ;
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
     return ;
 }
 
 inline ft_promise<void>::~ft_promise()
 {
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
-    this->teardown_thread_safety();
-    return ;
-}
-
-template <typename ValueType>
-void ft_promise<ValueType>::set_error(int error) const
-{
-    bool lock_acquired;
-
-    lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
-        return ;
-    this->set_error_unlocked(error);
-    this->unlock_internal(lock_acquired);
-    return ;
-}
-
-inline void ft_promise<void>::set_error(int error) const
-{
-    bool lock_acquired;
-
-    lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
-        return ;
-    this->set_error_unlocked(error);
-    this->unlock_internal(lock_acquired);
-    return ;
-}
-
-template <typename ValueType>
-void ft_promise<ValueType>::set_error_unlocked(int error) const
-{
-    ft_promise<ValueType> *mutable_promise;
-
-    mutable_promise = const_cast<ft_promise<ValueType> *>(this);
-    mutable_promise->_error_code = error;
-    mutable_promise->record_operation_error(error);
-    return ;
-}
-
-inline void ft_promise<void>::set_error_unlocked(int error) const
-{
-    ft_promise<void> *mutable_promise;
-
-    mutable_promise = const_cast<ft_promise<void> *>(this);
-    mutable_promise->_error_code = error;
-    mutable_promise->record_operation_error(error);
-    return ;
-}
-
-template <typename ValueType>
-void ft_promise<ValueType>::record_operation_error(int error_code) const noexcept
-{
-    unsigned long long operation_id;
-
-    operation_id = ft_errno_next_operation_id();
-    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    return ;
-}
-
-inline void ft_promise<void>::record_operation_error(int error_code) const noexcept
-{
-    unsigned long long operation_id;
-
-    operation_id = ft_errno_next_operation_id();
-    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
+    this->disable_thread_safety();
     return ;
 }
 
 template <typename ValueType>
 int ft_promise<ValueType>::prepare_thread_safety()
 {
-    void *memory_pointer;
-    pt_mutex *mutex_pointer;
-
-    if (this->_thread_safe_enabled && this->_mutex != ft_nullptr)
-    {
-        this->set_error_unlocked(FT_ERR_SUCCESSS);
-        return (0);
-    }
-    memory_pointer = std::malloc(sizeof(pt_mutex));
-    if (memory_pointer == ft_nullptr)
-    {
-        this->set_error_unlocked(FT_ERR_NO_MEMORY);
-        return (-1);
-    }
-    mutex_pointer = new(memory_pointer) pt_mutex();
-        {
-            int mutex_error;
-
-            mutex_error = ft_global_error_stack_drop_last_error();
-            ft_global_error_stack_drop_last_error();
-            if (mutex_error != FT_ERR_SUCCESSS)
-            {
-                mutex_pointer->~pt_mutex();
-                std::free(memory_pointer);
-                this->set_error_unlocked(mutex_error);
-                return (-1);
-            }
-        }
-    this->_mutex = mutex_pointer;
-    this->_thread_safe_enabled = true;
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
-    return (0);
+    if (this->_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    return (pt_recursive_mutex_create_with_error(&this->_mutex));
 }
 
 inline int ft_promise<void>::prepare_thread_safety()
 {
-    void *memory_pointer;
-    pt_mutex *mutex_pointer;
-
-    if (this->_thread_safe_enabled && this->_mutex != ft_nullptr)
-    {
-        this->set_error_unlocked(FT_ERR_SUCCESSS);
-        return (0);
-    }
-    memory_pointer = std::malloc(sizeof(pt_mutex));
-    if (memory_pointer == ft_nullptr)
-    {
-        this->set_error_unlocked(FT_ERR_NO_MEMORY);
-        return (-1);
-    }
-    mutex_pointer = new(memory_pointer) pt_mutex();
-        {
-            int mutex_error;
-
-            mutex_error = ft_global_error_stack_drop_last_error();
-            ft_global_error_stack_drop_last_error();
-            if (mutex_error != FT_ERR_SUCCESSS)
-            {
-                mutex_pointer->~pt_mutex();
-                std::free(memory_pointer);
-                this->set_error_unlocked(mutex_error);
-                return (-1);
-            }
-        }
-    this->_mutex = mutex_pointer;
-    this->_thread_safe_enabled = true;
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
-    return (0);
+    if (this->_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    return (pt_recursive_mutex_create_with_error(&this->_mutex));
 }
 
 template <typename ValueType>
 void ft_promise<ValueType>::teardown_thread_safety()
 {
-    if (this->_mutex != ft_nullptr)
-    {
-        this->_mutex->~pt_mutex();
-        std::free(this->_mutex);
-        this->_mutex = ft_nullptr;
-    }
-    this->_thread_safe_enabled = false;
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    pt_recursive_mutex_destroy(&this->_mutex);
     return ;
 }
 
 inline void ft_promise<void>::teardown_thread_safety()
 {
-    if (this->_mutex != ft_nullptr)
+    pt_recursive_mutex_destroy(&this->_mutex);
+    return ;
+}
+
+
+template <typename ValueType>
+int ft_promise<ValueType>::lock(bool *lock_acquired) const
+{
+    int result = this->lock_internal(lock_acquired);
+    if (result == FT_ERR_SUCCESSS)
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return (result);
+}
+
+inline int ft_promise<void>::lock(bool *lock_acquired) const
+{
+    int result = this->lock_internal(lock_acquired);
+    if (result == FT_ERR_SUCCESSS)
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return (result);
+}
+
+template <typename ValueType>
+void ft_promise<ValueType>::unlock(bool lock_acquired) const
+{
+    int result = this->unlock_internal(lock_acquired);
+    if (result != FT_ERR_SUCCESSS)
     {
-        this->_mutex->~pt_mutex();
-        std::free(this->_mutex);
-        this->_mutex = ft_nullptr;
+        ft_global_error_stack_push(result);
+        return ;
     }
-    this->_thread_safe_enabled = false;
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return ;
+}
+
+inline void ft_promise<void>::unlock(bool lock_acquired) const
+{
+    int result = this->unlock_internal(lock_acquired);
+    if (result != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(result);
+        return ;
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
 template <typename ValueType>
 int ft_promise<ValueType>::lock_internal(bool *lock_acquired) const
 {
-    ft_promise<ValueType> *mutable_promise;
+    int mutex_result;
+    int stack_error;
+    int operation_error;
 
-    if (lock_acquired)
+    if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (!this->_thread_safe_enabled || this->_mutex == ft_nullptr)
-    {
-        const_cast<ft_promise<ValueType> *>(this)->set_error_unlocked(FT_ERR_SUCCESSS);
-        return (0);
-    }
-    mutable_promise = const_cast<ft_promise<ValueType> *>(this);
-    mutable_promise->_mutex->lock(THREAD_ID);
-    int mutex_error;
-
-    mutex_error = ft_global_error_stack_drop_last_error();
-    ft_global_error_stack_drop_last_error();
-    if (mutex_error != FT_ERR_SUCCESSS)
-    {
-        mutable_promise->set_error_unlocked(mutex_error);
-        return (mutex_error);
-    }
-    if (lock_acquired)
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    mutex_result = pt_recursive_mutex_lock_with_error(*this->_mutex);
+    stack_error = ft_global_error_stack_drop_last_error();
+    operation_error = stack_error;
+    if (stack_error == FT_ERR_SUCCESSS)
+        operation_error = mutex_result;
+    else
+        ft_global_error_stack_push(stack_error);
+    if (operation_error != FT_ERR_SUCCESSS)
+        return (operation_error);
+    if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    mutable_promise->set_error_unlocked(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);
 }
 
 inline int ft_promise<void>::lock_internal(bool *lock_acquired) const
 {
-    ft_promise<void> *mutable_promise;
+    int mutex_result;
+    int stack_error;
+    int operation_error;
 
-    if (lock_acquired)
+    if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (!this->_thread_safe_enabled || this->_mutex == ft_nullptr)
-    {
-        const_cast<ft_promise<void> *>(this)->set_error_unlocked(FT_ERR_SUCCESSS);
-        return (0);
-    }
-    mutable_promise = const_cast<ft_promise<void> *>(this);
-    mutable_promise->_mutex->lock(THREAD_ID);
-    int mutex_error;
-
-    mutex_error = ft_global_error_stack_drop_last_error();
-    ft_global_error_stack_drop_last_error();
-    if (mutex_error != FT_ERR_SUCCESSS)
-    {
-        mutable_promise->set_error_unlocked(mutex_error);
-        return (mutex_error);
-    }
-    if (lock_acquired)
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    mutex_result = pt_recursive_mutex_lock_with_error(*this->_mutex);
+    stack_error = ft_global_error_stack_drop_last_error();
+    operation_error = stack_error;
+    if (stack_error == FT_ERR_SUCCESSS)
+        operation_error = mutex_result;
+    else
+        ft_global_error_stack_push(stack_error);
+    if (operation_error != FT_ERR_SUCCESSS)
+        return (operation_error);
+    if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    mutable_promise->set_error_unlocked(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);
 }
 
 template <typename ValueType>
 int ft_promise<ValueType>::unlock_internal(bool lock_acquired) const
 {
-    if (!lock_acquired)
-        return (FT_ERR_SUCCESSS);
-    ft_promise<ValueType> *mutable_promise;
+    int mutex_result;
+    int stack_error;
+    int operation_error;
 
-    mutable_promise = const_cast<ft_promise<ValueType> *>(this);
-    if (mutable_promise->_mutex == ft_nullptr)
+    if (!lock_acquired || this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESSS);
-    mutable_promise->_mutex->unlock(THREAD_ID);
-    int mutex_error;
-
-    mutex_error = ft_global_error_stack_drop_last_error();
-    ft_global_error_stack_drop_last_error();
-    return (mutex_error);
+    mutex_result = pt_recursive_mutex_unlock_with_error(*this->_mutex);
+    stack_error = ft_global_error_stack_drop_last_error();
+    operation_error = stack_error;
+    if (stack_error == FT_ERR_SUCCESSS)
+        operation_error = mutex_result;
+    else
+        ft_global_error_stack_push(stack_error);
+    if (operation_error != FT_ERR_SUCCESSS)
+        return (operation_error);
+    return (FT_ERR_SUCCESSS);
 }
 
 inline int ft_promise<void>::unlock_internal(bool lock_acquired) const
 {
-    if (!lock_acquired)
-        return (FT_ERR_SUCCESSS);
-    ft_promise<void> *mutable_promise;
+    int mutex_result;
+    int stack_error;
+    int operation_error;
 
-    mutable_promise = const_cast<ft_promise<void> *>(this);
-    if (mutable_promise->_mutex == ft_nullptr)
+    if (!lock_acquired || this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESSS);
-    mutable_promise->_mutex->unlock(THREAD_ID);
-    int mutex_error;
-
-    mutex_error = ft_global_error_stack_drop_last_error();
-    ft_global_error_stack_drop_last_error();
-    return (mutex_error);
+    mutex_result = pt_recursive_mutex_unlock_with_error(*this->_mutex);
+    stack_error = ft_global_error_stack_drop_last_error();
+    operation_error = stack_error;
+    if (stack_error == FT_ERR_SUCCESSS)
+        operation_error = mutex_result;
+    else
+        ft_global_error_stack_push(stack_error);
+    if (operation_error != FT_ERR_SUCCESSS)
+        return (operation_error);
+    return (FT_ERR_SUCCESSS);
 }
 
 template <typename ValueType>
@@ -398,8 +280,8 @@ void ft_promise<ValueType>::set_value(const ValueType& value)
         return ;
     this->_value = value;
     this->_ready.store(true, std::memory_order_release);
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -411,8 +293,8 @@ inline void ft_promise<void>::set_value()
     if (this->lock_internal(&lock_acquired) != 0)
         return ;
     this->_ready.store(true, std::memory_order_release);
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -426,8 +308,8 @@ void ft_promise<ValueType>::set_value(ValueType&& value)
         return ;
     this->_value = ft_move(value);
     this->_ready.store(true, std::memory_order_release);
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -439,15 +321,15 @@ ValueType ft_promise<ValueType>::get() const
 
     if (!this->_ready.load(std::memory_order_acquire))
     {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ValueType());
     }
     lock_acquired = false;
     if (this->lock_internal(&lock_acquired) != 0)
         return (ValueType());
     value_copy = this->_value;
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (value_copy);
 }
 
@@ -457,14 +339,14 @@ inline void ft_promise<void>::get() const
 
     if (!this->_ready.load(std::memory_order_acquire))
     {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     lock_acquired = false;
     if (this->lock_internal(&lock_acquired) != 0)
         return ;
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -476,10 +358,10 @@ bool ft_promise<ValueType>::is_ready() const
     ready = this->_ready.load(std::memory_order_acquire);
     if (!ready)
     {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);
 }
 
@@ -487,172 +369,69 @@ inline bool ft_promise<void>::is_ready() const
 {
     if (!this->_ready.load(std::memory_order_acquire))
     {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (true);
-}
-
-template <typename ValueType>
-int ft_promise<ValueType>::get_error() const
-{
-    bool lock_acquired;
-    int error_code;
-
-    lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESSS)
-    {
-        return (this->_error_code);
-    }
-    error_code = this->_error_code;
-    ft_global_error_stack_push(error_code);
-    this->unlock_internal(lock_acquired);
-    return (error_code);
-}
-
-inline int ft_promise<void>::get_error() const
-{
-    bool lock_acquired;
-    int error_code;
-
-    lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESSS)
-    {
-        return (this->_error_code);
-    }
-    error_code = this->_error_code;
-    ft_global_error_stack_push(error_code);
-    this->unlock_internal(lock_acquired);
-    return (error_code);
-}
-
-template <typename ValueType>
-const char* ft_promise<ValueType>::get_error_str() const
-{
-    bool lock_acquired;
-    int error_code;
-
-    lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESSS)
-    {
-        return (ft_strerror(this->_error_code));
-    }
-    error_code = this->_error_code;
-    this->unlock_internal(lock_acquired);
-    return (ft_strerror(error_code));
-}
-
-inline const char *ft_promise<void>::get_error_str() const
-{
-    bool lock_acquired;
-    int error_code;
-
-    lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESSS)
-    {
-        return (ft_strerror(this->_error_code));
-    }
-    error_code = this->_error_code;
-    this->unlock_internal(lock_acquired);
-    return (ft_strerror(error_code));
 }
 
 template <typename ValueType>
 int ft_promise<ValueType>::enable_thread_safety()
 {
-    return (this->prepare_thread_safety());
+    int result = this->prepare_thread_safety();
+    ft_global_error_stack_push(result);
+    return (result);
 }
 
 inline int ft_promise<void>::enable_thread_safety()
 {
-    return (this->prepare_thread_safety());
+    int result = this->prepare_thread_safety();
+    ft_global_error_stack_push(result);
+    return (result);
 }
 
 template <typename ValueType>
 void ft_promise<ValueType>::disable_thread_safety()
 {
     this->teardown_thread_safety();
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
 inline void ft_promise<void>::disable_thread_safety()
 {
     this->teardown_thread_safety();
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
 template <typename ValueType>
 bool ft_promise<ValueType>::is_thread_safe() const
 {
-    if (this->_thread_safe_enabled && this->_mutex != ft_nullptr)
-        return (true);
-    return (false);
+    bool enabled = (this->_mutex != ft_nullptr);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return (enabled);
 }
 
 inline bool ft_promise<void>::is_thread_safe() const
 {
-    if (this->_thread_safe_enabled && this->_mutex != ft_nullptr)
-        return (true);
-    return (false);
+    bool enabled = (this->_mutex != ft_nullptr);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return (enabled);
 }
 
+#ifdef LIBFT_TEST_BUILD
 template <typename ValueType>
-int ft_promise<ValueType>::lock(bool *lock_acquired) const
+pt_recursive_mutex *ft_promise<ValueType>::get_mutex_for_validation() const noexcept
 {
-    int result;
-
-    result = this->lock_internal(lock_acquired);
-    if (result != FT_ERR_SUCCESSS)
-    {
-        const_cast<ft_promise<ValueType> *>(this)->set_error_unlocked(result);
-        return (result);
-    }
-    const_cast<ft_promise<ValueType> *>(this)->set_error_unlocked(FT_ERR_SUCCESSS);
-    return (result);
+    return (this->_mutex);
 }
 
-inline int ft_promise<void>::lock(bool *lock_acquired) const
+inline pt_recursive_mutex *ft_promise<void>::get_mutex_for_validation() const noexcept
 {
-    int result;
-
-    result = this->lock_internal(lock_acquired);
-    if (result != FT_ERR_SUCCESSS)
-    {
-        const_cast<ft_promise<void> *>(this)->set_error_unlocked(result);
-        return (result);
-    }
-    const_cast<ft_promise<void> *>(this)->set_error_unlocked(FT_ERR_SUCCESSS);
-    return (result);
+    return (this->_mutex);
 }
-
-template <typename ValueType>
-void ft_promise<ValueType>::unlock(bool lock_acquired) const
-{
-    int unlock_error;
-
-    unlock_error = this->unlock_internal(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESSS)
-    {
-        const_cast<ft_promise<ValueType> *>(this)->set_error_unlocked(unlock_error);
-        return ;
-    }
-    const_cast<ft_promise<ValueType> *>(this)->set_error_unlocked(FT_ERR_SUCCESSS);
-    return ;
-}
-
-inline void ft_promise<void>::unlock(bool lock_acquired) const
-{
-    int unlock_error;
-
-    unlock_error = this->unlock_internal(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESSS)
-    {
-        const_cast<ft_promise<void> *>(this)->set_error_unlocked(unlock_error);
-        return ;
-    }
-    const_cast<ft_promise<void> *>(this)->set_error_unlocked(FT_ERR_SUCCESSS);
-    return ;
-}
+#endif
 
 #endif

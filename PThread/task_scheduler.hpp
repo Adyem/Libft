@@ -767,9 +767,11 @@ auto ft_task_scheduler::submit(FunctionType function, Args... args)
         return (empty_future);
     }
     promise_shared.reset(promise_raw, 1, false);
-    if (promise_shared.hasError())
+    int promise_error = ft_global_error_stack_peek_last_error();
+
+    if (promise_error != FT_ERR_SUCCESSS)
     {
-        ft_global_error_stack_push(promise_shared.get_error());
+        ft_global_error_stack_push(promise_error);
         ft_future<return_type> empty_future;
         return (empty_future);
     }
@@ -868,9 +870,11 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
         return (result_pair);
     }
     promise_shared.reset(promise_raw, 1, false);
-    if (promise_shared.hasError())
+    int promise_error = ft_global_error_stack_peek_last_error();
+
+    if (promise_error != FT_ERR_SUCCESSS)
     {
-        ft_global_error_stack_push(promise_shared.get_error());
+        ft_global_error_stack_push(promise_error);
         raw_task_body();
         return (result_pair);
     }
@@ -889,9 +893,11 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
         return (result_pair);
     }
     state_shared.reset(state_raw, 1, false);
-    if (state_shared.hasError())
+    int state_error = ft_global_error_stack_peek_last_error();
+
+    if (state_error != FT_ERR_SUCCESSS)
     {
-        ft_global_error_stack_push(state_shared.get_error());
+        ft_global_error_stack_push(state_error);
         raw_task_body();
         return (result_pair);
     }
@@ -1011,9 +1017,11 @@ ft_scheduled_task_handle ft_task_scheduler::schedule_every(std::chrono::duration
         return (handle_result);
     }
     state_shared.reset(state_raw, 1, false);
-    if (state_shared.hasError())
+    int state_error = ft_global_error_stack_peek_last_error();
+
+    if (state_error != FT_ERR_SUCCESSS)
     {
-        ft_global_error_stack_push(state_shared.get_error());
+        ft_global_error_stack_push(state_error);
         return (handle_result);
     }
     handle_result = ft_scheduled_task_handle(this, state_shared);

@@ -159,7 +159,9 @@ int test_ft_map_remove(void)
 int test_ft_shared_ptr_basic(void)
 {
     ft_sharedptr<int> sp(new int(42));
-    return (!sp.hasError() && sp.use_count() == 1 && *sp == 42);
+    bool operations_ok = (sp.use_count() == 1 && *sp == 42);
+
+    return (operations_ok && ft_global_error_stack_peek_last_error() == FT_ERR_SUCCESSS);
 }
 
 int test_ft_unique_ptr_basic(void)
@@ -303,7 +305,7 @@ int test_ft_map_clear_empty(void)
 int test_ft_shared_ptr_array(void)
 {
     ft_sharedptr<int> sp(3);
-    if (sp.hasError())
+    if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
         return (0);
     sp[0] = 1;
     sp[1] = 2;
@@ -468,4 +470,3 @@ FT_TEST(test_ft_map_grows_from_zero_capacity, "ft_map grows when constructed wit
     FT_ASSERT_EQ(7, found_entry->value);
     return (1);
 }
-

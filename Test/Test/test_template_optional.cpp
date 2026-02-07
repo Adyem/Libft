@@ -83,25 +83,31 @@ const char *no_default_optional_value::get_error_str() const
 FT_TEST(test_ft_optional_non_default_constructible, "ft_optional stores and retrieves non-default-constructible values")
 {
     ft_optional<no_default_optional_value> empty_optional;
+    ft_global_error_stack_pop_all();
     FT_ASSERT(empty_optional.has_value() == false);
     empty_optional.value();
-    FT_ASSERT_EQ(FT_ERR_EMPTY, empty_optional.get_error());
+    FT_ASSERT_EQ(FT_ERR_EMPTY, ft_global_error_stack_peek_last_error());
+    ft_global_error_stack_pop_last();
 
     ft_optional<no_default_optional_value> value_optional(no_default_optional_value(42));
     FT_ASSERT(value_optional.has_value() == true);
     FT_ASSERT_EQ(42, value_optional.value().get_value());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, value_optional.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_global_error_stack_peek_last_error());
+    ft_global_error_stack_pop_last();
 
     ft_optional<no_default_optional_value> moved_optional(no_default_optional_value(64));
     value_optional = std::move(moved_optional);
     FT_ASSERT(value_optional.has_value() == true);
     FT_ASSERT_EQ(64, value_optional.value().get_value());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, value_optional.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_global_error_stack_peek_last_error());
+    ft_global_error_stack_pop_last();
     FT_ASSERT(moved_optional.has_value() == false);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, moved_optional.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_global_error_stack_peek_last_error());
+    ft_global_error_stack_pop_last();
 
     value_optional.reset();
     FT_ASSERT(value_optional.has_value() == false);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, value_optional.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_global_error_stack_peek_last_error());
+    ft_global_error_stack_pop_last();
     return (1);
 }

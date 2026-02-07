@@ -1,14 +1,62 @@
-HEADERS := algorithm.hpp bitset.hpp cancellation.hpp circular_buffer.hpp constructor.hpp deque.hpp event_emitter.hpp function.hpp future.hpp graph.hpp iterator.hpp map.hpp math.hpp matrix.hpp move.hpp optional.hpp pair.hpp pool.hpp priority_queue.hpp promise.hpp queue.hpp set.hpp shared_ptr.hpp stack.hpp static_cast.hpp string_view.hpp swap.hpp thread_pool.hpp trie.hpp tuple.hpp unique_ptr.hpp unordered_map.hpp variant.hpp vector.hpp
-
 MODULE_NAME := $(notdir $(CURDIR))
+SRCS := template_basic_types.cpp \
+        template_optional.cpp \
+        template_variant.cpp \
+        template_module_compile.cpp
+TOTAL_SRCS := $(words $(SRCS))
+TARGET := template_basic_types.a
+OBJDIR := objs
+OBJS := $(patsubst %.cpp,$(OBJDIR)/%.o,$(SRCS))
+CXX := g++
+AR := ar
+ARFLAGS := rcs
 
-all:
-	@echo "Template headers"
+CFLAGS ?= $(COMPILE_FLAGS)
+ifeq ($(strip $(CFLAGS)),)
+    CFLAGS := -Wall -Wextra -Werror -std=c++17
+endif
+
+ifeq ($(OS),Windows_NT)
+    MKDIR = mkdir
+    RM = del /F /Q
+else
+    MKDIR = mkdir -p
+    RM = rm -f
+endif
+
+CLEAN_FILES := $(TARGET) $(OBJS)
+ifeq ($(OS),Windows_NT)
+    CLEAN_FILES := $(subst /,\\,$(CLEAN_FILES))
+endif
+
+all: $(TARGET)
+	@if $(RM) $(CLEAN_FILES); then \
+        printf '        [%s] template verification passed (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS); \
+    else \
+        printf '        [%s] cleanup failed\n' "$(MODULE_NAME)"; \
+        exit 1; \
+    fi
+
+$(TARGET): $(OBJS)
+	@$(AR) $(ARFLAGS) $@ $^
+	@printf '        [%s] Module archive ready (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS)
+
+$(OBJDIR)/%.o: %.cpp | $(OBJDIR)
+	@$(CXX) $(CFLAGS) -c $< -o $@
+
+$(OBJDIR):
+	@$(MKDIR) $@
 
 clean:
-	@printf '        [%s] clean: success\n' "$(MODULE_NAME)"
+	@if $(RM) $(CLEAN_FILES); then \
+        printf '        [%s] clean: success\n' "$(MODULE_NAME)"; \
+    else \
+        printf '        [%s] clean: failed\n' "$(MODULE_NAME)"; \
+        exit 1; \
+    fi
 
-fclean:
-	@printf '        [%s] fclean: success\n' "$(MODULE_NAME)"
+fclean: clean
 
-.PHONY: all clean fclean
+re: fclean all
+
+.PHONY: all clean fclean re
