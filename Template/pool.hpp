@@ -7,8 +7,8 @@
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
-#include "../PThread/mutex.hpp"
-#include "../PThread/pthread.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "move.hpp"
 
 template<typename T>
@@ -18,17 +18,14 @@ class Pool
         using Storage = std::aligned_storage_t<sizeof(T), alignof(T)>;
         ft_vector<Storage> _buffer;
         ft_vector<size_t> _freeIndices;
-        mutable int _error_code;
-        mutable pt_mutex* _state_mutex;
-        bool _thread_safe_enabled;
+        mutable pt_recursive_mutex* _mutex;
 
         void release(size_t idx) noexcept;
         T* ptrAt(size_t idx) noexcept;
-        void set_error_unlocked(int error_code) const noexcept;
-        void set_error(int error_code) const noexcept;
-        int lock_internal(bool *lock_acquired) const noexcept;
-        void unlock_internal(bool lock_acquired) const noexcept;
-        void teardown_thread_safety() noexcept;
+        int lock_internal(bool *lock_acquired) const;
+        int unlock_internal(bool lock_acquired) const;
+        int prepare_thread_safety();
+        void teardown_thread_safety();
 
     public:
         Pool();
@@ -44,13 +41,15 @@ class Pool
         class Object;
         template<typename... Args>
         Object acquire(Args&&... args);
-        int get_error() const noexcept;
-        const char* get_error_str() const noexcept;
-        int enable_thread_safety() noexcept;
-        void disable_thread_safety() noexcept;
-        bool is_thread_safe_enabled() const noexcept;
-        int lock(bool *lock_acquired) const noexcept;
-        void unlock(bool lock_acquired) const noexcept;
+        int enable_thread_safety();
+        void disable_thread_safety();
+        bool is_thread_safe_enabled() const;
+        int lock(bool *lock_acquired) const;
+        void unlock(bool lock_acquired) const;
+
+#ifdef LIBFT_TEST_BUILD
+        pt_recursive_mutex* get_mutex_for_validation() const noexcept;
+#endif
 };
 
 template<typename T>
@@ -61,15 +60,12 @@ class Pool<T>::Object
         Pool<T>* _pool;
         size_t _idx;
         T* _ptr;
-        mutable int _error_code;
-        mutable pt_mutex* _state_mutex;
-        bool _thread_safe_enabled;
+        mutable pt_recursive_mutex* _mutex;
 
-        void set_error_unlocked(int error_code) const noexcept;
-        void set_error(int error_code) const noexcept;
-        int lock_internal(bool *lock_acquired) const noexcept;
-        void unlock_internal(bool lock_acquired) const noexcept;
-        void teardown_thread_safety() noexcept;
+        int lock_internal(bool *lock_acquired) const;
+        int unlock_internal(bool lock_acquired) const;
+        int prepare_thread_safety();
+        void teardown_thread_safety();
 
     public:
         Object() noexcept;
@@ -84,821 +80,540 @@ class Pool<T>::Object
 
         Object(const Object&) = delete;
         Object& operator=(const Object&) = delete;
-        int get_error() const noexcept;
-        const char* get_error_str() const noexcept;
-        int enable_thread_safety() noexcept;
-        void disable_thread_safety() noexcept;
-        bool is_thread_safe_enabled() const noexcept;
-        int lock(bool *lock_acquired) const noexcept;
-        void unlock(bool lock_acquired) const noexcept;
+        int enable_thread_safety();
+        void disable_thread_safety();
+        bool is_thread_safe_enabled() const;
+        int lock(bool *lock_acquired) const;
+        void unlock(bool lock_acquired) const;
+
+#ifdef LIBFT_TEST_BUILD
+        pt_recursive_mutex* get_mutex_for_validation() const noexcept;
+#endif
 };
 
 template<typename T>
 void Pool<T>::release(size_t idx) noexcept
 {
-    bool lock_acquired;
-    int vector_error;
+    bool lock_acquired = false;
+    int lock_result = this->lock_internal(&lock_acquired);
 
-    lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
+    if (lock_result != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(lock_result);
         return ;
+    }
     this->_freeIndices.push_back(idx);
-    vector_error = this->_freeIndices.get_error();
+    int vector_error = this->_freeIndices.get_error();
+
     if (vector_error != FT_ERR_SUCCESSS)
-        this->set_error_unlocked(vector_error);
-    else
-        this->set_error_unlocked(FT_ERR_SUCCESSS);
+    {
+        this->unlock_internal(lock_acquired);
+        ft_global_error_stack_push(vector_error);
+        return ;
+    }
     this->unlock_internal(lock_acquired);
-    return ;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
 }
 
 template<typename T>
 T* Pool<T>::ptrAt(size_t idx) noexcept
 {
-    size_t buffer_size;
+    size_t buffer_size = this->_buffer.size();
 
-    buffer_size = this->_buffer.size();
     if (buffer_size == 0 || idx >= buffer_size)
     {
-        this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (reinterpret_cast<T*>(&this->_buffer[idx]));
 }
 
 template<typename T>
 Pool<T>::Pool()
-    : _buffer()
-    , _freeIndices()
-    , _error_code(FT_ERR_SUCCESSS)
-    , _state_mutex(ft_nullptr)
-    , _thread_safe_enabled(false)
+    : _buffer(),
+      _freeIndices(),
+      _mutex(ft_nullptr)
 {
-    this->set_error(FT_ERR_SUCCESSS);
-    return ;
-}
-
-template<typename T>
-Pool<T>::Pool(Pool&& other)
-    : _buffer()
-    , _freeIndices()
-    , _error_code(FT_ERR_SUCCESSS)
-    , _state_mutex(ft_nullptr)
-    , _thread_safe_enabled(false)
-{
-    bool lock_acquired;
-    pt_mutex *other_mutex;
-    bool other_thread_safe;
-
-    lock_acquired = false;
-    other_mutex = ft_nullptr;
-    other_thread_safe = false;
-    if (other.lock_internal(&lock_acquired) != 0)
-    {
-        this->set_error(ft_errno);
-        return ;
-    }
-    this->_buffer = ft_move(other._buffer);
-    this->_freeIndices = ft_move(other._freeIndices);
-    this->_error_code = other._error_code;
-    other_thread_safe = other._thread_safe_enabled;
-    other_mutex = other._state_mutex;
-    other._error_code = FT_ERR_SUCCESSS;
-    other._state_mutex = ft_nullptr;
-    other._thread_safe_enabled = false;
-    other.unlock_internal(lock_acquired);
-    if (other_thread_safe && other_mutex != ft_nullptr)
-    {
-        other_mutex->~pt_mutex();
-        cma_free(other_mutex);
-    }
-    if (other_thread_safe)
-    {
-        if (this->enable_thread_safety() != 0)
-        {
-            this->_thread_safe_enabled = false;
-            this->set_error(this->_error_code);
-            return ;
-        }
-    }
-    this->set_error(this->_error_code);
-    return ;
-}
-
-template<typename T>
-Pool<T>& Pool<T>::operator=(Pool&& other)
-{
-    bool this_lock_acquired;
-    bool other_lock_acquired;
-    pt_mutex *previous_mutex;
-    bool previous_thread_safe;
-    pt_mutex *other_mutex;
-    bool other_thread_safe;
-
-    if (this != &other)
-    {
-        this_lock_acquired = false;
-        if (this->lock_internal(&this_lock_acquired) != 0)
-        {
-            this->set_error(ft_errno);
-            return (*this);
-        }
-        other_lock_acquired = false;
-        if (other.lock_internal(&other_lock_acquired) != 0)
-        {
-            this->unlock_internal(this_lock_acquired);
-            this->set_error(ft_errno);
-            return (*this);
-        }
-        previous_mutex = this->_state_mutex;
-        previous_thread_safe = this->_thread_safe_enabled;
-        other_mutex = other._state_mutex;
-        other_thread_safe = other._thread_safe_enabled;
-        this->_buffer = ft_move(other._buffer);
-        this->_freeIndices = ft_move(other._freeIndices);
-        this->_error_code = other._error_code;
-        this->_state_mutex = ft_nullptr;
-        this->_thread_safe_enabled = other._thread_safe_enabled;
-        other._error_code = FT_ERR_SUCCESSS;
-        other._state_mutex = ft_nullptr;
-        other._thread_safe_enabled = false;
-        other.unlock_internal(other_lock_acquired);
-        this->unlock_internal(this_lock_acquired);
-        if (previous_thread_safe && previous_mutex != ft_nullptr && previous_mutex != this->_state_mutex)
-        {
-            previous_mutex->~pt_mutex();
-            cma_free(previous_mutex);
-        }
-        if (other_thread_safe && other_mutex != ft_nullptr)
-        {
-            other_mutex->~pt_mutex();
-            cma_free(other_mutex);
-        }
-        if (other_thread_safe)
-        {
-            if (this->enable_thread_safety() != 0)
-            {
-                this->_thread_safe_enabled = false;
-                this->set_error(this->_error_code);
-                return (*this);
-            }
-        }
-    }
-    this->set_error(this->_error_code);
-    return (*this);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
 }
 
 template<typename T>
 Pool<T>::~Pool()
 {
     this->teardown_thread_safety();
-    this->set_error(FT_ERR_SUCCESSS);
-    return ;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+}
+
+template<typename T>
+Pool<T>::Pool(Pool&& other)
+    : _buffer(),
+      _freeIndices(),
+      _mutex(ft_nullptr)
+{
+    bool lock_acquired = false;
+    int lock_result = other.lock_internal(&lock_acquired);
+
+    if (lock_result != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(lock_result);
+        return ;
+    }
+    this->_buffer = ft_move(other._buffer);
+    this->_freeIndices = ft_move(other._freeIndices);
+    bool other_thread_safe = (other._mutex != ft_nullptr);
+    other.unlock_internal(lock_acquired);
+    if (other_thread_safe)
+    {
+        int enable_result = this->enable_thread_safety();
+
+        if (enable_result != FT_ERR_SUCCESSS)
+            return ;
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+}
+
+template<typename T>
+Pool<T>& Pool<T>::operator=(Pool&& other)
+{
+    if (this == &other)
+    {
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        return (*this);
+    }
+    bool this_lock_acquired = false;
+    int lock_result = this->lock_internal(&this_lock_acquired);
+
+    if (lock_result != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(lock_result);
+        return (*this);
+    }
+    bool other_lock_acquired = false;
+    lock_result = other.lock_internal(&other_lock_acquired);
+
+    if (lock_result != FT_ERR_SUCCESSS)
+    {
+        this->unlock_internal(this_lock_acquired);
+        ft_global_error_stack_push(lock_result);
+        return (*this);
+    }
+    this->_buffer = ft_move(other._buffer);
+    this->_freeIndices = ft_move(other._freeIndices);
+    bool other_thread_safe = (other._mutex != ft_nullptr);
+    other.unlock_internal(other_lock_acquired);
+    this->unlock_internal(this_lock_acquired);
+    this->teardown_thread_safety();
+    if (other_thread_safe)
+    {
+        int enable_result = this->enable_thread_safety();
+
+        if (enable_result != FT_ERR_SUCCESSS)
+            return (*this);
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return (*this);
 }
 
 template<typename T>
 void Pool<T>::resize(size_t new_size)
 {
-    bool lock_acquired;
-    int buffer_error;
-    int free_error;
-    size_t index;
+    bool lock_acquired = false;
+    int lock_result = this->lock_internal(&lock_acquired);
 
-    lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
+    if (lock_result != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
+        ft_global_error_stack_push(lock_result);
         return ;
     }
     this->_buffer.resize(new_size);
-    buffer_error = this->_buffer.get_error();
+    int buffer_error = this->_buffer.get_error();
+
     if (buffer_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(buffer_error);
         this->unlock_internal(lock_acquired);
+        ft_global_error_stack_push(buffer_error);
         return ;
     }
     this->_freeIndices.clear();
-    free_error = this->_freeIndices.get_error();
+    int free_error = this->_freeIndices.get_error();
+
     if (free_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(free_error);
         this->unlock_internal(lock_acquired);
+        ft_global_error_stack_push(free_error);
         return ;
     }
     this->_freeIndices.reserve(new_size);
     free_error = this->_freeIndices.get_error();
+
     if (free_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(free_error);
         this->unlock_internal(lock_acquired);
+        ft_global_error_stack_push(free_error);
         return ;
     }
-    index = 0;
+    size_t index = 0;
+
     while (index < new_size)
     {
         this->_freeIndices.push_back(index);
-        int push_error;
+        int push_error = this->_freeIndices.get_error();
 
-        push_error = this->_freeIndices.get_error();
         if (push_error != FT_ERR_SUCCESSS)
         {
-            this->set_error_unlocked(push_error);
             this->unlock_internal(lock_acquired);
+            ft_global_error_stack_push(push_error);
             return ;
         }
-        index++;
+        index = index + 1;
     }
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
-    return ;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
 }
 
 template<typename T>
 template<typename... Args>
 typename Pool<T>::Object Pool<T>::acquire(Args&&... args)
 {
-    bool lock_acquired;
-    size_t free_count;
-    size_t last;
-    size_t idx;
-    int vector_error;
-    T* storage_ptr;
-    Object error_object;
+    bool lock_acquired = false;
+    int lock_result = this->lock_internal(&lock_acquired);
 
-    lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
+    if (lock_result != FT_ERR_SUCCESSS)
     {
-        this->set_error(ft_errno);
-        error_object.set_error(ft_errno);
-        return (error_object);
+        ft_global_error_stack_push(lock_result);
+        return (Object());
     }
-    free_count = this->_freeIndices.size();
+    size_t free_count = this->_freeIndices.size();
+
     if (free_count == 0)
     {
-        this->set_error_unlocked(FT_ERR_EMPTY);
         this->unlock_internal(lock_acquired);
-        error_object.set_error(FT_ERR_EMPTY);
-        return (error_object);
+        ft_global_error_stack_push(FT_ERR_EMPTY);
+        return (Object());
     }
-    last = free_count - 1;
-    idx = this->_freeIndices[last];
+    size_t last = free_count - 1;
+    size_t idx = this->_freeIndices[last];
     this->_freeIndices.pop_back();
-    vector_error = this->_freeIndices.get_error();
+    int vector_error = this->_freeIndices.get_error();
+
     if (vector_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(vector_error);
         this->unlock_internal(lock_acquired);
-        error_object.set_error(vector_error);
-        return (error_object);
+        ft_global_error_stack_push(vector_error);
+        return (Object());
     }
-    storage_ptr = this->ptrAt(idx);
+    T* storage_ptr = this->ptrAt(idx);
+
     if (storage_ptr == ft_nullptr)
     {
-        int pointer_error;
-
-        pointer_error = this->_error_code;
         this->unlock_internal(lock_acquired);
-        error_object.set_error(pointer_error);
-        return (error_object);
+        return (Object());
     }
-    T* ptr;
-
-    ptr = new (storage_ptr) T(std::forward<Args>(args)...);
+    T* ptr = new (storage_ptr) T(std::forward<Args>(args)...);
     Object result(this, idx, ptr);
-    if (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr)
+
+    if (this->_mutex != ft_nullptr)
     {
-        if (result.enable_thread_safety() != 0)
+        int enable_result = result.enable_thread_safety();
+
+        if (enable_result != FT_ERR_SUCCESSS)
         {
             this->_freeIndices.push_back(idx);
-            vector_error = this->_freeIndices.get_error();
-            if (vector_error != FT_ERR_SUCCESSS)
-                this->set_error_unlocked(vector_error);
-            else
-                this->set_error_unlocked(result.get_error());
             this->unlock_internal(lock_acquired);
+            ft_global_error_stack_push(enable_result);
             return (result);
         }
     }
-    result.set_error(FT_ERR_SUCCESSS);
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
 
 template<typename T>
-int Pool<T>::get_error() const noexcept
+int Pool<T>::enable_thread_safety()
 {
-    bool lock_acquired;
-    int error_code;
+    if (this->_mutex != ft_nullptr)
+    {
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESSS);
+    }
+    int result = this->prepare_thread_safety();
 
-    lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
-        return (ft_errno);
-    error_code = this->_error_code;
-    this->unlock_internal(lock_acquired);
-    this->set_error(error_code);
-    return (error_code);
+    ft_global_error_stack_push(result);
+    return (result);
 }
 
 template<typename T>
-const char* Pool<T>::get_error_str() const noexcept
+void Pool<T>::disable_thread_safety()
 {
-    int error_code;
-
-    error_code = this->get_error();
-    return (ft_strerror(error_code));
+    this->teardown_thread_safety();
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
 }
 
 template<typename T>
-void Pool<T>::set_error_unlocked(int error_code) const noexcept
+bool Pool<T>::is_thread_safe_enabled() const
 {
-    Pool<T>* mutable_pool;
+    bool enabled = (this->_mutex != ft_nullptr);
 
-    mutable_pool = const_cast<Pool<T> *>(this);
-    mutable_pool->_error_code = error_code;
-    ft_errno = error_code;
-    return ;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return (enabled);
 }
 
 template<typename T>
-void Pool<T>::set_error(int error_code) const noexcept
+int Pool<T>::lock(bool *lock_acquired) const
 {
-    bool lock_acquired;
+    int result = this->lock_internal(lock_acquired);
 
-    lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
-        return ;
-    this->set_error_unlocked(error_code);
-    this->unlock_internal(lock_acquired);
-    return ;
+    ft_global_error_stack_push(result);
+    if (result != FT_ERR_SUCCESSS)
+        return (-1);
+    return (0);
 }
+
+template<typename T>
+void Pool<T>::unlock(bool lock_acquired) const
+{
+    int result = this->unlock_internal(lock_acquired);
+
+    ft_global_error_stack_push(result);
+}
+
+template<typename T>
+int Pool<T>::lock_internal(bool *lock_acquired) const
+{
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = false;
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    int result = pt_recursive_mutex_lock_with_error(*this->_mutex);
+
+    if (result == FT_ERR_SUCCESSS && lock_acquired != ft_nullptr)
+        *lock_acquired = true;
+    return (result);
+}
+
+template<typename T>
+int Pool<T>::unlock_internal(bool lock_acquired) const
+{
+    if (!lock_acquired || this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    return (pt_recursive_mutex_unlock_with_error(*this->_mutex));
+}
+
+template<typename T>
+int Pool<T>::prepare_thread_safety()
+{
+    if (this->_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    int result = pt_recursive_mutex_create_with_error(&this->_mutex);
+
+    if (result != FT_ERR_SUCCESSS && this->_mutex != ft_nullptr)
+        pt_recursive_mutex_destroy(&this->_mutex);
+    return (result);
+}
+
+template<typename T>
+void Pool<T>::teardown_thread_safety()
+{
+    pt_recursive_mutex_destroy(&this->_mutex);
+}
+
+#ifdef LIBFT_TEST_BUILD
+
+template<typename T>
+pt_recursive_mutex* Pool<T>::get_mutex_for_validation() const noexcept
+{
+    return (this->_mutex);
+}
+#endif
 
 template<typename T>
 Pool<T>::Object::Object() noexcept
-    : _pool(ft_nullptr)
-    , _idx(0)
-    , _ptr(ft_nullptr)
-    , _error_code(FT_ERR_SUCCESSS)
-    , _state_mutex(ft_nullptr)
-    , _thread_safe_enabled(false)
+    : _pool(ft_nullptr),
+      _idx(0),
+      _ptr(ft_nullptr),
+      _mutex(ft_nullptr)
 {
-    this->set_error(FT_ERR_SUCCESSS);
-    return ;
 }
 
 template<typename T>
 Pool<T>::Object::Object(Pool<T>* pool, size_t idx, T* ptr) noexcept
-    : _pool(pool)
-    , _idx(idx)
-    , _ptr(ptr)
-    , _error_code(FT_ERR_SUCCESSS)
-    , _state_mutex(ft_nullptr)
-    , _thread_safe_enabled(false)
+    : _pool(pool),
+      _idx(idx),
+      _ptr(ptr),
+      _mutex(ft_nullptr)
 {
-    this->set_error(FT_ERR_SUCCESSS);
-    return ;
 }
 
 template<typename T>
 Pool<T>::Object::~Object() noexcept
 {
-    bool lock_acquired;
-
-    lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
-    {
-        this->teardown_thread_safety();
-        return ;
-    }
     if (this->_ptr != ft_nullptr)
     {
         this->_ptr->~T();
         if (this->_pool != ft_nullptr)
+        {
             this->_pool->release(this->_idx);
+        }
         else
-            this->set_error_unlocked(FT_ERR_INVALID_HANDLE);
+        {
+            ft_global_error_stack_push(FT_ERR_INVALID_HANDLE);
+        }
     }
-    this->_pool = ft_nullptr;
-    this->_ptr = ft_nullptr;
-    if (this->_error_code == FT_ERR_SUCCESSS)
-        this->set_error_unlocked(FT_ERR_SUCCESSS);
-    this->unlock_internal(lock_acquired);
     this->teardown_thread_safety();
-    return ;
+    this->_pool = ft_nullptr;
+    this->_idx = 0;
+    this->_ptr = ft_nullptr;
 }
 
 template<typename T>
 T* Pool<T>::Object::operator->() const noexcept
 {
-    bool lock_acquired;
-
-    lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
-        return (ft_nullptr);
     if (this->_ptr == ft_nullptr)
     {
-        this->set_error_unlocked(FT_ERR_INVALID_HANDLE);
-        this->unlock_internal(lock_acquired);
+        ft_global_error_stack_push(FT_ERR_INVALID_HANDLE);
         return (ft_nullptr);
     }
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
-    this->unlock_internal(lock_acquired);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (this->_ptr);
 }
 
 template<typename T>
 Pool<T>::Object::operator bool() const noexcept
 {
-    bool lock_acquired;
+    bool result = (this->_ptr != ft_nullptr);
 
-    lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
-        return (false);
-    if (this->_ptr != ft_nullptr)
-    {
-        this->set_error_unlocked(FT_ERR_SUCCESSS);
-        this->unlock_internal(lock_acquired);
-        return (true);
-    }
-    this->set_error_unlocked(FT_ERR_INVALID_HANDLE);
-    this->unlock_internal(lock_acquired);
-    return (false);
+    ft_global_error_stack_push(result ? FT_ERR_SUCCESSS : FT_ERR_INVALID_HANDLE);
+    return (result);
 }
 
 template<typename T>
 Pool<T>::Object::Object(Object&& o) noexcept
-    : _pool(o._pool)
-    , _idx(o._idx)
-    , _ptr(o._ptr)
-    , _error_code(o._error_code)
-    , _state_mutex(o._state_mutex)
-    , _thread_safe_enabled(o._thread_safe_enabled)
+    : _pool(o._pool),
+      _idx(o._idx),
+      _ptr(o._ptr),
+      _mutex(o._mutex)
 {
     o._pool = ft_nullptr;
+    o._idx = 0;
     o._ptr = ft_nullptr;
-    o._error_code = FT_ERR_SUCCESSS;
-    o._state_mutex = ft_nullptr;
-    o._thread_safe_enabled = false;
-    this->set_error(this->_error_code);
-    return ;
+    o._mutex = ft_nullptr;
 }
 
 template<typename T>
-typename Pool<T>::Object& Pool<T>::Object::operator=(Object&& o) noexcept
+Pool<T>::Object& Pool<T>::Object::operator=(Object&& o) noexcept
 {
-    bool this_lock_acquired;
-    bool other_lock_acquired;
-    pt_mutex *previous_mutex;
-    bool previous_thread_safe;
-
-    if (this != &o)
-    {
-        this_lock_acquired = false;
-        if (this->lock_internal(&this_lock_acquired) != 0)
-        {
-            this->set_error(ft_errno);
-            return (*this);
-        }
-        other_lock_acquired = false;
-        if (o.lock_internal(&other_lock_acquired) != 0)
-        {
-            this->unlock_internal(this_lock_acquired);
-            this->set_error(ft_errno);
-            return (*this);
-        }
-        previous_mutex = this->_state_mutex;
-        previous_thread_safe = this->_thread_safe_enabled;
-        this->_pool = o._pool;
-        this->_idx = o._idx;
-        this->_ptr = o._ptr;
-        this->_error_code = o._error_code;
-        this->_state_mutex = o._state_mutex;
-        this->_thread_safe_enabled = o._thread_safe_enabled;
-        o._pool = ft_nullptr;
-        o._idx = 0;
-        o._ptr = ft_nullptr;
-        o._error_code = FT_ERR_SUCCESSS;
-        o._state_mutex = ft_nullptr;
-        o._thread_safe_enabled = false;
-        o.unlock_internal(other_lock_acquired);
-        this->unlock_internal(this_lock_acquired);
-        if (previous_thread_safe && previous_mutex != ft_nullptr && previous_mutex != this->_state_mutex)
-        {
-            previous_mutex->~pt_mutex();
-            cma_free(previous_mutex);
-        }
-    }
-    this->set_error(this->_error_code);
+    if (this == &o)
+        return (*this);
+    this->teardown_thread_safety();
+    this->_pool = o._pool;
+    this->_idx = o._idx;
+    this->_ptr = o._ptr;
+    this->_mutex = o._mutex;
+    o._pool = ft_nullptr;
+    o._idx = 0;
+    o._ptr = ft_nullptr;
+    o._mutex = ft_nullptr;
     return (*this);
 }
 
 template<typename T>
-int Pool<T>::Object::get_error() const noexcept
+int Pool<T>::Object::enable_thread_safety()
 {
-    bool lock_acquired;
-    int error_code;
-
-    lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
-        return (ft_errno);
-    error_code = this->_error_code;
-    this->unlock_internal(lock_acquired);
-    this->set_error(error_code);
-    return (error_code);
-}
-
-template<typename T>
-const char* Pool<T>::Object::get_error_str() const noexcept
-{
-    int error_code;
-
-    error_code = this->get_error();
-    return (ft_strerror(error_code));
-}
-
-template<typename T>
-void Pool<T>::Object::set_error_unlocked(int error_code) const noexcept
-{
-    typename Pool<T>::Object* mutable_object;
-
-    mutable_object = const_cast<typename Pool<T>::Object *>(this);
-    mutable_object->_error_code = error_code;
-    ft_errno = error_code;
-    return ;
-}
-
-template<typename T>
-void Pool<T>::Object::set_error(int error_code) const noexcept
-{
-    bool lock_acquired;
-
-    lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
-        return ;
-    this->set_error_unlocked(error_code);
-    this->unlock_internal(lock_acquired);
-    return ;
-}
-
-template<typename T>
-int Pool<T>::enable_thread_safety() noexcept
-{
-    void *memory;
-    pt_mutex *mutex_pointer;
-
-    if (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr)
+    if (this->_mutex != ft_nullptr)
     {
-        this->set_error(FT_ERR_SUCCESSS);
-        return (0);
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESSS);
     }
-    memory = cma_malloc(sizeof(pt_mutex));
-    if (memory == ft_nullptr)
-    {
-        this->set_error(FT_ERR_NO_MEMORY);
-        return (-1);
-    }
-    mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
-    {
-        int mutex_error;
+    int result = this->prepare_thread_safety();
 
-        mutex_error = mutex_pointer->get_error();
-        mutex_pointer->~pt_mutex();
-        cma_free(memory);
-        this->set_error(mutex_error);
-        return (-1);
-    }
-    this->_state_mutex = mutex_pointer;
-    this->_thread_safe_enabled = true;
-    this->set_error(FT_ERR_SUCCESSS);
-    return (0);
-}
-
-template<typename T>
-void Pool<T>::disable_thread_safety() noexcept
-{
-    this->teardown_thread_safety();
-    this->set_error(FT_ERR_SUCCESSS);
-    return ;
-}
-
-template<typename T>
-bool Pool<T>::is_thread_safe_enabled() const noexcept
-{
-    bool enabled;
-
-    enabled = (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr);
-    return (enabled);
-}
-
-template<typename T>
-int Pool<T>::lock(bool *lock_acquired) const noexcept
-{
-    int result;
-
-    result = this->lock_internal(lock_acquired);
-    if (result != 0)
-        const_cast<Pool<T> *>(this)->set_error(ft_errno);
-    else
-        const_cast<Pool<T> *>(this)->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(result);
     return (result);
 }
 
 template<typename T>
-void Pool<T>::unlock(bool lock_acquired) const noexcept
-{
-    this->unlock_internal(lock_acquired);
-    if (this->_state_mutex != ft_nullptr && this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
-        const_cast<Pool<T> *>(this)->set_error(this->_state_mutex->get_error());
-    else
-        const_cast<Pool<T> *>(this)->set_error(FT_ERR_SUCCESSS);
-    return ;
-}
-
-template<typename T>
-int Pool<T>::lock_internal(bool *lock_acquired) const noexcept
-{
-    if (lock_acquired != ft_nullptr)
-        *lock_acquired = false;
-    if (!this->_thread_safe_enabled || this->_state_mutex == ft_nullptr)
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-        return (0);
-    }
-    this->_state_mutex->lock(THREAD_ID);
-    if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = this->_state_mutex->get_error();
-        return (-1);
-    }
-    if (lock_acquired != ft_nullptr)
-        *lock_acquired = true;
-    ft_errno = FT_ERR_SUCCESSS;
-    return (0);
-}
-
-template<typename T>
-void Pool<T>::unlock_internal(bool lock_acquired) const noexcept
-{
-    if (!lock_acquired || this->_state_mutex == ft_nullptr)
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-        return ;
-    }
-    this->_state_mutex->unlock(THREAD_ID);
-    if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = this->_state_mutex->get_error();
-        return ;
-    }
-    ft_errno = FT_ERR_SUCCESSS;
-    return ;
-}
-
-template<typename T>
-void Pool<T>::teardown_thread_safety() noexcept
-{
-    if (this->_state_mutex != ft_nullptr)
-    {
-        this->_state_mutex->~pt_mutex();
-        cma_free(this->_state_mutex);
-        this->_state_mutex = ft_nullptr;
-    }
-    this->_thread_safe_enabled = false;
-    return ;
-}
-
-template<typename T>
-int Pool<T>::Object::enable_thread_safety() noexcept
-{
-    void *memory;
-    pt_mutex *mutex_pointer;
-
-    if (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr)
-    {
-        this->set_error(FT_ERR_SUCCESSS);
-        return (0);
-    }
-    memory = cma_malloc(sizeof(pt_mutex));
-    if (memory == ft_nullptr)
-    {
-        this->set_error(FT_ERR_NO_MEMORY);
-        return (-1);
-    }
-    mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
-    {
-        int mutex_error;
-
-        mutex_error = mutex_pointer->get_error();
-        mutex_pointer->~pt_mutex();
-        cma_free(memory);
-        this->set_error(mutex_error);
-        return (-1);
-    }
-    this->_state_mutex = mutex_pointer;
-    this->_thread_safe_enabled = true;
-    this->set_error(FT_ERR_SUCCESSS);
-    return (0);
-}
-
-template<typename T>
-void Pool<T>::Object::disable_thread_safety() noexcept
+void Pool<T>::Object::disable_thread_safety()
 {
     this->teardown_thread_safety();
-    this->set_error(FT_ERR_SUCCESSS);
-    return ;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
 }
 
 template<typename T>
-bool Pool<T>::Object::is_thread_safe_enabled() const noexcept
+bool Pool<T>::Object::is_thread_safe_enabled() const
 {
-    bool enabled;
+    bool enabled = (this->_mutex != ft_nullptr);
 
-    enabled = (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (enabled);
 }
 
 template<typename T>
-int Pool<T>::Object::lock(bool *lock_acquired) const noexcept
+int Pool<T>::Object::lock(bool *lock_acquired) const
 {
-    int result;
+    int result = this->lock_internal(lock_acquired);
 
-    result = this->lock_internal(lock_acquired);
-    if (result != 0)
-        const_cast<typename Pool<T>::Object *>(this)->set_error(ft_errno);
-    else
-        const_cast<typename Pool<T>::Object *>(this)->set_error(FT_ERR_SUCCESSS);
-    return (result);
-}
-
-template<typename T>
-void Pool<T>::Object::unlock(bool lock_acquired) const noexcept
-{
-    this->unlock_internal(lock_acquired);
-    if (this->_state_mutex != ft_nullptr && this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
-        const_cast<typename Pool<T>::Object *>(this)->set_error(this->_state_mutex->get_error());
-    else
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-        const_cast<typename Pool<T>::Object *>(this)->set_error(ft_errno);
-    }
-    return ;
-}
-
-template<typename T>
-int Pool<T>::Object::lock_internal(bool *lock_acquired) const noexcept
-{
-    if (lock_acquired != ft_nullptr)
-        *lock_acquired = false;
-    if (!this->_thread_safe_enabled || this->_state_mutex == ft_nullptr)
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-        return (0);
-    }
-    this->_state_mutex->lock(THREAD_ID);
-    if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = this->_state_mutex->get_error();
+    ft_global_error_stack_push(result);
+    if (result != FT_ERR_SUCCESSS)
         return (-1);
-    }
-    if (lock_acquired != ft_nullptr)
-        *lock_acquired = true;
-    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
 template<typename T>
-void Pool<T>::Object::unlock_internal(bool lock_acquired) const noexcept
+void Pool<T>::Object::unlock(bool lock_acquired) const
 {
-    if (!lock_acquired || this->_state_mutex == ft_nullptr)
-    {
-        ft_errno = FT_ERR_SUCCESSS;
-        return ;
-    }
-    this->_state_mutex->unlock(THREAD_ID);
-    if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = this->_state_mutex->get_error();
-        return ;
-    }
-    ft_errno = FT_ERR_SUCCESSS;
-    return ;
+    int result = this->unlock_internal(lock_acquired);
+
+    ft_global_error_stack_push(result);
 }
 
 template<typename T>
-void Pool<T>::Object::teardown_thread_safety() noexcept
+int Pool<T>::Object::lock_internal(bool *lock_acquired) const
 {
-    if (this->_state_mutex != ft_nullptr)
-    {
-        this->_state_mutex->~pt_mutex();
-        cma_free(this->_state_mutex);
-        this->_state_mutex = ft_nullptr;
-    }
-    this->_thread_safe_enabled = false;
-    return ;
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = false;
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    int result = pt_recursive_mutex_lock_with_error(*this->_mutex);
+
+    if (result == FT_ERR_SUCCESSS && lock_acquired != ft_nullptr)
+        *lock_acquired = true;
+    return (result);
 }
+
+template<typename T>
+int Pool<T>::Object::unlock_internal(bool lock_acquired) const
+{
+    if (!lock_acquired || this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    return (pt_recursive_mutex_unlock_with_error(*this->_mutex));
+}
+
+template<typename T>
+int Pool<T>::Object::prepare_thread_safety()
+{
+    if (this->_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    int result = pt_recursive_mutex_create_with_error(&this->_mutex);
+
+    if (result != FT_ERR_SUCCESSS && this->_mutex != ft_nullptr)
+        pt_recursive_mutex_destroy(&this->_mutex);
+    return (result);
+}
+
+template<typename T>
+void Pool<T>::Object::teardown_thread_safety()
+{
+    pt_recursive_mutex_destroy(&this->_mutex);
+}
+
+#ifdef LIBFT_TEST_BUILD
+
+template<typename T>
+pt_recursive_mutex* Pool<T>::Object::get_mutex_for_validation() const noexcept
+{
+    return (this->_mutex);
+}
+#endif
 
 #endif

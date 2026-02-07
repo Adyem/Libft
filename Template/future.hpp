@@ -18,7 +18,7 @@ class ft_future
     private:
         ft_promise<ValueType>* _promise;
         ft_sharedptr<ft_promise<ValueType> > _shared_promise;
-        mutable pt_recursive_mutex *_state_mutex;
+        mutable pt_recursive_mutex *_mutex;
         bool wait_ready() const;
         int lock_internal(bool *lock_acquired) const;
         int unlock_internal(bool lock_acquired) const;
@@ -56,7 +56,7 @@ class ft_future<void>
     private:
         ft_promise<void>* _promise;
         ft_sharedptr<ft_promise<void> > _shared_promise;
-        mutable pt_recursive_mutex *_state_mutex;
+        mutable pt_recursive_mutex *_mutex;
         bool wait_ready() const;
         int lock_internal(bool *lock_acquired) const;
         int unlock_internal(bool lock_acquired) const;
@@ -90,20 +90,20 @@ class ft_future<void>
 template <typename ValueType>
 int ft_future<ValueType>::prepare_thread_safety() const
 {
-    if (this->_state_mutex != ft_nullptr)
+    if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESSS);
     pt_recursive_mutex *mutex_pointer = ft_nullptr;
     int creation_result = pt_recursive_mutex_create_with_error(&mutex_pointer);
     if (creation_result != FT_ERR_SUCCESSS)
         return (creation_result);
-    this->_state_mutex = mutex_pointer;
+    this->_mutex = mutex_pointer;
     return (FT_ERR_SUCCESSS);
 }
 
 template <typename ValueType>
 void ft_future<ValueType>::teardown_thread_safety() const
 {
-    pt_recursive_mutex_destroy(&this->_state_mutex);
+    pt_recursive_mutex_destroy(&this->_mutex);
     return ;
 }
 
@@ -126,7 +126,7 @@ void ft_future<ValueType>::disable_thread_safety()
 template <typename ValueType>
 bool ft_future<ValueType>::is_thread_safe() const
 {
-    bool enabled = (this->_state_mutex != ft_nullptr);
+    bool enabled = (this->_mutex != ft_nullptr);
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (enabled);
 }
@@ -139,14 +139,14 @@ int ft_future<ValueType>::last_error_code() const
 
 template <typename ValueType>
 ft_future<ValueType>::ft_future()
-    : _promise(ft_nullptr), _shared_promise(), _state_mutex(ft_nullptr)
+    : _promise(ft_nullptr), _shared_promise(), _mutex(ft_nullptr)
 {
     return ;
 }
 
 template <typename ValueType>
 ft_future<ValueType>::ft_future(const ft_future<ValueType> &other)
-    : _promise(ft_nullptr), _shared_promise(), _state_mutex(ft_nullptr)
+    : _promise(ft_nullptr), _shared_promise(), _mutex(ft_nullptr)
 {
     bool lock_acquired;
     ft_promise<ValueType> *other_promise;
@@ -173,7 +173,7 @@ ft_future<ValueType>::ft_future(const ft_future<ValueType> &other)
 
 template <typename ValueType>
 ft_future<ValueType>::ft_future(ft_future<ValueType> &&other)
-    : _promise(ft_nullptr), _shared_promise(), _state_mutex(ft_nullptr)
+    : _promise(ft_nullptr), _shared_promise(), _mutex(ft_nullptr)
 {
     bool other_lock_acquired;
     ft_promise<ValueType> *transferred_promise;
@@ -202,7 +202,7 @@ ft_future<ValueType>::ft_future(ft_future<ValueType> &&other)
 
 template <typename ValueType>
 ft_future<ValueType>::ft_future(ft_promise<ValueType>& promise)
-    : _promise(&promise), _shared_promise(), _state_mutex(ft_nullptr)
+    : _promise(&promise), _shared_promise(), _mutex(ft_nullptr)
 {
     return ;
 }
@@ -210,7 +210,7 @@ ft_future<ValueType>::ft_future(ft_promise<ValueType>& promise)
 template <typename ValueType>
 ft_future<ValueType>::ft_future(ft_sharedptr<ft_promise<ValueType> > promise_pointer)
     : _promise(promise_pointer.get()), _shared_promise(promise_pointer),
-      _state_mutex(ft_nullptr)
+      _mutex(ft_nullptr)
 {
     if (!this->_promise)
     {
@@ -417,19 +417,19 @@ bool ft_future<ValueType>::valid() const
 
 inline int ft_future<void>::prepare_thread_safety() const
 {
-    if (this->_state_mutex != ft_nullptr)
+    if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESSS);
     pt_recursive_mutex *mutex_pointer = ft_nullptr;
     int creation_result = pt_recursive_mutex_create_with_error(&mutex_pointer);
     if (creation_result != FT_ERR_SUCCESSS)
         return (creation_result);
-    this->_state_mutex = mutex_pointer;
+    this->_mutex = mutex_pointer;
     return (FT_ERR_SUCCESSS);
 }
 
 inline void ft_future<void>::teardown_thread_safety() const
 {
-    pt_recursive_mutex_destroy(&this->_state_mutex);
+    pt_recursive_mutex_destroy(&this->_mutex);
     return ;
 }
 
@@ -449,7 +449,7 @@ inline void ft_future<void>::disable_thread_safety()
 
 inline bool ft_future<void>::is_thread_safe() const
 {
-    bool enabled = (this->_state_mutex != ft_nullptr);
+    bool enabled = (this->_mutex != ft_nullptr);
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (enabled);
 }
@@ -460,13 +460,13 @@ inline int ft_future<void>::last_error_code() const
 }
 
 inline ft_future<void>::ft_future()
-    : _promise(ft_nullptr), _shared_promise(), _state_mutex(ft_nullptr)
+    : _promise(ft_nullptr), _shared_promise(), _mutex(ft_nullptr)
 {
     return ;
 }
 
 inline ft_future<void>::ft_future(const ft_future<void> &other)
-    : _promise(ft_nullptr), _shared_promise(), _state_mutex(ft_nullptr)
+    : _promise(ft_nullptr), _shared_promise(), _mutex(ft_nullptr)
 {
     bool lock_acquired;
     ft_promise<void> *other_promise;
@@ -492,7 +492,7 @@ inline ft_future<void>::ft_future(const ft_future<void> &other)
 }
 
 inline ft_future<void>::ft_future(ft_future<void> &&other)
-    : _promise(ft_nullptr), _shared_promise(), _state_mutex(ft_nullptr)
+    : _promise(ft_nullptr), _shared_promise(), _mutex(ft_nullptr)
 {
     bool lock_acquired;
     ft_promise<void> *transferred_promise;
@@ -520,14 +520,14 @@ inline ft_future<void>::ft_future(ft_future<void> &&other)
 }
 
 inline ft_future<void>::ft_future(ft_promise<void>& promise)
-    : _promise(&promise), _shared_promise(), _state_mutex(ft_nullptr)
+    : _promise(&promise), _shared_promise(), _mutex(ft_nullptr)
 {
     return ;
 }
 
 inline ft_future<void>::ft_future(ft_sharedptr<ft_promise<void> > promise_pointer)
     : _promise(promise_pointer.get()), _shared_promise(promise_pointer),
-      _state_mutex(ft_nullptr)
+      _mutex(ft_nullptr)
 {
     if (!this->_promise)
     {
@@ -756,9 +756,9 @@ int ft_future<ValueType>::lock_internal(bool *lock_acquired) const
 
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_state_mutex == ft_nullptr)
+    if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESSS);
-    mutex_result = pt_recursive_mutex_lock_with_error(*this->_state_mutex);
+    mutex_result = pt_recursive_mutex_lock_with_error(*this->_mutex);
     stack_error = ft_global_error_stack_drop_last_error();
     operation_error = stack_error;
     if (stack_error == FT_ERR_SUCCESSS)
@@ -779,9 +779,9 @@ int ft_future<ValueType>::unlock_internal(bool lock_acquired) const
     int stack_error;
     int operation_error;
 
-    if (!lock_acquired || this->_state_mutex == ft_nullptr)
+    if (!lock_acquired || this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESSS);
-    mutex_result = pt_recursive_mutex_unlock_with_error(*this->_state_mutex);
+    mutex_result = pt_recursive_mutex_unlock_with_error(*this->_mutex);
     stack_error = ft_global_error_stack_drop_last_error();
     operation_error = stack_error;
     if (stack_error == FT_ERR_SUCCESSS)
@@ -821,9 +821,9 @@ inline int ft_future<void>::lock_internal(bool *lock_acquired) const
 
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_state_mutex == ft_nullptr)
+    if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESSS);
-    mutex_result = pt_recursive_mutex_lock_with_error(*this->_state_mutex);
+    mutex_result = pt_recursive_mutex_lock_with_error(*this->_mutex);
     stack_error = ft_global_error_stack_drop_last_error();
     operation_error = stack_error;
     if (stack_error == FT_ERR_SUCCESSS)
@@ -843,9 +843,9 @@ inline int ft_future<void>::unlock_internal(bool lock_acquired) const
     int stack_error;
     int operation_error;
 
-    if (!lock_acquired || this->_state_mutex == ft_nullptr)
+    if (!lock_acquired || this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESSS);
-    mutex_result = pt_recursive_mutex_unlock_with_error(*this->_state_mutex);
+    mutex_result = pt_recursive_mutex_unlock_with_error(*this->_mutex);
     stack_error = ft_global_error_stack_drop_last_error();
     operation_error = stack_error;
     if (stack_error == FT_ERR_SUCCESSS)
@@ -861,12 +861,12 @@ inline int ft_future<void>::unlock_internal(bool lock_acquired) const
 template <typename ValueType>
 pt_recursive_mutex *ft_future<ValueType>::get_mutex_for_validation() noexcept
 {
-    return (this->_state_mutex);
+    return (this->_mutex);
 }
 
 inline pt_recursive_mutex *ft_future<void>::get_mutex_for_validation() noexcept
 {
-    return (this->_state_mutex);
+    return (this->_mutex);
 }
 #endif
 
