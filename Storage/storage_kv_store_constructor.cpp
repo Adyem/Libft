@@ -13,12 +13,6 @@ static int storage_kv_move_string_error(ft_string &value) noexcept
     return (value.pop_operation_error(operation_id));
 }
 
-template <typename ContainerType>
-static int storage_kv_pop_newest_error(ContainerType &container) noexcept
-{
-    return (container.pop_newest_operation_error());
-}
-
 kv_store::kv_store(const char *file_path, const char *encryption_key, bool enable_encryption)
     : _data()
     , _file_path()
@@ -154,7 +148,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
                 return ;
             }
             ttl_metadata.insert(ttl_key, expiration_timestamp);
-            int ttl_metadata_pop_error = storage_kv_pop_newest_error(ttl_metadata);
+            int ttl_metadata_pop_error = ft_global_error_stack_peek_last_error();
             if (ttl_metadata_pop_error != FT_ERR_SUCCESSS)
             {
                 json_free_groups(group_head);
@@ -223,7 +217,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
             }
         }
         this->_data.insert(key_storage, entry);
-        int data_insert_pop_error = storage_kv_pop_newest_error(this->_data);
+        int data_insert_pop_error = ft_global_error_stack_peek_last_error();
         if (data_insert_pop_error != FT_ERR_SUCCESSS)
         {
             json_free_groups(group_head);
@@ -235,7 +229,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
     size_t ttl_size;
 
     ttl_size = ttl_metadata.size();
-    int ttl_metadata_size_pop_error = storage_kv_pop_newest_error(ttl_metadata);
+    int ttl_metadata_size_pop_error = ft_global_error_stack_peek_last_error();
     if (ttl_metadata_size_pop_error != FT_ERR_SUCCESSS)
     {
         json_free_groups(group_head);
@@ -249,7 +243,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
         size_t ttl_index;
 
         ttl_end = ttl_metadata.end();
-        int ttl_metadata_range_pop_error = storage_kv_pop_newest_error(ttl_metadata);
+        int ttl_metadata_range_pop_error = ft_global_error_stack_peek_last_error();
         if (ttl_metadata_range_pop_error != FT_ERR_SUCCESSS)
         {
             json_free_groups(group_head);
@@ -264,7 +258,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
             Pair<ft_string, kv_store_entry> *data_pair;
 
             data_pair = this->_data.find(ttl_entry.key);
-            int data_iteration_pop_error = storage_kv_pop_newest_error(this->_data);
+            int data_iteration_pop_error = ft_global_error_stack_peek_last_error();
             if (data_iteration_pop_error != FT_ERR_SUCCESSS)
             {
                 json_free_groups(group_head);

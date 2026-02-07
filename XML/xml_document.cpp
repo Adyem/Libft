@@ -599,7 +599,7 @@ static const char *parse_node(const char *string, xml_node **out_node,
                 return (ft_nullptr);
             }
             node->children.push_back(child);
-            int children_error_code = node->children.get_error();
+            int children_error_code = ft_global_error_stack_peek_last_error();
             if (children_error_code != FT_ERR_SUCCESSS)
             {
                 delete child;
@@ -995,21 +995,21 @@ char *xml_document::write_to_string() const noexcept
             error_code = write_status;
         if (error_code == FT_ERR_SUCCESSS)
         {
-            buffer_error = buffer.get_error();
+            buffer_error = ft_global_error_stack_peek_last_error();
             if (buffer_error != FT_ERR_SUCCESSS)
                 error_code = translate_vector_error(buffer_error);
         }
         if (error_code == FT_ERR_SUCCESSS)
         {
             buffer.push_back('\n');
-            buffer_error = buffer.get_error();
+            buffer_error = ft_global_error_stack_peek_last_error();
             if (buffer_error != FT_ERR_SUCCESSS)
                 error_code = translate_vector_error(buffer_error);
         }
         if (error_code == FT_ERR_SUCCESSS)
         {
             buffer.push_back('\0');
-            buffer_error = buffer.get_error();
+            buffer_error = ft_global_error_stack_peek_last_error();
             if (buffer_error != FT_ERR_SUCCESSS)
                 error_code = translate_vector_error(buffer_error);
         }

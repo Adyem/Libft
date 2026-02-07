@@ -99,7 +99,7 @@ static int xml_dom_populate_node_locked(const xml_node *source, ft_dom_node *tar
         xml_node *child_source;
 
         child_source = source->children[index];
-        int child_error_code = source->children.get_error();
+        int child_error_code = ft_global_error_stack_peek_last_error();
         if (child_error_code != FT_ERR_SUCCESSS)
             return (xml_dom_report_error(child_error_code));
         if (!child_source)
@@ -248,10 +248,12 @@ static int xml_dom_serialize_node(ft_dom_node *node, ft_string &output) noexcept
         const ft_string &attribute_name = attribute_keys[attribute_index];
         const ft_string &attribute_value = attribute_values[attribute_index];
 
-        if (attribute_keys.get_error() != FT_ERR_SUCCESSS)
-            return (xml_dom_report_error(attribute_keys.get_error()));
-        if (attribute_values.get_error() != FT_ERR_SUCCESSS)
-            return (xml_dom_report_error(attribute_values.get_error()));
+        int attribute_keys_error = ft_global_error_stack_peek_last_error();
+        if (attribute_keys_error != FT_ERR_SUCCESSS)
+            return (xml_dom_report_error(attribute_keys_error));
+        int attribute_values_error = ft_global_error_stack_peek_last_error();
+        if (attribute_values_error != FT_ERR_SUCCESSS)
+            return (xml_dom_report_error(attribute_values_error));
         output += " ";
         if (xml_dom_check_string_error(output) != FT_ERR_SUCCESSS)
             return (-1);
@@ -282,8 +284,9 @@ static int xml_dom_serialize_node(ft_dom_node *node, ft_string &output) noexcept
 
     has_children = children.size() > 0;
     has_value = value.size() > 0;
-    if (children.get_error() != FT_ERR_SUCCESSS)
-        return (xml_dom_report_error(children.get_error()));
+    int children_error_code = ft_global_error_stack_peek_last_error();
+    if (children_error_code != FT_ERR_SUCCESSS)
+        return (xml_dom_report_error(children_error_code));
     if (!has_children && !has_value)
     {
     output += "/>";
@@ -308,8 +311,9 @@ static int xml_dom_serialize_node(ft_dom_node *node, ft_string &output) noexcept
     {
         ft_dom_node *child_node = children[index];
 
-        if (children.get_error() != FT_ERR_SUCCESSS)
-            return (xml_dom_report_error(children.get_error()));
+        int child_vector_error = ft_global_error_stack_peek_last_error();
+        if (child_vector_error != FT_ERR_SUCCESSS)
+            return (xml_dom_report_error(child_vector_error));
         if (xml_dom_serialize_node(child_node, output) != 0)
             return (-1);
         index += 1;

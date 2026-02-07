@@ -76,9 +76,10 @@ int ft_file_watch::watch_directory(const char *path, void (*callback)(const char
                         this->_running = true;
                         this->_stopped = false;
                         new_thread = ft_thread(&ft_file_watch::event_loop, this);
-                        if (new_thread.get_error() != FT_ERR_SUCCESSS)
+                        int thread_error = ft_global_error_stack_peek_last_error();
+                        if (thread_error != FT_ERR_SUCCESSS)
                         {
-                            status = new_thread.get_error();
+                            status = thread_error;
                             this->_running = false;
                             this->_stopped = true;
                         this->close_handles_locked();

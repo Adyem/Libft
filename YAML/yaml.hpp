@@ -6,8 +6,6 @@
 #include "../Template/map.hpp"
 #include "../Parser/document_backend.hpp"
 
-class pt_mutex;
-
 enum yaml_type
 {
     YAML_SCALAR,
