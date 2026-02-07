@@ -414,7 +414,7 @@ void ft_tuple<Types...>::destroy_locked()
 {
     if (this->_data != ft_nullptr)
     {
-        destroy_at(this->_data);
+        ::destroy_at(this->_data);
         cma_free(this->_data);
         this->_data = ft_nullptr;
     }

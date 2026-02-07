@@ -36,50 +36,47 @@
 #include "variant.hpp"
 #include "vector.hpp"
 
-namespace template_module_compile
+static int instantiate_free_functions()
 {
-    static int instantiate_free_functions()
+    int data[] = {1, 2, 3};
+    ft_sort(data, data + 3);
+    ft_sort(data, data + 3, [](const int &left, const int &right)
     {
-        int data[] = {1, 2, 3};
-        ft_sort(data, data + 3);
-        ft_sort(data, data + 3, [](const int &left, const int &right)
-        {
-            return (left < right);
-        });
-        ft_binary_search(data, data + 3, 2);
-        ft_binary_search(data, data + 3, 2, [](const int &left, const int &right)
-        {
-            return (left < right);
-        });
-        ft_shuffle(data, data + 3);
-        ft_reverse(data, data + 3);
-        int max_value = ft_max(1, 2);
-        int min_value = ft_min(1, 2);
-        ft_swap(data[0], data[1]);
-        construct_at(&data[0], 5);
-        destroy_at(&data[0]);
-        int sample = 7;
-        auto moved_sample = ft_move(sample);
-        (void)moved_sample;
-        int target_value = 0;
-        static_cast_or_construct<int>(&target_value);
-        int invoked_value = ft_invoke([](int value)
-        {
-            return (value + 1);
-        }, 5);
-        (void)invoked_value;
-        ft_string serialized;
-        ft_container_serialization::default_string_serializer<int>(42, serialized);
-        ft_container_serialization::default_string_serializer<const char*>("abc", serialized);
-        ft_string_view<char> view("hello");
-        (void)view.size();
-        auto substring = view.substr(1, 3);
-        (void)substring.compare(view);
-        return (max_value + min_value);
-    }
-
-    static int functions_dummy = (instantiate_free_functions(), 0);
+        return (left < right);
+    });
+    ft_binary_search(data, data + 3, 2);
+    ft_binary_search(data, data + 3, 2, [](const int &left, const int &right)
+    {
+        return (left < right);
+    });
+    ft_shuffle(data, data + 3);
+    ft_reverse(data, data + 3);
+    int max_value = ft_max(1, 2);
+    int min_value = ft_min(1, 2);
+    ft_swap(data[0], data[1]);
+    construct_at(&data[0], 5);
+    destroy_at(&data[0]);
+    int sample = 7;
+    auto moved_sample = ft_move(sample);
+    (void)moved_sample;
+    int target_value = 0;
+    static_cast_or_construct<int>(&target_value);
+    int invoked_value = ft_invoke([](int value)
+    {
+        return (value + 1);
+    }, 5);
+    (void)invoked_value;
+    ft_string serialized;
+    ft_container_serialization::default_string_serializer<int>(42, serialized);
+    ft_container_serialization::default_string_serializer<const char*>("abc", serialized);
+    ft_string_view<char> view("hello");
+    (void)view.size();
+    auto substring = view.substr(1, 3);
+    (void)substring.compare(view);
+    return (max_value + min_value);
 }
+
+static int functions_dummy = (instantiate_free_functions(), 0);
 
 template class ft_vector<int>;
 template class ft_queue<int>;
@@ -103,7 +100,6 @@ template class ft_function<int(int)>;
 template class ft_graph<int>;
 template class ft_matrix<int>;
 template class Pool<int>;
-template class Pool<int>::Object;
 template class Iterator<int>;
 template class ft_trie<int>;
 template class ft_tuple<int, double>;

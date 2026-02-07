@@ -8,49 +8,41 @@
 #include "shared_ptr.hpp"
 #include "vector.hpp"
 #include "move.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include <atomic>
-#include <pthread.h>
-#include <errno.h>
 #include <new>
-#include <type_traits>
 
-namespace ft_cancellation_detail
+class ft_cancellation_state
 {
-    class ft_cancellation_state
-    {
-        private:
-            mutable int _error_code;
-            std::atomic<bool> _cancelled;
-            ft_vector<ft_function<void()> > _callbacks;
-            pthread_mutex_t _mutex;
-            bool _mutex_initialized;
+    private:
+        std::atomic<bool> _cancelled;
+        ft_vector<ft_function<void()> > _callbacks;
+        mutable pt_recursive_mutex* _mutex;
 
-            void set_error(int error_code) const;
+        int     lock_internal(bool *lock_acquired) const;
+        int     unlock_internal(bool lock_acquired) const;
+        int     prepare_thread_safety();
+        void    teardown_thread_safety();
 
-        public:
-            ft_cancellation_state() noexcept;
-            ~ft_cancellation_state() noexcept;
+    public:
+        ft_cancellation_state() noexcept;
+        ~ft_cancellation_state() noexcept;
 
-            ft_cancellation_state(const ft_cancellation_state&) = delete;
-            ft_cancellation_state &operator=(const ft_cancellation_state&) = delete;
+        ft_cancellation_state(const ft_cancellation_state&) = delete;
+        ft_cancellation_state &operator=(const ft_cancellation_state&) = delete;
 
-            int register_callback(const ft_function<void()> &callback) noexcept;
-            void request_cancel() noexcept;
-            bool is_cancelled() const noexcept;
-            int get_error() const noexcept;
-            const char *get_error_str() const noexcept;
-    };
-}
+        int register_callback(const ft_function<void()> &callback) noexcept;
+        int request_cancel() noexcept;
+        bool is_cancelled() const noexcept;
+};
 
 class ft_cancellation_source;
 
 class ft_cancellation_token
 {
     private:
-        ft_sharedptr<ft_cancellation_detail::ft_cancellation_state> _state;
-        mutable int _error_code;
-
-        void set_error(int error_code) const noexcept;
+        ft_sharedptr<ft_cancellation_state> _state;
 
         friend class ft_cancellation_source;
 
@@ -65,18 +57,13 @@ class ft_cancellation_token
 
         bool is_valid() const noexcept;
         bool is_cancellation_requested() const noexcept;
-        int get_error() const noexcept;
-        const char *get_error_str() const noexcept;
-        int register_callback(const ft_function<void()> &callback) const noexcept;
+        int  register_callback(const ft_function<void()> &callback) const noexcept;
 };
 
 class ft_cancellation_source
 {
     private:
-        ft_sharedptr<ft_cancellation_detail::ft_cancellation_state> _state;
-        mutable int _error_code;
-
-        void set_error(int error_code) const noexcept;
+        ft_sharedptr<ft_cancellation_state> _state;
 
     public:
         ft_cancellation_source() noexcept;
@@ -90,186 +77,174 @@ class ft_cancellation_source
         ft_cancellation_token get_token() const noexcept;
         void request_cancel() noexcept;
         bool is_cancellation_requested() const noexcept;
-        int get_error() const noexcept;
-        const char *get_error_str() const noexcept;
 };
 
-namespace ft_cancellation_detail
+inline int ft_cancellation_state::lock_internal(bool *lock_acquired) const
 {
-    inline void ft_cancellation_state::set_error(int error_code) const
-    {
-        this->_error_code = error_code;
-        return ;
-    }
-
-    inline ft_cancellation_state::ft_cancellation_state() noexcept
-        : _error_code(FT_ERR_SUCCESSS),
-          _cancelled(false),
-          _callbacks(),
-          _mutex(),
-          _mutex_initialized(false)
-    {
-        if (pthread_mutex_init(&this->_mutex, ft_nullptr) != 0)
-        {
-            this->set_error(ft_map_system_error(errno));
-            return ;
-        }
-        this->_mutex_initialized = true;
-        this->set_error(FT_ERR_SUCCESSS);
-        return ;
-    }
-
-    inline ft_cancellation_state::~ft_cancellation_state() noexcept
-    {
-        if (this->_mutex_initialized)
-            pthread_mutex_destroy(&this->_mutex);
-        this->set_error(FT_ERR_SUCCESSS);
-        return ;
-    }
-
-    inline int ft_cancellation_state::register_callback(const ft_function<void()> &callback) noexcept
-    {
-        if (this->_mutex_initialized == false)
-        {
-            this->set_error(FT_ERR_INVALID_STATE);
-            return (FT_ERR_INVALID_STATE);
-        }
-        if (pthread_mutex_lock(&this->_mutex) != 0)
-        {
-            this->set_error(ft_map_system_error(errno));
-            return (this->_error_code);
-        }
-        bool already_cancelled;
-
-        already_cancelled = this->_cancelled.load(std::memory_order_acquire);
-        if (already_cancelled == false)
-        {
-            this->_callbacks.push_back(callback);
-            if (this->_callbacks.get_error() != FT_ERR_SUCCESSS)
-            {
-                int push_error;
-
-                push_error = this->_callbacks.get_error();
-                pthread_mutex_unlock(&this->_mutex);
-                this->set_error(push_error);
-                return (push_error);
-            }
-        }
-        if (pthread_mutex_unlock(&this->_mutex) != 0)
-        {
-            this->set_error(ft_map_system_error(errno));
-            return (this->_error_code);
-        }
-        if (already_cancelled)
-        {
-            ft_function<void()> callback_copy(callback);
-
-            callback_copy();
-        }
-        this->set_error(FT_ERR_SUCCESSS);
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = false;
+    if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESSS);
-    }
-
-    inline void ft_cancellation_state::request_cancel() noexcept
-    {
-        if (this->_cancelled.exchange(true, std::memory_order_acq_rel))
-        {
-            this->set_error(FT_ERR_SUCCESSS);
-            return ;
-        }
-        ft_vector<ft_function<void()> > callbacks_to_run;
-
-        if (this->_mutex_initialized)
-        {
-            if (pthread_mutex_lock(&this->_mutex) != 0)
-            {
-                this->set_error(ft_map_system_error(errno));
-                return ;
-            }
-            size_t callback_index;
-
-            callback_index = 0;
-            while (callback_index < this->_callbacks.size())
-            {
-                callbacks_to_run.push_back(this->_callbacks[callback_index]);
-                if (callbacks_to_run.get_error() != FT_ERR_SUCCESSS)
-                {
-                    int copy_error;
-
-                    copy_error = callbacks_to_run.get_error();
-                    pthread_mutex_unlock(&this->_mutex);
-                    this->set_error(copy_error);
-                    return ;
-                }
-                ++callback_index;
-            }
-            this->_callbacks.clear();
-            if (this->_callbacks.get_error() != FT_ERR_SUCCESSS)
-            {
-                int clear_error;
-
-                clear_error = this->_callbacks.get_error();
-                pthread_mutex_unlock(&this->_mutex);
-                this->set_error(clear_error);
-                return ;
-            }
-            if (pthread_mutex_unlock(&this->_mutex) != 0)
-            {
-                this->set_error(ft_map_system_error(errno));
-                return ;
-            }
-        }
-        size_t invoke_index;
-
-        invoke_index = 0;
-        while (invoke_index < callbacks_to_run.size())
-        {
-            callbacks_to_run[invoke_index]();
-            ++invoke_index;
-        }
-        this->set_error(FT_ERR_SUCCESSS);
-        return ;
-    }
-
-    inline bool ft_cancellation_state::is_cancelled() const noexcept
-    {
-        return (this->_cancelled.load(std::memory_order_acquire));
-    }
-
-    inline int ft_cancellation_state::get_error() const noexcept
-    {
-        return (this->_error_code);
-    }
-
-    inline const char *ft_cancellation_state::get_error_str() const noexcept
-    {
-        return (ft_strerror(this->_error_code));
-    }
+    int mutex_result = pt_recursive_mutex_lock_with_error(*this->_mutex);
+    ft_global_error_stack_push(mutex_result);
+    if (mutex_result != FT_ERR_SUCCESSS)
+        return (mutex_result);
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = true;
+    return (FT_ERR_SUCCESSS);
 }
 
-inline void ft_cancellation_token::set_error(int error_code) const noexcept
+inline int ft_cancellation_state::unlock_internal(bool lock_acquired) const
 {
-    this->_error_code = error_code;
+    if (!lock_acquired || this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    int mutex_result = pt_recursive_mutex_unlock_with_error(*this->_mutex);
+    ft_global_error_stack_push(mutex_result);
+    return (mutex_result);
+}
+
+inline int ft_cancellation_state::prepare_thread_safety()
+{
+    if (this->_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    pt_recursive_mutex *mutex_pointer = ft_nullptr;
+    int creation_result = pt_recursive_mutex_create_with_error(&mutex_pointer);
+    if (creation_result != FT_ERR_SUCCESSS)
+        return (creation_result);
+    this->_mutex = mutex_pointer;
+    return (FT_ERR_SUCCESSS);
+}
+
+inline void ft_cancellation_state::teardown_thread_safety()
+{
+    pt_recursive_mutex_destroy(&this->_mutex);
     return ;
 }
 
-inline ft_cancellation_token::ft_cancellation_token() noexcept
-    : _state(), _error_code(FT_ERR_SUCCESSS)
+inline ft_cancellation_state::ft_cancellation_state() noexcept
+    : _cancelled(false), _callbacks(), _mutex(ft_nullptr)
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    int result = this->prepare_thread_safety();
+    ft_global_error_stack_push(result);
+    return ;
+}
+
+inline ft_cancellation_state::~ft_cancellation_state() noexcept
+{
+    this->teardown_thread_safety();
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return ;
+}
+
+inline int ft_cancellation_state::register_callback(const ft_function<void()> &callback) noexcept
+{
+    bool lock_acquired = false;
+    int lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(lock_error);
+        return (lock_error);
+    }
+    bool already_cancelled = this->_cancelled.load(std::memory_order_acquire);
+    if (!already_cancelled)
+    {
+        this->_callbacks.push_back(callback);
+        int push_error = ft_global_error_stack_drop_last_error();
+        if (push_error != FT_ERR_SUCCESSS)
+        {
+            this->unlock_internal(lock_acquired);
+            ft_global_error_stack_push(push_error);
+            return (push_error);
+        }
+    }
+    int unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(unlock_error);
+        return (unlock_error);
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    if (already_cancelled)
+        callback();
+    return (FT_ERR_SUCCESSS);
+}
+
+inline int ft_cancellation_state::request_cancel() noexcept
+{
+    if (this->_cancelled.exchange(true, std::memory_order_acq_rel))
+    {
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESSS);
+    }
+    bool lock_acquired = false;
+    int lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(lock_error);
+        return (lock_error);
+    }
+    ft_vector<ft_function<void()> > callbacks_to_run;
+    size_t callback_index = 0;
+    while (callback_index < this->_callbacks.size())
+    {
+        callbacks_to_run.push_back(this->_callbacks[callback_index]);
+        int push_error = ft_global_error_stack_drop_last_error();
+        if (push_error != FT_ERR_SUCCESSS)
+        {
+            this->unlock_internal(lock_acquired);
+            ft_global_error_stack_push(push_error);
+            return (push_error);
+        }
+        ++callback_index;
+    }
+    this->_callbacks.clear();
+    int clear_error = ft_global_error_stack_drop_last_error();
+    if (clear_error != FT_ERR_SUCCESSS)
+    {
+        this->unlock_internal(lock_acquired);
+        ft_global_error_stack_push(clear_error);
+        return (clear_error);
+    }
+    int unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(unlock_error);
+        return (unlock_error);
+    }
+    size_t invoke_index = 0;
+    while (invoke_index < callbacks_to_run.size())
+    {
+        callbacks_to_run[invoke_index]();
+        ++invoke_index;
+    }
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
+}
+
+inline bool ft_cancellation_state::is_cancelled() const noexcept
+{
+    bool result = this->_cancelled.load(std::memory_order_acquire);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    return (result);
+}
+
+inline ft_cancellation_token::ft_cancellation_token() noexcept
+    : _state()
+{
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
 inline ft_cancellation_token::~ft_cancellation_token() noexcept
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
 inline ft_cancellation_token::ft_cancellation_token(const ft_cancellation_token &other) noexcept
-    : _state(other._state), _error_code(FT_ERR_SUCCESSS)
+    : _state(other._state)
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -277,14 +252,14 @@ inline ft_cancellation_token &ft_cancellation_token::operator=(const ft_cancella
 {
     if (this != &other)
         this->_state = other._state;
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (*this);
 }
 
 inline ft_cancellation_token::ft_cancellation_token(ft_cancellation_token &&other) noexcept
-    : _state(ft_move(other._state)), _error_code(FT_ERR_SUCCESSS)
+    : _state(ft_move(other._state))
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -292,124 +267,90 @@ inline ft_cancellation_token &ft_cancellation_token::operator=(ft_cancellation_t
 {
     if (this != &other)
         this->_state = ft_move(other._state);
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (*this);
 }
 
 inline bool ft_cancellation_token::is_valid() const noexcept
 {
-    bool valid_state;
-
-    valid_state = static_cast<bool>(this->_state);
-    this->set_error(FT_ERR_SUCCESSS);
-    return (valid_state);
+    bool result = static_cast<bool>(this->_state);
+    if (result)
+        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    else
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
+    return (result);
 }
 
 inline bool ft_cancellation_token::is_cancellation_requested() const noexcept
 {
-    if (!this->is_valid())
+    if (!static_cast<bool>(this->_state))
     {
-        this->set_error(FT_ERR_INVALID_STATE);
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return (true);
     }
-    const ft_cancellation_detail::ft_cancellation_state *state_pointer;
-
-    state_pointer = this->_state.get();
+    const ft_cancellation_state *state_pointer = this->_state.get();
     if (!state_pointer)
     {
-        this->set_error(FT_ERR_INVALID_STATE);
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return (true);
     }
-    bool cancelled;
-
-    cancelled = state_pointer->is_cancelled();
-    this->set_error(FT_ERR_SUCCESSS);
-    return (cancelled);
-}
-
-inline int ft_cancellation_token::get_error() const noexcept
-{
-    return (this->_error_code);
-}
-
-inline const char *ft_cancellation_token::get_error_str() const noexcept
-{
-    return (ft_strerror(this->_error_code));
+    return (state_pointer->is_cancelled());
 }
 
 inline int ft_cancellation_token::register_callback(const ft_function<void()> &callback) const noexcept
 {
     if (!this->is_valid())
     {
-        this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
-    const ft_cancellation_detail::ft_cancellation_state *state_pointer_const;
-    ft_cancellation_detail::ft_cancellation_state *state_pointer;
-
-    state_pointer_const = this->_state.get();
-    if (!state_pointer_const)
+    const ft_cancellation_state *state_pointer = this->_state.get();
+    if (!state_pointer)
     {
-        this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
-    state_pointer = const_cast<ft_cancellation_detail::ft_cancellation_state*>(state_pointer_const);
-    int status;
-
-    status = state_pointer->register_callback(callback);
-    this->set_error(status);
-    return (status);
-}
-
-inline void ft_cancellation_source::set_error(int error_code) const noexcept
-{
-    this->_error_code = error_code;
-    return ;
+    return (const_cast<ft_cancellation_state *>(state_pointer)->register_callback(callback));
 }
 
 inline ft_cancellation_source::ft_cancellation_source() noexcept
-    : _state(), _error_code(FT_ERR_SUCCESSS)
+    : _state()
 {
-    ft_cancellation_detail::ft_cancellation_state *state_pointer;
+    ft_cancellation_state *state_pointer;
 
-    state_pointer = new (std::nothrow) ft_cancellation_detail::ft_cancellation_state();
+    state_pointer = new (std::nothrow) ft_cancellation_state();
     if (!state_pointer)
     {
-        this->set_error(FT_ERR_NO_MEMORY);
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
+        return ;
+    }
+    int construction_error = ft_global_error_stack_drop_last_error();
+    if (construction_error != FT_ERR_SUCCESSS)
+    {
+        delete state_pointer;
+        ft_global_error_stack_push(construction_error);
         return ;
     }
     this->_state.reset(state_pointer, 1, false);
-    if (this->_state.get_error() != FT_ERR_SUCCESSS)
+    int reset_error = ft_global_error_stack_drop_last_error();
+    if (reset_error != FT_ERR_SUCCESSS)
     {
-        int allocation_error;
-
-        allocation_error = this->_state.get_error();
-        this->set_error(allocation_error);
+        delete state_pointer;
+        ft_global_error_stack_push(reset_error);
         return ;
     }
-    if (state_pointer->get_error() != FT_ERR_SUCCESSS)
-    {
-        int state_error;
-
-        state_error = state_pointer->get_error();
-        this->_state.reset();
-        this->set_error(state_error);
-        return ;
-    }
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
 inline ft_cancellation_source::~ft_cancellation_source() noexcept
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
 inline ft_cancellation_source::ft_cancellation_source(const ft_cancellation_source &other) noexcept
-    : _state(other._state), _error_code(FT_ERR_SUCCESSS)
+    : _state(other._state)
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -417,14 +358,14 @@ inline ft_cancellation_source &ft_cancellation_source::operator=(const ft_cancel
 {
     if (this != &other)
         this->_state = other._state;
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (*this);
 }
 
 inline ft_cancellation_source::ft_cancellation_source(ft_cancellation_source &&other) noexcept
-    : _state(ft_move(other._state)), _error_code(FT_ERR_SUCCESSS)
+    : _state(ft_move(other._state))
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -432,7 +373,7 @@ inline ft_cancellation_source &ft_cancellation_source::operator=(ft_cancellation
 {
     if (this != &other)
         this->_state = ft_move(other._state);
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (*this);
 }
 
@@ -440,16 +381,13 @@ inline ft_cancellation_token ft_cancellation_source::get_token() const noexcept
 {
     ft_cancellation_token token;
 
-    token = ft_cancellation_token();
     if (!static_cast<bool>(this->_state))
     {
-        token.set_error(FT_ERR_INVALID_STATE);
-        this->set_error(FT_ERR_INVALID_STATE);
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return (token);
     }
     token._state = this->_state;
-    token.set_error(FT_ERR_SUCCESSS);
-    this->set_error(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (token);
 }
 
@@ -457,19 +395,18 @@ inline void ft_cancellation_source::request_cancel() noexcept
 {
     if (!static_cast<bool>(this->_state))
     {
-        this->set_error(FT_ERR_INVALID_STATE);
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return ;
     }
-    ft_cancellation_detail::ft_cancellation_state *state_pointer;
-
-    state_pointer = this->_state.get();
+    ft_cancellation_state *state_pointer = this->_state.get();
     if (!state_pointer)
     {
-        this->set_error(FT_ERR_INVALID_STATE);
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return ;
     }
     state_pointer->request_cancel();
-    this->set_error(state_pointer->get_error());
+    int state_error = ft_global_error_stack_drop_last_error();
+    ft_global_error_stack_push(state_error);
     return ;
 }
 
@@ -477,32 +414,19 @@ inline bool ft_cancellation_source::is_cancellation_requested() const noexcept
 {
     if (!static_cast<bool>(this->_state))
     {
-        this->set_error(FT_ERR_INVALID_STATE);
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return (true);
     }
-    const ft_cancellation_detail::ft_cancellation_state *state_pointer;
-
-    state_pointer = this->_state.get();
+    const ft_cancellation_state *state_pointer = this->_state.get();
     if (!state_pointer)
     {
-        this->set_error(FT_ERR_INVALID_STATE);
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return (true);
     }
-    bool cancelled;
-
-    cancelled = state_pointer->is_cancelled();
-    this->set_error(FT_ERR_SUCCESSS);
+    bool cancelled = state_pointer->is_cancelled();
+    int state_error = ft_global_error_stack_drop_last_error();
+    ft_global_error_stack_push(state_error);
     return (cancelled);
-}
-
-inline int ft_cancellation_source::get_error() const noexcept
-{
-    return (this->_error_code);
-}
-
-inline const char *ft_cancellation_source::get_error_str() const noexcept
-{
-    return (ft_strerror(this->_error_code));
 }
 
 #endif

@@ -336,12 +336,11 @@ bool ft_future<ValueType>::wait_ready() const
         ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return (false);
     }
-    using namespace std::chrono;
-    const auto start = steady_clock::now();
+    const auto start = std::chrono::steady_clock::now();
 
     while (!promise_pointer->is_ready())
     {
-        if (steady_clock::now() - start > seconds(1))
+        if (std::chrono::steady_clock::now() - start > std::chrono::seconds(1))
         {
             ft_global_error_stack_push(FT_ERR_BROKEN_PROMISE);
             return (false);
@@ -651,12 +650,11 @@ inline bool ft_future<void>::wait_ready() const
         ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return (false);
     }
-    using namespace std::chrono;
-    const auto start = steady_clock::now();
+    const auto start = std::chrono::steady_clock::now();
 
     while (!promise_pointer->is_ready())
     {
-        if (steady_clock::now() - start > seconds(1))
+        if (std::chrono::steady_clock::now() - start > std::chrono::seconds(1))
         {
             ft_global_error_stack_push(FT_ERR_BROKEN_PROMISE);
             return (false);

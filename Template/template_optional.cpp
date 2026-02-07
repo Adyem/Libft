@@ -1,7 +1,5 @@
 #include "optional.hpp"
 
-namespace template_optional_compile
-{
 static int check_optional_usage()
 {
     ft_optional<int> initial_value(21);
@@ -18,4 +16,3 @@ static int check_optional_usage()
 }
 
 static volatile int template_optional_result = check_optional_usage();
-}

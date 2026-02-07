@@ -5,46 +5,43 @@
 #include <utility>
 #include "template_concepts.hpp"
 
-namespace ft_invoke_detail
+template <typename InstanceType>
+struct ft_invoke_detail_is_pointer
 {
-    template <typename InstanceType>
-    struct is_pointer
-    {
-        static const bool value = std::is_pointer<typename std::decay<InstanceType>::type>::value;
-    };
+    static const bool value = std::is_pointer<typename std::decay<InstanceType>::type>::value;
+};
 
 #if FT_TEMPLATE_HAS_CONCEPTS
-    template <typename InstanceType>
-    constexpr auto access(InstanceType &&instance)
-        requires std::is_pointer_v<std::decay_t<InstanceType>>
-    {
-        return (*instance);
-    }
-
-    template <typename InstanceType>
-    constexpr auto access(InstanceType &&instance)
-        requires (!std::is_pointer_v<std::decay_t<InstanceType>>)
-    {
-        return (std::forward<InstanceType>(instance));
-    }
-#else
-    template <typename InstanceType>
-    constexpr auto access(InstanceType &&instance)
-        -> typename std::enable_if<is_pointer<InstanceType>::value,
-            decltype(*std::forward<InstanceType>(instance))>::type
-    {
-        return (*instance);
-    }
-
-    template <typename InstanceType>
-    constexpr auto access(InstanceType &&instance)
-        -> typename std::enable_if<!is_pointer<InstanceType>::value,
-            InstanceType &&>::type
-    {
-        return (std::forward<InstanceType>(instance));
-    }
-#endif
+template <typename InstanceType>
+constexpr auto ft_invoke_detail_access(InstanceType &&instance)
+    requires std::is_pointer_v<std::decay_t<InstanceType>>
+{
+    return (*instance);
 }
+
+template <typename InstanceType>
+constexpr auto ft_invoke_detail_access(InstanceType &&instance)
+    requires (!std::is_pointer_v<std::decay_t<InstanceType>>)
+{
+    return (std::forward<InstanceType>(instance));
+}
+#else
+template <typename InstanceType>
+constexpr auto ft_invoke_detail_access(InstanceType &&instance)
+    -> typename std::enable_if<ft_invoke_detail_is_pointer<InstanceType>::value,
+        decltype(*std::forward<InstanceType>(instance))>::type
+{
+    return (*instance);
+}
+
+template <typename InstanceType>
+constexpr auto ft_invoke_detail_access(InstanceType &&instance)
+    -> typename std::enable_if<!ft_invoke_detail_is_pointer<InstanceType>::value,
+        InstanceType &&>::type
+{
+    return (std::forward<InstanceType>(instance));
+}
+#endif
 
 template <typename MemberFunction, typename InstanceType, typename... Args>
 constexpr auto ft_invoke(MemberFunction &&member_function, InstanceType &&instance, Args&&... args)
@@ -53,12 +50,12 @@ constexpr auto ft_invoke(MemberFunction &&member_function, InstanceType &&instan
 #else
     -> typename std::enable_if<
         std::is_member_function_pointer<typename std::decay<MemberFunction>::type>::value,
-        decltype((ft_invoke_detail::access(std::forward<InstanceType>(instance)).*
+        decltype((ft_invoke_detail_access(std::forward<InstanceType>(instance)).*
             std::forward<MemberFunction>(member_function))(
                 std::forward<Args>(args)...))>::type
 #endif
 {
-    return ((ft_invoke_detail::access(std::forward<InstanceType>(instance)).*
+    return ((ft_invoke_detail_access(std::forward<InstanceType>(instance)).*
         std::forward<MemberFunction>(member_function))(
             std::forward<Args>(args)...));
 }
@@ -70,11 +67,11 @@ constexpr auto ft_invoke(MemberObject &&member_object, InstanceType &&instance)
 #else
     -> typename std::enable_if<
         std::is_member_object_pointer<typename std::decay<MemberObject>::type>::value,
-        decltype(ft_invoke_detail::access(std::forward<InstanceType>(instance)).*
+        decltype(ft_invoke_detail_access(std::forward<InstanceType>(instance)).*
             std::forward<MemberObject>(member_object))>::type
 #endif
 {
-    return (ft_invoke_detail::access(std::forward<InstanceType>(instance)).*
+    return (ft_invoke_detail_access(std::forward<InstanceType>(instance)).*
         std::forward<MemberObject>(member_object));
 }
 

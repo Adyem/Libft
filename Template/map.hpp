@@ -733,9 +733,12 @@ void ft_map<Key, MappedType>::unlock(bool lock_acquired) const
 }
 
 template <typename Key, typename MappedType>
+#ifdef LIBFT_TEST_BUILD
+template <typename Key, typename MappedType>
 pt_recursive_mutex* ft_map<Key, MappedType>::get_mutex_for_validation() const noexcept
 {
     return (this->_mutex);
 }
+#endif
 
 #endif

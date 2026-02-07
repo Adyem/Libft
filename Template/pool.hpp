@@ -103,7 +103,7 @@ void Pool<T>::release(size_t idx) noexcept
         return ;
     }
     this->_freeIndices.push_back(idx);
-    int vector_error = this->_freeIndices.get_error();
+    int vector_error = ft_global_error_stack_peek_last_error();
 
     if (vector_error != FT_ERR_SUCCESSS)
     {
@@ -227,7 +227,8 @@ void Pool<T>::resize(size_t new_size)
         return ;
     }
     this->_buffer.resize(new_size);
-    int buffer_error = this->_buffer.get_error();
+    int buffer_error = ft_global_error_stack_peek_last_error();
+    ft_global_error_stack_push(buffer_error);
 
     if (buffer_error != FT_ERR_SUCCESSS)
     {
@@ -236,7 +237,8 @@ void Pool<T>::resize(size_t new_size)
         return ;
     }
     this->_freeIndices.clear();
-    int free_error = this->_freeIndices.get_error();
+    int free_error = ft_global_error_stack_peek_last_error();
+    ft_global_error_stack_push(free_error);
 
     if (free_error != FT_ERR_SUCCESSS)
     {
@@ -245,7 +247,8 @@ void Pool<T>::resize(size_t new_size)
         return ;
     }
     this->_freeIndices.reserve(new_size);
-    free_error = this->_freeIndices.get_error();
+    free_error = ft_global_error_stack_peek_last_error();
+    ft_global_error_stack_push(free_error);
 
     if (free_error != FT_ERR_SUCCESSS)
     {
@@ -258,7 +261,8 @@ void Pool<T>::resize(size_t new_size)
     while (index < new_size)
     {
         this->_freeIndices.push_back(index);
-        int push_error = this->_freeIndices.get_error();
+        int push_error = ft_global_error_stack_peek_last_error();
+        ft_global_error_stack_push(push_error);
 
         if (push_error != FT_ERR_SUCCESSS)
         {
@@ -295,7 +299,8 @@ typename Pool<T>::Object Pool<T>::acquire(Args&&... args)
     size_t last = free_count - 1;
     size_t idx = this->_freeIndices[last];
     this->_freeIndices.pop_back();
-    int vector_error = this->_freeIndices.get_error();
+    int vector_error = ft_global_error_stack_drop_last_error();
+    ft_global_error_stack_push(vector_error);
 
     if (vector_error != FT_ERR_SUCCESSS)
     {
@@ -502,7 +507,7 @@ Pool<T>::Object::Object(Object&& o) noexcept
 }
 
 template<typename T>
-Pool<T>::Object& Pool<T>::Object::operator=(Object&& o) noexcept
+typename Pool<T>::Object& Pool<T>::Object::operator=(Object&& o) noexcept
 {
     if (this == &o)
         return (*this);

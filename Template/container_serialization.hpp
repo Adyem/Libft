@@ -14,8 +14,6 @@
 #include <new>
 #include <cstdlib>
 
-namespace ft_container_serialization
-{
     template <typename ElementType>
     int default_string_serializer(const ElementType &value, ft_string &output) noexcept
     {
@@ -141,8 +139,8 @@ namespace ft_container_serialization
         }
     }
 
-    template <typename ElementType>
-    int default_string_deserializer(const char *value_string, ElementType &output) noexcept
+template <typename ElementType>
+int default_string_deserializer(const char *value_string, ElementType &output) noexcept
     {
         if (!value_string)
         {
@@ -231,7 +229,6 @@ namespace ft_container_serialization
             return (-1);
         }
     }
-}
 
 template <typename ElementType, typename Serializer>
 int ft_vector_serialize_json(const ft_vector<ElementType> &values,
@@ -244,7 +241,7 @@ int ft_vector_serialize_json(const ft_vector<ElementType> &values,
     output_group = ft_nullptr;
     if (!group_name || !count_key || !item_prefix)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     json_group *group = json_create_json_group(group_name);
@@ -252,19 +249,21 @@ int ft_vector_serialize_json(const ft_vector<ElementType> &values,
         return (-1);
     size_t index = 0;
     size_t total_size = values.size();
-    if (values.get_error() != FT_ERR_SUCCESSS)
+    int total_error = ft_global_error_stack_peek_last_error();
+    if (total_error != FT_ERR_SUCCESSS)
     {
         json_free_groups(group);
-        ft_errno = values.get_error();
+        ft_global_error_stack_push(total_error);
         return (-1);
     }
     while (index < total_size)
     {
         const ElementType &element = values[index];
-        if (values.get_error() != FT_ERR_SUCCESSS)
+        if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
         {
+            int index_error = ft_global_error_stack_peek_last_error();
             json_free_groups(group);
-            ft_errno = values.get_error();
+            ft_global_error_stack_push(index_error);
             return (-1);
         }
         ft_string value_string;
@@ -280,7 +279,7 @@ int ft_vector_serialize_json(const ft_vector<ElementType> &values,
             if (error_code == FT_ERR_SUCCESSS)
                 error_code = FT_ERR_NO_MEMORY;
             json_free_groups(group);
-            ft_errno = error_code;
+            ft_global_error_stack_push(error_code);
             return (-1);
         }
         ft_string index_string = ft_to_string(static_cast<long>(index));
@@ -290,7 +289,7 @@ int ft_vector_serialize_json(const ft_vector<ElementType> &values,
             if (error_code == FT_ERR_SUCCESSS)
                 error_code = FT_ERR_NO_MEMORY;
             json_free_groups(group);
-            ft_errno = error_code;
+            ft_global_error_stack_push(error_code);
             return (-1);
         }
         key_string += index_string;
@@ -300,7 +299,7 @@ int ft_vector_serialize_json(const ft_vector<ElementType> &values,
             if (error_code == FT_ERR_SUCCESSS)
                 error_code = FT_ERR_NO_MEMORY;
             json_free_groups(group);
-            ft_errno = error_code;
+            ft_global_error_stack_push(error_code);
             return (-1);
         }
         json_item *item = json_create_item(key_string.c_str(), value_string.c_str());
@@ -320,7 +319,7 @@ int ft_vector_serialize_json(const ft_vector<ElementType> &values,
     }
     json_add_item_to_group(group, count_item);
     output_group = group;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -332,7 +331,7 @@ int ft_vector_serialize_json(const ft_vector<ElementType> &values,
     const char *item_prefix = "item_") noexcept
 {
     return (ft_vector_serialize_json(values, group_name,
-            ft_container_serialization::default_string_serializer<ElementType>,
+            default_string_serializer<ElementType>,
             output_group, count_key, item_prefix));
 }
 
@@ -345,21 +344,21 @@ int ft_vector_deserialize_json(json_group *group,
 {
     if (!group || !count_key || !item_prefix)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     json_item *count_item = json_find_item(group, count_key);
     if (!count_item)
     {
-        ft_errno = FT_ERR_NOT_FOUND;
+        ft_global_error_stack_push(FT_ERR_NOT_FOUND);
         return (-1);
     }
     long expected_count = ft_atol(count_item->value);
-    if (ft_errno != FT_ERR_SUCCESSS)
+    if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
         return (-1);
     if (expected_count < 0)
     {
-        ft_errno = FT_ERR_INVALID_STATE;
+        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return (-1);
     }
     ft_vector<ElementType> parsed_values;
@@ -372,7 +371,7 @@ int ft_vector_deserialize_json(json_group *group,
             int error_code = ft_string::last_operation_error();
             if (error_code == FT_ERR_SUCCESSS)
                 error_code = FT_ERR_NO_MEMORY;
-            ft_errno = error_code;
+            ft_global_error_stack_push(error_code);
             return (-1);
         }
         ft_string index_string = ft_to_string(static_cast<long>(index));
@@ -381,7 +380,7 @@ int ft_vector_deserialize_json(json_group *group,
             int error_code = ft_string::last_operation_error();
             if (error_code == FT_ERR_SUCCESSS)
                 error_code = FT_ERR_NO_MEMORY;
-            ft_errno = error_code;
+            ft_global_error_stack_push(error_code);
             return (-1);
         }
         key_string += index_string;
@@ -390,28 +389,31 @@ int ft_vector_deserialize_json(json_group *group,
             int error_code = ft_string::last_operation_error();
             if (error_code == FT_ERR_SUCCESSS)
                 error_code = FT_ERR_NO_MEMORY;
-            ft_errno = error_code;
+            ft_global_error_stack_push(error_code);
             return (-1);
         }
         json_item *value_item = json_find_item(group, key_string.c_str());
         if (!value_item)
         {
-            ft_errno = FT_ERR_NOT_FOUND;
+            ft_global_error_stack_push(FT_ERR_NOT_FOUND);
             return (-1);
         }
         ElementType element;
         if (deserializer(value_item->value, element) != 0)
             return (-1);
         parsed_values.push_back(element);
-        if (parsed_values.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = parsed_values.get_error();
-            return (-1);
+            int parsed_error = ft_global_error_stack_peek_last_error();
+            if (parsed_error != FT_ERR_SUCCESSS)
+            {
+                ft_global_error_stack_push(parsed_error);
+                return (-1);
+            }
         }
         index += 1;
     }
     output = ft_move(parsed_values);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -422,7 +424,7 @@ int ft_vector_deserialize_json(json_group *group,
     const char *item_prefix = "item_") noexcept
 {
     return (ft_vector_deserialize_json(group, count_key, item_prefix, output,
-            ft_container_serialization::default_string_deserializer<ElementType>));
+            default_string_deserializer<ElementType>));
 }
 
 template <typename ElementType, typename Serializer>
@@ -434,49 +436,59 @@ int ft_vector_serialize_yaml(const ft_vector<ElementType> &values,
     yaml_value *list_value = new (std::nothrow) yaml_value();
     if (!list_value)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (-1);
     }
     list_value->set_type(YAML_LIST);
-    if (list_value->get_error() != FT_ERR_SUCCESSS)
     {
-        int error_code = list_value->get_error();
-        delete list_value;
-        ft_errno = error_code;
-        return (-1);
+        int list_error = ft_global_error_stack_peek_last_error();
+        if (list_error != FT_ERR_SUCCESSS)
+        {
+            delete list_value;
+            ft_global_error_stack_push(list_error);
+            return (-1);
+        }
     }
     size_t index = 0;
     size_t total_size = values.size();
-    if (values.get_error() != FT_ERR_SUCCESSS)
     {
-        delete list_value;
-        ft_errno = values.get_error();
-        return (-1);
+        int total_error = ft_global_error_stack_peek_last_error();
+        if (total_error != FT_ERR_SUCCESSS)
+        {
+            delete list_value;
+            ft_global_error_stack_push(total_error);
+            return (-1);
+        }
     }
     while (index < total_size)
     {
         const ElementType &element = values[index];
-        if (values.get_error() != FT_ERR_SUCCESSS)
         {
-            yaml_free(list_value);
-            ft_errno = values.get_error();
-            return (-1);
+            int element_error = ft_global_error_stack_peek_last_error();
+            if (element_error != FT_ERR_SUCCESSS)
+            {
+                yaml_free(list_value);
+                ft_global_error_stack_push(element_error);
+                return (-1);
+            }
         }
         yaml_value *entry = new (std::nothrow) yaml_value();
         if (!entry)
         {
             yaml_free(list_value);
-            ft_errno = FT_ERR_NO_MEMORY;
+            ft_global_error_stack_push(FT_ERR_NO_MEMORY);
             return (-1);
         }
         entry->set_type(YAML_SCALAR);
-        if (entry->get_error() != FT_ERR_SUCCESSS)
         {
-            int error_code = entry->get_error();
-            delete entry;
-            yaml_free(list_value);
-            ft_errno = error_code;
-            return (-1);
+            int entry_error = ft_global_error_stack_peek_last_error();
+            if (entry_error != FT_ERR_SUCCESSS)
+            {
+                delete entry;
+                yaml_free(list_value);
+                ft_global_error_stack_push(entry_error);
+                return (-1);
+            }
         }
         ft_string serialized_value;
         if (serializer(element, serialized_value) != 0)
@@ -486,26 +498,30 @@ int ft_vector_serialize_yaml(const ft_vector<ElementType> &values,
             return (-1);
         }
         entry->set_scalar(serialized_value);
-        if (entry->get_error() != FT_ERR_SUCCESSS)
         {
-            int error_code = entry->get_error();
-            delete entry;
-            yaml_free(list_value);
-            ft_errno = error_code;
-            return (-1);
+            int entry_error = ft_global_error_stack_peek_last_error();
+            if (entry_error != FT_ERR_SUCCESSS)
+            {
+                delete entry;
+                yaml_free(list_value);
+                ft_global_error_stack_push(entry_error);
+                return (-1);
+            }
         }
         list_value->add_list_item(entry);
-        if (list_value->get_error() != FT_ERR_SUCCESSS)
         {
-            int error_code = list_value->get_error();
-            yaml_free(list_value);
-            ft_errno = error_code;
-            return (-1);
+            int list_error = ft_global_error_stack_peek_last_error();
+            if (list_error != FT_ERR_SUCCESSS)
+            {
+                yaml_free(list_value);
+                ft_global_error_stack_push(list_error);
+                return (-1);
+            }
         }
         index += 1;
     }
     output_value = list_value;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -514,7 +530,7 @@ int ft_vector_serialize_yaml(const ft_vector<ElementType> &values,
     yaml_value *&output_value) noexcept
 {
     return (ft_vector_serialize_yaml(values,
-            ft_container_serialization::default_string_serializer<ElementType>,
+            default_string_serializer<ElementType>,
             output_value));
 }
 
@@ -525,67 +541,75 @@ int ft_vector_deserialize_yaml(const yaml_value &value,
 {
     if (value.get_type() != YAML_LIST)
     {
-        int error_code = value.get_error();
-        if (error_code == FT_ERR_SUCCESSS)
-            error_code = FT_ERR_UNSUPPORTED_TYPE;
-        ft_errno = error_code;
+        int type_error = ft_global_error_stack_peek_last_error();
+        if (type_error == FT_ERR_SUCCESSS)
+            type_error = FT_ERR_UNSUPPORTED_TYPE;
+        ft_global_error_stack_push(type_error);
         return (-1);
     }
     const ft_vector<yaml_value*> &children = value.get_list();
-    int list_error = value.get_error();
-    if (list_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = list_error;
-        return (-1);
+        int list_error = ft_global_error_stack_peek_last_error();
+        if (list_error != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(list_error);
+            return (-1);
+        }
     }
     size_t total = children.size();
-    if (children.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = children.get_error();
-        return (-1);
+        int children_error = ft_global_error_stack_peek_last_error();
+        if (children_error != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(children_error);
+            return (-1);
+        }
     }
     ft_vector<ElementType> parsed;
     size_t index = 0;
     while (index < total)
     {
         yaml_value *child = children[index];
-        if (children.get_error() != FT_ERR_SUCCESSS)
+        if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = children.get_error();
+            int child_list_error = ft_global_error_stack_peek_last_error();
+            ft_global_error_stack_push(child_list_error);
             return (-1);
         }
         if (!child)
         {
-            ft_errno = FT_ERR_INVALID_STATE;
+            ft_global_error_stack_push(FT_ERR_INVALID_STATE);
             return (-1);
         }
         if (child->get_type() != YAML_SCALAR)
         {
-            int child_error = child->get_error();
+            int child_error = ft_global_error_stack_peek_last_error();
             if (child_error == FT_ERR_SUCCESSS)
                 child_error = FT_ERR_UNSUPPORTED_TYPE;
-            ft_errno = child_error;
+            ft_global_error_stack_push(child_error);
             return (-1);
         }
         const ft_string &scalar = child->get_scalar();
-        if (child->get_error() != FT_ERR_SUCCESSS)
+        if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = child->get_error();
+            int child_error = ft_global_error_stack_peek_last_error();
+            ft_global_error_stack_push(child_error);
             return (-1);
         }
         ElementType element;
         if (deserializer(scalar.c_str(), element) != 0)
             return (-1);
         parsed.push_back(element);
-        if (parsed.get_error() != FT_ERR_SUCCESSS)
+        if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = parsed.get_error();
+            int parsed_error = ft_global_error_stack_peek_last_error();
+            ft_global_error_stack_push(parsed_error);
             return (-1);
         }
         index += 1;
     }
     output = ft_move(parsed);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -594,7 +618,7 @@ int ft_vector_deserialize_yaml(const yaml_value &value,
     ft_vector<ElementType> &output) noexcept
 {
     return (ft_vector_deserialize_yaml(value, output,
-            ft_container_serialization::default_string_deserializer<ElementType>));
+            default_string_deserializer<ElementType>));
 }
 
 #endif

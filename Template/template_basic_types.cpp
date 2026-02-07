@@ -3,8 +3,6 @@
 #include "stack.hpp"
 #include "vector.hpp"
 
-namespace template_compile
-{
 static int build_types()
 {
     ft_vector<int> integers;
@@ -37,4 +35,3 @@ static int build_types()
 }
 
 static volatile int template_basic_types_result = build_types();
-}

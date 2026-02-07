@@ -35,7 +35,7 @@ class ft_graph
         bool    ensure_node_capacity(size_t desired);
         bool    ensure_edge_capacity(GraphNode& node, size_t desired);
         int     lock_internal(bool *lock_acquired) const;
-        void    unlock_internal(bool lock_acquired) const;
+        int     unlock_internal(bool lock_acquired) const;
         void    teardown_thread_safety();
 
     public:

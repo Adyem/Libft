@@ -25,12 +25,12 @@ class ft_sharedptr
         size_t _arraySize;
         bool _isArrayType;
         mutable pt_recursive_mutex *_mutex;
-        bool *_shared_thread_safe_flag;
+        mutable bool *_shared_thread_safe_flag;
 
         void release_current_locked();
         int lock_internal(bool *lock_acquired) const;
         void unlock_internal(bool lock_acquired) const;
-        int prepare_thread_safety();
+        int prepare_thread_safety() const;
         void teardown_thread_safety();
 
     public:
@@ -1417,7 +1417,7 @@ void ft_sharedptr<ManagedType>::unlock_internal(bool lock_acquired) const
 }
 
 template <typename ManagedType>
-int ft_sharedptr<ManagedType>::prepare_thread_safety()
+int ft_sharedptr<ManagedType>::prepare_thread_safety() const
 {
     void *memory_pointer;
     pt_recursive_mutex *mutex_pointer;

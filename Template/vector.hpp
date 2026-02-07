@@ -470,7 +470,7 @@ void ft_vector<ElementType>::pop_back()
     }
     if (this->_size > 0)
     {
-        destroy_at(&this->_data[this->_size - 1]);
+        ::destroy_at(&this->_data[this->_size - 1]);
         this->_size -= 1;
         ft_global_error_stack_push(FT_ERR_SUCCESSS);
     }
@@ -667,7 +667,7 @@ typename ft_vector<ElementType>::iterator ft_vector<ElementType>::insert(iterato
     while (move_index > index)
     {
         construct_at(&this->_data[move_index], this->_data[move_index - 1]);
-        destroy_at(&this->_data[move_index - 1]);
+        ::destroy_at(&this->_data[move_index - 1]);
         move_index -= 1;
     }
     construct_at(&this->_data[index], value);
@@ -703,12 +703,12 @@ typename ft_vector<ElementType>::iterator ft_vector<ElementType>::erase(iterator
         this->unlock_internal(lock_acquired);
         return (end_iterator);
     }
-    destroy_at(&this->_data[index]);
+    ::destroy_at(&this->_data[index]);
     shift_index = index;
     while (shift_index < this->_size - 1)
     {
         construct_at(&this->_data[shift_index], ft_move(this->_data[shift_index + 1]));
-        destroy_at(&this->_data[shift_index + 1]);
+        ::destroy_at(&this->_data[shift_index + 1]);
         shift_index += 1;
     }
     this->_size -= 1;
@@ -816,7 +816,7 @@ void ft_vector<ElementType>::destroy_elements_unlocked(size_t from, size_t to)
 
     while (index < to)
     {
-        destroy_at(&this->_data[index]);
+        ::destroy_at(&this->_data[index]);
         ++index;
     }
     return ;
@@ -892,7 +892,7 @@ int ft_vector<ElementType>::reserve_internal_unlocked(size_t new_capacity)
         while (index > 0)
         {
             --index;
-            destroy_at(&new_data[index]);
+            ::destroy_at(&new_data[index]);
         }
         cma_free(new_data);
         throw;
@@ -900,7 +900,7 @@ int ft_vector<ElementType>::reserve_internal_unlocked(size_t new_capacity)
     size_t destroy_index = 0;
     while (destroy_index < current_size)
     {
-        destroy_at(&old_data[destroy_index]);
+        ::destroy_at(&old_data[destroy_index]);
         ++destroy_index;
     }
     if (had_small_buffer == false && old_data != ft_nullptr)
