@@ -9,7 +9,7 @@
 
 static int cnfg_config_lock_if_enabled(cnfg_config *config, ft_unique_lock<pt_mutex> &mutex_guard)
 {
-    if (!config || !config->thread_safe_enabled || !config->mutex)
+    if (!config || !config->mutex)
         return (FT_ERR_SUCCESSS);
     mutex_guard = ft_unique_lock<pt_mutex>(*config->mutex);
     return (ft_global_error_stack_drop_last_error());
@@ -66,7 +66,6 @@ static int config_duplicate_entry(const cnfg_entry *source, cnfg_entry *destinat
         return (-1);
     }
     destination->mutex = ft_nullptr;
-    destination->thread_safe_enabled = false;
     destination->section = ft_nullptr;
     destination->key = ft_nullptr;
     destination->value = ft_nullptr;
@@ -176,7 +175,6 @@ static int config_append_entry(cnfg_config *destination, const cnfg_entry *sourc
     destination->entries = new_entries;
     target = &destination->entries[destination->entry_count];
     target->mutex = ft_nullptr;
-    target->thread_safe_enabled = false;
     target->section = copy.section;
     target->key = copy.key;
     target->value = copy.value;

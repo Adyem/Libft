@@ -32,18 +32,14 @@ static int math_fft_copy_inputs(const ft_vector<double> &input,
     output.clear();
     length = input.size();
     output.reserve(length);
-    if (output.get_error() != FT_ERR_SUCCESSS)
-    {
-        math_fft_push_error(output.get_error());
+    if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
         return (-1);
-    }
     index = 0;
     while (index < length)
     {
         output.push_back(input[index]);
-        if (output.get_error() != FT_ERR_SUCCESSS)
+        if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
         {
-            math_fft_push_error(output.get_error());
             output.clear();
             return (-1);
         }
@@ -278,12 +274,8 @@ static int math_fft_prepare_padded(const ft_vector<double> &input,
     imag.clear();
     real.reserve(target_length);
     imag.reserve(target_length);
-    if (real.get_error() != FT_ERR_SUCCESSS || imag.get_error() != FT_ERR_SUCCESSS)
+    if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
     {
-        if (real.get_error() != FT_ERR_SUCCESSS)
-            math_fft_push_error(real.get_error());
-        else
-            math_fft_push_error(imag.get_error());
         real.clear();
         imag.clear();
         return (-1);
@@ -299,17 +291,15 @@ static int math_fft_prepare_padded(const ft_vector<double> &input,
         else
             value = 0.0;
         real.push_back(value);
-        if (real.get_error() != FT_ERR_SUCCESSS)
+        if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
         {
-            math_fft_push_error(real.get_error());
             real.clear();
             imag.clear();
             return (-1);
         }
         imag.push_back(0.0);
-        if (imag.get_error() != FT_ERR_SUCCESSS)
+        if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
         {
-            math_fft_push_error(imag.get_error());
             real.clear();
             imag.clear();
             return (-1);
@@ -391,9 +381,8 @@ int math_convolution(const ft_vector<double> &first,
         return (-1);
     result.clear();
     result.reserve(result_length);
-    if (result.get_error() != FT_ERR_SUCCESSS)
+    if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
     {
-        math_fft_push_error(result.get_error());
         result.clear();
         return (-1);
     }
@@ -406,9 +395,8 @@ int math_convolution(const ft_vector<double> &first,
         if (std::fabs(value) < 1e-12)
             value = 0.0;
         result.push_back(value);
-        if (result.get_error() != FT_ERR_SUCCESSS)
+        if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
         {
-            math_fft_push_error(result.get_error());
             result.clear();
             return (-1);
         }

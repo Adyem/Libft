@@ -10,6 +10,7 @@ struct cmp_cross_process_mapping
     unsigned char *mapping_address;
     ft_size_t mapping_length;
     void *platform_handle;
+    void *mutex_address;
 };
 
 struct cmp_cross_process_mutex_state

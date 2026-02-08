@@ -71,6 +71,7 @@ int cp_write_memory(const cross_process_message &message, const unsigned char *p
     mapping.mapping_address = ft_nullptr;
     mapping.mapping_length = 0;
     mapping.platform_handle = ft_nullptr;
+    mapping.mutex_address = ft_nullptr;
     mutex_state.platform_mutex = ft_nullptr;
     if (cmp_cross_process_open_mapping(message, &mapping) != 0)
         return (-1);

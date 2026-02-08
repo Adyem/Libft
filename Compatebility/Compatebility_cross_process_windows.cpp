@@ -90,6 +90,21 @@ int cmp_cross_process_open_mapping(const cross_process_message &message, cmp_cro
     mapping->mapping_address = reinterpret_cast<unsigned char *>(mapping_pointer);
     mapping->mapping_length = static_cast<ft_size_t>(message.remote_memory_size);
     mapping->platform_handle = ft_nullptr;
+    mapping->mutex_address = ft_nullptr;
+    if (message.shared_mutex_address == 0)
+    {
+        cmp_cross_process_close_mapping(mapping);
+        errno = EINVAL;
+        return (-1);
+    }
+    ft_size_t mutex_offset = compute_offset(message.shared_mutex_address, message.stack_base_address);
+    if (mutex_offset + static_cast<ft_size_t>(sizeof(HANDLE)) > mapping->mapping_length)
+    {
+        cmp_cross_process_close_mapping(mapping);
+        errno = EINVAL;
+        return (-1);
+    }
+    mapping->mutex_address = mapping->mapping_address + mutex_offset;
     return (0);
 }
 
@@ -108,35 +123,29 @@ int cmp_cross_process_close_mapping(cmp_cross_process_mapping *mapping)
     mapping->mapping_address = ft_nullptr;
     mapping->mapping_length = 0;
     mapping->platform_handle = ft_nullptr;
+    mapping->mutex_address = ft_nullptr;
     return (0);
 }
 
 int cmp_cross_process_lock_mutex(const cross_process_message &message, cmp_cross_process_mapping *mapping, cmp_cross_process_mutex_state *mutex_state)
 {
-    ft_size_t mutex_offset;
-    HANDLE shared_mutex_handle;
-    DWORD wait_result;
-    DWORD windows_error;
-    int attempt_count;
-    bool mutex_locked;
-
-    mutex_offset = compute_offset(message.shared_mutex_address, message.stack_base_address);
-    if (mutex_offset + static_cast<ft_size_t>(sizeof(HANDLE)) > mapping->mapping_length)
+    (void)message;
+    if (!mapping || mapping->mutex_address == ft_nullptr)
     {
         errno = EINVAL;
         return (-1);
     }
-    shared_mutex_handle = *reinterpret_cast<HANDLE *>(mapping->mapping_address + mutex_offset);
+    HANDLE shared_mutex_handle = *reinterpret_cast<HANDLE *>(mapping->mutex_address);
     if (shared_mutex_handle == NULL)
     {
         errno = EINVAL;
         return (-1);
     }
-    attempt_count = 0;
-    mutex_locked = false;
+    int attempt_count = 0;
+    bool mutex_locked = false;
     while (attempt_count < 5)
     {
-        wait_result = WaitForSingleObject(shared_mutex_handle, 0);
+        DWORD wait_result = WaitForSingleObject(shared_mutex_handle, 0);
         if (wait_result == WAIT_OBJECT_0 || wait_result == WAIT_ABANDONED)
         {
             mutex_locked = true;
@@ -150,7 +159,7 @@ int cmp_cross_process_lock_mutex(const cross_process_message &message, cmp_cross
             Sleep(50);
             continue;
         }
-        windows_error = GetLastError();
+        DWORD windows_error = GetLastError();
         errno = static_cast<int>(windows_error);
         return (-1);
     }

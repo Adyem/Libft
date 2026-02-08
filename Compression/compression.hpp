@@ -38,14 +38,16 @@ class t_compress_stream_options
         int                                     _window_bits;
         int                                     _memory_level;
         int                                     _strategy;
-        mutable int                             _error_code;
-        mutable pt_mutex                        _mutex;
+        mutable pt_mutex                        *_mutex;
 
-        void    set_error(int error_code) const;
+        int     lock_mutex() const;
+        int     unlock_mutex() const;
 
     public:
         t_compress_stream_options(void);
         ~t_compress_stream_options(void);
+        int     enable_thread_safety();
+        void    disable_thread_safety();
 
         int         reset(void);
         int         set_input_buffer_size(std::size_t input_buffer_size);
@@ -69,8 +71,6 @@ class t_compress_stream_options
         int         get_memory_level() const;
         int         get_strategy() const;
         int         snapshot(struct s_compress_stream_options_snapshot *snapshot) const;
-        int         get_error() const;
-        const char  *get_error_str() const;
 };
 
 int              ft_compress_stream_with_options(int input_fd, int output_fd, const t_compress_stream_options *options);

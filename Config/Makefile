@@ -2,8 +2,6 @@ TARGET := config.a
 DEBUG_TARGET := config_debug.a
 
 SRCS :=         config_parse.cpp \
-                config_flags.cpp \
-                config_flag_parser.cpp \
                 config_write.cpp \
                 config_merge.cpp \
                 config_entry_thread_safety.cpp
@@ -11,7 +9,7 @@ SRCS :=         config_parse.cpp \
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
 
-HEADERS := config.hpp flag_parser.hpp
+HEADERS := config.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
@@ -99,4 +97,3 @@ re: fclean all
 both: all debug
 
 .PHONY: all clean fclean re debug both
-

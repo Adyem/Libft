@@ -6,8 +6,7 @@
 
 #if NETWORKING_HAS_OPENSSL
 #include <openssl/evp.h>
-#include "../PThread/mutex.hpp"
-#include "../PThread/unique_lock.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 class encryption_aead_context
 {
@@ -17,12 +16,9 @@ class encryption_aead_context
         bool _encrypt_mode;
         bool _initialized;
         size_t _iv_length;
-        mutable int _error_code;
-        mutable pt_mutex _mutex;
+        mutable pt_recursive_mutex *_mutex;
 
-        void    set_error_unlocked(int error_code) const;
-        void    set_error(int error_code) const;
-        int     lock_self(ft_unique_lock<pt_mutex> &guard) const;
+        int     finalize_operation(int result) const;
         int     configure_cipher(const unsigned char *key, size_t key_length,
                     const unsigned char *iv, size_t iv_length, bool encrypt_mode);
 
@@ -46,8 +42,6 @@ class encryption_aead_context
         int     finalize(unsigned char *tag, size_t tag_length);
         int     set_tag(const unsigned char *tag, size_t tag_length);
         void    reset();
-        int     get_error() const;
-        const char  *get_error_str() const;
 };
 
 bool    encryption_aead_encrypt(const unsigned char *key, size_t key_length,

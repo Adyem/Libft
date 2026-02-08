@@ -13,9 +13,10 @@ static void math_polynomial_copy_vector(const ft_vector<double> &source,
     size_t index;
 
     destination.resize(count, 0.0);
-    if (destination.get_error() != FT_ERR_SUCCESSS)
+    int resize_error = ft_global_error_stack_peek_last_error();
+    if (resize_error != FT_ERR_SUCCESSS)
     {
-        error_code = destination.get_error();
+        error_code = resize_error;
         return ;
     }
     index = 0;
@@ -146,8 +147,9 @@ pt_recursive_mutex *ft_cubic_spline::get_mutex_for_validation() const noexcept
 
 static int math_polynomial_validate_coefficients(const ft_vector<double> &coefficients) noexcept
 {
-    if (coefficients.get_error() != FT_ERR_SUCCESSS)
-        return (coefficients.get_error());
+    int coefficients_error = ft_global_error_stack_peek_last_error();
+    if (coefficients_error != FT_ERR_SUCCESSS)
+        return (coefficients_error);
     if (coefficients.size() == 0)
         return (FT_ERR_INVALID_ARGUMENT);
     return (FT_ERR_SUCCESSS);
@@ -344,17 +346,19 @@ int math_polynomial_lagrange_interpolate(const ft_vector<double> &x_values,
     double denominator;
     double epsilon;
 
-    if (x_values.get_error() != FT_ERR_SUCCESSS)
+    int x_error = ft_global_error_stack_peek_last_error();
+    if (x_error != FT_ERR_SUCCESSS)
     {
         result = 0.0;
-        ft_global_error_stack_push(x_values.get_error());
-        return (x_values.get_error());
+        ft_global_error_stack_push(x_error);
+        return (x_error);
     }
-    if (y_values.get_error() != FT_ERR_SUCCESSS)
+    int y_error = ft_global_error_stack_peek_last_error();
+    if (y_error != FT_ERR_SUCCESSS)
     {
         result = 0.0;
-        ft_global_error_stack_push(y_values.get_error());
-        return (y_values.get_error());
+        ft_global_error_stack_push(y_error);
+        return (y_error);
     }
     if (x_values.size() == 0 || x_values.size() != y_values.size())
     {
@@ -402,11 +406,12 @@ int math_bezier_evaluate(const ft_vector<double> &control_points,
     size_t index;
     int copy_error;
 
-    if (control_points.get_error() != FT_ERR_SUCCESSS)
+    int control_error = ft_global_error_stack_peek_last_error();
+    if (control_error != FT_ERR_SUCCESSS)
     {
         result = 0.0;
-        ft_global_error_stack_push(control_points.get_error());
-        return (control_points.get_error());
+        ft_global_error_stack_push(control_error);
+        return (control_error);
     }
     if (control_points.size() == 0)
     {
@@ -461,20 +466,25 @@ static int math_polynomial_extract_coordinates(const ft_vector<vector2> &control
     double x_value;
     double y_value;
 
-    if (control_points.get_error() != FT_ERR_SUCCESSS)
+    int control_error = ft_global_error_stack_peek_last_error();
+    if (control_error != FT_ERR_SUCCESSS)
     {
-        return (control_points.get_error());
+        return (control_error);
     }
     count = control_points.size();
     x_coordinates.resize(count, 0.0);
-    if (x_coordinates.get_error() != FT_ERR_SUCCESSS)
+    int x_resize_error = ft_global_error_stack_peek_last_error();
+    if (x_resize_error != FT_ERR_SUCCESSS)
     {
-        return (x_coordinates.get_error());
+        ft_global_error_stack_push(x_resize_error);
+        return (x_resize_error);
     }
     y_coordinates.resize(count, 0.0);
-    if (y_coordinates.get_error() != FT_ERR_SUCCESSS)
+    int y_resize_error = ft_global_error_stack_peek_last_error();
+    if (y_resize_error != FT_ERR_SUCCESSS)
     {
-        return (y_coordinates.get_error());
+        ft_global_error_stack_push(y_resize_error);
+        return (y_resize_error);
     }
     index = 0;
     while (index < count)
@@ -563,14 +573,16 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
     int error_code;
     double epsilon;
 
-    if (x_values.get_error() != FT_ERR_SUCCESSS)
+    int x_error = ft_global_error_stack_peek_last_error();
+    if (x_error != FT_ERR_SUCCESSS)
     {
-        ft_global_error_stack_push(x_values.get_error());
+        ft_global_error_stack_push(x_error);
         return (spline);
     }
-    if (y_values.get_error() != FT_ERR_SUCCESSS)
+    int y_error = ft_global_error_stack_peek_last_error();
+    if (y_error != FT_ERR_SUCCESSS)
     {
-        ft_global_error_stack_push(y_values.get_error());
+        ft_global_error_stack_push(y_error);
         return (spline);
     }
     if (x_values.size() < 2 || x_values.size() != y_values.size())
@@ -594,39 +606,54 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
         return (spline);
     }
     spline.b_coefficients.resize(segment_count, 0.0);
-    if (spline.b_coefficients.get_error() != FT_ERR_SUCCESSS)
     {
-        error_code = spline.b_coefficients.get_error();
-        ft_global_error_stack_push(error_code);
-        return (spline);
+        int resize_error = ft_global_error_stack_peek_last_error();
+        if (resize_error != FT_ERR_SUCCESSS)
+        {
+            error_code = resize_error;
+            ft_global_error_stack_push(error_code);
+            return (spline);
+        }
     }
     spline.c_coefficients.resize(count, 0.0);
-    if (spline.c_coefficients.get_error() != FT_ERR_SUCCESSS)
     {
-        error_code = spline.c_coefficients.get_error();
-        ft_global_error_stack_push(error_code);
-        return (spline);
+        int resize_error = ft_global_error_stack_peek_last_error();
+        if (resize_error != FT_ERR_SUCCESSS)
+        {
+            error_code = resize_error;
+            ft_global_error_stack_push(error_code);
+            return (spline);
+        }
     }
     spline.d_coefficients.resize(segment_count, 0.0);
-    if (spline.d_coefficients.get_error() != FT_ERR_SUCCESSS)
     {
-        error_code = spline.d_coefficients.get_error();
-        ft_global_error_stack_push(error_code);
-        return (spline);
+        int resize_error = ft_global_error_stack_peek_last_error();
+        if (resize_error != FT_ERR_SUCCESSS)
+        {
+            error_code = resize_error;
+            ft_global_error_stack_push(error_code);
+            return (spline);
+        }
     }
     h.resize(segment_count, 0.0);
-    if (h.get_error() != FT_ERR_SUCCESSS)
     {
-        error_code = h.get_error();
-        ft_global_error_stack_push(error_code);
-        return (spline);
+        int resize_error = ft_global_error_stack_peek_last_error();
+        if (resize_error != FT_ERR_SUCCESSS)
+        {
+            error_code = resize_error;
+            ft_global_error_stack_push(error_code);
+            return (spline);
+        }
     }
     alpha.resize(count, 0.0);
-    if (alpha.get_error() != FT_ERR_SUCCESSS)
     {
-        error_code = alpha.get_error();
-        ft_global_error_stack_push(error_code);
-        return (spline);
+        int resize_error = ft_global_error_stack_peek_last_error();
+        if (resize_error != FT_ERR_SUCCESSS)
+        {
+            error_code = resize_error;
+            ft_global_error_stack_push(error_code);
+            return (spline);
+        }
     }
     index = 0;
     while (index < segment_count)
@@ -689,39 +716,54 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
 
         equation_count = count - 2;
         lower.resize(equation_count, 0.0);
-        if (lower.get_error() != FT_ERR_SUCCESSS)
         {
-            error_code = lower.get_error();
-            ft_global_error_stack_push(error_code);
-            return (spline);
+            int resize_error = ft_global_error_stack_peek_last_error();
+            if (resize_error != FT_ERR_SUCCESSS)
+            {
+                error_code = resize_error;
+                ft_global_error_stack_push(error_code);
+                return (spline);
+            }
         }
         diagonal.resize(equation_count, 0.0);
-        if (diagonal.get_error() != FT_ERR_SUCCESSS)
         {
-            error_code = diagonal.get_error();
-            ft_global_error_stack_push(error_code);
-            return (spline);
+            int resize_error = ft_global_error_stack_peek_last_error();
+            if (resize_error != FT_ERR_SUCCESSS)
+            {
+                error_code = resize_error;
+                ft_global_error_stack_push(error_code);
+                return (spline);
+            }
         }
         upper.resize(equation_count, 0.0);
-        if (upper.get_error() != FT_ERR_SUCCESSS)
         {
-            error_code = upper.get_error();
-            ft_global_error_stack_push(error_code);
-            return (spline);
+            int resize_error = ft_global_error_stack_peek_last_error();
+            if (resize_error != FT_ERR_SUCCESSS)
+            {
+                error_code = resize_error;
+                ft_global_error_stack_push(error_code);
+                return (spline);
+            }
         }
         rhs.resize(equation_count, 0.0);
-        if (rhs.get_error() != FT_ERR_SUCCESSS)
         {
-            error_code = rhs.get_error();
-            ft_global_error_stack_push(error_code);
-            return (spline);
+            int resize_error = ft_global_error_stack_peek_last_error();
+            if (resize_error != FT_ERR_SUCCESSS)
+            {
+                error_code = resize_error;
+                ft_global_error_stack_push(error_code);
+                return (spline);
+            }
         }
         interior_c.resize(equation_count, 0.0);
-        if (interior_c.get_error() != FT_ERR_SUCCESSS)
         {
-            error_code = interior_c.get_error();
-            ft_global_error_stack_push(error_code);
-            return (spline);
+            int resize_error = ft_global_error_stack_peek_last_error();
+            if (resize_error != FT_ERR_SUCCESSS)
+            {
+                error_code = resize_error;
+                ft_global_error_stack_push(error_code);
+                return (spline);
+            }
         }
         diagonal[0] = (h[0] + h[1]) * (h[0] + 2.0 * h[1]);
         upper[0] = (h[1] * h[1]) - (h[0] * h[0]);

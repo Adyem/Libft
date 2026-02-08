@@ -226,7 +226,6 @@ FT_TEST(test_cnfg_config_create_initializes_thread_safety, "cnfg_config_create p
     if (!config)
         return (0);
     FT_ASSERT(config->mutex != ft_nullptr);
-    FT_ASSERT(config->thread_safe_enabled == true);
     cnfg_free(config);
     return (1);
 }
@@ -240,10 +239,8 @@ FT_TEST(test_cnfg_config_prepare_thread_safety_reinitializes_mutex, "cnfg_config
         return (0);
     cnfg_config_teardown_thread_safety(config);
     FT_ASSERT(config->mutex == ft_nullptr);
-    FT_ASSERT(config->thread_safe_enabled == false);
     FT_ASSERT_EQ(0, cnfg_config_prepare_thread_safety(config));
     FT_ASSERT(config->mutex != ft_nullptr);
-    FT_ASSERT(config->thread_safe_enabled == true);
     cnfg_free(config);
     return (1);
 }
@@ -254,20 +251,17 @@ FT_TEST(test_cnfg_entry_prepare_thread_safety_initializes_mutex, "cnfg_entry_pre
     bool lock_acquired;
 
     entry.mutex = ft_nullptr;
-    entry.thread_safe_enabled = false;
     entry.section = ft_nullptr;
     entry.key = ft_nullptr;
     entry.value = ft_nullptr;
     FT_ASSERT_EQ(0, cnfg_entry_prepare_thread_safety(&entry));
     FT_ASSERT(entry.mutex != ft_nullptr);
-    FT_ASSERT(entry.thread_safe_enabled == true);
     lock_acquired = false;
     FT_ASSERT_EQ(0, cnfg_entry_lock(&entry, &lock_acquired));
     FT_ASSERT(lock_acquired == true);
     cnfg_entry_unlock(&entry, lock_acquired);
     cnfg_entry_teardown_thread_safety(&entry);
     FT_ASSERT(entry.mutex == ft_nullptr);
-    FT_ASSERT(entry.thread_safe_enabled == false);
     return (1);
 }
 
@@ -277,7 +271,6 @@ FT_TEST(test_cnfg_entry_lock_handles_disabled_thread_safety, "cnfg_entry_lock su
     bool lock_acquired;
 
     entry.mutex = ft_nullptr;
-    entry.thread_safe_enabled = false;
     entry.section = ft_nullptr;
     entry.key = ft_nullptr;
     entry.value = ft_nullptr;
@@ -482,4 +475,3 @@ FT_TEST(test_config_merge_prefers_override_entries, "config_merge replaces dupli
     cnfg_free(merged);
     return (1);
 }
-

@@ -17,6 +17,7 @@ int pt_recursive_mutex_lock_if_enabled(pt_recursive_mutex *mutex, bool thread_sa
 int pt_recursive_mutex_unlock_if_enabled(pt_recursive_mutex *mutex, bool thread_safe_enabled);
 int pt_pthread_mutex_lock_with_error(pthread_mutex_t *mutex);
 int pt_pthread_mutex_unlock_with_error(pthread_mutex_t *mutex);
+int pt_pthread_mutex_try_lock_with_error(pthread_mutex_t *mutex);
 
 int pt_mutex_create_with_error(pt_mutex **mutex);
 void pt_mutex_destroy(pt_mutex **mutex);

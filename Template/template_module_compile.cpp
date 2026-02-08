@@ -67,8 +67,8 @@ static int instantiate_free_functions()
     }, 5);
     (void)invoked_value;
     ft_string serialized;
-    ft_container_serialization::default_string_serializer<int>(42, serialized);
-    ft_container_serialization::default_string_serializer<const char*>("abc", serialized);
+    default_string_serializer<int>(42, serialized);
+    default_string_serializer<const char *>("abc", serialized);
     ft_string_view<char> view("hello");
     (void)view.size();
     auto substring = view.substr(1, 3);

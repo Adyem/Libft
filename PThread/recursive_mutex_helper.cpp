@@ -2,6 +2,7 @@
 #include "pthread.hpp"
 #include "pthread_internal.hpp"
 #include "mutex.hpp"
+#include <errno.h>
 #include <pthread.h>
 #include <new>
 #include "../Errno/errno.hpp"
@@ -186,6 +187,23 @@ int pt_pthread_mutex_unlock_with_error(pthread_mutex_t *mutex)
     mutex_result = pthread_mutex_unlock(mutex);
     if (mutex_result != 0)
         error_code = ft_map_system_error(mutex_result);
+    else
+        error_code = FT_ERR_SUCCESSS;
+    ft_global_error_stack_push(error_code);
+    return (error_code);
+}
+
+int pt_pthread_mutex_try_lock_with_error(pthread_mutex_t *mutex)
+{
+    int mutex_result;
+    int error_code;
+
+    mutex_result = pthread_mutex_trylock(mutex);
+    if (mutex_result != 0)
+    {
+        error_code = ft_map_system_error(mutex_result);
+        errno = mutex_result;
+    }
     else
         error_code = FT_ERR_SUCCESSS;
     ft_global_error_stack_push(error_code);

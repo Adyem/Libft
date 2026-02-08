@@ -4,7 +4,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread.hpp"
-#include <new>
+#include "../PThread/pthread_internal.hpp"
 
 static void cnfg_entry_push_success(void)
 {
@@ -20,41 +20,22 @@ static void cnfg_entry_push_error(int error_code)
 
 int cnfg_entry_prepare_thread_safety(cnfg_entry *entry)
 {
-    pt_mutex *mutex_pointer;
-
     if (!entry)
     {
         cnfg_entry_push_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
-    if (entry->thread_safe_enabled && entry->mutex)
+    if (entry->mutex)
     {
         cnfg_entry_push_success();
         return (0);
     }
-    mutex_pointer = new (std::nothrow) pt_mutex();
-    if (mutex_pointer == ft_nullptr)
+    int mutex_error = pt_mutex_create_with_error(&entry->mutex);
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        cnfg_entry_push_error(FT_ERR_NO_MEMORY);
+        cnfg_entry_push_error(mutex_error);
         return (-1);
     }
-    {
-        int mutex_error;
-
-        if (mutex_pointer == ft_nullptr)
-            mutex_error = FT_ERR_SUCCESSS;
-        else
-            mutex_error = ft_global_error_stack_drop_last_error();
-
-        if (mutex_error != FT_ERR_SUCCESSS)
-        {
-            delete mutex_pointer;
-            cnfg_entry_push_error(mutex_error);
-            return (-1);
-        }
-    }
-    entry->mutex = mutex_pointer;
-    entry->thread_safe_enabled = true;
     cnfg_entry_push_success();
     return (0);
 }
@@ -63,12 +44,7 @@ void cnfg_entry_teardown_thread_safety(cnfg_entry *entry)
 {
     if (!entry)
         return ;
-    if (entry->mutex)
-    {
-        delete entry->mutex;
-        entry->mutex = ft_nullptr;
-    }
-    entry->thread_safe_enabled = false;
+    pt_mutex_destroy(&entry->mutex);
     cnfg_entry_push_success();
     return ;
 }
@@ -82,29 +58,16 @@ int cnfg_entry_lock(cnfg_entry *entry, bool *lock_acquired)
         cnfg_entry_push_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
-    if (!entry->thread_safe_enabled || !entry->mutex)
+    if (!entry->mutex)
     {
         cnfg_entry_push_success();
         return (0);
     }
-    entry->mutex->lock(THREAD_ID);
-    {
-        int lock_error;
-
-        if (entry->mutex == ft_nullptr)
-            lock_error = FT_ERR_SUCCESSS;
-        else
-            lock_error = ft_global_error_stack_drop_last_error();
-
-        if (lock_error != FT_ERR_SUCCESSS)
-        {
-            cnfg_entry_push_error(lock_error);
-            return (-1);
-        }
-    }
+    int lock_error = pt_mutex_lock_if_valid(entry->mutex);
+    if (lock_error != FT_ERR_SUCCESSS)
+        return (-1);
     if (lock_acquired)
         *lock_acquired = true;
-    cnfg_entry_push_success();
     return (0);
 }
 
@@ -115,21 +78,6 @@ void cnfg_entry_unlock(cnfg_entry *entry, bool lock_acquired)
         cnfg_entry_push_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
-    entry->mutex->unlock(THREAD_ID);
-    {
-        int unlock_error;
-
-        if (entry->mutex == ft_nullptr)
-            unlock_error = FT_ERR_SUCCESSS;
-        else
-            unlock_error = ft_global_error_stack_drop_last_error();
-
-        if (unlock_error != FT_ERR_SUCCESSS)
-        {
-            cnfg_entry_push_error(unlock_error);
-            return ;
-        }
-    }
-    cnfg_entry_push_success();
+    pt_mutex_unlock_if_valid(entry->mutex);
     return ;
 }

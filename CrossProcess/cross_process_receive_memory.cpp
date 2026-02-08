@@ -27,6 +27,7 @@ int cp_receive_memory(int socket_fd, cross_process_read_result &result)
     mapping.mapping_address = ft_nullptr;
     mapping.mapping_length = 0;
     mapping.platform_handle = ft_nullptr;
+    mapping.mutex_address = ft_nullptr;
     mutex_state.platform_mutex = ft_nullptr;
     if (cmp_cross_process_receive_descriptor(socket_fd, message) != 0)
         return (-1);

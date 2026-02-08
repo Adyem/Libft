@@ -10,7 +10,7 @@
 
 static int cnfg_config_lock_if_enabled(cnfg_config *config, ft_unique_lock<pt_mutex> &mutex_guard)
 {
-    if (!config || !config->thread_safe_enabled || !config->mutex)
+    if (!config || !config->mutex)
         return (FT_ERR_SUCCESSS);
     mutex_guard = ft_unique_lock<pt_mutex>(*config->mutex);
     return (ft_global_error_stack_drop_last_error());

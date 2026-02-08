@@ -474,18 +474,20 @@ void ft_blocking_queue<ElementType>::push(ElementType &&value)
         return ;
     }
     was_empty = this->_storage.empty();
-    if (this->_storage.get_error() != FT_ERR_SUCCESSS)
+    int storage_error = ft_global_error_stack_peek_last_error();
+    if (storage_error != FT_ERR_SUCCESSS)
     {
         pt_mutex_unlock_with_error(this->_mutex);
-        ft_global_error_stack_push(this->_storage.get_error());
+        ft_global_error_stack_push(storage_error);
         this->unlock_internal(state_lock_acquired);
         return ;
     }
     this->_storage.enqueue(ft_move(value));
-    if (this->_storage.get_error() != FT_ERR_SUCCESSS)
+    storage_error = ft_global_error_stack_peek_last_error();
+    if (storage_error != FT_ERR_SUCCESSS)
     {
         pt_mutex_unlock_with_error(this->_mutex);
-        ft_global_error_stack_push(this->_storage.get_error());
+        ft_global_error_stack_push(storage_error);
         this->unlock_internal(state_lock_acquired);
         return ;
     }
@@ -530,10 +532,11 @@ bool ft_blocking_queue<ElementType>::pop(ElementType &result)
         return (false);
     }
     is_empty = this->_storage.empty();
-    if (this->_storage.get_error() != FT_ERR_SUCCESSS)
+    int storage_error = ft_global_error_stack_peek_last_error();
+    if (storage_error != FT_ERR_SUCCESSS)
     {
         pt_mutex_unlock_with_error(this->_mutex);
-        ft_global_error_stack_push(this->_storage.get_error());
+        ft_global_error_stack_push(storage_error);
         this->unlock_internal(state_lock_acquired);
         return (false);
     }
@@ -545,10 +548,11 @@ bool ft_blocking_queue<ElementType>::pop(ElementType &result)
         return (false);
     }
     value = this->_storage.dequeue();
-    if (this->_storage.get_error() != FT_ERR_SUCCESSS)
+    int dequeue_error = ft_global_error_stack_peek_last_error();
+    if (dequeue_error != FT_ERR_SUCCESSS)
     {
         pt_mutex_unlock_with_error(this->_mutex);
-        ft_global_error_stack_push(this->_storage.get_error());
+        ft_global_error_stack_push(dequeue_error);
         this->unlock_internal(state_lock_acquired);
         return (false);
     }
@@ -587,10 +591,11 @@ bool ft_blocking_queue<ElementType>::wait_pop(ElementType &result, const std::at
     while (true)
     {
         is_empty = this->_storage.empty();
-        if (this->_storage.get_error() != FT_ERR_SUCCESSS)
+        int storage_error = ft_global_error_stack_peek_last_error();
+        if (storage_error != FT_ERR_SUCCESSS)
         {
             pt_mutex_unlock_with_error(this->_mutex);
-            ft_global_error_stack_push(this->_storage.get_error());
+            ft_global_error_stack_push(storage_error);
             this->unlock_internal(state_lock_acquired);
             return (false);
         }
@@ -619,10 +624,11 @@ bool ft_blocking_queue<ElementType>::wait_pop(ElementType &result, const std::at
         }
     }
     value = this->_storage.dequeue();
-    if (this->_storage.get_error() != FT_ERR_SUCCESSS)
+    int dequeue_error = ft_global_error_stack_peek_last_error();
+    if (dequeue_error != FT_ERR_SUCCESSS)
     {
         pt_mutex_unlock_with_error(this->_mutex);
-        ft_global_error_stack_push(this->_storage.get_error());
+        ft_global_error_stack_push(dequeue_error);
         this->unlock_internal(state_lock_acquired);
         return (false);
     }
@@ -776,10 +782,13 @@ auto ft_task_scheduler::submit(FunctionType function, Args... args)
         return (empty_future);
     }
     ft_future<return_type> future_value(promise_shared);
-    if (future_value.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_global_error_stack_push(future_value.get_error());
-        return (future_value);
+        int future_error = ft_global_error_stack_peek_last_error();
+        if (future_error != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(future_error);
+            return (future_value);
+        }
     }
     auto task_body = [promise_shared, function, args...]() mutable
     {
@@ -879,11 +888,14 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
         return (result_pair);
     }
     future_value = ft_future<return_type>(promise_shared);
-    if (future_value.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_global_error_stack_push(future_value.get_error());
-        raw_task_body();
-        return (result_pair);
+        int future_error = ft_global_error_stack_peek_last_error();
+        if (future_error != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(future_error);
+            raw_task_body();
+            return (result_pair);
+        }
     }
     state_raw = new (std::nothrow) ft_scheduled_task_state();
     if (!state_raw)
@@ -965,12 +977,11 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
         return (result_pair);
     }
     bool push_success;
-    int scheduled_error;
 
     push_success = this->scheduled_heap_push(ft_move(task_entry));
     if (!push_success)
     {
-        scheduled_error = this->_scheduled.get_error();
+        int scheduled_error = ft_global_error_stack_peek_last_error();
         scheduled_mutex_error = pt_mutex_unlock_with_error(this->_scheduled_mutex);
         if (scheduled_mutex_error == FT_ERR_SUCCESSS)
             ft_global_error_stack_push(scheduled_error);
@@ -1057,12 +1068,11 @@ ft_scheduled_task_handle ft_task_scheduler::schedule_every(std::chrono::duration
         return (handle_result);
     }
     bool push_success;
-    int scheduled_error;
 
     push_success = this->scheduled_heap_push(ft_move(task_entry));
     if (!push_success)
     {
-        scheduled_error = this->_scheduled.get_error();
+        int scheduled_error = ft_global_error_stack_peek_last_error();
         scheduled_mutex_error = pt_mutex_unlock_with_error(this->_scheduled_mutex);
         if (scheduled_mutex_error == FT_ERR_SUCCESSS)
             ft_global_error_stack_push(scheduled_error);

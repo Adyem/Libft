@@ -2,6 +2,7 @@
 
 #include "compatebility_cross_process.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Errno/errno.hpp"
 #include "../PThread/pthread_internal.hpp"
 
 #include <cerrno>
@@ -87,6 +88,21 @@ int cmp_cross_process_open_mapping(const cross_process_message &message, cmp_cro
     mapping->mapping_address = reinterpret_cast<unsigned char *>(mapping_pointer);
     mapping->mapping_length = static_cast<ft_size_t>(message.remote_memory_size);
     mapping->platform_handle = ft_nullptr;
+    mapping->mutex_address = ft_nullptr;
+    if (message.shared_mutex_address == 0)
+    {
+        cmp_cross_process_close_mapping(mapping);
+        errno = EINVAL;
+        return (-1);
+    }
+    ft_size_t mutex_offset = compute_offset(message.shared_mutex_address, message.stack_base_address);
+    if (mutex_offset + static_cast<ft_size_t>(sizeof(pthread_mutex_t)) > mapping->mapping_length)
+    {
+        cmp_cross_process_close_mapping(mapping);
+        errno = EINVAL;
+        return (-1);
+    }
+    mapping->mutex_address = mapping->mapping_address + mutex_offset;
     return (0);
 }
 
@@ -99,44 +115,39 @@ int cmp_cross_process_close_mapping(cmp_cross_process_mapping *mapping)
     mapping->mapping_address = ft_nullptr;
     mapping->mapping_length = 0;
     mapping->platform_handle = ft_nullptr;
+    mapping->mutex_address = ft_nullptr;
     return (0);
 }
 
 int cmp_cross_process_lock_mutex(const cross_process_message &message, cmp_cross_process_mapping *mapping, cmp_cross_process_mutex_state *mutex_state)
 {
-    ft_size_t mutex_offset;
-    pthread_mutex_t *shared_mutex;
-    int attempt_count;
-
-    mutex_offset = compute_offset(message.shared_mutex_address, message.stack_base_address);
-    if (mutex_offset + static_cast<ft_size_t>(sizeof(pthread_mutex_t)) > mapping->mapping_length)
+    (void)message;
+    if (!mapping || mapping->mutex_address == ft_nullptr)
     {
         errno = EINVAL;
         return (-1);
     }
-    shared_mutex = reinterpret_cast<pthread_mutex_t *>(mapping->mapping_address + mutex_offset);
-    attempt_count = 0;
-    while (attempt_count < 5)
+    pthread_mutex_t *shared_mutex = reinterpret_cast<pthread_mutex_t *>(mapping->mutex_address);
+    for (int attempt_count = 0; attempt_count < 5; ++attempt_count)
     {
-        int lock_result;
-
-        lock_result = pthread_mutex_trylock(shared_mutex);
-        if (lock_result == 0)
+        int lock_error = pt_pthread_mutex_try_lock_with_error(shared_mutex);
+        int stack_error = ft_global_error_stack_drop_last_error();
+        if (lock_error == FT_ERR_SUCCESSS)
         {
             mutex_state->platform_mutex = shared_mutex;
             return (0);
         }
-        if (lock_result != EBUSY)
+        if (lock_error != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            errno = lock_result;
+            ft_global_error_stack_push(stack_error);
             return (-1);
         }
-        attempt_count += 1;
-        if (attempt_count >= 5)
+        if (attempt_count >= 4)
             break;
         usleep(50000);
     }
     errno = ETIMEDOUT;
+    ft_global_error_stack_push(ft_map_system_error(ETIMEDOUT));
     return (-1);
 }
 

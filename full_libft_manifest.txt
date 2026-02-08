@@ -16,7 +16,6 @@ CPP_class/class_string.hpp
 CPP_class/class_stringbuf.hpp
 Compression/compression.hpp
 Config/config.hpp
-Config/flag_parser.hpp
 CrossProcess/cross_process.hpp
 Encryption/basic_encryption.hpp
 Encryption/encryption_aead.hpp

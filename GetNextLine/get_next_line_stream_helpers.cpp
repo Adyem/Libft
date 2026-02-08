@@ -29,9 +29,10 @@ static int append_line_to_vector(ft_vector<ft_string> &lines, char *line_buffer)
         return (string_error);
     }
     lines.push_back(ft_move(line_string));
-    if (lines.get_error() != FT_ERR_SUCCESSS)
+    int vector_error = ft_global_error_stack_peek_last_error();
+    if (vector_error != FT_ERR_SUCCESSS)
     {
-        return (lines.get_error());
+        return (vector_error);
     }
     return (FT_ERR_SUCCESSS);
 }

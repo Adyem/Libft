@@ -5,12 +5,12 @@
 #include "../JSon/json.hpp"
 #include "../PThread/unique_lock.hpp"
 #include "../PThread/mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include <cstdio>
-#include <new>
 
 static int cnfg_config_lock_if_enabled(cnfg_config *config, ft_unique_lock<pt_mutex> &mutex_guard)
 {
-    if (!config || !config->thread_safe_enabled || !config->mutex)
+    if (!config || !config->mutex)
         return (FT_ERR_SUCCESSS);
     mutex_guard = ft_unique_lock<pt_mutex>(*config->mutex);
     return (ft_global_error_stack_drop_last_error());
@@ -45,41 +45,22 @@ cnfg_config *cnfg_config_create()
 
 int cnfg_config_prepare_thread_safety(cnfg_config *config)
 {
-    pt_mutex *mutex_pointer = ft_nullptr;
-
     if (!config)
     {
         ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
-    if (config->thread_safe_enabled && config->mutex)
+    if (config->mutex)
     {
         ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (0);
     }
-    mutex_pointer = new (std::nothrow) pt_mutex();
-    if (mutex_pointer == ft_nullptr)
+    int mutex_error = pt_mutex_create_with_error(&config->mutex);
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
+        ft_global_error_stack_push(mutex_error);
         return (-1);
     }
-    {
-        int mutex_error;
-
-        if (mutex_pointer == ft_nullptr)
-            mutex_error = FT_ERR_SUCCESSS;
-        else
-            mutex_error = ft_global_error_stack_drop_last_error();
-
-        if (mutex_error != FT_ERR_SUCCESSS)
-        {
-            delete mutex_pointer;
-            ft_global_error_stack_push(mutex_error);
-            return (-1);
-        }
-    }
-    config->mutex = mutex_pointer;
-    config->thread_safe_enabled = true;
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
@@ -88,12 +69,7 @@ void cnfg_config_teardown_thread_safety(cnfg_config *config)
 {
     if (!config)
         return ;
-    if (config->mutex)
-    {
-        delete config->mutex;
-        config->mutex = ft_nullptr;
-    }
-    config->thread_safe_enabled = false;
+    pt_mutex_destroy(&config->mutex);
     return ;
 }
 
@@ -284,7 +260,6 @@ cnfg_config *cnfg_parse(const char *filename)
         config->entries = new_entries;
         cnfg_entry *new_entry = &config->entries[config->entry_count];
         new_entry->mutex = ft_nullptr;
-        new_entry->thread_safe_enabled = false;
         if (current_section)
         {
             new_entry->section = cma_strdup(current_section);
@@ -385,7 +360,6 @@ static cnfg_config *cnfg_parse_json(const char *filename)
         {
             cnfg_entry *entry = &config->entries[index];
             entry->mutex = ft_nullptr;
-            entry->thread_safe_enabled = false;
             if (group_pointer->name)
             {
                 entry->section = cma_strdup(group_pointer->name);
@@ -474,7 +448,6 @@ cnfg_config *config_load_env()
             equals_sign = ft_strchr(pair, '=');
         cnfg_entry *entry = &config->entries[index];
         entry->mutex = ft_nullptr;
-        entry->thread_safe_enabled = false;
         if (equals_sign)
         {
             size_t key_length = static_cast<size_t>(equals_sign - pair);

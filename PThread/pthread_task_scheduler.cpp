@@ -734,11 +734,14 @@ ft_task_scheduler::ft_task_scheduler(size_t thread_count)
     }
     worker_failure = false;
     this->_workers.reserve(thread_count);
-    if (this->_workers.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_global_error_stack_push(this->_workers.get_error());
-        this->_running.store(false);
-        return ;
+        int worker_reserve_error = ft_global_error_stack_peek_last_error();
+        if (worker_reserve_error != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(worker_reserve_error);
+            this->_running.store(false);
+            return ;
+        }
     }
     index = 0;
     while (index < thread_count)
@@ -760,11 +763,14 @@ ft_task_scheduler::ft_task_scheduler(size_t thread_count)
             }
         }
         this->_workers.push_back(ft_move(worker));
-        if (this->_workers.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_global_error_stack_push(this->_workers.get_error());
-            worker_failure = true;
-            break;
+            int worker_push_error = ft_global_error_stack_peek_last_error();
+            if (worker_push_error != FT_ERR_SUCCESSS)
+            {
+                ft_global_error_stack_push(worker_push_error);
+                worker_failure = true;
+                break;
+            }
         }
         if (!this->update_worker_total(1))
         {
@@ -1007,7 +1013,7 @@ bool ft_task_scheduler::scheduled_heap_push(scheduled_task &&task)
     size_t size;
 
     this->_scheduled.push_back(ft_move(task));
-    if (this->_scheduled.get_error() != FT_ERR_SUCCESSS)
+    if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
         return (false);
     size = this->_scheduled.size();
     if (size == 0)
@@ -1025,7 +1031,7 @@ bool ft_task_scheduler::scheduled_heap_pop(scheduled_task &task)
     size_t size;
 
     size = this->_scheduled.size();
-    if (this->_scheduled.get_error() != FT_ERR_SUCCESSS)
+    if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
         return (false);
     if (size == 0)
         return (false);
@@ -1033,7 +1039,7 @@ bool ft_task_scheduler::scheduled_heap_pop(scheduled_task &task)
     if (size == 1)
     {
         this->_scheduled.pop_back();
-        if (this->_scheduled.get_error() != FT_ERR_SUCCESSS)
+        if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
             return (false);
         this->_scheduled_size_counter = 0;
         return (true);
@@ -1042,7 +1048,7 @@ bool ft_task_scheduler::scheduled_heap_pop(scheduled_task &task)
 
     last_task = ft_move(this->_scheduled[size - 1]);
     this->_scheduled.pop_back();
-    if (this->_scheduled.get_error() != FT_ERR_SUCCESSS)
+    if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
         return (false);
     this->_scheduled[0] = ft_move(last_task);
     this->scheduled_heap_sift_down(0);
@@ -1055,7 +1061,7 @@ bool ft_task_scheduler::scheduled_remove_index(size_t index)
     size_t size;
 
     size = this->_scheduled.size();
-    if (this->_scheduled.get_error() != FT_ERR_SUCCESSS)
+    if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
         return (false);
     if (size == 0)
         return (false);
@@ -1064,7 +1070,7 @@ bool ft_task_scheduler::scheduled_remove_index(size_t index)
     if (index == size - 1)
     {
         this->_scheduled.pop_back();
-        if (this->_scheduled.get_error() != FT_ERR_SUCCESSS)
+        if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
             return (false);
         this->_scheduled_size_counter = static_cast<long long>(this->_scheduled.size());
         return (true);
@@ -1072,9 +1078,9 @@ bool ft_task_scheduler::scheduled_remove_index(size_t index)
     scheduled_task last_task;
 
     last_task = ft_move(this->_scheduled[size - 1]);
-    this->_scheduled.pop_back();
-    if (this->_scheduled.get_error() != FT_ERR_SUCCESSS)
-        return (false);
+        this->_scheduled.pop_back();
+        if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
+            return (false);
     this->_scheduled[index] = ft_move(last_task);
     this->scheduled_heap_sift_down(index);
     this->scheduled_heap_sift_up(index);
@@ -1151,7 +1157,7 @@ bool ft_task_scheduler::cancel_task_state(const ft_sharedptr<ft_scheduled_task_s
         size_t size;
 
         size = this->_scheduled.size();
-        if (this->_scheduled.get_error() != FT_ERR_SUCCESSS)
+        if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
         {
             scheduled_mutex_unlock_error = pt_mutex_unlock_with_error(this->_scheduled_mutex);
             if (scheduled_mutex_unlock_error != FT_ERR_SUCCESSS)
@@ -1159,7 +1165,7 @@ bool ft_task_scheduler::cancel_task_state(const ft_sharedptr<ft_scheduled_task_s
                 this->unlock_internal(scheduler_lock_acquired);
                 return (false);
             }
-            ft_global_error_stack_push(this->_scheduled.get_error());
+            ft_global_error_stack_push(ft_global_error_stack_peek_last_error());
             this->unlock_internal(scheduler_lock_acquired);
             return (false);
         }
@@ -1170,18 +1176,18 @@ bool ft_task_scheduler::cancel_task_state(const ft_sharedptr<ft_scheduled_task_s
             cancelled_trace_id = this->_scheduled[index]._trace_id;
             cancelled_parent_id = this->_scheduled[index]._parent_id;
             cancelled_label = this->_scheduled[index]._label;
-            if (!this->scheduled_remove_index(index))
-            {
-                scheduled_mutex_unlock_error = pt_mutex_unlock_with_error(this->_scheduled_mutex);
-                if (scheduled_mutex_unlock_error != FT_ERR_SUCCESSS)
+                if (!this->scheduled_remove_index(index))
                 {
+                    scheduled_mutex_unlock_error = pt_mutex_unlock_with_error(this->_scheduled_mutex);
+                    if (scheduled_mutex_unlock_error != FT_ERR_SUCCESSS)
+                    {
+                        this->unlock_internal(scheduler_lock_acquired);
+                        return (false);
+                    }
+                    ft_global_error_stack_push(ft_global_error_stack_peek_last_error());
                     this->unlock_internal(scheduler_lock_acquired);
                     return (false);
                 }
-                ft_global_error_stack_push(this->_scheduled.get_error());
-                this->unlock_internal(scheduler_lock_acquired);
-                return (false);
-            }
             removed_entry = true;
             should_emit_cancel = true;
             break;
@@ -1234,10 +1240,10 @@ void ft_task_scheduler::timer_loop()
                 return ;
             }
             scheduled_count = this->_scheduled.size();
-            if (this->_scheduled.get_error() != FT_ERR_SUCCESSS)
+            if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
             {
                 pt_mutex_unlock_with_error(this->_scheduled_mutex);
-                ft_global_error_stack_push(this->_scheduled.get_error());
+                ft_global_error_stack_push(ft_global_error_stack_peek_last_error());
                 return ;
             }
             has_entries = scheduled_count > 0;
@@ -1310,11 +1316,11 @@ void ft_task_scheduler::timer_loop()
             bool pop_success;
 
             scheduled_count = this->_scheduled.size();
-            if (this->_scheduled.get_error() != FT_ERR_SUCCESSS)
+            if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
             {
                 if (pt_mutex_unlock_with_error(this->_scheduled_mutex) != FT_ERR_SUCCESSS)
                     return ;
-                ft_global_error_stack_push(this->_scheduled.get_error());
+                ft_global_error_stack_push(ft_global_error_stack_peek_last_error());
                 return ;
             }
             if (scheduled_count == 0)
@@ -1326,9 +1332,7 @@ void ft_task_scheduler::timer_loop()
             pop_success = this->scheduled_heap_pop(expired_task);
             if (!pop_success)
             {
-                int scheduled_error;
-
-                scheduled_error = this->_scheduled.get_error();
+                int scheduled_error = ft_global_error_stack_peek_last_error();
                 if (pt_mutex_unlock_with_error(this->_scheduled_mutex) != FT_ERR_SUCCESSS)
                     return ;
                 ft_global_error_stack_push(scheduled_error);
@@ -1411,7 +1415,9 @@ void ft_task_scheduler::timer_loop()
                         expired_task._parent_id = previous_trace_id;
                         expired_task._label = reschedule_label;
                         if (!this->scheduled_heap_push(ft_move(expired_task)))
-                            ft_global_error_stack_push(this->_scheduled.get_error());
+                        {
+                            ft_global_error_stack_push(ft_global_error_stack_peek_last_error());
+                        }
                         else
                             this->trace_emit_event(FT_TASK_TRACE_PHASE_TIMER_REGISTERED,
                                     new_trace_id, previous_trace_id, reschedule_label, true);
@@ -1467,7 +1473,7 @@ void ft_task_scheduler::timer_loop()
                         expired_task._time = updated_time;
                         expired_task._function = ft_move(original_function);
                         if (!this->scheduled_heap_push(ft_move(expired_task)))
-                            ft_global_error_stack_push(this->_scheduled.get_error());
+                            ft_global_error_stack_push(ft_global_error_stack_peek_last_error());
                     }
                 }
                 continue;
@@ -1546,7 +1552,7 @@ void ft_task_scheduler::timer_loop()
                     expired_task._parent_id = previous_trace_id;
                     expired_task._label = reschedule_label;
                     if (!this->scheduled_heap_push(ft_move(expired_task)))
-                        ft_global_error_stack_push(this->_scheduled.get_error());
+                        ft_global_error_stack_push(ft_global_error_stack_peek_last_error());
                     else
                         this->trace_emit_event(FT_TASK_TRACE_PHASE_TIMER_REGISTERED,
                                 new_trace_id, previous_trace_id, reschedule_label, true);

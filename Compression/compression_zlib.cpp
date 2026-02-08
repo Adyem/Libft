@@ -7,6 +7,18 @@
 
 static const unsigned char g_compression_empty_input = 0;
 
+static bool compression_vector_operation_failed(void)
+{
+    int vector_error = ft_global_error_stack_peek_last_error();
+
+    if (vector_error != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(vector_error);
+        return (true);
+    }
+    return (false);
+}
+
 static int compression_string_pop_error(const ft_string &string_value)
 {
     unsigned long long operation_id = string_value.last_operation_id();
@@ -18,24 +30,13 @@ static int compression_string_pop_error(const ft_string &string_value)
 
 static int  compression_store_in_vector(ft_vector<unsigned char> &destination, const unsigned char *buffer, std::size_t size)
 {
-    int             vector_error;
     unsigned char   *destination_data;
 
-    vector_error = destination.get_error();
-    if (vector_error != FT_ERR_SUCCESSS)
-    {
-        ft_global_error_stack_push(vector_error);
-        return (1);
-    }
     if (size == 0)
     {
         destination.clear();
-        vector_error = destination.get_error();
-        if (vector_error != FT_ERR_SUCCESSS)
-        {
-            ft_global_error_stack_push(vector_error);
+        if (compression_vector_operation_failed())
             return (1);
-        }
         ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (0);
     }
@@ -45,19 +46,11 @@ static int  compression_store_in_vector(ft_vector<unsigned char> &destination, c
         return (1);
     }
     destination.resize(size);
-        vector_error = destination.get_error();
-        if (vector_error != FT_ERR_SUCCESSS)
-        {
-            ft_global_error_stack_push(vector_error);
-            return (1);
-        }
+    if (compression_vector_operation_failed())
+        return (1);
     destination_data = destination.begin();
-        vector_error = destination.get_error();
-        if (vector_error != FT_ERR_SUCCESSS)
-        {
-            ft_global_error_stack_push(vector_error);
-            return (1);
-        }
+    if (compression_vector_operation_failed())
+        return (1);
     ft_memcpy(destination_data, buffer, size);
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
@@ -248,30 +241,16 @@ int ft_compress_vector_to_vector(const ft_vector<unsigned char> &input, ft_vecto
     std::size_t           compressed_size;
     int                   store_status;
 
-    int input_error = input.get_error();
-    if (input_error != FT_ERR_SUCCESSS)
-    {
-        ft_global_error_stack_push(input_error);
-        return (1);
-    }
     input_size = input.size();
-    input_error = input.get_error();
-    if (input_error != FT_ERR_SUCCESSS)
-    {
-        ft_global_error_stack_push(input_error);
+    if (compression_vector_operation_failed())
         return (1);
-    }
     if (input_size == 0)
         input_buffer = &g_compression_empty_input;
     else
     {
         input_buffer = input.begin();
-        input_error = input.get_error();
-        if (input_error != FT_ERR_SUCCESSS)
-        {
-            ft_global_error_stack_push(input_error);
+        if (compression_vector_operation_failed())
             return (1);
-        }
     }
     compressed_size = 0;
     compressed_buffer = ft_compress(input_buffer, input_size, &compressed_size);
@@ -293,30 +272,16 @@ int ft_decompress_vector_to_string(const ft_vector<unsigned char> &input, ft_str
     std::size_t           decompressed_size;
     int                   assign_status;
 
-    int input_error = input.get_error();
-    if (input_error != FT_ERR_SUCCESSS)
-    {
-        ft_global_error_stack_push(input_error);
-        return (1);
-    }
     input_size = input.size();
-    input_error = input.get_error();
-    if (input_error != FT_ERR_SUCCESSS)
-    {
-        ft_global_error_stack_push(input_error);
+    if (compression_vector_operation_failed())
         return (1);
-    }
     if (input_size == 0)
         input_buffer = &g_compression_empty_input;
     else
     {
         input_buffer = input.begin();
-        input_error = input.get_error();
-        if (input_error != FT_ERR_SUCCESSS)
-        {
-            ft_global_error_stack_push(input_error);
+        if (compression_vector_operation_failed())
             return (1);
-        }
     }
     decompressed_size = 0;
     decompressed_buffer = ft_decompress(input_buffer, input_size, &decompressed_size);
@@ -338,30 +303,16 @@ int ft_decompress_vector_to_vector(const ft_vector<unsigned char> &input, ft_vec
     std::size_t           decompressed_size;
     int                   store_status;
 
-    int input_error = input.get_error();
-    if (input_error != FT_ERR_SUCCESSS)
-    {
-        ft_global_error_stack_push(input_error);
-        return (1);
-    }
     input_size = input.size();
-    input_error = input.get_error();
-    if (input_error != FT_ERR_SUCCESSS)
-    {
-        ft_global_error_stack_push(input_error);
+    if (compression_vector_operation_failed())
         return (1);
-    }
     if (input_size == 0)
         input_buffer = &g_compression_empty_input;
     else
     {
         input_buffer = input.begin();
-        input_error = input.get_error();
-        if (input_error != FT_ERR_SUCCESSS)
-        {
-            ft_global_error_stack_push(input_error);
+        if (compression_vector_operation_failed())
             return (1);
-        }
     }
     decompressed_size = 0;
     decompressed_buffer = ft_decompress(input_buffer, input_size, &decompressed_size);

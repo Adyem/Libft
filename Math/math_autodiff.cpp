@@ -384,10 +384,13 @@ static int math_autodiff_prepare_inputs(const ft_vector<double> &point,
     dual_inputs.clear();
     dimension = point.size();
     dual_inputs.reserve(dimension);
-    if (dual_inputs.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_global_error_stack_push(dual_inputs.get_error());
-        return (-1);
+        int reserve_error = ft_global_error_stack_peek_last_error();
+        if (reserve_error != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(reserve_error);
+            return (-1);
+        }
     }
     index = 0;
     while (index < dimension)
@@ -396,17 +399,20 @@ static int math_autodiff_prepare_inputs(const ft_vector<double> &point,
         double value;
 
         value = point[index];
-        if (dual_inputs.get_error() != FT_ERR_SUCCESSS)
+        if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
             return (-1);
         if (index == active_index)
             variable = ft_dual_number::variable(value);
         else
             variable = ft_dual_number::constant(value);
         dual_inputs.push_back(variable);
-        if (dual_inputs.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_global_error_stack_push(dual_inputs.get_error());
-            return (-1);
+            int push_error = ft_global_error_stack_peek_last_error();
+            if (push_error != FT_ERR_SUCCESSS)
+            {
+                ft_global_error_stack_push(push_error);
+                return (-1);
+            }
         }
         index++;
     }
@@ -458,10 +464,13 @@ int math_autodiff_gradient(math_autodiff_multivariate_function function,
     dimension = point.size();
     gradient.clear();
     gradient.reserve(dimension);
-    if (gradient.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_global_error_stack_push(gradient.get_error());
-        return (-1);
+        int reserve_error = ft_global_error_stack_peek_last_error();
+        if (reserve_error != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(reserve_error);
+            return (-1);
+        }
     }
     index = 0;
     value_set = false;
@@ -492,11 +501,14 @@ int math_autodiff_gradient(math_autodiff_multivariate_function function,
             value_set = true;
         }
         gradient.push_back(result.derivative());
-        if (gradient.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_global_error_stack_push(gradient.get_error());
-            gradient.clear();
-            return (-1);
+            int push_error = ft_global_error_stack_peek_last_error();
+            if (push_error != FT_ERR_SUCCESSS)
+            {
+                ft_global_error_stack_push(push_error);
+                gradient.clear();
+                return (-1);
+            }
         }
         index++;
     }
