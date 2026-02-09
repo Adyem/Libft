@@ -1,26 +1,30 @@
 #include "config.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
-#include "../Libft/libft.hpp"
+#include "../Basic/basic.hpp"
 #include "../Printf/printf.hpp"
 #include "../JSon/json.hpp"
 #include <cstddef>
-#include "../PThread/unique_lock.hpp"
 #include "../PThread/mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 
-static int cnfg_config_lock_if_enabled(cnfg_config *config, ft_unique_lock<pt_mutex> &mutex_guard)
+static int cnfg_config_lock_if_enabled(cnfg_config *config, bool *lock_acquired)
 {
     if (!config || !config->mutex)
         return (FT_ERR_SUCCESSS);
-    mutex_guard = ft_unique_lock<pt_mutex>(*config->mutex);
-    return (ft_global_error_stack_drop_last_error());
+    int lock_result = pt_mutex_lock_if_valid(config->mutex);
+    ft_global_error_stack_drop_last_error();
+    if (lock_result == FT_ERR_SUCCESSS && lock_acquired)
+        *lock_acquired = true;
+    return (lock_result);
 }
 
-static void cnfg_config_unlock_guard(ft_unique_lock<pt_mutex> &mutex_guard)
+static void cnfg_config_unlock_guard(cnfg_config *config, bool lock_acquired)
 {
-    if (!mutex_guard.owns_lock())
+    if (!config || !config->mutex || !lock_acquired)
         return ;
-    mutex_guard.unlock();
+    pt_mutex_unlock_if_valid(config->mutex);
+    ft_global_error_stack_drop_last_error();
     return ;
 }
 
@@ -170,7 +174,7 @@ static int config_write_json(const cnfg_config *config, const char *filename)
 int config_write_file(const cnfg_config *config, const char *filename)
 {
     const char *extension;
-    ft_unique_lock<pt_mutex> mutex_guard;
+    bool mutex_locked = false;
     int lock_error;
 
     if (!config || !filename)
@@ -178,7 +182,7 @@ int config_write_file(const cnfg_config *config, const char *filename)
         ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
-    lock_error = cnfg_config_lock_if_enabled(const_cast<cnfg_config*>(config), mutex_guard);
+    lock_error = cnfg_config_lock_if_enabled(const_cast<cnfg_config*>(config), &mutex_locked);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(lock_error);
@@ -187,7 +191,7 @@ int config_write_file(const cnfg_config *config, const char *filename)
     if (config->entry_count && !config->entries)
     {
         ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
-        cnfg_config_unlock_guard(mutex_guard);
+        cnfg_config_unlock_guard(const_cast<cnfg_config*>(config), mutex_locked);
         return (-1);
     }
     extension = ft_strrchr(filename, '.');
@@ -196,12 +200,12 @@ int config_write_file(const cnfg_config *config, const char *filename)
         int write_result;
 
         write_result = config_write_json(config, filename);
-        cnfg_config_unlock_guard(mutex_guard);
+        cnfg_config_unlock_guard(const_cast<cnfg_config*>(config), mutex_locked);
         return (write_result);
     }
     int write_result;
 
     write_result = config_write_ini(config, filename);
-    cnfg_config_unlock_guard(mutex_guard);
+    cnfg_config_unlock_guard(const_cast<cnfg_config*>(config), mutex_locked);
     return (write_result);
 }

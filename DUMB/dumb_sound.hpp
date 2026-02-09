@@ -28,7 +28,6 @@ class ft_sound_device
 {
     private:
         pt_recursive_mutex           *_mutex = ft_nullptr;
-        mutable bool                 _thread_safe_enabled = false;
 
         int                          prepare_thread_safety(void) noexcept;
         void                         teardown_thread_safety(void) noexcept;

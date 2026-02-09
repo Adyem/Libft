@@ -1,5 +1,4 @@
 #include "ft_vendor_profile.hpp"
-#include "../Errno/errno_internal.hpp"
 #include "../Template/move.hpp"
 
 thread_local ft_operation_error_stack ft_vendor_profile::_operation_errors = {{}, {}, 0};

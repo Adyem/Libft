@@ -4,7 +4,6 @@ DEBUG_TARGET := PThread_debug.a
 SRCS := pthread_lock_mutex.cpp \
         pthread_unlock_mutex.cpp \
         pthread_try_lock_mutex.cpp \
-        pthread_timed_lock_mutex.cpp \
         pthread_thread_join.cpp \
         pthread_thread_create.cpp \
         pthread_thread_detach.cpp \
@@ -20,7 +19,6 @@ SRCS := pthread_lock_mutex.cpp \
         pthread_recursive_mutex.cpp \
         pthread_recursive_lock_mutex.cpp \
         pthread_recursive_try_lock_mutex.cpp \
-        pthread_recursive_timed_lock_mutex.cpp \
         pthread_recursive_unlock_mutex.cpp \
         pthread_atomic_load.cpp \
         pthread_atomic_store.cpp \
@@ -32,7 +30,7 @@ SRCS := pthread_lock_mutex.cpp \
         pthread_task_scheduler.cpp \
         pthread_lock_tracking.cpp \
         pthread_task_scheduler_tracing.cpp \
-        recursive_mutex_helper.cpp
+        pthread_mutex_helper.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))

@@ -1,6 +1,5 @@
 #include "game_crafting.hpp"
 #include <utility>
-#include "../Errno/errno_internal.hpp"
 #include "../Template/move.hpp"
 #include "../PThread/pthread.hpp"
 

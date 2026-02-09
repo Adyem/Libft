@@ -1,7 +1,7 @@
 #include "time.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
-#include "../Libft/libft.hpp"
+#include "../Basic/basic.hpp"
 #include <ctime>
 #include <cstdio>
 #include <sstream>

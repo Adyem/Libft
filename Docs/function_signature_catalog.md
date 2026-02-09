@@ -4536,7 +4536,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `int json_write_to_backend(ft_document_sink &sink, json_group *groups)`
 - `int json_write_to_file(const char *file_path, json_group *groups)`
 
-### Libft/libft.hpp
+### Basic/basic.hpp
 
 - `char *ft_fgets(char *string, int size, FILE *stream);`
 - `char *ft_strchr(const char *string, int char_to_find);`
@@ -4562,7 +4562,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `ft_string ft_to_string(unsigned long number);`
 - `ft_string ft_utf16_to_utf8(const char16_t *input, size_t input_length);`
 - `ft_string ft_utf32_to_utf8(const char32_t *input, size_t input_length);`
-- `int ft_atoi(const char *string);`
+- `int ft_atoi(const char *string, int *error_code);`
 - `int ft_fclose(FILE *stream);`
 - `int ft_isalnum(int character);`
 - `int ft_isalpha(int character);`
@@ -4580,7 +4580,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `int ft_strncpy_s(char *destination, size_t destination_size, const char *source, size_t maximum_copy_length);`
 - `int ft_unsetenv(const char *name);`
 - `int ft_validate_int(const char *input);`
-- `long ft_atol(const char *string);`
+- `long ft_atol(const char *string, int *error_code);`
 - `long ft_strtol(const char *input_string, char **end_pointer, int numeric_base);`
 - `size_t ft_strlcpy(char *destination, const char *source, size_t buffer_size);`
 - `size_t ft_strnlen(const char *string, size_t maximum_length);`
@@ -4592,67 +4592,65 @@ The catalog lists the function declarations and definitions that appear in the C
 - `void ft_to_lower(char *string);`
 - `void ft_to_upper(char *string);`
 
-### Libft/libft_environment_lock.cpp
+### Basic/basic_environment_lock.cpp
 
 - `int ft_environment_lock(void)`
 - `int ft_environment_unlock(void)`
-- `static void ft_environment_initialize_mutex(void)`
-- `void ft_environment_force_lock_failure(int error_code)`
-- `void ft_environment_force_unlock_failure(int error_code)`
-- `void ft_environment_reset_failures(void)`
+- `int ft_environment_enable_thread_safety(void)`
+- `void ft_environment_disable_thread_safety(void)`
 
-### Libft/libft_environment_lock.hpp
+### Basic/basic_environment_lock.hpp
 
+- `int ft_environment_lock(void);`
 - `int ft_environment_unlock(void);`
-- `void ft_environment_force_lock_failure(int error_code);`
-- `void ft_environment_force_unlock_failure(int error_code);`
-- `void ft_environment_reset_failures(void);`
+- `int ft_environment_enable_thread_safety(void);`
+- `void ft_environment_disable_thread_safety(void);`
 
-### Libft/libft_locale.cpp
+### Basic/basic_locale.cpp
 
 - `ft_string ft_locale_casefold(const char *input, const char *locale_name)`
 
-### Libft/libft_memcpy_s.cpp
+### Basic/basic_memcpy_s.cpp
 
 - `int ft_memcpy_s(void *destination, size_t destination_size, const void *source, size_t number_of_bytes)`
 
-### Libft/libft_memmove_s.cpp
+### Basic/basic_memmove_s.cpp
 
 - `int ft_memmove_s(void *destination, size_t destination_size, const void *source, size_t number_of_bytes)`
 
-### Libft/libft_span.cpp
+### Basic/basic_span.cpp
 
 - `ft_string ft_span_to_string(const char *buffer, size_t length)`
 
-### Libft/libft_strcat_s.cpp
+### Basic/basic_strcat_s.cpp
 
 - `int ft_strcat_s(char *destination, size_t destination_size, const char *source)`
 
-### Libft/libft_strcpy_s.cpp
+### Basic/basic_strcpy_s.cpp
 
 - `int ft_strcpy_s(char *destination, size_t destination_size, const char *source)`
 
-### Libft/libft_strncat_s.cpp
+### Basic/basic_strncat_s.cpp
 
 - `int ft_strncat_s(char *destination, size_t destination_size, const char *source, size_t maximum_append_length)`
 
-### Libft/libft_strncpy_s.cpp
+### Basic/basic_strncpy_s.cpp
 
 - `int ft_strncpy_s(char *destination, size_t destination_size, const char *source, size_t maximum_copy_length)`
 
-### Libft/libft_strtol.cpp
+### Basic/basic_strtol.cpp
 
 - `long ft_strtol(const char *input_string, char **end_pointer, int numeric_base)`
 
-### Libft/libft_strtoul.cpp
+### Basic/basic_strtoul.cpp
 
 - `unsigned long ft_strtoul(const char *input_string, char **end_pointer, int numeric_base)`
 
-### Libft/libft_time.cpp
+### Basic/basic_time.cpp
 
 - `char *ft_time_format(char *buffer, size_t buffer_size)`
 
-### Libft/libft_to_string.cpp
+### Basic/basic_to_string.cpp
 
 - `ft_string ft_to_string(double number)`
 - `ft_string ft_to_string(float number)`
@@ -4666,7 +4664,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `static ft_string format_unsigned_long(unsigned long number, int *error_code)`
 - `static ft_string format_unsigned_long_long(unsigned long long number, int *error_code)`
 
-### Libft/libft_utf8.hpp
+### Basic/basic_utf8.hpp
 
 - `int ft_utf8_count(const char *string, size_t *code_point_count_pointer);`
 - `int ft_utf8_duplicate_grapheme(const char *string, size_t string_length, size_t *index_pointer, char **grapheme_pointer);`
@@ -4679,25 +4677,25 @@ The catalog lists the function declarations and definitions that appear in the C
 - `uint32_t ft_utf8_case_ascii_lower(uint32_t code_point);`
 - `uint32_t ft_utf8_case_ascii_upper(uint32_t code_point);`
 
-### Libft/libft_utf8_case.cpp
+### Basic/basic_utf8_case.cpp
 
 - `int ft_utf8_encode(uint32_t code_point, char *buffer, size_t buffer_size, size_t *encoded_length_pointer)`
 - `int ft_utf8_transform(const char *input, size_t input_length, char *output_buffer, size_t output_buffer_size, ft_utf8_case_hook case_hook)`
 - `int ft_utf8_transform_alloc(const char *input, char **output_pointer, ft_utf8_case_hook case_hook)`
 - `uint32_t ft_utf8_case_ascii_upper(uint32_t code_point)`
 
-### Libft/libft_utf8_decode.cpp
+### Basic/basic_utf8_decode.cpp
 
 - `int ft_utf8_next(const char *string, size_t string_length, size_t *index_pointer, uint32_t *code_point_pointer, size_t *sequence_length_pointer)`
 - `static int ft_utf8_detect_sequence(unsigned char first_byte, size_t *expected_length, uint32_t *initial_value, uint32_t *minimum_value)`
 
-### Libft/libft_utf8_grapheme.cpp
+### Basic/basic_utf8_grapheme.cpp
 
 - `int ft_utf8_duplicate_grapheme(const char *string, size_t string_length, size_t *index_pointer, char **grapheme_pointer)`
 - `int ft_utf8_is_combining_code_point(uint32_t code_point)`
 - `int ft_utf8_next_grapheme(const char *string, size_t string_length, size_t *index_pointer, size_t *grapheme_length_pointer)`
 
-### Libft/libft_wide.cpp
+### Basic/basic_wide.cpp
 
 - `char16_t *ft_utf8_to_utf16(const char *input, size_t input_length, size_t *output_length_pointer)`
 - `char32_t *ft_utf8_to_utf32(const char *input, size_t input_length, size_t *output_length_pointer)`
@@ -6182,19 +6180,16 @@ The catalog lists the function declarations and definitions that appear in the C
 - `const char *operation_error_last_error_str() const;`
 - `ft_size_t operation_error_depth() const;`
 - `ft_size_t operation_error_find_by_id(unsigned long long operation_id) const;`
-- `int lock(pthread_t thread_id) const;`
+- `int lock() const;`
 - `int lock_internal(bool *lock_acquired) const;`
 - `int lock_state(bool *lock_acquired) const;`
 - `int operation_error_error_at(ft_size_t index) const;`
 - `int operation_error_last_error() const;`
 - `int operation_error_pop_last() const;`
 - `int operation_error_pop_newest() const;`
-- `int try_lock(pthread_t thread_id) const;`
-- `int try_lock_for(pthread_t thread_id, const struct timespec &relative_time) const;`
-- `int try_lock_until(pthread_t thread_id, const struct timespec &absolute_time) const;`
-- `int unlock(pthread_t thread_id) const;`
+- `int try_lock() const;`
+- `int unlock() const;`
 - `int unlock_internal(bool lock_acquired) const;`
-- `pthread_mutex_t *get_native_mutex() const;`
 - `public: pt_mutex();`
 - `unsigned long long operation_error_get_id_at(ft_size_t index) const;`
 - `unsigned long long operation_error_push_entry(int error_code) const;`
@@ -6275,19 +6270,19 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### PThread/pthread_lock_tracking.cpp
 
-- `bool pt_lock_tracking::detect_cycle(const s_pt_thread_lock_info *origin, pthread_mutex_t *requested_mutex, pt_mutex_vector *visited_mutexes, pt_thread_vector *visited_threads)`
+- `bool pt_lock_tracking::detect_cycle(const s_pt_thread_lock_info *origin, const pt_mutex *requested_mutex, pt_mutex_vector *visited_mutexes, pt_thread_vector *visited_threads)`
 - `bool pt_lock_tracking::ensure_registry_mutex_initialized(int *error_code)`
 - `bool pt_lock_tracking::get_thread_state(pt_thread_id_type thread_identifier, s_pt_lock_tracking_thread_state &state)`
-- `bool pt_lock_tracking::notify_wait(pt_thread_id_type thread_identifier, pthread_mutex_t *requested_mutex, const pt_mutex_vector &owned_mutexes)`
+- `bool pt_lock_tracking::notify_wait(pt_thread_id_type thread_identifier, pt_mutex *requested_mutex, const pt_mutex_vector &owned_mutexes)`
 - `bool pt_lock_tracking::snapshot_waiters(pt_lock_wait_snapshot_vector &snapshot)`
-- `bool pt_lock_tracking::vector_contains_mutex(const pt_mutex_vector &mutexes, pthread_mutex_t *mutex_pointer)`
+- `bool pt_lock_tracking::vector_contains_mutex(const pt_mutex_vector &mutexes, const pt_mutex *mutex_pointer)`
 - `bool pt_lock_tracking::vector_contains_thread(const pt_thread_vector &thread_identifiers, pt_thread_id_type thread_identifier)`
 - `pt_mutex_vector pt_lock_tracking::get_owned_mutexes(pt_thread_id_type thread_identifier)`
-- `pthread_mutex_t *pt_lock_tracking::get_registry_mutex(void)`
+- `std::mutex *pt_lock_tracking::get_registry_mutex(void)`
 - `s_pt_thread_lock_info *pt_lock_tracking::find_thread_info(pt_thread_id_type thread_identifier, int *error_code)`
 - `s_pt_thread_lock_info *pt_lock_tracking::lookup_thread_info(pt_thread_id_type thread_identifier, int *error_code)`
-- `void pt_lock_tracking::notify_acquired(pt_thread_id_type thread_identifier, pthread_mutex_t *mutex_pointer)`
-- `void pt_lock_tracking::notify_released(pt_thread_id_type thread_identifier, pthread_mutex_t *mutex_pointer)`
+- `void pt_lock_tracking::notify_acquired(pt_thread_id_type thread_identifier, pt_mutex *mutex_pointer)`
+- `void pt_lock_tracking::notify_released(pt_thread_id_type thread_identifier, pt_mutex *mutex_pointer)`
 - `void pt_lock_tracking::record_error(ft_operation_error_stack *error_stack, int error_code, bool push_global)`
 - `void pt_lock_tracking::set_error(int error_code)`
 
@@ -6313,7 +6308,6 @@ The catalog lists the function declarations and definitions that appear in the C
 - `int pt_mutex::operation_error_pop_last() const`
 - `int pt_mutex::operation_error_pop_newest() const`
 - `int pt_mutex::unlock_internal(bool lock_acquired) const`
-- `pthread_mutex_t *pt_mutex::get_native_mutex() const`
 - `unsigned long long pt_mutex::operation_error_get_id_at(ft_size_t index) const`
   - `void pt_mutex::operation_error_pop_all() const`
 - `void pt_mutex::teardown_thread_safety()`
@@ -6335,18 +6329,12 @@ The catalog lists the function declarations and definitions that appear in the C
 - `int pt_recursive_mutex::operation_error_pop_last() const`
 - `int pt_recursive_mutex::operation_error_pop_newest() const`
 - `int pt_recursive_mutex::unlock_internal(bool lock_acquired) const`
-- `pthread_mutex_t *pt_recursive_mutex::get_native_mutex() const`
 - `unsigned long long pt_recursive_mutex::operation_error_get_id_at(ft_size_t index) const`
 - `unsigned long long pt_recursive_mutex::operation_error_push_entry(int error_code) const`
 - `void pt_recursive_mutex::operation_error_pop_all() const`
 - `void pt_recursive_mutex::operation_error_push(int error_code) const`
 - `void pt_recursive_mutex::teardown_thread_safety()`
 - `void pt_recursive_mutex::unlock_state(bool lock_acquired) const`
-
-### PThread/pthread_recursive_timed_lock_mutex.cpp
-
-- `int pt_recursive_mutex::try_lock_for(pthread_t thread_id, const struct timespec &relative_time) const`
-- `int pt_recursive_mutex::try_lock_until(pthread_t thread_id, const struct timespec &absolute_time) const`
 
 ### PThread/pthread_recursive_unlock_mutex.cpp
 
@@ -6518,11 +6506,6 @@ The catalog lists the function declarations and definitions that appear in the C
 
 - `int pt_thread_wake_one_uint32(std::atomic<uint32_t> *address)`
 
-### PThread/pthread_timed_lock_mutex.cpp
-
-- `int pt_mutex::try_lock_for(pthread_t thread_id, const struct timespec &relative_time) const`
-- `int pt_mutex::try_lock_until(pthread_t thread_id, const struct timespec &absolute_time) const`
-
 ### PThread/recursive_mutex.hpp
 
 - `bool ensure_native_mutex() const;`
@@ -6532,19 +6515,16 @@ The catalog lists the function declarations and definitions that appear in the C
 - `const char *operation_error_last_error_str() const;`
 - `ft_size_t operation_error_depth() const;`
 - `ft_size_t operation_error_find_by_id(unsigned long long operation_id) const;`
-- `int lock(pthread_t thread_id) const;`
+- `int lock() const;`
 - `int lock_internal(bool *lock_acquired) const;`
 - `int lock_state(bool *lock_acquired) const;`
 - `int operation_error_error_at(ft_size_t index) const;`
 - `int operation_error_last_error() const;`
 - `int operation_error_pop_last() const;`
 - `int operation_error_pop_newest() const;`
-- `int try_lock(pthread_t thread_id) const;`
-- `int try_lock_for(pthread_t thread_id, const struct timespec &relative_time) const;`
-- `int try_lock_until(pthread_t thread_id, const struct timespec &absolute_time) const;`
-- `int unlock(pthread_t thread_id) const;`
+- `int try_lock() const;`
+- `int unlock() const;`
 - `int unlock_internal(bool lock_acquired) const;`
-- `pthread_mutex_t *get_native_mutex() const;`
 - `public: pt_recursive_mutex();`
 - `unsigned long long operation_error_get_id_at(ft_size_t index) const;`
 - `unsigned long long operation_error_push_entry(int error_code) const;`
@@ -9831,9 +9811,9 @@ The catalog lists the function declarations and definitions that appear in the C
 
 - `cleanup: if (first_mutex_locked == 1)`
 - `cleanup: if (thread_created == 1)`
-- `static bool vector_contains_mutex(const pt_mutex_vector &owned_mutexes, pthread_mutex_t *mutex_pointer)`
+- `static bool vector_contains_mutex(const pt_mutex_vector &owned_mutexes, pt_mutex *mutex_pointer)`
 - `static bool wait_for_stage(std::atomic<int> *stage, int expected_stage)`
-- `static bool wait_for_thread_state(pt_thread_id_type thread_identifier, pthread_mutex_t *owned_mutex_pointer, pthread_mutex_t *waiting_mutex_pointer, ft_size_t expected_owned_count, long timeout_ms)`
+- `static bool wait_for_thread_state(pt_thread_id_type thread_identifier, pt_mutex *owned_mutex_pointer, pt_mutex *waiting_mutex_pointer, ft_size_t expected_owned_count, long timeout_ms)`
 - `static void *deadlock_worker(void *argument)`
 - `static void *foreign_owned_mutex_worker(void *argument)`
 - `static void *try_lock_worker(void *argument)`

@@ -1,6 +1,6 @@
 #include "game_behavior_tree.hpp"
 #include "../Template/move.hpp"
-#include "../Libft/libft.hpp"
+#include "../Basic/basic.hpp"
 
 ft_behavior_context::ft_behavior_context() noexcept
     : _character(ft_nullptr), _user_data(ft_nullptr)

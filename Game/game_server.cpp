@@ -394,7 +394,7 @@ int ft_game_server::handle_message_locked(int client_handle, const ft_string &me
                 return (1);
             }
         }
-        this->join_client_locked(ft_atoi(id_item->value), client_handle, guard);
+        this->join_client_locked(ft_atoi(id_item->value, ft_nullptr), client_handle, guard);
         json_free_groups(groups);
         this->set_error(FT_ERR_SUCCESSS);
         return (0);
@@ -409,7 +409,7 @@ int ft_game_server::handle_message_locked(int client_handle, const ft_string &me
             this->set_error(FT_ERR_GAME_GENERAL_ERROR);
             return (1);
         }
-        this->leave_client_locked(ft_atoi(id_item->value), guard);
+        this->leave_client_locked(ft_atoi(id_item->value, ft_nullptr), guard);
         nw_close(client_handle);
         json_free_groups(groups);
         this->set_error(FT_ERR_SUCCESSS);
@@ -437,8 +437,8 @@ int ft_game_server::handle_message_locked(int client_handle, const ft_string &me
         this->set_error(event.get_error());
         return (1);
     }
-    event->set_id(ft_atoi(id_item->value));
-    event->set_duration(ft_atoi(duration_item->value));
+    event->set_id(ft_atoi(id_item->value, ft_nullptr));
+    event->set_duration(ft_atoi(duration_item->value, ft_nullptr));
     if (this->_world.get_error() != FT_ERR_SUCCESSS)
     {
         json_free_groups(groups);

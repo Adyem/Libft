@@ -1,6 +1,7 @@
 #include "encryption_aead.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
-#include "../Libft/libft.hpp"
+#include "../Basic/basic.hpp"
 #include "../PThread/pthread_internal.hpp"
 
 #if NETWORKING_HAS_OPENSSL

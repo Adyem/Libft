@@ -13,7 +13,6 @@ class ft_sound_clip
         std::vector<uint8_t>     _data;
         ft_sound_spec            *_spec;
         pt_recursive_mutex       *_mutex = ft_nullptr;
-        mutable bool             _thread_safe_enabled = false;
 
         int                      prepare_thread_safety(void) noexcept;
         void                     teardown_thread_safety(void) noexcept;

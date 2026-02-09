@@ -3,7 +3,7 @@
 #include "../CPP_class/class_big_number.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
-#include "../Libft/libft.hpp"
+#include "../Basic/basic.hpp"
 #include <new>
 
 static void json_dom_push_error(int error_code)
@@ -311,6 +311,13 @@ static int json_dom_apply_group(ft_dom_node *group_node, json_document &document
         document.set_manual_error(group_node->get_error());
         return (-1);
     }
+    int children_error = ft_global_error_stack_drop_last_error();
+    ft_global_error_stack_push(children_error);
+    if (children_error != FT_ERR_SUCCESSS)
+    {
+        document.set_manual_error(children_error);
+        return (-1);
+    }
     size_t index;
     size_t count;
 
@@ -319,12 +326,6 @@ static int json_dom_apply_group(ft_dom_node *group_node, json_document &document
     while (index < count)
     {
         ft_dom_node *child_node = children[index];
-
-        if (children.get_error() != FT_ERR_SUCCESSS)
-        {
-            document.set_manual_error(children.get_error());
-            return (-1);
-        }
         if (json_dom_apply_item(child_node, group_pointer, document) != 0)
             return (-1);
         index += 1;
@@ -370,6 +371,12 @@ int json_document_from_dom(const ft_dom_document &dom, json_document &document) 
         document.set_manual_error(root_node->get_error());
         return (-1);
     }
+    int groups_error = json_dom_consume_vector_error();
+    if (groups_error != FT_ERR_SUCCESSS)
+    {
+        document.set_manual_error(groups_error);
+        return (-1);
+    }
     size_t index;
     size_t count;
 
@@ -378,12 +385,6 @@ int json_document_from_dom(const ft_dom_document &dom, json_document &document) 
     while (index < count)
     {
         ft_dom_node *group_node = groups[index];
-
-        if (groups.get_error() != FT_ERR_SUCCESSS)
-        {
-        document.set_manual_error(groups.get_error());
-            return (-1);
-        }
         if (json_dom_apply_group(group_node, document) != 0)
             return (-1);
         index += 1;

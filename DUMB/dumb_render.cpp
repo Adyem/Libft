@@ -63,7 +63,7 @@ ft_render_window::~ft_render_window(void)
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *ft_render_window::runtime_mutex(void)
 {
-    if (!this->_thread_safe_enabled)
+    if (!this->_mutex)
         this->prepare_thread_safety();
     return (this->_mutex);
 }
@@ -75,18 +75,12 @@ int ft_render_window::initialize(const ft_render_window_desc &desc)
     int                       unlock_status;
     ft_render_platform_result platform_result;
 
-    lock_status = pt_recursive_mutex_lock_if_enabled(
-        this->_mutex,
-        this->_thread_safe_enabled
-    );
+    lock_status = pt_recursive_mutex_lock_if_valid(this->_mutex);
     if (lock_status != FT_ERR_SUCCESSS)
         return (lock_status);
     if (this->_is_initialized == true)
     {
-        unlock_status = pt_recursive_mutex_unlock_if_enabled(
-            this->_mutex,
-            this->_thread_safe_enabled
-        );
+        unlock_status = pt_recursive_mutex_unlock_if_valid(this->_mutex);
         if (unlock_status != FT_ERR_SUCCESSS)
             return (unlock_status);
         ft_render_push_success();
@@ -95,10 +89,7 @@ int ft_render_window::initialize(const ft_render_window_desc &desc)
     if (desc.width <= 0 || desc.height <= 0 || desc.title == NULL)
     {
         ft_render_push_error(ft_render_error_invalid_argument, 0);
-        unlock_status = pt_recursive_mutex_unlock_if_enabled(
-            this->_mutex,
-            this->_thread_safe_enabled
-        );
+        unlock_status = pt_recursive_mutex_unlock_if_valid(this->_mutex);
         if (unlock_status != FT_ERR_SUCCESSS)
             return (unlock_status);
         return (ft_render_error_invalid_argument);
@@ -111,20 +102,14 @@ int ft_render_window::initialize(const ft_render_window_desc &desc)
     if (platform_result.error_code != ft_render_ok)
     {
         ft_render_push_error(platform_result.error_code, platform_result.system_error_code);
-        unlock_status = pt_recursive_mutex_unlock_if_enabled(
-            this->_mutex,
-            this->_thread_safe_enabled
-        );
+        unlock_status = pt_recursive_mutex_unlock_if_valid(this->_mutex);
         if (unlock_status != FT_ERR_SUCCESSS)
             return (unlock_status);
         return (platform_result.error_code);
     }
     this->_is_initialized = true;
     this->_should_close = false;
-    unlock_status = pt_recursive_mutex_unlock_if_enabled(
-        this->_mutex,
-        this->_thread_safe_enabled
-    );
+    unlock_status = pt_recursive_mutex_unlock_if_valid(this->_mutex);
     if (unlock_status != FT_ERR_SUCCESSS)
         return (unlock_status);
     ft_render_push_success();
@@ -137,10 +122,7 @@ void ft_render_window::shutdown(void)
     int                        lock_error;
     int                        unlock_error;
 
-    lock_error = pt_recursive_mutex_lock_if_enabled(
-        this->_mutex,
-        this->_thread_safe_enabled
-    );
+    lock_error = pt_recursive_mutex_lock_if_valid(this->_mutex);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(lock_error);
@@ -165,10 +147,7 @@ void ft_render_window::shutdown(void)
         this->_is_initialized = false;
         this->_should_close = true;
     }
-    unlock_error = pt_recursive_mutex_unlock_if_enabled(
-        this->_mutex,
-        this->_thread_safe_enabled
-    );
+    unlock_error = pt_recursive_mutex_unlock_if_valid(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESSS)
         ft_global_error_stack_push(unlock_error);
     return ;
@@ -180,19 +159,13 @@ int ft_render_window::poll_events(void)
     int                        lock_error;
     int                        unlock_error;
 
-    lock_error = pt_recursive_mutex_lock_if_enabled(
-        this->_mutex,
-        this->_thread_safe_enabled
-    );
+    lock_error = pt_recursive_mutex_lock_if_valid(this->_mutex);
     if (lock_error != FT_ERR_SUCCESSS)
         return (lock_error);
     if (this->_is_initialized == false)
     {
         ft_render_push_error(ft_render_error_not_initialized, 0);
-        unlock_error = pt_recursive_mutex_unlock_if_enabled(
-            this->_mutex,
-            this->_thread_safe_enabled
-        );
+        unlock_error = pt_recursive_mutex_unlock_if_valid(this->_mutex);
         if (unlock_error != FT_ERR_SUCCESSS)
             return (unlock_error);
         return (ft_render_error_not_initialized);
@@ -204,19 +177,13 @@ int ft_render_window::poll_events(void)
     if (platform_result.error_code != ft_render_ok)
     {
         ft_render_push_error(platform_result.error_code, platform_result.system_error_code);
-        unlock_error = pt_recursive_mutex_unlock_if_enabled(
-            this->_mutex,
-            this->_thread_safe_enabled
-        );
+        unlock_error = pt_recursive_mutex_unlock_if_valid(this->_mutex);
         if (unlock_error != FT_ERR_SUCCESSS)
             return (unlock_error);
         return (platform_result.error_code);
     }
     ft_render_push_success();
-    unlock_error = pt_recursive_mutex_unlock_if_enabled(
-        this->_mutex,
-        this->_thread_safe_enabled
-    );
+    unlock_error = pt_recursive_mutex_unlock_if_valid(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESSS)
         return (unlock_error);
     return (ft_render_ok);
@@ -228,19 +195,13 @@ int ft_render_window::present(void)
     int                        lock_error;
     int                        unlock_error;
 
-    lock_error = pt_recursive_mutex_lock_if_enabled(
-        this->_mutex,
-        this->_thread_safe_enabled
-    );
+    lock_error = pt_recursive_mutex_lock_if_valid(this->_mutex);
     if (lock_error != FT_ERR_SUCCESSS)
         return (lock_error);
     if (this->_is_initialized == false)
     {
         ft_render_push_error(ft_render_error_not_initialized, 0);
-        unlock_error = pt_recursive_mutex_unlock_if_enabled(
-            this->_mutex,
-            this->_thread_safe_enabled
-        );
+        unlock_error = pt_recursive_mutex_unlock_if_valid(this->_mutex);
         if (unlock_error != FT_ERR_SUCCESSS)
             return (unlock_error);
         return (ft_render_error_not_initialized);
@@ -252,19 +213,13 @@ int ft_render_window::present(void)
     if (platform_result.error_code != ft_render_ok)
     {
         ft_render_push_error(platform_result.error_code, platform_result.system_error_code);
-        unlock_error = pt_recursive_mutex_unlock_if_enabled(
-            this->_mutex,
-            this->_thread_safe_enabled
-        );
+        unlock_error = pt_recursive_mutex_unlock_if_valid(this->_mutex);
         if (unlock_error != FT_ERR_SUCCESSS)
             return (unlock_error);
         return (platform_result.error_code);
     }
     ft_render_push_success();
-    unlock_error = pt_recursive_mutex_unlock_if_enabled(
-        this->_mutex,
-        this->_thread_safe_enabled
-    );
+    unlock_error = pt_recursive_mutex_unlock_if_valid(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESSS)
         return (unlock_error);
     return (ft_render_ok);
@@ -286,20 +241,14 @@ int ft_render_window::clear(uint32_t color)
     int                          lock_error;
     int                          unlock_error;
 
-    lock_error = pt_recursive_mutex_lock_if_enabled(
-        this->_mutex,
-        this->_thread_safe_enabled
-    );
+    lock_error = pt_recursive_mutex_lock_if_valid(this->_mutex);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         return (lock_error);
     }
     if (this->_is_initialized == false)
     {
-        unlock_error = pt_recursive_mutex_unlock_if_enabled(
-            this->_mutex,
-            this->_thread_safe_enabled
-        );
+        unlock_error = pt_recursive_mutex_unlock_if_valid(this->_mutex);
         ft_render_push_error(ft_render_error_not_initialized, 0);
         if (unlock_error != FT_ERR_SUCCESSS)
             return (unlock_error);
@@ -321,10 +270,7 @@ int ft_render_window::clear(uint32_t color)
         }
         y = y + 1;
     }
-    unlock_error = pt_recursive_mutex_unlock_if_enabled(
-        this->_mutex,
-        this->_thread_safe_enabled
-    );
+    unlock_error = pt_recursive_mutex_unlock_if_valid(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESSS)
         return (unlock_error);
     ft_render_push_success();
@@ -339,19 +285,13 @@ int ft_render_window::put_pixel(int x, int y, uint32_t color)
     int height;
     int index;
 
-    lock_error = pt_recursive_mutex_lock_if_enabled(
-        this->_mutex,
-        this->_thread_safe_enabled
-    );
+    lock_error = pt_recursive_mutex_lock_if_valid(this->_mutex);
     if (lock_error != FT_ERR_SUCCESSS)
         return (lock_error);
     if (this->_is_initialized == false)
     {
         ft_render_push_error(ft_render_error_not_initialized, 0);
-        unlock_error = pt_recursive_mutex_unlock_if_enabled(
-            this->_mutex,
-            this->_thread_safe_enabled
-        );
+        unlock_error = pt_recursive_mutex_unlock_if_valid(this->_mutex);
         if (unlock_error != FT_ERR_SUCCESSS)
             return (unlock_error);
         return (ft_render_error_not_initialized);
@@ -361,10 +301,7 @@ int ft_render_window::put_pixel(int x, int y, uint32_t color)
     if (x < 0 || y < 0 || x >= width || y >= height)
     {
         ft_render_push_error(ft_render_error_invalid_argument, 0);
-        unlock_error = pt_recursive_mutex_unlock_if_enabled(
-            this->_mutex,
-            this->_thread_safe_enabled
-        );
+        unlock_error = pt_recursive_mutex_unlock_if_valid(this->_mutex);
         if (unlock_error != FT_ERR_SUCCESSS)
             return (unlock_error);
         return (ft_render_error_invalid_argument);
@@ -372,10 +309,7 @@ int ft_render_window::put_pixel(int x, int y, uint32_t color)
     index = (y * width) + x;
     this->_framebuffer.pixels[index] = color;
     ft_render_push_success();
-    unlock_error = pt_recursive_mutex_unlock_if_enabled(
-        this->_mutex,
-        this->_thread_safe_enabled
-    );
+    unlock_error = pt_recursive_mutex_unlock_if_valid(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESSS)
         return (unlock_error);
     return (ft_render_ok);
@@ -387,19 +321,13 @@ int ft_render_window::set_fullscreen(bool enabled)
     int                        lock_error;
     int                        unlock_error;
 
-    lock_error = pt_recursive_mutex_lock_if_enabled(
-        this->_mutex,
-        this->_thread_safe_enabled
-    );
+    lock_error = pt_recursive_mutex_lock_if_valid(this->_mutex);
     if (lock_error != FT_ERR_SUCCESSS)
         return (lock_error);
     if (this->_is_initialized == false)
     {
         ft_render_push_error(ft_render_error_not_initialized, 0);
-        unlock_error = pt_recursive_mutex_unlock_if_enabled(
-            this->_mutex,
-            this->_thread_safe_enabled
-        );
+        unlock_error = pt_recursive_mutex_unlock_if_valid(this->_mutex);
         if (unlock_error != FT_ERR_SUCCESSS)
             return (unlock_error);
         return (ft_render_error_not_initialized);
@@ -411,19 +339,13 @@ int ft_render_window::set_fullscreen(bool enabled)
     if (platform_result.error_code != ft_render_ok)
     {
         ft_render_push_error(platform_result.error_code, platform_result.system_error_code);
-        unlock_error = pt_recursive_mutex_unlock_if_enabled(
-            this->_mutex,
-            this->_thread_safe_enabled
-        );
+        unlock_error = pt_recursive_mutex_unlock_if_valid(this->_mutex);
         if (unlock_error != FT_ERR_SUCCESSS)
             return (unlock_error);
         return (platform_result.error_code);
     }
     ft_render_push_success();
-    unlock_error = pt_recursive_mutex_unlock_if_enabled(
-        this->_mutex,
-        this->_thread_safe_enabled
-    );
+    unlock_error = pt_recursive_mutex_unlock_if_valid(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESSS)
         return (unlock_error);
     return (ft_render_ok);
@@ -436,7 +358,7 @@ bool ft_render_window::should_close(void) const
 
 int ft_render_window::prepare_thread_safety(void) noexcept
 {
-    if (this->_thread_safe_enabled && this->_mutex)
+    if (this->_mutex)
     {
         ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (FT_ERR_SUCCESSS);
@@ -449,7 +371,6 @@ int ft_render_window::prepare_thread_safety(void) noexcept
         return (mutex_error);
     }
     this->_mutex = mutex_pointer;
-    this->_thread_safe_enabled = true;
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);
 }
@@ -457,7 +378,6 @@ int ft_render_window::prepare_thread_safety(void) noexcept
 void ft_render_window::teardown_thread_safety(void) noexcept
 {
     pt_recursive_mutex_destroy(&this->_mutex);
-    this->_thread_safe_enabled = false;
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
@@ -475,5 +395,5 @@ void ft_render_window::disable_thread_safety() noexcept
 
 bool ft_render_window::is_thread_safe_enabled() const noexcept
 {
-    return (this->_thread_safe_enabled);
+    return (this->_mutex != ft_nullptr);
 }

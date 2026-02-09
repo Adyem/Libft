@@ -96,10 +96,8 @@ FT_TEST(test_full_libft_header_manifest_sync, "full libft header matches manifes
     std::vector<std::string> manifest_candidates;
     header_candidates.push_back("FullLibft.hpp");
     header_candidates.push_back("../FullLibft.hpp");
-    header_candidates.push_back("Libft/FullLibft.hpp");
     manifest_candidates.push_back("full_libft_manifest.txt");
     manifest_candidates.push_back("../full_libft_manifest.txt");
-    manifest_candidates.push_back("Libft/full_libft_manifest.txt");
     std::string header_path = resolve_existing_path(header_candidates);
     std::string manifest_path = resolve_existing_path(manifest_candidates);
     FT_ASSERT(header_path.empty() == false);

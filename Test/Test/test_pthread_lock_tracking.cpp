@@ -2,7 +2,7 @@
 #include <atomic>
 #include <csignal>
 #include <csetjmp>
-#include "../../Libft/libft.hpp"
+#include "../../Basic/basic.hpp"
 #include "../../PThread/mutex.hpp"
 #include "../../PThread/pthread_lock_tracking.hpp"
 #include "../../PThread/pthread.hpp"
@@ -91,7 +91,7 @@ static bool wait_for_stage(std::atomic<int> *stage, int expected_stage)
     return (true);
 }
 
-static bool vector_contains_mutex(const pt_mutex_vector &owned_mutexes, pthread_mutex_t *mutex_pointer)
+static bool vector_contains_mutex(const pt_mutex_vector &owned_mutexes, pt_mutex *mutex_pointer)
 {
     ft_size_t index;
 
@@ -105,8 +105,8 @@ static bool vector_contains_mutex(const pt_mutex_vector &owned_mutexes, pthread_
     return (false);
 }
 
-static bool wait_for_thread_state(pt_thread_id_type thread_identifier, pthread_mutex_t *owned_mutex_pointer,
-        pthread_mutex_t *waiting_mutex_pointer, ft_size_t expected_owned_count, long timeout_ms)
+static bool wait_for_thread_state(pt_thread_id_type thread_identifier, pt_mutex *owned_mutex_pointer,
+        pt_mutex *waiting_mutex_pointer, ft_size_t expected_owned_count, long timeout_ms)
 {
     s_pt_lock_tracking_thread_state state;
     long attempts;
@@ -272,7 +272,7 @@ FT_TEST(test_pt_lock_tracking_detects_cycle, "pt_lock_tracking prevents circular
     failure_expression = ft_nullptr;
     failure_line = 0;
     initialize_shared_state(&shared, &first_mutex, &second_mutex);
-    RECORD_ASSERT(first_mutex.lock(THREAD_ID) == FT_SUCCESS);
+    RECORD_ASSERT(first_mutex.lock() == FT_SUCCESS);
     RECORD_ASSERT(first_mutex.get_error() == FT_ERR_SUCCESSS);
     first_mutex_locked = 1;
     if (pt_thread_create(&worker_thread, ft_nullptr, deadlock_worker, &shared) != 0)
@@ -285,13 +285,13 @@ FT_TEST(test_pt_lock_tracking_detects_cycle, "pt_lock_tracking prevents circular
     RECORD_ASSERT(shared.worker_thread_identifier.load() != 0);
     RECORD_ASSERT(shared.first_lock_result.load() == FT_SUCCESS);
     RECORD_ASSERT(shared.first_lock_error.load() == FT_ERR_SUCCESSS);
-    RECORD_ASSERT(wait_for_thread_state(THREAD_ID, first_mutex.get_native_mutex(), ft_nullptr, 1, 20));
-    RECORD_ASSERT(wait_for_thread_state(shared.worker_thread_identifier.load(), second_mutex.get_native_mutex(), first_mutex.get_native_mutex(), 1, 100));
-    RECORD_ASSERT(second_mutex.lock(THREAD_ID) == FT_SUCCESS);
+    RECORD_ASSERT(wait_for_thread_state(THREAD_ID, &first_mutex, ft_nullptr, 1, 20));
+    RECORD_ASSERT(wait_for_thread_state(shared.worker_thread_identifier.load(), &second_mutex, &first_mutex, 1, 100));
+    RECORD_ASSERT(second_mutex.lock() == FT_SUCCESS);
     RECORD_ASSERT(second_mutex.get_error() == FT_ERR_MUTEX_ALREADY_LOCKED);
     RECORD_ASSERT(second_mutex.lockState());
     second_mutex_locked = 1;
-    RECORD_ASSERT(first_mutex.unlock(THREAD_ID) == FT_SUCCESS);
+    RECORD_ASSERT(first_mutex.unlock() == FT_SUCCESS);
     RECORD_ASSERT(first_mutex.get_error() == FT_ERR_SUCCESSS);
     first_mutex_locked = 0;
     RECORD_ASSERT(wait_for_stage(&shared.stage, 5));
@@ -303,11 +303,11 @@ FT_TEST(test_pt_lock_tracking_detects_cycle, "pt_lock_tracking prevents circular
 cleanup:
     if (first_mutex_locked == 1)
     {
-        first_mutex.unlock(THREAD_ID);
+        first_mutex.unlock();
     }
     if (second_mutex_locked == 1)
     {
-        second_mutex.unlock(THREAD_ID);
+        second_mutex.unlock();
     }
     if (thread_created == 1)
     {
@@ -337,16 +337,16 @@ FT_TEST(test_pt_lock_tracking_reports_owned_mutexes, "pt_lock_tracking reports t
     pt_mutex second_mutex;
     pt_mutex_vector owned_mutexes;
 
-    FT_ASSERT_EQ(FT_SUCCESS, first_mutex.lock(THREAD_ID));
+    FT_ASSERT_EQ(FT_SUCCESS, first_mutex.lock());
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, first_mutex.get_error());
-    FT_ASSERT_EQ(FT_SUCCESS, second_mutex.lock(THREAD_ID));
+    FT_ASSERT_EQ(FT_SUCCESS, second_mutex.lock());
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, second_mutex.get_error());
     owned_mutexes = pt_lock_tracking::get_owned_mutexes(THREAD_ID);
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(2, static_cast<int>(owned_mutexes.size()));
-    FT_ASSERT_EQ(FT_SUCCESS, second_mutex.unlock(THREAD_ID));
+    FT_ASSERT_EQ(FT_SUCCESS, second_mutex.unlock());
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, second_mutex.get_error());
-    FT_ASSERT_EQ(FT_SUCCESS, first_mutex.unlock(THREAD_ID));
+    FT_ASSERT_EQ(FT_SUCCESS, first_mutex.unlock());
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, first_mutex.get_error());
     owned_mutexes = pt_lock_tracking::get_owned_mutexes(THREAD_ID);
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
@@ -387,7 +387,7 @@ FT_TEST(test_pt_mutex_unlock_requires_ownership, "pt_mutex unlock fails for thre
     RECORD_ASSERT(sigaction(SIGABRT, &sigabrt_action, &previous_sigabrt_action) == 0);
     handler_installed = 1;
     initialize_unlock_shared_state(&shared_state, &mutex_object);
-    RECORD_ASSERT(mutex_object.lock(THREAD_ID) == FT_SUCCESS);
+    RECORD_ASSERT(mutex_object.lock() == FT_SUCCESS);
     RECORD_ASSERT(mutex_object.get_error() == FT_ERR_SUCCESSS);
     if (pt_thread_create(&worker_thread, ft_nullptr, unlock_worker, &shared_state) != 0)
     {
@@ -397,7 +397,7 @@ FT_TEST(test_pt_mutex_unlock_requires_ownership, "pt_mutex unlock fails for thre
         thread_created = 1;
     RECORD_ASSERT(wait_for_stage(&shared_state.stage, 2));
     RECORD_ASSERT(g_sigabrt_received.load() == 1);
-    RECORD_ASSERT(mutex_object.unlock(THREAD_ID) == FT_SUCCESS);
+    RECORD_ASSERT(mutex_object.unlock() == FT_SUCCESS);
     RECORD_ASSERT(mutex_object.get_error() == FT_ERR_SUCCESSS);
     goto cleanup;
 
@@ -446,7 +446,7 @@ FT_TEST(test_pt_mutex_unlock_without_locking, "pt_mutex unlock reports invalid a
     g_sigabrt_received.store(0);
     if (sigsetjmp(g_sigabrt_jump_buffer, 1) == 0)
     {
-        FT_ASSERT_EQ(FT_SUCCESS, mutex_object.unlock(THREAD_ID));
+        FT_ASSERT_EQ(FT_SUCCESS, mutex_object.unlock());
     }
     else
         abort_captured = 1;
@@ -464,17 +464,17 @@ FT_TEST(test_pt_mutex_try_lock_reports_already_locked, "pt_mutex try_lock report
 {
     pt_mutex mutex_object;
 
-    FT_ASSERT_EQ(FT_SUCCESS, mutex_object.lock(THREAD_ID));
+    FT_ASSERT_EQ(FT_SUCCESS, mutex_object.lock());
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, mutex_object.get_error());
-    FT_ASSERT_EQ(FT_SUCCESS, mutex_object.try_lock(THREAD_ID));
+    FT_ASSERT_EQ(FT_SUCCESS, mutex_object.try_lock());
     FT_ASSERT_EQ(FT_ERR_MUTEX_ALREADY_LOCKED, mutex_object.get_error());
     FT_ASSERT(mutex_object.lockState());
-    FT_ASSERT_EQ(FT_SUCCESS, mutex_object.unlock(THREAD_ID));
+    FT_ASSERT_EQ(FT_SUCCESS, mutex_object.unlock());
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, mutex_object.get_error());
-    FT_ASSERT_EQ(FT_SUCCESS, mutex_object.try_lock(THREAD_ID));
+    FT_ASSERT_EQ(FT_SUCCESS, mutex_object.try_lock());
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, mutex_object.get_error());
     FT_ASSERT(mutex_object.lockState());
-    FT_ASSERT_EQ(FT_SUCCESS, mutex_object.unlock(THREAD_ID));
+    FT_ASSERT_EQ(FT_SUCCESS, mutex_object.unlock());
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, mutex_object.get_error());
     return (1);
 }
@@ -512,17 +512,17 @@ FT_TEST(test_pt_mutex_try_lock_owned_by_other_thread, "pt_mutex try_lock reports
     RECORD_ASSERT(wait_for_stage(&shared_state.stage, 2));
     RECORD_ASSERT(shared_state.lock_result.load() == FT_SUCCESS);
     RECORD_ASSERT(shared_state.lock_error.load() == FT_ERR_SUCCESSS);
-    RECORD_ASSERT(mutex_object.try_lock(THREAD_ID) == FT_SUCCESS);
+    RECORD_ASSERT(mutex_object.try_lock() == FT_SUCCESS);
     RECORD_ASSERT(mutex_object.get_error() == FT_ERR_MUTEX_ALREADY_LOCKED);
     RECORD_ASSERT(mutex_object.lockState());
     shared_state.stage.store(3);
     RECORD_ASSERT(wait_for_stage(&shared_state.stage, 4));
     RECORD_ASSERT(shared_state.unlock_result.load() == FT_SUCCESS);
     RECORD_ASSERT(shared_state.unlock_error.load() == FT_ERR_SUCCESSS);
-    RECORD_ASSERT(mutex_object.lock(THREAD_ID) == FT_SUCCESS);
+    RECORD_ASSERT(mutex_object.lock() == FT_SUCCESS);
     RECORD_ASSERT(mutex_object.get_error() == FT_ERR_SUCCESSS);
     RECORD_ASSERT(mutex_object.lockState());
-    RECORD_ASSERT(mutex_object.unlock(THREAD_ID) == FT_SUCCESS);
+    RECORD_ASSERT(mutex_object.unlock() == FT_SUCCESS);
     RECORD_ASSERT(mutex_object.get_error() == FT_ERR_SUCCESSS);
     goto cleanup;
 
@@ -553,12 +553,12 @@ FT_TEST(test_pt_mutex_lock_reports_reentrant_lock, "pt_mutex lock reports alread
 {
     pt_mutex mutex_object;
 
-    FT_ASSERT_EQ(FT_SUCCESS, mutex_object.lock(THREAD_ID));
+    FT_ASSERT_EQ(FT_SUCCESS, mutex_object.lock());
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, mutex_object.get_error());
-    FT_ASSERT_EQ(FT_SUCCESS, mutex_object.lock(THREAD_ID));
+    FT_ASSERT_EQ(FT_SUCCESS, mutex_object.lock());
     FT_ASSERT_EQ(FT_ERR_MUTEX_ALREADY_LOCKED, mutex_object.get_error());
     FT_ASSERT(mutex_object.lockState());
-    FT_ASSERT_EQ(FT_SUCCESS, mutex_object.unlock(THREAD_ID));
+    FT_ASSERT_EQ(FT_SUCCESS, mutex_object.unlock());
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, mutex_object.get_error());
     return (1);
 }
@@ -578,14 +578,14 @@ FT_TEST(test_pt_mutex_unlock_twice_reports_invalid_argument, "pt_mutex unlock re
     sigabrt_action.sa_flags = 0;
     FT_ASSERT_EQ(0, sigaction(SIGABRT, &sigabrt_action, &previous_sigabrt_action));
     handler_installed = 1;
-    FT_ASSERT_EQ(FT_SUCCESS, mutex_object.lock(THREAD_ID));
+    FT_ASSERT_EQ(FT_SUCCESS, mutex_object.lock());
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, mutex_object.get_error());
-    FT_ASSERT_EQ(FT_SUCCESS, mutex_object.unlock(THREAD_ID));
+    FT_ASSERT_EQ(FT_SUCCESS, mutex_object.unlock());
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, mutex_object.get_error());
     g_sigabrt_received.store(0);
     if (sigsetjmp(g_sigabrt_jump_buffer, 1) == 0)
     {
-        FT_ASSERT_EQ(FT_SUCCESS, mutex_object.unlock(THREAD_ID));
+        FT_ASSERT_EQ(FT_SUCCESS, mutex_object.unlock());
         FT_ASSERT(false);
     }
     else
@@ -604,13 +604,13 @@ FT_TEST(test_pt_mutex_recovers_after_already_locked_error, "pt_mutex recovers af
 {
     pt_mutex mutex_object;
 
-    FT_ASSERT_EQ(FT_SUCCESS, mutex_object.lock(THREAD_ID));
+    FT_ASSERT_EQ(FT_SUCCESS, mutex_object.lock());
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, mutex_object.get_error());
     FT_ASSERT(mutex_object.lockState());
-    FT_ASSERT_EQ(FT_SUCCESS, mutex_object.lock(THREAD_ID));
+    FT_ASSERT_EQ(FT_SUCCESS, mutex_object.lock());
     FT_ASSERT_EQ(FT_ERR_MUTEX_ALREADY_LOCKED, mutex_object.get_error());
     FT_ASSERT(mutex_object.lockState());
-    FT_ASSERT_EQ(FT_SUCCESS, mutex_object.unlock(THREAD_ID));
+    FT_ASSERT_EQ(FT_SUCCESS, mutex_object.unlock());
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, mutex_object.get_error());
     FT_ASSERT_EQ(false, mutex_object.lockState());
     return (1);

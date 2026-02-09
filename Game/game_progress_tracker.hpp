@@ -3,7 +3,6 @@
 
 #include "game_achievement.hpp"
 #include "game_quest.hpp"
-#include "../Errno/errno_internal.hpp"
 #include "../Template/map.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"

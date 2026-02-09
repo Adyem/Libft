@@ -1,6 +1,6 @@
 #include "logger.hpp"
 #include "logger_internal.hpp"
-#include "../Libft/libft.hpp"
+#include "../Basic/basic.hpp"
 
 ft_log_context_guard::ft_log_context_guard() noexcept
     : _pushed_count(0), _active(false), _error_code(FT_ERR_SUCCESSS)

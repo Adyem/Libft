@@ -4,7 +4,6 @@
 #include "ft_dialogue_line.hpp"
 #include "../Template/vector.hpp"
 #include "../Errno/errno.hpp"
-#include "../Errno/errno_internal.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
 

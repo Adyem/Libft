@@ -2,12 +2,11 @@
 #include "api_internal.hpp"
 #include "../Printf/printf.hpp"
 #include "../Errno/errno.hpp"
-#include "../Errno/errno_internal.hpp"
 #include "../Networking/socket_class.hpp"
 #include "../Networking/ssl_wrapper.hpp"
 #include "../Networking/networking.hpp"
 #include "../Networking/openssl_support.hpp"
-#include "../Libft/libft.hpp"
+#include "../Basic/basic.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Logger/logger.hpp"
 #include "../Template/move.hpp"
@@ -846,7 +845,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
         *status = -1;
         const char *space = ft_strchr(response.c_str(), ' ');
         if (space)
-            *status = ft_atoi(space + 1);
+            *status = ft_atoi(space + 1, ft_nullptr);
     }
 
     size_t header_len = static_cast<size_t>(header_end_ptr - response.c_str()) + 4;

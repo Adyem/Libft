@@ -50,9 +50,9 @@ JSon/json_schema_evolution.hpp
 JSon/json_stream_events.hpp
 JSon/json_stream_reader.hpp
 JSon/json_stream_writer.hpp
-Libft/libft.hpp
-Libft/libft_utf8.hpp
-Libft/limits.hpp
+Basic/basic.hpp
+Basic/limits.hpp
+Basic/utf8.hpp
 Logger/logger.hpp
 Math/math.hpp
 Math/roll.hpp

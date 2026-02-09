@@ -6528,14 +6528,14 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 
 ## Libft
 
-### Libft/libft.hpp
+### Basic/basic.hpp
 
 - Declares:
   - `#if defined(__cpp_lib_is_constant_evaluated) return (std::is_constant_evaluated())`
   - `#elif defined(__has_builtin) # if __has_builtin(__builtin_is_constant_evaluated) return (__builtin_is_constant_evaluated())`
   - `#elif defined(__GNUC__) || defined(__clang__) return (__builtin_is_constant_evaluated())`
   - `char *ft_strchr(const char *string, int char_to_find)`
-  - `int ft_atoi(const char *string)`
+  - `int ft_atoi(const char *string, int *error_code)`
   - `int ft_validate_int(const char *input)`
   - `void ft_bzero(void *string, size_t size)`
   - `void *ft_memchr(const void *pointer, int character, size_t size)`
@@ -6557,7 +6557,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `int ft_isprint(int character)`
   - `int ft_islower(int character)`
   - `int ft_isupper(int character)`
-  - `long ft_atol(const char *string)`
+  - `long ft_atol(const char *string, int *error_code)`
   - `long ft_strtol(const char *input_string, char **end_pointer, int numeric_base)`
   - `unsigned long ft_strtoul(const char *input_string, char **end_pointer, int numeric_base)`
   - `int ft_strcmp(const char *string1, const char *string2)`
@@ -6599,308 +6599,305 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_string ft_to_string(float number)`
 - Defines: _None_
 
-### Libft/libft_atoi.cpp
+### Basic/basic_atoi.cpp
 
 - Declares: _None_
 - Defines:
-  - `int ft_atoi(const char *string)`
+  - `int ft_atoi(const char *string, int *error_code)`
 
-### Libft/libft_atol.cpp
+### Basic/basic_atol.cpp
 
 - Declares: _None_
 - Defines:
-  - `long ft_atol(const char *string)`
+  - `long ft_atol(const char *string, int *error_code)`
 
-### Libft/libft_bzero.cpp
+### Basic/basic_bzero.cpp
 
 - Declares: _None_
 - Defines:
   - `void ft_bzero(void *pointer, size_t size)`
 
-### Libft/libft_config.hpp
+### Basic/basic_config.hpp
 
 - Declares: _None_
 - Defines: _None_
 
-### Libft/libft_environment_lock.cpp
+### Basic/basic_environment_lock.cpp
 
 - Declares: _None_
 - Defines:
-  - `static void ft_environment_initialize_mutex(void)`
   - `int ft_environment_lock(void)`
   - `int ft_environment_unlock(void)`
-  - `void ft_environment_force_lock_failure(int error_code)`
-  - `void ft_environment_force_unlock_failure(int error_code)`
-  - `void ft_environment_reset_failures(void)`
+  - `int ft_environment_enable_thread_safety(void)`
+  - `void ft_environment_disable_thread_safety(void)`
 
-### Libft/libft_environment_lock.hpp
+### Basic/basic_environment_lock.hpp
 
 - Declares:
   - `int ft_environment_lock(void)`
   - `int ft_environment_unlock(void)`
-  - `void ft_environment_force_lock_failure(int error_code)`
-  - `void ft_environment_force_unlock_failure(int error_code)`
-  - `void ft_environment_reset_failures(void)`
+  - `int ft_environment_enable_thread_safety(void)`
+  - `void ft_environment_disable_thread_safety(void)`
 - Defines: _None_
 
-### Libft/libft_fclose.cpp
+### Basic/basic_fclose.cpp
 
 - Declares: _None_
 - Defines:
   - `int ft_fclose(FILE *stream)`
 
-### Libft/libft_fgets.cpp
+### Basic/basic_fgets.cpp
 
 - Declares: _None_
 - Defines:
   - `char *ft_fgets(char *string, int size, FILE *stream)`
 
-### Libft/libft_fopen.cpp
+### Basic/basic_fopen.cpp
 
 - Declares: _None_
 - Defines:
   - `FILE *ft_fopen(const char *filename, const char *mode)`
 
-### Libft/libft_getenv.cpp
+### Basic/basic_getenv.cpp
 
 - Declares: _None_
 - Defines:
   - `char *ft_getenv(const char *name)`
 
-### Libft/libft_isalnum.cpp
+### Basic/basic_isalnum.cpp
 
 - Declares: _None_
 - Defines:
   - `int ft_isalnum(int character)`
 
-### Libft/libft_isalpha.cpp
+### Basic/basic_isalpha.cpp
 
 - Declares: _None_
 - Defines:
   - `int ft_isalpha(int character)`
 
-### Libft/libft_isdigit.cpp
+### Basic/basic_isdigit.cpp
 
 - Declares: _None_
 - Defines:
   - `int ft_isdigit(int character)`
 
-### Libft/libft_islower.cpp
+### Basic/basic_islower.cpp
 
 - Declares: _None_
 - Defines:
   - `int ft_islower(int character)`
 
-### Libft/libft_isprint.cpp
+### Basic/basic_isprint.cpp
 
 - Declares: _None_
 - Defines:
   - `int ft_isprint(int character)`
 
-### Libft/libft_isspace.cpp
+### Basic/basic_isspace.cpp
 
 - Declares: _None_
 - Defines:
   - `int ft_isspace(int character)`
 
-### Libft/libft_isupper.cpp
+### Basic/basic_isupper.cpp
 
 - Declares: _None_
 - Defines:
   - `int ft_isupper(int character)`
 
-### Libft/libft_locale.cpp
+### Basic/basic_locale.cpp
 
 - Declares: _None_
 - Defines:
   - `int ft_locale_compare(const char *left, const char *right, const char *locale_name)`
   - `ft_string ft_locale_casefold(const char *input, const char *locale_name)`
 
-### Libft/libft_memchr.cpp
+### Basic/basic_memchr.cpp
 
 - Declares: _None_
 - Defines:
   - `void* ft_memchr(const void* pointer, int number, size_t size)`
 
-### Libft/libft_memcmp.cpp
+### Basic/basic_memcmp.cpp
 
 - Declares: _None_
 - Defines:
   - `int ft_memcmp(const void *pointer1, const void *pointer2, size_t size)`
 
-### Libft/libft_memcpy.cpp
+### Basic/basic_memcpy.cpp
 
 - Declares: _None_
 - Defines:
   - `void* ft_memcpy(void* destination, const void* source, size_t size)`
 
-### Libft/libft_memcpy_s.cpp
+### Basic/basic_memcpy_s.cpp
 
 - Declares: _None_
 - Defines:
   - `static void zero_buffer(void *buffer, size_t buffer_size)`
   - `int ft_memcpy_s(void *destination, size_t destination_size, const void *source, size_t number_of_bytes)`
 
-### Libft/libft_memmove.cpp
+### Basic/basic_memmove.cpp
 
 - Declares: _None_
 - Defines:
   - `void *ft_memmove(void *destination, const void *source, size_t size)`
 
-### Libft/libft_memmove_s.cpp
+### Basic/basic_memmove_s.cpp
 
 - Declares: _None_
 - Defines:
   - `static void zero_buffer(void *buffer, size_t buffer_size)`
   - `int ft_memmove_s(void *destination, size_t destination_size, const void *source, size_t number_of_bytes)`
 
-### Libft/libft_memset.cpp
+### Basic/basic_memset.cpp
 
 - Declares: _None_
 - Defines:
   - `void *ft_memset(void *destination, int value, size_t number_of_bytes)`
 
-### Libft/libft_setenv.cpp
+### Basic/basic_setenv.cpp
 
 - Declares: _None_
 - Defines:
   - `#if defined(_WIN32) || defined(_WIN64) # include <winsock2.h> #endif #include #include #include #include <cstdlib> #include <cerrno> int ft_setenv(const char *name, const char *value, int overwrite)`
 
-### Libft/libft_span.cpp
+### Basic/basic_span.cpp
 
 - Declares: _None_
 - Defines:
   - `char *ft_span_dup(const char *buffer, size_t length)`
   - `ft_string ft_span_to_string(const char *buffer, size_t length)`
 
-### Libft/libft_strcat_s.cpp
+### Basic/basic_strcat_s.cpp
 
 - Declares: _None_
 - Defines:
   - `static void zero_buffer(char *buffer, size_t buffer_size)`
   - `int ft_strcat_s(char *destination, size_t destination_size, const char *source)`
 
-### Libft/libft_strchr.cpp
+### Basic/basic_strchr.cpp
 
 - Declares: _None_
 - Defines:
   - `char *ft_strchr(const char *string, int char_to_find)`
 
-### Libft/libft_strcmp.cpp
+### Basic/basic_strcmp.cpp
 
 - Declares: _None_
 - Defines:
   - `int ft_strcmp(const char *string1, const char *string2)`
 
-### Libft/libft_strcpy_s.cpp
+### Basic/basic_strcpy_s.cpp
 
 - Declares: _None_
 - Defines:
   - `static void zero_buffer(char *buffer, size_t buffer_size)`
   - `int ft_strcpy_s(char *destination, size_t destination_size, const char *source)`
 
-### Libft/libft_striteri.cpp
+### Basic/basic_striteri.cpp
 
 - Declares: _None_
 - Defines:
   - `void ft_striteri(char *string, void (*function)(unsigned int, char *))`
 
-### Libft/libft_strlcat.cpp
+### Basic/basic_strlcat.cpp
 
 - Declares: _None_
 - Defines:
   - `size_t ft_strlcat(char *destination, const char *source, size_t buffer_size)`
 
-### Libft/libft_strlcpy.cpp
+### Basic/basic_strlcpy.cpp
 
 - Declares: _None_
 - Defines:
   - `size_t ft_strlcpy(char *destination, const char *source, size_t buffer_size)`
 
-### Libft/libft_strmapi.cpp
+### Basic/basic_strmapi.cpp
 
 - Declares: _None_
 - Defines:
   - `char *ft_strmapi(const char *string, char (*function)(unsigned int, char))`
 
-### Libft/libft_strncat_s.cpp
+### Basic/basic_strncat_s.cpp
 
 - Declares: _None_
 - Defines:
   - `static void zero_buffer(char *buffer, size_t buffer_size)`
   - `int ft_strncat_s(char *destination, size_t destination_size, const char *source, size_t maximum_append_length)`
 
-### Libft/libft_strncmp.cpp
+### Basic/basic_strncmp.cpp
 
 - Declares: _None_
 - Defines:
   - `int ft_strncmp(const char *string_1, const char *string_2, size_t maximum_length)`
 
-### Libft/libft_strncpy.cpp
+### Basic/basic_strncpy.cpp
 
 - Declares: _None_
 - Defines:
   - `char *ft_strncpy(char *destination, const char *source, size_t number_of_characters)`
 
-### Libft/libft_strncpy_s.cpp
+### Basic/basic_strncpy_s.cpp
 
 - Declares: _None_
 - Defines:
   - `static void zero_buffer(char *buffer, size_t buffer_size)`
   - `int ft_strncpy_s(char *destination, size_t destination_size, const char *source, size_t maximum_copy_length)`
 
-### Libft/libft_strnlen.cpp
+### Basic/basic_strnlen.cpp
 
 - Declares: _None_
 - Defines:
   - `size_t ft_strnlen(const char *string, size_t maximum_length)`
 
-### Libft/libft_strnstr.cpp
+### Basic/basic_strnstr.cpp
 
 - Declares: _None_
 - Defines:
   - `char *ft_strnstr(const char *haystack, const char *needle, size_t maximum_length)`
 
-### Libft/libft_strrchr.cpp
+### Basic/basic_strrchr.cpp
 
 - Declares: _None_
 - Defines:
   - `char *ft_strrchr(const char *string, int char_to_find)`
 
-### Libft/libft_strstr.cpp
+### Basic/basic_strstr.cpp
 
 - Declares: _None_
 - Defines:
   - `char *ft_strstr(const char *haystack, const char *needle)`
 
-### Libft/libft_strtok.cpp
+### Basic/basic_strtok.cpp
 
 - Declares: _None_
 - Defines:
   - `char *ft_strtok(char *string, const char *delimiters)`
 
-### Libft/libft_strtol.cpp
+### Basic/basic_strtol.cpp
 
 - Declares: _None_
 - Defines:
   - `static int ft_digit_value(char character)`
   - `long ft_strtol(const char *input_string, char **end_pointer, int numeric_base)`
 
-### Libft/libft_strtoul.cpp
+### Basic/basic_strtoul.cpp
 
 - Declares: _None_
 - Defines:
   - `static int ft_digit_value(char character)`
   - `unsigned long ft_strtoul(const char *input_string, char **end_pointer, int numeric_base)`
 
-### Libft/libft_time.cpp
+### Basic/basic_time.cpp
 
 - Declares: _None_
 - Defines:
   - `int64_t ft_time_ms(void)`
   - `char *ft_time_format(char *buffer, size_t buffer_size)`
 
-### Libft/libft_to_string.cpp
+### Basic/basic_to_string.cpp
 
 - Declares: _None_
 - Defines:
@@ -6917,25 +6914,25 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_string ft_to_string(unsigned int number)`
   - `ft_string ft_to_string(float number)`
 
-### Libft/libft_tolower.cpp
+### Basic/basic_tolower.cpp
 
 - Declares: _None_
 - Defines:
   - `void ft_to_lower(char *string)`
 
-### Libft/libft_toupper.cpp
+### Basic/basic_toupper.cpp
 
 - Declares: _None_
 - Defines:
   - `void ft_to_upper(char *string)`
 
-### Libft/libft_unsetenv.cpp
+### Basic/basic_unsetenv.cpp
 
 - Declares: _None_
 - Defines:
   - `#if defined(_WIN32) || defined(_WIN64) # include <winsock2.h> #endif #include #include #include #include <cstdlib> #include <cerrno> int ft_unsetenv(const char *name)`
 
-### Libft/libft_utf8.hpp
+### Basic/basic_utf8.hpp
 
 - Declares:
   - `int ft_utf8_next(const char *string, size_t string_length, size_t *index_pointer, uint32_t *code_point_pointer, size_t *sequence_length_pointer)`
@@ -6950,7 +6947,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `int ft_utf8_duplicate_grapheme(const char *string, size_t string_length, size_t *index_pointer, char **grapheme_pointer)`
 - Defines: _None_
 
-### Libft/libft_utf8_case.cpp
+### Basic/basic_utf8_case.cpp
 
 - Declares: _None_
 - Defines:
@@ -6960,7 +6957,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `int ft_utf8_transform(const char *input, size_t input_length, char *output_buffer, size_t output_buffer_size, ft_utf8_case_hook case_hook)`
   - `int ft_utf8_transform_alloc(const char *input, char **output_pointer, ft_utf8_case_hook case_hook)`
 
-### Libft/libft_utf8_decode.cpp
+### Basic/basic_utf8_decode.cpp
 
 - Declares: _None_
 - Defines:
@@ -6968,7 +6965,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `static int ft_utf8_detect_sequence(unsigned char first_byte, size_t *expected_length, uint32_t *initial_value, uint32_t *minimum_value)`
   - `int ft_utf8_next(const char *string, size_t string_length, size_t *index_pointer, uint32_t *code_point_pointer, size_t *sequence_length_pointer)`
 
-### Libft/libft_utf8_grapheme.cpp
+### Basic/basic_utf8_grapheme.cpp
 
 - Declares: _None_
 - Defines:
@@ -6977,19 +6974,19 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `int ft_utf8_next_grapheme(const char *string, size_t string_length, size_t *index_pointer, size_t *grapheme_length_pointer)`
   - `int ft_utf8_duplicate_grapheme(const char *string, size_t string_length, size_t *index_pointer, char **grapheme_pointer)`
 
-### Libft/libft_utf8_length.cpp
+### Basic/basic_utf8_length.cpp
 
 - Declares: _None_
 - Defines:
   - `int ft_utf8_count(const char *string, size_t *code_point_count_pointer)`
 
-### Libft/libft_validate_int.cpp
+### Basic/basic_validate_int.cpp
 
 - Declares: _None_
 - Defines:
   - `int ft_validate_int(const char *input)`
 
-### Libft/libft_wide.cpp
+### Basic/basic_wide.cpp
 
 - Declares: _None_
 - Defines:
@@ -9326,13 +9323,12 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `bool lockState() const`
   - `int lock_state(bool *lock_acquired) const`
   - `void unlock_state(bool lock_acquired) const`
-  - `int lock(pthread_t thread_id) const`
-  - `int unlock(pthread_t thread_id) const`
+  - `int lock() const`
+  - `int unlock() const`
   - `int try_lock(pthread_t thread_id) const`
   - `int try_lock_until(pthread_t thread_id, const struct timespec &absolute_time) const`
   - `int try_lock_for(pthread_t thread_id, const struct timespec &relative_time) const`
   - `bool is_owned_by_thread(pthread_t thread_id) const`
-  - `pthread_mutex_t *get_native_mutex() const`
   - `unsigned long long operation_error_push_entry_with_id(int error_code, unsigned long long operation_id) const`
   - `unsigned long long operation_error_push_entry(int error_code) const`
   - `void operation_error_push(int error_code) const`
@@ -9459,7 +9455,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 
 - Declares: _None_
 - Defines:
-  - `int pt_mutex::lock(pthread_t thread_id) const`
+  - `int pt_mutex::lock() const`
 
 ### PThread/pthread_lock_tracking.cpp
 
@@ -9467,7 +9463,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Defines:
   - `void pt_lock_tracking::record_error(ft_operation_error_stack *error_stack, int error_code, bool push_global)`
   - `void pt_lock_tracking::set_error(int error_code)`
-  - `pthread_mutex_t *pt_lock_tracking::get_registry_mutex(void)`
+  - `std::mutex *pt_lock_tracking::get_registry_mutex(void)`
   - `bool pt_lock_tracking::ensure_registry_mutex_initialized(int *error_code)`
   - `std::vector<s_pt_thread_lock_info, pt_system_allocator<s_pt_thread_lock_info> > *pt_lock_tracking::get_thread_infos(int *error_code)`
   - `pt_lock_tracking::pt_lock_tracking()`
@@ -9475,12 +9471,12 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `pt_mutex_vector pt_lock_tracking::get_owned_mutexes(pt_thread_id_type thread_identifier)`
   - `s_pt_thread_lock_info *pt_lock_tracking::find_thread_info(pt_thread_id_type thread_identifier, int *error_code)`
   - `s_pt_thread_lock_info *pt_lock_tracking::lookup_thread_info(pt_thread_id_type thread_identifier, int *error_code)`
-  - `bool pt_lock_tracking::vector_contains_mutex(const pt_mutex_vector &mutexes, pthread_mutex_t *mutex_pointer)`
+  - `bool pt_lock_tracking::vector_contains_mutex(const pt_mutex_vector &mutexes, const pt_mutex *mutex_pointer)`
   - `bool pt_lock_tracking::vector_contains_thread(const pt_thread_vector &thread_identifiers, pt_thread_id_type thread_identifier)`
-  - `bool pt_lock_tracking::detect_cycle(const s_pt_thread_lock_info *origin, pthread_mutex_t *requested_mutex, pt_mutex_vector *visited_mutexes, pt_thread_vector *visited_threads)`
-  - `bool pt_lock_tracking::notify_wait(pt_thread_id_type thread_identifier, pthread_mutex_t *requested_mutex, const pt_mutex_vector &owned_mutexes)`
-  - `void pt_lock_tracking::notify_acquired(pt_thread_id_type thread_identifier, pthread_mutex_t *mutex_pointer)`
-  - `void pt_lock_tracking::notify_released(pt_thread_id_type thread_identifier, pthread_mutex_t *mutex_pointer)`
+  - `bool pt_lock_tracking::detect_cycle(const s_pt_thread_lock_info *origin, const pt_mutex *requested_mutex, pt_mutex_vector *visited_mutexes, pt_thread_vector *visited_threads)`
+  - `bool pt_lock_tracking::notify_wait(pt_thread_id_type thread_identifier, pt_mutex *requested_mutex, const pt_mutex_vector &owned_mutexes)`
+  - `void pt_lock_tracking::notify_acquired(pt_thread_id_type thread_identifier, pt_mutex *mutex_pointer)`
+  - `void pt_lock_tracking::notify_released(pt_thread_id_type thread_identifier, pt_mutex *mutex_pointer)`
   - `bool pt_lock_tracking::snapshot_waiters(pt_lock_wait_snapshot_vector &snapshot)`
   - `bool pt_lock_tracking::get_thread_state(pt_thread_id_type thread_identifier, s_pt_lock_tracking_thread_state &state)`
 
@@ -9489,20 +9485,20 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Declares:
   - `t_type *allocate(std::size_t count)`
   - `void deallocate(t_type *pointer, std::size_t count)`
-  - `static pthread_mutex_t *get_registry_mutex(void)`
+  - `static std::mutex *get_registry_mutex(void)`
   - `static std::vector<s_pt_thread_lock_info, pt_system_allocator<s_pt_thread_lock_info> > *get_thread_infos(int *error_code)`
   - `static bool ensure_registry_mutex_initialized(int *error_code)`
   - `static s_pt_thread_lock_info *find_thread_info(pt_thread_id_type thread_identifier, int *error_code)`
   - `static s_pt_thread_lock_info *lookup_thread_info(pt_thread_id_type thread_identifier, int *error_code)`
-  - `static bool vector_contains_mutex(const pt_mutex_vector &mutexes, pthread_mutex_t *mutex_pointer)`
+  - `static bool vector_contains_mutex(const pt_mutex_vector &mutexes, const pt_mutex *mutex_pointer)`
   - `static bool vector_contains_thread(const pt_thread_vector &thread_identifiers, pt_thread_id_type thread_identifier)`
-  - `static bool detect_cycle(const s_pt_thread_lock_info *origin, pthread_mutex_t *requested_mutex, pt_mutex_vector *visited_mutexes, pt_thread_vector *visited_threads)`
+  - `static bool detect_cycle(const s_pt_thread_lock_info *origin, const pt_mutex *requested_mutex, pt_mutex_vector *visited_mutexes, pt_thread_vector *visited_threads)`
   - `static void record_error(ft_operation_error_stack *error_stack, int error_code, bool push_global = true)`
   - `static void set_error(int error_code)`
   - `static pt_mutex_vector get_owned_mutexes(pt_thread_id_type thread_identifier)`
-  - `static bool notify_wait(pt_thread_id_type thread_identifier, pthread_mutex_t *requested_mutex, const pt_mutex_vector &owned_mutexes)`
-  - `static void notify_acquired(pt_thread_id_type thread_identifier, pthread_mutex_t *mutex_pointer)`
-  - `static void notify_released(pt_thread_id_type thread_identifier, pthread_mutex_t *mutex_pointer)`
+  - `static bool notify_wait(pt_thread_id_type thread_identifier, pt_mutex *requested_mutex, const pt_mutex_vector &owned_mutexes)`
+  - `static void notify_acquired(pt_thread_id_type thread_identifier, pt_mutex *mutex_pointer)`
+  - `static void notify_released(pt_thread_id_type thread_identifier, pt_mutex *mutex_pointer)`
   - `static bool snapshot_waiters(pt_lock_wait_snapshot_vector &snapshot)`
   - `static bool get_thread_state(pt_thread_id_type thread_identifier, s_pt_lock_tracking_thread_state &state)`
 - Defines: _None_
@@ -9531,13 +9527,12 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `int pt_mutex::lock_state(bool *lock_acquired) const`
   - `void pt_mutex::unlock_state(bool lock_acquired) const`
   - `bool pt_mutex::is_owned_by_thread(pthread_t thread_id) const`
-  - `pthread_mutex_t *pt_mutex::get_native_mutex() const`
 
 ### PThread/pthread_recursive_lock_mutex.cpp
 
 - Declares: _None_
 - Defines:
-  - `int pt_recursive_mutex::lock(pthread_t thread_id) const`
+  - `int pt_recursive_mutex::lock() const`
 
 ### PThread/pthread_recursive_mutex.cpp
 
@@ -9566,15 +9561,6 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `int pt_recursive_mutex::lock_state(bool *lock_acquired) const`
   - `void pt_recursive_mutex::unlock_state(bool lock_acquired) const`
   - `bool pt_recursive_mutex::is_owned_by_thread(pthread_t thread_id) const`
-  - `pthread_mutex_t *pt_recursive_mutex::get_native_mutex() const`
-
-### PThread/pthread_recursive_timed_lock_mutex.cpp
-
-- Declares: _None_
-- Defines:
-  - `static bool compute_absolute_deadline(const struct timespec &relative_time, struct timespec *absolute_time, int *error_code)`
-  - `int pt_recursive_mutex::try_lock_until(pthread_t thread_id, const struct timespec &absolute_time) const`
-  - `int pt_recursive_mutex::try_lock_for(pthread_t thread_id, const struct timespec &relative_time) const`
 
 ### PThread/pthread_recursive_try_lock_mutex.cpp
 
@@ -9586,7 +9572,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 
 - Declares: _None_
 - Defines:
-  - `int pt_recursive_mutex::unlock(pthread_t thread_id) const`
+  - `int pt_recursive_mutex::unlock() const`
 
 ### PThread/pthread_rwlock.cpp
 
@@ -9824,14 +9810,6 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Defines:
   - `int pt_thread_yield()`
 
-### PThread/pthread_timed_lock_mutex.cpp
-
-- Declares: _None_
-- Defines:
-  - `static bool compute_absolute_deadline(const struct timespec &relative_time, struct timespec *absolute_time, int *error_code)`
-  - `int pt_mutex::try_lock_until(pthread_t thread_id, const struct timespec &absolute_time) const`
-  - `int pt_mutex::try_lock_for(pthread_t thread_id, const struct timespec &relative_time) const`
-
 ### PThread/pthread_try_lock_mutex.cpp
 
 - Declares: _None_
@@ -9842,7 +9820,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 
 - Declares: _None_
 - Defines:
-  - `int pt_mutex::unlock(pthread_t thread_id) const`
+  - `int pt_mutex::unlock() const`
 
 ### PThread/recursive_mutex.hpp
 
@@ -9854,13 +9832,12 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `bool lockState() const`
   - `int lock_state(bool *lock_acquired) const`
   - `void unlock_state(bool lock_acquired) const`
-  - `int lock(pthread_t thread_id) const`
-  - `int unlock(pthread_t thread_id) const`
+  - `int lock() const`
+  - `int unlock() const`
   - `int try_lock(pthread_t thread_id) const`
   - `int try_lock_until(pthread_t thread_id, const struct timespec &absolute_time) const`
   - `int try_lock_for(pthread_t thread_id, const struct timespec &relative_time) const`
   - `bool is_owned_by_thread(pthread_t thread_id) const`
-  - `pthread_mutex_t *get_native_mutex() const`
   - `unsigned long long operation_error_push_entry(int error_code) const`
   - `unsigned long long operation_error_push_entry_with_id(int error_code, unsigned long long operation_id) const`
   - `void operation_error_push(int error_code) const`
@@ -17131,8 +17108,8 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 
 - Declares:
   - `RECORD_ASSERT( wait_for_stage(&shared.stage, 2) )`
-  - `RECORD_ASSERT( wait_for_thread_state(THREAD_ID, first_mutex.get_native_mutex(), ft_nullptr, 1, 20) )`
-  - `RECORD_ASSERT( wait_for_thread_state(shared.worker_thread_identifier.load(), second_mutex.get_native_mutex(), first_mutex.get_native_mutex(), 1, 100) )`
+  - `RECORD_ASSERT( wait_for_thread_state(THREAD_ID, &first_mutex, ft_nullptr, 1, 20) )`
+  - `RECORD_ASSERT( wait_for_thread_state(shared.worker_thread_identifier.load(), &second_mutex, &first_mutex, 1, 100) )`
   - `RECORD_ASSERT( wait_for_stage(&shared.stage, 5) )`
   - `FT_ASSERT_EQ(2, static_cast<int>(owned_mutexes.size()) )`
   - `FT_ASSERT_EQ(0, static_cast<int>(owned_mutexes.size()) )`
@@ -17148,8 +17125,8 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `static void handle_sigabrt(int signal_number)`
   - `static void initialize_shared_state(s_lock_cycle_shared *shared, pt_mutex *first_mutex, pt_mutex *second_mutex)`
   - `static bool wait_for_stage(std::atomic<int> *stage, int expected_stage)`
-  - `static bool vector_contains_mutex(const pt_mutex_vector &owned_mutexes, pthread_mutex_t *mutex_pointer)`
-  - `static bool wait_for_thread_state(pt_thread_id_type thread_identifier, pthread_mutex_t *owned_mutex_pointer, pthread_mutex_t *waiting_mutex_pointer, ft_size_t expected_owned_count, long timeout_ms)`
+  - `static bool vector_contains_mutex(const pt_mutex_vector &owned_mutexes, pt_mutex *mutex_pointer)`
+  - `static bool wait_for_thread_state(pt_thread_id_type thread_identifier, pt_mutex *owned_mutex_pointer, pt_mutex *waiting_mutex_pointer, ft_size_t expected_owned_count, long timeout_ms)`
   - `static void *deadlock_worker(void *argument)`
   - `static void initialize_unlock_shared_state(s_unlock_shared_state *shared_state, pt_mutex *mutex_pointer)`
   - `static void *unlock_worker(void *argument)`

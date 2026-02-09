@@ -1,6 +1,5 @@
 #include "ft_rarity_band.hpp"
 #include "../Errno/errno.hpp"
-#include "../Errno/errno_internal.hpp"
 #include "../Template/move.hpp"
 
 thread_local ft_operation_error_stack ft_rarity_band::_operation_errors = {{}, {}, 0};

@@ -9,7 +9,7 @@
 #include "../CPP_class/class_string.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
-#include "../Libft/libft.hpp"
+#include "../Basic/basic.hpp"
 #include "../Logger/logger.hpp"
 #include "../Printf/printf.hpp"
 #include "../PThread/thread.hpp"
@@ -1506,7 +1506,7 @@ static void api_tls_async_worker(api_tls_async_request *data)
     {
         const char *space = ft_strchr(response.c_str(), ' ');
         if (space)
-            status = ft_atoi(space + 1);
+            status = ft_atoi(space + 1, ft_nullptr);
         const char *body = ft_strstr(response.c_str(), "\r\n\r\n");
         if (body)
         {

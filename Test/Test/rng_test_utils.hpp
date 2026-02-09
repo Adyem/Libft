@@ -1,7 +1,7 @@
 #ifndef RNG_TEST_UTILS_HPP
 #define RNG_TEST_UTILS_HPP
 
-#include "../../Libft/libft.hpp"
+#include "../../Basic/basic.hpp"
 #include "../../RNG/rng.hpp"
 #include "../../RNG/rng_internal.hpp"
 

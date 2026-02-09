@@ -1,7 +1,7 @@
 #include "../../Template/trie.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../Errno/errno.hpp"
-#include "../../Libft/libft.hpp"
+#include "../../Basic/basic.hpp"
 #include "../../System_utils/test_runner.hpp"
 
 FT_TEST(test_trie_insert_nullptr_sets_errno, "ft_trie insert nullptr key sets FT_ERR_INVALID_ARGUMENT")

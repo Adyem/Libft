@@ -1,5 +1,5 @@
 #include "math.hpp"
-#include "../Libft/libft.hpp"
+#include "../Basic/basic.hpp"
 
 int math_validate_int(const char *input)
 {

@@ -1,7 +1,7 @@
 #include "time.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
-#include "../Libft/libft.hpp"
+#include "../Basic/basic.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread.hpp"
 #include <ctime>
@@ -19,7 +19,7 @@ static bool load_utc_time(std::time_t standard_time, std::tm *utc_out)
         ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
-    mutex_result = g_gmtime_mutex.lock(THREAD_ID);
+    mutex_result = g_gmtime_mutex.lock();
     if ((&g_gmtime_mutex) == ft_nullptr)
         mutex_error = FT_ERR_SUCCESSS;
     else
@@ -41,7 +41,7 @@ static bool load_utc_time(std::time_t standard_time, std::tm *utc_out)
     utc_pointer = std::gmtime(&standard_time);
     if (!utc_pointer)
     {
-        mutex_result = g_gmtime_mutex.unlock(THREAD_ID);
+        mutex_result = g_gmtime_mutex.unlock();
         if ((&g_gmtime_mutex) == ft_nullptr)
             mutex_error = FT_ERR_SUCCESSS;
         else
@@ -64,7 +64,7 @@ static bool load_utc_time(std::time_t standard_time, std::tm *utc_out)
         return (false);
     }
     *utc_out = *utc_pointer;
-    mutex_result = g_gmtime_mutex.unlock(THREAD_ID);
+    mutex_result = g_gmtime_mutex.unlock();
     if ((&g_gmtime_mutex) == ft_nullptr)
         mutex_error = FT_ERR_SUCCESSS;
     else

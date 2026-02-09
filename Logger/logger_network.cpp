@@ -2,7 +2,7 @@
 #include "../Networking/socket_class.hpp"
 #include "../System_utils/system_utils.hpp"
 #include "../CPP_class/class_nullptr.hpp"
-#include "../Libft/libft.hpp"
+#include "../Basic/basic.hpp"
 #include <new>
 
 int ft_log_set_remote_sink(const char *host, unsigned short port, bool use_tcp)

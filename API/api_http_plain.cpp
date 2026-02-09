@@ -7,7 +7,7 @@
 #include "../CPP_class/class_string.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
-#include "../Libft/libft.hpp"
+#include "../Basic/basic.hpp"
 #include "../Logger/logger.hpp"
 #include "../Printf/printf.hpp"
 #include "../Time/time.hpp"
@@ -373,7 +373,7 @@ static char *api_http_finalize_downgrade_response(
         *status = -1;
         space_position = ft_strchr(status_line, ' ');
         if (space_position)
-            *status = ft_atoi(space_position + 1);
+            *status = ft_atoi(space_position + 1, ft_nullptr);
     }
     if (handshake_buffer.size() < header_length)
     {
@@ -1047,7 +1047,7 @@ static bool api_http_receive_response(api_connection_pool_handle &connection_han
 
                 status_space = ft_strchr(header_storage.c_str(), ' ');
                 if (status_space)
-                    header_status_code = ft_atoi(status_space + 1);
+                    header_status_code = ft_atoi(status_space + 1, ft_nullptr);
                 api_http_stream_invoke_headers(streaming_handler,
                     header_status_code, header_storage.c_str());
                 body_length = response.size() - header_length;
@@ -1270,7 +1270,7 @@ static char *api_http_execute_plain_once(
         *status = -1;
         const char *space = ft_strchr(response.c_str(), ' ');
         if (space)
-            *status = ft_atoi(space + 1);
+            *status = ft_atoi(space + 1, ft_nullptr);
     }
     const char *body_start = response.c_str() + header_length;
     size_t body_length = response.size() - header_length;
@@ -2339,7 +2339,7 @@ static bool api_http_execute_plain_http2_streaming_once(
                         if (name_cstr && name_cstr[0] == ':')
                         {
                             if (ft_strcmp(name_cstr, ":status") == 0)
-                                status_code = ft_atoi(value_cstr);
+                                status_code = ft_atoi(value_cstr, ft_nullptr);
                         }
                         else
                         {

@@ -2,7 +2,6 @@
 #define TASK_SCHEDULER_HPP
 
 #include "../Errno/errno.hpp"
-#include "../Errno/errno_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Template/function.hpp"
 #include "../Template/vector.hpp"

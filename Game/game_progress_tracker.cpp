@@ -1,6 +1,5 @@
 #include "game_progress_tracker.hpp"
 #include "../Errno/errno.hpp"
-#include "../Errno/errno_internal.hpp"
 #include "../Template/move.hpp"
 #include "../Template/pair.hpp"
 #include "../PThread/pthread.hpp"

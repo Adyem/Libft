@@ -1,6 +1,6 @@
-#include "../../Libft/libft.hpp"
+#include "../../Basic/basic.hpp"
 #include "../../Math/math.hpp"
-#include "../../Libft/limits.hpp"
+#include "../../Basic/basic_limits.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../System_utils/system_utils.hpp"
 #include "../../Time/time.hpp"
@@ -340,12 +340,12 @@ int test_fabs_nan(void)
 
 int test_atol_basic(void)
 {
-    return (ft_atol("-42") == -42);
+    return (ft_atol("-42", ft_nullptr) == -42);
 }
 
 int test_atol_whitespace(void)
 {
-    return (ft_atol("  42") == 42);
+    return (ft_atol("  42", ft_nullptr) == 42);
 }
 
 int test_atol_longmax(void)
@@ -353,7 +353,7 @@ int test_atol_longmax(void)
     ft_string number_string;
 
     number_string = ft_to_string(FT_LONG_MAX);
-    return (ft_atol(number_string.c_str()) == FT_LONG_MAX);
+    return (ft_atol(number_string.c_str(), ft_nullptr) == FT_LONG_MAX);
 }
 
 int test_atol_longmin(void)
@@ -361,22 +361,22 @@ int test_atol_longmin(void)
     ft_string number_string;
 
     number_string = ft_to_string(FT_LONG_MIN);
-    return (ft_atol(number_string.c_str()) == FT_LONG_MIN);
+    return (ft_atol(number_string.c_str(), ft_nullptr) == FT_LONG_MIN);
 }
 
 int test_atol_plus_sign(void)
 {
-    return (ft_atol("+42") == 42);
+    return (ft_atol("+42", ft_nullptr) == 42);
 }
 
 int test_atol_trailing_chars(void)
 {
-    return (ft_atol("42xyz") == 42);
+    return (ft_atol("42xyz", ft_nullptr) == 42);
 }
 
 int test_atol_invalid_input(void)
 {
-    return (ft_atol("abc") == 0);
+    return (ft_atol("abc", ft_nullptr) == 0);
 }
 
 int test_setenv_getenv_basic(void)

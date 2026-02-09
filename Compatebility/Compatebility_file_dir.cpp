@@ -1,7 +1,7 @@
 #include "compatebility_internal.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
-#include "../Libft/libft.hpp"
+#include "../Basic/basic.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/pthread_internal.hpp"
 

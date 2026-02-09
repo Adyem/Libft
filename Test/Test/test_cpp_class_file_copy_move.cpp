@@ -87,13 +87,13 @@ FT_TEST(test_ft_file_move_constructor_mutex_is_fresh,
     release_lock.store(false);
     lock_result.store(FT_ERR_SUCCESSS);
     locker_thread = std::thread([&source, &lock_acquired, &release_lock, &lock_result]() {
-        lock_result.store(source._mutex.lock(THREAD_ID));
+        lock_result.store(source._mutex.lock());
         lock_acquired.store(true);
         if (lock_result.load() != FT_ERR_SUCCESSS)
             return ;
         while (!release_lock.load())
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        source._mutex.unlock(THREAD_ID);
+        source._mutex.unlock();
     });
     wait_until_true(lock_acquired);
     duration_ms = measure_read_duration(moved, character);
@@ -159,13 +159,13 @@ FT_TEST(test_ft_file_move_assignment_mutex_is_fresh,
     release_lock.store(false);
     lock_result.store(FT_ERR_SUCCESSS);
     locker_thread = std::thread([&source, &lock_acquired, &release_lock, &lock_result]() {
-        lock_result.store(source._mutex.lock(THREAD_ID));
+        lock_result.store(source._mutex.lock());
         lock_acquired.store(true);
         if (lock_result.load() != FT_ERR_SUCCESSS)
             return ;
         while (!release_lock.load())
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        source._mutex.unlock(THREAD_ID);
+        source._mutex.unlock();
     });
     wait_until_true(lock_acquired);
     duration_ms = measure_read_duration(target, character);

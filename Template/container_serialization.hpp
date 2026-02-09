@@ -8,7 +8,7 @@
 #include "../Template/move.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../CPP_class/class_string.hpp"
-#include "../Libft/libft.hpp"
+#include "../Basic/basic.hpp"
 #include <type_traits>
 #include <limits>
 #include <new>
@@ -163,7 +163,7 @@ int default_string_deserializer(const char *value_string, ElementType &output) n
         }
         else if constexpr (std::is_integral<ElementType>::value)
         {
-            long parsed = ft_atol(value_string);
+            long parsed = ft_atol(value_string, ft_nullptr);
             if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
                 return (-1);
             if constexpr (std::numeric_limits<ElementType>::is_signed)
@@ -353,7 +353,7 @@ int ft_vector_deserialize_json(json_group *group,
         ft_global_error_stack_push(FT_ERR_NOT_FOUND);
         return (-1);
     }
-    long expected_count = ft_atol(count_item->value);
+    long expected_count = ft_atol(count_item->value, ft_nullptr);
     if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
         return (-1);
     if (expected_count < 0)

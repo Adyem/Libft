@@ -1,7 +1,7 @@
 #include "../../Game/game_scripting_bridge.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
-#include "../../Libft/libft.hpp"
+#include "../../Basic/basic.hpp"
 #include "../../Template/shared_ptr.hpp"
 
 FT_TEST(test_game_script_context_default_constructor_sets_success,

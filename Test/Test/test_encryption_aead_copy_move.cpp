@@ -79,13 +79,13 @@ FT_TEST(test_encryption_aead_move_constructor_has_fresh_mutex,
     release_lock.store(false);
     lock_result.store(FT_ERR_SUCCESSS);
     locker_thread = std::thread([&source, &lock_acquired, &release_lock, &lock_result]() {
-        lock_result.store(source._mutex.lock(THREAD_ID));
+        lock_result.store(source._mutex.lock());
         lock_acquired.store(true);
         if (lock_result.load() != FT_ERR_SUCCESSS)
             return ;
         while (!release_lock.load())
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        source._mutex.unlock(THREAD_ID);
+        source._mutex.unlock();
     });
     wait_for_lock(lock_acquired);
     duration_ms = encrypt_small_message(moved, ciphertext, authentication_tag, output_length);
@@ -124,13 +124,13 @@ FT_TEST(test_encryption_aead_move_assignment_has_fresh_mutex,
     release_lock.store(false);
     lock_result.store(FT_ERR_SUCCESSS);
     locker_thread = std::thread([&source, &lock_acquired, &release_lock, &lock_result]() {
-        lock_result.store(source._mutex.lock(THREAD_ID));
+        lock_result.store(source._mutex.lock());
         lock_acquired.store(true);
         if (lock_result.load() != FT_ERR_SUCCESSS)
             return ;
         while (!release_lock.load())
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        source._mutex.unlock(THREAD_ID);
+        source._mutex.unlock();
     });
     wait_for_lock(lock_acquired);
     duration_ms = encrypt_small_message(target, ciphertext, authentication_tag, output_length);

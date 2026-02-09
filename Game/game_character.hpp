@@ -13,7 +13,6 @@
 #include "game_equipment.hpp"
 #include "game_experience_table.hpp"
 #include "game_resistance.hpp"
-#include "../Errno/errno_internal.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
 #include <cstdint>

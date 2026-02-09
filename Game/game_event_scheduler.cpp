@@ -1,6 +1,6 @@
 #include "game_event_scheduler.hpp"
 #include "../CMA/CMA.hpp"
-#include "../Libft/libft.hpp"
+#include "../Basic/basic.hpp"
 #include "../JSon/json.hpp"
 #include "../Time/time.hpp"
 #include "game_world.hpp"
@@ -1128,7 +1128,7 @@ int deserialize_event_scheduler(ft_sharedptr<ft_event_scheduler> &scheduler, jso
         ft_errno = FT_ERR_GAME_GENERAL_ERROR;
         return (FT_ERR_GAME_GENERAL_ERROR);
     }
-    int event_count = ft_atoi(count_item->value);
+    int event_count = ft_atoi(count_item->value, ft_nullptr);
     int event_index = 0;
     while (event_index < event_count)
     {
@@ -1158,8 +1158,8 @@ int deserialize_event_scheduler(ft_sharedptr<ft_event_scheduler> &scheduler, jso
             ft_errno = event.get_error();
             return (event.get_error());
         }
-        event->set_id(ft_atoi(id_item->value));
-        event->set_duration(ft_atoi(duration_item->value));
+        event->set_id(ft_atoi(id_item->value, ft_nullptr));
+        event->set_duration(ft_atoi(duration_item->value, ft_nullptr));
         if (event->get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = event->get_error();

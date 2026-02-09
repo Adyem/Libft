@@ -1,7 +1,7 @@
 #include "game_character.hpp"
 #include "../Errno/errno.hpp"
 #include "../JSon/json.hpp"
-#include "../Libft/libft.hpp"
+#include "../Basic/basic.hpp"
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_string.hpp"
 
@@ -276,62 +276,62 @@ int deserialize_character(ft_character &character, json_group *group)
 {
     json_item *item = json_find_item(group, "hit_points");
     if (item)
-        character.set_hit_points(ft_atoi(item->value));
+        character.set_hit_points(ft_atoi(item->value, ft_nullptr));
     item = json_find_item(group, "physical_armor");
     if (item)
-        character.set_physical_armor(ft_atoi(item->value));
+        character.set_physical_armor(ft_atoi(item->value, ft_nullptr));
     item = json_find_item(group, "magic_armor");
     if (item)
-        character.set_magic_armor(ft_atoi(item->value));
+        character.set_magic_armor(ft_atoi(item->value, ft_nullptr));
     item = json_find_item(group, "current_physical_armor");
     if (item)
-        character.set_current_physical_armor(ft_atoi(item->value));
+        character.set_current_physical_armor(ft_atoi(item->value, ft_nullptr));
     item = json_find_item(group, "current_magic_armor");
     if (item)
-        character.set_current_magic_armor(ft_atoi(item->value));
+        character.set_current_magic_armor(ft_atoi(item->value, ft_nullptr));
     item = json_find_item(group, "damage_rule");
     if (item)
-        character.set_damage_rule(static_cast<uint8_t>(ft_atoi(item->value)));
+        character.set_damage_rule(static_cast<uint8_t>(ft_atoi(item->value, ft_nullptr)));
     item = json_find_item(group, "might");
     if (item)
-        character.set_might(ft_atoi(item->value));
+        character.set_might(ft_atoi(item->value, ft_nullptr));
     item = json_find_item(group, "agility");
     if (item)
-        character.set_agility(ft_atoi(item->value));
+        character.set_agility(ft_atoi(item->value, ft_nullptr));
     item = json_find_item(group, "endurance");
     if (item)
-        character.set_endurance(ft_atoi(item->value));
+        character.set_endurance(ft_atoi(item->value, ft_nullptr));
     item = json_find_item(group, "reason");
     if (item)
-        character.set_reason(ft_atoi(item->value));
+        character.set_reason(ft_atoi(item->value, ft_nullptr));
     item = json_find_item(group, "insigh");
     if (item)
-        character.set_insigh(ft_atoi(item->value));
+        character.set_insigh(ft_atoi(item->value, ft_nullptr));
     item = json_find_item(group, "presence");
     if (item)
-        character.set_presence(ft_atoi(item->value));
+        character.set_presence(ft_atoi(item->value, ft_nullptr));
     item = json_find_item(group, "coins");
     if (item)
-        character.set_coins(ft_atoi(item->value));
+        character.set_coins(ft_atoi(item->value, ft_nullptr));
     item = json_find_item(group, "valor");
     if (item)
-        character.set_valor(ft_atoi(item->value));
+        character.set_valor(ft_atoi(item->value, ft_nullptr));
     item = json_find_item(group, "experience");
     if (item)
-        character.set_experience(ft_atoi(item->value));
+        character.set_experience(ft_atoi(item->value, ft_nullptr));
     item = json_find_item(group, "x");
     if (item)
-        character.set_x(ft_atoi(item->value));
+        character.set_x(ft_atoi(item->value, ft_nullptr));
     item = json_find_item(group, "y");
     if (item)
-        character.set_y(ft_atoi(item->value));
+        character.set_y(ft_atoi(item->value, ft_nullptr));
     item = json_find_item(group, "z");
     if (item)
-        character.set_z(ft_atoi(item->value));
+        character.set_z(ft_atoi(item->value, ft_nullptr));
     json_item *count_item = json_find_item(group, "skill_count");
     if (count_item)
     {
-        int skill_count = ft_atoi(count_item->value);
+        int skill_count = ft_atoi(count_item->value, ft_nullptr);
         int skill_index = 0;
         while (skill_index < skill_count)
         {
@@ -371,13 +371,13 @@ int deserialize_character(ft_character &character, json_group *group)
                 return (FT_ERR_GAME_GENERAL_ERROR);
             }
             ft_skill skill;
-            skill.set_id(ft_atoi(id_item->value));
-            skill.set_level(ft_atoi(level_item->value));
-            skill.set_cooldown(ft_atoi(cool_item->value));
-            skill.set_modifier1(ft_atoi(mod1_item->value));
-            skill.set_modifier2(ft_atoi(mod2_item->value));
-            skill.set_modifier3(ft_atoi(mod3_item->value));
-            skill.set_modifier4(ft_atoi(mod4_item->value));
+            skill.set_id(ft_atoi(id_item->value, ft_nullptr));
+            skill.set_level(ft_atoi(level_item->value, ft_nullptr));
+            skill.set_cooldown(ft_atoi(cool_item->value, ft_nullptr));
+            skill.set_modifier1(ft_atoi(mod1_item->value, ft_nullptr));
+            skill.set_modifier2(ft_atoi(mod2_item->value, ft_nullptr));
+            skill.set_modifier3(ft_atoi(mod3_item->value, ft_nullptr));
+            skill.set_modifier4(ft_atoi(mod4_item->value, ft_nullptr));
             if (character.add_skill(skill) != FT_ERR_SUCCESSS)
             {
                 int add_error = character.get_error();

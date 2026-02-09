@@ -4,7 +4,7 @@
 #include "../../CPP_class/class_string.hpp"
 #include "../../Template/vector.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
-#include "../../Libft/libft.hpp"
+#include "../../Basic/basic.hpp"
 #include "../../Errno/errno.hpp"
 
 typedef struct memory_stream

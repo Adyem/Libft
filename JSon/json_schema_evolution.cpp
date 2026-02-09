@@ -105,7 +105,7 @@ int json_register_schema_migration(const ft_string &schema_name,
     }
     ft_map<ft_string, ft_vector<json_schema_migration_step> > &registry = json_schema_registry();
     Pair<ft_string, ft_vector<json_schema_migration_step> > *entry = registry.find(schema_name);
-    int map_error = registry.pop_newest_operation_error();
+    int map_error = ft_global_error_stack_peek_last_error();
     if (map_error != FT_ERR_SUCCESSS)
     {
         json_schema_unlock(guard);
@@ -121,14 +121,14 @@ int json_register_schema_migration(const ft_string &schema_name,
         ft_vector<json_schema_migration_step> steps;
 
         steps.push_back(step);
-        if (steps.get_error() != FT_ERR_SUCCESSS)
+        int vector_error = ft_global_error_stack_peek_last_error();
+        if (vector_error != FT_ERR_SUCCESSS)
         {
-            int vector_error = steps.get_error();
             json_schema_unlock(guard);
             JSON_SCHEMA_ERROR_RETURN(vector_error, vector_error);
         }
         registry.insert(schema_name, ft_move(steps));
-        map_error = registry.pop_newest_operation_error();
+        map_error = ft_global_error_stack_peek_last_error();
         json_schema_unlock(guard);
         if (map_error != FT_ERR_SUCCESSS)
         {
@@ -138,7 +138,7 @@ int json_register_schema_migration(const ft_string &schema_name,
     }
     ft_vector<json_schema_migration_step> &steps = entry->value;
     size_t steps_count = steps.size();
-    int vector_error = steps.get_error();
+    int vector_error = ft_global_error_stack_peek_last_error();
     if (vector_error != FT_ERR_SUCCESSS)
     {
         json_schema_unlock(guard);
@@ -156,7 +156,7 @@ int json_register_schema_migration(const ft_string &schema_name,
         index++;
     }
     steps.push_back(step);
-    vector_error = steps.get_error();
+    vector_error = ft_global_error_stack_peek_last_error();
     json_schema_unlock(guard);
     if (vector_error != FT_ERR_SUCCESSS)
         JSON_SCHEMA_ERROR_RETURN(vector_error, vector_error);
@@ -190,7 +190,7 @@ int json_apply_schema_migrations(json_document &document,
         }
         ft_map<ft_string, ft_vector<json_schema_migration_step> > &registry = json_schema_registry();
         Pair<ft_string, ft_vector<json_schema_migration_step> > *entry = registry.find(schema_name);
-        int map_error = registry.pop_newest_operation_error();
+        int map_error = ft_global_error_stack_peek_last_error();
         if (map_error != FT_ERR_SUCCESSS)
         {
             json_schema_unlock(guard);
@@ -203,7 +203,7 @@ int json_apply_schema_migrations(json_document &document,
         }
         ft_vector<json_schema_migration_step> &steps = entry->value;
         size_t steps_count = steps.size();
-        int vector_error = steps.get_error();
+        int vector_error = ft_global_error_stack_peek_last_error();
         if (vector_error != FT_ERR_SUCCESSS)
         {
             json_schema_unlock(guard);
@@ -263,7 +263,7 @@ int json_get_latest_schema_version(const ft_string &schema_name,
     }
     ft_map<ft_string, ft_vector<json_schema_migration_step> > &registry = json_schema_registry();
     Pair<ft_string, ft_vector<json_schema_migration_step> > *entry = registry.find(schema_name);
-    int map_error = registry.pop_newest_operation_error();
+    int map_error = ft_global_error_stack_peek_last_error();
     if (map_error != FT_ERR_SUCCESSS)
     {
         json_schema_unlock(guard);
@@ -276,7 +276,7 @@ int json_get_latest_schema_version(const ft_string &schema_name,
     }
     ft_vector<json_schema_migration_step> &steps = entry->value;
     size_t steps_count = steps.size();
-    int vector_error = steps.get_error();
+    int vector_error = ft_global_error_stack_peek_last_error();
     if (vector_error != FT_ERR_SUCCESSS)
     {
         json_schema_unlock(guard);

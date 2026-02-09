@@ -4,7 +4,7 @@
 #include "../Printf/printf.hpp"
 #include "../GetNextLine/get_next_line.hpp"
 #include "../CPP_class/class_nullptr.hpp"
-#include "../Libft/libft.hpp"
+#include "../Basic/basic.hpp"
 #include "../Errno/errno.hpp"
 
 typedef int (*RollExecuteFunc)(char *, int *, int);
@@ -128,7 +128,7 @@ int *math_roll(const char *expression)
         return (math_roll_report_error(error_code, result));
     }
     ft_global_error_stack_drop_last_error();
-    *value = ft_atoi(result);
+    *value = ft_atoi(result, ft_nullptr);
     error_code = ft_global_error_stack_drop_last_error();
     if (error_code != FT_ERR_SUCCESSS)
     {

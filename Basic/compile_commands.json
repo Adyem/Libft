@@ -1,0 +1,38 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-g",
+      "-O0",
+      "-std=c++17",
+      "-c",
+      "-o",
+      "objs/libft_strlen.o",
+      "libft_strlen.cpp"
+    ],
+    "directory": "/home/adyem/DND_tools/Other/Libft/Libft",
+    "file": "/home/adyem/DND_tools/Other/Libft/Basic/basic_strlen.cpp",
+    "output": "/home/adyem/DND_tools/Other/Libft/Libft/objs/libft_strlen.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-g",
+      "-O0",
+      "-std=c++17",
+      "-c",
+      "-o",
+      "objs/libft_strchr.o",
+      "libft_strchr.cpp"
+    ],
+    "directory": "/home/adyem/DND_tools/Other/Libft/Libft",
+    "file": "/home/adyem/DND_tools/Other/Libft/Basic/basic_strchr.cpp",
+    "output": "/home/adyem/DND_tools/Other/Libft/Libft/objs/libft_strchr.o"
+  }
+]

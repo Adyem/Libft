@@ -2,24 +2,40 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../CMA/CMA.hpp"
-#include "../Libft/libft.hpp"
+#include "../Basic/basic.hpp"
 #include <cstddef>
-#include "../PThread/unique_lock.hpp"
 #include "../PThread/mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 
-static int cnfg_config_lock_if_enabled(cnfg_config *config, ft_unique_lock<pt_mutex> &mutex_guard)
+static int cnfg_config_lock_if_enabled(cnfg_config *config, bool *lock_acquired)
 {
     if (!config || !config->mutex)
         return (FT_ERR_SUCCESSS);
-    mutex_guard = ft_unique_lock<pt_mutex>(*config->mutex);
-    return (ft_global_error_stack_drop_last_error());
+    int lock_result = pt_mutex_lock_if_valid(config->mutex);
+    ft_global_error_stack_drop_last_error();
+    if (lock_result == FT_ERR_SUCCESSS && lock_acquired)
+        *lock_acquired = true;
+    return (lock_result);
 }
 
-static void cnfg_config_unlock_guard(ft_unique_lock<pt_mutex> &mutex_guard)
+static void cnfg_config_unlock_guard(cnfg_config *config, bool lock_acquired)
 {
-    if (!mutex_guard.owns_lock())
+    if (!config || !config->mutex || !lock_acquired)
         return ;
-    mutex_guard.unlock();
+    pt_mutex_unlock_if_valid(config->mutex);
+    ft_global_error_stack_drop_last_error();
+    return ;
+}
+
+static void cnfg_config_unlock_all(const cnfg_config *base_config, bool base_locked,
+    const cnfg_config *override_config, bool override_locked,
+    cnfg_config *result, bool result_locked)
+{
+    if (base_config)
+        cnfg_config_unlock_guard(const_cast<cnfg_config*>(base_config), base_locked);
+    if (override_config)
+        cnfg_config_unlock_guard(const_cast<cnfg_config*>(override_config), override_locked);
+    cnfg_config_unlock_guard(result, result_locked);
     return ;
 }
 
@@ -217,9 +233,9 @@ cnfg_config *config_merge(const cnfg_config *base_config, const cnfg_config *ove
 {
     cnfg_config *result;
     size_t index;
-    ft_unique_lock<pt_mutex> base_guard;
-    ft_unique_lock<pt_mutex> override_guard;
-    ft_unique_lock<pt_mutex> result_guard;
+    bool base_locked = false;
+    bool override_locked = false;
+    bool result_locked = false;
     int lock_error;
 
     if (!base_config && !override_config)
@@ -230,10 +246,10 @@ cnfg_config *config_merge(const cnfg_config *base_config, const cnfg_config *ove
     result = cnfg_config_create();
     if (!result)
         return (ft_nullptr);
-    lock_error = cnfg_config_lock_if_enabled(result, result_guard);
+    lock_error = cnfg_config_lock_if_enabled(result, &result_locked);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        cnfg_config_unlock_guard(result_guard);
+        cnfg_config_unlock_all(base_config, base_locked, override_config, override_locked, result, result_locked);
         cnfg_free(result);
         ft_global_error_stack_push(lock_error);
         return (ft_nullptr);
@@ -241,15 +257,16 @@ cnfg_config *config_merge(const cnfg_config *base_config, const cnfg_config *ove
     if (override_config && override_config->entry_count && !override_config->entries)
     {
         ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
+        cnfg_config_unlock_all(base_config, base_locked, override_config, override_locked, result, result_locked);
         cnfg_free(result);
         return (ft_nullptr);
     }
     if (base_config)
     {
-        lock_error = cnfg_config_lock_if_enabled(const_cast<cnfg_config*>(base_config), base_guard);
+        lock_error = cnfg_config_lock_if_enabled(const_cast<cnfg_config*>(base_config), &base_locked);
         if (lock_error != FT_ERR_SUCCESSS)
         {
-            cnfg_config_unlock_guard(result_guard);
+            cnfg_config_unlock_all(base_config, base_locked, override_config, override_locked, result, result_locked);
             cnfg_free(result);
             ft_global_error_stack_push(lock_error);
             return (ft_nullptr);
@@ -257,10 +274,10 @@ cnfg_config *config_merge(const cnfg_config *base_config, const cnfg_config *ove
     }
     if (override_config)
     {
-        lock_error = cnfg_config_lock_if_enabled(const_cast<cnfg_config*>(override_config), override_guard);
+        lock_error = cnfg_config_lock_if_enabled(const_cast<cnfg_config*>(override_config), &override_locked);
         if (lock_error != FT_ERR_SUCCESSS)
         {
-            cnfg_config_unlock_guard(result_guard);
+            cnfg_config_unlock_all(base_config, base_locked, override_config, override_locked, result, result_locked);
             cnfg_free(result);
             ft_global_error_stack_push(lock_error);
             return (ft_nullptr);
@@ -268,12 +285,13 @@ cnfg_config *config_merge(const cnfg_config *base_config, const cnfg_config *ove
     }
     if (config_copy_entries(result, base_config) != 0)
     {
-        cnfg_config_unlock_guard(result_guard);
+        cnfg_config_unlock_all(base_config, base_locked, override_config, override_locked, result, result_locked);
         cnfg_free(result);
         return (ft_nullptr);
     }
     if (!override_config)
     {
+        cnfg_config_unlock_all(base_config, base_locked, override_config, override_locked, result, result_locked);
         ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (result);
     }
@@ -289,14 +307,14 @@ cnfg_config *config_merge(const cnfg_config *base_config, const cnfg_config *ove
 
             if (config_duplicate_entry(override_entry, &replacement) != 0)
             {
-                cnfg_config_unlock_guard(result_guard);
+                cnfg_config_unlock_all(base_config, base_locked, override_config, override_locked, result, result_locked);
                 cnfg_free(result);
                 return (ft_nullptr);
             }
             if (cnfg_entry_lock(existing, &existing_locked) != 0)
             {
                 config_free_entry_contents(&replacement);
-                cnfg_config_unlock_guard(result_guard);
+                cnfg_config_unlock_all(base_config, base_locked, override_config, override_locked, result, result_locked);
                 cnfg_free(result);
                 return (ft_nullptr);
             }
@@ -313,13 +331,14 @@ cnfg_config *config_merge(const cnfg_config *base_config, const cnfg_config *ove
         {
             if (config_append_entry(result, override_entry) != 0)
             {
-                cnfg_config_unlock_guard(result_guard);
+                cnfg_config_unlock_all(base_config, base_locked, override_config, override_locked, result, result_locked);
                 cnfg_free(result);
                 return (ft_nullptr);
             }
         }
         ++index;
     }
+    cnfg_config_unlock_all(base_config, base_locked, override_config, override_locked, result, result_locked);
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }

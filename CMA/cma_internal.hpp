@@ -1,7 +1,7 @@
 #ifndef CMA_INTERNAL_HPP
 # define CMA_INTERNAL_HPP
 
-#include "../Libft/libft.hpp"
+#include "../Basic/basic.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include <cstdint>
 #include <stdint.h>

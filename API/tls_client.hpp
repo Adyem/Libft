@@ -6,7 +6,6 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/thread.hpp"
 #include "../PThread/mutex.hpp"
-#include "../Errno/errno_internal.hpp"
 #include <atomic>
 #include "../Networking/openssl_support.hpp"
 #if NETWORKING_HAS_OPENSSL

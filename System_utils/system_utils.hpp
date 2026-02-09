@@ -73,8 +73,6 @@ typedef struct su_file
 }   su_file;
 
 void    su_force_file_stream_allocation_failure(bool should_fail);
-void    su_force_fread_failure(int error_code);
-void    su_clear_forced_fread_failure(void);
 su_file *su_fopen(const char *path_name);
 su_file *su_fopen(const char *path_name, int flags);
 su_file *su_fopen(const char *path_name, int flags, mode_t mode);
@@ -91,6 +89,14 @@ void    su_file_unlock(su_file *stream, bool lock_acquired);
 
 int     su_environment_enable_thread_safety(void);
 void    su_environment_disable_thread_safety(void);
+
+char    *ft_getenv(const char *name);
+int     ft_setenv(const char *name, const char *value, int overwrite);
+int     ft_unsetenv(const char *name);
+int     ft_environment_lock(void);
+int     ft_environment_unlock(void);
+int     ft_environment_enable_thread_safety(void);
+void    ft_environment_disable_thread_safety(void);
 
 int     su_copy_file(const char *source_path, const char *destination_path);
 int     su_copy_directory_recursive(const char *source_path,

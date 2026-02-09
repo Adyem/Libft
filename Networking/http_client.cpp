@@ -11,7 +11,7 @@
 #include <cerrno>
 #include <vector>
 #include <openssl/x509v3.h>
-#include "../Libft/libft.hpp"
+#include "../Basic/basic.hpp"
 #include "../Errno/errno.hpp"
 #include "../Time/time.hpp"
 #include "../Observability/observability_networking_metrics.hpp"
@@ -817,7 +817,7 @@ static int http_client_parse_status(const ft_string &headers)
         index++;
     if (header_cstr[index] == '\0')
         return (0);
-    return (ft_atoi(header_cstr + index));
+    return (ft_atoi(header_cstr + index, ft_nullptr));
 }
 
 static int http_client_stream_handle_header(http_stream_state &state)

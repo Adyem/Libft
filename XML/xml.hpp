@@ -4,7 +4,6 @@
 #include "../Template/vector.hpp"
 #include "../Template/unordered_map.hpp"
 #include "../Errno/errno.hpp"
-#include "../Errno/errno_internal.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Parser/document_backend.hpp"
 

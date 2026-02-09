@@ -1,7 +1,7 @@
 #include "../../Template/container_serialization.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
-#include "../../Libft/libft.hpp"
+#include "../../Basic/basic.hpp"
 #include "../../YAML/yaml.hpp"
 #include "../../JSon/json.hpp"
 #include "../../CMA/CMA.hpp"
@@ -23,7 +23,7 @@ FT_TEST(test_vector_json_serialization_round_trip,
     json_item *count_item = json_find_item(serialized, "count");
 
     FT_ASSERT(count_item != ft_nullptr);
-    FT_ASSERT_EQ(2L, ft_atol(count_item->value));
+    FT_ASSERT_EQ(2L, ft_atol(count_item->value, ft_nullptr));
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     json_item *first_item = json_find_item(serialized, "item_0");
 
@@ -142,7 +142,7 @@ static int ft_entry_deserializer(const char *value_string, ft_serialized_entry &
     }
     const char *quantity_part = separator + 1;
 
-    entry.quantity = ft_atol(quantity_part);
+    entry.quantity = ft_atol(quantity_part, ft_nullptr);
     if (ft_errno != FT_ERR_SUCCESSS)
         return (-1);
     ft_errno = FT_ERR_SUCCESSS;

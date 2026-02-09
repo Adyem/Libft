@@ -4,7 +4,6 @@
 #include "../CPP_class/class_string.hpp"
 #include "../Networking/socket_class.hpp"
 #include "../PThread/mutex.hpp"
-#include "../Errno/errno_internal.hpp"
 #include <cstddef>
 #include <cstdint>
 

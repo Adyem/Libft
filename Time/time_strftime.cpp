@@ -1,5 +1,5 @@
 #include "time.hpp"
-#include "../Libft/libft.hpp"
+#include "../Basic/basic.hpp"
 #include "../Errno/errno.hpp"
 
 static size_t   format_time_component(char *destination, size_t destination_size, int value, int minimum_width)

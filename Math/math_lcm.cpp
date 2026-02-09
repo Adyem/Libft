@@ -1,6 +1,6 @@
 #include "math.hpp"
 #include "../Errno/errno.hpp"
-#include "../Libft/limits.hpp"
+#include "../Basic/basic_limits.hpp"
 
 static unsigned long long    math_lcm_magnitude(long long value)
 {

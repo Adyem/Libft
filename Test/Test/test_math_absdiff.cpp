@@ -1,5 +1,5 @@
 #include "../../Math/math.hpp"
-#include "../../Libft/limits.hpp"
+#include "../../Basic/basic_limits.hpp"
 #include "../../System_utils/test_runner.hpp"
 
 FT_TEST(test_math_absdiff_int_symmetry, "math_absdiff handles int inputs symmetrically")

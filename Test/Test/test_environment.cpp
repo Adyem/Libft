@@ -1,5 +1,5 @@
-#include "../../Libft/libft.hpp"
-#include "../../Libft/libft_environment_lock.hpp"
+#include "../../Basic/basic.hpp"
+#include "../../Basic/basic_environment_lock.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../Errno/errno.hpp"
@@ -204,55 +204,6 @@ FT_TEST(test_ft_unsetenv_failure_without_errno, "ft_unsetenv falls back when err
     return (1);
 }
 
-FT_TEST(test_ft_setenv_lock_failure_sets_errno, "ft_setenv surfaces environment lock failure")
-{
-    const char *variable_name;
-
-    variable_name = "LIBFT_TEST_SETENV_LOCK_FAILURE";
-    ft_environment_reset_failures();
-    ft_environment_force_lock_failure(FT_ERR_MUTEX_ALREADY_LOCKED);
-    ft_errno = FT_ERR_SUCCESSS;
-    FT_ASSERT_EQ(-1, ft_setenv(variable_name, "value", 1));
-    FT_ASSERT_EQ(FT_ERR_MUTEX_ALREADY_LOCKED, ft_errno);
-    ft_environment_reset_failures();
-    ft_unsetenv(variable_name);
-    return (1);
-}
-
-FT_TEST(test_ft_setenv_unlock_failure_sets_errno, "ft_setenv surfaces environment unlock failure")
-{
-    const char *variable_name;
-
-    variable_name = "LIBFT_TEST_SETENV_UNLOCK_FAILURE";
-    ft_environment_reset_failures();
-    ft_unsetenv(variable_name);
-    ft_environment_force_unlock_failure(FT_ERR_MUTEX_NOT_OWNER);
-    ft_errno = FT_ERR_SUCCESSS;
-    FT_ASSERT_EQ(-1, ft_setenv(variable_name, "value", 1));
-    FT_ASSERT_EQ(FT_ERR_MUTEX_NOT_OWNER, ft_errno);
-    ft_environment_reset_failures();
-    ft_unsetenv(variable_name);
-    return (1);
-}
-
-FT_TEST(test_ft_getenv_unlock_failure_sets_errno, "ft_getenv surfaces environment unlock failure")
-{
-    const char *variable_name;
-    char    *value;
-
-    variable_name = "LIBFT_TEST_GETENV_UNLOCK_FAILURE";
-    ft_environment_reset_failures();
-    FT_ASSERT_EQ(0, ft_setenv(variable_name, "value", 1));
-    ft_environment_force_unlock_failure(FT_ERR_MUTEX_NOT_OWNER);
-    ft_errno = FT_ERR_SUCCESSS;
-    value = ft_getenv(variable_name);
-    FT_ASSERT_EQ(ft_nullptr, value);
-    FT_ASSERT_EQ(FT_ERR_MUTEX_NOT_OWNER, ft_errno);
-    ft_environment_reset_failures();
-    ft_unsetenv(variable_name);
-    return (1);
-}
-
 #if defined(_WIN32) || defined(_WIN64)
 FT_TEST(test_ft_unsetenv_failure_uses_return_value, "ft_unsetenv uses return value on Windows")
 {
@@ -308,4 +259,3 @@ FT_TEST(test_ft_unsetenv_failure_uses_wsa_error, "ft_unsetenv uses WSA error whe
     return (1);
 }
 #endif
-

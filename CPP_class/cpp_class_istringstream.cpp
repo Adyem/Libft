@@ -1,5 +1,5 @@
 #include "class_istringstream.hpp"
-#include "../Libft/libft.hpp"
+#include "../Basic/basic.hpp"
 
 ft_istringstream::ft_istringstream(const ft_string &string) noexcept
 : ft_istream(), _buffer(string)
@@ -28,7 +28,7 @@ ft_string ft_istringstream::str() const
 ft_istringstream &operator>>(ft_istringstream &input, int &value)
 {
     ft_string content = input.str();
-    value = ft_atoi(content.c_str());
+    value = ft_atoi(content.c_str(), ft_nullptr);
     return (input);
 }
 

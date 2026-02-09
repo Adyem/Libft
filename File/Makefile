@@ -10,7 +10,10 @@ SRCS := file_opendir.cpp \
         file_delete.cpp \
         file_path_join.cpp \
         file_path_normalize.cpp \
-        file_watch.cpp
+        file_watch.cpp \
+        file_fopen.cpp \
+        file_fclose.cpp \
+        file_fgets.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
@@ -105,4 +108,3 @@ re: fclean all
 both: all debug
 
 .PHONY: all clean fclean re debug both
-

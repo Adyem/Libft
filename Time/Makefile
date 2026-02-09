@@ -22,7 +22,8 @@ SRCS := time_now.cpp \
         time_monotonic_translate.cpp \
         time_timezone.cpp \
         time_benchmark.cpp \
-        time_trace.cpp
+        time_trace.cpp \
+        time_basic.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
@@ -117,4 +118,3 @@ re: fclean all
 both: all debug
 
 .PHONY: all clean fclean re debug both
-

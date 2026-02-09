@@ -1,26 +1,30 @@
 #include "config.hpp"
 #include "../Errno/errno.hpp"
 #include "../CMA/CMA.hpp"
-#include "../Libft/libft.hpp"
+#include "../Basic/basic.hpp"
+#include "../File/file_utils.hpp"
 #include "../JSon/json.hpp"
-#include "../PThread/unique_lock.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread_internal.hpp"
 #include <cstdio>
 
-static int cnfg_config_lock_if_enabled(cnfg_config *config, ft_unique_lock<pt_mutex> &mutex_guard)
+static int cnfg_config_lock_if_enabled(cnfg_config *config, bool *lock_acquired)
 {
     if (!config || !config->mutex)
         return (FT_ERR_SUCCESSS);
-    mutex_guard = ft_unique_lock<pt_mutex>(*config->mutex);
-    return (ft_global_error_stack_drop_last_error());
+    int lock_result = pt_mutex_lock_if_valid(config->mutex);
+    ft_global_error_stack_drop_last_error();
+    if (lock_result == FT_ERR_SUCCESSS && lock_acquired)
+        *lock_acquired = true;
+    return (lock_result);
 }
 
-static void cnfg_config_unlock_guard(ft_unique_lock<pt_mutex> &mutex_guard)
+static void cnfg_config_unlock_guard(cnfg_config *config, bool lock_acquired)
 {
-    if (!mutex_guard.owns_lock())
+    if (!config || !config->mutex || !lock_acquired)
         return ;
-    mutex_guard.unlock();
+    pt_mutex_unlock_if_valid(config->mutex);
+    ft_global_error_stack_drop_last_error();
     return ;
 }
 
@@ -93,11 +97,11 @@ void cnfg_free(cnfg_config *config)
         ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
-    ft_unique_lock<pt_mutex> mutex_guard;
+    bool mutex_locked = false;
     size_t entry_index;
 
     bool already_owned = false;
-    int lock_result = cnfg_config_lock_if_enabled(config, mutex_guard);
+    int lock_result = cnfg_config_lock_if_enabled(config, &mutex_locked);
     if (lock_result != FT_ERR_SUCCESSS)
     {
         if (lock_result == FT_ERR_MUTEX_ALREADY_LOCKED && config->mutex)
@@ -138,7 +142,7 @@ void cnfg_free(cnfg_config *config)
     }
     else
     {
-        cnfg_config_unlock_guard(mutex_guard);
+        cnfg_config_unlock_guard(config, mutex_locked);
         ft_global_error_stack_push(FT_ERR_SUCCESSS);
     }
     cnfg_config_teardown_thread_safety(config);

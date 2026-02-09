@@ -1,4 +1,4 @@
-#include "../../Libft/libft.hpp"
+#include "../../Basic/basic.hpp"
 #include "utils.hpp"
 
 #include <cstdlib>
@@ -22,7 +22,7 @@ int test_efficiency_atoi(void)
     for (size_t i = 0; i < iterations; ++i)
     {
         prevent_optimization((void*)s);
-        result += ft_atoi(s);
+        result += ft_atoi(s, ft_nullptr);
         prevent_optimization((void*)&result);
     }
     auto end_ft = clock_type::now();

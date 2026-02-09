@@ -3,9 +3,9 @@
 
 #include "../JSon/json.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
-#include "../Errno/errno_internal.hpp"
 #include "api_request_signing.hpp"
 #include <cstdint>
 #include <cstddef>

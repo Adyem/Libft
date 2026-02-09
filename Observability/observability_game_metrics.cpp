@@ -3,7 +3,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/lock_guard.hpp"
-#include "../Libft/libft.hpp"
+#include "../Basic/basic.hpp"
 
 static pt_mutex g_observability_game_mutex;
 static bool g_observability_game_initialized = false;

@@ -1,97 +1,79 @@
+#include <system_error>
+
 #include "pthread.hpp"
 #include "recursive_mutex.hpp"
 #include "pthread_lock_tracking.hpp"
 #include "../Errno/errno.hpp"
-#include "../Libft/libft.hpp"
 
-int pt_recursive_mutex::lock(pthread_t thread_id) const
+int pt_recursive_mutex::lock() const
 {
-    pt_mutex_vector owned_mutexes;
-    int mutex_error;
-    int tracking_error;
-    bool lock_flag;
+    int ensure_error = this->ensure_native_mutex();
+    if (ensure_error != FT_ERR_SUCCESSS)
+        return (ensure_error);
 
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    if (!this->ensure_native_mutex())
-        return (FT_SUCCESS);
-    lock_flag = this->_lock.load(std::memory_order_acquire);
-    if (lock_flag)
+    pt_thread_id_type thread_id = pt_thread_self();
+    if (this->_lock.load(std::memory_order_acquire))
     {
-        pthread_t owner;
-
-        owner = this->_owner.load(std::memory_order_relaxed);
+        pt_thread_id_type owner = this->_owner.load(std::memory_order_relaxed);
         if (pt_thread_equal(owner, thread_id))
         {
-            std::size_t current_depth;
-
-            current_depth = this->_lock_depth.load(std::memory_order_relaxed);
-            this->_lock_depth.store(current_depth + 1, std::memory_order_relaxed);
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
-            return (FT_SUCCESS);
+            this->_lock_depth.fetch_add(1, std::memory_order_relaxed);
+            return (FT_ERR_SUCCESSS);
         }
     }
-    owned_mutexes = pt_lock_tracking::get_owned_mutexes(thread_id);
-    tracking_error = ft_global_error_stack_drop_last_error();
+
+    pt_mutex_vector owned_mutexes;
+    int tracking_error = FT_ERR_SUCCESSS;
+    const void *mutex_handle = static_cast<const void *>(this->_native_mutex);
+
+    owned_mutexes = pt_lock_tracking::get_owned_mutexes(thread_id, &tracking_error);
     if (tracking_error != FT_ERR_SUCCESSS)
     {
-        ft_global_error_stack_push(tracking_error);
-        return (FT_SUCCESS);
+        pt_buffer_destroy(owned_mutexes);
+        return (tracking_error);
     }
-    if (lock_flag)
-    {
-        pthread_t owner;
 
-        owner = this->_owner.load(std::memory_order_relaxed);
-        if (owner == 0)
-        {
-            ft_size_t index;
+    int wait_result = pt_lock_tracking::notify_wait(thread_id,
+            mutex_handle, owned_mutexes);
+    pt_buffer_destroy(owned_mutexes);
+    if (wait_result != FT_ERR_SUCCESSS)
+        return (wait_result);
 
-            index = 0;
-            while (index < owned_mutexes.size())
-            {
-                if (owned_mutexes[index] == &this->_native_mutex)
-                {
-                    ft_global_error_stack_push(FT_ERR_MUTEX_ALREADY_LOCKED);
-                    return (FT_SUCCESS);
-                }
-                index += 1;
-            }
-        }
-    }
-    if (!pt_lock_tracking::notify_wait(thread_id, &this->_native_mutex, owned_mutexes))
+    int mutex_error = FT_ERR_SUCCESSS;
+    try
     {
-        tracking_error = ft_global_error_stack_drop_last_error();
-        pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
-        ft_global_error_stack_drop_last_error();
-        if (tracking_error == FT_ERR_SUCCESSS)
-            tracking_error = FT_ERR_INVALID_STATE;
-        ft_global_error_stack_push(tracking_error);
-        return (FT_SUCCESS);
+        this->_native_mutex->lock();
     }
-    tracking_error = ft_global_error_stack_drop_last_error();
-    if (tracking_error != FT_ERR_SUCCESSS)
+    catch (const std::system_error &error)
     {
-        pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
-        ft_global_error_stack_drop_last_error();
-        ft_global_error_stack_push(tracking_error);
-        return (FT_SUCCESS);
+        mutex_error = ft_map_system_error(error.code().value());
     }
-    mutex_error = pthread_mutex_lock(&this->_native_mutex);
-    if (mutex_error != 0)
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
-        ft_global_error_stack_drop_last_error();
-        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
-        return (FT_SUCCESS);
+        pt_lock_tracking::notify_released(thread_id, mutex_handle);
+        return (mutex_error);
     }
+
     this->_owner.store(thread_id, std::memory_order_relaxed);
     this->_lock.store(true, std::memory_order_release);
     this->_lock_depth.store(1, std::memory_order_relaxed);
-    pt_lock_tracking::notify_acquired(thread_id, &this->_native_mutex);
-    tracking_error = ft_global_error_stack_drop_last_error();
-    if (tracking_error != FT_ERR_SUCCESSS)
-        ft_global_error_stack_push(tracking_error);
-    else
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (FT_SUCCESS);
+
+    int notify_error = pt_lock_tracking::notify_acquired(thread_id,
+            mutex_handle);
+    if (notify_error != FT_ERR_SUCCESSS)
+    {
+        this->_lock.store(false, std::memory_order_release);
+        this->_owner.store(0, std::memory_order_release);
+        this->_lock_depth.store(0, std::memory_order_relaxed);
+        try
+        {
+            this->_native_mutex->unlock();
+        }
+        catch (const std::system_error &)
+        {
+        }
+        return (notify_error);
+    }
+
+    return (FT_ERR_SUCCESSS);
 }

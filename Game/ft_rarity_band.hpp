@@ -2,7 +2,6 @@
 # define FT_RARITY_BAND_HPP
 
 #include "../Errno/errno.hpp"
-#include "../Errno/errno_internal.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
 

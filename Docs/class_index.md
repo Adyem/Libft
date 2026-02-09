@@ -718,14 +718,6 @@ Each entry lists the class or struct name introduced in that translation unit.
 - `s_pt_lock_wait_snapshot`
 - `s_pt_thread_lock_info`
 
-## PThread/pthread_recursive_timed_lock_mutex.cpp
-
-- `timespec`
-
-## PThread/pthread_timed_lock_mutex.cpp
-
-- `timespec`
-
 ## PThread/recursive_mutex.hpp
 
 - `pt_recursive_mutex`

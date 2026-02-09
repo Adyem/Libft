@@ -2,9 +2,6 @@ TARGET         := CustomMemoryAllocator.a
 DEBUG_TARGET   := CustomMemoryAllocator_debug.a
 
 SRCS := cma_calloc.cpp \
-        cma_strdup.cpp \
-        cma_strndup.cpp \
-        cma_memdup.cpp \
         cma_backend.cpp \
         cma_malloc.cpp \
         cma_free.cpp \
@@ -13,14 +10,6 @@ SRCS := cma_calloc.cpp \
         cma_realloc.cpp \
         cma_aligned_alloc.cpp \
         cma_alloc_size.cpp \
-        cma_atoi.cpp \
-        cma_itoa.cpp \
-        cma_itoa_base.cpp \
-        cma_split.cpp \
-        cma_strjoin.cpp \
-        cma_strjoin_multiple.cpp \
-        cma_substr.cpp \
-        cma_strtrim.cpp \
         cma_free_double.cpp \
         cma_globals.cpp \
         cma_allocator_lock.cpp \
@@ -123,4 +112,3 @@ re: fclean all
 both: all debug
 
 .PHONY: all clean fclean re debug both
-

@@ -7,7 +7,7 @@ Libft exposes a large surface area with many cooperating modules. This document 
 - **Key invariants:**
   - Callers must initialize library global state before invoking helpers that rely on environment or locale APIs.
   - Safe string and memory variants guarantee destination buffers are zeroed on failure and never write past their bounds.
-  - Configuration macros declared in `Libft/libft_config.hpp` must be honored by all translation units; disabling a feature removes the corresponding symbols from the umbrella headers.
+  - Configuration macros declared in `Basic/basic_config.hpp` must be honored by all translation units; disabling a feature removes the corresponding symbols from the umbrella headers.
 - **Error reporting:** Functions set `ft_errno` on failure and return sentinel values (`nullptr`, `0`, or error enums). Callers should immediately capture the error via `ft_errno` or helper wrappers like `ft_get_error_string`.
 
 ## CMA (custom memory allocation)

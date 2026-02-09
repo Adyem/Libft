@@ -3,7 +3,7 @@
 #include <climits>
 #include <cstdlib>
 #include "../CMA/CMA.hpp"
-#include "../Libft/libft.hpp"
+#include "../Basic/basic.hpp"
 #include "../Printf/printf.hpp"
 
 static int math_check_value_roll(const char *str)
@@ -99,7 +99,7 @@ int math_roll_convert_previous(char *string, int *i, int *error)
         }
         return (0);
     }
-    result = ft_atoi(&string[*i]);
+    result = ft_atoi(&string[*i], ft_nullptr);
     if (DEBUG == 1)
         pf_printf("the first number is %d and i=%d\n", result, *i);
     return (result);
@@ -120,7 +120,7 @@ int    math_roll_convert_next(char *string, int i, int *error)
         }
         return (0);
     }
-    result = ft_atoi(&string[i]);
+    result = ft_atoi(&string[i], ft_nullptr);
     if (DEBUG == 1)
         pf_printf("the second number is %d\n", result);
     return (result);

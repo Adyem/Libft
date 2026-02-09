@@ -3,24 +3,24 @@
 
 #include <pthread.h>
 #include <atomic>
-#include <time.h>
 #include <type_traits>
 #include <cstddef>
+#include <mutex>
 
 #include "mutex.hpp"
 
 class pt_recursive_mutex
 {
     private:
-        mutable std::atomic<pthread_t>    _owner;
+        mutable std::atomic<pt_thread_id_type>    _owner;
         mutable std::atomic<bool>         _lock;
         mutable std::atomic<std::size_t>  _lock_depth;
-        mutable pthread_mutex_t           _native_mutex;
+        mutable std::mutex               *_native_mutex;
         mutable bool                      _native_initialized;
         mutable pt_mutex                  *_state_mutex;
         mutable std::atomic<bool>         _valid_state;
 
-        bool    ensure_native_mutex() const;
+        int     ensure_native_mutex() const;
         int     lock_internal(bool *lock_acquired) const;
         int     unlock_internal(bool lock_acquired) const;
         void    teardown_thread_safety();
@@ -39,15 +39,14 @@ class pt_recursive_mutex
         int     lock_state(bool *lock_acquired) const;
         void    unlock_state(bool lock_acquired) const;
 
-        int     lock(pthread_t thread_id) const;
-        int     unlock(pthread_t thread_id) const;
-        int     try_lock(pthread_t thread_id) const;
-        int     try_lock_until(pthread_t thread_id, const struct timespec &absolute_time) const;
-        int     try_lock_for(pthread_t thread_id, const struct timespec &relative_time) const;
+        int     lock() const;
+        int     unlock() const;
+        int     try_lock(pt_thread_id_type thread_id) const;
 
-        bool    is_owned_by_thread(pthread_t thread_id) const;
+        bool    is_owned_by_thread(pt_thread_id_type thread_id) const;
 
-        pthread_mutex_t   *get_native_mutex() const;
+        int     initialize();
+        int     destroy();
 };
 
 static_assert(!std::is_copy_constructible<pt_recursive_mutex>::value, "pt_recursive_mutex cannot be copied");

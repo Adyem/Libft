@@ -7,7 +7,7 @@
 # include "../CPP_class/class_nullptr.hpp"
 # include "../PThread/mutex.hpp"
 # include "../PThread/pthread_internal.hpp"
-# include "../Libft/libft.hpp"
+# include "../Basic/basic.hpp"
 # include <windows.h>
 # include <stdio.h>
 # include <io.h>
@@ -48,12 +48,19 @@ static void cmp_clear_handle(int file_descriptor)
 
 static int cmp_lock_file_mutex(void)
 {
-    return (pt_mutex_lock_with_error(g_file_mutex));
+    int lock_result = g_file_mutex.lock();
+
+    if (lock_result != FT_ERR_SUCCESSS)
+        return (lock_result);
+    ft_global_error_stack_drop_last_error();
+    return (FT_ERR_SUCCESSS);
 }
 
 static int cmp_unlock_file_mutex(void)
 {
-    return (pt_mutex_unlock_with_error(g_file_mutex));
+    g_file_mutex.unlock();
+    ft_global_error_stack_drop_last_error();
+    return (FT_ERR_SUCCESSS);
 }
 
 static int cmp_open_internal(const char *path_name, int flags, int mode)
@@ -273,7 +280,7 @@ void cmp_initialize_standard_file_descriptors()
 
 #else
 # include "../CPP_class/class_nullptr.hpp"
-# include "../Libft/libft.hpp"
+# include "../Basic/basic.hpp"
 # include <fcntl.h>
 # include <unistd.h>
 # include <sys/stat.h>

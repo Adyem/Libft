@@ -207,35 +207,30 @@ void ft_thread::detach()
 int ft_thread::enable_thread_safety()
 {
     if (this->_state_mutex != ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (0);
-    }
-    int mutex_error = pt_mutex_create_with_error(&this->_state_mutex);
-    if (mutex_error != FT_ERR_SUCCESSS)
-    {
-        ft_global_error_stack_push(mutex_error);
+    this->_state_mutex = new (std::nothrow) pt_mutex();
+    if (this->_state_mutex == ft_nullptr)
         return (-1);
+    int init_error = this->_state_mutex->initialize();
+    if (init_error != FT_ERR_SUCCESSS)
+    {
+        delete this->_state_mutex;
+        this->_state_mutex = ft_nullptr;
+        return (init_error);
     }
     this->_thread_safe_enabled = true;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
 void ft_thread::disable_thread_safety()
 {
     this->teardown_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
 bool ft_thread::is_thread_safe_enabled() const
 {
-    bool enabled;
-
-    enabled = (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (enabled);
+    return (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr);
 }
 
 int ft_thread::lock(bool *lock_acquired) const
@@ -254,7 +249,7 @@ int ft_thread::lock_internal(bool *lock_acquired) const
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || this->_state_mutex == ft_nullptr)
         return (FT_ERR_SUCCESSS);
-    int mutex_error = pt_mutex_lock_with_error(*this->_state_mutex);
+    int mutex_error = this->_state_mutex->lock();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         if (mutex_error == FT_ERR_MUTEX_ALREADY_LOCKED)
@@ -277,13 +272,18 @@ void ft_thread::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
         return ;
-    pt_mutex_unlock_with_error(*this->_state_mutex);
+    this->_state_mutex->unlock();
     return ;
 }
 
 void ft_thread::teardown_thread_safety()
 {
-    pt_mutex_destroy(&this->_state_mutex);
+    if (this->_state_mutex != ft_nullptr)
+    {
+        this->_state_mutex->destroy();
+        delete this->_state_mutex;
+        this->_state_mutex = ft_nullptr;
+    }
     this->_thread_safe_enabled = false;
     return ;
 }

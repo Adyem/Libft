@@ -1,8 +1,7 @@
 #include "xml_dom_bridge.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
-#include "../Libft/libft.hpp"
-#include "../Errno/errno_internal.hpp"
+#include "../Basic/basic.hpp"
 #include <new>
 
 static int xml_dom_report_error(int error_code) noexcept

@@ -1,7 +1,7 @@
 #include "../../Game/game_scripting_bridge.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
-#include "../../Libft/libft.hpp"
+#include "../../Basic/basic.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../Template/shared_ptr.hpp"
 
@@ -18,11 +18,11 @@ static int game_script_adjust_score(ft_game_script_context &context, const ft_ve
     score_value = context.get_variable("score");
     if (score_value == ft_nullptr)
         return (context.get_error());
-    base_score = ft_atoi(score_value->c_str());
+    base_score = ft_atoi(score_value->c_str(), ft_nullptr);
     if (context.get_error() != FT_ERR_SUCCESSS)
         return (context.get_error());
     if (arguments.size() > 0)
-        delta = ft_atoi(arguments[0].c_str());
+        delta = ft_atoi(arguments[0].c_str(), ft_nullptr);
     else
         delta = 0;
     updated_score = ft_to_string(static_cast<long>(base_score + delta));

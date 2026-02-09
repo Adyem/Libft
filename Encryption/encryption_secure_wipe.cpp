@@ -2,7 +2,7 @@
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
-#include "../Libft/libft.hpp"
+#include "../Basic/basic.hpp"
 
 static int encryption_secure_wipe_report(int error_code, int return_value)
 {

@@ -56,7 +56,6 @@ class ft_render_window
     private:
 
         pt_recursive_mutex           *_mutex = ft_nullptr;
-        mutable bool                 _thread_safe_enabled = false;
 
         ft_render_framebuffer        _framebuffer;
         bool                         _is_initialized;

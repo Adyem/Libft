@@ -1,5 +1,5 @@
 #include "math.hpp"
-#include "../Libft/limits.hpp"
+#include "../Basic/basic_limits.hpp"
 
 int math_abs(int number)
 {

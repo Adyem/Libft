@@ -85,17 +85,17 @@ static inline ft_recursive_mutex_pair_lock_order ft_recursive_mutex_lock_pair(
 
     if (first_address == second_address)
     {
-        first_mutex.lock(THREAD_ID);
+        first_mutex.lock();
         return (ft_recursive_mutex_pair_lock_order::same_mutex);
     }
     if (first_address < second_address)
     {
-        first_mutex.lock(THREAD_ID);
-        second_mutex.lock(THREAD_ID);
+        first_mutex.lock();
+        second_mutex.lock();
         return (ft_recursive_mutex_pair_lock_order::first_then_second);
     }
-    second_mutex.lock(THREAD_ID);
-    first_mutex.lock(THREAD_ID);
+    second_mutex.lock();
+    first_mutex.lock();
     return (ft_recursive_mutex_pair_lock_order::second_then_first);
 }
 
@@ -104,17 +104,17 @@ static inline void ft_recursive_mutex_unlock_pair(pt_recursive_mutex &first_mute
 {
     if (order == ft_recursive_mutex_pair_lock_order::same_mutex)
     {
-        first_mutex.unlock(THREAD_ID);
+        first_mutex.unlock();
         return ;
     }
     if (order == ft_recursive_mutex_pair_lock_order::first_then_second)
     {
-        second_mutex.unlock(THREAD_ID);
-        first_mutex.unlock(THREAD_ID);
+        second_mutex.unlock();
+        first_mutex.unlock();
         return ;
     }
-    first_mutex.unlock(THREAD_ID);
-    second_mutex.unlock(THREAD_ID);
+    first_mutex.unlock();
+    second_mutex.unlock();
     return ;
 }
 

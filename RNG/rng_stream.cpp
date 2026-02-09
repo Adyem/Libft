@@ -27,7 +27,7 @@ int rng_stream::lock_internal(bool *lock_acquired) const
 
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    mutex_result = this->_mutex.lock(THREAD_ID);
+    mutex_result = this->_mutex.lock();
     global_error = ft_global_error_stack_drop_last_error();
     operation_error = global_error;
     if (global_error == FT_ERR_SUCCESSS)
@@ -47,7 +47,7 @@ int rng_stream::unlock_internal(bool lock_acquired) const
 
     if (!lock_acquired)
         return (FT_ERR_SUCCESSS);
-    mutex_result = this->_mutex.unlock(THREAD_ID);
+    mutex_result = this->_mutex.unlock();
     global_error = ft_global_error_stack_drop_last_error();
     operation_error = global_error;
     if (global_error == FT_ERR_SUCCESSS)

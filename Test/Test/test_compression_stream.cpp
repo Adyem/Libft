@@ -1,7 +1,7 @@
 #include "../../Compression/compression.hpp"
 #include "../../Compression/compression_stream_test_hooks.hpp"
 #include "../../CMA/CMA.hpp"
-#include "../../Libft/libft.hpp"
+#include "../../Basic/basic.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/system_utils.hpp"

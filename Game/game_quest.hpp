@@ -6,7 +6,6 @@
 #include "game_item.hpp"
 #include "../Template/shared_ptr.hpp"
 #include "../Errno/errno.hpp"
-#include "../Errno/errno_internal.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
 

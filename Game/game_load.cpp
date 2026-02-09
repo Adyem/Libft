@@ -3,7 +3,7 @@
 #include "game_item.hpp"
 #include "game_quest.hpp"
 #include "../JSon/json.hpp"
-#include "../Libft/libft.hpp"
+#include "../Basic/basic.hpp"
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_string.hpp"
 #include "../Template/shared_ptr.hpp"
@@ -21,7 +21,7 @@ static int parse_item_field(json_group *group, const ft_string &key, int &out_va
         ft_errno = FT_ERR_GAME_GENERAL_ERROR;
         return (FT_ERR_GAME_GENERAL_ERROR);
     }
-    out_value = ft_atoi(json_item_ptr->value);
+    out_value = ft_atoi(json_item_ptr->value, ft_nullptr);
     ft_errno = FT_ERR_SUCCESSS;
     return (FT_ERR_SUCCESSS);
 }
@@ -106,28 +106,28 @@ int deserialize_inventory(ft_inventory &inventory, json_group *group)
         ft_errno = FT_ERR_GAME_GENERAL_ERROR;
         return (FT_ERR_GAME_GENERAL_ERROR);
     }
-    inventory.resize(ft_atoi(capacity_item->value));
+    inventory.resize(ft_atoi(capacity_item->value, ft_nullptr));
     json_item *weight_item = json_find_item(group, "weight_limit");
     if (!weight_item)
     {
         ft_errno = FT_ERR_GAME_GENERAL_ERROR;
         return (FT_ERR_GAME_GENERAL_ERROR);
     }
-    inventory.set_weight_limit(ft_atoi(weight_item->value));
+    inventory.set_weight_limit(ft_atoi(weight_item->value, ft_nullptr));
     json_item *cur_weight_item = json_find_item(group, "current_weight");
     if (!cur_weight_item)
     {
         ft_errno = FT_ERR_GAME_GENERAL_ERROR;
         return (FT_ERR_GAME_GENERAL_ERROR);
     }
-    int serialized_weight = ft_atoi(cur_weight_item->value);
+    int serialized_weight = ft_atoi(cur_weight_item->value, ft_nullptr);
     json_item *used_slots_item = json_find_item(group, "used_slots");
     if (!used_slots_item)
     {
         ft_errno = FT_ERR_GAME_GENERAL_ERROR;
         return (FT_ERR_GAME_GENERAL_ERROR);
     }
-    int serialized_slots = ft_atoi(used_slots_item->value);
+    int serialized_slots = ft_atoi(used_slots_item->value, ft_nullptr);
     inventory.set_current_weight(0);
     inventory.set_used_slots(0);
     inventory.get_items().clear();
@@ -137,7 +137,7 @@ int deserialize_inventory(ft_inventory &inventory, json_group *group)
         ft_errno = FT_ERR_GAME_GENERAL_ERROR;
         return (FT_ERR_GAME_GENERAL_ERROR);
     }
-    int item_count = ft_atoi(count_item->value);
+    int item_count = ft_atoi(count_item->value, ft_nullptr);
     int item_index = 0;
     int loop_error = FT_ERR_SUCCESSS;
     while (item_index < item_count)
@@ -184,7 +184,7 @@ int deserialize_inventory(ft_inventory &inventory, json_group *group)
 int deserialize_equipment(ft_character &character, json_group *group)
 {
     json_item *present = json_find_item(group, "head_present");
-    if (present && ft_atoi(present->value) == 1)
+    if (present && ft_atoi(present->value, ft_nullptr) == 1)
     {
         ft_item item_temp;
         if (build_item_from_group(item_temp, group, "head") != FT_ERR_SUCCESSS)
@@ -196,7 +196,7 @@ int deserialize_equipment(ft_character &character, json_group *group)
     else
         character.unequip_item(EQUIP_HEAD);
     present = json_find_item(group, "chest_present");
-    if (present && ft_atoi(present->value) == 1)
+    if (present && ft_atoi(present->value, ft_nullptr) == 1)
     {
         ft_item item_temp;
         if (build_item_from_group(item_temp, group, "chest") != FT_ERR_SUCCESSS)
@@ -208,7 +208,7 @@ int deserialize_equipment(ft_character &character, json_group *group)
     else
         character.unequip_item(EQUIP_CHEST);
     present = json_find_item(group, "weapon_present");
-    if (present && ft_atoi(present->value) == 1)
+    if (present && ft_atoi(present->value, ft_nullptr) == 1)
     {
         ft_item item_temp;
         if (build_item_from_group(item_temp, group, "weapon") != FT_ERR_SUCCESSS)
@@ -227,13 +227,13 @@ int deserialize_quest(ft_quest &quest, json_group *group)
 {
     json_item *item = json_find_item(group, "id");
     if (item)
-        quest.set_id(ft_atoi(item->value));
+        quest.set_id(ft_atoi(item->value, ft_nullptr));
     item = json_find_item(group, "phases");
     if (item)
-        quest.set_phases(ft_atoi(item->value));
+        quest.set_phases(ft_atoi(item->value, ft_nullptr));
     item = json_find_item(group, "current_phase");
     if (item)
-        quest.set_current_phase(ft_atoi(item->value));
+        quest.set_current_phase(ft_atoi(item->value, ft_nullptr));
     item = json_find_item(group, "description");
     if (item)
     {
@@ -248,11 +248,11 @@ int deserialize_quest(ft_quest &quest, json_group *group)
     }
     item = json_find_item(group, "reward_experience");
     if (item)
-        quest.set_reward_experience(ft_atoi(item->value));
+        quest.set_reward_experience(ft_atoi(item->value, ft_nullptr));
     json_item *count_item = json_find_item(group, "reward_item_count");
     if (count_item)
     {
-        int reward_count = ft_atoi(count_item->value);
+        int reward_count = ft_atoi(count_item->value, ft_nullptr);
         int reward_index = 0;
         quest.get_reward_items().clear();
         while (reward_index < reward_count)

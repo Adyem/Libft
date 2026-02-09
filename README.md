@@ -90,10 +90,10 @@ Every module that allocates through this layer inherits the same mechanisms for 
   JSon/ lets callers define schemas and reuse typed accessors while leaving format details to the shared utilities.
   The module exists because the project routinely exchanges structured data and needs a single trusted implementation.
 
-- `Libft/`: Provides the classic set of string, memory, and utility helpers inspired by the original Libft curriculum but expanded for modern C++.
+- `Basic/`: Provides the classic set of string, memory, and utility helpers inspired by the original Libft curriculum but expanded for modern C++.
   It includes normalized naming, allocator hooks, and consistent error reporting so every module can rely on the same baseline.
   Core helpers such as string duplication, memory comparison, and list splitting live here and underpin the rest of the codebase.
-  Libft/ exists to anchor the project with a collection of well-known helpers that maintainers already understand and trust.
+  Basic/ exists to anchor the project with a collection of well-known helpers that maintainers already understand and trust.
 
 - `Logger/`: Implements logging sinks, formatting helpers, and routing logic so runtime events can be emitted in a consistent, configurable manner.
   It supports multiple log levels, structured contexts, and the ability to redirect output to files or other sinks.

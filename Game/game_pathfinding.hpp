@@ -65,7 +65,7 @@ inline int ft_path_step_test_helper::lock(ft_path_step &step) noexcept
 {
     int result;
 
-    result = step._mutex.lock(THREAD_ID);
+    result = step._mutex.lock();
     if (step._mutex.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = step._mutex.get_error();
@@ -79,7 +79,7 @@ inline int ft_path_step_test_helper::unlock(ft_path_step &step) noexcept
 {
     int result;
 
-    result = step._mutex.unlock(THREAD_ID);
+    result = step._mutex.unlock();
     if (step._mutex.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = step._mutex.get_error();

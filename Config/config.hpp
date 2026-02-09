@@ -24,7 +24,6 @@ struct cnfg_config
 cnfg_config   *cnfg_config_create();
 int         cnfg_config_prepare_thread_safety(cnfg_config *config);
 void        cnfg_config_teardown_thread_safety(cnfg_config *config);
-
 cnfg_config   *cnfg_parse(const char *filename);
 void        cnfg_free(cnfg_config *config);
 cnfg_config   *config_load_env();

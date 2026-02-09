@@ -3,7 +3,6 @@
 
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
-#include "../Errno/errno_internal.hpp"
 
 template <typename GuardType>
 class pt_errno_guard

@@ -3,8 +3,8 @@
 #include <string.h>
 #include <unistd.h>
 #include "../Printf/printf.hpp"
-#include "../Libft/limits.hpp"
-#include "../Libft/libft.hpp"
+#include "../Basic/basic_limits.hpp"
+#include "../Basic/basic.hpp"
 #include "../Errno/errno.hpp"
 #include "readline_internal.hpp"
 

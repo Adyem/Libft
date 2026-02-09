@@ -10,8 +10,6 @@
 #include <limits>
 
 static bool g_force_file_stream_allocation_failure = false;
-static int g_force_fread_failure_enabled = 0;
-static int g_force_fread_failure_error = FT_ERR_SUCCESSS;
 
 int su_file_prepare_thread_safety(su_file *stream)
 {
@@ -45,82 +43,6 @@ void su_file_teardown_thread_safety(su_file *stream)
         return ;
     }
     pt_mutex_destroy(&stream->mutex);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return ;
-}
-
-int su_file_lock(su_file *stream, bool *lock_acquired)
-{
-    if (lock_acquired != ft_nullptr)
-        *lock_acquired = false;
-    if (stream == ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
-        return (-1);
-    }
-    if (stream->mutex == ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-        return (0);
-    }
-    int mutex_error = pt_mutex_lock_with_error(*stream->mutex);
-    ft_global_error_stack_drop_last_error();
-    if (mutex_error != FT_ERR_SUCCESSS)
-    {
-        ft_global_error_stack_push(mutex_error);
-        return (-1);
-    }
-    if (lock_acquired != ft_nullptr)
-        *lock_acquired = true;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (0);
-}
-
-void su_file_unlock(su_file *stream, bool lock_acquired)
-{
-    if (stream == ft_nullptr || lock_acquired == false)
-    {
-        if (stream == ft_nullptr)
-            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
-        else
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
-        return ;
-    }
-    if (stream->mutex == ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-        return ;
-    }
-    int mutex_error = pt_mutex_unlock_with_error(*stream->mutex);
-    ft_global_error_stack_drop_last_error();
-    if (mutex_error != FT_ERR_SUCCESSS)
-    {
-        ft_global_error_stack_push(mutex_error);
-        return ;
-    }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return ;
-}
-
-void su_force_fread_failure(int error_code)
-{
-    if (error_code == FT_ERR_SUCCESSS)
-    {
-        g_force_fread_failure_enabled = 0;
-        g_force_fread_failure_error = FT_ERR_SUCCESSS;
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-        return ;
-    }
-    g_force_fread_failure_enabled = 1;
-    g_force_fread_failure_error = error_code;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return ;
-}
-
-void su_clear_forced_fread_failure(void)
-{
-    g_force_fread_failure_enabled = 0;
-    g_force_fread_failure_error = FT_ERR_SUCCESSS;
     ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
@@ -244,22 +166,12 @@ su_file *su_fopen(const char *path_name, int flags, mode_t mode)
 
     if (path_name == ft_nullptr)
     {
-        error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_global_error_stack_push(error_code);
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     file_descriptor = su_open(path_name, flags, mode);
     error_code = ft_global_error_stack_drop_last_error();
     stream = create_file_stream(file_descriptor, &error_code);
-    if (stream == ft_nullptr)
-    {
-        if (error_code == FT_ERR_SUCCESSS)
-            error_code = FT_ERR_INTERNAL;
-        ft_global_error_stack_push(error_code);
-        return (ft_nullptr);
-    }
-    error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(error_code);
     return (stream);
 }
 
@@ -268,7 +180,6 @@ int su_fclose(su_file *stream)
     int result;
     bool lock_acquired;
     int error_code;
-    int lock_error;
 
     if (stream == ft_nullptr)
     {
@@ -277,21 +188,26 @@ int su_fclose(su_file *stream)
         return (-1);
     }
     lock_acquired = false;
-    if (su_file_lock(stream, &lock_acquired) != 0)
+    if (stream->mutex != ft_nullptr)
     {
-        lock_error = ft_global_error_stack_drop_last_error();
-        if (lock_error == FT_ERR_SUCCESSS)
-            lock_error = FT_ERR_SYS_MUTEX_LOCK_FAILED;
-        ft_global_error_stack_push(lock_error);
-        return (-1);
+        stream->mutex->lock(THREAD_ID);
+        int lock_error = ft_global_error_stack_drop_last_error();
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            ft_global_error_stack_push(lock_error);
+            return (-1);
+        }
+        lock_acquired = true;
     }
-    ft_global_error_stack_drop_last_error();
     stream->closed = true;
     result = cmp_close(stream->_descriptor);
     if (result == 0)
     {
-        su_file_unlock(stream, lock_acquired);
-        ft_global_error_stack_drop_last_error();
+        if (lock_acquired)
+        {
+            stream->mutex->unlock(THREAD_ID);
+            ft_global_error_stack_drop_last_error();
+        }
         su_file_teardown_thread_safety(stream);
         ft_global_error_stack_drop_last_error();
         std::free(stream);
@@ -299,8 +215,11 @@ int su_fclose(su_file *stream)
         return (0);
     }
     stream->closed = false;
-    su_file_unlock(stream, lock_acquired);
-    ft_global_error_stack_drop_last_error();
+    if (lock_acquired)
+    {
+        stream->mutex->unlock(THREAD_ID);
+        ft_global_error_stack_drop_last_error();
+    }
     error_code = FT_ERR_IO;
     if (errno != 0)
         error_code = ft_map_system_error(errno);
@@ -319,12 +238,10 @@ size_t su_fread(void *buffer, size_t size, size_t count, su_file *stream)
     size_t maximum_size;
     bool lock_acquired;
     int error_code;
-    int lock_error;
 
     if (buffer == ft_nullptr || stream == ft_nullptr)
     {
-        error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_global_error_stack_push(error_code);
+        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
     if (size == 0 || count == 0)
@@ -333,43 +250,34 @@ size_t su_fread(void *buffer, size_t size, size_t count, su_file *stream)
         return (0);
     }
     lock_acquired = false;
-    if (su_file_lock(stream, &lock_acquired) != 0)
+    if (stream->mutex != ft_nullptr)
     {
-        lock_error = ft_global_error_stack_drop_last_error();
-        if (lock_error == FT_ERR_SUCCESSS)
-            lock_error = FT_ERR_SYS_MUTEX_LOCK_FAILED;
-        ft_global_error_stack_push(lock_error);
-        return (0);
+        int lock_error = stream->mutex->lock(THREAD_ID);
+        if (lock_error != FT_ERR_SUCCESSS)
+            return (0);
+        ft_global_error_stack_drop_last_error();
+        lock_acquired = true;
     }
-    ft_global_error_stack_drop_last_error();
     if (stream->closed == true)
     {
         error_code = FT_ERR_INVALID_OPERATION;
-        su_file_unlock(stream, lock_acquired);
-        ft_global_error_stack_drop_last_error();
+        if (lock_acquired)
+        {
+            stream->mutex->unlock(THREAD_ID);
+            ft_global_error_stack_drop_last_error();
+        }
         ft_global_error_stack_push(error_code);
-        return (0);
-    }
-    if (g_force_fread_failure_enabled != 0)
-    {
-        int forced_error;
-
-        forced_error = g_force_fread_failure_error;
-        g_force_fread_failure_enabled = 0;
-        g_force_fread_failure_error = FT_ERR_SUCCESSS;
-        if (forced_error == FT_ERR_SUCCESSS)
-            forced_error = FT_ERR_IO;
-        su_file_unlock(stream, lock_acquired);
-        ft_global_error_stack_drop_last_error();
-        ft_global_error_stack_push(forced_error);
         return (0);
     }
     maximum_size = std::numeric_limits<size_t>::max();
     if (count > maximum_size / size)
     {
         error_code = FT_ERR_OUT_OF_RANGE;
-        su_file_unlock(stream, lock_acquired);
-        ft_global_error_stack_drop_last_error();
+        if (lock_acquired)
+        {
+            stream->mutex->unlock(THREAD_ID);
+            ft_global_error_stack_drop_last_error();
+        }
         ft_global_error_stack_push(error_code);
         return (0);
     }
@@ -390,8 +298,11 @@ size_t su_fread(void *buffer, size_t size, size_t count, su_file *stream)
         error_code = FT_ERR_SUCCESSS;
     else if (bytes_read < 0 && error_code == FT_ERR_SUCCESSS)
         error_code = FT_ERR_IO;
-    su_file_unlock(stream, lock_acquired);
-    ft_global_error_stack_drop_last_error();
+    if (lock_acquired)
+    {
+        stream->mutex->unlock(THREAD_ID);
+        ft_global_error_stack_drop_last_error();
+    }
     ft_global_error_stack_push(error_code);
     return (total_read / size);
 }

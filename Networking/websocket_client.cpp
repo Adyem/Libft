@@ -6,7 +6,7 @@
 #include "../RNG/rng.hpp"
 #include "../Encryption/basic_encryption.hpp"
 #include "../Encryption/encryption_sha1.hpp"
-#include "../Libft/libft.hpp"
+#include "../Basic/basic.hpp"
 #include "../Errno/errno.hpp"
 #include <cstring>
 #include <cstdio>

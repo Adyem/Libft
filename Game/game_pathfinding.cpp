@@ -1,9 +1,8 @@
 #include "game_pathfinding.hpp"
 #include <utility>
 #include "../Template/move.hpp"
-#include "../Libft/libft.hpp"
+#include "../Basic/basic.hpp"
 #include "../PThread/pthread.hpp"
-#include "../Errno/errno_internal.hpp"
 
 static size_t distance_component(size_t a, size_t b)
 {

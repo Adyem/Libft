@@ -2,69 +2,60 @@
 #include "mutex.hpp"
 #include "pthread_internal.hpp"
 #include "../Errno/errno.hpp"
-#include "../Libft/libft.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../Basic/basic.hpp"
 #include "pthread_lock_tracking.hpp"
+#include <system_error>
+#include "../CPP_class/class_nullptr.hpp"
 
 pt_mutex::pt_mutex()
-    : _owner(0), _lock(false), _native_initialized(false),
+    : _owner(0), _lock(false), _native_mutex(ft_nullptr), _native_initialized(false),
     _state_mutex(ft_nullptr), _valid_state(false)
 {
-    ft_bzero(&this->_native_mutex, sizeof(pthread_mutex_t));
-    if (pthread_mutex_init(&this->_native_mutex, ft_nullptr) != 0)
-    {
-        this->_native_initialized = false;
-        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
-        return ;
-    }
-    this->_native_initialized = true;
-    this->_valid_state.store(true, std::memory_order_release);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
 pt_mutex::~pt_mutex()
 {
-    this->_valid_state.store(false, std::memory_order_release);
-    if (this->_native_initialized)
-    {
-        pthread_mutex_destroy(&this->_native_mutex);
-        this->_native_initialized = false;
-    }
+    this->destroy();
     this->teardown_thread_safety();
     return ;
 }
 
-bool pt_mutex::ensure_native_mutex() const
+int pt_mutex::ensure_native_mutex() const
 {
-    bool lock_acquired;
-    bool initialized;
-    int lock_error;
+    if (this->_native_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    return (const_cast<pt_mutex *>(this)->initialize());
+}
 
-    lock_acquired = false;
-    lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
-        return (false);
-    initialized = this->_native_initialized;
-    if (initialized)
-    {
-        this->unlock_internal(lock_acquired);
-        return (true);
-    }
-    if (pthread_mutex_init(&this->_native_mutex, ft_nullptr) != 0)
+int pt_mutex::initialize()
+{
+    if (this->_native_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    this->_native_mutex = new (std::nothrow) std::mutex();
+    if (this->_native_mutex == ft_nullptr)
     {
         this->_native_initialized = false;
         this->_valid_state.store(false, std::memory_order_release);
-        this->unlock_internal(lock_acquired);
-        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
-        return (false);
+        return (FT_ERR_NO_MEMORY);
     }
     this->_native_initialized = true;
     this->_valid_state.store(true, std::memory_order_release);
-    this->unlock_internal(lock_acquired);
-    return (true);
+    return (FT_ERR_SUCCESSS);
 }
 
+int pt_mutex::destroy()
+{
+    if (this->_native_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESSS);
+    delete this->_native_mutex;
+    this->_native_mutex = ft_nullptr;
+    this->_native_initialized = false;
+    this->_valid_state.store(false, std::memory_order_release);
+    this->_lock.store(false, std::memory_order_release);
+    this->_owner.store(0, std::memory_order_release);
+    return (FT_ERR_SUCCESSS);
+}
 bool pt_mutex::lockState() const
 {
     return (this->_lock.load(std::memory_order_acquire));
@@ -76,30 +67,22 @@ int pt_mutex::lock_internal(bool *lock_acquired) const
         *lock_acquired = false;
     if (this->_state_mutex == ft_nullptr)
         return (FT_ERR_SUCCESSS);
-    int state_error = pt_mutex_lock_with_error(*this->_state_mutex);
-    if (state_error != FT_ERR_SUCCESSS)
+    int state_result = this->_state_mutex->lock_state(lock_acquired);
+    if (state_result == 0)
     {
-        if (state_error == FT_ERR_MUTEX_ALREADY_LOCKED)
-        {
-            bool state_lock_acquired;
-
-            state_lock_acquired = false;
-            if (this->_state_mutex->lock_state(&state_lock_acquired) == 0)
-                this->_state_mutex->unlock_state(state_lock_acquired);
-            return (FT_ERR_SUCCESSS);
-        }
-        return (state_error);
+        if (lock_acquired != ft_nullptr)
+            *lock_acquired = true;
+        return (FT_ERR_SUCCESSS);
     }
-    if (lock_acquired != ft_nullptr)
-        *lock_acquired = true;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_INVALID_STATE);
 }
 
 int pt_mutex::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
         return (FT_ERR_SUCCESSS);
-    return (pt_mutex_unlock_with_error(*this->_state_mutex));
+    this->_state_mutex->unlock_state(lock_acquired);
+    return (FT_ERR_SUCCESSS);
 }
 
 void pt_mutex::teardown_thread_safety()
@@ -110,34 +93,20 @@ void pt_mutex::teardown_thread_safety()
 
 int pt_mutex::lock_state(bool *lock_acquired) const
 {
-    int result;
-    int lock_error;
+    int lock_error = this->lock_internal(lock_acquired);
 
-    lock_error = this->lock_internal(lock_acquired);
     if (lock_error == FT_ERR_SUCCESSS)
-        result = 0;
-    else
-        result = -1;
-    if (lock_error != FT_ERR_SUCCESSS)
-        ft_global_error_stack_push(lock_error);
-    else
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (result);
+        return (0);
+    return (-1);
 }
 
 void pt_mutex::unlock_state(bool lock_acquired) const
 {
-    int unlock_error;
-
-    unlock_error = this->unlock_internal(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESSS)
-        ft_global_error_stack_push(unlock_error);
-    else
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
-bool pt_mutex::is_owned_by_thread(pthread_t thread_id) const
+bool pt_mutex::is_owned_by_thread(pt_thread_id_type thread_id) const
 {
     pthread_t owner_thread;
     pt_mutex_vector owned_mutexes;
@@ -158,26 +127,21 @@ bool pt_mutex::is_owned_by_thread(pthread_t thread_id) const
         matches_owner = (pt_thread_equal(owner_thread, thread_id) != 0);
         return (matches_owner);
     }
-    owned_mutexes = pt_lock_tracking::get_owned_mutexes(thread_id);
-    tracking_error = ft_global_error_stack_drop_last_error();
+    tracking_error = FT_ERR_SUCCESSS;
+    owned_mutexes = pt_lock_tracking::get_owned_mutexes(thread_id, &tracking_error);
     if (tracking_error != FT_ERR_SUCCESSS)
         return (false);
+    const void *mutex_handle = static_cast<const void *>(this->_native_mutex);
     index = 0;
-    while (index < owned_mutexes.size())
+    while (index < owned_mutexes.size)
     {
-        if (owned_mutexes[index] == &this->_native_mutex)
+        if (owned_mutexes.data[index] == mutex_handle)
         {
+            pt_buffer_destroy(owned_mutexes);
             return (true);
         }
         index += 1;
     }
+    pt_buffer_destroy(owned_mutexes);
     return (false);
-}
-
-pthread_mutex_t   *pt_mutex::get_native_mutex() const
-{
-    if (!this->ensure_native_mutex())
-        return (ft_nullptr);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (&this->_native_mutex);
 }

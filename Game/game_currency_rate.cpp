@@ -1,5 +1,4 @@
 #include "ft_currency_rate.hpp"
-#include "../Errno/errno_internal.hpp"
 #include "../Template/move.hpp"
 
 thread_local ft_operation_error_stack ft_currency_rate::_operation_errors = {{}, {}, 0};

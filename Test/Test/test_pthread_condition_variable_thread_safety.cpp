@@ -3,7 +3,7 @@
 #include "../../PThread/pthread.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
-#include "../../Libft/libft.hpp"
+#include "../../Basic/basic.hpp"
 #include <atomic>
 #include <chrono>
 #include <thread>
@@ -109,7 +109,7 @@ FT_TEST(test_pt_condition_variable_wait_for_times_out_with_thread_safety,
         wait_duration.tv_nsec = 2000000;
         int lock_result;
 
-        lock_result = mutex_object.lock(THREAD_ID);
+        lock_result = mutex_object.lock();
         if (lock_result != FT_SUCCESS)
         {
             wait_result.store(-1);
@@ -123,7 +123,7 @@ FT_TEST(test_pt_condition_variable_wait_for_times_out_with_thread_safety,
         wait_result.store(wait_call_result);
         int unlock_result;
 
-        unlock_result = mutex_object.unlock(THREAD_ID);
+        unlock_result = mutex_object.unlock();
         if (unlock_result != FT_SUCCESS)
         {
             wait_result.store(-2);

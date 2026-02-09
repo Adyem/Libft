@@ -1,6 +1,5 @@
 #include "game_dialogue_table.hpp"
 #include "../Errno/errno.hpp"
-#include "../Errno/errno_internal.hpp"
 
 thread_local ft_operation_error_stack ft_dialogue_table::_operation_errors = {{}, {}, 0};
 

@@ -11,7 +11,7 @@
 #include "ft_vendor_profile.hpp"
 #include "game_upgrade.hpp"
 #include "../JSon/json.hpp"
-#include "../Libft/libft.hpp"
+#include "../Basic/basic.hpp"
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_string.hpp"
 #include "../Template/vector.hpp"

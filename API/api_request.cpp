@@ -6,7 +6,7 @@
 #include "../CPP_class/class_string.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
-#include "../Libft/libft.hpp"
+#include "../Basic/basic.hpp"
 #include "../Logger/logger.hpp"
 #include "../Printf/printf.hpp"
 #include "../Time/time.hpp"
@@ -1392,7 +1392,7 @@ static bool parse_url(const char *url, bool &tls, ft_string &host,
             }
             walker++;
         }
-        port = static_cast<uint16_t>(ft_atoi(colon + 1));
+        port = static_cast<uint16_t>(ft_atoi(colon + 1, ft_nullptr));
     }
     else
     {

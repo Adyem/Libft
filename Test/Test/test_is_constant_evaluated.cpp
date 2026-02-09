@@ -1,4 +1,4 @@
-#include "../../Libft/libft.hpp"
+#include "../../Basic/basic.hpp"
 #include "../../System_utils/test_runner.hpp"
 
 static constexpr bool g_compile_time_result = ft_is_constant_evaluated();

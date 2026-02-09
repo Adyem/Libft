@@ -1,7 +1,7 @@
 #ifndef GET_NEXT_LINE_H
 # define GET_NEXT_LINE_H
 
-#include "../Libft/libft.hpp"
+#include "../Basic/basic.hpp"
 #include "../Template/vector.hpp"
 #include <cstddef>
 

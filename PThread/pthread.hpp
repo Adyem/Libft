@@ -5,13 +5,10 @@
     #include <windows.h>
 
 #endif
-#include <pthread.h>
 #include "../CPP_class/class_nullptr.hpp"
 #include <atomic>
 #include <cstddef>
 #include "../Time/time.hpp"
-#include "../Template/move.hpp"
-#include "recursive_mutex.hpp"
 #ifdef _WIN32
     using pt_thread_id_type = DWORD;
     #define THREAD_ID GetCurrentThreadId()
@@ -38,7 +35,8 @@ int pt_thread_wake_one_uint32(std::atomic<uint32_t> *address);
 int pt_atomic_load(const std::atomic<int>& atomic_variable);
 void pt_atomic_store(std::atomic<int>& atomic_variable, int desired_value);
 int pt_atomic_fetch_add(std::atomic<int>& atomic_variable, int increment_value);
-bool pt_atomic_compare_exchange(std::atomic<int>& atomic_variable, int& expected_value, int desired_value);
+bool pt_atomic_compare_exchange(std::atomic<int>& atomic_variable, int& expected_value,
+        int desired_value);
 
 int pt_rwlock_init(pthread_rwlock_t *rwlock, const pthread_rwlockattr_t *attributes);
 int pt_rwlock_rdlock(pthread_rwlock_t *rwlock);
@@ -93,9 +91,6 @@ class ft_promise;
 
 template <>
 class ft_promise<void>;
-
-#include "../Template/promise.hpp"
-#include <utility>
 
 template <typename ValueType, typename Function>
 int pt_async(ft_promise<ValueType>& promise, Function function)

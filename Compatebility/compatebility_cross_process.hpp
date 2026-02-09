@@ -1,9 +1,7 @@
 #ifndef COMPATEBILITY_CROSS_PROCESS_HPP
 #define COMPATEBILITY_CROSS_PROCESS_HPP
 
-#include "compatebility_internal.hpp"
 #include "../CrossProcess/cross_process.hpp"
-#include "../Libft/libft.hpp"
 
 struct cmp_cross_process_mapping
 {

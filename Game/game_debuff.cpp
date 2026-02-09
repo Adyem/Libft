@@ -1,6 +1,6 @@
 #include "game_debuff.hpp"
 #include "../Errno/errno.hpp"
-#include "../Libft/libft.hpp"
+#include "../Basic/basic.hpp"
 #include "../Template/move.hpp"
 #include "../PThread/pthread.hpp"
 

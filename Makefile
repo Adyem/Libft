@@ -57,7 +57,8 @@ else
     RMDIR  = rm -rf
 endif
 
-SUBDIRS := Libft \
+SUBDIRS := Basic \
+           Advanced \
            Compatebility \
            Errno \
            CMA \
@@ -92,7 +93,8 @@ SUBDIRS := Libft \
            Game
 
 LIB_BASES := \
-  Libft/LibFT \
+  Basic/Basic \
+  Advanced/Advanced \
   Compatebility/Compatebility \
   Errno/errno \
   CMA/CustomMemoryAllocator \

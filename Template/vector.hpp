@@ -8,7 +8,6 @@
 #include <cstddef>
 #include <type_traits>
 #include "../PThread/recursive_mutex.hpp"
-#include "../PThread/pthread_internal.hpp"
 
 template <typename Type, typename = void>
 struct ft_is_complete
@@ -32,8 +31,6 @@ struct ft_vector_inline_storage<Type, InlineCapacity, true>
 {
     alignas(Type) unsigned char buffer[sizeof(Type) * InlineCapacity];
 };
-#include "move.hpp"
-
 template <typename ElementType>
 class ft_vector
 {
