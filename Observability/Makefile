@@ -1,3 +1,4 @@
+include ../compiler_flags.mk
 TARGET := Observability.a
 DEBUG_TARGET := Observability_debug.a
 

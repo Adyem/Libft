@@ -20,18 +20,6 @@ static constexpr long long  FT_LLONG_MAX  = static_cast<long long>(~0ULL >> 1);
 static constexpr long long  FT_LLONG_MIN  = -FT_LLONG_MAX - 1LL;
 static constexpr unsigned long long FT_ULLONG_MAX = ~0ULL;
 
-static constexpr unsigned long long ft_compute_system_size_max()
-{
-    unsigned long long current_value = 0ULL;
-    ft_size_t byte_index = 0;
-    while (byte_index < sizeof(ft_size_t))
-    {
-        current_value = (current_value << 8U) | 0xFFULL;
-        byte_index++;
-    }
-    return (current_value);
-}
-
-static constexpr unsigned long long FT_SYSTEM_SIZE_MAX = ft_compute_system_size_max();
+static constexpr ft_size_t FT_SYSTEM_SIZE_MAX = 18446744073709551615ULL;
 
 #endif

@@ -1,58 +1,34 @@
 #include "CMA.hpp"
 #include "cma_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
-#include "../Errno/errno.hpp"
 #include <cstdlib>
 
 int cma_checked_free(void* ptr)
 {
-    int error_code;
-
     if (OFFSWITCH == 1)
     {
         std::free(ptr);
-        error_code = FT_ERR_SUCCESSS;
-        ft_global_error_stack_push(error_code);
         return (0);
     }
     if (!ptr)
-    {
-        error_code = FT_ERR_SUCCESSS;
-        ft_global_error_stack_push(error_code);
         return (0);
-    }
     bool lock_acquired = false;
-    error_code = cma_lock_allocator(&lock_acquired);
+    int lock_error = cma_lock_allocator(&lock_acquired);
 
-    if (error_code != FT_ERR_SUCCESSS)
-    {
-        if (error_code == FT_ERR_SUCCESSS)
-            error_code = FT_ERR_INVALID_STATE;
-        ft_global_error_stack_push(error_code);
+    if (lock_error != FT_ERR_SUCCESSS)
         return (-1);
-    }
     Block* found = cma_find_block_for_pointer(ptr);
     if (!found)
     {
-        error_code = FT_ERR_INVALID_POINTER;
         if (lock_acquired)
-        {
             cma_unlock_allocator(lock_acquired);
-            lock_acquired = false;
-        }
-        ft_global_error_stack_push(error_code);
         return (-1);
     }
     cma_validate_block(found, "cma_checked_free", ptr);
     if (static_cast<void *>(cma_block_user_pointer(found)) != ptr)
     {
-        error_code = FT_ERR_INVALID_POINTER;
         if (lock_acquired)
-        {
             cma_unlock_allocator(lock_acquired);
-            lock_acquired = false;
-        }
-        ft_global_error_stack_push(error_code);
         return (-1);
     }
     ft_size_t freed_size = found->size;
@@ -68,11 +44,6 @@ int cma_checked_free(void* ptr)
         g_cma_current_bytes = 0;
     g_cma_free_count++;
     if (lock_acquired)
-    {
         cma_unlock_allocator(lock_acquired);
-        lock_acquired = false;
-    }
-    error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(error_code);
     return (0);
 }

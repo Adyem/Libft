@@ -419,7 +419,7 @@ void free_page_if_empty(Page *page)
     return ;
 }
 
-void cma_get_extended_stats(ft_size_t *allocation_count,
+int32_t cma_get_extended_stats(ft_size_t *allocation_count,
         ft_size_t *free_count,
         ft_size_t *current_bytes,
         ft_size_t *peak_bytes)
@@ -428,7 +428,7 @@ void cma_get_extended_stats(ft_size_t *allocation_count,
     int lock_error = cma_lock_allocator(&lock_acquired);
 
     if (lock_error != FT_ERR_SUCCESSS)
-        return ;
+        return (lock_error);
     if (allocation_count != ft_nullptr)
         *allocation_count = g_cma_allocation_count;
     if (free_count != ft_nullptr)
@@ -438,11 +438,11 @@ void cma_get_extended_stats(ft_size_t *allocation_count,
     if (peak_bytes != ft_nullptr)
         *peak_bytes = g_cma_peak_bytes;
     cma_unlock_allocator(lock_acquired);
-    return ;
+    return (FT_ERR_SUCCESSS);
 }
 
-void cma_get_stats(ft_size_t *allocation_count, ft_size_t *free_count)
+int32_t cma_get_stats(ft_size_t *allocation_count, ft_size_t *free_count)
 {
-    cma_get_extended_stats(allocation_count, free_count, ft_nullptr, ft_nullptr);
-    return ;
+    return (cma_get_extended_stats(allocation_count, free_count,
+            ft_nullptr, ft_nullptr));
 }

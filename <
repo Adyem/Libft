@@ -6,7 +6,7 @@
 #include "CMA.hpp"
 #include "cma_internal.hpp"
 #include "../Basic/basic.hpp"
-#include "../Basic/limits.hpp"
+#include "../Basic/basic_limits.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../System_utils/system_utils.hpp"
 
@@ -107,33 +107,61 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
     if (cma_backend_is_enabled())
     {
         if (!ptr || cma_backend_owns_pointer(ptr))
-            return (cma_backend_reallocate(ptr, new_size, ft_nullptr));
+        {
+            void *memory_pointer;
+
+            memory_pointer = cma_backend_reallocate(ptr, new_size, &error_code);
+            return (memory_pointer);
+        }
     }
     if (OFFSWITCH == 1)
     {
         void *result = std::realloc(ptr, static_cast<size_t>(new_size));
-
         if (!ptr && result)
+        {
             g_cma_allocation_count++;
+            error_code = FT_ERR_SUCCESSS;
+        }
         else if (ptr && new_size == 0)
+        {
             g_cma_free_count++;
+            error_code = FT_ERR_SUCCESSS;
+        }
+        else if (!result && new_size != 0)
+            error_code = FT_ERR_NO_MEMORY;
+        else
+            error_code = FT_ERR_SUCCESSS;
         return (result);
     }
     bool lock_acquired = false;
     int lock_error = cma_lock_allocator(&lock_acquired);
 
     if (lock_error != FT_ERR_SUCCESSS)
+    {
+        error_code = lock_error;
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_INVALID_STATE;
         return (ft_nullptr);
+    }
     if (!ptr)
     {
         if (lock_acquired)
+        {
             cma_unlock_allocator(lock_acquired);
-        return (cma_malloc(new_size));
+            lock_acquired = false;
+        }
+        void *memory_pointer;
+
+        memory_pointer = cma_malloc(new_size);
+        return (memory_pointer);
     }
     if (new_size == 0)
     {
         if (lock_acquired)
+        {
             cma_unlock_allocator(lock_acquired);
+            lock_acquired = false;
+        }
         cma_free(ptr);
         return (ft_nullptr);
     }
@@ -141,7 +169,10 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
     if (instrumented_size < new_size)
     {
         if (lock_acquired)
+        {
             cma_unlock_allocator(lock_acquired);
+            lock_acquired = false;
+        }
         return (ft_nullptr);
     }
     ft_size_t aligned_size = align16(instrumented_size);
@@ -149,7 +180,10 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
     if (!block)
     {
         if (lock_acquired)
+        {
             cma_unlock_allocator(lock_acquired);
+            lock_acquired = false;
+        }
         return (ft_nullptr);
     }
     cma_validate_block(block, "cma_realloc header", ptr);
@@ -164,17 +198,23 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
         g_cma_current_bytes += block->size;
         if (g_cma_current_bytes > g_cma_peak_bytes)
             g_cma_peak_bytes = g_cma_current_bytes;
-        void *user_pointer = cma_block_user_pointer(block);
+        void *user_pointer;
 
+        user_pointer = cma_block_user_pointer(block);
         if (lock_acquired)
+        {
             cma_unlock_allocator(lock_acquired);
+            lock_acquired = false;
+        }
         return (user_pointer);
     }
-    Block *old_block = block;
-    cma_validate_block(old_block, "cma_realloc copy source", ptr);
-    ft_size_t old_user_size = cma_block_user_size(old_block);
+    Block *old_block;
     ft_size_t copy_size;
 
+    old_block = block;
+    cma_validate_block(old_block, "cma_realloc copy source", ptr);
+    ft_size_t old_user_size;
+    old_user_size = cma_block_user_size(old_block);
     if (old_user_size < new_size)
         copy_size = old_user_size;
     else
@@ -183,12 +223,18 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
     if (!new_ptr)
     {
         if (lock_acquired)
+        {
             cma_unlock_allocator(lock_acquired);
+            lock_acquired = false;
+        }
         return (ft_nullptr);
     }
     ft_memcpy(new_ptr, ptr, static_cast<size_t>(copy_size));
     release_block_locked(old_block);
     if (lock_acquired)
+    {
         cma_unlock_allocator(lock_acquired);
+        lock_acquired = false;
+    }
     return (new_ptr);
 }

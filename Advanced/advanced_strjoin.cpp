@@ -1,76 +1,43 @@
-#include "../CMA/CMA.hpp"
-#include "../Basic/basic.hpp"
+#include <cstddef>
+#include "advanced.hpp"
 #include "../CPP_class/class_nullptr.hpp"
-#include "../Errno/errno.hpp"
+#include "../CMA/CMA.hpp"
 
-static char    *allocate_new_string(const char *string_1, const char *string_2,
-                int *error_code)
+static ft_size_t safe_strlen(const char *string)
 {
-    size_t  total_length;
-    char    *new_string;
-
-    total_length = 0;
-    if (string_1)
+    if (string == ft_nullptr)
+        return (0);
+    ft_size_t length = 0;
+    while (string[length] != '\0')
     {
-        size_t  string_1_length;
-
-        string_1_length = ft_strlen_size_t(string_1);
-        *error_code = ft_global_error_stack_drop_last_error();
-        if (string_1_length > SIZE_MAX - 1 - total_length)
-        {
-            *error_code = FT_ERR_OUT_OF_RANGE;
-            return (ft_nullptr);
-        }
-        total_length += string_1_length;
+        if (length >= FT_SYSTEM_SIZE_MAX)
+            return (FT_SYSTEM_SIZE_MAX);
+        length += 1;
     }
-    if (string_2)
-    {
-        size_t  string_2_length;
-
-        string_2_length = ft_strlen_size_t(string_2);
-        *error_code = ft_global_error_stack_drop_last_error();
-        if (string_2_length > SIZE_MAX - 1 - total_length)
-        {
-            *error_code = FT_ERR_OUT_OF_RANGE;
-            return (ft_nullptr);
-        }
-        total_length += string_2_length;
-    }
-    new_string = static_cast<char *>(cma_malloc(total_length + 1));
-    *error_code = ft_global_error_stack_drop_last_error();
-    if (!new_string)
-        return (ft_nullptr);
-    *error_code = FT_ERR_SUCCESSS;
-    return (new_string);
+    return (length);
 }
 
-char    *adv_strjoin(char const *string_1, char const *string_2)
+char *adv_strjoin(char const *string_1, char const *string_2)
 {
-    char    *result;
-    size_t  write_index;
-    int     error_code;
-
-    if (!string_1 && !string_2)
-    {
-        error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_global_error_stack_push(error_code);
+    if (string_1 == ft_nullptr && string_2 == ft_nullptr)
         return (ft_nullptr);
-    }
-    result = allocate_new_string(string_1, string_2, &error_code);
-    if (!result)
-    {
-        ft_global_error_stack_push(error_code);
+    ft_size_t len1 = safe_strlen(string_1);
+    ft_size_t len2 = safe_strlen(string_2);
+    if (len1 >= FT_SYSTEM_SIZE_MAX || len2 >= FT_SYSTEM_SIZE_MAX)
         return (ft_nullptr);
-    }
-    write_index = 0;
+    if (len1 + len2 >= FT_SYSTEM_SIZE_MAX)
+        return (ft_nullptr);
+    ft_size_t total_length = len1 + len2;
+    char *result = static_cast<char *>(cma_malloc(total_length + 1));
+    if (result == ft_nullptr)
+        return (ft_nullptr);
+    ft_size_t write_index = 0;
     if (string_1)
-        while (string_1[0])
-            result[write_index++] = *string_1++;
+        for (ft_size_t i = 0; i < len1; ++i)
+            result[write_index++] = string_1[i];
     if (string_2)
-        while (string_2[0])
-            result[write_index++] = *string_2++;
+        for (ft_size_t i = 0; i < len2; ++i)
+            result[write_index++] = string_2[i];
     result[write_index] = '\0';
-    error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(error_code);
     return (result);
 }

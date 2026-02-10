@@ -1,3 +1,4 @@
+include ../compiler_flags.mk
 TARGET         := XMLParser.a
 DEBUG_TARGET   := XMLParser_debug.a
 

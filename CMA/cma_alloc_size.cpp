@@ -7,72 +7,31 @@
 
 ft_size_t cma_block_size(const void *memory_pointer)
 {
-    ft_size_t block_size;
-    int error_code;
+    ft_size_t block_size = 0;
 
     if (memory_pointer == ft_nullptr)
-    {
-        error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_global_error_stack_push(error_code);
         return (0);
-    }
     if (cma_backend_is_enabled())
-    {
-        error_code = FT_ERR_INVALID_STATE;
-        ft_global_error_stack_push(error_code);
         return (0);
-    }
-    block_size = 0;
     if (cma_checked_block_size(memory_pointer, &block_size) != 0)
-    {
-        error_code = ft_global_error_stack_drop_last_error();
-        if (error_code == FT_ERR_SUCCESSS)
-            error_code = FT_ERR_INTERNAL;
-        ft_global_error_stack_push(error_code);
         return (0);
-    }
-    ft_global_error_stack_drop_last_error();
-    error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(error_code);
     return (block_size);
 }
 
 int cma_checked_block_size(const void *memory_pointer, ft_size_t *block_size)
 {
-    int error_code;
-    int result_code;
-
     if (block_size == ft_nullptr)
-    {
-        error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_global_error_stack_push(error_code);
         return (-1);
-    }
     *block_size = 0;
     if (memory_pointer == ft_nullptr)
-    {
-        error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_global_error_stack_push(error_code);
         return (-1);
-    }
     if (cma_backend_is_enabled() && cma_backend_owns_pointer(memory_pointer))
-    {
-        result_code = cma_backend_checked_block_size(memory_pointer, block_size);
-        error_code = ft_global_error_stack_drop_last_error();
-        if (result_code != 0 && error_code == FT_ERR_SUCCESSS)
-            error_code = FT_ERR_INTERNAL;
-        ft_global_error_stack_push(error_code);
-        return (result_code);
-    }
+        return (cma_backend_checked_block_size(memory_pointer, block_size));
     bool lock_acquired = false;
     int lock_error = cma_lock_allocator(&lock_acquired);
 
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        error_code = lock_error;
-        if (error_code == FT_ERR_SUCCESSS)
-            error_code = FT_ERR_INVALID_STATE;
-        ft_global_error_stack_push(error_code);
         if (lock_acquired)
             cma_unlock_allocator(lock_acquired);
         return (-1);
@@ -82,35 +41,19 @@ int cma_checked_block_size(const void *memory_pointer, ft_size_t *block_size)
         || block->magic != MAGIC_NUMBER_ALLOCATED
         || cma_block_is_free(block))
     {
-        error_code = FT_ERR_INVALID_POINTER;
         cma_unlock_allocator(lock_acquired);
-        lock_acquired = false;
-        ft_global_error_stack_push(error_code);
         return (-1);
     }
     *block_size = cma_block_user_size(block);
     cma_unlock_allocator(lock_acquired);
-    lock_acquired = false;
-    error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(error_code);
     return (0);
 }
 
 ft_size_t cma_alloc_size(const void *memory_pointer)
 {
     ft_size_t block_size = 0;
-    int error_code;
 
     if (cma_checked_block_size(memory_pointer, &block_size) != 0)
-    {
-        error_code = ft_global_error_stack_drop_last_error();
-        if (error_code == FT_ERR_SUCCESSS)
-            error_code = FT_ERR_INTERNAL;
-        ft_global_error_stack_push(error_code);
         return (0);
-    }
-    ft_global_error_stack_drop_last_error();
-    error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(error_code);
     return (block_size);
 }

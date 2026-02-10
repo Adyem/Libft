@@ -1,101 +1,60 @@
+#include "advanced.hpp"
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
-#include "../Errno/errno.hpp"
 
-static int    itoa_length(int number)
+static int itoa_length(int number)
 {
-    int        length;
-
-    length = 0;
+    int length = 0;
     if (number == 0)
         return (1);
-    while (number)
+    while (number != 0)
     {
         number /= 10;
-        length++;
+        length += 1;
     }
     return (length);
 }
 
-static char *fill_digits(char *characters, unsigned int number, int start_index)
+static char *fill_digits(char *characters, unsigned int value, int index)
 {
-    while (start_index >= 0)
+    while (index >= 0)
     {
-        characters[start_index] = static_cast<char>((number % 10) + '0');
-        number /= 10;
-        start_index--;
+        characters[index] = static_cast<char>(value % 10 + '0');
+        value /= 10;
+        index -= 1;
     }
     return (characters);
 }
 
-static char    *convert_int(int number, int is_negative, int *error_code)
+static char *convert_int(int number, int is_negative)
 {
-    int                length;
-    char            *result;
-    unsigned int    absolute_value;
-
-    length = itoa_length(number);
-    result = static_cast<char *>(cma_malloc(length + 1 + is_negative));
-    *error_code = ft_global_error_stack_drop_last_error();
-    if (!result)
+    int length = itoa_length(number);
+    char *result = static_cast<char *>(cma_malloc(static_cast<ft_size_t>(length + 1 + is_negative)));
+    if (result == ft_nullptr)
         return (ft_nullptr);
-    if (number < 0)
-        absolute_value = -number;
-    else
-        absolute_value = number;
+    unsigned int absolute_value = (number < 0) ? -static_cast<unsigned int>(number) : static_cast<unsigned int>(number);
     result[length + is_negative] = '\0';
     if (is_negative == 0)
-        result = fill_digits(result, absolute_value, length - 1);
+        fill_digits(result, absolute_value, length - 1);
     else
-        result = fill_digits(result, absolute_value, length);
-    if (is_negative == 1)
+    {
+        fill_digits(result, absolute_value, length);
         result[0] = '-';
+    }
     return (result);
 }
 
-char    *adv_itoa(int number)
+char *adv_itoa(int number)
 {
-    int    is_negative;
-    char    *result;
-    int     error_code;
-
-    if (number > 0)
-        is_negative = 0;
-    else if (number == -2147483648)
+    if (number == 0)
     {
-        result = cma_strdup("-2147483648");
-        error_code = ft_global_error_stack_drop_last_error();
-        if (!result)
-        {
-            ft_global_error_stack_push(error_code);
+        char *result = static_cast<char *>(cma_malloc(2));
+        if (result == ft_nullptr)
             return (ft_nullptr);
-        }
-        error_code = FT_ERR_SUCCESSS;
-        ft_global_error_stack_push(error_code);
+        result[0] = '0';
+        result[1] = '\0';
         return (result);
     }
-    else if (number == 0)
-    {
-        result = cma_strdup("0");
-        error_code = ft_global_error_stack_drop_last_error();
-        if (!result)
-        {
-            ft_global_error_stack_push(error_code);
-            return (ft_nullptr);
-        }
-        error_code = FT_ERR_SUCCESSS;
-        ft_global_error_stack_push(error_code);
-        return (result);
-    }
-    else
-        is_negative = 1;
-    result = convert_int(number, is_negative, &error_code);
-    if (!result)
-    {
-        ft_global_error_stack_push(error_code);
-        return (ft_nullptr);
-    }
-    error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(error_code);
-    return (result);
+    int is_negative = (number < 0) ? 1 : 0;
+    return (convert_int(number, is_negative));
 }

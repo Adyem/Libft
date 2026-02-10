@@ -20,9 +20,9 @@ Every class must declare and define a constructor and destructor, even if they s
 
 ## Thread-safety Lifecycle Contract
 
-Every class that offers optional thread safety must provide the trio of explicit helpers `enable_thread_safety()`, `disable_thread_safety()`, and `is_thread_safe_enabled()`.
+Every class that offers optional thread safety must provide the trio of explicit helpers `enable_thread_safety()`, `disable_thread_safety()`, and `is_thread_safe()`.
 - `enable_thread_safety()` and `disable_thread_safety()` are the primary entry points for toggling synchronization. They must manage the mutex entirely on their own (e.g., `new`ing the mutex and calling its `initialize()` when enabling, destroying and deleting it when disabling) and cannot rely on other per-class helpers to bootstrap or tear down thread safety. They should return any underlying error code directly.
-- `is_thread_safe_enabled()` should simply return whether the class currently owns a valid mutex pointer (i.e., `_mutex != ft_nullptr`), making it the single authoritative check for callers.
+- `is_thread_safe()` should simply return whether the class currently owns a valid mutex pointer (i.e., `_mutex != ft_nullptr`), making it the single authoritative check for callers.
 - Keep `_mutex` in the private section and start it as `ft_nullptr`; when `enable_thread_safety()` succeeds, the mutex pointer becomes valid, and `disable_thread_safety()` resets it to `ft_nullptr` before returning.
 
 Locking rules:

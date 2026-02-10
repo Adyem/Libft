@@ -11,12 +11,11 @@
 #include "cma_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Logger/logger.hpp"
-#include "../Basic/basic_limits.hpp"
+#include "../Basic/limits.hpp"
 #include "../System_utils/system_utils.hpp"
 
 void* cma_malloc(ft_size_t size)
 {
-    int error_code = FT_ERR_SUCCESSS;
     void *result = ft_nullptr;
     bool lock_acquired = false;
     ft_size_t request_size = size;
@@ -25,22 +24,13 @@ void* cma_malloc(ft_size_t size)
     Block *block = ft_nullptr;
 
     if (size > FT_SYSTEM_SIZE_MAX)
-    {
-        error_code = FT_ERR_INVALID_ARGUMENT;
-        goto cleanup;
-    }
+        return (ft_nullptr);
     if (size == 0)
         size = 1;
     if (g_cma_alloc_limit != 0 && size > g_cma_alloc_limit)
-    {
-        error_code = FT_ERR_NO_MEMORY;
-        goto cleanup;
-    }
+        return (ft_nullptr);
     if (cma_backend_is_enabled())
-    {
-        result = cma_backend_allocate(size, &error_code);
-        goto cleanup;
-    }
+        return (cma_backend_allocate(size, ft_nullptr));
     if (OFFSWITCH == 1)
     {
         result = malloc(static_cast<size_t>(size));
@@ -48,17 +38,15 @@ void* cma_malloc(ft_size_t size)
         if (result)
         {
             g_cma_allocation_count++;
-            error_code = FT_ERR_SUCCESSS;
         }
         else
-            error_code = FT_ERR_NO_MEMORY;
+            return (ft_nullptr);
         if (ft_log_get_alloc_logging())
             ft_log_debug("cma_malloc %llu -> %p", size, result);
-        goto cleanup;
+        return (result);
     }
-    error_code = cma_lock_allocator(&lock_acquired);
-    if (error_code != FT_ERR_SUCCESSS)
-        goto cleanup;
+    if (cma_lock_allocator(&lock_acquired) != FT_ERR_SUCCESSS)
+        return (ft_nullptr);
     instrumented_size = cma_debug_allocation_size(size);
     aligned_size = align16(instrumented_size);
     block = find_free_block(aligned_size);
@@ -68,8 +56,9 @@ void* cma_malloc(ft_size_t size)
 
         if (!page)
         {
-            error_code = FT_ERR_NO_MEMORY;
-            goto cleanup;
+            if (lock_acquired)
+                cma_unlock_allocator(lock_acquired);
+            return (ft_nullptr);
         }
         block = page->blocks;
     }
@@ -91,7 +80,6 @@ void* cma_malloc(ft_size_t size)
     result = static_cast<void *>(cma_block_user_pointer(block));
     cma_unlock_allocator(lock_acquired);
     lock_acquired = false;
-    error_code = FT_ERR_SUCCESSS;
     if (ft_log_get_alloc_logging())
     {
         if (request_size == size)
@@ -100,9 +88,7 @@ void* cma_malloc(ft_size_t size)
             ft_log_debug("cma_malloc %llu (rounded to %llu) -> %p",
                 request_size, aligned_size, result);
     }
-cleanup:
     if (lock_acquired)
         cma_unlock_allocator(lock_acquired);
-    cma_record_operation_error(error_code);
     return (result);
 }

@@ -1,3 +1,4 @@
+include ../compiler_flags.mk
 TARGET := System_utils.a
 DEBUG_TARGET := System_utils_debug.a
 

@@ -1,3 +1,4 @@
+include ../compiler_flags.mk
 TARGET         := SCMA.a
 DEBUG_TARGET   := SCMA_debug.a
 

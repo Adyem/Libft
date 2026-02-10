@@ -1,3 +1,4 @@
+include ../compiler_flags.mk
 TARGET := encryption.a
 DEBUG_TARGET := encryption_debug.a
 

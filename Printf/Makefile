@@ -1,3 +1,4 @@
+include ../compiler_flags.mk
 TARGET := Printf.a
 DEBUG_TARGET := Printf_debug.a
 

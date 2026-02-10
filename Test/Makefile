@@ -1,3 +1,4 @@
+include ../compiler_flags.mk
 TARGET := libft_tests
 DEBUG_TARGET := libft_tests_debug
 LIBFT_ARCHIVE := Full_Libft.a

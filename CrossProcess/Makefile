@@ -1,3 +1,4 @@
+include ../compiler_flags.mk
 TARGET := CrossProcess.a
 DEBUG_TARGET := CrossProcess_debug.a
 

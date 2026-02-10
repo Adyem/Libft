@@ -1,3 +1,4 @@
+include ../compiler_flags.mk
 TARGET         := time.a
 DEBUG_TARGET   := time_debug.a
 

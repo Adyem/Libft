@@ -1,3 +1,4 @@
+include ../compiler_flags.mk
 TARGET         := API.a
 DEBUG_TARGET   := API_debug.a
 

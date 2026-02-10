@@ -1,64 +1,41 @@
+#include <cstddef>
+#include "advanced.hpp"
 #include "../CMA/CMA.hpp"
-#include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 
-static int    calculate_length(int number, int base)
+static int calculate_length(int number, int base)
 {
     int length = 0;
-    unsigned int absolute_value;
-    if (number < 0)
-        absolute_value = static_cast<unsigned int>(-number);
-    else
-        absolute_value = static_cast<unsigned int>(number);
-    if (absolute_value == 0)
+    unsigned int value = (number < 0) ? -static_cast<unsigned int>(number) : static_cast<unsigned int>(number);
+    if (value == 0)
         return (1);
-    while (absolute_value)
+    while (value != 0)
     {
-        absolute_value /= base;
-        length++;
+        value /= base;
+        length += 1;
     }
     return (length);
 }
 
-char    *adv_itoa_base(int number, int base)
+char *adv_itoa_base(int number, int base)
 {
-    const char digits[] = "0123456789ABCDEF";
-    int is_negative = 0;
-    int length;
-    char *result_string;
-    unsigned int absolute_value;
-    int error_code;
-
     if (base < 2 || base > 16)
-    {
-        error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
-    }
-    if (number < 0 && base == 10)
-        is_negative = 1;
-    if (number < 0)
-        absolute_value = static_cast<unsigned int>(-number);
-    else
-        absolute_value = static_cast<unsigned int>(number);
-    length = calculate_length(number, base);
-    result_string = static_cast<char*>(cma_malloc(length + is_negative + 1));
-    error_code = ft_global_error_stack_drop_last_error();
-    if (!result_string)
-    {
-        ft_global_error_stack_push(error_code);
+    const char digits[] = "0123456789ABCDEF";
+    int is_negative = (number < 0 && base == 10) ? 1 : 0;
+    unsigned int value = (number < 0) ? -static_cast<unsigned int>(number) : static_cast<unsigned int>(number);
+    int length = calculate_length(number, base);
+    char *result = static_cast<char *>(cma_malloc(static_cast<ft_size_t>(length + is_negative + 1)));
+    if (result == ft_nullptr)
         return (ft_nullptr);
-    }
-    result_string[length + is_negative] = '\0';
+    result[length + is_negative] = '\0';
     while (length > 0)
     {
-        result_string[length + is_negative - 1] = digits[absolute_value % base];
-        absolute_value /= base;
-        length--;
+        result[length + is_negative - 1] = digits[value % base];
+        value /= base;
+        length -= 1;
     }
     if (is_negative)
-        result_string[0] = '-';
-    error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(error_code);
-    return (result_string);
+        result[0] = '-';
+    return (result);
 }

@@ -1,109 +1,74 @@
-#include "../CMA/CMA.hpp"
+#include <cstddef>
+#include <cstdarg>
+#include "advanced.hpp"
 #include "../CPP_class/class_nullptr.hpp"
-#include "../Errno/errno.hpp"
-#include <stdarg.h>
+#include "../CMA/CMA.hpp"
+
+static ft_size_t safe_strlen(const char *string)
+{
+    if (string == ft_nullptr)
+        return (0);
+    ft_size_t length = 0;
+    while (string[length] != '\0')
+    {
+        if (length >= FT_SYSTEM_SIZE_MAX)
+            return (FT_SYSTEM_SIZE_MAX);
+        length += 1;
+    }
+    return (length);
+}
 
 char *adv_strjoin_multiple(int count, ...)
 {
-    int error_code;
-
     if (count <= 0)
-    {
-        error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
-    }
-    if (static_cast<size_t>(count) > SIZE_MAX / sizeof(size_t))
-    {
-        error_code = FT_ERR_OUT_OF_RANGE;
-        ft_global_error_stack_push(error_code);
+    if (static_cast<ft_size_t>(count) > FT_SYSTEM_SIZE_MAX / sizeof(ft_size_t))
         return (ft_nullptr);
-    }
-    size_t *cached_lengths = static_cast<size_t*>(cma_malloc(static_cast<size_t>(count) * sizeof(size_t)));
-    error_code = ft_global_error_stack_drop_last_error();
-    if (!cached_lengths)
-    {
-        ft_global_error_stack_push(error_code);
+    ft_size_t *length_cache = static_cast<ft_size_t *>(
+            cma_malloc(static_cast<ft_size_t>(count) * sizeof(ft_size_t)));
+    if (length_cache == ft_nullptr)
         return (ft_nullptr);
-    }
     va_list args;
     va_start(args, count);
-    size_t total_length = 0;
-    int argument_index = 0;
-    while (argument_index < count)
+    ft_size_t total_length = 0;
+    for (int i = 0; i < count; ++i)
     {
-        const char *current_string = va_arg(args, const char *);
-        size_t current_length = 0;
-        if (current_string)
+        const char *current = va_arg(args, const char *);
+        ft_size_t length = safe_strlen(current);
+        if (length == FT_SYSTEM_SIZE_MAX)
         {
-            size_t measured_length = ft_strlen_size_t(current_string);
-            error_code = ft_global_error_stack_drop_last_error();
-            current_length = measured_length;
-            if (total_length > SIZE_MAX - current_length)
-            {
-                error_code = FT_ERR_OUT_OF_RANGE;
-                va_end(args);
-                cma_free(cached_lengths);
-                error_code = ft_global_error_stack_drop_last_error();
-                if (error_code == FT_ERR_SUCCESSS)
-                    error_code = FT_ERR_OUT_OF_RANGE;
-                ft_global_error_stack_push(error_code);
-                return (ft_nullptr);
-            }
-            total_length += current_length;
+            va_end(args);
+            cma_free(length_cache);
+            return (ft_nullptr);
         }
-        cached_lengths[argument_index] = current_length;
-        ++argument_index;
+        if (total_length > FT_SYSTEM_SIZE_MAX - length)
+        {
+            va_end(args);
+            cma_free(length_cache);
+            return (ft_nullptr);
+        }
+        length_cache[i] = length;
+        total_length += length;
     }
     va_end(args);
-    if (total_length == SIZE_MAX)
+    ft_size_t allocation_size = total_length + 1;
+    char *result = static_cast<char *>(cma_malloc(allocation_size));
+    if (result == ft_nullptr)
     {
-        error_code = FT_ERR_OUT_OF_RANGE;
-        cma_free(cached_lengths);
-        error_code = ft_global_error_stack_drop_last_error();
-        if (error_code == FT_ERR_SUCCESSS)
-            error_code = FT_ERR_OUT_OF_RANGE;
-        ft_global_error_stack_push(error_code);
-        return (ft_nullptr);
-    }
-    char *result = static_cast<char*>(cma_malloc(total_length + 1));
-    error_code = ft_global_error_stack_drop_last_error();
-    if (!result)
-    {
-        cma_free(cached_lengths);
-        error_code = ft_global_error_stack_drop_last_error();
-        ft_global_error_stack_push(error_code);
+        cma_free(length_cache);
         return (ft_nullptr);
     }
     va_start(args, count);
-    size_t result_index = 0;
-    argument_index = 0;
-    while (argument_index < count)
+    ft_size_t write_index = 0;
+    for (int i = 0; i < count; ++i)
     {
-        const char *current_string = va_arg(args, const char *);
-        if (current_string)
-        {
-            size_t current_length = cached_lengths[argument_index];
-            if (current_length > 0)
-            {
-                ft_memcpy(result + result_index, current_string, current_length);
-                result_index += current_length;
-            }
-        }
-        ++argument_index;
+        const char *current = va_arg(args, const char *);
+        ft_size_t length = length_cache[i];
+        for (ft_size_t j = 0; j < length; ++j)
+            result[write_index++] = current[j];
     }
     va_end(args);
-    cma_free(cached_lengths);
-    error_code = ft_global_error_stack_drop_last_error();
-    if (error_code != FT_ERR_SUCCESSS)
-    {
-        cma_free(result);
-        ft_global_error_stack_drop_last_error();
-        ft_global_error_stack_push(error_code);
-        return (ft_nullptr);
-    }
-    result[result_index] = '\0';
-    error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(error_code);
+    cma_free(length_cache);
+    result[write_index] = '\0';
     return (result);
 }

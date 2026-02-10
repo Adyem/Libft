@@ -33,7 +33,7 @@ static ft_size_t cma_metadata_compute_stride(void)
 
     if (g_cma_metadata_stride != 0)
         return (g_cma_metadata_stride);
-    stride = align16(static_cast<ft_size_t>(sizeof(Block)));
+    stride = align16(sizeof(Block));
     g_cma_metadata_stride = stride;
     return (stride);
 }

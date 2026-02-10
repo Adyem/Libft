@@ -1,3 +1,4 @@
+include ../compiler_flags.mk
 TARGET := errno.a
 DEBUG_TARGET := errno_debug.a
 

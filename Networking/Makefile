@@ -1,3 +1,4 @@
+include ../compiler_flags.mk
 TARGET := networking.a
 DEBUG_TARGET := networking_debug.a
 

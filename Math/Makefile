@@ -1,3 +1,4 @@
+include ../compiler_flags.mk
 TARGET := Math.a
 DEBUG_TARGET := Math_debug.a
 

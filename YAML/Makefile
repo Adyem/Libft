@@ -1,3 +1,4 @@
+include ../compiler_flags.mk
 TARGET := YAML.a
 DEBUG_TARGET := YAML_debug.a
 

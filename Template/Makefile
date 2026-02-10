@@ -1,3 +1,4 @@
+include ../compiler_flags.mk
 MODULE_NAME := $(notdir $(CURDIR))
 SRCS := template_basic_types.cpp \
         template_optional.cpp \

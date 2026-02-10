@@ -1,3 +1,4 @@
+include ../compiler_flags.mk
 TARGET := Compatebility.a
 DEBUG_TARGET := Compatebility_debug.a
 

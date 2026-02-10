@@ -1,3 +1,4 @@
+include ../compiler_flags.mk
 TARGET := parser.a
 DEBUG_TARGET := parser_debug.a
 

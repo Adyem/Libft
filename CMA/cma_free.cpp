@@ -11,43 +11,30 @@
 
 void cma_free(void* ptr)
 {
-    int error_code = FT_ERR_SUCCESSS;
     bool lock_acquired = false;
 
     if (OFFSWITCH == 1)
     {
         std::free(ptr);
         g_cma_free_count++;
-        error_code = FT_ERR_SUCCESSS;
         if (ft_log_get_alloc_logging())
             ft_log_debug("cma_free %p", ptr);
-        cma_record_operation_error(error_code);
         return ;
     }
     if (!ptr)
-    {
-        cma_record_operation_error(error_code);
         return ;
-    }
     if (cma_backend_is_enabled() && cma_backend_owns_pointer(ptr))
     {
-        error_code = cma_backend_deallocate(ptr);
-        cma_record_operation_error(error_code);
+        cma_backend_deallocate(ptr);
         return ;
     }
-    error_code = cma_lock_allocator(&lock_acquired);
-    if (error_code != FT_ERR_SUCCESSS)
-    {
-        cma_record_operation_error(error_code);
+    if (cma_lock_allocator(&lock_acquired) != FT_ERR_SUCCESSS)
         return ;
-    }
     Block* block = cma_find_block_for_pointer(ptr);
     if (!block)
     {
-        error_code = FT_ERR_INVALID_POINTER;
         cma_unlock_allocator(lock_acquired);
         lock_acquired = false;
-        cma_record_operation_error(error_code);
         return ;
     }
     ft_size_t freed_size = 0;
@@ -72,9 +59,7 @@ void cma_free(void* ptr)
     g_cma_free_count++;
     cma_unlock_allocator(lock_acquired);
     lock_acquired = false;
-    error_code = FT_ERR_SUCCESSS;
     if (ft_log_get_alloc_logging())
         ft_log_debug("cma_free %p", ptr);
-    cma_record_operation_error(error_code);
     return ;
 }

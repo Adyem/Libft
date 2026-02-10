@@ -1,3 +1,4 @@
+include ../compiler_flags.mk
 TARGET := RNG.a
 DEBUG_TARGET := RNG_debug.a
 

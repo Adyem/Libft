@@ -1,3 +1,4 @@
+include ../compiler_flags.mk
 TARGET := compression.a
 DEBUG_TARGET := compression_debug.a
 

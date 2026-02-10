@@ -1,3 +1,4 @@
+include ../compiler_flags.mk
 TARGET := Basic.a
 DEBUG_TARGET := Basic_debug.a
 

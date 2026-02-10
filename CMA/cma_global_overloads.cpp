@@ -1,7 +1,6 @@
 #include <cstddef>
 #include <new>
 #include "../CMA/CMA.hpp"
-#include "../Errno/errno.hpp"
 
 static void *allocate_aligned_memory(std::size_t size, std::align_val_t alignment)
 {
@@ -9,7 +8,6 @@ static void *allocate_aligned_memory(std::size_t size, std::align_val_t alignmen
 
     pointer = cma_aligned_alloc(static_cast<ft_size_t>(alignment),
         static_cast<ft_size_t>(size));
-    ft_global_error_stack_drop_last_error();
     return (pointer);
 }
 
@@ -18,7 +16,6 @@ void* operator new(std::size_t size)
     void *pointer;
 
     pointer = cma_malloc(size);
-    ft_global_error_stack_drop_last_error();
     if (pointer == NULL)
         throw std::bad_alloc();
     return (pointer);
@@ -29,28 +26,24 @@ void* operator new(std::size_t size, const std::nothrow_t&) noexcept
     void *pointer;
 
     pointer = cma_malloc(size);
-    ft_global_error_stack_drop_last_error();
     return (pointer);
 }
 
 void operator delete(void* ptr) noexcept
 {
     cma_free(ptr);
-    ft_global_error_stack_drop_last_error();
     return ;
 }
 
 void operator delete(void* ptr, std::size_t) noexcept
 {
     cma_free(ptr);
-    ft_global_error_stack_drop_last_error();
     return ;
 }
 
 void operator delete(void* ptr, const std::nothrow_t&) noexcept
 {
     cma_free(ptr);
-    ft_global_error_stack_drop_last_error();
     return ;
 }
 
@@ -59,7 +52,6 @@ void* operator new[](std::size_t size)
     void *pointer;
 
     pointer = cma_malloc(size);
-    ft_global_error_stack_drop_last_error();
     if (pointer == NULL)
         throw std::bad_alloc();
     return (pointer);
@@ -70,28 +62,24 @@ void* operator new[](std::size_t size, const std::nothrow_t&) noexcept
     void *pointer;
 
     pointer = cma_malloc(size);
-    ft_global_error_stack_drop_last_error();
     return (pointer);
 }
 
 void operator delete[](void* ptr) noexcept
 {
     cma_free(ptr);
-    ft_global_error_stack_drop_last_error();
     return ;
 }
 
 void operator delete[](void* ptr, std::size_t) noexcept
 {
     cma_free(ptr);
-    ft_global_error_stack_drop_last_error();
     return ;
 }
 
 void operator delete[](void* ptr, const std::nothrow_t&) noexcept
 {
     cma_free(ptr);
-    ft_global_error_stack_drop_last_error();
     return ;
 }
 
@@ -114,21 +102,18 @@ void* operator new(std::size_t size, std::align_val_t alignment,
 void operator delete(void* ptr, std::align_val_t) noexcept
 {
     cma_free(ptr);
-    ft_global_error_stack_drop_last_error();
     return ;
 }
 
 void operator delete(void* ptr, std::size_t, std::align_val_t) noexcept
 {
     cma_free(ptr);
-    ft_global_error_stack_drop_last_error();
     return ;
 }
 
 void operator delete(void* ptr, std::align_val_t, const std::nothrow_t&) noexcept
 {
     cma_free(ptr);
-    ft_global_error_stack_drop_last_error();
     return ;
 }
 
@@ -151,14 +136,12 @@ void* operator new[](std::size_t size, std::align_val_t alignment,
 void operator delete[](void* ptr, std::align_val_t) noexcept
 {
     cma_free(ptr);
-    ft_global_error_stack_drop_last_error();
     return ;
 }
 
 void operator delete[](void* ptr, std::size_t, std::align_val_t) noexcept
 {
     cma_free(ptr);
-    ft_global_error_stack_drop_last_error();
     return ;
 }
 
@@ -166,6 +149,5 @@ void operator delete[](void* ptr, std::align_val_t,
     const std::nothrow_t&) noexcept
 {
     cma_free(ptr);
-    ft_global_error_stack_drop_last_error();
     return ;
 }

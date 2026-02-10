@@ -8,7 +8,6 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include <atomic>
 #include <cstddef>
-#include "../Time/time.hpp"
 #ifdef _WIN32
     using pt_thread_id_type = DWORD;
     #define THREAD_ID GetCurrentThreadId()
@@ -79,6 +78,11 @@ typedef struct s_thread_id
 {
     pt_thread_id_type native_id;
 }   t_thread_id;
+
+struct s_duration_milliseconds;
+struct s_monotonic_time_point;
+using t_duration_milliseconds = struct s_duration_milliseconds;
+using t_monotonic_time_point = struct s_monotonic_time_point;
 
 t_thread_id    ft_this_thread_get_id();
 void    ft_this_thread_sleep_for(t_duration_milliseconds duration);

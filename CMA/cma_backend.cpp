@@ -10,7 +10,7 @@ static cma_backend_hooks g_cma_backend_hooks = {ft_nullptr, ft_nullptr,
     ft_nullptr, ft_nullptr, ft_nullptr, ft_nullptr, ft_nullptr};
 static bool g_cma_backend_enabled = false;
 
-static void cma_backend_set_error(int *error_code, int value)
+static void cma_backend_set_error(int32_t *error_code, int32_t value)
 {
     if (error_code != ft_nullptr)
         *error_code = value;
@@ -25,7 +25,7 @@ static ft_size_t cma_backend_query_size(const void *memory_pointer)
             g_cma_backend_hooks.user_data));
 }
 
-static int cma_backend_query_ownership(const void *memory_pointer)
+static int32_t cma_backend_query_ownership(const void *memory_pointer)
 {
     if (!g_cma_backend_hooks.owns_allocation)
         return (0);
@@ -72,47 +72,29 @@ static void cma_backend_track_free(ft_size_t allocation_size)
     return ;
 }
 
-int cma_set_backend(const cma_backend_hooks *hooks)
+int32_t cma_set_backend(const cma_backend_hooks *hooks)
 {
-    int error_code;
-
     if (!hooks || !hooks->allocate || !hooks->deallocate
         || !hooks->get_allocation_size || !hooks->owns_allocation)
-    {
-        error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_global_error_stack_push(error_code);
-        return (-1);
-    }
+        return (FT_ERR_INVALID_ARGUMENT);
     g_cma_backend_hooks = *hooks;
     g_cma_backend_enabled = true;
-    error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(error_code);
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
-void cma_clear_backend(void)
+int32_t cma_clear_backend(void)
 {
-    int error_code;
-
     std::memset(&g_cma_backend_hooks, 0, sizeof(g_cma_backend_hooks));
     g_cma_backend_enabled = false;
-    error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(error_code);
-    return ;
+    return (FT_ERR_SUCCESSS);
 }
 
-int cma_backend_is_enabled(void)
+int32_t cma_backend_is_enabled(void)
 {
-    int error_code;
-
-    error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(error_code);
-    if (g_cma_backend_enabled)
-        return (1);
-    return (0);
+    return (g_cma_backend_enabled ? 1 : 0);
 }
 
-int cma_backend_owns_pointer(const void *memory_pointer)
+int32_t cma_backend_owns_pointer(const void *memory_pointer)
 {
     if (!g_cma_backend_enabled)
         return (0);
@@ -146,7 +128,7 @@ void *cma_backend_allocate(ft_size_t size, int *error_code)
     return (memory_pointer);
 }
 
-int cma_backend_deallocate(void *memory_pointer)
+int32_t cma_backend_deallocate(void *memory_pointer)
 {
     if (!memory_pointer)
         return (FT_ERR_SUCCESSS);
@@ -254,64 +236,22 @@ void *cma_backend_reallocate(void *memory_pointer, ft_size_t size,
 
 ft_size_t cma_backend_block_size(const void *memory_pointer)
 {
-    int error_code;
-
-    if (!g_cma_backend_enabled)
-    {
-        error_code = FT_ERR_SUCCESSS;
-        ft_global_error_stack_push(error_code);
+    if (!g_cma_backend_enabled || !memory_pointer)
         return (0);
-    }
-    if (!memory_pointer)
-    {
-        error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_global_error_stack_push(error_code);
-        return (0);
-    }
     if (!cma_backend_query_ownership(memory_pointer))
-    {
-        error_code = FT_ERR_SUCCESSS;
-        ft_global_error_stack_push(error_code);
         return (0);
-    }
-    ft_size_t allocation_size = cma_backend_query_size(memory_pointer);
-    error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(error_code);
-    return (allocation_size);
+    return (cma_backend_query_size(memory_pointer));
 }
 
-int cma_backend_checked_block_size(const void *memory_pointer,
+int32_t cma_backend_checked_block_size(const void *memory_pointer,
         ft_size_t *block_size)
 {
-    int error_code;
-
     if (!block_size)
-    {
-        error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_global_error_stack_push(error_code);
-        return (-1);
-    }
-    *block_size = 0;
-    if (!g_cma_backend_enabled)
-    {
-        error_code = FT_ERR_SUCCESSS;
-        ft_global_error_stack_push(error_code);
-        return (-1);
-    }
-    if (!memory_pointer)
-    {
-        error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_global_error_stack_push(error_code);
-        return (-1);
-    }
+        return (FT_ERR_INVALID_ARGUMENT);
+    if (!g_cma_backend_enabled || !memory_pointer)
+        return (FT_ERR_INVALID_STATE);
     if (!cma_backend_query_ownership(memory_pointer))
-    {
-        error_code = FT_ERR_SUCCESSS;
-        ft_global_error_stack_push(error_code);
-        return (-1);
-    }
+        return (FT_ERR_INVALID_STATE);
     *block_size = cma_backend_query_size(memory_pointer);
-    error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(error_code);
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }

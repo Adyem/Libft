@@ -1,3 +1,5 @@
+include ../compiler_flags.mk
+
 TARGET := Advanced.a
 DEBUG_TARGET := Advanced_debug.a
 

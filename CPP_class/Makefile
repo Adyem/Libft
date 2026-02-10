@@ -1,3 +1,4 @@
+include ../compiler_flags.mk
 TARGET := CPP_class.a
 DEBUG_TARGET := CPP_class_debug.a
 

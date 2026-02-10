@@ -1,3 +1,4 @@
+include ../compiler_flags.mk
 TARGET         := HTMLParser.a
 DEBUG_TARGET   := HTMLParser_debug.a
 

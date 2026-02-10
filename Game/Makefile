@@ -1,3 +1,4 @@
+include ../compiler_flags.mk
 TARGET := Game.a
 DEBUG_TARGET := Game_debug.a
 

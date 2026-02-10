@@ -1,3 +1,4 @@
+include ../compiler_flags.mk
 TARGET := geometry.a
 DEBUG_TARGET := geometry_debug.a
 

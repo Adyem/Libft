@@ -33,14 +33,14 @@ static ft_size_t    calculate_alignment_padding(Block *block, ft_size_t alignmen
     if (block == ft_nullptr)
         return (0);
     payload_address = reinterpret_cast<uintptr_t>(block->payload);
-    payload_address += static_cast<uintptr_t>(cma_debug_guard_size());
+    payload_address += cma_debug_guard_size();
     alignment_value = static_cast<uintptr_t>(alignment);
     if (alignment_value == 0)
         return (0);
     remainder = payload_address & (alignment_value - 1);
     if (remainder == 0)
         return (0);
-    padding = static_cast<ft_size_t>(alignment_value - remainder);
+    padding = alignment_value - remainder;
     return (padding);
 }
 
@@ -157,122 +157,53 @@ static ft_size_t    compute_extended_page_request(ft_size_t aligned_size,
     return (extended_size);
 }
 
+
 void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
 {
-    ft_size_t   request_size;
-    ft_size_t   aligned_size;
-    ft_size_t   padding;
-    Block       *block;
-    void        *result;
-    int         error_code;
-
     if ((alignment & (alignment - 1)) != 0
         || alignment < sizeof(void *))
-    {
-        error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
-    }
     if (alignment > FT_SYSTEM_SIZE_MAX || size > FT_SYSTEM_SIZE_MAX)
-    {
-        error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
-    }
-    request_size = size;
-    if (request_size == 0)
-        request_size = 1;
-    ft_size_t   backend_aligned_size;
-
-    backend_aligned_size = align16(request_size);
+    ft_size_t request_size = (size == 0) ? 1 : size;
+    ft_size_t backend_aligned_size = align16(request_size);
     if (backend_aligned_size < request_size)
-    {
-        error_code = FT_ERR_OUT_OF_RANGE;
-        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
-    }
-    ft_size_t   limit_check_size;
-
-    limit_check_size = backend_aligned_size;
+    ft_size_t limit_check_size = backend_aligned_size;
     if (alignment > limit_check_size)
         limit_check_size = alignment;
     if (g_cma_alloc_limit != 0 && limit_check_size > g_cma_alloc_limit)
-    {
-        error_code = FT_ERR_NO_MEMORY;
-        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
-    }
     if (cma_backend_is_enabled())
-    {
-        void *memory_pointer;
-
-        memory_pointer = cma_backend_aligned_allocate(alignment,
-                backend_aligned_size, &error_code);
-        ft_global_error_stack_push(error_code);
-        return (memory_pointer);
-    }
-    ft_size_t   instrumented_size;
-
-    instrumented_size = cma_debug_allocation_size(request_size);
+        return (cma_backend_aligned_allocate(alignment,
+                backend_aligned_size, ft_nullptr));
+    ft_size_t instrumented_size = cma_debug_allocation_size(request_size);
     if (instrumented_size < request_size)
-    {
-        error_code = FT_ERR_NO_MEMORY;
-        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
-    }
-    aligned_size = align16(instrumented_size);
+    ft_size_t aligned_size = align16(instrumented_size);
     if (aligned_size < instrumented_size)
-    {
-        error_code = FT_ERR_OUT_OF_RANGE;
-        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
-    }
     if (OFFSWITCH == 1)
-    {
-        result = aligned_alloc_offswitch(alignment, request_size, &error_code);
-        ft_global_error_stack_push(error_code);
-        return (result);
-    }
+        return (aligned_alloc_offswitch(alignment, request_size, ft_nullptr));
     bool lock_acquired = false;
     int lock_error = cma_lock_allocator(&lock_acquired);
-
     if (lock_error != FT_ERR_SUCCESSS)
-    {
-        error_code = lock_error;
-        if (error_code == FT_ERR_SUCCESSS)
-            error_code = FT_ERR_INVALID_STATE;
-        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
-    }
-    padding = 0;
-    block = find_aligned_free_block(aligned_size, alignment, &padding);
+    ft_size_t padding = 0;
+    Block *block = find_aligned_free_block(aligned_size, alignment, &padding);
     if (!block)
     {
-        ft_size_t   page_request;
-        Page        *page;
-
-        page_request = compute_extended_page_request(aligned_size, alignment);
+        ft_size_t page_request = compute_extended_page_request(aligned_size,
+                alignment);
         if (page_request == 0)
         {
-            error_code = FT_ERR_OUT_OF_RANGE;
-            if (lock_acquired)
-            {
-                cma_unlock_allocator(lock_acquired);
-                lock_acquired = false;
-            }
-            ft_global_error_stack_push(error_code);
+            cma_unlock_allocator(lock_acquired);
             return (ft_nullptr);
         }
-        page = create_page(page_request);
+        Page *page = create_page(page_request);
         if (!page)
         {
-            error_code = FT_ERR_NO_MEMORY;
-            if (lock_acquired)
-            {
-                cma_unlock_allocator(lock_acquired);
-                lock_acquired = false;
-            }
-            ft_global_error_stack_push(error_code);
+            cma_unlock_allocator(lock_acquired);
             return (ft_nullptr);
         }
         block = page->blocks;
@@ -281,31 +212,17 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
     }
     if (normalize_alignment_padding(&padding) == 0)
     {
-        error_code = FT_ERR_OUT_OF_RANGE;
-        if (lock_acquired)
-        {
-            cma_unlock_allocator(lock_acquired);
-            lock_acquired = false;
-        }
-        ft_global_error_stack_push(error_code);
+        cma_unlock_allocator(lock_acquired);
         return (ft_nullptr);
     }
     if (padding > 0)
     {
-        Block   *prefix_block;
-
-        prefix_block = split_block(block, padding);
+        Block *prefix_block = split_block(block, padding);
         cma_validate_block(prefix_block, "cma_aligned_alloc prefix", ft_nullptr);
         block = prefix_block->next;
         if (!block)
         {
-            error_code = FT_ERR_NO_MEMORY;
-            if (lock_acquired)
-            {
-                cma_unlock_allocator(lock_acquired);
-                lock_acquired = false;
-            }
-            ft_global_error_stack_push(error_code);
+            cma_unlock_allocator(lock_acquired);
             return (ft_nullptr);
         }
         cma_validate_block(block, "cma_aligned_alloc aligned", ft_nullptr);
@@ -314,11 +231,7 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
     cma_validate_block(block, "cma_aligned_alloc split", ft_nullptr);
     if (!cma_block_is_free(block))
     {
-        if (lock_acquired)
-        {
-            cma_unlock_allocator(lock_acquired);
-            lock_acquired = false;
-        }
+        cma_unlock_allocator(lock_acquired);
         su_sigabrt();
     }
     cma_mark_block_allocated(block);
@@ -327,16 +240,10 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
     if (g_cma_current_bytes > g_cma_peak_bytes)
         g_cma_peak_bytes = g_cma_current_bytes;
     cma_debug_prepare_allocation(block, request_size);
-    result = static_cast<void *>(cma_block_user_pointer(block));
-    if (lock_acquired)
-    {
-        cma_unlock_allocator(lock_acquired);
-        lock_acquired = false;
-    }
-    error_code = FT_ERR_SUCCESSS;
+    void *result = static_cast<void *>(cma_block_user_pointer(block));
+    cma_unlock_allocator(lock_acquired);
     if (ft_log_get_alloc_logging())
         ft_log_debug("cma_aligned_alloc %llu (alignment %llu) -> %p",
-            request_size, alignment, result);
-    ft_global_error_stack_push(error_code);
+                request_size, alignment, result);
     return (result);
 }

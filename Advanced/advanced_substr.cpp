@@ -1,70 +1,51 @@
-#include "../CMA/CMA.hpp"
-#include "../Basic/basic.hpp"
+#include <cstddef>
+#include "advanced.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../CMA/CMA.hpp"
 
-char    *adv_substr(const char *source, unsigned int start, size_t length)
+static ft_size_t safe_strlen(const char *string)
 {
-    size_t  source_length;
-    size_t  start_index;
-    size_t  available_length;
-    size_t  index;
-    char    *substring;
-    int     error_code;
-
-    if (!source)
+    if (string == ft_nullptr)
+        return (0);
+    ft_size_t length = 0;
+    while (string[length] != '\0')
     {
-        error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_global_error_stack_push(error_code);
-        return (ft_nullptr);
+        if (length >= FT_SYSTEM_SIZE_MAX)
+            return (FT_SYSTEM_SIZE_MAX);
+        length += 1;
     }
-    source_length = ft_strlen_size_t(source);
-    error_code = ft_global_error_stack_drop_last_error();
-    start_index = static_cast<size_t>(start);
+    return (length);
+}
+
+char *adv_substr(const char *source, unsigned int start, size_t length)
+{
+    if (source == ft_nullptr)
+        return (ft_nullptr);
+    ft_size_t source_length = safe_strlen(source);
+    ft_size_t start_index = start;
     if (start_index >= source_length)
     {
-        substring = cma_strdup("");
-        error_code = ft_global_error_stack_drop_last_error();
-        if (!substring)
-        {
-            ft_global_error_stack_push(error_code);
+        char *empty_string = static_cast<char *>(cma_malloc(1));
+        if (empty_string == ft_nullptr)
             return (ft_nullptr);
-        }
-        error_code = FT_ERR_SUCCESSS;
-        ft_global_error_stack_push(error_code);
-        return (substring);
+        empty_string[0] = '\0';
+        return (empty_string);
     }
-    available_length = source_length - start_index;
-    if (length > available_length)
-    {
-        if (available_length >= static_cast<size_t>(FT_SYSTEM_SIZE_MAX))
-        {
-            error_code = FT_ERR_OUT_OF_RANGE;
-            ft_global_error_stack_push(error_code);
-            return (ft_nullptr);
-        }
-        length = available_length;
-    }
-    if (length >= static_cast<size_t>(FT_SYSTEM_SIZE_MAX))
-    {
-        error_code = FT_ERR_OUT_OF_RANGE;
-        ft_global_error_stack_push(error_code);
+    ft_size_t available = source_length - start_index;
+    ft_size_t desired = static_cast<ft_size_t>(length);
+    if (desired > available)
+        desired = available;
+    if (desired >= FT_SYSTEM_SIZE_MAX)
         return (ft_nullptr);
-    }
-    substring = static_cast<char *>(cma_malloc(length + 1));
-    error_code = ft_global_error_stack_drop_last_error();
-    if (!substring)
-    {
-        ft_global_error_stack_push(error_code);
+    char *result = static_cast<char *>(cma_malloc(desired + 1));
+    if (result == ft_nullptr)
         return (ft_nullptr);
-    }
-    index = 0;
-    while (index < length && source[start_index + index])
+    ft_size_t index = 0;
+    while (index < desired)
     {
-        substring[index] = source[start_index + index];
-        index++;
+        result[index] = source[start_index + index];
+        index += 1;
     }
-    substring[index] = '\0';
-    error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(error_code);
-    return (substring);
+    result[index] = '\0';
+    return (result);
 }

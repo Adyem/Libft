@@ -1,3 +1,4 @@
+include ../compiler_flags.mk
 TARGET := PThread.a
 DEBUG_TARGET := PThread_debug.a
 

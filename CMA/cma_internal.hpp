@@ -41,8 +41,6 @@ extern ft_size_t    g_cma_current_bytes;
 extern ft_size_t    g_cma_peak_bytes;
 extern unsigned long long    g_cma_metadata_access_depth;
 
-void    cma_record_operation_error(int error_code);
-void    cma_record_internal_operation_error(int error_code);
 
 struct Block
 {
@@ -82,7 +80,7 @@ Block    *cma_find_block_for_pointer(const void *memory_pointer);
 int     cma_lock_allocator(bool *lock_acquired);
 int     cma_unlock_allocator(bool lock_acquired);
 int     cma_enable_thread_safety(void);
-void    cma_disable_thread_safety(void);
+int32_t cma_disable_thread_safety(void);
 bool    cma_is_thread_safe_enabled(void);
 int     cma_backend_is_enabled(void) __attribute__ ((warn_unused_result));
 int     cma_backend_owns_pointer(const void *memory_pointer)

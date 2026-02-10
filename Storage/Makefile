@@ -1,3 +1,4 @@
+include ../compiler_flags.mk
 TARGET         := storage.a
 DEBUG_TARGET   := storage_debug.a
 

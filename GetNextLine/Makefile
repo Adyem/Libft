@@ -1,3 +1,4 @@
+include ../compiler_flags.mk
 TARGET := GetNextLine.a
 DEBUG_TARGET := GetNextLine_debug.a
 

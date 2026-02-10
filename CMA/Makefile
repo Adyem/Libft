@@ -1,12 +1,11 @@
+include ../compiler_flags.mk
 TARGET         := CustomMemoryAllocator.a
 DEBUG_TARGET   := CustomMemoryAllocator_debug.a
 
-SRCS := cma_calloc.cpp \
-        cma_backend.cpp \
+SRCS := cma_backend.cpp \
         cma_malloc.cpp \
         cma_free.cpp \
         cma_free_checked.cpp \
-        cma_error_stack.cpp \
         cma_realloc.cpp \
         cma_aligned_alloc.cpp \
         cma_alloc_size.cpp \

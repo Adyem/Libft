@@ -1,3 +1,4 @@
+include ../compiler_flags.mk
 TARGET := dumb.a
 DEBUG_TARGET := dumb_debug.a
 

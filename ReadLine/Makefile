@@ -1,3 +1,4 @@
+include ../compiler_flags.mk
 TARGET := ReadLine.a
 DEBUG_TARGET := ReadLine_debug.a
 

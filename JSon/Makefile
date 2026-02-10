@@ -1,3 +1,4 @@
+include ../compiler_flags.mk
 TARGET := JSon.a
 DEBUG_TARGET := JSon_debug.a
 

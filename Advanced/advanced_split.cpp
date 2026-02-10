@@ -1,141 +1,79 @@
-#include "../CMA/CMA.hpp"
+#include <cstddef>
+#include "advanced.hpp"
 #include "../CPP_class/class_nullptr.hpp"
-#include "../Errno/errno.hpp"
+#include "../CMA/CMA.hpp"
 
-static int    ft_count_words(const char *string, char delimiter)
+static ft_size_t count_words(const char *string, char delimiter)
 {
-    int    word_count;
-    int    index;
-
-    word_count = 0;
-    index = 0;
-    while (string[index])
+    ft_size_t count = 0;
+    bool in_word = false;
+    for (ft_size_t index = 0; string[index] != '\0'; ++index)
     {
-        if (index == 0 && string[index] != delimiter)
-            word_count++;
-        if (index > 0 && string[index] != delimiter && string[index - 1] == delimiter)
-            word_count++;
-        index++;
-    }
-    return (word_count);
-}
-
-static char    **ft_malloc_strings(char **strings, const char *string, char delimiter,
-                int *error_code)
-{
-    int    char_count;
-    int    index;
-    int    array_index;
-
-    char_count = 0;
-    index = 0;
-    array_index = 0;
-    while (string[index])
-    {
-        if (string[index] != delimiter)
-            char_count++;
-        if ((string[index] == delimiter && index > 0 && string[index - 1] != delimiter)
-            || (string[index] != delimiter && string[index + 1] == '\0'))
+        if (string[index] != delimiter && !in_word)
         {
-            strings[array_index] = static_cast<char *>(cma_malloc(sizeof(char) * (char_count + 1)));
-            *error_code = ft_global_error_stack_drop_last_error();
-            if (!strings[array_index])
-            {
-                return (ft_nullptr);
-            }
-            char_count = 0;
-            array_index++;
+            in_word = true;
+            ++count;
         }
-        index++;
-    }
-    return (strings);
-}
-
-static char    **ft_copy_strings(char **strings, const char *string, char delimiter)
-{
-    int    index;
-    int    array_index;
-    int    string_index;
-
-    index = 0;
-    array_index = 0;
-    string_index = 0;
-    while (string[index])
-    {
-        if (string[index] != delimiter)
-            strings[array_index][string_index++] = string[index];
-        if (string[index] != delimiter && string[index + 1] == '\0')
-            strings[array_index][string_index] = '\0';
-        if (string[index] == delimiter && index > 0 && string[index - 1] != delimiter)
+        else if (string[index] == delimiter)
         {
-            strings[array_index][string_index] = '\0';
-            array_index++;
-            string_index = 0;
+            in_word = false;
         }
-        index++;
     }
-    return (strings);
+    return (count);
 }
 
-static char    **ft_memory_error(char **strings)
+static void free_strings(char **strings, ft_size_t filled)
 {
-    int    index;
-
-    index = 0;
-    while (strings[index])
+    for (ft_size_t index = 0; index < filled; ++index)
     {
-        cma_free(strings[index]);
-        ft_global_error_stack_drop_last_error();
-        strings[index] = ft_nullptr;
-        index++;
+        if (strings[index])
+            cma_free(strings[index]);
     }
     cma_free(strings);
-    ft_global_error_stack_drop_last_error();
-    return (ft_nullptr);
 }
 
-char    **adv_split(char const *string, char delimiter)
+static char *duplicate_range(const char *source, ft_size_t start, ft_size_t length)
 {
-    char    **strings;
-    int        word_count;
-    int        error_code;
+    char *result = static_cast<char *>(cma_malloc(length + 1));
+    if (result == ft_nullptr)
+        return (ft_nullptr);
+    for (ft_size_t index = 0; index < length; ++index)
+        result[index] = source[start + index];
+    result[length] = '\0';
+    return (result);
+}
 
-    if (!string)
+char **adv_split(char const *string, char delimiter)
+{
+    if (string == ft_nullptr)
+        return (ft_nullptr);
+    ft_size_t word_count = count_words(string, delimiter);
+    char **result = static_cast<char **>(cma_malloc((word_count + 1) * sizeof(char *)));
+    if (result == ft_nullptr)
+        return (ft_nullptr);
+    ft_size_t current_word = 0;
+    ft_size_t index = 0;
+    while (string[index] != '\0')
     {
-        strings = static_cast<char **>(cma_malloc(sizeof(*strings)));
-        error_code = ft_global_error_stack_drop_last_error();
-        if (!strings)
+        if (string[index] == delimiter)
         {
-            ft_global_error_stack_push(error_code);
+            ++index;
+            continue;
+        }
+        ft_size_t start = index;
+        while (string[index] != '\0' && string[index] != delimiter)
+            ++index;
+        ft_size_t length = index - start;
+        if (length == 0)
+            continue;
+        char *word = duplicate_range(string, start, length);
+        if (word == ft_nullptr)
+        {
+            free_strings(result, current_word);
             return (ft_nullptr);
         }
-        strings[0] = ft_nullptr;
-        error_code = FT_ERR_SUCCESSS;
-        ft_global_error_stack_push(error_code);
-        return (strings);
+        result[current_word++] = word;
     }
-    word_count = ft_count_words(string, delimiter);
-    strings = static_cast<char **>(cma_malloc(sizeof(*strings) * (word_count + 1)));
-    error_code = ft_global_error_stack_drop_last_error();
-    if (!strings)
-    {
-        ft_global_error_stack_push(error_code);
-        return (ft_nullptr);
-    }
-    if (ft_malloc_strings(strings, string, delimiter, &error_code))
-    {
-        ft_copy_strings(strings, string, delimiter);
-        strings[word_count] = ft_nullptr;
-    }
-    else
-    {
-        strings = ft_memory_error(strings);
-        if (error_code == FT_ERR_SUCCESSS)
-            error_code = FT_ERR_INTERNAL;
-        ft_global_error_stack_push(error_code);
-        return (ft_nullptr);
-    }
-    error_code = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(error_code);
-    return (strings);
+    result[current_word] = ft_nullptr;
+    return (result);
 }

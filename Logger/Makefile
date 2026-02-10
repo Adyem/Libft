@@ -1,3 +1,4 @@
+include ../compiler_flags.mk
 TARGET := Logger.a
 DEBUG_TARGET := Logger_debug.a
 
