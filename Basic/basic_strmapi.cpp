@@ -6,7 +6,7 @@ char *ft_strmapi(const char *string, char (*function)(unsigned int, char))
 {
     if (!string || !function)
         return (ft_nullptr);
-    size_t length = ft_strlen_size_t(string);
+    ft_size_t length = ft_strlen_size_t(string);
     char *result = static_cast<char*>(cma_malloc(length + 1));
     if (!result)
         return (ft_nullptr);

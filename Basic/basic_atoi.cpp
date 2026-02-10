@@ -8,7 +8,7 @@ int32_t ft_atoi(const char *string)
     const char *cursor = string;
     while (*cursor == ' ' || (*cursor >= '\t' && *cursor <= '\r'))
         cursor++;
-    int sign = 1;
+    int32_t sign = 1;
     if (*cursor == '+' || *cursor == '-')
     {
         if (*cursor == '-')
@@ -20,7 +20,7 @@ int32_t ft_atoi(const char *string)
     int32_t value = 0;
     while (*cursor >= '0' && *cursor <= '9')
     {
-        int digit = *cursor - '0';
+        int32_t digit = *cursor - '0';
         value = value * 10 + digit;
         cursor++;
     }

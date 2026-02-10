@@ -25,26 +25,26 @@ int ft_utf8_is_combining_code_point(uint32_t code_point)
     return (0);
 }
 
-int ft_utf8_next_grapheme(const char *string, size_t string_length,
-        size_t *index_pointer, size_t *grapheme_length_pointer)
+int ft_utf8_next_grapheme(const char *string, ft_size_t string_length,
+        ft_size_t *index_pointer, ft_size_t *grapheme_length_pointer)
 {
     if (!string || !index_pointer || !grapheme_length_pointer)
         return (FT_FAILURE);
     if (*index_pointer >= string_length)
         return (FT_FAILURE);
-    size_t local_index = *index_pointer;
+    ft_size_t local_index = *index_pointer;
     uint32_t code_point = 0;
-    size_t sequence_length = 0;
+    ft_size_t sequence_length = 0;
     if (ft_utf8_next(string, string_length, &local_index, &code_point, &sequence_length) != FT_SUCCESS)
         return (FT_FAILURE);
-    size_t grapheme_end = local_index;
+    ft_size_t grapheme_end = local_index;
     while (true)
     {
         if (grapheme_end >= string_length)
             break;
         uint32_t lookahead_code_point = 0;
-        size_t lookahead_length = 0;
-        size_t lookahead_index = grapheme_end;
+        ft_size_t lookahead_length = 0;
+        ft_size_t lookahead_index = grapheme_end;
         if (ft_utf8_next(string, string_length, &lookahead_index,
                 &lookahead_code_point, &lookahead_length) != FT_SUCCESS)
             break;
@@ -57,20 +57,20 @@ int ft_utf8_next_grapheme(const char *string, size_t string_length,
     return (FT_SUCCESS);
 }
 
-int ft_utf8_duplicate_grapheme(const char *string, size_t string_length,
-        size_t *index_pointer, char **grapheme_pointer)
+int ft_utf8_duplicate_grapheme(const char *string, ft_size_t string_length,
+        ft_size_t *index_pointer, char **grapheme_pointer)
 {
     if (!string || !index_pointer || !grapheme_pointer)
         return (FT_FAILURE);
     *grapheme_pointer = ft_nullptr;
-    size_t grapheme_length = 0;
-    size_t start_index = *index_pointer;
+    ft_size_t grapheme_length = 0;
+    ft_size_t start_index = *index_pointer;
     if (ft_utf8_next_grapheme(string, string_length, index_pointer, &grapheme_length) != FT_SUCCESS)
         return (FT_FAILURE);
-    char *allocated_grapheme = static_cast<char *>(cma_malloc(static_cast<ft_size_t>(grapheme_length + 1)));
+    char *allocated_grapheme = static_cast<char *>(cma_malloc(grapheme_length + 1));
     if (!allocated_grapheme)
         return (FT_FAILURE);
-    size_t copy_index = 0;
+    ft_size_t copy_index = 0;
     while (copy_index < grapheme_length)
     {
         allocated_grapheme[copy_index] = string[start_index + copy_index];

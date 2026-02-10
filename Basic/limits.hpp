@@ -23,8 +23,8 @@ static constexpr unsigned long long FT_ULLONG_MAX = ~0ULL;
 static constexpr unsigned long long ft_compute_system_size_max()
 {
     unsigned long long current_value = 0ULL;
-    size_t byte_index = 0;
-    while (byte_index < sizeof(size_t))
+    ft_size_t byte_index = 0;
+    while (byte_index < sizeof(ft_size_t))
     {
         current_value = (current_value << 8U) | 0xFFULL;
         byte_index++;

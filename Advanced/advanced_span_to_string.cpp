@@ -1,28 +1,26 @@
 #include "advanced.hpp"
 #include "../CPP_class/class_string.hpp"
 #include "../CPP_class/class_nullptr.hpp"
-#include "../Errno/errno.hpp"
+#include <new>
 
-ft_string adv_span_to_string(const char *buffer, size_t length)
+ft_string *adv_span_to_string(const char *buffer, size_t length)
 {
-    ft_string result;
-
     if (buffer == ft_nullptr && length != 0)
+        return (ft_nullptr);
+    ft_string *result = new (std::nothrow) ft_string();
+    if (result == ft_nullptr)
+        return (ft_nullptr);
+    if (result->initialize() != FT_ERR_SUCCESSS)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
-        return (ft_string(FT_ERR_INVALID_ARGUMENT));
+        delete result;
+        return (ft_nullptr);
     }
     if (length == 0)
-    {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (result);
-    }
-    result.assign(buffer, length);
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (result->append(buffer, length) != FT_ERR_SUCCESSS)
     {
-        ft_global_error_stack_push(ft_string::last_operation_error());
-        return (ft_string(ft_string::last_operation_error()));
+        delete result;
+        return (ft_nullptr);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }

@@ -1,6 +1,6 @@
 #include "basic.hpp"
 
-int    ft_strcmp(const char *string1, const char *string2)
+int32_t    ft_strcmp(const char *string1, const char *string2)
 {
     if (!string1 || !string2)
         return (-1);

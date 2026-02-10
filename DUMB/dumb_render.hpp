@@ -7,8 +7,9 @@
 
 #ifndef FT_TYPES_HPP
 # define FT_TYPES_HPP
+# include <cstdint>
 
-typedef unsigned long long ft_size_t;
+typedef uint64_t ft_size_t;
 
 #endif
 

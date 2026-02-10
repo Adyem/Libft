@@ -1,7 +1,7 @@
 #include "basic.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 
-int ft_strncmp(const char *string_1, const char *string_2, size_t maximum_length)
+int32_t ft_strncmp(const char *string_1, const char *string_2, ft_size_t maximum_length)
 {
     if (maximum_length == 0 || string_1 == ft_nullptr || string_2 == ft_nullptr)
         return (0);

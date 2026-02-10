@@ -7,7 +7,7 @@ static int ft_utf8_is_trailing_byte(unsigned char byte_value)
     return ((byte_value & 0xC0) == 0x80) ? 1 : 0;
 }
 
-static int ft_utf8_detect_sequence(unsigned char first_byte, size_t *expected_length,
+static int ft_utf8_detect_sequence(unsigned char first_byte, ft_size_t *expected_length,
         uint32_t *initial_value, uint32_t *minimum_value)
 {
     if (first_byte <= 0x7F)
@@ -41,17 +41,17 @@ static int ft_utf8_detect_sequence(unsigned char first_byte, size_t *expected_le
     return (FT_FAILURE);
 }
 
-int ft_utf8_next(const char *string, size_t string_length,
-        size_t *index_pointer, uint32_t *code_point_pointer,
-        size_t *sequence_length_pointer)
+int ft_utf8_next(const char *string, ft_size_t string_length,
+        ft_size_t *index_pointer, uint32_t *code_point_pointer,
+        ft_size_t *sequence_length_pointer)
 {
     if (!string || !index_pointer || !code_point_pointer)
         return (FT_FAILURE);
     if (*index_pointer >= string_length)
         return (FT_FAILURE);
-    size_t current_index = *index_pointer;
+    ft_size_t current_index = *index_pointer;
     unsigned char first_byte = static_cast<unsigned char>(string[current_index]);
-    size_t expected_length = 0;
+    ft_size_t expected_length = 0;
     uint32_t decoded_value = 0;
     uint32_t minimum_value = 0;
     if (ft_utf8_detect_sequence(first_byte, &expected_length, &decoded_value,
@@ -59,7 +59,7 @@ int ft_utf8_next(const char *string, size_t string_length,
         return (FT_FAILURE);
     if (current_index + expected_length > string_length)
         return (FT_FAILURE);
-    size_t processed_bytes = 1;
+    ft_size_t processed_bytes = 1;
     while (processed_bytes < expected_length)
     {
         unsigned char continuation = static_cast<unsigned char>(string[current_index + processed_bytes]);

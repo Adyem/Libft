@@ -1,7 +1,7 @@
 #include "basic.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 
-void* ft_memchr(const void* pointer, int number, size_t size)
+void* ft_memchr(const void* pointer, int32_t number, ft_size_t size)
 {
     const unsigned char *bytes;
     unsigned char character;
@@ -10,7 +10,7 @@ void* ft_memchr(const void* pointer, int number, size_t size)
         return (ft_nullptr);
     bytes = static_cast<const unsigned char*>(pointer);
     character = static_cast<unsigned char>(number);
-    size_t index = 0;
+    ft_size_t index = 0;
     while (index < size)
     {
         if (bytes[index] == character)

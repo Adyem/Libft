@@ -13,16 +13,16 @@ static int ft_digit_value(char character)
     return (-1);
 }
 
-unsigned long ft_strtoul(const char *input_string, char **end_pointer, int numeric_base)
+uint64_t ft_strtoul(const char *input_string, char **end_pointer, int32_t numeric_base)
 {
     const char *current_character = input_string;
-    int sign_value = 1;
-    unsigned long accumulated_value = 0;
+    int32_t sign_value = 1;
+    uint64_t accumulated_value = 0;
     int digit_value;
     bool overflow_detected = false;
     bool digit_processed = false;
-    unsigned long base_value;
-    unsigned long limit_value;
+    uint64_t base_value;
+    uint64_t limit_value;
 
     if (current_character == ft_nullptr)
     {
@@ -63,16 +63,16 @@ unsigned long ft_strtoul(const char *input_string, char **end_pointer, int numer
     else if (numeric_base == 16 && current_character[0] == '0'
              && (current_character[1] == 'x' || current_character[1] == 'X'))
         current_character += 2;
-    base_value = static_cast<unsigned long>(numeric_base);
-    limit_value = FT_ULONG_MAX;
+    base_value = static_cast<uint64_t>(numeric_base);
+    limit_value = FT_ULLONG_MAX;
     while ((digit_value = ft_digit_value(*current_character)) >= 0
             && digit_value < numeric_base)
     {
-        unsigned long digit_as_unsigned;
-        unsigned long limit_division;
-        unsigned long limit_remainder;
+        uint64_t digit_as_unsigned;
+        uint64_t limit_division;
+        uint64_t limit_remainder;
 
-        digit_as_unsigned = static_cast<unsigned long>(digit_value);
+        digit_as_unsigned = static_cast<uint64_t>(digit_value);
         digit_processed = true;
         if (base_value == 0)
             break ;

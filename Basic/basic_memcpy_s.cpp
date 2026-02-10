@@ -4,12 +4,12 @@
 #include "basic.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 
-static void zero_buffer(void *buffer, size_t buffer_size)
+static void zero_buffer(void *buffer, ft_size_t buffer_size)
 {
     if (buffer == ft_nullptr || buffer_size == 0)
         return ;
     unsigned char *bytes = static_cast<unsigned char *>(buffer);
-    size_t index = 0;
+    ft_size_t index = 0;
     while (index < buffer_size)
     {
         bytes[index] = 0;
@@ -17,7 +17,8 @@ static void zero_buffer(void *buffer, size_t buffer_size)
     }
 }
 
-int ft_memcpy_s(void *destination, size_t destination_size, const void *source, size_t number_of_bytes)
+int32_t ft_memcpy_s(void *destination, ft_size_t destination_size,
+                        const void *source, ft_size_t number_of_bytes)
 {
     if (number_of_bytes == 0)
         return (0);

@@ -2,7 +2,7 @@
 #include "limits.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 
-static int ft_digit_value(char character)
+static int32_t ft_digit_value(char character)
 {
     if (character >= '0' && character <= '9')
         return (character - '0');
@@ -13,17 +13,17 @@ static int ft_digit_value(char character)
     return (-1);
 }
 
-long ft_strtol(const char *input_string, char **end_pointer, int numeric_base)
+int64_t ft_strtol(const char *input_string, char **end_pointer, int32_t numeric_base)
 {
     const char *current_character = input_string;
-    long sign_value = 1;
-    unsigned long accumulated_value = 0;
-    int digit_value;
+    int32_t sign_value = 1;
+    uint64_t accumulated_value = 0;
+    int32_t digit_value;
     bool overflow_detected = false;
     bool digit_processed = false;
-    unsigned long positive_limit;
-    unsigned long negative_limit;
-    unsigned long base_value;
+    uint64_t positive_limit;
+    uint64_t negative_limit;
+    uint64_t base_value;
 
     if (current_character == ft_nullptr)
     {
@@ -64,18 +64,18 @@ long ft_strtol(const char *input_string, char **end_pointer, int numeric_base)
     else if (numeric_base == 16 && current_character[0] == '0'
              && (current_character[1] == 'x' || current_character[1] == 'X'))
         current_character += 2;
-    base_value = static_cast<unsigned long>(numeric_base);
-    positive_limit = static_cast<unsigned long>(FT_LONG_MAX);
-    negative_limit = positive_limit + 1UL;
+    base_value = static_cast<uint64_t>(numeric_base);
+    positive_limit = static_cast<uint64_t>(FT_LLONG_MAX);
+    negative_limit = positive_limit + 1ULL;
     while ((digit_value = ft_digit_value(*current_character)) >= 0
             && digit_value < numeric_base)
     {
-        unsigned long limit_value;
-        unsigned long limit_division;
-        unsigned long limit_remainder;
-        unsigned long digit_as_unsigned;
+        uint64_t limit_value;
+        uint64_t limit_division;
+        uint64_t limit_remainder;
+        uint64_t digit_as_unsigned;
 
-        digit_as_unsigned = static_cast<unsigned long>(digit_value);
+        digit_as_unsigned = static_cast<uint64_t>(digit_value);
         digit_processed = true;
         limit_value = positive_limit;
         if (sign_value < 0)
@@ -111,14 +111,14 @@ long ft_strtol(const char *input_string, char **end_pointer, int numeric_base)
     if (overflow_detected)
     {
         if (sign_value < 0)
-            return (FT_LONG_MIN);
-        return (FT_LONG_MAX);
+            return (FT_LLONG_MIN);
+        return (FT_LLONG_MAX);
     }
     if (sign_value < 0)
     {
-        long result = static_cast<long>(accumulated_value);
+        int64_t result = static_cast<int64_t>(accumulated_value);
         return (-result);
     }
-    long result = static_cast<long>(accumulated_value);
+    int64_t result = static_cast<int64_t>(accumulated_value);
     return (result);
 }

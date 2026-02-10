@@ -5,10 +5,13 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include <cstdint>
+#include <new>
+#include "../Basic/basic.hpp"
 
-static size_t ft_utf16_effective_length(const char16_t *input, size_t input_length)
+static ft_size_t ft_utf16_effective_length(const char16_t *input,
+                                                ft_size_t input_length)
 {
-    size_t computed_length;
+    ft_size_t computed_length;
 
     computed_length = input_length;
     if (computed_length != 0 || input == ft_nullptr)
@@ -21,9 +24,10 @@ static size_t ft_utf16_effective_length(const char16_t *input, size_t input_leng
     return (computed_length);
 }
 
-static size_t ft_utf32_effective_length(const char32_t *input, size_t input_length)
+static ft_size_t ft_utf32_effective_length(const char32_t *input,
+                                                ft_size_t input_length)
 {
-    size_t computed_length;
+    ft_size_t computed_length;
 
     computed_length = input_length;
     if (computed_length != 0 || input == ft_nullptr)
@@ -36,9 +40,8 @@ static size_t ft_utf32_effective_length(const char32_t *input, size_t input_leng
     return (computed_length);
 }
 
-static int ft_utf16_decode_unit(const char16_t *input, size_t length,
-        size_t index, uint32_t *code_point_pointer, size_t *advance,
-        int *error_code)
+static int ft_utf16_decode_unit(const char16_t *input, ft_size_t length,
+        ft_size_t index, uint32_t *code_point_pointer, ft_size_t *advance)
 {
     char16_t first_unit;
 
@@ -47,7 +50,6 @@ static int ft_utf16_decode_unit(const char16_t *input, size_t length,
     {
         if (index + 1 >= length)
         {
-            *error_code = FT_ERR_INVALID_ARGUMENT;
             return (FT_FAILURE);
         }
         char16_t second_unit;
@@ -55,392 +57,237 @@ static int ft_utf16_decode_unit(const char16_t *input, size_t length,
         second_unit = input[index + 1];
         if (second_unit < 0xDC00 || second_unit > 0xDFFF)
         {
-            *error_code = FT_ERR_INVALID_ARGUMENT;
             return (FT_FAILURE);
         }
         *code_point_pointer = 0x10000;
         *code_point_pointer += static_cast<uint32_t>(first_unit - 0xD800) << 10;
         *code_point_pointer += static_cast<uint32_t>(second_unit - 0xDC00);
         *advance = 2;
-        *error_code = FT_ERR_SUCCESSS;
         return (FT_SUCCESS);
     }
     if (first_unit >= 0xDC00 && first_unit <= 0xDFFF)
     {
-        *error_code = FT_ERR_INVALID_ARGUMENT;
         return (FT_FAILURE);
     }
     *code_point_pointer = static_cast<uint32_t>(first_unit);
     *advance = 1;
-    *error_code = FT_ERR_SUCCESSS;
     return (FT_SUCCESS);
 }
 
-ft_string adv_utf16_to_utf8(const char16_t *input, size_t input_length)
+static ft_string *create_empty_string(void)
 {
-    ft_string result;
-    size_t length;
-    size_t index;
-    int error_code;
-
-    if (input == ft_nullptr && input_length != 0)
+    ft_string *result = new (std::nothrow) ft_string();
+    if (result == ft_nullptr)
+        return (ft_nullptr);
+    if (result->initialize() != FT_ERR_SUCCESSS)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
-        return (ft_string(FT_ERR_INVALID_ARGUMENT));
+        delete result;
+        return (ft_nullptr);
     }
-    length = ft_utf16_effective_length(input, input_length);
-    index = 0;
-    while (index < length)
-    {
-        uint32_t code_point;
-        size_t advance;
-        char encoded_buffer[5];
-        size_t encoded_length;
-
-        if (ft_utf16_decode_unit(input, length, index, &code_point, &advance,
-                &error_code) != FT_SUCCESS)
-        {
-            ft_global_error_stack_push(error_code);
-            return (ft_string(error_code));
-        }
-        encoded_length = 0;
-        if (ft_utf8_encode(code_point, encoded_buffer, sizeof(encoded_buffer),
-                &encoded_length) != FT_SUCCESS)
-        {
-            error_code = ft_global_error_stack_drop_last_error();
-            if (error_code == FT_ERR_SUCCESSS)
-                error_code = FT_ERR_INVALID_ARGUMENT;
-            ft_global_error_stack_push(error_code);
-            return (ft_string(error_code));
-        }
-        error_code = ft_global_error_stack_drop_last_error();
-        if (error_code != FT_ERR_SUCCESSS)
-        {
-            ft_global_error_stack_push(error_code);
-            return (ft_string(error_code));
-        }
-        result.append(encoded_buffer, encoded_length);
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
-        {
-            ft_global_error_stack_push(ft_string::last_operation_error());
-            return (ft_string(ft_string::last_operation_error()));
-        }
-        index += advance;
-    }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
 
-ft_string adv_utf32_to_utf8(const char32_t *input, size_t input_length)
+ft_string *adv_utf16_to_utf8(const char16_t *input, ft_size_t input_length)
 {
-    ft_string result;
-    size_t length;
-    size_t index;
-    int error_code;
-
     if (input == ft_nullptr && input_length != 0)
+        return (ft_nullptr);
+    ft_string *result = create_empty_string();
+    if (result == ft_nullptr)
+        return (ft_nullptr);
+    ft_size_t length = ft_utf16_effective_length(input, input_length);
+    ft_size_t index = 0;
+    while (index < length)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
-        return (ft_string(FT_ERR_INVALID_ARGUMENT));
+        uint32_t code_point;
+        ft_size_t advance;
+        char encoded_buffer[5];
+        ft_size_t encoded_length;
+
+        if (ft_utf16_decode_unit(input, length, index, &code_point, &advance)
+                != FT_SUCCESS)
+        {
+            delete result;
+            return (ft_nullptr);
+        }
+        if (ft_utf8_encode(code_point, encoded_buffer, sizeof(encoded_buffer),
+                &encoded_length) != FT_SUCCESS)
+        {
+            delete result;
+            return (ft_nullptr);
+        }
+        if (result->append(encoded_buffer, encoded_length) != FT_ERR_SUCCESSS)
+        {
+            delete result;
+            return (ft_nullptr);
+        }
+        index += advance;
     }
-    length = ft_utf32_effective_length(input, input_length);
-    index = 0;
+    return (result);
+}
+
+ft_string *adv_utf32_to_utf8(const char32_t *input, ft_size_t input_length)
+{
+    if (input == ft_nullptr && input_length != 0)
+        return (ft_nullptr);
+    ft_string *result = create_empty_string();
+    if (result == ft_nullptr)
+        return (ft_nullptr);
+    ft_size_t length = ft_utf32_effective_length(input, input_length);
+    ft_size_t index = 0;
     while (index < length)
     {
         uint32_t code_point;
         char encoded_buffer[5];
-        size_t encoded_length;
+        ft_size_t encoded_length;
 
         code_point = static_cast<uint32_t>(input[index]);
         if (code_point >= 0xD800 && code_point <= 0xDFFF)
         {
-            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
-            return (ft_string(FT_ERR_INVALID_ARGUMENT));
+            delete result;
+            return (ft_nullptr);
         }
         if (code_point > 0x10FFFF)
         {
-            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
-            return (ft_string(FT_ERR_INVALID_ARGUMENT));
+            delete result;
+            return (ft_nullptr);
         }
-        encoded_length = 0;
         if (ft_utf8_encode(code_point, encoded_buffer, sizeof(encoded_buffer),
                 &encoded_length) != FT_SUCCESS)
         {
-            error_code = ft_global_error_stack_drop_last_error();
-            if (error_code == FT_ERR_SUCCESSS)
-                error_code = FT_ERR_INVALID_ARGUMENT;
-            ft_global_error_stack_push(error_code);
-            return (ft_string(error_code));
+            delete result;
+            return (ft_nullptr);
         }
-        error_code = ft_global_error_stack_drop_last_error();
-        if (error_code != FT_ERR_SUCCESSS)
+        if (result->append(encoded_buffer, encoded_length) != FT_ERR_SUCCESSS)
         {
-            ft_global_error_stack_push(error_code);
-            return (ft_string(error_code));
-        }
-        result.append(encoded_buffer, encoded_length);
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
-        {
-            ft_global_error_stack_push(ft_string::last_operation_error());
-            return (ft_string(ft_string::last_operation_error()));
+            delete result;
+            return (ft_nullptr);
         }
         index++;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
 
-static char16_t *ft_allocate_utf16(size_t code_unit_count, int *error_code)
+static char16_t *ft_allocate_utf16(ft_size_t code_unit_count)
 {
     char16_t *buffer;
 
-    buffer = static_cast<char16_t *>(cma_malloc((code_unit_count + 1) * sizeof(char16_t)));
+    buffer = static_cast<char16_t *>(cma_malloc((code_unit_count + 1)
+                * sizeof(char16_t)));
     if (buffer == ft_nullptr)
-    {
-        *error_code = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
-    }
     buffer[code_unit_count] = static_cast<char16_t>(0);
-    *error_code = FT_ERR_SUCCESSS;
     return (buffer);
 }
 
-char16_t *ft_utf8_to_utf16(const char *input, size_t input_length, size_t *output_length_pointer)
+char16_t *ft_utf8_to_utf16(const char *input, ft_size_t input_length,
+                                ft_size_t *output_length_pointer)
 {
-    size_t effective_length;
-    size_t index;
-    size_t code_unit_count;
-    char16_t *result;
-    int error_code;
-
     if (output_length_pointer != ft_nullptr)
         *output_length_pointer = 0;
     if (input == ft_nullptr && input_length != 0)
-    {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
-    }
-    effective_length = input_length;
+    ft_size_t effective_length = input_length;
     if (effective_length == 0 && input != ft_nullptr)
-    {
         effective_length = ft_strlen_size_t(input);
-        error_code = ft_global_error_stack_drop_last_error();
-        if (error_code != FT_ERR_SUCCESSS)
-        {
-            ft_global_error_stack_push(error_code);
-            return (ft_nullptr);
-        }
-    }
-    index = 0;
-    code_unit_count = 0;
+    ft_size_t index = 0;
+    ft_size_t code_unit_count = 0;
     while (index < effective_length)
     {
-        size_t working_index;
-        uint32_t code_point;
-        size_t sequence_length;
-
-        working_index = index;
-        code_point = 0;
-        sequence_length = 0;
+        ft_size_t working_index = index;
+        uint32_t code_point = 0;
+        ft_size_t sequence_length = 0;
         if (ft_utf8_next(input, effective_length, &working_index, &code_point,
                 &sequence_length) != FT_SUCCESS)
-        {
-            error_code = ft_global_error_stack_drop_last_error();
-            if (error_code == FT_ERR_SUCCESSS)
-                error_code = FT_ERR_INVALID_ARGUMENT;
-            ft_global_error_stack_push(error_code);
             return (ft_nullptr);
-        }
-        error_code = ft_global_error_stack_drop_last_error();
-        if (error_code != FT_ERR_SUCCESSS)
-        {
-            ft_global_error_stack_push(error_code);
-            return (ft_nullptr);
-        }
         if (code_point <= 0xFFFF)
         {
             if (code_point >= 0xD800 && code_point <= 0xDFFF)
-            {
-                ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
                 return (ft_nullptr);
-            }
             code_unit_count++;
         }
         else
-        {
             code_unit_count += 2;
-        }
         index = working_index;
     }
-    result = ft_allocate_utf16(code_unit_count, &error_code);
+    char16_t *result = ft_allocate_utf16(code_unit_count);
     if (result == ft_nullptr)
-    {
-        if (error_code == FT_ERR_SUCCESSS)
-            error_code = FT_ERR_NO_MEMORY;
-        ft_global_error_stack_push(error_code);
         return (ft_nullptr);
-    }
     index = 0;
-    size_t output_index;
-
-    output_index = 0;
+    ft_size_t output_index = 0;
     while (index < effective_length)
     {
-        size_t working_index;
-        uint32_t code_point;
-        size_t sequence_length;
-
-        working_index = index;
-        code_point = 0;
-        sequence_length = 0;
+        ft_size_t working_index = index;
+        uint32_t code_point = 0;
+        ft_size_t sequence_length = 0;
         if (ft_utf8_next(input, effective_length, &working_index, &code_point,
                 &sequence_length) != FT_SUCCESS)
         {
-            int decode_error;
-
-            decode_error = ft_global_error_stack_drop_last_error();
-            if (decode_error == FT_ERR_SUCCESSS)
-                decode_error = FT_ERR_INVALID_ARGUMENT;
             cma_free(result);
-            ft_global_error_stack_push(decode_error);
-            return (ft_nullptr);
-        }
-        error_code = ft_global_error_stack_drop_last_error();
-        if (error_code != FT_ERR_SUCCESSS)
-        {
-            cma_free(result);
-            ft_global_error_stack_push(error_code);
             return (ft_nullptr);
         }
         if (code_point <= 0xFFFF)
-        {
-            if (code_point >= 0xD800 && code_point <= 0xDFFF)
-            {
-                cma_free(result);
-                ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
-                return (ft_nullptr);
-            }
-            result[output_index] = static_cast<char16_t>(code_point);
-            output_index++;
-        }
+            result[output_index++] = static_cast<char16_t>(code_point);
         else
         {
-            uint32_t adjusted_value;
-
-            adjusted_value = code_point - 0x10000;
-            result[output_index] = static_cast<char16_t>(0xD800 + (adjusted_value >> 10));
-            result[output_index + 1] = static_cast<char16_t>(0xDC00 + (adjusted_value & 0x3FF));
-            output_index += 2;
+            uint32_t adjusted_value = code_point - 0x10000;
+            result[output_index++] = static_cast<char16_t>(0xD800
+                    + (adjusted_value >> 10));
+            result[output_index++] = static_cast<char16_t>(0xDC00
+                    + (adjusted_value & 0x3FF));
         }
         index = working_index;
     }
-    result[output_index] = static_cast<char16_t>(0);
     if (output_length_pointer != ft_nullptr)
         *output_length_pointer = output_index;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
 
-char32_t *ft_utf8_to_utf32(const char *input, size_t input_length, size_t *output_length_pointer)
-{
-    size_t effective_length;
-    size_t index;
-    size_t code_point_count;
-    char32_t *result;
-    int error_code;
 
+char32_t *ft_utf8_to_utf32(const char *input, ft_size_t input_length,
+                                ft_size_t *output_length_pointer)
+{
     if (output_length_pointer != ft_nullptr)
         *output_length_pointer = 0;
     if (input == ft_nullptr && input_length != 0)
-    {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
-    }
-    effective_length = input_length;
+    ft_size_t effective_length = input_length;
     if (effective_length == 0 && input != ft_nullptr)
-    {
         effective_length = ft_strlen_size_t(input);
-        error_code = ft_global_error_stack_drop_last_error();
-        if (error_code != FT_ERR_SUCCESSS)
-        {
-            ft_global_error_stack_push(error_code);
-            return (ft_nullptr);
-        }
-    }
-    index = 0;
-    code_point_count = 0;
+    ft_size_t index = 0;
+    ft_size_t code_point_count = 0;
     while (index < effective_length)
     {
-        size_t working_index;
-        uint32_t code_point;
-        size_t sequence_length;
-
-        working_index = index;
-        code_point = 0;
-        sequence_length = 0;
+        ft_size_t working_index = index;
+        uint32_t code_point = 0;
+        ft_size_t sequence_length = 0;
         if (ft_utf8_next(input, effective_length, &working_index, &code_point,
                 &sequence_length) != FT_SUCCESS)
-        {
-            error_code = ft_global_error_stack_drop_last_error();
-            if (error_code == FT_ERR_SUCCESSS)
-                error_code = FT_ERR_INVALID_ARGUMENT;
-            ft_global_error_stack_push(error_code);
             return (ft_nullptr);
-        }
-        error_code = ft_global_error_stack_drop_last_error();
-        if (error_code != FT_ERR_SUCCESSS)
-        {
-            ft_global_error_stack_push(error_code);
-            return (ft_nullptr);
-        }
         code_point_count++;
         index = working_index;
     }
-    result = static_cast<char32_t *>(cma_malloc((code_point_count + 1) * sizeof(char32_t)));
+    char32_t *result = static_cast<char32_t *>(cma_malloc((code_point_count + 1)
+                * sizeof(char32_t)));
     if (result == ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
-    }
     index = 0;
-    size_t output_index;
-
-    output_index = 0;
+    ft_size_t output_index = 0;
     while (index < effective_length)
     {
-        size_t working_index;
-        uint32_t code_point;
-        size_t sequence_length;
-
-        working_index = index;
-        code_point = 0;
-        sequence_length = 0;
+        ft_size_t working_index = index;
+        uint32_t code_point = 0;
+        ft_size_t sequence_length = 0;
         if (ft_utf8_next(input, effective_length, &working_index, &code_point,
                 &sequence_length) != FT_SUCCESS)
         {
-            int decode_error;
-
-            decode_error = ft_global_error_stack_drop_last_error();
-            if (decode_error == FT_ERR_SUCCESSS)
-                decode_error = FT_ERR_INVALID_ARGUMENT;
             cma_free(result);
-            ft_global_error_stack_push(decode_error);
             return (ft_nullptr);
         }
-        error_code = ft_global_error_stack_drop_last_error();
-        if (error_code != FT_ERR_SUCCESSS)
-        {
-            cma_free(result);
-            ft_global_error_stack_push(error_code);
-            return (ft_nullptr);
-        }
-        result[output_index] = static_cast<char32_t>(code_point);
-        output_index++;
+        result[output_index++] = static_cast<char32_t>(code_point);
         index = working_index;
     }
     result[output_index] = static_cast<char32_t>(0);
     if (output_length_pointer != ft_nullptr)
         *output_length_pointer = output_index;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
