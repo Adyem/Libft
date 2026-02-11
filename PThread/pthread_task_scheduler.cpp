@@ -1879,7 +1879,7 @@ int ft_task_scheduler::lock_internal(bool *lock_acquired) const
     }
     int lock_result;
 
-    lock_result = pt_recursive_mutex_lock_with_error(*this->_state_mutex);
+    lock_result = this->_state_mutex->lock();
     if (lock_result != FT_ERR_SUCCESSS)
     {
         return (lock_result);
@@ -1895,7 +1895,7 @@ int ft_task_scheduler::unlock_internal(bool lock_acquired) const
     {
         return (FT_ERR_SUCCESSS);
     }
-    return (pt_recursive_mutex_unlock_with_error(*this->_state_mutex));
+    return (this->_state_mutex->unlock());
 }
 
 void ft_task_scheduler::teardown_thread_safety()

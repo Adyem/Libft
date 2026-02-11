@@ -6,8 +6,7 @@ static void *allocate_aligned_memory(std::size_t size, std::align_val_t alignmen
 {
     void *pointer;
 
-    pointer = cma_aligned_alloc(static_cast<ft_size_t>(alignment),
-        static_cast<ft_size_t>(size));
+    pointer = cma_aligned_alloc(static_cast<ft_size_t>(alignment), size);
     return (pointer);
 }
 

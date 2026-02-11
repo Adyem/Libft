@@ -6,6 +6,25 @@
 
 static thread_local bool g_registry_mutex_owned = false;
 
+static void pt_lock_tracking_try_shrink_owned_mutexes(pt_mutex_vector &owned_mutexes)
+{
+    ft_size_t target_capacity;
+    void *new_data;
+
+    if (owned_mutexes.capacity <= owned_mutexes.size + 5)
+        return ;
+    target_capacity = owned_mutexes.size + 5;
+    if (target_capacity < 4)
+        target_capacity = 4;
+    if (target_capacity >= owned_mutexes.capacity)
+        return ;
+    new_data = std::realloc(owned_mutexes.data, target_capacity * sizeof(const void *));
+    if (new_data == ft_nullptr)
+        return ;
+    owned_mutexes.data = static_cast<const void **>(new_data);
+    owned_mutexes.capacity = target_capacity;
+}
+
 int pt_lock_tracking::lock_registry_mutex(void)
 {
     try
@@ -454,6 +473,7 @@ int pt_lock_tracking::notify_released(pt_thread_id_type thread_identifier,
         if (info->owned_mutexes.data[index] == mutex_pointer)
         {
             pt_buffer_erase(info->owned_mutexes, index);
+            pt_lock_tracking_try_shrink_owned_mutexes(info->owned_mutexes);
             break ;
         }
         index += 1;

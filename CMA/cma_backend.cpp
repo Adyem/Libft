@@ -38,7 +38,7 @@ static int32_t cma_backend_query_ownership(const void *memory_pointer)
 static void cma_backend_track_allocation(ft_size_t allocation_size)
 {
     bool lock_acquired = false;
-    int lock_error = cma_lock_allocator(&lock_acquired);
+    int32_t lock_error = cma_lock_allocator(&lock_acquired);
 
     if (lock_error != FT_ERR_SUCCESSS)
         return ;
@@ -56,7 +56,7 @@ static void cma_backend_track_allocation(ft_size_t allocation_size)
 static void cma_backend_track_free(ft_size_t allocation_size)
 {
     bool lock_acquired = false;
-    int lock_error = cma_lock_allocator(&lock_acquired);
+    int32_t lock_error = cma_lock_allocator(&lock_acquired);
 
     if (lock_error != FT_ERR_SUCCESSS)
         return ;
@@ -101,7 +101,7 @@ int32_t cma_backend_owns_pointer(const void *memory_pointer)
     return (cma_backend_query_ownership(memory_pointer));
 }
 
-void *cma_backend_allocate(ft_size_t size, int *error_code)
+void *cma_backend_allocate(ft_size_t size, int32_t *error_code)
 {
     if (!g_cma_backend_enabled)
     {
@@ -143,7 +143,7 @@ int32_t cma_backend_deallocate(void *memory_pointer)
 }
 
 void *cma_backend_aligned_allocate(ft_size_t alignment, ft_size_t size,
-        int *error_code)
+        int32_t *error_code)
 {
     if (!g_cma_backend_enabled)
     {
@@ -171,7 +171,7 @@ static void cma_backend_update_stats_for_resize(ft_size_t previous_size,
         ft_size_t new_size)
 {
     bool lock_acquired = false;
-    int lock_error = cma_lock_allocator(&lock_acquired);
+    int32_t lock_error = cma_lock_allocator(&lock_acquired);
 
     if (lock_error != FT_ERR_SUCCESSS)
         return ;
@@ -193,7 +193,7 @@ static void cma_backend_update_stats_for_resize(ft_size_t previous_size,
 }
 
 void *cma_backend_reallocate(void *memory_pointer, ft_size_t size,
-        int *error_code)
+        int32_t *error_code)
 {
     if (!g_cma_backend_enabled)
     {
@@ -229,7 +229,7 @@ void *cma_backend_reallocate(void *memory_pointer, ft_size_t size,
     if (copy_size > size)
         copy_size = size;
     if (copy_size != 0)
-        ft_memcpy(new_pointer, memory_pointer, static_cast<size_t>(copy_size));
+        ft_memcpy(new_pointer, memory_pointer, copy_size);
     cma_backend_set_error(error_code, cma_backend_deallocate(memory_pointer));
     return (new_pointer);
 }

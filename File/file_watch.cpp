@@ -64,9 +64,9 @@ int ft_file_watch::watch_directory(const char *path, void (*callback)(const char
                 {
                     this->_callback = callback;
                     this->_user_data = user_data;
-                    if (cmp_file_watch_start(this->_state, path) != 0)
+                    status = cmp_file_watch_start(this->_state, path);
+                    if (status != FT_ERR_SUCCESSS)
                     {
-                        status = cmp_file_watch_last_error(this->_state);
                         this->_callback = ft_nullptr;
                         this->_user_data = ft_nullptr;
                         this->_path.clear();

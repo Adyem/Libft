@@ -24,7 +24,7 @@ static ft_size_t    g_cma_metadata_page_size = 0;
 
 static bool cma_metadata_add_chunk(void);
 #if CMA_ENABLE_METADATA_PROTECTION
-static int cma_metadata_apply_protection(int protection);
+static int32_t cma_metadata_apply_protection(int32_t protection);
 #endif
 
 static ft_size_t cma_metadata_compute_stride(void)
@@ -40,7 +40,7 @@ static ft_size_t cma_metadata_compute_stride(void)
 
 static ft_size_t cma_metadata_compute_page_size(void)
 {
-    long    system_page_size;
+    int64_t    system_page_size;
 
     if (g_cma_metadata_page_size != 0)
         return (g_cma_metadata_page_size);
@@ -98,7 +98,7 @@ static bool cma_metadata_add_chunk(void)
 
 #if CMA_ENABLE_METADATA_PROTECTION
 
-static int cma_metadata_apply_protection(int protection)
+static int32_t cma_metadata_apply_protection(int32_t protection)
 {
     cma_metadata_chunk    *chunk;
 
@@ -139,7 +139,7 @@ static int cma_metadata_apply_protection(int protection)
     return (0);
 }
 
-int cma_metadata_make_writable(void)
+int32_t cma_metadata_make_writable(void)
 {
     if (g_cma_metadata_chunks == ft_nullptr)
     {
@@ -200,7 +200,7 @@ bool cma_metadata_guard_decrement(void)
 
 #else
 
-int cma_metadata_make_writable(void)
+int32_t cma_metadata_make_writable(void)
 {
     return (0);
 }

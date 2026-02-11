@@ -7,5 +7,4 @@ ft_size_t    g_cma_allocation_count = 0;
 ft_size_t    g_cma_free_count = 0;
 ft_size_t    g_cma_current_bytes = 0;
 ft_size_t    g_cma_peak_bytes = 0;
-unsigned long long    g_cma_metadata_access_depth = 0;
-
+int64_t    g_cma_metadata_access_depth = 0;

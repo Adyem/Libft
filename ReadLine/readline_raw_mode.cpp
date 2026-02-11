@@ -1,10 +1,9 @@
 #include "readline_internal.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 
-void rl_disable_raw_mode()
+int rl_disable_raw_mode()
 {
-    cmp_readline_disable_raw_mode();
-    return ;
+    return (cmp_readline_disable_raw_mode());
 }
 
 int rl_enable_raw_mode()

@@ -18,7 +18,7 @@ ft_size_t cma_block_size(const void *memory_pointer)
     return (block_size);
 }
 
-int cma_checked_block_size(const void *memory_pointer, ft_size_t *block_size)
+int32_t cma_checked_block_size(const void *memory_pointer, ft_size_t *block_size)
 {
     if (block_size == ft_nullptr)
         return (-1);
@@ -28,7 +28,7 @@ int cma_checked_block_size(const void *memory_pointer, ft_size_t *block_size)
     if (cma_backend_is_enabled() && cma_backend_owns_pointer(memory_pointer))
         return (cma_backend_checked_block_size(memory_pointer, block_size));
     bool lock_acquired = false;
-    int lock_error = cma_lock_allocator(&lock_acquired);
+    int32_t lock_error = cma_lock_allocator(&lock_acquired);
 
     if (lock_error != FT_ERR_SUCCESSS)
     {

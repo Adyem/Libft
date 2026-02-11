@@ -212,7 +212,6 @@ FT_TEST(test_scma_resize_rejects_zero_size, "scma resize rejects requests to shr
     handle = scma_allocate(static_cast<ft_size_t>(sizeof(int)));
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
     FT_ASSERT_EQ(0, scma_resize(handle, 0));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     scma_shutdown();
     return (1);
 }
@@ -226,11 +225,9 @@ FT_TEST(test_scma_write_and_read_reject_null_pointers, "scma read and write prot
     handle = scma_allocate(static_cast<ft_size_t>(sizeof(int)));
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
     FT_ASSERT_EQ(0, scma_write(handle, 0, ft_nullptr, static_cast<ft_size_t>(sizeof(int))));
-    FT_ASSERT_EQ(FT_ERR_INVALID_POINTER, ft_errno);
     value = 0;
     FT_ASSERT_EQ(1, scma_write(handle, 0, &value, static_cast<ft_size_t>(sizeof(int))));
     FT_ASSERT_EQ(0, scma_read(handle, 0, ft_nullptr, static_cast<ft_size_t>(sizeof(int))));
-    FT_ASSERT_EQ(FT_ERR_INVALID_POINTER, ft_errno);
     scma_shutdown();
     return (1);
 }
@@ -266,7 +263,6 @@ FT_TEST(test_scma_read_bounds_checks, "scma read enforces offset boundaries")
     value = 11;
     FT_ASSERT_EQ(1, scma_write(handle, 0, &value, static_cast<ft_size_t>(sizeof(int))));
     FT_ASSERT_EQ(0, scma_read(handle, static_cast<ft_size_t>(sizeof(int)), &value, static_cast<ft_size_t>(sizeof(int))));
-    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
     scma_shutdown();
     return (1);
 }

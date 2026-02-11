@@ -67,10 +67,7 @@ static int32_t cmp_open_internal(const char *path_name, int32_t flags, int32_t m
 
     lock_error = cmp_lock_file_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
-    {
-        cmp_set_last_error(lock_error);
         return (-1);
-    }
     DWORD desired_access = 0;
     DWORD creation_disposition = 0;
     DWORD flags_and_attributes = FILE_ATTRIBUTE_NORMAL;
@@ -107,9 +104,7 @@ static int32_t cmp_open_internal(const char *path_name, int32_t flags, int32_t m
         flags_and_attributes, ft_nullptr);
     if (file_handle == INVALID_HANDLE_VALUE)
     {
-        DWORD last_error = GetLastError();
         cmp_unlock_file_mutex();
-        cmp_set_last_error(ft_map_system_error(static_cast<int32_t>(last_error)));
         return (-1);
     }
     int32_t file_descriptor = cmp_store_handle(file_handle);
@@ -138,94 +133,116 @@ int32_t cmp_open(const char *path_name, int32_t flags, int32_t mode)
     return (cmp_open_internal(path_name, flags, mode));
 }
 
-ssize_t cmp_read(int32_t file_descriptor, void *buffer, uint32_t count)
+int32_t cmp_read(int32_t file_descriptor, void *buffer, ft_size_t count,
+    int64_t *bytes_read_out)
 {
     int32_t lock_error;
+    DWORD bytes_read;
+    BOOL is_successful;
+    HANDLE file_handle;
+    BY_HANDLE_FILE_INFORMATION file_info;
+
+    if (bytes_read_out != ft_nullptr)
+        *bytes_read_out = 0;
+    if (buffer == ft_nullptr)
+        return (FT_ERR_INVALID_ARGUMENT);
+    if (count > static_cast<ft_size_t>(UINT32_MAX))
+        return (FT_ERR_OUT_OF_RANGE);
 
     lock_error = cmp_lock_file_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
-    {
-        cmp_set_last_error(lock_error);
-        return (-1);
-    }
-    HANDLE file_handle = cmp_retrieve_handle(file_descriptor);
+        return (lock_error);
+    file_handle = cmp_retrieve_handle(file_descriptor);
     if (file_handle == INVALID_HANDLE_VALUE)
     {
         cmp_unlock_file_mutex();
-        return (-1);
+        return (FT_ERR_INVALID_HANDLE);
     }
-    BY_HANDLE_FILE_INFORMATION file_info;
     if (GetFileInformationByHandle(file_handle, &file_info))
     {
         if (file_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
             cmp_unlock_file_mutex();
-            return (-1);
+            return (FT_ERR_INVALID_HANDLE);
         }
     }
-    DWORD bytes_read = 0;
-    BOOL ok = ReadFile(file_handle, buffer, count, &bytes_read, ft_nullptr);
+    bytes_read = 0;
+    is_successful = ReadFile(file_handle, buffer, static_cast<DWORD>(count),
+        &bytes_read, ft_nullptr);
     cmp_unlock_file_mutex();
-    if (!ok)
+    if (!is_successful)
     {
-        DWORD last_error = GetLastError();
-        return (-1);
+        return (cmp_map_system_error_to_ft(static_cast<int32_t>(GetLastError())));
     }
-    return (bytes_read);
+    if (bytes_read_out != ft_nullptr)
+        *bytes_read_out = static_cast<int64_t>(bytes_read);
+    return (FT_ERR_SUCCESSS);
 }
 
-ssize_t cmp_write(int32_t file_descriptor, const void *buffer, uint32_t count)
+int32_t cmp_write(int32_t file_descriptor, const void *buffer, ft_size_t count,
+    int64_t *bytes_written_out)
 {
     int32_t lock_error;
+    DWORD bytes_written;
+    BOOL is_successful;
+    HANDLE file_handle;
+
+    if (bytes_written_out != ft_nullptr)
+        *bytes_written_out = 0;
+    if (buffer == ft_nullptr)
+        return (FT_ERR_INVALID_ARGUMENT);
+    if (count > static_cast<ft_size_t>(UINT32_MAX))
+        return (FT_ERR_OUT_OF_RANGE);
 
     lock_error = cmp_lock_file_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
-    {
-        cmp_set_last_error(lock_error);
-        return (-1);
-    }
-    HANDLE file_handle = cmp_retrieve_handle(file_descriptor);
+        return (lock_error);
+    file_handle = cmp_retrieve_handle(file_descriptor);
     if (file_handle == INVALID_HANDLE_VALUE)
     {
         cmp_unlock_file_mutex();
-        return (-1);
+        return (FT_ERR_INVALID_HANDLE);
     }
-    DWORD bytes_written = 0;
-    BOOL ok = WriteFile(file_handle, buffer, count, &bytes_written, ft_nullptr);
+    bytes_written = 0;
+    is_successful = WriteFile(file_handle, buffer, static_cast<DWORD>(count),
+        &bytes_written, ft_nullptr);
     cmp_unlock_file_mutex();
-    if (!ok)
-    {
-        DWORD last_error = GetLastError();
-        return (-1);
-    }
-    return (bytes_written);
+    if (!is_successful)
+        return (cmp_map_system_error_to_ft(static_cast<int32_t>(GetLastError())));
+    if (bytes_written_out != ft_nullptr)
+        *bytes_written_out = static_cast<int64_t>(bytes_written);
+    return (FT_ERR_SUCCESSS);
 }
 
 int32_t cmp_close(int32_t file_descriptor)
 {
     int32_t lock_error;
+    HANDLE file_handle;
+    DWORD last_error;
+    int32_t error_code;
 
     lock_error = cmp_lock_file_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
-    {
-        cmp_set_last_error(lock_error);
-        return (-1);
-    }
-    HANDLE file_handle = cmp_retrieve_handle(file_descriptor);
+        return (lock_error);
+    file_handle = cmp_retrieve_handle(file_descriptor);
     if (file_handle == INVALID_HANDLE_VALUE)
     {
         cmp_unlock_file_mutex();
-        return (-1);
+        return (FT_ERR_INVALID_HANDLE);
     }
     if (!CloseHandle(file_handle))
     {
-        DWORD last_error = GetLastError();
         cmp_unlock_file_mutex();
-        return (-1);
+        last_error = GetLastError();
+        if (last_error != 0)
+            error_code = cmp_map_system_error_to_ft(static_cast<int32_t>(last_error));
+        else
+            error_code = FT_ERR_IO;
+        return (error_code);
     }
     cmp_clear_handle(file_descriptor);
     cmp_unlock_file_mutex();
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
 void cmp_initialize_standard_file_descriptors()
@@ -261,10 +278,7 @@ void cmp_initialize_standard_file_descriptors()
 
     lock_error = cmp_lock_file_mutex();
     if (lock_error != FT_ERR_SUCCESSS)
-    {
-        cmp_set_last_error(lock_error);
         return ;
-    }
     g_file_handles[0] = standard_input;
     g_file_handles[1] = standard_output;
     g_file_handles[2] = standard_error;
@@ -314,45 +328,55 @@ int32_t cmp_open(const char *path_name, int32_t flags, mode_t mode)
     return (file_descriptor);
 }
 
-ssize_t cmp_read(int32_t file_descriptor, void *buffer, ft_size_t count)
+int32_t cmp_read(int32_t file_descriptor, void *buffer, ft_size_t count,
+    int64_t *bytes_read_out)
 {
+    int64_t bytes_read;
+
+    if (bytes_read_out != ft_nullptr)
+        *bytes_read_out = 0;
+    if (buffer == ft_nullptr)
+        return (FT_ERR_INVALID_ARGUMENT);
     if (file_descriptor < 0)
-    {
-        return (-1);
-    }
-    ssize_t bytes_read = read(file_descriptor, buffer, count);
+        return (FT_ERR_INVALID_ARGUMENT);
+    bytes_read = read(file_descriptor, buffer, count);
     if (bytes_read == -1)
-    {
-        return (-1);
-    }
-    return (bytes_read);
+        return (cmp_map_system_error_to_ft(errno));
+    if (bytes_read_out != ft_nullptr)
+        *bytes_read_out = bytes_read;
+    return (FT_ERR_SUCCESSS);
 }
 
-ssize_t cmp_write(int32_t file_descriptor, const void *buffer, ft_size_t count)
+int32_t cmp_write(int32_t file_descriptor, const void *buffer, ft_size_t count,
+    int64_t *bytes_written_out)
 {
+    int64_t bytes_written;
+
+    if (bytes_written_out != ft_nullptr)
+        *bytes_written_out = 0;
+    if (buffer == ft_nullptr)
+        return (FT_ERR_INVALID_ARGUMENT);
     if (file_descriptor < 0)
-    {
-        return (-1);
-    }
-    ssize_t bytes_written = write(file_descriptor, buffer, count);
+        return (FT_ERR_INVALID_ARGUMENT);
+    bytes_written = write(file_descriptor, buffer, count);
     if (bytes_written == -1)
-    {
-        return (-1);
-    }
-    return (bytes_written);
+        return (cmp_map_system_error_to_ft(errno));
+    if (bytes_written_out != ft_nullptr)
+        *bytes_written_out = bytes_written;
+    return (FT_ERR_SUCCESSS);
 }
 
 int32_t cmp_close(int32_t file_descriptor)
 {
     if (file_descriptor < 0)
     {
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     if (close(file_descriptor) == -1)
     {
-        return (-1);
+        return (cmp_map_system_error_to_ft(errno));
     }
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
 void cmp_initialize_standard_file_descriptors()
@@ -361,18 +385,3 @@ void cmp_initialize_standard_file_descriptors()
 }
 
 #endif
-
-int32_t cmp_file_last_error(void)
-{
-#if defined(_WIN32) || defined(_WIN64)
-    DWORD last_error = GetLastError();
-    if (last_error != 0)
-        return (ft_map_system_error(static_cast<int32_t>(last_error)));
-    if (errno != 0)
-        return (ft_map_system_error(errno));
-#else
-    if (errno != 0)
-        return (ft_map_system_error(errno));
-#endif
-    return (FT_ERR_IO);
-}

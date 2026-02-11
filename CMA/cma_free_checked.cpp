@@ -3,7 +3,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include <cstdlib>
 
-int cma_checked_free(void* ptr)
+int32_t cma_checked_free(void* ptr)
 {
     if (OFFSWITCH == 1)
     {
@@ -13,7 +13,7 @@ int cma_checked_free(void* ptr)
     if (!ptr)
         return (0);
     bool lock_acquired = false;
-    int lock_error = cma_lock_allocator(&lock_acquired);
+    int32_t lock_error = cma_lock_allocator(&lock_acquired);
 
     if (lock_error != FT_ERR_SUCCESSS)
         return (-1);

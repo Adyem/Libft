@@ -8,7 +8,7 @@
 #include "../Logger/logger.hpp"
 #include "../System_utils/system_utils.hpp"
 
-static int  normalize_alignment_padding(ft_size_t *padding)
+static int32_t  normalize_alignment_padding(ft_size_t *padding)
 {
     ft_size_t    aligned_padding;
 
@@ -34,7 +34,7 @@ static ft_size_t    calculate_alignment_padding(Block *block, ft_size_t alignmen
         return (0);
     payload_address = reinterpret_cast<uintptr_t>(block->payload);
     payload_address += cma_debug_guard_size();
-    alignment_value = static_cast<uintptr_t>(alignment);
+    alignment_value = alignment;
     if (alignment_value == 0)
         return (0);
     remainder = payload_address & (alignment_value - 1);
@@ -44,7 +44,7 @@ static ft_size_t    calculate_alignment_padding(Block *block, ft_size_t alignmen
     return (padding);
 }
 
-static int  block_supports_aligned_request(Block *block, ft_size_t aligned_size,
+static int32_t  block_supports_aligned_request(Block *block, ft_size_t aligned_size,
             ft_size_t alignment, ft_size_t *padding)
 {
     ft_size_t    remaining_size;
@@ -105,14 +105,21 @@ static Block   *find_aligned_free_block(ft_size_t aligned_size, ft_size_t alignm
 }
 
 static void    *aligned_alloc_offswitch(ft_size_t alignment, ft_size_t request_size,
-            int *error_code)
+            int32_t *error_code)
 {
-    size_t  alignment_value;
-    size_t  allocation_size;
-    size_t  remainder;
+    ft_size_t  alignment_value;
+    ft_size_t  allocation_size;
+    ft_size_t  remainder;
+    int32_t    local_error_code;
+    int32_t    *error_target;
     void    *pointer;
-    alignment_value = static_cast<size_t>(alignment);
-    allocation_size = static_cast<size_t>(request_size);
+
+    local_error_code = FT_ERR_SUCCESSS;
+    error_target = error_code;
+    if (error_target == ft_nullptr)
+        error_target = &local_error_code;
+    alignment_value = alignment;
+    allocation_size = request_size;
     remainder = 0;
     if (alignment_value != 0)
         remainder = allocation_size % alignment_value;
@@ -126,19 +133,19 @@ static void    *aligned_alloc_offswitch(ft_size_t alignment, ft_size_t request_s
     if (pointer)
     {
         g_cma_allocation_count++;
-        *error_code = FT_ERR_SUCCESSS;
+        *error_target = FT_ERR_SUCCESSS;
     }
     else
-        *error_code = FT_ERR_NO_MEMORY;
+        *error_target = FT_ERR_NO_MEMORY;
 #else
-    *error_code = posix_memalign(&pointer, alignment_value, allocation_size);
-    if (*error_code == 0 && pointer)
+    *error_target = posix_memalign(&pointer, alignment_value, allocation_size);
+    if (*error_target == 0 && pointer)
     {
         g_cma_allocation_count++;
-        *error_code = FT_ERR_SUCCESSS;
+        *error_target = FT_ERR_SUCCESSS;
     }
     else
-        *error_code = FT_ERR_NO_MEMORY;
+        *error_target = FT_ERR_NO_MEMORY;
 #endif
     if (ft_log_get_alloc_logging())
         ft_log_debug("cma_aligned_alloc %llu (alignment %llu) -> %p",
@@ -186,7 +193,7 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
     if (OFFSWITCH == 1)
         return (aligned_alloc_offswitch(alignment, request_size, ft_nullptr));
     bool lock_acquired = false;
-    int lock_error = cma_lock_allocator(&lock_acquired);
+    int32_t lock_error = cma_lock_allocator(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESSS)
         return (ft_nullptr);
     ft_size_t padding = 0;

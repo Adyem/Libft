@@ -49,6 +49,10 @@ int pt_recursive_mutex::destroy()
 {
     if (this->_native_mutex == ft_nullptr)
         return (FT_ERR_SUCCESSS);
+    if (this->_lock.load(std::memory_order_acquire))
+        return (FT_ERR_THREAD_BUSY);
+    if (this->_lock_depth.load(std::memory_order_acquire) != 0)
+        return (FT_ERR_THREAD_BUSY);
     delete this->_native_mutex;
     this->_native_mutex = ft_nullptr;
     this->_native_initialized = false;

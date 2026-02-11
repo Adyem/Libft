@@ -16,37 +16,36 @@
 static int32_t cmp_socket_map_send_error(void)
 {
 #if defined(_WIN32) || defined(_WIN64)
-    return (ft_map_system_error(WSAGetLastError()));
+    return (cmp_map_system_error_to_ft(WSAGetLastError()));
 #else
-    return (ft_map_system_error(errno));
+    return (cmp_map_system_error_to_ft(errno));
 #endif
 }
 
-static int32_t cmp_socket_normalize_send_length(ft_size_t source, int *destination_out)
+static void cmp_socket_normalize_send_length(ft_size_t source,
+    int32_t *destination_out)
 {
     if (source > static_cast<ft_size_t>(FT_INT32_MAX))
         *destination_out = FT_INT32_MAX;
     else
-        *destination_out = static_cast<int>(source);
-    return (0);
+        *destination_out = static_cast<int32_t>(source);
+    return ;
 }
 
 int32_t cmp_socket_send_all(intptr_t socket_handle, const void *buffer,
                             ft_size_t length, int32_t flags,
-                            ssize_t *bytes_sent_out)
+                            int64_t *bytes_sent_out)
 {
     if (buffer == ft_nullptr)
     {
         if (bytes_sent_out != ft_nullptr)
             *bytes_sent_out = 0;
-        cmp_set_last_error(FT_ERR_INVALID_POINTER);
         return (FT_ERR_INVALID_POINTER);
     }
     if (length == 0)
     {
         if (bytes_sent_out != ft_nullptr)
             *bytes_sent_out = 0;
-        cmp_set_last_error(FT_ERR_SUCCESSS);
         return (FT_ERR_SUCCESSS);
     }
 #if defined(_WIN32) || defined(_WIN64)
@@ -55,16 +54,14 @@ int32_t cmp_socket_send_all(intptr_t socket_handle, const void *buffer,
     {
         if (bytes_sent_out != ft_nullptr)
             *bytes_sent_out = 0;
-        cmp_set_last_error(FT_ERR_INVALID_HANDLE);
         return (FT_ERR_INVALID_HANDLE);
     }
 #else
-    int socket_descriptor = static_cast<int>(socket_handle);
+    int32_t socket_descriptor = static_cast<int32_t>(socket_handle);
     if (socket_descriptor < 0)
     {
         if (bytes_sent_out != ft_nullptr)
             *bytes_sent_out = 0;
-        cmp_set_last_error(FT_ERR_INVALID_HANDLE);
         return (FT_ERR_INVALID_HANDLE);
     }
 #endif
@@ -72,34 +69,31 @@ int32_t cmp_socket_send_all(intptr_t socket_handle, const void *buffer,
     ft_size_t total_sent = 0;
     while (total_sent < length)
     {
-        int send_length;
+        int32_t send_length;
+        int64_t chunk;
+
         cmp_socket_normalize_send_length(length - total_sent, &send_length);
-        ssize_t chunk;
 #if defined(_WIN32) || defined(_WIN64)
         chunk = ::send(socket_descriptor, data + total_sent, send_length, flags);
 #else
-        chunk = ::send(socket_descriptor, data + total_sent,
-            static_cast<size_t>(send_length), flags);
+        chunk = ::send(socket_descriptor, data + total_sent, send_length, flags);
 #endif
         if (chunk < 0)
         {
             int32_t error_code = cmp_socket_map_send_error();
             if (bytes_sent_out != ft_nullptr)
-                *bytes_sent_out = static_cast<ssize_t>(total_sent);
-            cmp_set_last_error(error_code);
+                *bytes_sent_out = static_cast<int64_t>(total_sent);
             return (error_code);
         }
         if (chunk == 0)
         {
             if (bytes_sent_out != ft_nullptr)
-                *bytes_sent_out = static_cast<ssize_t>(total_sent);
-            cmp_set_last_error(FT_ERR_IO);
+                *bytes_sent_out = static_cast<int64_t>(total_sent);
             return (FT_ERR_IO);
         }
         total_sent += static_cast<ft_size_t>(chunk);
     }
     if (bytes_sent_out != ft_nullptr)
-        *bytes_sent_out = static_cast<ssize_t>(total_sent);
-    cmp_set_last_error(FT_ERR_SUCCESSS);
+        *bytes_sent_out = static_cast<int64_t>(total_sent);
     return (FT_ERR_SUCCESSS);
 }

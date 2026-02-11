@@ -21,14 +21,12 @@ static int32_t cmp_lock_pt_mutex(pt_mutex *mutex)
 {
     if (mutex == ft_nullptr)
     {
-        cmp_set_last_error(FT_ERR_INVALID_ARGUMENT);
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     int32_t lock_error = mutex->lock();
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        cmp_set_last_error(lock_error);
-        return (-1);
+        return (lock_error);
     }
     return (FT_ERR_SUCCESSS);
 }
@@ -37,14 +35,12 @@ static int32_t cmp_unlock_pt_mutex(pt_mutex *mutex)
 {
     if (mutex == ft_nullptr)
     {
-        cmp_set_last_error(FT_ERR_INVALID_ARGUMENT);
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     int32_t unlock_error = mutex->unlock();
     if (unlock_error != FT_ERR_SUCCESSS)
     {
-        cmp_set_last_error(unlock_error);
-        return (-1);
+        return (unlock_error);
     }
     return (FT_ERR_SUCCESSS);
 }
@@ -55,23 +51,20 @@ static int32_t cmp_localtime_from_shared_state(const std::time_t *time_value, st
     std::tm *shared_result;
 
     if (cmp_lock_pt_mutex(&localtime_mutex) != FT_ERR_SUCCESSS)
-        return (-1);
+        return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
     shared_result = std::localtime(time_value);
     if (shared_result == ft_nullptr)
     {
         if (cmp_unlock_pt_mutex(&localtime_mutex) != FT_ERR_SUCCESSS)
-            return (-1);
+            return (FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
         if (errno != 0)
-            cmp_set_last_error(ft_map_system_error(errno));
-        else
-            cmp_set_last_error(FT_ERR_INVALID_ARGUMENT);
-        return (-1);
+            return (cmp_map_system_error_to_ft(errno));
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     *output = *shared_result;
     if (cmp_unlock_pt_mutex(&localtime_mutex) != FT_ERR_SUCCESSS)
-        return (-1);
-    cmp_set_last_error(FT_ERR_SUCCESSS);
-    return (0);
+        return (FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
+    return (FT_ERR_SUCCESSS);
 }
 #endif
 
@@ -79,8 +72,7 @@ int32_t cmp_localtime(const std::time_t *time_value, std::tm *output)
 {
     if (time_value == ft_nullptr || output == ft_nullptr)
     {
-        cmp_set_last_error(FT_ERR_INVALID_ARGUMENT);
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
 #if defined(_WIN32) || defined(_WIN64)
     errno_t error_code;
@@ -88,23 +80,18 @@ int32_t cmp_localtime(const std::time_t *time_value, std::tm *output)
     error_code = localtime_s(output, time_value);
     if (error_code == 0)
     {
-        cmp_set_last_error(FT_ERR_SUCCESSS);
-        return (0);
+        return (FT_ERR_SUCCESSS);
     }
-    cmp_set_last_error(ft_map_system_error(static_cast<int32_t>(error_code)));
-    return (-1);
+    return (cmp_map_system_error_to_ft(static_cast<int32_t>(error_code)));
 #else
 # if defined(_POSIX_VERSION)
     if (localtime_r(time_value, output) != ft_nullptr)
     {
-        cmp_set_last_error(FT_ERR_SUCCESSS);
-        return (0);
+        return (FT_ERR_SUCCESSS);
     }
     if (errno != 0)
-        cmp_set_last_error(ft_map_system_error(errno));
-    else
-        cmp_set_last_error(FT_ERR_INVALID_ARGUMENT);
-    return (-1);
+        return (cmp_map_system_error_to_ft(errno));
+    return (FT_ERR_INVALID_ARGUMENT);
 # else
     return (cmp_localtime_from_shared_state(time_value, output));
 # endif
@@ -115,8 +102,7 @@ int32_t cmp_time_get_time_of_day(struct timeval *time_value)
 {
     if (time_value == ft_nullptr)
     {
-        cmp_set_last_error(FT_ERR_INVALID_ARGUMENT);
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
 #if defined(_WIN32) || defined(_WIN64)
     FILETIME file_time;
@@ -129,16 +115,15 @@ int32_t cmp_time_get_time_of_day(struct timeval *time_value)
     microseconds_since_epoch = (file_time_value.QuadPart - 116444736000000000ULL) / 10ULL;
     time_value->tv_sec = static_cast<int64_t>(microseconds_since_epoch / 1000000ULL);
     time_value->tv_usec = static_cast<int64_t>(microseconds_since_epoch % 1000000ULL);
-    cmp_set_last_error(FT_ERR_SUCCESSS);
-    return (0);
+    return (FT_ERR_SUCCESSS);
 #else
     if (gettimeofday(time_value, ft_nullptr) == 0)
     {
-        cmp_set_last_error(FT_ERR_SUCCESSS);
-        return (0);
+        return (FT_ERR_SUCCESSS);
     }
-    cmp_set_last_error(ft_map_system_error(errno));
-    return (-1);
+    if (errno != 0)
+        return (cmp_map_system_error_to_ft(errno));
+    return (FT_ERR_IO);
 #endif
 }
 
@@ -149,8 +134,7 @@ static int32_t cmp_timespec_to_nanoseconds(const struct timespec *time_value, in
 
     if (time_value == ft_nullptr || nanoseconds_out == ft_nullptr)
     {
-        cmp_set_last_error(FT_ERR_INVALID_ARGUMENT);
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     seconds_component = static_cast<__int128>(time_value->tv_sec);
     seconds_component *= static_cast<__int128>(1000000000LL);
@@ -158,62 +142,52 @@ static int32_t cmp_timespec_to_nanoseconds(const struct timespec *time_value, in
     total_nanoseconds += static_cast<__int128>(time_value->tv_nsec);
     if (total_nanoseconds > static_cast<__int128>(LLONG_MAX))
     {
-        cmp_set_last_error(FT_ERR_OUT_OF_RANGE);
-        return (-1);
+        return (FT_ERR_OUT_OF_RANGE);
     }
     if (total_nanoseconds < static_cast<__int128>(LLONG_MIN))
     {
-        cmp_set_last_error(FT_ERR_OUT_OF_RANGE);
-        return (-1);
+        return (FT_ERR_OUT_OF_RANGE);
     }
     *nanoseconds_out = static_cast<int64_t>(total_nanoseconds);
-    cmp_set_last_error(FT_ERR_SUCCESSS);
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
 int32_t cmp_high_resolution_time(int64_t *nanoseconds_out)
 {
     if (nanoseconds_out == ft_nullptr)
     {
-        cmp_set_last_error(FT_ERR_INVALID_ARGUMENT);
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
 #if defined(_WIN32) || defined(_WIN64)
     LARGE_INTEGER performance_counter;
     LARGE_INTEGER performance_frequency;
-    int64_t double scaled_value;
+    double scaled_value;
 
     if (!QueryPerformanceCounter(&performance_counter))
     {
-        cmp_set_last_error(ft_map_system_error(GetLastError()));
-        return (-1);
+        return (cmp_map_system_error_to_ft(static_cast<int32_t>(GetLastError())));
     }
     if (!QueryPerformanceFrequency(&performance_frequency))
     {
-        cmp_set_last_error(ft_map_system_error(GetLastError()));
-        return (-1);
+        return (cmp_map_system_error_to_ft(static_cast<int32_t>(GetLastError())));
     }
     if (performance_frequency.QuadPart <= 0)
     {
-        cmp_set_last_error(FT_ERR_INVALID_OPERATION);
-        return (-1);
+        return (FT_ERR_INVALID_OPERATION);
     }
-    scaled_value = static_cast<int64_t double>(performance_counter.QuadPart);
+    scaled_value = static_cast<double>(performance_counter.QuadPart);
     scaled_value *= 1000000000.0L;
-    scaled_value /= static_cast<int64_t double>(performance_frequency.QuadPart);
-    if (scaled_value >= static_cast<int64_t double>(LLONG_MAX))
+    scaled_value /= static_cast<double>(performance_frequency.QuadPart);
+    if (scaled_value >= static_cast<double>(LLONG_MAX))
     {
-        cmp_set_last_error(FT_ERR_OUT_OF_RANGE);
-        return (-1);
+        return (FT_ERR_OUT_OF_RANGE);
     }
-    if (scaled_value <= static_cast<int64_t double>(LLONG_MIN))
+    if (scaled_value <= static_cast<double>(LLONG_MIN))
     {
-        cmp_set_last_error(FT_ERR_OUT_OF_RANGE);
-        return (-1);
+        return (FT_ERR_OUT_OF_RANGE);
     }
     *nanoseconds_out = static_cast<int64_t>(scaled_value);
-    cmp_set_last_error(FT_ERR_SUCCESSS);
-    return (0);
+    return (FT_ERR_SUCCESSS);
 #else
     struct timespec time_value;
     int32_t call_result;
@@ -235,26 +209,24 @@ int32_t cmp_high_resolution_time(int64_t *nanoseconds_out)
             break;
         if (errno != EINVAL)
         {
-            cmp_set_last_error(ft_map_system_error(errno));
-            return (-1);
+            return (cmp_map_system_error_to_ft(errno));
         }
         attempt_index += 1;
     }
     if (call_result != 0)
     {
-        cmp_set_last_error(FT_ERR_INVALID_OPERATION);
-        return (-1);
+        if (errno != 0)
+            return (cmp_map_system_error_to_ft(errno));
+        return (FT_ERR_INVALID_OPERATION);
     }
 # else
     if (clock_gettime(CLOCK_MONOTONIC, &time_value) != 0)
     {
-        cmp_set_last_error(ft_map_system_error(errno));
-        return (-1);
+        if (errno != 0)
+            return (cmp_map_system_error_to_ft(errno));
+        return (FT_ERR_INVALID_OPERATION);
     }
 # endif
-    if (cmp_timespec_to_nanoseconds(&time_value, nanoseconds_out) != 0)
-        return (-1);
-    cmp_set_last_error(FT_ERR_SUCCESSS);
-    return (0);
+    return (cmp_timespec_to_nanoseconds(&time_value, nanoseconds_out));
 #endif
 }

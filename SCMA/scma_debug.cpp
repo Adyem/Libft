@@ -1,41 +1,32 @@
 #include <cstdio>
+#include <cinttypes>
 #include "../Errno/errno.hpp"
-#include "../CPP_class/class_nullptr.hpp"
 #include "SCMA.hpp"
 #include "scma_internal.hpp"
 
-int    scma_get_stats(scma_stats *out_stats)
+int32_t    scma_get_stats(scma_stats *out_stats)
 {
     scma_stats stats;
     ft_size_t &block_count = scma_block_count_ref();
     ft_size_t &used_size = scma_used_size_ref();
     ft_size_t &heap_capacity = scma_heap_capacity_ref();
-    int error_code;
 
     if (scma_mutex_lock() != 0)
     {
-        error_code = FT_ERR_SYS_MUTEX_LOCK_FAILED;
-        scma_record_operation_error(error_code);
         return (0);
     }
     if (!scma_initialized_ref())
     {
-        error_code = FT_ERR_INVALID_STATE;
-        scma_record_operation_error(error_code);
         return (scma_unlock_and_return_int(0));
     }
     if (!out_stats)
     {
-        error_code = FT_ERR_INVALID_POINTER;
-        scma_record_operation_error(error_code);
         return (scma_unlock_and_return_int(0));
     }
     stats.block_count = block_count;
     stats.used_size = used_size;
     stats.heap_capacity = heap_capacity;
     *out_stats = stats;
-    error_code = FT_ERR_SUCCESSS;
-    scma_record_operation_error(error_code);
     return (scma_unlock_and_return_int(1));
 }
 
@@ -43,47 +34,48 @@ void    scma_debug_dump(void)
 {
     scma_block_span span;
     ft_size_t index;
-    size_t heap_capacity;
     ft_size_t &used_size = scma_used_size_ref();
     ft_size_t &heap_capacity_ref_value = scma_heap_capacity_ref();
-    int error_code;
+    uint64_t block_count_print;
+    uint64_t used_size_print;
+    uint64_t heap_capacity_print;
 
     if (scma_mutex_lock() != 0)
     {
-        error_code = FT_ERR_SYS_MUTEX_LOCK_FAILED;
-        scma_record_operation_error(error_code);
         return ;
     }
     if (!scma_initialized_ref())
     {
-        error_code = FT_ERR_INVALID_STATE;
-        scma_record_operation_error(error_code);
         std::printf("[scma] not initialized\n");
         scma_unlock_and_return_void();
         return ;
     }
     span = scma_get_block_span();
-    heap_capacity = static_cast<size_t>(heap_capacity_ref_value);
-    std::printf("[scma] blocks=%llu used=%llu capacity=%zu\n",
-        span.count,
-        used_size,
-        heap_capacity);
+    block_count_print = span.count;
+    used_size_print = used_size;
+    heap_capacity_print = heap_capacity_ref_value;
+    std::printf("[scma] blocks=%" PRIu64 " used=%" PRIu64 " capacity=%" PRIu64 "\n",
+        block_count_print,
+        used_size_print,
+        heap_capacity_print);
     index = 0;
     while (index < span.count)
     {
         scma_block *block;
+        uint64_t index_print;
+        uint64_t offset_print;
+        uint64_t size_print;
+        uint64_t generation_print;
 
-        block = &span.data[static_cast<size_t>(index)];
-        std::printf("  [%llu] offset=%llu size=%llu in_use=%d generation=%llu\n",
-            index,
-            block->offset,
-            block->size,
-            block->in_use,
-            block->generation);
+        block = &span.data[index];
+        index_print = index;
+        offset_print = block->offset;
+        size_print = block->size;
+        generation_print = block->generation;
+        std::printf("  [%" PRIu64 "] offset=%" PRIu64 " size=%" PRIu64 " in_use=%d generation=%" PRIu64 "\n",
+            index_print, offset_print, size_print, block->in_use, generation_print);
         index++;
     }
-    error_code = FT_ERR_SUCCESSS;
-    scma_record_operation_error(error_code);
     scma_unlock_and_return_void();
     return ;
 }

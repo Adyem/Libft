@@ -48,20 +48,24 @@ FT_TEST(test_cmp_open_failure_sets_errno, "cmp_open failure reports ft_errno")
 FT_TEST(test_cmp_read_invalid_fd_sets_ft_einval, "cmp_read invalid descriptor")
 {
     char buffer[4];
+    int64_t bytes_read;
 
-    ft_errno = FT_ERR_SUCCESSS;
-    FT_ASSERT_EQ(-1, cmp_read(-1, buffer, sizeof(buffer)));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    bytes_read = 0;
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT,
+        cmp_read(-1, buffer, sizeof(buffer), &bytes_read));
+    FT_ASSERT_EQ(0, bytes_read);
     return (1);
 }
 
 FT_TEST(test_cmp_write_invalid_fd_sets_ft_einval, "cmp_write invalid descriptor")
 {
     char buffer[4] = {0, 0, 0, 0};
+    int64_t bytes_written;
 
-    ft_errno = FT_ERR_SUCCESSS;
-    FT_ASSERT_EQ(-1, cmp_write(-1, buffer, sizeof(buffer)));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    bytes_written = 0;
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT,
+        cmp_write(-1, buffer, sizeof(buffer), &bytes_written));
+    FT_ASSERT_EQ(0, bytes_written);
     return (1);
 }
 
@@ -77,18 +81,16 @@ FT_TEST(test_cmp_read_translates_errno, "cmp_read propagates errno failures")
 {
     int file_descriptor;
     char buffer[4];
+    int64_t bytes_read;
 
     create_system_io_test_file();
-    ft_errno = FT_ERR_SUCCESSS;
     file_descriptor = cmp_open("test_cmp_system_io.txt", O_WRONLY);
     FT_ASSERT(file_descriptor >= 0);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
-    ft_errno = FT_ERR_SUCCESSS;
-    errno = 0;
-    FT_ASSERT_EQ(-1, cmp_read(file_descriptor, buffer, sizeof(buffer)));
-    FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, ft_errno);
+    bytes_read = 0;
+    FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE,
+        cmp_read(file_descriptor, buffer, sizeof(buffer), &bytes_read));
+    FT_ASSERT_EQ(0, bytes_read);
     FT_ASSERT_EQ(0, cmp_close(file_descriptor));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -96,18 +98,16 @@ FT_TEST(test_cmp_write_translates_errno, "cmp_write propagates errno failures")
 {
     int file_descriptor;
     const char buffer[4] = {'t', 'e', 's', 't'};
+    int64_t bytes_written;
 
     create_system_io_test_file();
-    ft_errno = FT_ERR_SUCCESSS;
     file_descriptor = cmp_open("test_cmp_system_io.txt", O_RDONLY);
     FT_ASSERT(file_descriptor >= 0);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
-    ft_errno = FT_ERR_SUCCESSS;
-    errno = 0;
-    FT_ASSERT_EQ(-1, cmp_write(file_descriptor, buffer, sizeof(buffer)));
-    FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, ft_errno);
+    bytes_written = 0;
+    FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE,
+        cmp_write(file_descriptor, buffer, sizeof(buffer), &bytes_written));
+    FT_ASSERT_EQ(0, bytes_written);
     FT_ASSERT_EQ(0, cmp_close(file_descriptor));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -143,4 +143,3 @@ FT_TEST(test_cmp_close_translates_errno, "cmp_close propagates errno failures")
     FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, ft_errno);
     return (1);
 }
-

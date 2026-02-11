@@ -32,7 +32,7 @@ char *adv_substr(const char *source, uint32_t start, ft_size_t length)
         return (empty_string);
     }
     ft_size_t available = source_length - start_index;
-    ft_size_t desired = static_cast<ft_size_t>(length);
+    ft_size_t desired = length;
     if (desired > available)
         desired = available;
     if (desired >= FT_SYSTEM_SIZE_MAX)

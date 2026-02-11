@@ -10,7 +10,14 @@ static t_su_write_syscall_hook    g_su_write_syscall_hook = ft_nullptr;
 
 static ssize_t    su_default_write_syscall(int file_descriptor, const void *buffer, size_t count)
 {
-    return (cmp_write(file_descriptor, buffer, count));
+    int64_t bytes_written;
+    int32_t error_code;
+
+    bytes_written = 0;
+    error_code = cmp_write(file_descriptor, buffer, count, &bytes_written);
+    if (error_code != FT_ERR_SUCCESSS)
+        return (-1);
+    return (static_cast<ssize_t>(bytes_written));
 }
 
 void    su_set_write_syscall_hook(t_su_write_syscall_hook hook)
@@ -36,29 +43,29 @@ void    su_reset_write_syscall_hook(void)
 ssize_t su_read(int file_descriptor, void *buffer, size_t count)
 {
     int retry_attempts;
+    int64_t bytes_read_value;
 
     retry_attempts = 0;
     while (true)
     {
-        ssize_t read_result;
-        int error_code;
+        int32_t error_code;
 
-        read_result = cmp_read(file_descriptor, buffer, count);
-        if (read_result >= 0)
+        bytes_read_value = 0;
+        error_code = cmp_read(file_descriptor, buffer, count, &bytes_read_value);
+        if (error_code == FT_ERR_SUCCESSS)
         {
             ft_global_error_stack_push(FT_ERR_SUCCESSS);
-            return (read_result);
+            return (static_cast<ssize_t>(bytes_read_value));
         }
-        error_code = cmp_file_last_error();
 #if defined(__linux__) || defined(__APPLE__)
-        const int max_retries = 10;
-        const int retry_delay_ms = 500;
+        const int32_t max_retries = 10;
+        const int32_t retry_delay_ms = 500;
         if (error_code == ft_map_system_error(EINTR))
             continue ;
         else if (error_code == ft_map_system_error(EAGAIN)
             || error_code == ft_map_system_error(EWOULDBLOCK))
         {
-            if (retry_attempts < max_retries)
+            if (retry_attempts < static_cast<int>(max_retries))
             {
                 retry_attempts++;
                 struct timespec delay = {0, retry_delay_ms * 1000000L};
@@ -89,6 +96,7 @@ ssize_t su_write(int file_descriptor, const void *buffer, size_t count)
     int retry_attempts;
     const char *byte_buffer;
     t_su_write_syscall_hook write_function;
+    int64_t bytes_written_value;
 
     total_written = 0;
     retry_attempts = 0;
@@ -99,13 +107,31 @@ ssize_t su_write(int file_descriptor, const void *buffer, size_t count)
     while (total_written < count)
     {
         ssize_t write_result;
+        int32_t error_code;
 
-        write_result = write_function(file_descriptor,
-            byte_buffer + total_written, count - total_written);
-        if (write_result > 0)
+        if (write_function == su_default_write_syscall)
         {
-            total_written += static_cast<size_t>(write_result);
+            bytes_written_value = 0;
+            error_code = cmp_write(file_descriptor, byte_buffer + total_written,
+                count - total_written, &bytes_written_value);
+            if (error_code == FT_ERR_SUCCESSS)
+                write_result = static_cast<ssize_t>(bytes_written_value);
+            else
+                write_result = -1;
         }
+        else
+        {
+            write_result = write_function(file_descriptor,
+                byte_buffer + total_written, count - total_written);
+            if (write_result < 0)
+            {
+                error_code = ft_map_system_error(errno);
+                if (error_code == FT_ERR_SUCCESSS)
+                    error_code = FT_ERR_IO;
+            }
+        }
+        if (write_result > 0)
+            total_written += static_cast<size_t>(write_result);
         else
         {
             if (write_result == 0)
@@ -113,18 +139,15 @@ ssize_t su_write(int file_descriptor, const void *buffer, size_t count)
                 ft_global_error_stack_push(FT_ERR_IO);
                 return (-1);
             }
-            int error_code;
-
-            error_code = cmp_file_last_error();
 #if defined(__linux__) || defined(__APPLE__)
-            const int max_retries = 10;
-            const int retry_delay_ms = 500;
+            const int32_t max_retries = 10;
+            const int32_t retry_delay_ms = 500;
             if (error_code == ft_map_system_error(EINTR))
                 continue ;
             else if (error_code == ft_map_system_error(EAGAIN)
                 || error_code == ft_map_system_error(EWOULDBLOCK))
             {
-                if (retry_attempts < max_retries)
+                if (retry_attempts < static_cast<int>(max_retries))
                 {
                     retry_attempts++;
                     struct timespec delay = {0, retry_delay_ms * 1000000L};
@@ -155,11 +178,14 @@ ssize_t su_write(int file_descriptor, const void *buffer, size_t count)
 int su_close(int file_descriptor)
 {
     int close_result;
+    int error_code;
 
     close_result = cmp_close(file_descriptor);
     if (close_result != 0)
     {
-        int error_code = cmp_file_last_error();
+        error_code = ft_map_system_error(errno);
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_IO;
         ft_global_error_stack_push(error_code);
         return (close_result);
     }

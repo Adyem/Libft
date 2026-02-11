@@ -11,6 +11,5 @@ int32_t cmp_file_watch_start(cmp_file_watch_context *context, const char *path);
 void cmp_file_watch_stop(cmp_file_watch_context *context);
 bool cmp_file_watch_wait_event(cmp_file_watch_context *context,
     cmp_file_watch_event *event);
-int32_t cmp_file_watch_last_error(const cmp_file_watch_context *context);
 
 #endif

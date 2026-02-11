@@ -91,7 +91,6 @@ FT_TEST(test_scma_resize_shrinks_truncates_tail, "scma resize shrinking truncate
             static_cast<ft_size_t>(sizeof(int) * 2),
             &read_value,
             static_cast<ft_size_t>(sizeof(int))));
-    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
     scma_shutdown();
     return (1);
 }
@@ -104,7 +103,6 @@ FT_TEST(test_scma_resize_rejects_zero_size, "scma resize rejects zero-sized targ
     handle = scma_allocate(static_cast<ft_size_t>(sizeof(int)));
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
     FT_ASSERT_EQ(0, scma_resize(handle, 0));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     scma_shutdown();
     return (1);
 }

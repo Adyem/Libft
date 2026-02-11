@@ -80,8 +80,11 @@ FT_TEST(test_cmp_dir_read_success_resets_errno, "cmp_dir_read success reports FT
 FT_TEST(test_cmp_directory_exists_null_path, "cmp_directory_exists null path reports invalid argument")
 {
     int error_code = FT_ERR_SUCCESSS;
+    int exists_value = 1;
 
-    FT_ASSERT_EQ(0, cmp_directory_exists(ft_nullptr, &error_code));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, cmp_directory_exists(ft_nullptr,
+        &exists_value, &error_code));
+    FT_ASSERT_EQ(0, exists_value);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_code);
     return (1);
 }
@@ -89,8 +92,11 @@ FT_TEST(test_cmp_directory_exists_null_path, "cmp_directory_exists null path rep
 FT_TEST(test_cmp_directory_exists_existing_directory, "cmp_directory_exists finds real directory")
 {
     int error_code = FT_ERR_INVALID_ARGUMENT;
+    int exists_value = 0;
 
-    FT_ASSERT_EQ(1, cmp_directory_exists(".", &error_code));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, cmp_directory_exists(".", &exists_value,
+        &error_code));
+    FT_ASSERT_EQ(1, exists_value);
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, error_code);
     return (1);
 }
@@ -98,8 +104,11 @@ FT_TEST(test_cmp_directory_exists_existing_directory, "cmp_directory_exists find
 FT_TEST(test_cmp_directory_exists_missing_directory, "cmp_directory_exists missing directory propagates error")
 {
     int error_code = FT_ERR_SUCCESSS;
+    int exists_value = 1;
 
-    FT_ASSERT_EQ(0, cmp_directory_exists("cmp_directory_exists_missing_directory", &error_code));
+    FT_ASSERT_EQ(FT_ERR_IO, cmp_directory_exists(
+        "cmp_directory_exists_missing_directory", &exists_value, &error_code));
+    FT_ASSERT_EQ(0, exists_value);
     FT_ASSERT_EQ(FT_ERR_IO, error_code);
     return (1);
 }
@@ -109,12 +118,15 @@ FT_TEST(test_cmp_directory_exists_file_path, "cmp_directory_exists returns 0 for
     const char *file_path = "cmp_directory_exists_file_path.txt";
     std::FILE *file_handle;
     int error_code = FT_ERR_INVALID_ARGUMENT;
+    int exists_value = 1;
 
     file_handle = std::fopen(file_path, "w");
     if (file_handle == ft_nullptr)
         return (0);
     std::fclose(file_handle);
-    FT_ASSERT_EQ(0, cmp_directory_exists(file_path, &error_code));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, cmp_directory_exists(file_path, &exists_value,
+        &error_code));
+    FT_ASSERT_EQ(0, exists_value);
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, error_code);
     std::remove(file_path);
     return (1);

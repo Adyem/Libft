@@ -32,7 +32,7 @@ static void json_reader_set_io_error(int last_error)
 {
     int normalized_error;
 
-    normalized_error = cmp_normalize_ft_errno(last_error);
+    normalized_error = cmp_decode_errno_offset_error(last_error);
     if (normalized_error == FT_ERR_SUCCESSS)
         normalized_error = FT_ERR_IO;
     json_reader_push_error(normalized_error);

@@ -6,7 +6,6 @@ FT_TEST(test_scma_initialize_cycle,
     scma_test_reset();
     FT_ASSERT_EQ(1, scma_initialize(64));
     FT_ASSERT_EQ(0, scma_initialize(64));
-    FT_ASSERT_EQ(FT_ERR_ALREADY_INITIALIZED, ft_errno);
     scma_shutdown();
     FT_ASSERT_EQ(0, scma_is_initialized());
     return (1);
@@ -18,7 +17,6 @@ FT_TEST(test_scma_allocate_zero_size_rejected, "scma rejects zero-sized allocati
 
     FT_ASSERT_EQ(1, scma_test_initialize(32));
     handle = scma_allocate(0);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(0, scma_handle_is_valid(handle));
     scma_shutdown();
     return (1);
@@ -37,10 +35,8 @@ FT_TEST(test_scma_double_free_and_bounds_errors,
     FT_ASSERT_EQ(1, scma_write(handle, 0, &value, static_cast<ft_size_t>(sizeof(int))));
     FT_ASSERT_EQ(0, scma_write(handle, static_cast<ft_size_t>(sizeof(int) * 2),
                 &value, static_cast<ft_size_t>(sizeof(int))));
-    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
     FT_ASSERT_EQ(1, scma_free(handle));
     FT_ASSERT_EQ(0, scma_free(handle));
-    FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, ft_errno);
     scma_shutdown();
     return (1);
 }
@@ -55,7 +51,6 @@ FT_TEST(test_scma_handle_invalid_after_shutdown,
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
     scma_shutdown();
     FT_ASSERT_EQ(0, scma_handle_is_valid(handle));
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, ft_errno);
     return (1);
 }
 
@@ -68,7 +63,6 @@ FT_TEST(test_scma_free_invalid_handle_reports_error,
     handle.generation = 0;
     scma_test_reset();
     FT_ASSERT_EQ(0, scma_free(handle));
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, ft_errno);
     return (1);
 }
 
@@ -80,6 +74,5 @@ FT_TEST(test_scma_allocate_requires_runtime_online,
     scma_test_reset();
     handle = scma_allocate(static_cast<ft_size_t>(sizeof(int)));
     FT_ASSERT_EQ(0, scma_handle_is_valid(handle));
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, ft_errno);
     return (1);
 }

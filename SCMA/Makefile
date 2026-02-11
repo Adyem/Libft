@@ -4,7 +4,6 @@ DEBUG_TARGET   := SCMA_debug.a
 
 SRCS := scma_allocator.cpp \
 scma_debug.cpp \
-scma_error_stack.cpp \
 scma_io.cpp \
 scma_mutex.cpp \
 scma_state.cpp

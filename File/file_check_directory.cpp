@@ -30,11 +30,20 @@ int file_dir_exists(const char *rel_path)
     ft_string path = normalize_path(rel_path);
     int error_code;
     int result;
+    int exists_value;
+    int status;
 
     error_code = file_string_error(path);
     if (error_code != FT_ERR_SUCCESSS)
         return (-1);
-    result = cmp_directory_exists(path.c_str(), &error_code);
-    ft_global_error_stack_push(error_code);
+    exists_value = 0;
+    status = cmp_directory_exists(path.c_str(), &exists_value, &error_code);
+    if (status != FT_ERR_SUCCESSS)
+    {
+        ft_global_error_stack_push(error_code);
+        return (-1);
+    }
+    result = exists_value;
+    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }

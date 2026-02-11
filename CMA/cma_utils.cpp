@@ -59,7 +59,7 @@ static void report_corrupted_block(Block *block, const char *context,
     return ;
 }
 
-static int are_blocks_adjacent(Block *left_block, Block *right_block)
+static int32_t are_blocks_adjacent(Block *left_block, Block *right_block)
 {
     unsigned char   *expected_address;
     unsigned char   *actual_address;
@@ -221,7 +221,7 @@ Page *create_page(ft_size_t size)
     void* ptr;
     if (use_heap)
     {
-        ptr = std::malloc(static_cast<size_t>(page_size));
+        ptr = std::malloc(page_size);
         if (!ptr)
             return (ft_nullptr);
     }
@@ -388,7 +388,7 @@ Page *find_page_of_block(Block *block)
         unsigned char    *payload;
 
         start = static_cast<unsigned char *>(page->start);
-        end = start + static_cast<size_t>(page->size);
+        end = start + page->size;
         payload = block->payload;
         if (payload >= start && payload < end)
             return (page);
@@ -425,7 +425,7 @@ int32_t cma_get_extended_stats(ft_size_t *allocation_count,
         ft_size_t *peak_bytes)
 {
     bool lock_acquired = false;
-    int lock_error = cma_lock_allocator(&lock_acquired);
+    int32_t lock_error = cma_lock_allocator(&lock_acquired);
 
     if (lock_error != FT_ERR_SUCCESSS)
         return (lock_error);

@@ -1,10 +1,9 @@
 #include "errno.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
-#include <cstddef>
 
 typedef struct s_ft_error_string
 {
-    int error_code;
+    int32_t error_code;
     const char *error_message;
 }   t_ft_error_string;
 
@@ -82,10 +81,10 @@ static const t_ft_error_string g_error_strings[] =
     {FT_ERR_API_CIRCUIT_OPEN, "API circuit breaker is open"}
 };
 
-static const char *ft_find_custom_error(int error_code)
+static const char *ft_find_custom_error(int32_t error_code)
 {
-    size_t error_index;
-    size_t error_count;
+    ft_size_t error_index;
+    ft_size_t error_count;
 
     error_count = sizeof(g_error_strings) / sizeof(g_error_strings[0]);
     error_index = 0;
@@ -98,7 +97,7 @@ static const char *ft_find_custom_error(int error_code)
     return (NULL);
 }
 
-const char* ft_strerror(int error_code)
+const char* ft_strerror(int32_t error_code)
 {
     const char *custom_message;
     const char *system_message;

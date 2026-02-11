@@ -8,7 +8,7 @@ struct scma_block
 {
     ft_size_t    offset;
     ft_size_t    size;
-    int          in_use;
+    int32_t          in_use;
     ft_size_t    generation;
 };
 
@@ -24,25 +24,23 @@ scma_block       *&scma_blocks_data_ref(void);
 ft_size_t        &scma_block_capacity_ref(void);
 ft_size_t        &scma_block_count_ref(void);
 ft_size_t        &scma_used_size_ref(void);
-int              &scma_initialized_ref(void);
+int32_t              &scma_initialized_ref(void);
 
 scma_block_span    scma_get_block_span(void);
 unsigned char    *scma_get_heap_data(void);
 
 scma_handle    scma_invalid_handle(void);
-int     scma_handle_is_invalid(scma_handle handle);
+int32_t     scma_handle_is_invalid(scma_handle handle);
 void    scma_compact(void);
-int     scma_validate_handle(scma_handle handle, scma_block **out_block);
-int     scma_ensure_block_capacity(ft_size_t required_count);
-int     scma_ensure_capacity(ft_size_t required_size);
+int32_t     scma_validate_handle(scma_handle handle, scma_block **out_block);
+int32_t     scma_ensure_block_capacity(ft_size_t required_count);
+int32_t     scma_ensure_capacity(ft_size_t required_size);
 ft_size_t    scma_next_generation(ft_size_t generation);
-int     scma_unlock_and_return_int(int value);
+int32_t     scma_unlock_and_return_int(int32_t value);
 ft_size_t    scma_unlock_and_return_size(ft_size_t value);
 scma_handle    scma_unlock_and_return_handle(scma_handle value);
 void    *scma_unlock_and_return_pointer(void *value);
 void    scma_unlock_and_return_void(void);
 
-unsigned long long    scma_record_operation_error(int error_code);
-int     scma_pop_operation_error(void);
 
 #endif

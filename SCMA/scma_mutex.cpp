@@ -1,62 +1,98 @@
 #include <cstddef>
 #include <new>
+#include <mutex>
 #include "../Errno/errno.hpp"
-#include "../Basic/basic_limits.hpp"
-#include "../PThread/pthread.hpp"
-#include "../PThread/pthread_internal.hpp"
+#include "../Basic/limits.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "SCMA.hpp"
 #include "scma_internal.hpp"
 
 static pt_recursive_mutex    *g_scma_mutex = ft_nullptr;
+static std::mutex g_scma_mutex_control;
 static thread_local ft_size_t g_scma_lock_depth = 0;
-static pt_recursive_mutex    g_scma_dummy_mutex;
+static ft_size_t g_scma_mutex_users = 0;
 
-int scma_enable_thread_safety(void)
+int32_t scma_enable_thread_safety(void)
 {
+    pt_recursive_mutex *mutex_pointer;
+    int32_t initialization_error;
+
+    g_scma_mutex_control.lock();
     if (g_scma_mutex != ft_nullptr)
-        return (FT_ERR_SUCCESSS);
-    int mutex_error = pt_recursive_mutex_create_with_error(&g_scma_mutex);
-    if (mutex_error != FT_ERR_SUCCESSS)
     {
-        scma_record_operation_error(mutex_error);
-        return (mutex_error);
+        g_scma_mutex_control.unlock();
+        return (FT_ERR_SUCCESSS);
     }
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
+    if (mutex_pointer == ft_nullptr)
+    {
+        g_scma_mutex_control.unlock();
+        return (FT_ERR_NO_MEMORY);
+    }
+    initialization_error = mutex_pointer->initialize();
+    if (initialization_error != FT_ERR_SUCCESSS)
+    {
+        delete mutex_pointer;
+        g_scma_mutex_control.unlock();
+        return (initialization_error);
+    }
+    g_scma_mutex = mutex_pointer;
+    g_scma_mutex_control.unlock();
     return (FT_ERR_SUCCESSS);
 }
 
-void scma_disable_thread_safety(void)
+int32_t scma_disable_thread_safety(void)
 {
-    pt_recursive_mutex_destroy(&g_scma_mutex);
-    return ;
+    int32_t destroy_error;
+
+    g_scma_mutex_control.lock();
+    if (g_scma_mutex == ft_nullptr)
+    {
+        g_scma_mutex_control.unlock();
+        return (FT_ERR_SUCCESSS);
+    }
+    if (g_scma_mutex_users != 0
+        || g_scma_lock_depth != 0
+        || g_scma_mutex->lockState())
+    {
+        g_scma_mutex_control.unlock();
+        return (FT_ERR_THREAD_BUSY);
+    }
+    destroy_error = g_scma_mutex->destroy();
+    if (destroy_error != FT_ERR_SUCCESSS)
+    {
+        g_scma_mutex_control.unlock();
+        return (destroy_error);
+    }
+    delete g_scma_mutex;
+    g_scma_mutex = ft_nullptr;
+    g_scma_mutex_control.unlock();
+    return (FT_ERR_SUCCESSS);
 }
 
 bool scma_is_thread_safe_enabled(void)
 {
-    return (g_scma_mutex != ft_nullptr);
+    bool is_enabled;
+
+    g_scma_mutex_control.lock();
+    is_enabled = (g_scma_mutex != ft_nullptr);
+    g_scma_mutex_control.unlock();
+    return (is_enabled);
 }
 
 static pt_recursive_mutex *scma_runtime_mutex_ptr(void)
 {
-    if (g_scma_mutex == ft_nullptr)
-    {
-        if (scma_enable_thread_safety() != FT_ERR_SUCCESSS)
-            return (ft_nullptr);
-    }
     return (g_scma_mutex);
 }
 
-pt_recursive_mutex    &scma_runtime_mutex(void)
+pt_recursive_mutex    *scma_runtime_mutex(void)
 {
-    pt_recursive_mutex *mutex_pointer = scma_runtime_mutex_ptr();
+    pt_recursive_mutex *mutex_pointer;
 
-    if (mutex_pointer == ft_nullptr)
-    {
-        scma_record_operation_error(FT_ERR_INITIALIZATION_FAILED);
-        return (g_scma_dummy_mutex);
-    }
-    scma_record_operation_error(FT_ERR_SUCCESSS);
-    return (*mutex_pointer);
+    g_scma_mutex_control.lock();
+    mutex_pointer = scma_runtime_mutex_ptr();
+    g_scma_mutex_control.unlock();
+    return (mutex_pointer);
 }
 
 static ft_size_t    &scma_runtime_lock_depth(void)
@@ -64,108 +100,96 @@ static ft_size_t    &scma_runtime_lock_depth(void)
     return (g_scma_lock_depth);
 }
 
-int    scma_mutex_lock(void)
+int32_t    scma_mutex_lock(void)
 {
     ft_size_t &lock_depth = scma_runtime_lock_depth();
-    int error_code;
+    pt_recursive_mutex *mutex_pointer;
+    int32_t mutex_error;
 
     if (lock_depth == static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX))
     {
-        error_code = FT_ERR_NO_MEMORY;
-        scma_record_operation_error(error_code);
         return (-1);
     }
     if (lock_depth == 0)
     {
-        pt_recursive_mutex *mutex_pointer = scma_runtime_mutex_ptr();
+        g_scma_mutex_control.lock();
+        mutex_pointer = scma_runtime_mutex_ptr();
         if (mutex_pointer == ft_nullptr)
         {
-            scma_record_operation_error(FT_ERR_INITIALIZATION_FAILED);
+            g_scma_mutex_control.unlock();
             return (-1);
         }
-        pt_recursive_mutex &mutex = *mutex_pointer;
-        int mutex_error = pt_recursive_mutex_lock_with_error(mutex);
-        ft_global_error_stack_drop_last_error();
+        g_scma_mutex_users = g_scma_mutex_users + 1;
+        g_scma_mutex_control.unlock();
+        mutex_error = mutex_pointer->lock();
+        g_scma_mutex_control.lock();
+        g_scma_mutex_users = g_scma_mutex_users - 1;
+        g_scma_mutex_control.unlock();
         if (mutex_error != FT_ERR_SUCCESSS)
         {
-            scma_record_operation_error(mutex_error);
             return (-1);
         }
     }
     lock_depth = lock_depth + 1;
-    error_code = FT_ERR_SUCCESSS;
-    scma_record_operation_error(error_code);
     return (0);
 }
 
-int    scma_mutex_unlock(void)
+int32_t    scma_mutex_unlock(void)
 {
     ft_size_t &lock_depth = scma_runtime_lock_depth();
-    int error_code;
+    pt_recursive_mutex *mutex_pointer;
+    int32_t mutex_error;
 
     if (lock_depth == 0)
     {
-        error_code = FT_ERR_INVALID_STATE;
-        scma_record_operation_error(error_code);
         return (-1);
     }
-    lock_depth = lock_depth - 1;
-    if (lock_depth == 0)
+    if (lock_depth == 1)
     {
-        pt_recursive_mutex *mutex_pointer = scma_runtime_mutex_ptr();
+        g_scma_mutex_control.lock();
+        mutex_pointer = scma_runtime_mutex_ptr();
         if (mutex_pointer == ft_nullptr)
         {
-            scma_record_operation_error(FT_ERR_INITIALIZATION_FAILED);
+            g_scma_mutex_control.unlock();
             return (-1);
         }
-        pt_recursive_mutex &mutex = *mutex_pointer;
-        int mutex_error = pt_recursive_mutex_unlock_with_error(mutex);
-        ft_global_error_stack_drop_last_error();
+        g_scma_mutex_users = g_scma_mutex_users + 1;
+        g_scma_mutex_control.unlock();
+        mutex_error = mutex_pointer->unlock();
+        g_scma_mutex_control.lock();
+        g_scma_mutex_users = g_scma_mutex_users - 1;
+        g_scma_mutex_control.unlock();
         if (mutex_error != FT_ERR_SUCCESSS)
         {
-            scma_record_operation_error(mutex_error);
             return (-1);
         }
+        lock_depth = 0;
+        return (0);
     }
-    error_code = FT_ERR_SUCCESSS;
-    scma_record_operation_error(error_code);
+    lock_depth = lock_depth - 1;
     return (0);
 }
 
-int    scma_mutex_close(void)
+int32_t    scma_mutex_close(void)
 {
     ft_size_t &lock_depth = scma_runtime_lock_depth();
-    int error_code;
 
     if (lock_depth == 0)
     {
-        error_code = FT_ERR_INVALID_STATE;
-        scma_record_operation_error(error_code);
         return (-1);
     }
     while (lock_depth > 0)
     {
         if (scma_mutex_unlock() != 0)
-        {
-            error_code = scma_pop_operation_error();
-            if (error_code == FT_ERR_SUCCESSS)
-                error_code = FT_ERR_SYS_MUTEX_UNLOCK_FAILED;
-            scma_record_operation_error(error_code);
             return (-1);
-        }
     }
-    error_code = FT_ERR_SUCCESSS;
-    scma_record_operation_error(error_code);
     return (0);
 }
 
 ft_size_t    scma_mutex_lock_count(void)
 {
     ft_size_t lock_depth;
-    int error_code;
 
     lock_depth = scma_runtime_lock_depth();
-    error_code = FT_ERR_SUCCESSS;
-    scma_record_operation_error(error_code);
     return (lock_depth);
 }

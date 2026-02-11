@@ -2,7 +2,7 @@
 #include <cstring>
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
-#include "../Basic/basic_limits.hpp"
+#include "../Basic/limits.hpp"
 #include "SCMA.hpp"
 #include "scma_internal.hpp"
 
@@ -12,9 +12,9 @@ static scma_block *g_scma_blocks_data = ft_nullptr;
 static ft_size_t g_scma_block_capacity = 0;
 static ft_size_t g_scma_block_count = 0;
 static ft_size_t g_scma_used_size = 0;
-static int g_scma_initialized = 0;
+static int32_t g_scma_initialized = 0;
 
-int    &scma_initialized_ref(void)
+int32_t    &scma_initialized_ref(void)
 {
     return (g_scma_initialized);
 }
@@ -87,7 +87,7 @@ scma_handle    scma_invalid_handle(void)
     return (scma_create_invalid_handle());
 }
 
-int    scma_handle_is_invalid(scma_handle handle)
+int32_t    scma_handle_is_invalid(scma_handle handle)
 {
     if (handle.index == static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX))
         return (1);
@@ -124,14 +124,14 @@ void    scma_compact(void)
     {
         scma_block *block;
 
-        block = &span.data[static_cast<size_t>(index)];
+        block = &span.data[index];
         if (block->in_use)
         {
             if (block->offset != new_offset)
             {
-                std::memmove(heap_data + static_cast<size_t>(new_offset),
-                    heap_data + static_cast<size_t>(block->offset),
-                    static_cast<size_t>(block->size));
+                std::memmove(heap_data + new_offset,
+                    heap_data + block->offset,
+                    block->size);
                 block->offset = new_offset;
             }
             new_offset += block->size;
@@ -143,9 +143,9 @@ void    scma_compact(void)
     return ;
 }
 
-int    scma_validate_handle(scma_handle handle, scma_block **out_block)
+int32_t    scma_validate_handle(scma_handle handle, scma_block **out_block)
 {
-    int validation_result;
+    int32_t validation_result;
     scma_block_span span;
     scma_block *block;
 
@@ -165,7 +165,7 @@ int    scma_validate_handle(scma_handle handle, scma_block **out_block)
     {
         return (scma_unlock_and_return_int(0));
     }
-    block = &span.data[static_cast<size_t>(handle.index)];
+    block = &span.data[handle.index];
     if (!block->in_use)
     {
         return (scma_unlock_and_return_int(0));
@@ -180,10 +180,10 @@ int    scma_validate_handle(scma_handle handle, scma_block **out_block)
     return (scma_unlock_and_return_int(validation_result));
 }
 
-int    scma_ensure_block_capacity(ft_size_t required_count)
+int32_t    scma_ensure_block_capacity(ft_size_t required_count)
 {
     ft_size_t new_capacity;
-    size_t allocation_size;
+    ft_size_t allocation_size;
     void *new_data;
     scma_block *&blocks_data = scma_blocks_data_ref();
     ft_size_t &block_capacity = scma_block_capacity_ref();
@@ -209,11 +209,11 @@ int    scma_ensure_block_capacity(ft_size_t required_count)
     {
         return (0);
     }
-    if (new_capacity > static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX) / static_cast<ft_size_t>(sizeof(scma_block)))
+    if (new_capacity > static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX) / sizeof(scma_block))
     {
         return (0);
     }
-    allocation_size = static_cast<size_t>(new_capacity) * sizeof(scma_block);
+    allocation_size = new_capacity * sizeof(scma_block);
     new_data = std::realloc(blocks_data, allocation_size);
     if (!new_data)
     {
@@ -224,7 +224,7 @@ int    scma_ensure_block_capacity(ft_size_t required_count)
     return (1);
 }
 
-int    scma_ensure_capacity(ft_size_t required_size)
+int32_t    scma_ensure_capacity(ft_size_t required_size)
 {
     ft_size_t new_capacity;
     void *new_data;
@@ -252,7 +252,7 @@ int    scma_ensure_capacity(ft_size_t required_size)
     {
         return (0);
     }
-    new_data = std::realloc(heap_data, static_cast<size_t>(new_capacity));
+    new_data = std::realloc(heap_data, new_capacity);
     if (!new_data)
     {
         return (0);
@@ -274,37 +274,32 @@ ft_size_t    scma_next_generation(ft_size_t generation)
     return (next_generation);
 }
 
-int    scma_unlock_and_return_int(int value)
+int32_t    scma_unlock_and_return_int(int32_t value)
 {
-    if (scma_mutex_unlock() != 0)
-        return (0);
+    (void)scma_mutex_unlock();
     return (value);
 }
 
 ft_size_t    scma_unlock_and_return_size(ft_size_t value)
 {
-    if (scma_mutex_unlock() != 0)
-        return (0);
+    (void)scma_mutex_unlock();
     return (value);
 }
 
 scma_handle    scma_unlock_and_return_handle(scma_handle value)
 {
-    if (scma_mutex_unlock() != 0)
-        return (scma_invalid_handle());
+    (void)scma_mutex_unlock();
     return (value);
 }
 
 void    *scma_unlock_and_return_pointer(void *value)
 {
-    if (scma_mutex_unlock() != 0)
-        return (ft_nullptr);
+    (void)scma_mutex_unlock();
     return (value);
 }
 
 void    scma_unlock_and_return_void(void)
 {
-    if (scma_mutex_unlock() != 0)
-        return ;
+    (void)scma_mutex_unlock();
     return ;
 }

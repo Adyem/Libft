@@ -1,4 +1,4 @@
-//#include "limits.hpp" // FT_INT_* defined there
+//#include "limits.hpp" // FT_INT32_* defined there
 #include "basic.hpp"
 
 int32_t ft_validate_int(const char *input)
@@ -6,8 +6,8 @@ int32_t ft_validate_int(const char *input)
     if (!input)
         return (FT_FAILURE);
 
-    const int32_t maximum_value = FT_INT_MAX;
-    const int32_t minimum_value = FT_INT_MIN;
+    const int32_t maximum_value = FT_INT32_MAX;
+    const int32_t minimum_value = FT_INT32_MIN;
     int32_t index = 0;
     int32_t sign = 1;
     if (input[index] == '+' || input[index] == '-')
@@ -25,7 +25,7 @@ int32_t ft_validate_int(const char *input)
         char character = input[index];
         if (character < '0' || character > '9')
             return (FT_FAILURE);
-        int digit = character - '0';
+        int32_t digit = character - '0';
         if (sign == 1)
         {
             if (accumulated > (maximum_value - digit) / 10)

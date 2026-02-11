@@ -40,8 +40,8 @@ constexpr int ft_strlen(const char *string)
     if (!string)
         return (0);
     ft_size_t length = ft_strlen_raw(string);
-    if (length > static_cast<ft_size_t>(FT_INT_MAX))
-        return (FT_INT_MAX);
+    if (length > static_cast<ft_size_t>(FT_INT32_MAX))
+        return (FT_INT32_MAX);
     return (static_cast<int>(length));
 }
 

@@ -10,6 +10,6 @@ int32_t *adv_atoi(const char *string)
     int32_t *result = static_cast<int32_t *>(cma_malloc(sizeof(int32_t)));
     if (!result)
         return (ft_nullptr);
-    *result = static_cast<int32_t>(parsed_value);
+    *result = parsed_value;
     return (result);
 }

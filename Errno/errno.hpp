@@ -11,10 +11,7 @@ typedef uint64_t ft_size_t;
 
 #endif
 
-int ft_map_system_error(int error_code);
-int ft_set_errno_from_system_error(int error_code);
-
-enum PTErrorCode
+enum PTErrorCode : int32_t
 {
     FT_ERR_SUCCESSS = 0,
     FT_ERR_NO_MEMORY = 1,
@@ -91,8 +88,8 @@ enum PTErrorCode
 #define FT_SYS_ERR_SUCCESS FT_ERR_SUCCESSS
 #define FT_SYS_ERR_NO_MEMORY FT_ERR_SYS_NO_MEMORY
 
-const char* ft_strerror(int error_code);
-void        ft_perror(const char *error_msg);
-void        ft_exit(const char *error_msg, int exit_code);
+const char* ft_strerror(int32_t error_code);
+void        ft_perror(const char *error_msg, int32_t error_code);
+void        ft_exit(const char *error_msg, int32_t exit_code);
 
 #endif

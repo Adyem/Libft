@@ -39,7 +39,7 @@ extern ft_size_t    g_cma_allocation_count;
 extern ft_size_t    g_cma_free_count;
 extern ft_size_t    g_cma_current_bytes;
 extern ft_size_t    g_cma_peak_bytes;
-extern unsigned long long    g_cma_metadata_access_depth;
+extern int64_t    g_cma_metadata_access_depth;
 
 
 struct Block
@@ -77,32 +77,32 @@ Page    *find_page_of_block(Block *block);
 void    free_page_if_empty(Page *page);
 void    cma_validate_block(Block *block, const char *context, void *user_pointer);
 Block    *cma_find_block_for_pointer(const void *memory_pointer);
-int     cma_lock_allocator(bool *lock_acquired);
-int     cma_unlock_allocator(bool lock_acquired);
-int     cma_enable_thread_safety(void);
+int32_t cma_lock_allocator(bool *lock_acquired);
+int32_t cma_unlock_allocator(bool lock_acquired);
+int32_t cma_enable_thread_safety(void);
 int32_t cma_disable_thread_safety(void);
 bool    cma_is_thread_safe_enabled(void);
-int     cma_backend_is_enabled(void) __attribute__ ((warn_unused_result));
-int     cma_backend_owns_pointer(const void *memory_pointer)
+int32_t cma_backend_is_enabled(void) __attribute__ ((warn_unused_result));
+int32_t cma_backend_owns_pointer(const void *memory_pointer)
             __attribute__ ((warn_unused_result));
-void    *cma_backend_allocate(ft_size_t size, int *error_code)
+void    *cma_backend_allocate(ft_size_t size, int32_t *error_code)
             __attribute__ ((warn_unused_result, hot));
 void    *cma_backend_reallocate(void *memory_pointer, ft_size_t size,
-            int *error_code)
+            int32_t *error_code)
             __attribute__ ((warn_unused_result, hot));
-int     cma_backend_deallocate(void *memory_pointer) __attribute__ ((hot));
+int32_t cma_backend_deallocate(void *memory_pointer) __attribute__ ((hot));
 void    *cma_backend_aligned_allocate(ft_size_t alignment, ft_size_t size,
-            int *error_code)
+            int32_t *error_code)
             __attribute__ ((warn_unused_result, hot));
 ft_size_t    cma_backend_block_size(const void *memory_pointer)
             __attribute__ ((warn_unused_result, hot));
-int     cma_backend_checked_block_size(const void *memory_pointer,
+int32_t cma_backend_checked_block_size(const void *memory_pointer,
             ft_size_t *block_size) __attribute__ ((warn_unused_result, hot));
 #ifndef CMA_ENABLE_METADATA_PROTECTION
 # define CMA_ENABLE_METADATA_PROTECTION 1
 #endif
 
-int     cma_metadata_make_writable(void);
+int32_t cma_metadata_make_writable(void);
 void    cma_metadata_make_inaccessible(void);
 bool    cma_metadata_guard_increment(void);
 bool    cma_metadata_guard_decrement(void);

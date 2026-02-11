@@ -5,14 +5,14 @@
 
 static pt_recursive_mutex *g_cma_allocator_mutex = ft_nullptr;
 
-int cma_enable_thread_safety(void)
+int32_t cma_enable_thread_safety(void)
 {
     if (g_cma_allocator_mutex != ft_nullptr)
         return (FT_ERR_SUCCESSS);
     g_cma_allocator_mutex = new (std::nothrow) pt_recursive_mutex();
     if (g_cma_allocator_mutex == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
-    int result = g_cma_allocator_mutex->initialize();
+    int32_t result = g_cma_allocator_mutex->initialize();
     if (result != FT_ERR_SUCCESSS)
     {
         delete g_cma_allocator_mutex;
@@ -26,7 +26,7 @@ int32_t cma_disable_thread_safety(void)
 {
     if (g_cma_allocator_mutex == ft_nullptr)
         return (FT_ERR_SUCCESSS);
-    int result = g_cma_allocator_mutex->destroy();
+    int32_t result = g_cma_allocator_mutex->destroy();
     delete g_cma_allocator_mutex;
     g_cma_allocator_mutex = ft_nullptr;
     return (result);
@@ -47,7 +47,7 @@ static pt_recursive_mutex *cma_allocator_mutex(void)
     return (g_cma_allocator_mutex);
 }
 
-int cma_lock_allocator(bool *lock_acquired)
+int32_t cma_lock_allocator(bool *lock_acquired)
 {
     if (!lock_acquired)
         return (FT_ERR_INVALID_ARGUMENT);
@@ -55,7 +55,7 @@ int cma_lock_allocator(bool *lock_acquired)
     pt_recursive_mutex *mutex_pointer = cma_allocator_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_INITIALIZATION_FAILED);
-    int mutex_error = mutex_pointer->lock();
+    int32_t mutex_error = mutex_pointer->lock();
     if (mutex_error != FT_ERR_SUCCESSS)
         return (FT_ERR_INVALID_STATE);
     if (cma_metadata_make_writable() != 0)
@@ -73,7 +73,7 @@ int cma_lock_allocator(bool *lock_acquired)
     return (FT_ERR_SUCCESSS);
 }
 
-int cma_unlock_allocator(bool lock_acquired)
+int32_t cma_unlock_allocator(bool lock_acquired)
 {
     if (!lock_acquired)
         return (FT_ERR_SUCCESSS);
@@ -81,8 +81,14 @@ int cma_unlock_allocator(bool lock_acquired)
     pt_recursive_mutex *mutex_pointer = cma_allocator_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_INITIALIZATION_FAILED);
-    int mutex_error = mutex_pointer->unlock();
-    if (!guard_decremented || mutex_error != FT_ERR_SUCCESSS)
+    int32_t mutex_error = mutex_pointer->unlock();
+    if (!guard_decremented)
+    {
+        if (mutex_error != FT_ERR_SUCCESSS)
+            return (mutex_error);
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (mutex_error != FT_ERR_SUCCESSS)
         return (mutex_error);
     return (FT_ERR_SUCCESSS);
 }

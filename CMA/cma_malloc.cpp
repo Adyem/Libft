@@ -33,7 +33,7 @@ void* cma_malloc(ft_size_t size)
         return (cma_backend_allocate(size, ft_nullptr));
     if (OFFSWITCH == 1)
     {
-        result = malloc(static_cast<size_t>(size));
+        result = malloc(size);
 
         if (result)
         {

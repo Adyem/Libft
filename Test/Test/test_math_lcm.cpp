@@ -1,6 +1,6 @@
 #include "../../Math/math.hpp"
 #include "../../Errno/errno.hpp"
-#include "../../Basic/basic_limits.hpp"
+#include "../../Basic/limits.hpp"
 #include "../../System_utils/test_runner.hpp"
 
 FT_TEST(test_math_lcm_basic_values, "math_lcm computes least common multiple")

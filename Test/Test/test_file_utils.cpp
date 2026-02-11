@@ -29,8 +29,11 @@
 static void remove_directory_if_present(const char *directory_path)
 {
     int error_code = FT_ERR_SUCCESSS;
+    int exists_value = 0;
+    int status;
 
-    if (cmp_directory_exists(directory_path, &error_code) != 1)
+    status = cmp_directory_exists(directory_path, &exists_value, &error_code);
+    if (status != FT_ERR_SUCCESSS || exists_value != 1)
         return ;
 #if defined(_WIN32) || defined(_WIN64)
     RemoveDirectoryA(directory_path);

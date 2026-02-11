@@ -3,19 +3,21 @@
 #include <random>
 #include <exception>
 
-static int rng_fill_from_random_device(unsigned char *buffer, size_t length)
+static int32_t rng_fill_from_random_device(unsigned char *buffer, ft_size_t length)
 {
+    ft_size_t offset;
+
     try
     {
         std::random_device random_device;
-        size_t offset = 0;
+        offset = 0;
         while (offset < length)
         {
-            unsigned int random_value = random_device();
-            size_t byte_index = 0;
-            while (byte_index < sizeof(unsigned int) && offset < length)
+            uint32_t random_value = random_device();
+            ft_size_t byte_index = 0;
+            while (byte_index < sizeof(uint32_t) && offset < length)
             {
-                unsigned int shifted_value = random_value >> (byte_index * 8);
+                uint32_t shifted_value = random_value >> (byte_index * 8);
                 buffer[offset] = static_cast<unsigned char>(shifted_value & 0xFFu);
                 offset++;
                 byte_index++;
@@ -24,71 +26,52 @@ static int rng_fill_from_random_device(unsigned char *buffer, size_t length)
     }
     catch (const std::exception &)
     {
-        ft_global_error_stack_push(FT_ERR_INTERNAL);
-        return (-1);
+        return (FT_ERR_INTERNAL);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
-int rng_secure_bytes_with_fallback(unsigned char *buffer, size_t length, int *fallback_used)
+int32_t rng_secure_bytes_with_fallback(unsigned char *buffer, ft_size_t length, int32_t *fallback_used)
 {
+    int32_t result;
+    int32_t fallback_result;
+
     if (buffer == ft_nullptr && length > 0)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         if (fallback_used != ft_nullptr)
             *fallback_used = 0;
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     if (fallback_used != ft_nullptr)
         *fallback_used = 0;
-    int result = rng_secure_bytes(buffer, length);
-    int error_code = ft_global_error_stack_drop_last_error();
-    if (result == 0 && error_code == FT_ERR_SUCCESSS)
-    {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-        return (0);
-    }
+    result = rng_secure_bytes(buffer, length);
+    if (result == FT_ERR_SUCCESSS)
+        return (FT_ERR_SUCCESSS);
     if (length == 0)
-    {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-        return (0);
-    }
-    int fallback_result = rng_fill_from_random_device(buffer, length);
-    int fallback_error = ft_global_error_stack_drop_last_error();
-    if (fallback_result != 0 || fallback_error != FT_ERR_SUCCESSS)
-    {
-        if (fallback_error == FT_ERR_SUCCESSS)
-            fallback_error = FT_ERR_INTERNAL;
-        ft_global_error_stack_push(fallback_error);
-        return (-1);
-    }
+        return (FT_ERR_SUCCESSS);
+    fallback_result = rng_fill_from_random_device(buffer, length);
+    if (fallback_result != FT_ERR_SUCCESSS)
+        return (fallback_result);
     if (fallback_used != ft_nullptr)
         *fallback_used = 1;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
-int rng_secure_uint64(uint64_t *value, int *fallback_used)
+int32_t rng_secure_uint64(uint64_t *value, int32_t *fallback_used)
 {
+    int32_t result;
+
     if (value == ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         if (fallback_used != ft_nullptr)
             *fallback_used = 0;
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     unsigned char buffer[sizeof(uint64_t)];
-    int result = rng_secure_bytes_with_fallback(buffer, sizeof(uint64_t), fallback_used);
-    int error_code = ft_global_error_stack_drop_last_error();
-    if (result != 0 || error_code != FT_ERR_SUCCESSS)
-    {
-        if (error_code == FT_ERR_SUCCESSS)
-            error_code = FT_ERR_INTERNAL;
-        ft_global_error_stack_push(error_code);
-        return (-1);
-    }
-    size_t index = 0;
+    result = rng_secure_bytes_with_fallback(buffer, sizeof(uint64_t), fallback_used);
+    if (result != FT_ERR_SUCCESSS)
+        return (result);
+    ft_size_t index = 0;
     uint64_t assembled_value = 0;
     while (index < sizeof(uint64_t))
     {
@@ -98,30 +81,23 @@ int rng_secure_uint64(uint64_t *value, int *fallback_used)
         index++;
     }
     *value = assembled_value;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
-int rng_secure_uint32(uint32_t *value, int *fallback_used)
+int32_t rng_secure_uint32(uint32_t *value, int32_t *fallback_used)
 {
+    int32_t result;
+
     if (value == ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         if (fallback_used != ft_nullptr)
             *fallback_used = 0;
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     uint64_t wide_value = 0;
-    int result = rng_secure_uint64(&wide_value, fallback_used);
-    int error_code = ft_global_error_stack_drop_last_error();
-    if (result != 0 || error_code != FT_ERR_SUCCESSS)
-    {
-        if (error_code == FT_ERR_SUCCESSS)
-            error_code = FT_ERR_INTERNAL;
-        ft_global_error_stack_push(error_code);
-        return (-1);
-    }
+    result = rng_secure_uint64(&wide_value, fallback_used);
+    if (result != FT_ERR_SUCCESSS)
+        return (result);
     *value = static_cast<uint32_t>(wide_value & 0xFFFFFFFFu);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }

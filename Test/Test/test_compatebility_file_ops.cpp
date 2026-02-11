@@ -57,8 +57,11 @@ static void write_test_file(const char *path)
 FT_TEST(test_cmp_file_exists_null_pointer_sets_errno, "cmp_file_exists reports FT_ERR_INVALID_ARGUMENT for null path")
 {
     int error_code = FT_ERR_SUCCESSS;
+    int exists_value = 1;
 
-    FT_ASSERT_EQ(0, cmp_file_exists(ft_nullptr, &error_code));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, cmp_file_exists(ft_nullptr,
+        &exists_value, &error_code));
+    FT_ASSERT_EQ(0, exists_value);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_code);
     return (1);
 }
@@ -67,9 +70,12 @@ FT_TEST(test_cmp_file_exists_missing_path_sets_errno, "cmp_file_exists reports F
 {
     const char *missing_path = "cmp_file_exists_missing_path.txt";
     int error_code = FT_ERR_SUCCESSS;
+    int exists_value = 1;
 
     remove_file_if_present(missing_path);
-    FT_ASSERT_EQ(0, cmp_file_exists(missing_path, &error_code));
+    FT_ASSERT_EQ(FT_ERR_IO, cmp_file_exists(missing_path, &exists_value,
+        &error_code));
+    FT_ASSERT_EQ(0, exists_value);
     FT_ASSERT_EQ(FT_ERR_IO, error_code);
     return (1);
 }
@@ -78,10 +84,13 @@ FT_TEST(test_cmp_file_exists_success_clears_errno, "cmp_file_exists clears errno
 {
     const char *path = "cmp_file_exists_success.txt";
     int error_code = FT_ERR_INVALID_ARGUMENT;
+    int exists_value = 0;
 
     remove_file_if_present(path);
     write_test_file(path);
-    FT_ASSERT_EQ(1, cmp_file_exists(path, &error_code));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, cmp_file_exists(path, &exists_value,
+        &error_code));
+    FT_ASSERT_EQ(1, exists_value);
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, error_code);
     remove_file_if_present(path);
     return (1);

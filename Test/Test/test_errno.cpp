@@ -104,7 +104,7 @@ FT_TEST(test_ft_perror_null_message_resets_errno, "ft_perror prints strerror whe
     FT_ASSERT(dup2(pipe_fds[1], 2) >= 0);
     close(pipe_fds[1]);
 
-    ft_perror(ft_nullptr);
+    ft_perror(ft_nullptr, FT_ERR_INVALID_ARGUMENT);
 
     read_count = read(pipe_fds[0], buffer, sizeof(buffer) - 1);
     FT_ASSERT(read_count > 0);
@@ -135,7 +135,7 @@ FT_TEST(test_ft_perror_prefixes_custom_message_resets_errno,
     FT_ASSERT(dup2(pipe_fds[1], 2) >= 0);
     close(pipe_fds[1]);
 
-    ft_perror("custom context");
+    ft_perror("custom context", FT_ERR_IO);
 
     read_count = read(pipe_fds[0], buffer, sizeof(buffer) - 1);
     FT_ASSERT(read_count > 0);

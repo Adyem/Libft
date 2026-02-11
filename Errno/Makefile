@@ -4,9 +4,7 @@ DEBUG_TARGET := errno_debug.a
 
 SRCS :=        errno_strerror.cpp \
         errno_perror.cpp \
-        errno_exit.cpp \
-        errno_code.cpp \
-        errno_map.cpp
+        errno_exit.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
@@ -99,4 +97,3 @@ re: fclean all
 both: all debug
 
 .PHONY: all clean fclean re debug both
-

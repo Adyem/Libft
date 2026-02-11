@@ -18,8 +18,11 @@ FT_TEST(test_game_world_persistence_round_trip,
 {
     const char *store_path = "./Test/world_persistence_store.json";
     int error_code = FT_ERR_SUCCESSS;
-    int file_status = cmp_file_exists(store_path, &error_code);
-    if (file_status == 1)
+    int file_exists = 0;
+    int file_status;
+
+    file_status = cmp_file_exists(store_path, &file_exists, &error_code);
+    if (file_status == FT_ERR_SUCCESSS && file_exists == 1)
     {
         int delete_status = cmp_file_delete(store_path, &error_code);
         (void)delete_status;

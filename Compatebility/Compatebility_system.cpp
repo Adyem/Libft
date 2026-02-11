@@ -10,19 +10,6 @@
 #include <cstring>
 #include <cstdio>
 
-static thread_local int32_t g_cmp_last_error = FT_ERR_SUCCESSS;
-
-void cmp_set_last_error(int32_t error_code)
-{
-    g_cmp_last_error = error_code;
-    return ;
-}
-
-int32_t cmp_last_error(void)
-{
-    return (g_cmp_last_error);
-}
-
 const char *cmp_service_null_device_path(void)
 {
 #if defined(_WIN32) || defined(_WIN64)
@@ -521,17 +508,15 @@ int32_t cmp_map_system_error_to_ft(int32_t error_code)
 #endif
 }
 
-int32_t cmp_normalize_ft_errno(int32_t error_code)
+int32_t cmp_decode_errno_offset_error(int32_t error_code)
 {
     int32_t normalized_error;
 
     if (error_code < ERRNO_OFFSET)
     {
-        cmp_set_last_error(FT_ERR_SUCCESSS);
         return (error_code);
     }
     normalized_error = cmp_map_system_error_to_ft(error_code - ERRNO_OFFSET);
-    cmp_set_last_error(FT_ERR_SUCCESSS);
     return (normalized_error);
 }
 
@@ -671,17 +656,14 @@ int32_t cmp_secure_memzero(void *buffer, ft_size_t length)
 {
     if (buffer == ft_nullptr)
     {
-        cmp_set_last_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (length == 0)
     {
-        cmp_set_last_error(FT_ERR_SUCCESSS);
         return (0);
     }
 #if defined(_WIN32) || defined(_WIN64)
     SecureZeroMemory(buffer, length);
-    cmp_set_last_error(FT_ERR_SUCCESSS);
     return (0);
 #else
     volatile unsigned char *volatile byte_pointer;
@@ -693,8 +675,28 @@ int32_t cmp_secure_memzero(void *buffer, ft_size_t length)
         byte_pointer = byte_pointer + 1;
         length = length - 1;
     }
-    cmp_set_last_error(FT_ERR_SUCCESSS);
     return (0);
+#endif
+}
+
+static int32_t cmp_environment_map_last_error(void)
+{
+#if defined(_WIN32) || defined(_WIN64)
+    int32_t system_error;
+
+    system_error = static_cast<int32_t>(GetLastError());
+    if (system_error != 0)
+        return (cmp_map_system_error_to_ft(system_error));
+    system_error = static_cast<int32_t>(WSAGetLastError());
+    if (system_error != 0)
+        return (cmp_map_system_error_to_ft(system_error));
+    if (errno != 0)
+        return (cmp_map_system_error_to_ft(errno));
+    return (FT_ERR_INVALID_ARGUMENT);
+#else
+    if (errno != 0)
+        return (cmp_map_system_error_to_ft(errno));
+    return (FT_ERR_INVALID_ARGUMENT);
 #endif
 }
 
@@ -702,45 +704,32 @@ int32_t cmp_setenv(const char *name, const char *value, int32_t overwrite)
 {
     if (name == ft_nullptr || value == ft_nullptr)
     {
-        cmp_set_last_error(FT_ERR_INVALID_ARGUMENT);
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
 #if defined(_WIN32) || defined(_WIN64)
     if (!overwrite && getenv(name) != ft_nullptr)
     {
-        cmp_set_last_error(FT_ERR_SUCCESSS);
-        return (0);
+        return (FT_ERR_SUCCESSS);
     }
     errno = 0;
+    SetLastError(0);
+    WSASetLastError(0);
     int32_t result = _putenv_s(name, value);
     if (result != 0)
     {
-        DWORD last_error;
-
-        last_error = GetLastError();
-        if (last_error != 0)
-            cmp_set_last_error(ft_map_system_error(static_cast<int32_t>(last_error)));
-        else if (errno != 0)
-            cmp_set_last_error(ft_map_system_error(errno));
-        else
-            cmp_set_last_error(FT_ERR_INVALID_ARGUMENT);
-        return (result);
+        if (errno == 0)
+            errno = result;
+        return (cmp_environment_map_last_error());
     }
-    cmp_set_last_error(FT_ERR_SUCCESSS);
-    return (result);
+    return (FT_ERR_SUCCESSS);
 #else
     errno = 0;
     int32_t result = setenv(name, value, overwrite);
     if (result != 0)
     {
-        if (errno != 0)
-            cmp_set_last_error(ft_map_system_error(errno));
-        else
-            cmp_set_last_error(FT_ERR_INVALID_ARGUMENT);
-        return (result);
+        return (cmp_environment_map_last_error());
     }
-    cmp_set_last_error(FT_ERR_SUCCESSS);
-    return (result);
+    return (FT_ERR_SUCCESSS);
 #endif
 }
 
@@ -748,8 +737,7 @@ int32_t cmp_unsetenv(const char *name)
 {
     if (name == ft_nullptr)
     {
-        cmp_set_last_error(FT_ERR_INVALID_ARGUMENT);
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
 #if defined(_WIN32) || defined(_WIN64)
     if (global_force_unsetenv_enabled != 0)
@@ -759,65 +747,36 @@ int32_t cmp_unsetenv(const char *name)
         WSASetLastError(global_force_unsetenv_socket_error);
         int32_t forced_result = global_force_unsetenv_result;
         if (forced_result != 0)
-        {
-            if (global_force_unsetenv_last_error != 0)
-                cmp_set_last_error(ft_map_system_error(global_force_unsetenv_last_error));
-            else if (global_force_unsetenv_socket_error != 0)
-                cmp_set_last_error(ft_map_system_error(global_force_unsetenv_socket_error));
-            else if (global_force_unsetenv_errno_value != 0)
-                cmp_set_last_error(ft_map_system_error(global_force_unsetenv_errno_value));
-            else
-                cmp_set_last_error(FT_ERR_INVALID_ARGUMENT);
-        }
-        else
-            cmp_set_last_error(FT_ERR_SUCCESSS);
-        return (forced_result);
+            return (cmp_environment_map_last_error());
+        return (FT_ERR_SUCCESSS);
     }
     errno = 0;
+    SetLastError(0);
+    WSASetLastError(0);
     int32_t result = _putenv_s(name, "");
     if (result != 0)
     {
-        DWORD last_error;
-
-        last_error = GetLastError();
-        if (last_error != 0)
-            cmp_set_last_error(ft_map_system_error(static_cast<int32_t>(last_error)));
-        else if (errno != 0)
-            cmp_set_last_error(ft_map_system_error(errno));
-        else
-            cmp_set_last_error(FT_ERR_INVALID_ARGUMENT);
-        return (result);
+        if (errno == 0)
+            errno = result;
+        return (cmp_environment_map_last_error());
     }
-    cmp_set_last_error(FT_ERR_SUCCESSS);
-    return (result);
+    return (FT_ERR_SUCCESSS);
 #else
     if (global_force_unsetenv_enabled != 0)
     {
         errno = global_force_unsetenv_errno_value;
         int32_t forced_result = global_force_unsetenv_result;
         if (forced_result != 0)
-        {
-            if (global_force_unsetenv_errno_value != 0)
-                cmp_set_last_error(ft_map_system_error(global_force_unsetenv_errno_value));
-            else
-                cmp_set_last_error(FT_ERR_INVALID_ARGUMENT);
-        }
-        else
-            cmp_set_last_error(FT_ERR_SUCCESSS);
-        return (forced_result);
+            return (cmp_environment_map_last_error());
+        return (FT_ERR_SUCCESSS);
     }
     errno = 0;
     int32_t result = unsetenv(name);
     if (result != 0)
     {
-        if (errno != 0)
-            cmp_set_last_error(ft_map_system_error(errno));
-        else
-            cmp_set_last_error(FT_ERR_INVALID_ARGUMENT);
-        return (result);
+        return (cmp_environment_map_last_error());
     }
-    cmp_set_last_error(FT_ERR_SUCCESSS);
-    return (result);
+    return (FT_ERR_SUCCESSS);
 #endif
 }
 
@@ -827,65 +786,36 @@ int32_t cmp_putenv(char *string)
 
     if (string == ft_nullptr)
     {
-        cmp_set_last_error(FT_ERR_INVALID_ARGUMENT);
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     if (global_force_putenv_enabled != 0)
     {
         errno = global_force_putenv_errno_value;
 #if defined(_WIN32) || defined(_WIN64)
         SetLastError(global_force_putenv_last_error);
+        WSASetLastError(0);
 #endif
         result = global_force_putenv_result;
         if (result != 0)
-        {
-#if defined(_WIN32) || defined(_WIN64)
-            if (global_force_putenv_last_error != 0)
-                cmp_set_last_error(ft_map_system_error(global_force_putenv_last_error));
-            else if (global_force_putenv_errno_value != 0)
-                cmp_set_last_error(ft_map_system_error(global_force_putenv_errno_value));
-            else
-                cmp_set_last_error(FT_ERR_INVALID_ARGUMENT);
-#else
-            if (global_force_putenv_errno_value != 0)
-                cmp_set_last_error(ft_map_system_error(global_force_putenv_errno_value));
-            else
-                cmp_set_last_error(FT_ERR_INVALID_ARGUMENT);
-#endif
-        }
-        else
-            cmp_set_last_error(FT_ERR_SUCCESSS);
-        return (result);
+            return (cmp_environment_map_last_error());
+        return (FT_ERR_SUCCESSS);
     }
 #if defined(_WIN32) || defined(_WIN64)
+    SetLastError(0);
+    WSASetLastError(0);
     result = _putenv(string);
     if (result != 0)
     {
-        DWORD last_error;
-
-        last_error = GetLastError();
-        if (last_error != 0)
-            cmp_set_last_error(ft_map_system_error(static_cast<int32_t>(last_error)));
-        else if (errno != 0)
-            cmp_set_last_error(ft_map_system_error(errno));
-        else
-            cmp_set_last_error(FT_ERR_INVALID_ARGUMENT);
-        return (result);
+        return (cmp_environment_map_last_error());
     }
-    cmp_set_last_error(FT_ERR_SUCCESSS);
-    return (result);
+    return (FT_ERR_SUCCESSS);
 #else
     result = putenv(string);
     if (result != 0)
     {
-        if (errno != 0)
-            cmp_set_last_error(ft_map_system_error(errno));
-        else
-            cmp_set_last_error(FT_ERR_INVALID_ARGUMENT);
-        return (result);
+        return (cmp_environment_map_last_error());
     }
-    cmp_set_last_error(FT_ERR_SUCCESSS);
-    return (result);
+    return (FT_ERR_SUCCESSS);
 #endif
 }
 
@@ -958,23 +888,19 @@ char *cmp_get_home_directory(void)
     home = ft_getenv("USERPROFILE");
     if (home != ft_nullptr)
     {
-        cmp_set_last_error(FT_ERR_SUCCESSS);
         return (home);
     }
     home_drive = ft_getenv("HOMEDRIVE");
     home_path = ft_getenv("HOMEPATH");
     if (home_drive == ft_nullptr || home_path == ft_nullptr)
     {
-        cmp_set_last_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     combined_home = cma_strjoin_multiple(2, home_drive, home_path);
     if (combined_home == ft_nullptr)
     {
-        cmp_set_last_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
-    cmp_set_last_error(FT_ERR_SUCCESSS);
     return (combined_home);
 #else
     char *home;
@@ -982,10 +908,8 @@ char *cmp_get_home_directory(void)
     home = ft_getenv("HOME");
     if (home == ft_nullptr)
     {
-        cmp_set_last_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
-    cmp_set_last_error(FT_ERR_SUCCESSS);
     return (home);
 #endif
 }
@@ -995,21 +919,13 @@ uint32_t cmp_get_cpu_count(void)
     if (global_force_cpu_count_enabled != 0)
     {
         if (global_force_cpu_count_should_fail != 0)
-        {
-            if (global_force_cpu_count_errno_value != 0)
-                cmp_set_last_error(ft_map_system_error(global_force_cpu_count_errno_value));
-            else
-                cmp_set_last_error(FT_ERR_TERMINATED);
             return (0);
-        }
-        cmp_set_last_error(FT_ERR_SUCCESSS);
         return (global_force_cpu_count_value);
     }
 #if defined(_WIN32) || defined(_WIN64)
     SYSTEM_INFO system_info;
 
     GetSystemInfo(&system_info);
-    cmp_set_last_error(FT_ERR_SUCCESSS);
     return (system_info.dwNumberOfProcessors);
 #elif defined(__APPLE__) && defined(__MACH__)
     int32_t cpu_count;
@@ -1018,14 +934,7 @@ uint32_t cmp_get_cpu_count(void)
     size = sizeof(cpu_count);
     errno = 0;
     if (sysctlbyname("hw.ncpu", &cpu_count, &size, ft_nullptr, 0) != 0)
-    {
-        if (errno != 0)
-            cmp_set_last_error(ft_map_system_error(errno));
-        else
-            cmp_set_last_error(FT_ERR_TERMINATED);
         return (0);
-    }
-    cmp_set_last_error(FT_ERR_SUCCESSS);
     return (static_cast<uint32_t>(cpu_count));
 #else
     int64_t cpu_count;
@@ -1033,14 +942,7 @@ uint32_t cmp_get_cpu_count(void)
     errno = 0;
     cpu_count = sysconf(_SC_NPROCESSORS_ONLN);
     if (cpu_count < 0)
-    {
-        if (errno != 0)
-            cmp_set_last_error(ft_map_system_error(errno));
-        else
-            cmp_set_last_error(FT_ERR_TERMINATED);
         return (0);
-    }
-    cmp_set_last_error(FT_ERR_SUCCESSS);
     return (static_cast<uint32_t>(cpu_count));
 #endif
 }
@@ -1051,7 +953,6 @@ int32_t cmp_get_total_memory(uint64_t *total_memory)
 
     if (total_memory == ft_nullptr)
     {
-        cmp_set_last_error(FT_ERR_INVALID_ARGUMENT);
         return (FT_ERR_INVALID_ARGUMENT);
     }
     if (global_force_total_memory_enabled != 0)
@@ -1064,23 +965,21 @@ int32_t cmp_get_total_memory(uint64_t *total_memory)
         {
 #if defined(_WIN32) || defined(_WIN64)
             if (global_force_total_memory_last_error != 0)
-                error_code = ft_map_system_error(static_cast<int32_t>(global_force_total_memory_last_error));
+                error_code = cmp_map_system_error_to_ft(static_cast<int32_t>(global_force_total_memory_last_error));
             else if (global_force_total_memory_errno_value != 0)
-                error_code = ft_map_system_error(global_force_total_memory_errno_value);
+                error_code = cmp_map_system_error_to_ft(global_force_total_memory_errno_value);
             else
                 error_code = FT_ERR_TERMINATED;
 #else
             if (global_force_total_memory_errno_value != 0)
-                error_code = ft_map_system_error(global_force_total_memory_errno_value);
+                error_code = cmp_map_system_error_to_ft(global_force_total_memory_errno_value);
             else
                 error_code = FT_ERR_TERMINATED;
 #endif
             *total_memory = 0;
-            cmp_set_last_error(error_code);
             return (error_code);
         }
         *total_memory = global_force_total_memory_value;
-        cmp_set_last_error(FT_ERR_SUCCESSS);
         return (FT_ERR_SUCCESSS);
     }
 #if defined(_WIN32) || defined(_WIN64)
@@ -1093,15 +992,13 @@ int32_t cmp_get_total_memory(uint64_t *total_memory)
 
         last_error = GetLastError();
         if (last_error != 0)
-            error_code = ft_map_system_error(static_cast<int32_t>(last_error));
+            error_code = cmp_map_system_error_to_ft(static_cast<int32_t>(last_error));
         else
             error_code = FT_ERR_TERMINATED;
         *total_memory = 0;
-        cmp_set_last_error(error_code);
         return (error_code);
     }
     *total_memory = memory_status.ullTotalPhys;
-    cmp_set_last_error(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);
 #elif defined(__APPLE__) && defined(__MACH__)
     uint64_t memory_size;
@@ -1112,15 +1009,13 @@ int32_t cmp_get_total_memory(uint64_t *total_memory)
     if (sysctlbyname("hw.memsize", &memory_size, &size, ft_nullptr, 0) != 0)
     {
         if (errno != 0)
-            error_code = ft_map_system_error(errno);
+            error_code = cmp_map_system_error_to_ft(errno);
         else
             error_code = FT_ERR_TERMINATED;
         *total_memory = 0;
-        cmp_set_last_error(error_code);
         return (error_code);
     }
     *total_memory = memory_size;
-    cmp_set_last_error(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);
 #else
     int64_t pages;
@@ -1131,11 +1026,10 @@ int32_t cmp_get_total_memory(uint64_t *total_memory)
     if (pages < 0)
     {
         if (errno != 0)
-            error_code = ft_map_system_error(errno);
+            error_code = cmp_map_system_error_to_ft(errno);
         else
             error_code = FT_ERR_TERMINATED;
         *total_memory = 0;
-        cmp_set_last_error(error_code);
         return (error_code);
     }
     errno = 0;
@@ -1143,16 +1037,14 @@ int32_t cmp_get_total_memory(uint64_t *total_memory)
     if (page_size < 0)
     {
         if (errno != 0)
-            error_code = ft_map_system_error(errno);
+            error_code = cmp_map_system_error_to_ft(errno);
         else
             error_code = FT_ERR_TERMINATED;
         *total_memory = 0;
-        cmp_set_last_error(error_code);
         return (error_code);
     }
     *total_memory = static_cast<uint64_t>(pages) *
         static_cast<uint64_t>(page_size);
-    cmp_set_last_error(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);
 #endif
 }
@@ -1163,7 +1055,6 @@ std::time_t cmp_timegm(std::tm *time_pointer)
 
     if (time_pointer == ft_nullptr)
     {
-        cmp_set_last_error(FT_ERR_INVALID_ARGUMENT);
         return (static_cast<std::time_t>(-1));
     }
     errno = 0;
@@ -1172,14 +1063,5 @@ std::time_t cmp_timegm(std::tm *time_pointer)
 #else
     conversion_result = ::timegm(time_pointer);
 #endif
-    if (conversion_result == static_cast<std::time_t>(-1))
-    {
-        if (errno != 0)
-            cmp_set_last_error(ft_map_system_error(errno));
-        else
-            cmp_set_last_error(FT_ERR_SUCCESSS);
-    }
-    else
-        cmp_set_last_error(FT_ERR_SUCCESSS);
     return (conversion_result);
 }

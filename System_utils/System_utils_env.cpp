@@ -5,6 +5,9 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
+#if defined(_WIN32) || defined(_WIN64)
+# include <winsock2.h>
+#endif
 #include <cstdlib>
 #include <cerrno>
 #include <utility>
@@ -272,14 +275,35 @@ int su_putenv(char *string)
     result = cmp_putenv(string);
     if (result != 0)
     {
+#if defined(_WIN32) || defined(_WIN64)
+        int last_error;
+        int socket_error;
+
+        last_error = GetLastError();
+        socket_error = WSAGetLastError();
+        if (last_error != 0)
+            error_code = ft_map_system_error(last_error);
+        else if (socket_error != 0)
+            error_code = ft_map_system_error(socket_error);
+        else if (errno != 0)
+            error_code = ft_map_system_error(errno);
+        else
+            error_code = FT_ERR_INVALID_ARGUMENT;
+#else
+        if (errno != 0)
+            error_code = ft_map_system_error(errno);
+        else
+            error_code = FT_ERR_INVALID_ARGUMENT;
+#endif
     }
+    else
+        error_code = FT_ERR_SUCCESSS;
     mutex_error = su_environment_unlock_mutex();
     if (mutex_error != FT_ERR_SUCCESSS)
     {
         ft_global_error_stack_push(FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
         return (-1);
     }
-    error_code = cmp_last_error();
     if (result != 0)
     {
         ft_global_error_stack_push(error_code);

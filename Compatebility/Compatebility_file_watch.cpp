@@ -24,7 +24,6 @@
 struct cmp_file_watch_context
 {
     std::atomic<bool>    running;
-    int32_t                  last_error;
 #if defined(__linux__)
     int32_t                  fd;
     int32_t                  watch;
@@ -50,12 +49,12 @@ static int32_t cmp_file_watch_translate_error(void)
     DWORD last_error = GetLastError();
 
     if (last_error != 0)
-        error_code = ft_map_system_error(static_cast<int32_t>(last_error));
+        error_code = cmp_map_system_error_to_ft(static_cast<int32_t>(last_error));
     else
         error_code = FT_ERR_IO;
 #else
     if (errno != 0)
-        error_code = ft_map_system_error(errno);
+        error_code = cmp_map_system_error_to_ft(errno);
 #endif
     return (error_code);
 }
@@ -94,7 +93,6 @@ cmp_file_watch_context *cmp_file_watch_create(void)
     cmp_file_watch_context *context = new cmp_file_watch_context();
 
     context->running.store(false);
-    context->last_error = FT_ERR_SUCCESSS;
 #if defined(__linux__)
     context->fd = -1;
     context->watch = -1;
@@ -122,24 +120,25 @@ void cmp_file_watch_destroy(cmp_file_watch_context *context)
 
 int32_t cmp_file_watch_start(cmp_file_watch_context *context, const char *path)
 {
+    int32_t error_code;
+
     if (!context || !path)
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     cmp_file_watch_stop(context);
-    context->last_error = FT_ERR_SUCCESSS;
 #if defined(__linux__)
     context->fd = inotify_init();
     if (context->fd < 0)
     {
-        context->last_error = cmp_file_watch_translate_error();
-        return (-1);
+        error_code = cmp_file_watch_translate_error();
+        return (error_code);
     }
     context->watch = inotify_add_watch(context->fd, path, IN_CREATE | IN_MODIFY | IN_DELETE);
     if (context->watch < 0)
     {
-        context->last_error = cmp_file_watch_translate_error();
+        error_code = cmp_file_watch_translate_error();
         close(context->fd);
         context->fd = -1;
-        return (-1);
+        return (error_code);
     }
     context->buffer_offset = 0;
     context->buffer_size = 0;
@@ -147,16 +146,16 @@ int32_t cmp_file_watch_start(cmp_file_watch_context *context, const char *path)
     context->watch_fd = open(path, O_EVTONLY);
     if (context->watch_fd < 0)
     {
-        context->last_error = cmp_file_watch_translate_error();
-        return (-1);
+        error_code = cmp_file_watch_translate_error();
+        return (error_code);
     }
     context->kqueue_fd = kqueue();
     if (context->kqueue_fd < 0)
     {
-        context->last_error = cmp_file_watch_translate_error();
+        error_code = cmp_file_watch_translate_error();
         close(context->watch_fd);
         context->watch_fd = -1;
-        return (-1);
+        return (error_code);
     }
     struct kevent configuration;
 
@@ -164,12 +163,12 @@ int32_t cmp_file_watch_start(cmp_file_watch_context *context, const char *path)
         NOTE_WRITE | NOTE_EXTEND | NOTE_DELETE | NOTE_RENAME, 0, ft_nullptr);
     if (kevent(context->kqueue_fd, &configuration, 1, ft_nullptr, 0, ft_nullptr) < 0)
     {
-        context->last_error = cmp_file_watch_translate_error();
+        error_code = cmp_file_watch_translate_error();
         close(context->kqueue_fd);
         context->kqueue_fd = -1;
         close(context->watch_fd);
         context->watch_fd = -1;
-        return (-1);
+        return (error_code);
     }
 #elif defined(_WIN32)
     context->directory = CreateFileA(path, FILE_LIST_DIRECTORY,
@@ -177,14 +176,14 @@ int32_t cmp_file_watch_start(cmp_file_watch_context *context, const char *path)
         ft_nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, ft_nullptr);
     if (context->directory == INVALID_HANDLE_VALUE)
     {
-        context->last_error = cmp_file_watch_translate_error();
-        return (-1);
+        error_code = cmp_file_watch_translate_error();
+        return (error_code);
     }
     context->buffer_offset = 0;
     context->buffer_size = 0;
 #endif
     context->running.store(true);
-    return (0);
+    return (FT_ERR_SUCCESSS);
 }
 
 void cmp_file_watch_stop(cmp_file_watch_context *context)
@@ -258,11 +257,11 @@ bool cmp_file_watch_wait_event(cmp_file_watch_context *context,
             }
             return (true);
         }
-        ssize_t read_result = ::read(context->fd, context->buffer, sizeof(context->buffer));
+        int64_t read_result = ::read(context->fd, context->buffer,
+                sizeof(context->buffer));
         if (read_result <= 0)
         {
             context->running.store(false);
-            context->last_error = cmp_file_watch_translate_error();
             return (false);
         }
         context->buffer_size = static_cast<ft_size_t>(read_result);
@@ -276,7 +275,6 @@ bool cmp_file_watch_wait_event(cmp_file_watch_context *context,
         if (event_count <= 0)
         {
             context->running.store(false);
-            context->last_error = cmp_file_watch_translate_error();
             return (false);
         }
         event->event_type = cmp_file_watch_translate_bsd_flags(observed_event.fflags);
@@ -326,12 +324,7 @@ bool cmp_file_watch_wait_event(cmp_file_watch_context *context,
             &bytes_returned, ft_nullptr, ft_nullptr);
         if (success == FALSE)
         {
-            DWORD windows_error = GetLastError();
             context->running.store(false);
-            if (windows_error != ERROR_OPERATION_ABORTED)
-                context->last_error = ft_map_system_error(static_cast<int32_t>(windows_error));
-            else
-                context->last_error = FT_ERR_SUCCESSS;
             return (false);
         }
         if (bytes_returned == 0)
@@ -341,11 +334,4 @@ bool cmp_file_watch_wait_event(cmp_file_watch_context *context,
     }
 #endif
     return (false);
-}
-
-int32_t cmp_file_watch_last_error(const cmp_file_watch_context *context)
-{
-    if (!context)
-        return (FT_ERR_INVALID_ARGUMENT);
-    return (context->last_error);
 }

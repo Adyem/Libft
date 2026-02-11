@@ -27,21 +27,21 @@ FT_TEST(test_ft_set_errno_from_system_error_records_mapping,
     return (1);
 }
 
-FT_TEST(test_cmp_normalize_ft_errno_decodes_offset_encoding_and_resets_errno,
-    "cmp_normalize_ft_errno converts offset encoded errors and clears errno")
+FT_TEST(test_cmp_decode_errno_offset_error_decodes_offset_encoding_and_resets_errno,
+    "cmp_decode_errno_offset_error converts offset encoded errors and clears errno")
 {
     int normalized_error;
 
     ft_errno = FT_ERR_CONFIGURATION;
-    normalized_error = cmp_normalize_ft_errno(ERRNO_OFFSET + ENOMEM);
+    normalized_error = cmp_decode_errno_offset_error(ERRNO_OFFSET + ENOMEM);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, normalized_error);
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     ft_errno = FT_ERR_TERMINATED;
-    normalized_error = cmp_normalize_ft_errno(ERRNO_OFFSET);
+    normalized_error = cmp_decode_errno_offset_error(ERRNO_OFFSET);
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, normalized_error);
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     ft_errno = FT_ERR_ALREADY_EXISTS;
-    normalized_error = cmp_normalize_ft_errno(FT_ERR_IO);
+    normalized_error = cmp_decode_errno_offset_error(FT_ERR_IO);
     FT_ASSERT_EQ(FT_ERR_IO, normalized_error);
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);

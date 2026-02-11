@@ -64,7 +64,7 @@ typedef int (*t_rl_completion_callback)(const char *buffer, int cursor_position,
 
 int        rl_initialize_state(readline_state_t *state);
 
-void    rl_disable_raw_mode();
+int        rl_disable_raw_mode();
 int        rl_enable_raw_mode();
 
 int        rl_clear_line(const char *prompt, const char *buffer);
