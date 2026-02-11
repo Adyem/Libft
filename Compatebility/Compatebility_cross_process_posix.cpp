@@ -1,9 +1,9 @@
 #ifndef _WIN32
 
 #include "compatebility_cross_process.hpp"
+#include "compatebility_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
-#include "../PThread/pthread_internal.hpp"
 
 #include <cerrno>
 #include <cstring>
@@ -15,17 +15,17 @@ static ft_size_t compute_offset(uint64_t pointer_value, uint64_t base_value)
 {
     if (pointer_value < base_value)
         return (0);
-    return (static_cast<ft_size_t>(pointer_value - base_value));
+    return (pointer_value - base_value);
 }
 
-int cmp_cross_process_send_descriptor(int socket_fd, const cross_process_message &message)
+int32_t cmp_cross_process_send_descriptor(int32_t socket_fd, const cross_process_message &message)
 {
     const unsigned char *raw_message;
     ft_size_t total_size;
     ft_size_t offset;
 
     raw_message = reinterpret_cast<const unsigned char *>(&message);
-    total_size = static_cast<ft_size_t>(sizeof(cross_process_message));
+    total_size = sizeof(cross_process_message);
     offset = 0;
     while (offset < total_size)
     {
@@ -43,14 +43,14 @@ int cmp_cross_process_send_descriptor(int socket_fd, const cross_process_message
     return (0);
 }
 
-int cmp_cross_process_receive_descriptor(int socket_fd, cross_process_message &message)
+int32_t cmp_cross_process_receive_descriptor(int32_t socket_fd, cross_process_message &message)
 {
     unsigned char *raw_message;
     ft_size_t total_size;
     ft_size_t offset;
 
     raw_message = reinterpret_cast<unsigned char *>(&message);
-    total_size = static_cast<ft_size_t>(sizeof(cross_process_message));
+    total_size = sizeof(cross_process_message);
     offset = 0;
     while (offset < total_size)
     {
@@ -73,9 +73,9 @@ int cmp_cross_process_receive_descriptor(int socket_fd, cross_process_message &m
     return (0);
 }
 
-int cmp_cross_process_open_mapping(const cross_process_message &message, cmp_cross_process_mapping *mapping)
+int32_t cmp_cross_process_open_mapping(const cross_process_message &message, cmp_cross_process_mapping *mapping)
 {
-    int shared_memory_fd;
+    int32_t shared_memory_fd;
     void *mapping_pointer;
 
     shared_memory_fd = shm_open(message.shared_memory_name, O_RDWR, 0600);
@@ -86,7 +86,7 @@ int cmp_cross_process_open_mapping(const cross_process_message &message, cmp_cro
     if (mapping_pointer == MAP_FAILED)
         return (-1);
     mapping->mapping_address = reinterpret_cast<unsigned char *>(mapping_pointer);
-    mapping->mapping_length = static_cast<ft_size_t>(message.remote_memory_size);
+    mapping->mapping_length = message.remote_memory_size;
     mapping->platform_handle = ft_nullptr;
     mapping->mutex_address = ft_nullptr;
     if (message.shared_mutex_address == 0)
@@ -96,7 +96,7 @@ int cmp_cross_process_open_mapping(const cross_process_message &message, cmp_cro
         return (-1);
     }
     ft_size_t mutex_offset = compute_offset(message.shared_mutex_address, message.stack_base_address);
-    if (mutex_offset + static_cast<ft_size_t>(sizeof(pthread_mutex_t)) > mapping->mapping_length)
+    if (mutex_offset + sizeof(pthread_mutex_t) > mapping->mapping_length)
     {
         cmp_cross_process_close_mapping(mapping);
         errno = EINVAL;
@@ -106,7 +106,7 @@ int cmp_cross_process_open_mapping(const cross_process_message &message, cmp_cro
     return (0);
 }
 
-int cmp_cross_process_close_mapping(cmp_cross_process_mapping *mapping)
+int32_t cmp_cross_process_close_mapping(cmp_cross_process_mapping *mapping)
 {
     if (mapping->mapping_address == ft_nullptr)
         return (0);
@@ -119,27 +119,29 @@ int cmp_cross_process_close_mapping(cmp_cross_process_mapping *mapping)
     return (0);
 }
 
-int cmp_cross_process_lock_mutex(const cross_process_message &message, cmp_cross_process_mapping *mapping, cmp_cross_process_mutex_state *mutex_state)
+int32_t cmp_cross_process_lock_mutex(const cross_process_message &message, cmp_cross_process_mapping *mapping, cmp_cross_process_mutex_state *mutex_state)
 {
     (void)message;
     if (!mapping || mapping->mutex_address == ft_nullptr)
     {
         errno = EINVAL;
+        cmp_set_last_error(cmp_map_system_error_to_ft(errno));
         return (-1);
     }
     pthread_mutex_t *shared_mutex = reinterpret_cast<pthread_mutex_t *>(mapping->mutex_address);
-    for (int attempt_count = 0; attempt_count < 5; ++attempt_count)
+    for (int32_t attempt_count = 0; attempt_count < 5; ++attempt_count)
     {
-        int lock_error = pt_pthread_mutex_try_lock_with_error(shared_mutex);
-        int stack_error = ft_global_error_stack_drop_last_error();
-        if (lock_error == FT_ERR_SUCCESSS)
+        int32_t lock_error = pthread_mutex_trylock(shared_mutex);
+        if (lock_error == 0)
         {
             mutex_state->platform_mutex = shared_mutex;
+            cmp_set_last_error(FT_ERR_SUCCESSS);
             return (0);
         }
-        if (lock_error != FT_ERR_MUTEX_ALREADY_LOCKED)
+        if (lock_error != EBUSY)
         {
-            ft_global_error_stack_push(stack_error);
+            errno = lock_error;
+        cmp_set_last_error(cmp_map_system_error_to_ft(lock_error));
             return (-1);
         }
         if (attempt_count >= 4)
@@ -147,11 +149,11 @@ int cmp_cross_process_lock_mutex(const cross_process_message &message, cmp_cross
         usleep(50000);
     }
     errno = ETIMEDOUT;
-    ft_global_error_stack_push(ft_map_system_error(ETIMEDOUT));
+    cmp_set_last_error(cmp_map_system_error_to_ft(ETIMEDOUT));
     return (-1);
 }
 
-int cmp_cross_process_unlock_mutex(const cross_process_message &message, cmp_cross_process_mapping *mapping, cmp_cross_process_mutex_state *mutex_state)
+int32_t cmp_cross_process_unlock_mutex(const cross_process_message &message, cmp_cross_process_mapping *mapping, cmp_cross_process_mutex_state *mutex_state)
 {
     pthread_mutex_t *shared_mutex;
 
@@ -160,10 +162,15 @@ int cmp_cross_process_unlock_mutex(const cross_process_message &message, cmp_cro
     shared_mutex = reinterpret_cast<pthread_mutex_t *>(mutex_state->platform_mutex);
     if (shared_mutex == ft_nullptr)
         return (0);
-    int unlock_error = pt_pthread_mutex_unlock_with_error(shared_mutex);
-    if (unlock_error != FT_ERR_SUCCESSS)
+    int32_t unlock_error = pthread_mutex_unlock(shared_mutex);
+    if (unlock_error != 0)
+    {
+        errno = unlock_error;
+        cmp_set_last_error(cmp_map_system_error_to_ft(unlock_error));
         return (-1);
+    }
     mutex_state->platform_mutex = ft_nullptr;
+    cmp_set_last_error(FT_ERR_SUCCESSS);
     return (0);
 }
 

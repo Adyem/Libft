@@ -6,19 +6,19 @@
 # include <windows.h>
 # include <wincrypt.h>
 
-static int cmp_rng_windows_error(DWORD last_error)
+static int32_t cmp_rng_windows_error(DWORD last_error)
 {
     if (last_error != 0)
     {
-        return (ft_map_system_error(static_cast<int>(last_error)));
+        return (ft_map_system_error(static_cast<int32_t>(last_error)));
     }
     return (FT_ERR_INVALID_ARGUMENT);
 }
 
-int cmp_rng_secure_bytes(unsigned char *buffer, size_t length)
+int32_t cmp_rng_secure_bytes(unsigned char *buffer, ft_size_t length)
 {
     HCRYPTPROV crypt_provider = 0;
-    int error_code;
+    int32_t error_code;
 
     (void)buffer;
     (void)length;
@@ -51,30 +51,30 @@ int cmp_rng_secure_bytes(unsigned char *buffer, size_t length)
 # include <fcntl.h>
 # include <cerrno>
 
-void cmp_force_rng_open_failure(int error_code);
-void cmp_force_rng_read_failure(int error_code);
+void cmp_force_rng_open_failure(int32_t error_code);
+void cmp_force_rng_read_failure(int32_t error_code);
 void cmp_force_rng_read_eof(void);
-void cmp_force_rng_close_failure(int error_code);
+void cmp_force_rng_close_failure(int32_t error_code);
 void cmp_clear_force_rng_failures(void);
 
-static int g_force_rng_open_errno = 0;
-static int g_force_rng_read_errno = 0;
-static int g_force_rng_close_errno = 0;
-static int g_force_rng_read_zero = 0;
+static int32_t g_force_rng_open_errno = 0;
+static int32_t g_force_rng_read_errno = 0;
+static int32_t g_force_rng_close_errno = 0;
+static int32_t g_force_rng_read_zero = 0;
 
-void cmp_force_rng_open_failure(int error_code)
+void cmp_force_rng_open_failure(int32_t error_code)
 {
     g_force_rng_open_errno = error_code;
     return ;
 }
 
-void cmp_force_rng_read_failure(int error_code)
+void cmp_force_rng_read_failure(int32_t error_code)
 {
     g_force_rng_read_errno = error_code;
     return ;
 }
 
-void cmp_force_rng_close_failure(int error_code)
+void cmp_force_rng_close_failure(int32_t error_code)
 {
     g_force_rng_close_errno = error_code;
     return ;
@@ -95,13 +95,13 @@ void cmp_clear_force_rng_failures(void)
     return ;
 }
 
-int cmp_rng_secure_bytes(unsigned char *buffer, size_t length)
+int32_t cmp_rng_secure_bytes(unsigned char *buffer, ft_size_t length)
 {
-    int forced_open_errno = g_force_rng_open_errno;
+    int32_t forced_open_errno = g_force_rng_open_errno;
     ssize_t bytes_read;
-    int file_descriptor;
-    int error_code;
-    size_t offset;
+    int32_t file_descriptor;
+    int32_t error_code;
+    ft_size_t offset;
 
     g_force_rng_open_errno = 0;
     if (forced_open_errno != 0)
@@ -121,14 +121,14 @@ int cmp_rng_secure_bytes(unsigned char *buffer, size_t length)
     offset = 0;
     while (offset < length)
     {
-        int forced_read_errno = g_force_rng_read_errno;
+        int32_t forced_read_errno = g_force_rng_read_errno;
 
         if (forced_read_errno != 0)
         {
             g_force_rng_read_errno = 0;
             errno = forced_read_errno;
             error_code = ft_map_system_error(errno);
-            int stored_errno = errno;
+            int32_t stored_errno = errno;
 
             close(file_descriptor);
             errno = stored_errno;
@@ -147,7 +147,7 @@ int cmp_rng_secure_bytes(unsigned char *buffer, size_t length)
         }
         if (bytes_read < 0)
         {
-            int stored_errno = errno;
+            int32_t stored_errno = errno;
 
             error_code = ft_map_system_error(errno);
             close(file_descriptor);
@@ -157,7 +157,7 @@ int cmp_rng_secure_bytes(unsigned char *buffer, size_t length)
         }
         if (bytes_read == 0)
         {
-            int close_result = close(file_descriptor);
+            int32_t close_result = close(file_descriptor);
 
             if (close_result < 0)
             {
@@ -168,7 +168,7 @@ int cmp_rng_secure_bytes(unsigned char *buffer, size_t length)
             cmp_set_last_error(FT_ERR_IO);
             return (-1);
         }
-        offset += static_cast<size_t>(bytes_read);
+        offset += static_cast<ft_size_t>(bytes_read);
     }
     if (close(file_descriptor) < 0)
     {
@@ -176,7 +176,7 @@ int cmp_rng_secure_bytes(unsigned char *buffer, size_t length)
         cmp_set_last_error(error_code);
         return (-1);
     }
-    int forced_close_errno = g_force_rng_close_errno;
+    int32_t forced_close_errno = g_force_rng_close_errno;
 
     g_force_rng_close_errno = 0;
     if (forced_close_errno != 0)

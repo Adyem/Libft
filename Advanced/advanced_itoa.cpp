@@ -2,9 +2,9 @@
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 
-static int itoa_length(int number)
+static int32_t itoa_length(int32_t number)
 {
-    int length = 0;
+    int32_t length = 0;
     if (number == 0)
         return (1);
     while (number != 0)
@@ -15,7 +15,7 @@ static int itoa_length(int number)
     return (length);
 }
 
-static char *fill_digits(char *characters, unsigned int value, int index)
+static char *fill_digits(char *characters, uint32_t value, int32_t index)
 {
     while (index >= 0)
     {
@@ -26,13 +26,13 @@ static char *fill_digits(char *characters, unsigned int value, int index)
     return (characters);
 }
 
-static char *convert_int(int number, int is_negative)
+static char *convert_int(int32_t number, int32_t is_negative)
 {
-    int length = itoa_length(number);
+    int32_t length = itoa_length(number);
     char *result = static_cast<char *>(cma_malloc(static_cast<ft_size_t>(length + 1 + is_negative)));
     if (result == ft_nullptr)
         return (ft_nullptr);
-    unsigned int absolute_value = (number < 0) ? -static_cast<unsigned int>(number) : static_cast<unsigned int>(number);
+    uint32_t absolute_value = (number < 0) ? -static_cast<uint32_t>(number) : static_cast<uint32_t>(number);
     result[length + is_negative] = '\0';
     if (is_negative == 0)
         fill_digits(result, absolute_value, length - 1);
@@ -44,7 +44,7 @@ static char *convert_int(int number, int is_negative)
     return (result);
 }
 
-char *adv_itoa(int number)
+char *adv_itoa(int32_t number)
 {
     if (number == 0)
     {
@@ -55,6 +55,6 @@ char *adv_itoa(int number)
         result[1] = '\0';
         return (result);
     }
-    int is_negative = (number < 0) ? 1 : 0;
+    int32_t is_negative = (number < 0) ? 1 : 0;
     return (convert_int(number, is_negative));
 }

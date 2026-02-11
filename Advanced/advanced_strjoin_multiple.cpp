@@ -18,7 +18,7 @@ static ft_size_t safe_strlen(const char *string)
     return (length);
 }
 
-char *adv_strjoin_multiple(int count, ...)
+char *adv_strjoin_multiple(int32_t count, ...)
 {
     if (count <= 0)
         return (ft_nullptr);
@@ -31,7 +31,7 @@ char *adv_strjoin_multiple(int count, ...)
     va_list args;
     va_start(args, count);
     ft_size_t total_length = 0;
-    for (int i = 0; i < count; ++i)
+    for (int32_t i = 0; i < count; ++i)
     {
         const char *current = va_arg(args, const char *);
         ft_size_t length = safe_strlen(current);
@@ -60,7 +60,7 @@ char *adv_strjoin_multiple(int count, ...)
     }
     va_start(args, count);
     ft_size_t write_index = 0;
-    for (int i = 0; i < count; ++i)
+    for (int32_t i = 0; i < count; ++i)
     {
         const char *current = va_arg(args, const char *);
         ft_size_t length = length_cache[i];

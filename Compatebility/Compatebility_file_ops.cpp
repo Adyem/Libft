@@ -2,7 +2,7 @@
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 
-static void cmp_set_error_code(int *error_code_out, int error_code)
+static void cmp_set_error_code(int32_t *error_code_out, int32_t error_code)
 {
     if (error_code_out != ft_nullptr)
         *error_code_out = error_code;
@@ -14,11 +14,11 @@ static void cmp_set_error_code(int *error_code_out, int error_code)
 # include <stdio.h>
 # include <errno.h>
 
-void cmp_set_force_cross_device_move(int force_cross_device_move);
+void cmp_set_force_cross_device_move(int32_t force_cross_device_move);
 
 static bool global_force_cross_device_move = false;
 
-void cmp_set_force_cross_device_move(int force_cross_device_move)
+void cmp_set_force_cross_device_move(int32_t force_cross_device_move)
 {
     if (force_cross_device_move != 0)
         global_force_cross_device_move = true;
@@ -27,7 +27,7 @@ void cmp_set_force_cross_device_move(int force_cross_device_move)
     return ;
 }
 
-int cmp_file_exists(const char *path, int *error_code_out)
+int32_t cmp_file_exists(const char *path, int32_t *error_code_out)
 {
     DWORD file_attributes;
     DWORD last_error;
@@ -50,13 +50,13 @@ int cmp_file_exists(const char *path, int *error_code_out)
     }
     last_error = GetLastError();
     if (last_error != 0)
-        cmp_set_error_code(error_code_out, cmp_map_system_error_to_ft(static_cast<int>(last_error)));
+        cmp_set_error_code(error_code_out, cmp_map_system_error_to_ft(static_cast<int32_t>(last_error)));
     else
         cmp_set_error_code(error_code_out, FT_ERR_INVALID_ARGUMENT);
     return (0);
 }
 
-int cmp_file_delete(const char *path, int *error_code_out)
+int32_t cmp_file_delete(const char *path, int32_t *error_code_out)
 {
     DWORD last_error;
 
@@ -72,18 +72,18 @@ int cmp_file_delete(const char *path, int *error_code_out)
     }
     last_error = GetLastError();
     if (last_error != 0)
-        cmp_set_error_code(error_code_out, cmp_map_system_error_to_ft(static_cast<int>(last_error)));
+        cmp_set_error_code(error_code_out, cmp_map_system_error_to_ft(static_cast<int32_t>(last_error)));
     else
         cmp_set_error_code(error_code_out, FT_ERR_INVALID_ARGUMENT);
     return (-1);
 }
 
-int cmp_file_move(const char *source_path, const char *destination_path, int *error_code_out)
+int32_t cmp_file_move(const char *source_path, const char *destination_path, int32_t *error_code_out)
 {
     DWORD last_error;
-    int stored_error;
-    int delete_error;
-    int copy_error;
+    int32_t stored_error;
+    int32_t delete_error;
+    int32_t copy_error;
 
     if (source_path == ft_nullptr || destination_path == ft_nullptr)
     {
@@ -127,7 +127,7 @@ int cmp_file_move(const char *source_path, const char *destination_path, int *er
         return (-1);
     }
     else if (last_error != 0)
-        stored_error = cmp_map_system_error_to_ft(static_cast<int>(last_error));
+        stored_error = cmp_map_system_error_to_ft(static_cast<int32_t>(last_error));
     else
         stored_error = FT_ERR_INVALID_ARGUMENT;
     if (stored_error == FT_ERR_SUCCESSS)
@@ -136,7 +136,7 @@ int cmp_file_move(const char *source_path, const char *destination_path, int *er
     return (-1);
 }
 
-int cmp_file_copy(const char *source_path, const char *destination_path, int *error_code_out)
+int32_t cmp_file_copy(const char *source_path, const char *destination_path, int32_t *error_code_out)
 {
     DWORD last_error;
 
@@ -152,13 +152,13 @@ int cmp_file_copy(const char *source_path, const char *destination_path, int *er
     }
     last_error = GetLastError();
     if (last_error != 0)
-        cmp_set_error_code(error_code_out, cmp_map_system_error_to_ft(static_cast<int>(last_error)));
+        cmp_set_error_code(error_code_out, cmp_map_system_error_to_ft(static_cast<int32_t>(last_error)));
     else
         cmp_set_error_code(error_code_out, FT_ERR_INVALID_ARGUMENT);
     return (-1);
 }
 
-int cmp_file_create_directory(const char *path, mode_t mode, int *error_code_out)
+int32_t cmp_file_create_directory(const char *path, mode_t mode, int32_t *error_code_out)
 {
     (void)mode;
     DWORD last_error;
@@ -175,13 +175,13 @@ int cmp_file_create_directory(const char *path, mode_t mode, int *error_code_out
     }
     last_error = GetLastError();
     if (last_error != 0)
-        cmp_set_error_code(error_code_out, cmp_map_system_error_to_ft(static_cast<int>(last_error)));
+        cmp_set_error_code(error_code_out, cmp_map_system_error_to_ft(static_cast<int32_t>(last_error)));
     else
         cmp_set_error_code(error_code_out, FT_ERR_INVALID_ARGUMENT);
     return (-1);
 }
 
-int cmp_file_get_permissions(const char *path, mode_t *mode_out, int *error_code_out)
+int32_t cmp_file_get_permissions(const char *path, mode_t *mode_out, int32_t *error_code_out)
 {
     struct _stat file_info;
 
@@ -210,11 +210,11 @@ int cmp_file_get_permissions(const char *path, mode_t *mode_out, int *error_code
 # include <system_error>
 # include <new>
 
-void cmp_set_force_cross_device_move(int force_cross_device_move);
+void cmp_set_force_cross_device_move(int32_t force_cross_device_move);
 
 static bool global_force_cross_device_move = false;
 
-void cmp_set_force_cross_device_move(int force_cross_device_move)
+void cmp_set_force_cross_device_move(int32_t force_cross_device_move)
 {
     if (force_cross_device_move != 0)
         global_force_cross_device_move = true;
@@ -223,7 +223,7 @@ void cmp_set_force_cross_device_move(int force_cross_device_move)
     return ;
 }
 
-int cmp_file_exists(const char *path, int *error_code_out)
+int32_t cmp_file_exists(const char *path, int32_t *error_code_out)
 {
     struct stat stat_buffer;
     if (path == ft_nullptr)
@@ -245,7 +245,7 @@ int cmp_file_exists(const char *path, int *error_code_out)
     return (0);
 }
 
-int cmp_file_delete(const char *path, int *error_code_out)
+int32_t cmp_file_delete(const char *path, int32_t *error_code_out)
 {
     if (path == ft_nullptr)
     {
@@ -261,11 +261,11 @@ int cmp_file_delete(const char *path, int *error_code_out)
     return (-1);
 }
 
-int cmp_file_move(const char *source_path, const char *destination_path, int *error_code_out)
+int32_t cmp_file_move(const char *source_path, const char *destination_path, int32_t *error_code_out)
 {
     std::error_code copy_error_code;
     std::error_code directory_error_code;
-    int delete_errno;
+    int32_t delete_errno;
     bool destination_is_directory;
 
     try
@@ -294,7 +294,7 @@ int cmp_file_move(const char *source_path, const char *destination_path, int *er
             directory_error_code);
         if (directory_error_code.value() != 0
             && directory_error_code.value()
-                != static_cast<int>(std::errc::not_a_directory))
+                != static_cast<int32_t>(std::errc::not_a_directory))
         {
             cmp_set_error_code(error_code_out,
                 cmp_map_system_error_to_ft(directory_error_code.value()));
@@ -323,7 +323,7 @@ int cmp_file_move(const char *source_path, const char *destination_path, int *er
         }
         if (copy_error_code.value() != 0)
         {
-            int copy_value;
+            int32_t copy_value;
 
             copy_value = copy_error_code.value();
             cmp_set_error_code(error_code_out, cmp_map_system_error_to_ft(copy_value));
@@ -340,7 +340,7 @@ int cmp_file_move(const char *source_path, const char *destination_path, int *er
     return (-1);
 }
 
-int cmp_file_copy(const char *source_path, const char *destination_path, int *error_code_out)
+int32_t cmp_file_copy(const char *source_path, const char *destination_path, int32_t *error_code_out)
 {
     std::error_code copy_error_code;
 
@@ -360,7 +360,7 @@ int cmp_file_copy(const char *source_path, const char *destination_path, int *er
         }
         if (copy_error_code.value() != 0)
         {
-            int copy_value;
+            int32_t copy_value;
 
             copy_value = copy_error_code.value();
             cmp_set_error_code(error_code_out, cmp_map_system_error_to_ft(copy_value));
@@ -377,7 +377,7 @@ int cmp_file_copy(const char *source_path, const char *destination_path, int *er
     return (-1);
 }
 
-int cmp_file_create_directory(const char *path, mode_t mode, int *error_code_out)
+int32_t cmp_file_create_directory(const char *path, mode_t mode, int32_t *error_code_out)
 {
     if (path == ft_nullptr)
     {
@@ -393,7 +393,7 @@ int cmp_file_create_directory(const char *path, mode_t mode, int *error_code_out
     return (-1);
 }
 
-int cmp_file_get_permissions(const char *path, mode_t *mode_out, int *error_code_out)
+int32_t cmp_file_get_permissions(const char *path, mode_t *mode_out, int32_t *error_code_out)
 {
     struct stat file_info;
 

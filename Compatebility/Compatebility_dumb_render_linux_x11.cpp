@@ -12,13 +12,13 @@
 struct ft_render_x11_state
 {
     Display     *display;
-    int         screen;
+    int32_t         screen;
     Window      window;
     GC          graphics_context;
 
     XImage      *image;
-    int         width;
-    int         height;
+    int32_t         width;
+    int32_t         height;
 
     bool        is_fullscreen;
 
@@ -32,14 +32,14 @@ static ft_render_platform_result ft_render_x11_create_image(
     ft_render_framebuffer *out_framebuffer
 )
 {
-    int         bytes_per_pixel;
-    int         bytes_per_row;
+    int32_t         bytes_per_pixel;
+    int32_t         bytes_per_row;
     char        *data;
 
     bytes_per_pixel = 4;
     bytes_per_row = state->width * bytes_per_pixel;
 
-    data = static_cast<char *>(malloc(static_cast<size_t>(bytes_per_row * state->height)));
+    data = static_cast<char *>(malloc(static_cast<ft_size_t>(bytes_per_row * state->height)));
     if (data == NULL)
     {
         return ((ft_render_platform_result){ ft_render_error_out_of_memory, 0 });
@@ -52,8 +52,8 @@ static ft_render_platform_result ft_render_x11_create_image(
         ZPixmap,
         0,
         data,
-        static_cast<unsigned int>(state->width),
-        static_cast<unsigned int>(state->height),
+        static_cast<uint32_t>(state->width),
+        static_cast<uint32_t>(state->height),
         32,
         bytes_per_row
     );
@@ -74,7 +74,7 @@ static ft_render_platform_result ft_render_x11_create_image(
 ft_render_platform_result ft_render_platform_get_primary_screen_size(ft_render_screen_size *out_size)
 {
     Display *display;
-    int     screen;
+    int32_t     screen;
 
     if (out_size == NULL)
     {
@@ -112,7 +112,7 @@ ft_render_platform_result ft_render_platform_create_window(
 )
 {
     ft_render_x11_state  *state;
-    long                 event_mask;
+    int64_t                 event_mask;
 
     if (out_platform_state == NULL || out_framebuffer == NULL)
     {
@@ -144,8 +144,8 @@ ft_render_platform_result ft_render_platform_create_window(
         RootWindow(state->display, state->screen),
         0,
         0,
-        static_cast<unsigned int>(state->width),
-        static_cast<unsigned int>(state->height),
+        static_cast<uint32_t>(state->width),
+        static_cast<uint32_t>(state->height),
         1,
         BlackPixel(state->display, state->screen),
         WhitePixel(state->display, state->screen)
@@ -276,8 +276,8 @@ ft_render_platform_result ft_render_platform_present(
         0,
         0,
         0,
-        static_cast<unsigned int>(framebuffer->width),
-        static_cast<unsigned int>(framebuffer->height)
+        static_cast<uint32_t>(framebuffer->width),
+        static_cast<uint32_t>(framebuffer->height)
     );
 
     XFlush(state->display);
@@ -299,7 +299,7 @@ static void ft_render_x11_send_fullscreen_message(ft_render_x11_state *state, bo
         event.xclient.data.l[0] = 1;
     else
         event.xclient.data.l[0] = 0;
-    event.xclient.data.l[1] = static_cast<long>(state->net_wm_state_fullscreen);
+    event.xclient.data.l[1] = static_cast<int64_t>(state->net_wm_state_fullscreen);
     event.xclient.data.l[2] = 0;
     event.xclient.data.l[3] = 1;
 

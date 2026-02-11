@@ -1,17 +1,17 @@
 #include "compatebility_internal.hpp"
 #include <cerrno>
 #include <atomic>
-#include "../PThread/pthread_internal.hpp"
+#include "../PThread/pthread.hpp"
 
 #if defined(_WIN32) || defined(_WIN64)
 # include <windows.h>
 # include <synchapi.h>
-int cmp_thread_equal(pthread_t thread1, pthread_t thread2)
+int32_t cmp_thread_equal(pthread_t thread1, pthread_t thread2)
 {
     return (thread1 == thread2);
 }
 
-int cmp_thread_cancel(pthread_t thread)
+int32_t cmp_thread_cancel(pthread_t thread)
 {
     if (TerminateThread((HANDLE)thread, 0) == 0)
     {
@@ -20,19 +20,19 @@ int cmp_thread_cancel(pthread_t thread)
     return (0);
 }
 
-int cmp_thread_yield()
+int32_t cmp_thread_yield()
 {
     SwitchToThread();
     return (0);
 }
 
-int cmp_thread_sleep(unsigned int milliseconds)
+int32_t cmp_thread_sleep(uint32_t milliseconds)
 {
     Sleep(milliseconds);
     return (0);
 }
 
-int cmp_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected_value)
+int32_t cmp_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected_value)
 {
     BOOL wait_result;
     DWORD error_code;
@@ -56,7 +56,7 @@ int cmp_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected_val
     }
 }
 
-int cmp_thread_wake_one_uint32(std::atomic<uint32_t> *address)
+int32_t cmp_thread_wake_one_uint32(std::atomic<uint32_t> *address)
 {
     WakeByAddressSingle(reinterpret_cast<volatile VOID *>(address));
     return (0);
@@ -76,7 +76,7 @@ struct cmp_wait_entry
 {
     std::atomic<uint32_t> *address;
     pthread_cond_t condition;
-    unsigned int waiter_count;
+    uint32_t waiter_count;
     cmp_wait_entry *next;
 };
 
@@ -97,10 +97,10 @@ static cmp_wait_entry *cmp_wait_lookup_entry(std::atomic<uint32_t> *address) noe
     return (ft_nullptr);
 }
 
-static int cmp_wait_create_entry(std::atomic<uint32_t> *address, cmp_wait_entry **entry_out) noexcept
+static int32_t cmp_wait_create_entry(std::atomic<uint32_t> *address, cmp_wait_entry **entry_out) noexcept
 {
     cmp_wait_entry *new_entry;
-    int init_result;
+    int32_t init_result;
 
     if (!entry_out)
     {
@@ -125,11 +125,11 @@ static int cmp_wait_create_entry(std::atomic<uint32_t> *address, cmp_wait_entry 
     return (0);
 }
 
-static int cmp_wait_remove_entry(cmp_wait_entry *entry) noexcept
+static int32_t cmp_wait_remove_entry(cmp_wait_entry *entry) noexcept
 {
     cmp_wait_entry *current_entry;
     cmp_wait_entry *previous_entry;
-    int destroy_result;
+    int32_t destroy_result;
 
     if (!entry)
     {
@@ -160,14 +160,14 @@ static int cmp_wait_remove_entry(cmp_wait_entry *entry) noexcept
 }
 # endif
 
-int cmp_thread_equal(pthread_t thread1, pthread_t thread2)
+int32_t cmp_thread_equal(pthread_t thread1, pthread_t thread2)
 {
     return (pthread_equal(thread1, thread2));
 }
 
-int cmp_thread_cancel(pthread_t thread)
+int32_t cmp_thread_cancel(pthread_t thread)
 {
-    int return_value;
+    int32_t return_value;
 
     return_value = pthread_cancel(thread);
     if (return_value != 0)
@@ -177,7 +177,7 @@ int cmp_thread_cancel(pthread_t thread)
     return (return_value);
 }
 
-int cmp_thread_yield()
+int32_t cmp_thread_yield()
 {
     if (sched_yield() != 0)
     {
@@ -186,7 +186,7 @@ int cmp_thread_yield()
     return (0);
 }
 
-int cmp_thread_sleep(unsigned int milliseconds)
+int32_t cmp_thread_sleep(uint32_t milliseconds)
 {
     if (usleep(milliseconds * 1000) == -1)
     {
@@ -195,10 +195,10 @@ int cmp_thread_sleep(unsigned int milliseconds)
     return (0);
 }
 
-int cmp_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected_value)
+int32_t cmp_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected_value)
 {
 # if defined(__linux__)
-    long syscall_result;
+    int64_t syscall_result;
 
     while (1)
     {
@@ -222,10 +222,10 @@ int cmp_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected_val
         return (-1);
     }
 # else
-    int lock_error;
+    int32_t lock_error;
     cmp_wait_entry *entry;
-    int wait_result;
-    int unlock_error;
+    int32_t wait_result;
+    int32_t unlock_error;
     uint32_t current_value;
 
     if (address == ft_nullptr)
@@ -298,10 +298,10 @@ int cmp_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected_val
 # endif
 }
 
-int cmp_thread_wake_one_uint32(std::atomic<uint32_t> *address)
+int32_t cmp_thread_wake_one_uint32(std::atomic<uint32_t> *address)
 {
 # if defined(__linux__)
-    long syscall_result;
+    int64_t syscall_result;
 
     syscall_result = syscall(SYS_futex, reinterpret_cast<uint32_t *>(address),
 #  ifdef FUTEX_WAKE_PRIVATE
@@ -316,10 +316,10 @@ int cmp_thread_wake_one_uint32(std::atomic<uint32_t> *address)
     }
     return (0);
 # else
-    int lock_error;
+    int32_t lock_error;
     cmp_wait_entry *entry;
-    int signal_result;
-    int unlock_error;
+    int32_t signal_result;
+    int32_t unlock_error;
 
     if (address == ft_nullptr)
     {

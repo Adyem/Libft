@@ -7,20 +7,20 @@
 static DWORD g_orig_mode;
 static bool g_raw_mode_active;
 
-static int cmp_set_errno_from_last_error()
+static int32_t cmp_set_errno_from_last_error()
 {
     DWORD last_error;
-    int error_code;
+    int32_t error_code;
 
     last_error = GetLastError();
     if (last_error == 0)
         error_code = FT_ERR_TERMINATED;
     else
-        error_code = ft_map_system_error(static_cast<int>(last_error));
+        error_code = ft_map_system_error(static_cast<int32_t>(last_error));
     return (error_code);
 }
 
-int cmp_readline_enable_raw_mode()
+int32_t cmp_readline_enable_raw_mode()
 {
     HANDLE handle;
     DWORD mode;
@@ -28,7 +28,7 @@ int cmp_readline_enable_raw_mode()
     handle = GetStdHandle(STD_INPUT_HANDLE);
     if (handle == INVALID_HANDLE_VALUE)
     {
-        int error_code = cmp_set_errno_from_last_error();
+        int32_t error_code = cmp_set_errno_from_last_error();
 
         if (error_code == FT_ERR_INVALID_HANDLE)
         {
@@ -39,7 +39,7 @@ int cmp_readline_enable_raw_mode()
     }
     if (!GetConsoleMode(handle, &mode))
     {
-        int error_code = cmp_set_errno_from_last_error();
+        int32_t error_code = cmp_set_errno_from_last_error();
 
         if (error_code == FT_ERR_INVALID_HANDLE)
         {
@@ -52,7 +52,7 @@ int cmp_readline_enable_raw_mode()
     mode &= ~(ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT);
     if (!SetConsoleMode(handle, mode))
     {
-        int error_code = cmp_set_errno_from_last_error();
+        int32_t error_code = cmp_set_errno_from_last_error();
 
         if (error_code == FT_ERR_INVALID_HANDLE)
         {
@@ -88,7 +88,7 @@ void cmp_readline_disable_raw_mode()
     return ;
 }
 
-int cmp_readline_terminal_dimensions(unsigned short *rows, unsigned short *cols,
+int32_t cmp_readline_terminal_dimensions(unsigned short *rows, unsigned short *cols,
     unsigned short *x_pixels, unsigned short *y_pixels)
 {
     CONSOLE_SCREEN_BUFFER_INFO info;
@@ -120,14 +120,14 @@ int cmp_readline_terminal_dimensions(unsigned short *rows, unsigned short *cols,
     return (0);
 }
 
-int cmp_readline_terminal_width()
+int32_t cmp_readline_terminal_width()
 {
     unsigned short rows;
     unsigned short cols;
 
     if (cmp_readline_terminal_dimensions(&rows, &cols, ft_nullptr, ft_nullptr) != 0)
         return (-1);
-    return (static_cast<int>(cols));
+    return (static_cast<int32_t>(cols));
 }
 #else
 # include <termios.h>
@@ -137,14 +137,14 @@ int cmp_readline_terminal_width()
 static termios g_orig_termios;
 static bool g_raw_mode_active;
 
-static int cmp_set_errno_from_errno()
+static int32_t cmp_set_errno_from_errno()
 {
     if (errno == 0)
         return (FT_ERR_TERMINATED);
     return (ft_map_system_error(errno));
 }
 
-int cmp_readline_enable_raw_mode()
+int32_t cmp_readline_enable_raw_mode()
 {
     struct termios raw;
 
@@ -181,7 +181,7 @@ void cmp_readline_disable_raw_mode()
     return ;
 }
 
-int cmp_readline_terminal_dimensions(unsigned short *rows, unsigned short *cols,
+int32_t cmp_readline_terminal_dimensions(unsigned short *rows, unsigned short *cols,
     unsigned short *x_pixels, unsigned short *y_pixels)
 {
     struct winsize window_size;
@@ -199,13 +199,13 @@ int cmp_readline_terminal_dimensions(unsigned short *rows, unsigned short *cols,
     return (0);
 }
 
-int cmp_readline_terminal_width()
+int32_t cmp_readline_terminal_width()
 {
     unsigned short rows;
     unsigned short cols;
 
     if (cmp_readline_terminal_dimensions(&rows, &cols, ft_nullptr, ft_nullptr) != 0)
         return (-1);
-    return (static_cast<int>(cols));
+    return (static_cast<int32_t>(cols));
 }
 #endif

@@ -3,21 +3,22 @@
 #include "../Errno/errno.hpp"
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../System_utils/system_utils.hpp"
 #include <cstdlib>
 #include <ctime>
 #include <cerrno>
 #include <cstring>
 #include <cstdio>
 
-static thread_local int g_cmp_last_error = FT_ERR_SUCCESSS;
+static thread_local int32_t g_cmp_last_error = FT_ERR_SUCCESSS;
 
-void cmp_set_last_error(int error_code)
+void cmp_set_last_error(int32_t error_code)
 {
     g_cmp_last_error = error_code;
     return ;
 }
 
-int cmp_last_error(void)
+int32_t cmp_last_error(void)
 {
     return (g_cmp_last_error);
 }
@@ -31,39 +32,39 @@ const char *cmp_service_null_device_path(void)
 #endif
 }
 
-int cmp_service_format_pid_line(char *buffer, size_t buffer_size,
-    size_t *length_out)
+int32_t cmp_service_format_pid_line(char *buffer, ft_size_t buffer_size,
+    ft_size_t *length_out)
 {
     if (!buffer || buffer_size == 0)
         return (FT_ERR_INVALID_ARGUMENT);
 #if defined(_WIN32) || defined(_WIN64)
-    unsigned long pid_value = static_cast<unsigned long>(_getpid());
-    int formatted = std::snprintf(buffer, buffer_size, "%lu\n", pid_value);
+    uint64_t pid_value = static_cast<uint64_t>(_getpid());
+    int32_t formatted = std::snprintf(buffer, buffer_size, "%lu\n", pid_value);
 #else
     pid_t pid_value = getpid();
-    int formatted = std::snprintf(buffer, buffer_size, "%ld\n",
-        static_cast<long>(pid_value));
+    int32_t formatted = std::snprintf(buffer, buffer_size, "%ld\n",
+        static_cast<int64_t>(pid_value));
 #endif
-    if (formatted < 0 || static_cast<size_t>(formatted) >= buffer_size)
+    if (formatted < 0 || static_cast<ft_size_t>(formatted) >= buffer_size)
         return (FT_ERR_IO);
     if (length_out != ft_nullptr)
-        *length_out = static_cast<size_t>(formatted);
+        *length_out = static_cast<ft_size_t>(formatted);
     return (FT_ERR_SUCCESSS);
 }
 
-void cmp_set_force_unsetenv_result(int result, int errno_value);
+void cmp_set_force_unsetenv_result(int32_t result, int32_t errno_value);
 void cmp_clear_force_unsetenv_result(void);
-void cmp_set_force_unsetenv_windows_errors(int last_error, int socket_error);
-void cmp_set_force_putenv_result(int result, int errno_value);
+void cmp_set_force_unsetenv_windows_errors(int32_t last_error, int32_t socket_error);
+void cmp_set_force_putenv_result(int32_t result, int32_t errno_value);
 void cmp_clear_force_putenv_result(void);
-void cmp_set_force_putenv_windows_error(int last_error);
-void cmp_set_force_cpu_count_success(unsigned int cpu_count);
-void cmp_set_force_cpu_count_failure(int errno_value);
+void cmp_set_force_putenv_windows_error(int32_t last_error);
+void cmp_set_force_cpu_count_success(uint32_t cpu_count);
+void cmp_set_force_cpu_count_failure(int32_t errno_value);
 void cmp_clear_force_cpu_count_result(void);
-void cmp_set_force_total_memory_success(unsigned long long memory_size);
-void cmp_set_force_total_memory_failure(int errno_value);
+void cmp_set_force_total_memory_success(uint64_t memory_size);
+void cmp_set_force_total_memory_failure(int32_t errno_value);
 #if defined(_WIN32) || defined(_WIN64)
-void cmp_set_force_total_memory_windows_failure(unsigned long last_error);
+void cmp_set_force_total_memory_windows_failure(uint64_t last_error);
 #endif
 void cmp_clear_force_total_memory_result(void);
 
@@ -80,31 +81,31 @@ void cmp_clear_force_total_memory_result(void);
 # endif
 #endif
 
-static int global_force_unsetenv_enabled = 0;
-static int global_force_unsetenv_result = 0;
-static int global_force_unsetenv_errno_value = 0;
-static int global_force_putenv_enabled = 0;
-static int global_force_putenv_result = 0;
-static int global_force_putenv_errno_value = 0;
+static int32_t global_force_unsetenv_enabled = 0;
+static int32_t global_force_unsetenv_result = 0;
+static int32_t global_force_unsetenv_errno_value = 0;
+static int32_t global_force_putenv_enabled = 0;
+static int32_t global_force_putenv_result = 0;
+static int32_t global_force_putenv_errno_value = 0;
 #if defined(_WIN32) || defined(_WIN64)
-static int global_force_unsetenv_last_error = 0;
-static int global_force_unsetenv_socket_error = 0;
-static int global_force_putenv_last_error = 0;
+static int32_t global_force_unsetenv_last_error = 0;
+static int32_t global_force_unsetenv_socket_error = 0;
+static int32_t global_force_putenv_last_error = 0;
 #endif
-static int global_force_cpu_count_enabled = 0;
-static int global_force_cpu_count_should_fail = 0;
-static unsigned int global_force_cpu_count_value = 0;
-static int global_force_cpu_count_errno_value = 0;
-static int global_force_total_memory_enabled = 0;
-static int global_force_total_memory_should_fail = 0;
-static unsigned long long global_force_total_memory_value = 0;
-static int global_force_total_memory_errno_value = 0;
+static int32_t global_force_cpu_count_enabled = 0;
+static int32_t global_force_cpu_count_should_fail = 0;
+static uint32_t global_force_cpu_count_value = 0;
+static int32_t global_force_cpu_count_errno_value = 0;
+static int32_t global_force_total_memory_enabled = 0;
+static int32_t global_force_total_memory_should_fail = 0;
+static uint64_t global_force_total_memory_value = 0;
+static int32_t global_force_total_memory_errno_value = 0;
 #if defined(_WIN32) || defined(_WIN64)
-static unsigned long global_force_total_memory_last_error = 0;
+static uint64_t global_force_total_memory_last_error = 0;
 #endif
 
 #if defined(_WIN32) || defined(_WIN64)
-static int cmp_translate_windows_error(int error_code)
+static int32_t cmp_translate_windows_error(int32_t error_code)
 {
     if (error_code == WSAEINTR)
         return (FT_ERR_INVALID_STATE);
@@ -222,10 +223,10 @@ static int cmp_translate_windows_error(int error_code)
         return (FT_ERR_INVALID_ARGUMENT);
     if (error_code == ERROR_BROKEN_PIPE)
         return (FT_ERR_IO);
-    return (static_cast<int>(error_code) + ERRNO_OFFSET);
+    return (static_cast<int32_t>(error_code) + ERRNO_OFFSET);
 }
 #else
-static int cmp_translate_posix_error(int error_code)
+static int32_t cmp_translate_posix_error(int32_t error_code)
 {
     if (error_code == EINTR)
         return (FT_ERR_INVALID_STATE);
@@ -509,7 +510,7 @@ static int cmp_translate_posix_error(int error_code)
 }
 #endif
 
-int cmp_map_system_error_to_ft(int error_code)
+int32_t cmp_map_system_error_to_ft(int32_t error_code)
 {
     if (error_code == 0)
         return (FT_ERR_SUCCESSS);
@@ -520,9 +521,9 @@ int cmp_map_system_error_to_ft(int error_code)
 #endif
 }
 
-int cmp_normalize_ft_errno(int error_code)
+int32_t cmp_normalize_ft_errno(int32_t error_code)
 {
-    int normalized_error;
+    int32_t normalized_error;
 
     if (error_code < ERRNO_OFFSET)
     {
@@ -534,7 +535,7 @@ int cmp_normalize_ft_errno(int error_code)
     return (normalized_error);
 }
 
-void cmp_set_force_unsetenv_result(int result, int errno_value)
+void cmp_set_force_unsetenv_result(int32_t result, int32_t errno_value)
 {
     global_force_unsetenv_enabled = 1;
     global_force_unsetenv_result = result;
@@ -552,7 +553,7 @@ void cmp_clear_force_unsetenv_result(void)
     return ;
 }
 
-void cmp_set_force_putenv_result(int result, int errno_value)
+void cmp_set_force_putenv_result(int32_t result, int32_t errno_value)
 {
     global_force_putenv_enabled = 1;
     global_force_putenv_result = result;
@@ -569,7 +570,7 @@ void cmp_clear_force_putenv_result(void)
     return ;
 }
 
-void cmp_set_force_unsetenv_windows_errors(int last_error, int socket_error)
+void cmp_set_force_unsetenv_windows_errors(int32_t last_error, int32_t socket_error)
 {
 #if defined(_WIN32) || defined(_WIN64)
     global_force_unsetenv_last_error = last_error;
@@ -581,7 +582,7 @@ void cmp_set_force_unsetenv_windows_errors(int last_error, int socket_error)
     return ;
 }
 
-void cmp_set_force_putenv_windows_error(int last_error)
+void cmp_set_force_putenv_windows_error(int32_t last_error)
 {
 #if defined(_WIN32) || defined(_WIN64)
     global_force_putenv_last_error = last_error;
@@ -591,7 +592,7 @@ void cmp_set_force_putenv_windows_error(int last_error)
     return ;
 }
 
-void cmp_set_force_cpu_count_success(unsigned int cpu_count)
+void cmp_set_force_cpu_count_success(uint32_t cpu_count)
 {
     global_force_cpu_count_enabled = 1;
     global_force_cpu_count_should_fail = 0;
@@ -600,7 +601,7 @@ void cmp_set_force_cpu_count_success(unsigned int cpu_count)
     return ;
 }
 
-void cmp_set_force_cpu_count_failure(int errno_value)
+void cmp_set_force_cpu_count_failure(int32_t errno_value)
 {
     global_force_cpu_count_enabled = 1;
     global_force_cpu_count_should_fail = 1;
@@ -618,7 +619,7 @@ void cmp_clear_force_cpu_count_result(void)
     return ;
 }
 
-void cmp_set_force_total_memory_success(unsigned long long memory_size)
+void cmp_set_force_total_memory_success(uint64_t memory_size)
 {
     global_force_total_memory_enabled = 1;
     global_force_total_memory_should_fail = 0;
@@ -630,7 +631,7 @@ void cmp_set_force_total_memory_success(unsigned long long memory_size)
     return ;
 }
 
-void cmp_set_force_total_memory_failure(int errno_value)
+void cmp_set_force_total_memory_failure(int32_t errno_value)
 {
     global_force_total_memory_enabled = 1;
     global_force_total_memory_should_fail = 1;
@@ -643,7 +644,7 @@ void cmp_set_force_total_memory_failure(int errno_value)
 }
 
 #if defined(_WIN32) || defined(_WIN64)
-void cmp_set_force_total_memory_windows_failure(unsigned long last_error)
+void cmp_set_force_total_memory_windows_failure(uint64_t last_error)
 {
     global_force_total_memory_enabled = 1;
     global_force_total_memory_should_fail = 1;
@@ -666,7 +667,7 @@ void cmp_clear_force_total_memory_result(void)
     return ;
 }
 
-int cmp_secure_memzero(void *buffer, size_t length)
+int32_t cmp_secure_memzero(void *buffer, ft_size_t length)
 {
     if (buffer == ft_nullptr)
     {
@@ -697,7 +698,7 @@ int cmp_secure_memzero(void *buffer, size_t length)
 #endif
 }
 
-int cmp_setenv(const char *name, const char *value, int overwrite)
+int32_t cmp_setenv(const char *name, const char *value, int32_t overwrite)
 {
     if (name == ft_nullptr || value == ft_nullptr)
     {
@@ -711,14 +712,14 @@ int cmp_setenv(const char *name, const char *value, int overwrite)
         return (0);
     }
     errno = 0;
-    int result = _putenv_s(name, value);
+    int32_t result = _putenv_s(name, value);
     if (result != 0)
     {
         DWORD last_error;
 
         last_error = GetLastError();
         if (last_error != 0)
-            cmp_set_last_error(ft_map_system_error(static_cast<int>(last_error)));
+            cmp_set_last_error(ft_map_system_error(static_cast<int32_t>(last_error)));
         else if (errno != 0)
             cmp_set_last_error(ft_map_system_error(errno));
         else
@@ -729,7 +730,7 @@ int cmp_setenv(const char *name, const char *value, int overwrite)
     return (result);
 #else
     errno = 0;
-    int result = setenv(name, value, overwrite);
+    int32_t result = setenv(name, value, overwrite);
     if (result != 0)
     {
         if (errno != 0)
@@ -743,7 +744,7 @@ int cmp_setenv(const char *name, const char *value, int overwrite)
 #endif
 }
 
-int cmp_unsetenv(const char *name)
+int32_t cmp_unsetenv(const char *name)
 {
     if (name == ft_nullptr)
     {
@@ -756,7 +757,7 @@ int cmp_unsetenv(const char *name)
         errno = global_force_unsetenv_errno_value;
         SetLastError(global_force_unsetenv_last_error);
         WSASetLastError(global_force_unsetenv_socket_error);
-        int forced_result = global_force_unsetenv_result;
+        int32_t forced_result = global_force_unsetenv_result;
         if (forced_result != 0)
         {
             if (global_force_unsetenv_last_error != 0)
@@ -773,14 +774,14 @@ int cmp_unsetenv(const char *name)
         return (forced_result);
     }
     errno = 0;
-    int result = _putenv_s(name, "");
+    int32_t result = _putenv_s(name, "");
     if (result != 0)
     {
         DWORD last_error;
 
         last_error = GetLastError();
         if (last_error != 0)
-            cmp_set_last_error(ft_map_system_error(static_cast<int>(last_error)));
+            cmp_set_last_error(ft_map_system_error(static_cast<int32_t>(last_error)));
         else if (errno != 0)
             cmp_set_last_error(ft_map_system_error(errno));
         else
@@ -793,7 +794,7 @@ int cmp_unsetenv(const char *name)
     if (global_force_unsetenv_enabled != 0)
     {
         errno = global_force_unsetenv_errno_value;
-        int forced_result = global_force_unsetenv_result;
+        int32_t forced_result = global_force_unsetenv_result;
         if (forced_result != 0)
         {
             if (global_force_unsetenv_errno_value != 0)
@@ -806,7 +807,7 @@ int cmp_unsetenv(const char *name)
         return (forced_result);
     }
     errno = 0;
-    int result = unsetenv(name);
+    int32_t result = unsetenv(name);
     if (result != 0)
     {
         if (errno != 0)
@@ -820,9 +821,9 @@ int cmp_unsetenv(const char *name)
 #endif
 }
 
-int cmp_putenv(char *string)
+int32_t cmp_putenv(char *string)
 {
-    int result;
+    int32_t result;
 
     if (string == ft_nullptr)
     {
@@ -864,7 +865,7 @@ int cmp_putenv(char *string)
 
         last_error = GetLastError();
         if (last_error != 0)
-            cmp_set_last_error(ft_map_system_error(static_cast<int>(last_error)));
+            cmp_set_last_error(ft_map_system_error(static_cast<int32_t>(last_error)));
         else if (errno != 0)
             cmp_set_last_error(ft_map_system_error(errno));
         else
@@ -898,7 +899,7 @@ char **cmp_get_environ_entries(void)
 #endif
 }
 
-const char *cmp_system_strerror(int error_code)
+const char *cmp_system_strerror(int32_t error_code)
 {
 #if defined(_WIN32) || defined(_WIN64)
     static char message_buffer[512];
@@ -933,11 +934,11 @@ const char *cmp_system_strerror(int error_code)
         if (format_result != 0)
             return (message_buffer);
     }
-    return (strerror(static_cast<int>(system_error)));
+    return (strerror(static_cast<int32_t>(system_error)));
 #else
     if (error_code > ERRNO_OFFSET)
     {
-        int standard_errno;
+        int32_t standard_errno;
 
         standard_errno = error_code - ERRNO_OFFSET;
         return (strerror(standard_errno));
@@ -989,7 +990,7 @@ char *cmp_get_home_directory(void)
 #endif
 }
 
-unsigned int cmp_get_cpu_count(void)
+uint32_t cmp_get_cpu_count(void)
 {
     if (global_force_cpu_count_enabled != 0)
     {
@@ -1011,8 +1012,8 @@ unsigned int cmp_get_cpu_count(void)
     cmp_set_last_error(FT_ERR_SUCCESSS);
     return (system_info.dwNumberOfProcessors);
 #elif defined(__APPLE__) && defined(__MACH__)
-    int cpu_count;
-    size_t size;
+    int32_t cpu_count;
+    ft_size_t size;
 
     size = sizeof(cpu_count);
     errno = 0;
@@ -1025,9 +1026,9 @@ unsigned int cmp_get_cpu_count(void)
         return (0);
     }
     cmp_set_last_error(FT_ERR_SUCCESSS);
-    return (static_cast<unsigned int>(cpu_count));
+    return (static_cast<uint32_t>(cpu_count));
 #else
-    long cpu_count;
+    int64_t cpu_count;
 
     errno = 0;
     cpu_count = sysconf(_SC_NPROCESSORS_ONLN);
@@ -1040,13 +1041,13 @@ unsigned int cmp_get_cpu_count(void)
         return (0);
     }
     cmp_set_last_error(FT_ERR_SUCCESSS);
-    return (static_cast<unsigned int>(cpu_count));
+    return (static_cast<uint32_t>(cpu_count));
 #endif
 }
 
-int cmp_get_total_memory(unsigned long long *total_memory)
+int32_t cmp_get_total_memory(uint64_t *total_memory)
 {
-    int error_code;
+    int32_t error_code;
 
     if (total_memory == ft_nullptr)
     {
@@ -1063,7 +1064,7 @@ int cmp_get_total_memory(unsigned long long *total_memory)
         {
 #if defined(_WIN32) || defined(_WIN64)
             if (global_force_total_memory_last_error != 0)
-                error_code = ft_map_system_error(static_cast<int>(global_force_total_memory_last_error));
+                error_code = ft_map_system_error(static_cast<int32_t>(global_force_total_memory_last_error));
             else if (global_force_total_memory_errno_value != 0)
                 error_code = ft_map_system_error(global_force_total_memory_errno_value);
             else
@@ -1092,7 +1093,7 @@ int cmp_get_total_memory(unsigned long long *total_memory)
 
         last_error = GetLastError();
         if (last_error != 0)
-            error_code = ft_map_system_error(static_cast<int>(last_error));
+            error_code = ft_map_system_error(static_cast<int32_t>(last_error));
         else
             error_code = FT_ERR_TERMINATED;
         *total_memory = 0;
@@ -1103,8 +1104,8 @@ int cmp_get_total_memory(unsigned long long *total_memory)
     cmp_set_last_error(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);
 #elif defined(__APPLE__) && defined(__MACH__)
-    unsigned long long memory_size;
-    size_t size;
+    uint64_t memory_size;
+    ft_size_t size;
 
     size = sizeof(memory_size);
     errno = 0;
@@ -1122,8 +1123,8 @@ int cmp_get_total_memory(unsigned long long *total_memory)
     cmp_set_last_error(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);
 #else
-    long pages;
-    long page_size;
+    int64_t pages;
+    int64_t page_size;
 
     errno = 0;
     pages = sysconf(_SC_PHYS_PAGES);
@@ -1149,8 +1150,8 @@ int cmp_get_total_memory(unsigned long long *total_memory)
         cmp_set_last_error(error_code);
         return (error_code);
     }
-    *total_memory = static_cast<unsigned long long>(pages) *
-        static_cast<unsigned long long>(page_size);
+    *total_memory = static_cast<uint64_t>(pages) *
+        static_cast<uint64_t>(page_size);
     cmp_set_last_error(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);
 #endif

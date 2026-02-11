@@ -40,7 +40,7 @@ static ft_size_t ft_utf32_effective_length(const char32_t *input,
     return (computed_length);
 }
 
-static int ft_utf16_decode_unit(const char16_t *input, ft_size_t length,
+static int32_t ft_utf16_decode_unit(const char16_t *input, ft_size_t length,
         ft_size_t index, uint32_t *code_point_pointer, ft_size_t *advance)
 {
     char16_t first_unit;

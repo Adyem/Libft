@@ -14,8 +14,8 @@ struct ft_render_win32_state
     HBITMAP         dib_section;
     void            *dib_pixels;
 
-    int             width;
-    int             height;
+    int32_t             width;
+    int32_t             height;
 
     bool            is_fullscreen;
 
@@ -75,7 +75,7 @@ static ft_render_platform_result ft_render_win32_create_dib(
         ft_render_platform_result result;
 
         result.error_code = ft_render_error_platform_failure;
-        result.system_error_code = (int)GetLastError();
+        result.system_error_code = (int32_t)GetLastError();
         return (result);
     }
 
@@ -96,12 +96,12 @@ ft_render_platform_result ft_render_platform_get_primary_screen_size(ft_render_s
         return ((ft_render_platform_result){ ft_render_error_invalid_argument, 0 });
     }
 
-    out_size->width = (int)GetSystemMetrics(SM_CXSCREEN);
-    out_size->height = (int)GetSystemMetrics(SM_CYSCREEN);
+    out_size->width = (int32_t)GetSystemMetrics(SM_CXSCREEN);
+    out_size->height = (int32_t)GetSystemMetrics(SM_CYSCREEN);
 
     if (out_size->width <= 0 || out_size->height <= 0)
     {
-        return ((ft_render_platform_result){ ft_render_error_platform_failure, (int)GetLastError() });
+        return ((ft_render_platform_result){ ft_render_error_platform_failure, (int32_t)GetLastError() });
     }
 
     return ((ft_render_platform_result){ ft_render_ok, 0 });
@@ -148,7 +148,7 @@ ft_render_platform_result ft_render_platform_create_window(
         ft_render_platform_result result;
 
         result.error_code = ft_render_error_platform_failure;
-        result.system_error_code = (int)GetLastError();
+        result.system_error_code = (int32_t)GetLastError();
         HeapFree(GetProcessHeap(), 0, state);
         return (result);
     }
@@ -185,7 +185,7 @@ ft_render_platform_result ft_render_platform_create_window(
         ft_render_platform_result result;
 
         result.error_code = ft_render_error_platform_failure;
-        result.system_error_code = (int)GetLastError();
+        result.system_error_code = (int32_t)GetLastError();
         HeapFree(GetProcessHeap(), 0, state);
         return (result);
     }
@@ -204,7 +204,7 @@ ft_render_platform_result ft_render_platform_create_window(
         ft_render_platform_result result;
 
         result.error_code = ft_render_error_platform_failure;
-        result.system_error_code = (int)GetLastError();
+        result.system_error_code = (int32_t)GetLastError();
         DestroyWindow(hwnd);
         HeapFree(GetProcessHeap(), 0, state);
         return (result);
@@ -323,7 +323,7 @@ ft_render_platform_result ft_render_platform_present(
     memory_dc = CreateCompatibleDC(state->window_device_context);
     if (memory_dc == NULL)
     {
-        return ((ft_render_platform_result){ ft_render_error_platform_failure, (int)GetLastError() });
+        return ((ft_render_platform_result){ ft_render_error_platform_failure, (int32_t)GetLastError() });
     }
 
     old_bitmap = (HBITMAP)SelectObject(memory_dc, state->dib_section);

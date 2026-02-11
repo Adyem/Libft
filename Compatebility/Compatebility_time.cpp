@@ -3,7 +3,6 @@
 #include "../Errno/errno.hpp"
 #include "../Basic/basic.hpp"
 #include "../PThread/mutex.hpp"
-#include "../PThread/pthread_internal.hpp"
 #include "../PThread/pthread.hpp"
 #include <cerrno>
 #include <ctime>
@@ -18,14 +17,14 @@
 #endif
 
 #if !defined(_WIN32) && !defined(_WIN64) && !defined(_POSIX_VERSION)
-static int cmp_lock_pt_mutex(pt_mutex *mutex)
+static int32_t cmp_lock_pt_mutex(pt_mutex *mutex)
 {
     if (mutex == ft_nullptr)
     {
         cmp_set_last_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
-    int lock_error = pt_mutex_lock_with_error(*mutex);
+    int32_t lock_error = mutex->lock();
     if (lock_error != FT_ERR_SUCCESSS)
     {
         cmp_set_last_error(lock_error);
@@ -34,14 +33,14 @@ static int cmp_lock_pt_mutex(pt_mutex *mutex)
     return (FT_ERR_SUCCESSS);
 }
 
-static int cmp_unlock_pt_mutex(pt_mutex *mutex)
+static int32_t cmp_unlock_pt_mutex(pt_mutex *mutex)
 {
     if (mutex == ft_nullptr)
     {
         cmp_set_last_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
-    int unlock_error = pt_mutex_unlock_with_error(*mutex);
+    int32_t unlock_error = mutex->unlock();
     if (unlock_error != FT_ERR_SUCCESSS)
     {
         cmp_set_last_error(unlock_error);
@@ -50,7 +49,7 @@ static int cmp_unlock_pt_mutex(pt_mutex *mutex)
     return (FT_ERR_SUCCESSS);
 }
 
-static int cmp_localtime_from_shared_state(const std::time_t *time_value, std::tm *output)
+static int32_t cmp_localtime_from_shared_state(const std::time_t *time_value, std::tm *output)
 {
     static pt_mutex localtime_mutex;
     std::tm *shared_result;
@@ -76,7 +75,7 @@ static int cmp_localtime_from_shared_state(const std::time_t *time_value, std::t
 }
 #endif
 
-int cmp_localtime(const std::time_t *time_value, std::tm *output)
+int32_t cmp_localtime(const std::time_t *time_value, std::tm *output)
 {
     if (time_value == ft_nullptr || output == ft_nullptr)
     {
@@ -92,7 +91,7 @@ int cmp_localtime(const std::time_t *time_value, std::tm *output)
         cmp_set_last_error(FT_ERR_SUCCESSS);
         return (0);
     }
-    cmp_set_last_error(ft_map_system_error(static_cast<int>(error_code)));
+    cmp_set_last_error(ft_map_system_error(static_cast<int32_t>(error_code)));
     return (-1);
 #else
 # if defined(_POSIX_VERSION)
@@ -112,7 +111,7 @@ int cmp_localtime(const std::time_t *time_value, std::tm *output)
 #endif
 }
 
-int cmp_time_get_time_of_day(struct timeval *time_value)
+int32_t cmp_time_get_time_of_day(struct timeval *time_value)
 {
     if (time_value == ft_nullptr)
     {
@@ -122,14 +121,14 @@ int cmp_time_get_time_of_day(struct timeval *time_value)
 #if defined(_WIN32) || defined(_WIN64)
     FILETIME file_time;
     ULARGE_INTEGER file_time_value;
-    unsigned long long microseconds_since_epoch;
+    uint64_t microseconds_since_epoch;
 
     GetSystemTimeAsFileTime(&file_time);
     file_time_value.LowPart = file_time.dwLowDateTime;
     file_time_value.HighPart = file_time.dwHighDateTime;
     microseconds_since_epoch = (file_time_value.QuadPart - 116444736000000000ULL) / 10ULL;
-    time_value->tv_sec = static_cast<long>(microseconds_since_epoch / 1000000ULL);
-    time_value->tv_usec = static_cast<long>(microseconds_since_epoch % 1000000ULL);
+    time_value->tv_sec = static_cast<int64_t>(microseconds_since_epoch / 1000000ULL);
+    time_value->tv_usec = static_cast<int64_t>(microseconds_since_epoch % 1000000ULL);
     cmp_set_last_error(FT_ERR_SUCCESSS);
     return (0);
 #else
@@ -143,7 +142,7 @@ int cmp_time_get_time_of_day(struct timeval *time_value)
 #endif
 }
 
-static int cmp_timespec_to_nanoseconds(const struct timespec *time_value, long long *nanoseconds_out)
+static int32_t cmp_timespec_to_nanoseconds(const struct timespec *time_value, int64_t *nanoseconds_out)
 {
     __int128 seconds_component;
     __int128 total_nanoseconds;
@@ -167,12 +166,12 @@ static int cmp_timespec_to_nanoseconds(const struct timespec *time_value, long l
         cmp_set_last_error(FT_ERR_OUT_OF_RANGE);
         return (-1);
     }
-    *nanoseconds_out = static_cast<long long>(total_nanoseconds);
+    *nanoseconds_out = static_cast<int64_t>(total_nanoseconds);
     cmp_set_last_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
-int cmp_high_resolution_time(long long *nanoseconds_out)
+int32_t cmp_high_resolution_time(int64_t *nanoseconds_out)
 {
     if (nanoseconds_out == ft_nullptr)
     {
@@ -182,7 +181,7 @@ int cmp_high_resolution_time(long long *nanoseconds_out)
 #if defined(_WIN32) || defined(_WIN64)
     LARGE_INTEGER performance_counter;
     LARGE_INTEGER performance_frequency;
-    long double scaled_value;
+    int64_t double scaled_value;
 
     if (!QueryPerformanceCounter(&performance_counter))
     {
@@ -199,29 +198,29 @@ int cmp_high_resolution_time(long long *nanoseconds_out)
         cmp_set_last_error(FT_ERR_INVALID_OPERATION);
         return (-1);
     }
-    scaled_value = static_cast<long double>(performance_counter.QuadPart);
+    scaled_value = static_cast<int64_t double>(performance_counter.QuadPart);
     scaled_value *= 1000000000.0L;
-    scaled_value /= static_cast<long double>(performance_frequency.QuadPart);
-    if (scaled_value >= static_cast<long double>(LLONG_MAX))
+    scaled_value /= static_cast<int64_t double>(performance_frequency.QuadPart);
+    if (scaled_value >= static_cast<int64_t double>(LLONG_MAX))
     {
         cmp_set_last_error(FT_ERR_OUT_OF_RANGE);
         return (-1);
     }
-    if (scaled_value <= static_cast<long double>(LLONG_MIN))
+    if (scaled_value <= static_cast<int64_t double>(LLONG_MIN))
     {
         cmp_set_last_error(FT_ERR_OUT_OF_RANGE);
         return (-1);
     }
-    *nanoseconds_out = static_cast<long long>(scaled_value);
+    *nanoseconds_out = static_cast<int64_t>(scaled_value);
     cmp_set_last_error(FT_ERR_SUCCESSS);
     return (0);
 #else
     struct timespec time_value;
-    int call_result;
+    int32_t call_result;
 
 # if defined(CLOCK_MONOTONIC_RAW)
     clockid_t clock_identifier;
-    int attempt_index;
+    int32_t attempt_index;
 
     attempt_index = 0;
     call_result = -1;

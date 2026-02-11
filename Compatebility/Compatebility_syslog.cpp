@@ -1,6 +1,6 @@
 #include "compatebility_internal.hpp"
 #if defined(_WIN32) || defined(_WIN64)
-int cmp_syslog_open(const char *identifier)
+int32_t cmp_syslog_open(const char *identifier)
 {
     (void)identifier;
     return (-1);
@@ -18,7 +18,7 @@ void cmp_syslog_close(void)
 }
 #else
 #include <syslog.h>
-int cmp_syslog_open(const char *identifier)
+int32_t cmp_syslog_open(const char *identifier)
 {
     openlog(identifier, LOG_PID | LOG_CONS, LOG_USER);
     return (0);

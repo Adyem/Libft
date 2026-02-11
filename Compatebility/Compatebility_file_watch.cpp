@@ -24,16 +24,16 @@
 struct cmp_file_watch_context
 {
     std::atomic<bool>    running;
-    int                  last_error;
+    int32_t                  last_error;
 #if defined(__linux__)
-    int                  fd;
-    int                  watch;
+    int32_t                  fd;
+    int32_t                  watch;
     char                 buffer[4096];
-    size_t               buffer_offset;
-    size_t               buffer_size;
+    ft_size_t               buffer_offset;
+    ft_size_t               buffer_size;
 #elif defined(__APPLE__) || defined(__FreeBSD__)
-    int                  kqueue_fd;
-    int                  watch_fd;
+    int32_t                  kqueue_fd;
+    int32_t                  watch_fd;
 #elif defined(_WIN32)
     HANDLE               directory;
     char                 buffer[4096];
@@ -42,15 +42,15 @@ struct cmp_file_watch_context
 #endif
 };
 
-static int cmp_file_watch_translate_error(void)
+static int32_t cmp_file_watch_translate_error(void)
 {
-    int error_code = FT_ERR_IO;
+    int32_t error_code = FT_ERR_IO;
 
 #if defined(_WIN32)
     DWORD last_error = GetLastError();
 
     if (last_error != 0)
-        error_code = ft_map_system_error(static_cast<int>(last_error));
+        error_code = ft_map_system_error(static_cast<int32_t>(last_error));
     else
         error_code = FT_ERR_IO;
 #else
@@ -120,7 +120,7 @@ void cmp_file_watch_destroy(cmp_file_watch_context *context)
     return ;
 }
 
-int cmp_file_watch_start(cmp_file_watch_context *context, const char *path)
+int32_t cmp_file_watch_start(cmp_file_watch_context *context, const char *path)
 {
     if (!context || !path)
         return (-1);
@@ -236,7 +236,7 @@ bool cmp_file_watch_wait_event(cmp_file_watch_context *context,
             const struct inotify_event *notify_event =
                 reinterpret_cast<const struct inotify_event *>(
                     context->buffer + context->buffer_offset);
-            size_t entry_size = sizeof(struct inotify_event) + static_cast<size_t>(notify_event->len);
+            ft_size_t entry_size = sizeof(struct inotify_event) + static_cast<ft_size_t>(notify_event->len);
 
             if (entry_size > 0)
                 context->buffer_offset += entry_size;
@@ -246,7 +246,7 @@ bool cmp_file_watch_wait_event(cmp_file_watch_context *context,
             event->has_name = (notify_event->len > 0);
             if (event->has_name)
             {
-                size_t name_length = notify_event->len;
+                ft_size_t name_length = notify_event->len;
                 if (name_length >= sizeof(event->name))
                     name_length = sizeof(event->name) - 1;
                 std::memcpy(event->name, notify_event->name, name_length);
@@ -265,14 +265,14 @@ bool cmp_file_watch_wait_event(cmp_file_watch_context *context,
             context->last_error = cmp_file_watch_translate_error();
             return (false);
         }
-        context->buffer_size = static_cast<size_t>(read_result);
+        context->buffer_size = static_cast<ft_size_t>(read_result);
         context->buffer_offset = 0;
     }
 #elif defined(__APPLE__) || defined(__FreeBSD__)
     while (context->running.load())
     {
         struct kevent observed_event;
-        int event_count = kevent(context->kqueue_fd, ft_nullptr, 0, &observed_event, 1, ft_nullptr);
+        int32_t event_count = kevent(context->kqueue_fd, ft_nullptr, 0, &observed_event, 1, ft_nullptr);
         if (event_count <= 0)
         {
             context->running.store(false);
@@ -298,9 +298,9 @@ bool cmp_file_watch_wait_event(cmp_file_watch_context *context,
             event->event_type = cmp_file_watch_translate_windows_action(notification->Action);
             if (notification->FileNameLength > 0)
             {
-                int converted = WideCharToMultiByte(CP_UTF8, 0, notification->FileName,
+                int32_t converted = WideCharToMultiByte(CP_UTF8, 0, notification->FileName,
                     notification->FileNameLength / sizeof(WCHAR), event->name,
-                    static_cast<int>(sizeof(event->name) - 1), ft_nullptr, ft_nullptr);
+                    static_cast<int32_t>(sizeof(event->name) - 1), ft_nullptr, ft_nullptr);
                 if (converted > 0)
                 {
                     event->name[converted] = '\0';
@@ -329,7 +329,7 @@ bool cmp_file_watch_wait_event(cmp_file_watch_context *context,
             DWORD windows_error = GetLastError();
             context->running.store(false);
             if (windows_error != ERROR_OPERATION_ABORTED)
-                context->last_error = ft_map_system_error(static_cast<int>(windows_error));
+                context->last_error = ft_map_system_error(static_cast<int32_t>(windows_error));
             else
                 context->last_error = FT_ERR_SUCCESSS;
             return (false);
@@ -343,7 +343,7 @@ bool cmp_file_watch_wait_event(cmp_file_watch_context *context,
     return (false);
 }
 
-int cmp_file_watch_last_error(const cmp_file_watch_context *context)
+int32_t cmp_file_watch_last_error(const cmp_file_watch_context *context)
 {
     if (!context)
         return (FT_ERR_INVALID_ARGUMENT);

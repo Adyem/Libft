@@ -17,7 +17,7 @@ static ft_size_t safe_strlen(const char *string)
     return (length);
 }
 
-char *adv_substr(const char *source, unsigned int start, size_t length)
+char *adv_substr(const char *source, uint32_t start, ft_size_t length)
 {
     if (source == ft_nullptr)
         return (ft_nullptr);

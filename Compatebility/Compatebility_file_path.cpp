@@ -10,7 +10,7 @@ void cmp_normalize_slashes(char *data)
 {
     if (!data)
         return ;
-    size_t index = 0;
+    ft_size_t index = 0;
     while (data[index] != '\0')
     {
         if (data[index] == '/')
@@ -29,7 +29,7 @@ void cmp_normalize_slashes(char *data)
 {
     if (!data)
         return ;
-    size_t index = 0;
+    ft_size_t index = 0;
     while (data[index] != '\0')
     {
         if (data[index] == '\\')

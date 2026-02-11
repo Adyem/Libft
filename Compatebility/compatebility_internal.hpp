@@ -6,10 +6,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <pthread.h>
+#include "../PThread/mutex.hpp"
 #include <sys/types.h>
 #include <ctime>
-
-class ft_socket;
 
 #if defined(_WIN32) || defined(_WIN64)
 # include <BaseTsd.h>
@@ -17,8 +16,8 @@ class ft_socket;
 # include <windows.h>
 struct timeval
 {
-    long tv_sec;
-    long tv_usec;
+    int64_t tv_sec;
+    int64_t tv_usec;
 };
 typedef SSIZE_T ssize_t;
 # ifndef O_DIRECTORY
@@ -29,16 +28,16 @@ struct file_dir
     intptr_t fd;
     WIN32_FIND_DATAA w_find_data;
     bool first_read;
-    pthread_mutex_t mutex;
+    pt_mutex mutex;
     bool mutex_initialized;
     file_dirent entry;
     bool closed;
 };
-int cmp_open(const char *path_name);
-int cmp_open(const char *path_name, int flags);
-int cmp_open(const char *path_name, int flags, int mode);
-ssize_t cmp_read(int file_descriptor, void *buffer, unsigned int count);
-ssize_t cmp_write(int file_descriptor, const void *buffer, unsigned int count);
+int32_t cmp_open(const char *path_name);
+int32_t cmp_open(const char *path_name, int32_t flags);
+int32_t cmp_open(const char *path_name, int32_t flags, int32_t mode);
+ssize_t cmp_read(int32_t file_descriptor, void *buffer, uint32_t count);
+ssize_t cmp_write(int32_t file_descriptor, const void *buffer, uint32_t count);
 #else
 # include <fcntl.h>
 # include <unistd.h>
@@ -48,78 +47,79 @@ struct file_dir
 {
     intptr_t fd;
     char *buffer;
-    size_t buffer_size;
+    ft_size_t buffer_size;
     ssize_t buffer_used;
-    size_t buffer_offset;
-    pthread_mutex_t mutex;
+    ft_size_t buffer_offset;
+    pt_mutex mutex;
     bool mutex_initialized;
     file_dirent entry;
     bool closed;
 };
-int cmp_open(const char *path_name);
-int cmp_open(const char *path_name, int flags);
-int cmp_open(const char *path_name, int flags, mode_t mode);
-ssize_t cmp_read(int file_descriptor, void *buffer, size_t count);
-ssize_t cmp_write(int file_descriptor, const void *buffer, size_t count);
+int32_t cmp_open(const char *path_name);
+int32_t cmp_open(const char *path_name, int32_t flags);
+int32_t cmp_open(const char *path_name, int32_t flags, mode_t mode);
+ssize_t cmp_read(int32_t file_descriptor, void *buffer, ft_size_t count);
+ssize_t cmp_write(int32_t file_descriptor, const void *buffer, ft_size_t count);
 #endif
-int cmp_close(int file_descriptor);
+int32_t cmp_close(int32_t file_descriptor);
 void cmp_initialize_standard_file_descriptors();
 
-file_dir *cmp_dir_open(const char *directory_path, int *error_code_out);
-file_dirent *cmp_dir_read(file_dir *directory_stream, int *error_code_out);
-int cmp_dir_close(file_dir *directory_stream, int *error_code_out);
-int cmp_directory_exists(const char *path, int *error_code_out);
+file_dir *cmp_dir_open(const char *directory_path, int32_t *error_code_out);
+file_dirent *cmp_dir_read(file_dir *directory_stream, int32_t *error_code_out);
+int32_t cmp_dir_close(file_dir *directory_stream, int32_t *error_code_out);
+int32_t cmp_directory_exists(const char *path, int32_t *error_code_out);
 char cmp_path_separator(void);
 void cmp_normalize_slashes(char *data);
-int cmp_file_exists(const char *path, int *error_code_out);
-int cmp_file_delete(const char *path, int *error_code_out);
-int cmp_file_move(const char *source_path, const char *destination_path, int *error_code_out);
-int cmp_file_copy(const char *source_path, const char *destination_path, int *error_code_out);
-int cmp_file_create_directory(const char *path, mode_t mode, int *error_code_out);
-int cmp_file_get_permissions(const char *path, mode_t *mode_out, int *error_code_out);
-int cmp_file_last_error(void);
+int32_t cmp_file_exists(const char *path, int32_t *error_code_out);
+int32_t cmp_file_delete(const char *path, int32_t *error_code_out);
+int32_t cmp_file_move(const char *source_path, const char *destination_path, int32_t *error_code_out);
+int32_t cmp_file_copy(const char *source_path, const char *destination_path, int32_t *error_code_out);
+int32_t cmp_file_create_directory(const char *path, mode_t mode, int32_t *error_code_out);
+int32_t cmp_file_get_permissions(const char *path, mode_t *mode_out, int32_t *error_code_out);
+int32_t cmp_file_last_error(void);
 
-int cmp_thread_equal(pthread_t thread1, pthread_t thread2);
-int cmp_thread_cancel(pthread_t thread);
-int cmp_thread_yield(void);
-int cmp_thread_sleep(unsigned int milliseconds);
-int cmp_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected_value);
-int cmp_thread_wake_one_uint32(std::atomic<uint32_t> *address);
+int32_t cmp_thread_equal(pthread_t thread1, pthread_t thread2);
+int32_t cmp_thread_cancel(pthread_t thread);
+int32_t cmp_thread_yield(void);
+int32_t cmp_thread_sleep(uint32_t milliseconds);
+int32_t cmp_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected_value);
+int32_t cmp_thread_wake_one_uint32(std::atomic<uint32_t> *address);
 
-int cmp_readline_enable_raw_mode(void);
+int32_t cmp_readline_enable_raw_mode(void);
 void cmp_readline_disable_raw_mode(void);
-int cmp_readline_terminal_width(void);
-int cmp_readline_terminal_dimensions(unsigned short *rows, unsigned short *cols,
+int32_t cmp_readline_terminal_width(void);
+int32_t cmp_readline_terminal_dimensions(unsigned short *rows, unsigned short *cols,
     unsigned short *x_pixels, unsigned short *y_pixels);
 
-int cmp_rng_secure_bytes(unsigned char *buffer, size_t length);
+int32_t cmp_rng_secure_bytes(unsigned char *buffer, ft_size_t length);
 
-int cmp_secure_memzero(void *buffer, size_t length);
+int32_t cmp_secure_memzero(void *buffer, ft_size_t length);
 
-int cmp_setenv(const char *name, const char *value, int overwrite);
-int cmp_unsetenv(const char *name);
-int cmp_putenv(char *string);
+int32_t cmp_setenv(const char *name, const char *value, int32_t overwrite);
+int32_t cmp_unsetenv(const char *name);
+int32_t cmp_putenv(char *string);
 char **cmp_get_environ_entries(void);
-const char *cmp_system_strerror(int error_code);
-int cmp_map_system_error_to_ft(int error_code);
-int cmp_normalize_ft_errno(int error_code);
-void cmp_set_last_error(int error_code);
-int cmp_last_error(void);
+const char *cmp_system_strerror(int32_t error_code);
+int32_t cmp_map_system_error_to_ft(int32_t error_code);
+int32_t cmp_normalize_ft_errno(int32_t error_code);
+void cmp_set_last_error(int32_t error_code);
+int32_t cmp_last_error(void);
 char *cmp_get_home_directory(void);
-unsigned int cmp_get_cpu_count(void);
-int cmp_get_total_memory(unsigned long long *total_memory);
+uint32_t cmp_get_cpu_count(void);
+int32_t cmp_get_total_memory(uint64_t *total_memory);
 std::time_t cmp_timegm(std::tm *time_pointer);
-int cmp_localtime(const std::time_t *time_value, std::tm *output);
-int cmp_time_get_time_of_day(struct timeval *time_value);
-int cmp_high_resolution_time(long long *nanoseconds_out);
+int32_t cmp_localtime(const std::time_t *time_value, std::tm *output);
+int32_t cmp_time_get_time_of_day(struct timeval *time_value);
+int32_t cmp_high_resolution_time(int64_t *nanoseconds_out);
 const char *cmp_service_null_device_path(void);
-int cmp_service_format_pid_line(char *buffer, size_t buffer_size, size_t *length_out);
+int32_t cmp_service_format_pid_line(char *buffer, ft_size_t buffer_size, ft_size_t *length_out);
 
-ssize_t cmp_su_write(int file_descriptor, const char *buffer, size_t length);
-ssize_t cmp_socket_send_all(ft_socket *socket_object, const void *buffer,
-                            size_t length, int flags);
+ssize_t cmp_su_write(int32_t file_descriptor, const char *buffer, ft_size_t length);
+int32_t cmp_socket_send_all(intptr_t socket_handle, const void *buffer,
+                            ft_size_t length, int32_t flags,
+                            ssize_t *bytes_sent_out);
 
-int cmp_syslog_open(const char *identifier);
+int32_t cmp_syslog_open(const char *identifier);
 void cmp_syslog_write(const char *message);
 void cmp_syslog_close(void);
 
