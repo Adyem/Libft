@@ -15,12 +15,12 @@ int ft_log_set_syslog(const char *identifier)
 
         cmp_syslog_close();
         error_code = ft_global_error_stack_peek_last_error();
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_INVALID_ARGUMENT;
         ft_global_error_stack_push(error_code);
         return (-1);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 

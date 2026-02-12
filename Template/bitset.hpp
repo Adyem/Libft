@@ -100,7 +100,7 @@ inline ft_bitset::ft_bitset(size_t bits)
             index = index + 1;
         }
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 inline ft_bitset::~ft_bitset()
@@ -108,13 +108,13 @@ inline ft_bitset::~ft_bitset()
     bool lock_acquired = false;
     int lock_error = this->lock_internal(&lock_acquired);
 
-    if (lock_error == FT_ERR_SUCCESSS)
+    if (lock_error == FT_ERR_SUCCESS)
     {
         this->destroy_data();
         this->unlock_internal(lock_acquired);
     }
     this->teardown_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 inline ft_bitset::ft_bitset(ft_bitset&& other) noexcept
@@ -126,7 +126,7 @@ inline ft_bitset::ft_bitset(ft_bitset&& other) noexcept
     bool lock_acquired = false;
     int lock_error = other.lock_internal(&lock_acquired);
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -142,30 +142,30 @@ inline ft_bitset::ft_bitset(ft_bitset&& other) noexcept
     other.teardown_thread_safety();
     if (other_thread_safe)
     {
-        if (this->enable_thread_safety() != FT_ERR_SUCCESSS)
+        if (this->enable_thread_safety() != FT_ERR_SUCCESS)
             return ;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 inline ft_bitset& ft_bitset::operator=(ft_bitset&& other) noexcept
 {
     if (this == &other)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (*this);
     }
     bool this_lock_acquired = false;
     bool other_lock_acquired = false;
     int lock_error = this->lock_internal(&this_lock_acquired);
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (*this);
     }
     lock_error = other.lock_internal(&other_lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->unlock_internal(this_lock_acquired);
         ft_global_error_stack_push(lock_error);
@@ -188,10 +188,10 @@ inline ft_bitset& ft_bitset::operator=(ft_bitset&& other) noexcept
         this->disable_thread_safety();
     if (other_thread_safe)
     {
-        if (this->enable_thread_safety() != FT_ERR_SUCCESSS)
+        if (this->enable_thread_safety() != FT_ERR_SUCCESS)
             return (*this);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (*this);
 }
 
@@ -200,7 +200,7 @@ inline void ft_bitset::set(size_t position)
     bool lock_acquired = false;
     int lock_result = this->lock_internal(&lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return ;
@@ -214,12 +214,12 @@ inline void ft_bitset::set(size_t position)
     this->_data[this->block_index(position)] |= this->bit_mask(position);
     int unlock_result = this->unlock_internal(lock_acquired);
 
-    if (unlock_result != FT_ERR_SUCCESSS)
+    if (unlock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_result);
         return ;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 inline void ft_bitset::reset(size_t position)
@@ -227,7 +227,7 @@ inline void ft_bitset::reset(size_t position)
     bool lock_acquired = false;
     int lock_result = this->lock_internal(&lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return ;
@@ -241,12 +241,12 @@ inline void ft_bitset::reset(size_t position)
     this->_data[this->block_index(position)] &= ~this->bit_mask(position);
     int unlock_result = this->unlock_internal(lock_acquired);
 
-    if (unlock_result != FT_ERR_SUCCESSS)
+    if (unlock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_result);
         return ;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 inline void ft_bitset::flip(size_t position)
@@ -254,7 +254,7 @@ inline void ft_bitset::flip(size_t position)
     bool lock_acquired = false;
     int lock_result = this->lock_internal(&lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return ;
@@ -268,12 +268,12 @@ inline void ft_bitset::flip(size_t position)
     this->_data[this->block_index(position)] ^= this->bit_mask(position);
     int unlock_result = this->unlock_internal(lock_acquired);
 
-    if (unlock_result != FT_ERR_SUCCESSS)
+    if (unlock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_result);
         return ;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 inline bool ft_bitset::test(size_t position) const
@@ -281,7 +281,7 @@ inline bool ft_bitset::test(size_t position) const
     bool lock_acquired = false;
     int lock_result = const_cast<ft_bitset*>(this)->lock_internal(&lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return (false);
@@ -295,12 +295,12 @@ inline bool ft_bitset::test(size_t position) const
     bool result = (this->_data[this->block_index(position)] & this->bit_mask(position)) != 0;
     int unlock_result = const_cast<ft_bitset*>(this)->unlock_internal(lock_acquired);
 
-    if (unlock_result != FT_ERR_SUCCESSS)
+    if (unlock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_result);
         return (false);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (result);
 }
 
@@ -309,7 +309,7 @@ inline size_t ft_bitset::size() const
     bool lock_acquired = false;
     int lock_result = const_cast<ft_bitset*>(this)->lock_internal(&lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return (0);
@@ -317,12 +317,12 @@ inline size_t ft_bitset::size() const
     size_t current_size = this->_size;
     int unlock_result = const_cast<ft_bitset*>(this)->unlock_internal(lock_acquired);
 
-    if (unlock_result != FT_ERR_SUCCESSS)
+    if (unlock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_result);
         return (0);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (current_size);
 }
 
@@ -331,7 +331,7 @@ inline void ft_bitset::clear()
     bool lock_acquired = false;
     int lock_result = this->lock_internal(&lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return ;
@@ -345,20 +345,20 @@ inline void ft_bitset::clear()
     }
     int unlock_result = this->unlock_internal(lock_acquired);
 
-    if (unlock_result != FT_ERR_SUCCESSS)
+    if (unlock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_result);
         return ;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 inline int ft_bitset::enable_thread_safety()
 {
     if (this->_mutex != ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-        return (FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     int result = this->prepare_thread_safety();
     ft_global_error_stack_push(result);
@@ -368,14 +368,14 @@ inline int ft_bitset::enable_thread_safety()
 inline void ft_bitset::disable_thread_safety()
 {
     this->teardown_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
 inline bool ft_bitset::is_thread_safe() const
 {
     bool enabled = (this->_mutex != ft_nullptr);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (enabled);
 }
 
@@ -384,7 +384,7 @@ inline int ft_bitset::lock(bool *lock_acquired) const
     int result = this->lock_internal(lock_acquired);
 
     ft_global_error_stack_push(result);
-    if (result != FT_ERR_SUCCESSS)
+    if (result != FT_ERR_SUCCESS)
         return (-1);
     return (0);
 }
@@ -401,9 +401,9 @@ inline int ft_bitset::lock_internal(bool *lock_acquired) const
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     int result = pt_recursive_mutex_lock_with_error(*this->_mutex);
-    if (result == FT_ERR_SUCCESSS && lock_acquired != ft_nullptr)
+    if (result == FT_ERR_SUCCESS && lock_acquired != ft_nullptr)
         *lock_acquired = true;
     return (result);
 }
@@ -411,16 +411,16 @@ inline int ft_bitset::lock_internal(bool *lock_acquired) const
 inline int ft_bitset::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     return (pt_recursive_mutex_unlock_with_error(*this->_mutex));
 }
 
 inline int ft_bitset::prepare_thread_safety()
 {
     if (this->_mutex != ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     int result = pt_recursive_mutex_create_with_error(&this->_mutex);
-    if (result != FT_ERR_SUCCESSS && this->_mutex != ft_nullptr)
+    if (result != FT_ERR_SUCCESS && this->_mutex != ft_nullptr)
         pt_recursive_mutex_destroy(&this->_mutex);
     return (result);
 }

@@ -10,14 +10,14 @@ ft_string *adv_span_to_string(const char *buffer, ft_size_t length)
     ft_string *result = new (std::nothrow) ft_string();
     if (result == ft_nullptr)
         return (ft_nullptr);
-    if (result->initialize() != FT_ERR_SUCCESSS)
+    if (result->initialize() != FT_ERR_SUCCESS)
     {
         delete result;
         return (ft_nullptr);
     }
     if (length == 0)
         return (result);
-    if (result->append(buffer, length) != FT_ERR_SUCCESSS)
+    if (result->append(buffer, length) != FT_ERR_SUCCESS)
     {
         delete result;
         return (ft_nullptr);

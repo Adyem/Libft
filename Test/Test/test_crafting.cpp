@@ -1,6 +1,10 @@
+#include "../test_internal.hpp"
 #include "../../Game/game_crafting.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <utility>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_crafting_success, "crafting succeeds")
 {
@@ -32,7 +36,7 @@ FT_TEST(test_crafting_success, "crafting succeeds")
     crafted.set_stack_size(1);
     crafted.set_rarity(0);
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, crafting.craft_item(inventory, 1, crafted));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, crafting.craft_item(inventory, 1, crafted));
     FT_ASSERT_EQ(1, inventory.count_item(3));
     FT_ASSERT_EQ(0, inventory.count_item(1));
     FT_ASSERT_EQ(0, inventory.count_item(2));

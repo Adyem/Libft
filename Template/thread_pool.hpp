@@ -75,7 +75,7 @@ static inline int handle_mutex_operation_error(int helper_result)
 
     stack_error = ft_global_error_stack_drop_last_error();
     operation_error = stack_error;
-    if (stack_error == FT_ERR_SUCCESSS)
+    if (stack_error == FT_ERR_SUCCESS)
         operation_error = helper_result;
     else
         ft_global_error_stack_push(stack_error);
@@ -94,11 +94,11 @@ inline void ft_thread_pool::worker()
 
         mutex_result = pt_pthread_mutex_lock_with_error(&this->_mutex);
         mutex_error = handle_mutex_operation_error(mutex_result);
-        if (mutex_error != FT_ERR_SUCCESSS)
+        if (mutex_error != FT_ERR_SUCCESS)
             return ;
         queue_empty = this->_tasks.empty();
         queue_error = ft_global_error_stack_drop_last_error();
-        if (queue_error != FT_ERR_SUCCESSS)
+        if (queue_error != FT_ERR_SUCCESS)
         {
             mutex_result = pt_pthread_mutex_unlock_with_error(&this->_mutex);
             ft_global_error_stack_drop_last_error();
@@ -118,7 +118,7 @@ inline void ft_thread_pool::worker()
             }
             queue_empty = this->_tasks.empty();
             queue_error = ft_global_error_stack_drop_last_error();
-            if (queue_error != FT_ERR_SUCCESSS)
+            if (queue_error != FT_ERR_SUCCESS)
             {
                 mutex_result = pt_pthread_mutex_unlock_with_error(&this->_mutex);
                 ft_global_error_stack_drop_last_error();
@@ -130,12 +130,12 @@ inline void ft_thread_pool::worker()
         {
             mutex_result = pt_pthread_mutex_unlock_with_error(&this->_mutex);
             ft_global_error_stack_drop_last_error();
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
+            ft_global_error_stack_push(FT_ERR_SUCCESS);
             return ;
         }
         task = this->_tasks.dequeue();
         queue_error = ft_global_error_stack_drop_last_error();
-        if (queue_error != FT_ERR_SUCCESSS)
+        if (queue_error != FT_ERR_SUCCESS)
         {
             mutex_result = pt_pthread_mutex_unlock_with_error(&this->_mutex);
             ft_global_error_stack_drop_last_error();
@@ -148,12 +148,12 @@ inline void ft_thread_pool::worker()
         task();
         mutex_result = pt_pthread_mutex_lock_with_error(&this->_mutex);
         mutex_error = handle_mutex_operation_error(mutex_result);
-        if (mutex_error != FT_ERR_SUCCESSS)
+        if (mutex_error != FT_ERR_SUCCESS)
             return ;
         --this->_active;
         queue_empty = this->_tasks.empty();
         queue_error = ft_global_error_stack_drop_last_error();
-        if (queue_error != FT_ERR_SUCCESSS)
+        if (queue_error != FT_ERR_SUCCESS)
         {
             mutex_result = pt_pthread_mutex_unlock_with_error(&this->_mutex);
             ft_global_error_stack_drop_last_error();
@@ -201,7 +201,7 @@ inline ft_thread_pool::ft_thread_pool(size_t thread_count, size_t max_tasks)
     this->_cond_initialized = true;
     this->_workers.reserve(thread_count);
     int reserve_error = ft_global_error_stack_drop_last_error();
-    if (reserve_error != FT_ERR_SUCCESSS)
+    if (reserve_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(reserve_error);
         this->_stop = true;
@@ -213,7 +213,7 @@ inline ft_thread_pool::ft_thread_pool(size_t thread_count, size_t max_tasks)
         ft_thread worker(&ft_thread_pool::worker, this);
         this->_workers.push_back(ft_move(worker));
         int vector_error = ft_global_error_stack_drop_last_error();
-        if (vector_error != FT_ERR_SUCCESSS)
+        if (vector_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(FT_ERR_NO_MEMORY);
             this->_stop = true;
@@ -221,7 +221,7 @@ inline ft_thread_pool::ft_thread_pool(size_t thread_count, size_t max_tasks)
         }
         ++worker_index;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 inline ft_thread_pool::~ft_thread_pool()
@@ -244,14 +244,14 @@ inline void ft_thread_pool::submit(Function &&function)
     bool lock_acquired = false;
     int lock_error = this->lock_internal(&lock_acquired);
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
     }
     int mutex_result = pt_pthread_mutex_lock_with_error(&this->_mutex);
     int mutex_error = handle_mutex_operation_error(mutex_result);
-    if (mutex_error != FT_ERR_SUCCESSS)
+    if (mutex_error != FT_ERR_SUCCESS)
     {
         this->unlock_internal(lock_acquired);
         ft_global_error_stack_push(mutex_error);
@@ -262,14 +262,14 @@ inline void ft_thread_pool::submit(Function &&function)
         mutex_result = pt_pthread_mutex_unlock_with_error(&this->_mutex);
         ft_global_error_stack_drop_last_error();
         this->unlock_internal(lock_acquired);
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return ;
     }
     if (this->_max_tasks != 0)
     {
         size_t task_count = this->_tasks.size();
         int size_error = ft_global_error_stack_drop_last_error();
-        if (size_error != FT_ERR_SUCCESSS)
+        if (size_error != FT_ERR_SUCCESS)
         {
             mutex_result = pt_pthread_mutex_unlock_with_error(&this->_mutex);
             ft_global_error_stack_drop_last_error();
@@ -290,7 +290,7 @@ inline void ft_thread_pool::submit(Function &&function)
     ft_function<void()> wrapper(ft_move(function));
     this->_tasks.enqueue(ft_move(wrapper));
     int queue_error = ft_global_error_stack_drop_last_error();
-    if (queue_error != FT_ERR_SUCCESSS)
+    if (queue_error != FT_ERR_SUCCESS)
     {
         enqueue_failed = true;
         wrapper = ft_function<void()>();
@@ -316,7 +316,7 @@ inline void ft_thread_pool::submit(Function &&function)
     mutex_result = pt_pthread_mutex_unlock_with_error(&this->_mutex);
     ft_global_error_stack_drop_last_error();
     this->unlock_internal(lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -354,14 +354,14 @@ inline void ft_thread_pool::wait()
     bool lock_acquired = false;
     int lock_error = this->lock_internal(&lock_acquired);
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
     }
     int mutex_result = pt_pthread_mutex_lock_with_error(&this->_mutex);
     int mutex_error = handle_mutex_operation_error(mutex_result);
-    if (mutex_error != FT_ERR_SUCCESSS)
+    if (mutex_error != FT_ERR_SUCCESS)
     {
         this->unlock_internal(lock_acquired);
         ft_global_error_stack_push(mutex_error);
@@ -369,7 +369,7 @@ inline void ft_thread_pool::wait()
     }
     bool tasks_empty = this->_tasks.empty();
     int queue_error = ft_global_error_stack_drop_last_error();
-    if (queue_error != FT_ERR_SUCCESSS)
+    if (queue_error != FT_ERR_SUCCESS)
     {
         mutex_result = pt_pthread_mutex_unlock_with_error(&this->_mutex);
         ft_global_error_stack_drop_last_error();
@@ -391,7 +391,7 @@ inline void ft_thread_pool::wait()
         }
         tasks_empty = this->_tasks.empty();
         queue_error = ft_global_error_stack_drop_last_error();
-        if (queue_error != FT_ERR_SUCCESSS)
+        if (queue_error != FT_ERR_SUCCESS)
         {
             mutex_result = pt_pthread_mutex_unlock_with_error(&this->_mutex);
             ft_global_error_stack_drop_last_error();
@@ -403,7 +403,7 @@ inline void ft_thread_pool::wait()
     mutex_result = pt_pthread_mutex_unlock_with_error(&this->_mutex);
     ft_global_error_stack_drop_last_error();
     this->unlock_internal(lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -412,14 +412,14 @@ inline void ft_thread_pool::destroy()
     bool lock_acquired = false;
     int lock_error = this->lock_internal(&lock_acquired);
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
     }
     int mutex_result = pt_pthread_mutex_lock_with_error(&this->_mutex);
     int mutex_error = handle_mutex_operation_error(mutex_result);
-    if (mutex_error != FT_ERR_SUCCESSS)
+    if (mutex_error != FT_ERR_SUCCESS)
     {
         this->unlock_internal(lock_acquired);
         ft_global_error_stack_push(mutex_error);
@@ -439,7 +439,7 @@ inline void ft_thread_pool::destroy()
     size_t worker_index = 0;
     size_t worker_count = this->_workers.size();
     int size_error = ft_global_error_stack_drop_last_error();
-    if (size_error != FT_ERR_SUCCESSS)
+    if (size_error != FT_ERR_SUCCESS)
     {
         this->unlock_internal(lock_acquired);
         ft_global_error_stack_push(size_error);
@@ -453,27 +453,27 @@ inline void ft_thread_pool::destroy()
     }
     this->_workers.clear();
     int clear_error = ft_global_error_stack_drop_last_error();
-    if (clear_error != FT_ERR_SUCCESSS)
+    if (clear_error != FT_ERR_SUCCESS)
     {
         this->unlock_internal(lock_acquired);
         ft_global_error_stack_push(clear_error);
         return ;
     }
     this->unlock_internal(lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
 inline int ft_thread_pool::prepare_thread_safety()
 {
     if (this->_thread_safe_mutex != ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     pt_recursive_mutex *mutex_pointer = ft_nullptr;
     int result = pt_recursive_mutex_create_with_error(&mutex_pointer);
-    if (result != FT_ERR_SUCCESSS)
+    if (result != FT_ERR_SUCCESS)
         return (result);
     this->_thread_safe_mutex = mutex_pointer;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 inline void ft_thread_pool::teardown_thread_safety()
@@ -487,14 +487,14 @@ inline int ft_thread_pool::lock_internal(bool *lock_acquired) const
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (this->_thread_safe_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     int mutex_result = pt_recursive_mutex_lock_with_error(*this->_thread_safe_mutex);
     int mutex_error = handle_mutex_operation_error(mutex_result);
-    if (mutex_error != FT_ERR_SUCCESSS)
+    if (mutex_error != FT_ERR_SUCCESS)
         return (mutex_error);
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 inline void ft_thread_pool::unlock_internal(bool lock_acquired) const
@@ -503,7 +503,7 @@ inline void ft_thread_pool::unlock_internal(bool lock_acquired) const
         return ;
     int mutex_result = pt_recursive_mutex_unlock_with_error(*this->_thread_safe_mutex);
     int mutex_error = handle_mutex_operation_error(mutex_result);
-    if (mutex_error != FT_ERR_SUCCESSS)
+    if (mutex_error != FT_ERR_SUCCESS)
         ft_global_error_stack_push(mutex_error);
     return ;
 }
@@ -518,33 +518,33 @@ inline int ft_thread_pool::enable_thread_safety()
 inline void ft_thread_pool::disable_thread_safety()
 {
     this->teardown_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
 inline bool ft_thread_pool::is_thread_safe() const
 {
     bool enabled = (this->_thread_safe_mutex != ft_nullptr);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (enabled);
 }
 
 inline int ft_thread_pool::lock(bool *lock_acquired) const
 {
     int result = this->lock_internal(lock_acquired);
-    if (result != FT_ERR_SUCCESSS)
+    if (result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(result);
         return (-1);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
 inline void ft_thread_pool::unlock(bool lock_acquired) const
 {
     this->unlock_internal(lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 

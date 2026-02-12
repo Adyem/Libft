@@ -9,7 +9,7 @@ file_dir *file_opendir(const char *directory_path)
     int error_code;
 
     directory_stream = cmp_dir_open(directory_path, &error_code);
-    if (directory_stream == ft_nullptr && error_code == FT_ERR_SUCCESSS)
+    if (directory_stream == ft_nullptr && error_code == FT_ERR_SUCCESS)
         error_code = FT_ERR_INTERNAL;
     ft_global_error_stack_push(error_code);
     return (directory_stream);
@@ -41,10 +41,10 @@ int file_closedir(file_dir *directory_stream)
         return (-1);
     }
     close_result = cmp_dir_close(directory_stream, &error_code);
-    if (close_result != 0 && error_code == FT_ERR_SUCCESSS)
+    if (close_result != 0 && error_code == FT_ERR_SUCCESS)
         error_code = FT_ERR_INTERNAL;
     if (close_result == 0)
-        error_code = FT_ERR_SUCCESSS;
+        error_code = FT_ERR_SUCCESS;
     ft_global_error_stack_push(error_code);
     return (close_result);
 }

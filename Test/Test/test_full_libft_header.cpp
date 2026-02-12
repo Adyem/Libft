@@ -1,3 +1,4 @@
+#include "../test_internal.hpp"
 #include <algorithm>
 #include <cctype>
 #include <fstream>
@@ -5,6 +6,9 @@
 #include <string>
 #include <vector>
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 static std::string trim_whitespace(const std::string &input)
 {

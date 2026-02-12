@@ -96,6 +96,6 @@ int cp_receive_memory(int socket_fd, cross_process_read_result &result)
     }
     if (cmp_cross_process_close_mapping(&mapping) != 0)
         return (cp_push_errno());
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }

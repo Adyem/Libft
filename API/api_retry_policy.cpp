@@ -43,13 +43,13 @@ int api_retry_policy::lock_pair(const api_retry_policy &first,
     {
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
 
-        if (single_guard.get_error() != FT_ERR_SUCCESSS)
+        if (single_guard.get_error() != FT_ERR_SUCCESS)
         {
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -67,12 +67,12 @@ int api_retry_policy::lock_pair(const api_retry_policy &first,
         {
             ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
 
-            if (lower_guard.get_error() != FT_ERR_SUCCESSS)
+            if (lower_guard.get_error() != FT_ERR_SUCCESS)
             {
                 return (lower_guard.get_error());
             }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ERR_SUCCESSS)
+        if (upper_guard.get_error() == FT_ERR_SUCCESS)
         {
             if (!swapped)
             {
@@ -84,7 +84,7 @@ int api_retry_policy::lock_pair(const api_retry_policy &first,
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            return (FT_ERR_SUCCESSS);
+            return (FT_ERR_SUCCESS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -100,10 +100,10 @@ api_retry_policy::api_retry_policy() noexcept
     : _max_attempts(0), _initial_delay_ms(0), _max_delay_ms(0),
       _backoff_multiplier(0), _circuit_breaker_threshold(0),
       _circuit_breaker_cooldown_ms(0),
-      _circuit_breaker_half_open_successes(0), _error_code(FT_ERR_SUCCESSS),
+      _circuit_breaker_half_open_successes(0), _error_code(FT_ERR_SUCCESS),
       _mutex()
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -111,13 +111,13 @@ api_retry_policy::api_retry_policy(const api_retry_policy &other) noexcept
     : _max_attempts(0), _initial_delay_ms(0), _max_delay_ms(0),
       _backoff_multiplier(0), _circuit_breaker_threshold(0),
       _circuit_breaker_cooldown_ms(0),
-      _circuit_breaker_half_open_successes(0), _error_code(FT_ERR_SUCCESSS),
+      _circuit_breaker_half_open_successes(0), _error_code(FT_ERR_SUCCESS),
       _mutex()
 {
     {
         ft_unique_lock<pt_mutex> other_guard(other._mutex);
 
-        if (other_guard.get_error() != FT_ERR_SUCCESSS)
+        if (other_guard.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(other_guard.get_error());
             return ;
@@ -146,12 +146,12 @@ api_retry_policy &api_retry_policy::operator=(
 
     if (this == &other)
     {
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
         return (*this);
     }
     lock_error = api_retry_policy::lock_pair(*this, other,
             this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         return (*this);
@@ -174,13 +174,13 @@ api_retry_policy::api_retry_policy(api_retry_policy &&other) noexcept
     : _max_attempts(0), _initial_delay_ms(0), _max_delay_ms(0),
       _backoff_multiplier(0), _circuit_breaker_threshold(0),
       _circuit_breaker_cooldown_ms(0),
-      _circuit_breaker_half_open_successes(0), _error_code(FT_ERR_SUCCESSS),
+      _circuit_breaker_half_open_successes(0), _error_code(FT_ERR_SUCCESS),
       _mutex()
 {
     {
         ft_unique_lock<pt_mutex> other_guard(other._mutex);
 
-        if (other_guard.get_error() != FT_ERR_SUCCESSS)
+        if (other_guard.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(other_guard.get_error());
             return ;
@@ -202,9 +202,9 @@ api_retry_policy::api_retry_policy(api_retry_policy &&other) noexcept
         other._circuit_breaker_threshold = 0;
         other._circuit_breaker_cooldown_ms = 0;
         other._circuit_breaker_half_open_successes = 0;
-        other._error_code = FT_ERR_SUCCESSS;
+        other._error_code = FT_ERR_SUCCESS;
         this->set_error(this->_error_code);
-        other.set_error(FT_ERR_SUCCESSS);
+        other.set_error(FT_ERR_SUCCESS);
     }
     return ;
 }
@@ -217,12 +217,12 @@ api_retry_policy &api_retry_policy::operator=(api_retry_policy &&other) noexcept
 
     if (this == &other)
     {
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
         return (*this);
     }
     lock_error = api_retry_policy::lock_pair(*this, other,
             this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         return (*this);
@@ -244,9 +244,9 @@ api_retry_policy &api_retry_policy::operator=(api_retry_policy &&other) noexcept
     other._circuit_breaker_threshold = 0;
     other._circuit_breaker_cooldown_ms = 0;
     other._circuit_breaker_half_open_successes = 0;
-    other._error_code = FT_ERR_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESS;
     this->set_error(this->_error_code);
-    other.set_error(FT_ERR_SUCCESSS);
+    other.set_error(FT_ERR_SUCCESS);
     return (*this);
 }
 
@@ -260,7 +260,7 @@ void api_retry_policy::reset() noexcept
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        if (guard.get_error() != FT_ERR_SUCCESSS)
+        if (guard.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(guard.get_error());
             return ;
@@ -272,8 +272,8 @@ void api_retry_policy::reset() noexcept
         this->_circuit_breaker_threshold = 0;
         this->_circuit_breaker_cooldown_ms = 0;
         this->_circuit_breaker_half_open_successes = 0;
-        this->_error_code = FT_ERR_SUCCESSS;
-        this->set_error(FT_ERR_SUCCESSS);
+        this->_error_code = FT_ERR_SUCCESS;
+        this->set_error(FT_ERR_SUCCESS);
     }
     return ;
 }
@@ -283,13 +283,13 @@ void api_retry_policy::set_max_attempts(int value) noexcept
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        if (guard.get_error() != FT_ERR_SUCCESSS)
+        if (guard.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(guard.get_error());
             return ;
         }
         this->_max_attempts = value;
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     }
     return ;
 }
@@ -299,13 +299,13 @@ void api_retry_policy::set_initial_delay_ms(int value) noexcept
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        if (guard.get_error() != FT_ERR_SUCCESSS)
+        if (guard.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(guard.get_error());
             return ;
         }
         this->_initial_delay_ms = value;
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     }
     return ;
 }
@@ -315,13 +315,13 @@ void api_retry_policy::set_max_delay_ms(int value) noexcept
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        if (guard.get_error() != FT_ERR_SUCCESSS)
+        if (guard.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(guard.get_error());
             return ;
         }
         this->_max_delay_ms = value;
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     }
     return ;
 }
@@ -331,13 +331,13 @@ void api_retry_policy::set_backoff_multiplier(int value) noexcept
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        if (guard.get_error() != FT_ERR_SUCCESSS)
+        if (guard.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(guard.get_error());
             return ;
         }
         this->_backoff_multiplier = value;
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     }
     return ;
 }
@@ -347,13 +347,13 @@ void api_retry_policy::set_circuit_breaker_threshold(int value) noexcept
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        if (guard.get_error() != FT_ERR_SUCCESSS)
+        if (guard.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(guard.get_error());
             return ;
         }
         this->_circuit_breaker_threshold = value;
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     }
     return ;
 }
@@ -363,13 +363,13 @@ void api_retry_policy::set_circuit_breaker_cooldown_ms(int value) noexcept
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        if (guard.get_error() != FT_ERR_SUCCESSS)
+        if (guard.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(guard.get_error());
             return ;
         }
         this->_circuit_breaker_cooldown_ms = value;
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     }
     return ;
 }
@@ -379,13 +379,13 @@ void api_retry_policy::set_circuit_breaker_half_open_successes(int value) noexce
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        if (guard.get_error() != FT_ERR_SUCCESSS)
+        if (guard.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(guard.get_error());
             return ;
         }
         this->_circuit_breaker_half_open_successes = value;
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     }
     return ;
 }
@@ -398,13 +398,13 @@ int api_retry_policy::get_max_attempts() const noexcept
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        if (guard.get_error() != FT_ERR_SUCCESSS)
+        if (guard.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(guard.get_error());
             return (0);
         }
         value = this->_max_attempts;
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     }
     return (value);
 }
@@ -417,13 +417,13 @@ int api_retry_policy::get_initial_delay_ms() const noexcept
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        if (guard.get_error() != FT_ERR_SUCCESSS)
+        if (guard.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(guard.get_error());
             return (0);
         }
         value = this->_initial_delay_ms;
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     }
     return (value);
 }
@@ -436,13 +436,13 @@ int api_retry_policy::get_max_delay_ms() const noexcept
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        if (guard.get_error() != FT_ERR_SUCCESSS)
+        if (guard.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(guard.get_error());
             return (0);
         }
         value = this->_max_delay_ms;
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     }
     return (value);
 }
@@ -455,13 +455,13 @@ int api_retry_policy::get_backoff_multiplier() const noexcept
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        if (guard.get_error() != FT_ERR_SUCCESSS)
+        if (guard.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(guard.get_error());
             return (0);
         }
         value = this->_backoff_multiplier;
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     }
     return (value);
 }
@@ -474,13 +474,13 @@ int api_retry_policy::get_circuit_breaker_threshold() const noexcept
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        if (guard.get_error() != FT_ERR_SUCCESSS)
+        if (guard.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(guard.get_error());
             return (0);
         }
         value = this->_circuit_breaker_threshold;
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     }
     return (value);
 }
@@ -493,13 +493,13 @@ int api_retry_policy::get_circuit_breaker_cooldown_ms() const noexcept
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        if (guard.get_error() != FT_ERR_SUCCESSS)
+        if (guard.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(guard.get_error());
             return (0);
         }
         value = this->_circuit_breaker_cooldown_ms;
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     }
     return (value);
 }
@@ -512,13 +512,13 @@ int api_retry_policy::get_circuit_breaker_half_open_successes() const noexcept
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        if (guard.get_error() != FT_ERR_SUCCESSS)
+        if (guard.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(guard.get_error());
             return (0);
         }
         value = this->_circuit_breaker_half_open_successes;
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     }
     return (value);
 }

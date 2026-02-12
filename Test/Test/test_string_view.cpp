@@ -1,9 +1,13 @@
+#include "../test_internal.hpp"
 #include "../../Template/string_view.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../CMA/CMA.hpp"
 #include "../../PThread/pthread.hpp"
 #include <atomic>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 struct string_view_thread_data
 {
@@ -111,7 +115,7 @@ FT_TEST(test_string_view_thread_safety, "ft_string_view thread safe copy and com
     pt_thread_join(assign_thread, ft_nullptr);
     pt_thread_join(compare_thread, ft_nullptr);
     FT_ASSERT_EQ(0, shared.compare(source));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, shared.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, source.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, shared.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
     return (1);
 }

@@ -32,12 +32,10 @@ double math_acos(double dot)
 
     if (math_isnan(dot))
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (math_nan());
     }
     if (math_is_infinite_internal(dot) != 0)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (math_nan());
     }
     tolerance = 0.0000000000001;
@@ -47,7 +45,6 @@ double math_acos(double dot)
             dot = 1.0;
         else
         {
-            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
             return (math_nan());
         }
     }
@@ -57,24 +54,20 @@ double math_acos(double dot)
             dot = -1.0;
         else
         {
-            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
             return (math_nan());
         }
     }
     pi_value = 3.14159265358979323846;
     if (math_fabs(dot - 1.0) <= tolerance)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (0.0);
     }
     if (math_fabs(dot + 1.0) <= tolerance)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (pi_value);
     }
     if (math_fabs(dot) <= tolerance)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (pi_value * 0.5);
     }
     lower_bound = 0.0;
@@ -86,7 +79,6 @@ double math_acos(double dot)
         cosine_middle = math_cos(middle_value);
         if (math_fabs(cosine_middle - dot) <= tolerance)
         {
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
             return (middle_value);
         }
         if (cosine_middle > dot)
@@ -95,6 +87,5 @@ double math_acos(double dot)
             upper_bound = middle_value;
         iteration_count = iteration_count + 1;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ((lower_bound + upper_bound) * 0.5);
 }

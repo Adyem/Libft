@@ -20,6 +20,6 @@ t_time  time_now(void)
         ft_global_error_stack_push(error_code);
         return (static_cast<t_time>(-1));
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (static_cast<t_time>(standard_time));
 }

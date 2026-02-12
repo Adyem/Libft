@@ -9,7 +9,7 @@ int ft_dice_roll(int number, int faces)
     ft_init_random_engine();
     if (faces == 0 && number == 0)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0);
     }
     if (faces < 1 || number < 1)
@@ -19,7 +19,7 @@ int ft_dice_roll(int number, int faces)
     }
     if (faces == 1)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (number);
     }
     int result = 0;
@@ -29,7 +29,7 @@ int ft_dice_roll(int number, int faces)
     {
         roll = ft_random_int();
         int error_code = ft_global_error_stack_drop_last_error();
-        if (error_code != FT_ERR_SUCCESSS)
+        if (error_code != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(error_code);
             return (-1);
@@ -45,6 +45,6 @@ int ft_dice_roll(int number, int faces)
     if (DEBUG == 1)
         pf_printf_fd(2, "The dice rolled %d on %d faces with %d amount of dice\n",
                 result, faces, number);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (result);
 }

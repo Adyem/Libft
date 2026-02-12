@@ -45,6 +45,6 @@ long    time_now_ms(void)
         ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
         return (LONG_MIN);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (static_cast<long>(milliseconds_count));
 }

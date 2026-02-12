@@ -19,7 +19,7 @@ int nw_set_nonblocking(int socket_fd)
         ft_global_error_stack_push(ft_map_system_error(WSAGetLastError()));
         return (-1);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 #else
     int flags;
@@ -34,7 +34,7 @@ int nw_set_nonblocking(int socket_fd)
         ft_global_error_stack_push(ft_map_system_error(errno));
         return (-1);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 #endif
 }

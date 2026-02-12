@@ -1,5 +1,9 @@
+#include "../test_internal.hpp"
 #include <utility>
 #include "test_scma_shared.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 struct scma_test_vector3
 {
@@ -221,7 +225,7 @@ FT_TEST(test_scma_accessor_dereference_reads_value, "scma accessor dereference r
     read_value = *accessor;
     FT_ASSERT_EQ(12, read_value);
     const scma_handle_accessor<int> const_accessor(accessor);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, const_accessor.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, const_accessor.get_error());
     read_value = const_accessor[1];
     FT_ASSERT_EQ(34, read_value);
     scma_shutdown();

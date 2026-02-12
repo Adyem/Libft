@@ -1,8 +1,12 @@
+#include "../test_internal.hpp"
 #include "../../Observability/observability_game_metrics.hpp"
 #include "../../Game/game_character.hpp"
 #include "../../Basic/basic.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 static ft_game_observability_sample g_game_last_sample;
 static int g_game_export_count = 0;
@@ -60,12 +64,12 @@ FT_TEST(test_observability_game_record_without_initialize_does_not_emit,
     sample.delta_value = 5;
     sample.total_value = 10;
     sample.unit = "unit";
-    sample.error_code = FT_ERR_SUCCESSS;
+    sample.error_code = FT_ERR_SUCCESS;
     sample.error_tag = ft_nullptr;
     sample.success = true;
     observability_game_metrics_record(sample);
     FT_ASSERT_EQ(0, g_game_export_count);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, observability_game_metrics_get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, observability_game_metrics_get_error());
     return (1);
 }
 
@@ -84,12 +88,12 @@ FT_TEST(test_observability_game_record_populates_defaults,
     sample.delta_value = 8;
     sample.total_value = 12;
     sample.unit = "unit";
-    sample.error_code = FT_ERR_SUCCESSS;
+    sample.error_code = FT_ERR_SUCCESS;
     sample.error_tag = ft_nullptr;
     sample.success = true;
     observability_game_metrics_record(sample);
     FT_ASSERT_EQ(1, g_game_export_count);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, g_game_last_sample.error_code);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, g_game_last_sample.error_code);
     FT_ASSERT(g_game_last_sample.success);
     FT_ASSERT(g_game_last_sample.error_tag != ft_nullptr);
     FT_ASSERT(observability_game_strings_equal("ok", g_game_last_sample.error_tag));

@@ -27,10 +27,10 @@ class quaternion
     public:
         quaternion();
         quaternion(double w, double x, double y, double z);
-        quaternion(const quaternion &other);
-        quaternion &operator=(const quaternion &other);
-        quaternion(quaternion &&other) noexcept;
-        quaternion &operator=(quaternion &&other) noexcept;
+        quaternion(const quaternion &other) = delete;
+        quaternion &operator=(const quaternion &other) = delete;
+        quaternion(quaternion &&other) noexcept = delete;
+        quaternion &operator=(quaternion &&other) noexcept = delete;
         ~quaternion();
         double      get_w() const;
         double      get_x() const;

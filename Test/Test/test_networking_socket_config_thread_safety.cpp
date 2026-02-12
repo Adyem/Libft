@@ -1,7 +1,11 @@
+#include "../test_internal.hpp"
 #include "../../Networking/networking.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <utility>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_socket_config_prepare_initializes_mutex,
     "socket_config_prepare_thread_safety initializes mutex and allows locking")
@@ -12,7 +16,7 @@ FT_TEST(test_socket_config_prepare_initializes_mutex,
     socket_config_teardown_thread_safety(&config);
     ft_errno = FT_ERR_INTERNAL;
     FT_ASSERT_EQ(0, socket_config_prepare_thread_safety(&config));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     lock_acquired = false;
     FT_ASSERT_EQ(0, socket_config_lock(&config, &lock_acquired));
     FT_ASSERT_EQ(true, lock_acquired);
@@ -26,7 +30,7 @@ FT_TEST(test_socket_config_prepare_initializes_mutex,
 FT_TEST(test_socket_config_prepare_rejects_null,
     "socket_config_prepare_thread_safety validates null arguments")
 {
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(-1, socket_config_prepare_thread_safety(ft_nullptr));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
@@ -46,7 +50,7 @@ FT_TEST(test_socket_config_prepare_is_idempotent,
     ft_errno = FT_ERR_INTERNAL;
     lock_acquired = false;
     FT_ASSERT_EQ(0, socket_config_prepare_thread_safety(&config));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT_EQ(0, socket_config_lock(&config, &lock_acquired));
     FT_ASSERT(lock_acquired);
     socket_config_unlock(&config, lock_acquired);
@@ -60,7 +64,7 @@ FT_TEST(test_socket_config_lock_rejects_null,
     bool lock_acquired;
 
     lock_acquired = true;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(-1, socket_config_lock(ft_nullptr, &lock_acquired));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(false, lock_acquired);
@@ -77,7 +81,7 @@ FT_TEST(test_socket_config_lock_handles_disabled_safety,
     lock_acquired = true;
     FT_ASSERT_EQ(0, socket_config_lock(&config, &lock_acquired));
     FT_ASSERT_EQ(false, lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     socket_config_unlock(&config, lock_acquired);
     return (1);
 }
@@ -90,7 +94,7 @@ FT_TEST(test_socket_config_unlock_resets_errno_without_lock,
     socket_config_teardown_thread_safety(&config);
     ft_errno = FT_ERR_SOCKET_ACCEPT_FAILED;
     socket_config_unlock(&config, false);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -130,7 +134,7 @@ FT_TEST(test_socket_config_teardown_resets_state,
     FT_ASSERT_EQ(false, lock_acquired);
     ft_errno = FT_ERR_SOCKET_BIND_FAILED;
     socket_config_teardown_thread_safety(&config);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 

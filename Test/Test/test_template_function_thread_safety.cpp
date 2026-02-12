@@ -1,5 +1,9 @@
+#include "../test_internal.hpp"
 #include "../../Template/function.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 static int increment_value(int value)
 {

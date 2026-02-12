@@ -1,8 +1,12 @@
+#include "../test_internal.hpp"
 #include "../../Game/game_skill.hpp"
 #include "../../Game/game_upgrade.hpp"
 #include "../../Game/game_quest.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_game_skill_rejects_negative_id, "Game: skill set_id rejects negative values")
 {
@@ -24,7 +28,7 @@ FT_TEST(test_game_skill_modifier_accumulation, "Game: skill modifier setters acc
     skill.sub_modifier1(2);
 
     FT_ASSERT_EQ(5, skill.get_modifier1());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, skill.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, skill.get_error());
     return (1);
 }
 
@@ -37,7 +41,7 @@ FT_TEST(test_game_upgrade_add_level_caps_at_max, "Game: upgrade add_level clamps
     upgrade.add_level(10);
 
     FT_ASSERT_EQ(5, upgrade.get_current_level());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, upgrade.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, upgrade.get_error());
     return (1);
 }
 
@@ -49,7 +53,7 @@ FT_TEST(test_game_upgrade_sub_level_floors_at_zero, "Game: upgrade sub_level flo
     upgrade.sub_level(7);
 
     FT_ASSERT_EQ(0, upgrade.get_current_level());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, upgrade.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, upgrade.get_error());
     return (1);
 }
 

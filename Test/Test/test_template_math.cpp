@@ -1,5 +1,9 @@
+#include "../test_internal.hpp"
 #include "../../Template/math.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 static_assert(ft_max(1, 2) == 2, "ft_max constexpr check");
 static_assert(ft_min(1, 2) == 1, "ft_min constexpr check");

@@ -26,11 +26,11 @@ int pf_printf_fd(int fd, const char *format, ...)
     error_code = ft_global_error_stack_drop_last_error();
     if (printed_chars < 0)
     {
-        if (error_code != FT_ERR_SUCCESSS)
+        if (error_code != FT_ERR_SUCCESS)
             ft_global_error_stack_push(error_code);
         return (printed_chars);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (printed_chars);
 }
 
@@ -51,10 +51,10 @@ int pf_printf(const char *format, ...)
     error_code = ft_global_error_stack_drop_last_error();
     if (printed_chars < 0)
     {
-        if (error_code != FT_ERR_SUCCESSS)
+        if (error_code != FT_ERR_SUCCESS)
             ft_global_error_stack_push(error_code);
         return (printed_chars);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (printed_chars);
 }

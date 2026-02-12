@@ -130,7 +130,7 @@ void game_event_scheduler_telemetry_record(ft_event_scheduler_telemetry_state &s
     if (!metrics_changed)
     {
         game_event_scheduler_telemetry_update_state(state, profile);
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESS;
         return ;
     }
     events_per_update = 0;
@@ -145,7 +145,7 @@ void game_event_scheduler_telemetry_record(ft_event_scheduler_telemetry_state &s
     }
     queue_depth_value = static_cast<long long>(profile.max_queue_depth);
     latency_value = profile.last_update_processing_ns;
-    success = profile.last_error_code == FT_ERR_SUCCESSS;
+    success = profile.last_error_code == FT_ERR_SUCCESS;
     game_event_scheduler_telemetry_emit("event_scheduler.throughput",
         "events_per_update",
         events_per_update,
@@ -179,7 +179,7 @@ void game_event_scheduler_telemetry_record(ft_event_scheduler_telemetry_state &s
         success,
         state.scheduler_name);
     game_event_scheduler_telemetry_update_state(state, profile);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return ;
 }
 
@@ -188,7 +188,7 @@ void game_event_scheduler_publish_telemetry(ft_event_scheduler &scheduler,
 {
     t_event_scheduler_profile profile;
     scheduler.snapshot_profile(profile);
-    if (scheduler.get_error() != FT_ERR_SUCCESSS)
+    if (scheduler.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = scheduler.get_error();
         return ;

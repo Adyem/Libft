@@ -16,7 +16,7 @@ static void json_stream_writer_push_error(int error_code)
     do { json_stream_writer_push_error(code); return (value); } while (0)
 
 #define JSON_STREAM_WRITER_SUCCESS_RETURN(value) \
-    do { json_stream_writer_push_error(FT_ERR_SUCCESSS); return (value); } while (0)
+    do { json_stream_writer_push_error(FT_ERR_SUCCESS); return (value); } while (0)
 
 static int json_stream_writer_last_error(void)
 {
@@ -331,7 +331,7 @@ int json_stream_writer_init(json_stream_writer *writer,
     writer->began_document = false;
     writer->finished_document = false;
     writer->root_value_emitted = false;
-    writer->error_code = FT_ERR_SUCCESSS;
+    writer->error_code = FT_ERR_SUCCESS;
     JSON_STREAM_WRITER_SUCCESS_RETURN(0);
 }
 
@@ -349,7 +349,7 @@ void json_stream_writer_destroy(json_stream_writer *writer)
     writer->began_document = false;
     writer->finished_document = false;
     writer->root_value_emitted = false;
-    writer->error_code = FT_ERR_SUCCESSS;
+    writer->error_code = FT_ERR_SUCCESS;
     return ;
 }
 
@@ -375,7 +375,7 @@ int json_stream_writer_process(json_stream_writer *writer,
         writer->error_code = FT_ERR_INVALID_STATE;
         JSON_STREAM_WRITER_ERROR_RETURN(FT_ERR_INVALID_STATE, -1);
     }
-    if (writer->error_code != FT_ERR_SUCCESSS)
+    if (writer->error_code != FT_ERR_SUCCESS)
     {
         json_stream_writer_push_error(writer->error_code);
         return (-1);
@@ -594,7 +594,7 @@ int json_stream_writer_finish(json_stream_writer *writer)
     {
         JSON_STREAM_WRITER_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
     }
-    if (writer->error_code != FT_ERR_SUCCESSS)
+    if (writer->error_code != FT_ERR_SUCCESS)
     {
         json_stream_writer_push_error(writer->error_code);
         return (-1);

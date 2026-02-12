@@ -1,6 +1,10 @@
+#include "../test_internal.hpp"
 #include "../../Math/math.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <cstring>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_math_big_gcd_large_operands, "math_big_gcd computes gcd for large operands")
 {

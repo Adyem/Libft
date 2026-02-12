@@ -1,3 +1,4 @@
+#include "../test_internal.hpp"
 #include "../../Game/game_buff.hpp"
 #include "../../Game/game_debuff.hpp"
 #include "../../Game/game_equipment.hpp"
@@ -7,6 +8,9 @@
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_game_buff_invalid_duration_sets_errno,
         "ft_buff rejects negative duration and updates errno")

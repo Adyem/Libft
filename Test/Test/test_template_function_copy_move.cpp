@@ -1,6 +1,10 @@
+#include "../test_internal.hpp"
 #include "../../Template/function.hpp"
 #include "../../Template/move.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 struct counter_callable
 {

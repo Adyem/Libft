@@ -36,10 +36,10 @@ char *ft_fgets(char *string, int size, FILE *stream)
             ft_global_error_stack_push(FT_ERR_END_OF_FILE);
             return (ft_nullptr);
         }
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (ft_nullptr);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (result_string);
 }
 #endif

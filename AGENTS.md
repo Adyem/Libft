@@ -69,6 +69,25 @@ reporting mechanisms instead.
 
 Every class (particularly those that own mutexes) must only prepare its synchronization members in the constructor—real backing resources are created on-demand when `initialize()` is called. `destroy()` must be invoked explicitly before reusing or destructing the object again so the instance can return to an uninitialized state. This keeps object lifecycles predictable and matches the new `pt_mutex` contract.
 
+## Initialization State Contract
+
+For every class that has lifecycle methods, store lifecycle state in an explicit 8-bit field:
+- `0`: uninitialized
+- `1`: destroyed
+- `2`: initialized
+
+Behavior rules:
+- Constructors must never abort, and must leave objects in the `0` (uninitialized) state.
+- `initialize()` must abort only when called while already in state `2`.
+- If any `initialize(...)` overload fails after it begins initialization work, it must leave the object in state `1` (destroyed), never in state `0`. This guarantees later destruction does not abort because of a failed initialization attempt.
+- `destroy()` must abort when called in state `0` or `1`, and move state `2 -> 1` on success.
+- All methods other than constructors and `initialize()` must abort when called in state `0` or `1`.
+- Destructors must call `su_abort();` only when state is `0`. If state is `2`, they should destroy and move to `1`; if state is `1`, they must not abort.
+
+Abort behavior is mandatory and uniform:
+- Print a clear lifecycle error through the Printf module (for example `pf_printf_fd(2, "...\\n")`) with a trailing newline.
+- Immediately call `su_abort();`.
+
 Only .cpp files must be prefixed with the name of the module they belong to. Nested modules must contain both the original module name followed by the nested module name.
 For .hpp files, prefix only those meant for internal use with the module name.
 Generic headers may use the module's name, while class headers should use the class name as the filename.
@@ -80,6 +99,14 @@ Code that relies on platform-specific features must place only the platform-depe
 #Build and Test Timing
 
 Building the library and running the full test suite typically takes about two and a half minutes, possibly a little longer.
+
+#Allocation Failure Test Pattern
+
+When using `cma_set_alloc_limit` in tests to force allocation failures:
+- Use a non-zero limit to trigger failures (`0` means no allocation limit).
+- Set the limit once at the start of the test (or test section), then run the failure scenario.
+- Reset it exactly once to `0` at the end of the test (or section) to avoid leaking state across tests.
+- Do not repeatedly set the same limit before and after a single call unless the test is explicitly stepping through multiple failure depths.
 
 #Locking guidelines
 

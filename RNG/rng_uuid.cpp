@@ -12,14 +12,14 @@ void ft_generate_uuid(char out[37])
     if (rng_secure_bytes(uuid_bytes, 16) != 0)
     {
         int error_code = ft_global_error_stack_drop_last_error();
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_INTERNAL;
         out[0] = '\0';
         ft_global_error_stack_push(error_code);
         return ;
     }
     int error_code = ft_global_error_stack_drop_last_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         out[0] = '\0';
         ft_global_error_stack_push(error_code);
@@ -44,6 +44,6 @@ void ft_generate_uuid(char out[37])
         byte_index++;
     }
     out[output_index] = '\0';
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }

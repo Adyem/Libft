@@ -1,3 +1,4 @@
+#include "../test_internal.hpp"
 #include "../../Game/game_world.hpp"
 #include "../../Game/game_character.hpp"
 #include "../../Game/game_event.hpp"
@@ -13,16 +14,19 @@
 #include "../../Basic/basic.hpp"
 #include <new>
 
+#ifndef LIBFT_TEST_BUILD
+#endif
+
 FT_TEST(test_game_world_persistence_round_trip,
     "Game world save/load integrates kv_store persistence backends")
 {
     const char *store_path = "./Test/world_persistence_store.json";
-    int error_code = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESS;
     int file_exists = 0;
     int file_status;
 
     file_status = cmp_file_exists(store_path, &file_exists, &error_code);
-    if (file_status == FT_ERR_SUCCESSS && file_exists == 1)
+    if (file_status == FT_ERR_SUCCESS && file_exists == 1)
     {
         int delete_status = cmp_file_delete(store_path, &error_code);
         (void)delete_status;
@@ -35,49 +39,49 @@ FT_TEST(test_game_world_persistence_round_trip,
     FT_ASSERT_EQ(su_fclose(store_file), 0);
 
     kv_store persistence_store(store_path);
-    FT_ASSERT_EQ(persistence_store.get_error(), FT_ERR_SUCCESSS);
+    FT_ASSERT_EQ(persistence_store.get_error(), FT_ERR_SUCCESS);
 
     ft_world world_instance;
-    FT_ASSERT_EQ(world_instance.get_error(), FT_ERR_SUCCESSS);
+    FT_ASSERT_EQ(world_instance.get_error(), FT_ERR_SUCCESS);
 
     ft_sharedptr<ft_event> scheduled_event(new (std::nothrow) ft_event());
     FT_ASSERT(scheduled_event.get() != ft_nullptr);
-    FT_ASSERT_EQ(scheduled_event->get_error(), FT_ERR_SUCCESSS);
+    FT_ASSERT_EQ(scheduled_event->get_error(), FT_ERR_SUCCESS);
     scheduled_event->set_id(7);
     scheduled_event->set_duration(5);
-    FT_ASSERT_EQ(scheduled_event->get_error(), FT_ERR_SUCCESSS);
+    FT_ASSERT_EQ(scheduled_event->get_error(), FT_ERR_SUCCESS);
     world_instance.schedule_event(scheduled_event);
-    FT_ASSERT_EQ(world_instance.get_error(), FT_ERR_SUCCESSS);
+    FT_ASSERT_EQ(world_instance.get_error(), FT_ERR_SUCCESS);
 
     ft_character hero;
     hero.set_hit_points(64);
     hero.set_damage_rule(FT_DAMAGE_RULE_FLAT);
-    FT_ASSERT_EQ(hero.get_error(), FT_ERR_SUCCESSS);
+    FT_ASSERT_EQ(hero.get_error(), FT_ERR_SUCCESS);
 
     ft_inventory backpack(6);
-    FT_ASSERT_EQ(backpack.get_error(), FT_ERR_SUCCESSS);
+    FT_ASSERT_EQ(backpack.get_error(), FT_ERR_SUCCESS);
 
     ft_sharedptr<ft_item> potion(new (std::nothrow) ft_item());
     FT_ASSERT(potion.get() != ft_nullptr);
-    FT_ASSERT_EQ(potion->get_error(), FT_ERR_SUCCESSS);
+    FT_ASSERT_EQ(potion->get_error(), FT_ERR_SUCCESS);
     potion->set_item_id(200);
     potion->set_max_stack(5);
     potion->set_stack_size(2);
     potion->set_modifier1_id(3);
     potion->set_modifier1_value(25);
-    FT_ASSERT_EQ(potion->get_error(), FT_ERR_SUCCESSS);
-    FT_ASSERT_EQ(backpack.add_item(potion), FT_ERR_SUCCESSS);
-    FT_ASSERT_EQ(backpack.get_error(), FT_ERR_SUCCESSS);
+    FT_ASSERT_EQ(potion->get_error(), FT_ERR_SUCCESS);
+    FT_ASSERT_EQ(backpack.add_item(potion), FT_ERR_SUCCESS);
+    FT_ASSERT_EQ(backpack.get_error(), FT_ERR_SUCCESS);
 
-    FT_ASSERT_EQ(world_instance.save_to_store(persistence_store, "slot-primary", hero, backpack), FT_ERR_SUCCESSS);
-    FT_ASSERT_EQ(world_instance.get_error(), FT_ERR_SUCCESSS);
+    FT_ASSERT_EQ(world_instance.save_to_store(persistence_store, "slot-primary", hero, backpack), FT_ERR_SUCCESS);
+    FT_ASSERT_EQ(world_instance.get_error(), FT_ERR_SUCCESS);
 
     ft_character restored_hero;
     ft_inventory restored_inventory(1);
-    FT_ASSERT_EQ(restored_inventory.get_error(), FT_ERR_SUCCESSS);
+    FT_ASSERT_EQ(restored_inventory.get_error(), FT_ERR_SUCCESS);
 
-    FT_ASSERT_EQ(world_instance.load_from_store(persistence_store, "slot-primary", restored_hero, restored_inventory), FT_ERR_SUCCESSS);
-    FT_ASSERT_EQ(world_instance.get_error(), FT_ERR_SUCCESSS);
+    FT_ASSERT_EQ(world_instance.load_from_store(persistence_store, "slot-primary", restored_hero, restored_inventory), FT_ERR_SUCCESS);
+    FT_ASSERT_EQ(world_instance.get_error(), FT_ERR_SUCCESS);
 
     FT_ASSERT_EQ(restored_hero.get_hit_points(), hero.get_hit_points());
     FT_ASSERT_EQ(restored_inventory.get_used(), backpack.get_used());
@@ -87,7 +91,7 @@ FT_TEST(test_game_world_persistence_round_trip,
     ft_sharedptr<ft_event_scheduler> &restored_scheduler = world_instance.get_event_scheduler();
     FT_ASSERT(restored_scheduler.get() != ft_nullptr);
     restored_scheduler->dump_events(restored_events);
-    FT_ASSERT_EQ(restored_scheduler->get_error(), FT_ERR_SUCCESSS);
+    FT_ASSERT_EQ(restored_scheduler->get_error(), FT_ERR_SUCCESS);
     FT_ASSERT_EQ(restored_events.size(), static_cast<size_t>(1));
     FT_ASSERT(restored_events[0].get() != ft_nullptr);
     FT_ASSERT_EQ(restored_events[0]->get_id(), scheduled_event->get_id());

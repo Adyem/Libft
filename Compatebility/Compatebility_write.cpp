@@ -17,11 +17,11 @@ int32_t cmp_su_write(int32_t file_descriptor, const char *buffer,
     if (bytes_written_value < 0)
     {
         error_code = cmp_map_system_error_to_ft(errno);
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             return (FT_ERR_IO);
         return (error_code);
     }
     if (bytes_written_out != ft_nullptr)
         *bytes_written_out = bytes_written_value;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }

@@ -29,15 +29,15 @@ int ft_world_region::lock_pair(const ft_world_region &first, const ft_world_regi
     {
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
 
-        if (single_guard.get_error() != FT_ERR_SUCCESSS)
+        if (single_guard.get_error() != FT_ERR_SUCCESS)
         {
             ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ERR_SUCCESSS;
-        return (FT_ERR_SUCCESSS);
+        ft_errno = FT_ERR_SUCCESS;
+        return (FT_ERR_SUCCESS);
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -55,13 +55,13 @@ int ft_world_region::lock_pair(const ft_world_region &first, const ft_world_regi
     {
         ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
 
-        if (lower_guard.get_error() != FT_ERR_SUCCESSS)
+        if (lower_guard.get_error() != FT_ERR_SUCCESS)
         {
             ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ERR_SUCCESSS)
+        if (upper_guard.get_error() == FT_ERR_SUCCESS)
         {
             if (!swapped)
             {
@@ -73,8 +73,8 @@ int ft_world_region::lock_pair(const ft_world_region &first, const ft_world_regi
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = FT_ERR_SUCCESSS;
-            return (FT_ERR_SUCCESSS);
+            ft_errno = FT_ERR_SUCCESS;
+            return (FT_ERR_SUCCESS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -88,13 +88,13 @@ int ft_world_region::lock_pair(const ft_world_region &first, const ft_world_regi
 }
 
 ft_world_region::ft_world_region() noexcept
-    : _world_id(0), _region_ids(), _error_code(FT_ERR_SUCCESSS)
+    : _world_id(0), _region_ids(), _error_code(FT_ERR_SUCCESS)
 {
     return ;
 }
 
 ft_world_region::ft_world_region(int world_id, const ft_vector<int> &region_ids) noexcept
-    : _world_id(world_id), _region_ids(), _error_code(FT_ERR_SUCCESSS)
+    : _world_id(world_id), _region_ids(), _error_code(FT_ERR_SUCCESS)
 {
     game_world_copy_region_ids(region_ids, this->_region_ids);
     return ;
@@ -106,10 +106,10 @@ ft_world_region::~ft_world_region() noexcept
 }
 
 ft_world_region::ft_world_region(const ft_world_region &other) noexcept
-    : _world_id(0), _region_ids(), _error_code(FT_ERR_SUCCESSS)
+    : _world_id(0), _region_ids(), _error_code(FT_ERR_SUCCESS)
 {
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESSS)
+    if (other_guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(other_guard.get_error());
         return ;
@@ -129,7 +129,7 @@ ft_world_region &ft_world_region::operator=(const ft_world_region &other) noexce
     if (this == &other)
         return (*this);
     lock_error = ft_world_region::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         return (*this);
@@ -141,10 +141,10 @@ ft_world_region &ft_world_region::operator=(const ft_world_region &other) noexce
 }
 
 ft_world_region::ft_world_region(ft_world_region &&other) noexcept
-    : _world_id(0), _region_ids(), _error_code(FT_ERR_SUCCESSS)
+    : _world_id(0), _region_ids(), _error_code(FT_ERR_SUCCESS)
 {
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESSS)
+    if (other_guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(other_guard.get_error());
         return ;
@@ -154,7 +154,7 @@ ft_world_region::ft_world_region(ft_world_region &&other) noexcept
     this->_error_code = other._error_code;
     other._world_id = 0;
     other._region_ids.clear();
-    other._error_code = FT_ERR_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESS;
     return ;
 }
 
@@ -167,7 +167,7 @@ ft_world_region &ft_world_region::operator=(ft_world_region &&other) noexcept
     if (this == &other)
         return (*this);
     lock_error = ft_world_region::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         return (*this);
@@ -177,7 +177,7 @@ ft_world_region &ft_world_region::operator=(ft_world_region &&other) noexcept
     this->_error_code = other._error_code;
     other._world_id = 0;
     other._region_ids.clear();
-    other._error_code = FT_ERR_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESS;
     return (*this);
 }
 
@@ -186,7 +186,7 @@ int ft_world_region::get_world_id() const noexcept
     int world_id;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return (0);
@@ -198,13 +198,13 @@ int ft_world_region::get_world_id() const noexcept
 void ft_world_region::set_world_id(int world_id) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
     }
     this->_world_id = world_id;
-    this->_error_code = FT_ERR_SUCCESSS;
+    this->_error_code = FT_ERR_SUCCESS;
     return ;
 }
 
@@ -213,7 +213,7 @@ const ft_vector<int> &ft_world_region::get_region_ids() const noexcept
     const ft_vector<int> *region_ids;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return (this->_region_ids);
@@ -227,7 +227,7 @@ ft_vector<int> &ft_world_region::get_region_ids() noexcept
     ft_vector<int> *region_ids;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return (this->_region_ids);
@@ -239,13 +239,13 @@ ft_vector<int> &ft_world_region::get_region_ids() noexcept
 void ft_world_region::set_region_ids(const ft_vector<int> &region_ids) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
     }
     game_world_copy_region_ids(region_ids, this->_region_ids);
-    this->_error_code = FT_ERR_SUCCESSS;
+    this->_error_code = FT_ERR_SUCCESS;
     return ;
 }
 
@@ -254,7 +254,7 @@ int ft_world_region::get_error() const noexcept
     int error_code;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
         return (guard.get_error());
     error_code = this->_error_code;
     return (error_code);

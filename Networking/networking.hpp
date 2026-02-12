@@ -107,7 +107,7 @@ static inline int networking_fetch_last_error(bool repush_failure = true)
     int error_code = ft_global_error_stack_peek_last_error();
 
     ft_global_error_stack_drop_last_error();
-    if (repush_failure && error_code != FT_ERR_SUCCESSS)
+    if (repush_failure && error_code != FT_ERR_SUCCESS)
     {
         if (operation_id != 0)
             ft_global_error_stack_push_entry_with_id(error_code, operation_id);

@@ -4,6 +4,7 @@
 #include <atomic>
 #include <mutex>
 #include <type_traits>
+#include <cstdint>
 #include "pthread.hpp"
 
 class pt_mutex
@@ -12,14 +13,20 @@ class pt_mutex
         mutable std::atomic<pt_thread_id_type>    _owner;
         mutable std::atomic<bool>         _lock;
         mutable std::mutex                *_native_mutex;
-        mutable bool                      _native_initialized;
+        mutable uint8_t                   _initialized_state;
         mutable pt_mutex                  *_state_mutex;
         mutable std::atomic<bool>        _valid_state;
+        static const uint8_t              _state_uninitialized = 0;
+        static const uint8_t              _state_destroyed = 1;
+        static const uint8_t              _state_initialized = 2;
 
         int     ensure_native_mutex() const;
         int     lock_internal(bool *lock_acquired) const;
         int     unlock_internal(bool lock_acquired) const;
         void    teardown_thread_safety();
+        void    abort_lifecycle_error(const char *method_name,
+                    const char *reason) const;
+        void    abort_if_not_initialized(const char *method_name) const;
 
         pt_mutex(const pt_mutex&) = delete;
         pt_mutex& operator=(const pt_mutex&) = delete;

@@ -246,14 +246,14 @@ static bool api_https_send_request(SSL *ssl_session, const ft_string &request,
         return (true);
     if (ssl_send_all(ssl_session, request.c_str(), request.size()) < 0)
     {
-        if (ft_errno == FT_ERR_SUCCESSS)
+        if (ft_errno == FT_ERR_SUCCESS)
         {
             api_request_set_ssl_error(ssl_session, -1);
             error_code = ft_errno;
         }
         else
             error_code = ft_errno;
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_SOCKET_SEND_FAILED;
         return (false);
     }
@@ -276,10 +276,10 @@ static bool api_https_send_callback(const char *data_pointer,
         return (true);
     if (ssl_send_all(ssl_session, data_pointer, data_length) < 0)
     {
-        if (ft_errno == FT_ERR_SUCCESSS)
+        if (ft_errno == FT_ERR_SUCCESS)
             api_request_set_ssl_error(ssl_session, -1);
         error_code = ft_errno;
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_SOCKET_SEND_FAILED;
         return (false);
     }
@@ -384,12 +384,12 @@ static bool api_https_ensure_session(
     int alpn_error_code;
 
     alpn_selected_http2 = false;
-    alpn_error_code = FT_ERR_SUCCESSS;
+    alpn_error_code = FT_ERR_SUCCESS;
     if (!http2_select_alpn_protocol(ssl_session, alpn_selected_http2,
             alpn_error_code))
     {
         connection_handle.negotiated_http2 = false;
-        if (alpn_error_code != FT_ERR_SUCCESSS)
+        if (alpn_error_code != FT_ERR_SUCCESS)
             ft_errno = alpn_error_code;
     }
     if (SSL_set_fd(ssl_session, socket_wrapper.get_fd()) != 1)
@@ -551,7 +551,7 @@ static bool api_https_receive_response(SSL *ssl_session, ft_string &response,
             api_request_set_ssl_error(ssl_session,
                 static_cast<int>(bytes_received));
             error_code = ft_errno;
-            if (error_code == FT_ERR_SUCCESSS)
+            if (error_code == FT_ERR_SUCCESS)
                 error_code = FT_ERR_SOCKET_RECEIVE_FAILED;
             return (false);
         }
@@ -634,7 +634,7 @@ static bool api_https_receive_response(SSL *ssl_session, ft_string &response,
         if (!headers_complete)
         {
             response.append(buffer, static_cast<size_t>(bytes_received));
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
             {
                 error_code = ft_string::last_operation_error();
                 return (false);
@@ -662,7 +662,7 @@ static bool api_https_receive_response(SSL *ssl_session, ft_string &response,
             if (!chunked_encoding && !has_length)
                 connection_close = true;
             header_storage.assign(response.c_str(), header_length);
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
             {
                 error_code = ft_string::last_operation_error();
                 return (false);
@@ -682,7 +682,7 @@ static bool api_https_receive_response(SSL *ssl_session, ft_string &response,
                 {
                     streaming_body_buffer.append(
                         response.c_str() + header_length, body_length);
-                    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+                    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
                     {
                         error_code = ft_string::last_operation_error();
                         return (false);
@@ -705,7 +705,7 @@ static bool api_https_receive_response(SSL *ssl_session, ft_string &response,
         if (!streaming_enabled)
         {
             response.append(buffer, static_cast<size_t>(bytes_received));
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
             {
                 error_code = ft_string::last_operation_error();
                 return (false);
@@ -736,7 +736,7 @@ static bool api_https_receive_response(SSL *ssl_session, ft_string &response,
         }
         streaming_body_buffer.append(buffer,
             static_cast<size_t>(bytes_received));
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             error_code = ft_string::last_operation_error();
             return (false);
@@ -810,7 +810,7 @@ static bool api_https_execute_streaming_once(
             connection_close, chunked_encoding, has_length, content_length,
             error_code, streaming_handler))
         return (false);
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     return (true);
 }
 
@@ -831,7 +831,7 @@ static bool api_https_prepare_request(const char *method, const char *path,
     request += path;
     request += " HTTP/1.1\r\nHost: ";
     request += host_header;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
         error_code = ft_string::last_operation_error();
         return (false);
@@ -840,7 +840,7 @@ static bool api_https_prepare_request(const char *method, const char *path,
     {
         request += "\r\n";
         request += headers;
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             error_code = ft_string::last_operation_error();
             return (false);
@@ -850,21 +850,21 @@ static bool api_https_prepare_request(const char *method, const char *path,
     {
         if (!api_http_measure_json_payload(payload, payload_length))
         {
-            if (ft_errno == FT_ERR_SUCCESSS)
+            if (ft_errno == FT_ERR_SUCCESS)
                 error_code = FT_ERR_IO;
             else
                 error_code = ft_errno;
             return (false);
         }
         request += "\r\nContent-Type: application/json";
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             error_code = ft_string::last_operation_error();
             return (false);
         }
         if (!api_append_content_length_header(request, payload_length))
         {
-            if (ft_errno == FT_ERR_SUCCESSS)
+            if (ft_errno == FT_ERR_SUCCESS)
                 error_code = FT_ERR_IO;
             else
                 error_code = ft_errno;
@@ -872,7 +872,7 @@ static bool api_https_prepare_request(const char *method, const char *path,
         }
     }
     request += "\r\nConnection: keep-alive\r\n\r\n";
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
         error_code = ft_string::last_operation_error();
         return (false);
@@ -956,7 +956,7 @@ static char *api_https_execute_once(
         while (index < expected_length)
         {
             decoded_body.append(body_start[index]);
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
             {
                 error_code = ft_string::last_operation_error();
                 return (ft_nullptr);
@@ -970,7 +970,7 @@ static char *api_https_execute_once(
     {
         decoded_body.clear();
         decoded_body.append(body_start);
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             error_code = ft_string::last_operation_error();
             return (ft_nullptr);
@@ -985,7 +985,7 @@ static char *api_https_execute_once(
     result_body = static_cast<char*>(cma_malloc(result_length + 1));
     if (!result_body)
     {
-        if (ft_errno == FT_ERR_SUCCESSS)
+        if (ft_errno == FT_ERR_SUCCESS)
             error_code = FT_ERR_NO_MEMORY;
         else
             error_code = ft_errno;
@@ -994,7 +994,7 @@ static char *api_https_execute_once(
     if (result_length > 0)
         ft_memcpy(result_body, result_source, result_length);
     result_body[result_length] = '\0';
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     return (result_body);
 }
 
@@ -1069,7 +1069,7 @@ char *api_https_execute_http2(api_connection_pool_handle &connection_handle,
                     max_delay);
     }
     used_http2 = false;
-    if (error_code == FT_ERR_SUCCESSS)
+    if (error_code == FT_ERR_SUCCESS)
         error_code = FT_ERR_IO;
     return (ft_nullptr);
 }
@@ -1140,7 +1140,7 @@ char *api_https_execute(api_connection_pool_handle &connection_handle,
             current_delay = api_retry_prepare_delay(initial_delay,
                     max_delay);
     }
-    if (error_code == FT_ERR_SUCCESSS)
+    if (error_code == FT_ERR_SUCCESS)
         error_code = FT_ERR_IO;
     return (ft_nullptr);
 }
@@ -1225,7 +1225,7 @@ bool api_https_execute_streaming(api_connection_pool_handle &connection_handle,
         if (current_delay <= 0)
             current_delay = api_retry_prepare_delay(initial_delay, max_delay);
     }
-    if (error_code == FT_ERR_SUCCESSS)
+    if (error_code == FT_ERR_SUCCESS)
         error_code = FT_ERR_IO;
     return (false);
 }
@@ -1245,7 +1245,7 @@ bool api_https_execute_http2_streaming(
         return (false);
     if (!connection_handle.negotiated_http2)
     {
-        error_code = FT_ERR_SUCCESSS;
+        error_code = FT_ERR_SUCCESS;
         return (false);
     }
     bool result;
@@ -1275,7 +1275,7 @@ static char *api_https_execute_http2_once(
     char *http_response;
 
     used_http2 = false;
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     if (!method || !path)
     {
         error_code = FT_ERR_INVALID_ARGUMENT;
@@ -1292,7 +1292,7 @@ static char *api_https_execute_http2_once(
         return (ft_nullptr);
     }
     header_fields.push_back(field_entry);
-    if (header_fields.get_error() != FT_ERR_SUCCESSS)
+    if (header_fields.get_error() != FT_ERR_SUCCESS)
     {
         error_code = header_fields.get_error();
         return (ft_nullptr);
@@ -1303,7 +1303,7 @@ static char *api_https_execute_http2_once(
         return (ft_nullptr);
     }
     header_fields.push_back(field_entry);
-    if (header_fields.get_error() != FT_ERR_SUCCESSS)
+    if (header_fields.get_error() != FT_ERR_SUCCESS)
     {
         error_code = header_fields.get_error();
         return (ft_nullptr);
@@ -1314,7 +1314,7 @@ static char *api_https_execute_http2_once(
         return (ft_nullptr);
     }
     header_fields.push_back(field_entry);
-    if (header_fields.get_error() != FT_ERR_SUCCESSS)
+    if (header_fields.get_error() != FT_ERR_SUCCESS)
     {
         error_code = header_fields.get_error();
         return (ft_nullptr);
@@ -1336,7 +1336,7 @@ static char *api_https_execute_http2_once(
         }
     }
     header_fields.push_back(field_entry);
-    if (header_fields.get_error() != FT_ERR_SUCCESSS)
+    if (header_fields.get_error() != FT_ERR_SUCCESS)
     {
         error_code = header_fields.get_error();
         return (ft_nullptr);
@@ -1358,7 +1358,7 @@ static char *api_https_execute_http2_once(
             while (header_cursor[index] && header_cursor[index] != ':' && header_cursor[index] != '\r')
             {
                 header_name.append(header_cursor[index]);
-                if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+                if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
                 {
                     error_code = ft_string::last_operation_error();
                     return (ft_nullptr);
@@ -1370,7 +1370,7 @@ static char *api_https_execute_http2_once(
             while (header_cursor[index] && header_cursor[index] != '\r' && header_cursor[index] != '\n')
             {
                 header_value.append(header_cursor[index]);
-                if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+                if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
                 {
                     error_code = ft_string::last_operation_error();
                     return (ft_nullptr);
@@ -1385,7 +1385,7 @@ static char *api_https_execute_http2_once(
                     return (ft_nullptr);
                 }
                 header_fields.push_back(field_entry);
-                if (header_fields.get_error() != FT_ERR_SUCCESSS)
+                if (header_fields.get_error() != FT_ERR_SUCCESS)
                 {
                     error_code = header_fields.get_error();
                     return (ft_nullptr);
@@ -1398,7 +1398,7 @@ static char *api_https_execute_http2_once(
     }
     if (!http2_compress_headers(header_fields, compressed_headers, error_code))
     {
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_IO;
         return (ft_nullptr);
     }
@@ -1424,7 +1424,7 @@ static char *api_https_execute_http2_once(
     }
     if (!http2_encode_frame(headers_frame, encoded_frame, error_code))
     {
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_IO;
         return (ft_nullptr);
     }
@@ -1468,7 +1468,7 @@ static char *api_https_execute_http2_once(
         cma_free(http_response);
         return (ft_nullptr);
     }
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     return (http_response);
 }
 

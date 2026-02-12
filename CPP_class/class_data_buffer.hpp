@@ -67,12 +67,12 @@ DataBuffer& DataBuffer::operator<<(const T& value)
     std::ostringstream oss;
     oss << value;
     int lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (*this);
     }
-    int final_error = FT_ERR_SUCCESSS;
+    int final_error = FT_ERR_SUCCESS;
     char *bytes = cma_strdup(oss.str().c_str());
     if (bytes == ft_nullptr)
     {
@@ -83,7 +83,7 @@ DataBuffer& DataBuffer::operator<<(const T& value)
     {
         size_t len = ft_strlen_size_t(bytes);
         int length_error = this->write_length_locked(len);
-        if (length_error != FT_ERR_SUCCESSS)
+        if (length_error != FT_ERR_SUCCESS)
         {
             this->_ok = false;
             final_error = length_error;
@@ -95,7 +95,7 @@ DataBuffer& DataBuffer::operator<<(const T& value)
             {
                 this->_buffer.push_back(static_cast<uint8_t>(bytes[index]));
                 int buffer_error = ft_global_error_stack_peek_last_error();
-                if (buffer_error != FT_ERR_SUCCESSS)
+                if (buffer_error != FT_ERR_SUCCESS)
                 {
                     this->_ok = false;
                     final_error = buffer_error;
@@ -106,10 +106,10 @@ DataBuffer& DataBuffer::operator<<(const T& value)
         }
         cma_free(bytes);
     }
-    this->_ok = (final_error == FT_ERR_SUCCESSS);
+    this->_ok = (final_error == FT_ERR_SUCCESS);
     {
         int unlock_error = this->unlock_mutex();
-        if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
+        if (unlock_error != FT_ERR_SUCCESS && final_error == FT_ERR_SUCCESS)
             final_error = unlock_error;
     }
     ft_global_error_stack_push(final_error);
@@ -120,16 +120,16 @@ template<typename T>
 DataBuffer& DataBuffer::operator>>(T& value)
 {
     int lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (*this);
     }
-    int final_error = FT_ERR_SUCCESSS;
+    int final_error = FT_ERR_SUCCESS;
     size_t len = 0;
     char *bytes = ft_nullptr;
     int length_error = this->read_length_locked(len);
-    if (length_error != FT_ERR_SUCCESSS)
+    if (length_error != FT_ERR_SUCCESS)
     {
         final_error = length_error;
     }
@@ -155,10 +155,10 @@ DataBuffer& DataBuffer::operator>>(T& value)
             cma_free(bytes);
         }
     }
-    this->_ok = (final_error == FT_ERR_SUCCESSS);
+    this->_ok = (final_error == FT_ERR_SUCCESS);
     {
         int unlock_error = this->unlock_mutex();
-        if (unlock_error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
+        if (unlock_error != FT_ERR_SUCCESS && final_error == FT_ERR_SUCCESS)
             final_error = unlock_error;
     }
     ft_global_error_stack_push(final_error);

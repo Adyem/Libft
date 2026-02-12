@@ -2,7 +2,6 @@
 #include "../Errno/errno.hpp"
 #include "../Basic/basic.hpp"
 #include "../PThread/pthread.hpp"
-#include "../PThread/pthread_internal.hpp"
 
 #include <cstddef>
 #include <utility>
@@ -34,7 +33,7 @@ int aabb::lock_pair(const aabb &other, const aabb *&lower, const aabb *&upper) c
         lower = this;
         upper = this;
         int self_error = this->lock_mutex();
-        if (self_error != FT_ERR_SUCCESSS)
+        if (self_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(self_error);
         }
@@ -50,15 +49,15 @@ int aabb::lock_pair(const aabb &other, const aabb *&lower, const aabb *&upper) c
     while (true)
     {
         int lower_error = lower->lock_mutex();
-        if (lower_error != FT_ERR_SUCCESSS)
+        if (lower_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(lower_error);
             return (lower_error);
         }
         int upper_error = upper->lock_mutex();
-        if (upper_error == FT_ERR_SUCCESSS)
+        if (upper_error == FT_ERR_SUCCESS)
         {
-            return (FT_ERR_SUCCESSS);
+            return (FT_ERR_SUCCESS);
         }
         if (upper_error != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -86,7 +85,7 @@ aabb::aabb()
     this->_minimum_y = 0.0;
     this->_maximum_x = 0.0;
     this->_maximum_y = 0.0;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -102,7 +101,7 @@ aabb::aabb(double minimum_x, double minimum_y,
         ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -115,7 +114,7 @@ aabb::aabb(const aabb &other)
     int lock_error;
 
     lock_error = this->lock_pair(other, lower, upper);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -125,7 +124,7 @@ aabb::aabb(const aabb &other)
     this->_maximum_x = other._maximum_x;
     this->_maximum_y = other._maximum_y;
     this->unlock_pair(lower, upper);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -138,7 +137,7 @@ aabb &aabb::operator=(const aabb &other)
     if (this == &other)
         return (*this);
     lock_error = this->lock_pair(other, lower, upper);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (*this);
@@ -148,7 +147,7 @@ aabb &aabb::operator=(const aabb &other)
     this->_maximum_x = other._maximum_x;
     this->_maximum_y = other._maximum_y;
     this->unlock_pair(lower, upper);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (*this);
 }
 
@@ -161,7 +160,7 @@ aabb::aabb(aabb &&other) noexcept
     int lock_error;
 
     lock_error = this->lock_pair(other, lower, upper);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -175,7 +174,7 @@ aabb::aabb(aabb &&other) noexcept
     other._maximum_x = 0.0;
     other._maximum_y = 0.0;
     this->unlock_pair(lower, upper);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -188,7 +187,7 @@ aabb &aabb::operator=(aabb &&other) noexcept
     if (this == &other)
         return (*this);
     lock_error = this->lock_pair(other, lower, upper);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (*this);
@@ -202,7 +201,7 @@ aabb &aabb::operator=(aabb &&other) noexcept
     other._maximum_x = 0.0;
     other._maximum_y = 0.0;
     this->unlock_pair(lower, upper);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (*this);
 }
 
@@ -219,7 +218,7 @@ int aabb::set_bounds(double minimum_x, double minimum_y,
     int unlock_error;
 
     lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (lock_error);
@@ -227,7 +226,7 @@ int aabb::set_bounds(double minimum_x, double minimum_y,
     if (minimum_x > maximum_x || minimum_y > maximum_y)
     {
         unlock_error = this->unlock_mutex();
-        if (unlock_error != FT_ERR_SUCCESSS)
+        if (unlock_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(unlock_error);
             return (unlock_error);
@@ -240,13 +239,13 @@ int aabb::set_bounds(double minimum_x, double minimum_y,
     this->_maximum_x = maximum_x;
     this->_maximum_y = maximum_y;
     unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return (unlock_error);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 int aabb::set_minimum(double minimum_x, double minimum_y)
@@ -255,7 +254,7 @@ int aabb::set_minimum(double minimum_x, double minimum_y)
     int unlock_error;
 
     lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (lock_error);
@@ -263,7 +262,7 @@ int aabb::set_minimum(double minimum_x, double minimum_y)
     if (minimum_x > this->_maximum_x || minimum_y > this->_maximum_y)
     {
         unlock_error = this->unlock_mutex();
-        if (unlock_error != FT_ERR_SUCCESSS)
+        if (unlock_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(unlock_error);
             return (unlock_error);
@@ -274,13 +273,13 @@ int aabb::set_minimum(double minimum_x, double minimum_y)
     this->_minimum_x = minimum_x;
     this->_minimum_y = minimum_y;
     unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return (unlock_error);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 int aabb::set_minimum_x(double minimum_x)
@@ -289,7 +288,7 @@ int aabb::set_minimum_x(double minimum_x)
     int unlock_error;
 
     lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (lock_error);
@@ -297,7 +296,7 @@ int aabb::set_minimum_x(double minimum_x)
     if (minimum_x > this->_maximum_x)
     {
         unlock_error = this->unlock_mutex();
-        if (unlock_error != FT_ERR_SUCCESSS)
+        if (unlock_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(unlock_error);
             return (unlock_error);
@@ -307,13 +306,13 @@ int aabb::set_minimum_x(double minimum_x)
     }
     this->_minimum_x = minimum_x;
     unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return (unlock_error);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 int aabb::set_minimum_y(double minimum_y)
@@ -322,7 +321,7 @@ int aabb::set_minimum_y(double minimum_y)
     int unlock_error;
 
     lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (lock_error);
@@ -330,7 +329,7 @@ int aabb::set_minimum_y(double minimum_y)
     if (minimum_y > this->_maximum_y)
     {
         unlock_error = this->unlock_mutex();
-        if (unlock_error != FT_ERR_SUCCESSS)
+        if (unlock_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(unlock_error);
             return (unlock_error);
@@ -340,13 +339,13 @@ int aabb::set_minimum_y(double minimum_y)
     }
     this->_minimum_y = minimum_y;
     unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return (unlock_error);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 int aabb::set_maximum(double maximum_x, double maximum_y)
@@ -355,7 +354,7 @@ int aabb::set_maximum(double maximum_x, double maximum_y)
     int unlock_error;
 
     lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (lock_error);
@@ -363,7 +362,7 @@ int aabb::set_maximum(double maximum_x, double maximum_y)
     if (maximum_x < this->_minimum_x || maximum_y < this->_minimum_y)
     {
         unlock_error = this->unlock_mutex();
-        if (unlock_error != FT_ERR_SUCCESSS)
+        if (unlock_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(unlock_error);
             return (unlock_error);
@@ -374,13 +373,13 @@ int aabb::set_maximum(double maximum_x, double maximum_y)
     this->_maximum_x = maximum_x;
     this->_maximum_y = maximum_y;
     unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return (unlock_error);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 int aabb::set_maximum_x(double maximum_x)
@@ -389,7 +388,7 @@ int aabb::set_maximum_x(double maximum_x)
     int unlock_error;
 
     lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (lock_error);
@@ -397,7 +396,7 @@ int aabb::set_maximum_x(double maximum_x)
     if (maximum_x < this->_minimum_x)
     {
         unlock_error = this->unlock_mutex();
-        if (unlock_error != FT_ERR_SUCCESSS)
+        if (unlock_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(unlock_error);
             return (unlock_error);
@@ -407,13 +406,13 @@ int aabb::set_maximum_x(double maximum_x)
     }
     this->_maximum_x = maximum_x;
     unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return (unlock_error);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 int aabb::set_maximum_y(double maximum_y)
@@ -422,7 +421,7 @@ int aabb::set_maximum_y(double maximum_y)
     int unlock_error;
 
     lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (lock_error);
@@ -430,7 +429,7 @@ int aabb::set_maximum_y(double maximum_y)
     if (maximum_y < this->_minimum_y)
     {
         unlock_error = this->unlock_mutex();
-        if (unlock_error != FT_ERR_SUCCESSS)
+        if (unlock_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(unlock_error);
             return (unlock_error);
@@ -440,13 +439,13 @@ int aabb::set_maximum_y(double maximum_y)
     }
     this->_maximum_y = maximum_y;
     unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return (unlock_error);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 double  aabb::get_minimum_x() const
@@ -456,19 +455,19 @@ double  aabb::get_minimum_x() const
     int unlock_error;
 
     lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (0.0);
     }
     value = this->_minimum_x;
     unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return (value);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (value);
 }
 
@@ -479,19 +478,19 @@ double  aabb::get_minimum_y() const
     int unlock_error;
 
     lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (0.0);
     }
     value = this->_minimum_y;
     unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return (value);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (value);
 }
 
@@ -502,19 +501,19 @@ double  aabb::get_maximum_x() const
     int unlock_error;
 
     lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (0.0);
     }
     value = this->_maximum_x;
     unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return (value);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (value);
 }
 
@@ -525,19 +524,19 @@ double  aabb::get_maximum_y() const
     int unlock_error;
 
     lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (0.0);
     }
     value = this->_maximum_y;
     unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return (value);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (value);
 }
 
@@ -570,24 +569,24 @@ int aabb::prepare_thread_safety(void) noexcept
 {
     if (this->_mutex != ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-        return (FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     pt_recursive_mutex *mutex_pointer = ft_nullptr;
     int mutex_error = pt_recursive_mutex_create_with_error(&mutex_pointer);
-    if (mutex_error != FT_ERR_SUCCESSS)
+    if (mutex_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(mutex_error);
         return (mutex_error);
     }
     this->_mutex = mutex_pointer;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 void aabb::teardown_thread_safety(void) noexcept
 {
     pt_recursive_mutex_destroy(&this->_mutex);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }

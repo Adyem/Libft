@@ -1,5 +1,9 @@
+#include "../test_internal.hpp"
 #include "../../Printf/printf.hpp"
 #include "utils.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 #include <cstdio>
 

@@ -158,7 +158,7 @@ json_group *serialize_character(const ft_character &character)
     }
     json_add_item_to_group(group, item);
     const ft_map<int, ft_skill> &skills = character.get_skills();
-    if (skills.last_operation_error() != FT_ERR_SUCCESSS)
+    if (skills.last_operation_error() != FT_ERR_SUCCESS)
     {
         json_free_groups(group);
         ft_global_error_stack_push(FT_ERR_GAME_GENERAL_ERROR);
@@ -268,7 +268,7 @@ json_group *serialize_character(const ft_character &character)
         json_add_item_to_group(group, item);
         skill_index++;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (group);
 }
 
@@ -378,7 +378,7 @@ int deserialize_character(ft_character &character, json_group *group)
             skill.set_modifier2(ft_atoi(mod2_item->value, ft_nullptr));
             skill.set_modifier3(ft_atoi(mod3_item->value, ft_nullptr));
             skill.set_modifier4(ft_atoi(mod4_item->value, ft_nullptr));
-            if (character.add_skill(skill) != FT_ERR_SUCCESSS)
+            if (character.add_skill(skill) != FT_ERR_SUCCESS)
             {
                 int add_error = character.get_error();
                 ft_global_error_stack_push(add_error);
@@ -387,6 +387,6 @@ int deserialize_character(ft_character &character, json_group *group)
             skill_index++;
         }
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }

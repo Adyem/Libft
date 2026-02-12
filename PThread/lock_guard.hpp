@@ -36,10 +36,10 @@ ft_lock_guard<MutexType>::ft_lock_guard(MutexType &mutex)
     : _mutex(&mutex)
     , _owns_lock(false)
 {
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->_mutex->lock(THREAD_ID);
     int mutex_error = ft_global_error_stack_peek_last_error();
-    if (mutex_error != FT_ERR_SUCCESSS)
+    if (mutex_error != FT_ERR_SUCCESS)
     {
         this->_mutex = ft_nullptr;
         this->_owns_lock = false;
@@ -47,7 +47,7 @@ ft_lock_guard<MutexType>::ft_lock_guard(MutexType &mutex)
         return ;
     }
     this->_owns_lock = true;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -58,13 +58,13 @@ ft_lock_guard<MutexType>::~ft_lock_guard()
     {
         this->_mutex->unlock(THREAD_ID);
         int mutex_error = ft_global_error_stack_peek_last_error();
-        if (mutex_error != FT_ERR_SUCCESSS)
+        if (mutex_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(mutex_error);
             return ;
         }
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 

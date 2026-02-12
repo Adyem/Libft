@@ -25,19 +25,19 @@ int32_t cmp_thread_cancel(pthread_t thread)
     {
         return (cmp_thread_map_windows_error(GetLastError()));
     }
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t cmp_thread_yield()
 {
     SwitchToThread();
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t cmp_thread_sleep(uint32_t milliseconds)
 {
     Sleep(milliseconds);
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t cmp_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected_value)
@@ -53,12 +53,12 @@ int32_t cmp_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected
                 &expected_value, sizeof(uint32_t), INFINITE);
         if (wait_result != FALSE)
         {
-            return (FT_ERR_SUCCESSS);
+            return (FT_ERR_SUCCESS);
         }
         error_code = GetLastError();
         if (error_code == ERROR_SUCCESS)
         {
-            return (FT_ERR_SUCCESSS);
+            return (FT_ERR_SUCCESS);
         }
         if (error_code == ERROR_TIMEOUT)
             continue;
@@ -71,7 +71,7 @@ int32_t cmp_thread_wake_one_uint32(std::atomic<uint32_t> *address)
     if (address == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     WakeByAddressSingle(reinterpret_cast<volatile VOID *>(address));
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 #else
 # include <sched.h>
@@ -134,7 +134,7 @@ static int32_t cmp_wait_create_entry(std::atomic<uint32_t> *address, cmp_wait_en
     }
     g_wait_list_head = new_entry;
     *entry_out = new_entry;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 static int32_t cmp_wait_remove_entry(cmp_wait_entry *entry) noexcept
@@ -163,12 +163,12 @@ static int32_t cmp_wait_remove_entry(cmp_wait_entry *entry) noexcept
             else
                 previous_entry->next = current_entry->next;
             cma_free(current_entry);
-            return (FT_ERR_SUCCESSS);
+            return (FT_ERR_SUCCESS);
         }
         previous_entry = current_entry;
         current_entry = current_entry->next;
     }
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 # endif
 
@@ -186,7 +186,7 @@ int32_t cmp_thread_cancel(pthread_t thread)
     {
         return (cmp_map_system_error_to_ft(return_value));
     }
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t cmp_thread_yield()
@@ -195,7 +195,7 @@ int32_t cmp_thread_yield()
     {
         return (cmp_map_system_error_to_ft(errno));
     }
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t cmp_thread_sleep(uint32_t milliseconds)
@@ -204,7 +204,7 @@ int32_t cmp_thread_sleep(uint32_t milliseconds)
     {
         return (cmp_map_system_error_to_ft(errno));
     }
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t cmp_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected_value)
@@ -223,11 +223,11 @@ int32_t cmp_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected
                 expected_value, NULL, NULL, 0);
         if (syscall_result == 0)
         {
-            return (FT_ERR_SUCCESSS);
+            return (FT_ERR_SUCCESS);
         }
         if (errno == EAGAIN)
         {
-            return (FT_ERR_SUCCESSS);
+            return (FT_ERR_SUCCESS);
         }
         if (errno == EINTR)
             continue;
@@ -247,7 +247,7 @@ int32_t cmp_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected
         return (FT_ERR_INVALID_ARGUMENT);
     }
     lock_error = pt_pthread_mutex_lock_with_error(&g_wait_list_mutex);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         return (lock_error);
     }
@@ -255,10 +255,10 @@ int32_t cmp_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected
     if (entry == ft_nullptr)
     {
         create_error = cmp_wait_create_entry(address, &entry);
-        if (create_error != FT_ERR_SUCCESSS)
+        if (create_error != FT_ERR_SUCCESS)
         {
             unlock_error = pt_pthread_mutex_unlock_with_error(&g_wait_list_mutex);
-            if (unlock_error != FT_ERR_SUCCESSS)
+            if (unlock_error != FT_ERR_SUCCESS)
                 return (unlock_error);
             return (create_error);
         }
@@ -277,16 +277,16 @@ int32_t cmp_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected
             if (entry->waiter_count == 0)
             {
                 remove_error = cmp_wait_remove_entry(entry);
-                if (remove_error != FT_ERR_SUCCESSS)
+                if (remove_error != FT_ERR_SUCCESS)
                 {
                     unlock_error = pt_pthread_mutex_unlock_with_error(&g_wait_list_mutex);
-                    if (unlock_error != FT_ERR_SUCCESSS)
+                    if (unlock_error != FT_ERR_SUCCESS)
                         return (unlock_error);
                     return (remove_error);
                 }
             }
             unlock_error = pt_pthread_mutex_unlock_with_error(&g_wait_list_mutex);
-            if (unlock_error != FT_ERR_SUCCESSS)
+            if (unlock_error != FT_ERR_SUCCESS)
             {
                 return (unlock_error);
             }
@@ -298,20 +298,20 @@ int32_t cmp_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected
     if (entry->waiter_count == 0)
     {
         remove_error = cmp_wait_remove_entry(entry);
-        if (remove_error != FT_ERR_SUCCESSS)
+        if (remove_error != FT_ERR_SUCCESS)
         {
             unlock_error = pt_pthread_mutex_unlock_with_error(&g_wait_list_mutex);
-            if (unlock_error != FT_ERR_SUCCESSS)
+            if (unlock_error != FT_ERR_SUCCESS)
                 return (unlock_error);
             return (remove_error);
         }
     }
     unlock_error = pt_pthread_mutex_unlock_with_error(&g_wait_list_mutex);
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         return (unlock_error);
     }
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 # endif
 }
 
@@ -331,7 +331,7 @@ int32_t cmp_thread_wake_one_uint32(std::atomic<uint32_t> *address)
     {
         return (cmp_map_system_error_to_ft(errno));
     }
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 # else
     int32_t lock_error;
     cmp_wait_entry *entry;
@@ -343,7 +343,7 @@ int32_t cmp_thread_wake_one_uint32(std::atomic<uint32_t> *address)
         return (FT_ERR_INVALID_ARGUMENT);
     }
     lock_error = pt_pthread_mutex_lock_with_error(&g_wait_list_mutex);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         return (lock_error);
     }
@@ -354,17 +354,17 @@ int32_t cmp_thread_wake_one_uint32(std::atomic<uint32_t> *address)
         if (signal_result != 0)
         {
             unlock_error = pt_pthread_mutex_unlock_with_error(&g_wait_list_mutex);
-            if (unlock_error != FT_ERR_SUCCESSS)
+            if (unlock_error != FT_ERR_SUCCESS)
                 return (unlock_error);
             return (cmp_map_system_error_to_ft(signal_result));
         }
     }
     unlock_error = pt_pthread_mutex_unlock_with_error(&g_wait_list_mutex);
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         return (unlock_error);
     }
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 # endif
 }
 #endif

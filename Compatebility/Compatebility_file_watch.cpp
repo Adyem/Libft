@@ -183,7 +183,7 @@ int32_t cmp_file_watch_start(cmp_file_watch_context *context, const char *path)
     context->buffer_size = 0;
 #endif
     context->running.store(true);
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 void cmp_file_watch_stop(cmp_file_watch_context *context)

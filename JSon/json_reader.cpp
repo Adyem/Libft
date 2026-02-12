@@ -33,7 +33,7 @@ static void json_reader_set_io_error(int last_error)
     int normalized_error;
 
     normalized_error = cmp_decode_errno_offset_error(last_error);
-    if (normalized_error == FT_ERR_SUCCESSS)
+    if (normalized_error == FT_ERR_SUCCESS)
         normalized_error = FT_ERR_IO;
     json_reader_push_error(normalized_error);
     return ;
@@ -119,7 +119,7 @@ static char *json_read_file_content(const char *filename)
         return (ft_nullptr);
     }
     json_reader_pop_error();
-    json_reader_push_error(FT_ERR_SUCCESSS);
+    json_reader_push_error(FT_ERR_SUCCESS);
     return (content);
 }
 
@@ -169,14 +169,14 @@ static int json_reader_ensure_capacity(char **buffer_ptr, size_t &capacity, size
     int realloc_error = json_reader_pop_error();
     if (!resized_buffer)
     {
-        if (realloc_error == FT_ERR_SUCCESSS)
+        if (realloc_error == FT_ERR_SUCCESS)
             realloc_error = FT_ERR_NO_MEMORY;
         json_reader_push_error(realloc_error);
         return (-1);
     }
     *buffer_ptr = resized_buffer;
     capacity = new_capacity;
-    json_reader_push_error(FT_ERR_SUCCESSS);
+    json_reader_push_error(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -196,7 +196,7 @@ static int json_reader_append_utf8(char **buffer_ptr,
         json_reader_pop_error();
         (*buffer_ptr)[length] = static_cast<char>(code_point);
         length++;
-        json_reader_push_error(FT_ERR_SUCCESSS);
+        json_reader_push_error(FT_ERR_SUCCESS);
         return (0);
     }
     if (code_point <= 0x7FF)
@@ -212,7 +212,7 @@ static int json_reader_append_utf8(char **buffer_ptr,
         length++;
         (*buffer_ptr)[length] = static_cast<char>(0x80 | (code_point & 0x3F));
         length++;
-        json_reader_push_error(FT_ERR_SUCCESSS);
+        json_reader_push_error(FT_ERR_SUCCESS);
         return (0);
     }
     if (code_point <= 0xFFFF)
@@ -230,7 +230,7 @@ static int json_reader_append_utf8(char **buffer_ptr,
         length++;
         (*buffer_ptr)[length] = static_cast<char>(0x80 | (code_point & 0x3F));
         length++;
-        json_reader_push_error(FT_ERR_SUCCESSS);
+        json_reader_push_error(FT_ERR_SUCCESS);
         return (0);
     }
     if (code_point <= 0x10FFFF)
@@ -250,7 +250,7 @@ static int json_reader_append_utf8(char **buffer_ptr,
         length++;
         (*buffer_ptr)[length] = static_cast<char>(0x80 | (code_point & 0x3F));
         length++;
-        json_reader_push_error(FT_ERR_SUCCESSS);
+        json_reader_push_error(FT_ERR_SUCCESS);
         return (0);
     }
     json_reader_push_error(FT_ERR_INVALID_ARGUMENT);
@@ -281,7 +281,7 @@ static int json_reader_parse_code_unit(const char *json_string,
         index++;
         digit_index++;
     }
-    json_reader_push_error(FT_ERR_SUCCESSS);
+    json_reader_push_error(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -310,7 +310,7 @@ static int json_reader_append_escape(const char *json_string,
         json_reader_pop_error();
         (*buffer_ptr)[out_length] = escape_char;
         out_length++;
-        json_reader_push_error(FT_ERR_SUCCESSS);
+        json_reader_push_error(FT_ERR_SUCCESS);
         return (0);
     }
     if (escape_char == 'b')
@@ -323,7 +323,7 @@ static int json_reader_append_escape(const char *json_string,
             return (-1);
         }
         json_reader_pop_error();
-        json_reader_push_error(FT_ERR_SUCCESSS);
+        json_reader_push_error(FT_ERR_SUCCESS);
         return (0);
     }
     if (escape_char == 'f')
@@ -336,7 +336,7 @@ static int json_reader_append_escape(const char *json_string,
             return (-1);
         }
         json_reader_pop_error();
-        json_reader_push_error(FT_ERR_SUCCESSS);
+        json_reader_push_error(FT_ERR_SUCCESS);
         return (0);
     }
     if (escape_char == 'n')
@@ -349,7 +349,7 @@ static int json_reader_append_escape(const char *json_string,
             return (-1);
         }
         json_reader_pop_error();
-        json_reader_push_error(FT_ERR_SUCCESSS);
+        json_reader_push_error(FT_ERR_SUCCESS);
         return (0);
     }
     if (escape_char == 'r')
@@ -362,7 +362,7 @@ static int json_reader_append_escape(const char *json_string,
             return (-1);
         }
         json_reader_pop_error();
-        json_reader_push_error(FT_ERR_SUCCESSS);
+        json_reader_push_error(FT_ERR_SUCCESS);
         return (0);
     }
     if (escape_char == 't')
@@ -375,7 +375,7 @@ static int json_reader_append_escape(const char *json_string,
             return (-1);
         }
         json_reader_pop_error();
-        json_reader_push_error(FT_ERR_SUCCESSS);
+        json_reader_push_error(FT_ERR_SUCCESS);
         return (0);
     }
     if (escape_char != 'u')
@@ -434,7 +434,7 @@ static int json_reader_append_escape(const char *json_string,
         json_reader_push_error(utf8_error);
         return (-1);
     }
-    json_reader_push_error(FT_ERR_SUCCESSS);
+    json_reader_push_error(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -515,7 +515,7 @@ static char *parse_string(const char *json_string, size_t &index)
     }
     json_reader_pop_error();
     result[out_length] = '\0';
-    json_reader_push_error(FT_ERR_SUCCESSS);
+    json_reader_push_error(FT_ERR_SUCCESS);
     return (result);
 }
 
@@ -584,7 +584,7 @@ static char *parse_number(const char *json_string, size_t &index)
         json_reader_push_error(substr_error);
         return (ft_nullptr);
     }
-    json_reader_push_error(FT_ERR_SUCCESSS);
+    json_reader_push_error(FT_ERR_SUCCESS);
     return (number);
 }
 
@@ -606,7 +606,7 @@ static char *parse_value(const char *json_string, size_t &index)
             json_reader_push_error(string_error);
             return (ft_nullptr);
         }
-        json_reader_push_error(FT_ERR_SUCCESSS);
+        json_reader_push_error(FT_ERR_SUCCESS);
         return (value);
     }
     if (length - index >= 4 && ft_strncmp(json_string + index, "true", 4) == 0)
@@ -619,7 +619,7 @@ static char *parse_value(const char *json_string, size_t &index)
             json_reader_push_error(string_error);
             return (ft_nullptr);
         }
-        json_reader_push_error(FT_ERR_SUCCESSS);
+        json_reader_push_error(FT_ERR_SUCCESS);
         return (value);
     }
     if (length - index >= 5 && ft_strncmp(json_string + index, "false", 5) == 0)
@@ -632,7 +632,7 @@ static char *parse_value(const char *json_string, size_t &index)
             json_reader_push_error(string_error);
             return (ft_nullptr);
         }
-        json_reader_push_error(FT_ERR_SUCCESSS);
+        json_reader_push_error(FT_ERR_SUCCESS);
         return (value);
     }
     if (ft_isdigit(static_cast<unsigned char>(json_string[index]))
@@ -645,7 +645,7 @@ static char *parse_value(const char *json_string, size_t &index)
             json_reader_push_error(number_error);
             return (ft_nullptr);
         }
-        json_reader_push_error(FT_ERR_SUCCESSS);
+        json_reader_push_error(FT_ERR_SUCCESS);
         return (value);
     }
     json_reader_push_error(FT_ERR_INVALID_ARGUMENT);
@@ -731,7 +731,7 @@ static json_item *parse_items(const char *json_string, size_t &index)
         json_reader_push_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
-    json_reader_push_error(FT_ERR_SUCCESSS);
+    json_reader_push_error(FT_ERR_SUCCESS);
     return (head);
 }
 
@@ -836,7 +836,7 @@ json_group *json_read_from_file(const char *filename)
         return (ft_nullptr);
     }
     cma_free(content);
-    json_reader_push_error(FT_ERR_SUCCESSS);
+    json_reader_push_error(FT_ERR_SUCCESS);
     return (head);
 }
 
@@ -846,7 +846,7 @@ json_group *json_read_from_backend(ft_document_source &source)
     int read_result;
 
     read_result = source.read_all(content_buffer);
-    if (read_result != FT_ERR_SUCCESSS)
+    if (read_result != FT_ERR_SUCCESS)
     {
         json_reader_push_error(read_result);
         return (ft_nullptr);
@@ -858,7 +858,7 @@ json_group *json_read_from_backend(ft_document_source &source)
         json_reader_push_error(parse_error);
         return (ft_nullptr);
     }
-    json_reader_push_error(FT_ERR_SUCCESSS);
+    json_reader_push_error(FT_ERR_SUCCESS);
     return (result);
 }
 
@@ -899,7 +899,7 @@ json_group *json_read_from_string(const char *content)
         int name_error = json_reader_pop_error();
         if (!group_name)
         {
-            if (name_error == FT_ERR_SUCCESSS)
+            if (name_error == FT_ERR_SUCCESS)
                 name_error = FT_ERR_INVALID_ARGUMENT;
             json_free_groups(head);
             json_reader_push_error(name_error);
@@ -918,7 +918,7 @@ json_group *json_read_from_string(const char *content)
         int items_error = json_reader_pop_error();
         if (!items)
         {
-            if (items_error == FT_ERR_SUCCESSS)
+            if (items_error == FT_ERR_SUCCESS)
                 items_error = FT_ERR_INVALID_ARGUMENT;
             cma_free(group_name);
             json_free_groups(head);
@@ -930,7 +930,7 @@ json_group *json_read_from_string(const char *content)
         cma_free(group_name);
         if (!group)
         {
-            if (group_error == FT_ERR_SUCCESSS)
+            if (group_error == FT_ERR_SUCCESS)
                 group_error = FT_ERR_INVALID_ARGUMENT;
             json_free_items(items);
             json_free_groups(head);
@@ -958,6 +958,6 @@ json_group *json_read_from_string(const char *content)
         json_reader_push_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
-    json_reader_push_error(FT_ERR_SUCCESSS);
+    json_reader_push_error(FT_ERR_SUCCESS);
     return (head);
 }

@@ -83,7 +83,7 @@ template<typename ElementType>
 int ft_loot_entry<ElementType>::prepare_thread_safety()
 {
     if (this->_mutex != ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     return (pt_recursive_mutex_create_with_error(&this->_mutex));
 }
 
@@ -106,7 +106,7 @@ template<typename ElementType>
 void ft_loot_entry<ElementType>::disable_thread_safety()
 {
     this->teardown_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -114,7 +114,7 @@ template<typename ElementType>
 bool ft_loot_entry<ElementType>::is_thread_safe() const
 {
     bool enabled = (this->_mutex != ft_nullptr);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (enabled);
 }
 
@@ -132,20 +132,20 @@ inline int ft_loot_entry<ElementType>::lock_entry(bool *lock_acquired) const noe
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     int lock_error = pt_recursive_mutex_lock_with_error(*this->_mutex);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 template<typename ElementType>
 inline int ft_loot_entry<ElementType>::unlock_entry(bool lock_acquired) const noexcept
 {
     if (!lock_acquired || this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     return (pt_recursive_mutex_unlock_with_error(*this->_mutex));
 }
 
@@ -156,7 +156,7 @@ ft_loot_entry<ElementType>::ft_loot_entry() noexcept
     , _rarity(0)
     , _mutex(ft_nullptr)
 {
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -178,7 +178,7 @@ ft_loot_entry<ElementType>::ft_loot_entry(ElementType *item, int weight, int rar
     if (rarity < 0)
         rarity = 0;
     this->_rarity = rarity;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -201,13 +201,13 @@ ft_loot_entry<ElementType>::ft_loot_entry(const ft_loot_entry<ElementType> &othe
     this->_weight = other._weight;
     this->_rarity = other._rarity;
     int unlock_error = other.unlock_entry(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_errno = unlock_error;
         ft_global_error_stack_push(unlock_error);
         return ;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -216,12 +216,12 @@ ft_loot_entry<ElementType> &ft_loot_entry<ElementType>::operator=(const ft_loot_
 {
     if (this == &other)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (*this);
     }
     bool this_lock_acquired = false;
     bool other_lock_acquired = false;
-    int lock_result = FT_ERR_SUCCESSS;
+    int lock_result = FT_ERR_SUCCESS;
     if (this < &other)
     {
         lock_result = this->lock_entry(&this_lock_acquired);
@@ -249,10 +249,10 @@ ft_loot_entry<ElementType> &ft_loot_entry<ElementType>::operator=(const ft_loot_
     this->_rarity = other._rarity;
     int first_unlock = this->unlock_entry(this_lock_acquired);
     int second_unlock = other.unlock_entry(other_lock_acquired);
-    int final_error = FT_ERR_SUCCESSS;
-    if (first_unlock != FT_ERR_SUCCESSS)
+    int final_error = FT_ERR_SUCCESS;
+    if (first_unlock != FT_ERR_SUCCESS)
         final_error = first_unlock;
-    else if (second_unlock != FT_ERR_SUCCESSS)
+    else if (second_unlock != FT_ERR_SUCCESS)
         final_error = second_unlock;
     ft_errno = final_error;
     ft_global_error_stack_push(final_error);
@@ -263,8 +263,8 @@ template<typename ElementType>
 ft_loot_entry<ElementType>::~ft_loot_entry() noexcept
 {
     this->teardown_thread_safety();
-    ft_errno = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_errno = FT_ERR_SUCCESS;
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -273,7 +273,7 @@ void ft_loot_entry<ElementType>::set_item(ElementType *item) noexcept
 {
     bool lock_acquired = false;
     int lock_result = this->lock_entry(&lock_acquired);
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_errno = lock_result;
         ft_global_error_stack_push(lock_result);
@@ -281,14 +281,14 @@ void ft_loot_entry<ElementType>::set_item(ElementType *item) noexcept
     }
     this->_item = item;
     int unlock_error = this->unlock_entry(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_errno = unlock_error;
         ft_global_error_stack_push(unlock_error);
         return ;
     }
-    ft_errno = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_errno = FT_ERR_SUCCESS;
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -297,7 +297,7 @@ ElementType *ft_loot_entry<ElementType>::get_item() const noexcept
 {
     bool lock_acquired = false;
     int lock_result = this->lock_entry(&lock_acquired);
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_errno = lock_result;
         ft_global_error_stack_push(lock_result);
@@ -305,14 +305,14 @@ ElementType *ft_loot_entry<ElementType>::get_item() const noexcept
     }
     ElementType *item_pointer = this->_item;
     int unlock_error = this->unlock_entry(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_errno = unlock_error;
         ft_global_error_stack_push(unlock_error);
         return (ft_nullptr);
     }
-    ft_errno = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_errno = FT_ERR_SUCCESS;
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (item_pointer);
 }
 
@@ -327,7 +327,7 @@ void ft_loot_entry<ElementType>::set_weight(int weight) noexcept
     }
     bool lock_acquired = false;
     int lock_result = this->lock_entry(&lock_acquired);
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_errno = lock_result;
         ft_global_error_stack_push(lock_result);
@@ -335,14 +335,14 @@ void ft_loot_entry<ElementType>::set_weight(int weight) noexcept
     }
     this->_weight = weight;
     int unlock_error = this->unlock_entry(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_errno = unlock_error;
         ft_global_error_stack_push(unlock_error);
         return ;
     }
-    ft_errno = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_errno = FT_ERR_SUCCESS;
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -351,7 +351,7 @@ int ft_loot_entry<ElementType>::get_weight() const noexcept
 {
     bool lock_acquired = false;
     int lock_result = this->lock_entry(&lock_acquired);
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_errno = lock_result;
         ft_global_error_stack_push(lock_result);
@@ -359,14 +359,14 @@ int ft_loot_entry<ElementType>::get_weight() const noexcept
     }
     int weight_value = this->_weight;
     int unlock_error = this->unlock_entry(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_errno = unlock_error;
         ft_global_error_stack_push(unlock_error);
         return (0);
     }
-    ft_errno = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_errno = FT_ERR_SUCCESS;
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (weight_value);
 }
 
@@ -377,7 +377,7 @@ void ft_loot_entry<ElementType>::set_rarity(int rarity) noexcept
         rarity = 0;
     bool lock_acquired = false;
     int lock_result = this->lock_entry(&lock_acquired);
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_errno = lock_result;
         ft_global_error_stack_push(lock_result);
@@ -385,14 +385,14 @@ void ft_loot_entry<ElementType>::set_rarity(int rarity) noexcept
     }
     this->_rarity = rarity;
     int unlock_error = this->unlock_entry(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_errno = unlock_error;
         ft_global_error_stack_push(unlock_error);
         return ;
     }
-    ft_errno = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_errno = FT_ERR_SUCCESS;
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -401,7 +401,7 @@ int ft_loot_entry<ElementType>::get_rarity() const noexcept
 {
     bool lock_acquired = false;
     int lock_result = this->lock_entry(&lock_acquired);
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_errno = lock_result;
         ft_global_error_stack_push(lock_result);
@@ -409,14 +409,14 @@ int ft_loot_entry<ElementType>::get_rarity() const noexcept
     }
     int rarity_value = this->_rarity;
     int unlock_error = this->unlock_entry(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_errno = unlock_error;
         ft_global_error_stack_push(unlock_error);
         return (0);
     }
-    ft_errno = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_errno = FT_ERR_SUCCESS;
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (rarity_value);
 }
 
@@ -425,7 +425,7 @@ int ft_loot_entry<ElementType>::get_effective_weight() const noexcept
 {
     bool lock_acquired = false;
     int lock_result = this->lock_entry(&lock_acquired);
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_errno = lock_result;
         ft_global_error_stack_push(lock_result);
@@ -435,14 +435,14 @@ int ft_loot_entry<ElementType>::get_effective_weight() const noexcept
     if (effective_weight < 1)
         effective_weight = 1;
     int unlock_error = this->unlock_entry(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_errno = unlock_error;
         ft_global_error_stack_push(unlock_error);
         return (0);
     }
-    ft_errno = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_errno = FT_ERR_SUCCESS;
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (effective_weight);
 }
 
@@ -450,7 +450,7 @@ template<typename ElementType>
 int ft_loot_table<ElementType>::prepare_thread_safety()
 {
     if (this->_mutex != ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     return (pt_recursive_mutex_create_with_error(&this->_mutex));
 }
 
@@ -473,7 +473,7 @@ template<typename ElementType>
 void ft_loot_table<ElementType>::disable_thread_safety()
 {
     this->teardown_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -481,7 +481,7 @@ template<typename ElementType>
 bool ft_loot_table<ElementType>::is_thread_safe() const
 {
     bool enabled = (this->_mutex != ft_nullptr);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (enabled);
 }
 
@@ -507,14 +507,14 @@ int ft_loot_table<ElementType>::compute_total_weight_locked(size_t entry_count, 
     {
         const ft_loot_entry<ElementType> &entry = (*this)[index];
         int entry_error = ft_global_error_stack_peek_last_error();
-        if (entry_error != FT_ERR_SUCCESSS)
+        if (entry_error != FT_ERR_SUCCESS)
         {
             ft_errno = entry_error;
             return (entry_error);
         }
         int effective_weight = entry.get_effective_weight();
         int weight_error = ft_global_error_stack_peek_last_error();
-        if (weight_error != FT_ERR_SUCCESSS)
+        if (weight_error != FT_ERR_SUCCESS)
         {
             ft_errno = weight_error;
             return (weight_error);
@@ -530,8 +530,8 @@ int ft_loot_table<ElementType>::compute_total_weight_locked(size_t entry_count, 
         index += 1;
     }
     *total_weight = computed_total;
-    ft_errno = FT_ERR_SUCCESSS;
-    return (FT_ERR_SUCCESSS);
+    ft_errno = FT_ERR_SUCCESS;
+    return (FT_ERR_SUCCESS);
 }
 
 template<typename ElementType>
@@ -548,14 +548,14 @@ int ft_loot_table<ElementType>::locate_entry_by_roll_locked(int roll, size_t ent
     {
         const ft_loot_entry<ElementType> &entry = (*this)[index];
         int entry_error = ft_global_error_stack_peek_last_error();
-        if (entry_error != FT_ERR_SUCCESSS)
+        if (entry_error != FT_ERR_SUCCESS)
         {
             ft_errno = entry_error;
             return (entry_error);
         }
         int effective_weight = entry.get_effective_weight();
         int weight_error = ft_global_error_stack_peek_last_error();
-        if (weight_error != FT_ERR_SUCCESSS)
+        if (weight_error != FT_ERR_SUCCESS)
         {
             ft_errno = weight_error;
             return (weight_error);
@@ -571,8 +571,8 @@ int ft_loot_table<ElementType>::locate_entry_by_roll_locked(int roll, size_t ent
         if (roll <= accumulated)
         {
             *result_index = index;
-            ft_errno = FT_ERR_SUCCESSS;
-            return (FT_ERR_SUCCESSS);
+            ft_errno = FT_ERR_SUCCESS;
+            return (FT_ERR_SUCCESS);
         }
         index += 1;
     }
@@ -585,7 +585,7 @@ ft_loot_table<ElementType>::ft_loot_table() noexcept
     : ft_vector<ft_loot_entry<ElementType> >()
     , _mutex(ft_nullptr)
 {
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -593,7 +593,7 @@ template<typename ElementType>
 ft_loot_table<ElementType>::~ft_loot_table() noexcept
 {
     this->teardown_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -610,35 +610,35 @@ void ft_loot_table<ElementType>::addElement(ElementType *elem, int weight, int r
         rarity = 0;
     ft_loot_entry<ElementType> entry(elem, weight, rarity);
     int entry_error = ft_global_error_stack_peek_last_error();
-    if (entry_error != FT_ERR_SUCCESSS)
+    if (entry_error != FT_ERR_SUCCESS)
     {
         ft_errno = entry_error;
         return ;
     }
     bool lock_acquired = false;
-    int lock_error = FT_ERR_SUCCESSS;
+    int lock_error = FT_ERR_SUCCESS;
     if (this->_mutex != ft_nullptr)
     {
         lock_error = pt_recursive_mutex_lock_with_error(*this->_mutex);
-        if (lock_error == FT_ERR_SUCCESSS)
+        if (lock_error == FT_ERR_SUCCESS)
             lock_acquired = true;
     }
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_errno = lock_error;
         ft_global_error_stack_push(lock_error);
         return ;
     }
-    int operation_error = FT_ERR_SUCCESSS;
+    int operation_error = FT_ERR_SUCCESS;
     do
     {
         this->push_back(entry);
         operation_error = ft_global_error_stack_peek_last_error();
     } while (false);
-    int unlock_error = FT_ERR_SUCCESSS;
+    int unlock_error = FT_ERR_SUCCESS;
     if (lock_acquired)
         unlock_error = pt_recursive_mutex_unlock_with_error(*this->_mutex);
-    if (operation_error == FT_ERR_SUCCESSS)
+    if (operation_error == FT_ERR_SUCCESS)
         operation_error = unlock_error;
     ft_errno = operation_error;
     ft_global_error_stack_push(operation_error);
@@ -649,26 +649,26 @@ template<typename ElementType>
 ElementType *ft_loot_table<ElementType>::getRandomLoot() const
 {
     bool lock_acquired = false;
-    int lock_error = FT_ERR_SUCCESSS;
+    int lock_error = FT_ERR_SUCCESS;
     if (this->_mutex != ft_nullptr)
     {
         lock_error = pt_recursive_mutex_lock_with_error(*this->_mutex);
-        if (lock_error == FT_ERR_SUCCESSS)
+        if (lock_error == FT_ERR_SUCCESS)
             lock_acquired = true;
     }
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_errno = lock_error;
         ft_global_error_stack_push(lock_error);
         return (ft_nullptr);
     }
-    int operation_error = FT_ERR_SUCCESSS;
+    int operation_error = FT_ERR_SUCCESS;
     ElementType *loot_item = ft_nullptr;
     do
     {
         size_t entry_count = this->size();
         int size_error = ft_global_error_stack_peek_last_error();
-        if (size_error != FT_ERR_SUCCESSS)
+        if (size_error != FT_ERR_SUCCESS)
         {
             operation_error = size_error;
             break;
@@ -681,41 +681,41 @@ ElementType *ft_loot_table<ElementType>::getRandomLoot() const
         }
         int total_weight = 0;
         operation_error = this->compute_total_weight_locked(entry_count, &total_weight);
-        if (operation_error != FT_ERR_SUCCESSS)
+        if (operation_error != FT_ERR_SUCCESS)
             break;
         int roll = ft_dice_roll(1, total_weight);
-        if (roll < 1 || ft_errno != FT_ERR_SUCCESSS)
+        if (roll < 1 || ft_errno != FT_ERR_SUCCESS)
         {
-            operation_error = ft_errno != FT_ERR_SUCCESSS ? ft_errno : FT_ERR_OUT_OF_RANGE;
+            operation_error = ft_errno != FT_ERR_SUCCESS ? ft_errno : FT_ERR_OUT_OF_RANGE;
             break;
         }
         size_t selected_index = 0;
         operation_error = this->locate_entry_by_roll_locked(roll, entry_count, &selected_index);
-        if (operation_error != FT_ERR_SUCCESSS)
+        if (operation_error != FT_ERR_SUCCESS)
             break;
         const ft_loot_entry<ElementType> &selected_entry = (*this)[selected_index];
         int entry_error = ft_global_error_stack_peek_last_error();
-        if (entry_error != FT_ERR_SUCCESSS)
+        if (entry_error != FT_ERR_SUCCESS)
         {
             operation_error = entry_error;
             break;
         }
         loot_item = selected_entry.get_item();
         int item_error = ft_global_error_stack_peek_last_error();
-        if (item_error != FT_ERR_SUCCESSS)
+        if (item_error != FT_ERR_SUCCESS)
         {
             operation_error = item_error;
             loot_item = ft_nullptr;
         }
     } while (false);
-    int unlock_error = FT_ERR_SUCCESSS;
+    int unlock_error = FT_ERR_SUCCESS;
     if (lock_acquired)
         unlock_error = pt_recursive_mutex_unlock_with_error(*this->_mutex);
-    if (operation_error == FT_ERR_SUCCESSS)
+    if (operation_error == FT_ERR_SUCCESS)
         operation_error = unlock_error;
     ft_errno = operation_error;
     ft_global_error_stack_push(operation_error);
-    if (operation_error != FT_ERR_SUCCESSS)
+    if (operation_error != FT_ERR_SUCCESS)
         return (ft_nullptr);
     return (loot_item);
 }
@@ -724,26 +724,26 @@ template<typename ElementType>
 ElementType *ft_loot_table<ElementType>::popRandomLoot()
 {
     bool lock_acquired = false;
-    int lock_error = FT_ERR_SUCCESSS;
+    int lock_error = FT_ERR_SUCCESS;
     if (this->_mutex != ft_nullptr)
     {
         lock_error = pt_recursive_mutex_lock_with_error(*this->_mutex);
-        if (lock_error == FT_ERR_SUCCESSS)
+        if (lock_error == FT_ERR_SUCCESS)
             lock_acquired = true;
     }
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_errno = lock_error;
         ft_global_error_stack_push(lock_error);
         return (ft_nullptr);
     }
-    int operation_error = FT_ERR_SUCCESSS;
+    int operation_error = FT_ERR_SUCCESS;
     ElementType *loot_item = ft_nullptr;
     do
     {
         size_t entry_count = this->size();
         int size_error = ft_global_error_stack_peek_last_error();
-        if (size_error != FT_ERR_SUCCESSS)
+        if (size_error != FT_ERR_SUCCESS)
         {
             operation_error = size_error;
             break;
@@ -756,41 +756,41 @@ ElementType *ft_loot_table<ElementType>::popRandomLoot()
         }
         int total_weight = 0;
         operation_error = this->compute_total_weight_locked(entry_count, &total_weight);
-        if (operation_error != FT_ERR_SUCCESSS)
+        if (operation_error != FT_ERR_SUCCESS)
             break;
         int roll = ft_dice_roll(1, total_weight);
-        if (roll < 1 || ft_errno != FT_ERR_SUCCESSS)
+        if (roll < 1 || ft_errno != FT_ERR_SUCCESS)
         {
-            operation_error = ft_errno != FT_ERR_SUCCESSS ? ft_errno : FT_ERR_OUT_OF_RANGE;
+            operation_error = ft_errno != FT_ERR_SUCCESS ? ft_errno : FT_ERR_OUT_OF_RANGE;
             break;
         }
         size_t selected_index = 0;
         operation_error = this->locate_entry_by_roll_locked(roll, entry_count, &selected_index);
-        if (operation_error != FT_ERR_SUCCESSS)
+        if (operation_error != FT_ERR_SUCCESS)
             break;
         ft_loot_entry<ElementType> removed_entry = this->release_at(selected_index);
         int release_error = ft_global_error_stack_peek_last_error();
-        if (release_error != FT_ERR_SUCCESSS)
+        if (release_error != FT_ERR_SUCCESS)
         {
             operation_error = release_error;
             break;
         }
         loot_item = removed_entry.get_item();
         int item_error = ft_global_error_stack_peek_last_error();
-        if (item_error != FT_ERR_SUCCESSS)
+        if (item_error != FT_ERR_SUCCESS)
         {
             operation_error = item_error;
             loot_item = ft_nullptr;
         }
     } while (false);
-    int unlock_error = FT_ERR_SUCCESSS;
+    int unlock_error = FT_ERR_SUCCESS;
     if (lock_acquired)
         unlock_error = pt_recursive_mutex_unlock_with_error(*this->_mutex);
-    if (operation_error == FT_ERR_SUCCESSS)
+    if (operation_error == FT_ERR_SUCCESS)
         operation_error = unlock_error;
     ft_errno = operation_error;
     ft_global_error_stack_push(operation_error);
-    if (operation_error != FT_ERR_SUCCESSS)
+    if (operation_error != FT_ERR_SUCCESS)
         return (ft_nullptr);
     return (loot_item);
 }

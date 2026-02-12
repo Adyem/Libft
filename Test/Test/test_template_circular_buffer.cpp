@@ -1,7 +1,11 @@
+#include "../test_internal.hpp"
 #include "../../Template/circular_buffer.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <utility>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_ft_circular_buffer_push_pop_cycle, "ft_circular_buffer preserves order across wrap around")
 {
@@ -13,35 +17,35 @@ FT_TEST(test_ft_circular_buffer_push_pop_cycle, "ft_circular_buffer preserves or
     FT_ASSERT_EQ(3UL, buffer_instance.capacity());
 
     buffer_instance.push(1);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, buffer_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_instance.get_error());
     buffer_instance.push(2);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, buffer_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_instance.get_error());
     buffer_instance.push(3);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, buffer_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_instance.get_error());
 
     FT_ASSERT(buffer_instance.is_full());
     FT_ASSERT_EQ(false, buffer_instance.is_empty());
 
     int first_value = buffer_instance.pop();
     FT_ASSERT_EQ(1, first_value);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, buffer_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_instance.get_error());
 
     buffer_instance.push(4);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, buffer_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_instance.get_error());
 
     int second_value = buffer_instance.pop();
     FT_ASSERT_EQ(2, second_value);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, buffer_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_instance.get_error());
 
     int third_value = buffer_instance.pop();
     FT_ASSERT_EQ(3, third_value);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, buffer_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_instance.get_error());
 
     int fourth_value = buffer_instance.pop();
     FT_ASSERT_EQ(4, fourth_value);
     FT_ASSERT(buffer_instance.is_empty());
     FT_ASSERT_EQ(0UL, buffer_instance.size());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, buffer_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_instance.get_error());
     return (1);
 }
 
@@ -50,15 +54,15 @@ FT_TEST(test_ft_circular_buffer_error_states, "ft_circular_buffer surfaces full 
     ft_circular_buffer<int> buffer_instance(2);
 
     buffer_instance.push(10);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, buffer_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_instance.get_error());
     buffer_instance.push(20);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, buffer_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_instance.get_error());
 
     buffer_instance.push(30);
     FT_ASSERT_EQ(FT_ERR_FULL, buffer_instance.get_error());
 
     buffer_instance.clear();
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, buffer_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_instance.get_error());
     FT_ASSERT(buffer_instance.is_empty());
 
     int empty_value = buffer_instance.pop();
@@ -66,14 +70,14 @@ FT_TEST(test_ft_circular_buffer_error_states, "ft_circular_buffer surfaces full 
     FT_ASSERT_EQ(FT_ERR_EMPTY, buffer_instance.get_error());
 
     buffer_instance.push(50);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, buffer_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_instance.get_error());
     buffer_instance.push(60);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, buffer_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_instance.get_error());
 
     buffer_instance.pop();
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, buffer_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_instance.get_error());
     buffer_instance.pop();
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, buffer_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer_instance.get_error());
     return (1);
 }
 
@@ -86,22 +90,22 @@ FT_TEST(test_ft_circular_buffer_move_semantics, "ft_circular_buffer move constru
     ft_circular_buffer<int> moved_buffer(std::move(original_buffer));
 
     FT_ASSERT(original_buffer.is_empty());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, original_buffer.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original_buffer.get_error());
 
     FT_ASSERT_EQ(false, moved_buffer.is_empty());
     FT_ASSERT_EQ(2UL, moved_buffer.size());
     FT_ASSERT_EQ(5, moved_buffer.pop());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, moved_buffer.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_buffer.get_error());
 
     ft_circular_buffer<int> assigned_buffer(3);
     assigned_buffer = std::move(moved_buffer);
 
     FT_ASSERT(moved_buffer.is_empty());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, moved_buffer.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_buffer.get_error());
 
     FT_ASSERT_EQ(1UL, assigned_buffer.size());
     FT_ASSERT_EQ(7, assigned_buffer.pop());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, assigned_buffer.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, assigned_buffer.get_error());
     FT_ASSERT(assigned_buffer.is_empty());
     return (1);
 }

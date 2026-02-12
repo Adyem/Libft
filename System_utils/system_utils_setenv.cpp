@@ -26,7 +26,7 @@ int ft_setenv(const char *name, const char *value, int overwrite)
     }
     invalid_character = ft_strchr(name, '=');
     error_code = ft_global_error_stack_drop_last_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(error_code);
         return (-1);
@@ -39,13 +39,13 @@ int ft_setenv(const char *name, const char *value, int overwrite)
     if (ft_environment_lock() != 0)
     {
         error_code = ft_global_error_stack_drop_last_error();
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_MUTEX_ALREADY_LOCKED;
         ft_global_error_stack_push(error_code);
         return (-1);
     }
     ft_global_error_stack_drop_last_error();
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     errno = 0;
     result = cmp_setenv(name, value, overwrite);
     if (result != 0)
@@ -74,11 +74,11 @@ int ft_setenv(const char *name, const char *value, int overwrite)
 #endif
     }
     else
-        error_code = FT_ERR_SUCCESSS;
+        error_code = FT_ERR_SUCCESS;
     if (ft_environment_unlock() != 0)
     {
         unlock_error = ft_global_error_stack_drop_last_error();
-        if (unlock_error == FT_ERR_SUCCESSS)
+        if (unlock_error == FT_ERR_SUCCESS)
             unlock_error = FT_ERR_MUTEX_NOT_OWNER;
         if (result == 0)
         {
@@ -94,7 +94,7 @@ int ft_setenv(const char *name, const char *value, int overwrite)
         ft_global_error_stack_push(error_code);
         return (result);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (result);
 }
 #endif

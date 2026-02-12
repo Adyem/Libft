@@ -76,7 +76,7 @@ ft_priority_queue<ElementType, Compare>::ft_priority_queue(size_t initialCapacit
         }
         this->_capacity = initialCapacity;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -87,7 +87,7 @@ ft_priority_queue<ElementType, Compare>::~ft_priority_queue()
     if (this->_data != ft_nullptr)
         cma_free(this->_data);
     this->teardown_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -101,7 +101,7 @@ ft_priority_queue<ElementType, Compare>::ft_priority_queue(ft_priority_queue&& o
     other_thread_safe = (other._mutex != ft_nullptr);
     if (other_thread_safe)
     {
-        if (this->enable_thread_safety() != FT_ERR_SUCCESSS)
+        if (this->enable_thread_safety() != FT_ERR_SUCCESS)
         {
             other.teardown_thread_safety();
             other._data = ft_nullptr;
@@ -114,7 +114,7 @@ ft_priority_queue<ElementType, Compare>::ft_priority_queue(ft_priority_queue&& o
     other._capacity = 0;
     other._size = 0;
     other.teardown_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -137,7 +137,7 @@ ft_priority_queue<ElementType, Compare>& ft_priority_queue<ElementType, Compare>
         this->_mutex = ft_nullptr;
         other_lock_acquired = false;
         lock_error = other.lock_internal(&other_lock_acquired);
-        if (lock_error != FT_ERR_SUCCESSS)
+        if (lock_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(lock_error);
             return (*this);
@@ -154,11 +154,11 @@ ft_priority_queue<ElementType, Compare>& ft_priority_queue<ElementType, Compare>
         other.teardown_thread_safety();
         if (other_thread_safe)
         {
-            if (this->enable_thread_safety() != FT_ERR_SUCCESSS)
+            if (this->enable_thread_safety() != FT_ERR_SUCCESS)
                 return (*this);
         }
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (*this);
 }
 
@@ -169,8 +169,8 @@ int ft_priority_queue<ElementType, Compare>::enable_thread_safety()
 
     if (this->_mutex != ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-        return (FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     result = this->prepare_thread_safety();
     ft_global_error_stack_push(result);
@@ -181,7 +181,7 @@ template <typename ElementType, typename Compare>
 void ft_priority_queue<ElementType, Compare>::disable_thread_safety()
 {
     this->teardown_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -191,7 +191,7 @@ bool ft_priority_queue<ElementType, Compare>::is_thread_safe() const
     bool enabled;
 
     enabled = (this->_mutex != ft_nullptr);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (enabled);
 }
 
@@ -201,12 +201,12 @@ int ft_priority_queue<ElementType, Compare>::lock(bool *lock_acquired) const
     int result;
 
     result = this->lock_internal(lock_acquired);
-    if (result != FT_ERR_SUCCESSS)
+    if (result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(result);
         return (-1);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -226,20 +226,20 @@ int ft_priority_queue<ElementType, Compare>::lock_internal(bool *lock_acquired) 
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     result = pt_recursive_mutex_lock_with_error(*this->_mutex);
-    if (result != FT_ERR_SUCCESSS)
+    if (result != FT_ERR_SUCCESS)
         return (result);
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 template <typename ElementType, typename Compare>
 int ft_priority_queue<ElementType, Compare>::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     return (pt_recursive_mutex_unlock_with_error(*this->_mutex));
 }
 
@@ -247,7 +247,7 @@ template <typename ElementType, typename Compare>
 int ft_priority_queue<ElementType, Compare>::prepare_thread_safety()
 {
     if (this->_mutex != ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     return (pt_recursive_mutex_create_with_error(&this->_mutex));
 }
 
@@ -263,7 +263,7 @@ bool ft_priority_queue<ElementType, Compare>::ensure_capacity(size_t desired)
 {
     if (desired <= this->_capacity)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (true);
     }
     size_t new_capacity;
@@ -290,7 +290,7 @@ bool ft_priority_queue<ElementType, Compare>::ensure_capacity(size_t desired)
         cma_free(this->_data);
     this->_data = new_data;
     this->_capacity = new_capacity;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -336,7 +336,7 @@ void ft_priority_queue<ElementType, Compare>::push(const ElementType& value)
 
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -349,7 +349,7 @@ void ft_priority_queue<ElementType, Compare>::push(const ElementType& value)
     construct_at(&this->_data[this->_size], value);
     this->heapify_up(this->_size);
     ++this->_size;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -362,7 +362,7 @@ void ft_priority_queue<ElementType, Compare>::push(ElementType&& value)
 
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -375,7 +375,7 @@ void ft_priority_queue<ElementType, Compare>::push(ElementType&& value)
     construct_at(&this->_data[this->_size], ft_move(value));
     this->heapify_up(this->_size);
     ++this->_size;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -389,7 +389,7 @@ ElementType ft_priority_queue<ElementType, Compare>::pop()
 
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (ElementType());
@@ -409,7 +409,7 @@ ElementType ft_priority_queue<ElementType, Compare>::pop()
         destroy_at(&this->_data[this->_size]);
         this->heapify_down(0);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (value);
 }
@@ -424,7 +424,7 @@ ElementType& ft_priority_queue<ElementType, Compare>::top()
 
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (error_element);
@@ -436,7 +436,7 @@ ElementType& ft_priority_queue<ElementType, Compare>::top()
         return (error_element);
     }
     value = &this->_data[0];
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (*value);
 }
@@ -451,7 +451,7 @@ const ElementType& ft_priority_queue<ElementType, Compare>::top() const
 
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (error_element);
@@ -463,7 +463,7 @@ const ElementType& ft_priority_queue<ElementType, Compare>::top() const
         return (error_element);
     }
     value = &this->_data[0];
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (*value);
 }
@@ -477,13 +477,13 @@ size_t ft_priority_queue<ElementType, Compare>::size() const
 
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (0);
     }
     current_size = this->_size;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (current_size);
 }
@@ -497,13 +497,13 @@ bool ft_priority_queue<ElementType, Compare>::empty() const
 
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (true);
     }
     result = (this->_size == 0);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (result);
 }
@@ -518,7 +518,7 @@ void ft_priority_queue<ElementType, Compare>::clear()
     lock_acquired = false;
 
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -530,7 +530,7 @@ void ft_priority_queue<ElementType, Compare>::clear()
         element_index += 1;
     }
     this->_size = 0;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return ;
 }

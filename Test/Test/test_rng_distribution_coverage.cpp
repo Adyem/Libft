@@ -1,6 +1,10 @@
+#include "../test_internal.hpp"
 #include "../../RNG/rng.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "rng_test_utils.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_rng_gamma_pdf_cdf_reference,
         "rng_gamma_pdf and rng_gamma_cdf track reference values")
@@ -14,7 +18,7 @@ FT_TEST(test_rng_gamma_pdf_cdf_reference,
     expected_pdf = 0.19196788093577974;
     expected_cdf = 0.45058404864721977;
     pdf_value = rng_gamma_pdf(2.5, 1.5, 3.0);
-    if (ft_errno != FT_ERR_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESS)
         return (0);
     difference = pdf_value - expected_pdf;
     if (difference < 0.0)
@@ -22,7 +26,7 @@ FT_TEST(test_rng_gamma_pdf_cdf_reference,
     if (difference > 0.000001)
         return (0);
     cdf_value = rng_gamma_cdf(2.5, 1.5, 3.0);
-    if (ft_errno != FT_ERR_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESS)
         return (0);
     difference = cdf_value - expected_cdf;
     if (difference < 0.0)
@@ -44,7 +48,7 @@ FT_TEST(test_rng_beta_pdf_cdf_reference,
     expected_pdf = 1.5552;
     expected_cdf = 0.76672;
     pdf_value = rng_beta_pdf(2.0, 5.0, 0.4);
-    if (ft_errno != FT_ERR_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESS)
         return (0);
     difference = pdf_value - expected_pdf;
     if (difference < 0.0)
@@ -52,7 +56,7 @@ FT_TEST(test_rng_beta_pdf_cdf_reference,
     if (difference > 0.0001)
         return (0);
     cdf_value = rng_beta_cdf(2.0, 5.0, 0.4);
-    if (ft_errno != FT_ERR_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESS)
         return (0);
     difference = cdf_value - expected_cdf;
     if (difference < 0.0)
@@ -74,7 +78,7 @@ FT_TEST(test_rng_chi_squared_pdf_cdf_reference,
     expected_pdf = 0.08790080915922291;
     expected_cdf = 0.7602705204748466;
     pdf_value = rng_chi_squared_pdf(4.0, 5.5);
-    if (ft_errno != FT_ERR_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESS)
         return (0);
     difference = pdf_value - expected_pdf;
     if (difference < 0.0)
@@ -82,7 +86,7 @@ FT_TEST(test_rng_chi_squared_pdf_cdf_reference,
     if (difference > 0.0001)
         return (0);
     cdf_value = rng_chi_squared_cdf(4.0, 5.5);
-    if (ft_errno != FT_ERR_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESS)
         return (0);
     difference = cdf_value - expected_cdf;
     if (difference < 0.0)
@@ -107,7 +111,7 @@ FT_TEST(test_rng_gamma_sampling_mean,
     while (index < sample_total)
     {
         sum = sum + static_cast<double>(ft_random_gamma(2.0f, 3.0f));
-        if (ft_errno != FT_ERR_SUCCESSS)
+        if (ft_errno != FT_ERR_SUCCESS)
             return (0);
         index = index + 1;
     }
@@ -136,7 +140,7 @@ FT_TEST(test_rng_beta_sampling_mean,
     while (index < sample_total)
     {
         sum = sum + static_cast<double>(ft_random_beta(2.0f, 5.0f));
-        if (ft_errno != FT_ERR_SUCCESSS)
+        if (ft_errno != FT_ERR_SUCCESS)
             return (0);
         index = index + 1;
     }
@@ -165,7 +169,7 @@ FT_TEST(test_rng_chi_squared_sampling_mean,
     while (index < sample_total)
     {
         sum = sum + static_cast<double>(ft_random_chi_squared(5.0f));
-        if (ft_errno != FT_ERR_SUCCESSS)
+        if (ft_errno != FT_ERR_SUCCESS)
             return (0);
         index = index + 1;
     }

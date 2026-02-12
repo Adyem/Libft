@@ -20,15 +20,15 @@
         if constexpr (std::is_same<ElementType, ft_string>::value)
         {
             output = value;
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
             {
                 int error_code = ft_string::last_operation_error();
-                if (error_code == FT_ERR_SUCCESSS)
+                if (error_code == FT_ERR_SUCCESS)
                     error_code = FT_ERR_NO_MEMORY;
                 ft_global_error_stack_push(error_code);
                 return (-1);
             }
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
+            ft_global_error_stack_push(FT_ERR_SUCCESS);
             return (0);
         }
         else if constexpr (std::is_same<ElementType, const char *>::value)
@@ -39,15 +39,15 @@
                 return (-1);
             }
             output = value;
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
             {
                 int error_code = ft_string::last_operation_error();
-                if (error_code == FT_ERR_SUCCESSS)
+                if (error_code == FT_ERR_SUCCESS)
                     error_code = FT_ERR_NO_MEMORY;
                 ft_global_error_stack_push(error_code);
                 return (-1);
             }
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
+            ft_global_error_stack_push(FT_ERR_SUCCESS);
             return (0);
         }
         else if constexpr (std::is_integral<ElementType>::value)
@@ -65,71 +65,71 @@
                     return (-1);
                 }
                 ft_string serialized = ft_to_string(static_cast<long>(value));
-                if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+                if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
                 {
                     int error_code = ft_string::last_operation_error();
-                    if (error_code == FT_ERR_SUCCESSS)
+                    if (error_code == FT_ERR_SUCCESS)
                         error_code = FT_ERR_NO_MEMORY;
                     ft_global_error_stack_push(error_code);
                     return (-1);
                 }
                 output = serialized;
-                if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+                if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
                 {
                     int error_code = ft_string::last_operation_error();
-                    if (error_code == FT_ERR_SUCCESSS)
+                    if (error_code == FT_ERR_SUCCESS)
                         error_code = FT_ERR_NO_MEMORY;
                     ft_global_error_stack_push(error_code);
                     return (-1);
                 }
-                ft_global_error_stack_push(FT_ERR_SUCCESSS);
+                ft_global_error_stack_push(FT_ERR_SUCCESS);
                 return (0);
             }
             else
             {
                 ft_string serialized = ft_to_string(static_cast<unsigned long long>(value));
-                if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+                if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
                 {
                     int error_code = ft_string::last_operation_error();
-                    if (error_code == FT_ERR_SUCCESSS)
+                    if (error_code == FT_ERR_SUCCESS)
                         error_code = FT_ERR_NO_MEMORY;
                     ft_global_error_stack_push(error_code);
                     return (-1);
                 }
                 output = serialized;
-                if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+                if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
                 {
                     int error_code = ft_string::last_operation_error();
-                    if (error_code == FT_ERR_SUCCESSS)
+                    if (error_code == FT_ERR_SUCCESS)
                         error_code = FT_ERR_NO_MEMORY;
                     ft_global_error_stack_push(error_code);
                     return (-1);
                 }
-                ft_global_error_stack_push(FT_ERR_SUCCESSS);
+                ft_global_error_stack_push(FT_ERR_SUCCESS);
                 return (0);
             }
         }
         else if constexpr (std::is_floating_point<ElementType>::value)
         {
             ft_string serialized = ft_to_string(static_cast<double>(value));
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
             {
                 int error_code = ft_string::last_operation_error();
-                if (error_code == FT_ERR_SUCCESSS)
+                if (error_code == FT_ERR_SUCCESS)
                     error_code = FT_ERR_NO_MEMORY;
                 ft_global_error_stack_push(error_code);
                 return (-1);
             }
             output = serialized;
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
             {
                 int error_code = ft_string::last_operation_error();
-                if (error_code == FT_ERR_SUCCESSS)
+                if (error_code == FT_ERR_SUCCESS)
                     error_code = FT_ERR_NO_MEMORY;
                 ft_global_error_stack_push(error_code);
                 return (-1);
             }
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
+            ft_global_error_stack_push(FT_ERR_SUCCESS);
             return (0);
         }
         else
@@ -150,21 +150,21 @@ int default_string_deserializer(const char *value_string, ElementType &output) n
         if constexpr (std::is_same<ElementType, ft_string>::value)
         {
             output = value_string;
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
             {
                 int error_code = ft_string::last_operation_error();
-                if (error_code == FT_ERR_SUCCESSS)
+                if (error_code == FT_ERR_SUCCESS)
                     error_code = FT_ERR_NO_MEMORY;
                 ft_global_error_stack_push(error_code);
                 return (-1);
             }
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
+            ft_global_error_stack_push(FT_ERR_SUCCESS);
             return (0);
         }
         else if constexpr (std::is_integral<ElementType>::value)
         {
             long parsed = ft_atol(value_string, ft_nullptr);
-            if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
+            if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESS)
                 return (-1);
             if constexpr (std::numeric_limits<ElementType>::is_signed)
             {
@@ -174,7 +174,7 @@ int default_string_deserializer(const char *value_string, ElementType &output) n
                     return (-1);
                 }
                 output = static_cast<ElementType>(parsed);
-                ft_global_error_stack_push(FT_ERR_SUCCESSS);
+                ft_global_error_stack_push(FT_ERR_SUCCESS);
                 return (0);
             }
             else
@@ -191,17 +191,17 @@ int default_string_deserializer(const char *value_string, ElementType &output) n
                     return (-1);
                 }
                 output = static_cast<ElementType>(converted);
-                ft_global_error_stack_push(FT_ERR_SUCCESSS);
+                ft_global_error_stack_push(FT_ERR_SUCCESS);
                 return (0);
             }
         }
         else if constexpr (std::is_floating_point<ElementType>::value)
         {
             ft_string input_copy = value_string;
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
             {
                 int error_code = ft_string::last_operation_error();
-                if (error_code == FT_ERR_SUCCESSS)
+                if (error_code == FT_ERR_SUCCESS)
                     error_code = FT_ERR_NO_MEMORY;
                 ft_global_error_stack_push(error_code);
                 return (-1);
@@ -220,7 +220,7 @@ int default_string_deserializer(const char *value_string, ElementType &output) n
                 return (-1);
             }
             output = static_cast<ElementType>(parsed_value);
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
+            ft_global_error_stack_push(FT_ERR_SUCCESS);
             return (0);
         }
         else
@@ -250,7 +250,7 @@ int ft_vector_serialize_json(const ft_vector<ElementType> &values,
     size_t index = 0;
     size_t total_size = values.size();
     int total_error = ft_global_error_stack_peek_last_error();
-    if (total_error != FT_ERR_SUCCESSS)
+    if (total_error != FT_ERR_SUCCESS)
     {
         json_free_groups(group);
         ft_global_error_stack_push(total_error);
@@ -259,7 +259,7 @@ int ft_vector_serialize_json(const ft_vector<ElementType> &values,
     while (index < total_size)
     {
         const ElementType &element = values[index];
-        if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
+        if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESS)
         {
             int index_error = ft_global_error_stack_peek_last_error();
             json_free_groups(group);
@@ -273,30 +273,30 @@ int ft_vector_serialize_json(const ft_vector<ElementType> &values,
             return (-1);
         }
         ft_string key_string(item_prefix);
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             int error_code = ft_string::last_operation_error();
-            if (error_code == FT_ERR_SUCCESSS)
+            if (error_code == FT_ERR_SUCCESS)
                 error_code = FT_ERR_NO_MEMORY;
             json_free_groups(group);
             ft_global_error_stack_push(error_code);
             return (-1);
         }
         ft_string index_string = ft_to_string(static_cast<long>(index));
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             int error_code = ft_string::last_operation_error();
-            if (error_code == FT_ERR_SUCCESSS)
+            if (error_code == FT_ERR_SUCCESS)
                 error_code = FT_ERR_NO_MEMORY;
             json_free_groups(group);
             ft_global_error_stack_push(error_code);
             return (-1);
         }
         key_string += index_string;
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             int error_code = ft_string::last_operation_error();
-            if (error_code == FT_ERR_SUCCESSS)
+            if (error_code == FT_ERR_SUCCESS)
                 error_code = FT_ERR_NO_MEMORY;
             json_free_groups(group);
             ft_global_error_stack_push(error_code);
@@ -319,7 +319,7 @@ int ft_vector_serialize_json(const ft_vector<ElementType> &values,
     }
     json_add_item_to_group(group, count_item);
     output_group = group;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -354,7 +354,7 @@ int ft_vector_deserialize_json(json_group *group,
         return (-1);
     }
     long expected_count = ft_atol(count_item->value, ft_nullptr);
-    if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
+    if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESS)
         return (-1);
     if (expected_count < 0)
     {
@@ -366,28 +366,28 @@ int ft_vector_deserialize_json(json_group *group,
     while (index < static_cast<size_t>(expected_count))
     {
         ft_string key_string(item_prefix);
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             int error_code = ft_string::last_operation_error();
-            if (error_code == FT_ERR_SUCCESSS)
+            if (error_code == FT_ERR_SUCCESS)
                 error_code = FT_ERR_NO_MEMORY;
             ft_global_error_stack_push(error_code);
             return (-1);
         }
         ft_string index_string = ft_to_string(static_cast<long>(index));
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             int error_code = ft_string::last_operation_error();
-            if (error_code == FT_ERR_SUCCESSS)
+            if (error_code == FT_ERR_SUCCESS)
                 error_code = FT_ERR_NO_MEMORY;
             ft_global_error_stack_push(error_code);
             return (-1);
         }
         key_string += index_string;
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             int error_code = ft_string::last_operation_error();
-            if (error_code == FT_ERR_SUCCESSS)
+            if (error_code == FT_ERR_SUCCESS)
                 error_code = FT_ERR_NO_MEMORY;
             ft_global_error_stack_push(error_code);
             return (-1);
@@ -404,7 +404,7 @@ int ft_vector_deserialize_json(json_group *group,
         parsed_values.push_back(element);
         {
             int parsed_error = ft_global_error_stack_peek_last_error();
-            if (parsed_error != FT_ERR_SUCCESSS)
+            if (parsed_error != FT_ERR_SUCCESS)
             {
                 ft_global_error_stack_push(parsed_error);
                 return (-1);
@@ -413,7 +413,7 @@ int ft_vector_deserialize_json(json_group *group,
         index += 1;
     }
     output = ft_move(parsed_values);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -442,7 +442,7 @@ int ft_vector_serialize_yaml(const ft_vector<ElementType> &values,
     list_value->set_type(YAML_LIST);
     {
         int list_error = ft_global_error_stack_peek_last_error();
-        if (list_error != FT_ERR_SUCCESSS)
+        if (list_error != FT_ERR_SUCCESS)
         {
             delete list_value;
             ft_global_error_stack_push(list_error);
@@ -453,7 +453,7 @@ int ft_vector_serialize_yaml(const ft_vector<ElementType> &values,
     size_t total_size = values.size();
     {
         int total_error = ft_global_error_stack_peek_last_error();
-        if (total_error != FT_ERR_SUCCESSS)
+        if (total_error != FT_ERR_SUCCESS)
         {
             delete list_value;
             ft_global_error_stack_push(total_error);
@@ -465,7 +465,7 @@ int ft_vector_serialize_yaml(const ft_vector<ElementType> &values,
         const ElementType &element = values[index];
         {
             int element_error = ft_global_error_stack_peek_last_error();
-            if (element_error != FT_ERR_SUCCESSS)
+            if (element_error != FT_ERR_SUCCESS)
             {
                 yaml_free(list_value);
                 ft_global_error_stack_push(element_error);
@@ -482,7 +482,7 @@ int ft_vector_serialize_yaml(const ft_vector<ElementType> &values,
         entry->set_type(YAML_SCALAR);
         {
             int entry_error = ft_global_error_stack_peek_last_error();
-            if (entry_error != FT_ERR_SUCCESSS)
+            if (entry_error != FT_ERR_SUCCESS)
             {
                 delete entry;
                 yaml_free(list_value);
@@ -500,7 +500,7 @@ int ft_vector_serialize_yaml(const ft_vector<ElementType> &values,
         entry->set_scalar(serialized_value);
         {
             int entry_error = ft_global_error_stack_peek_last_error();
-            if (entry_error != FT_ERR_SUCCESSS)
+            if (entry_error != FT_ERR_SUCCESS)
             {
                 delete entry;
                 yaml_free(list_value);
@@ -511,7 +511,7 @@ int ft_vector_serialize_yaml(const ft_vector<ElementType> &values,
         list_value->add_list_item(entry);
         {
             int list_error = ft_global_error_stack_peek_last_error();
-            if (list_error != FT_ERR_SUCCESSS)
+            if (list_error != FT_ERR_SUCCESS)
             {
                 yaml_free(list_value);
                 ft_global_error_stack_push(list_error);
@@ -521,7 +521,7 @@ int ft_vector_serialize_yaml(const ft_vector<ElementType> &values,
         index += 1;
     }
     output_value = list_value;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -542,7 +542,7 @@ int ft_vector_deserialize_yaml(const yaml_value &value,
     if (value.get_type() != YAML_LIST)
     {
         int type_error = ft_global_error_stack_peek_last_error();
-        if (type_error == FT_ERR_SUCCESSS)
+        if (type_error == FT_ERR_SUCCESS)
             type_error = FT_ERR_UNSUPPORTED_TYPE;
         ft_global_error_stack_push(type_error);
         return (-1);
@@ -550,7 +550,7 @@ int ft_vector_deserialize_yaml(const yaml_value &value,
     const ft_vector<yaml_value*> &children = value.get_list();
     {
         int list_error = ft_global_error_stack_peek_last_error();
-        if (list_error != FT_ERR_SUCCESSS)
+        if (list_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(list_error);
             return (-1);
@@ -559,7 +559,7 @@ int ft_vector_deserialize_yaml(const yaml_value &value,
     size_t total = children.size();
     {
         int children_error = ft_global_error_stack_peek_last_error();
-        if (children_error != FT_ERR_SUCCESSS)
+        if (children_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(children_error);
             return (-1);
@@ -570,7 +570,7 @@ int ft_vector_deserialize_yaml(const yaml_value &value,
     while (index < total)
     {
         yaml_value *child = children[index];
-        if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
+        if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESS)
         {
             int child_list_error = ft_global_error_stack_peek_last_error();
             ft_global_error_stack_push(child_list_error);
@@ -584,13 +584,13 @@ int ft_vector_deserialize_yaml(const yaml_value &value,
         if (child->get_type() != YAML_SCALAR)
         {
             int child_error = ft_global_error_stack_peek_last_error();
-            if (child_error == FT_ERR_SUCCESSS)
+            if (child_error == FT_ERR_SUCCESS)
                 child_error = FT_ERR_UNSUPPORTED_TYPE;
             ft_global_error_stack_push(child_error);
             return (-1);
         }
         const ft_string &scalar = child->get_scalar();
-        if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
+        if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESS)
         {
             int child_error = ft_global_error_stack_peek_last_error();
             ft_global_error_stack_push(child_error);
@@ -600,7 +600,7 @@ int ft_vector_deserialize_yaml(const yaml_value &value,
         if (deserializer(scalar.c_str(), element) != 0)
             return (-1);
         parsed.push_back(element);
-        if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
+        if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESS)
         {
             int parsed_error = ft_global_error_stack_peek_last_error();
             ft_global_error_stack_push(parsed_error);
@@ -609,7 +609,7 @@ int ft_vector_deserialize_yaml(const yaml_value &value,
         index += 1;
     }
     output = ft_move(parsed);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 

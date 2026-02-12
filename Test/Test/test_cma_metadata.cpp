@@ -1,7 +1,11 @@
+#include "../test_internal.hpp"
 #include "../../CMA/cma_internal.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_cma_metadata_allocate_block_zeroes_state,
         "cma_metadata_allocate_block returns cleared block")

@@ -9,7 +9,7 @@ int pt_mutex::lock() const
     pt_thread_id_type thread_id = pt_thread_self();
     int ensure_error = this->ensure_native_mutex();
 
-    if (ensure_error != FT_ERR_SUCCESSS)
+    if (ensure_error != FT_ERR_SUCCESS)
         return (ensure_error);
 
     pthread_t owner = this->_owner.load(std::memory_order_relaxed);
@@ -17,18 +17,18 @@ int pt_mutex::lock() const
             && pt_thread_equal(owner, thread_id))
         return (FT_ERR_MUTEX_ALREADY_LOCKED);
 
-    int tracking_error = FT_ERR_SUCCESSS;
+    int tracking_error = FT_ERR_SUCCESS;
     pt_mutex_vector owned_mutexes =
         pt_lock_tracking::get_owned_mutexes(thread_id, &tracking_error);
-    if (tracking_error != FT_ERR_SUCCESSS)
+    if (tracking_error != FT_ERR_SUCCESS)
         return (tracking_error);
 
     int wait_result = pt_lock_tracking::notify_wait(thread_id,
             static_cast<const void *>(this), owned_mutexes);
-    if (wait_result != FT_ERR_SUCCESSS)
+    if (wait_result != FT_ERR_SUCCESS)
         return (wait_result);
 
-    int mutex_error = FT_ERR_SUCCESSS;
+    int mutex_error = FT_ERR_SUCCESS;
     try
     {
         this->_native_mutex->lock();
@@ -37,7 +37,7 @@ int pt_mutex::lock() const
     {
         mutex_error = ft_map_system_error(error.code().value());
     }
-    if (mutex_error != FT_ERR_SUCCESSS)
+    if (mutex_error != FT_ERR_SUCCESS)
     {
         pt_lock_tracking::notify_released(thread_id,
                 static_cast<const void *>(this));
@@ -49,7 +49,7 @@ int pt_mutex::lock() const
 
     int notify_error = pt_lock_tracking::notify_acquired(thread_id,
             static_cast<const void *>(this));
-    if (notify_error != FT_ERR_SUCCESSS)
+    if (notify_error != FT_ERR_SUCCESS)
     {
         this->_lock.store(false, std::memory_order_release);
         this->_owner.store(0, std::memory_order_release);
@@ -65,5 +65,5 @@ int pt_mutex::lock() const
         return (notify_error);
     }
 
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }

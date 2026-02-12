@@ -1,3 +1,4 @@
+#include "../test_internal.hpp"
 #include "../../CPP_class/class_istream.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../CPP_class/class_string.hpp"
@@ -6,6 +7,9 @@
 #include "../../PThread/recursive_mutex.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <cstddef>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 class ft_test_simple_istream : public ft_istream
 {
@@ -29,7 +33,7 @@ class ft_test_simple_istream : public ft_istream
                 return (0);
             }
             buffer[0] = this->_fill_character;
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
+            ft_global_error_stack_push(FT_ERR_SUCCESS);
             return (1);
         }
 };
@@ -48,7 +52,7 @@ FT_TEST(test_ft_istream_read_unlocks_mutex,
     FT_ASSERT(mutex != ft_nullptr);
     FT_ASSERT_EQ(false, mutex->lockState());
     FT_ASSERT_EQ('r', buffer[0]);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -64,7 +68,7 @@ FT_TEST(test_ft_istream_bad_unlocks_mutex,
     FT_ASSERT(mutex != ft_nullptr);
     FT_ASSERT_EQ(false, mutex->lockState());
     FT_ASSERT_EQ(false, bad_result);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -85,7 +89,7 @@ FT_TEST(test_ft_istream_gcount_unlocks_mutex,
     FT_ASSERT_EQ(false, mutex->lockState());
     FT_ASSERT_EQ(1, count_value);
     FT_ASSERT_EQ('g', buffer[0]);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -104,7 +108,7 @@ FT_TEST(test_ft_stringbuf_read_unlocks_mutex,
     FT_ASSERT(mutex != ft_nullptr);
     FT_ASSERT_EQ(false, mutex->lockState());
     FT_ASSERT_EQ('m', storage[0]);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -121,7 +125,7 @@ FT_TEST(test_ft_stringbuf_is_valid_unlocks_mutex,
     FT_ASSERT(mutex != ft_nullptr);
     FT_ASSERT_EQ(false, mutex->lockState());
     FT_ASSERT_EQ(true, valid_result);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -138,7 +142,7 @@ FT_TEST(test_ft_stringbuf_str_unlocks_mutex,
     mutex = buffer.get_mutex_for_testing();
     FT_ASSERT(mutex != ft_nullptr);
     FT_ASSERT_EQ(false, mutex->lockState());
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -154,7 +158,7 @@ FT_TEST(test_ft_istream_read_invalid_argument_unlocks_mutex,
     FT_ASSERT(mutex != ft_nullptr);
     FT_ASSERT_EQ(false, mutex->lockState());
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, read_error);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -171,7 +175,7 @@ FT_TEST(test_ft_stringbuf_read_invalid_argument_unlocks_mutex,
     FT_ASSERT(mutex != ft_nullptr);
     FT_ASSERT_EQ(false, mutex->lockState());
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, read_error);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -189,7 +193,7 @@ FT_TEST(test_ft_istream_gcount_after_error_unlocks_mutex,
     FT_ASSERT_EQ(false, mutex->lockState());
     FT_ASSERT_EQ(0, count_value);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_global_error_stack_peek_last_error());
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -208,7 +212,7 @@ FT_TEST(test_ft_stringbuf_is_valid_after_error_unlocks_mutex,
     FT_ASSERT_EQ(false, mutex->lockState());
     FT_ASSERT_EQ(false, valid_result);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_global_error_stack_peek_last_error());
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -226,7 +230,7 @@ FT_TEST(test_ft_stringbuf_str_after_error_unlocks_mutex,
     mutex = buffer.get_mutex_for_testing();
     FT_ASSERT(mutex != ft_nullptr);
     FT_ASSERT_EQ(false, mutex->lockState());
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -245,7 +249,7 @@ FT_TEST(test_ft_istream_read_twice_unlocks_mutex,
     FT_ASSERT(mutex != ft_nullptr);
     FT_ASSERT_EQ(false, mutex->lockState());
     FT_ASSERT_EQ('t', buffer[0]);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -265,7 +269,7 @@ FT_TEST(test_ft_istream_bad_after_read_unlocks_mutex,
     FT_ASSERT(mutex != ft_nullptr);
     FT_ASSERT_EQ(false, mutex->lockState());
     FT_ASSERT_EQ(false, bad_result);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -285,7 +289,7 @@ FT_TEST(test_ft_istream_gcount_after_success_unlocks_mutex,
     FT_ASSERT(mutex != ft_nullptr);
     FT_ASSERT_EQ(false, mutex->lockState());
     FT_ASSERT_EQ(1, count_value);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -304,7 +308,7 @@ FT_TEST(test_ft_istream_read_zero_count_unlocks_mutex,
     FT_ASSERT(mutex != ft_nullptr);
     FT_ASSERT_EQ(false, mutex->lockState());
     FT_ASSERT_EQ(0, count_value);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -324,7 +328,7 @@ FT_TEST(test_ft_stringbuf_read_twice_unlocks_mutex,
     FT_ASSERT(mutex != ft_nullptr);
     FT_ASSERT_EQ(false, mutex->lockState());
     FT_ASSERT_EQ('t', storage[0]);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -342,7 +346,7 @@ FT_TEST(test_ft_stringbuf_read_zero_count_unlocks_mutex,
     FT_ASSERT(mutex != ft_nullptr);
     FT_ASSERT_EQ(false, mutex->lockState());
     FT_ASSERT_EQ('\0', storage[0]);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -363,7 +367,7 @@ FT_TEST(test_ft_stringbuf_is_valid_after_read_unlocks_mutex,
     FT_ASSERT(mutex != ft_nullptr);
     FT_ASSERT_EQ(false, mutex->lockState());
     FT_ASSERT_EQ(false, bad_result);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -382,7 +386,7 @@ FT_TEST(test_ft_stringbuf_str_multiple_unlocks_mutex,
     mutex = buffer.get_mutex_for_testing();
     FT_ASSERT(mutex != ft_nullptr);
     FT_ASSERT_EQ(false, mutex->lockState());
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -403,7 +407,7 @@ FT_TEST(test_ft_stringbuf_str_after_read_unlocks_mutex,
     mutex = buffer.get_mutex_for_testing();
     FT_ASSERT(mutex != ft_nullptr);
     FT_ASSERT_EQ(false, mutex->lockState());
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -422,6 +426,6 @@ FT_TEST(test_ft_stringbuf_bad_after_str_unlocks_mutex,
     mutex = buffer.get_mutex_for_testing();
     FT_ASSERT(mutex != ft_nullptr);
     FT_ASSERT_EQ(false, mutex->lockState());
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }

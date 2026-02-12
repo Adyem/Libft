@@ -28,7 +28,7 @@ static int32_t rng_fill_from_random_device(unsigned char *buffer, ft_size_t leng
     {
         return (FT_ERR_INTERNAL);
     }
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t rng_secure_bytes_with_fallback(unsigned char *buffer, ft_size_t length, int32_t *fallback_used)
@@ -45,16 +45,16 @@ int32_t rng_secure_bytes_with_fallback(unsigned char *buffer, ft_size_t length, 
     if (fallback_used != ft_nullptr)
         *fallback_used = 0;
     result = rng_secure_bytes(buffer, length);
-    if (result == FT_ERR_SUCCESSS)
-        return (FT_ERR_SUCCESSS);
+    if (result == FT_ERR_SUCCESS)
+        return (FT_ERR_SUCCESS);
     if (length == 0)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     fallback_result = rng_fill_from_random_device(buffer, length);
-    if (fallback_result != FT_ERR_SUCCESSS)
+    if (fallback_result != FT_ERR_SUCCESS)
         return (fallback_result);
     if (fallback_used != ft_nullptr)
         *fallback_used = 1;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t rng_secure_uint64(uint64_t *value, int32_t *fallback_used)
@@ -69,7 +69,7 @@ int32_t rng_secure_uint64(uint64_t *value, int32_t *fallback_used)
     }
     unsigned char buffer[sizeof(uint64_t)];
     result = rng_secure_bytes_with_fallback(buffer, sizeof(uint64_t), fallback_used);
-    if (result != FT_ERR_SUCCESSS)
+    if (result != FT_ERR_SUCCESS)
         return (result);
     ft_size_t index = 0;
     uint64_t assembled_value = 0;
@@ -81,7 +81,7 @@ int32_t rng_secure_uint64(uint64_t *value, int32_t *fallback_used)
         index++;
     }
     *value = assembled_value;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t rng_secure_uint32(uint32_t *value, int32_t *fallback_used)
@@ -96,8 +96,8 @@ int32_t rng_secure_uint32(uint32_t *value, int32_t *fallback_used)
     }
     uint64_t wide_value = 0;
     result = rng_secure_uint64(&wide_value, fallback_used);
-    if (result != FT_ERR_SUCCESSS)
+    if (result != FT_ERR_SUCCESS)
         return (result);
     *value = static_cast<uint32_t>(wide_value & 0xFFFFFFFFu);
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }

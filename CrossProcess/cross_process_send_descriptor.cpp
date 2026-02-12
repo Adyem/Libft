@@ -14,6 +14,6 @@ int cp_send_descriptor(int socket_fd, const cross_process_message &message)
         ft_global_error_stack_push(ft_map_system_error(errno));
         return (-1);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }

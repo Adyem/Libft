@@ -1,3 +1,7 @@
+#include "../test_internal.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 #define LIBFT_ENABLE_ENVIRONMENT_HELPERS 0
 #define LIBFT_ENABLE_FILE_IO_HELPERS 0
 #define LIBFT_ENABLE_TIME_HELPERS 0

@@ -1,9 +1,13 @@
+#include "../test_internal.hpp"
 #include "../../Encryption/basic_encryption.hpp"
 #include "../../CMA/CMA.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <cstdio>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 static int mock_open_failure(const char *path_name, int flags, mode_t mode)
 {
@@ -28,7 +32,7 @@ FT_TEST(test_be_get_encryption_key_allocation_failure_sets_errno,
 {
     const char *key;
 
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     cma_set_alloc_limit(1);
     key = be_getEncryptionKey();
     FT_ASSERT_EQ(ft_nullptr, key);
@@ -42,7 +46,7 @@ FT_TEST(test_be_save_game_allocation_failure_sets_errno,
 {
     int save_result;
 
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     cma_set_alloc_limit(1);
     save_result = be_saveGame("be_save_game_alloc.txt", "data", "key");
     FT_ASSERT_EQ(1, save_result);
@@ -88,10 +92,10 @@ FT_TEST(test_be_decrypt_data_null_input_sets_errno,
     char *missing_buffer = ft_nullptr;
     char **wrapper = &missing_buffer;
 
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, be_DecryptData(ft_nullptr, "key"));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, be_DecryptData(wrapper, "key"));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);

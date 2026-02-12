@@ -19,11 +19,10 @@ void math_calculate_j(char *string, int *j)
     return ;
 }
 
-static int  *math_roll_report_error(int error_code, char *buffer)
+static int  *math_roll_report_error(char *buffer)
 {
     if (buffer)
         cma_free(buffer);
-    ft_global_error_stack_push(error_code);
     return (ft_nullptr);
 }
 
@@ -83,61 +82,53 @@ int *math_roll(const char *expression)
     char    *result;
     int     *value;
     int     parse_error;
-    int     error_code;
+    ft_size_t index;
+    ft_size_t length;
 
     if (!expression)
     {
-        return (math_roll_report_error(FT_ERR_INVALID_ARGUMENT, ft_nullptr));
+        return (math_roll_report_error(ft_nullptr));
     }
-    result = cma_strdup(expression);
+    length = ft_strlen_size_t(expression);
+    result = static_cast<char *>(cma_malloc(length + 1));
     if (!result)
     {
-        error_code = ft_global_error_stack_drop_last_error();
-        if (error_code == FT_ERR_SUCCESSS)
-            error_code = FT_ERR_NO_MEMORY;
         if (DEBUG == 1)
         {
             pf_printf_fd(2, "168-Error: Malloc failed in cma_strdup\n");
         }
-        return (math_roll_report_error(error_code, ft_nullptr));
+        return (math_roll_report_error(ft_nullptr));
     }
-    ft_global_error_stack_drop_last_error();
+    index = 0;
+    while (index < length)
+    {
+        result[index] = expression[index];
+        index += 1;
+    }
+    result[index] = '\0';
     if (math_roll_validate(result))
     {
         if (DEBUG == 1)
         {
             pf_printf_fd(2, "169-Command Roll Error with the string: %s\n", result);
         }
-        return (math_roll_report_error(FT_ERR_INVALID_ARGUMENT, result));
+        return (math_roll_report_error(result));
     }
     parse_error = math_roll_parse(result, 0);
     if (parse_error)
     {
-        return (math_roll_report_error(FT_ERR_INVALID_ARGUMENT, result));
+        return (math_roll_report_error(result));
     }
     if (!math_check_string_number(result))
     {
-        return (math_roll_report_error(FT_ERR_INVALID_ARGUMENT, result));
+        return (math_roll_report_error(result));
     }
     value = reinterpret_cast<int*>(cma_malloc(sizeof(int)));
     if (!value)
     {
-        error_code = ft_global_error_stack_drop_last_error();
-        if (error_code == FT_ERR_SUCCESSS)
-            error_code = FT_ERR_NO_MEMORY;
-        return (math_roll_report_error(error_code, result));
+        return (math_roll_report_error(result));
     }
-    ft_global_error_stack_drop_last_error();
-    *value = ft_atoi(result, ft_nullptr);
-    error_code = ft_global_error_stack_drop_last_error();
-    if (error_code != FT_ERR_SUCCESSS)
-    {
-        cma_free(result);
-        cma_free(value);
-        ft_global_error_stack_push(error_code);
-        return (ft_nullptr);
-    }
+    *value = ft_atoi(result);
     cma_free(result);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (value);
 }

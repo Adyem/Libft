@@ -1,7 +1,11 @@
+#include "../test_internal.hpp"
 #include "../../Template/pool.hpp"
 #include "../../Template/move.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_pool_move_constructor_rebuilds_mutex,
         "Pool move constructor rebuilds thread safety while keeping storage")

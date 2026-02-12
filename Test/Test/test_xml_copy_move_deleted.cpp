@@ -1,6 +1,10 @@
+#include "../test_internal.hpp"
 #include "../../XML/xml.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <type_traits>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_xml_node_copy_move_deleted,
         "xml_node copy and move operations are deleted to prevent mutex reuse")

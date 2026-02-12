@@ -59,7 +59,7 @@ template <typename CharType>
 ft_string_view<CharType>::ft_string_view()
     : _data(ft_nullptr), _size(0), _mutex(ft_nullptr)
 {
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 template <typename CharType>
@@ -68,7 +68,7 @@ ft_string_view<CharType>::ft_string_view(const CharType* string)
 {
     if (string == ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return ;
     }
     size_t index = 0;
@@ -76,14 +76,14 @@ ft_string_view<CharType>::ft_string_view(const CharType* string)
     while (string[index] != CharType())
         ++index;
     this->_size = index;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 template <typename CharType>
 ft_string_view<CharType>::ft_string_view(const CharType* string, size_t size)
     : _data(string), _size(size), _mutex(ft_nullptr)
 {
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 template <typename CharType>
@@ -93,7 +93,7 @@ ft_string_view<CharType>::ft_string_view(const ft_string_view& other)
     bool lock_acquired = false;
     int lock_result = other.lock_internal(&lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return ;
@@ -103,10 +103,10 @@ ft_string_view<CharType>::ft_string_view(const ft_string_view& other)
     other.unlock_internal(lock_acquired);
     if (other._mutex != ft_nullptr)
     {
-        if (this->enable_thread_safety() != FT_ERR_SUCCESSS)
+        if (this->enable_thread_safety() != FT_ERR_SUCCESS)
             return ;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 template <typename CharType>
@@ -114,7 +114,7 @@ ft_string_view<CharType>& ft_string_view<CharType>::operator=(const ft_string_vi
 {
     if (this == &other)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (*this);
     }
     bool first_lock_acquired = false;
@@ -122,7 +122,7 @@ ft_string_view<CharType>& ft_string_view<CharType>::operator=(const ft_string_vi
     int lock_result = ft_string_view<CharType>::lock_pair(*this, other,
             &first_lock_acquired, &second_lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return (*this);
@@ -136,10 +136,10 @@ ft_string_view<CharType>& ft_string_view<CharType>::operator=(const ft_string_vi
     this->teardown_thread_safety();
     if (other._mutex != ft_nullptr)
     {
-        if (this->enable_thread_safety() != FT_ERR_SUCCESSS)
+        if (this->enable_thread_safety() != FT_ERR_SUCCESS)
             return (*this);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (*this);
 }
 
@@ -147,7 +147,7 @@ template <typename CharType>
 ft_string_view<CharType>::~ft_string_view()
 {
     this->teardown_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 template <typename CharType>
@@ -156,14 +156,14 @@ const CharType* ft_string_view<CharType>::data() const
     bool lock_acquired = false;
     int lock_result = this->lock_internal(&lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return (ft_nullptr);
     }
     const CharType* result = this->_data;
     this->unlock_internal(lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (result);
 }
 
@@ -173,14 +173,14 @@ size_t ft_string_view<CharType>::size() const
     bool lock_acquired = false;
     int lock_result = this->lock_internal(&lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return (0);
     }
     size_t current_size = this->_size;
     this->unlock_internal(lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (current_size);
 }
 
@@ -190,14 +190,14 @@ bool ft_string_view<CharType>::empty() const
     bool lock_acquired = false;
     int lock_result = this->lock_internal(&lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return (true);
     }
     bool result = (this->_size == 0);
     this->unlock_internal(lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (result);
 }
 
@@ -207,7 +207,7 @@ CharType ft_string_view<CharType>::operator[](size_t index) const
     bool lock_acquired = false;
     int lock_result = this->lock_internal(&lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return (CharType());
@@ -220,7 +220,7 @@ CharType ft_string_view<CharType>::operator[](size_t index) const
     }
     CharType value = this->_data[index];
     this->unlock_internal(lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (value);
 }
 
@@ -232,7 +232,7 @@ int ft_string_view<CharType>::compare(const ft_string_view& other) const
     int lock_result = ft_string_view<CharType>::lock_pair(*this, other,
             &first_acquired, &second_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return (0);
@@ -264,7 +264,7 @@ int ft_string_view<CharType>::compare(const ft_string_view& other) const
         other.unlock_internal(second_acquired);
     if (first_acquired)
         this->unlock_internal(first_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (result);
 }
 
@@ -275,7 +275,7 @@ ft_string_view<CharType> ft_string_view<CharType>::substr(size_t position, size_
     int lock_result = this->lock_internal(&lock_acquired);
     ft_string_view<CharType> result;
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return (result);
@@ -294,7 +294,7 @@ ft_string_view<CharType> ft_string_view<CharType>::substr(size_t position, size_
     byte_ptr += position * sizeof(CharType);
     const CharType* new_data = reinterpret_cast<const CharType*>(byte_ptr);
     this->unlock_internal(lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (ft_string_view<CharType>(new_data, count));
 }
 
@@ -303,8 +303,8 @@ int ft_string_view<CharType>::enable_thread_safety()
 {
     if (this->_mutex != ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-        return (FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     int result = this->prepare_thread_safety();
     ft_global_error_stack_push(result);
@@ -315,14 +315,14 @@ template <typename CharType>
 void ft_string_view<CharType>::disable_thread_safety()
 {
     this->teardown_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 template <typename CharType>
 bool ft_string_view<CharType>::is_thread_safe() const
 {
     bool enabled = (this->_mutex != ft_nullptr);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (enabled);
 }
 
@@ -331,7 +331,7 @@ int ft_string_view<CharType>::lock(bool *lock_acquired) const
 {
     int result = this->lock_internal(lock_acquired);
     ft_global_error_stack_push(result);
-    if (result != FT_ERR_SUCCESSS)
+    if (result != FT_ERR_SUCCESS)
         return (-1);
     return (0);
 }
@@ -349,10 +349,10 @@ int ft_string_view<CharType>::lock_internal(bool *lock_acquired) const
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     int result = pt_recursive_mutex_lock_with_error(*this->_mutex);
 
-    if (result == FT_ERR_SUCCESSS && lock_acquired != ft_nullptr)
+    if (result == FT_ERR_SUCCESS && lock_acquired != ft_nullptr)
         *lock_acquired = true;
     return (result);
 }
@@ -361,7 +361,7 @@ template <typename CharType>
 int ft_string_view<CharType>::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     return (pt_recursive_mutex_unlock_with_error(*this->_mutex));
 }
 
@@ -369,9 +369,9 @@ template <typename CharType>
 int ft_string_view<CharType>::prepare_thread_safety()
 {
     if (this->_mutex != ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     int result = pt_recursive_mutex_create_with_error(&this->_mutex);
-    if (result != FT_ERR_SUCCESSS && this->_mutex != ft_nullptr)
+    if (result != FT_ERR_SUCCESS && this->_mutex != ft_nullptr)
         pt_recursive_mutex_destroy(&this->_mutex);
     return (result);
 }
@@ -406,12 +406,12 @@ int ft_string_view<CharType>::lock_pair(const ft_string_view &first,
     bool first_lock = false;
     int first_result = ordered_first->lock_internal(&first_lock);
 
-    if (first_result != FT_ERR_SUCCESSS)
+    if (first_result != FT_ERR_SUCCESS)
         return first_result;
     bool second_lock = false;
     int second_result = ordered_second->lock_internal(&second_lock);
 
-    if (second_result != FT_ERR_SUCCESSS)
+    if (second_result != FT_ERR_SUCCESS)
     {
         ordered_first->unlock_internal(first_lock);
         return second_result;
@@ -430,7 +430,7 @@ int ft_string_view<CharType>::lock_pair(const ft_string_view &first,
         if (second_acquired != ft_nullptr)
             *second_acquired = first_lock;
     }
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 #ifdef LIBFT_TEST_BUILD

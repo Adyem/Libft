@@ -33,7 +33,7 @@ int32_t cmp_readline_enable_raw_mode()
         if (error_code == FT_ERR_INVALID_HANDLE)
         {
             g_raw_mode_active = false;
-            return (FT_ERR_SUCCESSS);
+            return (FT_ERR_SUCCESS);
         }
         return (error_code);
     }
@@ -44,7 +44,7 @@ int32_t cmp_readline_enable_raw_mode()
         if (error_code == FT_ERR_INVALID_HANDLE)
         {
             g_raw_mode_active = false;
-            return (FT_ERR_SUCCESSS);
+            return (FT_ERR_SUCCESS);
         }
         return (error_code);
     }
@@ -57,12 +57,12 @@ int32_t cmp_readline_enable_raw_mode()
         if (error_code == FT_ERR_INVALID_HANDLE)
         {
             g_raw_mode_active = false;
-            return (FT_ERR_SUCCESSS);
+            return (FT_ERR_SUCCESS);
         }
         return (error_code);
     }
     g_raw_mode_active = true;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t cmp_readline_disable_raw_mode()
@@ -71,7 +71,7 @@ int32_t cmp_readline_disable_raw_mode()
 
     if (g_raw_mode_active == false)
     {
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     }
     handle = GetStdHandle(STD_INPUT_HANDLE);
     if (handle == INVALID_HANDLE_VALUE)
@@ -83,7 +83,7 @@ int32_t cmp_readline_disable_raw_mode()
         return (cmp_map_last_error_to_ft_error());
     }
     g_raw_mode_active = false;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t cmp_readline_terminal_dimensions(unsigned short *rows, unsigned short *cols,
@@ -113,7 +113,7 @@ int32_t cmp_readline_terminal_dimensions(unsigned short *rows, unsigned short *c
         *x_pixels = 0;
     if (y_pixels != ft_nullptr)
         *y_pixels = 0;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t cmp_readline_terminal_width(int32_t *width_out)
@@ -127,10 +127,10 @@ int32_t cmp_readline_terminal_width(int32_t *width_out)
     *width_out = 0;
     error_code = cmp_readline_terminal_dimensions(&rows, &cols, ft_nullptr,
             ft_nullptr);
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
         return (error_code);
     *width_out = static_cast<int32_t>(cols);
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 #else
 # include <termios.h>
@@ -154,7 +154,7 @@ int32_t cmp_readline_enable_raw_mode()
     if (isatty(STDIN_FILENO) == 0)
     {
         g_raw_mode_active = false;
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     }
     if (tcgetattr(STDIN_FILENO, &raw) == -1)
     {
@@ -167,19 +167,19 @@ int32_t cmp_readline_enable_raw_mode()
         return (cmp_map_errno_to_ft_error());
     }
     g_raw_mode_active = true;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t cmp_readline_disable_raw_mode()
 {
     if (g_raw_mode_active == false)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     if (tcsetattr(STDIN_FILENO, TCSANOW, &g_orig_termios) == -1)
     {
         return (cmp_map_errno_to_ft_error());
     }
     g_raw_mode_active = false;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t cmp_readline_terminal_dimensions(unsigned short *rows, unsigned short *cols,
@@ -197,7 +197,7 @@ int32_t cmp_readline_terminal_dimensions(unsigned short *rows, unsigned short *c
         *x_pixels = window_size.ws_xpixel;
     if (y_pixels != ft_nullptr)
         *y_pixels = window_size.ws_ypixel;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t cmp_readline_terminal_width(int32_t *width_out)
@@ -211,9 +211,9 @@ int32_t cmp_readline_terminal_width(int32_t *width_out)
     *width_out = 0;
     error_code = cmp_readline_terminal_dimensions(&rows, &cols, ft_nullptr,
             ft_nullptr);
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
         return (error_code);
     *width_out = static_cast<int32_t>(cols);
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 #endif

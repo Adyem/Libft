@@ -1,7 +1,11 @@
+#include "../test_internal.hpp"
 #include "../../Template/circular_buffer.hpp"
 #include "../../Template/move.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_ft_circular_buffer_move_constructor_rebuilds_mutex,
         "ft_circular_buffer move constructor recreates mutex and preserves data")

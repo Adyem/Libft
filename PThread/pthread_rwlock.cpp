@@ -26,7 +26,7 @@ int pt_rwlock_init(pthread_rwlock_t *rwlock, const pthread_rwlockattr_t *attribu
     {
         return (pt_rwlock_report_result(ft_map_system_error(return_value), return_value));
     }
-    return (pt_rwlock_report_result(FT_ERR_SUCCESSS, return_value));
+    return (pt_rwlock_report_result(FT_ERR_SUCCESS, return_value));
 }
 
 int pt_rwlock_rdlock(pthread_rwlock_t *rwlock)
@@ -36,7 +36,7 @@ int pt_rwlock_rdlock(pthread_rwlock_t *rwlock)
     {
         return (pt_rwlock_report_result(ft_map_system_error(return_value), return_value));
     }
-    return (pt_rwlock_report_result(FT_ERR_SUCCESSS, return_value));
+    return (pt_rwlock_report_result(FT_ERR_SUCCESS, return_value));
 }
 
 int pt_rwlock_wrlock(pthread_rwlock_t *rwlock)
@@ -46,7 +46,7 @@ int pt_rwlock_wrlock(pthread_rwlock_t *rwlock)
     {
         return (pt_rwlock_report_result(ft_map_system_error(return_value), return_value));
     }
-    return (pt_rwlock_report_result(FT_ERR_SUCCESSS, return_value));
+    return (pt_rwlock_report_result(FT_ERR_SUCCESS, return_value));
 }
 
 int pt_rwlock_unlock(pthread_rwlock_t *rwlock)
@@ -62,7 +62,7 @@ int pt_rwlock_unlock(pthread_rwlock_t *rwlock)
     {
         return (pt_rwlock_report_result(ft_map_system_error(return_value), return_value));
     }
-    return (pt_rwlock_report_result(FT_ERR_SUCCESSS, return_value));
+    return (pt_rwlock_report_result(FT_ERR_SUCCESS, return_value));
 }
 
 int pt_rwlock_destroy(pthread_rwlock_t *rwlock)
@@ -72,7 +72,7 @@ int pt_rwlock_destroy(pthread_rwlock_t *rwlock)
     {
         return (pt_rwlock_report_result(ft_map_system_error(return_value), return_value));
     }
-    return (pt_rwlock_report_result(FT_ERR_SUCCESSS, return_value));
+    return (pt_rwlock_report_result(FT_ERR_SUCCESS, return_value));
 }
 
 int pt_rwlock_strategy_init(t_pt_rwlock *rwlock, t_pt_rwlock_strategy strategy)
@@ -106,7 +106,7 @@ int pt_rwlock_strategy_init(t_pt_rwlock *rwlock, t_pt_rwlock_strategy strategy)
     rwlock->active_writers = 0;
     rwlock->waiting_writers = 0;
     rwlock->strategy = strategy;
-    return (pt_rwlock_report_result(FT_ERR_SUCCESSS, FT_ERR_SUCCESSS));
+    return (pt_rwlock_report_result(FT_ERR_SUCCESS, FT_ERR_SUCCESS));
 }
 
 static int pt_rwlock_strategy_unlock_mutex(t_pt_rwlock *rwlock)
@@ -124,7 +124,7 @@ int pt_rwlock_strategy_rdlock(t_pt_rwlock *rwlock)
         return (pt_rwlock_report_result(FT_ERR_INVALID_ARGUMENT, -1));
     }
     system_error = pt_pthread_mutex_lock_with_error(&rwlock->mutex);
-    if (system_error != FT_ERR_SUCCESSS)
+    if (system_error != FT_ERR_SUCCESS)
     {
         return (pt_rwlock_report_result(system_error, system_error));
     }
@@ -164,9 +164,9 @@ int pt_rwlock_strategy_rdlock(t_pt_rwlock *rwlock)
     rwlock->waiting_readers--;
     rwlock->active_readers++;
     unlock_error = pt_rwlock_strategy_unlock_mutex(rwlock);
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
         return (pt_rwlock_report_result(unlock_error, unlock_error));
-    return (pt_rwlock_report_result(FT_ERR_SUCCESSS, FT_ERR_SUCCESSS));
+    return (pt_rwlock_report_result(FT_ERR_SUCCESS, FT_ERR_SUCCESS));
 }
 
 int pt_rwlock_strategy_wrlock(t_pt_rwlock *rwlock)
@@ -179,7 +179,7 @@ int pt_rwlock_strategy_wrlock(t_pt_rwlock *rwlock)
         return (pt_rwlock_report_result(FT_ERR_INVALID_ARGUMENT, -1));
     }
     system_error = pt_pthread_mutex_lock_with_error(&rwlock->mutex);
-    if (system_error != FT_ERR_SUCCESSS)
+    if (system_error != FT_ERR_SUCCESS)
     {
         return (pt_rwlock_report_result(system_error, system_error));
     }
@@ -200,9 +200,9 @@ int pt_rwlock_strategy_wrlock(t_pt_rwlock *rwlock)
     rwlock->waiting_writers--;
     rwlock->active_writers = 1;
     unlock_error = pt_rwlock_strategy_unlock_mutex(rwlock);
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
         return (pt_rwlock_report_result(unlock_error, unlock_error));
-    return (pt_rwlock_report_result(FT_ERR_SUCCESSS, FT_ERR_SUCCESSS));
+    return (pt_rwlock_report_result(FT_ERR_SUCCESS, FT_ERR_SUCCESS));
 }
 
 int pt_rwlock_strategy_unlock(t_pt_rwlock *rwlock)
@@ -215,7 +215,7 @@ int pt_rwlock_strategy_unlock(t_pt_rwlock *rwlock)
         return (pt_rwlock_report_result(FT_ERR_INVALID_ARGUMENT, -1));
     }
     system_error = pt_pthread_mutex_lock_with_error(&rwlock->mutex);
-    if (system_error != FT_ERR_SUCCESSS)
+    if (system_error != FT_ERR_SUCCESS)
     {
         return (pt_rwlock_report_result(system_error, system_error));
     }
@@ -289,9 +289,9 @@ int pt_rwlock_strategy_unlock(t_pt_rwlock *rwlock)
         }
     }
     unlock_error = pt_rwlock_strategy_unlock_mutex(rwlock);
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
         return (pt_rwlock_report_result(unlock_error, unlock_error));
-    return (pt_rwlock_report_result(FT_ERR_SUCCESSS, FT_ERR_SUCCESSS));
+    return (pt_rwlock_report_result(FT_ERR_SUCCESS, FT_ERR_SUCCESS));
 }
 
 int pt_rwlock_strategy_destroy(t_pt_rwlock *rwlock)
@@ -317,7 +317,7 @@ int pt_rwlock_strategy_destroy(t_pt_rwlock *rwlock)
     {
         return (pt_rwlock_report_system_error(system_error));
     }
-    return (pt_rwlock_report_result(FT_ERR_SUCCESSS, FT_ERR_SUCCESSS));
+    return (pt_rwlock_report_result(FT_ERR_SUCCESS, FT_ERR_SUCCESS));
 }
 
 int pt_rwlock_strategy_get_error(const t_pt_rwlock *rwlock)

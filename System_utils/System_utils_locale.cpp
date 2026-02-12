@@ -39,7 +39,7 @@ static int assign_locale(const char *locale_name, std::locale &locale_object)
         ft_global_error_stack_push(FT_ERR_CONFIGURATION);
         return (-1);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -60,13 +60,13 @@ int su_locale_compare(const char *left, const char *right, const char *locale_na
     if (assign_locale(locale_name, locale_object) != 0)
     {
         error_code = ft_global_error_stack_drop_last_error();
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_CONFIGURATION;
         ft_global_error_stack_push(error_code);
         return (-1);
     }
     error_code = ft_global_error_stack_drop_last_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(error_code);
         return (-1);
@@ -89,7 +89,7 @@ int su_locale_compare(const char *left, const char *right, const char *locale_na
     right_length = std::char_traits<char>::length(right);
     comparison_value = collate_facet->compare(left, left + left_length, right, right + right_length);
     *result = comparison_value;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -110,13 +110,13 @@ int su_locale_casefold(const char *input, const char *locale_name, ft_string &ou
     if (assign_locale(locale_name, locale_object) != 0)
     {
         error_code = ft_global_error_stack_drop_last_error();
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_CONFIGURATION;
         ft_global_error_stack_push(error_code);
         return (-1);
     }
     error_code = ft_global_error_stack_drop_last_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(error_code);
         return (-1);
@@ -154,16 +154,16 @@ int su_locale_casefold(const char *input, const char *locale_name, ft_string &ou
     output.assign(transformed_string.c_str(), transformed_string.size());
     {
         unsigned long long operation_id = output.last_operation_id();
-        int output_error = FT_ERR_SUCCESSS;
+        int output_error = FT_ERR_SUCCESS;
 
         if (operation_id != 0)
             output_error = output.pop_operation_error(operation_id);
-        if (output_error != FT_ERR_SUCCESSS)
+        if (output_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(output_error);
             return (-1);
         }
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }

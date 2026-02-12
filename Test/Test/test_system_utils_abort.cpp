@@ -1,8 +1,12 @@
+#include "../test_internal.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../Basic/basic.hpp"
 #include "../../System_utils/system_utils.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_su_internal_take_abort_reason_round_trip,
         "su_internal_take_abort_reason returns and clears stored reasons")

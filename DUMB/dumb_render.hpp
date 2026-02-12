@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <cstdint>
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/recursive_mutex.hpp"
 
@@ -57,24 +58,41 @@ class ft_render_window
     private:
 
         pt_recursive_mutex           *_mutex = ft_nullptr;
+        uint8_t                      _initialized_state;
 
         ft_render_framebuffer        _framebuffer;
         bool                         _is_initialized;
         bool                         _should_close;
 
         void                         *_platform_state;
+        static const uint8_t         _state_uninitialized = 0;
+        static const uint8_t         _state_destroyed = 1;
+        static const uint8_t         _state_initialized = 2;
+
+        void                         abort_lifecycle_error(const char *method_name,
+                                        const char *reason) const noexcept;
+        void                         abort_if_not_initialized(const char *method_name) const noexcept;
         int                          prepare_thread_safety(void) noexcept;
         void                         teardown_thread_safety(void) noexcept;
 
     public:
         ft_render_window(void);
+        ft_render_window(const ft_render_window &other) = delete;
+        ft_render_window(ft_render_window &&other) = delete;
+        ft_render_window &operator=(const ft_render_window &other) = delete;
+        ft_render_window &operator=(ft_render_window &&other) = delete;
         ~ft_render_window(void);
 
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex           *runtime_mutex(void);
 #endif
 
+        int                          initialize(void);
         int                          initialize(const ft_render_window_desc &desc);
+        int                          initialize(const ft_render_window &other);
+        int                          initialize(ft_render_window &&other);
+        int                          destroy(void);
+        int                          move(ft_render_window &other);
         void                         shutdown(void);
 
         int                          poll_events(void);

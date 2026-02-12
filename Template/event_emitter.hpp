@@ -79,7 +79,7 @@ ft_event_emitter<EventType, Args...>::ft_event_emitter(size_t initial_capacity)
         }
         this->_capacity = initial_capacity;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -94,7 +94,7 @@ ft_event_emitter<EventType, Args...>::~ft_event_emitter()
     }
     this->_capacity = 0;
     this->teardown_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -105,7 +105,7 @@ ft_event_emitter<EventType, Args...>::ft_event_emitter(ft_event_emitter&& other)
     bool other_lock_acquired = false;
     int lock_error = other.lock_internal(&other_lock_acquired);
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -121,10 +121,10 @@ ft_event_emitter<EventType, Args...>::ft_event_emitter(ft_event_emitter&& other)
     other.teardown_thread_safety();
     if (other_thread_safe)
     {
-        if (this->enable_thread_safety() != FT_ERR_SUCCESSS)
+        if (this->enable_thread_safety() != FT_ERR_SUCCESS)
             return ;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -133,19 +133,19 @@ ft_event_emitter<EventType, Args...>& ft_event_emitter<EventType, Args...>::oper
 {
     if (this == &other)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (*this);
     }
     bool this_lock_acquired = false;
     int this_lock_error = this->lock_internal(&this_lock_acquired);
-    if (this_lock_error != FT_ERR_SUCCESSS)
+    if (this_lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(this_lock_error);
         return (*this);
     }
     bool other_lock_acquired = false;
     int other_lock_error = other.lock_internal(&other_lock_acquired);
-    if (other_lock_error != FT_ERR_SUCCESSS)
+    if (other_lock_error != FT_ERR_SUCCESS)
     {
         this->unlock_internal(this_lock_acquired);
         ft_global_error_stack_push(other_lock_error);
@@ -167,13 +167,13 @@ ft_event_emitter<EventType, Args...>& ft_event_emitter<EventType, Args...>::oper
     this->teardown_thread_safety();
     if (other_thread_safe)
     {
-        if (this->enable_thread_safety() != FT_ERR_SUCCESSS)
+        if (this->enable_thread_safety() != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(FT_ERR_INVALID_STATE);
             return (*this);
         }
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (*this);
 }
 
@@ -191,7 +191,7 @@ template <typename EventType, typename... Args>
 void ft_event_emitter<EventType, Args...>::disable_thread_safety()
 {
     this->teardown_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -201,7 +201,7 @@ bool ft_event_emitter<EventType, Args...>::is_thread_safe() const
     bool enabled;
 
     enabled = (this->_mutex != ft_nullptr);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (enabled);
 }
 
@@ -211,12 +211,12 @@ int ft_event_emitter<EventType, Args...>::lock(bool *lock_acquired) const
     int result;
 
     result = this->lock_internal(lock_acquired);
-    if (result != FT_ERR_SUCCESSS)
+    if (result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(result);
         return (-1);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -236,7 +236,7 @@ void ft_event_emitter<EventType, Args...>::on(const EventType& event, void (*cal
     bool lock_acquired = false;
     int lock_error = this->lock_internal(&lock_acquired);
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -250,12 +250,12 @@ void ft_event_emitter<EventType, Args...>::on(const EventType& event, void (*cal
     this->_size += 1;
     int unlock_error = this->unlock_internal(lock_acquired);
 
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return ;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -265,7 +265,7 @@ void ft_event_emitter<EventType, Args...>::emit(const EventType& event, Args... 
     bool lock_acquired = false;
     int lock_error = this->lock_internal(&lock_acquired);
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -284,7 +284,7 @@ void ft_event_emitter<EventType, Args...>::emit(const EventType& event, Args... 
     }
     int unlock_error = this->unlock_internal(lock_acquired);
 
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return ;
@@ -294,7 +294,7 @@ void ft_event_emitter<EventType, Args...>::emit(const EventType& event, Args... 
         ft_global_error_stack_push(FT_ERR_NOT_FOUND);
         return ;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -304,7 +304,7 @@ void ft_event_emitter<EventType, Args...>::remove_listener(const EventType& even
     bool lock_acquired = false;
     int lock_error = this->lock_internal(&lock_acquired);
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -329,19 +329,19 @@ void ft_event_emitter<EventType, Args...>::remove_listener(const EventType& even
             this->_size -= 1;
             int unlock_error = this->unlock_internal(lock_acquired);
 
-            if (unlock_error != FT_ERR_SUCCESSS)
+            if (unlock_error != FT_ERR_SUCCESS)
             {
                 ft_global_error_stack_push(unlock_error);
                 return ;
             }
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
+            ft_global_error_stack_push(FT_ERR_SUCCESS);
             return ;
         }
         listener_index += 1;
     }
     int unlock_error = this->unlock_internal(lock_acquired);
 
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return ;
@@ -356,7 +356,7 @@ size_t ft_event_emitter<EventType, Args...>::size() const
     bool lock_acquired = false;
     int lock_error = this->lock_internal(&lock_acquired);
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (0);
@@ -364,12 +364,12 @@ size_t ft_event_emitter<EventType, Args...>::size() const
     size_t current_size = this->_size;
     int unlock_error = this->unlock_internal(lock_acquired);
 
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return (0);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (current_size);
 }
 
@@ -379,7 +379,7 @@ bool ft_event_emitter<EventType, Args...>::empty() const
     bool lock_acquired = false;
     int lock_error = this->lock_internal(&lock_acquired);
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (true);
@@ -387,12 +387,12 @@ bool ft_event_emitter<EventType, Args...>::empty() const
     bool is_empty = (this->_size == 0);
     int unlock_error = this->unlock_internal(lock_acquired);
 
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return (true);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (is_empty);
 }
 
@@ -402,7 +402,7 @@ void ft_event_emitter<EventType, Args...>::clear()
     bool lock_acquired = false;
     int lock_error = this->lock_internal(&lock_acquired);
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -410,12 +410,12 @@ void ft_event_emitter<EventType, Args...>::clear()
     this->clear_unlocked();
     int unlock_error = this->unlock_internal(lock_acquired);
 
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return ;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -501,21 +501,21 @@ int ft_event_emitter<EventType, Args...>::lock_internal(bool *lock_acquired) con
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     int result = pt_recursive_mutex_lock_with_error(*this->_mutex);
 
-    if (result != FT_ERR_SUCCESSS)
+    if (result != FT_ERR_SUCCESS)
         return (result);
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 template <typename EventType, typename... Args>
 int ft_event_emitter<EventType, Args...>::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     return (pt_recursive_mutex_unlock_with_error(*this->_mutex));
 }
 
@@ -523,14 +523,14 @@ template <typename EventType, typename... Args>
 int ft_event_emitter<EventType, Args...>::prepare_thread_safety()
 {
     if (this->_mutex != ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     pt_recursive_mutex *mutex_pointer = ft_nullptr;
     int creation_result = pt_recursive_mutex_create_with_error(&mutex_pointer);
 
-    if (creation_result != FT_ERR_SUCCESSS)
+    if (creation_result != FT_ERR_SUCCESS)
         return (creation_result);
     this->_mutex = mutex_pointer;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 template <typename EventType, typename... Args>
@@ -556,7 +556,7 @@ struct ft_event_emitter_test_helper
         bool lock_acquired = false;
         int lock_error = emitter.lock_internal(&lock_acquired);
 
-        if (lock_error != FT_ERR_SUCCESSS)
+        if (lock_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(lock_error);
             return (false);
@@ -564,7 +564,7 @@ struct ft_event_emitter_test_helper
         bool result = emitter.ensure_capacity_unlocked(desired);
         int unlock_error = emitter.unlock_internal(lock_acquired);
 
-        if (unlock_error != FT_ERR_SUCCESSS)
+        if (unlock_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(unlock_error);
             return (false);

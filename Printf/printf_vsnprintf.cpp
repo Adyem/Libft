@@ -60,7 +60,7 @@ int pf_flush_stream(FILE *stream)
             return (ft_map_system_error(saved_errno));
         return (FT_ERR_IO);
     }
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 void pf_set_ftell_function(t_pf_ftell_function function)
@@ -107,17 +107,17 @@ int pf_vsnprintf(char *string, size_t size, const char *format, va_list args)
         if (string != ft_nullptr && size > 0)
             string[0] = '\0';
         fclose(stream);
-        if (error_code != FT_ERR_SUCCESSS)
+        if (error_code != FT_ERR_SUCCESS)
             ft_global_error_stack_push(error_code);
         return (printed);
     }
     error_code = pf_flush_stream(stream);
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         fclose(stream);
         if (string != ft_nullptr && size > 0)
             string[0] = '\0';
-        if (error_code != FT_ERR_SUCCESSS)
+        if (error_code != FT_ERR_SUCCESS)
             ft_global_error_stack_push(error_code);
         return (-1);
     }
@@ -144,6 +144,6 @@ int pf_vsnprintf(char *string, size_t size, const char *format, va_list args)
         string[read_bytes] = '\0';
     }
     fclose(stream);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (printed);
 }

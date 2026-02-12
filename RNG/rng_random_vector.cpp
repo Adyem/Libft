@@ -62,14 +62,14 @@ int ft_random_int_vector(int minimum_value, int maximum_value, int *output_value
     }
     if (output_count == 0)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0);
     }
     ft_init_random_engine();
     std::uniform_int_distribution<int> distribution(minimum_value, maximum_value);
     ft_unique_lock<pt_mutex> guard(g_random_engine_mutex);
     int error_code = ft_global_error_stack_drop_last_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(error_code);
         return (-1);
@@ -93,7 +93,7 @@ int ft_random_int_vector(int minimum_value, int maximum_value, int *output_value
         output_values[output_index] = distribution(g_random_engine);
         output_index += 1;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -109,14 +109,14 @@ int ft_random_float_vector(float *output_values, size_t output_count)
     }
     if (output_count == 0)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0);
     }
     ft_init_random_engine();
     std::uniform_real_distribution<float> distribution(0.0f, 1.0f);
     ft_unique_lock<pt_mutex> guard(g_random_engine_mutex);
     int error_code = ft_global_error_stack_drop_last_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(error_code);
         return (-1);
@@ -140,6 +140,6 @@ int ft_random_float_vector(float *output_values, size_t output_count)
         output_values[output_index] = distribution(g_random_engine);
         output_index += 1;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }

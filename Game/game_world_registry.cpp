@@ -1,7 +1,7 @@
 #include "game_world_registry.hpp"
 
 ft_world_registry::ft_world_registry() noexcept
-    : _regions(), _world_regions(), _error_code(FT_ERR_SUCCESSS)
+    : _regions(), _world_regions(), _error_code(FT_ERR_SUCCESS)
 {
     return ;
 }
@@ -21,10 +21,10 @@ void ft_world_registry::copy_registry_unlocked(const ft_world_registry &other) n
 }
 
 ft_world_registry::ft_world_registry(const ft_world_registry &other) noexcept
-    : _regions(), _world_regions(), _error_code(FT_ERR_SUCCESSS)
+    : _regions(), _world_regions(), _error_code(FT_ERR_SUCCESS)
 {
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESSS)
+    if (other_guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(other_guard.get_error());
         return ;
@@ -41,13 +41,13 @@ ft_world_registry &ft_world_registry::operator=(const ft_world_registry &other) 
     if (this == &other)
         return (*this);
     this_guard = ft_unique_lock<pt_mutex>(this->_mutex);
-    if (this_guard.get_error() != FT_ERR_SUCCESSS)
+    if (this_guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(this_guard.get_error());
         return (*this);
     }
     other_guard = ft_unique_lock<pt_mutex>(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESSS)
+    if (other_guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(other_guard.get_error());
         return (*this);
@@ -57,10 +57,10 @@ ft_world_registry &ft_world_registry::operator=(const ft_world_registry &other) 
 }
 
 ft_world_registry::ft_world_registry(ft_world_registry &&other) noexcept
-    : _regions(), _world_regions(), _error_code(FT_ERR_SUCCESSS)
+    : _regions(), _world_regions(), _error_code(FT_ERR_SUCCESS)
 {
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESSS)
+    if (other_guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(other_guard.get_error());
         return ;
@@ -68,9 +68,9 @@ ft_world_registry::ft_world_registry(ft_world_registry &&other) noexcept
     this->copy_registry_unlocked(other);
     other._regions.clear();
     other._world_regions.clear();
-    other._error_code = FT_ERR_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESS;
     this->set_error(this->_error_code);
-    other.set_error(FT_ERR_SUCCESSS);
+    other.set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -82,13 +82,13 @@ ft_world_registry &ft_world_registry::operator=(ft_world_registry &&other) noexc
     if (this == &other)
         return (*this);
     this_guard = ft_unique_lock<pt_mutex>(this->_mutex);
-    if (this_guard.get_error() != FT_ERR_SUCCESSS)
+    if (this_guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(this_guard.get_error());
         return (*this);
     }
     other_guard = ft_unique_lock<pt_mutex>(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESSS)
+    if (other_guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(other_guard.get_error());
         return (*this);
@@ -96,9 +96,9 @@ ft_world_registry &ft_world_registry::operator=(ft_world_registry &&other) noexc
     this->copy_registry_unlocked(other);
     other._regions.clear();
     other._world_regions.clear();
-    other._error_code = FT_ERR_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESS;
     this->set_error(this->_error_code);
-    other.set_error(FT_ERR_SUCCESSS);
+    other.set_error(FT_ERR_SUCCESS);
     return (*this);
 }
 
@@ -107,12 +107,12 @@ int ft_world_registry::register_region(const ft_region_definition &region) noexc
     int identifier;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return (guard.get_error());
     }
-    if (region.get_error() != FT_ERR_SUCCESSS)
+    if (region.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(region.get_error());
         return (region.get_error());
@@ -128,12 +128,12 @@ int ft_world_registry::register_world(const ft_world_region &world_region) noexc
     int identifier;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return (guard.get_error());
     }
-    if (world_region.get_error() != FT_ERR_SUCCESSS)
+    if (world_region.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(world_region.get_error());
         return (world_region.get_error());
@@ -149,7 +149,7 @@ int ft_world_registry::fetch_region(int region_id, ft_region_definition &out_reg
     const Pair<int, ft_region_definition> *entry;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_world_registry *>(this)->set_error(guard.get_error());
         return (guard.get_error());
@@ -159,7 +159,7 @@ int ft_world_registry::fetch_region(int region_id, ft_region_definition &out_reg
     {
         const_cast<ft_world_registry *>(this)->set_error(FT_ERR_NOT_FOUND);
         guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
+        if (guard.get_error() != FT_ERR_SUCCESS)
         {
             const_cast<ft_world_registry *>(this)->set_error(guard.get_error());
             return (guard.get_error());
@@ -168,7 +168,7 @@ int ft_world_registry::fetch_region(int region_id, ft_region_definition &out_reg
         return (FT_ERR_NOT_FOUND);
     }
     out_region = entry->value;
-    if (out_region.get_error() != FT_ERR_SUCCESSS)
+    if (out_region.get_error() != FT_ERR_SUCCESS)
         const_cast<ft_world_registry *>(this)->set_error(out_region.get_error());
     return (out_region.get_error());
 }
@@ -178,7 +178,7 @@ int ft_world_registry::fetch_world(int world_id, ft_world_region &out_world) con
     const Pair<int, ft_world_region> *entry;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_world_registry *>(this)->set_error(guard.get_error());
         return (guard.get_error());
@@ -188,7 +188,7 @@ int ft_world_registry::fetch_world(int world_id, ft_world_region &out_world) con
     {
         const_cast<ft_world_registry *>(this)->set_error(FT_ERR_NOT_FOUND);
         guard.unlock();
-        if (guard.get_error() != FT_ERR_SUCCESSS)
+        if (guard.get_error() != FT_ERR_SUCCESS)
         {
             const_cast<ft_world_registry *>(this)->set_error(guard.get_error());
             return (guard.get_error());
@@ -197,27 +197,27 @@ int ft_world_registry::fetch_world(int world_id, ft_world_region &out_world) con
         return (FT_ERR_NOT_FOUND);
     }
     out_world = entry->value;
-    if (out_world.get_error() != FT_ERR_SUCCESSS)
+    if (out_world.get_error() != FT_ERR_SUCCESS)
         const_cast<ft_world_registry *>(this)->set_error(out_world.get_error());
     return (out_world.get_error());
 }
 
 ft_map<int, ft_region_definition> &ft_world_registry::get_regions() noexcept
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_regions);
 }
 
 const ft_map<int, ft_region_definition> &ft_world_registry::get_regions() const noexcept
 {
-    const_cast<ft_world_registry *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_world_registry *>(this)->set_error(FT_ERR_SUCCESS);
     return (this->_regions);
 }
 
 void ft_world_registry::set_regions(const ft_map<int, ft_region_definition> &regions) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
@@ -229,20 +229,20 @@ void ft_world_registry::set_regions(const ft_map<int, ft_region_definition> &reg
 
 ft_map<int, ft_world_region> &ft_world_registry::get_world_regions() noexcept
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_world_regions);
 }
 
 const ft_map<int, ft_world_region> &ft_world_registry::get_world_regions() const noexcept
 {
-    const_cast<ft_world_registry *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_world_registry *>(this)->set_error(FT_ERR_SUCCESS);
     return (this->_world_regions);
 }
 
 void ft_world_registry::set_world_regions(const ft_map<int, ft_world_region> &world_regions) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
@@ -258,7 +258,7 @@ int ft_world_registry::get_error() const noexcept
     int error_code;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
         return (guard.get_error());
     error_code = this->_error_code;
     return (error_code);

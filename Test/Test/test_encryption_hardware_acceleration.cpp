@@ -1,8 +1,12 @@
+#include "../test_internal.hpp"
 #include "../../Encryption/encryption_hardware_acceleration.hpp"
 #include "../../Encryption/aes.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 static bool g_encrypt_hook_invoked = false;
 static bool g_decrypt_hook_invoked = false;
@@ -58,8 +62,8 @@ FT_TEST(test_encryption_hardware_hooks_override_aes,
 
     hooks.aes_encrypt = encryption_test_encrypt_hook;
     hooks.aes_decrypt = encryption_test_decrypt_hook;
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, encryption_register_hardware_hooks(hooks));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, encryption_register_hardware_hooks(hooks));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
 
     aes_encrypt(cipher, key);
     FT_ASSERT_EQ(true, g_encrypt_hook_invoked);
@@ -115,7 +119,7 @@ FT_TEST(test_encryption_hardware_hooks_query_state,
     encryption_clear_hardware_hooks();
     hooks.aes_encrypt = encryption_test_encrypt_hook;
     hooks.aes_decrypt = encryption_test_decrypt_hook;
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, encryption_register_hardware_hooks(hooks));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, encryption_register_hardware_hooks(hooks));
     encryption_get_hardware_hooks(queried);
     FT_ASSERT_EQ(true, queried.aes_encrypt == encryption_test_encrypt_hook);
     FT_ASSERT_EQ(true, queried.aes_decrypt == encryption_test_decrypt_hook);

@@ -1,7 +1,11 @@
+#include "../test_internal.hpp"
 #include "../../Time/fps.hpp"
 #include "../../Time/timer.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_time_fps_get_frames_sets_errno_success, "time_fps get_frames_per_second resets ft_errno to success")
 {
@@ -11,7 +15,7 @@ FT_TEST(test_time_fps_get_frames_sets_errno_success, "time_fps get_frames_per_se
     ft_errno = FT_ERR_OUT_OF_RANGE;
     value = frames_per_second.get_frames_per_second();
     FT_ASSERT_EQ(30, value);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -31,7 +35,7 @@ FT_TEST(test_time_fps_sleep_invalid_state_sets_errno, "time_fps sleep reports in
 {
     time_fps    frames_per_second(10);
 
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     frames_per_second.sleep_to_next_frame();
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, frames_per_second.get_error());
@@ -42,7 +46,7 @@ FT_TEST(test_time_timer_start_negative_sets_error, "time_timer rejects negative 
 {
     time_timer  timer;
 
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     timer.start(-5);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, timer.get_error());
@@ -57,8 +61,8 @@ FT_TEST(test_time_timer_zero_duration_finishes_immediately, "time_timer zero dur
     timer.start(0);
     remaining = timer.update();
     FT_ASSERT_EQ(0, remaining);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, timer.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, timer.get_error());
     return (1);
 }
 
@@ -67,7 +71,7 @@ FT_TEST(test_time_timer_add_time_requires_running_timer, "time_timer add_time va
     time_timer  timer;
     long        result;
 
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     result = timer.add_time(100);
     FT_ASSERT_EQ(-1, result);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);

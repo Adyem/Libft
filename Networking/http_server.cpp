@@ -13,7 +13,7 @@
 #endif
 
 ft_http_server::ft_http_server()
-    : _server_socket(), _error_code(FT_ERR_SUCCESSS), _non_blocking(false), _mutex()
+    : _server_socket(), _error_code(FT_ERR_SUCCESS), _non_blocking(false), _mutex()
 {
     return ;
 }
@@ -22,15 +22,15 @@ ft_http_server::~ft_http_server()
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = guard.get_error();
         return ;
     }
     this->_server_socket.close_socket();
     this->_non_blocking = false;
-    this->set_error(FT_ERR_SUCCESSS);
-    ft_errno = FT_ERR_SUCCESSS;
+    this->set_error(FT_ERR_SUCCESS);
+    ft_errno = FT_ERR_SUCCESS;
     return ;
 }
 
@@ -46,8 +46,8 @@ int ft_http_server::start(const char *ip, uint16_t port, int address_family, boo
     SocketConfig configuration;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    ft_errno = FT_ERR_SUCCESSS;
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    ft_errno = FT_ERR_SUCCESS;
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return (1);
@@ -61,14 +61,14 @@ int ft_http_server::start(const char *ip, uint16_t port, int address_family, boo
     configuration._recv_timeout = 5000;
     configuration._send_timeout = 5000;
     this->_server_socket = ft_socket(configuration);
-    if (this->_networking_fetch_last_error() != FT_ERR_SUCCESSS)
+    if (this->_networking_fetch_last_error() != FT_ERR_SUCCESS)
     {
         this->set_error(this->_networking_fetch_last_error());
         return (1);
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     this->_non_blocking = non_blocking;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (0);
 }
 
@@ -92,7 +92,7 @@ static int parse_request(const ft_string &request, ft_string &body, bool &is_pos
     }
     else
         body.clear();
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 static void http_server_record_metrics(const char *method, size_t request_bytes,
@@ -108,7 +108,7 @@ static void http_server_record_metrics(const char *method, size_t request_bytes,
     duration_ms = time_monotonic_point_diff_ms(start_time, finish_time);
     if (duration_ms < 0)
         duration_ms = 0;
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     if (result != 0)
         error_code = ft_errno;
     sample.labels.component = "http_server";
@@ -120,7 +120,7 @@ static void http_server_record_metrics(const char *method, size_t request_bytes,
     sample.response_bytes = response_bytes;
     sample.status_code = status_code;
     sample.error_code = error_code;
-    if (error_code == FT_ERR_SUCCESSS)
+    if (error_code == FT_ERR_SUCCESS)
     {
         sample.success = true;
         sample.error_tag = "ok";
@@ -234,15 +234,15 @@ int ft_http_server::run_once()
     int result;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    ft_errno = FT_ERR_SUCCESSS;
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    ft_errno = FT_ERR_SUCCESS;
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return (1);
     }
     result = this->run_once_locked(guard);
     if (result == 0)
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESS;
     return (result);
 }
 
@@ -281,8 +281,8 @@ int ft_http_server::run_once_locked(ft_unique_lock<pt_mutex> &guard)
         last_error = WSAGetLastError();
         if (this->_non_blocking != false && last_error == WSAEWOULDBLOCK)
         {
-            ft_errno = FT_ERR_SUCCESSS;
-            this->_error_code = FT_ERR_SUCCESSS;
+            ft_errno = FT_ERR_SUCCESS;
+            this->_error_code = FT_ERR_SUCCESS;
             return (0);
         }
         this->set_error(ft_map_system_error(last_error));
@@ -292,8 +292,8 @@ int ft_http_server::run_once_locked(ft_unique_lock<pt_mutex> &guard)
         last_error = errno;
         if (this->_non_blocking != false && (last_error == EAGAIN || last_error == EWOULDBLOCK))
         {
-            ft_errno = FT_ERR_SUCCESSS;
-            this->_error_code = FT_ERR_SUCCESSS;
+            ft_errno = FT_ERR_SUCCESS;
+            this->_error_code = FT_ERR_SUCCESS;
             return (0);
         }
         this->set_error(ft_map_system_error(last_error));
@@ -303,7 +303,7 @@ int ft_http_server::run_once_locked(ft_unique_lock<pt_mutex> &guard)
     connection_active = true;
     overall_result = 0;
     processed_requests = 0;
-    last_error_code = FT_ERR_SUCCESSS;
+    last_error_code = FT_ERR_SUCCESS;
     ft_string pending_data;
     while (connection_active != false)
     {
@@ -342,7 +342,7 @@ int ft_http_server::run_once_locked(ft_unique_lock<pt_mutex> &guard)
         response_bytes = 0;
         status_code_value = 0;
         is_post = false;
-        parse_error = FT_ERR_SUCCESSS;
+        parse_error = FT_ERR_SUCCESS;
         request_failed = false;
         request_result = 1;
         should_keep_alive = false;
@@ -480,8 +480,8 @@ int ft_http_server::run_once_locked(ft_unique_lock<pt_mutex> &guard)
                 if (request.empty() != false && header_complete == false)
                 {
                     nw_close(client_socket);
-                    ft_errno = FT_ERR_SUCCESSS;
-                    this->_error_code = FT_ERR_SUCCESSS;
+                    ft_errno = FT_ERR_SUCCESS;
+                    this->_error_code = FT_ERR_SUCCESS;
                     return (0);
                 }
                 nw_close(client_socket);
@@ -523,7 +523,7 @@ int ft_http_server::run_once_locked(ft_unique_lock<pt_mutex> &guard)
         current_request.assign(request.c_str(), consumed_length);
         request_bytes = consumed_length;
         parse_error = parse_request(current_request, body, is_post);
-        if (parse_error != FT_ERR_SUCCESSS)
+        if (parse_error != FT_ERR_SUCCESS)
         {
             nw_close(client_socket);
             this->set_error(parse_error);
@@ -669,8 +669,8 @@ int ft_http_server::run_once_locked(ft_unique_lock<pt_mutex> &guard)
                 break;
             }
         }
-        ft_errno = FT_ERR_SUCCESSS;
-        this->_error_code = FT_ERR_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESS;
+        this->_error_code = FT_ERR_SUCCESS;
         status_code_value = 200;
         request_result = 0;
         if (metrics_enabled != false)
@@ -682,8 +682,8 @@ int ft_http_server::run_once_locked(ft_unique_lock<pt_mutex> &guard)
     nw_close(client_socket);
     if (overall_result == 0)
     {
-        ft_errno = FT_ERR_SUCCESSS;
-        this->_error_code = FT_ERR_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESS;
+        this->_error_code = FT_ERR_SUCCESS;
         return (0);
     }
     this->_error_code = last_error_code;
@@ -695,14 +695,14 @@ int ft_http_server::get_error() const
     int error_value;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    ft_errno = FT_ERR_SUCCESSS;
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    ft_errno = FT_ERR_SUCCESS;
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = guard.get_error();
         return (this->_error_code);
     }
     error_value = this->_error_code;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (error_value);
 }
 
@@ -712,8 +712,8 @@ const char *ft_http_server::get_error_str() const
     const char *error_string;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    ft_errno = FT_ERR_SUCCESSS;
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    ft_errno = FT_ERR_SUCCESS;
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const char *guard_error_string;
 
@@ -723,7 +723,7 @@ const char *ft_http_server::get_error_str() const
     }
     error_value = this->_error_code;
     error_string = ft_strerror(error_value);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (error_string);
 }
 

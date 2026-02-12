@@ -502,11 +502,11 @@ static int pf_engine_write_literal(const ft_string &literal, t_pf_engine_write_c
     int write_error;
 
     if (literal.size() == 0)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     write_error = writer(literal.c_str(), literal.size(), context, written_count);
-    if (write_error != FT_ERR_SUCCESSS)
+    if (write_error != FT_ERR_SUCCESS)
         return (write_error);
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 static ft_string pf_engine_build_format_string(const pf_engine_format_spec &spec, int width_value, bool width_specified, int precision_value, bool precision_specified)
@@ -576,9 +576,9 @@ static int pf_engine_format_boolean(int value, t_pf_engine_write_callback writer
         length = 5;
     }
     write_error = writer(literal, length, context, written_count);
-    if (write_error != FT_ERR_SUCCESSS)
+    if (write_error != FT_ERR_SUCCESS)
         return (write_error);
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 static int pf_engine_format_with_snprintf(const ft_string &format_string, t_pf_engine_write_callback writer, void *context, size_t *written_count, ...)
@@ -595,18 +595,18 @@ static int pf_engine_format_with_snprintf(const ft_string &format_string, t_pf_e
     if (required_length == 0)
     {
         write_error = writer("", 0, context, written_count);
-        if (write_error != FT_ERR_SUCCESSS)
+        if (write_error != FT_ERR_SUCCESS)
             return (write_error);
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     }
     ft_string output;
     output.resize_length(static_cast<size_t>(required_length));
     int string_error = pf_string_pop_last_error(output);
-    if (string_error != FT_ERR_SUCCESSS)
+    if (string_error != FT_ERR_SUCCESS)
         return (string_error);
     char *output_buffer = output.print();
     string_error = pf_string_pop_last_error(output);
-    if (string_error != FT_ERR_SUCCESSS)
+    if (string_error != FT_ERR_SUCCESS)
         return (string_error);
     if (output_buffer == ft_nullptr)
         return (FT_ERR_IO);
@@ -618,20 +618,20 @@ static int pf_engine_format_with_snprintf(const ft_string &format_string, t_pf_e
         return (FT_ERR_IO);
     output.resize_length(static_cast<size_t>(written_length));
     string_error = pf_string_pop_last_error(output);
-    if (string_error != FT_ERR_SUCCESSS)
+    if (string_error != FT_ERR_SUCCESS)
         return (string_error);
     const char *output_text = output.c_str();
     string_error = pf_string_pop_last_error(output);
-    if (string_error != FT_ERR_SUCCESSS)
+    if (string_error != FT_ERR_SUCCESS)
         return (string_error);
     size_t output_length = output.size();
     string_error = pf_string_pop_last_error(output);
-    if (string_error != FT_ERR_SUCCESSS)
+    if (string_error != FT_ERR_SUCCESS)
         return (string_error);
     write_error = writer(output_text, output_length, context, written_count);
-    if (write_error != FT_ERR_SUCCESSS)
+    if (write_error != FT_ERR_SUCCESS)
         return (write_error);
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 static int pf_engine_format_standard_sequential(const pf_engine_format_spec &original_spec, va_list *args, t_pf_engine_write_callback writer, void *context, size_t *written_count, size_t *character_count)
@@ -734,7 +734,7 @@ static int pf_engine_format_standard_sequential(const pf_engine_format_spec &ori
             if (pointer)
                 *pointer = static_cast<int>(value);
         }
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     }
     if (spec.conversion_specifier == 'b')
     {
@@ -743,10 +743,10 @@ static int pf_engine_format_standard_sequential(const pf_engine_format_spec &ori
 
         boolean_value = va_arg(*args, int);
         format_error = pf_engine_format_boolean(boolean_value, writer, context, written_count);
-        if (format_error != FT_ERR_SUCCESSS)
+        if (format_error != FT_ERR_SUCCESS)
             return (format_error);
         *character_count = *written_count;
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     }
     ft_string format_string;
     format_string = pf_engine_build_format_string(spec, width_value, width_specified, precision_value, precision_specified);
@@ -917,17 +917,17 @@ static int pf_engine_format_standard_sequential(const pf_engine_format_spec &ori
         int write_error;
 
         write_error = writer("%", 1, context, written_count);
-        if (write_error != FT_ERR_SUCCESSS)
+        if (write_error != FT_ERR_SUCCESS)
             return (write_error);
         *character_count += 1;
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     }
     else
         return (FT_ERR_INVALID_ARGUMENT);
-    if (status != FT_ERR_SUCCESSS)
+    if (status != FT_ERR_SUCCESS)
         return (status);
     *character_count = *written_count;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 static int pf_engine_process_sequential(const std::vector<pf_engine_token> &tokens, va_list args, t_pf_engine_write_callback writer, void *context, size_t *written_count)
@@ -939,7 +939,7 @@ static int pf_engine_process_sequential(const std::vector<pf_engine_token> &toke
     va_list current_args;
     va_copy(current_args, args);
     int status;
-    status = FT_ERR_SUCCESSS;
+    status = FT_ERR_SUCCESS;
     bool mark_overflow;
     mark_overflow = false;
     while (index < tokens.size())
@@ -948,7 +948,7 @@ static int pf_engine_process_sequential(const std::vector<pf_engine_token> &toke
         if (token.is_literal)
         {
             status = pf_engine_write_literal(token.literal_value, writer, context, written_count);
-            if (status != FT_ERR_SUCCESSS)
+            if (status != FT_ERR_SUCCESS)
                 break ;
             character_count = *written_count;
         }
@@ -961,7 +961,7 @@ static int pf_engine_process_sequential(const std::vector<pf_engine_token> &toke
 
                 handled = false;
                 status = pf_try_format_custom_specifier(token.spec.conversion_specifier, &current_args, custom_output, &handled);
-                if (status != FT_ERR_SUCCESSS)
+                if (status != FT_ERR_SUCCESS)
                 {
                     mark_overflow = true;
                     break ;
@@ -969,17 +969,17 @@ static int pf_engine_process_sequential(const std::vector<pf_engine_token> &toke
                 if (handled)
                 {
                     status = pf_engine_write_literal(custom_output, writer, context, written_count);
-                    if (status != FT_ERR_SUCCESSS)
+                    if (status != FT_ERR_SUCCESS)
                         break ;
                     character_count = *written_count;
                 }
                 else
                 {
                     status = writer("%", 1, context, written_count);
-                    if (status != FT_ERR_SUCCESSS)
+                    if (status != FT_ERR_SUCCESS)
                         break ;
                     status = writer(&token.spec.conversion_specifier, 1, context, written_count);
-                    if (status != FT_ERR_SUCCESSS)
+                    if (status != FT_ERR_SUCCESS)
                         break ;
                     character_count = *written_count;
                 }
@@ -987,20 +987,20 @@ static int pf_engine_process_sequential(const std::vector<pf_engine_token> &toke
                 continue ;
             }
             status = pf_engine_format_standard_sequential(token.spec, &current_args, writer, context, written_count, &character_count);
-            if (status != FT_ERR_SUCCESSS)
+            if (status != FT_ERR_SUCCESS)
                 break ;
         }
         index += 1;
     }
     va_end(current_args);
-    if (status != FT_ERR_SUCCESSS)
+    if (status != FT_ERR_SUCCESS)
     {
         if (mark_overflow == true)
             *written_count = SIZE_MAX;
         return (status);
     }
     *written_count = character_count;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 static void pf_engine_argument_types_resize(std::vector<pf_engine_argument_kind> &kinds, size_t required_index)
@@ -1299,7 +1299,7 @@ static int pf_engine_format_standard_positional(const pf_engine_format_spec &ori
             *target.data.ptrdiff_pointer_value = static_cast<ptrdiff_t>(value);
         else if (target.kind == PF_ARGUMENT_INT_POINTER && target.data.int_pointer_value)
             *target.data.int_pointer_value = static_cast<int>(value);
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     }
     if (spec.conversion_specifier == 'b')
     {
@@ -1311,10 +1311,10 @@ static int pf_engine_format_standard_positional(const pf_engine_format_spec &ori
         int format_error;
 
         format_error = pf_engine_format_boolean(value.data.int_value, writer, context, written_count);
-        if (format_error != FT_ERR_SUCCESSS)
+        if (format_error != FT_ERR_SUCCESS)
             return (format_error);
         *character_count = *written_count;
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     }
     ft_string format_string;
     format_string = pf_engine_build_format_string(spec, width_value, width_specified, precision_value, precision_specified);
@@ -1406,15 +1406,15 @@ static int pf_engine_format_standard_positional(const pf_engine_format_spec &ori
         int write_error;
 
         write_error = writer("%", 1, context, written_count);
-        if (write_error != FT_ERR_SUCCESSS)
+        if (write_error != FT_ERR_SUCCESS)
             return (write_error);
         *character_count += 1;
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     }
-    if (status != FT_ERR_SUCCESSS)
+    if (status != FT_ERR_SUCCESS)
         return (status);
     *character_count = *written_count;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 static int pf_engine_process_positional(const std::vector<pf_engine_token> &tokens, va_list args, t_pf_engine_write_callback writer, void *context, size_t *written_count)
@@ -1437,7 +1437,7 @@ static int pf_engine_process_positional(const std::vector<pf_engine_token> &toke
             int write_error;
 
             write_error = pf_engine_write_literal(token.literal_value, writer, context, written_count);
-            if (write_error != FT_ERR_SUCCESSS)
+            if (write_error != FT_ERR_SUCCESS)
                 return (write_error);
             character_count = *written_count;
         }
@@ -1448,13 +1448,13 @@ static int pf_engine_process_positional(const std::vector<pf_engine_token> &toke
             int format_error;
 
             format_error = pf_engine_format_standard_positional(token.spec, values, writer, context, written_count, &character_count);
-            if (format_error != FT_ERR_SUCCESSS)
+            if (format_error != FT_ERR_SUCCESS)
                 return (format_error);
         }
         index += 1;
     }
     *written_count = character_count;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 int pf_engine_format(const char *format, va_list args, t_pf_engine_write_callback writer, void *context, size_t *written_count)
@@ -1481,11 +1481,11 @@ int pf_engine_format(const char *format, va_list args, t_pf_engine_write_callbac
         status = pf_engine_process_positional(tokens, args, writer, context, written_count);
     else
         status = pf_engine_process_sequential(tokens, args, writer, context, written_count);
-    if (status != FT_ERR_SUCCESSS)
+    if (status != FT_ERR_SUCCESS)
         return (status);
     if (*written_count < initial_count)
     {
         return (FT_ERR_INVALID_ARGUMENT);
     }
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }

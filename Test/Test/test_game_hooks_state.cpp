@@ -1,3 +1,4 @@
+#include "../test_internal.hpp"
 #include "../../Game/game_state.hpp"
 #include "../../Game/game_hooks.hpp"
 #include "../../Game/game_character.hpp"
@@ -9,6 +10,9 @@
 #include "../../Errno/errno.hpp"
 #include <cstdint>
 #include <new>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_game_state_dispatches_registered_hooks, "Game: game state dispatch forwards callbacks")
 {
@@ -50,15 +54,15 @@ FT_TEST(test_game_state_dispatches_registered_hooks, "Game: game state dispatch 
         return ;
     }));
     state.set_hooks(hooks);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, state.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, state.get_error());
     state.dispatch_item_crafted(character, item);
     state.dispatch_character_damaged(character, 9, static_cast<uint8_t>(1));
     state.dispatch_event_triggered(world, event);
     FT_ASSERT_EQ(1, crafted_invocations);
     FT_ASSERT_EQ(1, damaged_invocations);
     FT_ASSERT_EQ(1, event_invocations);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, hooks->get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, state.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hooks->get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, state.get_error());
     return (1);
 }
 
@@ -109,7 +113,7 @@ FT_TEST(test_game_state_reset_hooks_clears_callbacks, "Game: game state reset cl
     FT_ASSERT_EQ(1, damaged_invocations);
     FT_ASSERT_EQ(1, event_invocations);
     state.reset_hooks();
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, state.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, state.get_error());
     crafted_invocations = 0;
     damaged_invocations = 0;
     event_invocations = 0;
@@ -119,7 +123,7 @@ FT_TEST(test_game_state_reset_hooks_clears_callbacks, "Game: game state reset cl
     FT_ASSERT_EQ(0, crafted_invocations);
     FT_ASSERT_EQ(0, damaged_invocations);
     FT_ASSERT_EQ(0, event_invocations);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, hooks->get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, state.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hooks->get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, state.get_error());
     return (1);
 }

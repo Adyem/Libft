@@ -32,22 +32,18 @@ double math_sqrt(double number)
 
     if (math_isnan(number))
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (math_nan());
     }
     if (number < 0)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (math_nan());
     }
     if (math_is_infinite_internal(number) != 0)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (number);
     }
     if (math_fabs(number) <= DBL_MIN)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
         return (0.0);
     }
     guess = number;
@@ -58,7 +54,6 @@ double math_sqrt(double number)
         next_guess = 0.5 * (guess + number / guess);
         if (math_isnan(next_guess))
         {
-            ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
             return (math_nan());
         }
         difference = math_fabs(next_guess - guess);
@@ -71,12 +66,10 @@ double math_sqrt(double number)
         }
         if (difference < tolerance)
         {
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
             return (next_guess);
         }
         guess = next_guess;
         iteration_count += 1;
     }
-    ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
     return (math_nan());
 }

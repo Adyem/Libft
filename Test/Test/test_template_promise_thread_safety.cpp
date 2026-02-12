@@ -1,6 +1,10 @@
+#include "../test_internal.hpp"
 #include "../../Template/promise.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_promise_thread_safety_controls_reset_errno,
         "ft_promise optional guard can lock, unlock, and reset errno")
@@ -18,9 +22,9 @@ FT_TEST(test_promise_thread_safety_controls_reset_errno,
     lock_acquired = false;
     FT_ASSERT_EQ(0, promise_value.lock(&lock_acquired));
     FT_ASSERT_EQ(true, lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     promise_value.unlock(lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -40,8 +44,8 @@ FT_TEST(test_promise_void_thread_safety_controls_reset_errno,
     lock_acquired = false;
     FT_ASSERT_EQ(0, promise_value.lock(&lock_acquired));
     FT_ASSERT_EQ(true, lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     promise_value.unlock(lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }

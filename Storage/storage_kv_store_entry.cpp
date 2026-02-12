@@ -10,12 +10,12 @@ static int storage_kv_capture_string_error(const ft_string &value) noexcept
     unsigned long long operation_id = value.last_operation_id();
 
     if (operation_id == 0)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     int error_code = value.pop_operation_error(operation_id);
 
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
         return (error_code);
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 void kv_store_entry::set_error_unlocked(int error_code) const noexcept
@@ -42,23 +42,23 @@ int kv_store_entry::lock_entry(ft_unique_lock<pt_mutex> &guard) const noexcept
     ft_unique_lock<pt_mutex> local_guard(this->_mutex);
     int guard_error = ft_global_error_stack_drop_last_error();
 
-    if (guard_error != FT_ERR_SUCCESSS)
+    if (guard_error != FT_ERR_SUCCESS)
     {
         guard = ft_unique_lock<pt_mutex>();
         return (guard_error);
     }
     guard = ft_move(local_guard);
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 kv_store_entry::kv_store_entry() noexcept
     : _value()
     , _has_expiration(false)
     , _expiration_timestamp(0)
-    , _error_code(FT_ERR_SUCCESSS)
+    , _error_code(FT_ERR_SUCCESS)
     , _mutex()
 {
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_error_unlocked(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -66,14 +66,14 @@ kv_store_entry::kv_store_entry(const kv_store_entry &other) noexcept
     : _value()
     , _has_expiration(false)
     , _expiration_timestamp(0)
-    , _error_code(FT_ERR_SUCCESSS)
+    , _error_code(FT_ERR_SUCCESS)
     , _mutex()
 {
     ft_unique_lock<pt_mutex> other_guard;
     int lock_error;
 
     lock_error = other.lock_entry(other_guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error_unlocked(lock_error);
         return ;
@@ -82,7 +82,7 @@ kv_store_entry::kv_store_entry(const kv_store_entry &other) noexcept
     {
         int value_error = storage_kv_capture_string_error(this->_value);
 
-        if (value_error != FT_ERR_SUCCESSS)
+        if (value_error != FT_ERR_SUCCESS)
         {
             this->set_error_unlocked(value_error);
             return ;
@@ -90,7 +90,7 @@ kv_store_entry::kv_store_entry(const kv_store_entry &other) noexcept
     }
     this->_has_expiration = other._has_expiration;
     this->_expiration_timestamp = other._expiration_timestamp;
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_error_unlocked(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -98,14 +98,14 @@ kv_store_entry::kv_store_entry(kv_store_entry &&other) noexcept
     : _value()
     , _has_expiration(false)
     , _expiration_timestamp(0)
-    , _error_code(FT_ERR_SUCCESSS)
+    , _error_code(FT_ERR_SUCCESS)
     , _mutex()
 {
     ft_unique_lock<pt_mutex> other_guard;
     int lock_error;
 
     lock_error = other.lock_entry(other_guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error_unlocked(lock_error);
         return ;
@@ -114,7 +114,7 @@ kv_store_entry::kv_store_entry(kv_store_entry &&other) noexcept
     {
         int value_error = storage_kv_capture_string_error(this->_value);
 
-        if (value_error != FT_ERR_SUCCESSS)
+        if (value_error != FT_ERR_SUCCESS)
         {
             this->set_error_unlocked(value_error);
             return ;
@@ -128,14 +128,14 @@ kv_store_entry::kv_store_entry(kv_store_entry &&other) noexcept
     {
         int other_error = storage_kv_capture_string_error(other._value);
 
-        if (other_error != FT_ERR_SUCCESSS)
+        if (other_error != FT_ERR_SUCCESS)
         {
             other.set_error_unlocked(other_error);
             return ;
         }
     }
-    other.set_error_unlocked(FT_ERR_SUCCESSS);
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    other.set_error_unlocked(FT_ERR_SUCCESS);
+    this->set_error_unlocked(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -147,17 +147,17 @@ kv_store_entry &kv_store_entry::operator=(const kv_store_entry &other) noexcept
 
     if (this == &other)
     {
-        this->set_error_unlocked(FT_ERR_SUCCESSS);
+        this->set_error_unlocked(FT_ERR_SUCCESS);
         return (*this);
     }
     lock_error = this->lock_entry(this_guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error_unlocked(lock_error);
         return (*this);
     }
     lock_error = other.lock_entry(other_guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error_unlocked(lock_error);
         return (*this);
@@ -166,7 +166,7 @@ kv_store_entry &kv_store_entry::operator=(const kv_store_entry &other) noexcept
     {
         int value_error = storage_kv_capture_string_error(this->_value);
 
-        if (value_error != FT_ERR_SUCCESSS)
+        if (value_error != FT_ERR_SUCCESS)
         {
             this->set_error_unlocked(value_error);
             return (*this);
@@ -174,7 +174,7 @@ kv_store_entry &kv_store_entry::operator=(const kv_store_entry &other) noexcept
     }
     this->_has_expiration = other._has_expiration;
     this->_expiration_timestamp = other._expiration_timestamp;
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_error_unlocked(FT_ERR_SUCCESS);
     return (*this);
 }
 
@@ -189,11 +189,11 @@ kv_store_entry &kv_store_entry::operator=(kv_store_entry &&other) noexcept
 
     if (this == &other)
     {
-        this->set_error_unlocked(FT_ERR_SUCCESSS);
+        this->set_error_unlocked(FT_ERR_SUCCESS);
         return (*this);
     }
     lock_error = other.lock_entry(other_guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error_unlocked(lock_error);
         return (*this);
@@ -202,7 +202,7 @@ kv_store_entry &kv_store_entry::operator=(kv_store_entry &&other) noexcept
     {
         int moved_error = storage_kv_capture_string_error(moved_value);
 
-        if (moved_error != FT_ERR_SUCCESSS)
+        if (moved_error != FT_ERR_SUCCESS)
         {
             this->set_error_unlocked(moved_error);
             return (*this);
@@ -216,16 +216,16 @@ kv_store_entry &kv_store_entry::operator=(kv_store_entry &&other) noexcept
     {
         int other_error = storage_kv_capture_string_error(other._value);
 
-        if (other_error != FT_ERR_SUCCESSS)
+        if (other_error != FT_ERR_SUCCESS)
         {
             other.set_error_unlocked(other_error);
             return (*this);
         }
     }
-    other.set_error_unlocked(FT_ERR_SUCCESSS);
+    other.set_error_unlocked(FT_ERR_SUCCESS);
     this->reinitialize_mutex();
     lock_error = this->lock_entry(new_guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error_unlocked(lock_error);
         return (*this);
@@ -234,7 +234,7 @@ kv_store_entry &kv_store_entry::operator=(kv_store_entry &&other) noexcept
     {
         int value_error = storage_kv_capture_string_error(this->_value);
 
-        if (value_error != FT_ERR_SUCCESSS)
+        if (value_error != FT_ERR_SUCCESS)
         {
             this->set_error_unlocked(value_error);
             return (*this);
@@ -242,7 +242,7 @@ kv_store_entry &kv_store_entry::operator=(kv_store_entry &&other) noexcept
     }
     this->_has_expiration = moved_has_expiration;
     this->_expiration_timestamp = moved_expiration_timestamp;
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_error_unlocked(FT_ERR_SUCCESS);
     return (*this);
 }
 
@@ -257,7 +257,7 @@ int kv_store_entry::set_value(const ft_string &value) noexcept
     int lock_error;
 
     lock_error = this->lock_entry(guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error_unlocked(lock_error);
         return (-1);
@@ -266,13 +266,13 @@ int kv_store_entry::set_value(const ft_string &value) noexcept
     {
         int value_error = storage_kv_capture_string_error(this->_value);
 
-        if (value_error != FT_ERR_SUCCESSS)
+        if (value_error != FT_ERR_SUCCESS)
         {
             this->set_error_unlocked(value_error);
             return (-1);
         }
     }
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_error_unlocked(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -289,7 +289,7 @@ int kv_store_entry::set_value(const char *value_string) noexcept
     {
         int temp_error = storage_kv_capture_string_error(temporary_value);
 
-        if (temp_error != FT_ERR_SUCCESSS)
+        if (temp_error != FT_ERR_SUCCESS)
         {
             this->set_error(temp_error);
             return (-1);
@@ -304,7 +304,7 @@ int kv_store_entry::copy_value(ft_string &destination) const noexcept
     int lock_error;
 
     lock_error = this->lock_entry(guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         const_cast<kv_store_entry *>(this)->set_error_unlocked(lock_error);
         return (-1);
@@ -313,13 +313,13 @@ int kv_store_entry::copy_value(ft_string &destination) const noexcept
     {
         int dest_error = storage_kv_capture_string_error(destination);
 
-        if (dest_error != FT_ERR_SUCCESSS)
+        if (dest_error != FT_ERR_SUCCESS)
         {
             const_cast<kv_store_entry *>(this)->set_error_unlocked(dest_error);
             return (-1);
         }
     }
-    const_cast<kv_store_entry *>(this)->set_error_unlocked(FT_ERR_SUCCESSS);
+    const_cast<kv_store_entry *>(this)->set_error_unlocked(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -334,7 +334,7 @@ int kv_store_entry::get_value_pointer(const char **value_pointer) const noexcept
         return (-1);
     }
     lock_error = this->lock_entry(guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         const_cast<kv_store_entry *>(this)->set_error_unlocked(lock_error);
         return (-1);
@@ -345,7 +345,7 @@ int kv_store_entry::get_value_pointer(const char **value_pointer) const noexcept
         const_cast<kv_store_entry *>(this)->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
-    const_cast<kv_store_entry *>(this)->set_error_unlocked(FT_ERR_SUCCESSS);
+    const_cast<kv_store_entry *>(this)->set_error_unlocked(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -355,7 +355,7 @@ int kv_store_entry::configure_expiration(bool has_expiration, long long expirati
     int lock_error;
 
     lock_error = this->lock_entry(guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error_unlocked(lock_error);
         return (-1);
@@ -365,7 +365,7 @@ int kv_store_entry::configure_expiration(bool has_expiration, long long expirati
         this->_expiration_timestamp = expiration_timestamp;
     else
         this->_expiration_timestamp = 0;
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_error_unlocked(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -375,13 +375,13 @@ int kv_store_entry::has_expiration(bool &has_expiration) const noexcept
     int lock_error;
 
     lock_error = this->lock_entry(guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         const_cast<kv_store_entry *>(this)->set_error_unlocked(lock_error);
         return (-1);
     }
     has_expiration = this->_has_expiration;
-    const_cast<kv_store_entry *>(this)->set_error_unlocked(FT_ERR_SUCCESSS);
+    const_cast<kv_store_entry *>(this)->set_error_unlocked(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -391,13 +391,13 @@ int kv_store_entry::get_expiration(long long &expiration_timestamp) const noexce
     int lock_error;
 
     lock_error = this->lock_entry(guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         const_cast<kv_store_entry *>(this)->set_error_unlocked(lock_error);
         return (-1);
     }
     expiration_timestamp = this->_expiration_timestamp;
-    const_cast<kv_store_entry *>(this)->set_error_unlocked(FT_ERR_SUCCESSS);
+    const_cast<kv_store_entry *>(this)->set_error_unlocked(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -407,7 +407,7 @@ int kv_store_entry::is_expired(long long current_time, bool &expired) const noex
     int lock_error;
 
     lock_error = this->lock_entry(guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         const_cast<kv_store_entry *>(this)->set_error_unlocked(lock_error);
         return (-1);
@@ -415,7 +415,7 @@ int kv_store_entry::is_expired(long long current_time, bool &expired) const noex
     if (this->_has_expiration == false)
     {
         expired = false;
-        const_cast<kv_store_entry *>(this)->set_error_unlocked(FT_ERR_SUCCESSS);
+        const_cast<kv_store_entry *>(this)->set_error_unlocked(FT_ERR_SUCCESS);
         return (0);
     }
     if (current_time < 0)
@@ -425,7 +425,7 @@ int kv_store_entry::is_expired(long long current_time, bool &expired) const noex
         return (-1);
     }
     expired = this->_expiration_timestamp <= current_time;
-    const_cast<kv_store_entry *>(this)->set_error_unlocked(FT_ERR_SUCCESSS);
+    const_cast<kv_store_entry *>(this)->set_error_unlocked(FT_ERR_SUCCESS);
     return (0);
 }
 

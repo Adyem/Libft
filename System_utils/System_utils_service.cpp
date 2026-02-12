@@ -71,7 +71,7 @@ static void su_service_signal_dispatch(int signal_number)
 void    su_service_force_no_fork(bool enable)
 {
     g_su_service_force_no_fork = enable;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -121,7 +121,7 @@ static int  su_service_redirect_standard_streams(int *error_code)
         return (-1);
     }
     if (error_code != ft_nullptr)
-        *error_code = FT_ERR_SUCCESSS;
+        *error_code = FT_ERR_SUCCESS;
     return (0);
 }
 
@@ -137,12 +137,12 @@ static int  su_service_write_pid_file(const char *pid_file_path, int *error_code
     if (!pid_file_path)
     {
         if (error_code != ft_nullptr)
-            *error_code = FT_ERR_SUCCESSS;
+            *error_code = FT_ERR_SUCCESS;
         return (0);
     }
     std::memset(buffer, 0, sizeof(buffer));
     int pid_error = cmp_service_format_pid_line(buffer, sizeof(buffer), &length);
-    if (pid_error != FT_ERR_SUCCESSS)
+    if (pid_error != FT_ERR_SUCCESS)
     {
         if (error_code != ft_nullptr)
             *error_code = pid_error;
@@ -152,7 +152,7 @@ static int  su_service_write_pid_file(const char *pid_file_path, int *error_code
     local_error_code = ft_global_error_stack_drop_last_error();
     if (file_descriptor < 0)
     {
-        if (local_error_code == FT_ERR_SUCCESSS)
+        if (local_error_code == FT_ERR_SUCCESS)
             local_error_code = FT_ERR_FILE_OPEN_FAILED;
         if (error_code != ft_nullptr)
             *error_code = local_error_code;
@@ -162,7 +162,7 @@ static int  su_service_write_pid_file(const char *pid_file_path, int *error_code
     local_error_code = ft_global_error_stack_drop_last_error();
     if (bytes_written < 0 || static_cast<size_t>(bytes_written) != length)
     {
-        if (local_error_code == FT_ERR_SUCCESSS)
+        if (local_error_code == FT_ERR_SUCCESS)
             local_error_code = FT_ERR_IO;
         su_close(file_descriptor);
         ft_global_error_stack_drop_last_error();
@@ -174,14 +174,14 @@ static int  su_service_write_pid_file(const char *pid_file_path, int *error_code
     local_error_code = ft_global_error_stack_drop_last_error();
     if (close_error != 0)
     {
-        if (local_error_code == FT_ERR_SUCCESSS)
+        if (local_error_code == FT_ERR_SUCCESS)
             local_error_code = FT_ERR_IO;
         if (error_code != ft_nullptr)
             *error_code = local_error_code;
         return (-1);
     }
     if (error_code != ft_nullptr)
-        *error_code = FT_ERR_SUCCESSS;
+        *error_code = FT_ERR_SUCCESS;
     return (0);
 }
 
@@ -208,14 +208,14 @@ int su_service_daemonize(const char *working_directory, const char *pid_file_pat
     }
     if (redirect_standard_streams)
     {
-        error_code = FT_ERR_SUCCESSS;
+        error_code = FT_ERR_SUCCESS;
         if (su_service_redirect_standard_streams(&error_code) != 0)
         {
             ft_global_error_stack_push(error_code);
             return (-1);
         }
     }
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     if (su_service_write_pid_file(pid_file_path, &error_code) != 0)
     {
         ft_global_error_stack_push(error_code);
@@ -236,7 +236,7 @@ int su_service_daemonize(const char *working_directory, const char *pid_file_pat
             return (-1);
         }
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 #else
     if (!g_su_service_force_no_fork)
@@ -255,7 +255,7 @@ int su_service_daemonize(const char *working_directory, const char *pid_file_pat
         }
         if (process_id > 0)
         {
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
+            ft_global_error_stack_push(FT_ERR_SUCCESS);
             return (1);
         }
         if (setsid() < 0)
@@ -295,20 +295,20 @@ int su_service_daemonize(const char *working_directory, const char *pid_file_pat
     }
     if (redirect_standard_streams)
     {
-        error_code = FT_ERR_SUCCESSS;
+        error_code = FT_ERR_SUCCESS;
         if (su_service_redirect_standard_streams(&error_code) != 0)
         {
             ft_global_error_stack_push(error_code);
             return (-1);
         }
     }
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     if (su_service_write_pid_file(pid_file_path, &error_code) != 0)
     {
         ft_global_error_stack_push(error_code);
         return (-1);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 #endif
 }
@@ -423,7 +423,7 @@ int su_service_install_signal_handlers(t_su_service_signal_handler handler,
     g_su_service_sighup_installed = true;
 #endif
 #endif
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -462,6 +462,6 @@ void    su_service_clear_signal_handlers(void)
 #endif
     g_su_service_signal_handler = ft_nullptr;
     g_su_service_signal_context = ft_nullptr;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }

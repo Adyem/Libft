@@ -5,7 +5,7 @@
 #include "../Template/move.hpp"
 
 api_connection_pool_handle::api_connection_pool_handle()
-        : _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), key(),
+        : _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), key(),
         socket(), tls_session(ft_nullptr), tls_context(ft_nullptr),
         security_mode(api_connection_security_mode::PLAIN), has_socket(false),
         from_pool(false), should_store(false), negotiated_http2(false),
@@ -15,13 +15,13 @@ api_connection_pool_handle::api_connection_pool_handle()
     {
         return ;
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 api_connection_pool_handle::api_connection_pool_handle(
         api_connection_pool_handle &&other)
-        : _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), key(),
+        : _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), key(),
         socket(), tls_session(ft_nullptr), tls_context(ft_nullptr),
         security_mode(api_connection_security_mode::PLAIN), has_socket(false),
         from_pool(false), should_store(false), negotiated_http2(false),
@@ -57,8 +57,8 @@ api_connection_pool_handle::api_connection_pool_handle(
     other.negotiated_http2 = false;
     other.plain_socket_timed_out = false;
     other.plain_socket_validated = false;
-    other.set_error(FT_ERR_SUCCESSS);
-    this->set_error(FT_ERR_SUCCESSS);
+    other.set_error(FT_ERR_SUCCESS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -73,7 +73,7 @@ api_connection_pool_handle::~api_connection_pool_handle()
     this->negotiated_http2 = false;
     this->plain_socket_timed_out = false;
     this->plain_socket_validated = false;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -85,7 +85,7 @@ api_connection_pool_handle &api_connection_pool_handle::operator=(
 
     if (this == &other)
     {
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
         return (*this);
     }
     this_lock_acquired = false;
@@ -126,8 +126,8 @@ api_connection_pool_handle &api_connection_pool_handle::operator=(
     other.negotiated_http2 = false;
     other.plain_socket_timed_out = false;
     other.plain_socket_validated = false;
-    other.set_error(FT_ERR_SUCCESSS);
-    this->set_error(FT_ERR_SUCCESSS);
+    other.set_error(FT_ERR_SUCCESS);
+    this->set_error(FT_ERR_SUCCESS);
     return (*this);
 }
 
@@ -138,7 +138,7 @@ int api_connection_pool_handle::initialize_thread_safety()
 
     if (this->_mutex != ft_nullptr)
     {
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
         return (0);
     }
     allocated_memory = cma_malloc(sizeof(pt_mutex));
@@ -148,7 +148,7 @@ int api_connection_pool_handle::initialize_thread_safety()
         return (-1);
     }
     mutex_pointer = new(allocated_memory) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
+    if (mutex_pointer->get_error() != FT_ERR_SUCCESS)
     {
         int mutex_error_code;
 
@@ -159,7 +159,7 @@ int api_connection_pool_handle::initialize_thread_safety()
         return (-1);
     }
     this->_mutex = mutex_pointer;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -217,14 +217,14 @@ int api_connection_pool_handle::lock_internal(bool *lock_acquired) const
         return (-1);
     }
     this->_mutex->lock(THREAD_ID);
-    if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
+    if (this->_mutex->get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(this->_mutex->get_error());
         return (-1);
     }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -236,12 +236,12 @@ void api_connection_pool_handle::unlock_internal(bool lock_acquired) const
         return ;
     }
     this->_mutex->unlock(THREAD_ID);
-    if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
+    if (this->_mutex->get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(this->_mutex->get_error());
         return ;
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 

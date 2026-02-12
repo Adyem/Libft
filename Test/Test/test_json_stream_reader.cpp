@@ -1,3 +1,4 @@
+#include "../test_internal.hpp"
 #include "../../JSon/json_stream_reader.hpp"
 #include "../../JSon/json.hpp"
 #include "../../JSon/document.hpp"
@@ -6,6 +7,9 @@
 #include "../../Basic/basic.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 #include <cstdio>
 #include <string>
@@ -83,7 +87,7 @@ FT_TEST(test_json_stream_reader_file_small_buffer, "json stream reader handles f
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     json_group *groups = json_read_from_file_stream(file, 8);
     FT_ASSERT(groups != ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     json_group *current_group = groups;
     int seen = 0;
     while (current_group)
@@ -117,7 +121,7 @@ FT_TEST(test_json_stream_reader_callback_error_propagation, "json stream reader 
     chunks[1] = ft_nullptr;
     sizes[1] = 0;
     json_stream_test_state state = { chunks, sizes, 1, 0, 0 };
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     json_group *groups = json_read_from_stream(test_chunk_callback, &state, 4);
     FT_ASSERT(groups == ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
@@ -150,7 +154,7 @@ FT_TEST(test_json_stream_reader_respects_allocator_limits, "json stream reader s
     json_group *groups = json_read_from_stream(test_chunk_callback, &state, 5);
     cma_set_alloc_limit(0);
     FT_ASSERT(groups != ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     json_group *current_group = groups;
     int seen = 0;
     while (current_group)
@@ -178,7 +182,7 @@ FT_TEST(test_json_stream_reader_decodes_escaped_strings, "json stream reader dec
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     json_group *groups = json_read_from_stream(test_chunk_callback, &state, 5);
     FT_ASSERT(groups != ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     json_group *group = json_find_group(groups, "config");
     FT_ASSERT(group != ft_nullptr);
     json_item *item = json_find_item(group, "value");
@@ -213,7 +217,7 @@ FT_TEST(test_json_document_streaming_loads_file, "json document supports streami
     json_document document;
     int status = document.read_from_file_streaming(file_path, 4);
     FT_ASSERT_EQ(0, status);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, document.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, document.get_error());
     json_group *group = document.find_group("config");
     FT_ASSERT(group != ft_nullptr);
     json_item *item = document.find_item(group, "value");

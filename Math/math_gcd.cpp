@@ -50,7 +50,6 @@ int math_gcd(int first_number, int second_number)
     first_number = math_abs(first_number);
     second_number = math_abs(second_number);
     result_value = math_gcd_normalized_int(first_number, second_number);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result_value);
 }
 
@@ -61,7 +60,6 @@ long math_gcd(long first_number, long second_number)
     first_number = math_abs(first_number);
     second_number = math_abs(second_number);
     result_value = math_gcd_normalized_long(first_number, second_number);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result_value);
 }
 
@@ -72,6 +70,5 @@ long long math_gcd(long long first_number, long long second_number)
     first_number = math_abs(first_number);
     second_number = math_abs(second_number);
     result_value = math_gcd_normalized_long_long(first_number, second_number);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result_value);
 }

@@ -1,8 +1,12 @@
+#include "../test_internal.hpp"
 #include "../../Template/future.hpp"
 #include "../../Template/promise.hpp"
 #include "../../Template/move.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_ft_future_copy_constructor_rebuilds_mutex,
         "ft_future copy constructor rebuilds mutex for shared promise")

@@ -16,7 +16,7 @@ char    *su_get_home_directory(void)
         ft_global_error_stack_push(error_code);
         return (result);
     }
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     ft_global_error_stack_push(error_code);
     return (result);
 }

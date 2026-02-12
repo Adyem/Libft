@@ -427,7 +427,7 @@ int32_t cma_get_extended_stats(ft_size_t *allocation_count,
     bool lock_acquired = false;
     int32_t lock_error = cma_lock_allocator(&lock_acquired);
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (allocation_count != ft_nullptr)
         *allocation_count = g_cma_allocation_count;
@@ -438,7 +438,7 @@ int32_t cma_get_extended_stats(ft_size_t *allocation_count,
     if (peak_bytes != ft_nullptr)
         *peak_bytes = g_cma_peak_bytes;
     cma_unlock_allocator(lock_acquired);
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t cma_get_stats(ft_size_t *allocation_count, ft_size_t *free_count)

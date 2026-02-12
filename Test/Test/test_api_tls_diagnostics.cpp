@@ -1,3 +1,4 @@
+#include "../test_internal.hpp"
 #include "../../API/tls_client.hpp"
 #include "../../Networking/networking.hpp"
 #include "../../PThread/thread.hpp"
@@ -12,6 +13,9 @@
 #include <openssl/evp.h>
 #include <atomic>
 #include <cerrno>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 #ifdef _WIN32
 # include <winsock2.h>
@@ -183,7 +187,7 @@ static bool tls_write_temp_file(const char *prefix, const char *contents, ft_str
         return (false);
     }
     path = template_path;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
         TLS_TEST_UNLINK(template_path);
         return (false);
@@ -351,7 +355,7 @@ static bool tls_compute_expected_fingerprint(ft_string &fingerprint)
     char byte_buffer[3];
 
     fingerprint.clear();
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         return (false);
     memory = BIO_new_mem_buf(g_tls_test_server_certificate, -1);
     if (!memory)
@@ -374,7 +378,7 @@ static bool tls_compute_expected_fingerprint(ft_string &fingerprint)
             return (false);
         }
         fingerprint.append(byte_buffer, 2);
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             X509_free(certificate);
             return (false);
@@ -382,7 +386,7 @@ static bool tls_compute_expected_fingerprint(ft_string &fingerprint)
         if (index + 1 < digest_length)
         {
             fingerprint.append(':');
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
             {
                 X509_free(certificate);
                 return (false);
@@ -426,7 +430,7 @@ FT_TEST(test_api_tls_client_populates_handshake_diagnostics,
     if (has_original_cert_file)
     {
         original_cert_file_copy = original_cert_file;
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             TLS_TEST_UNLINK(ca_path.c_str());
             TLS_TEST_UNLINK(cert_path.c_str());
@@ -449,7 +453,7 @@ FT_TEST(test_api_tls_client_populates_handshake_diagnostics,
     server_context.listen_fd = -1;
     server_context.client_fd = -1;
     server_thread = ft_thread(tls_test_server_run, &server_context);
-    if (server_thread.get_error() != FT_ERR_SUCCESSS)
+    if (server_thread.get_error() != FT_ERR_SUCCESS)
     {
         if (has_original_cert_file)
             ft_setenv("SSL_CERT_FILE", original_cert_file_copy.c_str(), 1);

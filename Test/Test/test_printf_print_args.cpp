@@ -1,3 +1,4 @@
+#include "../test_internal.hpp"
 #include "../../Printf/printf_internal.hpp"
 #include "../../Basic/basic.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
@@ -8,6 +9,9 @@
 #include <cstdio>
 #include <climits>
 #include <limits>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 static int create_pipe(int pipe_fds[2])
 {
@@ -481,11 +485,11 @@ FT_TEST(test_ft_putnbr_fd_marks_error_on_failed_write, "ft_putnbr_fd marks count
     size_t write_count;
 
     write_count = 0;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     ft_putnbr_fd(42, -1, &write_count);
     FT_ASSERT_EQ(SIZE_MAX, write_count);
-    FT_ASSERT(ft_errno != FT_ERR_SUCCESSS);
-    ft_errno = FT_ERR_SUCCESSS;
+    FT_ASSERT(ft_errno != FT_ERR_SUCCESS);
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 

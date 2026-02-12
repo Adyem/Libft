@@ -1,6 +1,10 @@
+#include "../test_internal.hpp"
 #include "../../Game/ft_dialogue_line.hpp"
 #include "../../Game/ft_dialogue_script.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_dialogue_line_setters, "dialogue line setters replace fields")
 {

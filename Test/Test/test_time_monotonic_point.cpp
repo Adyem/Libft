@@ -1,6 +1,10 @@
+#include "../test_internal.hpp"
 #include "../../Time/time.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <climits>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_time_monotonic_point_add_ms_positive_offset,
         "time_monotonic_point_add_ms adds positive offsets to the baseline")

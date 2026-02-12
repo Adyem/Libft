@@ -20,7 +20,6 @@ double math_log(double value)
 
     if (value <= 0.0)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (math_nan());
     }
     converter.double_value = value;
@@ -58,6 +57,5 @@ double math_log(double value)
         sign = -sign;
         iteration = iteration + 1;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (exponent * 0.69314718055994530942 + result);
 }

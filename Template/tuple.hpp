@@ -70,7 +70,7 @@ template <typename... Types>
 ft_tuple<Types...>::ft_tuple()
     : _data(ft_nullptr), _mutex(ft_nullptr)
 {
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 template <typename... Types>
@@ -79,13 +79,13 @@ ft_tuple<Types...>::~ft_tuple()
     bool lock_acquired = false;
     int lock_result = this->lock_internal(&lock_acquired);
 
-    if (lock_result == FT_ERR_SUCCESSS)
+    if (lock_result == FT_ERR_SUCCESS)
     {
         this->destroy_locked();
         this->unlock_internal(lock_acquired);
     }
     this->teardown_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 template <typename... Types>
@@ -95,7 +95,7 @@ ft_tuple<Types...>::ft_tuple(ft_tuple&& other) noexcept
     bool other_lock_acquired = false;
     int lock_result = other.lock_internal(&other_lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return ;
@@ -106,10 +106,10 @@ ft_tuple<Types...>::ft_tuple(ft_tuple&& other) noexcept
     other.unlock_internal(other_lock_acquired);
     if (other_thread_safe)
     {
-        if (this->enable_thread_safety() != FT_ERR_SUCCESSS)
+        if (this->enable_thread_safety() != FT_ERR_SUCCESS)
             return ;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 template <typename... Types>
@@ -117,13 +117,13 @@ ft_tuple<Types...>& ft_tuple<Types...>::operator=(ft_tuple&& other) noexcept
 {
     if (this == &other)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (*this);
     }
     bool this_lock_acquired = false;
     int lock_result = this->lock_internal(&this_lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return (*this);
@@ -131,7 +131,7 @@ ft_tuple<Types...>& ft_tuple<Types...>::operator=(ft_tuple&& other) noexcept
     bool other_lock_acquired = false;
     lock_result = other.lock_internal(&other_lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         this->unlock_internal(this_lock_acquired);
         ft_global_error_stack_push(lock_result);
@@ -145,10 +145,10 @@ ft_tuple<Types...>& ft_tuple<Types...>::operator=(ft_tuple&& other) noexcept
     this->teardown_thread_safety();
     if (other._mutex != ft_nullptr)
     {
-        if (this->enable_thread_safety() != FT_ERR_SUCCESSS)
+        if (this->enable_thread_safety() != FT_ERR_SUCCESS)
             return (*this);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (*this);
 }
 
@@ -164,7 +164,7 @@ ft_tuple<Types...>::ft_tuple(Args&&... args)
         return ;
     }
     construct_at(this->_data, std::forward<Args>(args)...);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 static inline void* tuple_default_buffer(size_t size)
@@ -183,7 +183,7 @@ ft_tuple<Types...>::get()
     bool lock_acquired = false;
     int lock_result = this->lock_internal(&lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         if constexpr (!std::is_abstract_v<elem_t>)
@@ -208,7 +208,7 @@ ft_tuple<Types...>::get()
     }
     elem_t& ref = std::get<I>(*this->_data);
     this->unlock_internal(lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (ref);
 }
 
@@ -221,7 +221,7 @@ ft_tuple<Types...>::get() const
     bool lock_acquired = false;
     int lock_result = this->lock_internal(&lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         if constexpr (!std::is_abstract_v<elem_t>)
@@ -246,7 +246,7 @@ ft_tuple<Types...>::get() const
     }
     const elem_t& ref = std::get<I>(*this->_data);
     this->unlock_internal(lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (ref);
 }
 
@@ -257,7 +257,7 @@ T& ft_tuple<Types...>::get()
     bool lock_acquired = false;
     int lock_result = this->lock_internal(&lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         if constexpr (!std::is_abstract_v<T>)
@@ -282,7 +282,7 @@ T& ft_tuple<Types...>::get()
     }
     T& ref = std::get<T>(*this->_data);
     this->unlock_internal(lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (ref);
 }
 
@@ -293,7 +293,7 @@ const T& ft_tuple<Types...>::get() const
     bool lock_acquired = false;
     int lock_result = this->lock_internal(&lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         if constexpr (!std::is_abstract_v<T>)
@@ -318,7 +318,7 @@ const T& ft_tuple<Types...>::get() const
     }
     const T& ref = std::get<T>(*this->_data);
     this->unlock_internal(lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (ref);
 }
 
@@ -328,14 +328,14 @@ void ft_tuple<Types...>::reset()
     bool lock_acquired = false;
     int lock_result = this->lock_internal(&lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return ;
     }
     this->destroy_locked();
     this->unlock_internal(lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 template <typename... Types>
@@ -343,8 +343,8 @@ int ft_tuple<Types...>::enable_thread_safety()
 {
     if (this->_mutex != ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-        return (FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     int result = this->prepare_thread_safety();
 
@@ -356,7 +356,7 @@ template <typename... Types>
 void ft_tuple<Types...>::disable_thread_safety()
 {
     this->teardown_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 template <typename... Types>
@@ -364,7 +364,7 @@ bool ft_tuple<Types...>::is_thread_safe() const
 {
     bool enabled = (this->_mutex != ft_nullptr);
 
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (enabled);
 }
 
@@ -374,7 +374,7 @@ int ft_tuple<Types...>::lock(bool *lock_acquired) const
     int result = this->lock_internal(lock_acquired);
 
     ft_global_error_stack_push(result);
-    if (result != FT_ERR_SUCCESSS)
+    if (result != FT_ERR_SUCCESS)
         return (-1);
     return (0);
 }
@@ -393,10 +393,10 @@ int ft_tuple<Types...>::lock_internal(bool *lock_acquired) const
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     int result = pt_recursive_mutex_lock_with_error(*this->_mutex);
 
-    if (result == FT_ERR_SUCCESSS && lock_acquired != ft_nullptr)
+    if (result == FT_ERR_SUCCESS && lock_acquired != ft_nullptr)
         *lock_acquired = true;
     return (result);
 }
@@ -405,7 +405,7 @@ template <typename... Types>
 int ft_tuple<Types...>::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     return (pt_recursive_mutex_unlock_with_error(*this->_mutex));
 }
 
@@ -424,10 +424,10 @@ template <typename... Types>
 int ft_tuple<Types...>::prepare_thread_safety()
 {
     if (this->_mutex != ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     int result = pt_recursive_mutex_create_with_error(&this->_mutex);
 
-    if (result != FT_ERR_SUCCESSS && this->_mutex != ft_nullptr)
+    if (result != FT_ERR_SUCCESS && this->_mutex != ft_nullptr)
         pt_recursive_mutex_destroy(&this->_mutex);
     return (result);
 }

@@ -1,7 +1,11 @@
+#include "../test_internal.hpp"
 #include "../../Template/deque.hpp"
 #include "../../Template/move.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_ft_deque_move_constructor_clears_empty_error,
         "ft_deque move constructor clears empty error and keeps deque usable")
@@ -13,8 +17,8 @@ FT_TEST(test_ft_deque_move_constructor_clears_empty_error,
 
     ft_deque<int> moved_deque(ft_move(source_deque));
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, moved_deque.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, source_deque.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_deque.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_deque.get_error());
     moved_deque.push_back(4);
     moved_deque.push_back(6);
     FT_ASSERT_EQ(4, moved_deque.pop_front());
@@ -34,15 +38,15 @@ FT_TEST(test_ft_deque_move_assignment_clears_empty_error,
 
     destination_deque.push_back(1);
     destination_deque.pop_back();
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, destination_deque.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_deque.get_error());
 
     source_deque.pop_back();
     FT_ASSERT_EQ(FT_ERR_EMPTY, source_deque.get_error());
 
     destination_deque = ft_move(source_deque);
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, destination_deque.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, source_deque.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_deque.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_deque.get_error());
     destination_deque.push_front(3);
     destination_deque.push_back(5);
     FT_ASSERT_EQ(3, destination_deque.pop_front());

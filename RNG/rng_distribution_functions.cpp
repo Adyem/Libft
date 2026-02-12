@@ -56,7 +56,7 @@ static double rng_simpson_integral(double start, double end, int segment_total, 
             weight = 4.0;
         value = function(point, context);
         error_code = ft_global_error_stack_drop_last_error();
-        if (error_code != FT_ERR_SUCCESSS)
+        if (error_code != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(error_code);
             return (0.0);
@@ -84,7 +84,7 @@ static double rng_simpson_integral(double start, double end, int segment_total, 
             }
             value = function(adjusted_point, context);
             error_code = ft_global_error_stack_drop_last_error();
-            if (error_code != FT_ERR_SUCCESSS)
+            if (error_code != FT_ERR_SUCCESS)
             {
                 ft_global_error_stack_push(error_code);
                 return (0.0);
@@ -95,7 +95,7 @@ static double rng_simpson_integral(double start, double end, int segment_total, 
         sum = sum + weight * value;
         index = index + 1;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ((step / 3.0) * sum);
 }
 
@@ -128,7 +128,7 @@ double rng_gamma_pdf(double shape, double scale, double value)
     }
     if (value < 0.0)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0.0);
     }
     epsilon = 0.000000000001;
@@ -136,15 +136,15 @@ double rng_gamma_pdf(double shape, double scale, double value)
     {
         if (shape < 1.0)
         {
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
+            ft_global_error_stack_push(FT_ERR_SUCCESS);
             return (std::numeric_limits<double>::infinity());
         }
         if (std::fabs(shape - 1.0) <= epsilon)
         {
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
+            ft_global_error_stack_push(FT_ERR_SUCCESS);
             return (1.0 / scale);
         }
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0.0);
     }
     log_component = (shape - 1.0) * std::log(value) - (value / scale);
@@ -156,7 +156,7 @@ double rng_gamma_pdf(double shape, double scale, double value)
         ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0.0);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (result);
 }
 
@@ -176,7 +176,7 @@ double rng_gamma_cdf(double shape, double scale, double value)
     }
     if (value <= 0.0)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0.0);
     }
     context.shape = shape;
@@ -188,7 +188,7 @@ double rng_gamma_cdf(double shape, double scale, double value)
     segment_total = rng_adjust_segment_total(segment_total);
     integral = rng_simpson_integral(0.0, value, segment_total, rng_gamma_pdf_integrand, &context);
     error_code = ft_global_error_stack_drop_last_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(error_code);
         return (0.0);
@@ -198,7 +198,7 @@ double rng_gamma_cdf(double shape, double scale, double value)
         result = 0.0;
     if (result > 1.0)
         result = 1.0;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (result);
 }
 
@@ -219,30 +219,30 @@ double rng_beta_pdf(double alpha, double beta, double value)
     {
         if (alpha < 1.0)
         {
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
+            ft_global_error_stack_push(FT_ERR_SUCCESS);
             return (std::numeric_limits<double>::infinity());
         }
         if (std::fabs(alpha - 1.0) <= epsilon)
         {
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
+            ft_global_error_stack_push(FT_ERR_SUCCESS);
             return (beta);
         }
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0.0);
     }
     if (value >= 1.0)
     {
         if (beta < 1.0)
         {
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
+            ft_global_error_stack_push(FT_ERR_SUCCESS);
             return (std::numeric_limits<double>::infinity());
         }
         if (std::fabs(beta - 1.0) <= epsilon)
         {
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
+            ft_global_error_stack_push(FT_ERR_SUCCESS);
             return (alpha);
         }
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0.0);
     }
     log_denominator = std::lgamma(alpha) + std::lgamma(beta) - std::lgamma(alpha + beta);
@@ -253,7 +253,7 @@ double rng_beta_pdf(double alpha, double beta, double value)
         ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0.0);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (result);
 }
 
@@ -273,12 +273,12 @@ double rng_beta_cdf(double alpha, double beta, double value)
     }
     if (value <= 0.0)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0.0);
     }
     if (value >= 1.0)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (1.0);
     }
     context.alpha = alpha;
@@ -288,7 +288,7 @@ double rng_beta_cdf(double alpha, double beta, double value)
     range_end = value;
     integral = rng_simpson_integral(0.0, range_end, segment_total, rng_beta_pdf_integrand, &context);
     error_code = ft_global_error_stack_drop_last_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(error_code);
         return (0.0);
@@ -298,7 +298,7 @@ double rng_beta_cdf(double alpha, double beta, double value)
         result = 0.0;
     if (result > 1.0)
         result = 1.0;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (result);
 }
 
@@ -314,12 +314,12 @@ double rng_chi_squared_pdf(double degrees_of_freedom, double value)
     }
     result = rng_gamma_pdf(degrees_of_freedom * 0.5, 2.0, value);
     error_code = ft_global_error_stack_drop_last_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(error_code);
         return (0.0);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (result);
 }
 
@@ -335,11 +335,11 @@ double rng_chi_squared_cdf(double degrees_of_freedom, double value)
     }
     result = rng_gamma_cdf(degrees_of_freedom * 0.5, 2.0, value);
     error_code = ft_global_error_stack_drop_last_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(error_code);
         return (0.0);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (result);
 }

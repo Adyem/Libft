@@ -78,11 +78,11 @@ int ft_socket::lock_pair(const ft_socket &first, const ft_socket &second,
         single_error = ft_global_error_stack_peek_last_error();
 
         ft_global_error_stack_drop_last_error();
-        if (single_error != FT_ERR_SUCCESSS)
+        if (single_error != FT_ERR_SUCCESS)
             return (single_error);
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_recursive_mutex>();
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -104,7 +104,7 @@ int ft_socket::lock_pair(const ft_socket &first, const ft_socket &second,
         lower_error = ft_global_error_stack_peek_last_error();
 
         ft_global_error_stack_drop_last_error();
-        if (lower_error != FT_ERR_SUCCESSS)
+        if (lower_error != FT_ERR_SUCCESS)
             return (lower_error);
         ft_unique_lock<pt_recursive_mutex> upper_guard(ordered_second->_mutex);
         int upper_error;
@@ -112,7 +112,7 @@ int ft_socket::lock_pair(const ft_socket &first, const ft_socket &second,
         upper_error = ft_global_error_stack_peek_last_error();
 
         ft_global_error_stack_drop_last_error();
-        if (upper_error == FT_ERR_SUCCESSS)
+        if (upper_error == FT_ERR_SUCCESS)
         {
             if (!swapped)
             {
@@ -124,7 +124,7 @@ int ft_socket::lock_pair(const ft_socket &first, const ft_socket &second,
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            return (FT_ERR_SUCCESSS);
+            return (FT_ERR_SUCCESS);
         }
         if (upper_error != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -149,7 +149,7 @@ ssize_t ft_socket::send_data_locked(const void *data, size_t size, int flags)
     if (bytes_sent < 0)
         ft_global_error_stack_push(networking_map_socket_error());
     else
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (bytes_sent);
 }
 
@@ -229,7 +229,7 @@ ssize_t ft_socket::send_all_locked(const void *data, size_t size, int flags)
         return (-1);
     }
     networking_consume_last_error();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (static_cast<ssize_t>(total_sent));
 }
 
@@ -246,7 +246,7 @@ ssize_t ft_socket::receive_data_locked(void *buffer, size_t size, int flags)
     if (bytes_received < 0)
         ft_global_error_stack_push(networking_map_socket_error());
     else
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (bytes_received);
 }
 
@@ -257,7 +257,7 @@ bool ft_socket::close_socket_locked()
         if (nw_close(this->_socket_fd) == 0)
         {
             this->_socket_fd = -1;
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
+            ft_global_error_stack_push(FT_ERR_SUCCESS);
             return (true);
         }
 #ifdef _WIN32
@@ -267,7 +267,7 @@ bool ft_socket::close_socket_locked()
 #endif
         return (false);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -284,7 +284,7 @@ void ft_socket::reset_to_empty_state_locked()
 
         client_error = ft_global_error_stack_peek_last_error();
         ft_global_error_stack_drop_last_error();
-        if (client_error == FT_ERR_SUCCESSS)
+        if (client_error == FT_ERR_SUCCESS)
             client.close_socket_locked();
         socket_finalize_guard(client_guard);
         connection_index++;
@@ -292,7 +292,7 @@ void ft_socket::reset_to_empty_state_locked()
     this->_connected.clear();
     ft_bzero(&this->_address, sizeof(this->_address));
     this->_socket_fd = -1;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -306,7 +306,7 @@ ft_socket::ft_socket()
 
     ft_global_error_stack_drop_last_error();
 
-    if (guard_error != FT_ERR_SUCCESSS)
+    if (guard_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(guard_error);
         return ;
@@ -314,7 +314,7 @@ ft_socket::ft_socket()
     ft_bzero(&this->_address, sizeof(this->_address));
     this->_connected.clear();
     this->_socket_fd = -1;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     socket_finalize_guard(guard);
     return ;
 }
@@ -329,7 +329,7 @@ ft_socket::ft_socket(int fd, const sockaddr_storage &addr)
 
     ft_global_error_stack_drop_last_error();
 
-    if (guard_error != FT_ERR_SUCCESSS)
+    if (guard_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(guard_error);
         return ;
@@ -337,7 +337,7 @@ ft_socket::ft_socket(int fd, const sockaddr_storage &addr)
     this->_address = addr;
     this->_connected.clear();
     this->_socket_fd = fd;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     socket_finalize_guard(guard);
     return ;
 }
@@ -352,7 +352,7 @@ ft_socket::ft_socket(const SocketConfig &config)
 
     ft_global_error_stack_drop_last_error();
 
-    if (guard_error != FT_ERR_SUCCESSS)
+    if (guard_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(guard_error);
         return ;
@@ -360,7 +360,7 @@ ft_socket::ft_socket(const SocketConfig &config)
     ft_bzero(&this->_address, sizeof(this->_address));
     this->_connected.clear();
     this->_socket_fd = -1;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     socket_finalize_guard(guard);
     this->initialize(config);
     return ;
@@ -385,7 +385,7 @@ ssize_t ft_socket::send_data(const void *data, size_t size, int flags)
 
 
     ft_global_error_stack_drop_last_error();
-    if (guard_error != FT_ERR_SUCCESSS)
+    if (guard_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(guard_error);
         return (-1);
@@ -407,7 +407,7 @@ ssize_t ft_socket::send_all(const void *data, size_t size, int flags)
 
 
     ft_global_error_stack_drop_last_error();
-    if (guard_error != FT_ERR_SUCCESSS)
+    if (guard_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(guard_error);
         return (-1);
@@ -431,7 +431,7 @@ ssize_t ft_socket::receive_data(void *buffer, size_t size, int flags)
 
 
     ft_global_error_stack_drop_last_error();
-    if (guard_error != FT_ERR_SUCCESSS)
+    if (guard_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(guard_error);
         return (-1);
@@ -449,7 +449,7 @@ ssize_t ft_socket::receive_data(void *buffer, size_t size, int flags)
     unlock_error = ft_global_error_stack_peek_last_error();
 
     ft_global_error_stack_drop_last_error();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return (-1);
@@ -458,14 +458,14 @@ ssize_t ft_socket::receive_data(void *buffer, size_t size, int flags)
     if (result < 0)
         receive_errno = networking_map_socket_error();
     else
-        receive_errno = FT_ERR_SUCCESSS;
+        receive_errno = FT_ERR_SUCCESS;
     guard.lock();
     int lock_error;
 
     lock_error = ft_global_error_stack_peek_last_error();
 
     ft_global_error_stack_drop_last_error();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (-1);
@@ -491,27 +491,27 @@ bool ft_socket::close_socket()
 
 
     ft_global_error_stack_drop_last_error();
-    if (guard_error != FT_ERR_SUCCESSS)
+    if (guard_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(guard_error);
         return (false);
     }
     if (this->_socket_fd < 0)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         socket_finalize_guard(guard);
         return (true);
     }
     socket_fd = this->_socket_fd;
     shutdown_success = true;
-    shutdown_errno = FT_ERR_SUCCESSS;
+    shutdown_errno = FT_ERR_SUCCESS;
     guard.unlock();
     int unlock_error;
 
     unlock_error = ft_global_error_stack_peek_last_error();
 
     ft_global_error_stack_drop_last_error();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return (false);
@@ -528,7 +528,7 @@ bool ft_socket::close_socket()
     if (nw_close(socket_fd) == 0)
     {
         closed = true;
-        close_errno = FT_ERR_SUCCESSS;
+        close_errno = FT_ERR_SUCCESS;
         networking_consume_last_error();
     }
     else
@@ -543,7 +543,7 @@ bool ft_socket::close_socket()
     lock_error = ft_global_error_stack_peek_last_error();
 
     ft_global_error_stack_drop_last_error();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (closed);
@@ -553,7 +553,7 @@ bool ft_socket::close_socket()
         if (this->_socket_fd == socket_fd)
             this->_socket_fd = -1;
         if (shutdown_success)
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
+            ft_global_error_stack_push(FT_ERR_SUCCESS);
         else
             ft_global_error_stack_push(shutdown_errno);
     }
@@ -576,7 +576,7 @@ ssize_t ft_socket::send_data(const void *data, size_t size, int flags, int fd)
     guard_error = ft_global_error_stack_peek_last_error();
 
     ft_global_error_stack_drop_last_error();
-    if (guard_error != FT_ERR_SUCCESSS)
+    if (guard_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(guard_error);
         return (-1);
@@ -599,7 +599,7 @@ ssize_t ft_socket::send_data(const void *data, size_t size, int flags, int fd)
 
 
             ft_global_error_stack_drop_last_error();
-            if (client_error != FT_ERR_SUCCESSS)
+            if (client_error != FT_ERR_SUCCESS)
             {
                 ft_global_error_stack_push(client_error);
                 socket_finalize_guard(client_guard);
@@ -633,7 +633,7 @@ ssize_t ft_socket::broadcast_data(const void *data, size_t size, int flags, int 
     guard_error = ft_global_error_stack_peek_last_error();
 
     ft_global_error_stack_drop_last_error();
-    if (guard_error != FT_ERR_SUCCESSS)
+    if (guard_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(guard_error);
         return (-1);
@@ -659,7 +659,7 @@ ssize_t ft_socket::broadcast_data(const void *data, size_t size, int flags, int 
 
 
         ft_global_error_stack_drop_last_error();
-        if (client_error != FT_ERR_SUCCESSS)
+        if (client_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(client_error);
             socket_finalize_guard(client_guard);
@@ -680,7 +680,7 @@ ssize_t ft_socket::broadcast_data(const void *data, size_t size, int flags, int 
         index++;
     }
     if (!send_failed)
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
     socket_finalize_guard(guard);
     return (total_bytes_sent);
 }
@@ -698,7 +698,7 @@ int ft_socket::accept_connection()
     guard_error = ft_global_error_stack_peek_last_error();
 
     ft_global_error_stack_drop_last_error();
-    if (guard_error != FT_ERR_SUCCESSS)
+    if (guard_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(guard_error);
         return (-1);
@@ -735,13 +735,13 @@ int ft_socket::accept_connection()
         int push_error;
 
         push_error = this->_connected.get_error();
-        if (push_error == FT_ERR_SUCCESSS)
+        if (push_error == FT_ERR_SUCCESS)
             push_error = FT_ERR_NO_MEMORY;
         ft_global_error_stack_push(push_error);
         socket_finalize_guard(guard);
         return (-1);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     socket_finalize_guard(guard);
     return (new_fd);
 }
@@ -754,7 +754,7 @@ bool ft_socket::disconnect_client(int fd)
     guard_error = ft_global_error_stack_peek_last_error();
 
     ft_global_error_stack_drop_last_error();
-    if (guard_error != FT_ERR_SUCCESSS)
+    if (guard_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(guard_error);
         return (false);
@@ -770,7 +770,7 @@ bool ft_socket::disconnect_client(int fd)
             if (index != last)
                 this->_connected[index] = ft_move(this->_connected[last]);
             this->_connected.pop_back();
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
+            ft_global_error_stack_push(FT_ERR_SUCCESS);
             socket_finalize_guard(guard);
             return (true);
         }
@@ -790,14 +790,14 @@ void ft_socket::disconnect_all_clients()
     guard_error = ft_global_error_stack_peek_last_error();
 
     ft_global_error_stack_drop_last_error();
-    if (guard_error != FT_ERR_SUCCESSS)
+    if (guard_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(guard_error);
         return ;
     }
     owned_clients = ft_move(this->_connected);
     this->_connected.clear();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     socket_finalize_guard(guard);
     index = 0;
     while (index < owned_clients.size())
@@ -808,7 +808,7 @@ void ft_socket::disconnect_all_clients()
 
         client_error = ft_global_error_stack_peek_last_error();
         ft_global_error_stack_drop_last_error();
-        if (client_error == FT_ERR_SUCCESSS)
+        if (client_error == FT_ERR_SUCCESS)
             client.close_socket_locked();
         socket_finalize_guard(client_guard);
         index++;
@@ -825,14 +825,14 @@ size_t ft_socket::get_client_count() const
     guard_error = ft_global_error_stack_peek_last_error();
 
     ft_global_error_stack_drop_last_error();
-    if (guard_error != FT_ERR_SUCCESSS)
+    if (guard_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(guard_error);
         socket_finalize_guard(guard);
         return (0);
     }
     count = this->_connected.size();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     socket_finalize_guard(guard);
     return (count);
 }
@@ -846,7 +846,7 @@ bool ft_socket::is_client_connected(int fd) const
     guard_error = ft_global_error_stack_peek_last_error();
 
     ft_global_error_stack_drop_last_error();
-    if (guard_error != FT_ERR_SUCCESSS)
+    if (guard_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(guard_error);
         socket_finalize_guard(guard);
@@ -863,7 +863,7 @@ bool ft_socket::is_client_connected(int fd) const
         }
         index++;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     socket_finalize_guard(guard);
     return (connected);
 }
@@ -876,14 +876,14 @@ int ft_socket::get_fd() const
     guard_error = ft_global_error_stack_peek_last_error();
 
     ft_global_error_stack_drop_last_error();
-    if (guard_error != FT_ERR_SUCCESSS)
+    if (guard_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(guard_error);
         socket_finalize_guard(guard);
         return (-1);
     }
     descriptor = this->_socket_fd;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     socket_finalize_guard(guard);
     return (descriptor);
 }
@@ -895,13 +895,13 @@ const struct sockaddr_storage &ft_socket::get_address() const
     guard_error = ft_global_error_stack_peek_last_error();
 
     ft_global_error_stack_drop_last_error();
-    if (guard_error != FT_ERR_SUCCESSS)
+    if (guard_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(guard_error);
         socket_finalize_guard(guard);
         return (this->_address);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     socket_finalize_guard(guard);
     return (this->_address);
 }
@@ -913,7 +913,7 @@ void ft_socket::reset_to_empty_state()
     guard_error = ft_global_error_stack_peek_last_error();
 
     ft_global_error_stack_drop_last_error();
-    if (guard_error != FT_ERR_SUCCESSS)
+    if (guard_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(guard_error);
         return ;
@@ -931,7 +931,7 @@ ft_socket::ft_socket(ft_socket &&other) noexcept
     this_guard_error = ft_global_error_stack_peek_last_error();
 
     ft_global_error_stack_drop_last_error();
-    if (this_guard_error != FT_ERR_SUCCESSS)
+    if (this_guard_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(this_guard_error);
         return ;
@@ -942,7 +942,7 @@ ft_socket::ft_socket(ft_socket &&other) noexcept
     other_guard_error = ft_global_error_stack_peek_last_error();
 
     ft_global_error_stack_drop_last_error();
-    if (other_guard_error != FT_ERR_SUCCESSS)
+    if (other_guard_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(other_guard_error);
         socket_finalize_guard(this_guard);
@@ -963,7 +963,7 @@ ft_socket &ft_socket::operator=(ft_socket &&other) noexcept
     {        ft_unique_lock<pt_recursive_mutex> this_guard;
         ft_unique_lock<pt_recursive_mutex> other_guard;
         int lock_error;        lock_error = ft_socket::lock_pair(*this, other, this_guard, other_guard);
-        if (lock_error != FT_ERR_SUCCESSS)
+        if (lock_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(lock_error);
             return (*this);
@@ -986,7 +986,7 @@ int ft_socket::initialize(const SocketConfig &config)
     guard_error = ft_global_error_stack_peek_last_error();
 
     ft_global_error_stack_drop_last_error();
-    if (guard_error != FT_ERR_SUCCESSS)
+    if (guard_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(guard_error);
         return (guard_error);
@@ -1011,7 +1011,7 @@ void ft_socket::finalize_mutex_guard(ft_unique_lock<pt_recursive_mutex> &guard) 
     int guard_error;
 
     guard_error = socket_finalize_guard(guard);
-    if (guard_error != FT_ERR_SUCCESSS)
+    if (guard_error != FT_ERR_SUCCESS)
         ft_global_error_stack_push(guard_error);
     return ;
 }

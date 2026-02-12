@@ -9,7 +9,7 @@ static ft_string *create_string_from_buffer(const char *buffer)
     if (result == ft_nullptr)
         return (ft_nullptr);
     int32_t initialization_error = result->initialize(buffer);
-    if (initialization_error != FT_ERR_SUCCESSS)
+    if (initialization_error != FT_ERR_SUCCESS)
     {
         delete result;
         return (ft_nullptr);

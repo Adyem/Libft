@@ -1,15 +1,19 @@
+#include "../test_internal.hpp"
 #include "../../Compression/compression.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../CMA/CMA.hpp"
 #include "../../System_utils/test_runner.hpp"
 
+#ifndef LIBFT_TEST_BUILD
+#endif
+
 FT_TEST(test_base64_encode_null_input_sets_errno, "ft_base64_encode null input sets FT_ERR_INVALID_ARGUMENT")
 {
     std::size_t encoded_length;
 
     encoded_length = 123;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, ft_base64_encode(ft_nullptr, 4, &encoded_length));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(static_cast<std::size_t>(0), encoded_length);
@@ -23,7 +27,7 @@ FT_TEST(test_base64_encode_null_size_sets_errno, "ft_base64_encode null encoded_
     input_buffer[0] = 'a';
     input_buffer[1] = 'b';
     input_buffer[2] = 'c';
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, ft_base64_encode(input_buffer, 3, ft_nullptr));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
@@ -40,7 +44,7 @@ FT_TEST(test_base64_encode_allocation_failure_sets_errno,
     input_buffer[1] = 'B';
     input_buffer[2] = 'C';
     encoded_length = 0;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     cma_set_alloc_limit(2);
     result_buffer = ft_base64_encode(input_buffer, 3, &encoded_length);
     FT_ASSERT_EQ(ft_nullptr, result_buffer);
@@ -62,7 +66,7 @@ FT_TEST(test_base64_encode_success_resets_errno, "ft_base64_encode success reset
     encoded_buffer = ft_base64_encode(input_buffer, 0, &encoded_length);
     FT_ASSERT(encoded_buffer != ft_nullptr);
     FT_ASSERT_EQ(static_cast<std::size_t>(0), encoded_length);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_free(encoded_buffer);
     return (1);
 }
@@ -72,7 +76,7 @@ FT_TEST(test_base64_decode_null_input_sets_errno, "ft_base64_decode null input s
     std::size_t decoded_length;
 
     decoded_length = 77;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, ft_base64_decode(ft_nullptr, 4, &decoded_length));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(static_cast<std::size_t>(77), decoded_length);
@@ -84,7 +88,7 @@ FT_TEST(test_base64_decode_null_size_sets_errno, "ft_base64_decode null decoded_
     const unsigned char *input_buffer;
 
     input_buffer = reinterpret_cast<const unsigned char *>("AAAA");
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, ft_base64_decode(input_buffer, 4, ft_nullptr));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
@@ -100,7 +104,7 @@ FT_TEST(test_base64_decode_empty_input_resets_errno, "ft_base64_decode empty inp
     decoded_buffer = ft_base64_decode(reinterpret_cast<const unsigned char *>(""), 0, &decoded_length);
     FT_ASSERT(decoded_buffer != ft_nullptr);
     FT_ASSERT_EQ(static_cast<std::size_t>(0), decoded_length);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_free(decoded_buffer);
     return (1);
 }
@@ -113,7 +117,7 @@ FT_TEST(test_base64_decode_short_block_sets_errno, "ft_base64_decode short input
 
     input_buffer = reinterpret_cast<const unsigned char *>("A");
     decoded_length = 0;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     decoded_buffer = ft_base64_decode(input_buffer, 1, &decoded_length);
     FT_ASSERT_EQ(ft_nullptr, decoded_buffer);
     FT_ASSERT_EQ(static_cast<std::size_t>(0), decoded_length);
@@ -129,7 +133,7 @@ FT_TEST(test_base64_decode_allocation_failure_sets_errno, "ft_base64_decode allo
 
     input_buffer = reinterpret_cast<const unsigned char *>("AAAA");
     decoded_length = 0;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     cma_set_alloc_limit(2);
     decoded_buffer = ft_base64_decode(input_buffer, 4, &decoded_length);
     FT_ASSERT_EQ(ft_nullptr, decoded_buffer);
@@ -147,7 +151,7 @@ FT_TEST(test_base64_decode_invalid_first_character_sets_errno, "ft_base64_decode
 
     input_buffer = reinterpret_cast<const unsigned char *>("!AAA");
     decoded_length = 0;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     decoded_buffer = ft_base64_decode(input_buffer, 4, &decoded_length);
     FT_ASSERT_EQ(ft_nullptr, decoded_buffer);
     FT_ASSERT_EQ(static_cast<std::size_t>(0), decoded_length);
@@ -163,7 +167,7 @@ FT_TEST(test_base64_decode_invalid_second_character_sets_errno, "ft_base64_decod
 
     input_buffer = reinterpret_cast<const unsigned char *>("A!AA");
     decoded_length = 0;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     decoded_buffer = ft_base64_decode(input_buffer, 4, &decoded_length);
     FT_ASSERT_EQ(ft_nullptr, decoded_buffer);
     FT_ASSERT_EQ(static_cast<std::size_t>(0), decoded_length);
@@ -179,7 +183,7 @@ FT_TEST(test_base64_decode_invalid_third_character_sets_errno, "ft_base64_decode
 
     input_buffer = reinterpret_cast<const unsigned char *>("AA!A");
     decoded_length = 0;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     decoded_buffer = ft_base64_decode(input_buffer, 4, &decoded_length);
     FT_ASSERT_EQ(ft_nullptr, decoded_buffer);
     FT_ASSERT_EQ(static_cast<std::size_t>(0), decoded_length);
@@ -195,7 +199,7 @@ FT_TEST(test_base64_decode_invalid_fourth_character_sets_errno, "ft_base64_decod
 
     input_buffer = reinterpret_cast<const unsigned char *>("AAA!");
     decoded_length = 0;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     decoded_buffer = ft_base64_decode(input_buffer, 4, &decoded_length);
     FT_ASSERT_EQ(ft_nullptr, decoded_buffer);
     FT_ASSERT_EQ(static_cast<std::size_t>(0), decoded_length);
@@ -211,7 +215,7 @@ FT_TEST(test_base64_decode_invalid_padding_mismatch_sets_errno, "ft_base64_decod
 
     input_buffer = reinterpret_cast<const unsigned char *>("AA=A");
     decoded_length = 0;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     decoded_buffer = ft_base64_decode(input_buffer, 4, &decoded_length);
     FT_ASSERT_EQ(ft_nullptr, decoded_buffer);
     FT_ASSERT_EQ(static_cast<std::size_t>(0), decoded_length);
@@ -227,7 +231,7 @@ FT_TEST(test_base64_decode_trailing_data_after_padding_sets_errno, "ft_base64_de
 
     input_buffer = reinterpret_cast<const unsigned char *>("AAA=AAAA");
     decoded_length = 0;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     decoded_buffer = ft_base64_decode(input_buffer, 8, &decoded_length);
     FT_ASSERT_EQ(ft_nullptr, decoded_buffer);
     FT_ASSERT_EQ(static_cast<std::size_t>(0), decoded_length);
@@ -248,7 +252,7 @@ FT_TEST(test_base64_decode_success_resets_errno, "ft_base64_decode success reset
     FT_ASSERT(decoded_buffer != ft_nullptr);
     FT_ASSERT_EQ(static_cast<std::size_t>(1), decoded_length);
     FT_ASSERT_EQ('M', decoded_buffer[0]);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_free(decoded_buffer);
     return (1);
 }

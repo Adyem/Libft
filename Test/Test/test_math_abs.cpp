@@ -1,6 +1,10 @@
+#include "../test_internal.hpp"
 #include "../../Math/math.hpp"
 #include "../../Basic/limits.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_math_abs_positive_value_returns_same, "math_abs returns positive values unchanged")
 {

@@ -1,8 +1,12 @@
+#include "../test_internal.hpp"
 #include "../../Game/game_scripting_bridge.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../Basic/basic.hpp"
 #include "../../Template/shared_ptr.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_game_script_context_default_constructor_sets_success,
     "Game: script context default constructor sets success state")
@@ -10,7 +14,7 @@ FT_TEST(test_game_script_context_default_constructor_sets_success,
     ft_game_script_context context;
 
     FT_ASSERT_EQ(ft_nullptr, context.get_state());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, context.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, context.get_error());
     FT_ASSERT_EQ(ft_nullptr, context.get_world().get());
     return (1);
 }
@@ -24,7 +28,7 @@ FT_TEST(test_game_script_context_parameterized_constructor_stores_inputs,
 
     FT_ASSERT_EQ(&state, context.get_state());
     FT_ASSERT_EQ(world_pointer.get(), context.get_world().get());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, context.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, context.get_error());
     return (1);
 }
 
@@ -39,7 +43,7 @@ FT_TEST(test_game_script_context_copy_constructor_preserves_error,
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, original.get_error());
 
     original.set_variable("quest", "alpha");
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, original.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.get_error());
 
     ft_game_script_context copy(original);
 
@@ -48,7 +52,7 @@ FT_TEST(test_game_script_context_copy_constructor_preserves_error,
     value_pointer = copy.get_variable("quest");
     FT_ASSERT(value_pointer != ft_nullptr);
     FT_ASSERT(*value_pointer == "alpha");
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, copy.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, copy.get_error());
     return (1);
 }
 
@@ -62,10 +66,10 @@ FT_TEST(test_game_script_context_copy_assignment_replaces_state,
     const ft_string *value_pointer;
 
     source.set_variable("score", "42");
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, source.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
 
     destination.set_variable("score", "7");
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, destination.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.get_error());
 
     destination = source;
     FT_ASSERT_EQ(&second_state, destination.get_state());
@@ -74,7 +78,7 @@ FT_TEST(test_game_script_context_copy_assignment_replaces_state,
     value_pointer = destination.get_variable("score");
     FT_ASSERT(value_pointer != ft_nullptr);
     FT_ASSERT(*value_pointer == "42");
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, destination.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.get_error());
     return (1);
 }
 
@@ -92,11 +96,11 @@ FT_TEST(test_game_script_context_set_state_clears_previous_error,
 
     context.set_state(&initial_state);
     FT_ASSERT_EQ(&initial_state, context.get_state());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, context.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, context.get_error());
 
     context.set_state(&updated_state);
     FT_ASSERT_EQ(&updated_state, context.get_state());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, context.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, context.get_error());
     return (1);
 }
 
@@ -109,11 +113,11 @@ FT_TEST(test_game_script_context_set_world_updates_pointer,
 
     context.set_world(first_world);
     FT_ASSERT_EQ(first_world.get(), context.get_world().get());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, context.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, context.get_error());
 
     context.set_world(second_world);
     FT_ASSERT_EQ(second_world.get(), context.get_world().get());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, context.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, context.get_error());
     return (1);
 }
 
@@ -124,15 +128,15 @@ FT_TEST(test_game_script_context_set_variable_overwrites_existing,
     const ft_string *value_pointer;
 
     context.set_variable("stage", "1");
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, context.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, context.get_error());
 
     context.set_variable("stage", "2");
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, context.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, context.get_error());
 
     value_pointer = context.get_variable("stage");
     FT_ASSERT(value_pointer != ft_nullptr);
     FT_ASSERT(*value_pointer == "2");
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, context.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, context.get_error());
     return (1);
 }
 
@@ -143,10 +147,10 @@ FT_TEST(test_game_script_context_remove_variable_clears_entry,
     const ft_string *value_pointer;
 
     context.set_variable("target", "enabled");
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, context.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, context.get_error());
 
     context.remove_variable("target");
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, context.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, context.get_error());
 
     value_pointer = context.get_variable("target");
     FT_ASSERT_EQ(ft_nullptr, value_pointer);
@@ -162,10 +166,10 @@ FT_TEST(test_game_script_context_clear_variables_removes_all,
 
     context.set_variable("alpha", "a");
     context.set_variable("beta", "b");
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, context.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, context.get_error());
 
     context.clear_variables();
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, context.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, context.get_error());
 
     value_pointer = context.get_variable("alpha");
     FT_ASSERT_EQ(ft_nullptr, value_pointer);
@@ -180,11 +184,11 @@ FT_TEST(test_game_script_context_get_error_str_matches_errno,
     const char *message;
 
     context.set_variable("key", "value");
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, context.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, context.get_error());
 
     message = context.get_error_str();
     FT_ASSERT(message != ft_nullptr);
-    FT_ASSERT(ft_strncmp(message, ft_strerror(FT_ERR_SUCCESSS), 32) == 0);
+    FT_ASSERT(ft_strncmp(message, ft_strerror(FT_ERR_SUCCESS), 32) == 0);
     return (1);
 }
 
@@ -198,11 +202,11 @@ FT_TEST(test_game_script_bridge_inspect_budget_counts_supported_commands,
     int result;
 
     bridge.set_max_operations(10);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, bridge.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.get_error());
 
     result = bridge.inspect_bytecode_budget(script, operations);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, result);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, bridge.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, result);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.get_error());
     FT_ASSERT_EQ(3, operations);
     return (1);
 }
@@ -234,7 +238,7 @@ FT_TEST(test_game_script_bridge_inspect_budget_enforces_max_operations,
     int result;
 
     bridge.set_max_operations(1);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, bridge.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.get_error());
 
     result = bridge.inspect_bytecode_budget(script, operations);
     FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, result);
@@ -253,8 +257,8 @@ FT_TEST(test_game_script_bridge_inspect_budget_ignores_comments_and_blank_lines,
     int result;
 
     result = bridge.inspect_bytecode_budget(script, operations);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, result);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, bridge.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, result);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.get_error());
     FT_ASSERT_EQ(1, operations);
     return (1);
 }
@@ -269,8 +273,8 @@ FT_TEST(test_game_script_bridge_inspect_budget_handles_crlf_lines,
     int result;
 
     result = bridge.inspect_bytecode_budget(script, operations);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, result);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, bridge.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, result);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.get_error());
     FT_ASSERT_EQ(2, operations);
     return (1);
 }
@@ -285,11 +289,11 @@ FT_TEST(test_game_script_bridge_inspect_budget_handles_empty_script,
     int result;
 
     script = "";
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, script.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, script.get_error());
 
     result = bridge.inspect_bytecode_budget(script, operations);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, result);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, bridge.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, result);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.get_error());
     FT_ASSERT_EQ(0, operations);
     return (1);
 }
@@ -306,10 +310,10 @@ FT_TEST(test_game_script_bridge_inspect_budget_resets_errno_on_success,
     ft_errno = FT_ERR_INTERNAL;
     result = bridge.inspect_bytecode_budget(script, operations);
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, result);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, bridge.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, result);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.get_error());
     FT_ASSERT_EQ(1, operations);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -327,8 +331,8 @@ FT_TEST(test_game_script_bridge_inspect_budget_reuses_previous_limit_after_inval
     FT_ASSERT_EQ(32, bridge.get_max_operations());
 
     result = bridge.inspect_bytecode_budget(script, operations);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, result);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, bridge.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, result);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.get_error());
     FT_ASSERT_EQ(2, operations);
     return (1);
 }

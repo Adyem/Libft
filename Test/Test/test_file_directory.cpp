@@ -1,3 +1,4 @@
+#include "../test_internal.hpp"
 #include "../../Compatebility/compatebility_internal.hpp"
 #include "../../CMA/CMA.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
@@ -13,6 +14,9 @@
 #include <cstring>
 #include <thread>
 
+#ifndef LIBFT_TEST_BUILD
+#endif
+
 #if defined(_WIN32) || defined(_WIN64)
 # include <direct.h>
 # include <windows.h>
@@ -23,7 +27,7 @@
 
 FT_TEST(test_cmp_dir_open_null_path, "cmp_dir_open null path reports invalid argument")
 {
-    int error_code = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESS;
 
     FT_ASSERT_EQ(ft_nullptr, cmp_dir_open(ft_nullptr, &error_code));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_code);
@@ -33,7 +37,7 @@ FT_TEST(test_cmp_dir_open_null_path, "cmp_dir_open null path reports invalid arg
 FT_TEST(test_cmp_dir_open_allocation_failure, "cmp_dir_open allocation failure reports error code")
 {
     file_dir *directory_stream;
-    int error_code = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESS;
 
     cma_set_alloc_limit(1);
     directory_stream = cmp_dir_open(".", &error_code);
@@ -45,7 +49,7 @@ FT_TEST(test_cmp_dir_open_allocation_failure, "cmp_dir_open allocation failure r
 
 FT_TEST(test_cmp_dir_open_os_error, "cmp_dir_open propagates operating system errors")
 {
-    int error_code = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESS;
 
     FT_ASSERT_EQ(ft_nullptr, cmp_dir_open("cmp_dir_open_os_error_missing", &error_code));
     FT_ASSERT_EQ(FT_ERR_IO, error_code);
@@ -54,14 +58,14 @@ FT_TEST(test_cmp_dir_open_os_error, "cmp_dir_open propagates operating system er
 
 FT_TEST(test_cmp_dir_read_null_stream, "cmp_dir_read null stream reports invalid argument")
 {
-    int error_code = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESS;
 
     FT_ASSERT_EQ(ft_nullptr, cmp_dir_read(ft_nullptr, &error_code));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_code);
     return (1);
 }
 
-FT_TEST(test_cmp_dir_read_success_resets_errno, "cmp_dir_read success reports FT_ERR_SUCCESSS")
+FT_TEST(test_cmp_dir_read_success_resets_errno, "cmp_dir_read success reports FT_ERR_SUCCESS")
 {
     file_dir *directory_stream;
     file_dirent *directory_entry;
@@ -72,14 +76,14 @@ FT_TEST(test_cmp_dir_read_success_resets_errno, "cmp_dir_read success reports FT
         return (0);
     directory_entry = cmp_dir_read(directory_stream, &error_code);
     FT_ASSERT(directory_entry != ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, error_code);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, error_code);
     cmp_dir_close(directory_stream, &error_code);
     return (1);
 }
 
 FT_TEST(test_cmp_directory_exists_null_path, "cmp_directory_exists null path reports invalid argument")
 {
-    int error_code = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESS;
     int exists_value = 1;
 
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, cmp_directory_exists(ft_nullptr,
@@ -94,16 +98,16 @@ FT_TEST(test_cmp_directory_exists_existing_directory, "cmp_directory_exists find
     int error_code = FT_ERR_INVALID_ARGUMENT;
     int exists_value = 0;
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, cmp_directory_exists(".", &exists_value,
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, cmp_directory_exists(".", &exists_value,
         &error_code));
     FT_ASSERT_EQ(1, exists_value);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, error_code);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, error_code);
     return (1);
 }
 
 FT_TEST(test_cmp_directory_exists_missing_directory, "cmp_directory_exists missing directory propagates error")
 {
-    int error_code = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESS;
     int exists_value = 1;
 
     FT_ASSERT_EQ(FT_ERR_IO, cmp_directory_exists(
@@ -124,10 +128,10 @@ FT_TEST(test_cmp_directory_exists_file_path, "cmp_directory_exists returns 0 for
     if (file_handle == ft_nullptr)
         return (0);
     std::fclose(file_handle);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, cmp_directory_exists(file_path, &exists_value,
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, cmp_directory_exists(file_path, &exists_value,
         &error_code));
     FT_ASSERT_EQ(0, exists_value);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, error_code);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, error_code);
     std::remove(file_path);
     return (1);
 }
@@ -169,7 +173,7 @@ FT_TEST(test_cmp_dir_independent_entry_buffers, "cmp_dir_read maintains per-stre
     ft_bzero(file_path, sizeof(file_path));
     ft_bzero(&result_one, sizeof(result_one));
     ft_bzero(&result_two, sizeof(result_two));
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
 #if defined(_WIN32) || defined(_WIN64)
     char directory_path_buffer[MAX_PATH];
     DWORD process_id;
@@ -216,7 +220,7 @@ FT_TEST(test_cmp_dir_independent_entry_buffers, "cmp_dir_read maintains per-stre
         thread_one_ready.store(true);
         while (start_reads.load() == false)
             std::this_thread::yield();
-        int local_error = FT_ERR_SUCCESSS;
+        int local_error = FT_ERR_SUCCESS;
         file_dirent *entry = cmp_dir_read(directory_one, &local_error);
         if (entry == ft_nullptr)
             return ;
@@ -230,7 +234,7 @@ FT_TEST(test_cmp_dir_independent_entry_buffers, "cmp_dir_read maintains per-stre
         thread_two_ready.store(true);
         while (start_reads.load() == false)
             std::this_thread::yield();
-        int local_error = FT_ERR_SUCCESSS;
+        int local_error = FT_ERR_SUCCESS;
         file_dirent *entry = cmp_dir_read(directory_two, &local_error);
         if (entry == ft_nullptr)
             return ;

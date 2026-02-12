@@ -122,7 +122,7 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
     bool lock_acquired = false;
     int32_t lock_error = cma_lock_allocator(&lock_acquired);
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
         return (ft_nullptr);
     if (!ptr)
     {

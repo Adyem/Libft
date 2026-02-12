@@ -13,7 +13,6 @@ double math_pow(double base_value, int exponent)
     {
         if (math_fabs(base_value) <= DBL_MIN)
         {
-            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
             return (math_nan());
         }
         base_value = 1.0 / base_value;
@@ -26,6 +25,5 @@ double math_pow(double base_value, int exponent)
         base_value *= base_value;
         exponent_value /= 2;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }

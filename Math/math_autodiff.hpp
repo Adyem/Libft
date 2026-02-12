@@ -3,6 +3,7 @@
 
 #include "../Errno/errno.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "../Template/move.hpp"
 #include "../Template/vector.hpp"
 
 class ft_dual_number

@@ -1,3 +1,4 @@
+#include "../test_internal.hpp"
 #include "../../JSon/json.hpp"
 #include "../../JSon/document.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
@@ -5,6 +6,9 @@
 #include "../../System_utils/test_runner.hpp"
 #include "../../Basic/basic.hpp"
 #include "../../CMA/CMA.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_json_parse_detects_big_number, "json parser promotes oversized integers to big numbers")
 {

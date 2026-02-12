@@ -87,7 +87,7 @@ static int networking_dns_cache_lock(ft_unique_lock<pt_mutex> &cache_lock) noexc
 static int networking_dns_cache_unlock(ft_unique_lock<pt_mutex> &cache_lock) noexcept
 {
     if (!cache_lock.owns_lock())
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     cache_lock.unlock();
     return (ft_global_error_stack_drop_last_error());
 }
@@ -101,7 +101,7 @@ static bool networking_dns_append_literal(ft_string &target, const char *literal
         value = "";
     target.append(value);
     int string_error = networking_fetch_last_error(false);
-    if (string_error != FT_ERR_SUCCESSS)
+    if (string_error != FT_ERR_SUCCESS)
     {
         networking_push_failure(string_error);
         return (false);
@@ -113,7 +113,7 @@ static bool networking_dns_append_string(ft_string &target, const ft_string &val
 {
     target.append(value);
     int string_error = networking_fetch_last_error(false);
-    if (string_error != FT_ERR_SUCCESSS)
+    if (string_error != FT_ERR_SUCCESS)
     {
         networking_push_failure(string_error);
         return (false);
@@ -125,7 +125,7 @@ static bool networking_dns_append_separator(ft_string &target) noexcept
 {
     target.append('|');
     int string_error = networking_fetch_last_error(false);
-    if (string_error != FT_ERR_SUCCESSS)
+    if (string_error != FT_ERR_SUCCESS)
     {
         networking_push_failure(string_error);
         return (false);
@@ -140,13 +140,13 @@ static bool networking_dns_copy_addresses(const ft_vector<networking_resolved_ad
     size_t  count;
 
     destination.clear();
-    if (destination.get_error() != FT_ERR_SUCCESSS)
+    if (destination.get_error() != FT_ERR_SUCCESS)
     {
         networking_push_failure(destination.get_error());
         return (false);
     }
     count = source.size();
-    if (source.get_error() != FT_ERR_SUCCESSS)
+    if (source.get_error() != FT_ERR_SUCCESS)
     {
         networking_push_failure(source.get_error());
         return (false);
@@ -155,7 +155,7 @@ static bool networking_dns_copy_addresses(const ft_vector<networking_resolved_ad
     while (index < count)
     {
         destination.push_back(source[index]);
-        if (destination.get_error() != FT_ERR_SUCCESSS)
+        if (destination.get_error() != FT_ERR_SUCCESS)
         {
             networking_push_failure(destination.get_error());
             return (false);
@@ -278,7 +278,7 @@ bool networking_dns_resolve(const char *host, const char *service,
     int         cache_lock_error;
 
     out_addresses.clear();
-    if (out_addresses.get_error() != FT_ERR_SUCCESSS)
+    if (out_addresses.get_error() != FT_ERR_SUCCESS)
     {
         networking_push_failure(out_addresses.get_error());
         return (false);
@@ -291,7 +291,7 @@ bool networking_dns_resolve(const char *host, const char *service,
     cache_key = host;
     {
         int string_error = networking_fetch_last_error(false);
-        if (string_error != FT_ERR_SUCCESSS)
+        if (string_error != FT_ERR_SUCCESS)
         {
             networking_push_failure(string_error);
             return (false);
@@ -309,7 +309,7 @@ bool networking_dns_resolve(const char *host, const char *service,
     number_string = ft_to_string(static_cast<long>(family));
     {
         int string_error = networking_fetch_last_error(false);
-        if (string_error != FT_ERR_SUCCESSS)
+        if (string_error != FT_ERR_SUCCESS)
         {
             networking_push_failure(string_error);
             return (false);
@@ -322,7 +322,7 @@ bool networking_dns_resolve(const char *host, const char *service,
     number_string = ft_to_string(static_cast<long>(socktype));
     {
         int string_error = networking_fetch_last_error(false);
-        if (string_error != FT_ERR_SUCCESSS)
+        if (string_error != FT_ERR_SUCCESS)
         {
             networking_push_failure(string_error);
             return (false);
@@ -335,7 +335,7 @@ bool networking_dns_resolve(const char *host, const char *service,
     number_string = ft_to_string(static_cast<long>(protocol));
     {
         int string_error = networking_fetch_last_error(false);
-        if (string_error != FT_ERR_SUCCESSS)
+        if (string_error != FT_ERR_SUCCESS)
         {
             networking_push_failure(string_error);
             return (false);
@@ -348,7 +348,7 @@ bool networking_dns_resolve(const char *host, const char *service,
     number_string = ft_to_string(static_cast<long>(flags));
     {
         int string_error = networking_fetch_last_error(false);
-        if (string_error != FT_ERR_SUCCESSS)
+        if (string_error != FT_ERR_SUCCESS)
         {
             networking_push_failure(string_error);
             return (false);
@@ -359,7 +359,7 @@ bool networking_dns_resolve(const char *host, const char *service,
     lookup_start_ms = time_now_ms();
     lookup_start_valid = true;
     cache_lock_error = networking_dns_cache_lock(cache_lock);
-    if (cache_lock_error != FT_ERR_SUCCESSS)
+    if (cache_lock_error != FT_ERR_SUCCESS)
     {
         networking_push_failure(cache_lock_error);
         return (false);
@@ -379,7 +379,7 @@ bool networking_dns_resolve(const char *host, const char *service,
             {
                 int cache_unlock_error = networking_dns_cache_unlock(cache_lock);
 
-                if (cache_unlock_error != FT_ERR_SUCCESSS)
+                if (cache_unlock_error != FT_ERR_SUCCESS)
                 {
                     networking_consume_global_error();
                     networking_push_failure(cache_unlock_error);
@@ -389,13 +389,13 @@ bool networking_dns_resolve(const char *host, const char *service,
             {
                 int cache_unlock_error = networking_dns_cache_unlock(cache_lock);
 
-                if (cache_unlock_error != FT_ERR_SUCCESSS)
+                if (cache_unlock_error != FT_ERR_SUCCESS)
                 {
                     networking_push_failure(cache_unlock_error);
                     return (false);
                 }
             }
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
+            ft_global_error_stack_push(FT_ERR_SUCCESS);
             return (true);
         }
         g_networking_dns_cache.remove(cache_key);
@@ -403,7 +403,7 @@ bool networking_dns_resolve(const char *host, const char *service,
     {
         int cache_unlock_error = networking_dns_cache_unlock(cache_lock);
 
-        if (cache_unlock_error != FT_ERR_SUCCESSS)
+        if (cache_unlock_error != FT_ERR_SUCCESS)
         {
             networking_push_failure(cache_unlock_error);
             return (false);
@@ -442,7 +442,7 @@ bool networking_dns_resolve(const char *host, const char *service,
             ft_memcpy(&resolved.address, current->ai_addr, current->ai_addrlen);
             resolved.length = static_cast<socklen_t>(current->ai_addrlen);
             out_addresses.push_back(resolved);
-            if (out_addresses.get_error() != FT_ERR_SUCCESSS)
+            if (out_addresses.get_error() != FT_ERR_SUCCESS)
             {
                 freeaddrinfo(results);
                 networking_push_failure(out_addresses.get_error());
@@ -455,7 +455,7 @@ bool networking_dns_resolve(const char *host, const char *service,
     size_t result_count;
 
     result_count = out_addresses.size();
-    if (out_addresses.get_error() != FT_ERR_SUCCESSS)
+    if (out_addresses.get_error() != FT_ERR_SUCCESS)
     {
         networking_push_failure(out_addresses.get_error());
         return (false);
@@ -485,13 +485,13 @@ bool networking_dns_resolve(const char *host, const char *service,
             ft_unique_lock<pt_mutex> update_lock;
             int update_lock_error = networking_dns_cache_lock(update_lock);
 
-            if (update_lock_error == FT_ERR_SUCCESSS)
+            if (update_lock_error == FT_ERR_SUCCESS)
             {
                 g_networking_dns_cache.remove(cache_key);
                 g_networking_dns_cache.insert(cache_key, ft_move(cache_value));
                 int update_unlock_error = networking_dns_cache_unlock(update_lock);
 
-                if (update_unlock_error != FT_ERR_SUCCESSS)
+                if (update_unlock_error != FT_ERR_SUCCESS)
                 {
                     networking_push_failure(update_unlock_error);
                     return (false);
@@ -499,7 +499,7 @@ bool networking_dns_resolve(const char *host, const char *service,
             }
         }
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -513,7 +513,7 @@ bool networking_dns_resolve_first(const char *host, const char *service,
     if (!networking_dns_resolve(host, service, family, socktype, protocol, flags, results))
         return (false);
     count = results.size();
-    if (results.get_error() != FT_ERR_SUCCESSS)
+    if (results.get_error() != FT_ERR_SUCCESS)
     {
         networking_push_failure(results.get_error());
         return (false);
@@ -524,12 +524,12 @@ bool networking_dns_resolve_first(const char *host, const char *service,
         return (false);
     }
     out_address = results[0];
-    if (results.get_error() != FT_ERR_SUCCESSS)
+    if (results.get_error() != FT_ERR_SUCCESS)
     {
         networking_push_failure(results.get_error());
         return (false);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -538,7 +538,7 @@ void networking_dns_clear_cache(void) noexcept
     ft_unique_lock<pt_mutex> cache_lock;
     int cache_lock_error = networking_dns_cache_lock(cache_lock);
 
-    if (cache_lock_error != FT_ERR_SUCCESSS)
+    if (cache_lock_error != FT_ERR_SUCCESS)
     {
         networking_push_failure(cache_lock_error);
         return ;
@@ -547,12 +547,12 @@ void networking_dns_clear_cache(void) noexcept
     {
         int cache_unlock_error = networking_dns_cache_unlock(cache_lock);
 
-        if (cache_unlock_error != FT_ERR_SUCCESSS)
+        if (cache_unlock_error != FT_ERR_SUCCESS)
         {
             networking_push_failure(cache_unlock_error);
             return ;
         }
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }

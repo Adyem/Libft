@@ -13,7 +13,7 @@ int pt_cond_init(pthread_cond_t *condition, const pthread_condattr_t *attributes
         ft_global_error_stack_push(error_code);
         return (return_value);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (return_value);
 }
 
@@ -27,7 +27,7 @@ int pt_cond_destroy(pthread_cond_t *condition)
         ft_global_error_stack_push(error_code);
         return (return_value);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (return_value);
 }
 
@@ -49,7 +49,7 @@ int pt_cond_wait(pthread_cond_t *condition, pthread_mutex_t *mutex)
         ft_global_error_stack_push(error_code);
         return (return_value);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (return_value);
 }
 
@@ -63,7 +63,7 @@ int pt_cond_signal(pthread_cond_t *condition)
         ft_global_error_stack_push(error_code);
         return (return_value);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (return_value);
 }
 
@@ -77,6 +77,6 @@ int pt_cond_broadcast(pthread_cond_t *condition)
         ft_global_error_stack_push(error_code);
         return (return_value);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (return_value);
 }

@@ -30,7 +30,7 @@ int32_t cma_checked_block_size(const void *memory_pointer, ft_size_t *block_size
     bool lock_acquired = false;
     int32_t lock_error = cma_lock_allocator(&lock_acquired);
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         if (lock_acquired)
             cma_unlock_allocator(lock_acquired);

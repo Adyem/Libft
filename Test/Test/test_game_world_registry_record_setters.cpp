@@ -1,6 +1,10 @@
+#include "../test_internal.hpp"
 #include "../../Game/ft_region_definition.hpp"
 #include "../../Game/ft_world_region.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_region_definition_setters, "region definition setters update fields")
 {

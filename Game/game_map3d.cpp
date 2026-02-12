@@ -31,13 +31,13 @@ int ft_map3d::lock_pair(const ft_map3d &first, const ft_map3d &second,
     {
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
 
-        if (single_guard.get_error() != FT_ERR_SUCCESSS)
+        if (single_guard.get_error() != FT_ERR_SUCCESS)
         {
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -55,12 +55,12 @@ int ft_map3d::lock_pair(const ft_map3d &first, const ft_map3d &second,
     {
         ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
 
-        if (lower_guard.get_error() != FT_ERR_SUCCESSS)
+        if (lower_guard.get_error() != FT_ERR_SUCCESS)
         {
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ERR_SUCCESSS)
+        if (upper_guard.get_error() == FT_ERR_SUCCESS)
         {
             if (swapped == false)
             {
@@ -72,7 +72,7 @@ int ft_map3d::lock_pair(const ft_map3d &first, const ft_map3d &second,
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            return (FT_ERR_SUCCESSS);
+            return (FT_ERR_SUCCESS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -85,44 +85,44 @@ int ft_map3d::lock_pair(const ft_map3d &first, const ft_map3d &second,
 }
 
 ft_map3d::ft_map3d(size_t width, size_t height, size_t depth, int value)
-    : _data(ft_nullptr), _width(0), _height(0), _depth(0), _error(FT_ERR_SUCCESSS),
+    : _data(ft_nullptr), _width(0), _height(0), _depth(0), _error(FT_ERR_SUCCESS),
       _mutex(), _operation_errors({{}, {}, 0})
 {
     this->allocate(width, height, depth, value);
-    if (this->_error == FT_ERR_SUCCESSS)
-        this->set_error(FT_ERR_SUCCESSS);
+    if (this->_error == FT_ERR_SUCCESS)
+        this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 ft_map3d::~ft_map3d()
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         ft_map3d::finalize_lock(guard);
         return ;
     }
     this->deallocate();
-    if (this->_error == FT_ERR_SUCCESSS)
-        this->set_error(FT_ERR_SUCCESSS);
+    if (this->_error == FT_ERR_SUCCESS)
+        this->set_error(FT_ERR_SUCCESS);
     ft_map3d::finalize_lock(guard);
     return ;
 }
 
 ft_map3d::ft_map3d(const ft_map3d &other)
-    : _data(ft_nullptr), _width(0), _height(0), _depth(0), _error(FT_ERR_SUCCESSS),
+    : _data(ft_nullptr), _width(0), _height(0), _depth(0), _error(FT_ERR_SUCCESS),
       _mutex(), _operation_errors({{}, {}, 0})
 {
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESSS)
+    if (other_guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(other_guard.get_error());
         ft_map3d::finalize_lock(other_guard);
         return ;
     }
     this->allocate(other._width, other._height, other._depth, 0);
-    if (this->_error == FT_ERR_SUCCESSS && this->_data)
+    if (this->_error == FT_ERR_SUCCESS && this->_data)
     {
         size_t z = 0;
         while (z < this->_depth)
@@ -144,7 +144,7 @@ ft_map3d::ft_map3d(const ft_map3d &other)
     int error_value;
 
     error_value = this->_error;
-    if (error_value == FT_ERR_SUCCESSS)
+    if (error_value == FT_ERR_SUCCESS)
         error_value = other._error;
     this->set_error(error_value);
     ft_map3d::finalize_lock(other_guard);
@@ -160,7 +160,7 @@ ft_map3d &ft_map3d::operator=(const ft_map3d &other)
     if (this == &other)
         return (*this);
     lock_error = ft_map3d::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         ft_map3d::finalize_lock(this_guard);
@@ -169,7 +169,7 @@ ft_map3d &ft_map3d::operator=(const ft_map3d &other)
     }
     this->deallocate();
     this->allocate(other._width, other._height, other._depth, 0);
-    if (this->_error == FT_ERR_SUCCESSS && this->_data)
+    if (this->_error == FT_ERR_SUCCESS && this->_data)
     {
         size_t z = 0;
         while (z < this->_depth)
@@ -191,7 +191,7 @@ ft_map3d &ft_map3d::operator=(const ft_map3d &other)
     int error_value;
 
     error_value = this->_error;
-    if (error_value == FT_ERR_SUCCESSS)
+    if (error_value == FT_ERR_SUCCESS)
         error_value = other._error;
     this->set_error(error_value);
     ft_map3d::finalize_lock(this_guard);
@@ -200,11 +200,11 @@ ft_map3d &ft_map3d::operator=(const ft_map3d &other)
 }
 
 ft_map3d::ft_map3d(ft_map3d &&other) noexcept
-    : _data(ft_nullptr), _width(0), _height(0), _depth(0), _error(FT_ERR_SUCCESSS),
+    : _data(ft_nullptr), _width(0), _height(0), _depth(0), _error(FT_ERR_SUCCESS),
       _mutex(), _operation_errors({{}, {}, 0})
 {
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESSS)
+    if (other_guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(other_guard.get_error());
         ft_map3d::finalize_lock(other_guard);
@@ -220,7 +220,7 @@ ft_map3d::ft_map3d(ft_map3d &&other) noexcept
     other._height = 0;
     other._depth = 0;
     this->set_error(this->_error);
-    other.set_error(FT_ERR_SUCCESSS);
+    other.set_error(FT_ERR_SUCCESS);
     ft_map3d::finalize_lock(other_guard);
     return ;
 }
@@ -234,7 +234,7 @@ ft_map3d &ft_map3d::operator=(ft_map3d &&other) noexcept
     if (this == &other)
         return (*this);
     lock_error = ft_map3d::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         ft_map3d::finalize_lock(this_guard);
@@ -252,7 +252,7 @@ ft_map3d &ft_map3d::operator=(ft_map3d &&other) noexcept
     other._height = 0;
     other._depth = 0;
     this->set_error(this->_error);
-    other.set_error(FT_ERR_SUCCESSS);
+    other.set_error(FT_ERR_SUCCESS);
     this->_operation_errors = {{}, {}, 0};
     ft_map3d::finalize_lock(this_guard);
     ft_map3d::finalize_lock(other_guard);
@@ -262,7 +262,7 @@ ft_map3d &ft_map3d::operator=(ft_map3d &&other) noexcept
 void ft_map3d::resize(size_t width, size_t height, size_t depth, int value)
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         ft_map3d::finalize_lock(guard);
@@ -270,8 +270,8 @@ void ft_map3d::resize(size_t width, size_t height, size_t depth, int value)
     }
     this->deallocate();
     this->allocate(width, height, depth, value);
-    if (this->_error == FT_ERR_SUCCESSS)
-        this->set_error(FT_ERR_SUCCESSS);
+    if (this->_error == FT_ERR_SUCCESS)
+        this->set_error(FT_ERR_SUCCESS);
     ft_map3d::finalize_lock(guard);
     return ;
 }
@@ -281,7 +281,7 @@ int ft_map3d::get_error() const
     int error_code;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_map3d *>(this)->set_error(guard.get_error());
         ft_map3d::finalize_lock(guard);
@@ -298,7 +298,7 @@ const char *ft_map3d::get_error_str() const
     int error_code;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_map3d *>(this)->set_error(guard.get_error());
         ft_map3d::finalize_lock(guard);
@@ -367,7 +367,7 @@ int ft_map3d::pop_oldest_operation_error() noexcept
 {
     int error_value = ft_operation_error_stack_pop_last(&this->_operation_errors);
 
-    if (error_value != FT_ERR_SUCCESSS)
+    if (error_value != FT_ERR_SUCCESS)
         return (error_value);
     ft_global_error_stack_pop_last();
     return (error_value);
@@ -377,7 +377,7 @@ int ft_map3d::pop_newest_operation_error() noexcept
 {
     int error_value = ft_operation_error_stack_pop_newest(&this->_operation_errors);
 
-    if (error_value != FT_ERR_SUCCESSS)
+    if (error_value != FT_ERR_SUCCESS)
         return (error_value);
     ft_global_error_stack_drop_last_error();
     return (error_value);
@@ -393,7 +393,7 @@ int ft_map3d::get(size_t x, size_t y, size_t z) const
     int value;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_map3d *>(this)->set_error(guard.get_error());
         ft_map3d::finalize_lock(guard);
@@ -406,7 +406,7 @@ int ft_map3d::get(size_t x, size_t y, size_t z) const
         return (0);
     }
     value = this->_data[z][y][x];
-    const_cast<ft_map3d *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_map3d *>(this)->set_error(FT_ERR_SUCCESS);
     ft_map3d::finalize_lock(guard);
     return (value);
 }
@@ -414,7 +414,7 @@ int ft_map3d::get(size_t x, size_t y, size_t z) const
 void ft_map3d::set(size_t x, size_t y, size_t z, int value)
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         ft_map3d::finalize_lock(guard);
@@ -427,7 +427,7 @@ void ft_map3d::set(size_t x, size_t y, size_t z, int value)
         return ;
     }
     this->_data[z][y][x] = value;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     ft_map3d::finalize_lock(guard);
     return ;
 }
@@ -437,7 +437,7 @@ int ft_map3d::is_obstacle(size_t x, size_t y, size_t z) const
     int value;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_map3d *>(this)->set_error(guard.get_error());
         ft_map3d::finalize_lock(guard);
@@ -450,7 +450,7 @@ int ft_map3d::is_obstacle(size_t x, size_t y, size_t z) const
         return (0);
     }
     value = this->_data[z][y][x];
-    const_cast<ft_map3d *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_map3d *>(this)->set_error(FT_ERR_SUCCESS);
     ft_map3d::finalize_lock(guard);
     if (value != 0)
         return (1);
@@ -462,7 +462,7 @@ void ft_map3d::toggle_obstacle(size_t x, size_t y, size_t z, ft_pathfinding *lis
     int new_value;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         ft_map3d::finalize_lock(guard);
@@ -479,7 +479,7 @@ void ft_map3d::toggle_obstacle(size_t x, size_t y, size_t z, ft_pathfinding *lis
     else
         this->_data[z][y][x] = 0;
     new_value = this->_data[z][y][x];
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     ft_map3d::finalize_lock(guard);
     if (listener)
         listener->update_obstacle(x, y, z, new_value);
@@ -491,14 +491,14 @@ size_t ft_map3d::get_width() const
     size_t width_value;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_map3d *>(this)->set_error(guard.get_error());
         ft_map3d::finalize_lock(guard);
         return (0);
     }
     width_value = this->_width;
-    const_cast<ft_map3d *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_map3d *>(this)->set_error(FT_ERR_SUCCESS);
     ft_map3d::finalize_lock(guard);
     return (width_value);
 }
@@ -508,14 +508,14 @@ size_t ft_map3d::get_height() const
     size_t height_value;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_map3d *>(this)->set_error(guard.get_error());
         ft_map3d::finalize_lock(guard);
         return (0);
     }
     height_value = this->_height;
-    const_cast<ft_map3d *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_map3d *>(this)->set_error(FT_ERR_SUCCESS);
     ft_map3d::finalize_lock(guard);
     return (height_value);
 }
@@ -525,21 +525,21 @@ size_t ft_map3d::get_depth() const
     size_t depth_value;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_map3d *>(this)->set_error(guard.get_error());
         ft_map3d::finalize_lock(guard);
         return (0);
     }
     depth_value = this->_depth;
-    const_cast<ft_map3d *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_map3d *>(this)->set_error(FT_ERR_SUCCESS);
     ft_map3d::finalize_lock(guard);
     return (depth_value);
 }
 
 void ft_map3d::allocate(size_t width, size_t height, size_t depth, int value)
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     this->_width = width;
     this->_height = height;
     this->_depth = depth;
@@ -596,7 +596,7 @@ void ft_map3d::allocate(size_t width, size_t height, size_t depth, int value)
         }
         ++z;
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -607,8 +607,8 @@ void ft_map3d::deallocate()
         this->_width = 0;
         this->_height = 0;
         this->_depth = 0;
-        if (this->_error == FT_ERR_SUCCESSS)
-            this->set_error(FT_ERR_SUCCESSS);
+        if (this->_error == FT_ERR_SUCCESS)
+            this->set_error(FT_ERR_SUCCESS);
         return ;
     }
     size_t z = 0;
@@ -628,7 +628,7 @@ void ft_map3d::deallocate()
     this->_width = 0;
     this->_height = 0;
     this->_depth = 0;
-    if (this->_error == FT_ERR_SUCCESSS)
-        this->set_error(FT_ERR_SUCCESSS);
+    if (this->_error == FT_ERR_SUCCESS)
+        this->set_error(FT_ERR_SUCCESS);
     return ;
 }

@@ -30,7 +30,7 @@ const char *be_getEncryptionKey(void)
             index++;
         }
         key[key_length] = '\0';
-        return (encryption_key_report(FT_ERR_SUCCESSS, key));
+        return (encryption_key_report(FT_ERR_SUCCESS, key));
     }
     int secure_error = FT_ERR_INTERNAL;
     uint32_t seed_value = ft_random_seed(ft_nullptr);
@@ -42,9 +42,9 @@ const char *be_getEncryptionKey(void)
         index++;
     }
     key[key_length] = '\0';
-    if (secure_error != FT_ERR_SUCCESSS)
+    if (secure_error != FT_ERR_SUCCESS)
     {
         return (encryption_key_report(secure_error, key));
     }
-    return (encryption_key_report(FT_ERR_SUCCESSS, key));
+    return (encryption_key_report(FT_ERR_SUCCESS, key));
 }

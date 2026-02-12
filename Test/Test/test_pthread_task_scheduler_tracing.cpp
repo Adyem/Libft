@@ -1,3 +1,4 @@
+#include "../test_internal.hpp"
 #include "../../PThread/task_scheduler.hpp"
 #include "../../PThread/task_scheduler_tracing.hpp"
 #include "../../System_utils/test_runner.hpp"
@@ -5,6 +6,9 @@
 #include <mutex>
 #include <chrono>
 #include <thread>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 static std::mutex g_trace_mutex;
 static std::vector<ft_task_trace_event> g_recorded_events;

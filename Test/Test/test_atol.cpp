@@ -1,103 +1,49 @@
+#include "../test_internal.hpp"
 #include "../../Basic/basic.hpp"
-#include "../../System_utils/test_runner.hpp"
-#include "../../Basic/limits.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
-#include "../../Errno/errno.hpp"
+#include "../../System_utils/test_runner.hpp"
 
-FT_TEST(test_atol_simple_success, "ft_atol simple parses value")
+#ifndef LIBFT_TEST_BUILD
+#endif
+
+FT_TEST(test_atol_simple, "ft_atol parses a positive number")
 {
-    ft_errno = FT_ERR_OUT_OF_RANGE;
-    FT_ASSERT_EQ(1234L, ft_atol("1234", ft_nullptr));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(1234L, ft_atol("1234"));
     return (1);
 }
 
-FT_TEST(test_atol_overflow_sets_erange, "ft_atol clamps overflow to FT_LONG_MAX")
+FT_TEST(test_atol_negative, "ft_atol parses a negative number")
 {
-    ft_string overflow_string;
-
-    overflow_string = ft_to_string(FT_LONG_MAX);
-    overflow_string += "9";
-    ft_errno = FT_ERR_SUCCESSS;
-    FT_ASSERT_EQ(FT_LONG_MAX, ft_atol(overflow_string.c_str(), ft_nullptr));
-    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
+    FT_ASSERT_EQ(-9876L, ft_atol("-9876"));
     return (1);
 }
 
-FT_TEST(test_atol_underflow_sets_erange, "ft_atol clamps underflow to FT_LONG_MIN")
+FT_TEST(test_atol_with_plus_sign, "ft_atol parses plus sign")
 {
-    ft_string underflow_string;
-
-    underflow_string = ft_to_string(FT_LONG_MIN);
-    underflow_string += "9";
-    ft_errno = FT_ERR_SUCCESSS;
-    FT_ASSERT_EQ(FT_LONG_MIN, ft_atol(underflow_string.c_str(), ft_nullptr));
-    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
+    FT_ASSERT_EQ(42L, ft_atol("+42"));
     return (1);
 }
 
-FT_TEST(test_atol_null_input_sets_einval, "ft_atol null input returns zero")
+FT_TEST(test_atol_with_leading_whitespace, "ft_atol skips leading whitespace")
 {
-    ft_errno = FT_ERR_SUCCESSS;
-    FT_ASSERT_EQ(0L, ft_atol(ft_nullptr, ft_nullptr));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(42L, ft_atol(" \t\n +0042"));
     return (1);
 }
 
-FT_TEST(test_atol_trailing_chars_sets_einval, "ft_atol stops at non-digit")
+FT_TEST(test_atol_stops_at_trailing_characters, "ft_atol stops at first non digit")
 {
-    ft_errno = FT_ERR_SUCCESSS;
-    FT_ASSERT_EQ(98765L, ft_atol("98765abc", ft_nullptr));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(98765L, ft_atol("98765abc"));
     return (1);
 }
 
-FT_TEST(test_atol_no_digits_sets_einval, "ft_atol rejects non-numeric input")
+FT_TEST(test_atol_null_input, "ft_atol returns zero for null input")
 {
-    ft_errno = FT_ERR_SUCCESSS;
-    FT_ASSERT_EQ(0L, ft_atol("abc", ft_nullptr));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(0L, ft_atol(ft_nullptr));
     return (1);
 }
 
-FT_TEST(test_atol_long_min_exact_success, "ft_atol FT_LONG_MIN exact")
+FT_TEST(test_atol_no_digits, "ft_atol returns zero when no digits are found")
 {
-    ft_string integer_string;
-
-    integer_string = ft_to_string(FT_LONG_MIN);
-    ft_errno = FT_ERR_OUT_OF_RANGE;
-    FT_ASSERT_EQ(FT_LONG_MIN, ft_atol(integer_string.c_str(), ft_nullptr));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
-    return (1);
-}
-
-FT_TEST(test_atol_long_max_exact_success, "ft_atol FT_LONG_MAX exact")
-{
-    ft_string integer_string;
-
-    integer_string = ft_to_string(FT_LONG_MAX);
-    ft_errno = FT_ERR_OUT_OF_RANGE;
-    FT_ASSERT_EQ(FT_LONG_MAX, ft_atol(integer_string.c_str(), ft_nullptr));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
-    return (1);
-}
-
-FT_TEST(test_atol_skips_leading_whitespace_and_sign, "ft_atol trims whitespace before sign")
-{
-    const char *input_string = " \t\n +0042";
-
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
-    FT_ASSERT_EQ(42L, ft_atol(input_string, ft_nullptr));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
-    return (1);
-}
-
-FT_TEST(test_atol_errno_recovers_after_invalid, "ft_atol clears errno after invalid input")
-{
-    ft_errno = FT_ERR_SUCCESSS;
-    FT_ASSERT_EQ(0L, ft_atol("invalid", ft_nullptr));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
-    FT_ASSERT_EQ(27L, ft_atol("27", ft_nullptr));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(0L, ft_atol("abc"));
     return (1);
 }

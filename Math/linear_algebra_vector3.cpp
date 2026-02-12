@@ -2,7 +2,8 @@
 #include "math.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/pthread.hpp"
-#include "../PThread/pthread_internal.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include <new>
 #include "../Template/move.hpp"
 
 #if defined(__SSE2__)
@@ -17,18 +18,16 @@ static void vector3_sleep_backoff()
 
 int vector3::lock_mutex() const noexcept
 {
-    return (pt_recursive_mutex_lock_if_enabled(
-        this->_mutex,
-        this->_mutex != ft_nullptr
-    ));
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    return (this->_mutex->lock());
 }
 
 int vector3::unlock_mutex() const noexcept
 {
-    return (pt_recursive_mutex_unlock_if_enabled(
-        this->_mutex,
-        this->_mutex != ft_nullptr
-    ));
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    return (this->_mutex->unlock());
 }
 
 #if defined(__SSE2__)
@@ -91,14 +90,14 @@ int vector3::lock_pair(const vector3 &first, const vector3 &second,
     while (true)
     {
         int lower_error = lower->lock_mutex();
-        if (lower_error != FT_ERR_SUCCESSS)
+        if (lower_error != FT_ERR_SUCCESS)
         {
             return (lower_error);
         }
         int upper_error = upper->lock_mutex();
-        if (upper_error == FT_ERR_SUCCESSS)
+        if (upper_error == FT_ERR_SUCCESS)
         {
-            return (FT_ERR_SUCCESSS);
+            return (FT_ERR_SUCCESS);
         }
         if (upper_error != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -119,68 +118,6 @@ void vector3::unlock_pair(const vector3 *lower, const vector3 *upper)
     return ;
 }
 
-vector3::vector3(const vector3 &other)
-    : _x(0.0), _y(0.0), _z(0.0)
-{
-    *this = other;
-    return ;
-}
-
-vector3 &vector3::operator=(const vector3 &other)
-{
-    const vector3 *lower;
-    const vector3 *upper;
-    int lock_error;
-
-    if (this == &other)
-        return (*this);
-    lock_error = this->lock_pair(*this, other, lower, upper);
-    if (lock_error != FT_ERR_SUCCESSS)
-    {
-        ft_global_error_stack_push(lock_error);
-        return (*this);
-    }
-    this->_x = other._x;
-    this->_y = other._y;
-    this->_z = other._z;
-    this->unlock_pair(lower, upper);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (*this);
-}
-
-vector3::vector3(vector3 &&other)
-    : _x(0.0), _y(0.0), _z(0.0)
-{
-    *this = ft_move(other);
-    return ;
-}
-
-vector3 &vector3::operator=(vector3 &&other)
-{
-    const vector3 *lower;
-    const vector3 *upper;
-    int lock_error;
-
-    if (this == &other)
-        return (*this);
-    lock_error = this->lock_pair(*this, other, lower, upper);
-    if (lock_error != FT_ERR_SUCCESSS)
-    {
-        ft_global_error_stack_push(lock_error);
-        return (*this);
-    }
-    this->_x = other._x;
-    this->_y = other._y;
-    this->_z = other._z;
-    this->unlock_pair(lower, upper);
-    other._x = 0.0;
-    other._y = 0.0;
-    other._z = 0.0;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (*this);
-}
-
 double vector3::get_x() const
 {
     int lock_error;
@@ -188,19 +125,16 @@ double vector3::get_x() const
     int unlock_error;
 
     lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(lock_error);
         return (0.0);
     }
     value = this->_x;
     unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(unlock_error);
         return (value);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (value);
 }
 
@@ -211,19 +145,16 @@ double vector3::get_y() const
     int unlock_error;
 
     lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(lock_error);
         return (0.0);
     }
     value = this->_y;
     unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(unlock_error);
         return (value);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (value);
 }
 
@@ -234,19 +165,16 @@ double vector3::get_z() const
     int unlock_error;
 
     lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(lock_error);
         return (0.0);
     }
     value = this->_z;
     unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(unlock_error);
         return (value);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (value);
 }
 
@@ -258,18 +186,14 @@ vector3 vector3::add(const vector3 &other) const
     vector3 result;
 
     lock_error = this->lock_pair(*this, other, lower, upper);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(lock_error);
-        ft_global_error_stack_push(lock_error);
         return (result);
     }
     result._x = this->_x + other._x;
     result._y = this->_y + other._y;
     result._z = this->_z + other._z;
     this->unlock_pair(lower, upper);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -281,18 +205,14 @@ vector3 vector3::subtract(const vector3 &other) const
     vector3 result;
 
     lock_error = this->lock_pair(*this, other, lower, upper);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(lock_error);
-        ft_global_error_stack_push(lock_error);
         return (result);
     }
     result._x = this->_x - other._x;
     result._y = this->_y - other._y;
     result._z = this->_z - other._z;
     this->unlock_pair(lower, upper);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -304,15 +224,13 @@ double vector3::dot(const vector3 &other) const
     double result;
 
     lock_error = this->lock_pair(*this, other, lower, upper);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(lock_error);
         return (0.0);
     }
     result = vector3_compute_dot(this->_x, this->_y, this->_z,
             other._x, other._y, other._z);
     this->unlock_pair(lower, upper);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -324,18 +242,14 @@ vector3 vector3::cross(const vector3 &other) const
     vector3 result;
 
     lock_error = this->lock_pair(*this, other, lower, upper);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(lock_error);
-        ft_global_error_stack_push(lock_error);
         return (result);
     }
     result._x = this->_y * other._z - this->_z * other._y;
     result._y = this->_z * other._x - this->_x * other._z;
     result._z = this->_x * other._y - this->_y * other._x;
     this->unlock_pair(lower, upper);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -347,21 +261,18 @@ double vector3::length() const
     int unlock_error;
 
     lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(lock_error);
         return (0.0);
     }
     squared = vector3_compute_dot(this->_x, this->_y, this->_z,
             this->_x, this->_y, this->_z);
     result = math_sqrt(squared);
     unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(unlock_error);
         return (result);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -375,10 +286,8 @@ vector3 vector3::normalize() const
     int unlock_error;
 
     lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(lock_error);
-        ft_global_error_stack_push(lock_error);
         return (result);
     }
     squared_length = this->_x * this->_x + this->_y * this->_y + this->_z * this->_z;
@@ -387,28 +296,20 @@ vector3 vector3::normalize() const
     if (math_absdiff(length_value, 0.0) <= epsilon)
     {
         unlock_error = this->unlock_mutex();
-        if (unlock_error != FT_ERR_SUCCESSS)
+        if (unlock_error != FT_ERR_SUCCESS)
         {
-            ft_global_error_stack_push(unlock_error);
-            ft_global_error_stack_push(unlock_error);
             return (result);
         }
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (result);
     }
     result._x = this->_x / length_value;
     result._y = this->_y / length_value;
     result._z = this->_z / length_value;
     unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(unlock_error);
-        ft_global_error_stack_push(unlock_error);
         return (result);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -432,25 +333,31 @@ int vector3::prepare_thread_safety(void) noexcept
 {
     if (this->_mutex != ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     }
-    pt_recursive_mutex *mutex_pointer = ft_nullptr;
-    int mutex_error = pt_recursive_mutex_create_with_error(&mutex_pointer);
-    if (mutex_error != FT_ERR_SUCCESSS)
+    pt_recursive_mutex *mutex_pointer;
+    int mutex_error;
+
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
+    if (mutex_pointer == ft_nullptr)
+        return (FT_ERR_NO_MEMORY);
+    mutex_error = mutex_pointer->initialize();
+    if (mutex_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(mutex_error);
+        delete mutex_pointer;
         return (mutex_error);
     }
     this->_mutex = mutex_pointer;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 void vector3::teardown_thread_safety(void) noexcept
-{
-    pt_recursive_mutex_destroy(&this->_mutex);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+{    if (this->_mutex != ft_nullptr)
+    {
+        this->_mutex->destroy();
+        delete this->_mutex;
+        this->_mutex = ft_nullptr;
+    }
     return ;
 }
 

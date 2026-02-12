@@ -74,7 +74,7 @@ template <typename ElementType>
 ft_deque<ElementType>::ft_deque()
     : _front(ft_nullptr), _back(ft_nullptr), _size(0), _mutex(ft_nullptr)
 {
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -84,17 +84,17 @@ ft_deque<ElementType>::~ft_deque()
     bool lock_acquired = false;
     int  lock_error = this->lock_internal(&lock_acquired);
 
-    if (lock_error == FT_ERR_SUCCESSS)
+    if (lock_error == FT_ERR_SUCCESS)
     {
         this->destroy_all_unlocked();
         this->_front = ft_nullptr;
         this->_back = ft_nullptr;
         this->_size = 0;
         int unlock_error = this->unlock_internal(lock_acquired);
-        if (unlock_error != FT_ERR_SUCCESSS)
+        if (unlock_error != FT_ERR_SUCCESS)
             ft_global_error_stack_push(unlock_error);
         else
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
+            ft_global_error_stack_push(FT_ERR_SUCCESS);
     }
     else
     {
@@ -115,7 +115,7 @@ ft_deque<ElementType>::ft_deque(ft_deque<ElementType>&& other) noexcept
     other_thread_safe = (other._mutex != ft_nullptr);
     lock_acquired = false;
     lock_error = other.lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -133,13 +133,13 @@ ft_deque<ElementType>::ft_deque(ft_deque<ElementType>&& other) noexcept
         int enable_error;
 
         enable_error = this->enable_thread_safety();
-        if (enable_error != FT_ERR_SUCCESSS)
+        if (enable_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(enable_error);
             return ;
         }
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -148,7 +148,7 @@ ft_deque<ElementType>& ft_deque<ElementType>::operator=(ft_deque<ElementType>&& 
 {
     if (this == &other)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (*this);
     }
     bool                other_thread_safe;
@@ -159,7 +159,7 @@ ft_deque<ElementType>& ft_deque<ElementType>::operator=(ft_deque<ElementType>&& 
 
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (*this);
@@ -172,7 +172,7 @@ ft_deque<ElementType>& ft_deque<ElementType>::operator=(ft_deque<ElementType>&& 
     this->teardown_thread_safety();
     other_lock_acquired = false;
     other_lock_error = other.lock_internal(&other_lock_acquired);
-    if (other_lock_error != FT_ERR_SUCCESSS)
+    if (other_lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(other_lock_error);
         return (*this);
@@ -191,13 +191,13 @@ ft_deque<ElementType>& ft_deque<ElementType>::operator=(ft_deque<ElementType>&& 
         int enable_error;
 
         enable_error = this->enable_thread_safety();
-        if (enable_error != FT_ERR_SUCCESSS)
+        if (enable_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(enable_error);
             return (*this);
         }
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (*this);
 }
 
@@ -208,8 +208,8 @@ int ft_deque<ElementType>::enable_thread_safety()
 
     if (this->_mutex != ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-        return (FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     result = this->prepare_thread_safety();
     ft_global_error_stack_push(result);
@@ -220,7 +220,7 @@ template <typename ElementType>
 void ft_deque<ElementType>::disable_thread_safety()
 {
     this->teardown_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -230,7 +230,7 @@ bool ft_deque<ElementType>::is_thread_safe() const
     bool enabled;
 
     enabled = (this->_mutex != ft_nullptr);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (enabled);
 }
 
@@ -240,12 +240,12 @@ int ft_deque<ElementType>::lock(bool *lock_acquired) const
     int result;
 
     result = this->lock_internal(lock_acquired);
-    if (result != FT_ERR_SUCCESSS)
+    if (result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(result);
         return (-1);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -268,7 +268,7 @@ void ft_deque<ElementType>::push_front(const ElementType& value)
 
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -289,7 +289,7 @@ void ft_deque<ElementType>::push_front(const ElementType& value)
         this->_front->_prev = node;
     this->_front = node;
     this->_size += 1;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -303,7 +303,7 @@ void ft_deque<ElementType>::push_front(ElementType&& value)
 
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -324,7 +324,7 @@ void ft_deque<ElementType>::push_front(ElementType&& value)
         this->_front->_prev = node;
     this->_front = node;
     this->_size += 1;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -338,7 +338,7 @@ void ft_deque<ElementType>::push_back(const ElementType& value)
 
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -359,7 +359,7 @@ void ft_deque<ElementType>::push_back(const ElementType& value)
         this->_back->_next = node;
     this->_back = node;
     this->_size += 1;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -373,7 +373,7 @@ void ft_deque<ElementType>::push_back(ElementType&& value)
 
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -394,7 +394,7 @@ void ft_deque<ElementType>::push_back(ElementType&& value)
         this->_back->_next = node;
     this->_back = node;
     this->_size += 1;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -409,7 +409,7 @@ ElementType ft_deque<ElementType>::pop_front()
 
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (ElementType());
@@ -430,7 +430,7 @@ ElementType ft_deque<ElementType>::pop_front()
     destroy_at(&node->_data);
     cma_free(node);
     this->_size -= 1;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (value);
 }
@@ -445,7 +445,7 @@ ElementType ft_deque<ElementType>::pop_back()
 
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (ElementType());
@@ -466,7 +466,7 @@ ElementType ft_deque<ElementType>::pop_back()
     destroy_at(&node->_data);
     cma_free(node);
     this->_size -= 1;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (value);
 }
@@ -481,7 +481,7 @@ ElementType& ft_deque<ElementType>::front()
 
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (error_element);
@@ -493,7 +493,7 @@ ElementType& ft_deque<ElementType>::front()
         return (error_element);
     }
     value_pointer = &this->_front->_data;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (*value_pointer);
 }
@@ -508,7 +508,7 @@ const ElementType& ft_deque<ElementType>::front() const
 
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (error_element);
@@ -520,7 +520,7 @@ const ElementType& ft_deque<ElementType>::front() const
         return (error_element);
     }
     value_pointer = &this->_front->_data;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (*value_pointer);
 }
@@ -535,7 +535,7 @@ ElementType& ft_deque<ElementType>::back()
 
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (error_element);
@@ -547,7 +547,7 @@ ElementType& ft_deque<ElementType>::back()
         return (error_element);
     }
     value_pointer = &this->_back->_data;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (*value_pointer);
 }
@@ -562,7 +562,7 @@ const ElementType& ft_deque<ElementType>::back() const
 
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (error_element);
@@ -574,7 +574,7 @@ const ElementType& ft_deque<ElementType>::back() const
         return (error_element);
     }
     value_pointer = &this->_back->_data;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (*value_pointer);
 }
@@ -588,13 +588,13 @@ size_t ft_deque<ElementType>::size() const
 
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (0);
     }
     current_size = this->_size;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (current_size);
 }
@@ -608,13 +608,13 @@ bool ft_deque<ElementType>::empty() const
 
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (true);
     }
     is_empty = (this->_size == 0);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (is_empty);
 }
@@ -627,7 +627,7 @@ void ft_deque<ElementType>::clear()
 
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -636,7 +636,7 @@ void ft_deque<ElementType>::clear()
     this->_front = ft_nullptr;
     this->_back = ft_nullptr;
     this->_size = 0;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -660,20 +660,20 @@ int ft_deque<ElementType>::lock_internal(bool *lock_acquired) const
     if (lock_acquired)
         *lock_acquired = false;
     if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     int result = pt_recursive_mutex_lock_with_error(*this->_mutex);
-    if (result != FT_ERR_SUCCESSS)
+    if (result != FT_ERR_SUCCESS)
         return (result);
     if (lock_acquired)
         *lock_acquired = true;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 template <typename ElementType>
 int ft_deque<ElementType>::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     return (pt_recursive_mutex_unlock_with_error(*this->_mutex));
 }
 
@@ -681,7 +681,7 @@ template <typename ElementType>
 int ft_deque<ElementType>::prepare_thread_safety()
 {
     if (this->_mutex != ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     return (pt_recursive_mutex_create_with_error(&this->_mutex));
 }
 

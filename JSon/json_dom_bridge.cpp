@@ -16,7 +16,7 @@ static void json_dom_push_error(int error_code)
     do { json_dom_push_error(code); return (value); } while (0)
 
 #define JSON_DOM_SUCCESS_RETURN(value) \
-    do { json_dom_push_error(FT_ERR_SUCCESSS); return (value); } while (0)
+    do { json_dom_push_error(FT_ERR_SUCCESS); return (value); } while (0)
 
 static void json_dom_delete_node(ft_dom_node *node) noexcept
 {
@@ -40,7 +40,7 @@ static int json_dom_append_item(const json_item *item, ft_dom_node *group_node) 
         JSON_DOM_ERROR_RETURN(FT_ERR_NO_MEMORY, -1);
     }
     item_node->set_type(FT_DOM_NODE_VALUE);
-    if (item_node->get_error() != FT_ERR_SUCCESSS)
+    if (item_node->get_error() != FT_ERR_SUCCESS)
     {
         json_dom_delete_node(item_node);
         return (-1);
@@ -65,7 +65,7 @@ static int json_dom_append_item(const json_item *item, ft_dom_node *group_node) 
         ft_string number_string;
 
         number_string = item->big_number->to_string_base(10);
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             json_dom_delete_node(item_node);
             JSON_DOM_ERROR_RETURN(ft_string::last_operation_error(), -1);
@@ -116,7 +116,7 @@ static int json_dom_append_group(const json_group *group, ft_dom_node *root_node
         JSON_DOM_ERROR_RETURN(FT_ERR_NO_MEMORY, -1);
     }
     group_node->set_type(FT_DOM_NODE_OBJECT);
-    if (group_node->get_error() != FT_ERR_SUCCESSS)
+    if (group_node->get_error() != FT_ERR_SUCCESS)
     {
         json_dom_delete_node(group_node);
         return (-1);
@@ -154,7 +154,7 @@ static int json_dom_append_group(const json_group *group, ft_dom_node *root_node
 int json_document_to_dom(const json_document &document, ft_dom_document &dom) noexcept
 {
     dom.clear();
-    if (dom.get_error() != FT_ERR_SUCCESSS)
+    if (dom.get_error() != FT_ERR_SUCCESS)
         return (-1);
     ft_dom_node *root_node;
 
@@ -164,7 +164,7 @@ int json_document_to_dom(const json_document &document, ft_dom_document &dom) no
         JSON_DOM_ERROR_RETURN(FT_ERR_NO_MEMORY, -1);
     }
     root_node->set_type(FT_DOM_NODE_OBJECT);
-    if (root_node->get_error() != FT_ERR_SUCCESSS)
+    if (root_node->get_error() != FT_ERR_SUCCESS)
     {
         json_dom_delete_node(root_node);
         return (-1);
@@ -177,7 +177,7 @@ int json_document_to_dom(const json_document &document, ft_dom_document &dom) no
     json_group *group_iterator;
 
     group_iterator = document.get_groups();
-    if (document.get_error() != FT_ERR_SUCCESSS)
+    if (document.get_error() != FT_ERR_SUCCESS)
     {
         json_dom_delete_node(root_node);
         return (-1);
@@ -192,7 +192,7 @@ int json_document_to_dom(const json_document &document, ft_dom_document &dom) no
         group_iterator = group_iterator->next;
     }
     dom.set_root(root_node);
-    if (dom.get_error() != FT_ERR_SUCCESSS)
+    if (dom.get_error() != FT_ERR_SUCCESS)
     {
         json_dom_delete_node(root_node);
         return (-1);
@@ -209,7 +209,7 @@ static int json_dom_apply_item(ft_dom_node *item_node, json_group *group, json_d
     }
     const ft_string &item_name = item_node->get_name();
 
-    if (item_node->get_error() != FT_ERR_SUCCESSS)
+    if (item_node->get_error() != FT_ERR_SUCCESS)
     {
         document.set_manual_error(item_node->get_error());
         return (-1);
@@ -224,7 +224,7 @@ static int json_dom_apply_item(ft_dom_node *item_node, json_group *group, json_d
     }
     const ft_string &item_value_string = item_node->get_value();
 
-    if (item_node->get_error() != FT_ERR_SUCCESSS)
+    if (item_node->get_error() != FT_ERR_SUCCESS)
     {
         document.set_manual_error(item_node->get_error());
         return (-1);
@@ -240,7 +240,7 @@ static int json_dom_apply_item(ft_dom_node *item_node, json_group *group, json_d
     ft_string type_attribute = item_node->get_attribute("json:type");
     bool has_type_attribute;
 
-    has_type_attribute = (item_node->get_error() == FT_ERR_SUCCESSS);
+    has_type_attribute = (item_node->get_error() == FT_ERR_SUCCESS);
     if (has_type_attribute && type_attribute == "big_number")
     {
         ft_big_number big_number_value;
@@ -248,7 +248,7 @@ static int json_dom_apply_item(ft_dom_node *item_node, json_group *group, json_d
 
         big_number_value.assign(item_value);
         big_number_error = ft_big_number::last_operation_error();
-        if (big_number_error != FT_ERR_SUCCESSS)
+        if (big_number_error != FT_ERR_SUCCESS)
         {
             document.set_manual_error(big_number_error);
             return (-1);
@@ -259,7 +259,7 @@ static int json_dom_apply_item(ft_dom_node *item_node, json_group *group, json_d
         if (!json_item_pointer)
             return (-1);
         document.add_item(group, json_item_pointer);
-        if (document.get_error() != FT_ERR_SUCCESSS)
+        if (document.get_error() != FT_ERR_SUCCESS)
             return (-1);
         return (0);
     }
@@ -269,7 +269,7 @@ static int json_dom_apply_item(ft_dom_node *item_node, json_group *group, json_d
     if (!json_item_pointer)
         return (-1);
     document.add_item(group, json_item_pointer);
-    if (document.get_error() != FT_ERR_SUCCESSS)
+    if (document.get_error() != FT_ERR_SUCCESS)
         return (-1);
     return (0);
 }
@@ -283,7 +283,7 @@ static int json_dom_apply_group(ft_dom_node *group_node, json_document &document
     }
     const ft_string &group_name = group_node->get_name();
 
-    if (group_node->get_error() != FT_ERR_SUCCESSS)
+    if (group_node->get_error() != FT_ERR_SUCCESS)
     {
         document.set_manual_error(group_node->get_error());
         return (-1);
@@ -302,18 +302,18 @@ static int json_dom_apply_group(ft_dom_node *group_node, json_document &document
     if (!group_pointer)
         return (-1);
     document.append_group(group_pointer);
-    if (document.get_error() != FT_ERR_SUCCESSS)
+    if (document.get_error() != FT_ERR_SUCCESS)
         return (-1);
     const ft_vector<ft_dom_node*> &children = group_node->get_children();
 
-    if (group_node->get_error() != FT_ERR_SUCCESSS)
+    if (group_node->get_error() != FT_ERR_SUCCESS)
     {
         document.set_manual_error(group_node->get_error());
         return (-1);
     }
     int children_error = ft_global_error_stack_drop_last_error();
     ft_global_error_stack_push(children_error);
-    if (children_error != FT_ERR_SUCCESSS)
+    if (children_error != FT_ERR_SUCCESS)
     {
         document.set_manual_error(children_error);
         return (-1);
@@ -336,12 +336,12 @@ static int json_dom_apply_group(ft_dom_node *group_node, json_document &document
 int json_document_from_dom(const ft_dom_document &dom, json_document &document) noexcept
 {
     document.clear();
-    if (document.get_error() != FT_ERR_SUCCESSS)
+    if (document.get_error() != FT_ERR_SUCCESS)
         return (-1);
     ft_dom_node *root_node;
 
     root_node = dom.get_root();
-    if (dom.get_error() != FT_ERR_SUCCESSS)
+    if (dom.get_error() != FT_ERR_SUCCESS)
     {
         document.set_manual_error(dom.get_error());
         return (-1);
@@ -354,7 +354,7 @@ int json_document_from_dom(const ft_dom_document &dom, json_document &document) 
     ft_dom_node_type root_type;
 
     root_type = root_node->get_type();
-    if (root_node->get_error() != FT_ERR_SUCCESSS)
+    if (root_node->get_error() != FT_ERR_SUCCESS)
     {
         document.set_manual_error(root_node->get_error());
         return (-1);
@@ -366,13 +366,13 @@ int json_document_from_dom(const ft_dom_document &dom, json_document &document) 
     }
     const ft_vector<ft_dom_node*> &groups = root_node->get_children();
 
-    if (root_node->get_error() != FT_ERR_SUCCESSS)
+    if (root_node->get_error() != FT_ERR_SUCCESS)
     {
         document.set_manual_error(root_node->get_error());
         return (-1);
     }
     int groups_error = json_dom_consume_vector_error();
-    if (groups_error != FT_ERR_SUCCESSS)
+    if (groups_error != FT_ERR_SUCCESS)
     {
         document.set_manual_error(groups_error);
         return (-1);
@@ -389,6 +389,6 @@ int json_document_from_dom(const ft_dom_document &dom, json_document &document) 
             return (-1);
         index += 1;
     }
-    document.set_manual_error(FT_ERR_SUCCESSS);
+    document.set_manual_error(FT_ERR_SUCCESS);
     return (0);
 }

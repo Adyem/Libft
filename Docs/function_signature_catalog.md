@@ -930,14 +930,14 @@ The catalog lists the function declarations and definitions that appear in the C
 - `bool ft_big_number::is_negative() const noexcept`
 - `bool ft_big_number::is_positive() const noexcept`
 - `bool ft_big_number::is_zero_value() const noexcept`
-- `cleanup_division: if (operation_error != FT_ERR_SUCCESSS)`
-- `cleanup_modulus: if (operation_error != FT_ERR_SUCCESSS)`
+- `cleanup_division: if (operation_error != FT_ERR_SUCCESS)`
+- `cleanup_modulus: if (operation_error != FT_ERR_SUCCESS)`
 - `const char* ft_big_number::c_str() const noexcept`
 - `const char* ft_big_number::last_operation_error_str() noexcept`
 - `const char* ft_big_number::operation_error_str_at(ft_size_t index) noexcept`
-- `finalize_add: if (operation_error == FT_ERR_SUCCESSS && ft_big_number::last_operation_error() != FT_ERR_SUCCESSS)`
-- `finalize_multiply: if (operation_error == FT_ERR_SUCCESSS && ft_big_number::last_operation_error() != FT_ERR_SUCCESSS)`
-- `finalize_subtract: if (operation_error == FT_ERR_SUCCESSS && ft_big_number::last_operation_error() != FT_ERR_SUCCESSS)`
+- `finalize_add: if (operation_error == FT_ERR_SUCCESS && ft_big_number::last_operation_error() != FT_ERR_SUCCESS)`
+- `finalize_multiply: if (operation_error == FT_ERR_SUCCESS && ft_big_number::last_operation_error() != FT_ERR_SUCCESS)`
+- `finalize_subtract: if (operation_error == FT_ERR_SUCCESS && ft_big_number::last_operation_error() != FT_ERR_SUCCESS)`
 - `ft_big_number ft_big_number::add_magnitude(const ft_big_number& other) const noexcept`
 - `ft_big_number ft_big_number::mod_pow(const ft_big_number& exponent, const ft_big_number& modulus) const noexcept`
 - `ft_big_number ft_big_number::subtract_magnitude(const ft_big_number& other) const noexcept`
@@ -6163,7 +6163,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `static inline ft_recursive_mutex_pair_lock_order ft_recursive_mutex_lock_pair( pt_recursive_mutex &first_mutex, pt_recursive_mutex &second_mutex)`
 - `static inline void ft_recursive_mutex_unlock_pair(pt_recursive_mutex &first_mutex, pt_recursive_mutex &second_mutex, ft_recursive_mutex_pair_lock_order order)`
 - `template <typename MutexType> const char *ft_lock_guard<MutexType>::get_error_str() const`
-- `template <typename MutexType> ft_lock_guard<MutexType>::ft_lock_guard(MutexType &mutex) : _mutex(&mutex), _owns_lock(false), _error_code(FT_ERR_SUCCESSS)`
+- `template <typename MutexType> ft_lock_guard<MutexType>::ft_lock_guard(MutexType &mutex) : _mutex(&mutex), _owns_lock(false), _error_code(FT_ERR_SUCCESS)`
 - `template <typename MutexType> ft_lock_guard<MutexType>::~ft_lock_guard()`
 - `template <typename MutexType> int ft_lock_guard<MutexType>::get_error() const`
 - `template <typename MutexType> void ft_lock_guard<MutexType>::record_error(int error, bool push_global) const`
@@ -6878,9 +6878,9 @@ The catalog lists the function declarations and definitions that appear in the C
 - `template<typename ElementType> ElementType *ft_loot_table<ElementType>::getRandomLoot() const`
 - `template<typename ElementType> ElementType *ft_loot_table<ElementType>::popRandomLoot()`
 - `template<typename ElementType> const char *ft_loot_entry<ElementType>::get_error_str() const noexcept`
-- `template<typename ElementType> ft_loot_entry<ElementType>::ft_loot_entry() noexcept : _item(ft_nullptr) , _weight(1) , _rarity(0) , _error_code(FT_ERR_SUCCESSS) , _mutex()`
-- `template<typename ElementType> ft_loot_entry<ElementType>::ft_loot_entry(ElementType *item, int weight, int rarity) noexcept : _item(item) , _weight(1) , _rarity(0) , _error_code(FT_ERR_SUCCESSS) , _mutex()`
-- `template<typename ElementType> ft_loot_entry<ElementType>::ft_loot_entry(const ft_loot_entry<ElementType> &other) noexcept : _item(ft_nullptr) , _weight(1) , _rarity(0) , _error_code(FT_ERR_SUCCESSS) , _mutex()`
+- `template<typename ElementType> ft_loot_entry<ElementType>::ft_loot_entry() noexcept : _item(ft_nullptr) , _weight(1) , _rarity(0) , _error_code(FT_ERR_SUCCESS) , _mutex()`
+- `template<typename ElementType> ft_loot_entry<ElementType>::ft_loot_entry(ElementType *item, int weight, int rarity) noexcept : _item(item) , _weight(1) , _rarity(0) , _error_code(FT_ERR_SUCCESS) , _mutex()`
+- `template<typename ElementType> ft_loot_entry<ElementType>::ft_loot_entry(const ft_loot_entry<ElementType> &other) noexcept : _item(ft_nullptr) , _weight(1) , _rarity(0) , _error_code(FT_ERR_SUCCESS) , _mutex()`
 - `template<typename ElementType> ft_loot_entry<ElementType>::~ft_loot_entry() noexcept`
 - `template<typename ElementType> ft_loot_table<ElementType>::ft_loot_table() noexcept : ft_vector<ft_loot_entry<ElementType> >() , _mutex()`
 - `template<typename ElementType> ft_loot_table<ElementType>::~ft_loot_table() noexcept`
@@ -7781,8 +7781,8 @@ The catalog lists the function declarations and definitions that appear in the C
 - `template <typename ElementType> bool ft_circular_buffer<ElementType>::is_full() const`
 - `template <typename ElementType> bool ft_circular_buffer<ElementType>::is_thread_safe() const`
 - `template <typename ElementType> const char* ft_circular_buffer<ElementType>::get_error_str() const`
-- `template <typename ElementType> ft_circular_buffer<ElementType>::ft_circular_buffer(ft_circular_buffer&& other) noexcept : _buffer(ft_nullptr), _capacity(0), _head(0), _tail(0), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
-- `template <typename ElementType> ft_circular_buffer<ElementType>::ft_circular_buffer(size_t capacity) : _buffer(ft_nullptr), _capacity(capacity), _head(0), _tail(0), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+- `template <typename ElementType> ft_circular_buffer<ElementType>::ft_circular_buffer(ft_circular_buffer&& other) noexcept : _buffer(ft_nullptr), _capacity(0), _head(0), _tail(0), _size(0), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+- `template <typename ElementType> ft_circular_buffer<ElementType>::ft_circular_buffer(size_t capacity) : _buffer(ft_nullptr), _capacity(capacity), _head(0), _tail(0), _size(0), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
 - `template <typename ElementType> ft_circular_buffer<ElementType>::~ft_circular_buffer()`
 - `template <typename ElementType> int ft_circular_buffer<ElementType>::enable_thread_safety()`
 - `template <typename ElementType> int ft_circular_buffer<ElementType>::get_error() const`
@@ -7858,8 +7858,8 @@ The catalog lists the function declarations and definitions that appear in the C
 - `template <typename ElementType> const ElementType& ft_deque<ElementType>::back() const`
 - `template <typename ElementType> const ElementType& ft_deque<ElementType>::front() const`
 - `template <typename ElementType> const char* ft_deque<ElementType>::get_error_str() const`
-- `template <typename ElementType> ft_deque<ElementType>::ft_deque() : _front(ft_nullptr), _back(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
-- `template <typename ElementType> ft_deque<ElementType>::ft_deque(ft_deque&& other) noexcept : _front(ft_nullptr), _back(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+- `template <typename ElementType> ft_deque<ElementType>::ft_deque() : _front(ft_nullptr), _back(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+- `template <typename ElementType> ft_deque<ElementType>::ft_deque(ft_deque&& other) noexcept : _front(ft_nullptr), _back(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
 - `template <typename ElementType> ft_deque<ElementType>::~ft_deque()`
 - `template <typename ElementType> int ft_deque<ElementType>::enable_thread_safety()`
 - `template <typename ElementType> int ft_deque<ElementType>::get_error() const`
@@ -7900,8 +7900,8 @@ The catalog lists the function declarations and definitions that appear in the C
 - `template <typename EventType, typename... Args> bool ft_event_emitter<EventType, Args...>::ensure_capacity(size_t desired)`
 - `template <typename EventType, typename... Args> bool ft_event_emitter<EventType, Args...>::ensure_capacity_unlocked(size_t desired)`
 - `template <typename EventType, typename... Args> const char* ft_event_emitter<EventType, Args...>::get_error_str() const`
-- `template <typename EventType, typename... Args> ft_event_emitter<EventType, Args...>::ft_event_emitter(ft_event_emitter&& other) noexcept : _listeners(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `template <typename EventType, typename... Args> ft_event_emitter<EventType, Args...>::ft_event_emitter(size_t initial_capacity) : _listeners(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
+- `template <typename EventType, typename... Args> ft_event_emitter<EventType, Args...>::ft_event_emitter(ft_event_emitter&& other) noexcept : _listeners(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `template <typename EventType, typename... Args> ft_event_emitter<EventType, Args...>::ft_event_emitter(size_t initial_capacity) : _listeners(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESS), _mutex()`
 - `template <typename EventType, typename... Args> ft_event_emitter<EventType, Args...>::~ft_event_emitter()`
 - `template <typename EventType, typename... Args> int ft_event_emitter<EventType, Args...>::get_error() const`
 - `template <typename EventType, typename... Args> size_t ft_event_emitter<EventType, Args...>::size() const`
@@ -8017,8 +8017,8 @@ The catalog lists the function declarations and definitions that appear in the C
 - `template <typename VertexType> const char *ft_graph<VertexType>::last_operation_error_str() const noexcept`
 - `template <typename VertexType> const char *ft_graph<VertexType>::operation_error_str_at(ft_size_t index) const noexcept`
 - `template <typename VertexType> const char* ft_graph<VertexType>::get_error_str() const`
-- `template <typename VertexType> ft_graph<VertexType>::ft_graph(ft_graph&& other) noexcept : _nodes(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false), _operation_errors(`
-- `template <typename VertexType> ft_graph<VertexType>::ft_graph(size_t initialCapacity) : _nodes(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false), _operation_errors(`
+- `template <typename VertexType> ft_graph<VertexType>::ft_graph(ft_graph&& other) noexcept : _nodes(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), _operation_errors(`
+- `template <typename VertexType> ft_graph<VertexType>::ft_graph(size_t initialCapacity) : _nodes(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), _operation_errors(`
 - `template <typename VertexType> ft_graph<VertexType>::~ft_graph()`
 - `template <typename VertexType> ft_operation_error_stack *ft_graph<VertexType>::get_operation_error_stack_for_validation() noexcept`
 - `template <typename VertexType> int ft_graph<VertexType>::enable_thread_safety()`
@@ -8070,9 +8070,9 @@ The catalog lists the function declarations and definitions that appear in the C
 - `int lock(bool *lock_acquired) const;`
 - `int lock_internal(bool *lock_acquired) const;`
 - `public: Iterator(ValueType* ptr) noexcept;`
-- `template <typename ValueType> Iterator<ValueType>::Iterator(Iterator&& other) noexcept : _ptr(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
-- `template <typename ValueType> Iterator<ValueType>::Iterator(ValueType* ptr) noexcept : _ptr(ptr), _error_code(FT_ERR_SUCCESSS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
-- `template <typename ValueType> Iterator<ValueType>::Iterator(const Iterator& other) noexcept : _ptr(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
+- `template <typename ValueType> Iterator<ValueType>::Iterator(Iterator&& other) noexcept : _ptr(ft_nullptr), _error_code(FT_ERR_SUCCESS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
+- `template <typename ValueType> Iterator<ValueType>::Iterator(ValueType* ptr) noexcept : _ptr(ptr), _error_code(FT_ERR_SUCCESS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
+- `template <typename ValueType> Iterator<ValueType>::Iterator(const Iterator& other) noexcept : _ptr(ft_nullptr), _error_code(FT_ERR_SUCCESS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
 - `template <typename ValueType> Iterator<ValueType>::~Iterator()`
 - `template <typename ValueType> bool Iterator<ValueType>::is_thread_safe_enabled() const noexcept`
 - `template <typename ValueType> const char* Iterator<ValueType>::get_error_str() const noexcept`
@@ -8203,8 +8203,8 @@ The catalog lists the function declarations and definitions that appear in the C
 - `template <typename ElementType> ft_matrix<ElementType> ft_matrix<ElementType>::add(const ft_matrix& other) const`
 - `template <typename ElementType> ft_matrix<ElementType> ft_matrix<ElementType>::multiply(const ft_matrix& other) const`
 - `template <typename ElementType> ft_matrix<ElementType> ft_matrix<ElementType>::transpose() const`
-- `template <typename ElementType> ft_matrix<ElementType>::ft_matrix(ft_matrix&& other) noexcept : _data(ft_nullptr), _rows(0), _cols(0), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
-- `template <typename ElementType> ft_matrix<ElementType>::ft_matrix(size_t rows, size_t cols) : _data(ft_nullptr), _rows(0), _cols(0), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+- `template <typename ElementType> ft_matrix<ElementType>::ft_matrix(ft_matrix&& other) noexcept : _data(ft_nullptr), _rows(0), _cols(0), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+- `template <typename ElementType> ft_matrix<ElementType>::ft_matrix(size_t rows, size_t cols) : _data(ft_nullptr), _rows(0), _cols(0), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
 - `template <typename ElementType> ft_matrix<ElementType>::~ft_matrix()`
 - `template <typename ElementType> int ft_matrix<ElementType>::enable_thread_safety()`
 - `template <typename ElementType> int ft_matrix<ElementType>::get_error() const`
@@ -8244,10 +8244,10 @@ The catalog lists the function declarations and definitions that appear in the C
 - `template <typename T> bool ft_optional<T>::has_value() const`
 - `template <typename T> const T& ft_optional<T>::value() const`
 - `template <typename T> const char* ft_optional<T>::get_error_str() const`
-- `template <typename T> ft_optional<T>::ft_optional() : _value(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `template <typename T> ft_optional<T>::ft_optional(T&& value) : _value(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `template <typename T> ft_optional<T>::ft_optional(const T& value) : _value(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `template <typename T> ft_optional<T>::ft_optional(ft_optional&& other) noexcept : _value(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex()`
+- `template <typename T> ft_optional<T>::ft_optional() : _value(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `template <typename T> ft_optional<T>::ft_optional(T&& value) : _value(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `template <typename T> ft_optional<T>::ft_optional(const T& value) : _value(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `template <typename T> ft_optional<T>::ft_optional(ft_optional&& other) noexcept : _value(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex()`
 - `template <typename T> ft_optional<T>::~ft_optional()`
 - `template <typename T> int ft_optional<T>::get_error() const`
 - `template <typename T> int ft_optional<T>::lock_pair(ft_optional &first, ft_optional &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard) noexcept`
@@ -8291,8 +8291,8 @@ The catalog lists the function declarations and definitions that appear in the C
 - `int lock_internal(bool *lock_acquired) const noexcept;`
 - `private: using Storage = std::aligned_storage_t<sizeof(T), alignof(T)>;`
 - `public: Pool();`
-- `template<typename T> Pool<T>::Pool() : _buffer() , _freeIndices() , _error_code(FT_ERR_SUCCESSS) , _state_mutex(ft_nullptr) , _thread_safe_enabled(false)`
-- `template<typename T> Pool<T>::Pool(Pool&& other) : _buffer() , _freeIndices() , _error_code(FT_ERR_SUCCESSS) , _state_mutex(ft_nullptr) , _thread_safe_enabled(false)`
+- `template<typename T> Pool<T>::Pool() : _buffer() , _freeIndices() , _error_code(FT_ERR_SUCCESS) , _state_mutex(ft_nullptr) , _thread_safe_enabled(false)`
+- `template<typename T> Pool<T>::Pool(Pool&& other) : _buffer() , _freeIndices() , _error_code(FT_ERR_SUCCESS) , _state_mutex(ft_nullptr) , _thread_safe_enabled(false)`
 - `template<typename T> Pool<T>::~Pool()`
 - `template<typename T> T* Pool<T>::ptrAt(size_t idx) noexcept`
 - `template<typename T> bool Pool<T>::Object::is_thread_safe_enabled() const noexcept`
@@ -8354,7 +8354,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `template <typename ElementType, typename Compare> const ElementType& ft_priority_queue<ElementType, Compare>::top() const`
 - `template <typename ElementType, typename Compare> const char* ft_priority_queue<ElementType, Compare>::get_error_str() const`
 - `template <typename ElementType, typename Compare> ft_priority_queue<ElementType, Compare>::ft_priority_queue(ft_priority_queue&& other) noexcept : _data(other._data), _capacity(other._capacity), _size(other._size), _comp(other._comp), _error_code(other._error_code), _mutex(ft_nullptr), _thread_safe_enabled(false)`
-- `template <typename ElementType, typename Compare> ft_priority_queue<ElementType, Compare>::ft_priority_queue(size_t initialCapacity, const Compare& comp) : _data(ft_nullptr), _capacity(0), _size(0), _comp(comp), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+- `template <typename ElementType, typename Compare> ft_priority_queue<ElementType, Compare>::ft_priority_queue(size_t initialCapacity, const Compare& comp) : _data(ft_nullptr), _capacity(0), _size(0), _comp(comp), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
 - `template <typename ElementType, typename Compare> ft_priority_queue<ElementType, Compare>::~ft_priority_queue()`
 - `template <typename ElementType, typename Compare> int ft_priority_queue<ElementType, Compare>::enable_thread_safety()`
 - `template <typename ElementType, typename Compare> int ft_priority_queue<ElementType, Compare>::get_error() const`
@@ -8393,7 +8393,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `inline bool ft_promise<void>::is_ready() const`
 - `inline bool ft_promise<void>::is_thread_safe() const`
 - `inline const char *ft_promise<void>::get_error_str() const`
-- `inline ft_promise<void>::ft_promise() : _ready(false), _error_code(FT_ERR_SUCCESSS), _thread_safe_enabled(false), _operation_errors(`
+- `inline ft_promise<void>::ft_promise() : _ready(false), _error_code(FT_ERR_SUCCESS), _thread_safe_enabled(false), _operation_errors(`
 - `inline ft_promise<void>::~ft_promise()`
 - `inline int ft_promise<void>::enable_thread_safety()`
 - `inline int ft_promise<void>::get_error() const`
@@ -8421,7 +8421,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `template <typename ValueType> bool ft_promise<ValueType>::is_ready() const`
 - `template <typename ValueType> bool ft_promise<ValueType>::is_thread_safe() const`
 - `template <typename ValueType> const char* ft_promise<ValueType>::get_error_str() const`
-- `template <typename ValueType> ft_promise<ValueType>::ft_promise() : _value(), _ready(false), _error_code(FT_ERR_SUCCESSS), _thread_safe_enabled(false), _operation_errors(`
+- `template <typename ValueType> ft_promise<ValueType>::ft_promise() : _value(), _ready(false), _error_code(FT_ERR_SUCCESS), _thread_safe_enabled(false), _operation_errors(`
 - `template <typename ValueType> ft_promise<ValueType>::~ft_promise()`
 - `template <typename ValueType> int ft_promise<ValueType>::enable_thread_safety()`
 - `template <typename ValueType> int ft_promise<ValueType>::get_error() const`
@@ -8482,8 +8482,8 @@ The catalog lists the function declarations and definitions that appear in the C
 - `template <typename ElementType> const char* ft_queue<ElementType>::get_error_str() const`
 - `template <typename ElementType> const ft_operation_error_stack *ft_queue<ElementType>::get_operation_error_stack_for_validation() const noexcept`
 - `template <typename ElementType> ft_operation_error_stack *ft_queue<ElementType>::get_operation_error_stack_for_validation() noexcept`
-- `template <typename ElementType> ft_queue<ElementType>::ft_queue() : _front(ft_nullptr), _rear(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESSS), _operation_errors(`
-- `template <typename ElementType> ft_queue<ElementType>::ft_queue(ft_queue&& other) noexcept : _front(ft_nullptr), _rear(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESSS), _operation_errors(`
+- `template <typename ElementType> ft_queue<ElementType>::ft_queue() : _front(ft_nullptr), _rear(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESS), _operation_errors(`
+- `template <typename ElementType> ft_queue<ElementType>::ft_queue(ft_queue&& other) noexcept : _front(ft_nullptr), _rear(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESS), _operation_errors(`
 - `template <typename ElementType> ft_queue<ElementType>::~ft_queue()`
 - `template <typename ElementType> int ft_queue<ElementType>::enable_thread_safety()`
 - `template <typename ElementType> int ft_queue<ElementType>::get_error() const`
@@ -8536,8 +8536,8 @@ The catalog lists the function declarations and definitions that appear in the C
 - `template <typename ElementType> bool ft_set<ElementType>::is_thread_safe() const`
 - `template <typename ElementType> const ElementType* ft_set<ElementType>::find(const ElementType& value) const`
 - `template <typename ElementType> const char* ft_set<ElementType>::get_error_str() const`
-- `template <typename ElementType> ft_set<ElementType>::ft_set(ft_set&& other) noexcept : _data(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
-- `template <typename ElementType> ft_set<ElementType>::ft_set(size_t initial_capacity) : _data(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+- `template <typename ElementType> ft_set<ElementType>::ft_set(ft_set&& other) noexcept : _data(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+- `template <typename ElementType> ft_set<ElementType>::ft_set(size_t initial_capacity) : _data(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
 - `template <typename ElementType> ft_set<ElementType>::~ft_set()`
 - `template <typename ElementType> int ft_set<ElementType>::enable_thread_safety()`
 - `template <typename ElementType> int ft_set<ElementType>::get_error() const`
@@ -8590,10 +8590,10 @@ The catalog lists the function declarations and definitions that appear in the C
 - `template <typename ManagedType> const char* ft_sharedptr<ManagedType>::get_error_str() const`
 - `template <typename ManagedType> const ft_operation_error_stack *ft_sharedptr<ManagedType>::operation_error_stack_handle() const noexcept`
 - `template <typename ManagedType> ft_operation_error_stack *ft_sharedptr<ManagedType>::operation_error_stack_handle() noexcept`
-- `template <typename ManagedType> ft_sharedptr<ManagedType>::ft_sharedptr() : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr)`
-- `template <typename ManagedType> ft_sharedptr<ManagedType>::ft_sharedptr(const ft_sharedptr<ManagedType>& other) : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr)`
-- `template <typename ManagedType> ft_sharedptr<ManagedType>::ft_sharedptr(ft_sharedptr<ManagedType>&& other) noexcept : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr)`
-- `template <typename ManagedType> ft_sharedptr<ManagedType>::ft_sharedptr(size_t size) : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(size), _isArrayType(true), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr)`
+- `template <typename ManagedType> ft_sharedptr<ManagedType>::ft_sharedptr() : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr)`
+- `template <typename ManagedType> ft_sharedptr<ManagedType>::ft_sharedptr(const ft_sharedptr<ManagedType>& other) : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr)`
+- `template <typename ManagedType> ft_sharedptr<ManagedType>::ft_sharedptr(ft_sharedptr<ManagedType>&& other) noexcept : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr)`
+- `template <typename ManagedType> ft_sharedptr<ManagedType>::ft_sharedptr(size_t size) : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(size), _isArrayType(true), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr)`
 - `template <typename ManagedType> ft_sharedptr<ManagedType>::~ft_sharedptr()`
 - `template <typename ManagedType> int ft_sharedptr<ManagedType>::enable_thread_safety()`
 - `template <typename ManagedType> int ft_sharedptr<ManagedType>::get_error() const`
@@ -8705,10 +8705,10 @@ The catalog lists the function declarations and definitions that appear in the C
 - `template <typename CharType> const char* ft_string_view<CharType>::get_error_str() const`
 - `template <typename CharType> const size_t ft_string_view<CharType>::npos = static_cast<size_t>(-1);`
 - `template <typename CharType> ft_string_view<CharType> ft_string_view<CharType>::substr(size_t position, size_t count) const`
-- `template <typename CharType> ft_string_view<CharType>::ft_string_view() : _data(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `template <typename CharType> ft_string_view<CharType>::ft_string_view(const CharType* string) : _data(string), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `template <typename CharType> ft_string_view<CharType>::ft_string_view(const CharType* string, size_t size) : _data(string), _size(size), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `template <typename CharType> ft_string_view<CharType>::ft_string_view(const ft_string_view& other) : _data(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
+- `template <typename CharType> ft_string_view<CharType>::ft_string_view() : _data(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `template <typename CharType> ft_string_view<CharType>::ft_string_view(const CharType* string) : _data(string), _size(0), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `template <typename CharType> ft_string_view<CharType>::ft_string_view(const CharType* string, size_t size) : _data(string), _size(size), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `template <typename CharType> ft_string_view<CharType>::ft_string_view(const ft_string_view& other) : _data(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESS), _mutex()`
 - `template <typename CharType> ft_string_view<CharType>::~ft_string_view()`
 - `template <typename CharType> int ft_string_view<CharType>::compare(const ft_string_view& other) const`
 - `template <typename CharType> int ft_string_view<CharType>::get_error() const`
@@ -8773,7 +8773,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `template <typename ValueType> bool ft_trie<ValueType>::is_thread_safe_enabled() const`
 - `template <typename ValueType> const char *ft_trie<ValueType>::get_error_str() const`
 - `template <typename ValueType> const typename ft_trie<ValueType>::node_value *ft_trie<ValueType>::search(const char *key) const`
-- `template <typename ValueType> ft_trie<ValueType>::ft_trie() : _data(ft_nullptr), _children(), _error_code(FT_ERR_SUCCESSS), _last_error(FT_ERR_SUCCESSS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
+- `template <typename ValueType> ft_trie<ValueType>::ft_trie() : _data(ft_nullptr), _children(), _error_code(FT_ERR_SUCCESS), _last_error(FT_ERR_SUCCESS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
 - `template <typename ValueType> ft_trie<ValueType>::~ft_trie()`
 - `template <typename ValueType> int ft_trie<ValueType>::enable_thread_safety()`
 - `template <typename ValueType> int ft_trie<ValueType>::get_error() const`
@@ -8811,8 +8811,8 @@ The catalog lists the function declarations and definitions that appear in the C
 - `template <typename T> const T& get() const;`
 - `template <typename... Types> bool ft_tuple<Types...>::is_thread_safe() const`
 - `template <typename... Types> const char* ft_tuple<Types...>::get_error_str() const`
-- `template <typename... Types> ft_tuple<Types...>::ft_tuple() : _data(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
-- `template <typename... Types> ft_tuple<Types...>::ft_tuple(ft_tuple&& other) noexcept : _data(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+- `template <typename... Types> ft_tuple<Types...>::ft_tuple() : _data(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+- `template <typename... Types> ft_tuple<Types...>::ft_tuple(ft_tuple&& other) noexcept : _data(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
 - `template <typename... Types> ft_tuple<Types...>::~ft_tuple()`
 - `template <typename... Types> int ft_tuple<Types...>::enable_thread_safety()`
 - `template <typename... Types> int ft_tuple<Types...>::get_error() const`
@@ -8823,7 +8823,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `template <typename... Types> template <std::size_t I> typename std::tuple_element<I, typename ft_tuple<Types...>::tuple_t>::type& ft_tuple<Types...>::get()`
 - `template <typename... Types> template <typename T> T& ft_tuple<Types...>::get()`
 - `template <typename... Types> template <typename T> const T& ft_tuple<Types...>::get() const`
-- `template <typename... Types> template <typename... Args> ft_tuple<Types...>::ft_tuple(Args&&... args) : _data(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+- `template <typename... Types> template <typename... Args> ft_tuple<Types...>::ft_tuple(Args&&... args) : _data(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
 - `template <typename... Types> void ft_tuple<Types...>::destroy_locked()`
 - `template <typename... Types> void ft_tuple<Types...>::disable_thread_safety()`
 - `template <typename... Types> void ft_tuple<Types...>::reset()`
@@ -8860,9 +8860,9 @@ The catalog lists the function declarations and definitions that appear in the C
 - `template <typename ManagedType> bool ft_uniqueptr<ManagedType>::is_thread_safe() const`
 - `template <typename ManagedType> const ManagedType* ft_uniqueptr<ManagedType>::get() const`
 - `template <typename ManagedType> const char* ft_uniqueptr<ManagedType>::get_error_str() const`
-- `template <typename ManagedType> ft_uniqueptr<ManagedType>::ft_uniqueptr() : _managedPointer(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
-- `template <typename ManagedType> ft_uniqueptr<ManagedType>::ft_uniqueptr(ft_uniqueptr&& other) noexcept : _managedPointer(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
-- `template <typename ManagedType> ft_uniqueptr<ManagedType>::ft_uniqueptr(size_t size) : _managedPointer(new (std::nothrow) ManagedType[size]), _arraySize(size), _isArrayType(true), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+- `template <typename ManagedType> ft_uniqueptr<ManagedType>::ft_uniqueptr() : _managedPointer(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+- `template <typename ManagedType> ft_uniqueptr<ManagedType>::ft_uniqueptr(ft_uniqueptr&& other) noexcept : _managedPointer(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+- `template <typename ManagedType> ft_uniqueptr<ManagedType>::ft_uniqueptr(size_t size) : _managedPointer(new (std::nothrow) ManagedType[size]), _arraySize(size), _isArrayType(true), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
 - `template <typename ManagedType> ft_uniqueptr<ManagedType>::~ft_uniqueptr()`
 - `template <typename ManagedType> int ft_uniqueptr<ManagedType>::enable_thread_safety()`
 - `template <typename ManagedType> int ft_uniqueptr<ManagedType>::get_error() const`
@@ -8906,7 +8906,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `template <typename Key, typename MappedType> ft_pair<Key, MappedType>::ft_pair(const Key& k, const MappedType& m) : first(k), second(m)`
 - `template <typename Key, typename MappedType> ft_unordered_map<Key, MappedType>::ft_unordered_map(const ft_unordered_map<Key, MappedType>& other) : _data(ft_nullptr), _occupied(ft_nullptr), _capacity(other._capacity), _size(other._size), _error(other._error), _mutex(ft_nullptr), _thread_safe_enabled(false)`
 - `template <typename Key, typename MappedType> ft_unordered_map<Key, MappedType>::ft_unordered_map(ft_unordered_map<Key, MappedType>&& other) noexcept : _data(other._data), _occupied(other._occupied), _capacity(other._capacity), _size(other._size), _error(other._error), _mutex(ft_nullptr), _thread_safe_enabled(false)`
-- `template <typename Key, typename MappedType> ft_unordered_map<Key, MappedType>::ft_unordered_map(size_t initial_capacity) : _data(ft_nullptr), _occupied(ft_nullptr), _capacity(initial_capacity), _size(0), _error(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+- `template <typename Key, typename MappedType> ft_unordered_map<Key, MappedType>::ft_unordered_map(size_t initial_capacity) : _data(ft_nullptr), _occupied(ft_nullptr), _capacity(initial_capacity), _size(0), _error(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
 - `template <typename Key, typename MappedType> ft_unordered_map<Key, MappedType>::~ft_unordered_map()`
 - `template <typename Key, typename MappedType> int ft_unordered_map<Key, MappedType>::const_iterator::enable_thread_safety()`
 - `template <typename Key, typename MappedType> int ft_unordered_map<Key, MappedType>::const_iterator::get_error() const`
@@ -8965,8 +8965,8 @@ The catalog lists the function declarations and definitions that appear in the C
 
 - `template <typename... Types> bool ft_variant<Types...>::is_thread_safe_enabled() const`
 - `template <typename... Types> const char* ft_variant<Types...>::get_error_str() const`
-- `template <typename... Types> ft_variant<Types...>::ft_variant() : _data(static_cast<storage_t*>(cma_malloc(sizeof(storage_t)))), _index(npos), _error_code(FT_ERR_SUCCESSS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
-- `template <typename... Types> ft_variant<Types...>::ft_variant(ft_variant&& other) noexcept : _data(ft_nullptr), _index(npos), _error_code(FT_ERR_SUCCESSS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
+- `template <typename... Types> ft_variant<Types...>::ft_variant() : _data(static_cast<storage_t*>(cma_malloc(sizeof(storage_t)))), _index(npos), _error_code(FT_ERR_SUCCESS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
+- `template <typename... Types> ft_variant<Types...>::ft_variant(ft_variant&& other) noexcept : _data(ft_nullptr), _index(npos), _error_code(FT_ERR_SUCCESS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
 - `template <typename... Types> ft_variant<Types...>::~ft_variant()`
 - `template <typename... Types> int ft_variant<Types...>::enable_thread_safety()`
 - `template <typename... Types> int ft_variant<Types...>::get_error() const`
@@ -9019,8 +9019,8 @@ The catalog lists the function declarations and definitions that appear in the C
 - `template <typename ElementType> bool ft_vector<ElementType>::using_small_buffer() const`
 - `template <typename ElementType> const ElementType* ft_vector<ElementType>::small_data() const`
 - `template <typename ElementType> const char* ft_vector<ElementType>::get_error_str() const`
-- `template <typename ElementType> ft_vector<ElementType>::ft_vector(ft_vector<ElementType>&& other) noexcept : _data(ft_nullptr), _size(0), _capacity(0), _error_code(FT_ERR_SUCCESSS), _operation_errors(`
-- `template <typename ElementType> ft_vector<ElementType>::ft_vector(size_t initial_capacity) : _data(ft_nullptr), _size(0), _capacity(0), _error_code(FT_ERR_SUCCESSS), _operation_errors(`
+- `template <typename ElementType> ft_vector<ElementType>::ft_vector(ft_vector<ElementType>&& other) noexcept : _data(ft_nullptr), _size(0), _capacity(0), _error_code(FT_ERR_SUCCESS), _operation_errors(`
+- `template <typename ElementType> ft_vector<ElementType>::ft_vector(size_t initial_capacity) : _data(ft_nullptr), _size(0), _capacity(0), _error_code(FT_ERR_SUCCESS), _operation_errors(`
 - `template <typename ElementType> ft_vector<ElementType>::~ft_vector()`
 - `template <typename ElementType> int ft_vector<ElementType>::get_error() const`
 - `template <typename ElementType> int ft_vector<ElementType>::lock(bool *lock_acquired) const`
@@ -9196,9 +9196,9 @@ The catalog lists the function declarations and definitions that appear in the C
 - `static std::atomic<bool> g_api_request_success_server_ready(false);`
 - `static std::atomic<int> g_api_async_retry_server_last_errno(0);`
 - `static std::atomic<int> g_api_async_retry_server_last_recv_result(0);`
-- `static std::atomic<int> g_api_request_stream_chunked_server_start_error(FT_ERR_SUCCESSS);`
-- `static std::atomic<int> g_api_request_stream_large_server_start_error(FT_ERR_SUCCESSS);`
-- `static std::atomic<int> g_api_request_success_server_start_error(FT_ERR_SUCCESSS);`
+- `static std::atomic<int> g_api_request_stream_chunked_server_start_error(FT_ERR_SUCCESS);`
+- `static std::atomic<int> g_api_request_stream_large_server_start_error(FT_ERR_SUCCESS);`
+- `static std::atomic<int> g_api_request_success_server_start_error(FT_ERR_SUCCESS);`
 - `static std::atomic<size_t> g_api_async_retry_server_bytes_received(0);`
 - `static void api_request_async_retry_callback(char *body, int status, void *user_data)`
 - `static void api_request_async_retry_server(void)`
@@ -10454,7 +10454,7 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### API/api_connection_pool_handle.cpp
 
-- `api_connection_pool_handle::api_connection_pool_handle( api_connection_pool_handle &&other) : _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), key(), socket(), tls_session(ft_nullptr), tls_context(ft_nullptr), security_mode(api_connection_security_mode::PLAIN), has_socket(false), from_pool(false), should_store(false), negotiated_http2(false), plain_socket_timed_out(false), plain_socket_validated(false)`
+- `api_connection_pool_handle::api_connection_pool_handle( api_connection_pool_handle &&other) : _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), key(), socket(), tls_session(ft_nullptr), tls_context(ft_nullptr), security_mode(api_connection_security_mode::PLAIN), has_socket(false), from_pool(false), should_store(false), negotiated_http2(false), plain_socket_timed_out(false), plain_socket_validated(false)`
 - `api_connection_pool_handle_lock_guard::api_connection_pool_handle_lock_guard( api_connection_pool_handle &handle) : _handle(handle), _lock_acquired(false), _lock_result(-1)`
 
 ### API/api_request.cpp
@@ -10474,19 +10474,19 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### API/api_retry_policy.cpp
 
-- `api_retry_policy::api_retry_policy() noexcept : _max_attempts(0), _initial_delay_ms(0), _max_delay_ms(0), _backoff_multiplier(0), _circuit_breaker_threshold(0), _circuit_breaker_cooldown_ms(0), _circuit_breaker_half_open_successes(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `api_retry_policy::api_retry_policy(api_retry_policy &&other) noexcept : _max_attempts(0), _initial_delay_ms(0), _max_delay_ms(0), _backoff_multiplier(0), _circuit_breaker_threshold(0), _circuit_breaker_cooldown_ms(0), _circuit_breaker_half_open_successes(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `api_retry_policy::api_retry_policy(const api_retry_policy &other) noexcept : _max_attempts(0), _initial_delay_ms(0), _max_delay_ms(0), _backoff_multiplier(0), _circuit_breaker_threshold(0), _circuit_breaker_cooldown_ms(0), _circuit_breaker_half_open_successes(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
+- `api_retry_policy::api_retry_policy() noexcept : _max_attempts(0), _initial_delay_ms(0), _max_delay_ms(0), _backoff_multiplier(0), _circuit_breaker_threshold(0), _circuit_breaker_cooldown_ms(0), _circuit_breaker_half_open_successes(0), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `api_retry_policy::api_retry_policy(api_retry_policy &&other) noexcept : _max_attempts(0), _initial_delay_ms(0), _max_delay_ms(0), _backoff_multiplier(0), _circuit_breaker_threshold(0), _circuit_breaker_cooldown_ms(0), _circuit_breaker_half_open_successes(0), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `api_retry_policy::api_retry_policy(const api_retry_policy &other) noexcept : _max_attempts(0), _initial_delay_ms(0), _max_delay_ms(0), _backoff_multiplier(0), _circuit_breaker_threshold(0), _circuit_breaker_cooldown_ms(0), _circuit_breaker_half_open_successes(0), _error_code(FT_ERR_SUCCESS), _mutex()`
 
 ### API/api_streaming_handler.cpp
 
-- `api_streaming_handler::api_streaming_handler( api_streaming_handler &&other) noexcept : _headers_callback(ft_nullptr), _body_callback(ft_nullptr), _user_data(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `api_streaming_handler::api_streaming_handler( const api_streaming_handler &other) noexcept : _headers_callback(ft_nullptr), _body_callback(ft_nullptr), _user_data(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `api_streaming_handler::api_streaming_handler() noexcept : _headers_callback(ft_nullptr), _body_callback(ft_nullptr), _user_data(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex()`
+- `api_streaming_handler::api_streaming_handler( api_streaming_handler &&other) noexcept : _headers_callback(ft_nullptr), _body_callback(ft_nullptr), _user_data(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `api_streaming_handler::api_streaming_handler( const api_streaming_handler &other) noexcept : _headers_callback(ft_nullptr), _body_callback(ft_nullptr), _user_data(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `api_streaming_handler::api_streaming_handler() noexcept : _headers_callback(ft_nullptr), _body_callback(ft_nullptr), _user_data(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex()`
 
 ### API/api_tls_client.cpp
 
-- `api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms) : _ctx(ft_nullptr), _ssl(ft_nullptr), _sock(-1), _host(""), _timeout(timeout_ms), _error_code(FT_ERR_SUCCESSS)`
+- `api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms) : _ctx(ft_nullptr), _ssl(ft_nullptr), _sock(-1), _host(""), _timeout(timeout_ms), _error_code(FT_ERR_SUCCESS)`
 
 ### CMA/cma_alloc_limit_guard.cpp
 
@@ -10501,9 +10501,9 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### CMA/cma_allocation_guard.cpp
 
-- `cma_allocation_guard::cma_allocation_guard() : _pointer(ft_nullptr), _error_code(FT_ERR_SUCCESSS)`
+- `cma_allocation_guard::cma_allocation_guard() : _pointer(ft_nullptr), _error_code(FT_ERR_SUCCESS)`
 - `cma_allocation_guard::cma_allocation_guard(cma_allocation_guard &&other) noexcept : _pointer(other._pointer), _error_code(other._error_code)`
-- `cma_allocation_guard::cma_allocation_guard(void *memory_pointer) : _pointer(memory_pointer), _error_code(FT_ERR_SUCCESSS)`
+- `cma_allocation_guard::cma_allocation_guard(void *memory_pointer) : _pointer(memory_pointer), _error_code(FT_ERR_SUCCESS)`
 
 ### CMA/cma_allocation_guard.hpp
 
@@ -10514,7 +10514,7 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### CMA/cma_allocator_guard.cpp
 
-- `cma_allocator_guard::cma_allocator_guard() : _lock_acquired(false), _active(false), _was_active(false), _error_code(FT_ERR_SUCCESSS), _failure_logged(false), _owned_mutexes(CMA_GUARD_VECTOR_MIN_CAPACITY)`
+- `cma_allocator_guard::cma_allocator_guard() : _lock_acquired(false), _active(false), _was_active(false), _error_code(FT_ERR_SUCCESS), _failure_logged(false), _owned_mutexes(CMA_GUARD_VECTOR_MIN_CAPACITY)`
 
 ### CMA/cma_internal.hpp
 
@@ -10614,9 +10614,9 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### CPP_class/cpp_class_istream.cpp
 
-- `ft_istream::ft_istream() noexcept : _gcount(0) , _bad(false) , _error_code(FT_ERR_SUCCESSS) , _mutex()`
-- `ft_istream::ft_istream(const ft_istream &other) noexcept : _gcount(0) , _bad(false) , _error_code(FT_ERR_SUCCESSS) , _mutex()`
-- `ft_istream::ft_istream(ft_istream &&other) noexcept : _gcount(0) , _bad(false) , _error_code(FT_ERR_SUCCESSS) , _mutex()`
+- `ft_istream::ft_istream() noexcept : _gcount(0) , _bad(false) , _error_code(FT_ERR_SUCCESS) , _mutex()`
+- `ft_istream::ft_istream(const ft_istream &other) noexcept : _gcount(0) , _bad(false) , _error_code(FT_ERR_SUCCESS) , _mutex()`
+- `ft_istream::ft_istream(ft_istream &&other) noexcept : _gcount(0) , _bad(false) , _error_code(FT_ERR_SUCCESS) , _mutex()`
 
 ### CPP_class/cpp_class_nullptr.cpp
 
@@ -10636,14 +10636,14 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### CPP_class/cpp_class_string_methods.cpp
 
-- `ft_string::mutex_guard::mutex_guard() noexcept : _mutex(ft_nullptr), _owns_lock(false), _error_code(FT_ERR_SUCCESSS)`
+- `ft_string::mutex_guard::mutex_guard() noexcept : _mutex(ft_nullptr), _owns_lock(false), _error_code(FT_ERR_SUCCESS)`
 - `ft_string::mutex_guard::mutex_guard(mutex_guard &&other) noexcept : _mutex(other._mutex), _owns_lock(other._owns_lock), _error_code(other._error_code)`
 
 ### CPP_class/cpp_class_stringbuf.cpp
 
-- `ft_stringbuf::ft_stringbuf(const ft_string &string) noexcept : _storage(string) , _position(0) , _error_code(FT_ERR_SUCCESSS) , _mutex()`
-- `ft_stringbuf::ft_stringbuf(const ft_stringbuf &other) noexcept : _storage(other._storage) , _position(other._position) , _error_code(FT_ERR_SUCCESSS) , _mutex()`
-- `ft_stringbuf::ft_stringbuf(ft_stringbuf &&other) noexcept : _storage(ft_move(other._storage)) , _position(other._position) , _error_code(FT_ERR_SUCCESSS) , _mutex()`
+- `ft_stringbuf::ft_stringbuf(const ft_string &string) noexcept : _storage(string) , _position(0) , _error_code(FT_ERR_SUCCESS) , _mutex()`
+- `ft_stringbuf::ft_stringbuf(const ft_stringbuf &other) noexcept : _storage(other._storage) , _position(other._position) , _error_code(FT_ERR_SUCCESS) , _mutex()`
+- `ft_stringbuf::ft_stringbuf(ft_stringbuf &&other) noexcept : _storage(ft_move(other._storage)) , _position(other._position) , _error_code(FT_ERR_SUCCESS) , _mutex()`
 
 ### Compression/compression_stream.cpp
 
@@ -10785,12 +10785,12 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Game/game_achievement.cpp
 
-- `ft_achievement::ft_achievement() noexcept : _id(0), _goals(), _error(FT_ERR_SUCCESSS), _mutex()`
-- `ft_achievement::ft_achievement(const ft_achievement &other) noexcept : _id(0), _goals(), _error(FT_ERR_SUCCESSS), _mutex()`
-- `ft_achievement::ft_achievement(ft_achievement &&other) noexcept : _id(0), _goals(), _error(FT_ERR_SUCCESSS), _mutex()`
-- `ft_goal::ft_goal() noexcept : _target(0), _progress(0), _error(FT_ERR_SUCCESSS), _mutex()`
-- `ft_goal::ft_goal(const ft_goal &other) noexcept : _target(0), _progress(0), _error(FT_ERR_SUCCESSS), _mutex()`
-- `ft_goal::ft_goal(ft_goal &&other) noexcept : _target(0), _progress(0), _error(FT_ERR_SUCCESSS), _mutex()`
+- `ft_achievement::ft_achievement() noexcept : _id(0), _goals(), _error(FT_ERR_SUCCESS), _mutex()`
+- `ft_achievement::ft_achievement(const ft_achievement &other) noexcept : _id(0), _goals(), _error(FT_ERR_SUCCESS), _mutex()`
+- `ft_achievement::ft_achievement(ft_achievement &&other) noexcept : _id(0), _goals(), _error(FT_ERR_SUCCESS), _mutex()`
+- `ft_goal::ft_goal() noexcept : _target(0), _progress(0), _error(FT_ERR_SUCCESS), _mutex()`
+- `ft_goal::ft_goal(const ft_goal &other) noexcept : _target(0), _progress(0), _error(FT_ERR_SUCCESS), _mutex()`
+- `ft_goal::ft_goal(ft_goal &&other) noexcept : _target(0), _progress(0), _error(FT_ERR_SUCCESS), _mutex()`
 
 ### Game/game_achievement.hpp
 
@@ -10800,23 +10800,23 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Game/game_behavior_action.cpp
 
-- `ft_behavior_action::ft_behavior_action() noexcept : _action_id(0), _weight(0.0), _cooldown_seconds(0.0), _error_code(FT_ERR_SUCCESSS)`
-- `ft_behavior_action::ft_behavior_action(const ft_behavior_action &other) noexcept : _action_id(0), _weight(0.0), _cooldown_seconds(0.0), _error_code(FT_ERR_SUCCESSS)`
-- `ft_behavior_action::ft_behavior_action(ft_behavior_action &&other) noexcept : _action_id(0), _weight(0.0), _cooldown_seconds(0.0), _error_code(FT_ERR_SUCCESSS)`
-- `ft_behavior_action::ft_behavior_action(int action_id, double weight, double cooldown_seconds) noexcept : _action_id(action_id), _weight(weight), _cooldown_seconds(cooldown_seconds), _error_code(FT_ERR_SUCCESSS)`
+- `ft_behavior_action::ft_behavior_action() noexcept : _action_id(0), _weight(0.0), _cooldown_seconds(0.0), _error_code(FT_ERR_SUCCESS)`
+- `ft_behavior_action::ft_behavior_action(const ft_behavior_action &other) noexcept : _action_id(0), _weight(0.0), _cooldown_seconds(0.0), _error_code(FT_ERR_SUCCESS)`
+- `ft_behavior_action::ft_behavior_action(ft_behavior_action &&other) noexcept : _action_id(0), _weight(0.0), _cooldown_seconds(0.0), _error_code(FT_ERR_SUCCESS)`
+- `ft_behavior_action::ft_behavior_action(int action_id, double weight, double cooldown_seconds) noexcept : _action_id(action_id), _weight(weight), _cooldown_seconds(cooldown_seconds), _error_code(FT_ERR_SUCCESS)`
 
 ### Game/game_behavior_profile.cpp
 
-- `ft_behavior_profile::ft_behavior_profile() noexcept : _profile_id(0), _aggression_weight(0.0), _caution_weight(0.0), _actions(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_behavior_profile::ft_behavior_profile(const ft_behavior_profile &other) noexcept : _profile_id(0), _aggression_weight(0.0), _caution_weight(0.0), _actions(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_behavior_profile::ft_behavior_profile(ft_behavior_profile &&other) noexcept : _profile_id(0), _aggression_weight(0.0), _caution_weight(0.0), _actions(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_behavior_profile::ft_behavior_profile(int profile_id, double aggression_weight, double caution_weight, const ft_vector<ft_behavior_action> &actions) noexcept : _profile_id(profile_id), _aggression_weight(aggression_weight), _caution_weight(caution_weight), _actions(), _error_code(FT_ERR_SUCCESSS), _mutex()`
+- `ft_behavior_profile::ft_behavior_profile() noexcept : _profile_id(0), _aggression_weight(0.0), _caution_weight(0.0), _actions(), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_behavior_profile::ft_behavior_profile(const ft_behavior_profile &other) noexcept : _profile_id(0), _aggression_weight(0.0), _caution_weight(0.0), _actions(), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_behavior_profile::ft_behavior_profile(ft_behavior_profile &&other) noexcept : _profile_id(0), _aggression_weight(0.0), _caution_weight(0.0), _actions(), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_behavior_profile::ft_behavior_profile(int profile_id, double aggression_weight, double caution_weight, const ft_vector<ft_behavior_action> &actions) noexcept : _profile_id(profile_id), _aggression_weight(aggression_weight), _caution_weight(caution_weight), _actions(), _error_code(FT_ERR_SUCCESS), _mutex()`
 
 ### Game/game_behavior_table.cpp
 
-- `ft_behavior_table::ft_behavior_table() noexcept : _profiles(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_behavior_table::ft_behavior_table(const ft_behavior_table &other) noexcept : _profiles(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_behavior_table::ft_behavior_table(ft_behavior_table &&other) noexcept : _profiles(), _error_code(FT_ERR_SUCCESSS), _mutex()`
+- `ft_behavior_table::ft_behavior_table() noexcept : _profiles(), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_behavior_table::ft_behavior_table(const ft_behavior_table &other) noexcept : _profiles(), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_behavior_table::ft_behavior_table(ft_behavior_table &&other) noexcept : _profiles(), _error_code(FT_ERR_SUCCESS), _mutex()`
 
 ### Game/game_behavior_table.hpp
 
@@ -10832,13 +10832,13 @@ The catalog lists the function declarations and definitions that appear in the C
 - `ft_behavior_composite::ft_behavior_composite() noexcept : ft_behavior_node(), _children()`
 - `ft_behavior_composite::ft_behavior_composite(const ft_behavior_composite &other) noexcept : ft_behavior_node(other), _children()`
 - `ft_behavior_context::ft_behavior_context(const ft_behavior_context &other) noexcept : _character(other._character), _user_data(other._user_data)`
-- `ft_behavior_node::ft_behavior_node() noexcept : _error_code(FT_ERR_SUCCESSS)`
+- `ft_behavior_node::ft_behavior_node() noexcept : _error_code(FT_ERR_SUCCESS)`
 - `ft_behavior_node::ft_behavior_node(const ft_behavior_node &other) noexcept : _error_code(other._error_code)`
 - `ft_behavior_selector::ft_behavior_selector() noexcept : ft_behavior_composite()`
 - `ft_behavior_selector::ft_behavior_selector(const ft_behavior_selector &other) noexcept : ft_behavior_composite(other)`
 - `ft_behavior_sequence::ft_behavior_sequence() noexcept : ft_behavior_composite()`
 - `ft_behavior_sequence::ft_behavior_sequence(const ft_behavior_sequence &other) noexcept : ft_behavior_composite(other)`
-- `ft_behavior_tree::ft_behavior_tree() noexcept : _root(), _error_code(FT_ERR_SUCCESSS)`
+- `ft_behavior_tree::ft_behavior_tree() noexcept : _root(), _error_code(FT_ERR_SUCCESS)`
 - `ft_behavior_tree::ft_behavior_tree(const ft_behavior_tree &other) noexcept : _root(other._root), _error_code(other._error_code)`
 
 ### Game/game_behavior_tree.hpp
@@ -10848,9 +10848,9 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Game/game_buff.cpp
 
-- `ft_buff::ft_buff() noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESSS), _mutex()`
-- `ft_buff::ft_buff(const ft_buff &other) noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESSS), _mutex()`
-- `ft_buff::ft_buff(ft_buff &&other) noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESSS), _mutex()`
+- `ft_buff::ft_buff() noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()`
+- `ft_buff::ft_buff(const ft_buff &other) noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()`
+- `ft_buff::ft_buff(ft_buff &&other) noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()`
 
 ### Game/game_buff.hpp
 
@@ -10867,19 +10867,19 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Game/game_character_constructor.cpp
 
-- `ft_character::ft_character() noexcept : _hit_points(0), _physical_armor(0), _magic_armor(0), _current_physical_armor(0), _current_magic_armor(0), _physical_damage_multiplier(1.0), _magic_damage_multiplier(1.0), _damage_rule(FT_DAMAGE_RULE_FLAT), _might(0), _agility(0), _endurance(0), _reason(0), _insigh(0), _presence(0), _coins(0), _valor(0), _experience(0), _x(0), _y(0), _z(0), _fire_res(), _frost_res(), _lightning_res(), _air_res(), _earth_res(), _chaos_res(), _physical_res(), _skills(), _buffs(), _debuffs(), _upgrades(), _quests(), _achievements(), _reputation(), _inventory(), _equipment(), _error(FT_ERR_SUCCESSS), _mutex(), _operation_errors(`
+- `ft_character::ft_character() noexcept : _hit_points(0), _physical_armor(0), _magic_armor(0), _current_physical_armor(0), _current_magic_armor(0), _physical_damage_multiplier(1.0), _magic_damage_multiplier(1.0), _damage_rule(FT_DAMAGE_RULE_FLAT), _might(0), _agility(0), _endurance(0), _reason(0), _insigh(0), _presence(0), _coins(0), _valor(0), _experience(0), _x(0), _y(0), _z(0), _fire_res(), _frost_res(), _lightning_res(), _air_res(), _earth_res(), _chaos_res(), _physical_res(), _skills(), _buffs(), _debuffs(), _upgrades(), _quests(), _achievements(), _reputation(), _inventory(), _equipment(), _error(FT_ERR_SUCCESS), _mutex(), _operation_errors(`
 - `ft_character::ft_character(const ft_character &other) noexcept : ft_character()`
 - `ft_character::ft_character(ft_character &&other) noexcept : ft_character()`
 
 ### Game/game_crafting.cpp
 
-- `ft_crafting::ft_crafting() noexcept : _recipes(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_crafting::ft_crafting(const ft_crafting &other) noexcept : _recipes(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_crafting::ft_crafting(ft_crafting &&other) noexcept : _recipes(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_crafting_ingredient::ft_crafting_ingredient() noexcept : _item_id(0), _count(0), _rarity(-1), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_crafting_ingredient::ft_crafting_ingredient(const ft_crafting_ingredient &other) noexcept : _item_id(0), _count(0), _rarity(-1), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_crafting_ingredient::ft_crafting_ingredient(ft_crafting_ingredient &&other) noexcept : _item_id(0), _count(0), _rarity(-1), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_crafting_ingredient::ft_crafting_ingredient(int item_id, int count, int rarity) noexcept : _item_id(item_id), _count(count), _rarity(rarity), _error_code(FT_ERR_SUCCESSS), _mutex()`
+- `ft_crafting::ft_crafting() noexcept : _recipes(), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_crafting::ft_crafting(const ft_crafting &other) noexcept : _recipes(), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_crafting::ft_crafting(ft_crafting &&other) noexcept : _recipes(), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_crafting_ingredient::ft_crafting_ingredient() noexcept : _item_id(0), _count(0), _rarity(-1), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_crafting_ingredient::ft_crafting_ingredient(const ft_crafting_ingredient &other) noexcept : _item_id(0), _count(0), _rarity(-1), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_crafting_ingredient::ft_crafting_ingredient(ft_crafting_ingredient &&other) noexcept : _item_id(0), _count(0), _rarity(-1), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_crafting_ingredient::ft_crafting_ingredient(int item_id, int count, int rarity) noexcept : _item_id(item_id), _count(count), _rarity(rarity), _error_code(FT_ERR_SUCCESS), _mutex()`
 
 ### Game/game_crafting.hpp
 
@@ -10891,32 +10891,32 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Game/game_currency_rate.cpp
 
-- `ft_currency_rate::ft_currency_rate() noexcept : _currency_id(0), _rate_to_base(1.0), _display_precision(2), _error_code(FT_ERR_SUCCESSS)`
-- `ft_currency_rate::ft_currency_rate(const ft_currency_rate &other) noexcept : _currency_id(0), _rate_to_base(1.0), _display_precision(2), _error_code(FT_ERR_SUCCESSS)`
-- `ft_currency_rate::ft_currency_rate(ft_currency_rate &&other) noexcept : _currency_id(0), _rate_to_base(1.0), _display_precision(2), _error_code(FT_ERR_SUCCESSS)`
-- `ft_currency_rate::ft_currency_rate(int currency_id, double rate_to_base, int display_precision) noexcept : _currency_id(currency_id), _rate_to_base(rate_to_base), _display_precision(display_precision), _error_code(FT_ERR_SUCCESSS)`
+- `ft_currency_rate::ft_currency_rate() noexcept : _currency_id(0), _rate_to_base(1.0), _display_precision(2), _error_code(FT_ERR_SUCCESS)`
+- `ft_currency_rate::ft_currency_rate(const ft_currency_rate &other) noexcept : _currency_id(0), _rate_to_base(1.0), _display_precision(2), _error_code(FT_ERR_SUCCESS)`
+- `ft_currency_rate::ft_currency_rate(ft_currency_rate &&other) noexcept : _currency_id(0), _rate_to_base(1.0), _display_precision(2), _error_code(FT_ERR_SUCCESS)`
+- `ft_currency_rate::ft_currency_rate(int currency_id, double rate_to_base, int display_precision) noexcept : _currency_id(currency_id), _rate_to_base(rate_to_base), _display_precision(display_precision), _error_code(FT_ERR_SUCCESS)`
 
 ### Game/game_data_catalog.cpp
 
-- `ft_data_catalog::ft_data_catalog() noexcept : _item_definitions(), _recipes(), _loadouts(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_data_catalog::ft_data_catalog(const ft_data_catalog &other) noexcept : _item_definitions(), _recipes(), _loadouts(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_data_catalog::ft_data_catalog(ft_data_catalog &&other) noexcept : _item_definitions(), _recipes(), _loadouts(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_item_definition::ft_item_definition() noexcept : _item_id(0), _rarity(0), _max_stack(0), _width(0), _height(0), _weight(0), _slot_requirement(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_item_definition::ft_item_definition(const ft_item_definition &other) noexcept : _item_id(0), _rarity(0), _max_stack(0), _width(0), _height(0), _weight(0), _slot_requirement(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_item_definition::ft_item_definition(ft_item_definition &&other) noexcept : _item_id(0), _rarity(0), _max_stack(0), _width(0), _height(0), _weight(0), _slot_requirement(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_item_definition::ft_item_definition(int item_id, int rarity, int max_stack, int width, int height, int weight, int slot_requirement) noexcept : _item_id(item_id), _rarity(rarity), _max_stack(max_stack), _width(width), _height(height), _weight(weight), _slot_requirement(slot_requirement), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_loadout_blueprint::ft_loadout_blueprint() noexcept : _loadout_id(0), _entries(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_loadout_blueprint::ft_loadout_blueprint(const ft_loadout_blueprint &other) noexcept : _loadout_id(0), _entries(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_loadout_blueprint::ft_loadout_blueprint(ft_loadout_blueprint &&other) noexcept : _loadout_id(0), _entries(ft_move(other._entries)), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_loadout_blueprint::ft_loadout_blueprint(int loadout_id, const ft_vector<ft_loadout_entry> &entries) noexcept : _loadout_id(loadout_id), _entries(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_loadout_entry::ft_loadout_entry() noexcept : _slot(0), _item_id(0), _quantity(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_loadout_entry::ft_loadout_entry(const ft_loadout_entry &other) noexcept : _slot(0), _item_id(0), _quantity(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_loadout_entry::ft_loadout_entry(ft_loadout_entry &&other) noexcept : _slot(0), _item_id(0), _quantity(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_loadout_entry::ft_loadout_entry(int slot, int item_id, int quantity) noexcept : _slot(slot), _item_id(item_id), _quantity(quantity), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_recipe_blueprint::ft_recipe_blueprint() noexcept : _recipe_id(0), _result_item_id(0), _ingredients(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_recipe_blueprint::ft_recipe_blueprint(const ft_recipe_blueprint &other) noexcept : _recipe_id(0), _result_item_id(0), _ingredients(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_recipe_blueprint::ft_recipe_blueprint(ft_recipe_blueprint &&other) noexcept : _recipe_id(0), _result_item_id(0), _ingredients(ft_move(other._ingredients)), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_recipe_blueprint::ft_recipe_blueprint(int recipe_id, int result_item_id, const ft_vector<ft_crafting_ingredient> &ingredients) noexcept : _recipe_id(recipe_id), _result_item_id(result_item_id), _ingredients(), _error_code(FT_ERR_SUCCESSS), _mutex()`
+- `ft_data_catalog::ft_data_catalog() noexcept : _item_definitions(), _recipes(), _loadouts(), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_data_catalog::ft_data_catalog(const ft_data_catalog &other) noexcept : _item_definitions(), _recipes(), _loadouts(), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_data_catalog::ft_data_catalog(ft_data_catalog &&other) noexcept : _item_definitions(), _recipes(), _loadouts(), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_item_definition::ft_item_definition() noexcept : _item_id(0), _rarity(0), _max_stack(0), _width(0), _height(0), _weight(0), _slot_requirement(0), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_item_definition::ft_item_definition(const ft_item_definition &other) noexcept : _item_id(0), _rarity(0), _max_stack(0), _width(0), _height(0), _weight(0), _slot_requirement(0), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_item_definition::ft_item_definition(ft_item_definition &&other) noexcept : _item_id(0), _rarity(0), _max_stack(0), _width(0), _height(0), _weight(0), _slot_requirement(0), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_item_definition::ft_item_definition(int item_id, int rarity, int max_stack, int width, int height, int weight, int slot_requirement) noexcept : _item_id(item_id), _rarity(rarity), _max_stack(max_stack), _width(width), _height(height), _weight(weight), _slot_requirement(slot_requirement), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_loadout_blueprint::ft_loadout_blueprint() noexcept : _loadout_id(0), _entries(), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_loadout_blueprint::ft_loadout_blueprint(const ft_loadout_blueprint &other) noexcept : _loadout_id(0), _entries(), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_loadout_blueprint::ft_loadout_blueprint(ft_loadout_blueprint &&other) noexcept : _loadout_id(0), _entries(ft_move(other._entries)), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_loadout_blueprint::ft_loadout_blueprint(int loadout_id, const ft_vector<ft_loadout_entry> &entries) noexcept : _loadout_id(loadout_id), _entries(), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_loadout_entry::ft_loadout_entry() noexcept : _slot(0), _item_id(0), _quantity(0), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_loadout_entry::ft_loadout_entry(const ft_loadout_entry &other) noexcept : _slot(0), _item_id(0), _quantity(0), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_loadout_entry::ft_loadout_entry(ft_loadout_entry &&other) noexcept : _slot(0), _item_id(0), _quantity(0), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_loadout_entry::ft_loadout_entry(int slot, int item_id, int quantity) noexcept : _slot(slot), _item_id(item_id), _quantity(quantity), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_recipe_blueprint::ft_recipe_blueprint() noexcept : _recipe_id(0), _result_item_id(0), _ingredients(), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_recipe_blueprint::ft_recipe_blueprint(const ft_recipe_blueprint &other) noexcept : _recipe_id(0), _result_item_id(0), _ingredients(), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_recipe_blueprint::ft_recipe_blueprint(ft_recipe_blueprint &&other) noexcept : _recipe_id(0), _result_item_id(0), _ingredients(ft_move(other._ingredients)), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_recipe_blueprint::ft_recipe_blueprint(int recipe_id, int result_item_id, const ft_vector<ft_crafting_ingredient> &ingredients) noexcept : _recipe_id(recipe_id), _result_item_id(result_item_id), _ingredients(), _error_code(FT_ERR_SUCCESS), _mutex()`
 
 ### Game/game_data_catalog.hpp
 
@@ -10928,9 +10928,9 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Game/game_debuff.cpp
 
-- `ft_debuff::ft_debuff() noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESSS), _mutex()`
-- `ft_debuff::ft_debuff(const ft_debuff &other) noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESSS), _mutex()`
-- `ft_debuff::ft_debuff(ft_debuff &&other) noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESSS), _mutex()`
+- `ft_debuff::ft_debuff() noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()`
+- `ft_debuff::ft_debuff(const ft_debuff &other) noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()`
+- `ft_debuff::ft_debuff(ft_debuff &&other) noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()`
 
 ### Game/game_debuff.hpp
 
@@ -10941,23 +10941,23 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Game/game_dialogue_line.cpp
 
-- `ft_dialogue_line::ft_dialogue_line() noexcept : _line_id(0), _speaker(), _text(), _next_line_ids(), _error_code(FT_ERR_SUCCESSS)`
-- `ft_dialogue_line::ft_dialogue_line(const ft_dialogue_line &other) noexcept : _line_id(0), _speaker(), _text(), _next_line_ids(), _error_code(FT_ERR_SUCCESSS)`
-- `ft_dialogue_line::ft_dialogue_line(ft_dialogue_line &&other) noexcept : _line_id(0), _speaker(), _text(), _next_line_ids(), _error_code(FT_ERR_SUCCESSS)`
-- `ft_dialogue_line::ft_dialogue_line(int line_id, const ft_string &speaker, const ft_string &text, const ft_vector<int> &next_line_ids) noexcept : _line_id(line_id), _speaker(speaker), _text(text), _next_line_ids(), _error_code(FT_ERR_SUCCESSS)`
+- `ft_dialogue_line::ft_dialogue_line() noexcept : _line_id(0), _speaker(), _text(), _next_line_ids(), _error_code(FT_ERR_SUCCESS)`
+- `ft_dialogue_line::ft_dialogue_line(const ft_dialogue_line &other) noexcept : _line_id(0), _speaker(), _text(), _next_line_ids(), _error_code(FT_ERR_SUCCESS)`
+- `ft_dialogue_line::ft_dialogue_line(ft_dialogue_line &&other) noexcept : _line_id(0), _speaker(), _text(), _next_line_ids(), _error_code(FT_ERR_SUCCESS)`
+- `ft_dialogue_line::ft_dialogue_line(int line_id, const ft_string &speaker, const ft_string &text, const ft_vector<int> &next_line_ids) noexcept : _line_id(line_id), _speaker(speaker), _text(text), _next_line_ids(), _error_code(FT_ERR_SUCCESS)`
 
 ### Game/game_dialogue_script.cpp
 
-- `ft_dialogue_script::ft_dialogue_script() noexcept : _script_id(0), _title(), _summary(), _start_line_id(0), _lines(), _error_code(FT_ERR_SUCCESSS)`
-- `ft_dialogue_script::ft_dialogue_script(const ft_dialogue_script &other) noexcept : _script_id(0), _title(), _summary(), _start_line_id(0), _lines(), _error_code(FT_ERR_SUCCESSS)`
-- `ft_dialogue_script::ft_dialogue_script(ft_dialogue_script &&other) noexcept : _script_id(0), _title(), _summary(), _start_line_id(0), _lines(), _error_code(FT_ERR_SUCCESSS)`
-- `ft_dialogue_script::ft_dialogue_script(int script_id, const ft_string &title, const ft_string &summary, int start_line_id, const ft_vector<ft_dialogue_line> &lines) noexcept : _script_id(script_id), _title(title), _summary(summary), _start_line_id(start_line_id), _lines(), _error_code(FT_ERR_SUCCESSS)`
+- `ft_dialogue_script::ft_dialogue_script() noexcept : _script_id(0), _title(), _summary(), _start_line_id(0), _lines(), _error_code(FT_ERR_SUCCESS)`
+- `ft_dialogue_script::ft_dialogue_script(const ft_dialogue_script &other) noexcept : _script_id(0), _title(), _summary(), _start_line_id(0), _lines(), _error_code(FT_ERR_SUCCESS)`
+- `ft_dialogue_script::ft_dialogue_script(ft_dialogue_script &&other) noexcept : _script_id(0), _title(), _summary(), _start_line_id(0), _lines(), _error_code(FT_ERR_SUCCESS)`
+- `ft_dialogue_script::ft_dialogue_script(int script_id, const ft_string &title, const ft_string &summary, int start_line_id, const ft_vector<ft_dialogue_line> &lines) noexcept : _script_id(script_id), _title(title), _summary(summary), _start_line_id(start_line_id), _lines(), _error_code(FT_ERR_SUCCESS)`
 
 ### Game/game_dialogue_table.cpp
 
-- `ft_dialogue_table::ft_dialogue_table() noexcept : _lines(), _scripts(), _error_code(FT_ERR_SUCCESSS)`
-- `ft_dialogue_table::ft_dialogue_table(const ft_dialogue_table &other) noexcept : _lines(), _scripts(), _error_code(FT_ERR_SUCCESSS)`
-- `ft_dialogue_table::ft_dialogue_table(ft_dialogue_table &&other) noexcept : _lines(), _scripts(), _error_code(FT_ERR_SUCCESSS)`
+- `ft_dialogue_table::ft_dialogue_table() noexcept : _lines(), _scripts(), _error_code(FT_ERR_SUCCESS)`
+- `ft_dialogue_table::ft_dialogue_table(const ft_dialogue_table &other) noexcept : _lines(), _scripts(), _error_code(FT_ERR_SUCCESS)`
+- `ft_dialogue_table::ft_dialogue_table(ft_dialogue_table &&other) noexcept : _lines(), _scripts(), _error_code(FT_ERR_SUCCESS)`
 
 ### Game/game_dialogue_table.hpp
 
@@ -10967,9 +10967,9 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Game/game_economy_table.cpp
 
-- `ft_economy_table::ft_economy_table() noexcept : _error_code(FT_ERR_SUCCESSS)`
-- `ft_economy_table::ft_economy_table(const ft_economy_table &other) noexcept : _error_code(FT_ERR_SUCCESSS) , _mutex()`
-- `ft_economy_table::ft_economy_table(ft_economy_table &&other) noexcept : _error_code(FT_ERR_SUCCESSS) , _mutex()`
+- `ft_economy_table::ft_economy_table() noexcept : _error_code(FT_ERR_SUCCESS)`
+- `ft_economy_table::ft_economy_table(const ft_economy_table &other) noexcept : _error_code(FT_ERR_SUCCESS) , _mutex()`
+- `ft_economy_table::ft_economy_table(ft_economy_table &&other) noexcept : _error_code(FT_ERR_SUCCESS) , _mutex()`
 
 ### Game/game_economy_table.hpp
 
@@ -10979,9 +10979,9 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Game/game_equipment.cpp
 
-- `ft_equipment::ft_equipment() noexcept : _head(ft_sharedptr<ft_item>()), _chest(ft_sharedptr<ft_item>()), _weapon(ft_sharedptr<ft_item>()), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_equipment::ft_equipment(const ft_equipment &other) noexcept : _head(ft_sharedptr<ft_item>()), _chest(ft_sharedptr<ft_item>()), _weapon(ft_sharedptr<ft_item>()), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_equipment::ft_equipment(ft_equipment &&other) noexcept : _head(ft_sharedptr<ft_item>()), _chest(ft_sharedptr<ft_item>()), _weapon(ft_sharedptr<ft_item>()), _error_code(FT_ERR_SUCCESSS), _mutex()`
+- `ft_equipment::ft_equipment() noexcept : _head(ft_sharedptr<ft_item>()), _chest(ft_sharedptr<ft_item>()), _weapon(ft_sharedptr<ft_item>()), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_equipment::ft_equipment(const ft_equipment &other) noexcept : _head(ft_sharedptr<ft_item>()), _chest(ft_sharedptr<ft_item>()), _weapon(ft_sharedptr<ft_item>()), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_equipment::ft_equipment(ft_equipment &&other) noexcept : _head(ft_sharedptr<ft_item>()), _chest(ft_sharedptr<ft_item>()), _weapon(ft_sharedptr<ft_item>()), _error_code(FT_ERR_SUCCESS), _mutex()`
 
 ### Game/game_equipment.hpp
 
@@ -10992,9 +10992,9 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Game/game_event.cpp
 
-- `ft_event::ft_event() noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _callback(), _error(FT_ERR_SUCCESSS), _mutex()`
-- `ft_event::ft_event(const ft_event &other) noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _callback(), _error(FT_ERR_SUCCESSS), _mutex()`
-- `ft_event::ft_event(ft_event &&other) noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _callback(), _error(FT_ERR_SUCCESSS), _mutex()`
+- `ft_event::ft_event() noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _callback(), _error(FT_ERR_SUCCESS), _mutex()`
+- `ft_event::ft_event(const ft_event &other) noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _callback(), _error(FT_ERR_SUCCESS), _mutex()`
+- `ft_event::ft_event(ft_event &&other) noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _callback(), _error(FT_ERR_SUCCESS), _mutex()`
 
 ### Game/game_event.hpp
 
@@ -11004,15 +11004,15 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Game/game_event_scheduler.cpp
 
-- `ft_event_scheduler::ft_event_scheduler() noexcept : _events(), _error_code(FT_ERR_SUCCESSS), _mutex(), _profiling_enabled(false), _profile(), _ready_cache()`
-- `ft_event_scheduler::ft_event_scheduler(const ft_event_scheduler &other) noexcept : _events(), _error_code(FT_ERR_SUCCESSS), _mutex(), _profiling_enabled(false), _profile(), _ready_cache()`
-- `ft_event_scheduler::ft_event_scheduler(ft_event_scheduler &&other) noexcept : _events(), _error_code(FT_ERR_SUCCESSS), _mutex(), _profiling_enabled(false), _profile(), _ready_cache()`
+- `ft_event_scheduler::ft_event_scheduler() noexcept : _events(), _error_code(FT_ERR_SUCCESS), _mutex(), _profiling_enabled(false), _profile(), _ready_cache()`
+- `ft_event_scheduler::ft_event_scheduler(const ft_event_scheduler &other) noexcept : _events(), _error_code(FT_ERR_SUCCESS), _mutex(), _profiling_enabled(false), _profile(), _ready_cache()`
+- `ft_event_scheduler::ft_event_scheduler(ft_event_scheduler &&other) noexcept : _events(), _error_code(FT_ERR_SUCCESS), _mutex(), _profiling_enabled(false), _profile(), _ready_cache()`
 
 ### Game/game_experience_table.cpp
 
-- `ft_experience_table::ft_experience_table(const ft_experience_table &other) noexcept : _levels(ft_nullptr), _count(0), _error(FT_ERR_SUCCESSS), _mutex()`
-- `ft_experience_table::ft_experience_table(ft_experience_table &&other) noexcept : _levels(ft_nullptr), _count(0), _error(FT_ERR_SUCCESSS), _mutex()`
-- `ft_experience_table::ft_experience_table(int count) noexcept : _levels(ft_nullptr), _count(0), _error(FT_ERR_SUCCESSS), _mutex()`
+- `ft_experience_table::ft_experience_table(const ft_experience_table &other) noexcept : _levels(ft_nullptr), _count(0), _error(FT_ERR_SUCCESS), _mutex()`
+- `ft_experience_table::ft_experience_table(ft_experience_table &&other) noexcept : _levels(ft_nullptr), _count(0), _error(FT_ERR_SUCCESS), _mutex()`
+- `ft_experience_table::ft_experience_table(int count) noexcept : _levels(ft_nullptr), _count(0), _error(FT_ERR_SUCCESS), _mutex()`
 
 ### Game/game_experience_table.hpp
 
@@ -11023,15 +11023,15 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Game/game_hooks.cpp
 
-- `ft_game_hooks::ft_game_hooks() noexcept : _legacy_item_crafted(), _legacy_character_damaged(), _legacy_event_triggered(), _listener_catalog(), _catalog_metadata(), _error_code(FT_ERR_SUCCESSS), _mutex()`
+- `ft_game_hooks::ft_game_hooks() noexcept : _legacy_item_crafted(), _legacy_character_damaged(), _legacy_event_triggered(), _listener_catalog(), _catalog_metadata(), _error_code(FT_ERR_SUCCESS), _mutex()`
 - `ft_game_hooks::ft_game_hooks(const ft_game_hooks &other) noexcept : _legacy_item_crafted(), _legacy_character_damaged(), _legacy_event_triggered(), _listener_catalog(), _catalog_metadata(), _error_code(other._error_code), _mutex()`
-- `ft_game_hooks::ft_game_hooks(ft_game_hooks &&other) noexcept : _legacy_item_crafted(), _legacy_character_damaged(), _legacy_event_triggered(), _listener_catalog(), _catalog_metadata(), _error_code(FT_ERR_SUCCESSS), _mutex()`
+- `ft_game_hooks::ft_game_hooks(ft_game_hooks &&other) noexcept : _legacy_item_crafted(), _legacy_character_damaged(), _legacy_event_triggered(), _listener_catalog(), _catalog_metadata(), _error_code(FT_ERR_SUCCESS), _mutex()`
 
 ### Game/game_inventory.cpp
 
-- `ft_inventory::ft_inventory(const ft_inventory &other) noexcept : _items(), _capacity(0), _used_slots(0), _weight_limit(0), _current_weight(0), _next_slot(0), _error(FT_ERR_SUCCESSS), _mutex()`
-- `ft_inventory::ft_inventory(ft_inventory &&other) noexcept : _items(), _capacity(0), _used_slots(0), _weight_limit(0), _current_weight(0), _next_slot(0), _error(FT_ERR_SUCCESSS), _mutex()`
-- `ft_inventory::ft_inventory(size_t capacity, int weight_limit) noexcept : _items(), _capacity(capacity), _used_slots(0), _weight_limit(weight_limit), _current_weight(0), _next_slot(0), _error(FT_ERR_SUCCESSS), _mutex()`
+- `ft_inventory::ft_inventory(const ft_inventory &other) noexcept : _items(), _capacity(0), _used_slots(0), _weight_limit(0), _current_weight(0), _next_slot(0), _error(FT_ERR_SUCCESS), _mutex()`
+- `ft_inventory::ft_inventory(ft_inventory &&other) noexcept : _items(), _capacity(0), _used_slots(0), _weight_limit(0), _current_weight(0), _next_slot(0), _error(FT_ERR_SUCCESS), _mutex()`
+- `ft_inventory::ft_inventory(size_t capacity, int weight_limit) noexcept : _items(), _capacity(capacity), _used_slots(0), _weight_limit(weight_limit), _current_weight(0), _next_slot(0), _error(FT_ERR_SUCCESS), _mutex()`
 
 ### Game/game_inventory.hpp
 
@@ -11042,13 +11042,13 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Game/game_item.cpp
 
-- `ft_item::ft_item() noexcept : _max_stack(0), _stack_size(0), _item_id(0), _rarity(0), _width(1), _height(1), _modifier1(), _modifier2(), _modifier3(), _modifier4(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_item::ft_item(const ft_item &other) noexcept : _max_stack(0), _stack_size(0), _item_id(0), _rarity(0), _width(1), _height(1), _modifier1(), _modifier2(), _modifier3(), _modifier4(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_item::ft_item(ft_item &&other) noexcept : _max_stack(0), _stack_size(0), _item_id(0), _rarity(0), _width(1), _height(1), _modifier1(), _modifier2(), _modifier3(), _modifier4(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_item_modifier::ft_item_modifier() noexcept : _id(0), _value(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_item_modifier::ft_item_modifier(const ft_item_modifier &other) noexcept : _id(0), _value(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_item_modifier::ft_item_modifier(ft_item_modifier &&other) noexcept : _id(0), _value(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_item_modifier::ft_item_modifier(int id, int value) noexcept : _id(id), _value(value), _error_code(FT_ERR_SUCCESSS), _mutex()`
+- `ft_item::ft_item() noexcept : _max_stack(0), _stack_size(0), _item_id(0), _rarity(0), _width(1), _height(1), _modifier1(), _modifier2(), _modifier3(), _modifier4(), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_item::ft_item(const ft_item &other) noexcept : _max_stack(0), _stack_size(0), _item_id(0), _rarity(0), _width(1), _height(1), _modifier1(), _modifier2(), _modifier3(), _modifier4(), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_item::ft_item(ft_item &&other) noexcept : _max_stack(0), _stack_size(0), _item_id(0), _rarity(0), _width(1), _height(1), _modifier1(), _modifier2(), _modifier3(), _modifier4(), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_item_modifier::ft_item_modifier() noexcept : _id(0), _value(0), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_item_modifier::ft_item_modifier(const ft_item_modifier &other) noexcept : _id(0), _value(0), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_item_modifier::ft_item_modifier(ft_item_modifier &&other) noexcept : _id(0), _value(0), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_item_modifier::ft_item_modifier(int id, int value) noexcept : _id(id), _value(value), _error_code(FT_ERR_SUCCESS), _mutex()`
 
 ### Game/game_item.hpp
 
@@ -11060,9 +11060,9 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Game/game_map3d.cpp
 
-- `ft_map3d::ft_map3d(const ft_map3d &other) : _data(ft_nullptr), _width(0), _height(0), _depth(0), _error(FT_ERR_SUCCESSS), _mutex(), _operation_errors(`
-- `ft_map3d::ft_map3d(ft_map3d &&other) noexcept : _data(ft_nullptr), _width(0), _height(0), _depth(0), _error(FT_ERR_SUCCESSS), _mutex(), _operation_errors(`
-- `ft_map3d::ft_map3d(size_t width, size_t height, size_t depth, int value) : _data(ft_nullptr), _width(0), _height(0), _depth(0), _error(FT_ERR_SUCCESSS), _mutex(), _operation_errors(`
+- `ft_map3d::ft_map3d(const ft_map3d &other) : _data(ft_nullptr), _width(0), _height(0), _depth(0), _error(FT_ERR_SUCCESS), _mutex(), _operation_errors(`
+- `ft_map3d::ft_map3d(ft_map3d &&other) noexcept : _data(ft_nullptr), _width(0), _height(0), _depth(0), _error(FT_ERR_SUCCESS), _mutex(), _operation_errors(`
+- `ft_map3d::ft_map3d(size_t width, size_t height, size_t depth, int value) : _data(ft_nullptr), _width(0), _height(0), _depth(0), _error(FT_ERR_SUCCESS), _mutex(), _operation_errors(`
 
 ### Game/game_map3d.hpp
 
@@ -11073,12 +11073,12 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Game/game_pathfinding.cpp
 
-- `ft_path_step::ft_path_step() noexcept : _x(0), _y(0), _z(0), _error_code(FT_ERR_SUCCESSS), _system_error_code(FT_SYS_ERR_SUCCESS), _mutex()`
-- `ft_path_step::ft_path_step(const ft_path_step &other) noexcept : _x(0), _y(0), _z(0), _error_code(FT_ERR_SUCCESSS), _system_error_code(FT_SYS_ERR_SUCCESS), _mutex()`
-- `ft_path_step::ft_path_step(ft_path_step &&other) noexcept : _x(0), _y(0), _z(0), _error_code(FT_ERR_SUCCESSS), _system_error_code(FT_SYS_ERR_SUCCESS), _mutex()`
-- `ft_pathfinding::ft_pathfinding() noexcept : _error_code(FT_ERR_SUCCESSS), _current_path(), _needs_replan(false), _mutex()`
-- `ft_pathfinding::ft_pathfinding(const ft_pathfinding &other) noexcept : _error_code(FT_ERR_SUCCESSS), _current_path(), _needs_replan(false), _mutex()`
-- `ft_pathfinding::ft_pathfinding(ft_pathfinding &&other) noexcept : _error_code(FT_ERR_SUCCESSS), _current_path(), _needs_replan(false), _mutex()`
+- `ft_path_step::ft_path_step() noexcept : _x(0), _y(0), _z(0), _error_code(FT_ERR_SUCCESS), _system_error_code(FT_SYS_ERR_SUCCESS), _mutex()`
+- `ft_path_step::ft_path_step(const ft_path_step &other) noexcept : _x(0), _y(0), _z(0), _error_code(FT_ERR_SUCCESS), _system_error_code(FT_SYS_ERR_SUCCESS), _mutex()`
+- `ft_path_step::ft_path_step(ft_path_step &&other) noexcept : _x(0), _y(0), _z(0), _error_code(FT_ERR_SUCCESS), _system_error_code(FT_SYS_ERR_SUCCESS), _mutex()`
+- `ft_pathfinding::ft_pathfinding() noexcept : _error_code(FT_ERR_SUCCESS), _current_path(), _needs_replan(false), _mutex()`
+- `ft_pathfinding::ft_pathfinding(const ft_pathfinding &other) noexcept : _error_code(FT_ERR_SUCCESS), _current_path(), _needs_replan(false), _mutex()`
+- `ft_pathfinding::ft_pathfinding(ft_pathfinding &&other) noexcept : _error_code(FT_ERR_SUCCESS), _current_path(), _needs_replan(false), _mutex()`
 
 ### Game/game_pathfinding.hpp
 
@@ -11088,16 +11088,16 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Game/game_price_definition.cpp
 
-- `ft_price_definition::ft_price_definition() noexcept : _item_id(0), _rarity(0), _base_value(0), _minimum_value(0), _maximum_value(0), _error_code(FT_ERR_SUCCESSS)`
-- `ft_price_definition::ft_price_definition(const ft_price_definition &other) noexcept : _item_id(0), _rarity(0), _base_value(0), _minimum_value(0), _maximum_value(0), _error_code(FT_ERR_SUCCESSS)`
-- `ft_price_definition::ft_price_definition(ft_price_definition &&other) noexcept : _item_id(0), _rarity(0), _base_value(0), _minimum_value(0), _maximum_value(0), _error_code(FT_ERR_SUCCESSS)`
-- `ft_price_definition::ft_price_definition(int item_id, int rarity, int base_value, int minimum_value, int maximum_value) noexcept : _item_id(item_id), _rarity(rarity), _base_value(base_value), _minimum_value(minimum_value), _maximum_value(maximum_value), _error_code(FT_ERR_SUCCESSS)`
+- `ft_price_definition::ft_price_definition() noexcept : _item_id(0), _rarity(0), _base_value(0), _minimum_value(0), _maximum_value(0), _error_code(FT_ERR_SUCCESS)`
+- `ft_price_definition::ft_price_definition(const ft_price_definition &other) noexcept : _item_id(0), _rarity(0), _base_value(0), _minimum_value(0), _maximum_value(0), _error_code(FT_ERR_SUCCESS)`
+- `ft_price_definition::ft_price_definition(ft_price_definition &&other) noexcept : _item_id(0), _rarity(0), _base_value(0), _minimum_value(0), _maximum_value(0), _error_code(FT_ERR_SUCCESS)`
+- `ft_price_definition::ft_price_definition(int item_id, int rarity, int base_value, int minimum_value, int maximum_value) noexcept : _item_id(item_id), _rarity(rarity), _base_value(base_value), _minimum_value(minimum_value), _maximum_value(maximum_value), _error_code(FT_ERR_SUCCESS)`
 
 ### Game/game_progress_tracker.cpp
 
-- `ft_progress_tracker::ft_progress_tracker() noexcept : _achievements(), _quests(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_progress_tracker::ft_progress_tracker(const ft_progress_tracker &other) noexcept : _achievements(), _quests(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_progress_tracker::ft_progress_tracker(ft_progress_tracker &&other) noexcept : _achievements(), _quests(), _error_code(FT_ERR_SUCCESSS), _mutex()`
+- `ft_progress_tracker::ft_progress_tracker() noexcept : _achievements(), _quests(), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_progress_tracker::ft_progress_tracker(const ft_progress_tracker &other) noexcept : _achievements(), _quests(), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_progress_tracker::ft_progress_tracker(ft_progress_tracker &&other) noexcept : _achievements(), _quests(), _error_code(FT_ERR_SUCCESS), _mutex()`
 
 ### Game/game_progress_tracker.hpp
 
@@ -11107,9 +11107,9 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Game/game_quest.cpp
 
-- `ft_quest::ft_quest() noexcept : _id(0), _phases(0), _current_phase(0), _description(), _objective(), _reward_experience(0), _reward_items(), _error(FT_ERR_SUCCESSS), _mutex()`
-- `ft_quest::ft_quest(const ft_quest &other) noexcept : _id(0), _phases(0), _current_phase(0), _description(), _objective(), _reward_experience(0), _reward_items(), _error(FT_ERR_SUCCESSS), _mutex()`
-- `ft_quest::ft_quest(ft_quest &&other) noexcept : _id(0), _phases(0), _current_phase(0), _description(), _objective(), _reward_experience(0), _reward_items(), _error(FT_ERR_SUCCESSS), _mutex()`
+- `ft_quest::ft_quest() noexcept : _id(0), _phases(0), _current_phase(0), _description(), _objective(), _reward_experience(0), _reward_items(), _error(FT_ERR_SUCCESS), _mutex()`
+- `ft_quest::ft_quest(const ft_quest &other) noexcept : _id(0), _phases(0), _current_phase(0), _description(), _objective(), _reward_experience(0), _reward_items(), _error(FT_ERR_SUCCESS), _mutex()`
+- `ft_quest::ft_quest(ft_quest &&other) noexcept : _id(0), _phases(0), _current_phase(0), _description(), _objective(), _reward_experience(0), _reward_items(), _error(FT_ERR_SUCCESS), _mutex()`
 
 ### Game/game_quest.hpp
 
@@ -11119,24 +11119,24 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Game/game_rarity_band.cpp
 
-- `ft_rarity_band::ft_rarity_band() noexcept : _rarity(0), _value_multiplier(1.0), _error_code(FT_ERR_SUCCESSS)`
-- `ft_rarity_band::ft_rarity_band(const ft_rarity_band &other) noexcept : _rarity(0), _value_multiplier(1.0), _error_code(FT_ERR_SUCCESSS)`
-- `ft_rarity_band::ft_rarity_band(ft_rarity_band &&other) noexcept : _rarity(0), _value_multiplier(1.0), _error_code(FT_ERR_SUCCESSS)`
-- `ft_rarity_band::ft_rarity_band(int rarity, double value_multiplier) noexcept : _rarity(rarity), _value_multiplier(value_multiplier), _error_code(FT_ERR_SUCCESSS)`
+- `ft_rarity_band::ft_rarity_band() noexcept : _rarity(0), _value_multiplier(1.0), _error_code(FT_ERR_SUCCESS)`
+- `ft_rarity_band::ft_rarity_band(const ft_rarity_band &other) noexcept : _rarity(0), _value_multiplier(1.0), _error_code(FT_ERR_SUCCESS)`
+- `ft_rarity_band::ft_rarity_band(ft_rarity_band &&other) noexcept : _rarity(0), _value_multiplier(1.0), _error_code(FT_ERR_SUCCESS)`
+- `ft_rarity_band::ft_rarity_band(int rarity, double value_multiplier) noexcept : _rarity(rarity), _value_multiplier(value_multiplier), _error_code(FT_ERR_SUCCESS)`
 
 ### Game/game_region_definition.cpp
 
-- `ft_region_definition::ft_region_definition() noexcept : _region_id(0), _name(), _description(), _recommended_level(0), _error_code(FT_ERR_SUCCESSS)`
-- `ft_region_definition::ft_region_definition(const ft_region_definition &other) noexcept : _region_id(0), _name(), _description(), _recommended_level(0), _error_code(FT_ERR_SUCCESSS)`
-- `ft_region_definition::ft_region_definition(ft_region_definition &&other) noexcept : _region_id(0), _name(), _description(), _recommended_level(0), _error_code(FT_ERR_SUCCESSS)`
-- `ft_region_definition::ft_region_definition(int region_id, const ft_string &name, const ft_string &description, int recommended_level) noexcept : _region_id(region_id), _name(name), _description(description), _recommended_level(recommended_level), _error_code(FT_ERR_SUCCESSS)`
+- `ft_region_definition::ft_region_definition() noexcept : _region_id(0), _name(), _description(), _recommended_level(0), _error_code(FT_ERR_SUCCESS)`
+- `ft_region_definition::ft_region_definition(const ft_region_definition &other) noexcept : _region_id(0), _name(), _description(), _recommended_level(0), _error_code(FT_ERR_SUCCESS)`
+- `ft_region_definition::ft_region_definition(ft_region_definition &&other) noexcept : _region_id(0), _name(), _description(), _recommended_level(0), _error_code(FT_ERR_SUCCESS)`
+- `ft_region_definition::ft_region_definition(int region_id, const ft_string &name, const ft_string &description, int recommended_level) noexcept : _region_id(region_id), _name(name), _description(description), _recommended_level(recommended_level), _error_code(FT_ERR_SUCCESS)`
 
 ### Game/game_reputation.cpp
 
-- `ft_reputation::ft_reputation() noexcept : _milestones(), _reps(), _total_rep(0), _current_rep(0), _error(FT_ERR_SUCCESSS), _mutex()`
-- `ft_reputation::ft_reputation(const ft_map<int, int> &milestones, int total) noexcept : _milestones(milestones), _reps(), _total_rep(total), _current_rep(0), _error(FT_ERR_SUCCESSS), _mutex()`
-- `ft_reputation::ft_reputation(const ft_reputation &other) noexcept : _milestones(), _reps(), _total_rep(0), _current_rep(0), _error(FT_ERR_SUCCESSS), _mutex()`
-- `ft_reputation::ft_reputation(ft_reputation &&other) noexcept : _milestones(), _reps(), _total_rep(0), _current_rep(0), _error(FT_ERR_SUCCESSS), _mutex()`
+- `ft_reputation::ft_reputation() noexcept : _milestones(), _reps(), _total_rep(0), _current_rep(0), _error(FT_ERR_SUCCESS), _mutex()`
+- `ft_reputation::ft_reputation(const ft_map<int, int> &milestones, int total) noexcept : _milestones(milestones), _reps(), _total_rep(total), _current_rep(0), _error(FT_ERR_SUCCESS), _mutex()`
+- `ft_reputation::ft_reputation(const ft_reputation &other) noexcept : _milestones(), _reps(), _total_rep(0), _current_rep(0), _error(FT_ERR_SUCCESS), _mutex()`
+- `ft_reputation::ft_reputation(ft_reputation &&other) noexcept : _milestones(), _reps(), _total_rep(0), _current_rep(0), _error(FT_ERR_SUCCESS), _mutex()`
 
 ### Game/game_reputation.hpp
 
@@ -11148,9 +11148,9 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Game/game_resistance.cpp
 
-- `ft_resistance::ft_resistance() noexcept : _percent_value(0), _flat_value(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_resistance::ft_resistance(const ft_resistance &other) noexcept : _percent_value(0), _flat_value(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_resistance::ft_resistance(ft_resistance &&other) noexcept : _percent_value(0), _flat_value(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
+- `ft_resistance::ft_resistance() noexcept : _percent_value(0), _flat_value(0), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_resistance::ft_resistance(const ft_resistance &other) noexcept : _percent_value(0), _flat_value(0), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_resistance::ft_resistance(ft_resistance &&other) noexcept : _percent_value(0), _flat_value(0), _error_code(FT_ERR_SUCCESS), _mutex()`
 
 ### Game/game_resistance.hpp
 
@@ -11161,11 +11161,11 @@ The catalog lists the function declarations and definitions that appear in the C
 ### Game/game_scripting_bridge.cpp
 
 - `ft_game_script_bridge::ft_game_script_bridge(const ft_game_script_bridge &other) noexcept : _world(other._world), _callbacks(other._callbacks), _language(other._language), _max_operations(other._max_operations), _error_code(other._error_code), _mutex()`
-- `ft_game_script_bridge::ft_game_script_bridge(const ft_sharedptr<ft_world> &world, const char *language) noexcept : _world(world), _callbacks(), _language(), _max_operations(32), _error_code(FT_ERR_SUCCESSS), _mutex()`
+- `ft_game_script_bridge::ft_game_script_bridge(const ft_sharedptr<ft_world> &world, const char *language) noexcept : _world(world), _callbacks(), _language(), _max_operations(32), _error_code(FT_ERR_SUCCESS), _mutex()`
 - `ft_game_script_bridge::ft_game_script_bridge(ft_game_script_bridge &&other) noexcept : _world(ft_move(other._world)), _callbacks(ft_move(other._callbacks)), _language(ft_move(other._language)), _max_operations(other._max_operations), _error_code(other._error_code), _mutex()`
-- `ft_game_script_context::ft_game_script_context() noexcept : _state(ft_nullptr), _world(), _variables(), _error_code(FT_ERR_SUCCESSS)`
+- `ft_game_script_context::ft_game_script_context() noexcept : _state(ft_nullptr), _world(), _variables(), _error_code(FT_ERR_SUCCESS)`
 - `ft_game_script_context::ft_game_script_context(const ft_game_script_context &other) noexcept : _state(other._state), _world(other._world), _variables(other._variables), _error_code(other._error_code)`
-- `ft_game_script_context::ft_game_script_context(ft_game_state *state, const ft_sharedptr<ft_world> &world) noexcept : _state(state), _world(world), _variables(), _error_code(FT_ERR_SUCCESSS)`
+- `ft_game_script_context::ft_game_script_context(ft_game_state *state, const ft_sharedptr<ft_world> &world) noexcept : _state(state), _world(world), _variables(), _error_code(FT_ERR_SUCCESS)`
 
 ### Game/game_scripting_bridge.hpp
 
@@ -11175,9 +11175,9 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Game/game_server.cpp
 
-- `ft_game_server::ft_game_server(const ft_game_server &other) noexcept : _server(ft_nullptr), _world(), _clients(), _auth_token(), _on_join(ft_nullptr), _on_leave(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_game_server::ft_game_server(const ft_sharedptr<ft_world> &world, const char *auth_token) noexcept : _server(ft_nullptr), _world(world), _clients(), _auth_token(), _on_join(ft_nullptr), _on_leave(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_game_server::ft_game_server(ft_game_server &&other) noexcept : _server(ft_nullptr), _world(), _clients(), _auth_token(), _on_join(ft_nullptr), _on_leave(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex()`
+- `ft_game_server::ft_game_server(const ft_game_server &other) noexcept : _server(ft_nullptr), _world(), _clients(), _auth_token(), _on_join(ft_nullptr), _on_leave(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_game_server::ft_game_server(const ft_sharedptr<ft_world> &world, const char *auth_token) noexcept : _server(ft_nullptr), _world(world), _clients(), _auth_token(), _on_join(ft_nullptr), _on_leave(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_game_server::ft_game_server(ft_game_server &&other) noexcept : _server(ft_nullptr), _world(), _clients(), _auth_token(), _on_join(ft_nullptr), _on_leave(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex()`
 
 ### Game/game_server.hpp
 
@@ -11188,9 +11188,9 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Game/game_skill.cpp
 
-- `ft_skill::ft_skill() noexcept : _id(0), _level(0), _cooldown(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESSS), _mutex()`
-- `ft_skill::ft_skill(const ft_skill &other) noexcept : _id(0), _level(0), _cooldown(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESSS), _mutex()`
-- `ft_skill::ft_skill(ft_skill &&other) noexcept : _id(0), _level(0), _cooldown(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESSS), _mutex()`
+- `ft_skill::ft_skill() noexcept : _id(0), _level(0), _cooldown(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()`
+- `ft_skill::ft_skill(const ft_skill &other) noexcept : _id(0), _level(0), _cooldown(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()`
+- `ft_skill::ft_skill(ft_skill &&other) noexcept : _id(0), _level(0), _cooldown(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()`
 
 ### Game/game_skill.hpp
 
@@ -11200,9 +11200,9 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Game/game_state.cpp
 
-- `ft_game_state::ft_game_state() noexcept : _worlds(), _characters(), _variables(), _hooks(), _error_code(FT_ERR_SUCCESSS), _mutex()`
+- `ft_game_state::ft_game_state() noexcept : _worlds(), _characters(), _variables(), _hooks(), _error_code(FT_ERR_SUCCESS), _mutex()`
 - `ft_game_state::ft_game_state(const ft_game_state &other) noexcept : _worlds(), _characters(), _variables(), _hooks(), _error_code(other._error_code), _mutex()`
-- `ft_game_state::ft_game_state(ft_game_state &&other) noexcept : _worlds(), _characters(), _variables(), _hooks(), _error_code(FT_ERR_SUCCESSS), _mutex()`
+- `ft_game_state::ft_game_state(ft_game_state &&other) noexcept : _worlds(), _characters(), _variables(), _hooks(), _error_code(FT_ERR_SUCCESS), _mutex()`
 
 ### Game/game_state.hpp
 
@@ -11212,9 +11212,9 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Game/game_upgrade.cpp
 
-- `ft_upgrade::ft_upgrade() noexcept : _id(0), _current_level(0), _max_level(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESSS), _mutex()`
-- `ft_upgrade::ft_upgrade(const ft_upgrade &other) noexcept : _id(0), _current_level(0), _max_level(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESSS), _mutex()`
-- `ft_upgrade::ft_upgrade(ft_upgrade &&other) noexcept : _id(0), _current_level(0), _max_level(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESSS), _mutex()`
+- `ft_upgrade::ft_upgrade() noexcept : _id(0), _current_level(0), _max_level(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()`
+- `ft_upgrade::ft_upgrade(const ft_upgrade &other) noexcept : _id(0), _current_level(0), _max_level(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()`
+- `ft_upgrade::ft_upgrade(ft_upgrade &&other) noexcept : _id(0), _current_level(0), _max_level(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()`
 
 ### Game/game_upgrade.hpp
 
@@ -11224,14 +11224,14 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Game/game_vendor_profile.cpp
 
-- `ft_vendor_profile::ft_vendor_profile() noexcept : _vendor_id(0), _buy_markup(1.0), _sell_multiplier(1.0), _tax_rate(0.0), _error_code(FT_ERR_SUCCESSS)`
-- `ft_vendor_profile::ft_vendor_profile(const ft_vendor_profile &other) noexcept : _vendor_id(0), _buy_markup(1.0), _sell_multiplier(1.0), _tax_rate(0.0), _error_code(FT_ERR_SUCCESSS)`
-- `ft_vendor_profile::ft_vendor_profile(ft_vendor_profile &&other) noexcept : _vendor_id(0), _buy_markup(1.0), _sell_multiplier(1.0), _tax_rate(0.0), _error_code(FT_ERR_SUCCESSS)`
-- `ft_vendor_profile::ft_vendor_profile(int vendor_id, double buy_markup, double sell_multiplier, double tax_rate) noexcept : _vendor_id(vendor_id), _buy_markup(buy_markup), _sell_multiplier(sell_multiplier), _tax_rate(tax_rate), _error_code(FT_ERR_SUCCESSS)`
+- `ft_vendor_profile::ft_vendor_profile() noexcept : _vendor_id(0), _buy_markup(1.0), _sell_multiplier(1.0), _tax_rate(0.0), _error_code(FT_ERR_SUCCESS)`
+- `ft_vendor_profile::ft_vendor_profile(const ft_vendor_profile &other) noexcept : _vendor_id(0), _buy_markup(1.0), _sell_multiplier(1.0), _tax_rate(0.0), _error_code(FT_ERR_SUCCESS)`
+- `ft_vendor_profile::ft_vendor_profile(ft_vendor_profile &&other) noexcept : _vendor_id(0), _buy_markup(1.0), _sell_multiplier(1.0), _tax_rate(0.0), _error_code(FT_ERR_SUCCESS)`
+- `ft_vendor_profile::ft_vendor_profile(int vendor_id, double buy_markup, double sell_multiplier, double tax_rate) noexcept : _vendor_id(vendor_id), _buy_markup(buy_markup), _sell_multiplier(sell_multiplier), _tax_rate(tax_rate), _error_code(FT_ERR_SUCCESS)`
 
 ### Game/game_world.cpp
 
-- `ft_world::ft_world() noexcept : _event_scheduler(new (std::nothrow) ft_event_scheduler()), _world_registry(new (std::nothrow) ft_world_registry()), _replay_session(new (std::nothrow) ft_world_replay_session()), _economy_table(new (std::nothrow) ft_economy_table()), _crafting(new (std::nothrow) ft_crafting()), _dialogue_table(new (std::nothrow) ft_dialogue_table()), _world_region(new (std::nothrow) ft_world_region()), _quest(new (std::nothrow) ft_quest()), _vendor_profile(new (std::nothrow) ft_vendor_profile()), _upgrade(new (std::nothrow) ft_upgrade()), _error(FT_ERR_SUCCESSS)`
+- `ft_world::ft_world() noexcept : _event_scheduler(new (std::nothrow) ft_event_scheduler()), _world_registry(new (std::nothrow) ft_world_registry()), _replay_session(new (std::nothrow) ft_world_replay_session()), _economy_table(new (std::nothrow) ft_economy_table()), _crafting(new (std::nothrow) ft_crafting()), _dialogue_table(new (std::nothrow) ft_dialogue_table()), _world_region(new (std::nothrow) ft_world_region()), _quest(new (std::nothrow) ft_quest()), _vendor_profile(new (std::nothrow) ft_vendor_profile()), _upgrade(new (std::nothrow) ft_upgrade()), _error(FT_ERR_SUCCESS)`
 - `ft_world::ft_world(const ft_world &other) noexcept : _event_scheduler(other._event_scheduler), _world_registry(other._world_registry), _replay_session(other._replay_session), _economy_table(other._economy_table), _crafting(other._crafting), _dialogue_table(other._dialogue_table), _world_region(other._world_region), _quest(other._quest), _vendor_profile(other._vendor_profile), _upgrade(other._upgrade), _error(other._error)`
 - `ft_world::ft_world(ft_world &&other) noexcept : _event_scheduler(ft_move(other._event_scheduler)), _world_registry(ft_move(other._world_registry)), _replay_session(ft_move(other._replay_session)), _economy_table(ft_move(other._economy_table)), _crafting(ft_move(other._crafting)), _dialogue_table(ft_move(other._dialogue_table)), _world_region(ft_move(other._world_region)), _quest(ft_move(other._quest)), _vendor_profile(ft_move(other._vendor_profile)), _upgrade(ft_move(other._upgrade)), _error(other._error)`
 
@@ -11244,15 +11244,15 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Game/game_world_region.cpp
 
-- `ft_world_region::ft_world_region() noexcept : _world_id(0), _region_ids(), _error_code(FT_ERR_SUCCESSS)`
-- `ft_world_region::ft_world_region(const ft_world_region &other) noexcept : _world_id(0), _region_ids(), _error_code(FT_ERR_SUCCESSS)`
-- `ft_world_region::ft_world_region(ft_world_region &&other) noexcept : _world_id(0), _region_ids(), _error_code(FT_ERR_SUCCESSS)`
-- `ft_world_region::ft_world_region(int world_id, const ft_vector<int> &region_ids) noexcept : _world_id(world_id), _region_ids(), _error_code(FT_ERR_SUCCESSS)`
+- `ft_world_region::ft_world_region() noexcept : _world_id(0), _region_ids(), _error_code(FT_ERR_SUCCESS)`
+- `ft_world_region::ft_world_region(const ft_world_region &other) noexcept : _world_id(0), _region_ids(), _error_code(FT_ERR_SUCCESS)`
+- `ft_world_region::ft_world_region(ft_world_region &&other) noexcept : _world_id(0), _region_ids(), _error_code(FT_ERR_SUCCESS)`
+- `ft_world_region::ft_world_region(int world_id, const ft_vector<int> &region_ids) noexcept : _world_id(world_id), _region_ids(), _error_code(FT_ERR_SUCCESS)`
 
 ### Game/game_world_registry.cpp
 
-- `ft_world_registry::ft_world_registry(const ft_world_registry &other) noexcept : _regions(), _world_regions(), _error_code(FT_ERR_SUCCESSS)`
-- `ft_world_registry::ft_world_registry(ft_world_registry &&other) noexcept : _regions(), _world_regions(), _error_code(FT_ERR_SUCCESSS)`
+- `ft_world_registry::ft_world_registry(const ft_world_registry &other) noexcept : _regions(), _world_regions(), _error_code(FT_ERR_SUCCESS)`
+- `ft_world_registry::ft_world_registry(ft_world_registry &&other) noexcept : _regions(), _world_regions(), _error_code(FT_ERR_SUCCESS)`
 
 ### Game/game_world_registry.hpp
 
@@ -11262,7 +11262,7 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Game/game_world_replay.cpp
 
-- `ft_world_replay_session::ft_world_replay_session() noexcept : _snapshot_payload(), _event_callbacks(), _error_code(FT_ERR_SUCCESSS)`
+- `ft_world_replay_session::ft_world_replay_session() noexcept : _snapshot_payload(), _event_callbacks(), _error_code(FT_ERR_SUCCESS)`
 - `ft_world_replay_session::ft_world_replay_session(const ft_world_replay_session &other) noexcept : _snapshot_payload(other._snapshot_payload), _event_callbacks(), _error_code(other._error_code)`
 - `ft_world_replay_session::ft_world_replay_session(ft_world_replay_session &&other) noexcept : _snapshot_payload(ft_move(other._snapshot_payload)), _event_callbacks(ft_move(other._event_callbacks)), _error_code(other._error_code)`
 
@@ -11316,7 +11316,7 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### GetNextLine/gnl_stream.cpp
 
-- `gnl_stream::gnl_stream() noexcept : _read_callback(ft_nullptr) , _user_data(ft_nullptr) , _file_descriptor(-1) , _file_handle(ft_nullptr) , _close_on_reset(false) , _error_code(FT_ERR_SUCCESSS) , _mutex()`
+- `gnl_stream::gnl_stream() noexcept : _read_callback(ft_nullptr) , _user_data(ft_nullptr) , _file_descriptor(-1) , _file_handle(ft_nullptr) , _close_on_reset(false) , _error_code(FT_ERR_SUCCESS) , _mutex()`
 
 ### GetNextLine/gnl_stream.hpp
 
@@ -11340,7 +11340,7 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### JSon/json_document.cpp
 
-- `json_document::json_document() noexcept : _groups(ft_nullptr) , _error_code(FT_ERR_SUCCESSS) , _mutex()`
+- `json_document::json_document() noexcept : _groups(ft_nullptr) , _error_code(FT_ERR_SUCCESS) , _mutex()`
 
 ### JSon/json_stream_reader.cpp
 
@@ -11349,7 +11349,7 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Logger/logger.cpp
 
-- `ft_logger::ft_logger(const char *path, size_t max_size, t_log_level level) noexcept : _mutex(ft_nullptr), _thread_safe_enabled(false), _alloc_logging(false), _api_logging(false), _error_code(FT_ERR_SUCCESSS)`
+- `ft_logger::ft_logger(const char *path, size_t max_size, t_log_level level) noexcept : _mutex(ft_nullptr), _thread_safe_enabled(false), _alloc_logging(false), _api_logging(false), _error_code(FT_ERR_SUCCESS)`
 - `ft_logger::thread_guard::thread_guard(const ft_logger *logger) noexcept : _logger(logger), _lock_acquired(false), _status(0)`
 
 ### Logger/logger_internal.hpp
@@ -11362,7 +11362,7 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Logger/logger_log_context_guard.cpp
 
-- `ft_log_context_guard::ft_log_context_guard(const s_log_field *fields, size_t field_count) noexcept : _pushed_count(0), _active(false), _error_code(FT_ERR_SUCCESSS)`
+- `ft_log_context_guard::ft_log_context_guard(const s_log_field *fields, size_t field_count) noexcept : _pushed_count(0), _active(false), _error_code(FT_ERR_SUCCESS)`
 - `ft_log_context_guard::ft_log_context_guard(ft_log_context_guard &&other) noexcept : _pushed_count(other._pushed_count), _active(other._active), _error_code(other._error_code)`
 
 ### Logger/logger_log_health.cpp
@@ -11430,10 +11430,10 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Math/math_autodiff.cpp
 
-- `ft_dual_number::ft_dual_number() noexcept : _value(0.0) , _derivative(0.0) , _error_code(FT_ERR_SUCCESSS) , _operation_errors(`
-- `ft_dual_number::ft_dual_number(const ft_dual_number &other) noexcept : _value(0.0) , _derivative(0.0) , _error_code(FT_ERR_SUCCESSS) , _operation_errors(`
-- `ft_dual_number::ft_dual_number(double value, double derivative) noexcept : _value(value) , _derivative(derivative) , _error_code(FT_ERR_SUCCESSS) , _operation_errors(`
-- `ft_dual_number::ft_dual_number(ft_dual_number &&other) noexcept : _value(0.0) , _derivative(0.0) , _error_code(FT_ERR_SUCCESSS) , _operation_errors(`
+- `ft_dual_number::ft_dual_number() noexcept : _value(0.0) , _derivative(0.0) , _error_code(FT_ERR_SUCCESS) , _operation_errors(`
+- `ft_dual_number::ft_dual_number(const ft_dual_number &other) noexcept : _value(0.0) , _derivative(0.0) , _error_code(FT_ERR_SUCCESS) , _operation_errors(`
+- `ft_dual_number::ft_dual_number(double value, double derivative) noexcept : _value(value) , _derivative(derivative) , _error_code(FT_ERR_SUCCESS) , _operation_errors(`
+- `ft_dual_number::ft_dual_number(ft_dual_number &&other) noexcept : _value(0.0) , _derivative(0.0) , _error_code(FT_ERR_SUCCESS) , _operation_errors(`
 
 ### Math/math_autodiff.hpp
 
@@ -11446,8 +11446,8 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Math/math_polynomial.cpp
 
-- `ft_cubic_spline::ft_cubic_spline() noexcept : _error_code(FT_ERR_SUCCESSS) , _operation_errors(`
-- `ft_cubic_spline::ft_cubic_spline(ft_cubic_spline &&other) noexcept : _error_code(FT_ERR_SUCCESSS) , _operation_errors(`
+- `ft_cubic_spline::ft_cubic_spline() noexcept : _error_code(FT_ERR_SUCCESS) , _operation_errors(`
+- `ft_cubic_spline::ft_cubic_spline(ft_cubic_spline &&other) noexcept : _error_code(FT_ERR_SUCCESS) , _operation_errors(`
 
 ### Math/math_polynomial.hpp
 
@@ -11457,14 +11457,14 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Networking/http2_client.cpp
 
-- `http2_frame::http2_frame() noexcept : _type(0), _flags(0), _stream_identifier(0), _payload(), _error_code(FT_ERR_SUCCESSS), _thread_safe_enabled(false), _mutex(ft_nullptr)`
-- `http2_frame::http2_frame(const http2_frame &other) noexcept : _type(0), _flags(0), _stream_identifier(0), _payload(), _error_code(FT_ERR_SUCCESSS), _thread_safe_enabled(false), _mutex(ft_nullptr)`
-- `http2_frame::http2_frame(http2_frame &&other) noexcept : _type(0), _flags(0), _stream_identifier(0), _payload(), _error_code(FT_ERR_SUCCESSS), _thread_safe_enabled(false), _mutex(ft_nullptr)`
-- `http2_header_field::http2_header_field() noexcept : _name(), _value(), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr)`
-- `http2_header_field::http2_header_field(const http2_header_field &other) noexcept : _name(), _value(), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr)`
-- `http2_header_field::http2_header_field(http2_header_field &&other) noexcept : _name(), _value(), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr)`
-- `http2_settings_state::http2_settings_state() noexcept : _header_table_size(4096), _enable_push(true), _max_concurrent_streams(0xFFFFFFFFu), _initial_local_window(65535), _initial_remote_window(65535), _max_frame_size(16384), _max_header_list_size(0), _error_code(FT_ERR_SUCCESSS)`
-- `http2_stream_manager::http2_stream_manager() noexcept : _streams(), _stream_identifiers(), _initial_remote_window(65535), _initial_local_window(65535), _connection_remote_window(65535), _connection_local_window(65535), _error_code(FT_ERR_SUCCESSS), _thread_safe_enabled(false), _mutex(ft_nullptr)`
+- `http2_frame::http2_frame() noexcept : _type(0), _flags(0), _stream_identifier(0), _payload(), _error_code(FT_ERR_SUCCESS), _thread_safe_enabled(false), _mutex(ft_nullptr)`
+- `http2_frame::http2_frame(const http2_frame &other) noexcept : _type(0), _flags(0), _stream_identifier(0), _payload(), _error_code(FT_ERR_SUCCESS), _thread_safe_enabled(false), _mutex(ft_nullptr)`
+- `http2_frame::http2_frame(http2_frame &&other) noexcept : _type(0), _flags(0), _stream_identifier(0), _payload(), _error_code(FT_ERR_SUCCESS), _thread_safe_enabled(false), _mutex(ft_nullptr)`
+- `http2_header_field::http2_header_field() noexcept : _name(), _value(), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr)`
+- `http2_header_field::http2_header_field(const http2_header_field &other) noexcept : _name(), _value(), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr)`
+- `http2_header_field::http2_header_field(http2_header_field &&other) noexcept : _name(), _value(), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr)`
+- `http2_settings_state::http2_settings_state() noexcept : _header_table_size(4096), _enable_push(true), _max_concurrent_streams(0xFFFFFFFFu), _initial_local_window(65535), _initial_remote_window(65535), _max_frame_size(16384), _max_header_list_size(0), _error_code(FT_ERR_SUCCESS)`
+- `http2_stream_manager::http2_stream_manager() noexcept : _streams(), _stream_identifiers(), _initial_remote_window(65535), _initial_local_window(65535), _connection_remote_window(65535), _connection_local_window(65535), _error_code(FT_ERR_SUCCESS), _thread_safe_enabled(false), _mutex(ft_nullptr)`
 - `http2_stream_state::http2_stream_state() noexcept : buffer(), dependency_identifier(0), weight(16), exclusive_dependency(false), remote_window(65535), local_window(65535)`
 
 ### Networking/http2_client.hpp
@@ -11479,8 +11479,8 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Networking/networking.cpp
 
-- `SocketConfig::SocketConfig(SocketConfig&& other) noexcept : _error_code(FT_ERR_SUCCESSS), _thread_safe_enabled(false), _mutex(ft_nullptr), _type(SocketType::SERVER), _ip("127.0.0.1"), _port(8080), _backlog(10), _protocol(IPPROTO_TCP), _address_family(AF_INET), _reuse_address(true), _non_blocking(false), _recv_timeout(5000), _send_timeout(5000), _multicast_group(""), _multicast_interface("")`
-- `SocketConfig::SocketConfig(const SocketConfig& other) noexcept : _error_code(FT_ERR_SUCCESSS), _thread_safe_enabled(false), _mutex(ft_nullptr), _type(SocketType::SERVER), _ip("127.0.0.1"), _port(8080), _backlog(10), _protocol(IPPROTO_TCP), _address_family(AF_INET), _reuse_address(true), _non_blocking(false), _recv_timeout(5000), _send_timeout(5000), _multicast_group(""), _multicast_interface("")`
+- `SocketConfig::SocketConfig(SocketConfig&& other) noexcept : _error_code(FT_ERR_SUCCESS), _thread_safe_enabled(false), _mutex(ft_nullptr), _type(SocketType::SERVER), _ip("127.0.0.1"), _port(8080), _backlog(10), _protocol(IPPROTO_TCP), _address_family(AF_INET), _reuse_address(true), _non_blocking(false), _recv_timeout(5000), _send_timeout(5000), _multicast_group(""), _multicast_interface("")`
+- `SocketConfig::SocketConfig(const SocketConfig& other) noexcept : _error_code(FT_ERR_SUCCESS), _thread_safe_enabled(false), _mutex(ft_nullptr), _type(SocketType::SERVER), _ip("127.0.0.1"), _port(8080), _backlog(10), _protocol(IPPROTO_TCP), _address_family(AF_INET), _reuse_address(true), _non_blocking(false), _recv_timeout(5000), _send_timeout(5000), _multicast_group(""), _multicast_interface("")`
 
 ### Networking/networking_dns_resolver.cpp
 
@@ -11501,10 +11501,10 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Networking/networking_socket_class.cpp
 
-- `ft_socket::ft_socket() : _address(), _connected(), _socket_fd(-1), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_socket::ft_socket(const SocketConfig &config) : _address(), _connected(), _socket_fd(-1), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_socket::ft_socket(ft_socket &&other) noexcept : _address(), _connected(), _socket_fd(-1), _error_code(FT_ERR_SUCCESSS), _mutex()`
-- `ft_socket::ft_socket(int fd, const sockaddr_storage &addr) : _address(), _connected(), _socket_fd(-1), _error_code(FT_ERR_SUCCESSS), _mutex()`
+- `ft_socket::ft_socket() : _address(), _connected(), _socket_fd(-1), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_socket::ft_socket(const SocketConfig &config) : _address(), _connected(), _socket_fd(-1), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_socket::ft_socket(ft_socket &&other) noexcept : _address(), _connected(), _socket_fd(-1), _error_code(FT_ERR_SUCCESS), _mutex()`
+- `ft_socket::ft_socket(int fd, const sockaddr_storage &addr) : _address(), _connected(), _socket_fd(-1), _error_code(FT_ERR_SUCCESS), _mutex()`
 
 ### Networking/socket_class.hpp
 
@@ -11516,9 +11516,9 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Networking/socket_handle.cpp
 
-- `ft_socket_handle::ft_socket_handle() : _socket_fd(-1), _error_code(FT_ERR_SUCCESSS)`
+- `ft_socket_handle::ft_socket_handle() : _socket_fd(-1), _error_code(FT_ERR_SUCCESS)`
 - `ft_socket_handle::ft_socket_handle(ft_socket_handle &&other) noexcept : _socket_fd(other._socket_fd), _error_code(other._error_code)`
-- `ft_socket_handle::ft_socket_handle(int socket_fd) : _socket_fd(-1), _error_code(FT_ERR_SUCCESSS)`
+- `ft_socket_handle::ft_socket_handle(int socket_fd) : _socket_fd(-1), _error_code(FT_ERR_SUCCESS)`
 
 ### Networking/socket_handle.hpp
 
@@ -11533,7 +11533,7 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Networking/websocket_client.cpp
 
-- `ft_websocket_client::ft_websocket_client() : _socket(), _error_code(FT_ERR_SUCCESSS), _mutex()`
+- `ft_websocket_client::ft_websocket_client() : _socket(), _error_code(FT_ERR_SUCCESS), _mutex()`
 
 ### Networking/websocket_client.hpp
 
@@ -11541,7 +11541,7 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Networking/websocket_server.cpp
 
-- `ft_websocket_server::ft_websocket_server() : _server_socket(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex()`
+- `ft_websocket_server::ft_websocket_server() : _server_socket(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex()`
 
 ### Networking/websocket_server.hpp
 
@@ -11556,7 +11556,7 @@ The catalog lists the function declarations and definitions that appear in the C
 
 - `ft_lock_guard() {`
 - `ft_lock_guard();`
-- `ft_lock_guard(MutexType &mutex) : _mutex(&mutex), _owns_lock(false), _error_code(FT_ERR_SUCCESSS) {`
+- `ft_lock_guard(MutexType &mutex) : _mutex(&mutex), _owns_lock(false), _error_code(FT_ERR_SUCCESS) {`
 - `ft_lock_guard(MutexType &mutex);`
 - `ft_lock_guard(const ft_lock_guard &) = delete;`
 
@@ -11568,7 +11568,7 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### PThread/pthread_condition_variable.cpp
 
-- `pt_condition_variable::pt_condition_variable() : _condition(), _mutex(), _condition_initialized(false), _mutex_initialized(false), _error_code(FT_ERR_SUCCESSS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
+- `pt_condition_variable::pt_condition_variable() : _condition(), _mutex(), _condition_initialized(false), _mutex_initialized(false), _error_code(FT_ERR_SUCCESS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
 
 ### PThread/pthread_errno_guard.hpp
 
@@ -11604,8 +11604,8 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### PThread/pthread_thread.cpp
 
-- `ft_thread::ft_thread() : _thread(), _joinable(false), _error_code(FT_ERR_SUCCESSS), _start_payload(), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
-- `ft_thread::ft_thread(ft_thread &&other) : _thread(), _joinable(false), _error_code(FT_ERR_SUCCESSS), _start_payload(), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
+- `ft_thread::ft_thread() : _thread(), _joinable(false), _error_code(FT_ERR_SUCCESS), _start_payload(), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
+- `ft_thread::ft_thread(ft_thread &&other) : _thread(), _joinable(false), _error_code(FT_ERR_SUCCESS), _start_payload(), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
 
 ### PThread/recursive_mutex.hpp
 
@@ -11623,11 +11623,11 @@ The catalog lists the function declarations and definitions that appear in the C
 ### PThread/thread.hpp
 
 - `ft_thread();`
-- `ft_thread(FunctionType function, Args... args) : _thread(), _joinable(false), _error_code(FT_ERR_SUCCESSS), _start_payload(), _state_mutex(ft_nullptr), _thread_safe_enabled(false) {`
+- `ft_thread(FunctionType function, Args... args) : _thread(), _joinable(false), _error_code(FT_ERR_SUCCESS), _start_payload(), _state_mutex(ft_nullptr), _thread_safe_enabled(false) {`
 - `ft_thread(FunctionType function, Args... args);`
 - `ft_thread(const ft_thread &) = delete;`
 - `ft_thread(ft_thread &&other);`
-- `template <typename FunctionType, typename... Args> ft_thread::ft_thread(FunctionType function, Args... args) : _thread(), _joinable(false), _error_code(FT_ERR_SUCCESSS), _start_payload(), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
+- `template <typename FunctionType, typename... Args> ft_thread::ft_thread(FunctionType function, Args... args) : _thread(), _joinable(false), _error_code(FT_ERR_SUCCESS), _start_payload(), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
 
 ### PThread/unique_lock.hpp
 
@@ -11647,13 +11647,13 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Parser/dom.cpp
 
-- `ft_dom_document::ft_dom_document() noexcept : _root(ft_nullptr), _mutex(ft_nullptr), _thread_safe_enabled(false), _error_code(FT_ERR_SUCCESSS)`
+- `ft_dom_document::ft_dom_document() noexcept : _root(ft_nullptr), _mutex(ft_nullptr), _thread_safe_enabled(false), _error_code(FT_ERR_SUCCESS)`
 - `ft_dom_document::thread_guard::thread_guard(const ft_dom_document *document) noexcept : _document(document), _lock_acquired(false), _status(0)`
-- `ft_dom_node::ft_dom_node() noexcept : _error_code(FT_ERR_SUCCESSS), _type(FT_DOM_NODE_NULL), _name(), _value(), _children(), _attribute_keys(), _attribute_values(), _mutex(ft_nullptr), _thread_safe_enabled(false)`
-- `ft_dom_schema::ft_dom_schema() noexcept : _rules(), _error_code(FT_ERR_SUCCESSS)`
+- `ft_dom_node::ft_dom_node() noexcept : _error_code(FT_ERR_SUCCESS), _type(FT_DOM_NODE_NULL), _name(), _value(), _children(), _attribute_keys(), _attribute_values(), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+- `ft_dom_schema::ft_dom_schema() noexcept : _rules(), _error_code(FT_ERR_SUCCESS)`
 - `ft_dom_schema_rule::ft_dom_schema_rule() noexcept : path(), type(FT_DOM_NODE_NULL), required(false)`
 - `ft_dom_validation_error::ft_dom_validation_error() noexcept : path(), message()`
-- `ft_dom_validation_report::ft_dom_validation_report() noexcept : _valid(true), _errors(), _error_code(FT_ERR_SUCCESSS)`
+- `ft_dom_validation_report::ft_dom_validation_report() noexcept : _valid(true), _errors(), _error_code(FT_ERR_SUCCESS)`
 
 ### Parser/dom.hpp
 
@@ -11663,7 +11663,7 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Parser/parser_document_backend.cpp
 
-- `ft_document_sink::ft_document_sink() noexcept : _error_code(FT_ERR_SUCCESSS)`
+- `ft_document_sink::ft_document_sink() noexcept : _error_code(FT_ERR_SUCCESS)`
 - `ft_file_document_sink::ft_file_document_sink(const char *file_path) noexcept : _path()`
 - `ft_file_document_source::ft_file_document_source(const char *file_path) noexcept : _path()`
 - `ft_http_document_sink::ft_http_document_sink() noexcept : _host(), _path(), _port(), _use_ssl(false)`
@@ -11685,13 +11685,13 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### RNG/loot_table.hpp
 
-- `ft_loot_entry() noexcept : _item(ft_nullptr) , _weight(1) , _rarity(0) , _error_code(FT_ERR_SUCCESSS) , _mutex() {`
+- `ft_loot_entry() noexcept : _item(ft_nullptr) , _weight(1) , _rarity(0) , _error_code(FT_ERR_SUCCESS) , _mutex() {`
 - `ft_loot_entry() noexcept {`
 - `ft_loot_entry() noexcept;`
-- `ft_loot_entry(ElementType *item, int weight, int rarity) noexcept : _item(item) , _weight(1) , _rarity(0) , _error_code(FT_ERR_SUCCESSS) , _mutex() {`
+- `ft_loot_entry(ElementType *item, int weight, int rarity) noexcept : _item(item) , _weight(1) , _rarity(0) , _error_code(FT_ERR_SUCCESS) , _mutex() {`
 - `ft_loot_entry(ElementType *item, int weight, int rarity) noexcept;`
 - `ft_loot_entry(const ft_loot_entry &other) noexcept;`
-- `ft_loot_entry(const ft_loot_entry<ElementType> &other) noexcept : _item(ft_nullptr) , _weight(1) , _rarity(0) , _error_code(FT_ERR_SUCCESSS) , _mutex() {`
+- `ft_loot_entry(const ft_loot_entry<ElementType> &other) noexcept : _item(ft_nullptr) , _weight(1) , _rarity(0) , _error_code(FT_ERR_SUCCESS) , _mutex() {`
 
 ### RNG/rng_stream.cpp
 
@@ -11708,62 +11708,62 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Storage/storage_kv_store_constructor.cpp
 
-- `kv_store::kv_store(const char *file_path, const char *encryption_key, bool enable_encryption) : _data() , _file_path() , _encryption_key() , _encryption_enabled(false) , _backend_type(KV_STORE_BACKEND_JSON) , _background_thread_active(false) , _background_stop_requested(false) , _background_interval_seconds(0) , _background_thread() , _background_mutex() , _error_code(FT_ERR_SUCCESSS) , _mutex() , _metrics_set_operations(0) , _metrics_delete_operations(0) , _metrics_get_hits(0) , _metrics_get_misses(0) , _metrics_prune_operations(0) , _metrics_pruned_entries(0) , _metrics_total_prune_duration_ms(0) , _metrics_last_prune_duration_ms(0) , _replication_sinks() , _replication_mutex()`
+- `kv_store::kv_store(const char *file_path, const char *encryption_key, bool enable_encryption) : _data() , _file_path() , _encryption_key() , _encryption_enabled(false) , _backend_type(KV_STORE_BACKEND_JSON) , _background_thread_active(false) , _background_stop_requested(false) , _background_interval_seconds(0) , _background_thread() , _background_mutex() , _error_code(FT_ERR_SUCCESS) , _mutex() , _metrics_set_operations(0) , _metrics_delete_operations(0) , _metrics_get_hits(0) , _metrics_get_misses(0) , _metrics_prune_operations(0) , _metrics_pruned_entries(0) , _metrics_total_prune_duration_ms(0) , _metrics_last_prune_duration_ms(0) , _replication_sinks() , _replication_mutex()`
 
 ### Storage/storage_kv_store_entry.cpp
 
-- `kv_store_entry::kv_store_entry() noexcept : _value() , _has_expiration(false) , _expiration_timestamp(0) , _error_code(FT_ERR_SUCCESSS) , _mutex()`
-- `kv_store_entry::kv_store_entry(const kv_store_entry &other) noexcept : _value() , _has_expiration(false) , _expiration_timestamp(0) , _error_code(FT_ERR_SUCCESSS) , _mutex()`
-- `kv_store_entry::kv_store_entry(kv_store_entry &&other) noexcept : _value() , _has_expiration(false) , _expiration_timestamp(0) , _error_code(FT_ERR_SUCCESSS) , _mutex()`
+- `kv_store_entry::kv_store_entry() noexcept : _value() , _has_expiration(false) , _expiration_timestamp(0) , _error_code(FT_ERR_SUCCESS) , _mutex()`
+- `kv_store_entry::kv_store_entry(const kv_store_entry &other) noexcept : _value() , _has_expiration(false) , _expiration_timestamp(0) , _error_code(FT_ERR_SUCCESS) , _mutex()`
+- `kv_store_entry::kv_store_entry(kv_store_entry &&other) noexcept : _value() , _has_expiration(false) , _expiration_timestamp(0) , _error_code(FT_ERR_SUCCESS) , _mutex()`
 
 ### Template/bitset.hpp
 
 - `ft_bitset() {`
 - `ft_bitset();`
 - `ft_bitset(const ft_bitset&) = delete;`
-- `ft_bitset(ft_bitset&& other) noexcept : _size(0), _blockCount(0), _data(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _state_mutex(ft_nullptr), _thread_safe_enabled(false) {`
+- `ft_bitset(ft_bitset&& other) noexcept : _size(0), _blockCount(0), _data(ft_nullptr), _error_code(FT_ERR_SUCCESS), _state_mutex(ft_nullptr), _thread_safe_enabled(false) {`
 - `ft_bitset(ft_bitset&& other) noexcept;`
 - `ft_bitset(size_t bits = 0);`
-- `ft_bitset(size_t bits) : _size(bits), _blockCount((bits + BITS_PER_BLOCK - 1) / BITS_PER_BLOCK), _data(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _state_mutex(ft_nullptr), _thread_safe_enabled(false) {`
-- `inline ft_bitset::ft_bitset(ft_bitset&& other) noexcept : _size(0), _blockCount(0), _data(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
-- `inline ft_bitset::ft_bitset(size_t bits) : _size(bits), _blockCount((bits + BITS_PER_BLOCK - 1) / BITS_PER_BLOCK), _data(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
+- `ft_bitset(size_t bits) : _size(bits), _blockCount((bits + BITS_PER_BLOCK - 1) / BITS_PER_BLOCK), _data(ft_nullptr), _error_code(FT_ERR_SUCCESS), _state_mutex(ft_nullptr), _thread_safe_enabled(false) {`
+- `inline ft_bitset::ft_bitset(ft_bitset&& other) noexcept : _size(0), _blockCount(0), _data(ft_nullptr), _error_code(FT_ERR_SUCCESS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
+- `inline ft_bitset::ft_bitset(size_t bits) : _size(bits), _blockCount((bits + BITS_PER_BLOCK - 1) / BITS_PER_BLOCK), _data(ft_nullptr), _error_code(FT_ERR_SUCCESS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
 
 ### Template/cancellation.hpp
 
 - `ft_cancellation_state() noexcept;`
 - `ft_cancellation_state(const ft_cancellation_state&) = delete;`
-- `ft_cancellation_token() noexcept : _state(), _error_code(FT_ERR_SUCCESSS) {`
+- `ft_cancellation_token() noexcept : _state(), _error_code(FT_ERR_SUCCESS) {`
 - `ft_cancellation_token() noexcept {`
 - `ft_cancellation_token() noexcept;`
 - `ft_cancellation_token();`
-- `ft_cancellation_token(const ft_cancellation_token &other) noexcept : _state(other._state), _error_code(FT_ERR_SUCCESSS) {`
+- `ft_cancellation_token(const ft_cancellation_token &other) noexcept : _state(other._state), _error_code(FT_ERR_SUCCESS) {`
 - `ft_cancellation_token(const ft_cancellation_token &other) noexcept;`
-- `ft_cancellation_token(ft_cancellation_token &&other) noexcept : _state(ft_move(other._state)), _error_code(FT_ERR_SUCCESSS) {`
+- `ft_cancellation_token(ft_cancellation_token &&other) noexcept : _state(ft_move(other._state)), _error_code(FT_ERR_SUCCESS) {`
 - `ft_cancellation_token(ft_cancellation_token &&other) noexcept;`
-- `inline ft_cancellation_source::ft_cancellation_source() noexcept : _state(), _error_code(FT_ERR_SUCCESSS)`
-- `inline ft_cancellation_source::ft_cancellation_source(const ft_cancellation_source &other) noexcept : _state(other._state), _error_code(FT_ERR_SUCCESSS)`
-- `inline ft_cancellation_source::ft_cancellation_source(ft_cancellation_source &&other) noexcept : _state(ft_move(other._state)), _error_code(FT_ERR_SUCCESSS)`
-- `inline ft_cancellation_token::ft_cancellation_token() noexcept : _state(), _error_code(FT_ERR_SUCCESSS)`
-- `inline ft_cancellation_token::ft_cancellation_token(const ft_cancellation_token &other) noexcept : _state(other._state), _error_code(FT_ERR_SUCCESSS)`
-- `inline ft_cancellation_token::ft_cancellation_token(ft_cancellation_token &&other) noexcept : _state(ft_move(other._state)), _error_code(FT_ERR_SUCCESSS)`
+- `inline ft_cancellation_source::ft_cancellation_source() noexcept : _state(), _error_code(FT_ERR_SUCCESS)`
+- `inline ft_cancellation_source::ft_cancellation_source(const ft_cancellation_source &other) noexcept : _state(other._state), _error_code(FT_ERR_SUCCESS)`
+- `inline ft_cancellation_source::ft_cancellation_source(ft_cancellation_source &&other) noexcept : _state(ft_move(other._state)), _error_code(FT_ERR_SUCCESS)`
+- `inline ft_cancellation_token::ft_cancellation_token() noexcept : _state(), _error_code(FT_ERR_SUCCESS)`
+- `inline ft_cancellation_token::ft_cancellation_token(const ft_cancellation_token &other) noexcept : _state(other._state), _error_code(FT_ERR_SUCCESS)`
+- `inline ft_cancellation_token::ft_cancellation_token(ft_cancellation_token &&other) noexcept : _state(ft_move(other._state)), _error_code(FT_ERR_SUCCESS)`
 
 ### Template/circular_buffer.hpp
 
 - `ft_circular_buffer() {`
 - `ft_circular_buffer();`
 - `ft_circular_buffer(const ft_circular_buffer&) = delete;`
-- `ft_circular_buffer(ft_circular_buffer&& other) noexcept : _buffer(ft_nullptr), _capacity(0), _head(0), _tail(0), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
+- `ft_circular_buffer(ft_circular_buffer&& other) noexcept : _buffer(ft_nullptr), _capacity(0), _head(0), _tail(0), _size(0), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
 - `ft_circular_buffer(ft_circular_buffer&& other) noexcept;`
-- `ft_circular_buffer(size_t capacity) : _buffer(ft_nullptr), _capacity(capacity), _head(0), _tail(0), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
+- `ft_circular_buffer(size_t capacity) : _buffer(ft_nullptr), _capacity(capacity), _head(0), _tail(0), _size(0), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
 - `ft_circular_buffer(size_t capacity);`
 
 ### Template/deque.hpp
 
-- `ft_deque() : _front(ft_nullptr), _back(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
+- `ft_deque() : _front(ft_nullptr), _back(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
 - `ft_deque() {`
 - `ft_deque();`
 - `ft_deque(const ft_deque&) = delete;`
-- `ft_deque(ft_deque&& other) noexcept : _front(ft_nullptr), _back(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
+- `ft_deque(ft_deque&& other) noexcept : _front(ft_nullptr), _back(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
 - `ft_deque(ft_deque&& other) noexcept;`
 
 ### Template/event_emitter.hpp
@@ -11771,10 +11771,10 @@ The catalog lists the function declarations and definitions that appear in the C
 - `ft_event_emitter() {`
 - `ft_event_emitter();`
 - `ft_event_emitter(const ft_event_emitter&) = delete;`
-- `ft_event_emitter(ft_event_emitter&& other) noexcept : _listeners(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex() {`
+- `ft_event_emitter(ft_event_emitter&& other) noexcept : _listeners(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESS), _mutex() {`
 - `ft_event_emitter(ft_event_emitter&& other) noexcept;`
 - `ft_event_emitter(size_t initial_capacity = 0);`
-- `ft_event_emitter(size_t initial_capacity) : _listeners(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex() {`
+- `ft_event_emitter(size_t initial_capacity) : _listeners(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESS), _mutex() {`
 
 ### Template/function.hpp
 
@@ -11813,20 +11813,20 @@ The catalog lists the function declarations and definitions that appear in the C
 - `ft_graph() {`
 - `ft_graph();`
 - `ft_graph(const ft_graph&) = delete;`
-- `ft_graph(ft_graph&& other) noexcept : _nodes(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false), _operation_errors({`
+- `ft_graph(ft_graph&& other) noexcept : _nodes(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), _operation_errors({`
 - `ft_graph(ft_graph&& other) noexcept;`
 - `ft_graph(size_t initialCapacity = 0);`
-- `ft_graph(size_t initialCapacity) : _nodes(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false), _operation_errors({`
+- `ft_graph(size_t initialCapacity) : _nodes(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), _operation_errors({`
 
 ### Template/iterator.hpp
 
 - `Iterator() {`
 - `Iterator();`
-- `Iterator(Iterator&& other) noexcept : _ptr(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _state_mutex(ft_nullptr), _thread_safe_enabled(false) {`
+- `Iterator(Iterator&& other) noexcept : _ptr(ft_nullptr), _error_code(FT_ERR_SUCCESS), _state_mutex(ft_nullptr), _thread_safe_enabled(false) {`
 - `Iterator(Iterator&& other) noexcept;`
-- `Iterator(ValueType* ptr) noexcept : _ptr(ptr), _error_code(FT_ERR_SUCCESSS), _state_mutex(ft_nullptr), _thread_safe_enabled(false) {`
+- `Iterator(ValueType* ptr) noexcept : _ptr(ptr), _error_code(FT_ERR_SUCCESS), _state_mutex(ft_nullptr), _thread_safe_enabled(false) {`
 - `Iterator(ValueType* ptr) noexcept;`
-- `Iterator(const Iterator& other) noexcept : _ptr(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _state_mutex(ft_nullptr), _thread_safe_enabled(false) {`
+- `Iterator(const Iterator& other) noexcept : _ptr(ft_nullptr), _error_code(FT_ERR_SUCCESS), _state_mutex(ft_nullptr), _thread_safe_enabled(false) {`
 - `Iterator(const Iterator& other) noexcept;`
 
 ### Template/map.hpp
@@ -11845,22 +11845,22 @@ The catalog lists the function declarations and definitions that appear in the C
 - `ft_matrix() {`
 - `ft_matrix();`
 - `ft_matrix(const ft_matrix&) = delete;`
-- `ft_matrix(ft_matrix&& other) noexcept : _data(ft_nullptr), _rows(0), _cols(0), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
+- `ft_matrix(ft_matrix&& other) noexcept : _data(ft_nullptr), _rows(0), _cols(0), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
 - `ft_matrix(ft_matrix&& other) noexcept;`
 - `ft_matrix(size_t rows = 0, size_t cols = 0);`
-- `ft_matrix(size_t rows, size_t cols) : _data(ft_nullptr), _rows(0), _cols(0), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
+- `ft_matrix(size_t rows, size_t cols) : _data(ft_nullptr), _rows(0), _cols(0), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
 
 ### Template/optional.hpp
 
-- `ft_optional() : _value(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex() {`
+- `ft_optional() : _value(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex() {`
 - `ft_optional() {`
 - `ft_optional();`
-- `ft_optional(T&& value) : _value(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex() {`
+- `ft_optional(T&& value) : _value(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex() {`
 - `ft_optional(T&& value);`
-- `ft_optional(const T& value) : _value(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex() {`
+- `ft_optional(const T& value) : _value(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex() {`
 - `ft_optional(const T& value);`
 - `ft_optional(const ft_optional&) = delete;`
-- `ft_optional(ft_optional&& other) noexcept : _value(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex() {`
+- `ft_optional(ft_optional&& other) noexcept : _value(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex() {`
 - `ft_optional(ft_optional&& other) noexcept;`
 
 ### Template/pair.hpp
@@ -11879,15 +11879,15 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Template/pool.hpp
 
-- `Pool() : _buffer() , _freeIndices() , _error_code(FT_ERR_SUCCESSS) , _state_mutex(ft_nullptr) , _thread_safe_enabled(false) {`
+- `Pool() : _buffer() , _freeIndices() , _error_code(FT_ERR_SUCCESS) , _state_mutex(ft_nullptr) , _thread_safe_enabled(false) {`
 - `Pool() {`
 - `Pool();`
-- `Pool(Pool&& other) : _buffer() , _freeIndices() , _error_code(FT_ERR_SUCCESSS) , _state_mutex(ft_nullptr) , _thread_safe_enabled(false) {`
+- `Pool(Pool&& other) : _buffer() , _freeIndices() , _error_code(FT_ERR_SUCCESS) , _state_mutex(ft_nullptr) , _thread_safe_enabled(false) {`
 - `Pool(Pool&& other);`
 - `Pool(const Pool&) = delete;`
-- `template<typename T> Pool<T>::Object::Object() noexcept : _pool(ft_nullptr) , _idx(0) , _ptr(ft_nullptr) , _error_code(FT_ERR_SUCCESSS) , _state_mutex(ft_nullptr) , _thread_safe_enabled(false)`
+- `template<typename T> Pool<T>::Object::Object() noexcept : _pool(ft_nullptr) , _idx(0) , _ptr(ft_nullptr) , _error_code(FT_ERR_SUCCESS) , _state_mutex(ft_nullptr) , _thread_safe_enabled(false)`
 - `template<typename T> Pool<T>::Object::Object(Object&& o) noexcept : _pool(o._pool) , _idx(o._idx) , _ptr(o._ptr) , _error_code(o._error_code) , _state_mutex(o._state_mutex) , _thread_safe_enabled(o._thread_safe_enabled)`
-- `template<typename T> Pool<T>::Object::Object(Pool<T>* pool, size_t idx, T* ptr) noexcept : _pool(pool) , _idx(idx) , _ptr(ptr) , _error_code(FT_ERR_SUCCESSS) , _state_mutex(ft_nullptr) , _thread_safe_enabled(false)`
+- `template<typename T> Pool<T>::Object::Object(Pool<T>* pool, size_t idx, T* ptr) noexcept : _pool(pool) , _idx(idx) , _ptr(ptr) , _error_code(FT_ERR_SUCCESS) , _state_mutex(ft_nullptr) , _thread_safe_enabled(false)`
 
 ### Template/priority_queue.hpp
 
@@ -11897,12 +11897,12 @@ The catalog lists the function declarations and definitions that appear in the C
 - `ft_priority_queue(ft_priority_queue&& other) noexcept : _data(other._data), _capacity(other._capacity), _size(other._size), _comp(other._comp), _error_code(other._error_code), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
 - `ft_priority_queue(ft_priority_queue&& other) noexcept;`
 - `ft_priority_queue(size_t initialCapacity = 0, const Compare& comp = Compare());`
-- `ft_priority_queue(size_t initialCapacity, const Compare& comp) : _data(ft_nullptr), _capacity(0), _size(0), _comp(comp), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
+- `ft_priority_queue(size_t initialCapacity, const Compare& comp) : _data(ft_nullptr), _capacity(0), _size(0), _comp(comp), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
 
 ### Template/promise.hpp
 
-- `ft_promise() : _ready(false), _error_code(FT_ERR_SUCCESSS), _thread_safe_enabled(false), _operation_errors({`
-- `ft_promise() : _value(), _ready(false), _error_code(FT_ERR_SUCCESSS), _thread_safe_enabled(false), _operation_errors({`
+- `ft_promise() : _ready(false), _error_code(FT_ERR_SUCCESS), _thread_safe_enabled(false), _operation_errors({`
+- `ft_promise() : _value(), _ready(false), _error_code(FT_ERR_SUCCESS), _thread_safe_enabled(false), _operation_errors({`
 - `ft_promise() {`
 - `ft_promise();`
 - `ft_promise(const ft_promise&) = delete;`
@@ -11910,11 +11910,11 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Template/queue.hpp
 
-- `ft_queue() : _front(ft_nullptr), _rear(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESSS), _operation_errors({`
+- `ft_queue() : _front(ft_nullptr), _rear(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESS), _operation_errors({`
 - `ft_queue() {`
 - `ft_queue();`
 - `ft_queue(const ft_queue&) = delete;`
-- `ft_queue(ft_queue&& other) noexcept : _front(ft_nullptr), _rear(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESSS), _operation_errors({`
+- `ft_queue(ft_queue&& other) noexcept : _front(ft_nullptr), _rear(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESS), _operation_errors({`
 - `ft_queue(ft_queue&& other) noexcept;`
 
 ### Template/set.hpp
@@ -11922,35 +11922,35 @@ The catalog lists the function declarations and definitions that appear in the C
 - `ft_set() {`
 - `ft_set();`
 - `ft_set(const ft_set&) = delete;`
-- `ft_set(ft_set&& other) noexcept : _data(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
+- `ft_set(ft_set&& other) noexcept : _data(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
 - `ft_set(ft_set&& other) noexcept;`
 - `ft_set(size_t initial_capacity = 0);`
-- `ft_set(size_t initial_capacity) : _data(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
+- `ft_set(size_t initial_capacity) : _data(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
 
 ### Template/shared_ptr.hpp
 
-- `ft_sharedptr() : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr) {`
+- `ft_sharedptr() : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr) {`
 - `ft_sharedptr() {`
 - `ft_sharedptr();`
-- `ft_sharedptr(Args&&... args) : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr) {`
-- `ft_sharedptr(Args&&... args) requires (!is_single_convertible_to_size_t<Args...>::value && ft_constructible_from<ManagedType, Args&&...>) : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr) {`
+- `ft_sharedptr(Args&&... args) : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr) {`
+- `ft_sharedptr(Args&&... args) requires (!is_single_convertible_to_size_t<Args...>::value && ft_constructible_from<ManagedType, Args&&...>) : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr) {`
 - `ft_sharedptr(Args&&... args) requires (!is_single_convertible_to_size_t<Args...>::value && ft_constructible_from<ManagedType, Args&&...>);`
 - `ft_sharedptr(Args&&... args);`
 - `ft_sharedptr(ManagedType* pointer, bool isArray = false, size_t arraySize = 1);`
-- `ft_sharedptr(ManagedType* pointer, bool isArray, size_t arraySize) : _managedPointer(pointer), _referenceCount(ft_nullptr), _arraySize(isArray ? arraySize : (pointer ? 1 : 0)), _isArrayType(isArray), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr) {`
-- `ft_sharedptr(const ft_sharedptr<ManagedType>& other) : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr) {`
+- `ft_sharedptr(ManagedType* pointer, bool isArray, size_t arraySize) : _managedPointer(pointer), _referenceCount(ft_nullptr), _arraySize(isArray ? arraySize : (pointer ? 1 : 0)), _isArrayType(isArray), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr) {`
+- `ft_sharedptr(const ft_sharedptr<ManagedType>& other) : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr) {`
 - `ft_sharedptr(const ft_sharedptr<ManagedType>& other);`
-- `ft_sharedptr(const ft_sharedptr<Other>& other) : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr) {`
-- `ft_sharedptr(const ft_sharedptr<Other>& other) requires ft_convertible_to<Other*, ManagedType*> : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr) {`
+- `ft_sharedptr(const ft_sharedptr<Other>& other) : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr) {`
+- `ft_sharedptr(const ft_sharedptr<Other>& other) requires ft_convertible_to<Other*, ManagedType*> : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr) {`
 - `ft_sharedptr(const ft_sharedptr<Other>& other) requires ft_convertible_to<Other*, ManagedType*>;`
 - `ft_sharedptr(const ft_sharedptr<Other>& other);`
-- `ft_sharedptr(ft_sharedptr<ManagedType>&& other) noexcept : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr) {`
+- `ft_sharedptr(ft_sharedptr<ManagedType>&& other) noexcept : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr) {`
 - `ft_sharedptr(ft_sharedptr<ManagedType>&& other) noexcept;`
-- `ft_sharedptr(ft_sharedptr<Other>&& other) noexcept : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr) {`
-- `ft_sharedptr(ft_sharedptr<Other>&& other) noexcept requires ft_convertible_to<Other*, ManagedType*> : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr) {`
+- `ft_sharedptr(ft_sharedptr<Other>&& other) noexcept : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr) {`
+- `ft_sharedptr(ft_sharedptr<Other>&& other) noexcept requires ft_convertible_to<Other*, ManagedType*> : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr) {`
 - `ft_sharedptr(ft_sharedptr<Other>&& other) noexcept requires ft_convertible_to<Other*, ManagedType*>;`
 - `ft_sharedptr(ft_sharedptr<Other>&& other) noexcept;`
-- `ft_sharedptr(size_t size) : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(size), _isArrayType(true), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr) {`
+- `ft_sharedptr(size_t size) : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(size), _isArrayType(true), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr) {`
 - `ft_sharedptr(size_t size);`
 
 ### Template/stack.hpp
@@ -11964,14 +11964,14 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Template/string_view.hpp
 
-- `ft_string_view() : _data(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex() {`
+- `ft_string_view() : _data(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESS), _mutex() {`
 - `ft_string_view() {`
 - `ft_string_view();`
-- `ft_string_view(const CharType* string) : _data(string), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex() {`
+- `ft_string_view(const CharType* string) : _data(string), _size(0), _error_code(FT_ERR_SUCCESS), _mutex() {`
 - `ft_string_view(const CharType* string);`
-- `ft_string_view(const CharType* string, size_t size) : _data(string), _size(size), _error_code(FT_ERR_SUCCESSS), _mutex() {`
+- `ft_string_view(const CharType* string, size_t size) : _data(string), _size(size), _error_code(FT_ERR_SUCCESS), _mutex() {`
 - `ft_string_view(const CharType* string, size_t size);`
-- `ft_string_view(const ft_string_view& other) : _data(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex() {`
+- `ft_string_view(const ft_string_view& other) : _data(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESS), _mutex() {`
 - `ft_string_view(const ft_string_view& other);`
 
 ### Template/thread_pool.hpp
@@ -11981,12 +11981,12 @@ The catalog lists the function declarations and definitions that appear in the C
 - `ft_thread_pool(const ft_thread_pool&) = delete;`
 - `ft_thread_pool(ft_thread_pool&&) = delete;`
 - `ft_thread_pool(size_t thread_count = 0, size_t max_tasks = 0);`
-- `ft_thread_pool(size_t thread_count, size_t max_tasks) : _workers(), _tasks(), _max_tasks(max_tasks), _stop(false), _active(0), _error_code(FT_ERR_SUCCESSS), _mutex(), _cond(), _mutex_initialized(false), _cond_initialized(false), _external_mutex(ft_nullptr), _thread_safe_enabled(false) {`
-- `inline ft_thread_pool::ft_thread_pool(size_t thread_count, size_t max_tasks) : _workers(), _tasks(), _max_tasks(max_tasks), _stop(false), _active(0), _error_code(FT_ERR_SUCCESSS), _mutex(), _cond(), _mutex_initialized(false), _cond_initialized(false), _external_mutex(ft_nullptr), _thread_safe_enabled(false)`
+- `ft_thread_pool(size_t thread_count, size_t max_tasks) : _workers(), _tasks(), _max_tasks(max_tasks), _stop(false), _active(0), _error_code(FT_ERR_SUCCESS), _mutex(), _cond(), _mutex_initialized(false), _cond_initialized(false), _external_mutex(ft_nullptr), _thread_safe_enabled(false) {`
+- `inline ft_thread_pool::ft_thread_pool(size_t thread_count, size_t max_tasks) : _workers(), _tasks(), _max_tasks(max_tasks), _stop(false), _active(0), _error_code(FT_ERR_SUCCESS), _mutex(), _cond(), _mutex_initialized(false), _cond_initialized(false), _external_mutex(ft_nullptr), _thread_safe_enabled(false)`
 
 ### Template/trie.hpp
 
-- `ft_trie() : _data(ft_nullptr), _children(), _error_code(FT_ERR_SUCCESSS), _last_error(FT_ERR_SUCCESSS), _state_mutex(ft_nullptr), _thread_safe_enabled(false) {`
+- `ft_trie() : _data(ft_nullptr), _children(), _error_code(FT_ERR_SUCCESS), _last_error(FT_ERR_SUCCESS), _state_mutex(ft_nullptr), _thread_safe_enabled(false) {`
 - `ft_trie() {`
 - `ft_trie();`
 - `ft_trie(const ft_trie &other) = delete;`
@@ -11994,30 +11994,30 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Template/tuple.hpp
 
-- `ft_tuple() : _data(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
+- `ft_tuple() : _data(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
 - `ft_tuple() {`
 - `ft_tuple();`
-- `ft_tuple(Args&&... args) : _data(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
+- `ft_tuple(Args&&... args) : _data(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
 - `ft_tuple(Args&&... args);`
 - `ft_tuple(const ft_tuple&) = delete;`
-- `ft_tuple(ft_tuple&& other) noexcept : _data(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
+- `ft_tuple(ft_tuple&& other) noexcept : _data(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
 - `ft_tuple(ft_tuple&& other) noexcept;`
 
 ### Template/unique_ptr.hpp
 
-- `ft_uniqueptr() : _managedPointer(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
+- `ft_uniqueptr() : _managedPointer(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
 - `ft_uniqueptr() {`
 - `ft_uniqueptr();`
-- `ft_uniqueptr(Args&&... args) : _managedPointer(new (std::nothrow) ManagedType(std::forward<Args>(args)...)), _arraySize(1), _isArrayType(false), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
-- `ft_uniqueptr(Args&&... args) requires (!is_single_convertible_to_size_t<Args...>::value && ft_constructible_from<ManagedType, Args&&...>) : _managedPointer(new (std::nothrow) ManagedType(std::forward<Args>(args)...)), _arraySize(1), _isArrayType(false), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
+- `ft_uniqueptr(Args&&... args) : _managedPointer(new (std::nothrow) ManagedType(std::forward<Args>(args)...)), _arraySize(1), _isArrayType(false), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
+- `ft_uniqueptr(Args&&... args) requires (!is_single_convertible_to_size_t<Args...>::value && ft_constructible_from<ManagedType, Args&&...>) : _managedPointer(new (std::nothrow) ManagedType(std::forward<Args>(args)...)), _arraySize(1), _isArrayType(false), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
 - `ft_uniqueptr(Args&&... args) requires (!is_single_convertible_to_size_t<Args...>::value && ft_constructible_from<ManagedType, Args&&...>);`
 - `ft_uniqueptr(Args&&... args);`
 - `ft_uniqueptr(ManagedType* pointer, bool isArray = false, size_t arraySize = 1);`
-- `ft_uniqueptr(ManagedType* pointer, bool isArray, size_t arraySize) : _managedPointer(pointer), _arraySize(arraySize), _isArrayType(isArray), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
+- `ft_uniqueptr(ManagedType* pointer, bool isArray, size_t arraySize) : _managedPointer(pointer), _arraySize(arraySize), _isArrayType(isArray), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
 - `ft_uniqueptr(const ft_uniqueptr&) = delete;`
-- `ft_uniqueptr(ft_uniqueptr&& other) noexcept : _managedPointer(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
+- `ft_uniqueptr(ft_uniqueptr&& other) noexcept : _managedPointer(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
 - `ft_uniqueptr(ft_uniqueptr&& other) noexcept;`
-- `ft_uniqueptr(size_t size) : _managedPointer(new (std::nothrow) ManagedType[size]), _arraySize(size), _isArrayType(true), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
+- `ft_uniqueptr(size_t size) : _managedPointer(new (std::nothrow) ManagedType[size]), _arraySize(size), _isArrayType(true), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false) {`
 - `ft_uniqueptr(size_t size);`
 
 ### Template/unordered_map.hpp
@@ -12027,10 +12027,10 @@ The catalog lists the function declarations and definitions that appear in the C
 - `ft_pair(const Key& k, const MappedType& m) : first(k), second(m) {`
 - `ft_pair(const Key& k, const MappedType& m);`
 - `template <typename Key, typename MappedType> ft_unordered_map<Key, MappedType>::const_iterator::const_iterator(const const_iterator& other) : _data(other._data), _occupied(other._occupied), _index(other._index), _capacity(other._capacity), _error_code(other._error_code), _mutex(ft_nullptr), _thread_safe_enabled(false)`
-- `template <typename Key, typename MappedType> ft_unordered_map<Key, MappedType>::const_iterator::const_iterator(const ft_pair<Key, MappedType>* data, const bool* occ, size_t idx, size_t cap) : _data(data), _occupied(occ), _index(idx), _capacity(cap), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+- `template <typename Key, typename MappedType> ft_unordered_map<Key, MappedType>::const_iterator::const_iterator(const ft_pair<Key, MappedType>* data, const bool* occ, size_t idx, size_t cap) : _data(data), _occupied(occ), _index(idx), _capacity(cap), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
 - `template <typename Key, typename MappedType> ft_unordered_map<Key, MappedType>::const_iterator::const_iterator(const_iterator&& other) noexcept : _data(other._data), _occupied(other._occupied), _index(other._index), _capacity(other._capacity), _error_code(other._error_code), _mutex(ft_nullptr), _thread_safe_enabled(false)`
 - `template <typename Key, typename MappedType> ft_unordered_map<Key, MappedType>::iterator::iterator(const iterator& other) : _data(other._data), _occupied(other._occupied), _index(other._index), _capacity(other._capacity), _error_code(other._error_code), _mutex(ft_nullptr), _thread_safe_enabled(false)`
-- `template <typename Key, typename MappedType> ft_unordered_map<Key, MappedType>::iterator::iterator(ft_pair<Key, MappedType>* data, bool* occ, size_t idx, size_t cap) : _data(data), _occupied(occ), _index(idx), _capacity(cap), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+- `template <typename Key, typename MappedType> ft_unordered_map<Key, MappedType>::iterator::iterator(ft_pair<Key, MappedType>* data, bool* occ, size_t idx, size_t cap) : _data(data), _occupied(occ), _index(idx), _capacity(cap), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
 - `template <typename Key, typename MappedType> ft_unordered_map<Key, MappedType>::iterator::iterator(iterator&& other) noexcept : _data(other._data), _occupied(other._occupied), _index(other._index), _capacity(other._capacity), _error_code(other._error_code), _mutex(ft_nullptr), _thread_safe_enabled(false)`
 
 ### Test/Test/test_cma_global_new.cpp
@@ -12059,41 +12059,41 @@ The catalog lists the function declarations and definitions that appear in the C
 
 ### Test/Test/test_template.cpp
 
-- `vector_destructor_tracker() : _value(0), _error_code(FT_ERR_SUCCESSS) {`
+- `vector_destructor_tracker() : _value(0), _error_code(FT_ERR_SUCCESS) {`
 - `vector_destructor_tracker() {`
 - `vector_destructor_tracker();`
 - `vector_destructor_tracker(1));`
 - `vector_destructor_tracker(2));`
 - `vector_destructor_tracker(3));`
-- `vector_destructor_tracker(const vector_destructor_tracker &other) : _value(other._value), _error_code(FT_ERR_SUCCESSS) {`
+- `vector_destructor_tracker(const vector_destructor_tracker &other) : _value(other._value), _error_code(FT_ERR_SUCCESS) {`
 - `vector_destructor_tracker(const vector_destructor_tracker &other);`
-- `vector_destructor_tracker(int value) : _value(value), _error_code(FT_ERR_SUCCESSS) {`
+- `vector_destructor_tracker(int value) : _value(value), _error_code(FT_ERR_SUCCESS) {`
 - `vector_destructor_tracker(int value);`
-- `vector_destructor_tracker(vector_destructor_tracker &&other) noexcept : _value(other._value), _error_code(FT_ERR_SUCCESSS) {`
+- `vector_destructor_tracker(vector_destructor_tracker &&other) noexcept : _value(other._value), _error_code(FT_ERR_SUCCESS) {`
 - `vector_destructor_tracker(vector_destructor_tracker &&other) noexcept;`
-- `vector_destructor_tracker::vector_destructor_tracker() : _value(0), _error_code(FT_ERR_SUCCESSS)`
-- `vector_destructor_tracker::vector_destructor_tracker(const vector_destructor_tracker &other) : _value(other._value), _error_code(FT_ERR_SUCCESSS)`
-- `vector_destructor_tracker::vector_destructor_tracker(int value) : _value(value), _error_code(FT_ERR_SUCCESSS)`
-- `vector_destructor_tracker::vector_destructor_tracker(vector_destructor_tracker &&other) noexcept : _value(other._value), _error_code(FT_ERR_SUCCESSS)`
+- `vector_destructor_tracker::vector_destructor_tracker() : _value(0), _error_code(FT_ERR_SUCCESS)`
+- `vector_destructor_tracker::vector_destructor_tracker(const vector_destructor_tracker &other) : _value(other._value), _error_code(FT_ERR_SUCCESS)`
+- `vector_destructor_tracker::vector_destructor_tracker(int value) : _value(value), _error_code(FT_ERR_SUCCESS)`
+- `vector_destructor_tracker::vector_destructor_tracker(vector_destructor_tracker &&other) noexcept : _value(other._value), _error_code(FT_ERR_SUCCESS)`
 
 ### Test/Test/test_template_concepts.cpp
 
-- `shared_ptr_base_type::shared_ptr_base_type() : _marker(0), _error_code(FT_ERR_SUCCESSS)`
+- `shared_ptr_base_type::shared_ptr_base_type() : _marker(0), _error_code(FT_ERR_SUCCESS)`
 - `shared_ptr_base_type::shared_ptr_base_type(const shared_ptr_base_type &other) : _marker(other._marker), _error_code(other._error_code)`
-- `shared_ptr_base_type::shared_ptr_base_type(int marker) : _marker(marker), _error_code(FT_ERR_SUCCESSS)`
-- `shared_ptr_derived_type::shared_ptr_derived_type() : shared_ptr_base_type(), _error_code(FT_ERR_SUCCESSS)`
+- `shared_ptr_base_type::shared_ptr_base_type(int marker) : _marker(marker), _error_code(FT_ERR_SUCCESS)`
+- `shared_ptr_derived_type::shared_ptr_derived_type() : shared_ptr_base_type(), _error_code(FT_ERR_SUCCESS)`
 - `shared_ptr_derived_type::shared_ptr_derived_type(const shared_ptr_derived_type &other) : shared_ptr_base_type(other), _error_code(other._error_code)`
-- `shared_ptr_derived_type::shared_ptr_derived_type(int marker) : shared_ptr_base_type(marker), _error_code(FT_ERR_SUCCESSS)`
-- `variadic_constructible() : _first(0), _second(0.0), _error_code(FT_ERR_SUCCESSS) {`
+- `shared_ptr_derived_type::shared_ptr_derived_type(int marker) : shared_ptr_base_type(marker), _error_code(FT_ERR_SUCCESS)`
+- `variadic_constructible() : _first(0), _second(0.0), _error_code(FT_ERR_SUCCESS) {`
 - `variadic_constructible() {`
 - `variadic_constructible();`
 - `variadic_constructible(const variadic_constructible &other) : _first(other._first), _second(other._second), _error_code(other._error_code) {`
 - `variadic_constructible(const variadic_constructible &other);`
-- `variadic_constructible(int first, double second) : _first(first), _second(second), _error_code(FT_ERR_SUCCESSS) {`
+- `variadic_constructible(int first, double second) : _first(first), _second(second), _error_code(FT_ERR_SUCCESS) {`
 - `variadic_constructible(int first, double second);`
-- `variadic_constructible::variadic_constructible() : _first(0), _second(0.0), _error_code(FT_ERR_SUCCESSS)`
+- `variadic_constructible::variadic_constructible() : _first(0), _second(0.0), _error_code(FT_ERR_SUCCESS)`
 - `variadic_constructible::variadic_constructible(const variadic_constructible &other) : _first(other._first), _second(other._second), _error_code(other._error_code)`
-- `variadic_constructible::variadic_constructible(int first, double second) : _first(first), _second(second), _error_code(FT_ERR_SUCCESSS)`
+- `variadic_constructible::variadic_constructible(int first, double second) : _first(first), _second(second), _error_code(FT_ERR_SUCCESS)`
 
 ### Test/Test/test_template_function_copy_move.cpp
 
@@ -12111,10 +12111,10 @@ The catalog lists the function declarations and definitions that appear in the C
 - `no_default_optional_value(64));`
 - `no_default_optional_value(const no_default_optional_value &other) : _value(other._value), _error_code(other._error_code) {`
 - `no_default_optional_value(const no_default_optional_value &other);`
-- `no_default_optional_value(int value) : _value(value), _error_code(FT_ERR_SUCCESSS) {`
+- `no_default_optional_value(int value) : _value(value), _error_code(FT_ERR_SUCCESS) {`
 - `no_default_optional_value(int value);`
 - `no_default_optional_value::no_default_optional_value(const no_default_optional_value &other) : _value(other._value), _error_code(other._error_code)`
-- `no_default_optional_value::no_default_optional_value(int value) : _value(value), _error_code(FT_ERR_SUCCESSS)`
+- `no_default_optional_value::no_default_optional_value(int value) : _value(value), _error_code(FT_ERR_SUCCESS)`
 
 ### Time/fps.hpp
 
@@ -12134,7 +12134,7 @@ The catalog lists the function declarations and definitions that appear in the C
 ### XML/xml_document.cpp
 
 - `xml_document::thread_guard::thread_guard(const xml_document *document) noexcept : _document(document), _lock_acquired(false), _status(0)`
-- `xml_document::xml_document() noexcept : _root(ft_nullptr), _mutex(ft_nullptr), _thread_safe_enabled(false), _error_code(FT_ERR_SUCCESSS)`
+- `xml_document::xml_document() noexcept : _root(ft_nullptr), _mutex(ft_nullptr), _thread_safe_enabled(false), _error_code(FT_ERR_SUCCESS)`
 - `xml_namespace_entry();`
 - `xml_node::xml_node() noexcept : mutex(ft_nullptr), thread_safe_enabled(false), name(ft_nullptr), namespace_prefix(ft_nullptr), local_name(ft_nullptr), namespace_uri(ft_nullptr), namespace_bindings(ft_nullptr), text(ft_nullptr), children(), attributes()`
 

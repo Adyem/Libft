@@ -1,5 +1,9 @@
+#include "../test_internal.hpp"
 #include "../../PThread/pthread.hpp"
 #include "utils.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 #include <cstddef>
 
@@ -13,7 +17,7 @@ int test_efficiency_rwlock_reader_priority(void)
 
     if (pt_rwlock_init(&native_lock, ft_nullptr) != 0)
         return (0);
-    if (pt_rwlock_strategy_init(&custom_lock, PT_RWLOCK_STRATEGY_READER_PRIORITY) != FT_ERR_SUCCESSS)
+    if (pt_rwlock_strategy_init(&custom_lock, PT_RWLOCK_STRATEGY_READER_PRIORITY) != FT_ERR_SUCCESS)
     {
         pt_rwlock_destroy(&native_lock);
         return (0);
@@ -61,7 +65,7 @@ int test_efficiency_rwlock_writer_priority(void)
 
     if (pt_rwlock_init(&native_lock, ft_nullptr) != 0)
         return (0);
-    if (pt_rwlock_strategy_init(&custom_lock, PT_RWLOCK_STRATEGY_WRITER_PRIORITY) != FT_ERR_SUCCESSS)
+    if (pt_rwlock_strategy_init(&custom_lock, PT_RWLOCK_STRATEGY_WRITER_PRIORITY) != FT_ERR_SUCCESS)
     {
         pt_rwlock_destroy(&native_lock);
         return (0);

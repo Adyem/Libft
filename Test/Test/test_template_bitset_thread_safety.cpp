@@ -1,7 +1,11 @@
+#include "../test_internal.hpp"
 #include "../../Template/bitset.hpp"
 #include "../../Template/move.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_bitset_thread_safety_resets_errno,
         "ft_bitset installs optional mutex guard and resets errno to success")
@@ -17,9 +21,9 @@ FT_TEST(test_bitset_thread_safety_resets_errno,
     lock_acquired = false;
     FT_ASSERT_EQ(0, bits.lock(&lock_acquired));
     FT_ASSERT_EQ(true, lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     bits.unlock(lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT_EQ(true, bits.test(3));
     bits.disable_thread_safety();
     FT_ASSERT_EQ(false, bits.is_thread_safe_enabled());

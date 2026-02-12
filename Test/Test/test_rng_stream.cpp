@@ -1,7 +1,11 @@
+#include "../test_internal.hpp"
 #include "../../RNG/rng.hpp"
 #include "../../RNG/rng_stream.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_rng_stream_independent_seeds, "rng_stream instances keep independent seeds")
 {
@@ -37,7 +41,7 @@ FT_TEST(test_rng_stream_reseed_from_string, "rng_stream can reseed from string a
     initial_value = stream_instance.random_int();
     stream_instance.reseed_from_string("example-seed");
     reseeded_value = stream_instance.random_int();
-    if (stream_instance.get_error() != FT_ERR_SUCCESSS)
+    if (stream_instance.get_error() != FT_ERR_SUCCESS)
         return (0);
     if (initial_value == reseeded_value)
         return (0);

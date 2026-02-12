@@ -1,3 +1,4 @@
+#include "../test_internal.hpp"
 #include "../../Compatebility/compatebility_internal.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../CMA/CMA.hpp"
@@ -7,6 +8,9 @@
 #include "../../System_utils/test_runner.hpp"
 #include <cstring>
 #include <string>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 #if defined(_WIN32) || defined(_WIN64)
 static void capture_environment_value(const char *name, std::string &storage, int &was_present)
@@ -60,7 +64,7 @@ FT_TEST(test_su_get_home_directory_windows_missing_guard_sets_errno,
     FT_ASSERT_EQ(0, cmp_unsetenv("USERPROFILE"));
     FT_ASSERT_EQ(0, cmp_setenv("HOMEDRIVE", "C:", 1));
     FT_ASSERT_EQ(0, cmp_unsetenv("HOMEPATH"));
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     home_directory = su_get_home_directory();
     FT_ASSERT_EQ(ft_nullptr, home_directory);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
@@ -108,7 +112,7 @@ FT_TEST(test_su_get_home_directory_windows_concatenates_success,
     FT_ASSERT(home_directory != ft_nullptr);
     FT_ASSERT_EQ(0, std::strcmp(home_directory,
                                 expected_home_directory.c_str()));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_free(home_directory);
     restore_environment_value("USERPROFILE", original_userprofile,
                               original_userprofile_present);

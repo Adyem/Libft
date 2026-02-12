@@ -1,5 +1,9 @@
+#include "../test_internal.hpp"
 #include "../../Template/unique_ptr.hpp"
 #include "utils.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 #include <memory>
 #include <utility>

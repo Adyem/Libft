@@ -1,8 +1,12 @@
+#include "../test_internal.hpp"
 #include "../../Basic/basic.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../CMA/CMA.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_memdup_basic, "cma_memdup basic")
 {
@@ -19,7 +23,7 @@ FT_TEST(test_memdup_basic, "cma_memdup basic")
     FT_ASSERT(duplicate != ft_nullptr);
     FT_ASSERT(duplicate != source);
     FT_ASSERT_EQ(0, ft_memcmp(source, duplicate, 5));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_free(duplicate);
     return (1);
 }
@@ -36,7 +40,7 @@ FT_TEST(test_memdup_zero_size, "cma_memdup zero size")
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     duplicate = cma_memdup(buffer, 0);
     FT_ASSERT(duplicate != ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_free(duplicate);
     return (1);
 }
@@ -49,14 +53,14 @@ FT_TEST(test_memdup_zero_size_null_source_allocates,
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     duplicate = cma_memdup(ft_nullptr, 0);
     FT_ASSERT(duplicate != ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_free(duplicate);
     return (1);
 }
 
 FT_TEST(test_memdup_null_source, "cma_memdup null source")
 {
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, cma_memdup(ft_nullptr, 5));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
@@ -82,7 +86,7 @@ FT_TEST(test_memdup_independent_copy, "cma_memdup duplicates without sharing sto
     FT_ASSERT_EQ('o', source[1]);
     FT_ASSERT_EQ('o', source[2]);
     FT_ASSERT_EQ('!', source[3]);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_free(duplicate);
     return (1);
 }
@@ -92,7 +96,7 @@ FT_TEST(test_memdup_resets_errno_after_null_source,
 {
     void *duplicate;
 
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, cma_memdup(ft_nullptr, 3));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
 
@@ -100,7 +104,7 @@ FT_TEST(test_memdup_resets_errno_after_null_source,
     duplicate = cma_memdup("ok", 2);
     FT_ASSERT(duplicate != ft_nullptr);
     FT_ASSERT_EQ(0, ft_memcmp(duplicate, "ok", 2));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_free(duplicate);
     return (1);
 }
@@ -124,7 +128,7 @@ FT_TEST(test_memdup_preserves_embedded_null_bytes,
     FT_ASSERT_EQ('\0', duplicate[2]);
     FT_ASSERT_EQ('c', duplicate[3]);
     FT_ASSERT_EQ('d', duplicate[4]);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_free(duplicate);
     return (1);
 }

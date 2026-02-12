@@ -17,6 +17,6 @@ int pt_thread_create(pthread_t *thread, const pthread_attr_t *attr,
         ft_global_error_stack_push(error_code);
         return (return_value);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (return_value);
 }

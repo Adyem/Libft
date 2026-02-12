@@ -46,7 +46,7 @@ ft_thread::~ft_thread()
 
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error == FT_ERR_SUCCESSS)
+    if (lock_error == FT_ERR_SUCCESS)
     {
         if (this->_joinable)
             this->detach_locked();
@@ -68,7 +68,7 @@ ft_thread::ft_thread(ft_thread &&other)
 
     lock_acquired = false;
     int lock_error = other.lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -97,14 +97,14 @@ ft_thread &ft_thread::operator=(ft_thread &&other)
     {
         this_lock_acquired = false;
         int this_lock_error = this->lock_internal(&this_lock_acquired);
-        if (this_lock_error != FT_ERR_SUCCESSS)
+        if (this_lock_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(this_lock_error);
             return (*this);
         }
         other_lock_acquired = false;
         int other_lock_error = other.lock_internal(&other_lock_acquired);
-        if (other_lock_error != FT_ERR_SUCCESSS)
+        if (other_lock_error != FT_ERR_SUCCESS)
         {
             this->unlock_internal(this_lock_acquired);
             ft_global_error_stack_push(other_lock_error);
@@ -138,13 +138,13 @@ bool ft_thread::joinable() const
 
     lock_acquired = false;
     int lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (false);
     }
     joinable_state = this->_joinable;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (joinable_state);
 }
@@ -155,7 +155,7 @@ void ft_thread::join()
 
     lock_acquired = false;
     int lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -163,7 +163,7 @@ void ft_thread::join()
     if (!this->_joinable)
     {
         this->_start_payload.reset();
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         this->unlock_internal(lock_acquired);
         return ;
     }
@@ -183,7 +183,7 @@ void ft_thread::join()
     }
     this->_joinable = false;
     this->_start_payload.reset();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -194,7 +194,7 @@ void ft_thread::detach()
 
     lock_acquired = false;
     int lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -212,14 +212,14 @@ int ft_thread::enable_thread_safety()
     if (this->_state_mutex == ft_nullptr)
         return (-1);
     int init_error = this->_state_mutex->initialize();
-    if (init_error != FT_ERR_SUCCESSS)
+    if (init_error != FT_ERR_SUCCESS)
     {
         delete this->_state_mutex;
         this->_state_mutex = ft_nullptr;
         return (init_error);
     }
     this->_thread_safe_enabled = true;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 void ft_thread::disable_thread_safety()
@@ -248,9 +248,9 @@ int ft_thread::lock_internal(bool *lock_acquired) const
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || this->_state_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     int mutex_error = this->_state_mutex->lock();
-    if (mutex_error != FT_ERR_SUCCESSS)
+    if (mutex_error != FT_ERR_SUCCESS)
     {
         if (mutex_error == FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -259,13 +259,13 @@ int ft_thread::lock_internal(bool *lock_acquired) const
             state_lock_acquired = false;
             if (this->_state_mutex->lock_state(&state_lock_acquired) == 0)
                 this->_state_mutex->unlock_state(state_lock_acquired);
-            return (FT_ERR_SUCCESSS);
+            return (FT_ERR_SUCCESS);
         }
         return (mutex_error);
     }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 void ft_thread::unlock_internal(bool lock_acquired) const
@@ -293,8 +293,8 @@ int ft_thread::detach_locked()
     if (!this->_joinable)
     {
         this->_start_payload.reset();
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-        return (FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     int detach_result = pt_thread_detach(this->_thread);
     int detach_error = ft_global_error_stack_peek_last_error();
@@ -310,6 +310,6 @@ int ft_thread::detach_locked()
     }
     this->_joinable = false;
     this->_start_payload.reset();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }

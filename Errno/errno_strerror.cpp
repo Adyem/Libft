@@ -9,7 +9,7 @@ typedef struct s_ft_error_string
 
 static const t_ft_error_string g_error_strings[] =
 {
-    {FT_ERR_SUCCESSS, "Success"},
+    {FT_ERR_SUCCESS, "Success"},
     {FT_ERR_NO_MEMORY, "Memory allocation failed"},
     {FT_ERR_FILE_OPEN_FAILED, "File open failed"},
     {FT_ERR_INVALID_ARGUMENT, "Invalid argument"},

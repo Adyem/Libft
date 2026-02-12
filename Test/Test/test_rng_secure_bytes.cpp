@@ -1,7 +1,11 @@
+#include "../test_internal.hpp"
 #include "../../RNG/rng.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../Compatebility/compatebility_system_test_hooks.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 #include <cerrno>
 
@@ -15,7 +19,7 @@ FT_TEST(test_rng_secure_bytes_null_buffer_sets_ft_einval, "rng_secure_bytes null
 FT_TEST(test_rng_secure_bytes_success_clears_errno, "rng_secure_bytes success clears ft_errno")
 {
     unsigned char buffer[8];
-    if (rng_secure_bytes(buffer, 8) != FT_ERR_SUCCESSS)
+    if (rng_secure_bytes(buffer, 8) != FT_ERR_SUCCESS)
         return (0);
     return (1);
 }

@@ -20,7 +20,7 @@ static int networking_pop_guard_error(const ft_unique_lock<pt_mutex> &guard) noe
 
     operation_id = guard.last_operation_id();
     if (operation_id == 0)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     return (guard.pop_operation_error(operation_id));
 }
 
@@ -33,7 +33,7 @@ static inline int setsockopt_reuse(int fd, int opt)
         ft_errno = ft_map_system_error(WSAGetLastError());
         return (-1);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (0);
 }
 
@@ -45,7 +45,7 @@ static inline int set_timeout_recv(int fd, int ms)
         ft_errno = ft_map_system_error(WSAGetLastError());
         return (-1);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (0);
 }
 
@@ -57,7 +57,7 @@ static inline int set_timeout_send(int fd, int ms)
         ft_errno = ft_map_system_error(WSAGetLastError());
         return (-1);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (0);
 }
 #else
@@ -68,7 +68,7 @@ static inline int setsockopt_reuse(int fd, int opt)
         ft_errno = ft_map_system_error(errno);
         return (-1);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (0);
 }
 
@@ -82,7 +82,7 @@ static inline int set_timeout_recv(int fd, int ms)
         ft_errno = ft_map_system_error(errno);
         return (-1);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (0);
 }
 
@@ -96,25 +96,25 @@ static inline int set_timeout_send(int fd, int ms)
         ft_errno = ft_map_system_error(errno);
         return (-1);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (0);
 }
 #endif
 
 udp_socket::udp_socket()
-    : _address(), _socket_fd(-1), _error_code(FT_ERR_SUCCESSS), _mutex()
+    : _address(), _socket_fd(-1), _error_code(FT_ERR_SUCCESS), _mutex()
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = guard.get_error();
         return ;
     }
     ft_bzero(&this->_address, sizeof(this->_address));
     this->_socket_fd = -1;
-    this->_error_code = FT_ERR_SUCCESSS;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->_error_code = FT_ERR_SUCCESS;
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -137,7 +137,7 @@ int udp_socket::create_socket(const SocketConfig &config)
     SocketConfig *mutable_config;
     bool lock_acquired;
 
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = guard.get_error();
         return (this->_error_code);
@@ -162,13 +162,13 @@ int udp_socket::create_socket(const SocketConfig &config)
         int error_code;
 
         error_code = ft_errno;
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_SOCKET_CREATION_FAILED;
         this->set_error(error_code);
         return (this->_error_code);
     }
-    this->set_error(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 int udp_socket::set_non_blocking(const SocketConfig &config)
@@ -177,7 +177,7 @@ int udp_socket::set_non_blocking(const SocketConfig &config)
     SocketConfig *mutable_config;
     bool lock_acquired;
 
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = guard.get_error();
         return (this->_error_code);
@@ -197,15 +197,15 @@ int udp_socket::set_non_blocking(const SocketConfig &config)
     if (mutable_config->_non_blocking == false)
     {
         socket_config_unlock(mutable_config, lock_acquired);
-        this->set_error(FT_ERR_SUCCESSS);
-        return (FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     if (nw_set_nonblocking(this->_socket_fd) != 0)
     {
         int error_code;
 
         error_code = ft_errno;
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_CONFIGURATION;
         this->set_error(error_code);
         nw_close(this->_socket_fd);
@@ -214,8 +214,8 @@ int udp_socket::set_non_blocking(const SocketConfig &config)
         return (this->_error_code);
     }
     socket_config_unlock(mutable_config, lock_acquired);
-    this->set_error(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 int udp_socket::set_timeouts(const SocketConfig &config)
@@ -224,7 +224,7 @@ int udp_socket::set_timeouts(const SocketConfig &config)
     SocketConfig *mutable_config;
     bool lock_acquired;
 
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = guard.get_error();
         return (this->_error_code);
@@ -248,7 +248,7 @@ int udp_socket::set_timeouts(const SocketConfig &config)
             int error_code;
 
             error_code = ft_errno;
-            if (error_code == FT_ERR_SUCCESSS)
+            if (error_code == FT_ERR_SUCCESS)
                 error_code = FT_ERR_CONFIGURATION;
             this->set_error(error_code);
             nw_close(this->_socket_fd);
@@ -264,7 +264,7 @@ int udp_socket::set_timeouts(const SocketConfig &config)
             int error_code;
 
             error_code = ft_errno;
-            if (error_code == FT_ERR_SUCCESSS)
+            if (error_code == FT_ERR_SUCCESS)
                 error_code = FT_ERR_CONFIGURATION;
             this->set_error(error_code);
             nw_close(this->_socket_fd);
@@ -274,8 +274,8 @@ int udp_socket::set_timeouts(const SocketConfig &config)
         }
     }
     socket_config_unlock(mutable_config, lock_acquired);
-    this->set_error(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 int udp_socket::configure_address(const SocketConfig &config)
@@ -288,7 +288,7 @@ int udp_socket::configure_address(const SocketConfig &config)
     int address_family;
     int protocol_value;
 
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = guard.get_error();
         return (this->_error_code);
@@ -311,7 +311,7 @@ int udp_socket::configure_address(const SocketConfig &config)
     address_family = mutable_config->_address_family;
     protocol_value = mutable_config->_protocol;
     socket_config_unlock(mutable_config, lock_acquired);
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
         this->set_error(ft_string::last_operation_error());
         nw_close(this->_socket_fd);
@@ -328,13 +328,13 @@ int udp_socket::configure_address(const SocketConfig &config)
         if (host_copy.empty())
         {
             addr_in->sin_addr.s_addr = htonl(INADDR_ANY);
-            this->set_error(FT_ERR_SUCCESSS);
-            return (FT_ERR_SUCCESSS);
+            this->set_error(FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
         }
         if (nw_inet_pton(AF_INET, host_copy.c_str(), &addr_in->sin_addr) > 0)
         {
-            this->set_error(FT_ERR_SUCCESSS);
-            return (FT_ERR_SUCCESSS);
+            this->set_error(FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
         }
     }
     else if (address_family == AF_INET6)
@@ -347,13 +347,13 @@ int udp_socket::configure_address(const SocketConfig &config)
         if (host_copy.empty())
         {
             addr_in6->sin6_addr = in6addr_any;
-            this->set_error(FT_ERR_SUCCESSS);
-            return (FT_ERR_SUCCESSS);
+            this->set_error(FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
         }
         if (nw_inet_pton(AF_INET6, host_copy.c_str(), &addr_in6->sin6_addr) > 0)
         {
-            this->set_error(FT_ERR_SUCCESSS);
-            return (FT_ERR_SUCCESSS);
+            this->set_error(FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
         }
     }
     else
@@ -368,7 +368,7 @@ int udp_socket::configure_address(const SocketConfig &config)
     int resolver_error;
 
     port_string = ft_to_string(static_cast<long>(port_value));
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
         this->set_error(ft_string::last_operation_error());
         nw_close(this->_socket_fd);
@@ -380,7 +380,7 @@ int udp_socket::configure_address(const SocketConfig &config)
             SOCK_DGRAM, protocol_value, 0, resolved_address))
     {
         resolver_error = ft_errno;
-        if (resolver_error == FT_ERR_SUCCESSS)
+        if (resolver_error == FT_ERR_SUCCESS)
             resolver_error = FT_ERR_SOCKET_RESOLVE_FAILED;
         this->set_error(resolver_error);
         nw_close(this->_socket_fd);
@@ -411,8 +411,8 @@ int udp_socket::configure_address(const SocketConfig &config)
         addr_in6->sin6_family = AF_INET6;
         addr_in6->sin6_port = htons(port_value);
     }
-    this->set_error(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 int udp_socket::bind_socket(const SocketConfig &config)
@@ -424,7 +424,7 @@ int udp_socket::bind_socket(const SocketConfig &config)
     int address_family;
     socklen_t addr_len;
 
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = guard.get_error();
         return (this->_error_code);
@@ -446,8 +446,8 @@ int udp_socket::bind_socket(const SocketConfig &config)
     socket_config_unlock(mutable_config, lock_acquired);
     if (type != SocketType::SERVER)
     {
-        this->set_error(FT_ERR_SUCCESSS);
-        return (FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     if (address_family == AF_INET)
         addr_len = sizeof(struct sockaddr_in);
@@ -460,15 +460,15 @@ int udp_socket::bind_socket(const SocketConfig &config)
         int error_code;
 
         error_code = ft_errno;
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_SOCKET_BIND_FAILED;
         this->set_error(error_code);
         nw_close(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error_code);
     }
-    this->set_error(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 int udp_socket::connect_socket(const SocketConfig &config)
@@ -480,7 +480,7 @@ int udp_socket::connect_socket(const SocketConfig &config)
     int address_family;
     socklen_t addr_len;
 
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = guard.get_error();
         return (this->_error_code);
@@ -502,8 +502,8 @@ int udp_socket::connect_socket(const SocketConfig &config)
     socket_config_unlock(mutable_config, lock_acquired);
     if (type != SocketType::CLIENT)
     {
-        this->set_error(FT_ERR_SUCCESSS);
-        return (FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     if (address_family == AF_INET)
         addr_len = sizeof(struct sockaddr_in);
@@ -516,15 +516,15 @@ int udp_socket::connect_socket(const SocketConfig &config)
         int error_code;
 
         error_code = ft_errno;
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_SOCKET_CONNECT_FAILED;
         this->set_error(error_code);
         nw_close(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error_code);
     }
-    this->set_error(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 int udp_socket::initialize(const SocketConfig &config)
@@ -551,15 +551,15 @@ int udp_socket::initialize(const SocketConfig &config)
     has_timeout = (mutable_config->_recv_timeout > 0 || mutable_config->_send_timeout > 0);
     reuse_address = mutable_config->_reuse_address;
     socket_config_unlock(mutable_config, lock_acquired);
-    if (create_socket(config) != FT_ERR_SUCCESSS)
+    if (create_socket(config) != FT_ERR_SUCCESS)
         return (this->_error_code);
     if (non_blocking)
-        if (set_non_blocking(config) != FT_ERR_SUCCESSS)
+        if (set_non_blocking(config) != FT_ERR_SUCCESS)
             return (this->_error_code);
     if (has_timeout)
-        if (set_timeouts(config) != FT_ERR_SUCCESSS)
+        if (set_timeouts(config) != FT_ERR_SUCCESS)
             return (this->_error_code);
-    if (configure_address(config) != FT_ERR_SUCCESSS)
+    if (configure_address(config) != FT_ERR_SUCCESS)
         return (this->_error_code);
     if (reuse_address)
         if (setsockopt_reuse(this->_socket_fd, 1) < 0)
@@ -567,18 +567,18 @@ int udp_socket::initialize(const SocketConfig &config)
             int error_code;
 
             error_code = ft_errno;
-            if (error_code == FT_ERR_SUCCESSS)
+            if (error_code == FT_ERR_SUCCESS)
                 error_code = FT_ERR_CONFIGURATION;
             this->set_error(error_code);
             nw_close(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error_code);
         }
-    if (bind_socket(config) != FT_ERR_SUCCESSS)
+    if (bind_socket(config) != FT_ERR_SUCCESS)
         return (this->_error_code);
-    if (connect_socket(config) != FT_ERR_SUCCESSS)
+    if (connect_socket(config) != FT_ERR_SUCCESS)
         return (this->_error_code);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_error_code);
 }
 
@@ -588,7 +588,7 @@ ssize_t udp_socket::send_to(const void *data, size_t size, int flags,
     ssize_t bytes_sent;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = guard.get_error();
         return (-1);
@@ -604,12 +604,12 @@ ssize_t udp_socket::send_to(const void *data, size_t size, int flags,
         int error_code;
 
         error_code = ft_errno;
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_SOCKET_SEND_FAILED;
         this->set_error(error_code);
     }
     else
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     return (bytes_sent);
 }
 
@@ -619,7 +619,7 @@ ssize_t udp_socket::receive_from(void *buffer, size_t size, int flags,
     ssize_t bytes_received;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = guard.get_error();
         return (-1);
@@ -635,12 +635,12 @@ ssize_t udp_socket::receive_from(void *buffer, size_t size, int flags,
         int error_code;
 
         error_code = ft_errno;
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_SOCKET_RECEIVE_FAILED;
         this->set_error(error_code);
     }
     else
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     return (bytes_received);
 }
 
@@ -648,7 +648,7 @@ bool udp_socket::close_socket()
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = guard.get_error();
         return (false);
@@ -658,7 +658,7 @@ bool udp_socket::close_socket()
         if (nw_close(this->_socket_fd) == 0)
         {
             this->_socket_fd = -1;
-            this->set_error(FT_ERR_SUCCESSS);
+            this->set_error(FT_ERR_SUCCESS);
             return (true);
         }
 #ifdef _WIN32
@@ -668,7 +668,7 @@ bool udp_socket::close_socket()
 #endif
         return (false);
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -677,7 +677,7 @@ int udp_socket::get_error() const
     int error_value;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<udp_socket *>(this)->set_error(guard.get_error());
         return (const_cast<udp_socket *>(this)->_error_code);
@@ -692,7 +692,7 @@ const char *udp_socket::get_error_str() const
     int error_value;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<udp_socket *>(this)->set_error(guard.get_error());
         return (ft_strerror(guard.get_error()));
@@ -707,13 +707,13 @@ int udp_socket::get_fd() const
     int descriptor;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<udp_socket *>(this)->set_error(guard.get_error());
         return (-1);
     }
     descriptor = this->_socket_fd;
-    const_cast<udp_socket *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<udp_socket *>(this)->set_error(FT_ERR_SUCCESS);
     return (descriptor);
 }
 
@@ -721,11 +721,11 @@ const struct sockaddr_storage &udp_socket::get_address() const
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<udp_socket *>(this)->set_error(guard.get_error());
         return (this->_address);
     }
-    const_cast<udp_socket *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<udp_socket *>(this)->set_error(FT_ERR_SUCCESS);
     return (this->_address);
 }

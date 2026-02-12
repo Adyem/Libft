@@ -41,15 +41,15 @@ int ft_goal::lock_pair(const ft_goal &first,
     {
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
 
-        if (single_guard.get_error() != FT_ERR_SUCCESSS)
+        if (single_guard.get_error() != FT_ERR_SUCCESS)
         {
             ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ERR_SUCCESSS;
-        return (FT_ERR_SUCCESSS);
+        ft_errno = FT_ERR_SUCCESS;
+        return (FT_ERR_SUCCESS);
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -67,13 +67,13 @@ int ft_goal::lock_pair(const ft_goal &first,
     {
         ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
 
-        if (lower_guard.get_error() != FT_ERR_SUCCESSS)
+        if (lower_guard.get_error() != FT_ERR_SUCCESS)
         {
             ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ERR_SUCCESSS)
+        if (upper_guard.get_error() == FT_ERR_SUCCESS)
         {
             if (!swapped)
             {
@@ -85,8 +85,8 @@ int ft_goal::lock_pair(const ft_goal &first,
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = FT_ERR_SUCCESSS;
-            return (FT_ERR_SUCCESSS);
+            ft_errno = FT_ERR_SUCCESS;
+            return (FT_ERR_SUCCESS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -100,9 +100,9 @@ int ft_goal::lock_pair(const ft_goal &first,
 }
 
 ft_goal::ft_goal() noexcept
-    : _target(0), _progress(0), _error(FT_ERR_SUCCESSS), _mutex()
+    : _target(0), _progress(0), _error(FT_ERR_SUCCESS), _mutex()
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -112,10 +112,10 @@ ft_goal::~ft_goal() noexcept
 }
 
 ft_goal::ft_goal(const ft_goal &other) noexcept
-    : _target(0), _progress(0), _error(FT_ERR_SUCCESSS), _mutex()
+    : _target(0), _progress(0), _error(FT_ERR_SUCCESS), _mutex()
 {
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESSS)
+    if (other_guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(other_guard.get_error());
         return ;
@@ -137,7 +137,7 @@ ft_goal &ft_goal::operator=(const ft_goal &other) noexcept
     if (this == &other)
         return (*this);
     lock_error = ft_goal::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         return (*this);
@@ -152,10 +152,10 @@ ft_goal &ft_goal::operator=(const ft_goal &other) noexcept
 }
 
 ft_goal::ft_goal(ft_goal &&other) noexcept
-    : _target(0), _progress(0), _error(FT_ERR_SUCCESSS), _mutex()
+    : _target(0), _progress(0), _error(FT_ERR_SUCCESS), _mutex()
 {
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESSS)
+    if (other_guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(other_guard.get_error());
         return ;
@@ -165,9 +165,9 @@ ft_goal::ft_goal(ft_goal &&other) noexcept
     this->_error = other._error;
     other._target = 0;
     other._progress = 0;
-    other._error = FT_ERR_SUCCESSS;
+    other._error = FT_ERR_SUCCESS;
     this->set_error(this->_error);
-    other.set_error(FT_ERR_SUCCESSS);
+    other.set_error(FT_ERR_SUCCESS);
     game_goal_unlock_guard(other_guard);
     return ;
 }
@@ -181,7 +181,7 @@ ft_goal &ft_goal::operator=(ft_goal &&other) noexcept
     if (this == &other)
         return (*this);
     lock_error = ft_goal::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         return (*this);
@@ -191,9 +191,9 @@ ft_goal &ft_goal::operator=(ft_goal &&other) noexcept
     this->_error = other._error;
     other._target = 0;
     other._progress = 0;
-    other._error = FT_ERR_SUCCESSS;
+    other._error = FT_ERR_SUCCESS;
     this->set_error(this->_error);
-    other.set_error(FT_ERR_SUCCESSS);
+    other.set_error(FT_ERR_SUCCESS);
     game_goal_unlock_guard(this_guard);
     game_goal_unlock_guard(other_guard);
     return (*this);
@@ -204,13 +204,13 @@ int ft_goal::get_target() const noexcept
     int target_value;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_goal *>(this)->set_error(guard.get_error());
         return (0);
     }
     target_value = this->_target;
-    const_cast<ft_goal *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_goal *>(this)->set_error(FT_ERR_SUCCESS);
     game_goal_unlock_guard(guard);
     return (target_value);
 }
@@ -218,13 +218,13 @@ int ft_goal::get_target() const noexcept
 void ft_goal::set_target(int target) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
     }
     this->_target = target;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_goal_unlock_guard(guard);
     return ;
 }
@@ -234,13 +234,13 @@ int ft_goal::get_progress() const noexcept
     int progress_value;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_goal *>(this)->set_error(guard.get_error());
         return (0);
     }
     progress_value = this->_progress;
-    const_cast<ft_goal *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_goal *>(this)->set_error(FT_ERR_SUCCESS);
     game_goal_unlock_guard(guard);
     return (progress_value);
 }
@@ -248,13 +248,13 @@ int ft_goal::get_progress() const noexcept
 void ft_goal::set_progress(int value) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
     }
     this->_progress = value;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_goal_unlock_guard(guard);
     return ;
 }
@@ -262,13 +262,13 @@ void ft_goal::set_progress(int value) noexcept
 void ft_goal::add_progress(int delta) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
     }
     this->_progress += delta;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_goal_unlock_guard(guard);
     return ;
 }
@@ -278,7 +278,7 @@ int ft_goal::get_error() const noexcept
     int error_code;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_goal *>(this)->set_error(guard.get_error());
         return (guard.get_error());
@@ -294,7 +294,7 @@ const char *ft_goal::get_error_str() const noexcept
     int error_code;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_goal *>(this)->set_error(guard.get_error());
         return (ft_strerror(guard.get_error()));
@@ -325,15 +325,15 @@ int ft_achievement::lock_pair(const ft_achievement &first,
     {
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
 
-        if (single_guard.get_error() != FT_ERR_SUCCESSS)
+        if (single_guard.get_error() != FT_ERR_SUCCESS)
         {
             ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ERR_SUCCESSS;
-        return (FT_ERR_SUCCESSS);
+        ft_errno = FT_ERR_SUCCESS;
+        return (FT_ERR_SUCCESS);
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -351,13 +351,13 @@ int ft_achievement::lock_pair(const ft_achievement &first,
     {
         ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
 
-        if (lower_guard.get_error() != FT_ERR_SUCCESSS)
+        if (lower_guard.get_error() != FT_ERR_SUCCESS)
         {
             ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ERR_SUCCESSS)
+        if (upper_guard.get_error() == FT_ERR_SUCCESS)
         {
             if (!swapped)
             {
@@ -369,8 +369,8 @@ int ft_achievement::lock_pair(const ft_achievement &first,
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = FT_ERR_SUCCESSS;
-            return (FT_ERR_SUCCESSS);
+            ft_errno = FT_ERR_SUCCESS;
+            return (FT_ERR_SUCCESS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -384,14 +384,14 @@ int ft_achievement::lock_pair(const ft_achievement &first,
 }
 
 ft_achievement::ft_achievement() noexcept
-    : _id(0), _goals(), _error(FT_ERR_SUCCESSS), _mutex()
+    : _id(0), _goals(), _error(FT_ERR_SUCCESS), _mutex()
 {
-    if (this->_goals.get_error() != FT_ERR_SUCCESSS)
+    if (this->_goals.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(this->_goals.get_error());
         return ;
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -401,17 +401,17 @@ ft_achievement::~ft_achievement() noexcept
 }
 
 ft_achievement::ft_achievement(const ft_achievement &other) noexcept
-    : _id(0), _goals(), _error(FT_ERR_SUCCESSS), _mutex()
+    : _id(0), _goals(), _error(FT_ERR_SUCCESS), _mutex()
 {
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESSS)
+    if (other_guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(other_guard.get_error());
         return ;
     }
     this->_id = other._id;
     this->_goals = other._goals;
-    if (this->_goals.get_error() != FT_ERR_SUCCESSS)
+    if (this->_goals.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(this->_goals.get_error());
         return ;
@@ -431,14 +431,14 @@ ft_achievement &ft_achievement::operator=(const ft_achievement &other) noexcept
     if (this == &other)
         return (*this);
     lock_error = ft_achievement::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         return (*this);
     }
     this->_id = other._id;
     this->_goals = other._goals;
-    if (this->_goals.get_error() != FT_ERR_SUCCESSS)
+    if (this->_goals.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(this->_goals.get_error());
         game_achievement_unlock_guard(this_guard);
@@ -453,32 +453,32 @@ ft_achievement &ft_achievement::operator=(const ft_achievement &other) noexcept
 }
 
 ft_achievement::ft_achievement(ft_achievement &&other) noexcept
-    : _id(0), _goals(), _error(FT_ERR_SUCCESSS), _mutex()
+    : _id(0), _goals(), _error(FT_ERR_SUCCESS), _mutex()
 {
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESSS)
+    if (other_guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(other_guard.get_error());
         return ;
     }
     this->_id = other._id;
     this->_goals = ft_move(other._goals);
-    if (this->_goals.get_error() != FT_ERR_SUCCESSS)
+    if (this->_goals.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(this->_goals.get_error());
         return ;
     }
     this->_error = other._error;
     other._id = 0;
-    other._error = FT_ERR_SUCCESSS;
+    other._error = FT_ERR_SUCCESS;
     other._goals.clear();
-    if (other._goals.get_error() != FT_ERR_SUCCESSS)
+    if (other._goals.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(other._goals.get_error());
         return ;
     }
     this->set_error(this->_error);
-    other.set_error(FT_ERR_SUCCESSS);
+    other.set_error(FT_ERR_SUCCESS);
     game_achievement_unlock_guard(other_guard);
     return ;
 }
@@ -492,14 +492,14 @@ ft_achievement &ft_achievement::operator=(ft_achievement &&other) noexcept
     if (this == &other)
         return (*this);
     lock_error = ft_achievement::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         return (*this);
     }
     this->_id = other._id;
     this->_goals = ft_move(other._goals);
-    if (this->_goals.get_error() != FT_ERR_SUCCESSS)
+    if (this->_goals.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(this->_goals.get_error());
         game_achievement_unlock_guard(this_guard);
@@ -508,9 +508,9 @@ ft_achievement &ft_achievement::operator=(ft_achievement &&other) noexcept
     }
     this->_error = other._error;
     other._id = 0;
-    other._error = FT_ERR_SUCCESSS;
+    other._error = FT_ERR_SUCCESS;
     other._goals.clear();
-    if (other._goals.get_error() != FT_ERR_SUCCESSS)
+    if (other._goals.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(other._goals.get_error());
         game_achievement_unlock_guard(this_guard);
@@ -518,7 +518,7 @@ ft_achievement &ft_achievement::operator=(ft_achievement &&other) noexcept
         return (*this);
     }
     this->set_error(this->_error);
-    other.set_error(FT_ERR_SUCCESSS);
+    other.set_error(FT_ERR_SUCCESS);
     game_achievement_unlock_guard(this_guard);
     game_achievement_unlock_guard(other_guard);
     return (*this);
@@ -529,13 +529,13 @@ int ft_achievement::get_id() const noexcept
     int identifier;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_achievement *>(this)->set_error(guard.get_error());
         return (0);
     }
     identifier = this->_id;
-    const_cast<ft_achievement *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_achievement *>(this)->set_error(FT_ERR_SUCCESS);
     game_achievement_unlock_guard(guard);
     return (identifier);
 }
@@ -548,13 +548,13 @@ void ft_achievement::set_id(int id) noexcept
         return ;
     }
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
     }
     this->_id = id;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_achievement_unlock_guard(guard);
     return ;
 }
@@ -562,12 +562,12 @@ void ft_achievement::set_id(int id) noexcept
 ft_map<int, ft_goal> &ft_achievement::get_goals() noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return (this->_goals);
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_achievement_unlock_guard(guard);
     return (this->_goals);
 }
@@ -575,12 +575,12 @@ ft_map<int, ft_goal> &ft_achievement::get_goals() noexcept
 const ft_map<int, ft_goal> &ft_achievement::get_goals() const noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_achievement *>(this)->set_error(guard.get_error());
         return (this->_goals);
     }
-    const_cast<ft_achievement *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_achievement *>(this)->set_error(FT_ERR_SUCCESS);
     game_achievement_unlock_guard(guard);
     return (this->_goals);
 }
@@ -588,19 +588,19 @@ const ft_map<int, ft_goal> &ft_achievement::get_goals() const noexcept
 void ft_achievement::set_goals(const ft_map<int, ft_goal> &goals) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
     }
     this->_goals = goals;
-    if (this->_goals.get_error() != FT_ERR_SUCCESSS)
+    if (this->_goals.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(this->_goals.get_error());
         game_achievement_unlock_guard(guard);
         return ;
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_achievement_unlock_guard(guard);
     return ;
 }
@@ -616,7 +616,7 @@ int ft_achievement::get_goal(int id) const noexcept
         return (FT_ERR_INVALID_ARGUMENT);
     }
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_achievement *>(this)->set_error(guard.get_error());
         return (guard.get_error());
@@ -628,12 +628,12 @@ int ft_achievement::get_goal(int id) const noexcept
         return (FT_ERR_NOT_FOUND);
     }
     goal_value = entry->value.get_target();
-    if (entry->value.get_error() != FT_ERR_SUCCESSS)
+    if (entry->value.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_achievement *>(this)->set_error(entry->value.get_error());
         return (0);
     }
-    const_cast<ft_achievement *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_achievement *>(this)->set_error(FT_ERR_SUCCESS);
     game_achievement_unlock_guard(guard);
     return (goal_value);
 }
@@ -648,7 +648,7 @@ void ft_achievement::set_goal(int id, int goal) noexcept
         return ;
     }
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
@@ -659,21 +659,21 @@ void ft_achievement::set_goal(int id, int goal) noexcept
         ft_goal new_goal;
 
         new_goal.set_target(goal);
-        if (new_goal.get_error() != FT_ERR_SUCCESSS)
+        if (new_goal.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(new_goal.get_error());
             game_achievement_unlock_guard(guard);
             return ;
         }
         new_goal.set_progress(0);
-        if (new_goal.get_error() != FT_ERR_SUCCESSS)
+        if (new_goal.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(new_goal.get_error());
             game_achievement_unlock_guard(guard);
             return ;
         }
         this->_goals.insert(id, new_goal);
-        if (this->_goals.get_error() != FT_ERR_SUCCESSS)
+        if (this->_goals.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(this->_goals.get_error());
             game_achievement_unlock_guard(guard);
@@ -683,14 +683,14 @@ void ft_achievement::set_goal(int id, int goal) noexcept
     else
     {
         entry->value.set_target(goal);
-        if (entry->value.get_error() != FT_ERR_SUCCESSS)
+        if (entry->value.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(entry->value.get_error());
             game_achievement_unlock_guard(guard);
             return ;
         }
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_achievement_unlock_guard(guard);
     return ;
 }
@@ -706,7 +706,7 @@ int ft_achievement::get_progress(int id) const noexcept
         return (0);
     }
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_achievement *>(this)->set_error(guard.get_error());
         return (0);
@@ -718,12 +718,12 @@ int ft_achievement::get_progress(int id) const noexcept
         return (0);
     }
     progress_value = entry->value.get_progress();
-    if (entry->value.get_error() != FT_ERR_SUCCESSS)
+    if (entry->value.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_achievement *>(this)->set_error(entry->value.get_error());
         return (0);
     }
-    const_cast<ft_achievement *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_achievement *>(this)->set_error(FT_ERR_SUCCESS);
     game_achievement_unlock_guard(guard);
     return (progress_value);
 }
@@ -738,7 +738,7 @@ void ft_achievement::set_progress(int id, int progress) noexcept
         return ;
     }
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
@@ -749,21 +749,21 @@ void ft_achievement::set_progress(int id, int progress) noexcept
         ft_goal new_goal;
 
         new_goal.set_target(0);
-        if (new_goal.get_error() != FT_ERR_SUCCESSS)
+        if (new_goal.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(new_goal.get_error());
             game_achievement_unlock_guard(guard);
             return ;
         }
         new_goal.set_progress(progress);
-        if (new_goal.get_error() != FT_ERR_SUCCESSS)
+        if (new_goal.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(new_goal.get_error());
             game_achievement_unlock_guard(guard);
             return ;
         }
         this->_goals.insert(id, new_goal);
-        if (this->_goals.get_error() != FT_ERR_SUCCESSS)
+        if (this->_goals.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(this->_goals.get_error());
             game_achievement_unlock_guard(guard);
@@ -773,14 +773,14 @@ void ft_achievement::set_progress(int id, int progress) noexcept
     else
     {
         entry->value.set_progress(progress);
-        if (entry->value.get_error() != FT_ERR_SUCCESSS)
+        if (entry->value.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(entry->value.get_error());
             game_achievement_unlock_guard(guard);
             return ;
         }
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_achievement_unlock_guard(guard);
     return ;
 }
@@ -795,7 +795,7 @@ void ft_achievement::add_progress(int id, int value) noexcept
         return ;
     }
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
@@ -806,21 +806,21 @@ void ft_achievement::add_progress(int id, int value) noexcept
         ft_goal new_goal;
 
         new_goal.set_target(0);
-        if (new_goal.get_error() != FT_ERR_SUCCESSS)
+        if (new_goal.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(new_goal.get_error());
             game_achievement_unlock_guard(guard);
             return ;
         }
         new_goal.set_progress(value);
-        if (new_goal.get_error() != FT_ERR_SUCCESSS)
+        if (new_goal.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(new_goal.get_error());
             game_achievement_unlock_guard(guard);
             return ;
         }
         this->_goals.insert(id, new_goal);
-        if (this->_goals.get_error() != FT_ERR_SUCCESSS)
+        if (this->_goals.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(this->_goals.get_error());
             game_achievement_unlock_guard(guard);
@@ -830,14 +830,14 @@ void ft_achievement::add_progress(int id, int value) noexcept
     else
     {
         entry->value.add_progress(value);
-        if (entry->value.get_error() != FT_ERR_SUCCESSS)
+        if (entry->value.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(entry->value.get_error());
             game_achievement_unlock_guard(guard);
             return ;
         }
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_achievement_unlock_guard(guard);
     return ;
 }
@@ -852,7 +852,7 @@ bool ft_achievement::is_goal_complete(int id) const noexcept
         return (false);
     }
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_achievement *>(this)->set_error(guard.get_error());
         return (false);
@@ -867,23 +867,23 @@ bool ft_achievement::is_goal_complete(int id) const noexcept
     int target_value;
 
     progress_value = entry->value.get_progress();
-    if (entry->value.get_error() != FT_ERR_SUCCESSS)
+    if (entry->value.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_achievement *>(this)->set_error(entry->value.get_error());
         return (false);
     }
     target_value = entry->value.get_target();
-    if (entry->value.get_error() != FT_ERR_SUCCESSS)
+    if (entry->value.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_achievement *>(this)->set_error(entry->value.get_error());
         return (false);
     }
     if (progress_value < target_value)
     {
-        const_cast<ft_achievement *>(this)->set_error(FT_ERR_SUCCESSS);
+        const_cast<ft_achievement *>(this)->set_error(FT_ERR_SUCCESS);
         return (false);
     }
-    const_cast<ft_achievement *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_achievement *>(this)->set_error(FT_ERR_SUCCESS);
     game_achievement_unlock_guard(guard);
     return (true);
 }
@@ -894,7 +894,7 @@ bool ft_achievement::is_complete() const noexcept
     const Pair<int, ft_goal> *goal_end;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_achievement *>(this)->set_error(guard.get_error());
         return (false);
@@ -907,25 +907,25 @@ bool ft_achievement::is_complete() const noexcept
         int target_value;
 
         progress_value = goal_ptr->value.get_progress();
-        if (goal_ptr->value.get_error() != FT_ERR_SUCCESSS)
+        if (goal_ptr->value.get_error() != FT_ERR_SUCCESS)
         {
             const_cast<ft_achievement *>(this)->set_error(goal_ptr->value.get_error());
             return (false);
         }
         target_value = goal_ptr->value.get_target();
-        if (goal_ptr->value.get_error() != FT_ERR_SUCCESSS)
+        if (goal_ptr->value.get_error() != FT_ERR_SUCCESS)
         {
             const_cast<ft_achievement *>(this)->set_error(goal_ptr->value.get_error());
             return (false);
         }
         if (progress_value < target_value)
         {
-            const_cast<ft_achievement *>(this)->set_error(FT_ERR_SUCCESSS);
+            const_cast<ft_achievement *>(this)->set_error(FT_ERR_SUCCESS);
             return (false);
         }
         ++goal_ptr;
     }
-    const_cast<ft_achievement *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_achievement *>(this)->set_error(FT_ERR_SUCCESS);
     game_achievement_unlock_guard(guard);
     return (true);
 }
@@ -935,7 +935,7 @@ int ft_achievement::get_error() const noexcept
     int error_code;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_achievement *>(this)->set_error(guard.get_error());
         return (guard.get_error());
@@ -951,7 +951,7 @@ const char *ft_achievement::get_error_str() const noexcept
     int error_code;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_achievement *>(this)->set_error(guard.get_error());
         return (ft_strerror(guard.get_error()));

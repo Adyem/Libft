@@ -1,5 +1,9 @@
+#include "../test_internal.hpp"
 #include "../../Template/pool.hpp"
 #include "utils.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 #include "../../Template/vector.hpp"
 #include <utility>

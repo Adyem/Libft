@@ -64,7 +64,7 @@ int ft_log_set_file(const char *path, size_t max_size)
     sink->max_size = max_size;
     sink->retention_count = 1;
     sink->max_age_seconds = 0;
-    if (sink->path.get_error() != FT_ERR_SUCCESSS)
+    if (sink->path.get_error() != FT_ERR_SUCCESS)
     {
         int error_code;
 
@@ -74,7 +74,7 @@ int ft_log_set_file(const char *path, size_t max_size)
         return (log_set_file_report(error_code, -1));
     }
     prepare_error = file_sink_prepare_thread_safety(sink);
-    if (prepare_error != FT_ERR_SUCCESSS)
+    if (prepare_error != FT_ERR_SUCCESS)
     {
         close(file_descriptor);
         delete sink;
@@ -90,5 +90,5 @@ int ft_log_set_file(const char *path, size_t max_size)
         delete sink;
         return (log_set_file_report(error_code, -1));
     }
-    return (log_set_file_report(FT_ERR_SUCCESSS, 0));
+    return (log_set_file_report(FT_ERR_SUCCESS, 0));
 }

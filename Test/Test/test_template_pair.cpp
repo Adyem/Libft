@@ -1,8 +1,12 @@
+#include "../test_internal.hpp"
 #include "../../Template/pair.hpp"
 #include "../../CPP_class/class_string.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <type_traits>
 #include <utility>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 static_assert(std::is_same<Pair<int, ft_string>, decltype(ft_make_pair(1, ft_string("value")))>::value,
         "ft_make_pair deduces Pair<int, ft_string>");

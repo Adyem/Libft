@@ -16,7 +16,7 @@ static void json_group_initialize_error(json_group *group) noexcept
 {
     if (group == ft_nullptr)
         return ;
-    group->_error_code = FT_ERR_SUCCESSS;
+    group->_error_code = FT_ERR_SUCCESS;
     return ;
 }
 
@@ -24,7 +24,7 @@ static void json_item_initialize_error(json_item *item) noexcept
 {
     if (item == ft_nullptr)
         return ;
-    item->_error_code = FT_ERR_SUCCESSS;
+    item->_error_code = FT_ERR_SUCCESS;
     return ;
 }
 
@@ -32,7 +32,7 @@ static void json_schema_initialize_error(json_schema *schema) noexcept
 {
     if (schema == ft_nullptr)
         return ;
-    schema->_error_code = FT_ERR_SUCCESSS;
+    schema->_error_code = FT_ERR_SUCCESS;
     return ;
 }
 
@@ -40,7 +40,7 @@ static void json_schema_field_initialize_error(json_schema_field *field) noexcep
 {
     if (field == ft_nullptr)
         return ;
-    field->_error_code = FT_ERR_SUCCESSS;
+    field->_error_code = FT_ERR_SUCCESS;
     return ;
 }
 
@@ -48,7 +48,7 @@ static void json_stream_reader_initialize_error(json_stream_reader *reader) noex
 {
     if (reader == ft_nullptr)
         return ;
-    reader->_error_code = FT_ERR_SUCCESSS;
+    reader->_error_code = FT_ERR_SUCCESS;
     return ;
 }
 
@@ -60,7 +60,7 @@ int json_group_list_lock(ft_unique_lock<pt_mutex> &guard)
     {
         int lock_error = ft_global_error_stack_drop_last_error();
 
-        if (lock_error != FT_ERR_SUCCESSS)
+        if (lock_error != FT_ERR_SUCCESS)
         {
             guard = ft_unique_lock<pt_mutex>();
             json_thread_error_push(lock_error);
@@ -68,19 +68,19 @@ int json_group_list_lock(ft_unique_lock<pt_mutex> &guard)
         }
     }
     guard = ft_move(local_guard);
-    json_thread_error_push(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    json_thread_error_push(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 void json_group_list_finalize_lock(ft_unique_lock<pt_mutex> &guard)
 {
-    int current_error = FT_ERR_SUCCESSS;
+    int current_error = FT_ERR_SUCCESS;
 
     if (guard.owns_lock())
         guard.unlock();
     int guard_error = ft_global_error_stack_drop_last_error();
 
-    if (guard_error != FT_ERR_SUCCESSS)
+    if (guard_error != FT_ERR_SUCCESS)
     {
         current_error = guard_error;
     }
@@ -111,7 +111,7 @@ void json_group_set_error(json_group *group, int error_code)
         return ;
     }
     lock_error = json_group_lock(group, guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         json_thread_error_push(lock_error);
         return ;
@@ -130,7 +130,7 @@ int json_group_enable_thread_safety(json_group *group)
         return (-1);
     }
     json_group_initialize_error(group);
-    json_group_set_error_unlocked(group, FT_ERR_SUCCESSS);
+    json_group_set_error_unlocked(group, FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -148,7 +148,7 @@ int json_group_lock(json_group *group, ft_unique_lock<pt_mutex> &guard)
     {
         int lock_error = ft_global_error_stack_drop_last_error();
 
-        if (lock_error != FT_ERR_SUCCESSS)
+        if (lock_error != FT_ERR_SUCCESS)
         {
             json_thread_error_push(lock_error);
             guard = ft_unique_lock<pt_mutex>();
@@ -156,8 +156,8 @@ int json_group_lock(json_group *group, ft_unique_lock<pt_mutex> &guard)
         }
     }
     guard = ft_move(local_guard);
-    json_thread_error_push(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    json_thread_error_push(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 int json_group_get_error(const json_group *group)
@@ -167,7 +167,7 @@ int json_group_get_error(const json_group *group)
         json_thread_error_push(FT_ERR_INVALID_ARGUMENT);
         return (FT_ERR_INVALID_ARGUMENT);
     }
-    json_thread_error_push(FT_ERR_SUCCESSS);
+    json_thread_error_push(FT_ERR_SUCCESS);
     return (group->_error_code);
 }
 
@@ -202,7 +202,7 @@ void json_item_set_error(json_item *item, int error_code)
         return ;
     }
     lock_error = json_item_lock(item, guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         json_thread_error_push(lock_error);
         return ;
@@ -221,7 +221,7 @@ int json_item_enable_thread_safety(json_item *item)
         return (-1);
     }
     json_item_initialize_error(item);
-    json_item_set_error_unlocked(item, FT_ERR_SUCCESSS);
+    json_item_set_error_unlocked(item, FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -236,7 +236,7 @@ int json_item_lock(json_item *item, ft_unique_lock<pt_mutex> &guard)
         return (FT_ERR_INVALID_ARGUMENT);
     }
     int enable_error = json_item_enable_thread_safety(item);
-    if (enable_error != FT_ERR_SUCCESSS)
+    if (enable_error != FT_ERR_SUCCESS)
     {
         guard = ft_unique_lock<pt_mutex>();
         return (enable_error);
@@ -245,7 +245,7 @@ int json_item_lock(json_item *item, ft_unique_lock<pt_mutex> &guard)
     {
         int lock_error = ft_global_error_stack_drop_last_error();
 
-        if (lock_error != FT_ERR_SUCCESSS)
+        if (lock_error != FT_ERR_SUCCESS)
         {
             json_thread_error_push(lock_error);
             guard = ft_unique_lock<pt_mutex>();
@@ -253,8 +253,8 @@ int json_item_lock(json_item *item, ft_unique_lock<pt_mutex> &guard)
         }
     }
     guard = ft_move(local_guard);
-    json_thread_error_push(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    json_thread_error_push(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 int json_item_get_error(const json_item *item)
@@ -264,7 +264,7 @@ int json_item_get_error(const json_item *item)
         json_thread_error_push(FT_ERR_INVALID_ARGUMENT);
         return (FT_ERR_INVALID_ARGUMENT);
     }
-    json_thread_error_push(FT_ERR_SUCCESSS);
+    json_thread_error_push(FT_ERR_SUCCESS);
     return (item->_error_code);
 }
 
@@ -292,7 +292,7 @@ void json_schema_field_set_error(json_schema_field *field, int error_code)
     if (field == ft_nullptr)
         return ;
     lock_error = json_schema_field_lock(field, guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
     json_schema_field_set_error_unlocked(field, error_code);
     if (guard.owns_lock())
@@ -305,8 +305,8 @@ int json_schema_field_enable_thread_safety(json_schema_field *field)
     if (field == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     json_schema_field_initialize_error(field);
-    json_schema_field_set_error_unlocked(field, FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    json_schema_field_set_error_unlocked(field, FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 int json_schema_field_lock(json_schema_field *field, ft_unique_lock<pt_mutex> &guard)
@@ -321,20 +321,20 @@ int json_schema_field_lock(json_schema_field *field, ft_unique_lock<pt_mutex> &g
         return (FT_ERR_INVALID_ARGUMENT);
     }
     enable_error = json_schema_field_enable_thread_safety(field);
-    if (enable_error != FT_ERR_SUCCESSS)
+    if (enable_error != FT_ERR_SUCCESS)
     {
         guard = ft_unique_lock<pt_mutex>();
         return (enable_error);
     }
     local_guard = ft_unique_lock<pt_mutex>(field->_mutex);
     mutex_error = ft_global_error_stack_drop_last_error();
-    if (mutex_error != FT_ERR_SUCCESSS)
+    if (mutex_error != FT_ERR_SUCCESS)
     {
         guard = ft_unique_lock<pt_mutex>();
         return (mutex_error);
     }
     guard = ft_move(local_guard);
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 int json_schema_field_get_error(const json_schema_field *field)
@@ -368,7 +368,7 @@ void json_schema_set_error(json_schema *schema, int error_code)
     if (schema == ft_nullptr)
         return ;
     lock_error = json_schema_lock(schema, guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
     json_schema_set_error_unlocked(schema, error_code);
     if (guard.owns_lock())
@@ -381,8 +381,8 @@ int json_schema_enable_thread_safety(json_schema *schema)
     if (schema == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     json_schema_initialize_error(schema);
-    json_schema_set_error_unlocked(schema, FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    json_schema_set_error_unlocked(schema, FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 int json_schema_lock(json_schema *schema, ft_unique_lock<pt_mutex> &guard)
@@ -397,20 +397,20 @@ int json_schema_lock(json_schema *schema, ft_unique_lock<pt_mutex> &guard)
         return (FT_ERR_INVALID_ARGUMENT);
     }
     enable_error = json_schema_enable_thread_safety(schema);
-    if (enable_error != FT_ERR_SUCCESSS)
+    if (enable_error != FT_ERR_SUCCESS)
     {
         guard = ft_unique_lock<pt_mutex>();
         return (enable_error);
     }
     local_guard = ft_unique_lock<pt_mutex>(schema->_mutex);
     mutex_error = ft_global_error_stack_drop_last_error();
-    if (mutex_error != FT_ERR_SUCCESSS)
+    if (mutex_error != FT_ERR_SUCCESS)
     {
         guard = ft_unique_lock<pt_mutex>();
         return (mutex_error);
     }
     guard = ft_move(local_guard);
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 int json_schema_get_error(const json_schema *schema)
@@ -451,7 +451,7 @@ void json_stream_reader_set_error(json_stream_reader *reader, int error_code)
         return ;
     }
     lock_error = json_stream_reader_lock(reader, guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         json_thread_error_push(lock_error);
         return ;
@@ -469,7 +469,7 @@ int json_stream_reader_enable_thread_safety(json_stream_reader *reader)
         return (-1);
     }
     json_stream_reader_initialize_error(reader);
-    json_stream_reader_set_error_unlocked(reader, FT_ERR_SUCCESSS);
+    json_stream_reader_set_error_unlocked(reader, FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -493,7 +493,7 @@ int json_stream_reader_lock(json_stream_reader *reader, ft_unique_lock<pt_mutex>
     {
         int lock_error = ft_global_error_stack_drop_last_error();
 
-        if (lock_error != FT_ERR_SUCCESSS)
+        if (lock_error != FT_ERR_SUCCESS)
         {
             json_thread_error_push(lock_error);
             guard = ft_unique_lock<pt_mutex>();
@@ -501,8 +501,8 @@ int json_stream_reader_lock(json_stream_reader *reader, ft_unique_lock<pt_mutex>
         }
     }
     guard = ft_move(local_guard);
-    json_thread_error_push(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    json_thread_error_push(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 void json_stream_reader_finalize_lock(json_stream_reader *reader,
@@ -515,17 +515,17 @@ void json_stream_reader_finalize_lock(json_stream_reader *reader,
         guard.unlock();
     int guard_error = ft_global_error_stack_drop_last_error();
 
-    if (guard_error != FT_ERR_SUCCESSS)
+    if (guard_error != FT_ERR_SUCCESS)
     {
         json_stream_reader_set_error_unlocked(reader, guard_error);
         return ;
     }
-    if (current_errno != FT_ERR_SUCCESSS)
+    if (current_errno != FT_ERR_SUCCESS)
     {
         json_stream_reader_set_error_unlocked(reader, current_errno);
         return ;
     }
-    json_stream_reader_set_error_unlocked(reader, FT_ERR_SUCCESSS);
+    json_stream_reader_set_error_unlocked(reader, FT_ERR_SUCCESS);
     return ;
 }
 
@@ -536,7 +536,7 @@ int json_stream_reader_get_error(const json_stream_reader *reader)
         json_thread_error_push(FT_ERR_INVALID_ARGUMENT);
         return (FT_ERR_INVALID_ARGUMENT);
     }
-    json_thread_error_push(FT_ERR_SUCCESSS);
+    json_thread_error_push(FT_ERR_SUCCESS);
     return (reader->_error_code);
 }
 

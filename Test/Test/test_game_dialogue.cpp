@@ -1,3 +1,4 @@
+#include "../test_internal.hpp"
 #include "../../Game/ft_dialogue_line.hpp"
 #include "../../Game/ft_dialogue_script.hpp"
 #include "../../Game/ft_behavior_action.hpp"
@@ -5,6 +6,9 @@
 #include "../../Template/vector.hpp"
 #include "../../Template/move.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_game_dialogue_line_move_resets_source, "Game: dialogue line move constructor clears source state")
 {
@@ -42,7 +46,7 @@ FT_TEST(test_game_dialogue_line_assignment_deep_copies_successfully, "Game: dial
     FT_ASSERT_EQ(4, target.get_line_id());
     FT_ASSERT(target.get_speaker() == ft_string("guide"));
     FT_ASSERT_EQ(2U, target.get_next_line_ids().size());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, target.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, target.get_error());
     return (1);
 }
 

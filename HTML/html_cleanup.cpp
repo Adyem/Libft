@@ -129,7 +129,7 @@ void html_remove_nodes_by_tag(html_node **nodeList, const char *tagName)
     }
     if (previousNode)
         html_node_unlock(previousNode, previous_lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 void html_remove_nodes_by_attr(html_node **nodeList, const char *key, const char *value)
@@ -216,7 +216,7 @@ void html_remove_nodes_by_attr(html_node **nodeList, const char *key, const char
     }
     if (previousNode)
         html_node_unlock(previousNode, previous_lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 void html_remove_nodes_by_text(html_node **nodeList, const char *textContent)
@@ -274,5 +274,5 @@ void html_remove_nodes_by_text(html_node **nodeList, const char *textContent)
     }
     if (previousNode)
         html_node_unlock(previousNode, previous_lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }

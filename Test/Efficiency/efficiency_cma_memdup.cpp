@@ -1,6 +1,10 @@
+#include "../test_internal.hpp"
 #include "../../CMA/CMA.hpp"
 #include "../../Basic/basic.hpp"
 #include "utils.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 #include <cstdlib>
 #include <vector>

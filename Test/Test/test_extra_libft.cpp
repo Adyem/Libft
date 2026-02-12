@@ -1,3 +1,4 @@
+#include "../test_internal.hpp"
 #include "../../Basic/basic.hpp"
 #include "../../Math/math.hpp"
 #include "../../Basic/limits.hpp"
@@ -10,9 +11,12 @@
 #include <cstring>
 #include <cstdlib>
 
+#ifndef LIBFT_TEST_BUILD
+#endif
+
 int test_strlen_size_t_null(void)
 {
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     if (ft_strlen_size_t(ft_nullptr) != 0)
     {
         return (0);

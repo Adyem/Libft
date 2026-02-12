@@ -1,6 +1,10 @@
+#include "../test_internal.hpp"
 #include "../../Basic/basic.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 static int assert_buffer_zeroed(const char *buffer, size_t buffer_size)
 {
@@ -24,7 +28,7 @@ FT_TEST(test_strncpy_s_copies_within_bounds, "ft_strncpy_s copies strings when w
     ft_memset(destination, 'X', sizeof(destination));
     FT_ASSERT_EQ(0, ft_strncpy_s(destination, sizeof(destination), source, 10));
     FT_ASSERT_EQ(0, ft_strcmp(source, destination));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -50,7 +54,7 @@ FT_TEST(test_strncat_s_appends_without_truncation, "ft_strncat_s appends when bo
     FT_ASSERT_EQ(0, ft_strcpy_s(buffer, sizeof(buffer), "foo"));
     FT_ASSERT_EQ(0, ft_strncat_s(buffer, sizeof(buffer), "bar", 8));
     FT_ASSERT_EQ(0, ft_strcmp("foobar", buffer));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 

@@ -2,21 +2,20 @@
 #include "math.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/pthread.hpp"
-#include "../PThread/pthread_internal.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include <new>
 int quaternion::lock_mutex() const noexcept
 {
-    return (pt_recursive_mutex_lock_if_enabled(
-        this->_mutex,
-        this->_mutex != ft_nullptr
-    ));
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    return (this->_mutex->lock());
 }
 
 int quaternion::unlock_mutex() const noexcept
 {
-    return (pt_recursive_mutex_unlock_if_enabled(
-        this->_mutex,
-        this->_mutex != ft_nullptr
-    ));
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    return (this->_mutex->unlock());
 }
 
 static void quaternion_sleep_backoff()
@@ -57,11 +56,11 @@ int quaternion::lock_pair(const quaternion &first, const quaternion &second,
     while (true)
     {
         int lower_error = ordered_first->lock_mutex();
-        if (lower_error != FT_ERR_SUCCESSS)
+        if (lower_error != FT_ERR_SUCCESS)
             return (lower_error);
         int upper_error = ordered_second->lock_mutex();
-        if (upper_error == FT_ERR_SUCCESSS)
-            return (FT_ERR_SUCCESSS);
+        if (upper_error == FT_ERR_SUCCESS)
+            return (FT_ERR_SUCCESS);
         if (upper_error != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
             ordered_first->unlock_mutex();
@@ -107,7 +106,6 @@ quaternion::quaternion()
     this->_x = 0.0;
     this->_y = 0.0;
     this->_z = 0.0;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -117,102 +115,7 @@ quaternion::quaternion(double w, double x, double y, double z)
     this->_x = x;
     this->_y = y;
     this->_z = z;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
-}
-
-quaternion::quaternion(const quaternion &other)
-{
-    int lock_error;
-
-    lock_error = other.lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
-    {
-        ft_global_error_stack_push(lock_error);
-        return ;
-    }
-    this->_w = other._w;
-    this->_x = other._x;
-    this->_y = other._y;
-    this->_z = other._z;
-    other.unlock_mutex();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return ;
-}
-
-quaternion &quaternion::operator=(const quaternion &other)
-{
-    const quaternion *lower;
-    const quaternion *upper;
-    int lock_error;
-
-    if (this == &other)
-        return (*this);
-    lock_error = quaternion::lock_pair(*this, other, lower, upper);
-    if (lock_error != FT_ERR_SUCCESSS)
-    {
-        ft_global_error_stack_push(lock_error);
-        return (*this);
-    }
-    this->_w = other._w;
-    this->_x = other._x;
-    this->_y = other._y;
-    this->_z = other._z;
-    quaternion::unlock_pair(lower, upper);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (*this);
-}
-
-quaternion::quaternion(quaternion &&other) noexcept
-{
-    int lock_error;
-
-    lock_error = other.lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
-    {
-        ft_global_error_stack_push(lock_error);
-        return ;
-    }
-    this->_w = other._w;
-    this->_x = other._x;
-    this->_y = other._y;
-    this->_z = other._z;
-    other._w = 1.0;
-    other._x = 0.0;
-    other._y = 0.0;
-    other._z = 0.0;
-    other.unlock_mutex();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return ;
-}
-
-quaternion &quaternion::operator=(quaternion &&other) noexcept
-{
-    const quaternion *lower;
-    const quaternion *upper;
-    int lock_error;
-
-    if (this == &other)
-        return (*this);
-    lock_error = quaternion::lock_pair(*this, other, lower, upper);
-    if (lock_error != FT_ERR_SUCCESSS)
-    {
-        ft_global_error_stack_push(lock_error);
-        return (*this);
-    }
-    this->_w = other._w;
-    this->_x = other._x;
-    this->_y = other._y;
-    this->_z = other._z;
-    other._w = 1.0;
-    other._x = 0.0;
-    other._y = 0.0;
-    other._z = 0.0;
-    quaternion::unlock_pair(lower, upper);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (*this);
 }
 
 quaternion::~quaternion()
@@ -227,19 +130,16 @@ double  quaternion::get_w() const
     int lock_error;
     int unlock_error;
     lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(lock_error);
         return (0.0);
     }
     value = this->_w;
     unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(unlock_error);
         return (value);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (value);
 }
 
@@ -249,19 +149,16 @@ double  quaternion::get_x() const
     int lock_error;
     int unlock_error;
     lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(lock_error);
         return (0.0);
     }
     value = this->_x;
     unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(unlock_error);
         return (value);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (value);
 }
 
@@ -271,19 +168,16 @@ double  quaternion::get_y() const
     int lock_error;
     int unlock_error;
     lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(lock_error);
         return (0.0);
     }
     value = this->_y;
     unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(unlock_error);
         return (value);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (value);
 }
 
@@ -293,19 +187,16 @@ double  quaternion::get_z() const
     int lock_error;
     int unlock_error;
     lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(lock_error);
         return (0.0);
     }
     value = this->_z;
     unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(unlock_error);
         return (value);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (value);
 }
 
@@ -317,10 +208,8 @@ quaternion  quaternion::add(const quaternion &other) const
     int lock_error;
 
     lock_error = quaternion::lock_pair(*this, other, lower, upper);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(lock_error);
-        ft_global_error_stack_push(lock_error);
         return (result);
     }
     result._w = this->_w + other._w;
@@ -328,8 +217,6 @@ quaternion  quaternion::add(const quaternion &other) const
     result._y = this->_y + other._y;
     result._z = this->_z + other._z;
     quaternion::unlock_pair(lower, upper);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -341,18 +228,14 @@ quaternion  quaternion::multiply(const quaternion &other) const
     int lock_error;
 
     lock_error = quaternion::lock_pair(*this, other, lower, upper);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(lock_error);
-        ft_global_error_stack_push(lock_error);
         return (result);
     }
     quaternion_compute_product_components(result,
         this->_w, this->_x, this->_y, this->_z,
         other._w, other._x, other._y, other._z);
     quaternion::unlock_pair(lower, upper);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -363,10 +246,8 @@ quaternion  quaternion::conjugate() const
     int unlock_error;
 
     lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(lock_error);
-        ft_global_error_stack_push(lock_error);
         return (result);
     }
     result._w = this->_w;
@@ -374,14 +255,10 @@ quaternion  quaternion::conjugate() const
     result._y = -this->_y;
     result._z = -this->_z;
     unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(unlock_error);
-        ft_global_error_stack_push(unlock_error);
         return (result);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -392,21 +269,18 @@ double  quaternion::length() const
     int unlock_error;
 
     lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(lock_error);
         return (0.0);
     }
     length_value = quaternion_compute_dot(this->_w, this->_x,
         this->_y, this->_z,
         this->_w, this->_x, this->_y, this->_z);
     unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(unlock_error);
         return (math_sqrt(length_value));
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (math_sqrt(length_value));
 }
 
@@ -423,10 +297,8 @@ quaternion  quaternion::normalize() const
     int unlock_error;
 
     lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(lock_error);
-        ft_global_error_stack_push(lock_error);
         return (result);
     }
     local_w = this->_w;
@@ -434,10 +306,8 @@ quaternion  quaternion::normalize() const
     local_y = this->_y;
     local_z = this->_z;
     unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(unlock_error);
-        ft_global_error_stack_push(unlock_error);
         return (result);
     }
     length_value = math_sqrt(local_w * local_w + local_x * local_x
@@ -445,16 +315,12 @@ quaternion  quaternion::normalize() const
     epsilon = 0.0000001;
     if (math_absdiff(length_value, 0.0) <= epsilon)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (result);
     }
     result._w = local_w / length_value;
     result._x = local_x / length_value;
     result._y = local_y / length_value;
     result._z = local_z / length_value;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -487,25 +353,31 @@ int quaternion::prepare_thread_safety(void) noexcept
 {
     if (this->_mutex != ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     }
-    pt_recursive_mutex *mutex_pointer = ft_nullptr;
-    int mutex_error = pt_recursive_mutex_create_with_error(&mutex_pointer);
-    if (mutex_error != FT_ERR_SUCCESSS)
+    pt_recursive_mutex *mutex_pointer;
+    int mutex_error;
+
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
+    if (mutex_pointer == ft_nullptr)
+        return (FT_ERR_NO_MEMORY);
+    mutex_error = mutex_pointer->initialize();
+    if (mutex_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(mutex_error);
+        delete mutex_pointer;
         return (mutex_error);
     }
     this->_mutex = mutex_pointer;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 void quaternion::teardown_thread_safety(void) noexcept
-{
-    pt_recursive_mutex_destroy(&this->_mutex);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+{    if (this->_mutex != ft_nullptr)
+    {
+        this->_mutex->destroy();
+        delete this->_mutex;
+        this->_mutex = ft_nullptr;
+    }
     return ;
 }
 

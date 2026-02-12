@@ -27,10 +27,10 @@ class vector2
     public:
         vector2();
         vector2(double x, double y);
-        vector2(const vector2 &other);
-        vector2 &operator=(const vector2 &other);
-        vector2(vector2 &&other);
-        vector2 &operator=(vector2 &&other);
+        vector2(const vector2 &other) = delete;
+        vector2 &operator=(const vector2 &other) = delete;
+        vector2(vector2 &&other) = delete;
+        vector2 &operator=(vector2 &&other) = delete;
         ~vector2();
         double  get_x() const;
         double  get_y() const;
@@ -70,10 +70,10 @@ class vector3
     public:
         vector3();
         vector3(double x, double y, double z);
-        vector3(const vector3 &other);
-        vector3 &operator=(const vector3 &other);
-        vector3(vector3 &&other);
-        vector3 &operator=(vector3 &&other);
+        vector3(const vector3 &other) = delete;
+        vector3 &operator=(const vector3 &other) = delete;
+        vector3(vector3 &&other) = delete;
+        vector3 &operator=(vector3 &&other) = delete;
         ~vector3();
         double  get_x() const;
         double  get_y() const;
@@ -116,10 +116,10 @@ class vector4
     public:
         vector4();
         vector4(double x, double y, double z, double w);
-        vector4(const vector4 &other);
-        vector4 &operator=(const vector4 &other);
-        vector4(vector4 &&other);
-        vector4 &operator=(vector4 &&other);
+        vector4(const vector4 &other) = delete;
+        vector4 &operator=(const vector4 &other) = delete;
+        vector4(vector4 &&other) = delete;
+        vector4 &operator=(vector4 &&other) = delete;
         ~vector4();
         double  get_x() const;
         double  get_y() const;
@@ -158,10 +158,10 @@ class matrix2
         matrix2();
         matrix2(double m00, double m01,
                 double m10, double m11);
-        matrix2(const matrix2 &other);
-        matrix2 &operator=(const matrix2 &other);
-        matrix2(matrix2 &&other);
-        matrix2 &operator=(matrix2 &&other);
+        matrix2(const matrix2 &other) = delete;
+        matrix2 &operator=(const matrix2 &other) = delete;
+        matrix2(matrix2 &&other) = delete;
+        matrix2 &operator=(matrix2 &&other) = delete;
         ~matrix2();
         vector2 transform(const vector2 &vector) const;
         matrix2 multiply(const matrix2 &other) const;

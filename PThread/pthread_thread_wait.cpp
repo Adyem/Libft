@@ -16,7 +16,7 @@ int pt_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected_valu
         ft_global_error_stack_push(error_code);
         return (return_value);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (return_value);
 }
 
@@ -32,6 +32,6 @@ int pt_thread_wake_one_uint32(std::atomic<uint32_t> *address)
         ft_global_error_stack_push(error_code);
         return (return_value);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (return_value);
 }

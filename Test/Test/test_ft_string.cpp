@@ -1,5 +1,9 @@
+#include "../test_internal.hpp"
 #include "../../CPP_class/class_string.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_ft_string_assigns_from_literal, "ft_string operator= accepts string literal")
 {

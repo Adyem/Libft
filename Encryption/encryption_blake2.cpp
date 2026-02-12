@@ -62,7 +62,7 @@ static int blake2_hash_internal(const EVP_MD *algorithm, const void *data,
     {
         return (FT_ERR_INTERNAL);
     }
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 void blake2b_hash(const void *data, size_t length, unsigned char *digest,

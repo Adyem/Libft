@@ -1,7 +1,11 @@
+#include "../test_internal.hpp"
 #include "../../Game/ft_rarity_band.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../Template/move.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_rarity_band_default_values, "Game: rarity band defaults to base values")
 {
@@ -9,7 +13,7 @@ FT_TEST(test_rarity_band_default_values, "Game: rarity band defaults to base val
 
     FT_ASSERT_EQ(0, rarity_band.get_rarity());
     FT_ASSERT_EQ(1.0, rarity_band.get_value_multiplier());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, rarity_band.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rarity_band.get_error());
     return (1);
 }
 
@@ -19,7 +23,7 @@ FT_TEST(test_rarity_band_parameterized_constructor_sets_fields, "Game: parameter
 
     FT_ASSERT_EQ(3, rarity_band.get_rarity());
     FT_ASSERT_EQ(2.5, rarity_band.get_value_multiplier());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, rarity_band.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rarity_band.get_error());
     return (1);
 }
 
@@ -51,7 +55,7 @@ FT_TEST(test_rarity_band_set_rarity_sets_errno_success, "Game: set_rarity sets e
 
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     rarity_band.set_rarity(9);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT_EQ(9, rarity_band.get_rarity());
     return (1);
 }
@@ -62,7 +66,7 @@ FT_TEST(test_rarity_band_set_multiplier_sets_errno_success, "Game: set_value_mul
 
     ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
     rarity_band.set_value_multiplier(3.25);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT_EQ(3.25, rarity_band.get_value_multiplier());
     return (1);
 }
@@ -74,7 +78,7 @@ FT_TEST(test_rarity_band_get_rarity_sets_errno_success, "Game: get_rarity clears
     rarity_band.set_rarity(4);
     ft_errno = FT_ERR_INVALID_POINTER;
     FT_ASSERT_EQ(4, rarity_band.get_rarity());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -85,7 +89,7 @@ FT_TEST(test_rarity_band_get_multiplier_sets_errno_success, "Game: get_value_mul
     rarity_band.set_value_multiplier(6.5);
     ft_errno = FT_ERR_GAME_INVALID_MOVE;
     FT_ASSERT_EQ(6.5, rarity_band.get_value_multiplier());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -94,7 +98,7 @@ FT_TEST(test_rarity_band_get_error_reports_current_state, "Game: get_error retur
     ft_rarity_band rarity_band;
 
     rarity_band.set_rarity(2);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, rarity_band.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rarity_band.get_error());
     return (1);
 }
 
@@ -104,8 +108,8 @@ FT_TEST(test_rarity_band_get_error_str_reports_success, "Game: get_error_str des
 
     rarity_band.set_value_multiplier(1.1);
     ft_errno = FT_ERR_NOT_FOUND;
-    FT_ASSERT_STR_EQ(ft_strerror(FT_ERR_SUCCESSS), rarity_band.get_error_str());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_STR_EQ(ft_strerror(FT_ERR_SUCCESS), rarity_band.get_error_str());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -116,7 +120,7 @@ FT_TEST(test_rarity_band_copy_constructor_clones_values, "Game: copy constructor
     ft_rarity_band copy(original);
     FT_ASSERT_EQ(7, copy.get_rarity());
     FT_ASSERT_EQ(4.0, copy.get_value_multiplier());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, copy.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, copy.get_error());
     FT_ASSERT_EQ(7, original.get_rarity());
     FT_ASSERT_EQ(4.0, original.get_value_multiplier());
     return (1);

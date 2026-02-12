@@ -1,7 +1,11 @@
+#include "../test_internal.hpp"
 #include "../../Template/priority_queue.hpp"
 #include "../../Template/move.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_ft_priority_queue_move_constructor_rebuilds_mutex,
         "ft_priority_queue move constructor recreates mutex and preserves ordering")

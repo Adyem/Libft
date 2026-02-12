@@ -1,5 +1,9 @@
+#include "../test_internal.hpp"
 #include "../../Math/math.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 static int assert_near(double expected, double actual, double tolerance)
 {

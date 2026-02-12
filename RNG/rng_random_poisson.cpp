@@ -18,7 +18,7 @@ int ft_random_poisson(double lambda_value)
     }
     limit_value = math_exp(-lambda_value);
     int error_code = ft_global_error_stack_drop_last_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(error_code);
         return (0);
@@ -29,7 +29,7 @@ int ft_random_poisson(double lambda_value)
     {
         random_value = static_cast<double>(ft_random_float());
         error_code = ft_global_error_stack_drop_last_error();
-        if (error_code != FT_ERR_SUCCESSS)
+        if (error_code != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(error_code);
             return (0);
@@ -37,6 +37,6 @@ int ft_random_poisson(double lambda_value)
         product_value = product_value * random_value;
         count_value = count_value + 1;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (count_value - 1);
 }

@@ -45,7 +45,7 @@ void* cma_malloc(ft_size_t size)
             ft_log_debug("cma_malloc %llu -> %p", size, result);
         return (result);
     }
-    if (cma_lock_allocator(&lock_acquired) != FT_ERR_SUCCESSS)
+    if (cma_lock_allocator(&lock_acquired) != FT_ERR_SUCCESS)
         return (ft_nullptr);
     instrumented_size = cma_debug_allocation_size(size);
     aligned_size = align16(instrumented_size);

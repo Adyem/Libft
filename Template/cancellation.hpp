@@ -84,20 +84,20 @@ inline int ft_cancellation_state::lock_internal(bool *lock_acquired) const
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     int mutex_result = pt_recursive_mutex_lock_with_error(*this->_mutex);
     ft_global_error_stack_push(mutex_result);
-    if (mutex_result != FT_ERR_SUCCESSS)
+    if (mutex_result != FT_ERR_SUCCESS)
         return (mutex_result);
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 inline int ft_cancellation_state::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     int mutex_result = pt_recursive_mutex_unlock_with_error(*this->_mutex);
     ft_global_error_stack_push(mutex_result);
     return (mutex_result);
@@ -106,13 +106,13 @@ inline int ft_cancellation_state::unlock_internal(bool lock_acquired) const
 inline int ft_cancellation_state::prepare_thread_safety()
 {
     if (this->_mutex != ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     pt_recursive_mutex *mutex_pointer = ft_nullptr;
     int creation_result = pt_recursive_mutex_create_with_error(&mutex_pointer);
-    if (creation_result != FT_ERR_SUCCESSS)
+    if (creation_result != FT_ERR_SUCCESS)
         return (creation_result);
     this->_mutex = mutex_pointer;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 inline void ft_cancellation_state::teardown_thread_safety()
@@ -132,7 +132,7 @@ inline ft_cancellation_state::ft_cancellation_state() noexcept
 inline ft_cancellation_state::~ft_cancellation_state() noexcept
 {
     this->teardown_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -140,7 +140,7 @@ inline int ft_cancellation_state::register_callback(const ft_function<void()> &c
 {
     bool lock_acquired = false;
     int lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (lock_error);
@@ -150,7 +150,7 @@ inline int ft_cancellation_state::register_callback(const ft_function<void()> &c
     {
         this->_callbacks.push_back(callback);
         int push_error = ft_global_error_stack_drop_last_error();
-        if (push_error != FT_ERR_SUCCESSS)
+        if (push_error != FT_ERR_SUCCESS)
         {
             this->unlock_internal(lock_acquired);
             ft_global_error_stack_push(push_error);
@@ -158,27 +158,27 @@ inline int ft_cancellation_state::register_callback(const ft_function<void()> &c
         }
     }
     int unlock_error = this->unlock_internal(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return (unlock_error);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     if (already_cancelled)
         callback();
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 inline int ft_cancellation_state::request_cancel() noexcept
 {
     if (this->_cancelled.exchange(true, std::memory_order_acq_rel))
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-        return (FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     bool lock_acquired = false;
     int lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (lock_error);
@@ -189,7 +189,7 @@ inline int ft_cancellation_state::request_cancel() noexcept
     {
         callbacks_to_run.push_back(this->_callbacks[callback_index]);
         int push_error = ft_global_error_stack_drop_last_error();
-        if (push_error != FT_ERR_SUCCESSS)
+        if (push_error != FT_ERR_SUCCESS)
         {
             this->unlock_internal(lock_acquired);
             ft_global_error_stack_push(push_error);
@@ -199,14 +199,14 @@ inline int ft_cancellation_state::request_cancel() noexcept
     }
     this->_callbacks.clear();
     int clear_error = ft_global_error_stack_drop_last_error();
-    if (clear_error != FT_ERR_SUCCESSS)
+    if (clear_error != FT_ERR_SUCCESS)
     {
         this->unlock_internal(lock_acquired);
         ft_global_error_stack_push(clear_error);
         return (clear_error);
     }
     int unlock_error = this->unlock_internal(lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return (unlock_error);
@@ -217,34 +217,34 @@ inline int ft_cancellation_state::request_cancel() noexcept
         callbacks_to_run[invoke_index]();
         ++invoke_index;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 inline bool ft_cancellation_state::is_cancelled() const noexcept
 {
     bool result = this->_cancelled.load(std::memory_order_acquire);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (result);
 }
 
 inline ft_cancellation_token::ft_cancellation_token() noexcept
     : _state()
 {
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
 inline ft_cancellation_token::~ft_cancellation_token() noexcept
 {
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
 inline ft_cancellation_token::ft_cancellation_token(const ft_cancellation_token &other) noexcept
     : _state(other._state)
 {
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -252,14 +252,14 @@ inline ft_cancellation_token &ft_cancellation_token::operator=(const ft_cancella
 {
     if (this != &other)
         this->_state = other._state;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (*this);
 }
 
 inline ft_cancellation_token::ft_cancellation_token(ft_cancellation_token &&other) noexcept
     : _state(ft_move(other._state))
 {
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -267,7 +267,7 @@ inline ft_cancellation_token &ft_cancellation_token::operator=(ft_cancellation_t
 {
     if (this != &other)
         this->_state = ft_move(other._state);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (*this);
 }
 
@@ -275,7 +275,7 @@ inline bool ft_cancellation_token::is_valid() const noexcept
 {
     bool result = static_cast<bool>(this->_state);
     if (result)
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
     else
         ft_global_error_stack_push(FT_ERR_INVALID_STATE);
     return (result);
@@ -323,7 +323,7 @@ inline ft_cancellation_source::ft_cancellation_source() noexcept
         return ;
     }
     int construction_error = ft_global_error_stack_drop_last_error();
-    if (construction_error != FT_ERR_SUCCESSS)
+    if (construction_error != FT_ERR_SUCCESS)
     {
         delete state_pointer;
         ft_global_error_stack_push(construction_error);
@@ -331,26 +331,26 @@ inline ft_cancellation_source::ft_cancellation_source() noexcept
     }
     this->_state.reset(state_pointer, 1, false);
     int reset_error = ft_global_error_stack_drop_last_error();
-    if (reset_error != FT_ERR_SUCCESSS)
+    if (reset_error != FT_ERR_SUCCESS)
     {
         delete state_pointer;
         ft_global_error_stack_push(reset_error);
         return ;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
 inline ft_cancellation_source::~ft_cancellation_source() noexcept
 {
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
 inline ft_cancellation_source::ft_cancellation_source(const ft_cancellation_source &other) noexcept
     : _state(other._state)
 {
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -358,14 +358,14 @@ inline ft_cancellation_source &ft_cancellation_source::operator=(const ft_cancel
 {
     if (this != &other)
         this->_state = other._state;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (*this);
 }
 
 inline ft_cancellation_source::ft_cancellation_source(ft_cancellation_source &&other) noexcept
     : _state(ft_move(other._state))
 {
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -373,7 +373,7 @@ inline ft_cancellation_source &ft_cancellation_source::operator=(ft_cancellation
 {
     if (this != &other)
         this->_state = ft_move(other._state);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (*this);
 }
 
@@ -387,7 +387,7 @@ inline ft_cancellation_token ft_cancellation_source::get_token() const noexcept
         return (token);
     }
     token._state = this->_state;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (token);
 }
 

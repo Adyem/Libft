@@ -1,9 +1,13 @@
+#include "../test_internal.hpp"
 #include "../../Template/vector.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
 #include <atomic>
 #include <chrono>
 #include <thread>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_ft_vector_default_thread_safety_installs_mutex,
         "ft_vector installs mutex guards by default")
@@ -12,22 +16,22 @@ FT_TEST(test_ft_vector_default_thread_safety_installs_mutex,
     bool           lock_acquired;
 
     FT_ASSERT(vector_instance.is_thread_safe());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, vector_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_instance.get_error());
 
     vector_instance.push_back(5);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, vector_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_instance.get_error());
     vector_instance.push_back(7);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, vector_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_instance.get_error());
     FT_ASSERT_EQ(2u, vector_instance.size());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, vector_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_instance.get_error());
 
     lock_acquired = false;
     FT_ASSERT_EQ(0, vector_instance.lock(&lock_acquired));
     FT_ASSERT(lock_acquired);
     vector_instance.push_back(11);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, vector_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_instance.get_error());
     vector_instance.unlock(lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, vector_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_instance.get_error());
 
     return (1);
 }

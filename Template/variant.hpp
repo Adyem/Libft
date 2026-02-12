@@ -138,7 +138,7 @@ ft_variant<Types...>::ft_variant()
         ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return ;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 template <typename... Types>
@@ -148,7 +148,7 @@ ft_variant<Types...>::~ft_variant()
     bool lock_acquired = false;
     int lock_error = this->lock_internal(&lock_acquired);
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         if (data_pointer != ft_nullptr)
@@ -162,7 +162,7 @@ ft_variant<Types...>::~ft_variant()
     if (data_pointer != ft_nullptr)
         cma_free(data_pointer);
     this->teardown_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 template <typename... Types>
@@ -172,7 +172,7 @@ ft_variant<Types...>::ft_variant(ft_variant&& other) noexcept
     bool lock_acquired = false;
     int lock_error = other.lock_internal(&lock_acquired);
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -186,10 +186,10 @@ ft_variant<Types...>::ft_variant(ft_variant&& other) noexcept
     other.teardown_thread_safety();
     if (other_thread_safe)
     {
-        if (this->enable_thread_safety() != FT_ERR_SUCCESSS)
+        if (this->enable_thread_safety() != FT_ERR_SUCCESS)
             return ;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 template <typename... Types>
@@ -197,19 +197,19 @@ ft_variant<Types...>& ft_variant<Types...>::operator=(ft_variant&& other) noexce
 {
     if (this == &other)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (*this);
     }
     bool this_lock_acquired = false;
     int lock_error = this->lock_internal(&this_lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (*this);
     }
     bool other_lock_acquired = false;
     lock_error = other.lock_internal(&other_lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->unlock_internal(this_lock_acquired);
         ft_global_error_stack_push(lock_error);
@@ -232,10 +232,10 @@ ft_variant<Types...>& ft_variant<Types...>::operator=(ft_variant&& other) noexce
         this->disable_thread_safety();
     if (other_thread_safe)
     {
-        if (this->enable_thread_safety() != FT_ERR_SUCCESSS)
+        if (this->enable_thread_safety() != FT_ERR_SUCCESS)
             return (*this);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (*this);
 }
 
@@ -262,7 +262,7 @@ void ft_variant<Types...>::emplace(T&& value)
     bool lock_acquired = false;
     int lock_error = this->lock_internal(&lock_acquired);
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -281,7 +281,7 @@ void ft_variant<Types...>::emplace(T&& value)
     construct_at(reinterpret_cast<std::decay_t<T>*>(this->_data), std::forward<T>(value));
     this->_index = variant_index<std::decay_t<T>, Types...>::value;
     this->unlock_internal(lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 template <typename... Types>
@@ -291,7 +291,7 @@ bool ft_variant<Types...>::holds_alternative() const
     bool lock_acquired = false;
     int lock_error = this->lock_internal(&lock_acquired);
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (false);
@@ -299,7 +299,7 @@ bool ft_variant<Types...>::holds_alternative() const
     size_t idx = variant_index<T, Types...>::value;
     bool result = (this->_index == idx);
     this->unlock_internal(lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (result);
 }
 
@@ -311,7 +311,7 @@ T& ft_variant<Types...>::get()
     bool lock_acquired = false;
     int lock_error = this->lock_internal(&lock_acquired);
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (default_instance);
@@ -325,7 +325,7 @@ T& ft_variant<Types...>::get()
     }
     T *value_pointer = reinterpret_cast<T*>(this->_data);
     this->unlock_internal(lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (*value_pointer);
 }
 
@@ -337,7 +337,7 @@ const T& ft_variant<Types...>::get() const
     bool lock_acquired = false;
     int lock_error = this->lock_internal(&lock_acquired);
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (default_instance);
@@ -351,7 +351,7 @@ const T& ft_variant<Types...>::get() const
     }
     const T *value_pointer = reinterpret_cast<const T*>(this->_data);
     this->unlock_internal(lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (*value_pointer);
 }
 
@@ -362,7 +362,7 @@ void ft_variant<Types...>::visit(Visitor&& vis)
     bool lock_acquired = false;
     int lock_error = this->lock_internal(&lock_acquired);
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -375,7 +375,7 @@ void ft_variant<Types...>::visit(Visitor&& vis)
     }
     variant_visitor<0, Types...>::apply(this->_index, this->_data, std::forward<Visitor>(vis));
     this->unlock_internal(lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -385,14 +385,14 @@ void ft_variant<Types...>::reset()
     bool lock_acquired = false;
     int lock_error = this->lock_internal(&lock_acquired);
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
     }
     this->destroy_unlocked();
     this->unlock_internal(lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -411,8 +411,8 @@ int ft_variant<Types...>::enable_thread_safety()
 {
     if (this->_mutex != ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-        return (FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     int result = this->prepare_thread_safety();
     ft_global_error_stack_push(result);
@@ -423,7 +423,7 @@ template <typename... Types>
 void ft_variant<Types...>::disable_thread_safety()
 {
     this->teardown_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -431,7 +431,7 @@ template <typename... Types>
 bool ft_variant<Types...>::is_thread_safe() const
 {
     bool enabled = (this->_mutex != ft_nullptr);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (enabled);
 }
 
@@ -440,7 +440,7 @@ int ft_variant<Types...>::lock(bool *lock_acquired) const
 {
     int result = this->lock_internal(lock_acquired);
     ft_global_error_stack_push(result);
-    if (result != FT_ERR_SUCCESSS)
+    if (result != FT_ERR_SUCCESS)
         return (-1);
     return (0);
 }
@@ -461,20 +461,20 @@ int ft_variant<Types...>::lock_internal(bool *lock_acquired) const
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     result = pt_recursive_mutex_lock_with_error(*this->_mutex);
-    if (result != FT_ERR_SUCCESSS)
+    if (result != FT_ERR_SUCCESS)
         return (result);
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 template <typename... Types>
 int ft_variant<Types...>::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     return (pt_recursive_mutex_unlock_with_error(*this->_mutex));
 }
 
@@ -482,7 +482,7 @@ template <typename... Types>
 int ft_variant<Types...>::prepare_thread_safety()
 {
     if (this->_mutex != ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     return (pt_recursive_mutex_create_with_error(&this->_mutex));
 }
 

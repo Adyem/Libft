@@ -28,7 +28,7 @@ void cma_free(void* ptr)
         cma_backend_deallocate(ptr);
         return ;
     }
-    if (cma_lock_allocator(&lock_acquired) != FT_ERR_SUCCESSS)
+    if (cma_lock_allocator(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     Block* block = cma_find_block_for_pointer(ptr);
     if (!block)

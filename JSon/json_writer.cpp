@@ -23,11 +23,11 @@ static void json_writer_push_error(int error_code)
     do { json_writer_push_error(code); return (value); } while (0)
 
 #define JSON_WRITER_SUCCESS_RETURN(value) \
-    do { json_writer_push_error(FT_ERR_SUCCESSS); return (value); } while (0)
+    do { json_writer_push_error(FT_ERR_SUCCESS); return (value); } while (0)
 
 static char *json_writer_return_failure(void)
 {
-    if (ft_global_error_stack_peek_last_error() == FT_ERR_SUCCESSS)
+    if (ft_global_error_stack_peek_last_error() == FT_ERR_SUCCESS)
         json_writer_push_error(FT_ERR_NO_MEMORY);
     return (ft_nullptr);
 }
@@ -100,7 +100,7 @@ int json_write_to_backend(ft_document_sink &sink, json_group *groups)
     serialized_length = ft_strlen(serialized_content);
     write_result = sink.write_all(serialized_content, serialized_length);
     cma_free(serialized_content);
-    if (write_result != FT_ERR_SUCCESSS)
+    if (write_result != FT_ERR_SUCCESS)
     {
         json_writer_push_error(write_result);
         return (-1);

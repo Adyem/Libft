@@ -34,7 +34,7 @@ int time_info_prepare_thread_safety(t_time_info *time_info)
     }
     if (time_info->thread_safe_enabled && time_info->mutex)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0);
     }
     memory = std::malloc(sizeof(pt_mutex));
@@ -48,11 +48,11 @@ int time_info_prepare_thread_safety(t_time_info *time_info)
         int mutex_error;
 
         if (mutex_pointer == ft_nullptr)
-            mutex_error = FT_ERR_SUCCESSS;
+            mutex_error = FT_ERR_SUCCESS;
         else
             mutex_error = ft_global_error_stack_drop_last_error();
 
-        if (mutex_error != FT_ERR_SUCCESSS)
+        if (mutex_error != FT_ERR_SUCCESS)
         {
             mutex_pointer->~pt_mutex();
             std::free(memory);
@@ -62,7 +62,7 @@ int time_info_prepare_thread_safety(t_time_info *time_info)
     }
     time_info->mutex = mutex_pointer;
     time_info->thread_safe_enabled = true;
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     ft_global_error_stack_push(error_code);
     return (0);
 }
@@ -89,7 +89,7 @@ int time_info_lock(const t_time_info *time_info, bool *lock_acquired)
     mutable_info = const_cast<t_time_info *>(time_info);
     if (!mutable_info->thread_safe_enabled || !mutable_info->mutex)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0);
     }
     mutable_info->mutex->lock(THREAD_ID);
@@ -97,11 +97,11 @@ int time_info_lock(const t_time_info *time_info, bool *lock_acquired)
         int lock_error;
 
         if (mutable_info->mutex == ft_nullptr)
-            lock_error = FT_ERR_SUCCESSS;
+            lock_error = FT_ERR_SUCCESS;
         else
             lock_error = ft_global_error_stack_drop_last_error();
 
-        if (lock_error != FT_ERR_SUCCESSS)
+        if (lock_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(lock_error);
             return (-1);
@@ -109,7 +109,7 @@ int time_info_lock(const t_time_info *time_info, bool *lock_acquired)
     }
     if (lock_acquired)
         *lock_acquired = true;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -124,13 +124,13 @@ void    time_info_unlock(const t_time_info *time_info, bool lock_acquired)
     }
     if (!lock_acquired)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return ;
     }
     mutable_info = const_cast<t_time_info *>(time_info);
     if (!mutable_info->mutex)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return ;
     }
     mutable_info->mutex->unlock(THREAD_ID);
@@ -138,17 +138,17 @@ void    time_info_unlock(const t_time_info *time_info, bool lock_acquired)
         int unlock_error;
 
         if (mutable_info->mutex == ft_nullptr)
-            unlock_error = FT_ERR_SUCCESSS;
+            unlock_error = FT_ERR_SUCCESS;
         else
             unlock_error = ft_global_error_stack_drop_last_error();
 
-        if (unlock_error != FT_ERR_SUCCESSS)
+        if (unlock_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(unlock_error);
             return ;
         }
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 

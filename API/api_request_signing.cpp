@@ -10,7 +10,7 @@
 
 namespace
 {
-    static thread_local int g_api_request_signing_error = FT_ERR_SUCCESSS;
+    static thread_local int g_api_request_signing_error = FT_ERR_SUCCESS;
 
     void api_request_signing_set_error(int error_code) noexcept
     {
@@ -38,7 +38,7 @@ namespace
             return (0);
         target += value;
         string_error = ft_string::last_operation_error();
-        if (string_error != FT_ERR_SUCCESSS)
+        if (string_error != FT_ERR_SUCCESS)
         {
             api_request_signing_set_error(string_error);
             return (-1);
@@ -53,7 +53,7 @@ namespace
 
         target.append(value);
         string_error = ft_string::last_operation_error();
-        if (string_error != FT_ERR_SUCCESSS)
+        if (string_error != FT_ERR_SUCCESS)
         {
             api_request_signing_set_error(string_error);
             return (-1);
@@ -97,7 +97,7 @@ namespace
             {
                 output.append(static_cast<char>(character));
                 string_error = ft_string::last_operation_error();
-                if (string_error != FT_ERR_SUCCESSS)
+                if (string_error != FT_ERR_SUCCESS)
                 {
                     api_request_signing_set_error(string_error);
                     return (-1);
@@ -113,7 +113,7 @@ namespace
                 encoded_chunk[3] = '\0';
                 output.append(encoded_chunk, 3);
                 string_error = ft_string::last_operation_error();
-                if (string_error != FT_ERR_SUCCESSS)
+                if (string_error != FT_ERR_SUCCESS)
                 {
                     api_request_signing_set_error(string_error);
                     return (-1);
@@ -146,7 +146,7 @@ namespace
                 character = static_cast<unsigned char>(character - 'a' + 'A');
             output.append(static_cast<char>(character));
             string_error = ft_string::last_operation_error();
-            if (string_error != FT_ERR_SUCCESSS)
+            if (string_error != FT_ERR_SUCCESS)
             {
                 api_request_signing_set_error(string_error);
                 return (-1);
@@ -194,7 +194,7 @@ namespace
             if (api_request_signing_append(canonical, input.body) != 0)
                 return (-1);
         }
-        api_request_signing_set_error(FT_ERR_SUCCESSS);
+        api_request_signing_set_error(FT_ERR_SUCCESS);
         return (0);
     }
 
@@ -311,7 +311,7 @@ int api_sign_request_hmac_sha256(const api_hmac_signature_input &input,
         return (api_request_signing_finish(-1));
     hmac_sha256(key, key_length, canonical.c_str(), canonical.size(), digest);
     error_code = ft_global_error_stack_drop_last_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         api_request_signing_set_error(error_code);
         return (api_request_signing_finish(-1));
@@ -320,24 +320,24 @@ int api_sign_request_hmac_sha256(const api_hmac_signature_input &input,
     error_code = ft_global_error_stack_drop_last_error();
     if (!encoded_buffer)
     {
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_NO_MEMORY;
         api_request_signing_set_error(error_code);
         return (api_request_signing_finish(-1));
     }
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         api_request_signing_set_error(error_code);
         return (api_request_signing_finish(-1));
     }
     signature_output = reinterpret_cast<const char *>(encoded_buffer);
     cma_free(encoded_buffer);
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
         api_request_signing_set_error(ft_string::last_operation_error());
         return (api_request_signing_finish(-1));
     }
-    api_request_signing_set_error(FT_ERR_SUCCESSS);
+    api_request_signing_set_error(FT_ERR_SUCCESS);
     return (api_request_signing_finish(0));
 }
 
@@ -357,7 +357,7 @@ int api_apply_hmac_signature_header(const api_hmac_signature_input &input,
     sign_result = api_sign_request_hmac_sha256(input, key, key_length,
             signature);
     sign_error = ft_global_error_stack_drop_last_error();
-    if (sign_result != 0 || sign_error != FT_ERR_SUCCESSS)
+    if (sign_result != 0 || sign_error != FT_ERR_SUCCESS)
     {
         api_request_signing_set_error(sign_error);
         return (api_request_signing_finish(-1));
@@ -369,7 +369,7 @@ int api_apply_hmac_signature_header(const api_hmac_signature_input &input,
         return (api_request_signing_finish(-1));
     if (api_request_signing_append(header_output, signature.c_str()) != 0)
         return (api_request_signing_finish(-1));
-    api_request_signing_set_error(FT_ERR_SUCCESSS);
+    api_request_signing_set_error(FT_ERR_SUCCESS);
     return (api_request_signing_finish(0));
 }
 
@@ -472,7 +472,7 @@ int api_build_oauth1_authorization_header(
     ft_string base_string;
 
     base_string = encoded_method.c_str();
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
         api_request_signing_set_error(ft_string::last_operation_error());
         return (api_request_signing_finish(-1));
@@ -496,7 +496,7 @@ int api_build_oauth1_authorization_header(
             encoded_token_secret) != 0)
         return (api_request_signing_finish(-1));
     signing_key = encoded_consumer_secret.c_str();
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
         api_request_signing_set_error(ft_string::last_operation_error());
         return (api_request_signing_finish(-1));
@@ -509,7 +509,7 @@ int api_build_oauth1_authorization_header(
     hmac_sha256(reinterpret_cast<const unsigned char *>(signing_key.c_str()),
         signing_key.size(), base_string.c_str(), base_string.size(), digest);
     error_code = ft_global_error_stack_drop_last_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         api_request_signing_set_error(error_code);
         return (api_request_signing_finish(-1));
@@ -518,19 +518,19 @@ int api_build_oauth1_authorization_header(
     error_code = ft_global_error_stack_drop_last_error();
     if (!encoded_buffer)
     {
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_NO_MEMORY;
         api_request_signing_set_error(error_code);
         return (api_request_signing_finish(-1));
     }
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         api_request_signing_set_error(error_code);
         return (api_request_signing_finish(-1));
     }
     signature_string = reinterpret_cast<const char *>(encoded_buffer);
     cma_free(encoded_buffer);
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
         api_request_signing_set_error(ft_string::last_operation_error());
         return (api_request_signing_finish(-1));
@@ -586,6 +586,6 @@ int api_build_oauth1_authorization_header(
         return (api_request_signing_finish(-1));
     if (api_request_signing_append_character(header_output, '"') != 0)
         return (api_request_signing_finish(-1));
-    api_request_signing_set_error(FT_ERR_SUCCESSS);
+    api_request_signing_set_error(FT_ERR_SUCCESS);
     return (api_request_signing_finish(0));
 }

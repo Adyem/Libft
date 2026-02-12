@@ -1,6 +1,10 @@
+#include "../test_internal.hpp"
 #include "../../Math/math.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_math_swap_exchanges_values, "math_swap exchanges pointed integers")
 {

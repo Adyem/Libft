@@ -17,7 +17,7 @@ int xml_node_prepare_thread_safety(xml_node *node) noexcept
     }
     if (node->thread_safe_enabled && node->mutex)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0);
     }
     mutex_pointer = new(std::nothrow) pt_mutex();
@@ -29,10 +29,10 @@ int xml_node_prepare_thread_safety(xml_node *node) noexcept
     int mutex_error_code;
 
     if (mutex_pointer == ft_nullptr)
-        mutex_error_code = FT_ERR_SUCCESSS;
+        mutex_error_code = FT_ERR_SUCCESS;
     else
         mutex_error_code = ft_global_error_stack_drop_last_error();
-    if (mutex_error_code != FT_ERR_SUCCESSS)
+    if (mutex_error_code != FT_ERR_SUCCESS)
     {
         delete mutex_pointer;
         ft_global_error_stack_push(mutex_error_code);
@@ -40,7 +40,7 @@ int xml_node_prepare_thread_safety(xml_node *node) noexcept
     }
     node->mutex = mutex_pointer;
     node->thread_safe_enabled = true;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -71,25 +71,25 @@ int xml_node_lock(const xml_node *node, bool *lock_acquired) noexcept
     mutable_node = const_cast<xml_node *>(node);
     if (!mutable_node->thread_safe_enabled || !mutable_node->mutex)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0);
     }
     int mutex_result = mutable_node->mutex->lock(THREAD_ID);
     int mutex_error_code;
 
     if (mutable_node->mutex == ft_nullptr)
-        mutex_error_code = FT_ERR_SUCCESSS;
+        mutex_error_code = FT_ERR_SUCCESS;
     else
         mutex_error_code = ft_global_error_stack_drop_last_error();
     {
         int reported_error;
 
-        if (mutex_error_code != FT_ERR_SUCCESSS)
+        if (mutex_error_code != FT_ERR_SUCCESS)
             reported_error = mutex_error_code;
         else
             reported_error = mutex_result;
 
-        if (reported_error != FT_ERR_SUCCESSS)
+        if (reported_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(reported_error);
             return (-1);
@@ -97,7 +97,7 @@ int xml_node_lock(const xml_node *node, bool *lock_acquired) noexcept
     }
     if (lock_acquired)
         *lock_acquired = true;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -110,7 +110,7 @@ void xml_node_unlock(const xml_node *node, bool lock_acquired) noexcept
         if (!node)
             ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         else
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
+            ft_global_error_stack_push(FT_ERR_SUCCESS);
         return ;
     }
     mutable_node = const_cast<xml_node *>(node);
@@ -123,24 +123,24 @@ void xml_node_unlock(const xml_node *node, bool lock_acquired) noexcept
     int mutex_error_code;
 
     if (mutable_node->mutex == ft_nullptr)
-        mutex_error_code = FT_ERR_SUCCESSS;
+        mutex_error_code = FT_ERR_SUCCESS;
     else
         mutex_error_code = ft_global_error_stack_drop_last_error();
     {
         int reported_error;
 
-        if (mutex_error_code != FT_ERR_SUCCESSS)
+        if (mutex_error_code != FT_ERR_SUCCESS)
             reported_error = mutex_error_code;
         else
             reported_error = mutex_result;
 
-        if (reported_error != FT_ERR_SUCCESSS)
+        if (reported_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(reported_error);
             return ;
         }
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 

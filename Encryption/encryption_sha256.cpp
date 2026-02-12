@@ -129,6 +129,6 @@ void sha256_hash(const void *data, size_t length, unsigned char *digest)
         ++digest_index;
     }
     cma_free(message);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }

@@ -454,7 +454,7 @@ bool api_http_decode_chunked(const char *body_start, size_t body_size,
         while (index < chunk_size_t)
         {
             decoded_body.append(body_start[offset + index]);
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
             {
                 ft_errno = ft_string::last_operation_error();
                 return (false);
@@ -488,11 +488,11 @@ bool api_http_measure_json_payload(json_group *payload,
     size_t total_length;
     json_group *group_iterator;
 
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     payload_length = 0;
     if (!payload)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESS;
         return (true);
     }
     total_length = 0;
@@ -582,7 +582,7 @@ bool api_http_measure_json_payload(json_group *payload,
     if (!api_http_measure_add(total_length, 2))
         return (false);
     payload_length = total_length;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (true);
 }
 
@@ -607,11 +607,11 @@ bool api_http_stream_json_payload(json_group *payload,
 {
     json_group *group_iterator;
 
-    ft_errno = FT_ERR_SUCCESSS;
-    error_code = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
+    error_code = FT_ERR_SUCCESS;
     if (!payload)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESS;
         return (true);
     }
     if (!api_http_stream_literal(send_callback, context, "{\n",
@@ -768,6 +768,6 @@ bool api_http_stream_json_payload(json_group *payload,
         ft_errno = error_code;
         return (false);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (true);
 }

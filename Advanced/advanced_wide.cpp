@@ -79,7 +79,7 @@ static ft_string *create_empty_string(void)
     ft_string *result = new (std::nothrow) ft_string();
     if (result == ft_nullptr)
         return (ft_nullptr);
-    if (result->initialize() != FT_ERR_SUCCESSS)
+    if (result->initialize() != FT_ERR_SUCCESS)
     {
         delete result;
         return (ft_nullptr);
@@ -115,7 +115,7 @@ ft_string *adv_utf16_to_utf8(const char16_t *input, ft_size_t input_length)
             delete result;
             return (ft_nullptr);
         }
-        if (result->append(encoded_buffer, encoded_length) != FT_ERR_SUCCESSS)
+        if (result->append(encoded_buffer, encoded_length) != FT_ERR_SUCCESS)
         {
             delete result;
             return (ft_nullptr);
@@ -157,7 +157,7 @@ ft_string *adv_utf32_to_utf8(const char32_t *input, ft_size_t input_length)
             delete result;
             return (ft_nullptr);
         }
-        if (result->append(encoded_buffer, encoded_length) != FT_ERR_SUCCESSS)
+        if (result->append(encoded_buffer, encoded_length) != FT_ERR_SUCCESS)
         {
             delete result;
             return (ft_nullptr);

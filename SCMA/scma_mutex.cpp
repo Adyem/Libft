@@ -21,7 +21,7 @@ int32_t scma_enable_thread_safety(void)
     if (g_scma_mutex != ft_nullptr)
     {
         g_scma_mutex_control.unlock();
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     }
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
@@ -30,7 +30,7 @@ int32_t scma_enable_thread_safety(void)
         return (FT_ERR_NO_MEMORY);
     }
     initialization_error = mutex_pointer->initialize();
-    if (initialization_error != FT_ERR_SUCCESSS)
+    if (initialization_error != FT_ERR_SUCCESS)
     {
         delete mutex_pointer;
         g_scma_mutex_control.unlock();
@@ -38,7 +38,7 @@ int32_t scma_enable_thread_safety(void)
     }
     g_scma_mutex = mutex_pointer;
     g_scma_mutex_control.unlock();
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 int32_t scma_disable_thread_safety(void)
@@ -49,7 +49,7 @@ int32_t scma_disable_thread_safety(void)
     if (g_scma_mutex == ft_nullptr)
     {
         g_scma_mutex_control.unlock();
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     }
     if (g_scma_mutex_users != 0
         || g_scma_lock_depth != 0
@@ -59,7 +59,7 @@ int32_t scma_disable_thread_safety(void)
         return (FT_ERR_THREAD_BUSY);
     }
     destroy_error = g_scma_mutex->destroy();
-    if (destroy_error != FT_ERR_SUCCESSS)
+    if (destroy_error != FT_ERR_SUCCESS)
     {
         g_scma_mutex_control.unlock();
         return (destroy_error);
@@ -67,7 +67,7 @@ int32_t scma_disable_thread_safety(void)
     delete g_scma_mutex;
     g_scma_mutex = ft_nullptr;
     g_scma_mutex_control.unlock();
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 bool scma_is_thread_safe_enabled(void)
@@ -125,7 +125,7 @@ int32_t    scma_mutex_lock(void)
         g_scma_mutex_control.lock();
         g_scma_mutex_users = g_scma_mutex_users - 1;
         g_scma_mutex_control.unlock();
-        if (mutex_error != FT_ERR_SUCCESSS)
+        if (mutex_error != FT_ERR_SUCCESS)
         {
             return (-1);
         }
@@ -159,7 +159,7 @@ int32_t    scma_mutex_unlock(void)
         g_scma_mutex_control.lock();
         g_scma_mutex_users = g_scma_mutex_users - 1;
         g_scma_mutex_control.unlock();
-        if (mutex_error != FT_ERR_SUCCESSS)
+        if (mutex_error != FT_ERR_SUCCESS)
         {
             return (-1);
         }

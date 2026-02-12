@@ -1,6 +1,10 @@
+#include "../test_internal.hpp"
 #include "../../CPP_class/class_string.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_ft_string_operation_stack_ctor_records_success,
         "ft_string ctor records success in operation stack")
@@ -8,7 +12,7 @@ FT_TEST(test_ft_string_operation_stack_ctor_records_success,
     ft_string::pop_operation_errors();
     ft_string string_value;
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::last_operation_error());
     FT_ASSERT_EQ(0, ft_string::operation_error_index());
     return (1);
 }
@@ -20,8 +24,8 @@ FT_TEST(test_ft_string_operation_stack_append_char_success,
     ft_string string_value("abc");
 
     string_value.append('d');
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_string::last_operation_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_string::operation_error_at(1));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::operation_error_at(1));
     FT_ASSERT_EQ(0, ft_string::operation_error_index());
     return (1);
 }
@@ -33,8 +37,8 @@ FT_TEST(test_ft_string_operation_stack_assign_count_success,
     ft_string string_value;
 
     string_value.assign(3, 'x');
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_string::last_operation_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::last_operation_error());
     FT_ASSERT_EQ(0, ft_string::operation_error_index());
     return (1);
 }
@@ -59,7 +63,7 @@ FT_TEST(test_ft_string_operation_stack_append_zero_length_success,
     ft_string string_value("abc");
 
     string_value.append("ignored", 0);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::last_operation_error());
     FT_ASSERT_EQ(0, ft_string::operation_error_index());
     return (1);
 }
@@ -71,8 +75,8 @@ FT_TEST(test_ft_string_operation_stack_assign_cstr_success,
     ft_string string_value;
 
     string_value.assign("data", 4);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_string::last_operation_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::last_operation_error());
     FT_ASSERT_EQ(0, ft_string::operation_error_index());
     return (1);
 }
@@ -84,7 +88,7 @@ FT_TEST(test_ft_string_operation_stack_out_of_range_index_success,
     ft_string string_value("abc");
 
     string_value.append('q');
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_string::operation_error_at(4));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::operation_error_at(4));
     return (1);
 }
 
@@ -124,6 +128,6 @@ FT_TEST(test_ft_string_operation_stack_pop_all_clears,
     FT_ASSERT_EQ(1, ft_string::operation_error_index());
     ft_string::pop_operation_errors();
     FT_ASSERT_EQ(0, ft_string::operation_error_index());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::last_operation_error());
     return (1);
 }

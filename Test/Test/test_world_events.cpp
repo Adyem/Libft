@@ -1,8 +1,12 @@
+#include "../test_internal.hpp"
 #include "../../Game/game_world.hpp"
 #include "../../Game/game_event.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Template/vector.hpp"
 #include "../../Template/shared_ptr.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_world_process_events, "ft_world event expiration")
 {

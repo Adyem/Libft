@@ -8,7 +8,7 @@
 int pt_recursive_mutex::try_lock(pthread_t thread_id) const
 {
     int ensure_error = this->ensure_native_mutex();
-    if (ensure_error != FT_ERR_SUCCESSS)
+    if (ensure_error != FT_ERR_SUCCESS)
         return (ensure_error);
 
     if (this->_lock.load(std::memory_order_acquire))
@@ -17,7 +17,7 @@ int pt_recursive_mutex::try_lock(pthread_t thread_id) const
         if (pt_thread_equal(owner, thread_id))
         {
             this->_lock_depth.fetch_add(1, std::memory_order_relaxed);
-            return (FT_ERR_SUCCESSS);
+            return (FT_ERR_SUCCESS);
         }
     }
 
@@ -39,7 +39,7 @@ int pt_recursive_mutex::try_lock(pthread_t thread_id) const
 
     int notify_error = pt_lock_tracking::notify_acquired(thread_id,
             static_cast<const void *>(this));
-    if (notify_error != FT_ERR_SUCCESSS)
+    if (notify_error != FT_ERR_SUCCESS)
     {
         this->_lock.store(false, std::memory_order_release);
         this->_owner.store(0, std::memory_order_release);
@@ -54,5 +54,5 @@ int pt_recursive_mutex::try_lock(pthread_t thread_id) const
         return (notify_error);
     }
 
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }

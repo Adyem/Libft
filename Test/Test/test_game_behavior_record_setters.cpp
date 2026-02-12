@@ -1,6 +1,10 @@
+#include "../test_internal.hpp"
 #include "../../Game/ft_behavior_action.hpp"
 #include "../../Game/ft_behavior_profile.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_behavior_action_setters, "setters update action values and preserve error")
 {
@@ -12,7 +16,7 @@ FT_TEST(test_behavior_action_setters, "setters update action values and preserve
     FT_ASSERT_EQ(15, action.get_action_id());
     FT_ASSERT_DOUBLE_EQ(0.95, action.get_weight());
     FT_ASSERT_DOUBLE_EQ(7.25, action.get_cooldown_seconds());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, action.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, action.get_error());
     return (1);
 }
 
@@ -36,6 +40,6 @@ FT_TEST(test_behavior_profile_setters, "setters replace profile fields and actio
     FT_ASSERT_EQ(2u, profile.get_actions().size());
     FT_ASSERT_EQ(7, profile.get_actions()[0].get_action_id());
     FT_ASSERT_EQ(9, profile.get_actions()[1].get_action_id());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, profile.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
     return (1);
 }

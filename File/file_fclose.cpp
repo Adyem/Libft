@@ -29,7 +29,7 @@ int ft_fclose(FILE *stream)
         ft_global_error_stack_push(error_code);
         return (EOF);
     }
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     ft_global_error_stack_push(error_code);
     return (FT_SUCCESS);
 }

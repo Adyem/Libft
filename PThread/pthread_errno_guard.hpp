@@ -35,7 +35,7 @@ static int pt_errno_guard_capture_error() noexcept
 
     error_value = ft_global_error_stack_peek_last_error();
     ft_global_error_stack_drop_last_error();
-    if (error_value != FT_ERR_SUCCESSS)
+    if (error_value != FT_ERR_SUCCESS)
         ft_global_error_stack_push(error_value);
     return (error_value);
 }
@@ -45,7 +45,7 @@ pt_errno_guard<GuardType>::~pt_errno_guard() noexcept
 {
     int unlock_error;
 
-    unlock_error = FT_ERR_SUCCESSS;
+    unlock_error = FT_ERR_SUCCESS;
     if (this->_second_guard && this->_second_guard->owns_lock())
     {
         this->_second_guard->unlock();
@@ -56,7 +56,7 @@ pt_errno_guard<GuardType>::~pt_errno_guard() noexcept
         this->_first_guard->unlock();
         unlock_error = pt_errno_guard_capture_error();
     }
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
         ft_global_error_stack_push(unlock_error);
     else
         ft_global_error_stack_push(this->_previous_error);

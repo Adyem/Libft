@@ -1,7 +1,11 @@
+#include "../test_internal.hpp"
 #include "../../RNG/rng.hpp"
 #include "../../RNG/rng_internal.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "rng_test_utils.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_rng_seed_override_from_environment, "ft_rng_test_seed_engine mixes FT_RNG_TEST_SEED with defaults")
 {
@@ -19,7 +23,7 @@ FT_TEST(test_rng_seed_override_from_environment, "ft_rng_test_seed_engine mixes 
     if (original_value != ft_nullptr && *original_value != '\0')
     {
         original_copy = original_value;
-        if (original_copy.get_error() != FT_ERR_SUCCESSS)
+        if (original_copy.get_error() != FT_ERR_SUCCESS)
             return (0);
         restore_original = true;
     }

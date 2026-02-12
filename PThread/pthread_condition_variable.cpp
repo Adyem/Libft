@@ -39,7 +39,7 @@ static bool compute_wait_deadline(const struct timespec &relative_time, struct t
         absolute_time->tv_nsec -= 1000000000L;
         absolute_time->tv_sec += 1;
     }
-    *error_code = FT_ERR_SUCCESSS;
+    *error_code = FT_ERR_SUCCESS;
     return (true);
 }
 
@@ -97,9 +97,9 @@ int pt_condition_variable::lock_internal(bool *lock_acquired) const
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (this->_state_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     int state_error = this->_state_mutex->lock();
-    if (state_error != FT_ERR_SUCCESSS)
+    if (state_error != FT_ERR_SUCCESS)
     {
         if (state_error == FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -108,13 +108,13 @@ int pt_condition_variable::lock_internal(bool *lock_acquired) const
             state_lock_acquired = false;
             if (this->_state_mutex->lock_state(&state_lock_acquired) == 0)
                 this->_state_mutex->unlock_state(state_lock_acquired);
-            return (FT_ERR_SUCCESSS);
+            return (FT_ERR_SUCCESS);
         }
         return (state_error);
     }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 void pt_condition_variable::unlock_internal(bool lock_acquired) const
@@ -139,18 +139,18 @@ void pt_condition_variable::teardown_thread_safety()
 int pt_condition_variable::enable_thread_safety()
 {
     if (this->_state_mutex != ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     this->_state_mutex = new (std::nothrow) pt_mutex();
     if (this->_state_mutex == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     int init_error = this->_state_mutex->initialize();
-    if (init_error != FT_ERR_SUCCESSS)
+    if (init_error != FT_ERR_SUCCESS)
     {
         delete this->_state_mutex;
         this->_state_mutex = ft_nullptr;
         return (init_error);
     }
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 void pt_condition_variable::disable_thread_safety()
@@ -199,7 +199,7 @@ int pt_condition_variable::wait_until(pt_mutex &mutex, const struct timespec &ab
     if (native_lock_error != 0)
         return (ft_map_system_error(native_lock_error));
     int unlock_error = mutex.unlock();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         pthread_mutex_unlock(&this->_mutex);
         return (unlock_error);
@@ -210,14 +210,14 @@ int pt_condition_variable::wait_until(pt_mutex &mutex, const struct timespec &ab
     int relock_error = mutex.lock();
     if (native_unlock_error != 0)
     {
-        if (relock_error != FT_ERR_SUCCESSS)
+        if (relock_error != FT_ERR_SUCCESS)
             return (relock_error);
         return (ft_map_system_error(native_unlock_error));
     }
-    if (relock_error != FT_ERR_SUCCESSS)
+    if (relock_error != FT_ERR_SUCCESS)
         return (relock_error);
     if (wait_result == 0)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     if (wait_result == ETIMEDOUT)
         return (ETIMEDOUT);
     return (ft_map_system_error(wait_result));
@@ -240,7 +240,7 @@ int pt_condition_variable::signal()
     }
     if (native_unlock_error != 0)
         return (ft_map_system_error(native_unlock_error));
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 int pt_condition_variable::broadcast()
@@ -260,5 +260,5 @@ int pt_condition_variable::broadcast()
     }
     if (native_unlock_error != 0)
         return (ft_map_system_error(native_unlock_error));
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }

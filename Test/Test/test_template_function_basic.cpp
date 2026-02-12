@@ -1,5 +1,9 @@
+#include "../test_internal.hpp"
 #include "../../Template/function.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_ft_function_default_empty_callable,
     "ft_function default construction yields an empty callable")

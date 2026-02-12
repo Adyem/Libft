@@ -36,7 +36,7 @@ template <typename t_type>
 int pt_buffer_reserve(pt_buffer<t_type> &buffer, ft_size_t required)
 {
     if (required <= buffer.capacity)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     ft_size_t new_capacity = buffer.capacity != 0 ? buffer.capacity * 2 : 4;
     if (new_capacity < required)
         new_capacity = required;
@@ -53,18 +53,18 @@ int pt_buffer_reserve(pt_buffer<t_type> &buffer, ft_size_t required)
         std::free(buffer.data);
     buffer.data = static_cast<t_type *>(new_data);
     buffer.capacity = new_capacity;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 template <typename t_type>
 int pt_buffer_push(pt_buffer<t_type> &buffer, const t_type &value)
 {
     int reserve_error = pt_buffer_reserve(buffer, buffer.size + 1);
-    if (reserve_error != FT_ERR_SUCCESSS)
+    if (reserve_error != FT_ERR_SUCCESS)
         return (reserve_error);
     buffer.data[buffer.size] = value;
     buffer.size += 1;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 template <typename t_type>
@@ -78,7 +78,7 @@ int pt_buffer_copy(pt_buffer<t_type> &dest,
         const pt_buffer<t_type> &source)
 {
     int reserve_error = pt_buffer_reserve(dest, source.size);
-    if (reserve_error != FT_ERR_SUCCESSS)
+    if (reserve_error != FT_ERR_SUCCESS)
         return (reserve_error);
     ft_size_t copy_index = 0;
     while (copy_index < source.size)
@@ -87,7 +87,7 @@ int pt_buffer_copy(pt_buffer<t_type> &dest,
         copy_index += 1;
     }
     dest.size = source.size;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 template <typename t_type>

@@ -1,7 +1,11 @@
+#include "../test_internal.hpp"
 #include "../../Time/time.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <cmath>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_time_benchmark_computes_average_and_jitter,
     "time_benchmark tracks rolling averages and jitter")
@@ -26,8 +30,8 @@ FT_TEST(test_time_benchmark_computes_average_and_jitter,
     FT_ASSERT(std::fabs(snapshot.jitter_ms - 2.0) < 0.0001);
     FT_ASSERT(std::fabs(snapshot.minimum_ms - 10.0) < 0.0001);
     FT_ASSERT(std::fabs(snapshot.maximum_ms - 14.0) < 0.0001);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, time_benchmark_get_error(&benchmark));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, time_benchmark_get_error(&benchmark));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -43,7 +47,7 @@ FT_TEST(test_time_benchmark_rejects_negative_samples,
     add_result = time_benchmark_add_sample(&benchmark, 5.0);
     FT_ASSERT_EQ(0, add_result);
 
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     add_result = time_benchmark_add_sample(&benchmark, -1.0);
     FT_ASSERT_EQ(-1, add_result);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, time_benchmark_get_error(&benchmark));
@@ -55,8 +59,8 @@ FT_TEST(test_time_benchmark_rejects_negative_samples,
     FT_ASSERT(std::fabs(snapshot.average_ms - 5.0) < 0.0001);
 
     time_benchmark_reset(&benchmark);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, time_benchmark_get_error(&benchmark));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, time_benchmark_get_error(&benchmark));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT_EQ(static_cast<size_t>(0), time_benchmark_get_sample_count(&benchmark));
     return (1);
 }
@@ -85,6 +89,6 @@ FT_TEST(test_time_benchmark_accepts_duration_wrappers,
     FT_ASSERT(std::fabs(snapshot.average_ms - 10.0) < 0.0001);
     FT_ASSERT(snapshot.jitter_ms >= 5.0);
     FT_ASSERT(snapshot.maximum_ms >= snapshot.minimum_ms);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }

@@ -66,7 +66,7 @@ ft_circular_buffer<ElementType>::ft_circular_buffer(size_t capacity)
 {
     if (capacity == 0)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return ;
     }
     _buffer = static_cast<ElementType*>(cma_malloc(sizeof(ElementType) * capacity));
@@ -76,7 +76,7 @@ ft_circular_buffer<ElementType>::ft_circular_buffer(size_t capacity)
         _capacity = 0;
         return ;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -88,7 +88,7 @@ ft_circular_buffer<ElementType>::~ft_circular_buffer()
 
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error == FT_ERR_SUCCESSS)
+    if (lock_error == FT_ERR_SUCCESS)
     {
         this->destroy_elements_locked();
         if (this->_buffer != ft_nullptr)
@@ -101,10 +101,10 @@ ft_circular_buffer<ElementType>::~ft_circular_buffer()
         this->_tail = 0;
         this->_size = 0;
         int unlock_error = this->unlock_internal(lock_acquired);
-        if (unlock_error != FT_ERR_SUCCESSS)
+        if (unlock_error != FT_ERR_SUCCESS)
             ft_global_error_stack_push(unlock_error);
         else
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
+            ft_global_error_stack_push(FT_ERR_SUCCESS);
     }
     else
     {
@@ -125,7 +125,7 @@ ft_circular_buffer<ElementType>::ft_circular_buffer(ft_circular_buffer<ElementTy
     other_thread_safe = (other._mutex != ft_nullptr);
     lock_acquired = false;
     lock_error = other.lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -147,13 +147,13 @@ ft_circular_buffer<ElementType>::ft_circular_buffer(ft_circular_buffer<ElementTy
         int enable_error;
 
         enable_error = this->enable_thread_safety();
-        if (enable_error != FT_ERR_SUCCESSS)
+        if (enable_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(enable_error);
             return ;
         }
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -162,7 +162,7 @@ ft_circular_buffer<ElementType>& ft_circular_buffer<ElementType>::operator=(ft_c
 {
     if (this == &other)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (*this);
     }
     bool other_thread_safe;
@@ -173,7 +173,7 @@ ft_circular_buffer<ElementType>& ft_circular_buffer<ElementType>::operator=(ft_c
 
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (*this);
@@ -189,7 +189,7 @@ ft_circular_buffer<ElementType>& ft_circular_buffer<ElementType>::operator=(ft_c
     this->teardown_thread_safety();
     other_lock_acquired = false;
     other_lock_error = other.lock_internal(&other_lock_acquired);
-    if (other_lock_error != FT_ERR_SUCCESSS)
+    if (other_lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(other_lock_error);
         return (*this);
@@ -212,13 +212,13 @@ ft_circular_buffer<ElementType>& ft_circular_buffer<ElementType>::operator=(ft_c
         int enable_error;
 
         enable_error = this->enable_thread_safety();
-        if (enable_error != FT_ERR_SUCCESSS)
+        if (enable_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(enable_error);
             return (*this);
         }
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (*this);
 }
 
@@ -230,8 +230,8 @@ int ft_circular_buffer<ElementType>::enable_thread_safety()
 
     if (this->_mutex != ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-        return (FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     result = this->prepare_thread_safety();
     ft_global_error_stack_push(result);
@@ -242,7 +242,7 @@ template <typename ElementType>
 void ft_circular_buffer<ElementType>::disable_thread_safety()
 {
     this->teardown_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -252,7 +252,7 @@ bool ft_circular_buffer<ElementType>::is_thread_safe() const
     bool enabled;
 
     enabled = (this->_mutex != ft_nullptr);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (enabled);
 }
 
@@ -262,12 +262,12 @@ int ft_circular_buffer<ElementType>::lock(bool *lock_acquired) const
     int result;
 
     result = this->lock_internal(lock_acquired);
-    if (result != FT_ERR_SUCCESSS)
+    if (result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(result);
         return (-1);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -290,7 +290,7 @@ void ft_circular_buffer<ElementType>::push(const ElementType& value)
 
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -305,7 +305,7 @@ void ft_circular_buffer<ElementType>::push(const ElementType& value)
     if (this->_capacity != 0)
         this->_tail = (this->_tail + 1) % this->_capacity;
     this->_size += 1;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -318,7 +318,7 @@ void ft_circular_buffer<ElementType>::push(ElementType&& value)
 
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -333,7 +333,7 @@ void ft_circular_buffer<ElementType>::push(ElementType&& value)
     if (this->_capacity != 0)
         this->_tail = (this->_tail + 1) % this->_capacity;
     this->_size += 1;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -347,7 +347,7 @@ ElementType ft_circular_buffer<ElementType>::pop()
 
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (ElementType());
@@ -363,7 +363,7 @@ ElementType ft_circular_buffer<ElementType>::pop()
     if (this->_capacity != 0)
         this->_head = (this->_head + 1) % this->_capacity;
     this->_size -= 1;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (value);
 }
@@ -377,13 +377,13 @@ bool ft_circular_buffer<ElementType>::is_full() const
 
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (false);
     }
     result = (this->_size == this->_capacity);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (result);
 }
@@ -397,13 +397,13 @@ bool ft_circular_buffer<ElementType>::is_empty() const
 
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (true);
     }
     result = (this->_size == 0);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (result);
 }
@@ -417,13 +417,13 @@ size_t ft_circular_buffer<ElementType>::size() const
 
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (0);
     }
     current_size = this->_size;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (current_size);
 }
@@ -437,13 +437,13 @@ size_t ft_circular_buffer<ElementType>::capacity() const
 
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (0);
     }
     current_capacity = this->_capacity;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (current_capacity);
 }
@@ -456,7 +456,7 @@ void ft_circular_buffer<ElementType>::clear()
 
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -465,7 +465,7 @@ void ft_circular_buffer<ElementType>::clear()
     this->_head = 0;
     this->_tail = 0;
     this->_size = 0;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -501,20 +501,20 @@ int ft_circular_buffer<ElementType>::lock_internal(bool *lock_acquired) const
     if (lock_acquired)
         *lock_acquired = false;
     if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     int result = pt_recursive_mutex_lock_with_error(*this->_mutex);
-    if (result != FT_ERR_SUCCESSS)
+    if (result != FT_ERR_SUCCESS)
         return (result);
     if (lock_acquired)
         *lock_acquired = true;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 template <typename ElementType>
 int ft_circular_buffer<ElementType>::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     return (pt_recursive_mutex_unlock_with_error(*this->_mutex));
 }
 
@@ -522,7 +522,7 @@ template <typename ElementType>
 int ft_circular_buffer<ElementType>::prepare_thread_safety()
 {
     if (this->_mutex != ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     return (pt_recursive_mutex_create_with_error(&this->_mutex));
 }
 

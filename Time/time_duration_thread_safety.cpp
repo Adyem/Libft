@@ -35,7 +35,7 @@ int time_duration_ms_prepare_thread_safety(t_duration_milliseconds *duration)
     if (!duration)
         return (time_duration_ms_report_result(FT_ERR_INVALID_ARGUMENT, -1));
     if (duration->thread_safe_enabled && duration->mutex)
-        return (time_duration_ms_report_result(FT_ERR_SUCCESSS, 0));
+        return (time_duration_ms_report_result(FT_ERR_SUCCESS, 0));
     memory = std::malloc(sizeof(pt_mutex));
     if (!memory)
         return (time_duration_ms_report_result(FT_ERR_NO_MEMORY, -1));
@@ -44,11 +44,11 @@ int time_duration_ms_prepare_thread_safety(t_duration_milliseconds *duration)
         int mutex_error;
 
         if (mutex_pointer == ft_nullptr)
-            mutex_error = FT_ERR_SUCCESSS;
+            mutex_error = FT_ERR_SUCCESS;
         else
             mutex_error = ft_global_error_stack_drop_last_error();
 
-        if (mutex_error != FT_ERR_SUCCESSS)
+        if (mutex_error != FT_ERR_SUCCESS)
         {
             mutex_pointer->~pt_mutex();
             std::free(memory);
@@ -57,7 +57,7 @@ int time_duration_ms_prepare_thread_safety(t_duration_milliseconds *duration)
     }
     duration->mutex = mutex_pointer;
     duration->thread_safe_enabled = true;
-    return (time_duration_ms_report_result(FT_ERR_SUCCESSS, 0));
+    return (time_duration_ms_report_result(FT_ERR_SUCCESS, 0));
 }
 
 void    time_duration_ms_teardown_thread_safety(t_duration_milliseconds *duration)
@@ -78,22 +78,22 @@ int time_duration_ms_lock(const t_duration_milliseconds *duration, bool *lock_ac
         return (time_duration_ms_report_result(FT_ERR_INVALID_ARGUMENT, -1));
     mutable_duration = const_cast<t_duration_milliseconds *>(duration);
     if (!mutable_duration->thread_safe_enabled || !mutable_duration->mutex)
-        return (time_duration_ms_report_result(FT_ERR_SUCCESSS, 0));
+        return (time_duration_ms_report_result(FT_ERR_SUCCESS, 0));
     mutable_duration->mutex->lock(THREAD_ID);
     {
         int lock_error;
 
         if (mutable_duration->mutex == ft_nullptr)
-            lock_error = FT_ERR_SUCCESSS;
+            lock_error = FT_ERR_SUCCESS;
         else
             lock_error = ft_global_error_stack_drop_last_error();
 
-        if (lock_error != FT_ERR_SUCCESSS)
+        if (lock_error != FT_ERR_SUCCESS)
             return (time_duration_ms_report_result(lock_error, -1));
     }
     if (lock_acquired)
         *lock_acquired = true;
-    return (time_duration_ms_report_result(FT_ERR_SUCCESSS, 0));
+    return (time_duration_ms_report_result(FT_ERR_SUCCESS, 0));
 }
 
 void    time_duration_ms_unlock(const t_duration_milliseconds *duration, bool lock_acquired)
@@ -107,7 +107,7 @@ void    time_duration_ms_unlock(const t_duration_milliseconds *duration, bool lo
     }
     if (!lock_acquired)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return ;
     }
     mutable_duration = const_cast<t_duration_milliseconds *>(duration);
@@ -121,17 +121,17 @@ void    time_duration_ms_unlock(const t_duration_milliseconds *duration, bool lo
         int unlock_error;
 
         if (mutable_duration->mutex == ft_nullptr)
-            unlock_error = FT_ERR_SUCCESSS;
+            unlock_error = FT_ERR_SUCCESS;
         else
             unlock_error = ft_global_error_stack_drop_last_error();
 
-        if (unlock_error != FT_ERR_SUCCESSS)
+        if (unlock_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(unlock_error);
             return ;
         }
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -144,9 +144,9 @@ bool    time_duration_ms_is_thread_safe_enabled(const t_duration_milliseconds *d
     }
     if (!duration->thread_safe_enabled || !duration->mutex)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (false);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (true);
 }

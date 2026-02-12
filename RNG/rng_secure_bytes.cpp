@@ -17,7 +17,7 @@ uint32_t ft_random_uint32(void)
     ft_size_t index;
 
     error_code = rng_secure_bytes(byte_buffer, 4);
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
         return (0);
     random_value = 0;
     index = 0;

@@ -93,7 +93,7 @@ int html_write_to_file(const char *file_path, html_node *node_list)
     open_error = ft_global_error_stack_drop_last_error();
     if (file_descriptor < 0)
     {
-        if (open_error == FT_ERR_SUCCESSS)
+        if (open_error == FT_ERR_SUCCESS)
             open_error = FT_ERR_INTERNAL;
         ft_global_error_stack_push(open_error);
         return (-1);
@@ -116,12 +116,12 @@ int html_write_to_file(const char *file_path, html_node *node_list)
     if (su_close(file_descriptor) != 0)
     {
         close_error = ft_global_error_stack_drop_last_error();
-        if (close_error == FT_ERR_SUCCESSS)
+        if (close_error == FT_ERR_SUCCESS)
             close_error = FT_ERR_IO;
         ft_global_error_stack_push(close_error);
         return (-1);
     }
     ft_global_error_stack_drop_last_error();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }

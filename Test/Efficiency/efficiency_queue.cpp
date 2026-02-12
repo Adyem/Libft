@@ -1,6 +1,10 @@
+#include "../test_internal.hpp"
 #include "../../Template/queue.hpp"
 #include "../../Template/swap.hpp"
 #include "utils.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 #include <queue>
 #include <utility>

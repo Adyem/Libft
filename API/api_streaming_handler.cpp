@@ -43,13 +43,13 @@ int api_streaming_handler::lock_pair(const api_streaming_handler &first,
     {
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
 
-        if (single_guard.get_error() != FT_ERR_SUCCESSS)
+        if (single_guard.get_error() != FT_ERR_SUCCESS)
         {
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -67,12 +67,12 @@ int api_streaming_handler::lock_pair(const api_streaming_handler &first,
         {
             ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
 
-            if (lower_guard.get_error() != FT_ERR_SUCCESSS)
+            if (lower_guard.get_error() != FT_ERR_SUCCESS)
             {
                 return (lower_guard.get_error());
             }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ERR_SUCCESSS)
+        if (upper_guard.get_error() == FT_ERR_SUCCESS)
         {
             if (!swapped)
             {
@@ -84,7 +84,7 @@ int api_streaming_handler::lock_pair(const api_streaming_handler &first,
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            return (FT_ERR_SUCCESSS);
+            return (FT_ERR_SUCCESS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -98,21 +98,21 @@ int api_streaming_handler::lock_pair(const api_streaming_handler &first,
 
 api_streaming_handler::api_streaming_handler() noexcept
     : _headers_callback(ft_nullptr), _body_callback(ft_nullptr),
-      _user_data(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex()
+      _user_data(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex()
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 api_streaming_handler::api_streaming_handler(
     const api_streaming_handler &other) noexcept
     : _headers_callback(ft_nullptr), _body_callback(ft_nullptr),
-      _user_data(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex()
+      _user_data(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex()
 {
     {
         ft_unique_lock<pt_mutex> other_guard(other._mutex);
 
-        if (other_guard.get_error() != FT_ERR_SUCCESSS)
+        if (other_guard.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(other_guard.get_error());
             return ;
@@ -137,7 +137,7 @@ api_streaming_handler &api_streaming_handler::operator=(
         return (*this);
     lock_error = api_streaming_handler::lock_pair(*this, other,
             this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         return (*this);
@@ -153,12 +153,12 @@ api_streaming_handler &api_streaming_handler::operator=(
 api_streaming_handler::api_streaming_handler(
     api_streaming_handler &&other) noexcept
     : _headers_callback(ft_nullptr), _body_callback(ft_nullptr),
-      _user_data(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex()
+      _user_data(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex()
 {
     {
         ft_unique_lock<pt_mutex> other_guard(other._mutex);
 
-        if (other_guard.get_error() != FT_ERR_SUCCESSS)
+        if (other_guard.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(other_guard.get_error());
             return ;
@@ -170,9 +170,9 @@ api_streaming_handler::api_streaming_handler(
         other._headers_callback = ft_nullptr;
         other._body_callback = ft_nullptr;
         other._user_data = ft_nullptr;
-        other._error_code = FT_ERR_SUCCESSS;
+        other._error_code = FT_ERR_SUCCESS;
         this->set_error(this->_error_code);
-        other.set_error(FT_ERR_SUCCESSS);
+        other.set_error(FT_ERR_SUCCESS);
     }
     return ;
 }
@@ -188,7 +188,7 @@ api_streaming_handler &api_streaming_handler::operator=(
         return (*this);
     lock_error = api_streaming_handler::lock_pair(*this, other,
             this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         return (*this);
@@ -200,9 +200,9 @@ api_streaming_handler &api_streaming_handler::operator=(
     other._headers_callback = ft_nullptr;
     other._body_callback = ft_nullptr;
     other._user_data = ft_nullptr;
-    other._error_code = FT_ERR_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESS;
     this->set_error(this->_error_code);
-    other.set_error(FT_ERR_SUCCESSS);
+    other.set_error(FT_ERR_SUCCESS);
     return (*this);
 }
 
@@ -216,7 +216,7 @@ void api_streaming_handler::reset() noexcept
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        if (guard.get_error() != FT_ERR_SUCCESSS)
+        if (guard.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(guard.get_error());
             return ;
@@ -224,8 +224,8 @@ void api_streaming_handler::reset() noexcept
         this->_headers_callback = ft_nullptr;
         this->_body_callback = ft_nullptr;
         this->_user_data = ft_nullptr;
-        this->_error_code = FT_ERR_SUCCESSS;
-        this->set_error(FT_ERR_SUCCESSS);
+        this->_error_code = FT_ERR_SUCCESS;
+        this->set_error(FT_ERR_SUCCESS);
     }
     return ;
 }
@@ -236,13 +236,13 @@ void api_streaming_handler::set_headers_callback(
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        if (guard.get_error() != FT_ERR_SUCCESSS)
+        if (guard.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(guard.get_error());
             return ;
         }
         this->_headers_callback = callback;
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     }
     return ;
 }
@@ -253,13 +253,13 @@ void api_streaming_handler::set_body_callback(
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        if (guard.get_error() != FT_ERR_SUCCESSS)
+        if (guard.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(guard.get_error());
             return ;
         }
         this->_body_callback = callback;
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     }
     return ;
 }
@@ -269,13 +269,13 @@ void api_streaming_handler::set_user_data(void *user_data) noexcept
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        if (guard.get_error() != FT_ERR_SUCCESSS)
+        if (guard.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(guard.get_error());
             return ;
         }
         this->_user_data = user_data;
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     }
     return ;
 }
@@ -290,14 +290,14 @@ bool api_streaming_handler::invoke_headers_callback(int status_code,
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        if (guard.get_error() != FT_ERR_SUCCESSS)
+        if (guard.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(guard.get_error());
             return (false);
         }
         callback = this->_headers_callback;
         user_data = this->_user_data;
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     }
     if (!callback)
         return (true);
@@ -316,14 +316,14 @@ bool api_streaming_handler::invoke_body_callback(const char *chunk_data,
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        if (guard.get_error() != FT_ERR_SUCCESSS)
+        if (guard.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(guard.get_error());
             return (false);
         }
         callback = this->_body_callback;
         user_data = this->_user_data;
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     }
     if (!callback)
         return (true);

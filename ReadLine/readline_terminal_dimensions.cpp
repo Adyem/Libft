@@ -24,19 +24,19 @@ int rl_terminal_dimensions_prepare_thread_safety(terminal_dimensions *dimensions
         return (FT_ERR_INVALID_ARGUMENT);
     if (dimensions->mutex != ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-        return (FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     pt_recursive_mutex *mutex_pointer = ft_nullptr;
     int mutex_error = pt_recursive_mutex_create_with_error(&mutex_pointer);
-    if (mutex_error != FT_ERR_SUCCESSS)
+    if (mutex_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(mutex_error);
         return (mutex_error);
     }
     dimensions->mutex = mutex_pointer;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 void rl_terminal_dimensions_teardown_thread_safety(terminal_dimensions *dimensions)
@@ -44,7 +44,7 @@ void rl_terminal_dimensions_teardown_thread_safety(terminal_dimensions *dimensio
     if (dimensions == ft_nullptr)
         return ;
     pt_recursive_mutex_destroy(&dimensions->mutex);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -55,17 +55,17 @@ int rl_terminal_dimensions_lock(terminal_dimensions *dimensions, bool *lock_acqu
     if (dimensions == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     if (dimensions->mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     int mutex_error = pt_recursive_mutex_lock_with_error(*dimensions->mutex);
     int stack_error = ft_global_error_stack_drop_last_error();
-    if (mutex_error != FT_ERR_SUCCESSS)
+    if (mutex_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(stack_error);
         return (mutex_error);
     }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 int rl_terminal_dimensions_unlock(terminal_dimensions *dimensions, bool lock_acquired)
@@ -76,12 +76,12 @@ int rl_terminal_dimensions_unlock(terminal_dimensions *dimensions, bool lock_acq
         return (FT_ERR_INVALID_STATE);
     int mutex_error = pt_recursive_mutex_unlock_with_error(*dimensions->mutex);
     int stack_error = ft_global_error_stack_drop_last_error();
-    if (mutex_error != FT_ERR_SUCCESSS)
+    if (mutex_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(stack_error);
         return (mutex_error);
     }
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 int rl_terminal_dimensions_refresh(terminal_dimensions *dimensions)
@@ -97,7 +97,7 @@ int rl_terminal_dimensions_refresh(terminal_dimensions *dimensions)
         return (FT_ERR_INVALID_ARGUMENT);
     lock_acquired = false;
     result = rl_terminal_dimensions_lock(dimensions, &lock_acquired);
-    if (result != FT_ERR_SUCCESSS)
+    if (result != FT_ERR_SUCCESS)
         return (result);
     if (cmp_readline_terminal_dimensions(&rows, &cols, &x_pixels, &y_pixels) != 0)
     {
@@ -115,7 +115,7 @@ cleanup:
     {
         int unlock_error = rl_terminal_dimensions_unlock(dimensions, lock_acquired);
 
-        if (unlock_error != FT_ERR_SUCCESSS && result == FT_ERR_SUCCESSS)
+        if (unlock_error != FT_ERR_SUCCESS && result == FT_ERR_SUCCESS)
             result = unlock_error;
     }
     return (result);
@@ -133,7 +133,7 @@ int rl_terminal_dimensions_get(terminal_dimensions *dimensions,
         return (FT_ERR_INVALID_ARGUMENT);
     lock_acquired = false;
     result = rl_terminal_dimensions_lock(dimensions, &lock_acquired);
-    if (result != FT_ERR_SUCCESSS)
+    if (result != FT_ERR_SUCCESS)
         return (result);
     if (rows != ft_nullptr)
         *rows = dimensions->rows;
@@ -149,7 +149,7 @@ int rl_terminal_dimensions_get(terminal_dimensions *dimensions,
     {
         int unlock_error = rl_terminal_dimensions_unlock(dimensions, lock_acquired);
 
-        if (unlock_error != FT_ERR_SUCCESSS && result == FT_ERR_SUCCESSS)
+        if (unlock_error != FT_ERR_SUCCESS && result == FT_ERR_SUCCESS)
             result = unlock_error;
     }
     return (result);

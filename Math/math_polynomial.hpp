@@ -1,6 +1,7 @@
 #ifndef MATH_POLYNOMIAL_HPP
 # define MATH_POLYNOMIAL_HPP
 
+# include "../Template/move.hpp"
 # include "../Template/vector.hpp"
 # include "../Errno/errno.hpp"
 # include "../PThread/recursive_mutex.hpp"

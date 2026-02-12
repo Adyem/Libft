@@ -14,7 +14,7 @@ static void http2_append_raw_byte(ft_string &target, unsigned char value)
 }
 
 http2_header_field::http2_header_field() noexcept
-    : _name(), _value(), _error_code(FT_ERR_SUCCESSS),
+    : _name(), _value(), _error_code(FT_ERR_SUCCESS),
       _mutex(ft_nullptr)
 {
     if (this->prepare_thread_safety() != 0)
@@ -30,7 +30,7 @@ http2_header_field::~http2_header_field() noexcept
 }
 
 http2_header_field::http2_header_field(const http2_header_field &other) noexcept
-    : _name(), _value(), _error_code(FT_ERR_SUCCESSS),
+    : _name(), _value(), _error_code(FT_ERR_SUCCESS),
       _mutex(ft_nullptr)
 {
     if (this->prepare_thread_safety() != 0)
@@ -47,13 +47,13 @@ http2_header_field::http2_header_field(const http2_header_field &other) noexcept
     if (success_state)
     {
         other_name = other._name;
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
             success_state = false;
     }
     if (success_state)
     {
         other_value = other._value;
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
             success_state = false;
     }
     if (lock_acquired)
@@ -62,21 +62,21 @@ http2_header_field::http2_header_field(const http2_header_field &other) noexcept
     {
         this->_name = other_name;
         this->_value = other_value;
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
             success_state = false;
         if (success_state
-            && ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            && ft_string::last_operation_error() != FT_ERR_SUCCESS)
             success_state = false;
     }
     if (success_state)
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     else
         this->set_error(FT_ERR_NO_MEMORY);
     return ;
 }
 
 http2_header_field::http2_header_field(http2_header_field &&other) noexcept
-    : _name(), _value(), _error_code(FT_ERR_SUCCESSS),
+    : _name(), _value(), _error_code(FT_ERR_SUCCESS),
       _mutex(ft_nullptr)
 {
     if (this->prepare_thread_safety() != 0)
@@ -92,26 +92,26 @@ http2_header_field::http2_header_field(http2_header_field &&other) noexcept
     {
         this->_name = other._name;
         this->_value = other._value;
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
             success_state = false;
         if (success_state
-            && ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            && ft_string::last_operation_error() != FT_ERR_SUCCESS)
             success_state = false;
         if (success_state)
         {
             other._name.clear();
             other._value.clear();
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
                 success_state = false;
             if (success_state
-                && ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+                && ft_string::last_operation_error() != FT_ERR_SUCCESS)
                 success_state = false;
         }
     }
     if (lock_acquired)
         other.unlock(lock_acquired);
     if (success_state)
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     else
         this->set_error(FT_ERR_NO_MEMORY);
     return ;
@@ -133,13 +133,13 @@ http2_header_field &http2_header_field::operator=(const http2_header_field &othe
         if (success_state)
         {
             other_name = other._name;
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
                 success_state = false;
         }
         if (success_state)
         {
             other_value = other._value;
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
                 success_state = false;
         }
         if (lock_acquired)
@@ -148,14 +148,14 @@ http2_header_field &http2_header_field::operator=(const http2_header_field &othe
         {
             this->_name = other_name;
             this->_value = other_value;
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
                 success_state = false;
             if (success_state
-                && ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+                && ft_string::last_operation_error() != FT_ERR_SUCCESS)
                 success_state = false;
         }
         if (success_state)
-            this->set_error(FT_ERR_SUCCESSS);
+            this->set_error(FT_ERR_SUCCESS);
         else
             this->set_error(FT_ERR_NO_MEMORY);
     }
@@ -177,26 +177,26 @@ http2_header_field &http2_header_field::operator=(http2_header_field &&other) no
         {
             this->_name = other._name;
             this->_value = other._value;
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
                 success_state = false;
             if (success_state
-                && ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+                && ft_string::last_operation_error() != FT_ERR_SUCCESS)
                 success_state = false;
             if (success_state)
             {
                 other._name.clear();
                 other._value.clear();
-                if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+                if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
                     success_state = false;
                 if (success_state
-                    && ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+                    && ft_string::last_operation_error() != FT_ERR_SUCCESS)
                     success_state = false;
             }
         }
         if (lock_acquired)
             other.unlock(lock_acquired);
         if (success_state)
-            this->set_error(FT_ERR_SUCCESSS);
+            this->set_error(FT_ERR_SUCCESS);
         else
             this->set_error(FT_ERR_NO_MEMORY);
     }
@@ -210,7 +210,7 @@ int http2_header_field::prepare_thread_safety() noexcept
 
     if (this->_mutex != ft_nullptr)
     {
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
         return (0);
     }
     memory_pointer = std::malloc(sizeof(pt_mutex));
@@ -220,7 +220,7 @@ int http2_header_field::prepare_thread_safety() noexcept
         return (-1);
     }
     mutex_pointer = new(memory_pointer) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
+    if (mutex_pointer->get_error() != FT_ERR_SUCCESS)
     {
         int mutex_error;
 
@@ -231,7 +231,7 @@ int http2_header_field::prepare_thread_safety() noexcept
         return (-1);
     }
     this->_mutex = mutex_pointer;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -243,7 +243,7 @@ void http2_header_field::teardown_thread_safety() noexcept
         std::free(this->_mutex);
         this->_mutex = ft_nullptr;
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -255,19 +255,19 @@ int http2_header_field::lock(bool *lock_acquired) const noexcept
         *lock_acquired = false;
     if (this->_mutex == ft_nullptr)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESS;
         return (0);
     }
     mutable_field = const_cast<http2_header_field *>(this);
     mutable_field->_mutex->lock(THREAD_ID);
-    if (mutable_field->_mutex->get_error() != FT_ERR_SUCCESSS)
+    if (mutable_field->_mutex->get_error() != FT_ERR_SUCCESS)
     {
         mutable_field->set_error(mutable_field->_mutex->get_error());
         return (-1);
     }
     if (lock_acquired)
         *lock_acquired = true;
-    mutable_field->set_error(FT_ERR_SUCCESSS);
+    mutable_field->set_error(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -277,23 +277,23 @@ void http2_header_field::unlock(bool lock_acquired) const noexcept
 
     if (!lock_acquired)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESS;
         return ;
     }
     mutable_field = const_cast<http2_header_field *>(this);
     if (mutable_field->_mutex == ft_nullptr)
     {
-        ft_errno = FT_ERR_SUCCESSS;
-        mutable_field->set_error(FT_ERR_SUCCESSS);
+        ft_errno = FT_ERR_SUCCESS;
+        mutable_field->set_error(FT_ERR_SUCCESS);
         return ;
     }
     mutable_field->_mutex->unlock(THREAD_ID);
-    if (mutable_field->_mutex->get_error() != FT_ERR_SUCCESSS)
+    if (mutable_field->_mutex->get_error() != FT_ERR_SUCCESS)
     {
         mutable_field->set_error(mutable_field->_mutex->get_error());
         return ;
     }
-    mutable_field->set_error(FT_ERR_SUCCESSS);
+    mutable_field->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -307,10 +307,10 @@ bool http2_header_field::set_name(const ft_string &name_value) noexcept
     if (this->lock(&lock_acquired) != 0)
         return (false);
     this->_name = name_value;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         success_state = false;
     if (success_state)
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     else
         this->set_error(ft_string::last_operation_error());
     this->unlock(lock_acquired);
@@ -327,7 +327,7 @@ bool http2_header_field::set_name_from_cstr(const char *name_value) noexcept
     ft_string temporary_name;
 
     temporary_name = name_value;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
         this->set_error(ft_string::last_operation_error());
         return (false);
@@ -350,10 +350,10 @@ bool http2_header_field::set_name_from_buffer(const char *buffer, size_t length)
     if (this->lock(&lock_acquired) != 0)
         return (false);
     this->_name.assign(buffer, length);
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         success_state = false;
     if (success_state)
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     else
         this->set_error(ft_string::last_operation_error());
     this->unlock(lock_acquired);
@@ -370,10 +370,10 @@ bool http2_header_field::set_value(const ft_string &value_value) noexcept
     if (this->lock(&lock_acquired) != 0)
         return (false);
     this->_value = value_value;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         success_state = false;
     if (success_state)
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     else
         this->set_error(ft_string::last_operation_error());
     this->unlock(lock_acquired);
@@ -390,7 +390,7 @@ bool http2_header_field::set_value_from_cstr(const char *value_value) noexcept
     ft_string temporary_value;
 
     temporary_value = value_value;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
         this->set_error(ft_string::last_operation_error());
         return (false);
@@ -413,10 +413,10 @@ bool http2_header_field::set_value_from_buffer(const char *buffer, size_t length
     if (this->lock(&lock_acquired) != 0)
         return (false);
     this->_value.assign(buffer, length);
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         success_state = false;
     if (success_state)
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     else
         this->set_error(ft_string::last_operation_error());
     this->unlock(lock_acquired);
@@ -433,17 +433,17 @@ bool http2_header_field::assign(const ft_string &name_value, const ft_string &va
     if (this->lock(&lock_acquired) != 0)
         return (false);
     this->_name = name_value;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         success_state = false;
     if (success_state)
     {
         this->_value = value_value;
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
             success_state = false;
     }
     if (success_state)
-        this->set_error(FT_ERR_SUCCESSS);
-    else if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        this->set_error(FT_ERR_SUCCESS);
+    else if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         this->set_error(ft_string::last_operation_error());
     else
         this->set_error(ft_string::last_operation_error());
@@ -462,13 +462,13 @@ bool http2_header_field::assign_from_cstr(const char *name_value, const char *va
         return (false);
     }
     name_string = name_value;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
         this->set_error(ft_string::last_operation_error());
         return (false);
     }
     value_string = value_value;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
         this->set_error(ft_string::last_operation_error());
         return (false);
@@ -492,17 +492,17 @@ bool http2_header_field::assign_from_buffers(const char *name_buffer, size_t nam
     if (this->lock(&lock_acquired) != 0)
         return (false);
     this->_name.assign(name_buffer, name_length);
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         success_state = false;
     if (success_state)
     {
         this->_value.assign(value_buffer, value_length);
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
             success_state = false;
     }
     if (success_state)
-        this->set_error(FT_ERR_SUCCESSS);
-    else if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        this->set_error(FT_ERR_SUCCESS);
+    else if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         this->set_error(ft_string::last_operation_error());
     else
         this->set_error(ft_string::last_operation_error());
@@ -520,10 +520,10 @@ bool http2_header_field::copy_name(ft_string &out_name) const noexcept
     if (this->lock(&lock_acquired) != 0)
         return (false);
     out_name = this->_name;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         success_state = false;
     if (success_state)
-        const_cast<http2_header_field *>(this)->set_error(FT_ERR_SUCCESSS);
+        const_cast<http2_header_field *>(this)->set_error(FT_ERR_SUCCESS);
     else
         const_cast<http2_header_field *>(this)->set_error(
             ft_string::last_operation_error());
@@ -541,10 +541,10 @@ bool http2_header_field::copy_value(ft_string &out_value) const noexcept
     if (this->lock(&lock_acquired) != 0)
         return (false);
     out_value = this->_value;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         success_state = false;
     if (success_state)
-        const_cast<http2_header_field *>(this)->set_error(FT_ERR_SUCCESSS);
+        const_cast<http2_header_field *>(this)->set_error(FT_ERR_SUCCESS);
     else
         const_cast<http2_header_field *>(this)->set_error(
             ft_string::last_operation_error());
@@ -561,12 +561,12 @@ void http2_header_field::clear() noexcept
         return ;
     this->_name.clear();
     this->_value.clear();
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         this->set_error(ft_string::last_operation_error());
-    else if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    else if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         this->set_error(ft_string::last_operation_error());
     else
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     this->unlock(lock_acquired);
     return ;
 }
@@ -583,7 +583,7 @@ const char *http2_header_field::get_error_str() const noexcept
 
 http2_frame::http2_frame() noexcept
     : _type(0), _flags(0), _stream_identifier(0), _payload(),
-      _error_code(FT_ERR_SUCCESSS), _thread_safe_enabled(false), _mutex(ft_nullptr)
+      _error_code(FT_ERR_SUCCESS), _thread_safe_enabled(false), _mutex(ft_nullptr)
 {
     return ;
 }
@@ -597,7 +597,7 @@ http2_frame::~http2_frame() noexcept
 
 http2_frame::http2_frame(const http2_frame &other) noexcept
     : _type(0), _flags(0), _stream_identifier(0), _payload(),
-      _error_code(FT_ERR_SUCCESSS), _thread_safe_enabled(false), _mutex(ft_nullptr)
+      _error_code(FT_ERR_SUCCESS), _thread_safe_enabled(false), _mutex(ft_nullptr)
 {
     bool lock_acquired;
     bool success_state;
@@ -612,14 +612,14 @@ http2_frame::http2_frame(const http2_frame &other) noexcept
         this->_flags = other._flags;
         this->_stream_identifier = other._stream_identifier;
         this->_payload = other._payload;
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
             success_state = false;
     }
     if (lock_acquired)
         const_cast<http2_frame &>(other).unlock(lock_acquired);
     if (success_state)
-        this->set_error(FT_ERR_SUCCESSS);
-    else if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        this->set_error(FT_ERR_SUCCESS);
+    else if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         this->set_error(ft_string::last_operation_error());
     else
         this->set_error(FT_ERR_NO_MEMORY);
@@ -628,7 +628,7 @@ http2_frame::http2_frame(const http2_frame &other) noexcept
 
 http2_frame::http2_frame(http2_frame &&other) noexcept
     : _type(0), _flags(0), _stream_identifier(0), _payload(),
-      _error_code(FT_ERR_SUCCESSS), _thread_safe_enabled(false), _mutex(ft_nullptr)
+      _error_code(FT_ERR_SUCCESS), _thread_safe_enabled(false), _mutex(ft_nullptr)
 {
     bool lock_acquired;
     bool success_state;
@@ -643,12 +643,12 @@ http2_frame::http2_frame(http2_frame &&other) noexcept
         this->_flags = other._flags;
         this->_stream_identifier = other._stream_identifier;
         this->_payload = other._payload;
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
             success_state = false;
         if (success_state)
         {
             other._payload.clear();
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
                 success_state = false;
             other._type = 0;
             other._flags = 0;
@@ -658,8 +658,8 @@ http2_frame::http2_frame(http2_frame &&other) noexcept
     if (lock_acquired)
         other.unlock(lock_acquired);
     if (success_state)
-        this->set_error(FT_ERR_SUCCESSS);
-    else if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        this->set_error(FT_ERR_SUCCESS);
+    else if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         this->set_error(ft_string::last_operation_error());
     else
         this->set_error(FT_ERR_NO_MEMORY);
@@ -683,14 +683,14 @@ http2_frame &http2_frame::operator=(const http2_frame &other) noexcept
             this->_flags = other._flags;
             this->_stream_identifier = other._stream_identifier;
             this->_payload = other._payload;
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
                 success_state = false;
         }
         if (lock_acquired)
             const_cast<http2_frame &>(other).unlock(lock_acquired);
         if (success_state)
-            this->set_error(FT_ERR_SUCCESSS);
-        else if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            this->set_error(FT_ERR_SUCCESS);
+        else if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
             this->set_error(ft_string::last_operation_error());
         else
             this->set_error(FT_ERR_NO_MEMORY);
@@ -715,12 +715,12 @@ http2_frame &http2_frame::operator=(http2_frame &&other) noexcept
             this->_flags = other._flags;
             this->_stream_identifier = other._stream_identifier;
             this->_payload = other._payload;
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
                 success_state = false;
             if (success_state)
             {
                 other._payload.clear();
-                if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+                if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
                     success_state = false;
                 other._type = 0;
                 other._flags = 0;
@@ -730,8 +730,8 @@ http2_frame &http2_frame::operator=(http2_frame &&other) noexcept
         if (lock_acquired)
             other.unlock(lock_acquired);
         if (success_state)
-            this->set_error(FT_ERR_SUCCESSS);
-        else if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            this->set_error(FT_ERR_SUCCESS);
+        else if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
             this->set_error(ft_string::last_operation_error());
         else
             this->set_error(FT_ERR_NO_MEMORY);
@@ -746,7 +746,7 @@ int http2_frame::enable_thread_safety() noexcept
 
     if (this->_thread_safe_enabled && this->_mutex != ft_nullptr)
     {
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
         return (0);
     }
     memory_pointer = std::malloc(sizeof(pt_mutex));
@@ -756,7 +756,7 @@ int http2_frame::enable_thread_safety() noexcept
         return (-1);
     }
     mutex_pointer = new(memory_pointer) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
+    if (mutex_pointer->get_error() != FT_ERR_SUCCESS)
     {
         int mutex_error;
 
@@ -768,7 +768,7 @@ int http2_frame::enable_thread_safety() noexcept
     }
     this->_mutex = mutex_pointer;
     this->_thread_safe_enabled = true;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -781,7 +781,7 @@ void http2_frame::teardown_thread_safety() noexcept
         this->_mutex = ft_nullptr;
     }
     this->_thread_safe_enabled = false;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -806,19 +806,19 @@ int http2_frame::lock(bool *lock_acquired) const noexcept
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || this->_mutex == ft_nullptr)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESS;
         return (0);
     }
     mutable_frame = const_cast<http2_frame *>(this);
     mutable_frame->_mutex->lock(THREAD_ID);
-    if (mutable_frame->_mutex->get_error() != FT_ERR_SUCCESSS)
+    if (mutable_frame->_mutex->get_error() != FT_ERR_SUCCESS)
     {
         mutable_frame->set_error(mutable_frame->_mutex->get_error());
         return (-1);
     }
     if (lock_acquired)
         *lock_acquired = true;
-    mutable_frame->set_error(FT_ERR_SUCCESSS);
+    mutable_frame->set_error(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -832,12 +832,12 @@ void http2_frame::unlock(bool lock_acquired) const noexcept
     if (mutable_frame->_mutex == ft_nullptr)
         return ;
     mutable_frame->_mutex->unlock(THREAD_ID);
-    if (mutable_frame->_mutex->get_error() != FT_ERR_SUCCESSS)
+    if (mutable_frame->_mutex->get_error() != FT_ERR_SUCCESS)
     {
         mutable_frame->set_error(mutable_frame->_mutex->get_error());
         return ;
     }
-    mutable_frame->set_error(FT_ERR_SUCCESSS);
+    mutable_frame->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -849,7 +849,7 @@ bool http2_frame::set_type(uint8_t type_value) noexcept
     if (this->lock(&lock_acquired) != 0)
         return (false);
     this->_type = type_value;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     this->unlock(lock_acquired);
     return (true);
 }
@@ -862,7 +862,7 @@ bool http2_frame::get_type(uint8_t &out_type) const noexcept
     if (this->lock(&lock_acquired) != 0)
         return (false);
     out_type = this->_type;
-    const_cast<http2_frame *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<http2_frame *>(this)->set_error(FT_ERR_SUCCESS);
     this->unlock(lock_acquired);
     return (true);
 }
@@ -875,7 +875,7 @@ bool http2_frame::set_flags(uint8_t flags_value) noexcept
     if (this->lock(&lock_acquired) != 0)
         return (false);
     this->_flags = flags_value;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     this->unlock(lock_acquired);
     return (true);
 }
@@ -888,7 +888,7 @@ bool http2_frame::get_flags(uint8_t &out_flags) const noexcept
     if (this->lock(&lock_acquired) != 0)
         return (false);
     out_flags = this->_flags;
-    const_cast<http2_frame *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<http2_frame *>(this)->set_error(FT_ERR_SUCCESS);
     this->unlock(lock_acquired);
     return (true);
 }
@@ -901,7 +901,7 @@ bool http2_frame::set_stream_identifier(uint32_t stream_identifier_value) noexce
     if (this->lock(&lock_acquired) != 0)
         return (false);
     this->_stream_identifier = stream_identifier_value;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     this->unlock(lock_acquired);
     return (true);
 }
@@ -914,7 +914,7 @@ bool http2_frame::get_stream_identifier(uint32_t &out_stream_identifier) const n
     if (this->lock(&lock_acquired) != 0)
         return (false);
     out_stream_identifier = this->_stream_identifier;
-    const_cast<http2_frame *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<http2_frame *>(this)->set_error(FT_ERR_SUCCESS);
     this->unlock(lock_acquired);
     return (true);
 }
@@ -929,10 +929,10 @@ bool http2_frame::set_payload(const ft_string &payload_value) noexcept
     if (this->lock(&lock_acquired) != 0)
         return (false);
     this->_payload = payload_value;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         success_state = false;
     if (success_state)
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     else
         this->set_error(ft_string::last_operation_error());
     this->unlock(lock_acquired);
@@ -954,10 +954,10 @@ bool http2_frame::set_payload_from_buffer(const char *buffer, size_t length) noe
     if (this->lock(&lock_acquired) != 0)
         return (false);
     this->_payload.assign(buffer, length);
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         success_state = false;
     if (success_state)
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     else
         this->set_error(ft_string::last_operation_error());
     this->unlock(lock_acquired);
@@ -974,10 +974,10 @@ bool http2_frame::copy_payload(ft_string &out_payload) const noexcept
     if (this->lock(&lock_acquired) != 0)
         return (false);
     out_payload = this->_payload;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         success_state = false;
     if (success_state)
-        const_cast<http2_frame *>(this)->set_error(FT_ERR_SUCCESSS);
+        const_cast<http2_frame *>(this)->set_error(FT_ERR_SUCCESS);
     else
         const_cast<http2_frame *>(this)->set_error(
             ft_string::last_operation_error());
@@ -993,10 +993,10 @@ void http2_frame::clear_payload() noexcept
     if (this->lock(&lock_acquired) != 0)
         return ;
     this->_payload.clear();
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         this->set_error(ft_string::last_operation_error());
     else
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     this->unlock(lock_acquired);
     return ;
 }
@@ -1047,12 +1047,12 @@ http2_stream_state::~http2_stream_state() noexcept
 http2_stream_manager::http2_stream_manager() noexcept
     : _streams(), _stream_identifiers(), _initial_remote_window(65535),
       _initial_local_window(65535), _connection_remote_window(65535),
-      _connection_local_window(65535), _error_code(FT_ERR_SUCCESSS),
+      _connection_local_window(65535), _error_code(FT_ERR_SUCCESS),
       _thread_safe_enabled(false), _mutex(ft_nullptr)
 {
     if (this->prepare_thread_safety() != 0)
         return ;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -1064,7 +1064,7 @@ http2_stream_manager::~http2_stream_manager() noexcept
     this->_initial_local_window = 65535;
     this->_connection_remote_window = 65535;
     this->_connection_local_window = 65535;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     this->teardown_thread_safety();
     return ;
 }
@@ -1076,7 +1076,7 @@ int http2_stream_manager::prepare_thread_safety() noexcept
 
     if (this->_thread_safe_enabled && this->_mutex != ft_nullptr)
     {
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
         return (0);
     }
     memory_pointer = std::malloc(sizeof(pt_mutex));
@@ -1086,7 +1086,7 @@ int http2_stream_manager::prepare_thread_safety() noexcept
         return (-1);
     }
     mutex_pointer = new(memory_pointer) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
+    if (mutex_pointer->get_error() != FT_ERR_SUCCESS)
     {
         int mutex_error;
 
@@ -1098,7 +1098,7 @@ int http2_stream_manager::prepare_thread_safety() noexcept
     }
     this->_mutex = mutex_pointer;
     this->_thread_safe_enabled = true;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -1111,7 +1111,7 @@ void http2_stream_manager::teardown_thread_safety() noexcept
         this->_mutex = ft_nullptr;
     }
     this->_thread_safe_enabled = false;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -1123,12 +1123,12 @@ int http2_stream_manager::lock(bool *lock_acquired) const noexcept
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || this->_mutex == ft_nullptr)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESS;
         return (0);
     }
     mutable_manager = const_cast<http2_stream_manager *>(this);
     mutable_manager->_mutex->lock(THREAD_ID);
-    if (mutable_manager->_mutex->get_error() != FT_ERR_SUCCESSS)
+    if (mutable_manager->_mutex->get_error() != FT_ERR_SUCCESS)
     {
         mutable_manager->set_error(mutable_manager->_mutex->get_error());
         return (-1);
@@ -1148,12 +1148,12 @@ void http2_stream_manager::unlock(bool lock_acquired) const noexcept
     if (mutable_manager->_mutex == ft_nullptr)
         return ;
     mutable_manager->_mutex->unlock(THREAD_ID);
-    if (mutable_manager->_mutex->get_error() != FT_ERR_SUCCESSS)
+    if (mutable_manager->_mutex->get_error() != FT_ERR_SUCCESS)
     {
         mutable_manager->set_error(mutable_manager->_mutex->get_error());
         return ;
     }
-    mutable_manager->set_error(FT_ERR_SUCCESSS);
+    mutable_manager->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -1203,7 +1203,7 @@ bool http2_stream_manager::validate_receive_window(uint32_t stream_identifier,
         this->set_error(FT_ERR_OUT_OF_RANGE);
         return (false);
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -1230,7 +1230,7 @@ bool http2_stream_manager::record_received_data(uint32_t stream_identifier,
     }
     stream_entry->value.local_window -= length;
     this->_connection_local_window -= length;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -1241,7 +1241,7 @@ bool http2_stream_manager::reserve_remote_connection_window(uint32_t length) noe
         this->set_error(FT_ERR_OUT_OF_RANGE);
         return (false);
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -1253,7 +1253,7 @@ bool http2_stream_manager::record_connection_send(uint32_t length) noexcept
         return (false);
     }
     this->_connection_remote_window -= length;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -1264,7 +1264,7 @@ void http2_stream_manager::remove_stream_identifier(uint32_t stream_identifier) 
     size_t index;
 
     identifier_count = this->_stream_identifiers.size();
-    if (this->_stream_identifiers.get_error() != FT_ERR_SUCCESSS)
+    if (this->_stream_identifiers.get_error() != FT_ERR_SUCCESS)
         return ;
     iterator_value = this->_stream_identifiers.begin();
     index = 0;
@@ -1303,7 +1303,7 @@ bool http2_stream_manager::open_stream(uint32_t stream_identifier) noexcept
         new_state.remote_window = this->_initial_remote_window;
         new_state.local_window = this->_initial_local_window;
         this->_streams.insert(stream_identifier, new_state);
-        if (this->_streams.get_error() != FT_ERR_SUCCESSS)
+        if (this->_streams.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(this->_streams.get_error());
             success_state = false;
@@ -1312,7 +1312,7 @@ bool http2_stream_manager::open_stream(uint32_t stream_identifier) noexcept
     if (success_state)
     {
         this->_stream_identifiers.push_back(stream_identifier);
-        if (this->_stream_identifiers.get_error() != FT_ERR_SUCCESSS)
+        if (this->_stream_identifiers.get_error() != FT_ERR_SUCCESS)
         {
             this->_streams.remove(stream_identifier);
             this->set_error(this->_stream_identifiers.get_error());
@@ -1320,7 +1320,7 @@ bool http2_stream_manager::open_stream(uint32_t stream_identifier) noexcept
         }
     }
     if (success_state)
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     this->unlock(lock_acquired);
     return (success_state);
 }
@@ -1369,7 +1369,7 @@ bool http2_stream_manager::append_data(uint32_t stream_identifier, const char *d
             while (index < length)
             {
                 stream_entry->value.buffer.append(data[index]);
-                if (stream_entry->value.buffer.get_error() != FT_ERR_SUCCESSS)
+                if (stream_entry->value.buffer.get_error() != FT_ERR_SUCCESS)
                 {
                     this->set_error(stream_entry->value.buffer.get_error());
                     success_state = false;
@@ -1385,7 +1385,7 @@ bool http2_stream_manager::append_data(uint32_t stream_identifier, const char *d
         }
     }
     if (success_state)
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     this->unlock(lock_acquired);
     return (success_state);
 }
@@ -1409,7 +1409,7 @@ bool http2_stream_manager::close_stream(uint32_t stream_identifier) noexcept
     if (success_state)
     {
         this->_streams.remove(stream_identifier);
-        if (this->_streams.get_error() != FT_ERR_SUCCESSS)
+        if (this->_streams.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(this->_streams.get_error());
             success_state = false;
@@ -1418,7 +1418,7 @@ bool http2_stream_manager::close_stream(uint32_t stream_identifier) noexcept
     if (success_state)
         this->remove_stream_identifier(stream_identifier);
     if (success_state)
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     this->unlock(lock_acquired);
     return (success_state);
 }
@@ -1443,14 +1443,14 @@ bool http2_stream_manager::get_stream_buffer(uint32_t stream_identifier,
     if (success_state)
     {
         out_buffer = stream_entry->value.buffer;
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             this->set_error(ft_string::last_operation_error());
             success_state = false;
         }
     }
     if (success_state)
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     this->unlock(lock_acquired);
     return (success_state);
 }
@@ -1492,7 +1492,7 @@ bool http2_stream_manager::update_priority(uint32_t stream_identifier,
     if (success_state && exclusive)
     {
         identifier_count = this->_stream_identifiers.size();
-        if (this->_stream_identifiers.get_error() != FT_ERR_SUCCESSS)
+        if (this->_stream_identifiers.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(this->_stream_identifiers.get_error());
             success_state = false;
@@ -1526,7 +1526,7 @@ bool http2_stream_manager::update_priority(uint32_t stream_identifier,
         stream_entry->value.dependency_identifier = dependency_identifier;
         stream_entry->value.weight = weight;
         stream_entry->value.exclusive_dependency = exclusive;
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     }
     this->unlock(lock_acquired);
     return (success_state);
@@ -1554,7 +1554,7 @@ bool http2_stream_manager::get_priority(uint32_t stream_identifier,
         dependency_identifier = stream_entry->value.dependency_identifier;
         weight = stream_entry->value.weight;
         exclusive = stream_entry->value.exclusive_dependency;
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     }
     this->unlock(lock_acquired);
     return (success_state);
@@ -1582,7 +1582,7 @@ bool http2_stream_manager::update_remote_initial_window(uint32_t new_window) noe
     {
         this->_initial_remote_window = new_window;
         identifier_count = this->_stream_identifiers.size();
-        if (this->_stream_identifiers.get_error() != FT_ERR_SUCCESSS)
+        if (this->_stream_identifiers.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(this->_stream_identifiers.get_error());
             success_state = false;
@@ -1630,7 +1630,7 @@ bool http2_stream_manager::update_remote_initial_window(uint32_t new_window) noe
         }
     }
     if (success_state)
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     this->unlock(lock_acquired);
     return (success_state);
 }
@@ -1657,7 +1657,7 @@ bool http2_stream_manager::update_local_initial_window(uint32_t new_window) noex
     {
         this->_initial_local_window = new_window;
         identifier_count = this->_stream_identifiers.size();
-        if (this->_stream_identifiers.get_error() != FT_ERR_SUCCESSS)
+        if (this->_stream_identifiers.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(this->_stream_identifiers.get_error());
             success_state = false;
@@ -1705,7 +1705,7 @@ bool http2_stream_manager::update_local_initial_window(uint32_t new_window) noex
         }
     }
     if (success_state)
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     this->unlock(lock_acquired);
     return (success_state);
 }
@@ -1731,7 +1731,7 @@ uint32_t http2_stream_manager::get_local_window(uint32_t stream_identifier) cons
     if (success_state)
     {
         window_value = stream_entry->value.local_window;
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     }
     this->unlock(lock_acquired);
     if (!success_state)
@@ -1760,7 +1760,7 @@ uint32_t http2_stream_manager::get_remote_window(uint32_t stream_identifier) con
     if (success_state)
     {
         window_value = stream_entry->value.remote_window;
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     }
     this->unlock(lock_acquired);
     if (!success_state)
@@ -1807,7 +1807,7 @@ bool http2_stream_manager::increase_local_window(uint32_t stream_identifier,
         else
         {
             stream_entry->value.local_window = static_cast<uint32_t>(updated_window);
-            this->set_error(FT_ERR_SUCCESSS);
+            this->set_error(FT_ERR_SUCCESS);
         }
     }
     this->unlock(lock_acquired);
@@ -1853,7 +1853,7 @@ bool http2_stream_manager::increase_remote_window(uint32_t stream_identifier,
         else
         {
             stream_entry->value.remote_window = static_cast<uint32_t>(updated_window);
-            this->set_error(FT_ERR_SUCCESSS);
+            this->set_error(FT_ERR_SUCCESS);
         }
     }
     this->unlock(lock_acquired);
@@ -1894,7 +1894,7 @@ bool http2_stream_manager::reserve_send_window(uint32_t stream_identifier,
             success_state = false;
     }
     if (success_state)
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
     this->unlock(lock_acquired);
     return (success_state);
 }
@@ -1926,7 +1926,7 @@ bool http2_stream_manager::update_connection_local_window(uint32_t increment) no
         else
         {
             this->_connection_local_window = static_cast<uint32_t>(updated_window);
-            this->set_error(FT_ERR_SUCCESSS);
+            this->set_error(FT_ERR_SUCCESS);
         }
     }
     this->unlock(lock_acquired);
@@ -1960,7 +1960,7 @@ bool http2_stream_manager::update_connection_remote_window(uint32_t increment) n
         else
         {
             this->_connection_remote_window = static_cast<uint32_t>(updated_window);
-            this->set_error(FT_ERR_SUCCESSS);
+            this->set_error(FT_ERR_SUCCESS);
         }
     }
     this->unlock(lock_acquired);
@@ -1977,7 +1977,7 @@ uint32_t http2_stream_manager::get_connection_local_window() const noexcept
     if (this->lock(&lock_acquired) != 0)
         return (0);
     window_value = this->_connection_local_window;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     this->unlock(lock_acquired);
     return (window_value);
 }
@@ -1992,7 +1992,7 @@ uint32_t http2_stream_manager::get_connection_remote_window() const noexcept
     if (this->lock(&lock_acquired) != 0)
         return (0);
     window_value = this->_connection_remote_window;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     this->unlock(lock_acquired);
     return (window_value);
 }
@@ -2038,7 +2038,7 @@ bool http2_settings_state::apply_single_setting(uint16_t identifier, uint32_t va
     if (identifier == 0x1)
     {
         this->_header_table_size = value;
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
         return (true);
     }
     if (identifier == 0x2)
@@ -2049,13 +2049,13 @@ bool http2_settings_state::apply_single_setting(uint16_t identifier, uint32_t va
             return (false);
         }
         this->_enable_push = (value != 0);
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
         return (true);
     }
     if (identifier == 0x3)
     {
         this->_max_concurrent_streams = value;
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
         return (true);
     }
     if (identifier == 0x4)
@@ -2071,7 +2071,7 @@ bool http2_settings_state::apply_single_setting(uint16_t identifier, uint32_t va
             return (false);
         }
         this->_initial_remote_window = value;
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
         return (true);
     }
     if (identifier == 0x5)
@@ -2082,30 +2082,30 @@ bool http2_settings_state::apply_single_setting(uint16_t identifier, uint32_t va
             return (false);
         }
         this->_max_frame_size = value;
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
         return (true);
     }
     if (identifier == 0x6)
     {
         this->_max_header_list_size = value;
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
         return (true);
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (true);
 }
 
 http2_settings_state::http2_settings_state() noexcept
     : _header_table_size(4096), _enable_push(true), _max_concurrent_streams(0xFFFFFFFFu),
       _initial_local_window(65535), _initial_remote_window(65535),
-      _max_frame_size(16384), _max_header_list_size(0), _error_code(FT_ERR_SUCCESSS)
+      _max_frame_size(16384), _max_header_list_size(0), _error_code(FT_ERR_SUCCESS)
 {
     return ;
 }
 
 http2_settings_state::~http2_settings_state() noexcept
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -2135,7 +2135,7 @@ bool http2_settings_state::apply_remote_settings(const http2_frame &frame,
         return (false);
     }
     payload_length = payload_copy.size();
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
         this->set_error(ft_string::last_operation_error());
         return (false);
@@ -2152,7 +2152,7 @@ bool http2_settings_state::apply_remote_settings(const http2_frame &frame,
             this->set_error(FT_ERR_INVALID_ARGUMENT);
             return (false);
         }
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
         return (true);
     }
     if ((payload_length % 6) != 0)
@@ -2161,7 +2161,7 @@ bool http2_settings_state::apply_remote_settings(const http2_frame &frame,
         return (false);
     }
     payload_bytes = reinterpret_cast<const unsigned char*>(payload_copy.c_str());
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
         this->set_error(ft_string::last_operation_error());
         return (false);
@@ -2182,7 +2182,7 @@ bool http2_settings_state::apply_remote_settings(const http2_frame &frame,
             return (false);
         offset += 6;
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -2200,7 +2200,7 @@ bool http2_settings_state::update_local_initial_window(uint32_t new_window,
         return (false);
     }
     this->_initial_local_window = new_window;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -2218,49 +2218,49 @@ bool http2_settings_state::update_remote_initial_window(uint32_t new_window,
         return (false);
     }
     this->_initial_remote_window = new_window;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (true);
 }
 
 uint32_t http2_settings_state::get_header_table_size() const noexcept
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_header_table_size);
 }
 
 bool http2_settings_state::get_enable_push() const noexcept
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_enable_push);
 }
 
 uint32_t http2_settings_state::get_max_concurrent_streams() const noexcept
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_max_concurrent_streams);
 }
 
 uint32_t http2_settings_state::get_initial_local_window() const noexcept
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_initial_local_window);
 }
 
 uint32_t http2_settings_state::get_initial_remote_window() const noexcept
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_initial_remote_window);
 }
 
 uint32_t http2_settings_state::get_max_frame_size() const noexcept
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_max_frame_size);
 }
 
 uint32_t http2_settings_state::get_max_header_list_size() const noexcept
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_max_header_list_size);
 }
 
@@ -2287,7 +2287,7 @@ bool http2_encode_frame(const http2_frame &frame, ft_string &out_buffer,
     uint32_t frame_stream_identifier;
 
     out_buffer.clear();
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
         error_code = ft_string::last_operation_error();
         return (false);
@@ -2298,7 +2298,7 @@ bool http2_encode_frame(const http2_frame &frame, ft_string &out_buffer,
         return (false);
     }
     payload_length = payload_copy.size();
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
         error_code = ft_string::last_operation_error();
         return (false);
@@ -2336,7 +2336,7 @@ bool http2_encode_frame(const http2_frame &frame, ft_string &out_buffer,
     while (index < sizeof(header))
     {
         http2_append_raw_byte(out_buffer, header[index]);
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             error_code = ft_string::last_operation_error();
             return (false);
@@ -2344,7 +2344,7 @@ bool http2_encode_frame(const http2_frame &frame, ft_string &out_buffer,
         index++;
     }
     payload_data = payload_copy.c_str();
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
         error_code = ft_string::last_operation_error();
         return (false);
@@ -2354,14 +2354,14 @@ bool http2_encode_frame(const http2_frame &frame, ft_string &out_buffer,
     {
         http2_append_raw_byte(out_buffer,
             static_cast<unsigned char>(payload_data[index]));
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             error_code = ft_string::last_operation_error();
             return (false);
         }
         index++;
     }
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     return (true);
 }
 
@@ -2418,7 +2418,7 @@ bool http2_decode_frame(const unsigned char *buffer, size_t buffer_size,
         return (false);
     }
     payload_copy.clear();
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
         error_code = ft_string::last_operation_error();
         return (false);
@@ -2428,7 +2428,7 @@ bool http2_decode_frame(const unsigned char *buffer, size_t buffer_size,
     {
         http2_append_raw_byte(payload_copy,
             static_cast<unsigned char>(buffer[offset + 9 + index]));
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             error_code = ft_string::last_operation_error();
             return (false);
@@ -2441,7 +2441,7 @@ bool http2_decode_frame(const unsigned char *buffer, size_t buffer_size,
         return (false);
     }
     offset += 9 + payload_length;
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     return (true);
 }
 
@@ -2452,13 +2452,13 @@ bool http2_compress_headers(const ft_vector<http2_header_field> &headers,
     size_t index;
 
     out_block.clear();
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
         error_code = ft_string::last_operation_error();
         return (false);
     }
     header_count = headers.size();
-    if (headers.get_error() != FT_ERR_SUCCESSS)
+    if (headers.get_error() != FT_ERR_SUCCESS)
     {
         error_code = headers.get_error();
         return (false);
@@ -2470,14 +2470,14 @@ bool http2_compress_headers(const ft_vector<http2_header_field> &headers,
     }
     http2_append_raw_byte(out_block,
         static_cast<unsigned char>((header_count >> 8) & 0xFF));
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
         error_code = ft_string::last_operation_error();
         return (false);
     }
     http2_append_raw_byte(out_block,
         static_cast<unsigned char>(header_count & 0xFF));
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
         error_code = ft_string::last_operation_error();
         return (false);
@@ -2506,13 +2506,13 @@ bool http2_compress_headers(const ft_vector<http2_header_field> &headers,
             return (false);
         }
         name_length = field_name.size();
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             error_code = ft_string::last_operation_error();
             return (false);
         }
         value_length = field_value.size();
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             error_code = ft_string::last_operation_error();
             return (false);
@@ -2524,20 +2524,20 @@ bool http2_compress_headers(const ft_vector<http2_header_field> &headers,
         }
         http2_append_raw_byte(out_block,
             static_cast<unsigned char>((name_length >> 8) & 0xFF));
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             error_code = ft_string::last_operation_error();
             return (false);
         }
         http2_append_raw_byte(out_block,
             static_cast<unsigned char>(name_length & 0xFF));
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             error_code = ft_string::last_operation_error();
             return (false);
         }
         name_data = field_name.c_str();
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             error_code = ft_string::last_operation_error();
             return (false);
@@ -2547,7 +2547,7 @@ bool http2_compress_headers(const ft_vector<http2_header_field> &headers,
         {
             http2_append_raw_byte(out_block,
                 static_cast<unsigned char>(name_data[name_index]));
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
             {
                 error_code = ft_string::last_operation_error();
                 return (false);
@@ -2556,20 +2556,20 @@ bool http2_compress_headers(const ft_vector<http2_header_field> &headers,
         }
         http2_append_raw_byte(out_block,
             static_cast<unsigned char>((value_length >> 8) & 0xFF));
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             error_code = ft_string::last_operation_error();
             return (false);
         }
         http2_append_raw_byte(out_block,
             static_cast<unsigned char>(value_length & 0xFF));
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             error_code = ft_string::last_operation_error();
             return (false);
         }
         value_data = field_value.c_str();
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             error_code = ft_string::last_operation_error();
             return (false);
@@ -2579,7 +2579,7 @@ bool http2_compress_headers(const ft_vector<http2_header_field> &headers,
         {
             http2_append_raw_byte(out_block,
                 static_cast<unsigned char>(value_data[value_index]));
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
             {
                 error_code = ft_string::last_operation_error();
                 return (false);
@@ -2588,7 +2588,7 @@ bool http2_compress_headers(const ft_vector<http2_header_field> &headers,
         }
         index++;
     }
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     return (true);
 }
 
@@ -2603,19 +2603,19 @@ bool http2_decompress_headers(const ft_string &block,
     size_t index;
 
     out_headers.clear();
-    if (out_headers.get_error() != FT_ERR_SUCCESSS)
+    if (out_headers.get_error() != FT_ERR_SUCCESS)
     {
         error_code = out_headers.get_error();
         return (false);
     }
     buffer_length = block.size();
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
         error_code = ft_string::last_operation_error();
         return (false);
     }
     buffer = reinterpret_cast<const unsigned char*>(block.c_str());
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
         error_code = ft_string::last_operation_error();
         return (false);
@@ -2672,14 +2672,14 @@ bool http2_decompress_headers(const ft_string &block,
         }
         cursor += value_length;
         out_headers.push_back(entry);
-        if (out_headers.get_error() != FT_ERR_SUCCESSS)
+        if (out_headers.get_error() != FT_ERR_SUCCESS)
         {
             error_code = out_headers.get_error();
             return (false);
         }
         index++;
     }
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     return (true);
 }
 
@@ -2724,7 +2724,7 @@ bool http2_select_alpn_protocol(SSL *ssl_session, bool &selected_http2,
         if (selected_protocol[0] == 'h' && selected_protocol[1] == '2')
             selected_http2 = true;
     }
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     return (true);
 }
 

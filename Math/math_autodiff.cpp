@@ -3,7 +3,9 @@
 #include <cmath>
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Basic/basic.hpp"
-#include "../PThread/pthread_internal.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include <new>
+#include "../Template/move.hpp"
 
 static int math_autodiff_lock_pair(pt_recursive_mutex *first_mutex,
         pt_recursive_mutex *second_mutex,
@@ -18,28 +20,41 @@ static int math_autodiff_lock_pair(pt_recursive_mutex *first_mutex,
         lower_mutex = upper_mutex;
         upper_mutex = temporary;
     }
-    int lock_error = pt_recursive_mutex_lock_if_valid(lower_mutex);
-    if (lock_error != FT_ERR_SUCCESSS)
+    int lock_error;
+
+    if (lower_mutex == ft_nullptr)
+        lock_error = FT_ERR_SUCCESS;
+    else
+        lock_error = lower_mutex->lock();
+    if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (lower_mutex == upper_mutex)
-        return (FT_ERR_SUCCESSS);
-    lock_error = pt_recursive_mutex_lock_if_valid(upper_mutex);
-    if (lock_error != FT_ERR_SUCCESSS)
+        return (FT_ERR_SUCCESS);
+    if (upper_mutex == ft_nullptr)
+        lock_error = FT_ERR_SUCCESS;
+    else
+        lock_error = upper_mutex->lock();
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        int unlock_error = pt_recursive_mutex_unlock_if_valid(lower_mutex);
-        if (unlock_error == FT_ERR_SUCCESSS)
-            ft_global_error_stack_drop_last_error();
+        int unlock_error;
+
+        if (lower_mutex == ft_nullptr)
+            unlock_error = FT_ERR_SUCCESS;
+        else
+            unlock_error = lower_mutex->unlock();
+        if (unlock_error != FT_ERR_SUCCESS)
+            return (lock_error);
         return (lock_error);
     }
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 static void math_autodiff_unlock_pair(pt_recursive_mutex *lower_mutex,
         pt_recursive_mutex *upper_mutex)
-{
-    if (upper_mutex != lower_mutex)
-        pt_recursive_mutex_unlock_if_valid(upper_mutex);
-    pt_recursive_mutex_unlock_if_valid(lower_mutex);
+{    if (upper_mutex != lower_mutex && upper_mutex != ft_nullptr)
+        upper_mutex->unlock();
+    if (lower_mutex != ft_nullptr)
+        lower_mutex->unlock();
 }
 
 ft_dual_number::ft_dual_number() noexcept
@@ -89,7 +104,7 @@ ft_dual_number &ft_dual_number::operator=(const ft_dual_number &other) noexcept
     pt_recursive_mutex *lower_mutex = ft_nullptr;
     pt_recursive_mutex *upper_mutex = ft_nullptr;
     int lock_error = math_autodiff_lock_pair(this->_mutex, other._mutex, lower_mutex, upper_mutex);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
         return (*this);
     this->_value = other._value;
     this->_derivative = other._derivative;
@@ -104,7 +119,7 @@ ft_dual_number &ft_dual_number::operator=(ft_dual_number &&other) noexcept
     pt_recursive_mutex *lower_mutex = ft_nullptr;
     pt_recursive_mutex *upper_mutex = ft_nullptr;
     int lock_error = math_autodiff_lock_pair(this->_mutex, other._mutex, lower_mutex, upper_mutex);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
         return (*this);
     this->_value = other._value;
     this->_derivative = other._derivative;
@@ -126,43 +141,48 @@ ft_dual_number ft_dual_number::variable(double value) noexcept
 
 int ft_dual_number::lock_mutex() const noexcept
 {
-    return (pt_recursive_mutex_lock_if_enabled(
-        this->_mutex,
-        this->_mutex != ft_nullptr
-    ));
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    return (this->_mutex->lock());
 }
 
 int ft_dual_number::unlock_mutex() const noexcept
 {
-    return (pt_recursive_mutex_unlock_if_enabled(
-        this->_mutex,
-        this->_mutex != ft_nullptr
-    ));
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    return (this->_mutex->unlock());
 }
 
 int ft_dual_number::prepare_thread_safety(void) noexcept
 {
     if (this->_mutex != ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     }
-    pt_recursive_mutex *mutex_pointer = ft_nullptr;
-    int mutex_error = pt_recursive_mutex_create_with_error(&mutex_pointer);
-    if (mutex_error != FT_ERR_SUCCESSS)
+    pt_recursive_mutex *mutex_pointer;
+    int mutex_error;
+
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
+    if (mutex_pointer == ft_nullptr)
+        return (FT_ERR_NO_MEMORY);
+    mutex_error = mutex_pointer->initialize();
+    if (mutex_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(mutex_error);
+        delete mutex_pointer;
         return (mutex_error);
     }
     this->_mutex = mutex_pointer;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 void ft_dual_number::teardown_thread_safety(void) noexcept
 {
-    pt_recursive_mutex_destroy(&this->_mutex);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    if (this->_mutex != ft_nullptr)
+    {
+        this->_mutex->destroy();
+        delete this->_mutex;
+        this->_mutex = ft_nullptr;
+    }
     return ;
 }
 
@@ -185,11 +205,11 @@ bool ft_dual_number::is_thread_safe_enabled() const noexcept
 double ft_dual_number::value() const noexcept
 {
     int lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
         return (0.0);
     double result = this->_value;
     int unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
         return (result);
     return (result);
 }
@@ -197,11 +217,11 @@ double ft_dual_number::value() const noexcept
 double ft_dual_number::derivative() const noexcept
 {
     int lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
         return (0.0);
     double result = this->_derivative;
     int unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
         return (result);
     return (result);
 }
@@ -212,7 +232,7 @@ ft_dual_number ft_dual_number::operator+(const ft_dual_number &other) const noex
     pt_recursive_mutex *lower_mutex = ft_nullptr;
     pt_recursive_mutex *upper_mutex = ft_nullptr;
     int lock_error = math_autodiff_lock_pair(this->_mutex, other._mutex, lower_mutex, upper_mutex);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
         return (result);
     result._value = this->_value + other._value;
     result._derivative = this->_derivative + other._derivative;
@@ -226,7 +246,7 @@ ft_dual_number ft_dual_number::operator-(const ft_dual_number &other) const noex
     pt_recursive_mutex *lower_mutex = ft_nullptr;
     pt_recursive_mutex *upper_mutex = ft_nullptr;
     int lock_error = math_autodiff_lock_pair(this->_mutex, other._mutex, lower_mutex, upper_mutex);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
         return (result);
     result._value = this->_value - other._value;
     result._derivative = this->_derivative - other._derivative;
@@ -240,7 +260,7 @@ ft_dual_number ft_dual_number::operator*(const ft_dual_number &other) const noex
     pt_recursive_mutex *lower_mutex = ft_nullptr;
     pt_recursive_mutex *upper_mutex = ft_nullptr;
     int lock_error = math_autodiff_lock_pair(this->_mutex, other._mutex, lower_mutex, upper_mutex);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
         return (result);
     result._value = this->_value * other._value;
     result._derivative = this->_value * other._derivative
@@ -262,7 +282,7 @@ ft_dual_number ft_dual_number::operator/(const ft_dual_number &other) const noex
     pt_recursive_mutex *upper_mutex = ft_nullptr;
 
     int lock_error = math_autodiff_lock_pair(this->_mutex, other._mutex, lower_mutex, upper_mutex);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
         return (result);
     denominator = other._value;
     value = this->_value;
@@ -283,7 +303,6 @@ ft_dual_number ft_dual_number::operator/(const ft_dual_number &other) const noex
     math_autodiff_unlock_pair(lower_mutex, upper_mutex);
     if (invalid_divisor)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (result);
     }
     return (result);
@@ -295,12 +314,12 @@ ft_dual_number ft_dual_number::apply_sin() const noexcept
     double value;
     double derivative_value;
     int lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
         return (result);
     value = this->_value;
     derivative_value = this->_derivative;
     int unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
         return (result);
     result._value = std::sin(value);
     result._derivative = std::cos(value) * derivative_value;
@@ -313,12 +332,12 @@ ft_dual_number ft_dual_number::apply_cos() const noexcept
     double value;
     double derivative_value;
     int lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
         return (result);
     value = this->_value;
     derivative_value = this->_derivative;
     int unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
         return (result);
     result._value = std::cos(value);
     result._derivative = -std::sin(value) * derivative_value;
@@ -332,12 +351,12 @@ ft_dual_number ft_dual_number::apply_exp() const noexcept
     double value;
     double derivative_value;
     int lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
         return (result);
     value = this->_value;
     derivative_value = this->_derivative;
     int unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
         return (result);
     exponential = std::exp(value);
     result._value = exponential;
@@ -351,18 +370,17 @@ ft_dual_number ft_dual_number::apply_log() const noexcept
     double value;
     double derivative_value;
     int lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
         return (result);
     value = this->_value;
     derivative_value = this->_derivative;
     int unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
         return (result);
     if (value <= 0.0)
     {
         result._value = 0.0;
         result._derivative = 0.0;
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (result);
     }
     result._value = std::log(value);
@@ -385,10 +403,9 @@ static int math_autodiff_prepare_inputs(const ft_vector<double> &point,
     dimension = point.size();
     dual_inputs.reserve(dimension);
     {
-        int reserve_error = ft_global_error_stack_peek_last_error();
-        if (reserve_error != FT_ERR_SUCCESSS)
+        int reserve_error = FT_ERR_SUCCESS;
+        if (reserve_error != FT_ERR_SUCCESS)
         {
-            ft_global_error_stack_push(reserve_error);
             return (-1);
         }
     }
@@ -399,7 +416,7 @@ static int math_autodiff_prepare_inputs(const ft_vector<double> &point,
         double value;
 
         value = point[index];
-        if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
+        if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
             return (-1);
         if (index == active_index)
             variable = ft_dual_number::variable(value);
@@ -407,16 +424,14 @@ static int math_autodiff_prepare_inputs(const ft_vector<double> &point,
             variable = ft_dual_number::constant(value);
         dual_inputs.push_back(variable);
         {
-            int push_error = ft_global_error_stack_peek_last_error();
-            if (push_error != FT_ERR_SUCCESSS)
+            int push_error = FT_ERR_SUCCESS;
+            if (push_error != FT_ERR_SUCCESS)
             {
-                ft_global_error_stack_push(push_error);
                 return (-1);
             }
         }
         index++;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -428,23 +443,20 @@ int math_autodiff_univariate(math_autodiff_univariate_function function,
 
     if (function == ft_nullptr || value == ft_nullptr || derivative == ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     variable = ft_dual_number::variable(point);
     result = function(variable, user_data);
     {
-        int result_error = ft_global_error_stack_peek_last_error();
+        int result_error = FT_ERR_SUCCESS;
 
-        if (result_error != FT_ERR_SUCCESSS)
+        if (result_error != FT_ERR_SUCCESS)
         {
-            ft_global_error_stack_push(result_error);
             return (-1);
         }
     }
     *value = result.value();
     *derivative = result.derivative();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -458,17 +470,15 @@ int math_autodiff_gradient(math_autodiff_multivariate_function function,
 
     if (function == ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     dimension = point.size();
     gradient.clear();
     gradient.reserve(dimension);
     {
-        int reserve_error = ft_global_error_stack_peek_last_error();
-        if (reserve_error != FT_ERR_SUCCESSS)
+        int reserve_error = FT_ERR_SUCCESS;
+        if (reserve_error != FT_ERR_SUCCESS)
         {
-            ft_global_error_stack_push(reserve_error);
             return (-1);
         }
     }
@@ -486,11 +496,10 @@ int math_autodiff_gradient(math_autodiff_multivariate_function function,
         }
         result = function(dual_inputs, user_data);
         {
-            int result_error = ft_global_error_stack_peek_last_error();
+            int result_error = FT_ERR_SUCCESS;
 
-            if (result_error != FT_ERR_SUCCESSS)
+            if (result_error != FT_ERR_SUCCESS)
             {
-                ft_global_error_stack_push(result_error);
                 gradient.clear();
                 return (-1);
             }
@@ -502,16 +511,14 @@ int math_autodiff_gradient(math_autodiff_multivariate_function function,
         }
         gradient.push_back(result.derivative());
         {
-            int push_error = ft_global_error_stack_peek_last_error();
-            if (push_error != FT_ERR_SUCCESSS)
+            int push_error = FT_ERR_SUCCESS;
+            if (push_error != FT_ERR_SUCCESS)
             {
-                ft_global_error_stack_push(push_error);
                 gradient.clear();
                 return (-1);
             }
         }
         index++;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (0);
 }

@@ -1,6 +1,10 @@
+#include "../test_internal.hpp"
 #include "../../Math/math.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <limits>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_math_signbit_positive_values, "math_signbit reports zero for positive values")
 {

@@ -19,7 +19,7 @@ ft_file_watch::~ft_file_watch()
 
 int ft_file_watch::watch_directory(const char *path, void (*callback)(const char *, int, void *), void *user_data)
 {
-    int status = FT_ERR_SUCCESSS;
+    int status = FT_ERR_SUCCESS;
     int result = -1;
 
     {
@@ -27,7 +27,7 @@ int ft_file_watch::watch_directory(const char *path, void (*callback)(const char
         ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
         int mutex_error = ft_global_error_stack_drop_last_error();
 
-        if (mutex_error != FT_ERR_SUCCESSS)
+        if (mutex_error != FT_ERR_SUCCESS)
         {
             status = mutex_error;
         }
@@ -44,16 +44,16 @@ int ft_file_watch::watch_directory(const char *path, void (*callback)(const char
                 mutex_guard = ft_unique_lock<pt_mutex>(this->_mutex);
                 int relock_error = ft_global_error_stack_drop_last_error();
 
-                if (relock_error != FT_ERR_SUCCESSS)
+                if (relock_error != FT_ERR_SUCCESS)
                     status = relock_error;
             }
-            if (status == FT_ERR_SUCCESSS)
+            if (status == FT_ERR_SUCCESS)
             {
                 this->_path = ft_string(path);
                 unsigned long long path_operation_id = this->_path.last_operation_id();
                 int path_error = this->_path.pop_operation_error(path_operation_id);
 
-                if (path_error != FT_ERR_SUCCESSS)
+                if (path_error != FT_ERR_SUCCESS)
                 {
                     status = path_error;
                     this->_callback = ft_nullptr;
@@ -65,19 +65,19 @@ int ft_file_watch::watch_directory(const char *path, void (*callback)(const char
                     this->_callback = callback;
                     this->_user_data = user_data;
                     status = cmp_file_watch_start(this->_state, path);
-                    if (status != FT_ERR_SUCCESSS)
+                    if (status != FT_ERR_SUCCESS)
                     {
                         this->_callback = ft_nullptr;
                         this->_user_data = ft_nullptr;
                         this->_path.clear();
                     }
-                    if (status == FT_ERR_SUCCESSS)
+                    if (status == FT_ERR_SUCCESS)
                     {
                         this->_running = true;
                         this->_stopped = false;
                         new_thread = ft_thread(&ft_file_watch::event_loop, this);
                         int thread_error = ft_global_error_stack_peek_last_error();
-                        if (thread_error != FT_ERR_SUCCESSS)
+                        if (thread_error != FT_ERR_SUCCESS)
                         {
                             status = thread_error;
                             this->_running = false;
@@ -105,14 +105,14 @@ int ft_file_watch::watch_directory(const char *path, void (*callback)(const char
 
 void ft_file_watch::stop()
 {
-    int status = FT_ERR_SUCCESSS;
+    int status = FT_ERR_SUCCESS;
 
     {
         ft_thread thread_to_join;
         ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
         int mutex_error = ft_global_error_stack_drop_last_error();
 
-        if (mutex_error != FT_ERR_SUCCESSS)
+        if (mutex_error != FT_ERR_SUCCESS)
         {
             status = mutex_error;
         }
@@ -155,7 +155,7 @@ bool ft_file_watch::snapshot_callback(void (**callback)(const char *, int, void 
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
     int mutex_error = ft_global_error_stack_drop_last_error();
 
-    if (mutex_error != FT_ERR_SUCCESSS)
+    if (mutex_error != FT_ERR_SUCCESS)
     {
         return (false);
     }
@@ -173,7 +173,7 @@ bool ft_file_watch::snapshot_callback(void (**callback)(const char *, int, void 
     path_snapshot = this->_path;
     unsigned long long path_operation_id = path_snapshot.last_operation_id();
     int path_error = path_snapshot.pop_operation_error(path_operation_id);
-    if (path_error != FT_ERR_SUCCESSS)
+    if (path_error != FT_ERR_SUCCESS)
         path_snapshot.clear();
     mutex_guard.unlock();
     return (true);

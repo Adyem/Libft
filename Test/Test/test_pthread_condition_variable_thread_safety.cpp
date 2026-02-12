@@ -1,3 +1,4 @@
+#include "../test_internal.hpp"
 #include "../../PThread/condition.hpp"
 #include "../../PThread/mutex.hpp"
 #include "../../PThread/pthread.hpp"
@@ -9,6 +10,9 @@
 #include <thread>
 #include <cerrno>
 
+#ifndef LIBFT_TEST_BUILD
+#endif
+
 FT_TEST(test_pt_condition_variable_state_guard_controls,
         "pt_condition_variable installs optional guard mutex")
 {
@@ -16,21 +20,21 @@ FT_TEST(test_pt_condition_variable_state_guard_controls,
     bool lock_acquired;
 
     FT_ASSERT(condition.is_thread_safe() == false);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, condition.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, condition.get_error());
 
     FT_ASSERT_EQ(0, condition.enable_thread_safety());
     FT_ASSERT(condition.is_thread_safe());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, condition.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, condition.get_error());
 
     lock_acquired = false;
     FT_ASSERT_EQ(0, condition.lock_state(&lock_acquired));
     FT_ASSERT(lock_acquired);
     condition.unlock_state(lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, condition.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, condition.get_error());
 
     condition.disable_thread_safety();
     FT_ASSERT(condition.is_thread_safe() == false);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, condition.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, condition.get_error());
     return (1);
 }
 
@@ -80,11 +84,11 @@ FT_TEST(test_pt_condition_variable_state_guard_blocks,
 
     FT_ASSERT(worker_finished.load());
     FT_ASSERT(worker_locked.load());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, condition.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, condition.get_error());
 
     condition.disable_thread_safety();
     FT_ASSERT(condition.is_thread_safe() == false);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, condition.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, condition.get_error());
     return (1);
 }
 
@@ -136,10 +140,10 @@ FT_TEST(test_pt_condition_variable_wait_for_times_out_with_thread_safety,
     worker_thread.join();
 
     FT_ASSERT(wait_result.load() == ETIMEDOUT);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, condition.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, condition.get_error());
 
     condition.disable_thread_safety();
     FT_ASSERT(condition.is_thread_safe() == false);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, condition.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, condition.get_error());
     return (1);
 }

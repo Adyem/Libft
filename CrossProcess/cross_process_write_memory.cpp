@@ -108,6 +108,6 @@ int cp_write_memory(const cross_process_message &message, const unsigned char *p
         errno = failure_errno;
         return (cp_push_errno());
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }

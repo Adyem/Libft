@@ -34,7 +34,7 @@ int logger_lock_sinks()
     lock_result = pthread_mutex_lock(&g_sinks_mutex);
     if (lock_result != 0)
         return (ft_map_system_error(lock_result));
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 int logger_unlock_sinks()
@@ -50,5 +50,5 @@ int logger_unlock_sinks()
     unlock_result = pthread_mutex_unlock(&g_sinks_mutex);
     if (unlock_result != 0)
         return (ft_map_system_error(unlock_result));
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }

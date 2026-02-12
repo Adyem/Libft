@@ -11,7 +11,7 @@ static pt_mutex *g_environment_mutex = ft_nullptr;
 static int ft_environment_enable_thread_safety_internal(void)
 {
     if (g_environment_mutex != ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     return (pt_mutex_create_with_error(&g_environment_mutex));
 }
 
@@ -29,7 +29,7 @@ int ft_environment_lock(void)
         return (-1);
     }
     int lock_result = g_environment_mutex->lock();
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
         return (-1);
     ft_global_error_stack_drop_last_error();
     return (0);
@@ -43,7 +43,7 @@ int ft_environment_unlock(void)
         return (-1);
     }
     int unlock_result = g_environment_mutex->unlock();
-    if (unlock_result != FT_ERR_SUCCESSS)
+    if (unlock_result != FT_ERR_SUCCESS)
         return (-1);
     ft_global_error_stack_drop_last_error();
     return (0);
@@ -53,7 +53,7 @@ int ft_environment_enable_thread_safety(void)
 {
     int result = ft_environment_enable_thread_safety_internal();
     ft_global_error_stack_push(result);
-    if (result != FT_ERR_SUCCESSS)
+    if (result != FT_ERR_SUCCESS)
         return (-1);
     return (0);
 }
@@ -61,7 +61,7 @@ int ft_environment_enable_thread_safety(void)
 void ft_environment_disable_thread_safety(void)
 {
     ft_environment_disable_thread_safety_internal();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 

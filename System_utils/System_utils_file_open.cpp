@@ -12,11 +12,11 @@ int su_open(const char *path_name)
     if (result < 0)
     {
         error_code = cmp_map_system_error_to_ft(errno);
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_INTERNAL;
     }
     else
-        error_code = FT_ERR_SUCCESSS;
+        error_code = FT_ERR_SUCCESS;
     ft_global_error_stack_push(error_code);
     return (result);
 }
@@ -30,11 +30,11 @@ int su_open(const char *path_name, int flags)
     if (result < 0)
     {
         error_code = cmp_map_system_error_to_ft(errno);
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_INTERNAL;
     }
     else
-        error_code = FT_ERR_SUCCESSS;
+        error_code = FT_ERR_SUCCESS;
     ft_global_error_stack_push(error_code);
     return (result);
 }
@@ -48,11 +48,11 @@ int su_open(const char *path_name, int flags, mode_t mode)
     if (result < 0)
     {
         error_code = cmp_map_system_error_to_ft(errno);
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_INTERNAL;
     }
     else
-        error_code = FT_ERR_SUCCESSS;
+        error_code = FT_ERR_SUCCESS;
     ft_global_error_stack_push(error_code);
     return (result);
 }

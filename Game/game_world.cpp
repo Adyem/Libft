@@ -55,13 +55,13 @@ bool ft_world::propagate_scheduler_state_error() const noexcept
         return (true);
     }
     int pointer_error = this->_event_scheduler.get_error();
-    if (pointer_error != FT_ERR_SUCCESSS)
+    if (pointer_error != FT_ERR_SUCCESS)
     {
         this->set_error(pointer_error);
         return (true);
     }
     int scheduler_error = this->_event_scheduler->get_error();
-    if (scheduler_error != FT_ERR_SUCCESSS)
+    if (scheduler_error != FT_ERR_SUCCESS)
     {
         this->set_error(scheduler_error);
         return (true);
@@ -80,54 +80,54 @@ ft_world::ft_world() noexcept
     _quest(new (std::nothrow) ft_quest()),
     _vendor_profile(new (std::nothrow) ft_vendor_profile()),
     _upgrade(new (std::nothrow) ft_upgrade()),
-    _error(FT_ERR_SUCCESSS)
+    _error(FT_ERR_SUCCESS)
 {
-    if (!this->_event_scheduler || this->_event_scheduler.get_error() != FT_ERR_SUCCESSS)
+    if (!this->_event_scheduler || this->_event_scheduler.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
-    if (!this->_world_registry || this->_world_registry.get_error() != FT_ERR_SUCCESSS)
+    if (!this->_world_registry || this->_world_registry.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
-    if (!this->_replay_session || this->_replay_session.get_error() != FT_ERR_SUCCESSS)
+    if (!this->_replay_session || this->_replay_session.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
-    if (!this->_economy_table || this->_economy_table.get_error() != FT_ERR_SUCCESSS)
+    if (!this->_economy_table || this->_economy_table.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
-    if (!this->_crafting || this->_crafting.get_error() != FT_ERR_SUCCESSS)
+    if (!this->_crafting || this->_crafting.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
-    if (!this->_dialogue_table || this->_dialogue_table.get_error() != FT_ERR_SUCCESSS)
+    if (!this->_dialogue_table || this->_dialogue_table.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
-    if (!this->_world_region || this->_world_region.get_error() != FT_ERR_SUCCESSS)
+    if (!this->_world_region || this->_world_region.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
-    if (!this->_quest || this->_quest.get_error() != FT_ERR_SUCCESSS)
+    if (!this->_quest || this->_quest.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
-    if (!this->_vendor_profile || this->_vendor_profile.get_error() != FT_ERR_SUCCESSS)
+    if (!this->_vendor_profile || this->_vendor_profile.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
-    if (!this->_upgrade || this->_upgrade.get_error() != FT_ERR_SUCCESSS)
+    if (!this->_upgrade || this->_upgrade.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(FT_ERR_NO_MEMORY);
         return ;
@@ -152,7 +152,7 @@ ft_world::ft_world() noexcept
         return ;
     if (this->propagate_upgrade_state_error() == true)
         return ;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -267,12 +267,12 @@ ft_world::ft_world(ft_world &&other) noexcept
         return ;
     this->set_error(this->_error);
     other._event_scheduler = ft_sharedptr<ft_event_scheduler>(new (std::nothrow) ft_event_scheduler());
-    if (!other._event_scheduler || other._event_scheduler.get_error() != FT_ERR_SUCCESSS)
+    if (!other._event_scheduler || other._event_scheduler.get_error() != FT_ERR_SUCCESS)
     {
         other.set_error(FT_ERR_NO_MEMORY);
         return ;
     }
-    other.set_error(FT_ERR_SUCCESSS);
+    other.set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -312,12 +312,12 @@ ft_world &ft_world::operator=(ft_world &&other) noexcept
             return (*this);
         this->set_error(other._error);
         other._event_scheduler = ft_sharedptr<ft_event_scheduler>(new (std::nothrow) ft_event_scheduler());
-        if (!other._event_scheduler || other._event_scheduler.get_error() != FT_ERR_SUCCESSS)
+        if (!other._event_scheduler || other._event_scheduler.get_error() != FT_ERR_SUCCESS)
         {
             other.set_error(FT_ERR_NO_MEMORY);
             return (*this);
         }
-        other.set_error(FT_ERR_SUCCESSS);
+        other.set_error(FT_ERR_SUCCESS);
     }
     return (*this);
 }
@@ -329,7 +329,7 @@ void ft_world::schedule_event(const ft_sharedptr<ft_event> &event) noexcept
         this->set_error(FT_ERR_GAME_GENERAL_ERROR);
         return ;
     }
-    if (event.get_error() != FT_ERR_SUCCESSS)
+    if (event.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(event.get_error());
         return ;
@@ -339,7 +339,7 @@ void ft_world::schedule_event(const ft_sharedptr<ft_event> &event) noexcept
     this->_event_scheduler->schedule_event(event);
     if (this->propagate_scheduler_state_error() == true)
         return ;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -355,7 +355,7 @@ void ft_world::update_events(ft_sharedptr<ft_world> &self, int ticks, const char
     this->_event_scheduler->update_events(self, ticks, log_file_path, log_buffer);
     if (this->propagate_scheduler_state_error() == true)
         return ;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -364,9 +364,9 @@ ft_sharedptr<ft_event_scheduler> &ft_world::get_event_scheduler() noexcept
     int previous_error;
 
     previous_error = this->_error;
-    if (previous_error != FT_ERR_SUCCESSS)
+    if (previous_error != FT_ERR_SUCCESS)
         return (this->_event_scheduler);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_event_scheduler);
 }
 
@@ -375,9 +375,9 @@ const ft_sharedptr<ft_event_scheduler> &ft_world::get_event_scheduler() const no
     int previous_error;
 
     previous_error = this->_error;
-    if (previous_error != FT_ERR_SUCCESSS)
+    if (previous_error != FT_ERR_SUCCESS)
         return (this->_event_scheduler);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_event_scheduler);
 }
 
@@ -385,7 +385,7 @@ ft_sharedptr<ft_world_registry> &ft_world::get_world_registry() noexcept
 {
     if (this->propagate_registry_state_error() == true)
         return (this->_world_registry);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_world_registry);
 }
 
@@ -393,7 +393,7 @@ const ft_sharedptr<ft_world_registry> &ft_world::get_world_registry() const noex
 {
     if (this->propagate_registry_state_error() == true)
         return (this->_world_registry);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_world_registry);
 }
 
@@ -401,7 +401,7 @@ ft_sharedptr<ft_world_replay_session> &ft_world::get_replay_session() noexcept
 {
     if (this->propagate_replay_state_error() == true)
         return (this->_replay_session);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_replay_session);
 }
 
@@ -409,7 +409,7 @@ const ft_sharedptr<ft_world_replay_session> &ft_world::get_replay_session() cons
 {
     if (this->propagate_replay_state_error() == true)
         return (this->_replay_session);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_replay_session);
 }
 
@@ -417,7 +417,7 @@ ft_sharedptr<ft_economy_table> &ft_world::get_economy_table() noexcept
 {
     if (this->propagate_economy_state_error() == true)
         return (this->_economy_table);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_economy_table);
 }
 
@@ -425,7 +425,7 @@ const ft_sharedptr<ft_economy_table> &ft_world::get_economy_table() const noexce
 {
     if (this->propagate_economy_state_error() == true)
         return (this->_economy_table);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_economy_table);
 }
 
@@ -433,7 +433,7 @@ ft_sharedptr<ft_crafting> &ft_world::get_crafting() noexcept
 {
     if (this->propagate_crafting_state_error() == true)
         return (this->_crafting);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_crafting);
 }
 
@@ -441,7 +441,7 @@ const ft_sharedptr<ft_crafting> &ft_world::get_crafting() const noexcept
 {
     if (this->propagate_crafting_state_error() == true)
         return (this->_crafting);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_crafting);
 }
 
@@ -449,7 +449,7 @@ ft_sharedptr<ft_dialogue_table> &ft_world::get_dialogue_table() noexcept
 {
     if (this->propagate_dialogue_state_error() == true)
         return (this->_dialogue_table);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_dialogue_table);
 }
 
@@ -457,7 +457,7 @@ const ft_sharedptr<ft_dialogue_table> &ft_world::get_dialogue_table() const noex
 {
     if (this->propagate_dialogue_state_error() == true)
         return (this->_dialogue_table);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_dialogue_table);
 }
 
@@ -465,7 +465,7 @@ ft_sharedptr<ft_world_region> &ft_world::get_world_region() noexcept
 {
     if (this->propagate_region_state_error() == true)
         return (this->_world_region);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_world_region);
 }
 
@@ -473,7 +473,7 @@ const ft_sharedptr<ft_world_region> &ft_world::get_world_region() const noexcept
 {
     if (this->propagate_region_state_error() == true)
         return (this->_world_region);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_world_region);
 }
 
@@ -484,9 +484,9 @@ ft_sharedptr<ft_quest> &ft_world::get_quest() noexcept
     previous_error = this->_error;
     if (this->propagate_quest_state_error() == true)
         return (this->_quest);
-    if (previous_error != FT_ERR_SUCCESSS)
+    if (previous_error != FT_ERR_SUCCESS)
         return (this->_quest);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_quest);
 }
 
@@ -497,9 +497,9 @@ const ft_sharedptr<ft_quest> &ft_world::get_quest() const noexcept
     previous_error = this->_error;
     if (this->propagate_quest_state_error() == true)
         return (this->_quest);
-    if (previous_error != FT_ERR_SUCCESSS)
+    if (previous_error != FT_ERR_SUCCESS)
         return (this->_quest);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_quest);
 }
 
@@ -510,9 +510,9 @@ ft_sharedptr<ft_vendor_profile> &ft_world::get_vendor_profile() noexcept
     previous_error = this->_error;
     if (this->propagate_vendor_profile_state_error() == true)
         return (this->_vendor_profile);
-    if (previous_error != FT_ERR_SUCCESSS)
+    if (previous_error != FT_ERR_SUCCESS)
         return (this->_vendor_profile);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_vendor_profile);
 }
 
@@ -523,9 +523,9 @@ const ft_sharedptr<ft_vendor_profile> &ft_world::get_vendor_profile() const noex
     previous_error = this->_error;
     if (this->propagate_vendor_profile_state_error() == true)
         return (this->_vendor_profile);
-    if (previous_error != FT_ERR_SUCCESSS)
+    if (previous_error != FT_ERR_SUCCESS)
         return (this->_vendor_profile);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_vendor_profile);
 }
 
@@ -533,7 +533,7 @@ ft_sharedptr<ft_upgrade> &ft_world::get_upgrade() noexcept
 {
     if (this->propagate_upgrade_state_error() == true)
         return (this->_upgrade);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_upgrade);
 }
 
@@ -541,7 +541,7 @@ const ft_sharedptr<ft_upgrade> &ft_world::get_upgrade() const noexcept
 {
     if (this->propagate_upgrade_state_error() == true)
         return (this->_upgrade);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_upgrade);
 }
 
@@ -552,7 +552,7 @@ int ft_world::save_to_file(const char *file_path, const ft_character &character,
 
     if (this->propagate_scheduler_state_error() == true)
         return (this->_error);
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     groups = this->build_snapshot_groups(character, inventory, error_code);
     if (!groups)
         return (this->_error);
@@ -563,8 +563,8 @@ int ft_world::save_to_file(const char *file_path, const ft_character &character,
         return (this->_error);
     }
     json_free_groups(groups);
-    this->set_error(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 int ft_world::load_from_file(const char *file_path, ft_character &character, ft_inventory &inventory) noexcept
@@ -597,7 +597,7 @@ int ft_world::save_to_store(kv_store &store, const char *slot_key, const ft_char
     }
     if (this->propagate_scheduler_state_error() == true)
         return (this->_error);
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     groups = this->build_snapshot_groups(character, inventory, error_code);
     if (!groups)
         return (this->_error);
@@ -606,7 +606,7 @@ int ft_world::save_to_store(kv_store &store, const char *slot_key, const ft_char
     if (!serialized_state)
     {
         error_code = ft_errno;
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_NO_MEMORY;
         this->set_error(error_code);
         return (this->_error);
@@ -615,14 +615,14 @@ int ft_world::save_to_store(kv_store &store, const char *slot_key, const ft_char
     {
         store_error = store.get_error();
         cma_free(serialized_state);
-        if (store_error == FT_ERR_SUCCESSS)
+        if (store_error == FT_ERR_SUCCESS)
             store_error = FT_ERR_GAME_GENERAL_ERROR;
         this->set_error(store_error);
         return (this->_error);
     }
     store_error = store.get_error();
     cma_free(serialized_state);
-    if (store_error != FT_ERR_SUCCESSS)
+    if (store_error != FT_ERR_SUCCESS)
     {
         this->set_error(store_error);
         return (this->_error);
@@ -630,13 +630,13 @@ int ft_world::save_to_store(kv_store &store, const char *slot_key, const ft_char
     if (store.kv_flush() != 0)
     {
         store_error = store.get_error();
-        if (store_error == FT_ERR_SUCCESSS)
+        if (store_error == FT_ERR_SUCCESS)
             store_error = FT_ERR_GAME_GENERAL_ERROR;
         this->set_error(store_error);
         return (this->_error);
     }
-    this->set_error(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 int ft_world::load_from_store(kv_store &store, const char *slot_key, ft_character &character, ft_inventory &inventory) noexcept
@@ -655,7 +655,7 @@ int ft_world::load_from_store(kv_store &store, const char *slot_key, ft_characte
     store_error = store.get_error();
     if (serialized_state == ft_nullptr)
     {
-        if (store_error == FT_ERR_SUCCESSS)
+        if (store_error == FT_ERR_SUCCESS)
             store_error = FT_ERR_GAME_GENERAL_ERROR;
         this->set_error(store_error);
         return (this->_error);
@@ -666,7 +666,7 @@ int ft_world::load_from_store(kv_store &store, const char *slot_key, ft_characte
         int parse_error;
 
         parse_error = ft_errno;
-        if (parse_error == FT_ERR_SUCCESSS)
+        if (parse_error == FT_ERR_SUCCESS)
             parse_error = FT_ERR_GAME_GENERAL_ERROR;
         this->set_error(parse_error);
         return (this->_error);
@@ -684,7 +684,7 @@ int ft_world::save_to_buffer(ft_string &out_buffer, const ft_character &characte
 
     if (this->propagate_scheduler_state_error() == true)
         return (this->_error);
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     groups = this->build_snapshot_groups(character, inventory, error_code);
     if (!groups)
         return (this->_error);
@@ -693,13 +693,13 @@ int ft_world::save_to_buffer(ft_string &out_buffer, const ft_character &characte
     if (!serialized_state)
     {
         error_code = ft_errno;
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_GAME_GENERAL_ERROR;
         this->set_error(error_code);
         return (this->_error);
     }
     out_buffer = serialized_state;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
         int assign_error;
 
@@ -709,8 +709,8 @@ int ft_world::save_to_buffer(ft_string &out_buffer, const ft_character &characte
         return (this->_error);
     }
     cma_free(serialized_state);
-    this->set_error(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 int ft_world::load_from_buffer(const char *buffer, ft_character &character, ft_inventory &inventory) noexcept
@@ -728,7 +728,7 @@ int ft_world::load_from_buffer(const char *buffer, ft_character &character, ft_i
     if (!groups)
     {
         parse_error = ft_errno;
-        if (parse_error == FT_ERR_SUCCESSS)
+        if (parse_error == FT_ERR_SUCCESS)
             parse_error = FT_ERR_GAME_GENERAL_ERROR;
         this->set_error(parse_error);
         return (this->_error);
@@ -745,13 +745,13 @@ int ft_world::plan_route(const ft_map3d &grid,
 {
     ft_pathfinding finder;
     if (finder.astar_grid(grid, start_x, start_y, start_z,
-            goal_x, goal_y, goal_z, path) != FT_ERR_SUCCESSS)
+            goal_x, goal_y, goal_z, path) != FT_ERR_SUCCESS)
     {
         this->set_error(finder.get_error());
         return (this->_error);
     }
-    this->set_error(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 int ft_world::get_error() const noexcept
@@ -781,7 +781,7 @@ bool ft_world::propagate_registry_state_error() const noexcept
     int pointer_error;
 
     pointer_error = this->_world_registry.get_error();
-    if (pointer_error != FT_ERR_SUCCESSS)
+    if (pointer_error != FT_ERR_SUCCESS)
     {
         this->set_error(pointer_error);
         return (true);
@@ -789,7 +789,7 @@ bool ft_world::propagate_registry_state_error() const noexcept
     int registry_error;
 
     registry_error = this->_world_registry->get_error();
-    if (registry_error != FT_ERR_SUCCESSS)
+    if (registry_error != FT_ERR_SUCCESS)
     {
         this->set_error(registry_error);
         return (true);
@@ -807,7 +807,7 @@ bool ft_world::propagate_replay_state_error() const noexcept
     int pointer_error;
 
     pointer_error = this->_replay_session.get_error();
-    if (pointer_error != FT_ERR_SUCCESSS)
+    if (pointer_error != FT_ERR_SUCCESS)
     {
         this->set_error(pointer_error);
         return (true);
@@ -815,7 +815,7 @@ bool ft_world::propagate_replay_state_error() const noexcept
     int replay_error;
 
     replay_error = this->_replay_session->get_error();
-    if (replay_error != FT_ERR_SUCCESSS)
+    if (replay_error != FT_ERR_SUCCESS)
     {
         this->set_error(replay_error);
         return (true);
@@ -833,7 +833,7 @@ bool ft_world::propagate_economy_state_error() const noexcept
     int pointer_error;
 
     pointer_error = this->_economy_table.get_error();
-    if (pointer_error != FT_ERR_SUCCESSS)
+    if (pointer_error != FT_ERR_SUCCESS)
     {
         this->set_error(pointer_error);
         return (true);
@@ -841,7 +841,7 @@ bool ft_world::propagate_economy_state_error() const noexcept
     int economy_error;
 
     economy_error = this->_economy_table->get_error();
-    if (economy_error != FT_ERR_SUCCESSS)
+    if (economy_error != FT_ERR_SUCCESS)
     {
         this->set_error(economy_error);
         return (true);
@@ -859,7 +859,7 @@ bool ft_world::propagate_crafting_state_error() const noexcept
     int pointer_error;
 
     pointer_error = this->_crafting.get_error();
-    if (pointer_error != FT_ERR_SUCCESSS)
+    if (pointer_error != FT_ERR_SUCCESS)
     {
         this->set_error(pointer_error);
         return (true);
@@ -867,7 +867,7 @@ bool ft_world::propagate_crafting_state_error() const noexcept
     int crafting_error;
 
     crafting_error = this->_crafting->get_error();
-    if (crafting_error != FT_ERR_SUCCESSS)
+    if (crafting_error != FT_ERR_SUCCESS)
     {
         this->set_error(crafting_error);
         return (true);
@@ -885,7 +885,7 @@ bool ft_world::propagate_dialogue_state_error() const noexcept
     int pointer_error;
 
     pointer_error = this->_dialogue_table.get_error();
-    if (pointer_error != FT_ERR_SUCCESSS)
+    if (pointer_error != FT_ERR_SUCCESS)
     {
         this->set_error(pointer_error);
         return (true);
@@ -893,7 +893,7 @@ bool ft_world::propagate_dialogue_state_error() const noexcept
     int dialogue_error;
 
     dialogue_error = this->_dialogue_table->get_error();
-    if (dialogue_error != FT_ERR_SUCCESSS)
+    if (dialogue_error != FT_ERR_SUCCESS)
     {
         this->set_error(dialogue_error);
         return (true);
@@ -911,7 +911,7 @@ bool ft_world::propagate_region_state_error() const noexcept
     int pointer_error;
 
     pointer_error = this->_world_region.get_error();
-    if (pointer_error != FT_ERR_SUCCESSS)
+    if (pointer_error != FT_ERR_SUCCESS)
     {
         this->set_error(pointer_error);
         return (true);
@@ -919,7 +919,7 @@ bool ft_world::propagate_region_state_error() const noexcept
     int region_error;
 
     region_error = this->_world_region->get_error();
-    if (region_error != FT_ERR_SUCCESSS)
+    if (region_error != FT_ERR_SUCCESS)
     {
         this->set_error(region_error);
         return (true);
@@ -937,7 +937,7 @@ bool ft_world::propagate_quest_state_error() const noexcept
     int pointer_error;
 
     pointer_error = this->_quest.get_error();
-    if (pointer_error != FT_ERR_SUCCESSS)
+    if (pointer_error != FT_ERR_SUCCESS)
     {
         this->set_error(pointer_error);
         return (true);
@@ -945,7 +945,7 @@ bool ft_world::propagate_quest_state_error() const noexcept
     int quest_error;
 
     quest_error = this->_quest->get_error();
-    if (quest_error != FT_ERR_SUCCESSS)
+    if (quest_error != FT_ERR_SUCCESS)
     {
         this->set_error(quest_error);
         return (true);
@@ -963,7 +963,7 @@ bool ft_world::propagate_vendor_profile_state_error() const noexcept
     int pointer_error;
 
     pointer_error = this->_vendor_profile.get_error();
-    if (pointer_error != FT_ERR_SUCCESSS)
+    if (pointer_error != FT_ERR_SUCCESS)
     {
         this->set_error(pointer_error);
         return (true);
@@ -971,7 +971,7 @@ bool ft_world::propagate_vendor_profile_state_error() const noexcept
     int vendor_error;
 
     vendor_error = this->_vendor_profile->get_error();
-    if (vendor_error != FT_ERR_SUCCESSS)
+    if (vendor_error != FT_ERR_SUCCESS)
     {
         this->set_error(vendor_error);
         return (true);
@@ -989,7 +989,7 @@ bool ft_world::propagate_upgrade_state_error() const noexcept
     int pointer_error;
 
     pointer_error = this->_upgrade.get_error();
-    if (pointer_error != FT_ERR_SUCCESSS)
+    if (pointer_error != FT_ERR_SUCCESS)
     {
         this->set_error(pointer_error);
         return (true);
@@ -997,7 +997,7 @@ bool ft_world::propagate_upgrade_state_error() const noexcept
     int upgrade_error;
 
     upgrade_error = this->_upgrade->get_error();
-    if (upgrade_error != FT_ERR_SUCCESSS)
+    if (upgrade_error != FT_ERR_SUCCESS)
     {
         this->set_error(upgrade_error);
         return (true);
@@ -1014,12 +1014,12 @@ json_group *ft_world::build_snapshot_groups(const ft_character &character,
     json_group *equipment_group;
 
     groups = ft_nullptr;
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     event_group = serialize_event_scheduler(this->_event_scheduler);
     if (!event_group)
     {
         error_code = ft_errno;
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_GAME_GENERAL_ERROR;
         this->set_error(error_code);
         return (ft_nullptr);
@@ -1030,7 +1030,7 @@ json_group *ft_world::build_snapshot_groups(const ft_character &character,
     {
         json_free_groups(groups);
         error_code = ft_errno;
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_GAME_GENERAL_ERROR;
         this->set_error(error_code);
         return (ft_nullptr);
@@ -1041,7 +1041,7 @@ json_group *ft_world::build_snapshot_groups(const ft_character &character,
     {
         json_free_groups(groups);
         error_code = ft_errno;
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_GAME_GENERAL_ERROR;
         this->set_error(error_code);
         return (ft_nullptr);
@@ -1052,14 +1052,14 @@ json_group *ft_world::build_snapshot_groups(const ft_character &character,
     {
         json_free_groups(groups);
         error_code = ft_errno;
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_GAME_GENERAL_ERROR;
         this->set_error(error_code);
         return (ft_nullptr);
     }
     json_append_group(&groups, equipment_group);
-    this->set_error(FT_ERR_SUCCESSS);
-    error_code = FT_ERR_SUCCESSS;
+    this->set_error(FT_ERR_SUCCESS);
+    error_code = FT_ERR_SUCCESS;
     return (groups);
 }
 
@@ -1091,10 +1091,10 @@ int ft_world::restore_from_groups(json_group *groups, ft_character &character,
     if (this->propagate_scheduler_state_error() == true)
         return (this->_error);
     inventory.get_items().clear();
-    if (deserialize_event_scheduler(this->_event_scheduler, event_group) != FT_ERR_SUCCESSS ||
-        deserialize_character(character, character_group) != FT_ERR_SUCCESSS ||
-        deserialize_inventory(inventory, inventory_group) != FT_ERR_SUCCESSS ||
-        deserialize_equipment(character, equipment_group) != FT_ERR_SUCCESSS)
+    if (deserialize_event_scheduler(this->_event_scheduler, event_group) != FT_ERR_SUCCESS ||
+        deserialize_character(character, character_group) != FT_ERR_SUCCESS ||
+        deserialize_inventory(inventory, inventory_group) != FT_ERR_SUCCESS ||
+        deserialize_equipment(character, equipment_group) != FT_ERR_SUCCESS)
     {
         this->set_error(ft_errno);
         return (this->_error);
@@ -1121,6 +1121,6 @@ int ft_world::restore_from_groups(json_group *groups, ft_character &character,
             return (this->_error);
         event_index++;
     }
-    this->set_error(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }

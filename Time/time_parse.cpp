@@ -128,7 +128,7 @@ static bool parse_timezone_offset(const char *timezone_buffer, int *offset_secon
         return (false);
     }
     *offset_seconds = sign_multiplier * ((offset_hours * 60) + offset_minutes) * 60;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -188,7 +188,7 @@ bool    time_parse_iso8601(const char *string_input, std::tm *time_output, t_tim
     if (!parse_timezone_offset(timezone_buffer, &offset_seconds))
     {
         error_code = ft_global_error_stack_drop_last_error();
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_INTERNAL;
         ft_global_error_stack_push(error_code);
         return (false);
@@ -235,7 +235,7 @@ bool    time_parse_iso8601(const char *string_input, std::tm *time_output, t_tim
         }
         *time_output = *utc_time;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -298,7 +298,7 @@ bool    time_parse_custom(const char *string_input, const char *format, std::tm 
         else
             *time_output = parsed_time;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (true);
 }
 

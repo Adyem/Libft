@@ -1,4 +1,8 @@
+#include "../test_internal.hpp"
 #include "test_scma_shared.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_scma_initialize_cycle,
         "scma initialization cycle handles double init and shutdown")

@@ -27,7 +27,7 @@ int rng_stream_seed(uint64_t base_seed, uint64_t stream_identifier, uint64_t *st
     }
     uint64_t state = rng_initialize_state(base_seed, stream_identifier);
     *stream_seed = rng_splitmix64_next(&state);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -40,7 +40,7 @@ int rng_stream_seed_sequence(uint64_t base_seed, uint64_t stream_identifier, uin
     }
     if (count == 0)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0);
     }
     uint64_t state = rng_initialize_state(base_seed, stream_identifier);
@@ -56,7 +56,7 @@ int rng_stream_seed_sequence(uint64_t base_seed, uint64_t stream_identifier, uin
             index++;
         }
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -69,7 +69,7 @@ int rng_stream_seed_from_string(const char *seed_string, uint64_t stream_identif
     }
     uint32_t base_seed_32 = ft_random_seed(seed_string);
     int error_code = ft_global_error_stack_drop_last_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(error_code);
         return (-1);
@@ -86,7 +86,7 @@ int rng_stream_seed_sequence_from_string(const char *seed_string, uint64_t strea
     }
     uint32_t base_seed_32 = ft_random_seed(seed_string);
     int error_code = ft_global_error_stack_drop_last_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(error_code);
         return (-1);

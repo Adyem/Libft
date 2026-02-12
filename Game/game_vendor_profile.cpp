@@ -25,13 +25,13 @@ int ft_vendor_profile::lock_pair(const ft_vendor_profile &first, const ft_vendor
     {
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
 
-        if (single_guard.get_error() != FT_ERR_SUCCESSS)
+        if (single_guard.get_error() != FT_ERR_SUCCESS)
         {
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -49,12 +49,12 @@ int ft_vendor_profile::lock_pair(const ft_vendor_profile &first, const ft_vendor
     {
         ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
 
-        if (lower_guard.get_error() != FT_ERR_SUCCESSS)
+        if (lower_guard.get_error() != FT_ERR_SUCCESS)
         {
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ERR_SUCCESSS)
+        if (upper_guard.get_error() == FT_ERR_SUCCESS)
         {
             if (!swapped)
             {
@@ -66,7 +66,7 @@ int ft_vendor_profile::lock_pair(const ft_vendor_profile &first, const ft_vendor
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            return (FT_ERR_SUCCESSS);
+            return (FT_ERR_SUCCESS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -80,24 +80,24 @@ int ft_vendor_profile::lock_pair(const ft_vendor_profile &first, const ft_vendor
 
 ft_vendor_profile::ft_vendor_profile() noexcept
     : _vendor_id(0), _buy_markup(1.0), _sell_multiplier(1.0), _tax_rate(0.0),
-    _error_code(FT_ERR_SUCCESSS)
+    _error_code(FT_ERR_SUCCESS)
 {
     return ;
 }
 
 ft_vendor_profile::ft_vendor_profile(int vendor_id, double buy_markup, double sell_multiplier, double tax_rate) noexcept
-    : _vendor_id(vendor_id), _buy_markup(buy_markup), _sell_multiplier(sell_multiplier), _tax_rate(tax_rate), _error_code(FT_ERR_SUCCESSS)
+    : _vendor_id(vendor_id), _buy_markup(buy_markup), _sell_multiplier(sell_multiplier), _tax_rate(tax_rate), _error_code(FT_ERR_SUCCESS)
 {
     return ;
 }
 
 ft_vendor_profile::ft_vendor_profile(const ft_vendor_profile &other) noexcept
-    : _vendor_id(0), _buy_markup(1.0), _sell_multiplier(1.0), _tax_rate(0.0), _error_code(FT_ERR_SUCCESSS)
+    : _vendor_id(0), _buy_markup(1.0), _sell_multiplier(1.0), _tax_rate(0.0), _error_code(FT_ERR_SUCCESS)
 {
     ft_unique_lock<pt_mutex> self_guard;
     ft_unique_lock<pt_mutex> other_guard;
 
-    if (ft_vendor_profile::lock_pair(*this, other, self_guard, other_guard) != FT_ERR_SUCCESSS)
+    if (ft_vendor_profile::lock_pair(*this, other, self_guard, other_guard) != FT_ERR_SUCCESS)
     {
         this->set_error(self_guard.get_error());
         return ;
@@ -118,7 +118,7 @@ ft_vendor_profile &ft_vendor_profile::operator=(const ft_vendor_profile &other) 
 
     if (this == &other)
         return (*this);
-    if (ft_vendor_profile::lock_pair(*this, other, self_guard, other_guard) != FT_ERR_SUCCESSS)
+    if (ft_vendor_profile::lock_pair(*this, other, self_guard, other_guard) != FT_ERR_SUCCESS)
     {
         this->set_error(self_guard.get_error());
         return (*this);
@@ -133,11 +133,11 @@ ft_vendor_profile &ft_vendor_profile::operator=(const ft_vendor_profile &other) 
 }
 
 ft_vendor_profile::ft_vendor_profile(ft_vendor_profile &&other) noexcept
-    : _vendor_id(0), _buy_markup(1.0), _sell_multiplier(1.0), _tax_rate(0.0), _error_code(FT_ERR_SUCCESSS)
+    : _vendor_id(0), _buy_markup(1.0), _sell_multiplier(1.0), _tax_rate(0.0), _error_code(FT_ERR_SUCCESS)
 {
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
 
-    if (other_guard.get_error() != FT_ERR_SUCCESSS)
+    if (other_guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(other_guard.get_error());
         return ;
@@ -151,9 +151,9 @@ ft_vendor_profile::ft_vendor_profile(ft_vendor_profile &&other) noexcept
     other._buy_markup = 1.0;
     other._sell_multiplier = 1.0;
     other._tax_rate = 0.0;
-    other._error_code = FT_ERR_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESS;
     this->set_error(this->_error_code);
-    other.set_error(FT_ERR_SUCCESSS);
+    other.set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -164,7 +164,7 @@ ft_vendor_profile &ft_vendor_profile::operator=(ft_vendor_profile &&other) noexc
 
     if (this == &other)
         return (*this);
-    if (ft_vendor_profile::lock_pair(*this, other, self_guard, other_guard) != FT_ERR_SUCCESSS)
+    if (ft_vendor_profile::lock_pair(*this, other, self_guard, other_guard) != FT_ERR_SUCCESS)
     {
         this->set_error(self_guard.get_error());
         return (*this);
@@ -178,9 +178,9 @@ ft_vendor_profile &ft_vendor_profile::operator=(ft_vendor_profile &&other) noexc
     other._buy_markup = 1.0;
     other._sell_multiplier = 1.0;
     other._tax_rate = 0.0;
-    other._error_code = FT_ERR_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESS;
     this->set_error(this->_error_code);
-    other.set_error(FT_ERR_SUCCESSS);
+    other.set_error(FT_ERR_SUCCESS);
     return (*this);
 }
 
@@ -189,7 +189,7 @@ int ft_vendor_profile::get_vendor_id() const noexcept
     int identifier;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_vendor_profile *>(this)->set_error(guard.get_error());
         return (guard.get_error());
@@ -207,13 +207,13 @@ void ft_vendor_profile::set_vendor_id(int vendor_id) noexcept
         return ;
     }
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
     }
     this->_vendor_id = vendor_id;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -222,7 +222,7 @@ double ft_vendor_profile::get_buy_markup() const noexcept
     double markup;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_vendor_profile *>(this)->set_error(guard.get_error());
         return (static_cast<double>(guard.get_error()));
@@ -235,13 +235,13 @@ double ft_vendor_profile::get_buy_markup() const noexcept
 void ft_vendor_profile::set_buy_markup(double buy_markup) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
     }
     this->_buy_markup = buy_markup;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -250,7 +250,7 @@ double ft_vendor_profile::get_sell_multiplier() const noexcept
     double multiplier;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_vendor_profile *>(this)->set_error(guard.get_error());
         return (static_cast<double>(guard.get_error()));
@@ -263,13 +263,13 @@ double ft_vendor_profile::get_sell_multiplier() const noexcept
 void ft_vendor_profile::set_sell_multiplier(double sell_multiplier) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
     }
     this->_sell_multiplier = sell_multiplier;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -278,7 +278,7 @@ double ft_vendor_profile::get_tax_rate() const noexcept
     double tax_rate;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_vendor_profile *>(this)->set_error(guard.get_error());
         return (static_cast<double>(guard.get_error()));
@@ -291,13 +291,13 @@ double ft_vendor_profile::get_tax_rate() const noexcept
 void ft_vendor_profile::set_tax_rate(double tax_rate) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
     }
     this->_tax_rate = tax_rate;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -306,7 +306,7 @@ int ft_vendor_profile::get_error() const noexcept
     int error_value;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_vendor_profile *>(this)->set_error(guard.get_error());
         return (guard.get_error());

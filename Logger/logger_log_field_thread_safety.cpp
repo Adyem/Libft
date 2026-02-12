@@ -26,7 +26,7 @@ int log_field_prepare_thread_safety(s_log_field *field)
         return (-1);
     }
     mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
+    if (mutex_pointer->get_error() != FT_ERR_SUCCESS)
     {
         int mutex_error;
 
@@ -72,7 +72,7 @@ int log_field_lock(const s_log_field *field, bool *lock_acquired)
         return (0);
     }
     mutable_field->mutex->lock(THREAD_ID);
-    if (mutable_field->mutex->get_error() != FT_ERR_SUCCESSS)
+    if (mutable_field->mutex->get_error() != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(mutable_field->mutex->get_error());
         return (-1);
@@ -97,7 +97,7 @@ void log_field_unlock(const s_log_field *field, bool lock_acquired)
     if (!mutable_field->mutex)
         return ;
     mutable_field->mutex->unlock(THREAD_ID);
-    if (mutable_field->mutex->get_error() != FT_ERR_SUCCESSS)
+    if (mutable_field->mutex->get_error() != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(mutable_field->mutex->get_error());
         return ;

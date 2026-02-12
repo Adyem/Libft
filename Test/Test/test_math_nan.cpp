@@ -1,5 +1,9 @@
+#include "../test_internal.hpp"
 #include "../../Math/math.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_math_nan_not_equal_to_itself, "math_nan returns a NaN value")
 {
@@ -30,7 +34,7 @@ FT_TEST(test_math_nan_resets_errno_to_success, "math_nan resets errno to success
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     value = math_nan();
     FT_ASSERT(math_isnan(value));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 

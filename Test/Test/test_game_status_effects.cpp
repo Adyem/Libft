@@ -1,9 +1,13 @@
+#include "../test_internal.hpp"
 #include "../../Game/game_buff.hpp"
 #include "../../Game/game_debuff.hpp"
 #include "../../Game/game_resistance.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../Template/move.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_game_buff_rejects_negative_id, "Game: buff setter rejects negative identifiers")
 {
@@ -36,7 +40,7 @@ FT_TEST(test_game_debuff_modifier_updates_apply_deltas, "Game: debuff modifier u
     debuff.add_modifier2(4);
 
     FT_ASSERT_EQ(7, debuff.get_modifier2());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, debuff.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, debuff.get_error());
     return (1);
 }
 
@@ -48,7 +52,7 @@ FT_TEST(test_game_resistance_reset_clears_values, "Game: resistance reset restor
 
     FT_ASSERT_EQ(25, resistance.get_percent());
     FT_ASSERT_EQ(10, resistance.get_flat());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, resistance.reset());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, resistance.reset());
     FT_ASSERT_EQ(0, resistance.get_percent());
     FT_ASSERT_EQ(0, resistance.get_flat());
     return (1);
@@ -67,7 +71,7 @@ FT_TEST(test_game_resistance_move_assignment_transfers_values, "Game: resistance
     FT_ASSERT_EQ(3, destination.get_flat());
     FT_ASSERT_EQ(0, source.get_percent());
     FT_ASSERT_EQ(0, source.get_flat());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, destination.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, source.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
     return (1);
 }

@@ -66,12 +66,12 @@ inline int ft_path_step_test_helper::lock(ft_path_step &step) noexcept
     int result;
 
     result = step._mutex.lock();
-    if (step._mutex.get_error() != FT_ERR_SUCCESSS)
+    if (step._mutex.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = step._mutex.get_error();
         return (step._mutex.get_error());
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (result);
 }
 
@@ -80,12 +80,12 @@ inline int ft_path_step_test_helper::unlock(ft_path_step &step) noexcept
     int result;
 
     result = step._mutex.unlock();
-    if (step._mutex.get_error() != FT_ERR_SUCCESSS)
+    if (step._mutex.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = step._mutex.get_error();
         return (step._mutex.get_error());
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (result);
 }
 
@@ -94,7 +94,7 @@ inline bool ft_path_step_test_helper::is_locked(const ft_path_step &step) noexce
     bool locked;
 
     locked = step._mutex.lockState();
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (locked);
 }
 
@@ -103,9 +103,9 @@ inline bool ft_path_step_test_helper::is_owned_by_thread(const ft_path_step &ste
     bool owned;
 
     owned = step._mutex.is_owned_by_thread(thread_id);
-    if (ft_errno != FT_ERR_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESS)
         return (false);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (owned);
 }
 

@@ -33,7 +33,7 @@ int rl_initialize_state(readline_state_t *state)
         return (FT_ERR_INVALID_ARGUMENT);
     had_mutex = (state->mutex != ft_nullptr);
     result = rl_state_prepare_thread_safety(state);
-    if (result != FT_ERR_SUCCESSS)
+    if (result != FT_ERR_SUCCESS)
         return (result);
     if (!had_mutex && state->mutex != ft_nullptr)
         thread_safety_created = true;
@@ -44,7 +44,7 @@ int rl_initialize_state(readline_state_t *state)
         return (FT_ERR_TERMINATED);
     }
     result = rl_state_lock(state, &lock_acquired);
-    if (result != FT_ERR_SUCCESSS)
+    if (result != FT_ERR_SUCCESS)
     {
         rl_disable_raw_mode();
         if (thread_safety_created == true)
@@ -55,7 +55,7 @@ int rl_initialize_state(readline_state_t *state)
     {
         cma_free(state->buffer);
         result = ft_global_error_stack_drop_last_error();
-        if (result != FT_ERR_SUCCESSS)
+        if (result != FT_ERR_SUCCESS)
         {
             rl_state_unlock(state, lock_acquired);
             rl_disable_raw_mode();
@@ -70,7 +70,7 @@ int rl_initialize_state(readline_state_t *state)
     result = ft_global_error_stack_drop_last_error();
     if (state->buffer == ft_nullptr)
     {
-        if (result == FT_ERR_SUCCESSS)
+        if (result == FT_ERR_SUCCESS)
             result = FT_ERR_NO_MEMORY;
         rl_state_unlock(state, lock_acquired);
         rl_disable_raw_mode();
@@ -78,7 +78,7 @@ int rl_initialize_state(readline_state_t *state)
             rl_state_teardown_thread_safety(state);
         return (result);
     }
-    if (result != FT_ERR_SUCCESSS)
+    if (result != FT_ERR_SUCCESS)
     {
         rl_state_unlock(state, lock_acquired);
         rl_disable_raw_mode();
@@ -103,5 +103,5 @@ int rl_initialize_state(readline_state_t *state)
     }
     rl_open_log_file(state);
     rl_state_unlock(state, lock_acquired);
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }

@@ -6,6 +6,7 @@
 #include <type_traits>
 #include <cstddef>
 #include <mutex>
+#include <cstdint>
 
 #include "mutex.hpp"
 
@@ -16,14 +17,20 @@ class pt_recursive_mutex
         mutable std::atomic<bool>         _lock;
         mutable std::atomic<std::size_t>  _lock_depth;
         mutable std::mutex               *_native_mutex;
-        mutable bool                      _native_initialized;
+        mutable uint8_t                   _initialized_state;
         mutable pt_mutex                  *_state_mutex;
         mutable std::atomic<bool>         _valid_state;
+        static const uint8_t              _state_uninitialized = 0;
+        static const uint8_t              _state_destroyed = 1;
+        static const uint8_t              _state_initialized = 2;
 
         int     ensure_native_mutex() const;
         int     lock_internal(bool *lock_acquired) const;
         int     unlock_internal(bool lock_acquired) const;
         void    teardown_thread_safety();
+        void    abort_lifecycle_error(const char *method_name,
+                    const char *reason) const;
+        void    abort_if_not_initialized(const char *method_name) const;
 
         pt_recursive_mutex(const pt_recursive_mutex&) = delete;
         pt_recursive_mutex& operator=(const pt_recursive_mutex&) = delete;

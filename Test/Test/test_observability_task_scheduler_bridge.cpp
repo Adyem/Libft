@@ -1,3 +1,4 @@
+#include "../test_internal.hpp"
 #include "../../Observability/observability_task_scheduler_bridge.hpp"
 #include "../../PThread/task_scheduler.hpp"
 #include "../../Errno/errno.hpp"
@@ -6,6 +7,9 @@
 #include <mutex>
 #include <thread>
 #include <chrono>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 static std::mutex g_span_mutex;
 static std::vector<ft_otel_span_metrics> g_recorded_spans;

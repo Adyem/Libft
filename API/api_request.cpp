@@ -35,13 +35,13 @@ static int api_request_capture_network_error()
     system_error = errno;
 #endif
     if (system_error == 0)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     return (ft_map_system_error(system_error));
 }
 
 static int api_request_assign_resolve_error(int mapped_error)
 {
-    if (mapped_error != FT_ERR_SUCCESSS)
+    if (mapped_error != FT_ERR_SUCCESS)
         return (mapped_error);
     return (FT_ERR_SOCKET_RESOLVE_FAILED);
 }
@@ -78,7 +78,7 @@ bool api_request(const char *ip, uint16_t port,
 {
     bool http2_used_local;
     bool request_success;
-    int error_code = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESS;
     api_request_error_guard guard(&error_code);
 
     if (used_http2)
@@ -97,7 +97,7 @@ bool api_request(const char *ip, uint16_t port,
         if (!request_success)
         {
             error_code = ft_global_error_stack_drop_last_error();
-            if (error_code == FT_ERR_SUCCESSS)
+            if (error_code == FT_ERR_SUCCESS)
                 error_code = FT_ERR_IO;
             return (false);
         }
@@ -110,7 +110,7 @@ bool api_request(const char *ip, uint16_t port,
     if (!request_success)
     {
         error_code = ft_global_error_stack_drop_last_error();
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_IO;
         return (false);
     }
@@ -140,7 +140,7 @@ bool api_request_stream(const char *ip, uint16_t port,
         ft_log_debug("api_request_stream %s:%u %s %s", log_ip, port,
             log_method, log_path);
     }
-    int error_code = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESS;
     api_request_error_guard guard(&error_code);
     if (!streaming_handler)
     {
@@ -261,7 +261,7 @@ bool api_request_stream_http2(const char *ip, uint16_t port,
         ft_log_debug("api_request_stream_http2 %s:%u %s %s", log_ip, port,
             log_method, log_path);
     }
-    int error_code = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESS;
     api_request_error_guard guard(&error_code);
     if (!streaming_handler)
     {
@@ -357,7 +357,7 @@ bool api_request_stream_http2(const char *ip, uint16_t port,
             streaming_handler, http2_used_local, error_code);
     if (!result)
     {
-        error_code = FT_ERR_SUCCESSS;
+        error_code = FT_ERR_SUCCESS;
         result = api_http_execute_plain_streaming(connection_handle, method,
                 path, ip, payload, headers, timeout, ip, port, retry_policy,
                 streaming_handler, error_code);
@@ -391,7 +391,7 @@ char *api_request_string(const char *ip, uint16_t port,
             log_ip, port, log_method, log_path);
     }
     const api_transport_hooks *hooks;
-    int error_code = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESS;
     api_request_error_guard guard(&error_code);
 
     hooks = api_get_transport_hooks();
@@ -535,7 +535,7 @@ char *api_request_string_http2(const char *ip, uint16_t port,
             log_ip, port, log_method, log_path);
     }
     const api_transport_hooks *hooks;
-    int error_code = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESS;
     api_request_error_guard guard(&error_code);
 
     hooks = api_get_transport_hooks();
@@ -684,7 +684,7 @@ char *api_request_string_http2(const char *ip, uint16_t port,
             if (!api_retry_circuit_allow(connection_handle, retry_policy,
                     error_code))
                 return (ft_nullptr);
-            error_code = FT_ERR_SUCCESSS;
+            error_code = FT_ERR_SUCCESS;
             socket_ready = api_http_prepare_plain_socket(connection_handle, ip,
                     port, timeout, error_code);
             if (socket_ready)
@@ -722,7 +722,7 @@ char *api_request_string_http2(const char *ip, uint16_t port,
                 current_delay = api_retry_prepare_delay(initial_delay,
                         max_delay);
         }
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_IO;
         if (used_http2)
             *used_http2 = false;
@@ -759,13 +759,13 @@ char *api_request_string_http2(const char *ip, uint16_t port,
         connection_handle.tls_session = ft_nullptr;
         connection_handle.tls_context = ft_nullptr;
         previous_error_code = error_code;
-        error_code = FT_ERR_SUCCESSS;
+        error_code = FT_ERR_SUCCESS;
         metrics_result_body = api_http_execute_plain(connection_handle, method,
                 path, ip, payload, headers, status, timeout, ip, port,
                 retry_policy, error_code);
         if (!metrics_result_body)
         {
-            if (previous_error_code != FT_ERR_SUCCESSS
+            if (previous_error_code != FT_ERR_SUCCESS
                 && previous_error_code != FT_ERR_SOCKET_CONNECT_FAILED
                 && error_code == FT_ERR_SOCKET_CONNECT_FAILED)
             {
@@ -786,14 +786,14 @@ json_group *api_request_json(const char *ip, uint16_t port,
     const char *headers, int *status, int timeout,
     const api_retry_policy *retry_policy)
 {
-    int error_code = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESS;
     api_request_error_guard guard(&error_code);
     char *body = api_request_string(ip, port, method, path, payload,
             headers, status, timeout, retry_policy);
     if (!body)
     {
         error_code = ft_global_error_stack_drop_last_error();
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_IO;
         return (ft_nullptr);
     }
@@ -804,7 +804,7 @@ json_group *api_request_json(const char *ip, uint16_t port,
         error_code = ft_global_error_stack_drop_last_error();
         return (ft_nullptr);
     }
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     return (result);
 }
 
@@ -817,7 +817,7 @@ json_group *api_request_json_http2(const char *ip, uint16_t port,
     char *body;
 
     http2_used_local = false;
-    int error_code = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESS;
     api_request_error_guard guard(&error_code);
     body = api_request_string_http2(ip, port, method, path, payload,
             headers, status, timeout, &http2_used_local, retry_policy);
@@ -826,7 +826,7 @@ json_group *api_request_json_http2(const char *ip, uint16_t port,
     if (!body)
     {
         error_code = ft_global_error_stack_drop_last_error();
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_IO;
         return (ft_nullptr);
     }
@@ -837,7 +837,7 @@ json_group *api_request_json_http2(const char *ip, uint16_t port,
         error_code = ft_global_error_stack_drop_last_error();
         return (ft_nullptr);
     }
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     return (result);
 }
 
@@ -964,7 +964,7 @@ char *api_request_string_host(const char *host, uint16_t port,
         ft_log_debug("api_request_string_host %s:%u %s %s",
             log_host, port, log_method, log_path);
     }
-    int error_code = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESS;
     api_request_error_guard guard(&error_code);
     if (!host || !method || !path)
     {
@@ -982,7 +982,7 @@ char *api_request_string_host(const char *host, uint16_t port,
         if (!hook_result)
         {
             error_code = ft_global_error_stack_drop_last_error();
-            if (error_code == FT_ERR_SUCCESSS)
+            if (error_code == FT_ERR_SUCCESS)
                 error_code = FT_ERR_IO;
         }
         return (hook_result);
@@ -1055,11 +1055,11 @@ char *api_request_string_host(const char *host, uint16_t port,
     if (!result)
     {
         error_code = ft_global_error_stack_drop_last_error();
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_IO;
         return (ft_nullptr);
     }
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     return (result);
 }
 
@@ -1068,14 +1068,14 @@ json_group *api_request_json_host(const char *host, uint16_t port,
     const char *headers, int *status, int timeout,
     const api_retry_policy *retry_policy)
 {
-    int error_code = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESS;
     api_request_error_guard guard(&error_code);
     char *body = api_request_string_host(host, port, method, path, payload,
             headers, status, timeout, retry_policy);
     if (!body)
     {
         error_code = ft_global_error_stack_drop_last_error();
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_IO;
         return (ft_nullptr);
     }
@@ -1086,7 +1086,7 @@ json_group *api_request_json_host(const char *host, uint16_t port,
         error_code = ft_global_error_stack_drop_last_error();
         return (ft_nullptr);
     }
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     return (result);
 }
 
@@ -1117,14 +1117,14 @@ json_group *api_request_json_bearer(const char *ip, uint16_t port,
     json_group *payload, const char *headers, int *status, int timeout,
     const api_retry_policy *retry_policy)
 {
-    int error_code = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESS;
     api_request_error_guard guard(&error_code);
     char *body = api_request_string_bearer(ip, port, method, path, token,
             payload, headers, status, timeout, retry_policy);
     if (!body)
     {
         error_code = ft_global_error_stack_drop_last_error();
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_IO;
         return (ft_nullptr);
     }
@@ -1135,7 +1135,7 @@ json_group *api_request_json_bearer(const char *ip, uint16_t port,
         error_code = ft_global_error_stack_drop_last_error();
         return (ft_nullptr);
     }
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     return (result);
 }
 
@@ -1166,14 +1166,14 @@ json_group *api_request_json_basic(const char *ip, uint16_t port,
     json_group *payload, const char *headers, int *status, int timeout,
     const api_retry_policy *retry_policy)
 {
-    int error_code = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESS;
     api_request_error_guard guard(&error_code);
     char *body = api_request_string_basic(ip, port, method, path, credentials,
             payload, headers, status, timeout, retry_policy);
     if (!body)
     {
         error_code = ft_global_error_stack_drop_last_error();
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_IO;
         return (ft_nullptr);
     }
@@ -1184,7 +1184,7 @@ json_group *api_request_json_basic(const char *ip, uint16_t port,
         error_code = ft_global_error_stack_drop_last_error();
         return (ft_nullptr);
     }
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     return (result);
 }
 
@@ -1216,14 +1216,14 @@ json_group *api_request_json_host_bearer(const char *host, uint16_t port,
     json_group *payload, const char *headers, int *status, int timeout,
     const api_retry_policy *retry_policy)
 {
-    int error_code = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESS;
     api_request_error_guard guard(&error_code);
     char *body = api_request_string_host_bearer(host, port, method, path, token,
             payload, headers, status, timeout, retry_policy);
     if (!body)
     {
         error_code = ft_global_error_stack_drop_last_error();
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_IO;
         return (ft_nullptr);
     }
@@ -1234,7 +1234,7 @@ json_group *api_request_json_host_bearer(const char *host, uint16_t port,
         error_code = ft_global_error_stack_drop_last_error();
         return (ft_nullptr);
     }
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     return (result);
 }
 
@@ -1266,7 +1266,7 @@ json_group *api_request_json_host_basic(const char *host, uint16_t port,
     json_group *payload, const char *headers, int *status, int timeout,
     const api_retry_policy *retry_policy)
 {
-    int error_code = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESS;
     api_request_error_guard guard(&error_code);
     char *body = api_request_string_host_basic(host, port, method, path,
             credentials, payload, headers, status, timeout,
@@ -1274,7 +1274,7 @@ json_group *api_request_json_host_basic(const char *host, uint16_t port,
     if (!body)
     {
         error_code = ft_global_error_stack_drop_last_error();
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_IO;
         return (ft_nullptr);
     }
@@ -1285,7 +1285,7 @@ json_group *api_request_json_host_basic(const char *host, uint16_t port,
         error_code = ft_global_error_stack_drop_last_error();
         return (ft_nullptr);
     }
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     return (result);
 }
 
@@ -1317,7 +1317,7 @@ static bool parse_url(const char *url, bool &tls, ft_string &host,
     {
         scheme.append(*walker);
         int scheme_error = ft_string::last_operation_error();
-        if (scheme_error != FT_ERR_SUCCESSS)
+        if (scheme_error != FT_ERR_SUCCESS)
         {
             error_code = scheme_error;
             return (false);
@@ -1332,7 +1332,7 @@ static bool parse_url(const char *url, bool &tls, ft_string &host,
     {
         path.append(path_start);
         int path_error = ft_string::last_operation_error();
-        if (path_error != FT_ERR_SUCCESSS)
+        if (path_error != FT_ERR_SUCCESS)
         {
             error_code = path_error;
             return (false);
@@ -1343,7 +1343,7 @@ static bool parse_url(const char *url, bool &tls, ft_string &host,
         slash = "/";
         path = slash;
         int path_error = ft_string::last_operation_error();
-        if (path_error != FT_ERR_SUCCESSS)
+        if (path_error != FT_ERR_SUCCESS)
         {
             error_code = path_error;
             return (false);
@@ -1357,7 +1357,7 @@ static bool parse_url(const char *url, bool &tls, ft_string &host,
         {
             hostport.append(*walker);
             int hostport_error = ft_string::last_operation_error();
-            if (hostport_error != FT_ERR_SUCCESSS)
+            if (hostport_error != FT_ERR_SUCCESS)
             {
                 error_code = hostport_error;
                 return (false);
@@ -1370,7 +1370,7 @@ static bool parse_url(const char *url, bool &tls, ft_string &host,
         hostport.clear();
         hostport.append(host_start);
         int hostport_error = ft_string::last_operation_error();
-        if (hostport_error != FT_ERR_SUCCESSS)
+        if (hostport_error != FT_ERR_SUCCESS)
         {
             error_code = hostport_error;
             return (false);
@@ -1385,7 +1385,7 @@ static bool parse_url(const char *url, bool &tls, ft_string &host,
         {
             host.append(*walker);
             int host_error = ft_string::last_operation_error();
-            if (host_error != FT_ERR_SUCCESSS)
+            if (host_error != FT_ERR_SUCCESS)
             {
                 error_code = host_error;
                 return (false);
@@ -1398,7 +1398,7 @@ static bool parse_url(const char *url, bool &tls, ft_string &host,
     {
         host = hostport;
         int host_error = ft_string::last_operation_error();
-        if (host_error != FT_ERR_SUCCESSS)
+        if (host_error != FT_ERR_SUCCESS)
         {
             error_code = host_error;
             return (false);
@@ -1408,7 +1408,7 @@ static bool parse_url(const char *url, bool &tls, ft_string &host,
         else
             port = 80;
     }
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     return (true);
 }
 
@@ -1427,7 +1427,7 @@ char *api_request_string_url(const char *url, const char *method,
         ft_log_debug("api_request_string_url %s %s",
             log_url, log_method);
     }
-    int error_code = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESS;
     api_request_error_guard guard(&error_code);
     if (!method)
     {
@@ -1452,11 +1452,11 @@ char *api_request_string_url(const char *url, const char *method,
     if (!result)
     {
         error_code = ft_global_error_stack_drop_last_error();
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_IO;
         return (ft_nullptr);
     }
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     return (result);
 }
 
@@ -1464,14 +1464,14 @@ json_group *api_request_json_url(const char *url, const char *method,
     json_group *payload, const char *headers, int *status, int timeout,
     const api_retry_policy *retry_policy)
 {
-    int error_code = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESS;
     api_request_error_guard guard(&error_code);
     char *body = api_request_string_url(url, method, payload,
             headers, status, timeout, retry_policy);
     if (!body)
     {
         error_code = ft_global_error_stack_drop_last_error();
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_IO;
         return (ft_nullptr);
     }
@@ -1482,6 +1482,6 @@ json_group *api_request_json_url(const char *url, const char *method,
         error_code = ft_global_error_stack_drop_last_error();
         return (ft_nullptr);
     }
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     return (result);
 }

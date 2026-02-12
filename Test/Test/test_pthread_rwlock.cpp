@@ -1,6 +1,10 @@
+#include "../test_internal.hpp"
 #include "../../PThread/pthread.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 struct reader_data
 {
@@ -90,9 +94,9 @@ FT_TEST(test_pt_rwlock_unlock_updates_errno, "pt_rwlock_unlock updates ft_errno 
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(0, pthread_rwlock_wrlock(&rwlock));
     FT_ASSERT_EQ(0, pt_rwlock_unlock(&rwlock));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT_EQ(0, pt_rwlock_destroy(&rwlock));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 

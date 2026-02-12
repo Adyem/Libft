@@ -21,13 +21,13 @@ static bool load_utc_time(std::time_t standard_time, std::tm *utc_out)
     }
     mutex_result = g_gmtime_mutex.lock();
     if ((&g_gmtime_mutex) == ft_nullptr)
-        mutex_error = FT_ERR_SUCCESSS;
+        mutex_error = FT_ERR_SUCCESS;
     else
         mutex_error = ft_global_error_stack_drop_last_error();
     {
         int reported_error;
 
-        if (mutex_error != FT_ERR_SUCCESSS)
+        if (mutex_error != FT_ERR_SUCCESS)
             reported_error = mutex_error;
         else
             reported_error = mutex_result;
@@ -43,13 +43,13 @@ static bool load_utc_time(std::time_t standard_time, std::tm *utc_out)
     {
         mutex_result = g_gmtime_mutex.unlock();
         if ((&g_gmtime_mutex) == ft_nullptr)
-            mutex_error = FT_ERR_SUCCESSS;
+            mutex_error = FT_ERR_SUCCESS;
         else
             mutex_error = ft_global_error_stack_drop_last_error();
         {
             int reported_error;
 
-            if (mutex_error != FT_ERR_SUCCESSS)
+            if (mutex_error != FT_ERR_SUCCESS)
                 reported_error = mutex_error;
             else
                 reported_error = mutex_result;
@@ -66,13 +66,13 @@ static bool load_utc_time(std::time_t standard_time, std::tm *utc_out)
     *utc_out = *utc_pointer;
     mutex_result = g_gmtime_mutex.unlock();
     if ((&g_gmtime_mutex) == ft_nullptr)
-        mutex_error = FT_ERR_SUCCESSS;
+        mutex_error = FT_ERR_SUCCESS;
     else
         mutex_error = ft_global_error_stack_drop_last_error();
     {
         int reported_error;
 
-        if (mutex_error != FT_ERR_SUCCESSS)
+        if (mutex_error != FT_ERR_SUCCESS)
             reported_error = mutex_error;
         else
             reported_error = mutex_result;
@@ -83,7 +83,7 @@ static bool load_utc_time(std::time_t standard_time, std::tm *utc_out)
             return (false);
         }
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -107,7 +107,7 @@ bool    time_get_local_offset(t_time time_value, int *offset_minutes, bool *is_d
     if (cmp_localtime(&standard_time, &local_time) != 0)
     {
         error_code = ft_global_error_stack_drop_last_error();
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_INTERNAL;
         ft_global_error_stack_push(error_code);
         return (false);
@@ -115,7 +115,7 @@ bool    time_get_local_offset(t_time time_value, int *offset_minutes, bool *is_d
     if (!load_utc_time(standard_time, &utc_time))
     {
         error_code = ft_global_error_stack_drop_last_error();
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_INTERNAL;
         ft_global_error_stack_push(error_code);
         return (false);
@@ -153,7 +153,7 @@ bool    time_get_local_offset(t_time time_value, int *offset_minutes, bool *is_d
         else
             *is_daylight_saving = false;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -186,6 +186,6 @@ bool    time_convert_timezone(t_time time_value, int source_offset_minutes, int 
         return (false);
     }
     *converted_time = static_cast<t_time>(converted_seconds);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (true);
 }

@@ -64,7 +64,7 @@ int be_saveGame(const char *filename, const char *data, const char *key)
         int error_code;
 
         error_code = ft_global_error_stack_drop_last_error();
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_NO_MEMORY;
         ft_global_error_stack_push(error_code);
         return (1);
@@ -79,7 +79,7 @@ int be_saveGame(const char *filename, const char *data, const char *key)
 
         cma_free(encrypted_data);
         error_code = ft_global_error_stack_drop_last_error();
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_INVALID_HANDLE;
         ft_global_error_stack_push(error_code);
         return (1);
@@ -93,10 +93,10 @@ int be_saveGame(const char *filename, const char *data, const char *key)
     cma_free(encrypted_data);
     if (bytes_written == static_cast<ssize_t>(data_length))
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0);
     }
-    if (write_error_code == FT_ERR_SUCCESSS)
+    if (write_error_code == FT_ERR_SUCCESS)
         write_error_code = FT_ERR_IO;
     ft_global_error_stack_push(write_error_code);
     return (1);
@@ -111,6 +111,6 @@ char **be_DecryptData(char **data, const char *key)
     }
     size_t data_length = ft_strlen(*data);
     be_encrypt(*data, data_length, key);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (data);
 }

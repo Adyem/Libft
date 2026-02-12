@@ -90,7 +90,7 @@ ft_graph<VertexType>::ft_graph(size_t initialCapacity)
         }
         this->_capacity = initialCapacity;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -141,7 +141,7 @@ ft_graph<VertexType>::ft_graph(ft_graph&& other) noexcept
         if (this->enable_thread_safety() != 0)
             return ;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -184,7 +184,7 @@ ft_graph<VertexType>& ft_graph<VertexType>::operator=(ft_graph&& other) noexcept
                 return (*this);
         }
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (*this);
 }
 
@@ -193,7 +193,7 @@ bool ft_graph<VertexType>::ensure_node_capacity(size_t desired)
 {
     if (desired <= this->_capacity)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (true);
     }
     size_t newCap;
@@ -223,7 +223,7 @@ bool ft_graph<VertexType>::ensure_node_capacity(size_t desired)
         cma_free(this->_nodes);
     this->_nodes = newNodes;
     this->_capacity = newCap;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -232,7 +232,7 @@ bool ft_graph<VertexType>::ensure_edge_capacity(GraphNode& node, size_t desired)
 {
     if (desired <= node._capacity)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (true);
     }
     size_t newCap;
@@ -258,7 +258,7 @@ bool ft_graph<VertexType>::ensure_edge_capacity(GraphNode& node, size_t desired)
         cma_free(node._edges);
     node._edges = newEdges;
     node._capacity = newCap;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -283,7 +283,7 @@ size_t ft_graph<VertexType>::add_vertex(const VertexType& value)
     this->_nodes[this->_size]._capacity = 0;
     size_t idx = this->_size;
     ++this->_size;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (idx);
 }
@@ -309,7 +309,7 @@ size_t ft_graph<VertexType>::add_vertex(VertexType&& value)
     this->_nodes[this->_size]._capacity = 0;
     size_t idx = this->_size;
     ++this->_size;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (idx);
 }
@@ -336,7 +336,7 @@ void ft_graph<VertexType>::add_edge(size_t from, size_t to)
     }
     node._edges[node._degree] = to;
     ++node._degree;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -389,7 +389,7 @@ void ft_graph<VertexType>::bfs(size_t start, Func visit)
         }
     }
     cma_free(visited);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -441,7 +441,7 @@ void ft_graph<VertexType>::dfs(size_t start, Func visit)
         }
     }
     cma_free(visited);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -466,7 +466,7 @@ void ft_graph<VertexType>::neighbors(size_t index, ft_vector<size_t> &out) const
         out.push_back(this->_nodes[index]._edges[neighbor_index]);
         ++neighbor_index;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -481,7 +481,7 @@ size_t ft_graph<VertexType>::size() const
     if (this->lock_internal(&lock_acquired) != 0)
         return (this->_size);
     size_value = this->_size;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (size_value);
 }
@@ -496,7 +496,7 @@ bool ft_graph<VertexType>::empty() const
     if (this->lock_internal(&lock_acquired) != 0)
         return (true);
     result = (this->_size == 0);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (result);
 }
@@ -523,7 +523,7 @@ void ft_graph<VertexType>::clear()
         ++node_index_clear;
     }
     this->_size = 0;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -532,7 +532,7 @@ template <typename VertexType>
 int ft_graph<VertexType>::prepare_thread_safety()
 {
     if (this->_mutex != ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     return (pt_recursive_mutex_create_with_error(&this->_mutex));
 }
 
@@ -548,7 +548,7 @@ template <typename VertexType>
 void ft_graph<VertexType>::disable_thread_safety()
 {
     this->teardown_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -556,7 +556,7 @@ template <typename VertexType>
 bool ft_graph<VertexType>::is_thread_safe() const
 {
     bool enabled = (this->_mutex != ft_nullptr);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (enabled);
 }
 
@@ -564,12 +564,12 @@ template <typename VertexType>
 int ft_graph<VertexType>::lock(bool *lock_acquired) const
 {
     int result = this->lock_internal(lock_acquired);
-    if (result != FT_ERR_SUCCESSS)
+    if (result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(result);
         return (-1);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -587,9 +587,9 @@ int ft_graph<VertexType>::lock_internal(bool *lock_acquired) const
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     int result = pt_recursive_mutex_lock_with_error(*this->_mutex);
-    if (result == FT_ERR_SUCCESSS && lock_acquired != ft_nullptr)
+    if (result == FT_ERR_SUCCESS && lock_acquired != ft_nullptr)
         *lock_acquired = true;
     return (result);
 }
@@ -598,7 +598,7 @@ template <typename VertexType>
 int ft_graph<VertexType>::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     return (pt_recursive_mutex_unlock_with_error(*this->_mutex));
 }
 

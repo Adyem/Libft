@@ -1,8 +1,12 @@
+#include "../test_internal.hpp"
 #include "../../CPP_class/class_big_number.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../Template/move.hpp"
 #include <cstring>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_big_number_default_state, "ft_big_number default state is zero")
 {

@@ -17,7 +17,7 @@ static void json_schema_push_error(int error_code)
     do { json_schema_push_error(code); return (value); } while (0)
 
 #define JSON_SCHEMA_SUCCESS_RETURN(value) \
-    do { json_schema_push_error(FT_ERR_SUCCESSS); return (value); } while (0)
+    do { json_schema_push_error(FT_ERR_SUCCESS); return (value); } while (0)
 
 static int json_schema_last_error(void)
 {
@@ -97,7 +97,7 @@ int json_register_schema_migration(const ft_string &schema_name,
     {
         int lock_error = ft_global_error_stack_drop_last_error();
 
-        if (lock_error != FT_ERR_SUCCESSS)
+        if (lock_error != FT_ERR_SUCCESS)
         {
             json_schema_unlock(guard);
             JSON_SCHEMA_ERROR_RETURN(lock_error, lock_error);
@@ -106,7 +106,7 @@ int json_register_schema_migration(const ft_string &schema_name,
     ft_map<ft_string, ft_vector<json_schema_migration_step> > &registry = json_schema_registry();
     Pair<ft_string, ft_vector<json_schema_migration_step> > *entry = registry.find(schema_name);
     int map_error = ft_global_error_stack_peek_last_error();
-    if (map_error != FT_ERR_SUCCESSS)
+    if (map_error != FT_ERR_SUCCESS)
     {
         json_schema_unlock(guard);
         JSON_SCHEMA_ERROR_RETURN(map_error, map_error);
@@ -122,7 +122,7 @@ int json_register_schema_migration(const ft_string &schema_name,
 
         steps.push_back(step);
         int vector_error = ft_global_error_stack_peek_last_error();
-        if (vector_error != FT_ERR_SUCCESSS)
+        if (vector_error != FT_ERR_SUCCESS)
         {
             json_schema_unlock(guard);
             JSON_SCHEMA_ERROR_RETURN(vector_error, vector_error);
@@ -130,16 +130,16 @@ int json_register_schema_migration(const ft_string &schema_name,
         registry.insert(schema_name, ft_move(steps));
         map_error = ft_global_error_stack_peek_last_error();
         json_schema_unlock(guard);
-        if (map_error != FT_ERR_SUCCESSS)
+        if (map_error != FT_ERR_SUCCESS)
         {
             JSON_SCHEMA_ERROR_RETURN(map_error, map_error);
         }
-        JSON_SCHEMA_SUCCESS_RETURN(FT_ERR_SUCCESSS);
+        JSON_SCHEMA_SUCCESS_RETURN(FT_ERR_SUCCESS);
     }
     ft_vector<json_schema_migration_step> &steps = entry->value;
     size_t steps_count = steps.size();
     int vector_error = ft_global_error_stack_peek_last_error();
-    if (vector_error != FT_ERR_SUCCESSS)
+    if (vector_error != FT_ERR_SUCCESS)
     {
         json_schema_unlock(guard);
         JSON_SCHEMA_ERROR_RETURN(vector_error, vector_error);
@@ -158,9 +158,9 @@ int json_register_schema_migration(const ft_string &schema_name,
     steps.push_back(step);
     vector_error = ft_global_error_stack_peek_last_error();
     json_schema_unlock(guard);
-    if (vector_error != FT_ERR_SUCCESSS)
+    if (vector_error != FT_ERR_SUCCESS)
         JSON_SCHEMA_ERROR_RETURN(vector_error, vector_error);
-    JSON_SCHEMA_SUCCESS_RETURN(FT_ERR_SUCCESSS);
+    JSON_SCHEMA_SUCCESS_RETURN(FT_ERR_SUCCESS);
 }
 
 int json_apply_schema_migrations(json_document &document,
@@ -173,7 +173,7 @@ int json_apply_schema_migrations(json_document &document,
     if (current_version < 0 || target_version < current_version)
         JSON_SCHEMA_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, FT_ERR_INVALID_ARGUMENT);
     if (current_version == target_version)
-        JSON_SCHEMA_SUCCESS_RETURN(FT_ERR_SUCCESSS);
+        JSON_SCHEMA_SUCCESS_RETURN(FT_ERR_SUCCESS);
     int working_version = current_version;
     while (working_version < target_version)
     {
@@ -182,7 +182,7 @@ int json_apply_schema_migrations(json_document &document,
         {
             int lock_error = ft_global_error_stack_drop_last_error();
 
-            if (lock_error != FT_ERR_SUCCESSS)
+            if (lock_error != FT_ERR_SUCCESS)
             {
                 json_schema_unlock(guard);
                 JSON_SCHEMA_ERROR_RETURN(lock_error, lock_error);
@@ -191,7 +191,7 @@ int json_apply_schema_migrations(json_document &document,
         ft_map<ft_string, ft_vector<json_schema_migration_step> > &registry = json_schema_registry();
         Pair<ft_string, ft_vector<json_schema_migration_step> > *entry = registry.find(schema_name);
         int map_error = ft_global_error_stack_peek_last_error();
-        if (map_error != FT_ERR_SUCCESSS)
+        if (map_error != FT_ERR_SUCCESS)
         {
             json_schema_unlock(guard);
             JSON_SCHEMA_ERROR_RETURN(map_error, map_error);
@@ -204,7 +204,7 @@ int json_apply_schema_migrations(json_document &document,
         ft_vector<json_schema_migration_step> &steps = entry->value;
         size_t steps_count = steps.size();
         int vector_error = ft_global_error_stack_peek_last_error();
-        if (vector_error != FT_ERR_SUCCESSS)
+        if (vector_error != FT_ERR_SUCCESS)
         {
             json_schema_unlock(guard);
             JSON_SCHEMA_ERROR_RETURN(vector_error, vector_error);
@@ -236,11 +236,11 @@ int json_apply_schema_migrations(json_document &document,
         if (!callback)
             JSON_SCHEMA_ERROR_RETURN(FT_ERR_INVALID_STATE, FT_ERR_INVALID_STATE);
         int callback_result = callback(document);
-        if (callback_result != FT_ERR_SUCCESSS)
+        if (callback_result != FT_ERR_SUCCESS)
             JSON_SCHEMA_ERROR_RETURN(callback_result, callback_result);
         working_version = next_version;
     }
-    JSON_SCHEMA_SUCCESS_RETURN(FT_ERR_SUCCESSS);
+    JSON_SCHEMA_SUCCESS_RETURN(FT_ERR_SUCCESS);
 }
 
 int json_get_latest_schema_version(const ft_string &schema_name,
@@ -255,7 +255,7 @@ int json_get_latest_schema_version(const ft_string &schema_name,
     {
         int lock_error = ft_global_error_stack_drop_last_error();
 
-        if (lock_error != FT_ERR_SUCCESSS)
+        if (lock_error != FT_ERR_SUCCESS)
         {
             json_schema_unlock(guard);
             JSON_SCHEMA_ERROR_RETURN(lock_error, lock_error);
@@ -264,7 +264,7 @@ int json_get_latest_schema_version(const ft_string &schema_name,
     ft_map<ft_string, ft_vector<json_schema_migration_step> > &registry = json_schema_registry();
     Pair<ft_string, ft_vector<json_schema_migration_step> > *entry = registry.find(schema_name);
     int map_error = ft_global_error_stack_peek_last_error();
-    if (map_error != FT_ERR_SUCCESSS)
+    if (map_error != FT_ERR_SUCCESS)
     {
         json_schema_unlock(guard);
         JSON_SCHEMA_ERROR_RETURN(map_error, map_error);
@@ -277,7 +277,7 @@ int json_get_latest_schema_version(const ft_string &schema_name,
     ft_vector<json_schema_migration_step> &steps = entry->value;
     size_t steps_count = steps.size();
     int vector_error = ft_global_error_stack_peek_last_error();
-    if (vector_error != FT_ERR_SUCCESSS)
+    if (vector_error != FT_ERR_SUCCESS)
     {
         json_schema_unlock(guard);
         JSON_SCHEMA_ERROR_RETURN(vector_error, vector_error);
@@ -299,5 +299,5 @@ int json_get_latest_schema_version(const ft_string &schema_name,
     if (!found)
         JSON_SCHEMA_ERROR_RETURN(FT_ERR_NOT_FOUND, FT_ERR_NOT_FOUND);
     *out_version = latest_version;
-    JSON_SCHEMA_SUCCESS_RETURN(FT_ERR_SUCCESSS);
+    JSON_SCHEMA_SUCCESS_RETURN(FT_ERR_SUCCESS);
 }

@@ -1,7 +1,11 @@
+#include "../test_internal.hpp"
 #include "../../Math/math_polynomial.hpp"
 #include "../../Math/math.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <cmath>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 static double test_math_polynomial_sine(double value, void *user_data)
 {
@@ -25,14 +29,14 @@ FT_TEST(test_polynomial_newton_finds_root, "math_polynomial_find_root_newton loc
     coefficients.push_back(-2.0);
     coefficients.push_back(0.0);
     coefficients.push_back(1.0);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, coefficients.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, coefficients.get_error());
     tolerance = 0.000001;
     result_code = math_polynomial_find_root_newton(coefficients,
             1.0,
             tolerance,
             32,
             root);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, result_code);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, result_code);
     FT_ASSERT(std::fabs(root * root - 2.0) < tolerance);
     return (1);
 }
@@ -46,7 +50,7 @@ FT_TEST(test_polynomial_quadratic_solver_returns_roots, "math_polynomial_solve_q
     result_code = math_polynomial_solve_quadratic(1.0, -5.0, 6.0,
             root_one,
             root_two);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, result_code);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, result_code);
     FT_ASSERT(std::fabs((root_one * root_one) - 5.0 * root_one + 6.0) < 0.000001);
     FT_ASSERT(std::fabs((root_two * root_two) - 5.0 * root_two + 6.0) < 0.000001);
     return (1);
@@ -65,13 +69,13 @@ FT_TEST(test_polynomial_lagrange_interpolation_recovers_parabola, "math_polynomi
     y_values.push_back(1.0);
     y_values.push_back(0.0);
     y_values.push_back(1.0);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, x_values.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, y_values.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, x_values.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, y_values.get_error());
     result_code = math_polynomial_lagrange_interpolate(x_values,
             y_values,
             2.0,
             interpolated);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, result_code);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, result_code);
     FT_ASSERT(std::fabs(interpolated - 4.0) < 0.000001);
     return (1);
 }
@@ -85,9 +89,9 @@ FT_TEST(test_polynomial_bezier_scalar_midpoint, "math_bezier_evaluate blends qua
     control_points.push_back(0.0);
     control_points.push_back(2.0);
     control_points.push_back(4.0);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, control_points.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, control_points.get_error());
     result_code = math_bezier_evaluate(control_points, 0.5, value);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, result_code);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, result_code);
     FT_ASSERT(std::fabs(value - 2.0) < 0.000001);
     return (1);
 }
@@ -103,12 +107,12 @@ FT_TEST(test_polynomial_bezier_vector2_midpoint, "math_bezier_evaluate_vector2 i
     control_points.push_back(vector2(0.0, 0.0));
     control_points.push_back(vector2(2.0, 2.0));
     control_points.push_back(vector2(4.0, 0.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, control_points.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, control_points.get_error());
     result_code = math_bezier_evaluate_vector2(control_points, 0.5, point);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, result_code);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, result_code);
     x_coordinate = point.get_x();
     y_coordinate = point.get_y();
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, point.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, point.get_error());
     FT_ASSERT(std::fabs(x_coordinate - 2.0) < 0.000001);
     FT_ASSERT(std::fabs(y_coordinate - 1.0) < 0.000001);
     return (1);
@@ -129,12 +133,12 @@ FT_TEST(test_polynomial_cubic_spline_tracks_curve, "ft_cubic_spline_build approx
     y_values.push_back(1.0);
     y_values.push_back(8.0);
     y_values.push_back(27.0);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, x_values.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, y_values.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, x_values.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, y_values.get_error());
     spline = ft_cubic_spline_build(x_values, y_values);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, spline.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, spline.get_error());
     evaluated = ft_cubic_spline_evaluate(spline, 1.5);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT(std::fabs(evaluated - 3.375) < 0.01);
     return (1);
 }
@@ -150,7 +154,7 @@ FT_TEST(test_polynomial_trapezoidal_integral, "math_integrate_trapezoidal integr
             1.0,
             128,
             result);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, status);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, status);
     FT_ASSERT(std::fabs(result - (1.0 / 3.0)) < 0.001);
     return (1);
 }
@@ -168,7 +172,7 @@ FT_TEST(test_polynomial_simpson_integral, "math_integrate_simpson integrates sin
             pi_value,
             0.000001,
             result);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, status);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, status);
     FT_ASSERT(std::fabs(result - 2.0) < 0.0001);
     return (1);
 }

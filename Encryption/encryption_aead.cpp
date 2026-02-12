@@ -39,7 +39,7 @@ encryption_aead_context::encryption_aead_context()
     this->_iv_length = 0;
     this->_mutex = ft_nullptr;
     int mutex_error = encryption_aead_initialize_mutex(&this->_mutex);
-    if (mutex_error != FT_ERR_SUCCESSS)
+    if (mutex_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(mutex_error);
         return ;
@@ -68,7 +68,7 @@ int encryption_aead_context::finalize_operation(int result) const
 {
     int unlock_error = pt_recursive_mutex_unlock_if_valid(this->_mutex);
     ft_global_error_stack_drop_last_error();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return (unlock_error);
@@ -88,14 +88,14 @@ encryption_aead_context::encryption_aead_context(encryption_aead_context &&other
     encryption_aead_initialize_mutex(&this->_mutex);
     int self_lock = pt_recursive_mutex_lock_if_valid(this->_mutex);
     ft_global_error_stack_drop_last_error();
-    if (self_lock != FT_ERR_SUCCESSS)
+    if (self_lock != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(self_lock);
         return ;
     }
     int other_lock = pt_recursive_mutex_lock_if_valid(other._mutex);
     ft_global_error_stack_drop_last_error();
-    if (other_lock != FT_ERR_SUCCESSS)
+    if (other_lock != FT_ERR_SUCCESS)
     {
         pt_recursive_mutex_unlock_if_valid(this->_mutex);
         ft_global_error_stack_drop_last_error();
@@ -125,14 +125,14 @@ encryption_aead_context &encryption_aead_context::operator=(encryption_aead_cont
         return (*this);
     int self_lock = pt_recursive_mutex_lock_if_valid(this->_mutex);
     ft_global_error_stack_drop_last_error();
-    if (self_lock != FT_ERR_SUCCESSS)
+    if (self_lock != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(self_lock);
         return (*this);
     }
     int other_lock = pt_recursive_mutex_lock_if_valid(other._mutex);
     ft_global_error_stack_drop_last_error();
-    if (other_lock != FT_ERR_SUCCESSS)
+    if (other_lock != FT_ERR_SUCCESS)
     {
         pt_recursive_mutex_unlock_if_valid(this->_mutex);
         ft_global_error_stack_drop_last_error();
@@ -168,7 +168,7 @@ int encryption_aead_context::configure_cipher(const unsigned char *key, size_t k
     int lock_result = pt_recursive_mutex_lock_if_valid(this->_mutex);
     ft_global_error_stack_drop_last_error();
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return (lock_result);
@@ -202,7 +202,7 @@ int encryption_aead_context::configure_cipher(const unsigned char *key, size_t k
     this->_cipher = cipher;
     this->_encrypt_mode = encrypt_mode;
     this->_initialized = true;
-    return (this->finalize_operation(FT_ERR_SUCCESSS));
+    return (this->finalize_operation(FT_ERR_SUCCESS));
 }
 
 int encryption_aead_context::initialize_encrypt(const unsigned char *key, size_t key_length,
@@ -222,7 +222,7 @@ int encryption_aead_context::update_aad(const unsigned char *aad, size_t aad_len
     int lock_result = pt_recursive_mutex_lock_if_valid(this->_mutex);
     ft_global_error_stack_drop_last_error();
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return (lock_result);
@@ -230,7 +230,7 @@ int encryption_aead_context::update_aad(const unsigned char *aad, size_t aad_len
     if (!this->_initialized)
         return (this->finalize_operation(FT_ERR_INVALID_STATE));
     if (aad_length == 0)
-        return (this->finalize_operation(FT_ERR_SUCCESSS));
+        return (this->finalize_operation(FT_ERR_SUCCESS));
     int update_result;
     int out_length = 0;
 
@@ -238,7 +238,7 @@ int encryption_aead_context::update_aad(const unsigned char *aad, size_t aad_len
             aad, static_cast<int>(aad_length));
     if (update_result != 1)
         return (this->finalize_operation(FT_ERR_INTERNAL));
-    return (this->finalize_operation(FT_ERR_SUCCESSS));
+    return (this->finalize_operation(FT_ERR_SUCCESS));
 }
 
 int encryption_aead_context::update(const unsigned char *input, size_t input_length,
@@ -248,7 +248,7 @@ int encryption_aead_context::update(const unsigned char *input, size_t input_len
     ft_global_error_stack_drop_last_error();
 
     output_length = 0;
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return (lock_result);
@@ -256,7 +256,7 @@ int encryption_aead_context::update(const unsigned char *input, size_t input_len
     if (!this->_initialized)
         return (this->finalize_operation(FT_ERR_INVALID_STATE));
     if (input_length == 0)
-        return (this->finalize_operation(FT_ERR_SUCCESSS));
+        return (this->finalize_operation(FT_ERR_SUCCESS));
     int local_length = 0;
     int update_result = EVP_CipherUpdate(this->_context, output, &local_length,
             input, static_cast<int>(input_length));
@@ -265,7 +265,7 @@ int encryption_aead_context::update(const unsigned char *input, size_t input_len
     if (local_length < 0)
         return (this->finalize_operation(FT_ERR_INTERNAL));
     output_length = static_cast<size_t>(local_length);
-    return (this->finalize_operation(FT_ERR_SUCCESSS));
+    return (this->finalize_operation(FT_ERR_SUCCESS));
 }
 
 int encryption_aead_context::finalize(unsigned char *tag, size_t tag_length)
@@ -273,7 +273,7 @@ int encryption_aead_context::finalize(unsigned char *tag, size_t tag_length)
     int lock_result = pt_recursive_mutex_lock_if_valid(this->_mutex);
     ft_global_error_stack_drop_last_error();
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return (lock_result);
@@ -299,7 +299,7 @@ int encryption_aead_context::finalize(unsigned char *tag, size_t tag_length)
     if (!this->_encrypt_mode)
     {
         this->_initialized = false;
-        return (this->finalize_operation(FT_ERR_SUCCESSS));
+        return (this->finalize_operation(FT_ERR_SUCCESS));
     }
     if (tag == NULL)
         return (this->finalize_operation(FT_ERR_INVALID_ARGUMENT));
@@ -309,7 +309,7 @@ int encryption_aead_context::finalize(unsigned char *tag, size_t tag_length)
             static_cast<int>(tag_length), tag) != 1)
         return (this->finalize_operation(FT_ERR_INTERNAL));
     this->_initialized = false;
-    return (this->finalize_operation(FT_ERR_SUCCESSS));
+    return (this->finalize_operation(FT_ERR_SUCCESS));
 }
 
 int encryption_aead_context::set_tag(const unsigned char *tag, size_t tag_length)
@@ -317,7 +317,7 @@ int encryption_aead_context::set_tag(const unsigned char *tag, size_t tag_length
     int lock_result = pt_recursive_mutex_lock_if_valid(this->_mutex);
     ft_global_error_stack_drop_last_error();
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return (lock_result);
@@ -333,7 +333,7 @@ int encryption_aead_context::set_tag(const unsigned char *tag, size_t tag_length
     if (EVP_CIPHER_CTX_ctrl(this->_context, EVP_CTRL_GCM_SET_TAG,
             static_cast<int>(tag_length), const_cast<unsigned char *>(tag)) != 1)
         return (this->finalize_operation(FT_ERR_INTERNAL));
-    return (this->finalize_operation(FT_ERR_SUCCESSS));
+    return (this->finalize_operation(FT_ERR_SUCCESS));
 }
 
 void    encryption_aead_context::reset()
@@ -341,7 +341,7 @@ void    encryption_aead_context::reset()
     int lock_result = pt_recursive_mutex_lock_if_valid(this->_mutex);
     ft_global_error_stack_drop_last_error();
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return ;
@@ -354,9 +354,9 @@ void    encryption_aead_context::reset()
     this->_iv_length = 0;
     int unlock_result = pt_recursive_mutex_unlock_if_valid(this->_mutex);
     ft_global_error_stack_drop_last_error();
-    if (unlock_result != FT_ERR_SUCCESSS)
+    if (unlock_result != FT_ERR_SUCCESS)
         return ;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 bool    encryption_aead_encrypt(const unsigned char *key, size_t key_length,
@@ -368,9 +368,9 @@ bool    encryption_aead_encrypt(const unsigned char *key, size_t key_length,
     encryption_aead_context context;
     size_t output_length;
 
-    if (context.initialize_encrypt(key, key_length, iv, iv_length) != FT_ERR_SUCCESSS)
+    if (context.initialize_encrypt(key, key_length, iv, iv_length) != FT_ERR_SUCCESS)
         return (false);
-    if (context.update_aad(aad, aad_length) != FT_ERR_SUCCESSS)
+    if (context.update_aad(aad, aad_length) != FT_ERR_SUCCESS)
         return (false);
     output_length = 0;
     if (plaintext_length > 0)
@@ -381,7 +381,7 @@ bool    encryption_aead_encrypt(const unsigned char *key, size_t key_length,
             return (false);
         }
         if (context.update(plaintext, plaintext_length, ciphertext,
-                output_length) != FT_ERR_SUCCESSS)
+                output_length) != FT_ERR_SUCCESS)
             return (false);
         if (output_length != plaintext_length)
         {
@@ -389,7 +389,7 @@ bool    encryption_aead_encrypt(const unsigned char *key, size_t key_length,
             return (false);
         }
     }
-    if (context.finalize(tag, tag_length) != FT_ERR_SUCCESSS)
+    if (context.finalize(tag, tag_length) != FT_ERR_SUCCESS)
         return (false);
     return (true);
 }
@@ -404,11 +404,11 @@ bool    encryption_aead_decrypt(const unsigned char *key, size_t key_length,
     encryption_aead_context context;
     size_t output_length;
 
-    if (context.initialize_decrypt(key, key_length, iv, iv_length) != FT_ERR_SUCCESSS)
+    if (context.initialize_decrypt(key, key_length, iv, iv_length) != FT_ERR_SUCCESS)
         return (false);
-    if (context.set_tag(tag, tag_length) != FT_ERR_SUCCESSS)
+    if (context.set_tag(tag, tag_length) != FT_ERR_SUCCESS)
         return (false);
-    if (context.update_aad(aad, aad_length) != FT_ERR_SUCCESSS)
+    if (context.update_aad(aad, aad_length) != FT_ERR_SUCCESS)
         return (false);
     output_length = 0;
     if (ciphertext_length > 0)
@@ -419,7 +419,7 @@ bool    encryption_aead_decrypt(const unsigned char *key, size_t key_length,
             return (false);
         }
         if (context.update(ciphertext, ciphertext_length, plaintext,
-                output_length) != FT_ERR_SUCCESSS)
+                output_length) != FT_ERR_SUCCESS)
             return (false);
         if (output_length != ciphertext_length)
         {
@@ -427,7 +427,7 @@ bool    encryption_aead_decrypt(const unsigned char *key, size_t key_length,
             return (false);
         }
     }
-    if (context.finalize(NULL, 0) != FT_ERR_SUCCESSS)
+    if (context.finalize(NULL, 0) != FT_ERR_SUCCESS)
         return (false);
     return (true);
 }

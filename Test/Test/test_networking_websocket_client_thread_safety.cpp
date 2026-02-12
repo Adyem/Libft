@@ -1,3 +1,4 @@
+#include "../test_internal.hpp"
 #include "../../Networking/websocket_client.hpp"
 #include "../../Networking/websocket_server.hpp"
 #include "../../Networking/networking.hpp"
@@ -8,6 +9,9 @@
 #include "../../CPP_class/class_nullptr.hpp"
 #include <thread>
 #include <atomic>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 struct websocket_client_server_context
 {
@@ -90,7 +94,7 @@ FT_TEST(test_websocket_client_thread_safe_error_queries,
     server_context.result = -1;
     server_context.client_fd = -1;
     server_thread = ft_thread(websocket_client_server_run, &server_context);
-    if (server_thread.get_error() != FT_ERR_SUCCESSS)
+    if (server_thread.get_error() != FT_ERR_SUCCESS)
         return (0);
     inspector_running.store(true);
     inspector_failed.store(false);

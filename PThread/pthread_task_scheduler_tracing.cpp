@@ -45,13 +45,13 @@ int task_scheduler_register_trace_sink(task_scheduler_trace_sink sink)
         }
         g_task_scheduler_trace_sinks.push_back(sink);
         int push_error = ft_global_error_stack_peek_last_error();
-        if (push_error != FT_ERR_SUCCESSS)
+        if (push_error != FT_ERR_SUCCESS)
         {
             task_scheduler_trace_set_error(push_error);
             return (-1);
         }
     }
-    task_scheduler_trace_set_error(FT_ERR_SUCCESSS);
+    task_scheduler_trace_set_error(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -75,12 +75,12 @@ int task_scheduler_unregister_trace_sink(task_scheduler_trace_sink sink)
             {
                 g_task_scheduler_trace_sinks.erase(g_task_scheduler_trace_sinks.begin() + index);
                 int erase_error = ft_global_error_stack_peek_last_error();
-                if (erase_error != FT_ERR_SUCCESSS)
+                if (erase_error != FT_ERR_SUCCESS)
                 {
                     task_scheduler_trace_set_error(erase_error);
                     return (-1);
                 }
-                task_scheduler_trace_set_error(FT_ERR_SUCCESSS);
+                task_scheduler_trace_set_error(FT_ERR_SUCCESS);
                 return (0);
             }
             index += 1;
@@ -108,7 +108,7 @@ void task_scheduler_trace_emit(const ft_task_trace_event &event)
             sink_instance = g_task_scheduler_trace_sinks[index];
             sinks_copy.push_back(sink_instance);
             int push_error = ft_global_error_stack_peek_last_error();
-            if (push_error != FT_ERR_SUCCESSS)
+            if (push_error != FT_ERR_SUCCESS)
             {
                 task_scheduler_trace_set_error(push_error);
                 return ;
@@ -130,7 +130,7 @@ void task_scheduler_trace_emit(const ft_task_trace_event &event)
             sink_instance(event);
         call_index += 1;
     }
-    task_scheduler_trace_set_error(FT_ERR_SUCCESSS);
+    task_scheduler_trace_set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -141,13 +141,13 @@ unsigned long long task_scheduler_trace_generate_span_id(void)
     next_value = g_task_scheduler_trace_counter.fetch_add(1);
     if (next_value == 0)
         next_value = g_task_scheduler_trace_counter.fetch_add(1);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (next_value);
 }
 
 unsigned long long task_scheduler_trace_current_span(void)
 {
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (g_task_scheduler_trace_current);
 }
 
@@ -157,13 +157,13 @@ unsigned long long task_scheduler_trace_push_span(unsigned long long span_id)
 
     previous_span = g_task_scheduler_trace_current;
     g_task_scheduler_trace_current = span_id;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (previous_span);
 }
 
 void task_scheduler_trace_pop_span(unsigned long long previous_span)
 {
     g_task_scheduler_trace_current = previous_span;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }

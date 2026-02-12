@@ -4,47 +4,47 @@
 void ft_character::restore_physical_armor() noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
     }
     this->restore_physical_armor_internal();
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 void ft_character::restore_magic_armor() noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
     }
     this->restore_magic_armor_internal();
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 void ft_character::restore_armor() noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
     }
     this->restore_physical_armor_internal();
     this->restore_magic_armor_internal();
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 void ft_character::take_damage(long long damage, uint8_t type) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
@@ -59,59 +59,59 @@ void ft_character::take_damage(long long damage, uint8_t type) noexcept
         this->take_damage_magic_shield_internal(damage, type);
     else
         this->take_damage_flat_internal(damage, type);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 void ft_character::take_damage_flat(long long damage, uint8_t type) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
     }
     this->take_damage_flat_internal(damage, type);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 void ft_character::take_damage_scaled(long long damage, uint8_t type) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
     }
     this->take_damage_scaled_internal(damage, type);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 void ft_character::take_damage_buffer(long long damage, uint8_t type) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
     }
     this->take_damage_buffer_internal(damage, type);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 void ft_character::take_damage_magic_shield(long long damage, uint8_t type) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
     }
     this->take_damage_magic_shield_internal(damage, type);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -138,7 +138,7 @@ void ft_character::take_damage_flat_internal(long long damage, uint8_t type) noe
         damage_applied = 0;
     this->emit_game_metric("character.damage_taken", "hit_points",
         damage_applied, this->_hit_points, "hp");
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -171,7 +171,7 @@ void ft_character::take_damage_scaled_internal(long long damage, uint8_t type) n
         damage_applied = 0;
     this->emit_game_metric("character.damage_taken", "hit_points",
         damage_applied, this->_hit_points, "hp");
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -226,7 +226,7 @@ void ft_character::take_damage_buffer_internal(long long damage, uint8_t type) n
         damage_applied = 0;
     this->emit_game_metric("character.damage_taken", "hit_points",
         damage_applied, this->_hit_points, "hp");
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -280,14 +280,14 @@ void ft_character::take_damage_magic_shield_internal(long long damage, uint8_t t
         damage_applied = 0;
     this->emit_game_metric("character.damage_taken", "hit_points",
         damage_applied, this->_hit_points, "hp");
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 void ft_character::move(int dx, int dy, int dz) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
@@ -295,7 +295,7 @@ void ft_character::move(int dx, int dy, int dz) noexcept
     this->_x += dx;
     this->_y += dy;
     this->_z += dz;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -304,13 +304,13 @@ long long ft_character::apply_skill_modifiers(long long damage) const noexcept
     long long result;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_character *>(this)->set_error(guard.get_error());
         return (0);
     }
     result = this->apply_skill_modifiers_internal(damage);
-    const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESS);
     return (result);
 }
 
@@ -343,13 +343,13 @@ long long ft_character::apply_skill_modifiers_internal(long long damage) const n
 void ft_character::apply_modifier(const ft_item_modifier &mod, int sign) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
     }
     this->apply_modifier_internal(mod, sign);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -360,21 +360,21 @@ void ft_character::apply_modifier_internal(const ft_item_modifier &mod, int sign
     int modifier_value;
 
     modifier_error = mod.get_error();
-    if (modifier_error != FT_ERR_SUCCESSS)
+    if (modifier_error != FT_ERR_SUCCESS)
     {
         this->set_error(modifier_error);
         return ;
     }
     modifier_identifier = mod.get_id();
     modifier_error = mod.get_error();
-    if (modifier_error != FT_ERR_SUCCESSS)
+    if (modifier_error != FT_ERR_SUCCESS)
     {
         this->set_error(modifier_error);
         return ;
     }
     modifier_value = mod.get_value();
     modifier_error = mod.get_error();
-    if (modifier_error != FT_ERR_SUCCESSS)
+    if (modifier_error != FT_ERR_SUCCESS)
     {
         this->set_error(modifier_error);
         return ;
@@ -397,7 +397,7 @@ void ft_character::apply_modifier_internal(const ft_item_modifier &mod, int sign
         this->_presence += modifier_value * sign;
     else if (modifier_identifier == 8)
         this->_hit_points += modifier_value * sign;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -407,7 +407,7 @@ int ft_character::equip_item(int slot, const ft_sharedptr<ft_item> &item) noexce
     int equip_error;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return (this->_error);
@@ -418,7 +418,7 @@ int ft_character::equip_item(int slot, const ft_sharedptr<ft_item> &item) noexce
         return (this->_error);
     }
     equip_error = this->_equipment.equip(slot, item);
-    if (equip_error != FT_ERR_SUCCESSS)
+    if (equip_error != FT_ERR_SUCCESS)
     {
         this->handle_component_error(equip_error);
         return (this->_error);
@@ -437,8 +437,8 @@ int ft_character::equip_item(int slot, const ft_sharedptr<ft_item> &item) noexce
         this->apply_modifier_internal(item->get_modifier3(), 1);
         this->apply_modifier_internal(item->get_modifier4(), 1);
     }
-    this->set_error(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 void ft_character::unequip_item(int slot) noexcept
@@ -446,7 +446,7 @@ void ft_character::unequip_item(int slot) noexcept
     ft_sharedptr<ft_item> item;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
@@ -464,7 +464,7 @@ void ft_character::unequip_item(int slot) noexcept
     {
         return ;
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 

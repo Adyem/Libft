@@ -80,21 +80,21 @@ static int rl_customization_lock(bool *lock_acquired)
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     int mutex_error = rl_customization_lock_mutex();
-    if (mutex_error != FT_ERR_SUCCESSS)
+    if (mutex_error != FT_ERR_SUCCESS)
         return (mutex_error);
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 static int rl_customization_unlock(bool lock_acquired)
 {
     if (lock_acquired == false)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     int mutex_error = rl_customization_unlock_mutex();
-    if (mutex_error != FT_ERR_SUCCESSS)
+    if (mutex_error != FT_ERR_SUCCESS)
         return (mutex_error);
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 static int rl_history_assign_path(char **target_path, const char *location)
@@ -185,7 +185,7 @@ static int rl_history_plain_load(void *context_pointer)
     }
     rl_clear_history();
     file_descriptor = history_file.get_fd();
-    if (history_file.get_error() != FT_ERR_SUCCESSS)
+    if (history_file.get_error() != FT_ERR_SUCCESS)
     {
         history_file.close();
         return (-1);
@@ -327,7 +327,7 @@ static int rl_history_json_save(void *context_pointer)
         if (history_entry == ft_nullptr)
             history_entry = "";
         key_string = ft_to_string(history_index);
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             json_free_groups(history_group);
             return (-1);
@@ -815,7 +815,7 @@ int rl_state_insert_text(readline_state_t *state, const char *text)
             new_bufsize *= 2;
         }
         int resize_error = rl_resize_buffer(&state->buffer, &state->bufsize, new_bufsize);
-        if (resize_error != FT_ERR_SUCCESSS)
+        if (resize_error != FT_ERR_SUCCESS)
         {
             result = -1;
             goto cleanup;

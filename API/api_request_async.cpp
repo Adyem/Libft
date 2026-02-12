@@ -131,7 +131,7 @@ static bool api_async_build_request(const api_async_request &data,
     ft_string body_string;
     char *temporary_string;
 
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     request.clear();
     body_string.clear();
     if (!data.method || !data.path || !data.ip)
@@ -140,35 +140,35 @@ static bool api_async_build_request(const api_async_request &data,
         return (false);
     }
     request += data.method;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
         ft_errno = ft_string::last_operation_error();
         request.clear();
         return (false);
     }
     request += " ";
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
         ft_errno = ft_string::last_operation_error();
         request.clear();
         return (false);
     }
     request += data.path;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
         ft_errno = ft_string::last_operation_error();
         request.clear();
         return (false);
     }
     request += " HTTP/1.1\r\nHost: ";
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
         ft_errno = ft_string::last_operation_error();
         request.clear();
         return (false);
     }
     request += data.ip;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
         ft_errno = ft_string::last_operation_error();
         request.clear();
@@ -179,7 +179,7 @@ static bool api_async_build_request(const api_async_request &data,
         ft_string headers_string;
 
         headers_string = data.headers;
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             ft_errno = ft_string::last_operation_error();
             request.clear();
@@ -189,7 +189,7 @@ static bool api_async_build_request(const api_async_request &data,
         if (!headers_string.empty())
         {
             api_request_append_header_block(request, headers_string);
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
             {
                 ft_errno = ft_string::last_operation_error();
                 request.clear();
@@ -202,21 +202,21 @@ static bool api_async_build_request(const api_async_request &data,
         temporary_string = json_write_to_string(data.payload);
         if (!temporary_string)
         {
-            if (ft_errno == FT_ERR_SUCCESSS)
+            if (ft_errno == FT_ERR_SUCCESS)
                 ft_errno = FT_ERR_NO_MEMORY;
             request.clear();
             return (false);
         }
         body_string = temporary_string;
         cma_free(temporary_string);
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             ft_errno = ft_string::last_operation_error();
             request.clear();
             return (false);
         }
         request += "\r\nContent-Type: application/json";
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             ft_errno = ft_string::last_operation_error();
             request.clear();
@@ -224,14 +224,14 @@ static bool api_async_build_request(const api_async_request &data,
         }
         if (!api_append_content_length_header(request, body_string.size()))
         {
-            if (ft_errno == FT_ERR_SUCCESSS)
+            if (ft_errno == FT_ERR_SUCCESS)
                 ft_errno = FT_ERR_IO;
             request.clear();
             return (false);
         }
     }
     request += "\r\nConnection: keep-alive\r\n\r\n";
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
         ft_errno = ft_string::last_operation_error();
         request.clear();
@@ -240,14 +240,14 @@ static bool api_async_build_request(const api_async_request &data,
     if (data.payload)
     {
         request += body_string.c_str();
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             ft_errno = ft_string::last_operation_error();
             request.clear();
             return (false);
         }
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (true);
 }
 
@@ -463,7 +463,7 @@ bool    api_request_string_async(const char *ip, uint16_t port,
     }
     ft_thread thread_worker(api_async_worker, data);
     thread_worker.detach();
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (true);
 }
 
@@ -515,11 +515,11 @@ bool    api_request_json_async(const char *ip, uint16_t port,
             data, payload, headers, timeout))
     {
         cma_free(data);
-        if (ft_errno == FT_ERR_SUCCESSS)
+        if (ft_errno == FT_ERR_SUCCESS)
             ft_errno = FT_ERR_NO_MEMORY;
         return (false);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (true);
 }
 

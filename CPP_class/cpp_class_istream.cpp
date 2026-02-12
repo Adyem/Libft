@@ -18,25 +18,25 @@ int ft_istream::prepare_thread_safety(void) noexcept
 {
     if (this->_mutex != ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-        return (FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     pt_recursive_mutex *mutex_pointer = ft_nullptr;
     int mutex_error = pt_recursive_mutex_create_with_error(&mutex_pointer);
-    if (mutex_error != FT_ERR_SUCCESSS)
+    if (mutex_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(mutex_error);
         return (mutex_error);
     }
     this->_mutex = mutex_pointer;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 void ft_istream::teardown_thread_safety(void) noexcept
 {
     pt_recursive_mutex_destroy(&this->_mutex);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -82,12 +82,12 @@ int ft_istream::lock_pair(const ft_istream &first, const ft_istream &second,
     {
         int lower_error = lower->lock_mutex();
 
-        if (lower_error != FT_ERR_SUCCESSS)
+        if (lower_error != FT_ERR_SUCCESS)
             return (lower_error);
         int upper_error = upper->lock_mutex();
 
-        if (upper_error == FT_ERR_SUCCESSS)
-            return (FT_ERR_SUCCESSS);
+        if (upper_error == FT_ERR_SUCCESS)
+            return (FT_ERR_SUCCESS);
         if (upper_error != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
             lower->unlock_mutex();
@@ -101,18 +101,18 @@ int ft_istream::lock_pair(const ft_istream &first, const ft_istream &second,
 int ft_istream::unlock_pair(const ft_istream *lower, const ft_istream *upper) noexcept
 {
     int error;
-    int final_error = FT_ERR_SUCCESSS;
+    int final_error = FT_ERR_SUCCESS;
 
     if (upper != ft_nullptr)
     {
         error = upper->unlock_mutex();
-        if (error != FT_ERR_SUCCESSS)
+        if (error != FT_ERR_SUCCESS)
             final_error = error;
     }
     if (lower != ft_nullptr && lower != upper)
     {
         error = lower->unlock_mutex();
-        if (error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
+        if (error != FT_ERR_SUCCESS && final_error == FT_ERR_SUCCESS)
             final_error = error;
     }
     return (final_error);
@@ -124,7 +124,7 @@ ft_istream::ft_istream() noexcept
     , _mutex(ft_nullptr)
 {
     this->enable_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -138,7 +138,7 @@ ft_istream::ft_istream(const ft_istream &other) noexcept
     const ft_istream *upper = ft_nullptr;
     int lock_error = ft_istream::lock_pair(*this, other, lower, upper);
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -147,10 +147,10 @@ ft_istream::ft_istream(const ft_istream &other) noexcept
     this->_is_valid = other._is_valid;
     int unlock_error = ft_istream::unlock_pair(lower, upper);
 
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
         ft_global_error_stack_push(unlock_error);
     else
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -164,7 +164,7 @@ ft_istream::ft_istream(ft_istream &&other) noexcept
     const ft_istream *upper = ft_nullptr;
     int lock_error = ft_istream::lock_pair(*this, other, lower, upper);
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -175,10 +175,10 @@ ft_istream::ft_istream(ft_istream &&other) noexcept
     other._is_valid = true;
     int unlock_error = ft_istream::unlock_pair(lower, upper);
 
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
         ft_global_error_stack_push(unlock_error);
     else
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -192,14 +192,14 @@ ft_istream &ft_istream::operator=(const ft_istream &other) noexcept
 {
     if (this == &other)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (*this);
     }
     const ft_istream *lower = ft_nullptr;
     const ft_istream *upper = ft_nullptr;
     int lock_error = ft_istream::lock_pair(*this, other, lower, upper);
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->_is_valid = false;
         ft_global_error_stack_push(lock_error);
@@ -209,13 +209,13 @@ ft_istream &ft_istream::operator=(const ft_istream &other) noexcept
     this->_is_valid = other._is_valid;
     int unlock_error = ft_istream::unlock_pair(lower, upper);
 
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         this->_is_valid = false;
         ft_global_error_stack_push(unlock_error);
         return (*this);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (*this);
 }
 
@@ -223,14 +223,14 @@ ft_istream &ft_istream::operator=(ft_istream &&other) noexcept
 {
     if (this == &other)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (*this);
     }
     const ft_istream *lower = ft_nullptr;
     const ft_istream *upper = ft_nullptr;
     int lock_error = ft_istream::lock_pair(*this, other, lower, upper);
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->_is_valid = false;
         ft_global_error_stack_push(lock_error);
@@ -242,13 +242,13 @@ ft_istream &ft_istream::operator=(ft_istream &&other) noexcept
     other._is_valid = true;
     int unlock_error = ft_istream::unlock_pair(lower, upper);
 
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         this->_is_valid = false;
         ft_global_error_stack_push(unlock_error);
         return (*this);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (*this);
 }
 
@@ -256,9 +256,9 @@ void ft_istream::read(char *buffer, std::size_t count)
 {
     std::size_t bytes_read;
     int lock_error = this->lock_mutex();
-    int operation_error = FT_ERR_SUCCESSS;
+    int operation_error = FT_ERR_SUCCESS;
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->_is_valid = false;
         this->_gcount = 0;
@@ -269,10 +269,10 @@ void ft_istream::read(char *buffer, std::size_t count)
     if (buffer == ft_nullptr && count > 0)
     {
         int unlock_error = this->unlock_mutex();
-        if (unlock_error != FT_ERR_SUCCESSS)
+        if (unlock_error != FT_ERR_SUCCESS)
             ft_global_error_stack_push(unlock_error);
         else
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
+            ft_global_error_stack_push(FT_ERR_SUCCESS);
         ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         this->_is_valid = false;
         return ;
@@ -280,13 +280,13 @@ void ft_istream::read(char *buffer, std::size_t count)
     bytes_read = this->do_read(buffer, count);
     this->_gcount = bytes_read;
     int last_error = ft_global_error_stack_peek_last_error();
-    this->_is_valid = (last_error == FT_ERR_SUCCESSS);
+    this->_is_valid = (last_error == FT_ERR_SUCCESS);
     operation_error = last_error;
     int unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
         ft_global_error_stack_push(unlock_error);
     else
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
     ft_global_error_stack_push(operation_error);
     return ;
 }
@@ -296,16 +296,16 @@ std::size_t ft_istream::gcount() const noexcept
     std::size_t count_value;
     int lock_error = this->lock_mutex();
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         return (0);
     }
     count_value = this->_gcount;
     int unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
         ft_global_error_stack_push(unlock_error);
     else
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (count_value);
 }
 
@@ -314,16 +314,16 @@ bool ft_istream::is_valid() const noexcept
     bool is_valid_result;
     int lock_error = this->lock_mutex();
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         return (false);
     }
     is_valid_result = this->_is_valid;
     int unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
         ft_global_error_stack_push(unlock_error);
     else
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (is_valid_result);
 }
 

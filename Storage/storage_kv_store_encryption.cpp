@@ -27,7 +27,7 @@ int kv_store::encrypt_value(const ft_string &plain_string, ft_string &encoded_st
     if (this->_encryption_enabled == false)
     {
         encoded_string = plain_string;
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             this->set_error(ft_string::last_operation_error());
             return (-1);
@@ -92,14 +92,14 @@ int kv_store::encrypt_value(const ft_string &plain_string, ft_string &encoded_st
         int error_code;
 
         error_code = ft_global_error_stack_drop_last_error();
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_NO_MEMORY;
         this->set_error(error_code);
         return (-1);
     }
     ft_global_error_stack_drop_last_error();
     encoded_string.clear();
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
         cma_free(encoded_buffer);
         this->set_error(ft_string::last_operation_error());
@@ -109,7 +109,7 @@ int kv_store::encrypt_value(const ft_string &plain_string, ft_string &encoded_st
     while (output_index < encoded_size)
     {
         encoded_string.append(static_cast<char>(encoded_buffer[output_index]));
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             cma_free(encoded_buffer);
             this->set_error(ft_string::last_operation_error());
@@ -139,7 +139,7 @@ int kv_store::decrypt_value(const ft_string &encoded_string, ft_string &plain_st
     if (this->_encryption_enabled == false)
     {
         plain_string = encoded_string;
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             this->set_error(ft_string::last_operation_error());
             return (-1);
@@ -158,7 +158,7 @@ int kv_store::decrypt_value(const ft_string &encoded_string, ft_string &plain_st
         int error_code;
 
         error_code = ft_global_error_stack_drop_last_error();
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_NO_MEMORY;
         this->set_error(error_code);
         return (-1);
@@ -167,7 +167,7 @@ int kv_store::decrypt_value(const ft_string &encoded_string, ft_string &plain_st
     if (decoded_size == 0)
     {
         plain_string.clear();
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             cma_free(decoded_buffer);
             this->set_error(ft_string::last_operation_error());
@@ -204,7 +204,7 @@ int kv_store::decrypt_value(const ft_string &encoded_string, ft_string &plain_st
     payload_size = decoded_size - 16;
     payload_pointer = decoded_buffer + 16;
     plain_string.clear();
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
         cma_free(decoded_buffer);
         this->set_error(ft_string::last_operation_error());
@@ -234,7 +234,7 @@ int kv_store::decrypt_value(const ft_string &encoded_string, ft_string &plain_st
 
             plain_char = static_cast<char>(payload_pointer[payload_index] ^ counter_block[byte_index]);
             plain_string.append(plain_char);
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
             {
                 cma_free(decoded_buffer);
                 this->set_error(ft_string::last_operation_error());
@@ -259,7 +259,7 @@ int kv_store::configure_encryption(const char *encryption_key, bool enable_encry
             return (-1);
         }
         this->_encryption_key = encryption_key;
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             this->set_error(ft_string::last_operation_error());
             return (-1);
@@ -270,14 +270,14 @@ int kv_store::configure_encryption(const char *encryption_key, bool enable_encry
             return (-1);
         }
         this->_encryption_enabled = true;
-        this->set_error(FT_ERR_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESS);
         return (0);
     }
     this->_encryption_enabled = false;
     if (encryption_key != ft_nullptr)
     {
         this->_encryption_key = encryption_key;
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             this->set_error(ft_string::last_operation_error());
             return (-1);
@@ -285,6 +285,6 @@ int kv_store::configure_encryption(const char *encryption_key, bool enable_encry
     }
     else
         this->_encryption_key.clear();
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (0);
 }

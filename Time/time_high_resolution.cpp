@@ -16,19 +16,19 @@ bool    time_high_resolution_now(t_high_resolution_time_point *time_point)
     if (cmp_high_resolution_time(&nanoseconds) != 0)
     {
         error_code = ft_global_error_stack_drop_last_error();
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_TERMINATED;
         ft_global_error_stack_push(error_code);
         return (false);
     }
     error_code = ft_global_error_stack_drop_last_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(error_code);
         return (false);
     }
     time_point->nanoseconds = nanoseconds;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (true);
 }
 

@@ -49,7 +49,7 @@ char *rl_readline(const char *prompt)
     int                 init_error;
 
     init_error = rl_initialize_state(&state);
-    if (init_error != FT_ERR_SUCCESSS)
+    if (init_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(init_error);
         return (ft_nullptr);
@@ -61,7 +61,7 @@ char *rl_readline(const char *prompt)
         char character;
         int read_error = rl_read_key(&character);
 
-        if (read_error != FT_ERR_SUCCESSS)
+        if (read_error != FT_ERR_SUCCESS)
         {
             error_code = read_error;
             rl_error(&state);
@@ -96,7 +96,7 @@ char *rl_readline(const char *prompt)
         else if (character == 127 || character == '\b')
         {
             int backspace_error = rl_handle_backspace(&state, prompt);
-            if (backspace_error != FT_ERR_SUCCESSS)
+            if (backspace_error != FT_ERR_SUCCESS)
             {
                 error_code = backspace_error;
                 rl_error(&state);
@@ -107,7 +107,7 @@ char *rl_readline(const char *prompt)
         else if (character == 27)
         {
             int escape_error = rl_handle_escape_sequence(&state, prompt);
-            if (escape_error != FT_ERR_SUCCESSS)
+            if (escape_error != FT_ERR_SUCCESS)
             {
                 error_code = escape_error;
                 rl_error(&state);
@@ -118,7 +118,7 @@ char *rl_readline(const char *prompt)
         else if (character == '\t')
         {
             int completion_error = rl_handle_tab_completion(&state, prompt);
-            if (completion_error != FT_ERR_SUCCESSS)
+            if (completion_error != FT_ERR_SUCCESS)
             {
                 error_code = completion_error;
                 rl_error(&state);
@@ -129,7 +129,7 @@ char *rl_readline(const char *prompt)
         else if (character >= 32 && character <= 126)
         {
             int printable_error = rl_handle_printable_char(&state, character, prompt);
-            if (printable_error != FT_ERR_SUCCESSS)
+            if (printable_error != FT_ERR_SUCCESS)
             {
                 error_code = printable_error;
                 rl_error(&state);
@@ -145,7 +145,7 @@ char *rl_readline(const char *prompt)
     rl_state_teardown_thread_safety(&state);
     if (DEBUG == 1)
         pf_printf("returning %s\n", state.buffer);
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     ft_global_error_stack_push(error_code);
     return (state.buffer);
 }

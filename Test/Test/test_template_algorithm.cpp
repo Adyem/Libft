@@ -1,3 +1,4 @@
+#include "../test_internal.hpp"
 #include "../../Template/algorithm.hpp"
 #include "../../RNG/rng.hpp"
 #include "../../RNG/rng_internal.hpp"
@@ -5,6 +6,9 @@
 #include "rng_test_utils.hpp"
 #include <vector>
 #include <array>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_ft_sort_orders_values, "ft_sort orders values using operator<")
 {

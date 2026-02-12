@@ -102,7 +102,7 @@ ft_thread::ft_thread(FunctionType function, Args... args)
         int create_error;
 
         create_error = ft_global_error_stack_drop_last_error();
-        if (create_error == FT_ERR_SUCCESSS)
+        if (create_error == FT_ERR_SUCCESS)
             create_error = ft_map_system_error(create_result);
         ft_global_error_stack_push(create_error);
         delete shared_capsule;

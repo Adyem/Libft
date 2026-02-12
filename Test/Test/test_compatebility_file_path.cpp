@@ -1,6 +1,10 @@
+#include "../test_internal.hpp"
 #include "../../Compatebility/compatebility_internal.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <cstring>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_cmp_path_separator_matches_platform, "cmp_path_separator returns platform separator")
 {

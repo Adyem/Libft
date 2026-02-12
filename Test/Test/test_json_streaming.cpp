@@ -1,3 +1,4 @@
+#include "../test_internal.hpp"
 #include "../../JSon/json_stream_reader.hpp"
 #include "../../JSon/json_stream_writer.hpp"
 #include "../../System_utils/test_runner.hpp"
@@ -6,6 +7,9 @@
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../Basic/basic.hpp"
 #include "../../Errno/errno.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 typedef struct memory_stream
 {
@@ -60,7 +64,7 @@ static int capture_event(void *user_data, const json_stream_event *event)
     else
         record.value.clear();
     events->push_back(record);
-    if (events->get_error() != FT_ERR_SUCCESSS)
+    if (events->get_error() != FT_ERR_SUCCESS)
         return (-1);
     return (0);
 }
@@ -95,7 +99,7 @@ static size_t string_sink_write(void *user_data, const char *buffer, size_t size
         return (0);
     output = static_cast<ft_string *>(user_data);
     output->append(buffer, size);
-    if (output->get_error() != FT_ERR_SUCCESSS)
+    if (output->get_error() != FT_ERR_SUCCESS)
         return (0);
     return (size);
 }

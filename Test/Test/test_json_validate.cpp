@@ -1,7 +1,11 @@
+#include "../test_internal.hpp"
 #include "../../JSon/json.hpp"
 #include "../../JSon/document.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_json_validate_schema_success, "json schema validation success")
 {

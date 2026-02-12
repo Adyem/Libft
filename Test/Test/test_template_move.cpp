@@ -1,8 +1,12 @@
+#include "../test_internal.hpp"
 #include "../../Template/move.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include <type_traits>
 #include <memory>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_ft_move_produces_rvalue_reference,
     "ft_move casts lvalues to rvalue references")

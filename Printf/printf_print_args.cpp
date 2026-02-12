@@ -17,7 +17,7 @@ int pf_string_pop_last_error(const ft_string &string_value)
 
     operation_id = string_value.last_operation_id();
     if (operation_id == 0)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     return (string_value.pop_operation_error(operation_id));
 }
 
@@ -390,19 +390,19 @@ static int format_double_output(char specifier, int precision, double number, ft
         if (required_length < 0) \
             return (-1); \
         output.clear(); \
-        if (pf_string_pop_last_error(output) != FT_ERR_SUCCESSS) \
+        if (pf_string_pop_last_error(output) != FT_ERR_SUCCESS) \
             return (-1); \
         output.resize_length(static_cast<size_t>(required_length)); \
-        if (pf_string_pop_last_error(output) != FT_ERR_SUCCESSS) \
+        if (pf_string_pop_last_error(output) != FT_ERR_SUCCESS) \
             return (-1); \
         output_buffer = output.print(); \
-        if (pf_string_pop_last_error(output) != FT_ERR_SUCCESSS || output_buffer == ft_nullptr) \
+        if (pf_string_pop_last_error(output) != FT_ERR_SUCCESS || output_buffer == ft_nullptr) \
             return (-1); \
         int written_length = std::snprintf(output_buffer, static_cast<size_t>(required_length) + 1, literal, precision, number); \
         if (written_length < 0) \
             return (-1); \
         output.resize_length(static_cast<size_t>(written_length)); \
-        if (pf_string_pop_last_error(output) != FT_ERR_SUCCESSS) \
+        if (pf_string_pop_last_error(output) != FT_ERR_SUCCESS) \
             return (-1); \
         return (0); \
     }
@@ -568,19 +568,19 @@ void pf_write_ft_string_fd(const ft_string &output, int fd, size_t *count)
 
     if (count_has_error(count))
         return ;
-    if (pf_string_pop_last_error(output) != FT_ERR_SUCCESSS)
+    if (pf_string_pop_last_error(output) != FT_ERR_SUCCESS)
     {
         mark_count_error(count);
         return ;
     }
     buffer = output.c_str();
-    if (pf_string_pop_last_error(output) != FT_ERR_SUCCESSS || buffer == ft_nullptr)
+    if (pf_string_pop_last_error(output) != FT_ERR_SUCCESS || buffer == ft_nullptr)
     {
         mark_count_error(count);
         return ;
     }
     length = output.size();
-    if (pf_string_pop_last_error(output) != FT_ERR_SUCCESSS)
+    if (pf_string_pop_last_error(output) != FT_ERR_SUCCESS)
     {
         mark_count_error(count);
         return ;

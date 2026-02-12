@@ -1,8 +1,12 @@
+#include "../test_internal.hpp"
 #include "../../CMA/CMA.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../Basic/basic.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 static void cma_free_split_result(char **strings)
 {
@@ -30,7 +34,7 @@ FT_TEST(test_cma_itoa_positive_number, "cma_itoa converts positive numbers")
     if (!converted_string)
         return (0);
     FT_ASSERT_EQ(0, ft_strcmp(converted_string, "12345"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_free(converted_string);
     return (1);
 }
@@ -54,7 +58,7 @@ FT_TEST(test_cma_itoa_handles_negative_and_zero,
     }
     FT_ASSERT_EQ(0, ft_strcmp(negative_string, "-2048"));
     FT_ASSERT_EQ(0, ft_strcmp(zero_string, "0"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_free(negative_string);
     cma_free(zero_string);
     return (1);
@@ -70,7 +74,7 @@ FT_TEST(test_cma_itoa_handles_int_min, "cma_itoa duplicates INT_MIN literal")
     if (!minimum_string)
         return (0);
     FT_ASSERT_EQ(0, ft_strcmp(minimum_string, "-2147483648"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_free(minimum_string);
     return (1);
 }
@@ -81,7 +85,7 @@ FT_TEST(test_cma_itoa_allocation_failure_sets_errno,
     char *converted_string;
 
     cma_set_alloc_limit(2);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     converted_string = cma_itoa(9999);
     FT_ASSERT_EQ(ft_nullptr, converted_string);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
@@ -100,7 +104,7 @@ FT_TEST(test_cma_itoa_base_hexadecimal,
     if (!converted_string)
         return (0);
     FT_ASSERT_EQ(0, ft_strcmp(converted_string, "1234ABCD"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_free(converted_string);
     return (1);
 }
@@ -116,7 +120,7 @@ FT_TEST(test_cma_itoa_base_negative_decimal,
     if (!converted_string)
         return (0);
     FT_ASSERT_EQ(0, ft_strcmp(converted_string, "-256"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_free(converted_string);
     return (1);
 }
@@ -127,7 +131,7 @@ FT_TEST(test_cma_itoa_base_rejects_invalid_base,
     char *converted_string;
 
     cma_set_alloc_limit(0);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     converted_string = cma_itoa_base(42, 1);
     FT_ASSERT_EQ(ft_nullptr, converted_string);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
@@ -145,7 +149,7 @@ FT_TEST(test_cma_strtrim_trims_prefix_and_suffix,
     if (!trimmed_string)
         return (0);
     FT_ASSERT_EQ(0, ft_strcmp(trimmed_string, "hello"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_free(trimmed_string);
     return (1);
 }
@@ -161,7 +165,7 @@ FT_TEST(test_cma_strtrim_returns_empty_when_all_trimmed,
     if (!trimmed_string)
         return (0);
     FT_ASSERT_EQ(0, ft_strcmp(trimmed_string, ""));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_free(trimmed_string);
     return (1);
 }
@@ -172,10 +176,10 @@ FT_TEST(test_cma_strtrim_rejects_null_input,
     char *trimmed_string;
 
     cma_set_alloc_limit(0);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     trimmed_string = cma_strtrim(ft_nullptr, " ");
     FT_ASSERT_EQ(ft_nullptr, trimmed_string);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     trimmed_string = cma_strtrim("example", ft_nullptr);
     FT_ASSERT_EQ(ft_nullptr, trimmed_string);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
@@ -193,7 +197,7 @@ FT_TEST(test_cma_substr_within_bounds,
     if (!substring)
         return (0);
     FT_ASSERT_EQ(0, ft_strcmp(substring, "cde"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_free(substring);
     return (1);
 }
@@ -209,7 +213,7 @@ FT_TEST(test_cma_substr_truncates_when_length_exceeds,
     if (!substring)
         return (0);
     FT_ASSERT_EQ(0, ft_strcmp(substring, "ft"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_free(substring);
     return (1);
 }
@@ -253,7 +257,7 @@ FT_TEST(test_cma_substr_large_buffer_tail_segment,
         return (0);
     }
     FT_ASSERT_EQ(0, ft_strcmp(substring, tail_segment));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_free(substring);
     cma_free(buffer);
     return (1);
@@ -270,7 +274,7 @@ FT_TEST(test_cma_substr_handles_out_of_range_start,
     if (!substring)
         return (0);
     FT_ASSERT_EQ(0, ft_strcmp(substring, ""));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_free(substring);
     return (1);
 }
@@ -281,10 +285,10 @@ FT_TEST(test_cma_substr_rejects_null_source,
     char *substring;
 
     cma_set_alloc_limit(0);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     substring = cma_substr(ft_nullptr, 0, 1);
     FT_ASSERT_EQ(ft_nullptr, substring);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -302,7 +306,7 @@ FT_TEST(test_cma_split_basic_tokens, "cma_split separates tokens and null-termin
     FT_ASSERT_EQ(0, ft_strcmp(parts[1], "beta"));
     FT_ASSERT_EQ(0, ft_strcmp(parts[2], "gamma"));
     FT_ASSERT_EQ(ft_nullptr, parts[3]);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     index = 0;
     while (parts[index])
     {
@@ -325,7 +329,7 @@ FT_TEST(test_cma_split_skips_repeated_delimiters, "cma_split ignores empty segme
     FT_ASSERT_EQ(0, ft_strcmp(parts[0], "left"));
     FT_ASSERT_EQ(0, ft_strcmp(parts[1], "right"));
     FT_ASSERT_EQ(ft_nullptr, parts[2]);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_free_split_result(parts);
     return (1);
 }
@@ -340,7 +344,7 @@ FT_TEST(test_cma_split_null_string_returns_empty_array, "cma_split returns an em
     if (!parts)
         return (0);
     FT_ASSERT_EQ(ft_nullptr, parts[0]);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_free(parts);
     return (1);
 }
@@ -350,7 +354,7 @@ FT_TEST(test_cma_split_allocation_failure_sets_errno, "cma_split propagates allo
     char **parts;
 
     cma_set_alloc_limit(1);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     parts = cma_split("a,b", ',');
     FT_ASSERT_EQ(ft_nullptr, parts);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
@@ -371,7 +375,7 @@ FT_TEST(test_cma_strdup_copies_string, "cma_strdup duplicates the input string")
         return (0);
     FT_ASSERT(duplicate != source);
     FT_ASSERT_EQ(0, ft_strcmp(source, duplicate));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_free(duplicate);
     return (1);
 }
@@ -389,7 +393,7 @@ FT_TEST(test_cma_strdup_allocation_failure_sets_errno, "cma_strdup surfaces allo
     char *duplicate;
 
     cma_set_alloc_limit(1);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     duplicate = cma_strdup("needs space");
     FT_ASSERT_EQ(ft_nullptr, duplicate);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
@@ -402,11 +406,11 @@ FT_TEST(test_cma_memdup_and_cma_memdup_share_null_error,
 {
     void *duplicate;
 
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     duplicate = cma_memdup(ft_nullptr, 4);
     FT_ASSERT_EQ(ft_nullptr, duplicate);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -423,7 +427,7 @@ FT_TEST(test_cma_memdup_and_cma_memdup_share_zero_length,
     cma_duplicate = cma_memdup(buffer, 0);
     if (!cma_duplicate)
         return (0);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     cma_free(cma_duplicate);
     return (1);
@@ -443,7 +447,7 @@ FT_TEST(test_cma_memdup_and_cma_memdup_share_successful_copy,
     cma_duplicate = cma_memdup(source, sizeof(source));
     if (!cma_duplicate)
         return (0);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     cma_free(cma_duplicate);
     return (1);

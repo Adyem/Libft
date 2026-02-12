@@ -1,7 +1,11 @@
+#include "../test_internal.hpp"
 #include <algorithm>
 #include <cmath>
 #include <limits>
 #include <vector>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 #include "../../RNG/rng.hpp"
 #include "../../System_utils/test_runner.hpp"

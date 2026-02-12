@@ -26,15 +26,15 @@ int ft_behavior_table::lock_pair(const ft_behavior_table &first, const ft_behavi
     {
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
 
-        if (single_guard.get_error() != FT_ERR_SUCCESSS)
+        if (single_guard.get_error() != FT_ERR_SUCCESS)
         {
             ft_behavior_table::record_operation_error_unlocked(single_guard.get_error());
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_behavior_table::record_operation_error_unlocked(FT_ERR_SUCCESSS);
-        return (FT_ERR_SUCCESSS);
+        ft_behavior_table::record_operation_error_unlocked(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -52,13 +52,13 @@ int ft_behavior_table::lock_pair(const ft_behavior_table &first, const ft_behavi
     {
         ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
 
-        if (lower_guard.get_error() != FT_ERR_SUCCESSS)
+        if (lower_guard.get_error() != FT_ERR_SUCCESS)
         {
             ft_behavior_table::record_operation_error_unlocked(lower_guard.get_error());
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ERR_SUCCESSS)
+        if (upper_guard.get_error() == FT_ERR_SUCCESS)
         {
             if (!swapped)
             {
@@ -70,8 +70,8 @@ int ft_behavior_table::lock_pair(const ft_behavior_table &first, const ft_behavi
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_behavior_table::record_operation_error_unlocked(FT_ERR_SUCCESSS);
-            return (FT_ERR_SUCCESSS);
+            ft_behavior_table::record_operation_error_unlocked(FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -85,7 +85,7 @@ int ft_behavior_table::lock_pair(const ft_behavior_table &first, const ft_behavi
 }
 
 ft_behavior_table::ft_behavior_table() noexcept
-    : _profiles(), _error_code(FT_ERR_SUCCESSS), _mutex()
+    : _profiles(), _error_code(FT_ERR_SUCCESS), _mutex()
 {
     return ;
 }
@@ -103,12 +103,12 @@ int ft_behavior_table::clone_profiles_from(const ft_behavior_table &other) noexc
     const Pair<int, ft_behavior_profile> *entry;
 
     profile_count = other._profiles.size();
-    if (other._profiles.get_error() != FT_ERR_SUCCESSS)
+    if (other._profiles.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(other._profiles.get_error());
         return (other._profiles.get_error());
     }
-    if (profiles_copy.get_error() != FT_ERR_SUCCESSS)
+    if (profiles_copy.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(profiles_copy.get_error());
         return (profiles_copy.get_error());
@@ -143,7 +143,7 @@ int ft_behavior_table::clone_profiles_from(const ft_behavior_table &other) noexc
         profile_copy._error_code = entry->value._error_code;
         profile_copy.set_error(profile_copy._actions.get_error());
         profiles_copy.insert(entry->key, ft_move(profile_copy));
-        if (profiles_copy.get_error() != FT_ERR_SUCCESSS)
+        if (profiles_copy.get_error() != FT_ERR_SUCCESS)
         {
             this->set_error(profiles_copy.get_error());
             return (profiles_copy.get_error());
@@ -151,23 +151,23 @@ int ft_behavior_table::clone_profiles_from(const ft_behavior_table &other) noexc
         ++entry;
     }
     this->_profiles = ft_move(profiles_copy);
-    ft_behavior_table::record_operation_error_unlocked(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    ft_behavior_table::record_operation_error_unlocked(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 ft_behavior_table::ft_behavior_table(const ft_behavior_table &other) noexcept
-    : _profiles(), _error_code(FT_ERR_SUCCESSS), _mutex()
+    : _profiles(), _error_code(FT_ERR_SUCCESS), _mutex()
 {
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESSS)
+    if (other_guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(other_guard.get_error());
         return ;
     }
     this->_error_code = other._error_code;
-    if (this->clone_profiles_from(other) != FT_ERR_SUCCESSS)
+    if (this->clone_profiles_from(other) != FT_ERR_SUCCESS)
         return ;
-    ft_behavior_table::record_operation_error_unlocked(FT_ERR_SUCCESSS);
+    ft_behavior_table::record_operation_error_unlocked(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -180,7 +180,7 @@ ft_behavior_table &ft_behavior_table::operator=(const ft_behavior_table &other) 
     if (this == &other)
         return (*this);
     lock_error = ft_behavior_table::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         return (*this);
@@ -190,27 +190,27 @@ ft_behavior_table &ft_behavior_table::operator=(const ft_behavior_table &other) 
         int clone_error;
 
         clone_error = this->clone_profiles_from(other);
-        if (clone_error != FT_ERR_SUCCESSS)
+        if (clone_error != FT_ERR_SUCCESS)
             return (*this);
     }
     return (*this);
 }
 
 ft_behavior_table::ft_behavior_table(ft_behavior_table &&other) noexcept
-    : _profiles(), _error_code(FT_ERR_SUCCESSS), _mutex()
+    : _profiles(), _error_code(FT_ERR_SUCCESS), _mutex()
 {
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESSS)
+    if (other_guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(other_guard.get_error());
         return ;
     }
     this->_error_code = other._error_code;
-    if (this->clone_profiles_from(other) != FT_ERR_SUCCESSS)
+    if (this->clone_profiles_from(other) != FT_ERR_SUCCESS)
         return ;
     other._profiles.clear();
-    other._error_code = FT_ERR_SUCCESSS;
-    other.set_error(FT_ERR_SUCCESSS);
+    other._error_code = FT_ERR_SUCCESS;
+    other.set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -223,33 +223,33 @@ ft_behavior_table &ft_behavior_table::operator=(ft_behavior_table &&other) noexc
     if (this == &other)
         return (*this);
     lock_error = ft_behavior_table::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         return (*this);
     }
     this->_error_code = other._error_code;
-    if (this->clone_profiles_from(other) != FT_ERR_SUCCESSS)
+    if (this->clone_profiles_from(other) != FT_ERR_SUCCESS)
     {
         return (*this);
     }
     other._profiles.clear();
-    other._error_code = FT_ERR_SUCCESSS;
-    other.set_error(FT_ERR_SUCCESSS);
+    other._error_code = FT_ERR_SUCCESS;
+    other.set_error(FT_ERR_SUCCESS);
     return (*this);
 }
 
 ft_map<int, ft_behavior_profile> &ft_behavior_table::get_profiles() noexcept
 {
-    this->set_error(FT_ERR_SUCCESSS);
-    ft_behavior_table::record_operation_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
+    ft_behavior_table::record_operation_error_unlocked(FT_ERR_SUCCESS);
     return (this->_profiles);
 }
 
 const ft_map<int, ft_behavior_profile> &ft_behavior_table::get_profiles() const noexcept
 {
-    const_cast<ft_behavior_table *>(this)->set_error(FT_ERR_SUCCESSS);
-    ft_behavior_table::record_operation_error_unlocked(FT_ERR_SUCCESSS);
+    const_cast<ft_behavior_table *>(this)->set_error(FT_ERR_SUCCESS);
+    ft_behavior_table::record_operation_error_unlocked(FT_ERR_SUCCESS);
     return (this->_profiles);
 }
 
@@ -258,7 +258,7 @@ void ft_behavior_table::set_profiles(const ft_map<int, ft_behavior_profile> &pro
     ft_unique_lock<pt_mutex> guard;
 
     guard = ft_unique_lock<pt_mutex>(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
@@ -273,7 +273,7 @@ int ft_behavior_table::register_profile(const ft_behavior_profile &profile) noex
     int identifier;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return (guard.get_error());
@@ -283,20 +283,20 @@ int ft_behavior_table::register_profile(const ft_behavior_profile &profile) noex
         this->set_error(FT_ERR_ALREADY_EXISTS);
         return (FT_ERR_ALREADY_EXISTS);
     }
-    if (profile.get_error() != FT_ERR_SUCCESSS)
+    if (profile.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(profile.get_error());
         return (profile.get_error());
     }
     identifier = profile.get_profile_id();
     this->_profiles.insert(identifier, profile);
-    if (this->_profiles.get_error() != FT_ERR_SUCCESSS)
+    if (this->_profiles.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(this->_profiles.get_error());
         return (this->_profiles.get_error());
     }
-    this->set_error(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 int ft_behavior_table::fetch_profile(int profile_id, ft_behavior_profile &profile) const noexcept
@@ -306,7 +306,7 @@ int ft_behavior_table::fetch_profile(int profile_id, ft_behavior_profile &profil
 
     self = this;
     ft_unique_lock<pt_mutex> guard(self->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_behavior_table *>(self)->set_error(guard.get_error());
         return (guard.get_error());
@@ -318,20 +318,20 @@ int ft_behavior_table::fetch_profile(int profile_id, ft_behavior_profile &profil
         return (FT_ERR_NOT_FOUND);
     }
     ft_unique_lock<pt_mutex> entry_guard(entry->value._mutex);
-    if (entry_guard.get_error() != FT_ERR_SUCCESSS)
+    if (entry_guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_behavior_table *>(self)->set_error(entry_guard.get_error());
         return (entry_guard.get_error());
     }
     ft_behavior_profile entry_profile;
     entry_profile.clone_from_unlocked(entry->value);
-    if (entry_profile.get_error() != FT_ERR_SUCCESSS)
+    if (entry_profile.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_behavior_table *>(self)->set_error(entry_profile.get_error());
         return (entry_profile.get_error());
     }
     ft_unique_lock<pt_mutex> destination_guard(profile._mutex);
-    if (destination_guard.get_error() != FT_ERR_SUCCESSS)
+    if (destination_guard.get_error() != FT_ERR_SUCCESS)
     {
         profile.set_error(destination_guard.get_error());
         return (destination_guard.get_error());
@@ -346,7 +346,7 @@ int ft_behavior_table::get_error() const noexcept
     int error_code;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_behavior_table *>(this)->set_error(guard.get_error());
         return (guard.get_error());

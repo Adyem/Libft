@@ -128,7 +128,7 @@ application shuts down.
 void run_periodic_job()
 {
     ft_task_scheduler scheduler_instance(2);
-    if (scheduler_instance.get_error() != FT_ERR_SUCCESSS)
+    if (scheduler_instance.get_error() != FT_ERR_SUCCESS)
     {
         std::fprintf(stderr, "scheduler init failed: %s\n",
             scheduler_instance.get_error_str());

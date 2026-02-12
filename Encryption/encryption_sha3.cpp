@@ -52,7 +52,7 @@ static int sha3_hash_internal(const EVP_MD *algorithm, const void *data,
     {
         return (FT_ERR_INTERNAL);
     }
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 void sha3_256_hash(const void *data, size_t length, unsigned char *digest)

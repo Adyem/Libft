@@ -42,27 +42,27 @@ bool json_validate_schema(json_group *group, const json_schema &schema)
     }
     schema_mutable = const_cast<json_schema *>(&schema);
     validation_error = json_schema_enable_thread_safety(schema_mutable);
-    if (validation_error != FT_ERR_SUCCESSS)
+    if (validation_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(validation_error);
         return (false);
     }
     lock_error = json_schema_lock(schema_mutable, schema_guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (false);
     }
     field = schema_mutable->fields;
     validation_result = true;
-    validation_error = FT_ERR_SUCCESSS;
+    validation_error = FT_ERR_SUCCESS;
     while (validation_result == true && field)
     {
         json_schema_field *next_field;
         int field_error;
 
         field_error = json_schema_field_enable_thread_safety(field);
-        if (field_error != FT_ERR_SUCCESSS)
+        if (field_error != FT_ERR_SUCCESS)
         {
             json_schema_set_error_unlocked(schema_mutable, field_error);
             validation_error = field_error;
@@ -70,7 +70,7 @@ bool json_validate_schema(json_group *group, const json_schema &schema)
             break;
         }
         field_error = json_schema_field_lock(field, field_guard);
-        if (field_error != FT_ERR_SUCCESSS)
+        if (field_error != FT_ERR_SUCCESS)
         {
             json_schema_set_error_unlocked(schema_mutable, field_error);
             validation_error = field_error;
@@ -122,7 +122,7 @@ bool json_validate_schema(json_group *group, const json_schema &schema)
                     validation_result = false;
                 }
                 else
-                    json_schema_field_set_error_unlocked(field, FT_ERR_SUCCESSS);
+                    json_schema_field_set_error_unlocked(field, FT_ERR_SUCCESS);
             }
         }
         if (validation_result == false)
@@ -131,11 +131,11 @@ bool json_validate_schema(json_group *group, const json_schema &schema)
     }
     if (validation_result == true)
     {
-        json_schema_set_error_unlocked(schema_mutable, FT_ERR_SUCCESSS);
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        json_schema_set_error_unlocked(schema_mutable, FT_ERR_SUCCESS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (true);
     }
-    if (validation_error == FT_ERR_SUCCESSS)
+    if (validation_error == FT_ERR_SUCCESS)
         validation_error = schema_mutable->_error_code;
     ft_global_error_stack_push(validation_error);
     return (false);

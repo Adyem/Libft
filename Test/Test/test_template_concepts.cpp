@@ -1,9 +1,13 @@
+#include "../test_internal.hpp"
 #include "../../Template/shared_ptr.hpp"
 #include "../../Template/unique_ptr.hpp"
 #include "../../Template/template_concepts.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../Basic/basic.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 class variadic_constructible
 {
@@ -28,16 +32,16 @@ class variadic_constructible
 };
 
 variadic_constructible::variadic_constructible()
-    : _first(0), _second(0.0), _error_code(FT_ERR_SUCCESSS)
+    : _first(0), _second(0.0), _error_code(FT_ERR_SUCCESS)
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 variadic_constructible::variadic_constructible(int first, double second)
-    : _first(first), _second(second), _error_code(FT_ERR_SUCCESSS)
+    : _first(first), _second(second), _error_code(FT_ERR_SUCCESS)
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -62,7 +66,7 @@ variadic_constructible &variadic_constructible::operator=(const variadic_constru
 
 variadic_constructible::~variadic_constructible()
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -75,13 +79,13 @@ void variadic_constructible::set_error(int error) const
 
 int variadic_constructible::first() const
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_first);
 }
 
 double variadic_constructible::second() const
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_second);
 }
 
@@ -118,16 +122,16 @@ class shared_ptr_base_type
 };
 
 shared_ptr_base_type::shared_ptr_base_type()
-    : _marker(0), _error_code(FT_ERR_SUCCESSS)
+    : _marker(0), _error_code(FT_ERR_SUCCESS)
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 shared_ptr_base_type::shared_ptr_base_type(int marker)
-    : _marker(marker), _error_code(FT_ERR_SUCCESSS)
+    : _marker(marker), _error_code(FT_ERR_SUCCESS)
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -151,7 +155,7 @@ shared_ptr_base_type &shared_ptr_base_type::operator=(const shared_ptr_base_type
 
 shared_ptr_base_type::~shared_ptr_base_type()
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -164,7 +168,7 @@ void shared_ptr_base_type::set_error(int error) const
 
 int shared_ptr_base_type::get_marker() const
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_marker);
 }
 
@@ -199,16 +203,16 @@ class shared_ptr_derived_type : public shared_ptr_base_type
 };
 
 shared_ptr_derived_type::shared_ptr_derived_type()
-    : shared_ptr_base_type(), _error_code(FT_ERR_SUCCESSS)
+    : shared_ptr_base_type(), _error_code(FT_ERR_SUCCESS)
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 shared_ptr_derived_type::shared_ptr_derived_type(int marker)
-    : shared_ptr_base_type(marker), _error_code(FT_ERR_SUCCESSS)
+    : shared_ptr_base_type(marker), _error_code(FT_ERR_SUCCESS)
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -232,7 +236,7 @@ shared_ptr_derived_type &shared_ptr_derived_type::operator=(const shared_ptr_der
 
 shared_ptr_derived_type::~shared_ptr_derived_type()
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -259,7 +263,7 @@ FT_TEST(test_ft_shared_ptr_variadic_constructor_uses_custom_concept, "ft_sharedp
 {
     ft_sharedptr<variadic_constructible> pointer(21, 3.5);
 
-    FT_ASSERT(ft_global_error_stack_peek_last_error() == FT_ERR_SUCCESSS);
+    FT_ASSERT(ft_global_error_stack_peek_last_error() == FT_ERR_SUCCESS);
     FT_ASSERT(pointer.get() != ft_nullptr);
     FT_ASSERT_EQ(21, pointer->first());
     FT_ASSERT(pointer->second() > 3.4);
@@ -282,16 +286,16 @@ FT_TEST(test_ft_unique_ptr_variadic_constructor_uses_custom_concept, "ft_uniquep
 FT_TEST(test_ft_shared_ptr_convertible_constructor_uses_custom_concept, "ft_sharedptr cross-type constructors rely on custom convertible concept")
 {
     ft_sharedptr<shared_ptr_derived_type> derived_pointer(new shared_ptr_derived_type(73));
-    FT_ASSERT(ft_global_error_stack_peek_last_error() == FT_ERR_SUCCESSS);
+    FT_ASSERT(ft_global_error_stack_peek_last_error() == FT_ERR_SUCCESS);
 
     ft_sharedptr<shared_ptr_base_type> copied_pointer(derived_pointer);
-    FT_ASSERT(ft_global_error_stack_peek_last_error() == FT_ERR_SUCCESSS);
+    FT_ASSERT(ft_global_error_stack_peek_last_error() == FT_ERR_SUCCESS);
     FT_ASSERT_EQ(2, derived_pointer.use_count());
     FT_ASSERT_EQ(2, copied_pointer.use_count());
     FT_ASSERT_EQ(73, copied_pointer->get_marker());
 
     ft_sharedptr<shared_ptr_base_type> moved_pointer(ft_sharedptr<shared_ptr_derived_type>(new shared_ptr_derived_type(29)));
-    FT_ASSERT(ft_global_error_stack_peek_last_error() == FT_ERR_SUCCESSS);
+    FT_ASSERT(ft_global_error_stack_peek_last_error() == FT_ERR_SUCCESS);
     FT_ASSERT(moved_pointer.get() != ft_nullptr);
     FT_ASSERT_EQ(29, moved_pointer->get_marker());
     return (1);

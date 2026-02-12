@@ -1,5 +1,9 @@
+#include "../test_internal.hpp"
 #include "../../Math/math_internal.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_math_roll_validate_rejects_punctuation, "math_roll_validate rejects punctuation in argument scan")
 {

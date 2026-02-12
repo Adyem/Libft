@@ -1,3 +1,4 @@
+#include "../test_internal.hpp"
 #include "../../Template/vector.hpp"
 #include "../../Template/map.hpp"
 #include "../../Template/set.hpp"
@@ -13,6 +14,9 @@
 #include <cstring>
 #include <cstdio>
 #include <vector>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 class vector_destructor_tracker
 {
@@ -41,28 +45,28 @@ class vector_destructor_tracker
 int vector_destructor_tracker::_live_count = 0;
 
 vector_destructor_tracker::vector_destructor_tracker()
-    : _value(0), _error_code(FT_ERR_SUCCESSS)
+    : _value(0), _error_code(FT_ERR_SUCCESS)
 {
     ++_live_count;
     return ;
 }
 
 vector_destructor_tracker::vector_destructor_tracker(int value)
-    : _value(value), _error_code(FT_ERR_SUCCESSS)
+    : _value(value), _error_code(FT_ERR_SUCCESS)
 {
     ++_live_count;
     return ;
 }
 
 vector_destructor_tracker::vector_destructor_tracker(const vector_destructor_tracker &other)
-    : _value(other._value), _error_code(FT_ERR_SUCCESSS)
+    : _value(other._value), _error_code(FT_ERR_SUCCESS)
 {
     ++_live_count;
     return ;
 }
 
 vector_destructor_tracker::vector_destructor_tracker(vector_destructor_tracker &&other) noexcept
-    : _value(other._value), _error_code(FT_ERR_SUCCESSS)
+    : _value(other._value), _error_code(FT_ERR_SUCCESS)
 {
     ++_live_count;
     return ;
@@ -72,7 +76,7 @@ vector_destructor_tracker &vector_destructor_tracker::operator=(const vector_des
 {
     if (this != &other)
         this->_value = other._value;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (*this);
 }
 
@@ -80,21 +84,21 @@ vector_destructor_tracker &vector_destructor_tracker::operator=(vector_destructo
 {
     if (this != &other)
         this->_value = other._value;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return (*this);
 }
 
 vector_destructor_tracker::~vector_destructor_tracker()
 {
     --_live_count;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 void vector_destructor_tracker::reset()
 {
     _live_count = 0;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return ;
 }
 
@@ -161,7 +165,7 @@ int test_ft_shared_ptr_basic(void)
     ft_sharedptr<int> sp(new int(42));
     bool operations_ok = (sp.use_count() == 1 && *sp == 42);
 
-    return (operations_ok && ft_global_error_stack_peek_last_error() == FT_ERR_SUCCESSS);
+    return (operations_ok && ft_global_error_stack_peek_last_error() == FT_ERR_SUCCESS);
 }
 
 int test_ft_unique_ptr_basic(void)
@@ -305,7 +309,7 @@ int test_ft_map_clear_empty(void)
 int test_ft_shared_ptr_array(void)
 {
     ft_sharedptr<int> sp(3);
-    if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESSS)
+    if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESS)
         return (0);
     sp[0] = 1;
     sp[1] = 2;
@@ -411,15 +415,15 @@ FT_TEST(test_ft_vector_resets_errno_after_successful_push, "ft_vector clears err
 {
     ft_vector<int> vector_instance;
 
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     vector_instance[0];
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, vector_instance.get_error());
     vector_instance.push_back(5);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, vector_instance.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT_EQ(5, vector_instance[0]);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, vector_instance.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -427,16 +431,16 @@ FT_TEST(test_ft_set_resets_errno_after_successful_insert, "ft_set clears errno a
 {
     ft_set<int> set_instance;
 
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, set_instance.find(42));
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, set_instance.get_error());
     set_instance.insert(42);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, set_instance.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, set_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     int *found = set_instance.find(42);
     FT_ASSERT(found != ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, set_instance.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, set_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -444,15 +448,15 @@ FT_TEST(test_ft_stack_resets_errno_after_successful_push, "ft_stack clears errno
 {
     ft_stack<int> stack_instance;
 
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     stack_instance.pop();
     FT_ASSERT_EQ(FT_ERR_EMPTY, stack_instance.get_error());
     stack_instance.push(7);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, stack_instance.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stack_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT_EQ(7, stack_instance.top());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, stack_instance.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stack_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -460,13 +464,13 @@ FT_TEST(test_ft_map_grows_from_zero_capacity, "ft_map grows when constructed wit
 {
     ft_map<int, int> map_instance(0);
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, map_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.get_error());
     map_instance.insert(42, 7);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, map_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.get_error());
     FT_ASSERT_EQ(static_cast<size_t>(1), map_instance.size());
     Pair<int, int> *found_entry = map_instance.find(42);
     FT_ASSERT(found_entry != map_instance.end());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, map_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.get_error());
     FT_ASSERT_EQ(7, found_entry->value);
     return (1);
 }

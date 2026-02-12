@@ -1,9 +1,13 @@
+#include "../test_internal.hpp"
 #include "../../Template/unique_ptr.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
 #include <atomic>
 #include <chrono>
 #include <thread>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_ft_uniqueptr_enable_thread_safety_installs_mutex,
         "ft_uniqueptr installs optional mutex guards when requested")
@@ -12,28 +16,28 @@ FT_TEST(test_ft_uniqueptr_enable_thread_safety_installs_mutex,
     bool              lock_acquired;
 
     FT_ASSERT_EQ(0, unique_pointer.enable_thread_safety());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, unique_pointer.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, unique_pointer.get_error());
     FT_ASSERT(unique_pointer.is_thread_safe());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, unique_pointer.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, unique_pointer.get_error());
 
     lock_acquired = false;
     FT_ASSERT_EQ(0, unique_pointer.lock(&lock_acquired));
     FT_ASSERT(lock_acquired);
     FT_ASSERT(unique_pointer.get() != ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, unique_pointer.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, unique_pointer.get_error());
     unique_pointer.unlock(lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, unique_pointer.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, unique_pointer.get_error());
 
     unique_pointer.disable_thread_safety();
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, unique_pointer.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, unique_pointer.get_error());
     FT_ASSERT(unique_pointer.is_thread_safe() == false);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, unique_pointer.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, unique_pointer.get_error());
 
     lock_acquired = false;
     FT_ASSERT_EQ(0, unique_pointer.lock(&lock_acquired));
     FT_ASSERT(lock_acquired == false);
     unique_pointer.unlock(lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, unique_pointer.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, unique_pointer.get_error());
     return (1);
 }
 
@@ -48,7 +52,7 @@ FT_TEST(test_ft_uniqueptr_lock_blocks_until_release,
     std::thread                  worker;
 
     FT_ASSERT_EQ(0, unique_pointer.enable_thread_safety());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, unique_pointer.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, unique_pointer.get_error());
 
     main_lock_acquired = false;
     FT_ASSERT_EQ(0, unique_pointer.lock(&main_lock_acquired));
@@ -90,6 +94,6 @@ FT_TEST(test_ft_uniqueptr_lock_blocks_until_release,
     FT_ASSERT(wait_duration_ms.load() >= 10);
 
     unique_pointer.disable_thread_safety();
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, unique_pointer.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, unique_pointer.get_error());
     return (1);
 }

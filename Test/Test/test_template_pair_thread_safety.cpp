@@ -1,6 +1,10 @@
+#include "../test_internal.hpp"
 #include "../../Template/pair.hpp"
 #include "../../Template/move.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_pair_getters_and_setters_mutate_values,
         "Pair getters and setters reflect stored key/value data")

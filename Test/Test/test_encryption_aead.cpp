@@ -1,3 +1,4 @@
+#include "../test_internal.hpp"
 #include "../../Encryption/encryption_aead.hpp"
 #include "../../Networking/networking_tls_aead.hpp"
 #include "../../System_utils/test_runner.hpp"
@@ -5,6 +6,9 @@
 #include "../../Basic/basic.hpp"
 #include <openssl/ssl.h>
 #include <openssl/pem.h>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 static const char g_aead_test_server_certificate[] =
 "-----BEGIN CERTIFICATE-----\n"
@@ -233,19 +237,19 @@ FT_TEST(test_encryption_aead_tls_integration, "AEAD wrappers derive keys from TL
     size_t cipher_length;
     size_t plain_length;
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, client_send_context.update_aad(additional_data, 2));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, client_send_context.update_aad(additional_data, 2));
     cipher_length = 0;
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, client_send_context.update(plaintext, 5, ciphertext, cipher_length));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, client_send_context.update(plaintext, 5, ciphertext, cipher_length));
     FT_ASSERT_EQ(static_cast<size_t>(5), cipher_length);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, client_send_context.finalize(authentication_tag,
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, client_send_context.finalize(authentication_tag,
             sizeof(authentication_tag)));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, server_receive_context.set_tag(authentication_tag, sizeof(authentication_tag)));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, server_receive_context.update_aad(additional_data, 2));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, server_receive_context.set_tag(authentication_tag, sizeof(authentication_tag)));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, server_receive_context.update_aad(additional_data, 2));
     plain_length = 0;
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, server_receive_context.update(ciphertext, cipher_length,
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, server_receive_context.update(ciphertext, cipher_length,
             decrypted, plain_length));
     FT_ASSERT_EQ(cipher_length, plain_length);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, server_receive_context.finalize(NULL, 0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, server_receive_context.finalize(NULL, 0));
     index = 0;
     while (index < plain_length)
     {

@@ -9,7 +9,6 @@ int math_factorial(int number)
 
     if (number < 0)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
     result = 1;
@@ -18,13 +17,11 @@ int math_factorial(int number)
     {
         if (result > INT_MAX / current_number)
         {
-            ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
             return (0);
         }
         result *= current_number;
         current_number += 1;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -35,7 +32,6 @@ long math_factorial(long number)
 
     if (number < 0)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
     result = 1;
@@ -44,13 +40,11 @@ long math_factorial(long number)
     {
         if (result > LONG_MAX / current_number)
         {
-            ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
             return (0);
         }
         result *= current_number;
         current_number += 1;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -61,7 +55,6 @@ long long math_factorial(long long number)
 
     if (number < 0)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
     result = 1;
@@ -70,12 +63,10 @@ long long math_factorial(long long number)
     {
         if (result > LLONG_MAX / current_number)
         {
-            ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
             return (0);
         }
         result *= current_number;
         current_number += 1;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }

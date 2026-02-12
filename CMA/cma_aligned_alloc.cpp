@@ -114,7 +114,7 @@ static void    *aligned_alloc_offswitch(ft_size_t alignment, ft_size_t request_s
     int32_t    *error_target;
     void    *pointer;
 
-    local_error_code = FT_ERR_SUCCESSS;
+    local_error_code = FT_ERR_SUCCESS;
     error_target = error_code;
     if (error_target == ft_nullptr)
         error_target = &local_error_code;
@@ -133,7 +133,7 @@ static void    *aligned_alloc_offswitch(ft_size_t alignment, ft_size_t request_s
     if (pointer)
     {
         g_cma_allocation_count++;
-        *error_target = FT_ERR_SUCCESSS;
+        *error_target = FT_ERR_SUCCESS;
     }
     else
         *error_target = FT_ERR_NO_MEMORY;
@@ -142,7 +142,7 @@ static void    *aligned_alloc_offswitch(ft_size_t alignment, ft_size_t request_s
     if (*error_target == 0 && pointer)
     {
         g_cma_allocation_count++;
-        *error_target = FT_ERR_SUCCESSS;
+        *error_target = FT_ERR_SUCCESS;
     }
     else
         *error_target = FT_ERR_NO_MEMORY;
@@ -194,7 +194,7 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
         return (aligned_alloc_offswitch(alignment, request_size, ft_nullptr));
     bool lock_acquired = false;
     int32_t lock_error = cma_lock_allocator(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
         return (ft_nullptr);
     ft_size_t padding = 0;
     Block *block = find_aligned_free_block(aligned_size, alignment, &padding);

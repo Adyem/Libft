@@ -1,3 +1,4 @@
+#include "../test_internal.hpp"
 #include "../../Compatebility/compatebility_internal.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../CPP_class/class_string.hpp"
@@ -8,6 +9,9 @@
 #include <cstring>
 #include <fcntl.h>
 #include <sys/stat.h>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 #if defined(_WIN32) || defined(_WIN64)
 # include <direct.h>
@@ -97,7 +101,7 @@ static ft_string su_read_text_file(const char *path)
         if (bytes_read == 0)
         {
             error_code = ft_global_error_stack_drop_last_error();
-            if (error_code == FT_ERR_SUCCESSS)
+            if (error_code == FT_ERR_SUCCESS)
                 break;
             result = ft_string(error_code);
             break;
@@ -121,7 +125,7 @@ static ft_string su_read_text_file(const char *path)
 
 static void su_prepare_directory_fixture(void)
 {
-    int error_code = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESS;
 
     cmp_file_create_directory("su_copy_dir_source", 0755, &error_code);
     cmp_file_create_directory("su_copy_dir_source/nested", 0755, &error_code);
@@ -201,7 +205,7 @@ FT_TEST(test_su_copy_directory_handles_invalid_arguments, "su_copy_directory_rec
     FT_ASSERT_EQ(-1, su_copy_directory_recursive(ft_nullptr, "target"));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_global_error_stack_drop_last_error());
     FT_ASSERT_EQ(-1, su_copy_directory_recursive("missing", "target"));
-    FT_ASSERT(ft_global_error_stack_drop_last_error() != FT_ERR_SUCCESSS);
+    FT_ASSERT(ft_global_error_stack_drop_last_error() != FT_ERR_SUCCESS);
     return (1);
 }
 

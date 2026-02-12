@@ -1,7 +1,11 @@
+#include "../test_internal.hpp"
 #include "../../Template/pool.hpp"
 #include "../../Template/move.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_pool_thread_safety_controls,
         "Pool installs optional mutex guards for shared state")

@@ -15,9 +15,9 @@ int rl_handle_backspace(readline_state_t *state, const char *prompt)
     if (state == ft_nullptr || prompt == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     lock_acquired = false;
-    result = FT_ERR_SUCCESSS;
+    result = FT_ERR_SUCCESS;
     lock_error = rl_state_lock(state, &lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (state->pos > 0)
     {
@@ -127,11 +127,11 @@ static int rl_copy_history_entry_to_buffer(readline_state_t *state, const char *
             new_bufsize *= 2;
         int resize_error = rl_resize_buffer(&state->buffer, &state->bufsize, new_bufsize);
 
-        if (resize_error != FT_ERR_SUCCESSS)
+        if (resize_error != FT_ERR_SUCCESS)
             return (resize_error);
     }
     ft_strlcpy(state->buffer, history_entry, state->bufsize);
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 static void rl_reset_completion_mode_locked(readline_state_t *state)
@@ -177,7 +177,7 @@ static int rl_handle_up_arrow(readline_state_t *state, const char *prompt)
             return (-1);
         state->pos = 0;
         int copy_error = rl_copy_history_entry_to_buffer(state, history[state->history_index]);
-        if (copy_error != FT_ERR_SUCCESSS)
+        if (copy_error != FT_ERR_SUCCESS)
             return (copy_error);
         pf_printf("%s%s", prompt, state->buffer);
         state->pos = ft_strlen(state->buffer);
@@ -197,7 +197,7 @@ static int rl_handle_down_arrow(readline_state_t *state, const char *prompt)
             return (-1);
         state->pos = 0;
         int copy_error = rl_copy_history_entry_to_buffer(state, history[state->history_index]);
-        if (copy_error != FT_ERR_SUCCESSS)
+        if (copy_error != FT_ERR_SUCCESS)
             return (copy_error);
         pf_printf("%s%s", prompt, state->buffer);
         state->pos = ft_strlen(state->buffer);
@@ -244,9 +244,9 @@ int rl_handle_escape_sequence(readline_state_t *state, const char *prompt)
     if (state == ft_nullptr || prompt == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     lock_acquired = false;
-    result = FT_ERR_SUCCESSS;
+    result = FT_ERR_SUCCESS;
     lock_error = rl_state_lock(state, &lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (state->in_completion_mode)
         rl_reset_completion_mode_locked(state);

@@ -46,7 +46,7 @@ int32_t cmp_socket_send_all(intptr_t socket_handle, const void *buffer,
     {
         if (bytes_sent_out != ft_nullptr)
             *bytes_sent_out = 0;
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     }
 #if defined(_WIN32) || defined(_WIN64)
     SOCKET socket_descriptor = static_cast<SOCKET>(socket_handle);
@@ -95,5 +95,5 @@ int32_t cmp_socket_send_all(intptr_t socket_handle, const void *buffer,
     }
     if (bytes_sent_out != ft_nullptr)
         *bytes_sent_out = static_cast<int64_t>(total_sent);
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }

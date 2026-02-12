@@ -1,3 +1,4 @@
+#include "../test_internal.hpp"
 #include "../../Geometry/geometry.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
@@ -5,13 +6,16 @@
 #include <chrono>
 #include <thread>
 
+#ifndef LIBFT_TEST_BUILD
+#endif
+
 FT_TEST(test_intersect_aabb_overlap, "intersect_aabb detects overlapping boxes")
 {
     aabb first;
     aabb second;
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, first.set_bounds(0.0, 0.0, 5.0, 5.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, second.set_bounds(3.0, 3.0, 8.0, 8.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first.set_bounds(0.0, 0.0, 5.0, 5.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second.set_bounds(3.0, 3.0, 8.0, 8.0));
     FT_ASSERT(intersect_aabb(first, second));
     FT_ASSERT(intersect_aabb(second, first));
     return (1);
@@ -22,8 +26,8 @@ FT_TEST(test_intersect_aabb_separated, "intersect_aabb returns false when separa
     aabb first;
     aabb second;
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, first.set_bounds(-2.0, -2.0, 2.0, 2.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, second.set_bounds(3.0, -1.0, 6.0, 1.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first.set_bounds(-2.0, -2.0, 2.0, 2.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second.set_bounds(3.0, -1.0, 6.0, 1.0));
     FT_ASSERT_EQ(false, intersect_aabb(first, second));
     FT_ASSERT_EQ(false, intersect_aabb(second, first));
     return (1);
@@ -34,8 +38,8 @@ FT_TEST(test_intersect_aabb_touching_edge, "intersect_aabb treats shared boundar
     aabb first;
     aabb second;
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, first.set_bounds(0.0, 0.0, 4.0, 4.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, second.set_bounds(4.0, 1.0, 7.0, 3.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first.set_bounds(0.0, 0.0, 4.0, 4.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second.set_bounds(4.0, 1.0, 7.0, 3.0));
     FT_ASSERT(intersect_aabb(first, second));
     FT_ASSERT(intersect_aabb(second, first));
     return (1);
@@ -51,8 +55,8 @@ FT_TEST(test_intersect_aabb_parallel_access, "intersect_aabb handles concurrent 
     std::thread worker_thread;
     int iteration_index;
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, first.set_bounds(0.0, 0.0, 10.0, 10.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, second.set_bounds(2.0, 2.0, 8.0, 8.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first.set_bounds(0.0, 0.0, 10.0, 10.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second.set_bounds(2.0, 2.0, 8.0, 8.0));
 
     worker_ready.store(false);
     worker_failed.store(false);
@@ -72,12 +76,12 @@ FT_TEST(test_intersect_aabb_parallel_access, "intersect_aabb handles concurrent 
                 worker_failed.store(true);
                 break;
             }
-            if (first.get_error() != FT_ERR_SUCCESSS)
+            if (first.get_error() != FT_ERR_SUCCESS)
             {
                 worker_failed.store(true);
                 break;
             }
-            if (second.get_error() != FT_ERR_SUCCESSS)
+            if (second.get_error() != FT_ERR_SUCCESS)
             {
                 worker_failed.store(true);
                 break;
@@ -109,17 +113,17 @@ FT_TEST(test_intersect_aabb_parallel_access, "intersect_aabb handles concurrent 
             failure_line = __LINE__;
             break;
         }
-        if (first.get_error() != FT_ERR_SUCCESSS && test_failed == 0)
+        if (first.get_error() != FT_ERR_SUCCESS && test_failed == 0)
         {
             test_failed = 1;
-            failure_expression = "first.get_error() == FT_ERR_SUCCESSS";
+            failure_expression = "first.get_error() == FT_ERR_SUCCESS";
             failure_line = __LINE__;
             break;
         }
-        if (second.get_error() != FT_ERR_SUCCESSS && test_failed == 0)
+        if (second.get_error() != FT_ERR_SUCCESS && test_failed == 0)
         {
             test_failed = 1;
-            failure_expression = "second.get_error() == FT_ERR_SUCCESSS";
+            failure_expression = "second.get_error() == FT_ERR_SUCCESS";
             failure_line = __LINE__;
             break;
         }
@@ -136,8 +140,8 @@ FT_TEST(test_intersect_aabb_parallel_access, "intersect_aabb handles concurrent 
 
     FT_ASSERT(worker_completed.load());
     FT_ASSERT(worker_failed.load() == false);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, first.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, second.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second.get_error());
     return (1);
 }
 
@@ -145,10 +149,10 @@ FT_TEST(test_intersect_aabb_self_reference, "intersect_aabb supports self collis
 {
     aabb box;
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, box.set_bounds(-1.0, -2.0, 3.0, 4.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, box.set_bounds(-1.0, -2.0, 3.0, 4.0));
     ft_errno = FT_ERR_ALREADY_EXISTS;
     FT_ASSERT(intersect_aabb(box, box));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, box.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, box.get_error());
     FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, ft_errno);
     return (1);
 }
@@ -161,7 +165,7 @@ FT_TEST(test_aabb_set_bounds_invalid, "aabb rejects invalid bounds and preserves
     double stored_maximum_x;
     double stored_maximum_y;
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, box.set_bounds(-2.0, -3.0, 4.0, 6.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, box.set_bounds(-2.0, -3.0, 4.0, 6.0));
     ft_errno = FT_ERR_CONFIGURATION;
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, box.set_bounds(8.0, -3.0, 4.0, 6.0));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, box.get_error());

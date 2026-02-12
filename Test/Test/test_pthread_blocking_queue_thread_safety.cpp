@@ -1,6 +1,10 @@
+#include "../test_internal.hpp"
 #include "../../PThread/task_scheduler.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_ft_blocking_queue_enable_thread_safety_controls,
         "ft_blocking_queue enable_thread_safety installs guard mutex")
@@ -26,9 +30,9 @@ FT_TEST(test_ft_blocking_queue_lock_cycle_resets_errno,
     lock_acquired = false;
     FT_ASSERT_EQ(0, queue.lock(&lock_acquired));
     FT_ASSERT_EQ(true, lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     queue.unlock(lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     queue.disable_thread_safety();
     return (1);
 }

@@ -1,7 +1,11 @@
+#include "../test_internal.hpp"
 #include "../../CPP_class/class_string.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_ft_string_constructors_unlock_mutex,
         "ft_string constructors and assignments unlock mutexes")
@@ -30,7 +34,7 @@ FT_TEST(test_ft_string_constructors_unlock_mutex,
     FT_ASSERT_EQ(false, init_mutex->lockState());
     FT_ASSERT_EQ(false, copy_mutex->lockState());
     FT_ASSERT_EQ(false, assigned_mutex->lockState());
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -71,7 +75,7 @@ FT_TEST(test_ft_string_mutators_unlock_mutex,
     string_mutex = string_value.get_mutex_for_validation();
     FT_ASSERT(string_mutex != ft_nullptr);
     FT_ASSERT_EQ(false, string_mutex->lockState());
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -120,7 +124,7 @@ FT_TEST(test_ft_string_observers_unlock_mutex,
     string_mutex = string_value.get_mutex_for_validation();
     FT_ASSERT(string_mutex != ft_nullptr);
     FT_ASSERT_EQ(false, string_mutex->lockState());
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -136,7 +140,7 @@ FT_TEST(test_ft_string_erase_out_of_range_unlocks_mutex,
     FT_ASSERT(string_mutex != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_string::last_operation_error());
     FT_ASSERT_EQ(false, string_mutex->lockState());
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -158,7 +162,7 @@ FT_TEST(test_ft_string_substr_out_of_range_unlocks_mutex,
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_string::last_operation_error());
     FT_ASSERT_EQ(false, source_mutex->lockState());
     FT_ASSERT_EQ(false, substring_mutex->lockState());
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -175,7 +179,7 @@ FT_TEST(test_ft_string_at_out_of_range_unlocks_mutex,
     FT_ASSERT(string_mutex != ft_nullptr);
     FT_ASSERT(result == ft_nullptr);
     FT_ASSERT_EQ(false, string_mutex->lockState());
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -193,7 +197,7 @@ FT_TEST(test_ft_string_back_empty_unlocks_mutex,
     FT_ASSERT_EQ('\0', last_character);
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_string::last_operation_error());
     FT_ASSERT_EQ(false, string_mutex->lockState());
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -211,7 +215,7 @@ FT_TEST(test_ft_string_find_nullptr_unlocks_mutex,
     FT_ASSERT_EQ(ft_string::npos, find_result);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_string::last_operation_error());
     FT_ASSERT_EQ(false, string_mutex->lockState());
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -227,7 +231,7 @@ FT_TEST(test_ft_string_append_nullptr_unlocks_mutex,
     FT_ASSERT(string_mutex != ft_nullptr);
     FT_ASSERT_EQ(false, string_mutex->lockState());
     FT_ASSERT_EQ(4, string_value.size());
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -244,7 +248,7 @@ FT_TEST(test_ft_string_push_back_unlocks_mutex,
     FT_ASSERT_EQ(false, string_mutex->lockState());
     FT_ASSERT_EQ(3, string_value.size());
     FT_ASSERT_EQ('z', string_value.back());
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -271,7 +275,7 @@ FT_TEST(test_ft_string_addition_unlocks_mutex,
     FT_ASSERT_EQ(false, right_mutex->lockState());
     FT_ASSERT_EQ(false, combined_mutex->lockState());
     FT_ASSERT_EQ(9, combined_string.size());
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -287,7 +291,7 @@ FT_TEST(test_ft_string_assign_length_nullptr_unlocks_mutex,
     FT_ASSERT(target_mutex != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_string::last_operation_error());
     FT_ASSERT_EQ(false, target_mutex->lockState());
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -303,7 +307,7 @@ FT_TEST(test_ft_string_resize_length_expand_unlocks_mutex,
     FT_ASSERT(target_mutex != ft_nullptr);
     FT_ASSERT_EQ(false, target_mutex->lockState());
     FT_ASSERT_EQ(5, target_string.size());
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -320,7 +324,7 @@ FT_TEST(test_ft_string_append_object_unlocks_mutex,
     FT_ASSERT(base_mutex != ft_nullptr);
     FT_ASSERT_EQ(false, base_mutex->lockState());
     FT_ASSERT_EQ(7, base_string.size());
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -336,7 +340,7 @@ FT_TEST(test_ft_string_replace_out_of_range_unlocks_mutex,
     FT_ASSERT(target_mutex != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_string::last_operation_error());
     FT_ASSERT_EQ(false, target_mutex->lockState());
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -359,7 +363,7 @@ FT_TEST(test_ft_string_operator_plus_char_unlocks_mutex,
     FT_ASSERT_EQ(false, combined_mutex->lockState());
     FT_ASSERT_EQ(3, combined_string.size());
     FT_ASSERT_EQ('!', combined_string.back());
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -375,7 +379,7 @@ FT_TEST(test_ft_string_assignment_from_nullptr_unlocks_mutex,
     FT_ASSERT(target_mutex != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_string::last_operation_error());
     FT_ASSERT_EQ(false, target_mutex->lockState());
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -391,7 +395,7 @@ FT_TEST(test_ft_string_operator_plus_equals_cstr_unlocks_mutex,
     FT_ASSERT(base_mutex != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_string::last_operation_error());
     FT_ASSERT_EQ(false, base_mutex->lockState());
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -408,7 +412,7 @@ FT_TEST(test_ft_string_operator_plus_equals_object_unlocks_mutex,
     FT_ASSERT(base_mutex != ft_nullptr);
     FT_ASSERT_EQ(false, base_mutex->lockState());
     FT_ASSERT_EQ(7, base_string.size());
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -425,7 +429,7 @@ FT_TEST(test_ft_string_conversion_operator_unlocks_mutex,
     FT_ASSERT(base_mutex != ft_nullptr);
     FT_ASSERT(c_string != ft_nullptr);
     FT_ASSERT_EQ(false, base_mutex->lockState());
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -447,6 +451,6 @@ FT_TEST(test_ft_string_operator_plus_cstring_left_unlocks_mutex,
     FT_ASSERT_EQ(false, right_mutex->lockState());
     FT_ASSERT_EQ(false, combined_mutex->lockState());
     FT_ASSERT_EQ(9, combined_string.size());
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }

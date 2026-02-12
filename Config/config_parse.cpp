@@ -11,10 +11,10 @@
 static int cnfg_config_lock_if_enabled(cnfg_config *config, bool *lock_acquired)
 {
     if (!config || !config->mutex)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     int lock_result = pt_mutex_lock_if_valid(config->mutex);
     ft_global_error_stack_drop_last_error();
-    if (lock_result == FT_ERR_SUCCESSS && lock_acquired)
+    if (lock_result == FT_ERR_SUCCESS && lock_acquired)
         *lock_acquired = true;
     return (lock_result);
 }
@@ -43,7 +43,7 @@ cnfg_config *cnfg_config_create()
         cma_free(config);
         return (ft_nullptr);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (config);
 }
 
@@ -56,16 +56,16 @@ int cnfg_config_prepare_thread_safety(cnfg_config *config)
     }
     if (config->mutex)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0);
     }
     int mutex_error = pt_mutex_create_with_error(&config->mutex);
-    if (mutex_error != FT_ERR_SUCCESSS)
+    if (mutex_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(mutex_error);
         return (-1);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -102,7 +102,7 @@ void cnfg_free(cnfg_config *config)
 
     bool already_owned = false;
     int lock_result = cnfg_config_lock_if_enabled(config, &mutex_locked);
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         if (lock_result == FT_ERR_MUTEX_ALREADY_LOCKED && config->mutex)
         {
@@ -131,19 +131,19 @@ void cnfg_free(cnfg_config *config)
         int unlock_error;
 
         if (config->mutex == ft_nullptr)
-            unlock_error = FT_ERR_SUCCESSS;
+            unlock_error = FT_ERR_SUCCESS;
         else
             unlock_error = ft_global_error_stack_drop_last_error();
 
-        if (unlock_error != FT_ERR_SUCCESSS)
+        if (unlock_error != FT_ERR_SUCCESS)
             ft_global_error_stack_push(unlock_error);
         else
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
+            ft_global_error_stack_push(FT_ERR_SUCCESS);
     }
     else
     {
         cnfg_config_unlock_guard(config, mutex_locked);
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
     }
     cnfg_config_teardown_thread_safety(config);
     cma_free(config);
@@ -304,7 +304,7 @@ cnfg_config *cnfg_parse(const char *filename)
     if (current_section)
         cma_free(current_section);
     ft_fclose(file);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (config);
 }
 
@@ -414,7 +414,7 @@ static cnfg_config *cnfg_parse_json(const char *filename)
     }
     config->entry_count = count;
     json_free_groups(groups);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (config);
 }
 
@@ -432,7 +432,7 @@ cnfg_config *config_load_env()
     }
     if (!count)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (config);
     }
     config->entries = static_cast<cnfg_entry*>(cma_calloc(count, sizeof(cnfg_entry)));
@@ -497,7 +497,7 @@ cnfg_config *config_load_env()
         ++index;
     }
     config->entry_count = count;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (config);
 }
 
@@ -513,11 +513,11 @@ cnfg_config *config_load_file(const char *filename)
     {
         cnfg_config *config = cnfg_parse_json(filename);
         if (config)
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
+            ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (config);
     }
     cnfg_config *config = cnfg_parse(filename);
     if (config)
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (config);
 }

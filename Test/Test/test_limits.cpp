@@ -1,6 +1,10 @@
+#include "../test_internal.hpp"
 #include "../../Basic/limits.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <limits>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 static_assert(ft_compute_system_size_max() == FT_SYSTEM_SIZE_MAX,
         "ft_compute_system_size_max matches FT_SYSTEM_SIZE_MAX");

@@ -14,6 +14,6 @@ int pt_thread_detach(pthread_t thread)
         ft_global_error_stack_push(error_code);
         return (return_value);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (return_value);
 }

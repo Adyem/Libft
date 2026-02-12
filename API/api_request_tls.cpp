@@ -49,18 +49,18 @@ static int api_request_capture_network_error()
     system_error = errno;
 #endif
     if (system_error == 0)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     return (ft_map_system_error(system_error));
 }
 
 static void api_request_assign_network_error(int mapped_error, int fallback)
 {
-    if (mapped_error != FT_ERR_SUCCESSS)
+    if (mapped_error != FT_ERR_SUCCESS)
     {
         ft_errno = mapped_error;
         return ;
     }
-    if (ft_errno == FT_ERR_SUCCESSS)
+    if (ft_errno == FT_ERR_SUCCESS)
         ft_errno = fallback;
     return ;
 }
@@ -119,8 +119,8 @@ char *api_request_https(const char *ip, uint16_t port,
         metrics_request_bytes += ft_strlen(metrics_payload_string);
         cma_free(metrics_payload_string);
     }
-    ft_errno = FT_ERR_SUCCESSS;
-    int error_code = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
+    int error_code = FT_ERR_SUCCESS;
     struct api_request_errno_guard
     {
         int *code;
@@ -233,7 +233,7 @@ char *api_request_https(const char *ip, uint16_t port,
             http2_used_local, error_code);
     if (!metrics_result_body)
     {
-        error_code = FT_ERR_SUCCESSS;
+        error_code = FT_ERR_SUCCESS;
         metrics_result_body = api_https_execute(connection_handle, method,
                 path, ip, payload, headers, status, timeout, ca_certificate,
                 verify_peer, ip, port, security_identity_pointer, retry_policy,
@@ -301,8 +301,8 @@ char *api_request_https_http2(const char *ip, uint16_t port,
         metrics_request_bytes += ft_strlen(metrics_payload_string);
         cma_free(metrics_payload_string);
     }
-    ft_errno = FT_ERR_SUCCESSS;
-    int error_code = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
+    int error_code = FT_ERR_SUCCESS;
     struct api_request_errno_guard
     {
         int *code;
@@ -416,7 +416,7 @@ char *api_request_https_http2(const char *ip, uint16_t port,
             http2_used_local, error_code);
     if (!metrics_result_body)
     {
-        error_code = FT_ERR_SUCCESSS;
+        error_code = FT_ERR_SUCCESS;
         metrics_result_body = api_https_execute(connection_handle, method,
                 path, ip, payload, headers, status, timeout, ca_certificate,
                 verify_peer, ip, port, security_identity_pointer, retry_policy,
@@ -466,7 +466,7 @@ bool api_request_stream_tls(const char *host, uint16_t port,
                 streaming_handler, payload, headers, timeout, ca_certificate,
                 verify_peer, retry_policy, hooks->user_data));
     }
-    int error_code = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESS;
     struct api_request_errno_guard
     {
         int *code;
@@ -567,7 +567,7 @@ bool api_request_stream_tls(const char *host, uint16_t port,
             streaming_handler, http2_used_local, error_code);
     if (!result)
     {
-        error_code = FT_ERR_SUCCESSS;
+        error_code = FT_ERR_SUCCESS;
         result = api_https_execute_streaming(connection_handle, method, path,
                 host, payload, headers, timeout, ca_certificate, verify_peer,
                 host, port, security_identity_pointer, retry_policy,
@@ -616,7 +616,7 @@ bool api_request_stream_tls_http2(const char *host, uint16_t port,
                 streaming_handler, payload, headers, timeout, ca_certificate,
                 verify_peer, used_http2, retry_policy, hooks->user_data));
     }
-    int error_code = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESS;
     struct api_request_errno_guard
     {
         int *code;
@@ -717,7 +717,7 @@ bool api_request_stream_tls_http2(const char *host, uint16_t port,
             http2_used_local, error_code);
     if (!result)
     {
-        error_code = FT_ERR_SUCCESSS;
+        error_code = FT_ERR_SUCCESS;
         result = api_https_execute_streaming(connection_handle, method, path,
                 host, payload, headers, timeout, ca_certificate, verify_peer,
                 host, port, security_identity_pointer, retry_policy,
@@ -751,7 +751,7 @@ char *api_request_string_tls(const char *host, uint16_t port,
         ft_log_debug("api_request_string_tls %s:%u %s %s",
             log_host, port, log_method, log_path);
     }
-    int error_code = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESS;
     struct api_request_errno_guard
     {
         int *code;
@@ -805,7 +805,7 @@ char *api_request_string_tls(const char *host, uint16_t port,
         metrics_request_bytes += ft_strlen(metrics_payload_string);
         cma_free(metrics_payload_string);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
 
     SocketConfig config;
     config._type = SocketType::CLIENT;
@@ -909,7 +909,7 @@ char *api_request_string_tls_http2(const char *host, uint16_t port,
         ft_log_debug("api_request_string_tls_http2 %s:%u %s %s",
             log_host, port, log_method, log_path);
     }
-    int error_code = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESS;
     struct api_request_errno_guard
     {
         int *code;
@@ -964,7 +964,7 @@ char *api_request_string_tls_http2(const char *host, uint16_t port,
         metrics_request_bytes += ft_strlen(metrics_payload_string);
         cma_free(metrics_payload_string);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
 
     SocketConfig config;
     config._type = SocketType::CLIENT;
@@ -1044,7 +1044,7 @@ char *api_request_string_tls_http2(const char *host, uint16_t port,
             ft_nullptr, retry_policy, http2_used_local, error_code);
     if (!metrics_result_body)
     {
-        error_code = FT_ERR_SUCCESSS;
+        error_code = FT_ERR_SUCCESS;
         metrics_result_body = api_https_execute(connection_handle, method, path, host,
                 payload, headers, status, timeout, ft_nullptr, true, host,
                 port, ft_nullptr, retry_policy, error_code);
@@ -1067,14 +1067,14 @@ json_group *api_request_json_tls(const char *host, uint16_t port,
                                        headers, status, timeout, retry_policy);
     if (!body)
     {
-        if (ft_errno == FT_ERR_SUCCESSS)
+        if (ft_errno == FT_ERR_SUCCESS)
             ft_errno = FT_ERR_IO;
         return (ft_nullptr);
     }
     json_group *result = json_read_from_string(body);
     cma_free(body);
     if (result)
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESS;
     return (result);
 }
 
@@ -1093,14 +1093,14 @@ json_group *api_request_json_tls_http2(const char *host, uint16_t port,
         *used_http2 = http2_used_local;
     if (!body)
     {
-        if (ft_errno == FT_ERR_SUCCESSS)
+        if (ft_errno == FT_ERR_SUCCESS)
             ft_errno = FT_ERR_IO;
         return (ft_nullptr);
     }
     json_group *result = json_read_from_string(body);
     cma_free(body);
     if (result)
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESS;
     return (result);
 }
 
@@ -1136,14 +1136,14 @@ json_group *api_request_json_tls_bearer(const char *host, uint16_t port,
                                                retry_policy);
     if (!body)
     {
-        if (ft_errno == FT_ERR_SUCCESSS)
+        if (ft_errno == FT_ERR_SUCCESS)
             ft_errno = FT_ERR_IO;
         return (ft_nullptr);
     }
     json_group *result = json_read_from_string(body);
     cma_free(body);
     if (result)
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESS;
     return (result);
 }
 
@@ -1179,14 +1179,14 @@ json_group *api_request_json_tls_basic(const char *host, uint16_t port,
                                               status, timeout, retry_policy);
     if (!body)
     {
-        if (ft_errno == FT_ERR_SUCCESSS)
+        if (ft_errno == FT_ERR_SUCCESS)
             ft_errno = FT_ERR_IO;
         return (ft_nullptr);
     }
     json_group *result = json_read_from_string(body);
     cma_free(body);
     if (result)
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESS;
     return (result);
 }
 
@@ -1263,7 +1263,7 @@ static void api_tls_async_worker(api_tls_async_request *data)
     }
     if (socket_fd < 0)
     {
-        if (ft_errno == FT_ERR_SUCCESSS)
+        if (ft_errno == FT_ERR_SUCCESS)
             ft_errno = FT_ERR_SOCKET_CONNECT_FAILED;
         goto cleanup;
     }
@@ -1383,7 +1383,7 @@ static void api_tls_async_worker(api_tls_async_request *data)
         char *temporary_string = json_write_to_string(data->payload);
         if (!temporary_string)
         {
-            if (ft_errno == FT_ERR_SUCCESSS)
+            if (ft_errno == FT_ERR_SUCCESS)
                 ft_errno = FT_ERR_NO_MEMORY;
             goto cleanup;
         }
@@ -1512,10 +1512,10 @@ static void api_tls_async_worker(api_tls_async_request *data)
         {
             body += 4;
             result_body = cma_strdup(body);
-            if (!result_body && ft_errno == FT_ERR_SUCCESSS)
+            if (!result_body && ft_errno == FT_ERR_SUCCESS)
                 ft_errno = FT_ERR_NO_MEMORY;
             if (result_body)
-                ft_errno = FT_ERR_SUCCESSS;
+                ft_errno = FT_ERR_SUCCESS;
         }
     }
 
@@ -1596,7 +1596,7 @@ bool    api_request_string_tls_async(const char *host, uint16_t port,
     }
     ft_thread thread_worker(api_tls_async_worker, data);
     thread_worker.detach();
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (true);
 }
 
@@ -1648,11 +1648,11 @@ bool    api_request_json_tls_async(const char *host, uint16_t port,
             data, payload, headers, timeout))
     {
         cma_free(data);
-        if (ft_errno == FT_ERR_SUCCESSS)
+        if (ft_errno == FT_ERR_SUCCESS)
             ft_errno = FT_ERR_NO_MEMORY;
         return (false);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (true);
 }
 

@@ -50,7 +50,7 @@ Iterator<ValueType>::Iterator(ValueType* ptr) noexcept
     }
     else
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
     }
 }
 
@@ -62,7 +62,7 @@ Iterator<ValueType>::Iterator(const Iterator& other) noexcept
     bool other_lock_acquired = false;
     int lock_result = other.lock_internal(&other_lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return ;
@@ -71,10 +71,10 @@ Iterator<ValueType>::Iterator(const Iterator& other) noexcept
     other.unlock_internal(other_lock_acquired);
     if (other._mutex != ft_nullptr)
     {
-        if (this->enable_thread_safety() != FT_ERR_SUCCESSS)
+        if (this->enable_thread_safety() != FT_ERR_SUCCESS)
             return ;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 template <typename ValueType>
@@ -82,13 +82,13 @@ Iterator<ValueType>& Iterator<ValueType>::operator=(const Iterator& other) noexc
 {
     if (this == &other)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (*this);
     }
     bool this_lock_acquired = false;
     int lock_result = this->lock_internal(&this_lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return (*this);
@@ -96,7 +96,7 @@ Iterator<ValueType>& Iterator<ValueType>::operator=(const Iterator& other) noexc
     bool other_lock_acquired = false;
     lock_result = other.lock_internal(&other_lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         this->unlock_internal(this_lock_acquired);
         ft_global_error_stack_push(lock_result);
@@ -108,14 +108,14 @@ Iterator<ValueType>& Iterator<ValueType>::operator=(const Iterator& other) noexc
     bool other_thread_safe = (other._mutex != ft_nullptr);
     if (other_thread_safe)
     {
-        if (this->enable_thread_safety() != FT_ERR_SUCCESSS)
+        if (this->enable_thread_safety() != FT_ERR_SUCCESS)
             return (*this);
     }
     else
     {
         this->disable_thread_safety();
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (*this);
 }
 
@@ -127,7 +127,7 @@ Iterator<ValueType>::Iterator(Iterator&& other) noexcept
     bool other_lock_acquired = false;
     int lock_result = other.lock_internal(&other_lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return ;
@@ -139,10 +139,10 @@ Iterator<ValueType>::Iterator(Iterator&& other) noexcept
     other.teardown_thread_safety();
     if (other_thread_safe)
     {
-        if (this->enable_thread_safety() != FT_ERR_SUCCESSS)
+        if (this->enable_thread_safety() != FT_ERR_SUCCESS)
             return ;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 template <typename ValueType>
@@ -150,13 +150,13 @@ Iterator<ValueType>& Iterator<ValueType>::operator=(Iterator&& other) noexcept
 {
     if (this == &other)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (*this);
     }
     bool this_lock_acquired = false;
     int lock_result = this->lock_internal(&this_lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return (*this);
@@ -164,7 +164,7 @@ Iterator<ValueType>& Iterator<ValueType>::operator=(Iterator&& other) noexcept
     bool other_lock_acquired = false;
     lock_result = other.lock_internal(&other_lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         this->unlock_internal(this_lock_acquired);
         ft_global_error_stack_push(lock_result);
@@ -179,10 +179,10 @@ Iterator<ValueType>& Iterator<ValueType>::operator=(Iterator&& other) noexcept
     this->teardown_thread_safety();
     if (other_thread_safe)
     {
-        if (this->enable_thread_safety() != FT_ERR_SUCCESSS)
+        if (this->enable_thread_safety() != FT_ERR_SUCCESS)
             return (*this);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (*this);
 }
 
@@ -190,7 +190,7 @@ template <typename ValueType>
 Iterator<ValueType>::~Iterator()
 {
     this->teardown_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 template <typename ValueType>
@@ -199,7 +199,7 @@ Iterator<ValueType> Iterator<ValueType>::operator++() noexcept
     bool lock_acquired = false;
     int lock_result = this->lock_internal(&lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return (*this);
@@ -212,7 +212,7 @@ Iterator<ValueType> Iterator<ValueType>::operator++() noexcept
     }
     ++this->_ptr;
     this->unlock_internal(lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (*this);
 }
 
@@ -224,13 +224,13 @@ bool Iterator<ValueType>::operator!=(const Iterator& other) const noexcept
         bool lock_acquired = false;
         int lock_result = this->lock_internal(&lock_acquired);
 
-        if (lock_result != FT_ERR_SUCCESSS)
+        if (lock_result != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(lock_result);
             return (false);
         }
         this->unlock_internal(lock_acquired);
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (false);
     }
     const Iterator<ValueType> *first_iterator = this;
@@ -244,18 +244,18 @@ bool Iterator<ValueType>::operator!=(const Iterator& other) const noexcept
     bool first_lock_acquired = false;
     int first_lock_result = first_iterator->lock_internal(&first_lock_acquired);
 
-    if (first_lock_result != FT_ERR_SUCCESSS)
+    if (first_lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(first_lock_result);
         return (false);
     }
     bool second_lock_acquired = false;
-    int second_lock_result = FT_ERR_SUCCESSS;
+    int second_lock_result = FT_ERR_SUCCESS;
 
     if (second_iterator != first_iterator)
     {
         second_lock_result = second_iterator->lock_internal(&second_lock_acquired);
-        if (second_lock_result != FT_ERR_SUCCESSS)
+        if (second_lock_result != FT_ERR_SUCCESS)
         {
             first_iterator->unlock_internal(first_lock_acquired);
             ft_global_error_stack_push(second_lock_result);
@@ -268,7 +268,7 @@ bool Iterator<ValueType>::operator!=(const Iterator& other) const noexcept
         second_iterator->unlock_internal(second_lock_acquired);
     }
     first_iterator->unlock_internal(first_lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (result);
 }
 
@@ -279,7 +279,7 @@ ValueType& Iterator<ValueType>::operator*() const noexcept
     bool lock_acquired = false;
     int lock_result = this->lock_internal(&lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return (default_value);
@@ -292,7 +292,7 @@ ValueType& Iterator<ValueType>::operator*() const noexcept
     }
     ValueType& result = *this->_ptr;
     this->unlock_internal(lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (result);
 }
 
@@ -301,8 +301,8 @@ int Iterator<ValueType>::enable_thread_safety()
 {
     if (this->_mutex != ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-        return (FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     int result = this->prepare_thread_safety();
 
@@ -314,7 +314,7 @@ template <typename ValueType>
 void Iterator<ValueType>::disable_thread_safety()
 {
     this->teardown_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -323,7 +323,7 @@ bool Iterator<ValueType>::is_thread_safe_enabled() const noexcept
 {
     bool enabled = (this->_mutex != ft_nullptr);
 
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (enabled);
 }
 
@@ -333,7 +333,7 @@ int Iterator<ValueType>::lock(bool *lock_acquired) const
     int result = this->lock_internal(lock_acquired);
 
     ft_global_error_stack_push(result);
-    if (result != FT_ERR_SUCCESSS)
+    if (result != FT_ERR_SUCCESS)
     {
         return (-1);
     }
@@ -358,11 +358,11 @@ int Iterator<ValueType>::lock_internal(bool *lock_acquired) const
     }
     if (this->_mutex == ft_nullptr)
     {
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     }
     int result = pt_recursive_mutex_lock_with_error(*this->_mutex);
 
-    if (result == FT_ERR_SUCCESSS && lock_acquired != ft_nullptr)
+    if (result == FT_ERR_SUCCESS && lock_acquired != ft_nullptr)
     {
         *lock_acquired = true;
     }
@@ -374,7 +374,7 @@ int Iterator<ValueType>::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || this->_mutex == ft_nullptr)
     {
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     }
     return (pt_recursive_mutex_unlock_with_error(*this->_mutex));
 }
@@ -384,11 +384,11 @@ int Iterator<ValueType>::prepare_thread_safety()
 {
     if (this->_mutex != ft_nullptr)
     {
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     }
     int result = pt_recursive_mutex_create_with_error(&this->_mutex);
 
-    if (result != FT_ERR_SUCCESSS && this->_mutex != ft_nullptr)
+    if (result != FT_ERR_SUCCESS && this->_mutex != ft_nullptr)
     {
         pt_recursive_mutex_destroy(&this->_mutex);
     }

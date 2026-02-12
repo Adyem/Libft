@@ -1,7 +1,11 @@
+#include "../test_internal.hpp"
 #include "../../Template/queue.hpp"
 #include "../../Template/move.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_ft_queue_move_constructor_rebuilds_mutex,
         "ft_queue move constructor rebuilds thread-safety while preserving ordering")
@@ -25,7 +29,7 @@ FT_TEST(test_ft_queue_move_constructor_rebuilds_mutex,
     dequeued_value = moved_queue.dequeue();
     FT_ASSERT_EQ(9, dequeued_value);
     FT_ASSERT(moved_queue.empty());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, moved_queue.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_queue.get_error());
     return (1);
 }
 
@@ -57,7 +61,7 @@ FT_TEST(test_ft_queue_move_assignment_rebuilds_mutex,
     dequeued_value = destination_queue.dequeue();
     FT_ASSERT_EQ(21, dequeued_value);
     FT_ASSERT(destination_queue.empty());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, destination_queue.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_queue.get_error());
     return (1);
 }
 
@@ -104,6 +108,6 @@ FT_TEST(test_ft_queue_move_allows_reusing_source_after_transfer,
     FT_ASSERT(source_queue.is_thread_safe());
     source_queue.enqueue(30);
     FT_ASSERT_EQ(30, source_queue.dequeue());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, source_queue.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_queue.get_error());
     return (1);
 }

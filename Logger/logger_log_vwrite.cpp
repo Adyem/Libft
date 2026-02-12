@@ -21,7 +21,7 @@ static bool logger_sink_snapshot_contains(const ft_vector<s_log_sink> &snapshot,
 
     snapshot_count = snapshot.size();
     error_code = snapshot.get_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
         return (false);
     snapshot_index = 0;
     while (snapshot_index < snapshot_count)
@@ -30,7 +30,7 @@ static bool logger_sink_snapshot_contains(const ft_vector<s_log_sink> &snapshot,
 
         snapshot_entry = snapshot[snapshot_index];
         error_code = snapshot.get_error();
-        if (error_code != FT_ERR_SUCCESSS)
+        if (error_code != FT_ERR_SUCCESS)
             return (false);
         if (logger_sink_equals(snapshot_entry, entry))
             return (true);
@@ -50,7 +50,7 @@ static int logger_append_quoted_token(ft_string &buffer, const char *value)
         return (-1);
     }
     buffer.append('"');
-    if (buffer.get_error() != FT_ERR_SUCCESSS)
+    if (buffer.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = buffer.get_error();
         return (-1);
@@ -64,13 +64,13 @@ static int logger_append_quoted_token(ft_string &buffer, const char *value)
         if (character == '"' || character == '\\')
         {
             buffer.append('\\');
-            if (buffer.get_error() != FT_ERR_SUCCESSS)
+            if (buffer.get_error() != FT_ERR_SUCCESS)
             {
                 ft_errno = buffer.get_error();
                 return (-1);
             }
             buffer.append(character);
-            if (buffer.get_error() != FT_ERR_SUCCESSS)
+            if (buffer.get_error() != FT_ERR_SUCCESS)
             {
                 ft_errno = buffer.get_error();
                 return (-1);
@@ -86,7 +86,7 @@ static int logger_append_quoted_token(ft_string &buffer, const char *value)
             escape_buffer[3] = hex_digits[static_cast<unsigned char>(character) & 0x0F];
             escape_buffer[4] = '\0';
             buffer.append(escape_buffer);
-            if (buffer.get_error() != FT_ERR_SUCCESSS)
+            if (buffer.get_error() != FT_ERR_SUCCESS)
             {
                 ft_errno = buffer.get_error();
                 return (-1);
@@ -95,7 +95,7 @@ static int logger_append_quoted_token(ft_string &buffer, const char *value)
         else
         {
             buffer.append(character);
-            if (buffer.get_error() != FT_ERR_SUCCESSS)
+            if (buffer.get_error() != FT_ERR_SUCCESS)
             {
                 ft_errno = buffer.get_error();
                 return (-1);
@@ -104,12 +104,12 @@ static int logger_append_quoted_token(ft_string &buffer, const char *value)
         index += 1;
     }
     buffer.append('"');
-    if (buffer.get_error() != FT_ERR_SUCCESSS)
+    if (buffer.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = buffer.get_error();
         return (-1);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (0);
 }
 
@@ -122,13 +122,13 @@ int logger_build_standard_message(t_log_level level, const ft_string &message_te
     char severity_buffer[16];
     int severity_length;
 
-    if (message_text.get_error() != FT_ERR_SUCCESSS)
+    if (message_text.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = message_text.get_error();
         return (-1);
     }
     timestamp = time_format_iso8601(time_now());
-    if (timestamp.get_error() != FT_ERR_SUCCESSS)
+    if (timestamp.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = timestamp.get_error();
         return (-1);
@@ -141,50 +141,50 @@ int logger_build_standard_message(t_log_level level, const ft_string &message_te
         return (-1);
     }
     assembled = ft_string("time=");
-    if (assembled.get_error() != FT_ERR_SUCCESSS)
+    if (assembled.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = assembled.get_error();
         return (-1);
     }
     assembled.append(timestamp);
-    if (assembled.get_error() != FT_ERR_SUCCESSS)
+    if (assembled.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = assembled.get_error();
         return (-1);
     }
     assembled.append(" level=");
-    if (assembled.get_error() != FT_ERR_SUCCESSS)
+    if (assembled.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = assembled.get_error();
         return (-1);
     }
     assembled.append(ft_level_to_str(level));
-    if (assembled.get_error() != FT_ERR_SUCCESSS)
+    if (assembled.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = assembled.get_error();
         return (-1);
     }
     assembled.append(" severity=");
-    if (assembled.get_error() != FT_ERR_SUCCESSS)
+    if (assembled.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = assembled.get_error();
         return (-1);
     }
     assembled.append(severity_buffer);
-    if (assembled.get_error() != FT_ERR_SUCCESSS)
+    if (assembled.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = assembled.get_error();
         return (-1);
     }
     assembled.append(" message=");
-    if (assembled.get_error() != FT_ERR_SUCCESSS)
+    if (assembled.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = assembled.get_error();
         return (-1);
     }
     if (logger_append_quoted_token(assembled, message_text.c_str()) != 0)
         return (-1);
-    if (context_fragment.get_error() != FT_ERR_SUCCESSS)
+    if (context_fragment.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = context_fragment.get_error();
         return (-1);
@@ -192,31 +192,31 @@ int logger_build_standard_message(t_log_level level, const ft_string &message_te
     if (context_fragment.size() > 0)
     {
         assembled.append(' ');
-        if (assembled.get_error() != FT_ERR_SUCCESSS)
+        if (assembled.get_error() != FT_ERR_SUCCESS)
         {
             ft_errno = assembled.get_error();
             return (-1);
         }
         assembled.append(context_fragment);
-        if (assembled.get_error() != FT_ERR_SUCCESSS)
+        if (assembled.get_error() != FT_ERR_SUCCESS)
         {
             ft_errno = assembled.get_error();
             return (-1);
         }
     }
     assembled.append('\n');
-    if (assembled.get_error() != FT_ERR_SUCCESSS)
+    if (assembled.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = assembled.get_error();
         return (-1);
     }
     formatted_message = assembled;
-    if (formatted_message.get_error() != FT_ERR_SUCCESSS)
+    if (formatted_message.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = formatted_message.get_error();
         return (-1);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (0);
 }
 
@@ -241,7 +241,7 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
     }
     if (level < g_level)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESS;
         return ;
     }
     va_copy(args_copy, args);
@@ -250,12 +250,12 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
     format_error = ft_global_error_stack_drop_last_error();
     if (formatted_length < 0)
     {
-        if (format_error != FT_ERR_SUCCESSS)
+        if (format_error != FT_ERR_SUCCESS)
             ft_errno = format_error;
         return ;
     }
     message_text = ft_string(message_buffer);
-    if (message_text.get_error() != FT_ERR_SUCCESSS)
+    if (message_text.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = message_text.get_error();
         return ;
@@ -263,7 +263,7 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
     if (logger_lock_sinks() != 0)
         return ;
     sink_count = g_sinks.size();
-    if (g_sinks.get_error() != FT_ERR_SUCCESSS)
+    if (g_sinks.get_error() != FT_ERR_SUCCESS)
     {
         final_error = g_sinks.get_error();
         if (logger_unlock_sinks() != 0)
@@ -284,7 +284,7 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
             s_log_sink entry;
 
             entry = g_sinks[index];
-            if (g_sinks.get_error() != FT_ERR_SUCCESSS)
+            if (g_sinks.get_error() != FT_ERR_SUCCESS)
             {
                 final_error = g_sinks.get_error();
                 if (logger_unlock_sinks() != 0)
@@ -295,9 +295,9 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
             int contains_error;
             bool is_duplicate;
 
-            contains_error = FT_ERR_SUCCESSS;
+            contains_error = FT_ERR_SUCCESS;
             is_duplicate = logger_sink_snapshot_contains(sinks_snapshot, entry, contains_error);
-            if (contains_error != FT_ERR_SUCCESSS)
+            if (contains_error != FT_ERR_SUCCESS)
             {
                 final_error = contains_error;
                 if (logger_unlock_sinks() != 0)
@@ -308,7 +308,7 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
             if (!is_duplicate)
             {
                 sinks_snapshot.push_back(entry);
-                if (sinks_snapshot.get_error() != FT_ERR_SUCCESSS)
+                if (sinks_snapshot.get_error() != FT_ERR_SUCCESS)
                 {
                     final_error = sinks_snapshot.get_error();
                     if (logger_unlock_sinks() != 0)
@@ -334,7 +334,7 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
         return ;
     if (logger_context_format_flat(context_fragment) != 0)
         return ;
-    if (context_fragment.get_error() != FT_ERR_SUCCESSS)
+    if (context_fragment.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = context_fragment.get_error();
         return ;
@@ -346,7 +346,7 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
     }
     if (logger_build_standard_message(level, message_text, context_fragment, final_message) != 0)
         return ;
-    if (final_message.get_error() != FT_ERR_SUCCESSS)
+    if (final_message.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = final_message.get_error();
         return ;
@@ -396,14 +396,14 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
                 return ;
             }
         }
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESS;
         return ;
     }
     size_t snapshot_count;
     size_t index;
 
     snapshot_count = sinks_snapshot.size();
-    if (sinks_snapshot.get_error() != FT_ERR_SUCCESSS)
+    if (sinks_snapshot.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = sinks_snapshot.get_error();
         return ;
@@ -414,7 +414,7 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
         s_log_sink entry;
 
         entry = sinks_snapshot[index];
-        if (sinks_snapshot.get_error() != FT_ERR_SUCCESSS)
+        if (sinks_snapshot.get_error() != FT_ERR_SUCCESS)
         {
             ft_errno = sinks_snapshot.get_error();
             return ;
@@ -424,9 +424,9 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
         int sink_lock_error;
 
         sink_lock_acquired = false;
-        sink_error = FT_ERR_SUCCESSS;
+        sink_error = FT_ERR_SUCCESS;
         sink_lock_error = log_sink_lock(&entry, &sink_lock_acquired);
-        if (sink_lock_error != FT_ERR_SUCCESSS)
+        if (sink_lock_error != FT_ERR_SUCCESS)
             sink_error = sink_lock_error;
         else
         {
@@ -443,13 +443,13 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
                 if (logger_prepare_rotation(file_sink, &rotate_for_size_pre, &rotate_for_age_pre) != 0)
                     sink_error = ft_errno;
             }
-            if (sink_error == FT_ERR_SUCCESSS)
+            if (sink_error == FT_ERR_SUCCESS)
             {
                 entry.function(final_message.c_str(), entry.user_data);
-                if (ft_errno != FT_ERR_SUCCESSS)
+                if (ft_errno != FT_ERR_SUCCESS)
                     sink_error = ft_errno;
             }
-            if (sink_error == FT_ERR_SUCCESSS && entry.function == ft_file_sink)
+            if (sink_error == FT_ERR_SUCCESS && entry.function == ft_file_sink)
             {
                 bool rotate_for_size_post;
                 bool rotate_for_age_post;
@@ -461,20 +461,20 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
                 else if (rotate_for_size_pre || rotate_for_age_pre || rotate_for_size_post || rotate_for_age_post)
                 {
                     logger_execute_rotation(file_sink);
-                    if (ft_errno != FT_ERR_SUCCESSS)
+                    if (ft_errno != FT_ERR_SUCCESS)
                         sink_error = ft_errno;
                 }
             }
         }
         if (sink_lock_acquired)
             log_sink_unlock(&entry, sink_lock_acquired);
-        if (sink_error != FT_ERR_SUCCESSS)
+        if (sink_error != FT_ERR_SUCCESS)
         {
             ft_errno = sink_error;
             return ;
         }
         index += 1;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return ;
 }

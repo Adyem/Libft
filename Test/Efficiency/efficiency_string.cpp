@@ -1,5 +1,9 @@
+#include "../test_internal.hpp"
 #include "../../CPP_class/class_string.hpp"
 #include "utils.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 #include <string>
 #include <utility>

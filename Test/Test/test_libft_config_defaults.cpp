@@ -1,5 +1,9 @@
+#include "../test_internal.hpp"
 #include "../../Basic/basic.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 static_assert(LIBFT_HAS_ENVIRONMENT_HELPERS == 1, "environment helpers enabled by default");
 static_assert(LIBFT_HAS_FILE_IO_HELPERS == 1, "file helpers enabled by default");

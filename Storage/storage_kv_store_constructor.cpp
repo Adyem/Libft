@@ -9,7 +9,7 @@ static int storage_kv_move_string_error(ft_string &value) noexcept
     unsigned long long operation_id = value.last_operation_id();
 
     if (operation_id == 0)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     return (value.pop_operation_error(operation_id));
 }
 
@@ -24,7 +24,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
     , _background_interval_seconds(0)
     , _background_thread()
     , _background_mutex()
-    , _error_code(FT_ERR_SUCCESSS)
+    , _error_code(FT_ERR_SUCCESS)
     , _mutex()
     , _metrics_set_operations(0)
     , _metrics_delete_operations(0)
@@ -50,7 +50,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
     }
     this->_file_path = file_path;
     int file_path_error = storage_kv_move_string_error(this->_file_path);
-    if (file_path_error != FT_ERR_SUCCESSS)
+    if (file_path_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(file_path_error);
         return ;
@@ -64,7 +64,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
         }
         this->_encryption_key = encryption_key;
         int encryption_key_error = storage_kv_move_string_error(this->_encryption_key);
-        if (encryption_key_error != FT_ERR_SUCCESSS)
+        if (encryption_key_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(encryption_key_error);
             return ;
@@ -83,7 +83,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
         {
             this->_encryption_key = encryption_key;
             int encryption_key_error = storage_kv_move_string_error(this->_encryption_key);
-            if (encryption_key_error != FT_ERR_SUCCESSS)
+            if (encryption_key_error != FT_ERR_SUCCESS)
             {
                 ft_global_error_stack_push(encryption_key_error);
                 return ;
@@ -136,7 +136,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
             long long expiration_timestamp;
 
             int ttl_key_error = storage_kv_move_string_error(ttl_key);
-            if (ttl_key_error != FT_ERR_SUCCESSS)
+            if (ttl_key_error != FT_ERR_SUCCESS)
             {
                 json_free_groups(group_head);
                 ft_global_error_stack_push(ttl_key_error);
@@ -149,7 +149,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
             }
             ttl_metadata.insert(ttl_key, expiration_timestamp);
             int ttl_metadata_pop_error = ft_global_error_stack_peek_last_error();
-            if (ttl_metadata_pop_error != FT_ERR_SUCCESSS)
+            if (ttl_metadata_pop_error != FT_ERR_SUCCESS)
             {
                 json_free_groups(group_head);
                 ft_global_error_stack_push(ttl_metadata_pop_error);
@@ -162,7 +162,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
         kv_store_entry entry;
 
         int key_storage_error = storage_kv_move_string_error(key_storage);
-        if (key_storage_error != FT_ERR_SUCCESSS)
+        if (key_storage_error != FT_ERR_SUCCESS)
         {
             json_free_groups(group_head);
             ft_global_error_stack_push(key_storage_error);
@@ -180,7 +180,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
             ft_string decrypted_value;
 
             int encoded_value_error = storage_kv_move_string_error(encoded_value);
-            if (encoded_value_error != FT_ERR_SUCCESSS)
+            if (encoded_value_error != FT_ERR_SUCCESS)
             {
                 json_free_groups(group_head);
                 ft_global_error_stack_push(encoded_value_error);
@@ -203,7 +203,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
             ft_string plain_value(item_pointer->value);
 
             int plain_value_error = storage_kv_move_string_error(plain_value);
-            if (plain_value_error != FT_ERR_SUCCESSS)
+            if (plain_value_error != FT_ERR_SUCCESS)
             {
                 json_free_groups(group_head);
                 ft_global_error_stack_push(plain_value_error);
@@ -218,7 +218,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
         }
         this->_data.insert(key_storage, entry);
         int data_insert_pop_error = ft_global_error_stack_peek_last_error();
-        if (data_insert_pop_error != FT_ERR_SUCCESSS)
+        if (data_insert_pop_error != FT_ERR_SUCCESS)
         {
             json_free_groups(group_head);
             ft_global_error_stack_push(data_insert_pop_error);
@@ -230,7 +230,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
 
     ttl_size = ttl_metadata.size();
     int ttl_metadata_size_pop_error = ft_global_error_stack_peek_last_error();
-    if (ttl_metadata_size_pop_error != FT_ERR_SUCCESSS)
+    if (ttl_metadata_size_pop_error != FT_ERR_SUCCESS)
     {
         json_free_groups(group_head);
         ft_global_error_stack_push(ttl_metadata_size_pop_error);
@@ -244,7 +244,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
 
         ttl_end = ttl_metadata.end();
         int ttl_metadata_range_pop_error = ft_global_error_stack_peek_last_error();
-        if (ttl_metadata_range_pop_error != FT_ERR_SUCCESSS)
+        if (ttl_metadata_range_pop_error != FT_ERR_SUCCESS)
         {
             json_free_groups(group_head);
             ft_global_error_stack_push(ttl_metadata_range_pop_error);
@@ -259,7 +259,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
 
             data_pair = this->_data.find(ttl_entry.key);
             int data_iteration_pop_error = ft_global_error_stack_peek_last_error();
-            if (data_iteration_pop_error != FT_ERR_SUCCESSS)
+            if (data_iteration_pop_error != FT_ERR_SUCCESS)
             {
                 json_free_groups(group_head);
                 ft_global_error_stack_push(data_iteration_pop_error);
@@ -283,7 +283,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
         return ;
     }
     json_free_groups(group_head);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 

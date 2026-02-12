@@ -36,7 +36,7 @@ int32_t cmp_service_format_pid_line(char *buffer, ft_size_t buffer_size,
         return (FT_ERR_IO);
     if (length_out != ft_nullptr)
         *length_out = static_cast<ft_size_t>(formatted);
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 void cmp_set_force_unsetenv_result(int32_t result, int32_t errno_value);
@@ -500,7 +500,7 @@ static int32_t cmp_translate_posix_error(int32_t error_code)
 int32_t cmp_map_system_error_to_ft(int32_t error_code)
 {
     if (error_code == 0)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
 #if defined(_WIN32) || defined(_WIN64)
     return (cmp_translate_windows_error(error_code));
 #else
@@ -709,7 +709,7 @@ int32_t cmp_setenv(const char *name, const char *value, int32_t overwrite)
 #if defined(_WIN32) || defined(_WIN64)
     if (!overwrite && getenv(name) != ft_nullptr)
     {
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     }
     errno = 0;
     SetLastError(0);
@@ -721,7 +721,7 @@ int32_t cmp_setenv(const char *name, const char *value, int32_t overwrite)
             errno = result;
         return (cmp_environment_map_last_error());
     }
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 #else
     errno = 0;
     int32_t result = setenv(name, value, overwrite);
@@ -729,7 +729,7 @@ int32_t cmp_setenv(const char *name, const char *value, int32_t overwrite)
     {
         return (cmp_environment_map_last_error());
     }
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 #endif
 }
 
@@ -748,7 +748,7 @@ int32_t cmp_unsetenv(const char *name)
         int32_t forced_result = global_force_unsetenv_result;
         if (forced_result != 0)
             return (cmp_environment_map_last_error());
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     }
     errno = 0;
     SetLastError(0);
@@ -760,7 +760,7 @@ int32_t cmp_unsetenv(const char *name)
             errno = result;
         return (cmp_environment_map_last_error());
     }
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 #else
     if (global_force_unsetenv_enabled != 0)
     {
@@ -768,7 +768,7 @@ int32_t cmp_unsetenv(const char *name)
         int32_t forced_result = global_force_unsetenv_result;
         if (forced_result != 0)
             return (cmp_environment_map_last_error());
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     }
     errno = 0;
     int32_t result = unsetenv(name);
@@ -776,7 +776,7 @@ int32_t cmp_unsetenv(const char *name)
     {
         return (cmp_environment_map_last_error());
     }
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 #endif
 }
 
@@ -798,7 +798,7 @@ int32_t cmp_putenv(char *string)
         result = global_force_putenv_result;
         if (result != 0)
             return (cmp_environment_map_last_error());
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     }
 #if defined(_WIN32) || defined(_WIN64)
     SetLastError(0);
@@ -808,14 +808,14 @@ int32_t cmp_putenv(char *string)
     {
         return (cmp_environment_map_last_error());
     }
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 #else
     result = putenv(string);
     if (result != 0)
     {
         return (cmp_environment_map_last_error());
     }
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 #endif
 }
 
@@ -980,7 +980,7 @@ int32_t cmp_get_total_memory(uint64_t *total_memory)
             return (error_code);
         }
         *total_memory = global_force_total_memory_value;
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     }
 #if defined(_WIN32) || defined(_WIN64)
     MEMORYSTATUSEX memory_status;
@@ -999,7 +999,7 @@ int32_t cmp_get_total_memory(uint64_t *total_memory)
         return (error_code);
     }
     *total_memory = memory_status.ullTotalPhys;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 #elif defined(__APPLE__) && defined(__MACH__)
     uint64_t memory_size;
     ft_size_t size;
@@ -1016,7 +1016,7 @@ int32_t cmp_get_total_memory(uint64_t *total_memory)
         return (error_code);
     }
     *total_memory = memory_size;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 #else
     int64_t pages;
     int64_t page_size;
@@ -1045,7 +1045,7 @@ int32_t cmp_get_total_memory(uint64_t *total_memory)
     }
     *total_memory = static_cast<uint64_t>(pages) *
         static_cast<uint64_t>(page_size);
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 #endif
 }
 

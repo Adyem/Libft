@@ -97,7 +97,7 @@ void Pool<T>::release(size_t idx) noexcept
     bool lock_acquired = false;
     int lock_result = this->lock_internal(&lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return ;
@@ -105,14 +105,14 @@ void Pool<T>::release(size_t idx) noexcept
     this->_freeIndices.push_back(idx);
     int vector_error = ft_global_error_stack_peek_last_error();
 
-    if (vector_error != FT_ERR_SUCCESSS)
+    if (vector_error != FT_ERR_SUCCESS)
     {
         this->unlock_internal(lock_acquired);
         ft_global_error_stack_push(vector_error);
         return ;
     }
     this->unlock_internal(lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 template<typename T>
@@ -125,7 +125,7 @@ T* Pool<T>::ptrAt(size_t idx) noexcept
         ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (reinterpret_cast<T*>(&this->_buffer[idx]));
 }
 
@@ -135,14 +135,14 @@ Pool<T>::Pool()
       _freeIndices(),
       _mutex(ft_nullptr)
 {
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 template<typename T>
 Pool<T>::~Pool()
 {
     this->teardown_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 template<typename T>
@@ -154,7 +154,7 @@ Pool<T>::Pool(Pool&& other)
     bool lock_acquired = false;
     int lock_result = other.lock_internal(&lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return ;
@@ -167,10 +167,10 @@ Pool<T>::Pool(Pool&& other)
     {
         int enable_result = this->enable_thread_safety();
 
-        if (enable_result != FT_ERR_SUCCESSS)
+        if (enable_result != FT_ERR_SUCCESS)
             return ;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 template<typename T>
@@ -178,13 +178,13 @@ Pool<T>& Pool<T>::operator=(Pool&& other)
 {
     if (this == &other)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (*this);
     }
     bool this_lock_acquired = false;
     int lock_result = this->lock_internal(&this_lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return (*this);
@@ -192,7 +192,7 @@ Pool<T>& Pool<T>::operator=(Pool&& other)
     bool other_lock_acquired = false;
     lock_result = other.lock_internal(&other_lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         this->unlock_internal(this_lock_acquired);
         ft_global_error_stack_push(lock_result);
@@ -208,10 +208,10 @@ Pool<T>& Pool<T>::operator=(Pool&& other)
     {
         int enable_result = this->enable_thread_safety();
 
-        if (enable_result != FT_ERR_SUCCESSS)
+        if (enable_result != FT_ERR_SUCCESS)
             return (*this);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (*this);
 }
 
@@ -221,7 +221,7 @@ void Pool<T>::resize(size_t new_size)
     bool lock_acquired = false;
     int lock_result = this->lock_internal(&lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return ;
@@ -230,7 +230,7 @@ void Pool<T>::resize(size_t new_size)
     int buffer_error = ft_global_error_stack_peek_last_error();
     ft_global_error_stack_push(buffer_error);
 
-    if (buffer_error != FT_ERR_SUCCESSS)
+    if (buffer_error != FT_ERR_SUCCESS)
     {
         this->unlock_internal(lock_acquired);
         ft_global_error_stack_push(buffer_error);
@@ -240,7 +240,7 @@ void Pool<T>::resize(size_t new_size)
     int free_error = ft_global_error_stack_peek_last_error();
     ft_global_error_stack_push(free_error);
 
-    if (free_error != FT_ERR_SUCCESSS)
+    if (free_error != FT_ERR_SUCCESS)
     {
         this->unlock_internal(lock_acquired);
         ft_global_error_stack_push(free_error);
@@ -250,7 +250,7 @@ void Pool<T>::resize(size_t new_size)
     free_error = ft_global_error_stack_peek_last_error();
     ft_global_error_stack_push(free_error);
 
-    if (free_error != FT_ERR_SUCCESSS)
+    if (free_error != FT_ERR_SUCCESS)
     {
         this->unlock_internal(lock_acquired);
         ft_global_error_stack_push(free_error);
@@ -264,7 +264,7 @@ void Pool<T>::resize(size_t new_size)
         int push_error = ft_global_error_stack_peek_last_error();
         ft_global_error_stack_push(push_error);
 
-        if (push_error != FT_ERR_SUCCESSS)
+        if (push_error != FT_ERR_SUCCESS)
         {
             this->unlock_internal(lock_acquired);
             ft_global_error_stack_push(push_error);
@@ -273,7 +273,7 @@ void Pool<T>::resize(size_t new_size)
         index = index + 1;
     }
     this->unlock_internal(lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 template<typename T>
@@ -283,7 +283,7 @@ typename Pool<T>::Object Pool<T>::acquire(Args&&... args)
     bool lock_acquired = false;
     int lock_result = this->lock_internal(&lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return (Object());
@@ -302,7 +302,7 @@ typename Pool<T>::Object Pool<T>::acquire(Args&&... args)
     int vector_error = ft_global_error_stack_drop_last_error();
     ft_global_error_stack_push(vector_error);
 
-    if (vector_error != FT_ERR_SUCCESSS)
+    if (vector_error != FT_ERR_SUCCESS)
     {
         this->unlock_internal(lock_acquired);
         ft_global_error_stack_push(vector_error);
@@ -322,7 +322,7 @@ typename Pool<T>::Object Pool<T>::acquire(Args&&... args)
     {
         int enable_result = result.enable_thread_safety();
 
-        if (enable_result != FT_ERR_SUCCESSS)
+        if (enable_result != FT_ERR_SUCCESS)
         {
             this->_freeIndices.push_back(idx);
             this->unlock_internal(lock_acquired);
@@ -331,7 +331,7 @@ typename Pool<T>::Object Pool<T>::acquire(Args&&... args)
         }
     }
     this->unlock_internal(lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (result);
 }
 
@@ -340,8 +340,8 @@ int Pool<T>::enable_thread_safety()
 {
     if (this->_mutex != ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-        return (FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     int result = this->prepare_thread_safety();
 
@@ -353,7 +353,7 @@ template<typename T>
 void Pool<T>::disable_thread_safety()
 {
     this->teardown_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 template<typename T>
@@ -361,7 +361,7 @@ bool Pool<T>::is_thread_safe_enabled() const
 {
     bool enabled = (this->_mutex != ft_nullptr);
 
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (enabled);
 }
 
@@ -371,7 +371,7 @@ int Pool<T>::lock(bool *lock_acquired) const
     int result = this->lock_internal(lock_acquired);
 
     ft_global_error_stack_push(result);
-    if (result != FT_ERR_SUCCESSS)
+    if (result != FT_ERR_SUCCESS)
         return (-1);
     return (0);
 }
@@ -390,10 +390,10 @@ int Pool<T>::lock_internal(bool *lock_acquired) const
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     int result = pt_recursive_mutex_lock_with_error(*this->_mutex);
 
-    if (result == FT_ERR_SUCCESSS && lock_acquired != ft_nullptr)
+    if (result == FT_ERR_SUCCESS && lock_acquired != ft_nullptr)
         *lock_acquired = true;
     return (result);
 }
@@ -402,7 +402,7 @@ template<typename T>
 int Pool<T>::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     return (pt_recursive_mutex_unlock_with_error(*this->_mutex));
 }
 
@@ -410,10 +410,10 @@ template<typename T>
 int Pool<T>::prepare_thread_safety()
 {
     if (this->_mutex != ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     int result = pt_recursive_mutex_create_with_error(&this->_mutex);
 
-    if (result != FT_ERR_SUCCESSS && this->_mutex != ft_nullptr)
+    if (result != FT_ERR_SUCCESS && this->_mutex != ft_nullptr)
         pt_recursive_mutex_destroy(&this->_mutex);
     return (result);
 }
@@ -480,7 +480,7 @@ T* Pool<T>::Object::operator->() const noexcept
         ft_global_error_stack_push(FT_ERR_INVALID_HANDLE);
         return (ft_nullptr);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (this->_ptr);
 }
 
@@ -489,7 +489,7 @@ Pool<T>::Object::operator bool() const noexcept
 {
     bool result = (this->_ptr != ft_nullptr);
 
-    ft_global_error_stack_push(result ? FT_ERR_SUCCESSS : FT_ERR_INVALID_HANDLE);
+    ft_global_error_stack_push(result ? FT_ERR_SUCCESS : FT_ERR_INVALID_HANDLE);
     return (result);
 }
 
@@ -528,8 +528,8 @@ int Pool<T>::Object::enable_thread_safety()
 {
     if (this->_mutex != ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-        return (FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     int result = this->prepare_thread_safety();
 
@@ -541,7 +541,7 @@ template<typename T>
 void Pool<T>::Object::disable_thread_safety()
 {
     this->teardown_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 template<typename T>
@@ -549,7 +549,7 @@ bool Pool<T>::Object::is_thread_safe_enabled() const
 {
     bool enabled = (this->_mutex != ft_nullptr);
 
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (enabled);
 }
 
@@ -559,7 +559,7 @@ int Pool<T>::Object::lock(bool *lock_acquired) const
     int result = this->lock_internal(lock_acquired);
 
     ft_global_error_stack_push(result);
-    if (result != FT_ERR_SUCCESSS)
+    if (result != FT_ERR_SUCCESS)
         return (-1);
     return (0);
 }
@@ -578,10 +578,10 @@ int Pool<T>::Object::lock_internal(bool *lock_acquired) const
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     int result = pt_recursive_mutex_lock_with_error(*this->_mutex);
 
-    if (result == FT_ERR_SUCCESSS && lock_acquired != ft_nullptr)
+    if (result == FT_ERR_SUCCESS && lock_acquired != ft_nullptr)
         *lock_acquired = true;
     return (result);
 }
@@ -590,7 +590,7 @@ template<typename T>
 int Pool<T>::Object::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     return (pt_recursive_mutex_unlock_with_error(*this->_mutex));
 }
 
@@ -598,10 +598,10 @@ template<typename T>
 int Pool<T>::Object::prepare_thread_safety()
 {
     if (this->_mutex != ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     int result = pt_recursive_mutex_create_with_error(&this->_mutex);
 
-    if (result != FT_ERR_SUCCESSS && this->_mutex != ft_nullptr)
+    if (result != FT_ERR_SUCCESS && this->_mutex != ft_nullptr)
         pt_recursive_mutex_destroy(&this->_mutex);
     return (result);
 }

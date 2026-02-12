@@ -1,3 +1,4 @@
+#include "../test_internal.hpp"
 #include "../../Storage/kv_store.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../File/file_utils.hpp"
@@ -9,6 +10,9 @@
 #include <cstdio>
 #include <cerrno>
 #include <string>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 #if defined(_WIN32) || defined(_WIN64)
 # include <windows.h>
@@ -24,7 +28,7 @@ static void remove_directory_if_present(const char *directory_path)
 
     directory_exists = 0;
     status = cmp_directory_exists(directory_path, &directory_exists, &error_code);
-    if (status != FT_ERR_SUCCESSS || directory_exists != 1)
+    if (status != FT_ERR_SUCCESS || directory_exists != 1)
         return ;
 #if defined(_WIN32) || defined(_WIN64)
     RemoveDirectoryA(directory_path);
@@ -105,11 +109,11 @@ FT_TEST(test_kv_store_flush_propagates_json_writer_errno, "kv_store flush propag
     FT_ASSERT_EQ(0, file_create_directory(directory_path, 0700));
     create_kv_store_file(file_path);
     kv_store store(file_path);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, store.get_error());
     FT_ASSERT_EQ(0, store.kv_delete("__placeholder__"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, store.get_error());
     FT_ASSERT_EQ(0, store.kv_set("key", "value"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, store.get_error());
     FT_ASSERT_EQ(0, file_delete(file_path));
     remove_directory_if_present(directory_path);
     flush_result = store.kv_flush();
@@ -134,15 +138,15 @@ FT_TEST(test_kv_store_encrypted_round_trip, "kv_store encrypted round trip")
     FT_ASSERT_EQ(0, file_create_directory(directory_path, 0700));
     create_kv_store_file(file_path);
     kv_store encrypted_store(file_path, encryption_key, true);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, encrypted_store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, encrypted_store.get_error());
     FT_ASSERT_EQ(0, encrypted_store.kv_delete("__placeholder__"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, encrypted_store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, encrypted_store.get_error());
     FT_ASSERT_EQ(0, encrypted_store.kv_set("secret", "value"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, encrypted_store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, encrypted_store.get_error());
     FT_ASSERT_EQ(0, encrypted_store.kv_flush());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, encrypted_store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, encrypted_store.get_error());
     kv_store reloaded_store(file_path, encryption_key, true);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, reloaded_store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, reloaded_store.get_error());
     FT_ASSERT(reloaded_store.kv_get("secret") != ft_nullptr);
     FT_ASSERT_EQ(0, ft_strcmp(reloaded_store.kv_get("secret"), "value"));
     std::string file_content = read_file_contents(file_path);
@@ -167,11 +171,11 @@ FT_TEST(test_kv_store_wrong_key_fails_to_decrypt, "kv_store wrong key fails to d
     FT_ASSERT_EQ(0, file_create_directory(directory_path, 0700));
     create_kv_store_file(file_path);
     kv_store encrypted_store(file_path, encryption_key, true);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, encrypted_store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, encrypted_store.get_error());
     FT_ASSERT_EQ(0, encrypted_store.kv_delete("__placeholder__"));
     FT_ASSERT_EQ(0, encrypted_store.kv_set("secret", "value"));
     FT_ASSERT_EQ(0, encrypted_store.kv_flush());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, encrypted_store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, encrypted_store.get_error());
     kv_store failing_store(file_path, wrong_key, true);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, failing_store.get_error());
     cleanup_paths(directory_path, file_path);
@@ -189,15 +193,15 @@ FT_TEST(test_kv_store_configure_encryption_validates_key, "kv_store configure en
     FT_ASSERT_EQ(0, file_create_directory(directory_path, 0700));
     create_kv_store_file(file_path);
     kv_store configurable_store(file_path);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, configurable_store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, configurable_store.get_error());
     FT_ASSERT_EQ(-1, configurable_store.configure_encryption(ft_nullptr, true));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, configurable_store.get_error());
     FT_ASSERT_EQ(-1, configurable_store.configure_encryption("short", true));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, configurable_store.get_error());
     FT_ASSERT_EQ(0, configurable_store.configure_encryption("sixteen-byte-key", true));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, configurable_store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, configurable_store.get_error());
     FT_ASSERT_EQ(0, configurable_store.configure_encryption(ft_nullptr, false));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, configurable_store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, configurable_store.get_error());
     cleanup_paths(directory_path, file_path);
     return (1);
 }
@@ -213,17 +217,17 @@ FT_TEST(test_kv_store_ttl_persistence, "kv_store ttl persistence")
     FT_ASSERT_EQ(0, file_create_directory(directory_path, 0700));
     create_kv_store_file(file_path);
     kv_store store(file_path);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, store.get_error());
     FT_ASSERT_EQ(0, store.kv_delete("__placeholder__"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, store.get_error());
     FT_ASSERT_EQ(0, store.kv_set("session", "token", 120));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, store.get_error());
     FT_ASSERT_EQ(0, store.kv_flush());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, store.get_error());
     std::string file_content = read_file_contents(file_path);
     FT_ASSERT(file_content.find("__ttl__session") != std::string::npos);
     kv_store reloaded_store(file_path);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, reloaded_store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, reloaded_store.get_error());
     FT_ASSERT(reloaded_store.kv_get("session") != ft_nullptr);
     FT_ASSERT_EQ(0, ft_strcmp(reloaded_store.kv_get("session"), "token"));
     cleanup_paths(directory_path, file_path);
@@ -243,17 +247,17 @@ FT_TEST(test_kv_store_encrypted_ttl_persistence, "kv_store encrypted ttl persist
     FT_ASSERT_EQ(0, file_create_directory(directory_path, 0700));
     create_kv_store_file(file_path);
     kv_store encrypted_store(file_path, encryption_key, true);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, encrypted_store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, encrypted_store.get_error());
     FT_ASSERT_EQ(0, encrypted_store.kv_delete("__placeholder__"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, encrypted_store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, encrypted_store.get_error());
     FT_ASSERT_EQ(0, encrypted_store.kv_set("session", "token", 90));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, encrypted_store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, encrypted_store.get_error());
     FT_ASSERT_EQ(0, encrypted_store.kv_flush());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, encrypted_store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, encrypted_store.get_error());
     std::string file_content = read_file_contents(file_path);
     FT_ASSERT(file_content.find("__ttl__session") != std::string::npos);
     kv_store reloaded_store(file_path, encryption_key, true);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, reloaded_store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, reloaded_store.get_error());
     FT_ASSERT(reloaded_store.kv_get("session") != ft_nullptr);
     FT_ASSERT_EQ(0, ft_strcmp(reloaded_store.kv_get("session"), "token"));
     cleanup_paths(directory_path, file_path);
@@ -277,28 +281,28 @@ FT_TEST(test_kv_store_transactional_batch_commit, "kv_store transactional batch 
     FT_ASSERT_EQ(0, file_create_directory(directory_path, 0700));
     create_kv_store_file(file_path);
     kv_store store(file_path);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, store.get_error());
     FT_ASSERT_EQ(0, store.kv_delete("__placeholder__"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, store.get_error());
     FT_ASSERT_EQ(0, kv_store_init_set_operation(set_alpha, "alpha", "one"));
     FT_ASSERT_EQ(0, kv_store_init_set_operation(set_beta, "beta", "two", 60));
     FT_ASSERT_EQ(0, kv_store_init_delete_operation(delete_placeholder, "alpha"));
     operations.push_back(set_alpha);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, operations.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, operations.get_error());
     operations.push_back(set_beta);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, operations.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, operations.get_error());
     operations.push_back(delete_placeholder);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, operations.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, operations.get_error());
     FT_ASSERT_EQ(0, store.kv_apply(operations));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, store.get_error());
     FT_ASSERT_EQ(ft_nullptr, store.kv_get("alpha"));
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, store.get_error());
     beta_value = store.kv_get("beta");
     FT_ASSERT(beta_value != ft_nullptr);
     FT_ASSERT_EQ(0, ft_strcmp(beta_value, "two"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, store.get_error());
     FT_ASSERT_EQ(0, store.kv_flush());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, store.get_error());
     file_content = read_file_contents(file_path);
     FT_ASSERT(file_content.find("\"beta\": \"two\"") != std::string::npos);
     FT_ASSERT(file_content.find("__ttl__beta") != std::string::npos);
@@ -320,15 +324,15 @@ FT_TEST(test_kv_store_transactional_batch_rolls_back_on_error, "kv_store transac
     FT_ASSERT_EQ(0, file_create_directory(directory_path, 0700));
     create_kv_store_file(file_path);
     kv_store store(file_path);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, store.get_error());
     FT_ASSERT_EQ(0, store.kv_delete("__placeholder__"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, store.get_error());
     FT_ASSERT_EQ(0, kv_store_init_set_operation(set_gamma, "gamma", "value"));
     FT_ASSERT_EQ(0, kv_store_init_delete_operation(delete_missing, "does-not-exist"));
     operations.push_back(set_gamma);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, operations.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, operations.get_error());
     operations.push_back(delete_missing);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, operations.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, operations.get_error());
     FT_ASSERT_EQ(-1, store.kv_apply(operations));
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, store.get_error());
     FT_ASSERT_EQ(ft_nullptr, store.kv_get("gamma"));
@@ -349,37 +353,37 @@ FT_TEST(test_kv_store_compare_and_swap_behaviour, "kv_store compare_and_swap enf
     FT_ASSERT_EQ(0, file_create_directory(directory_path, 0700));
     create_kv_store_file(file_path);
     kv_store store(file_path);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, store.get_error());
     FT_ASSERT_EQ(0, store.kv_delete("__placeholder__"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, store.get_error());
     FT_ASSERT_EQ(0, store.kv_set("target", "initial"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, store.get_error());
     FT_ASSERT_EQ(0, store.kv_compare_and_swap("target", "initial", "updated"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, store.get_error());
     value_pointer = store.kv_get("target");
     FT_ASSERT(value_pointer != ft_nullptr);
     FT_ASSERT_EQ(0, ft_strcmp(value_pointer, "updated"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, store.get_error());
     FT_ASSERT_EQ(-1, store.kv_compare_and_swap("target", "wrong", "replacement"));
     FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, store.get_error());
     value_pointer = store.kv_get("target");
     FT_ASSERT(value_pointer != ft_nullptr);
     FT_ASSERT_EQ(0, ft_strcmp(value_pointer, "updated"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, store.get_error());
     FT_ASSERT_EQ(0, store.kv_compare_and_swap("fresh", ft_nullptr, "created"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, store.get_error());
     value_pointer = store.kv_get("fresh");
     FT_ASSERT(value_pointer != ft_nullptr);
     FT_ASSERT_EQ(0, ft_strcmp(value_pointer, "created"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, store.get_error());
     FT_ASSERT_EQ(-1, store.kv_compare_and_swap("fresh", ft_nullptr, "should-fail"));
     FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, store.get_error());
     FT_ASSERT_EQ(0, store.kv_compare_and_swap("fresh", "created", ft_nullptr));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, store.get_error());
     FT_ASSERT_EQ(ft_nullptr, store.kv_get("fresh"));
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, store.get_error());
     FT_ASSERT_EQ(0, store.kv_compare_and_swap("ttl", ft_nullptr, "temp", 0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, store.get_error());
     FT_ASSERT_EQ(ft_nullptr, store.kv_get("ttl"));
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, store.get_error());
     cleanup_paths(directory_path, file_path);
@@ -397,11 +401,11 @@ FT_TEST(test_kv_store_expired_entries_are_evicted, "kv_store expired entries are
     FT_ASSERT_EQ(0, file_create_directory(directory_path, 0700));
     create_kv_store_file(file_path);
     kv_store store(file_path);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, store.get_error());
     FT_ASSERT_EQ(0, store.kv_delete("__placeholder__"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, store.get_error());
     FT_ASSERT_EQ(0, store.kv_set("temporary", "value", 1));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, store.get_error());
 #if defined(_WIN32) || defined(_WIN64)
     Sleep(1500);
 #else
@@ -428,11 +432,11 @@ FT_TEST(test_kv_store_loads_legacy_format, "kv_store loads legacy format")
     std::fputs("{\n  \"kv_store\": {\n    \"legacy\": \"data\"\n  }\n}\n", file_pointer);
     ft_fclose(file_pointer);
     kv_store store(file_path);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, store.get_error());
     FT_ASSERT(store.kv_get("legacy") != ft_nullptr);
     FT_ASSERT_EQ(0, ft_strcmp(store.kv_get("legacy"), "data"));
     FT_ASSERT_EQ(0, store.kv_flush());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, store.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, store.get_error());
     std::string file_content = read_file_contents(file_path);
     FT_ASSERT(file_content.find("__ttl__legacy") == std::string::npos);
     cleanup_paths(directory_path, file_path);

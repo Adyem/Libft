@@ -11,9 +11,9 @@ static int file_string_error(const ft_string &string_value) noexcept
 
     operation_id = string_value.last_operation_id();
     if (operation_id == 0)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     error_code = string_value.pop_operation_error(operation_id);
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
         ft_global_error_stack_push_entry_with_id(error_code, operation_id);
     return (error_code);
 }
@@ -34,16 +34,16 @@ int file_dir_exists(const char *rel_path)
     int status;
 
     error_code = file_string_error(path);
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
         return (-1);
     exists_value = 0;
     status = cmp_directory_exists(path.c_str(), &exists_value, &error_code);
-    if (status != FT_ERR_SUCCESSS)
+    if (status != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(error_code);
         return (-1);
     }
     result = exists_value;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (result);
 }

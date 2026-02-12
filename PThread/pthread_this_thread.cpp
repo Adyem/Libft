@@ -28,10 +28,10 @@ t_thread_id ft_this_thread_get_id()
 
     thread_identifier.native_id = pt_thread_self();
     error_code = ft_global_error_stack_drop_last_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
         ft_global_error_stack_push(error_code);
     else
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (thread_identifier);
 }
 
@@ -44,7 +44,7 @@ void ft_this_thread_sleep_for(t_duration_milliseconds duration)
     remaining_milliseconds = duration.milliseconds;
     if (remaining_milliseconds <= 0)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return ;
     }
     while (remaining_milliseconds > 0)
@@ -52,24 +52,24 @@ void ft_this_thread_sleep_for(t_duration_milliseconds duration)
         chunk_milliseconds = ft_this_thread_get_sleep_chunk(remaining_milliseconds);
         if (chunk_milliseconds == 0)
         {
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
+            ft_global_error_stack_push(FT_ERR_SUCCESS);
             return ;
         }
         pt_thread_sleep(chunk_milliseconds);
         error_code = ft_global_error_stack_drop_last_error();
-        if (error_code != FT_ERR_SUCCESSS)
+        if (error_code != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(error_code);
             return ;
         }
         if (remaining_milliseconds <= static_cast<long long>(chunk_milliseconds))
         {
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
+            ft_global_error_stack_push(FT_ERR_SUCCESS);
             return ;
         }
         remaining_milliseconds -= static_cast<long long>(chunk_milliseconds);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -84,18 +84,18 @@ void ft_this_thread_sleep_until(t_monotonic_time_point time_point)
     remaining_milliseconds = time_monotonic_point_diff_ms(current_time, time_point);
     if (remaining_milliseconds <= 0)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return ;
     }
     duration = time_duration_ms_create(remaining_milliseconds);
     ft_this_thread_sleep_for(duration);
     error_code = ft_global_error_stack_drop_last_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(error_code);
         return ;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -105,11 +105,11 @@ void ft_this_thread_yield()
 
     pt_thread_yield();
     error_code = ft_global_error_stack_drop_last_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(error_code);
         return ;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }

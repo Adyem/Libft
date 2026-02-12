@@ -1,7 +1,11 @@
+#include "../test_internal.hpp"
 #include "../../Template/iterator.hpp"
 #include "../../Template/move.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_iterator_copy_constructor_rebuilds_mutex,
         "Iterator copy constructor recreates mutex and keeps pointer")

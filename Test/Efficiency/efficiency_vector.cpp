@@ -1,6 +1,10 @@
+#include "../test_internal.hpp"
 #include "../../Template/vector.hpp"
 #include "../../Template/swap.hpp"
 #include "utils.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 #include <vector>
 #include <utility>

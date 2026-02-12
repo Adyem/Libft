@@ -14,12 +14,12 @@ static void game_dialogue_copy_int_vector(const ft_vector<int> &source, ft_vecto
         destination.push_back(*entry);
         ++entry;
     }
-    if (destination.get_error() != FT_ERR_SUCCESSS)
+    if (destination.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = destination.get_error();
         return ;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return ;
 }
 
@@ -35,15 +35,15 @@ int ft_dialogue_line::lock_pair(const ft_dialogue_line &first, const ft_dialogue
     {
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
 
-        if (single_guard.get_error() != FT_ERR_SUCCESSS)
+        if (single_guard.get_error() != FT_ERR_SUCCESS)
         {
             ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ERR_SUCCESSS;
-        return (FT_ERR_SUCCESSS);
+        ft_errno = FT_ERR_SUCCESS;
+        return (FT_ERR_SUCCESS);
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -61,13 +61,13 @@ int ft_dialogue_line::lock_pair(const ft_dialogue_line &first, const ft_dialogue
     {
         ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
 
-        if (lower_guard.get_error() != FT_ERR_SUCCESSS)
+        if (lower_guard.get_error() != FT_ERR_SUCCESS)
         {
             ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ERR_SUCCESSS)
+        if (upper_guard.get_error() == FT_ERR_SUCCESS)
         {
             if (!swapped)
             {
@@ -79,8 +79,8 @@ int ft_dialogue_line::lock_pair(const ft_dialogue_line &first, const ft_dialogue
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = FT_ERR_SUCCESSS;
-            return (FT_ERR_SUCCESSS);
+            ft_errno = FT_ERR_SUCCESS;
+            return (FT_ERR_SUCCESS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -94,7 +94,7 @@ int ft_dialogue_line::lock_pair(const ft_dialogue_line &first, const ft_dialogue
 }
 
 ft_dialogue_line::ft_dialogue_line() noexcept
-    : _line_id(0), _speaker(), _text(), _next_line_ids(), _error_code(FT_ERR_SUCCESSS)
+    : _line_id(0), _speaker(), _text(), _next_line_ids(), _error_code(FT_ERR_SUCCESS)
 {
     return ;
 }
@@ -102,7 +102,7 @@ ft_dialogue_line::ft_dialogue_line() noexcept
 ft_dialogue_line::ft_dialogue_line(int line_id, const ft_string &speaker, const ft_string &text,
         const ft_vector<int> &next_line_ids) noexcept
     : _line_id(line_id), _speaker(speaker), _text(text), _next_line_ids(),
-    _error_code(FT_ERR_SUCCESSS)
+    _error_code(FT_ERR_SUCCESS)
 {
     game_dialogue_copy_int_vector(next_line_ids, this->_next_line_ids);
     return ;
@@ -114,10 +114,10 @@ ft_dialogue_line::~ft_dialogue_line() noexcept
 }
 
 ft_dialogue_line::ft_dialogue_line(const ft_dialogue_line &other) noexcept
-    : _line_id(0), _speaker(), _text(), _next_line_ids(), _error_code(FT_ERR_SUCCESSS)
+    : _line_id(0), _speaker(), _text(), _next_line_ids(), _error_code(FT_ERR_SUCCESS)
 {
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESSS)
+    if (other_guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(other_guard.get_error());
         return ;
@@ -139,7 +139,7 @@ ft_dialogue_line &ft_dialogue_line::operator=(const ft_dialogue_line &other) noe
     if (this == &other)
         return (*this);
     lock_error = ft_dialogue_line::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         return (*this);
@@ -153,10 +153,10 @@ ft_dialogue_line &ft_dialogue_line::operator=(const ft_dialogue_line &other) noe
 }
 
 ft_dialogue_line::ft_dialogue_line(ft_dialogue_line &&other) noexcept
-    : _line_id(0), _speaker(), _text(), _next_line_ids(), _error_code(FT_ERR_SUCCESSS)
+    : _line_id(0), _speaker(), _text(), _next_line_ids(), _error_code(FT_ERR_SUCCESS)
 {
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESSS)
+    if (other_guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(other_guard.get_error());
         return ;
@@ -170,7 +170,7 @@ ft_dialogue_line::ft_dialogue_line(ft_dialogue_line &&other) noexcept
     other._speaker.clear();
     other._text.clear();
     other._next_line_ids.clear();
-    other._error_code = FT_ERR_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESS;
     return ;
 }
 
@@ -183,7 +183,7 @@ ft_dialogue_line &ft_dialogue_line::operator=(ft_dialogue_line &&other) noexcept
     if (this == &other)
         return (*this);
     lock_error = ft_dialogue_line::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         return (*this);
@@ -197,7 +197,7 @@ ft_dialogue_line &ft_dialogue_line::operator=(ft_dialogue_line &&other) noexcept
     other._speaker.clear();
     other._text.clear();
     other._next_line_ids.clear();
-    other._error_code = FT_ERR_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESS;
     return (*this);
 }
 
@@ -206,7 +206,7 @@ int ft_dialogue_line::get_line_id() const noexcept
     int line_id;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return (0);
@@ -218,13 +218,13 @@ int ft_dialogue_line::get_line_id() const noexcept
 void ft_dialogue_line::set_line_id(int line_id) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
     }
     this->_line_id = line_id;
-    this->_error_code = FT_ERR_SUCCESSS;
+    this->_error_code = FT_ERR_SUCCESS;
     return ;
 }
 
@@ -233,7 +233,7 @@ const ft_string &ft_dialogue_line::get_speaker() const noexcept
     const ft_string *speaker;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return (this->_speaker);
@@ -245,13 +245,13 @@ const ft_string &ft_dialogue_line::get_speaker() const noexcept
 void ft_dialogue_line::set_speaker(const ft_string &speaker) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
     }
     this->_speaker = speaker;
-    this->_error_code = FT_ERR_SUCCESSS;
+    this->_error_code = FT_ERR_SUCCESS;
     return ;
 }
 
@@ -260,7 +260,7 @@ const ft_string &ft_dialogue_line::get_text() const noexcept
     const ft_string *text;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return (this->_text);
@@ -272,13 +272,13 @@ const ft_string &ft_dialogue_line::get_text() const noexcept
 void ft_dialogue_line::set_text(const ft_string &text) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
     }
     this->_text = text;
-    this->_error_code = FT_ERR_SUCCESSS;
+    this->_error_code = FT_ERR_SUCCESS;
     return ;
 }
 
@@ -287,7 +287,7 @@ const ft_vector<int> &ft_dialogue_line::get_next_line_ids() const noexcept
     const ft_vector<int> *next_lines;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return (this->_next_line_ids);
@@ -301,7 +301,7 @@ ft_vector<int> &ft_dialogue_line::get_next_line_ids() noexcept
     ft_vector<int> *next_lines;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return (this->_next_line_ids);
@@ -313,13 +313,13 @@ ft_vector<int> &ft_dialogue_line::get_next_line_ids() noexcept
 void ft_dialogue_line::set_next_line_ids(const ft_vector<int> &next_line_ids) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
     }
     game_dialogue_copy_int_vector(next_line_ids, this->_next_line_ids);
-    this->_error_code = FT_ERR_SUCCESSS;
+    this->_error_code = FT_ERR_SUCCESS;
     return ;
 }
 
@@ -328,7 +328,7 @@ int ft_dialogue_line::get_error() const noexcept
     int error_code;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
         return (guard.get_error());
     error_code = this->_error_code;
     return (error_code);

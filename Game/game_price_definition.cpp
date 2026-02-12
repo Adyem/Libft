@@ -13,15 +13,15 @@ int ft_price_definition::lock_pair(const ft_price_definition &first, const ft_pr
     {
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
 
-        if (single_guard.get_error() != FT_ERR_SUCCESSS)
+        if (single_guard.get_error() != FT_ERR_SUCCESS)
         {
             ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ERR_SUCCESSS;
-        return (FT_ERR_SUCCESSS);
+        ft_errno = FT_ERR_SUCCESS;
+        return (FT_ERR_SUCCESS);
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -39,13 +39,13 @@ int ft_price_definition::lock_pair(const ft_price_definition &first, const ft_pr
     {
         ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
 
-        if (lower_guard.get_error() != FT_ERR_SUCCESSS)
+        if (lower_guard.get_error() != FT_ERR_SUCCESS)
         {
             ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ERR_SUCCESSS)
+        if (upper_guard.get_error() == FT_ERR_SUCCESS)
         {
             if (!swapped)
             {
@@ -57,8 +57,8 @@ int ft_price_definition::lock_pair(const ft_price_definition &first, const ft_pr
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = FT_ERR_SUCCESSS;
-            return (FT_ERR_SUCCESSS);
+            ft_errno = FT_ERR_SUCCESS;
+            return (FT_ERR_SUCCESS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -73,27 +73,27 @@ int ft_price_definition::lock_pair(const ft_price_definition &first, const ft_pr
 
 ft_price_definition::ft_price_definition() noexcept
     : _item_id(0), _rarity(0), _base_value(0), _minimum_value(0), _maximum_value(0),
-    _error_code(FT_ERR_SUCCESSS)
+    _error_code(FT_ERR_SUCCESS)
 {
     return ;
 }
 
 ft_price_definition::ft_price_definition(int item_id, int rarity, int base_value, int minimum_value, int maximum_value) noexcept
     : _item_id(item_id), _rarity(rarity), _base_value(base_value), _minimum_value(minimum_value), _maximum_value(maximum_value),
-    _error_code(FT_ERR_SUCCESSS)
+    _error_code(FT_ERR_SUCCESS)
 {
     return ;
 }
 
 ft_price_definition::ft_price_definition(const ft_price_definition &other) noexcept
     : _item_id(0), _rarity(0), _base_value(0), _minimum_value(0), _maximum_value(0),
-    _error_code(FT_ERR_SUCCESSS)
+    _error_code(FT_ERR_SUCCESS)
 {
     ft_unique_lock<pt_mutex> self_guard;
     ft_unique_lock<pt_mutex> other_guard;
 
     if (ft_price_definition::lock_pair(*this, other, self_guard, other_guard)
-            != FT_ERR_SUCCESSS)
+            != FT_ERR_SUCCESS)
     {
         this->set_error(self_guard.get_error());
         return ;
@@ -115,7 +115,7 @@ ft_price_definition &ft_price_definition::operator=(const ft_price_definition &o
 
     if (this == &other)
         return (*this);
-    if (ft_price_definition::lock_pair(*this, other, self_guard, other_guard) != FT_ERR_SUCCESSS)
+    if (ft_price_definition::lock_pair(*this, other, self_guard, other_guard) != FT_ERR_SUCCESS)
     {
         this->set_error(self_guard.get_error());
         return (*this);
@@ -131,13 +131,13 @@ ft_price_definition &ft_price_definition::operator=(const ft_price_definition &o
 }
 
 ft_price_definition::ft_price_definition(ft_price_definition &&other) noexcept
-    : _item_id(0), _rarity(0), _base_value(0), _minimum_value(0), _maximum_value(0), _error_code(FT_ERR_SUCCESSS)
+    : _item_id(0), _rarity(0), _base_value(0), _minimum_value(0), _maximum_value(0), _error_code(FT_ERR_SUCCESS)
 {
     ft_unique_lock<pt_mutex> self_guard;
     ft_unique_lock<pt_mutex> other_guard;
 
     if (ft_price_definition::lock_pair(*this, other, self_guard, other_guard)
-            != FT_ERR_SUCCESSS)
+            != FT_ERR_SUCCESS)
     {
         this->set_error(self_guard.get_error());
         return ;
@@ -153,9 +153,9 @@ ft_price_definition::ft_price_definition(ft_price_definition &&other) noexcept
     other._base_value = 0;
     other._minimum_value = 0;
     other._maximum_value = 0;
-    other._error_code = FT_ERR_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESS;
     this->set_error(this->_error_code);
-    other.set_error(FT_ERR_SUCCESSS);
+    other.set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -166,7 +166,7 @@ ft_price_definition &ft_price_definition::operator=(ft_price_definition &&other)
 
     if (this == &other)
         return (*this);
-    if (ft_price_definition::lock_pair(*this, other, self_guard, other_guard) != FT_ERR_SUCCESSS)
+    if (ft_price_definition::lock_pair(*this, other, self_guard, other_guard) != FT_ERR_SUCCESS)
     {
         this->set_error(self_guard.get_error());
         return (*this);
@@ -182,9 +182,9 @@ ft_price_definition &ft_price_definition::operator=(ft_price_definition &&other)
     other._base_value = 0;
     other._minimum_value = 0;
     other._maximum_value = 0;
-    other._error_code = FT_ERR_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESS;
     this->set_error(this->_error_code);
-    other.set_error(FT_ERR_SUCCESSS);
+    other.set_error(FT_ERR_SUCCESS);
     return (*this);
 }
 
@@ -193,7 +193,7 @@ int ft_price_definition::get_item_id() const noexcept
     int identifier;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_price_definition *>(this)->set_error(guard.get_error());
         return (guard.get_error());
@@ -206,13 +206,13 @@ int ft_price_definition::get_item_id() const noexcept
 void ft_price_definition::set_item_id(int item_id) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
     }
     this->_item_id = item_id;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -221,7 +221,7 @@ int ft_price_definition::get_rarity() const noexcept
     int rarity_value;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_price_definition *>(this)->set_error(guard.get_error());
         return (guard.get_error());
@@ -234,13 +234,13 @@ int ft_price_definition::get_rarity() const noexcept
 void ft_price_definition::set_rarity(int rarity) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
     }
     this->_rarity = rarity;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -249,7 +249,7 @@ int ft_price_definition::get_base_value() const noexcept
     int base_value;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_price_definition *>(this)->set_error(guard.get_error());
         return (guard.get_error());
@@ -262,13 +262,13 @@ int ft_price_definition::get_base_value() const noexcept
 void ft_price_definition::set_base_value(int base_value) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
     }
     this->_base_value = base_value;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -277,7 +277,7 @@ int ft_price_definition::get_minimum_value() const noexcept
     int minimum_value;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_price_definition *>(this)->set_error(guard.get_error());
         return (guard.get_error());
@@ -290,13 +290,13 @@ int ft_price_definition::get_minimum_value() const noexcept
 void ft_price_definition::set_minimum_value(int minimum_value) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
     }
     this->_minimum_value = minimum_value;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -305,7 +305,7 @@ int ft_price_definition::get_maximum_value() const noexcept
     int maximum_value;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_price_definition *>(this)->set_error(guard.get_error());
         return (guard.get_error());
@@ -318,13 +318,13 @@ int ft_price_definition::get_maximum_value() const noexcept
 void ft_price_definition::set_maximum_value(int maximum_value) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
     }
     this->_maximum_value = maximum_value;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -333,7 +333,7 @@ int ft_price_definition::get_error() const noexcept
     int error_value;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_price_definition *>(this)->set_error(guard.get_error());
         return (guard.get_error());

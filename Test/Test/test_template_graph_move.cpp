@@ -1,7 +1,11 @@
+#include "../test_internal.hpp"
 #include "../../Template/graph.hpp"
 #include "../../Template/move.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_ft_graph_move_constructor_recreates_mutex,
         "ft_graph move constructor rebuilds thread safety and keeps topology")

@@ -498,7 +498,7 @@ static int http_client_initialize_ssl(int socket_fd, const char *host, SSL_CTX *
     int alpn_error;
 
     if (!http2_select_alpn_protocol(local_connection, selected_http2, alpn_error))
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESS;
     (void)selected_http2;
     (void)alpn_error;
     if (host != NULL && host[0] != '\0')
@@ -653,7 +653,7 @@ static int http_client_establish_connection(const char *host, const char *port_s
         }
 #endif
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (0);
 }
 
@@ -707,7 +707,7 @@ int http_client_send_plain_request(int socket_fd, const char *buffer, size_t len
     }
     if (networking_check_socket_after_send(socket_fd) != 0)
         return (-1);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (0);
 }
 
@@ -784,7 +784,7 @@ int http_client_send_ssl_request(SSL *ssl_connection, const char *buffer, size_t
     }
     if (networking_check_ssl_after_send(ssl_connection) != 0)
         return (-1);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (0);
 }
 
@@ -1164,7 +1164,7 @@ static int http_client_finish_with_metrics(const char *method, const char *host,
     duration_ms = time_monotonic_point_diff_ms(start_time, finish_time);
     if (duration_ms < 0)
         duration_ms = 0;
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     if (result != 0)
         error_code = ft_errno;
     sample.labels.component = "http_client";
@@ -1176,7 +1176,7 @@ static int http_client_finish_with_metrics(const char *method, const char *host,
     sample.response_bytes = g_http_buffer_adapter_state.body_bytes;
     sample.status_code = g_http_buffer_adapter_state.status_code;
     sample.error_code = error_code;
-    if (error_code == FT_ERR_SUCCESSS)
+    if (error_code == FT_ERR_SUCCESS)
     {
         sample.success = true;
         sample.error_tag = "ok";
@@ -1268,7 +1268,7 @@ int http_get_stream(const char *host, const char *path, http_response_handler ha
             return (-1);
         }
         http_client_pool_release_connection(connection, allow_keep_alive);
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESS;
         return (0);
     }
     return (-1);

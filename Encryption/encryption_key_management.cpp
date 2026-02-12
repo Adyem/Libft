@@ -29,7 +29,7 @@ static int encryption_fill_secure_buffer_internal(unsigned char *buffer, size_t 
     }
     if (rng_secure_bytes(buffer, buffer_length) != 0)
         return (FT_ERR_INTERNAL);
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 int encryption_fill_secure_buffer(unsigned char *buffer, size_t buffer_length)
@@ -38,7 +38,7 @@ int encryption_fill_secure_buffer(unsigned char *buffer, size_t buffer_length)
     int return_value;
 
     error_code = encryption_fill_secure_buffer_internal(buffer, buffer_length);
-    if (error_code == FT_ERR_SUCCESSS)
+    if (error_code == FT_ERR_SUCCESS)
         return_value = 0;
     else
         return_value = -1;
@@ -57,7 +57,7 @@ static unsigned char *encryption_allocate_key(size_t key_length, int *error_code
         return (ft_nullptr);
     }
     if (error_code)
-        *error_code = FT_ERR_SUCCESSS;
+        *error_code = FT_ERR_SUCCESS;
     return (key_buffer);
 }
 
@@ -90,7 +90,7 @@ static unsigned char *encryption_generate_symmetric_key_internal(size_t key_leng
         return (ft_nullptr);
     }
     allocation_error = encryption_fill_secure_buffer_internal(key_buffer, key_length);
-    if (allocation_error != FT_ERR_SUCCESSS)
+    if (allocation_error != FT_ERR_SUCCESS)
     {
         encryption_discard_key(key_buffer, key_length);
         if (error_code)
@@ -98,7 +98,7 @@ static unsigned char *encryption_generate_symmetric_key_internal(size_t key_leng
         return (ft_nullptr);
     }
     if (error_code)
-        *error_code = FT_ERR_SUCCESSS;
+        *error_code = FT_ERR_SUCCESS;
     return (key_buffer);
 }
 

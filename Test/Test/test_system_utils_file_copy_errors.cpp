@@ -1,8 +1,12 @@
+#include "../test_internal.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/system_utils.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <cstdio>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_su_copy_file_rejects_null_source,
         "su_copy_file rejects null source path arguments")
@@ -13,7 +17,7 @@ FT_TEST(test_su_copy_file_rejects_null_source,
     destination_path = "su_copy_file_null_source.txt";
     std::remove(destination_path);
 
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(-1, su_copy_file(ft_nullptr, destination_path));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
 
@@ -37,9 +41,9 @@ FT_TEST(test_su_copy_file_missing_source_sets_error,
     std::remove(source_path);
     std::remove(destination_path);
 
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(-1, su_copy_file(source_path, destination_path));
-    FT_ASSERT(ft_errno != FT_ERR_SUCCESSS);
+    FT_ASSERT(ft_errno != FT_ERR_SUCCESS);
 
     destination_file = std::fopen(destination_path, "r");
     FT_ASSERT(destination_file == ft_nullptr);

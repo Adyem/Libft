@@ -1,7 +1,11 @@
+#include "../test_internal.hpp"
 #include "../../Math/roll.hpp"
 #include "../../CMA/CMA.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../Errno/errno.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 int test_math_eval_basic(void)
 {

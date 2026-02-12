@@ -1,5 +1,9 @@
+#include "../test_internal.hpp"
 #include "../../Game/ft_vendor_profile.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_vendor_profile_copy_constructor, "copy constructor duplicates vendor attributes")
 {
@@ -15,7 +19,7 @@ FT_TEST(test_vendor_profile_copy_constructor, "copy constructor duplicates vendo
     FT_ASSERT_EQ(1.15, copy.get_buy_markup());
     FT_ASSERT_EQ(0.85, copy.get_sell_multiplier());
     FT_ASSERT_EQ(0.07, copy.get_tax_rate());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, copy.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, copy.get_error());
     return (1);
 }
 
@@ -34,6 +38,6 @@ FT_TEST(test_vendor_profile_copy_assignment, "copy assignment overwrites vendor 
     FT_ASSERT_EQ(1.25, destination.get_buy_markup());
     FT_ASSERT_EQ(0.75, destination.get_sell_multiplier());
     FT_ASSERT_EQ(0.06, destination.get_tax_rate());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, destination.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.get_error());
     return (1);
 }

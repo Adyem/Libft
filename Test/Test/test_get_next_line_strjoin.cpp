@@ -1,9 +1,13 @@
+#include "../test_internal.hpp"
 #include "../../GetNextLine/get_next_line.hpp"
 #include "../../CMA/CMA.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../Basic/basic.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 static char *duplicate_literal(const char *literal)
 {
@@ -43,7 +47,7 @@ FT_TEST(test_ft_strjoin_gnl_concatenates_inputs, "ft_strjoin_gnl concatenates tw
     if (!joined)
         return (0);
     FT_ASSERT_EQ(0, ft_strcmp(joined, "Hello world"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_free(joined);
     return (1);
 }
@@ -62,7 +66,7 @@ FT_TEST(test_ft_strjoin_gnl_accepts_null_first, "ft_strjoin_gnl handles null fir
     if (!joined)
         return (0);
     FT_ASSERT_EQ(0, ft_strcmp(joined, "line"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_free(joined);
     return (1);
 }
@@ -71,7 +75,7 @@ FT_TEST(test_ft_strjoin_gnl_null_inputs_fail, "ft_strjoin_gnl rejects when both 
 {
     char *joined;
 
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     joined = ft_strjoin_gnl(ft_nullptr, ft_nullptr);
     FT_ASSERT_EQ(ft_nullptr, joined);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
@@ -91,7 +95,7 @@ FT_TEST(test_ft_strjoin_gnl_second_null_copies_first, "ft_strjoin_gnl returns du
     if (!joined)
         return (0);
     FT_ASSERT_EQ(0, ft_strcmp(joined, "partial"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_free(joined);
     return (1);
 }

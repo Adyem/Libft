@@ -1,3 +1,4 @@
+#include "../test_internal.hpp"
 #include "../../Game/game_event_scheduler_telemetry.hpp"
 #include "../../Observability/observability_game_metrics.hpp"
 #include "../../System_utils/test_runner.hpp"
@@ -5,6 +6,9 @@
 #include "../../Errno/errno.hpp"
 #include "../../Basic/basic.hpp"
 #include "../../Template/vector.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 static ft_vector<ft_game_observability_sample> g_scheduler_samples;
 
@@ -23,9 +27,9 @@ static int game_event_scheduler_reset_samples_state(void)
 
     g_scheduler_samples.clear();
     error = g_scheduler_samples.get_error();
-    if (error != FT_ERR_SUCCESSS)
+    if (error != FT_ERR_SUCCESS)
         return (-1);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (0);
 }
 
@@ -44,9 +48,9 @@ static int game_event_scheduler_capture_sample_state(const ft_game_observability
 
     g_scheduler_samples.push_back(sample);
     error = g_scheduler_samples.get_error();
-    if (error != FT_ERR_SUCCESSS)
+    if (error != FT_ERR_SUCCESS)
         return (-1);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (0);
 }
 
@@ -77,7 +81,7 @@ FT_TEST(test_game_event_scheduler_telemetry_exports_metrics,
     profile.max_ready_batch = 4;
     profile.total_processing_ns = 200000000;
     profile.last_update_processing_ns = 50000000;
-    profile.last_error_code = FT_ERR_SUCCESSS;
+    profile.last_error_code = FT_ERR_SUCCESS;
 
     game_event_scheduler_telemetry_record(state, profile);
 
@@ -134,7 +138,7 @@ FT_TEST(test_game_event_scheduler_telemetry_skips_duplicate_snapshots,
     profile.max_ready_batch = 3;
     profile.total_processing_ns = 160000000;
     profile.last_update_processing_ns = 40000000;
-    profile.last_error_code = FT_ERR_SUCCESSS;
+    profile.last_error_code = FT_ERR_SUCCESS;
 
     game_event_scheduler_telemetry_record(state, profile);
     FT_ASSERT_EQ(4, static_cast<int>(g_scheduler_samples.size()));
@@ -185,9 +189,9 @@ FT_TEST(test_game_event_scheduler_telemetry_rejects_null_scheduler_name,
     profile.max_ready_batch = 1;
     profile.total_processing_ns = 1000000;
     profile.last_update_processing_ns = 1000000;
-    profile.last_error_code = FT_ERR_SUCCESSS;
+    profile.last_error_code = FT_ERR_SUCCESS;
 
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     game_event_scheduler_telemetry_record(state, profile);
 
     FT_ASSERT_EQ(0, static_cast<int>(g_scheduler_samples.size()));

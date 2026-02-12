@@ -1,20 +1,21 @@
+#include "../test_internal.hpp"
 #include "../../Basic/basic.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
-#include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_toupper_basic, "ft_to_upper basic")
 {
     char string[4];
 
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
     string[0] = 'a';
     string[1] = 'b';
     string[2] = 'c';
     string[3] = '\0';
     ft_to_upper(string);
     FT_ASSERT_EQ(0, ft_strcmp(string, "ABC"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -29,10 +30,8 @@ FT_TEST(test_toupper_mixed, "ft_to_upper mixed characters")
     string[4] = 'c';
     string[5] = '?';
     string[6] = '\0';
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
     ft_to_upper(string);
     FT_ASSERT_EQ(0, ft_strcmp(string, "A1B!C?"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -41,18 +40,14 @@ FT_TEST(test_toupper_empty, "ft_to_upper empty string")
     char string[1];
 
     string[0] = '\0';
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
     ft_to_upper(string);
     FT_ASSERT_EQ(0, ft_strcmp(string, ""));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
 FT_TEST(test_toupper_nullptr, "ft_to_upper nullptr")
 {
-    ft_errno = FT_ERR_SUCCESSS;
     ft_to_upper(ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -66,14 +61,12 @@ FT_TEST(test_toupper_stops_at_terminator, "ft_to_upper stops at first null byte"
     string[3] = 'x';
     string[4] = 'y';
     string[5] = '\0';
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
     ft_to_upper(string);
     FT_ASSERT_EQ('A', string[0]);
     FT_ASSERT_EQ(static_cast<char>(0xE1), string[1]);
     FT_ASSERT_EQ('\0', string[2]);
     FT_ASSERT_EQ('x', string[3]);
     FT_ASSERT_EQ('y', string[4]);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -85,12 +78,8 @@ FT_TEST(test_toupper_recovers_after_nullptr, "ft_to_upper clears errno after nul
     string[1] = 'o';
     string[2] = 'w';
     string[3] = '\0';
-    ft_errno = FT_ERR_SUCCESSS;
     ft_to_upper(ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
     ft_to_upper(string);
     FT_ASSERT_EQ(0, ft_strcmp(string, "LOW"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }

@@ -49,14 +49,14 @@ ft_websocket_client::ft_websocket_client() : _socket(), _mutex()
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     int guard_error = guard.get_error();
-    if (guard_error != FT_ERR_SUCCESSS)
+    if (guard_error != FT_ERR_SUCCESS)
     {
         ft_errno = guard_error;
         ft_global_error_stack_push(guard_error);
         return ;
     }
-    ft_errno = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_errno = FT_ERR_SUCCESS;
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -64,7 +64,7 @@ ft_websocket_client::~ft_websocket_client()
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     int guard_error = guard.get_error();
-    if (guard_error != FT_ERR_SUCCESSS)
+    if (guard_error != FT_ERR_SUCCESS)
     {
         ft_errno = guard_error;
         ft_global_error_stack_push(guard_error);
@@ -84,8 +84,8 @@ int ft_websocket_client::close_locked(ft_unique_lock<pt_mutex> &guard)
         ft_global_error_stack_push(socket_error);
         return (1);
     }
-    ft_errno = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_errno = FT_ERR_SUCCESS;
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -93,7 +93,7 @@ void ft_websocket_client::close()
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     int guard_error = guard.get_error();
-    if (guard_error != FT_ERR_SUCCESSS)
+    if (guard_error != FT_ERR_SUCCESS)
     {
         ft_errno = guard_error;
         ft_global_error_stack_push(guard_error);
@@ -250,8 +250,8 @@ int ft_websocket_client::perform_handshake_locked(const char *host, const char *
         ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (1);
     }
-    ft_errno = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_errno = FT_ERR_SUCCESS;
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -268,7 +268,7 @@ int ft_websocket_client::connect(const char *host, uint16_t port, const char *pa
     std::snprintf(port_string, sizeof(port_string), "%u", port);
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     int guard_error = guard.get_error();
-    if (guard_error != FT_ERR_SUCCESSS)
+    if (guard_error != FT_ERR_SUCCESS)
     {
         ft_errno = guard_error;
         ft_global_error_stack_push(guard_error);
@@ -321,8 +321,8 @@ int ft_websocket_client::connect(const char *host, uint16_t port, const char *pa
         ft_global_error_stack_push(handshake_error);
         return (1);
     }
-    ft_errno = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_errno = FT_ERR_SUCCESS;
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -388,8 +388,8 @@ int ft_websocket_client::send_pong_locked(const unsigned char *payload, std::siz
         ft_global_error_stack_push(ft_errno);
         return (1);
     }
-    ft_errno = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_errno = FT_ERR_SUCCESS;
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -458,8 +458,8 @@ int ft_websocket_client::send_text_locked(const ft_string &message, ft_unique_lo
         ft_global_error_stack_push(ft_errno);
         return (1);
     }
-    ft_errno = FT_ERR_SUCCESSS;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_errno = FT_ERR_SUCCESS;
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -469,7 +469,7 @@ int ft_websocket_client::send_text(const ft_string &message)
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     int guard_error = guard.get_error();
-    if (guard_error != FT_ERR_SUCCESSS)
+    if (guard_error != FT_ERR_SUCCESS)
     {
         ft_errno = guard_error;
         ft_global_error_stack_push(guard_error);
@@ -607,8 +607,8 @@ int ft_websocket_client::receive_text_locked(ft_string &message, ft_unique_lock<
                 index_value++;
             }
             cma_free(payload);
-            ft_errno = FT_ERR_SUCCESSS;
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
+            ft_errno = FT_ERR_SUCCESS;
+            ft_global_error_stack_push(FT_ERR_SUCCESS);
             return (0);
         }
         cma_free(payload);
@@ -624,7 +624,7 @@ int ft_websocket_client::receive_text(ft_string &message)
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     int guard_error = guard.get_error();
-    if (guard_error != FT_ERR_SUCCESSS)
+    if (guard_error != FT_ERR_SUCCESS)
     {
         ft_errno = guard_error;
         ft_global_error_stack_push(guard_error);
@@ -639,13 +639,13 @@ int ft_websocket_client::get_error() const
     int error_value;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_websocket_client *>(this)->set_error(guard.get_error());
         return (const_cast<ft_websocket_client *>(this)->_error_code);
     }
     error_value = this->_error_code;
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (error_value);
 }
 
@@ -654,12 +654,12 @@ const char *ft_websocket_client::get_error_str() const
     const char *error_string;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_websocket_client *>(this)->set_error(guard.get_error());
         return (ft_strerror(const_cast<ft_websocket_client *>(this)->_error_code));
     }
     error_string = ft_strerror(this->_error_code);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (error_string);
 }

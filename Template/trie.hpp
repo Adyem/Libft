@@ -59,7 +59,7 @@ template <typename ValueType>
 ft_trie<ValueType>::ft_trie()
     : _data(ft_nullptr), _children(), _mutex(ft_nullptr)
 {
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 template <typename ValueType>
@@ -93,7 +93,7 @@ int ft_trie<ValueType>::insert_helper(const char *key, int unset_value, ValueTyp
     size_t key_length = ft_strlen_size_t(key);
     int length_error = ft_global_error_stack_drop_last_error();
 
-    if (length_error != FT_ERR_SUCCESSS)
+    if (length_error != FT_ERR_SUCCESS)
         return (length_error);
     ft_trie<ValueType> *current_node = this;
     const char *key_iterator = key;
@@ -116,7 +116,7 @@ int ft_trie<ValueType>::insert_helper(const char *key, int unset_value, ValueTyp
             {
                 int child_result = new_child->enable_thread_safety();
 
-                if (child_result != FT_ERR_SUCCESSS)
+                if (child_result != FT_ERR_SUCCESS)
                 {
                     current_node->_children[character] = ft_nullptr;
                     delete new_child;
@@ -140,8 +140,8 @@ int ft_trie<ValueType>::insert_helper(const char *key, int unset_value, ValueTyp
     current_node->_data->_unset_value = unset_value;
     current_node->_data->_key_length = key_length;
     current_node->_data->_value_pointer = value_pointer;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 template <typename ValueType>
@@ -150,7 +150,7 @@ int ft_trie<ValueType>::insert(const char *key, ValueType *value_pointer, int un
     bool lock_acquired = false;
     int lock_result = this->lock_internal(&lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return (lock_result);
@@ -171,7 +171,7 @@ const typename ft_trie<ValueType>::node_value *ft_trie<ValueType>::search(const 
     bool lock_acquired = false;
     int lock_result = this->lock_internal(&lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return (ft_nullptr);
@@ -192,7 +192,7 @@ const typename ft_trie<ValueType>::node_value *ft_trie<ValueType>::search(const 
         current_node = child_iterator->second;
         key_iterator = key_iterator + 1;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (key_found ? current_node->_data : ft_nullptr);
 }
@@ -202,12 +202,12 @@ int ft_trie<ValueType>::enable_thread_safety()
 {
     if (this->_mutex != ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-        return (FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     int result = this->prepare_thread_safety();
 
-    if (result != FT_ERR_SUCCESSS)
+    if (result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(result);
         return (result);
@@ -220,7 +220,7 @@ int ft_trie<ValueType>::enable_thread_safety()
         {
             int child_result = child_iterator->second->enable_thread_safety();
 
-            if (child_result != FT_ERR_SUCCESSS)
+            if (child_result != FT_ERR_SUCCESS)
             {
                 this->teardown_thread_safety();
                 return (child_result);
@@ -228,8 +228,8 @@ int ft_trie<ValueType>::enable_thread_safety()
         }
         ++child_iterator;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 template <typename ValueType>
@@ -250,7 +250,7 @@ void ft_trie<ValueType>::disable_thread_safety()
 {
     this->disable_children_thread_safety();
     this->teardown_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 template <typename ValueType>
@@ -258,7 +258,7 @@ bool ft_trie<ValueType>::is_thread_safe_enabled() const
 {
     bool enabled = (this->_mutex != ft_nullptr);
 
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (enabled);
 }
 
@@ -268,7 +268,7 @@ int ft_trie<ValueType>::lock(bool *lock_acquired) const
     int result = this->lock_internal(lock_acquired);
 
     ft_global_error_stack_push(result);
-    if (result != FT_ERR_SUCCESSS)
+    if (result != FT_ERR_SUCCESS)
         return (-1);
     return (0);
 }
@@ -287,10 +287,10 @@ int ft_trie<ValueType>::lock_internal(bool *lock_acquired) const
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     int result = pt_recursive_mutex_lock_with_error(*this->_mutex);
 
-    if (result == FT_ERR_SUCCESSS && lock_acquired != ft_nullptr)
+    if (result == FT_ERR_SUCCESS && lock_acquired != ft_nullptr)
         *lock_acquired = true;
     return (result);
 }
@@ -299,7 +299,7 @@ template <typename ValueType>
 int ft_trie<ValueType>::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     return (pt_recursive_mutex_unlock_with_error(*this->_mutex));
 }
 
@@ -307,10 +307,10 @@ template <typename ValueType>
 int ft_trie<ValueType>::prepare_thread_safety()
 {
     if (this->_mutex != ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     int result = pt_recursive_mutex_create_with_error(&this->_mutex);
 
-    if (result != FT_ERR_SUCCESSS && this->_mutex != ft_nullptr)
+    if (result != FT_ERR_SUCCESS && this->_mutex != ft_nullptr)
         pt_recursive_mutex_destroy(&this->_mutex);
     return (result);
 }

@@ -1,3 +1,4 @@
+#include "../test_internal.hpp"
 #include "../../File/file_utils.hpp"
 #include "../../File/open_dir.hpp"
 #include "../../Basic/basic.hpp"
@@ -11,6 +12,9 @@
 #include <cstddef>
 #include <cstdio>
 #include <cstring>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 #if defined(_WIN32) || defined(_WIN64)
 # include <fcntl.h>
@@ -28,12 +32,12 @@
 
 static void remove_directory_if_present(const char *directory_path)
 {
-    int error_code = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESS;
     int exists_value = 0;
     int status;
 
     status = cmp_directory_exists(directory_path, &exists_value, &error_code);
-    if (status != FT_ERR_SUCCESSS || exists_value != 1)
+    if (status != FT_ERR_SUCCESS || exists_value != 1)
         return ;
 #if defined(_WIN32) || defined(_WIN64)
     RemoveDirectoryA(directory_path);
@@ -141,7 +145,7 @@ FT_TEST(test_file_path_join_prefers_absolute_right, "file_path_join returns abso
 {
     ft_string result = file_path_join("/etc", "/var/log");
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, result.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, result.get_error());
     FT_ASSERT_EQ(0, ft_strcmp(result.c_str(), "/var/log"));
     return (1);
 }
@@ -150,7 +154,7 @@ FT_TEST(test_file_path_join_keeps_drive_letter, "file_path_join keeps Windows dr
 {
     ft_string result = file_path_join("/left", "C:/temp");
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, result.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, result.get_error());
     FT_ASSERT_EQ(0, ft_strcmp(result.c_str(), "C:/temp"));
     return (1);
 }
@@ -163,7 +167,7 @@ FT_TEST(test_file_path_normalize_collapses_duplicates, "file_path_normalize coll
 
     build_alternate_separator_path(path_buffer, "/folder///sub///file.txt");
     normalized = file_path_normalize(path_buffer);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, normalized.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, normalized.get_error());
     build_native_path(expected_buffer, "/folder/sub/file.txt");
     FT_ASSERT_EQ(0, ft_strcmp(normalized.c_str(), expected_buffer));
     return (1);
@@ -177,7 +181,7 @@ FT_TEST(test_file_path_normalize_preserves_trailing_separator, "file_path_normal
 
     build_alternate_separator_path(path_buffer, "/folder/subdir///");
     normalized = file_path_normalize(path_buffer);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, normalized.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, normalized.get_error());
     build_native_path(expected_buffer, "/folder/subdir/");
     FT_ASSERT_EQ(0, ft_strcmp(normalized.c_str(), expected_buffer));
     return (1);
@@ -188,7 +192,7 @@ FT_TEST(test_file_path_normalize_handles_null_input, "file_path_normalize gracef
     ft_string normalized;
 
     normalized = file_path_normalize(ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, normalized.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, normalized.get_error());
     FT_ASSERT_EQ(0, ft_strcmp(normalized.c_str(), ""));
     return (1);
 }
@@ -203,7 +207,7 @@ FT_TEST(test_file_path_join_appends_missing_separator, "file_path_join inserts m
     build_alternate_separator_path(left_buffer, "/var//log");
     build_alternate_separator_path(right_buffer, "nginx///access.log");
     result = file_path_join(left_buffer, right_buffer);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, result.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, result.get_error());
     build_native_path(expected_buffer, "/var/log/nginx/access.log");
     FT_ASSERT_EQ(0, ft_strcmp(result.c_str(), expected_buffer));
     return (1);
@@ -217,7 +221,7 @@ FT_TEST(test_file_path_join_with_empty_left, "file_path_join handles empty left 
 
     build_alternate_separator_path(right_buffer, "folder//file.txt");
     result = file_path_join("", right_buffer);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, result.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, result.get_error());
     build_native_path(expected_buffer, "folder/file.txt");
     FT_ASSERT_EQ(0, ft_strcmp(result.c_str(), expected_buffer));
     return (1);
@@ -300,7 +304,7 @@ FT_TEST(test_file_copy_with_buffer_small_chunks, "file_copy_with_buffer streams 
 
 FT_TEST(test_file_copy_with_buffer_rejects_null_paths, "file_copy_with_buffer validates inputs")
 {
-    int error_code = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESS;
 
     FT_ASSERT_EQ(-1, file_copy_with_buffer(ft_nullptr, "ignored.bin", 4));
     error_code = ft_global_error_stack_drop_last_error();
@@ -361,7 +365,7 @@ FT_TEST(test_ft_file_copy_to_streams_payload, "ft_file copy_to streams using sha
 
 FT_TEST(test_file_readdir_handles_null_stream, "file_readdir sets FT_ERR_INVALID_ARGUMENT when stream is null")
 {
-    int error_code = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESS;
 
     FT_ASSERT_EQ(ft_nullptr, file_readdir(ft_nullptr));
     error_code = ft_global_error_stack_drop_last_error();
@@ -369,7 +373,7 @@ FT_TEST(test_file_readdir_handles_null_stream, "file_readdir sets FT_ERR_INVALID
     return (1);
 }
 
-FT_TEST(test_file_readdir_clears_error_on_success, "file_readdir sets FT_ERR_SUCCESSS after reading entry")
+FT_TEST(test_file_readdir_clears_error_on_success, "file_readdir sets FT_ERR_SUCCESS after reading entry")
 {
     file_dir *directory_stream;
     file_dirent *directory_entry;
@@ -382,7 +386,7 @@ FT_TEST(test_file_readdir_clears_error_on_success, "file_readdir sets FT_ERR_SUC
     directory_entry = file_readdir(directory_stream);
     FT_ASSERT(directory_entry != ft_nullptr);
     error_code = ft_global_error_stack_drop_last_error();
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, error_code);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, error_code);
     FT_ASSERT_EQ(0, file_closedir(directory_stream));
     ft_global_error_stack_drop_last_error();
     return (1);
@@ -390,7 +394,7 @@ FT_TEST(test_file_readdir_clears_error_on_success, "file_readdir sets FT_ERR_SUC
 
 FT_TEST(test_file_closedir_handles_null_stream, "file_closedir sets FT_ERR_INVALID_ARGUMENT when stream is null")
 {
-    int error_code = FT_ERR_SUCCESSS;
+    int error_code = FT_ERR_SUCCESS;
 
     FT_ASSERT_EQ(-1, file_closedir(ft_nullptr));
     error_code = ft_global_error_stack_drop_last_error();
@@ -398,7 +402,7 @@ FT_TEST(test_file_closedir_handles_null_stream, "file_closedir sets FT_ERR_INVAL
     return (1);
 }
 
-FT_TEST(test_file_closedir_clears_error_on_success, "file_closedir sets FT_ERR_SUCCESSS after close")
+FT_TEST(test_file_closedir_clears_error_on_success, "file_closedir sets FT_ERR_SUCCESS after close")
 {
     file_dir *directory_stream;
     int error_code;
@@ -409,7 +413,7 @@ FT_TEST(test_file_closedir_clears_error_on_success, "file_closedir sets FT_ERR_S
         return (0);
     FT_ASSERT_EQ(0, file_closedir(directory_stream));
     error_code = ft_global_error_stack_drop_last_error();
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, error_code);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, error_code);
     return (1);
 }
 
@@ -448,7 +452,7 @@ FT_TEST(test_file_copy_with_buffer_zero_size_uses_default,
         file_delete(destination_path);
         return (0);
     }
-    if (ft_global_error_stack_drop_last_error() != FT_ERR_SUCCESSS)
+    if (ft_global_error_stack_drop_last_error() != FT_ERR_SUCCESS)
     {
         file_delete(source_path);
         file_delete(destination_path);

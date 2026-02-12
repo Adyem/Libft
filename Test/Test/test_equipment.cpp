@@ -1,8 +1,12 @@
+#include "../test_internal.hpp"
 #include "../../Game/game_character.hpp"
 #include "../../Game/game_item.hpp"
 #include "../../Basic/basic.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_equipment_equip, "equip item increases stats")
 {
@@ -11,7 +15,7 @@ FT_TEST(test_equipment_equip, "equip item increases stats")
     helm.set_item_id(1);
     helm.set_modifier1_id(1);
     helm.set_modifier1_value(5);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, hero.equip_item(EQUIP_HEAD, helm));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hero.equip_item(EQUIP_HEAD, helm));
     FT_ASSERT_EQ(5, hero.get_physical_armor());
     ft_sharedptr<ft_item> found = hero.get_equipped_item(EQUIP_HEAD);
     FT_ASSERT(found.get() != ft_nullptr);

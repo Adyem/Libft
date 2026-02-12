@@ -1,5 +1,9 @@
+#include "../test_internal.hpp"
 #include "../../Game/game_behavior_table.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 static int assert_action_values(const ft_behavior_action &action, int action_id, double weight,
         double cooldown)
@@ -20,8 +24,8 @@ FT_TEST(test_behavior_register_and_fetch, "register and fetch behavior profile")
     actions.push_back(ft_behavior_action(1, 0.6, 2.0));
     actions.push_back(ft_behavior_action(2, 0.4, 5.0));
     profile = ft_behavior_profile(5, 0.8, 0.2, actions);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.register_profile(profile));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.fetch_profile(5, fetched));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.register_profile(profile));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.fetch_profile(5, fetched));
     FT_ASSERT_EQ(5, fetched.get_profile_id());
     FT_ASSERT_DOUBLE_EQ(0.8, fetched.get_aggression_weight());
     FT_ASSERT_DOUBLE_EQ(0.2, fetched.get_caution_weight());
@@ -50,10 +54,10 @@ FT_TEST(test_behavior_profile_isolation, "fetched copies remain isolated")
 
     actions.push_back(ft_behavior_action(10, 1.0, 3.0));
     profile = ft_behavior_profile(20, 0.5, 0.5, actions);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.register_profile(profile));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.fetch_profile(20, first_fetch));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.register_profile(profile));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.fetch_profile(20, first_fetch));
     first_fetch.get_actions()[0].set_weight(2.5);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.fetch_profile(20, second_fetch));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.fetch_profile(20, second_fetch));
     FT_ASSERT_DOUBLE_EQ(1.0, second_fetch.get_actions()[0].get_weight());
     return (1);
 }

@@ -1,3 +1,4 @@
+#include "../test_internal.hpp"
 #include "../../Game/game_hooks.hpp"
 #include "../../Game/game_character.hpp"
 #include "../../Game/game_item.hpp"
@@ -6,6 +7,9 @@
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
 #include <cstdint>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_game_hooks_reset_clears_callbacks, "Game: hooks reset clears registered callbacks")
 {
@@ -50,6 +54,6 @@ FT_TEST(test_game_hooks_reset_clears_callbacks, "Game: hooks reset clears regist
     FT_ASSERT_EQ(0, crafted_invocations);
     FT_ASSERT_EQ(0, damaged_invocations);
     FT_ASSERT_EQ(0, event_invocations);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, hooks.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hooks.get_error());
     return (1);
 }

@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <cstdint>
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "dumb_sound_clip.hpp"
@@ -28,14 +29,31 @@ class ft_sound_device
 {
     private:
         pt_recursive_mutex           *_mutex = ft_nullptr;
+        uint8_t                      _initialized_state;
 
+        static const uint8_t         _state_uninitialized = 0;
+        static const uint8_t         _state_destroyed = 1;
+        static const uint8_t         _state_initialized = 2;
+
+        void                         abort_lifecycle_error(const char *method_name,
+                                        const char *reason) const noexcept;
+        void                         abort_if_not_initialized(const char *method_name) const noexcept;
         int                          prepare_thread_safety(void) noexcept;
         void                         teardown_thread_safety(void) noexcept;
 
     public:
         ft_sound_device(void);
+        ft_sound_device(const ft_sound_device &other) = delete;
+        ft_sound_device(ft_sound_device &&other) = delete;
+        ft_sound_device &operator=(const ft_sound_device &other) = delete;
+        ft_sound_device &operator=(ft_sound_device &&other) = delete;
         virtual ~ft_sound_device(void);
 
+        int                          initialize(void);
+        int                          initialize(const ft_sound_device &other);
+        int                          initialize(ft_sound_device &&other);
+        int                          destroy(void);
+        int                          move(ft_sound_device &other);
         virtual int open(const ft_sound_spec *spec) = 0;
         virtual void close(void) = 0;
 

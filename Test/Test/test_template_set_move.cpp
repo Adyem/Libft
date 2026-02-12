@@ -1,7 +1,11 @@
+#include "../test_internal.hpp"
 #include "../../Template/set.hpp"
 #include "../../Template/move.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_ft_set_move_constructor_rebuilds_mutex,
         "ft_set move constructor recreates thread-safety while copying data")
@@ -48,7 +52,7 @@ FT_TEST(test_ft_set_move_assignment_rebuilds_mutex,
     FT_ASSERT_EQ(ft_nullptr, destination_set.find(4));
     FT_ASSERT_NE(ft_nullptr, destination_set.find(11));
     FT_ASSERT_NE(ft_nullptr, destination_set.find(18));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, destination_set.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_set.get_error());
     return (1);
 }
 

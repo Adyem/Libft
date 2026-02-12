@@ -1,5 +1,9 @@
+#include "../test_internal.hpp"
 #include "../../Game/game_data_catalog.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 static void populate_ingredient(ft_crafting_ingredient &ingredient, int item_id, int count, int rarity)
 {
@@ -28,7 +32,7 @@ FT_TEST(test_item_definition_setters, "update item definition fields")
     FT_ASSERT_EQ(2, definition.get_height());
     FT_ASSERT_EQ(9, definition.get_weight());
     FT_ASSERT_EQ(5, definition.get_slot_requirement());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, definition.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.get_error());
     return (1);
 }
 
@@ -52,7 +56,7 @@ FT_TEST(test_recipe_blueprint_setters, "update recipe fields and ingredients")
     FT_ASSERT_EQ(2u, recipe.get_ingredients().size());
     FT_ASSERT_EQ(10, recipe.get_ingredients()[0].get_item_id());
     FT_ASSERT_EQ(11, recipe.get_ingredients()[1].get_item_id());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, recipe.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, recipe.get_error());
     return (1);
 }
 
@@ -67,7 +71,7 @@ FT_TEST(test_loadout_entry_setters, "update loadout entry fields")
     FT_ASSERT_EQ(3, entry.get_slot());
     FT_ASSERT_EQ(14, entry.get_item_id());
     FT_ASSERT_EQ(5, entry.get_quantity());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, entry.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, entry.get_error());
     return (1);
 }
 
@@ -93,6 +97,6 @@ FT_TEST(test_loadout_blueprint_setters, "update loadout blueprint fields and ent
     FT_ASSERT_EQ(2u, blueprint.get_entries().size());
     FT_ASSERT_EQ(0, blueprint.get_entries()[0].get_slot());
     FT_ASSERT_EQ(3, blueprint.get_entries()[1].get_item_id());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, blueprint.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, blueprint.get_error());
     return (1);
 }

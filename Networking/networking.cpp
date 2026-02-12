@@ -16,7 +16,7 @@ static void networking_update_operation_result(int &operation_result) noexcept
     int error_code;
 
     error_code = networking_consume_global_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
         operation_result = error_code;
     return ;
 }
@@ -30,7 +30,7 @@ static void networking_update_operation_result(int &operation_result) noexcept
 #endif
 
 SocketConfig::SocketConfig()
-    : _error_code(FT_ERR_SUCCESSS),
+    : _error_code(FT_ERR_SUCCESS),
       _thread_safe_enabled(false),
       _mutex(ft_nullptr),
       _type(SocketType::SERVER),
@@ -48,15 +48,15 @@ SocketConfig::SocketConfig()
 {
     int operation_result;
 
-    operation_result = FT_ERR_SUCCESSS;
-    if (operation_result == FT_ERR_SUCCESSS
-        && ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    operation_result = FT_ERR_SUCCESS;
+    if (operation_result == FT_ERR_SUCCESS
+        && ft_string::last_operation_error() != FT_ERR_SUCCESS)
         operation_result = ft_string::last_operation_error();
-    if (operation_result == FT_ERR_SUCCESSS
-        && ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (operation_result == FT_ERR_SUCCESS
+        && ft_string::last_operation_error() != FT_ERR_SUCCESS)
         operation_result = ft_string::last_operation_error();
-    if (operation_result == FT_ERR_SUCCESSS
-        && ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (operation_result == FT_ERR_SUCCESS
+        && ft_string::last_operation_error() != FT_ERR_SUCCESS)
         operation_result = ft_string::last_operation_error();
     socket_config_prepare_thread_safety(this);
     networking_update_operation_result(operation_result);
@@ -65,7 +65,7 @@ SocketConfig::SocketConfig()
 }
 
 SocketConfig::SocketConfig(const SocketConfig& other) noexcept
-    : _error_code(FT_ERR_SUCCESSS),
+    : _error_code(FT_ERR_SUCCESS),
       _thread_safe_enabled(false),
       _mutex(ft_nullptr),
       _type(SocketType::SERVER),
@@ -87,7 +87,7 @@ SocketConfig::SocketConfig(const SocketConfig& other) noexcept
 
     mutable_other = const_cast<SocketConfig*>(&other);
     other_locked = false;
-    operation_result = FT_ERR_SUCCESSS;
+    operation_result = FT_ERR_SUCCESS;
     bool lock_failed = socket_config_lock(mutable_other, &other_locked) != 0;
     networking_update_operation_result(operation_result);
     if (!lock_failed)
@@ -108,14 +108,14 @@ SocketConfig::SocketConfig(const SocketConfig& other) noexcept
         socket_config_unlock(mutable_other, other_locked);
         networking_consume_global_error();
     }
-    if (operation_result == FT_ERR_SUCCESSS
-        && ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (operation_result == FT_ERR_SUCCESS
+        && ft_string::last_operation_error() != FT_ERR_SUCCESS)
         operation_result = ft_string::last_operation_error();
-    if (operation_result == FT_ERR_SUCCESSS
-        && ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (operation_result == FT_ERR_SUCCESS
+        && ft_string::last_operation_error() != FT_ERR_SUCCESS)
         operation_result = ft_string::last_operation_error();
-    if (operation_result == FT_ERR_SUCCESSS
-        && ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (operation_result == FT_ERR_SUCCESS
+        && ft_string::last_operation_error() != FT_ERR_SUCCESS)
         operation_result = ft_string::last_operation_error();
     socket_config_prepare_thread_safety(this);
     networking_update_operation_result(operation_result);
@@ -192,14 +192,14 @@ SocketConfig& SocketConfig::operator=(const SocketConfig& other) noexcept
             networking_consume_global_error();
         }
     }
-    if (operation_result == FT_ERR_SUCCESSS
-        && ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (operation_result == FT_ERR_SUCCESS
+        && ft_string::last_operation_error() != FT_ERR_SUCCESS)
         operation_result = ft_string::last_operation_error();
-    if (operation_result == FT_ERR_SUCCESSS
-        && ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (operation_result == FT_ERR_SUCCESS
+        && ft_string::last_operation_error() != FT_ERR_SUCCESS)
         operation_result = ft_string::last_operation_error();
-    if (operation_result == FT_ERR_SUCCESSS
-        && ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (operation_result == FT_ERR_SUCCESS
+        && ft_string::last_operation_error() != FT_ERR_SUCCESS)
         operation_result = ft_string::last_operation_error();
     socket_config_prepare_thread_safety(this);
     networking_update_operation_result(operation_result);
@@ -208,7 +208,7 @@ SocketConfig& SocketConfig::operator=(const SocketConfig& other) noexcept
 }
 
 SocketConfig::SocketConfig(SocketConfig&& other) noexcept
-    : _error_code(FT_ERR_SUCCESSS),
+    : _error_code(FT_ERR_SUCCESS),
       _thread_safe_enabled(false),
       _mutex(ft_nullptr),
       _type(SocketType::SERVER),
@@ -228,7 +228,7 @@ SocketConfig::SocketConfig(SocketConfig&& other) noexcept
     int  operation_result;
 
     other_locked = false;
-    operation_result = FT_ERR_SUCCESSS;
+    operation_result = FT_ERR_SUCCESS;
     bool lock_failed = socket_config_lock(&other, &other_locked) != 0;
     networking_update_operation_result(operation_result);
     if (!lock_failed)
@@ -258,18 +258,18 @@ SocketConfig::SocketConfig(SocketConfig&& other) noexcept
         other._send_timeout = 0;
         other._multicast_group.clear();
         other._multicast_interface.clear();
-        other.report_operation_result(FT_ERR_SUCCESSS);
+        other.report_operation_result(FT_ERR_SUCCESS);
         socket_config_unlock(&other, other_locked);
         networking_consume_global_error();
     }
-    if (operation_result == FT_ERR_SUCCESSS
-        && ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (operation_result == FT_ERR_SUCCESS
+        && ft_string::last_operation_error() != FT_ERR_SUCCESS)
         operation_result = ft_string::last_operation_error();
-    if (operation_result == FT_ERR_SUCCESSS
-        && ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (operation_result == FT_ERR_SUCCESS
+        && ft_string::last_operation_error() != FT_ERR_SUCCESS)
         operation_result = ft_string::last_operation_error();
-    if (operation_result == FT_ERR_SUCCESSS
-        && ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (operation_result == FT_ERR_SUCCESS
+        && ft_string::last_operation_error() != FT_ERR_SUCCESS)
         operation_result = ft_string::last_operation_error();
     socket_config_prepare_thread_safety(this);
     networking_update_operation_result(operation_result);
@@ -344,7 +344,7 @@ SocketConfig& SocketConfig::operator=(SocketConfig&& other) noexcept
             other._send_timeout = 0;
             other._multicast_group.clear();
             other._multicast_interface.clear();
-            other.report_operation_result(FT_ERR_SUCCESSS);
+            other.report_operation_result(FT_ERR_SUCCESS);
         }
         if (second_locked)
         {
@@ -357,14 +357,14 @@ SocketConfig& SocketConfig::operator=(SocketConfig&& other) noexcept
             networking_consume_global_error();
         }
     }
-    if (operation_result == FT_ERR_SUCCESSS
-        && ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (operation_result == FT_ERR_SUCCESS
+        && ft_string::last_operation_error() != FT_ERR_SUCCESS)
         operation_result = ft_string::last_operation_error();
-    if (operation_result == FT_ERR_SUCCESSS
-        && ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (operation_result == FT_ERR_SUCCESS
+        && ft_string::last_operation_error() != FT_ERR_SUCCESS)
         operation_result = ft_string::last_operation_error();
-    if (operation_result == FT_ERR_SUCCESSS
-        && ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    if (operation_result == FT_ERR_SUCCESS
+        && ft_string::last_operation_error() != FT_ERR_SUCCESS)
         operation_result = ft_string::last_operation_error();
     socket_config_prepare_thread_safety(this);
     networking_update_operation_result(operation_result);

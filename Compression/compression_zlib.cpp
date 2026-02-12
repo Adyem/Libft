@@ -11,7 +11,7 @@ static bool compression_vector_operation_failed(void)
 {
     int vector_error = ft_global_error_stack_peek_last_error();
 
-    if (vector_error != FT_ERR_SUCCESSS)
+    if (vector_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(vector_error);
         return (true);
@@ -24,7 +24,7 @@ static int compression_string_pop_error(const ft_string &string_value)
     unsigned long long operation_id = string_value.last_operation_id();
 
     if (operation_id == 0)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     return (string_value.pop_operation_error(operation_id));
 }
 
@@ -37,7 +37,7 @@ static int  compression_store_in_vector(ft_vector<unsigned char> &destination, c
         destination.clear();
         if (compression_vector_operation_failed())
             return (1);
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0);
     }
     if (buffer == ft_nullptr)
@@ -52,7 +52,7 @@ static int  compression_store_in_vector(ft_vector<unsigned char> &destination, c
     if (compression_vector_operation_failed())
         return (1);
     ft_memcpy(destination_data, buffer, size);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -61,7 +61,7 @@ static int  compression_assign_string(ft_string &destination, const unsigned cha
     int string_error;
 
     string_error = ft_string::last_operation_error();
-    if (string_error != FT_ERR_SUCCESSS)
+    if (string_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(string_error);
         return (1);
@@ -70,12 +70,12 @@ static int  compression_assign_string(ft_string &destination, const unsigned cha
     {
         destination.clear();
         string_error = ft_string::last_operation_error();
-        if (string_error != FT_ERR_SUCCESSS)
+        if (string_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(string_error);
             return (1);
         }
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0);
     }
     if (buffer == ft_nullptr)
@@ -85,12 +85,12 @@ static int  compression_assign_string(ft_string &destination, const unsigned cha
     }
     destination.assign(reinterpret_cast<const char *>(buffer), size);
         string_error = ft_string::last_operation_error();
-        if (string_error != FT_ERR_SUCCESSS)
+        if (string_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(string_error);
             return (1);
         }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -140,7 +140,7 @@ unsigned char    *compress_buffer(const unsigned char *input_buffer, std::size_t
     resized_buffer = static_cast<unsigned char *>(cma_realloc(result_buffer, *compressed_size));
     if (resized_buffer)
         result_buffer = resized_buffer;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (result_buffer);
 }
 
@@ -188,7 +188,7 @@ unsigned char    *decompress_buffer(const unsigned char *input_buffer, std::size
         return (ft_nullptr);
     }
     *decompressed_size = actual_size;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (result_buffer);
 }
 
@@ -213,7 +213,7 @@ int ft_compress_string_to_vector(const ft_string &input, ft_vector<unsigned char
     {
         int string_error = compression_string_pop_error(input);
 
-        if (string_error != FT_ERR_SUCCESSS)
+        if (string_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(string_error);
             return (1);
@@ -229,7 +229,7 @@ int ft_compress_string_to_vector(const ft_string &input, ft_vector<unsigned char
     cma_free(compressed_buffer);
     if (store_status != 0)
         return (1);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -260,7 +260,7 @@ int ft_compress_vector_to_vector(const ft_vector<unsigned char> &input, ft_vecto
     cma_free(compressed_buffer);
     if (store_status != 0)
         return (1);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -291,7 +291,7 @@ int ft_decompress_vector_to_string(const ft_vector<unsigned char> &input, ft_str
     cma_free(decompressed_buffer);
     if (assign_status != 0)
         return (1);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -322,6 +322,6 @@ int ft_decompress_vector_to_vector(const ft_vector<unsigned char> &input, ft_vec
     cma_free(decompressed_buffer);
     if (store_status != 0)
         return (1);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }

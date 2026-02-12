@@ -6,7 +6,6 @@ vector2::vector2()
 {
     this->_x = 0.0;
     this->_y = 0.0;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -14,7 +13,6 @@ vector2::vector2(double x, double y)
 {
     this->_x = x;
     this->_y = y;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -29,7 +27,6 @@ vector3::vector3()
     this->_x = 0.0;
     this->_y = 0.0;
     this->_z = 0.0;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -38,7 +35,6 @@ vector3::vector3(double x, double y, double z)
     this->_x = x;
     this->_y = y;
     this->_z = z;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -54,7 +50,6 @@ vector4::vector4()
     this->_y = 0.0;
     this->_z = 0.0;
     this->_w = 0.0;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -64,7 +59,6 @@ vector4::vector4(double x, double y, double z, double w)
     this->_y = y;
     this->_z = z;
     this->_w = w;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -93,7 +87,6 @@ matrix2::matrix2()
         }
         row++;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -104,7 +97,6 @@ matrix2::matrix2(double m00, double m01,
     this->_m[0][1] = m01;
     this->_m[1][0] = m10;
     this->_m[1][1] = m11;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -133,7 +125,6 @@ matrix3::matrix3()
         }
         row++;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -150,7 +141,6 @@ matrix3::matrix3(double m00, double m01, double m02,
     this->_m[2][0] = m20;
     this->_m[2][1] = m21;
     this->_m[2][2] = m22;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -179,7 +169,6 @@ matrix4::matrix4()
         }
         row++;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -204,7 +193,6 @@ matrix4::matrix4(double m00, double m01, double m02, double m03,
     this->_m[3][1] = m31;
     this->_m[3][2] = m32;
     this->_m[3][3] = m33;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return ;
 }
 

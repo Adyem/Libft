@@ -1,15 +1,19 @@
+#include "../test_internal.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../CPP_class/class_string.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/system_utils.hpp"
 #include "../../System_utils/test_runner.hpp"
 
+#ifndef LIBFT_TEST_BUILD
+#endif
+
 static int su_test_health_success(void *context, ft_string &detail)
 {
     (void)context;
 
     detail = "ready";
-    if (detail.get_error() != FT_ERR_SUCCESSS)
+    if (detail.get_error() != FT_ERR_SUCCESS)
         return (-1);
     return (0);
 }
@@ -22,7 +26,7 @@ static int su_test_health_failure(void *context, ft_string &detail)
     if (failure_counter != ft_nullptr)
         *failure_counter += 1;
     detail = "database unavailable";
-    if (detail.get_error() != FT_ERR_SUCCESSS)
+    if (detail.get_error() != FT_ERR_SUCCESS)
         return (-1);
     ft_errno = FT_ERR_INTERNAL;
     return (-1);
@@ -38,7 +42,7 @@ FT_TEST(test_su_health_register_and_run_success,
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     if (su_health_register_check("ready", &su_test_health_success, ft_nullptr) != 0)
         return (0);
-    if (ft_errno != FT_ERR_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESS)
         return (0);
     count = 0;
     if (su_health_run_checks(results, 1, &count) != 0)
@@ -51,7 +55,7 @@ FT_TEST(test_su_health_register_and_run_success,
         return (0);
     if (!(results[0].detail == "ready"))
         return (0);
-    if (results[0].error_code != FT_ERR_SUCCESSS)
+    if (results[0].error_code != FT_ERR_SUCCESS)
         return (0);
     su_health_clear_checks();
     return (1);
@@ -109,7 +113,7 @@ FT_TEST(test_su_health_run_check_targets_single_entry,
         return (0);
     if (!(result.detail == "ready"))
         return (0);
-    if (result.error_code != FT_ERR_SUCCESSS)
+    if (result.error_code != FT_ERR_SUCCESS)
         return (0);
     if (su_health_run_check("missing", &result) != -1)
         return (0);
@@ -123,7 +127,7 @@ FT_TEST(test_su_health_unregister_check_validates_name,
         "su_health_unregister_check rejects null identifiers")
 {
     su_health_clear_checks();
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     if (su_health_unregister_check(ft_nullptr) != -1)
         return (0);
     if (ft_errno != FT_ERR_INVALID_ARGUMENT)
@@ -145,7 +149,7 @@ FT_TEST(test_su_health_unregister_check_removes_registered_entry,
         return (0);
     if (su_health_unregister_check("cache") != 0)
         return (0);
-    if (ft_errno != FT_ERR_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESS)
         return (0);
     if (su_health_run_check("cache", &result) != -1)
         return (0);

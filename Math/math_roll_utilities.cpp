@@ -1,6 +1,7 @@
 #include "roll.hpp"
 #include "math_internal.hpp"
 #include <climits>
+#include <cstdio>
 #include <cstdlib>
 #include "../CMA/CMA.hpp"
 #include "../Basic/basic.hpp"
@@ -99,7 +100,7 @@ int math_roll_convert_previous(char *string, int *i, int *error)
         }
         return (0);
     }
-    result = ft_atoi(&string[*i], ft_nullptr);
+    result = ft_atoi(&string[*i]);
     if (DEBUG == 1)
         pf_printf("the first number is %d and i=%d\n", result, *i);
     return (result);
@@ -120,7 +121,7 @@ int    math_roll_convert_next(char *string, int i, int *error)
         }
         return (0);
     }
-    result = ft_atoi(&string[i], ft_nullptr);
+    result = ft_atoi(&string[i]);
     if (DEBUG == 1)
         pf_printf("the second number is %d\n", result);
     return (result);
@@ -128,13 +129,14 @@ int    math_roll_convert_next(char *string, int i, int *error)
 
 int    math_roll_itoa(int result, int *i, char *string)
 {
-    char    *temp;
-    int        y;
+    char    temp[32];
+    int     y;
+    int     written_count;
 
     if (DEBUG == 1)
         pf_printf("roll itoa: the value of i=%d\n", *i);
-    temp = cma_itoa(result);
-    if (!temp)
+    written_count = std::snprintf(temp, sizeof(temp), "%d", result);
+    if (written_count < 0)
         return (1);
     y = 0;
     while (temp[y])
@@ -143,6 +145,5 @@ int    math_roll_itoa(int result, int *i, char *string)
         (*i)++;
         y++;
     }
-    cma_free(temp);
     return (0);
 }

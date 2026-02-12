@@ -1,3 +1,4 @@
+#include "../test_internal.hpp"
 #include "../../CMA/CMA.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
@@ -5,6 +6,9 @@
 #include "../../CPP_class/class_nullptr.hpp"
 #include <new>
 #include <cstdint>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 struct alignas(64) aligned_trivial_type
 {

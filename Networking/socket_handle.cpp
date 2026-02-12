@@ -34,13 +34,13 @@ static bool &ft_socket_runtime_initialized()
 
 ft_socket_handle::ft_socket_handle() : _socket_fd(-1)
 {
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
 ft_socket_handle::ft_socket_handle(int socket_fd) : _socket_fd(-1)
 {
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->reset(socket_fd);
     return ;
 }
@@ -55,7 +55,7 @@ ft_socket_handle::ft_socket_handle(ft_socket_handle &&other) noexcept
     : _socket_fd(other._socket_fd)
 {
     other._socket_fd = -1;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -66,7 +66,7 @@ ft_socket_handle &ft_socket_handle::operator=(ft_socket_handle &&other) noexcept
         this->close();
         this->_socket_fd = other._socket_fd;
         other._socket_fd = -1;
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
     }
     return (*this);
 }
@@ -79,7 +79,7 @@ bool ft_socket_handle::reset(int socket_fd)
         {
             return (false);
         }
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (true);
     }
     if (this->_socket_fd >= 0)
@@ -90,7 +90,7 @@ bool ft_socket_handle::reset(int socket_fd)
         }
     }
     this->_socket_fd = socket_fd;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -98,7 +98,7 @@ bool ft_socket_handle::close()
 {
     if (this->_socket_fd < 0)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (true);
     }
     if (nw_close(this->_socket_fd) != 0)
@@ -106,7 +106,7 @@ bool ft_socket_handle::close()
         int close_error;
 
         close_error = ft_global_error_stack_peek_last_error();
-        if (close_error == FT_ERR_SUCCESSS)
+        if (close_error == FT_ERR_SUCCESS)
         {
             close_error = FT_ERR_SOCKET_CLOSE_FAILED;
         }
@@ -114,7 +114,7 @@ bool ft_socket_handle::close()
         return (false);
     }
     this->_socket_fd = -1;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -145,7 +145,7 @@ int ft_socket_runtime_acquire()
             int runtime_error;
 
             runtime_error = ft_map_system_error(WSAGetLastError());
-            if (runtime_error == FT_ERR_SUCCESSS)
+            if (runtime_error == FT_ERR_SUCCESS)
             {
                 runtime_error = FT_ERR_INITIALIZATION_FAILED;
             }
@@ -160,8 +160,8 @@ int ft_socket_runtime_acquire()
     }
     reference_count++;
 #endif
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 void ft_socket_runtime_release()
@@ -180,7 +180,7 @@ void ft_socket_runtime_release()
                 int cleanup_error;
 
                 cleanup_error = ft_map_system_error(WSAGetLastError());
-                if (cleanup_error == FT_ERR_SUCCESSS)
+                if (cleanup_error == FT_ERR_SUCCESS)
                 {
                     cleanup_error = FT_ERR_INTERNAL;
                 }
@@ -188,13 +188,13 @@ void ft_socket_runtime_release()
             }
             else
             {
-                ft_global_error_stack_push(FT_ERR_SUCCESSS);
+                ft_global_error_stack_push(FT_ERR_SUCCESS);
             }
             initialized = false;
             return ;
         }
     }
 #endif
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }

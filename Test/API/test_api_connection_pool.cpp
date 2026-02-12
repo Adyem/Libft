@@ -1,3 +1,4 @@
+#include "../test_internal.hpp"
 #include "../../API/api.hpp"
 #include "../../API/api_internal.hpp"
 #include "../../Networking/socket_class.hpp"
@@ -8,6 +9,9 @@
 #include "../../Errno/errno.hpp"
 #include "../../Basic/basic.hpp"
 #include <atomic>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 #ifdef _WIN32
 # include <windows.h>
@@ -53,7 +57,7 @@ static void api_pool_test_server(api_pool_test_server_context *context)
     server_configuration._ip = "127.0.0.1";
     server_configuration._port = g_api_pool_test_port;
     server_socket = ft_socket(server_configuration);
-    if (networking_fetch_last_error() != FT_ERR_SUCCESSS)
+    if (networking_fetch_last_error() != FT_ERR_SUCCESS)
     {
         context->result.store(networking_fetch_last_error());
         context->ready.store(true);
@@ -100,7 +104,7 @@ static void api_pool_test_server(api_pool_test_server_context *context)
 
                 current_char = buffer[buffer_index];
                 request_storage.append(current_char);
-                if (request_storage.get_error() != FT_ERR_SUCCESSS)
+                if (request_storage.get_error() != FT_ERR_SUCCESS)
                 {
                     context->result.store(request_storage.get_error());
                     connection_active = false;
@@ -173,7 +177,7 @@ FT_TEST(test_api_connection_pool_reuses_connections,
     context.result.store(0);
     ft_thread server_thread(api_pool_test_server, &context);
 
-    if (server_thread.get_error() != FT_ERR_SUCCESSS)
+    if (server_thread.get_error() != FT_ERR_SUCCESS)
         return (0);
     int wait_attempts;
 

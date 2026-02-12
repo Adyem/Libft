@@ -14,13 +14,13 @@ static int logger_remove_oldest_rotation(const ft_string &rotation_base, size_t 
     int unlink_result;
 
     oldest_index = ft_to_string(static_cast<long>(retention_count));
-    if (oldest_index.get_error() != FT_ERR_SUCCESSS)
+    if (oldest_index.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = oldest_index.get_error();
         return (-1);
     }
     oldest_path = rotation_base + oldest_index;
-    if (oldest_path.get_error() != FT_ERR_SUCCESSS)
+    if (oldest_path.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = oldest_path.get_error();
         return (-1);
@@ -58,25 +58,25 @@ static int logger_shift_rotation_chain(const ft_string &rotation_base, size_t re
         ft_string destination_path;
 
         source_index = ft_to_string(static_cast<long>(current_index - 1));
-        if (source_index.get_error() != FT_ERR_SUCCESSS)
+        if (source_index.get_error() != FT_ERR_SUCCESS)
         {
             ft_errno = source_index.get_error();
             return (-1);
         }
         destination_index = ft_to_string(static_cast<long>(current_index));
-        if (destination_index.get_error() != FT_ERR_SUCCESSS)
+        if (destination_index.get_error() != FT_ERR_SUCCESS)
         {
             ft_errno = destination_index.get_error();
             return (-1);
         }
         source_path = rotation_base + source_index;
-        if (source_path.get_error() != FT_ERR_SUCCESSS)
+        if (source_path.get_error() != FT_ERR_SUCCESS)
         {
             ft_errno = source_path.get_error();
             return (-1);
         }
         destination_path = rotation_base + destination_index;
-        if (destination_path.get_error() != FT_ERR_SUCCESSS)
+        if (destination_path.get_error() != FT_ERR_SUCCESS)
         {
             ft_errno = destination_path.get_error();
             return (-1);
@@ -113,7 +113,7 @@ static int logger_prepare_rotation_internal(s_file_sink *sink, bool *rotate_for_
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
-    if (sink->path.empty() || sink->path.get_error() != FT_ERR_SUCCESSS)
+    if (sink->path.empty() || sink->path.get_error() != FT_ERR_SUCCESS)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
@@ -127,7 +127,7 @@ static int logger_prepare_rotation_internal(s_file_sink *sink, bool *rotate_for_
     {
         *rotate_for_size = false;
         *rotate_for_age = false;
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESS;
         return (0);
     }
     if (fstat(sink->fd, &file_stats) == -1)
@@ -160,7 +160,7 @@ static int logger_prepare_rotation_internal(s_file_sink *sink, bool *rotate_for_
                 *rotate_for_age = true;
         }
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     return (0);
 }
 
@@ -205,7 +205,7 @@ void logger_execute_rotation(s_file_sink *sink)
     if (retention_count > 0)
     {
         rotation_base = sink->path + ".";
-        if (rotation_base.get_error() != FT_ERR_SUCCESSS)
+        if (rotation_base.get_error() != FT_ERR_SUCCESS)
         {
             ft_errno = rotation_base.get_error();
             goto cleanup;
@@ -215,7 +215,7 @@ void logger_execute_rotation(s_file_sink *sink)
         if (logger_shift_rotation_chain(rotation_base, retention_count) != 0)
             goto cleanup;
         rotated_path = sink->path + ".1";
-        if (rotated_path.get_error() != FT_ERR_SUCCESSS)
+        if (rotated_path.get_error() != FT_ERR_SUCCESS)
         {
             ft_errno = rotated_path.get_error();
             goto cleanup;
@@ -250,7 +250,7 @@ void logger_execute_rotation(s_file_sink *sink)
         errno = saved_errno;
         goto cleanup;
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
 
 cleanup:
     if (should_unlock)
@@ -269,7 +269,7 @@ void ft_log_rotate(s_file_sink *sink)
         return ;
     if (!rotate_for_size && !rotate_for_age)
     {
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESS;
         return ;
     }
     logger_execute_rotation(sink);

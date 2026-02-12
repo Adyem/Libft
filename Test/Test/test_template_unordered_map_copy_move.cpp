@@ -1,12 +1,17 @@
+#include "../test_internal.hpp"
 #include "../../Template/unordered_map.hpp"
 #include "../../Template/move.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
 
+#ifndef LIBFT_TEST_BUILD
+#endif
+
 FT_TEST(test_ft_unordered_map_copy_constructor_recreates_mutex,
-        "ft_unordered_map copy constructor rebuilds mutex for independent locking")
+        "ft_unordered_map initialize(copy) rebuilds mutex for independent locking")
 {
     ft_unordered_map<int, int> source_map;
+    ft_unordered_map<int, int> copied_map;
     bool source_lock_acquired;
     bool copy_lock_acquired;
 
@@ -16,8 +21,8 @@ FT_TEST(test_ft_unordered_map_copy_constructor_recreates_mutex,
     source_map.insert(2, 20);
     FT_ASSERT_EQ(0, source_map.enable_thread_safety());
     FT_ASSERT(source_map.is_thread_safe());
-
-    ft_unordered_map<int, int> copied_map(source_map);
+    FT_ASSERT_EQ(0, copied_map.destroy());
+    FT_ASSERT_EQ(0, copied_map.initialize(source_map));
 
     FT_ASSERT(copied_map.is_thread_safe());
     FT_ASSERT(source_map.is_thread_safe());
@@ -69,16 +74,17 @@ FT_TEST(test_ft_unordered_map_copy_assignment_rebuilds_mutex,
 }
 
 FT_TEST(test_ft_unordered_map_move_constructor_resets_source_mutex,
-        "ft_unordered_map move constructor recreates mutex and clears source guard")
+        "ft_unordered_map initialize(move) recreates mutex and clears source guard")
 {
     ft_unordered_map<int, int> source_map;
+    ft_unordered_map<int, int> moved_map;
 
     source_map.insert(6, 60);
     source_map.insert(8, 80);
     FT_ASSERT_EQ(0, source_map.enable_thread_safety());
     FT_ASSERT(source_map.is_thread_safe());
-
-    ft_unordered_map<int, int> moved_map(ft_move(source_map));
+    FT_ASSERT_EQ(0, moved_map.destroy());
+    FT_ASSERT_EQ(0, moved_map.initialize(ft_move(source_map)));
 
     FT_ASSERT(moved_map.is_thread_safe());
     FT_ASSERT_EQ(false, source_map.is_thread_safe());

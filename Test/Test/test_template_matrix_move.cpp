@@ -1,7 +1,11 @@
+#include "../test_internal.hpp"
 #include "../../Template/matrix.hpp"
 #include "../../Template/move.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_ft_matrix_move_constructor_recreates_mutex,
         "ft_matrix move constructor rebuilds mutex and keeps values intact")

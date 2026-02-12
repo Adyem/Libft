@@ -8,20 +8,20 @@ static int write_indent(ft_string &output, int indent) noexcept
     while (indent_index < indent)
     {
         output.append(' ');
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             return (ft_string::last_operation_error());
         }
         indent_index++;
     }
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 static int write_node(const yaml_value *value, ft_string &output, int indent) noexcept
 {
     if (!value)
     {
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     }
     yaml_value::thread_guard guard(value);
 
@@ -33,7 +33,7 @@ static int write_node(const yaml_value *value, ft_string &output, int indent) no
     {
         int yaml_value_error = ft_global_error_stack_drop_last_error();
 
-        if (yaml_value_error != FT_ERR_SUCCESSS)
+        if (yaml_value_error != FT_ERR_SUCCESS)
             return (yaml_value_error);
     }
     if (value_type == YAML_SCALAR)
@@ -41,26 +41,26 @@ static int write_node(const yaml_value *value, ft_string &output, int indent) no
         int indent_error;
 
         indent_error = write_indent(output, indent);
-        if (indent_error != FT_ERR_SUCCESSS)
+        if (indent_error != FT_ERR_SUCCESS)
             return (indent_error);
         const ft_string &scalar = value->get_scalar();
             {
                 int yaml_value_error = ft_global_error_stack_drop_last_error();
 
-                if (yaml_value_error != FT_ERR_SUCCESSS)
+                if (yaml_value_error != FT_ERR_SUCCESS)
                     return (yaml_value_error);
             }
         output.append(scalar);
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             return (ft_string::last_operation_error());
         }
         output.append('\n');
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             return (ft_string::last_operation_error());
         }
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     }
     if (value_type == YAML_LIST)
     {
@@ -68,19 +68,19 @@ static int write_node(const yaml_value *value, ft_string &output, int indent) no
         {
             int yaml_value_error = ft_global_error_stack_drop_last_error();
 
-            if (yaml_value_error != FT_ERR_SUCCESSS)
+            if (yaml_value_error != FT_ERR_SUCCESS)
                 return (yaml_value_error);
         }
         size_t index = 0;
         size_t list_count = list_ref.size();
-        if (list_ref.get_error() != FT_ERR_SUCCESSS)
+        if (list_ref.get_error() != FT_ERR_SUCCESS)
         {
             return (list_ref.get_error());
         }
         while (index < list_count)
         {
             const yaml_value *item = list_ref[index];
-            if (list_ref.get_error() != FT_ERR_SUCCESSS)
+            if (list_ref.get_error() != FT_ERR_SUCCESS)
             {
                 return (list_ref.get_error());
             }
@@ -91,7 +91,7 @@ static int write_node(const yaml_value *value, ft_string &output, int indent) no
                 {
                     int yaml_value_error = ft_global_error_stack_drop_last_error();
 
-                    if (yaml_value_error != FT_ERR_SUCCESSS)
+                    if (yaml_value_error != FT_ERR_SUCCESS)
                         return (yaml_value_error);
                 }
                 if (item_type == YAML_SCALAR)
@@ -102,10 +102,10 @@ static int write_node(const yaml_value *value, ft_string &output, int indent) no
                 int indent_error;
 
                 indent_error = write_indent(output, indent);
-                if (indent_error != FT_ERR_SUCCESSS)
+                if (indent_error != FT_ERR_SUCCESS)
                     return (indent_error);
                 output.append("- ");
-                if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+                if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
                 {
                     return (ft_string::last_operation_error());
                 }
@@ -113,16 +113,16 @@ static int write_node(const yaml_value *value, ft_string &output, int indent) no
                 {
                     int yaml_value_error = ft_global_error_stack_drop_last_error();
 
-                    if (yaml_value_error != FT_ERR_SUCCESSS)
+                    if (yaml_value_error != FT_ERR_SUCCESS)
                         return (yaml_value_error);
                 }
                 output.append(scalar);
-                if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+                if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
                 {
                     return (ft_string::last_operation_error());
                 }
                 output.append('\n');
-                if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+                if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
                 {
                     return (ft_string::last_operation_error());
                 }
@@ -132,22 +132,22 @@ static int write_node(const yaml_value *value, ft_string &output, int indent) no
                 int indent_error;
 
                 indent_error = write_indent(output, indent);
-                if (indent_error != FT_ERR_SUCCESSS)
+                if (indent_error != FT_ERR_SUCCESS)
                     return (indent_error);
                 output.append("-\n");
-                if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+                if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
                 {
                     return (ft_string::last_operation_error());
                 }
                 int node_error;
 
                 node_error = write_node(item, output, indent + 2);
-                if (node_error != FT_ERR_SUCCESSS)
+                if (node_error != FT_ERR_SUCCESS)
                     return (node_error);
             }
             index++;
         }
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     }
     if (value_type == YAML_MAP)
     {
@@ -155,19 +155,19 @@ static int write_node(const yaml_value *value, ft_string &output, int indent) no
         {
             int yaml_value_error = ft_global_error_stack_drop_last_error();
 
-            if (yaml_value_error != FT_ERR_SUCCESSS)
+            if (yaml_value_error != FT_ERR_SUCCESS)
                 return (yaml_value_error);
         }
         const ft_vector<ft_string> &keys = value->get_map_keys();
         {
             int yaml_value_error = ft_global_error_stack_drop_last_error();
 
-            if (yaml_value_error != FT_ERR_SUCCESSS)
+            if (yaml_value_error != FT_ERR_SUCCESS)
                 return (yaml_value_error);
         }
         size_t key_index = 0;
         size_t key_count = keys.size();
-        if (keys.get_error() != FT_ERR_SUCCESSS)
+        if (keys.get_error() != FT_ERR_SUCCESS)
         {
             return (keys.get_error());
         }
@@ -178,7 +178,7 @@ static int write_node(const yaml_value *value, ft_string &output, int indent) no
             {
                 int map_error = map_ref.last_operation_error();
 
-                if (map_error != FT_ERR_SUCCESSS)
+                if (map_error != FT_ERR_SUCCESS)
                     return (map_error);
             }
             bool child_is_scalar = false;
@@ -188,7 +188,7 @@ static int write_node(const yaml_value *value, ft_string &output, int indent) no
                 {
                     int yaml_value_error = ft_global_error_stack_drop_last_error();
 
-                    if (yaml_value_error != FT_ERR_SUCCESSS)
+                    if (yaml_value_error != FT_ERR_SUCCESS)
                         return (yaml_value_error);
                 }
                 if (child_type == YAML_SCALAR)
@@ -199,15 +199,15 @@ static int write_node(const yaml_value *value, ft_string &output, int indent) no
                 int indent_error;
 
                 indent_error = write_indent(output, indent);
-                if (indent_error != FT_ERR_SUCCESSS)
+                if (indent_error != FT_ERR_SUCCESS)
                     return (indent_error);
                 output.append(key);
-                if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+                if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
                 {
                     return (ft_string::last_operation_error());
                 }
                 output.append(": ");
-                if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+                if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
                 {
                     return (ft_string::last_operation_error());
                 }
@@ -215,16 +215,16 @@ static int write_node(const yaml_value *value, ft_string &output, int indent) no
                 {
                     int yaml_value_error = ft_global_error_stack_drop_last_error();
 
-                    if (yaml_value_error != FT_ERR_SUCCESSS)
+                    if (yaml_value_error != FT_ERR_SUCCESS)
                         return (yaml_value_error);
                 }
                 output.append(scalar);
-                if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+                if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
                 {
                     return (ft_string::last_operation_error());
                 }
                 output.append('\n');
-                if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+                if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
                 {
                     return (ft_string::last_operation_error());
                 }
@@ -234,29 +234,29 @@ static int write_node(const yaml_value *value, ft_string &output, int indent) no
                 int indent_error;
 
                 indent_error = write_indent(output, indent);
-                if (indent_error != FT_ERR_SUCCESSS)
+                if (indent_error != FT_ERR_SUCCESS)
                     return (indent_error);
                 output.append(key);
-                if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+                if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
                 {
                     return (ft_string::last_operation_error());
                 }
                 output.append(":\n");
-                if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+                if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
                 {
                     return (ft_string::last_operation_error());
                 }
                 int node_error;
 
                 node_error = write_node(child, output, indent + 2);
-                if (node_error != FT_ERR_SUCCESSS)
+                if (node_error != FT_ERR_SUCCESS)
                     return (node_error);
             }
             key_index++;
         }
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     }
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 ft_string yaml_write_to_string(const yaml_value *value) noexcept
@@ -265,12 +265,12 @@ ft_string yaml_write_to_string(const yaml_value *value) noexcept
     int write_error;
 
     write_error = write_node(value, output, 0);
-    if (write_error != FT_ERR_SUCCESSS)
+    if (write_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(write_error);
         return (ft_string(write_error));
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (output);
 }
 
@@ -279,14 +279,14 @@ int yaml_write_to_file(const char *file_path, const yaml_value *value) noexcept
     int final_error;
     int result;
 
-    final_error = FT_ERR_SUCCESSS;
+    final_error = FT_ERR_SUCCESS;
     result = 0;
     {
         ft_string output = yaml_write_to_string(value);
         int serialize_error;
 
         serialize_error = ft_global_error_stack_drop_last_error();
-        if (serialize_error != FT_ERR_SUCCESSS)
+        if (serialize_error != FT_ERR_SUCCESS)
         {
             final_error = serialize_error;
             result = -1;
@@ -299,7 +299,7 @@ int yaml_write_to_file(const char *file_path, const yaml_value *value) noexcept
             int open_error = ft_global_error_stack_drop_last_error();
             if (file == ft_nullptr)
             {
-                if (open_error != FT_ERR_SUCCESSS)
+                if (open_error != FT_ERR_SUCCESS)
                     final_error = open_error;
                 else
                     final_error = FT_ERR_INVALID_ARGUMENT;
@@ -321,11 +321,11 @@ int yaml_write_to_file(const char *file_path, const yaml_value *value) noexcept
 
                     close_error = su_fclose(file);
                     int close_status = ft_global_error_stack_drop_last_error();
-                    if (close_error != 0 && write_error == FT_ERR_SUCCESSS)
+                    if (close_error != 0 && write_error == FT_ERR_SUCCESS)
                         write_error = close_status;
-                    if (write_error != FT_ERR_SUCCESSS)
+                    if (write_error != FT_ERR_SUCCESS)
                         final_error = write_error;
-                    else if (close_status != FT_ERR_SUCCESSS)
+                    else if (close_status != FT_ERR_SUCCESS)
                         final_error = close_status;
                     else
                         final_error = FT_ERR_INVALID_ARGUMENT;
@@ -339,7 +339,7 @@ int yaml_write_to_file(const char *file_path, const yaml_value *value) noexcept
                     int close_error = ft_global_error_stack_drop_last_error();
                     if (close_result != 0)
                     {
-                        if (close_error != FT_ERR_SUCCESSS)
+                        if (close_error != FT_ERR_SUCCESS)
                             final_error = close_error;
                         else
                             final_error = FT_ERR_INVALID_ARGUMENT;
@@ -350,7 +350,7 @@ int yaml_write_to_file(const char *file_path, const yaml_value *value) noexcept
         }
     }
     if (result == 0)
-        final_error = FT_ERR_SUCCESSS;
+        final_error = FT_ERR_SUCCESS;
     ft_global_error_stack_push(final_error);
     return (result);
 }
@@ -363,17 +363,17 @@ int yaml_write_to_backend(ft_document_sink &sink, const yaml_value *value) noexc
 
     serialized = yaml_write_to_string(value);
     serialize_error = ft_global_error_stack_drop_last_error();
-    if (serialize_error != FT_ERR_SUCCESSS)
+    if (serialize_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(serialize_error);
         return (-1);
     }
     write_result = sink.write_all(serialized.c_str(), serialized.size());
-    if (write_result != FT_ERR_SUCCESSS)
+    if (write_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(write_result);
         return (-1);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }

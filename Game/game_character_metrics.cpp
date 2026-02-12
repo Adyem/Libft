@@ -18,7 +18,7 @@ void ft_character::emit_game_metric(const char *event_name, const char *attribut
     sample.delta_value = delta_value;
     sample.total_value = total_value;
     sample.unit = unit;
-    sample.error_code = FT_ERR_SUCCESSS;
+    sample.error_code = FT_ERR_SUCCESS;
     sample.error_tag = ft_nullptr;
     sample.success = true;
     observability_game_metrics_record(sample);

@@ -44,7 +44,7 @@ struct api_pooled_connection
             ft_global_error_stack_push(FT_ERR_NO_MEMORY);
             return (pointer);
         }
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (pointer);
     }
 
@@ -57,7 +57,7 @@ struct api_pooled_connection
     {
         if (pointer)
             cma_free(pointer);
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return ;
     }
 
@@ -154,7 +154,7 @@ static bool api_connection_pool_socket_is_alive(ft_socket &socket)
     }
     if (poll_result == 0)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (true);
     }
     if (poll_descriptor == -1)
@@ -183,7 +183,7 @@ static bool api_connection_pool_socket_is_alive(ft_socket &socket)
     if (socket_error == ft_map_system_error(WSAEWOULDBLOCK)
         || socket_error == ft_map_system_error(WSAEINTR))
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (true);
     }
 #else
@@ -191,7 +191,7 @@ static bool api_connection_pool_socket_is_alive(ft_socket &socket)
         || socket_error == ft_map_system_error(EAGAIN)
         || socket_error == ft_map_system_error(EINTR))
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (true);
     }
 #endif
@@ -293,7 +293,7 @@ static api_connection_pool_dispose_snapshot g_api_connection_pool_last_dispose_s
 {
     false,
     false,
-    FT_ERR_SUCCESSS,
+    FT_ERR_SUCCESS,
     0
 };
 
@@ -382,12 +382,12 @@ static void api_connection_pool_dispose_entry(api_pooled_connection &entry)
     socket_has_clients = false;
     socket_cleanup_allowed = true;
     client_count = 0;
-    socket_error = FT_ERR_SUCCESSS;
+    socket_error = FT_ERR_SUCCESS;
     if (socket_is_open)
     {
         client_count = entry.socket.get_client_count();
         socket_error = networking_fetch_last_error();
-        if (socket_error != FT_ERR_SUCCESSS)
+        if (socket_error != FT_ERR_SUCCESS)
         {
             socket_cleanup_allowed = false;
         }
@@ -396,14 +396,14 @@ static void api_connection_pool_dispose_entry(api_pooled_connection &entry)
     }
     if (!socket_cleanup_allowed)
     {
-        if (socket_error != FT_ERR_SUCCESSS)
+        if (socket_error != FT_ERR_SUCCESS)
             ft_global_error_stack_push(socket_error);
     }
     else if (socket_has_clients)
     {
         entry.socket.disconnect_all_clients();
         socket_error = networking_fetch_last_error();
-        if (socket_error != FT_ERR_SUCCESSS)
+        if (socket_error != FT_ERR_SUCCESS)
         {
             socket_cleanup_allowed = false;
             ft_global_error_stack_push(socket_error);
@@ -440,7 +440,7 @@ static bool api_connection_pool_bucket_erase(t_api_connection_bucket &entries, s
     if (index >= entries.size())
         return (false);
     entries.erase(entries.begin() + index);
-    if (entries.get_error() != FT_ERR_SUCCESSS)
+    if (entries.get_error() != FT_ERR_SUCCESS)
         return (false);
     return (true);
 }
@@ -450,7 +450,7 @@ static bool api_connection_pool_map_erase(t_api_connection_map &buckets, size_t 
     if (index >= buckets.size())
         return (false);
     buckets.erase(buckets.begin() + index);
-    if (buckets.get_error() != FT_ERR_SUCCESSS)
+    if (buckets.get_error() != FT_ERR_SUCCESS)
         return (false);
     return (true);
 }
@@ -527,7 +527,7 @@ static void api_connection_pool_prune_expired(t_api_connection_bucket &entries,
             if (age >= g_api_connection_idle_timeout_ms)
                 remove_entry = true;
         }
-        if (entry->socket.get_error() != FT_ERR_SUCCESSS)
+        if (entry->socket.get_error() != FT_ERR_SUCCESS)
             remove_entry = true;
         if (remove_entry)
         {
@@ -549,7 +549,7 @@ static void api_connection_pool_remove_oldest(t_api_connection_bucket &entries)
 
     entry_pointer = ft_move(entries[0]);
     entries.erase(entries.begin());
-    if (entries.get_error() != FT_ERR_SUCCESSS)
+    if (entries.get_error() != FT_ERR_SUCCESS)
         return ;
     if (!entry_pointer)
         return ;
@@ -740,7 +740,7 @@ void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
         api_connection_pool_evict(handle);
         return ;
     }
-    if (networking_fetch_last_error() != FT_ERR_SUCCESSS)
+    if (networking_fetch_last_error() != FT_ERR_SUCCESS)
     {
         handle.unlock(handle_lock_acquired);
         api_connection_pool_evict(handle);
@@ -770,7 +770,7 @@ void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
 
         new_entry.key = map_key;
         buckets.push_back(ft_move(new_entry));
-        if (buckets.get_error() != FT_ERR_SUCCESSS)
+        if (buckets.get_error() != FT_ERR_SUCCESS)
         {
             handle.unlock(handle_lock_acquired);
             api_connection_pool_evict(handle);
@@ -786,7 +786,7 @@ void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
 
         previous_size = bucket->size();
         api_connection_pool_remove_oldest(*bucket);
-        if (bucket->get_error() != FT_ERR_SUCCESSS)
+        if (bucket->get_error() != FT_ERR_SUCCESS)
             break ;
         if (bucket->size() >= previous_size)
             break ;
@@ -837,7 +837,7 @@ void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
 
     stored_entry = entry_pointer.get();
     bucket->push_back(ft_move(entry_pointer));
-    if (bucket->get_error() != FT_ERR_SUCCESSS)
+    if (bucket->get_error() != FT_ERR_SUCCESS)
     {
         if (stored_entry)
             api_connection_pool_dispose_entry(*stored_entry);

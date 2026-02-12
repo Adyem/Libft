@@ -36,7 +36,7 @@ struct api_request_metrics_guard
             _endpoint = host;
         else
             _endpoint = "(null)";
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
             _enabled = false;
             return ;
@@ -52,7 +52,7 @@ struct api_request_metrics_guard
                 return ;
             }
             _endpoint.append(':');
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
             {
                 _enabled = false;
                 cma_free(port_string);
@@ -60,7 +60,7 @@ struct api_request_metrics_guard
             }
             _endpoint.append(port_string);
             cma_free(port_string);
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
             {
                 _enabled = false;
                 return ;
@@ -91,7 +91,7 @@ struct api_request_metrics_guard
         status_value = -1;
         if (_status_pointer)
             status_value = *_status_pointer;
-        error_value = FT_ERR_SUCCESSS;
+        error_value = FT_ERR_SUCCESS;
         if (_error_pointer)
             error_value = *_error_pointer;
         sample.labels.component = "api";
@@ -109,7 +109,7 @@ struct api_request_metrics_guard
         sample.status_code = status_value;
         sample.error_code = error_value;
         sample.error_tag = ft_nullptr;
-        if (error_value == FT_ERR_SUCCESSS)
+        if (error_value == FT_ERR_SUCCESS)
             sample.success = true;
         else
             sample.success = false;

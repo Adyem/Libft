@@ -36,14 +36,14 @@ int ft_socket::setup_client(const SocketConfig &config)
     int thread_error;
     thread_error = socket_config_prepare_thread_safety(mutable_config);
     thread_error = networking_consume_thread_error();
-    if (thread_error != FT_ERR_SUCCESSS)
+    if (thread_error != FT_ERR_SUCCESS)
     {
         this->report_operation_result(thread_error);
         return (this->_error_code);
     }
     thread_error = socket_config_lock(mutable_config, &lock_acquired);
     thread_error = networking_consume_thread_error();
-    if (thread_error != FT_ERR_SUCCESSS)
+    if (thread_error != FT_ERR_SUCCESS)
     {
         this->report_operation_result(thread_error);
         return (this->_error_code);
@@ -57,21 +57,21 @@ int ft_socket::setup_client(const SocketConfig &config)
         int unlock_error;
 
         unlock_error = networking_consume_thread_error();
-        if (unlock_error != FT_ERR_SUCCESSS)
+        if (unlock_error != FT_ERR_SUCCESS)
         {
             this->report_operation_result(unlock_error);
             return (this->_error_code);
         }
     }
-    if (this->create_socket(config) != FT_ERR_SUCCESSS)
+    if (this->create_socket(config) != FT_ERR_SUCCESS)
         return (this->_error_code);
     if (non_blocking)
-        if (this->set_non_blocking(config) != FT_ERR_SUCCESSS)
+        if (this->set_non_blocking(config) != FT_ERR_SUCCESS)
             return (this->_error_code);
     if (has_timeout)
-        if (this->set_timeouts(config) != FT_ERR_SUCCESSS)
+        if (this->set_timeouts(config) != FT_ERR_SUCCESS)
             return (this->_error_code);
-    if (this->configure_address(config) != FT_ERR_SUCCESSS)
+    if (this->configure_address(config) != FT_ERR_SUCCESS)
         return (this->_error_code);
     if (address_family == AF_INET)
         addr_len = sizeof(struct sockaddr_in);
@@ -115,8 +115,8 @@ int ft_socket::setup_client(const SocketConfig &config)
 #endif
     }
     if (has_multicast)
-        if (this->join_multicast_group(config) != FT_ERR_SUCCESSS)
+        if (this->join_multicast_group(config) != FT_ERR_SUCCESS)
             return (this->_error_code);
-    this->report_operation_result(FT_ERR_SUCCESSS);
+    this->report_operation_result(FT_ERR_SUCCESS);
     return (this->_error_code);
 }

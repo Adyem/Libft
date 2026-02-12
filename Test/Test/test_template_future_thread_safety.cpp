@@ -1,8 +1,12 @@
+#include "../test_internal.hpp"
 #include "../../Template/future.hpp"
 #include "../../Template/promise.hpp"
 #include "../../Template/move.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_future_thread_safety_resets_errno,
         "ft_future installs optional mutex guards and resets errno to success")
@@ -18,9 +22,9 @@ FT_TEST(test_future_thread_safety_resets_errno,
     lock_acquired = false;
     FT_ASSERT_EQ(0, future.lock(&lock_acquired));
     FT_ASSERT_EQ(true, lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     future.unlock(lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     future.disable_thread_safety();
     FT_ASSERT_EQ(false, future.is_thread_safe_enabled());
     return (1);
@@ -62,9 +66,9 @@ FT_TEST(test_future_void_thread_safety_controls,
     lock_acquired = false;
     FT_ASSERT_EQ(0, future.lock(&lock_acquired));
     FT_ASSERT_EQ(true, lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     future.unlock(lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     future.disable_thread_safety();
     FT_ASSERT_EQ(false, future.is_thread_safe_enabled());
     return (1);

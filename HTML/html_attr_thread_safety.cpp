@@ -17,7 +17,7 @@ int html_attr_prepare_thread_safety(html_attr *attribute)
     }
     if (attribute->thread_safe_enabled && attribute->mutex)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0);
     }
     mutex_pointer = new (std::nothrow) pt_mutex();
@@ -30,11 +30,11 @@ int html_attr_prepare_thread_safety(html_attr *attribute)
         int mutex_error;
 
         if (mutex_pointer == ft_nullptr)
-            mutex_error = FT_ERR_SUCCESSS;
+            mutex_error = FT_ERR_SUCCESS;
         else
             mutex_error = ft_global_error_stack_drop_last_error();
 
-        if (mutex_error != FT_ERR_SUCCESSS)
+        if (mutex_error != FT_ERR_SUCCESS)
         {
             delete mutex_pointer;
             ft_global_error_stack_push(mutex_error);
@@ -43,7 +43,7 @@ int html_attr_prepare_thread_safety(html_attr *attribute)
     }
     attribute->mutex = mutex_pointer;
     attribute->thread_safe_enabled = true;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -74,7 +74,7 @@ int html_attr_lock(const html_attr *attribute, bool *lock_acquired)
     mutable_attribute = const_cast<html_attr *>(attribute);
     if (!mutable_attribute->thread_safe_enabled || !mutable_attribute->mutex)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0);
     }
     mutable_attribute->mutex->lock(THREAD_ID);
@@ -82,11 +82,11 @@ int html_attr_lock(const html_attr *attribute, bool *lock_acquired)
         int lock_error;
 
         if (mutable_attribute->mutex == ft_nullptr)
-            lock_error = FT_ERR_SUCCESSS;
+            lock_error = FT_ERR_SUCCESS;
         else
             lock_error = ft_global_error_stack_drop_last_error();
 
-        if (lock_error != FT_ERR_SUCCESSS)
+        if (lock_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(lock_error);
             return (-1);
@@ -94,7 +94,7 @@ int html_attr_lock(const html_attr *attribute, bool *lock_acquired)
     }
     if (lock_acquired)
         *lock_acquired = true;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -104,7 +104,7 @@ void html_attr_unlock(const html_attr *attribute, bool lock_acquired)
 
     if (!attribute || !lock_acquired)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return ;
     }
     mutable_attribute = const_cast<html_attr *>(attribute);
@@ -115,17 +115,17 @@ void html_attr_unlock(const html_attr *attribute, bool lock_acquired)
         int unlock_error;
 
         if (mutable_attribute->mutex == ft_nullptr)
-            unlock_error = FT_ERR_SUCCESSS;
+            unlock_error = FT_ERR_SUCCESS;
         else
             unlock_error = ft_global_error_stack_drop_last_error();
 
-        if (unlock_error != FT_ERR_SUCCESSS)
+        if (unlock_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(unlock_error);
             return ;
         }
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 

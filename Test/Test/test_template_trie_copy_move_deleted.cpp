@@ -1,6 +1,10 @@
+#include "../test_internal.hpp"
 #include "../../Template/trie.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <type_traits>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_ft_trie_copy_operations_deleted,
         "ft_trie copy constructor and assignment are deleted to avoid mutex sharing")

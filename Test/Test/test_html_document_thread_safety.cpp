@@ -1,8 +1,12 @@
+#include "../test_internal.hpp"
 #include "../../HTML/document.hpp"
 #include "../../CMA/CMA.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_html_document_thread_guard_resets_errno,
         "html_document::thread_guard resets errno to success when locking")
@@ -16,9 +20,9 @@ FT_TEST(test_html_document_thread_guard_resets_errno,
 
         FT_ASSERT_EQ(0, guard.get_status());
         FT_ASSERT_EQ(true, guard.lock_acquired());
-        FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     }
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -30,7 +34,7 @@ FT_TEST(test_html_document_thread_guard_tolerates_null_document,
 
     FT_ASSERT_EQ(0, guard.get_status());
     FT_ASSERT_EQ(false, guard.lock_acquired());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -49,7 +53,7 @@ FT_TEST(test_html_document_handles_mutex_allocation_failure,
 
         FT_ASSERT_EQ(0, guard.get_status());
         FT_ASSERT_EQ(false, guard.lock_acquired());
-        FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     }
     html_node *node = failure_document.create_node("div", "text");
 

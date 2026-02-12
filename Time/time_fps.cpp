@@ -26,20 +26,20 @@ long    time_fps::get_frames_per_second()
     int final_error;
 
     frames_per_second_value = 0;
-    final_error = FT_ERR_SUCCESSS;
+    final_error = FT_ERR_SUCCESS;
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
         int guard_error = ft_global_error_stack_drop_last_error();
 
-        if (guard_error != FT_ERR_SUCCESSS)
+        if (guard_error != FT_ERR_SUCCESS)
             final_error = guard_error;
         else if (this->_frames_per_second <= 0)
             final_error = FT_ERR_INVALID_ARGUMENT;
         else
         {
             frames_per_second_value = this->_frames_per_second;
-            final_error = FT_ERR_SUCCESSS;
+            final_error = FT_ERR_SUCCESS;
         }
     }
     ft_global_error_stack_push(final_error);
@@ -51,13 +51,13 @@ int     time_fps::set_frames_per_second(long frames_per_second)
     int final_error;
     int result;
 
-    final_error = FT_ERR_SUCCESSS;
+    final_error = FT_ERR_SUCCESS;
     result = -1;
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
         int guard_error = ft_global_error_stack_drop_last_error();
 
-        if (guard_error != FT_ERR_SUCCESSS)
+        if (guard_error != FT_ERR_SUCCESS)
         {
             final_error = guard_error;
             result = -1;
@@ -75,7 +75,7 @@ int     time_fps::set_frames_per_second(long frames_per_second)
             this->_frames_per_second = frames_per_second;
             this->_frame_duration_ms = 1000.0 / static_cast<double>(frames_per_second);
             this->_last_frame_time = std::chrono::steady_clock::now();
-            final_error = FT_ERR_SUCCESSS;
+            final_error = FT_ERR_SUCCESS;
             result = 0;
         }
     }
@@ -87,12 +87,12 @@ void    time_fps::sleep_to_next_frame()
 {
     int final_error;
 
-    final_error = FT_ERR_SUCCESSS;
+    final_error = FT_ERR_SUCCESS;
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
         int guard_error = ft_global_error_stack_drop_last_error();
 
-        if (guard_error != FT_ERR_SUCCESSS)
+        if (guard_error != FT_ERR_SUCCESS)
             final_error = guard_error;
         else if (this->_frame_duration_ms <= 0.0)
             final_error = FT_ERR_INVALID_ARGUMENT;
@@ -108,7 +108,7 @@ void    time_fps::sleep_to_next_frame()
             if (remaining_ms > 0.0)
                 time_sleep_ms(static_cast<unsigned int>(remaining_ms));
             this->_last_frame_time = std::chrono::steady_clock::now();
-            final_error = FT_ERR_SUCCESSS;
+            final_error = FT_ERR_SUCCESS;
         }
     }
     ft_global_error_stack_push(final_error);

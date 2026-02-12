@@ -61,7 +61,7 @@ int ft_log_set_remote_sink(const char *host, unsigned short port, bool use_tcp)
     sink->port = port;
     sink->use_tcp = use_tcp;
     sink->host = host;
-    if (sink->host.get_error() != FT_ERR_SUCCESSS)
+    if (sink->host.get_error() != FT_ERR_SUCCESS)
     {
         su_close(socket_fd);
         delete sink;
@@ -69,7 +69,7 @@ int ft_log_set_remote_sink(const char *host, unsigned short port, bool use_tcp)
         return (-1);
     }
     error_code = network_sink_prepare_thread_safety(sink);
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         su_close(socket_fd);
         delete sink;
@@ -82,12 +82,12 @@ int ft_log_set_remote_sink(const char *host, unsigned short port, bool use_tcp)
         su_close(socket_fd);
         network_sink_teardown_thread_safety(sink);
         delete sink;
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_INVALID_ARGUMENT;
         ft_global_error_stack_push(error_code);
         return (-1);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -105,10 +105,10 @@ void ft_network_sink(const char *message, void *user_data)
     lock_acquired = false;
     if (network_sink_lock(sink, &lock_acquired) != 0)
         return ;
-    final_errno = FT_ERR_SUCCESSS;
+    final_errno = FT_ERR_SUCCESS;
     if (sink->socket_fd < 0)
     {
-        final_errno = FT_ERR_SUCCESSS;
+        final_errno = FT_ERR_SUCCESS;
         goto cleanup;
     }
     if (!sink->send_function)
@@ -136,7 +136,7 @@ void ft_network_sink(const char *message, void *user_data)
         }
         total_bytes_sent += static_cast<size_t>(send_result);
     }
-    final_errno = FT_ERR_SUCCESSS;
+    final_errno = FT_ERR_SUCCESS;
 
 cleanup:
     if (lock_acquired)

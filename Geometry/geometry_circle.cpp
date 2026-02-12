@@ -33,7 +33,7 @@ int circle::lock_pair(const circle &other, const circle *&lower,
         lower = this;
         upper = this;
         int self_error = this->lock_mutex();
-        if (self_error != FT_ERR_SUCCESSS)
+        if (self_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(self_error);
         }
@@ -49,15 +49,15 @@ int circle::lock_pair(const circle &other, const circle *&lower,
     while (true)
     {
         int lower_error = lower->lock_mutex();
-        if (lower_error != FT_ERR_SUCCESSS)
+        if (lower_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(lower_error);
             return (lower_error);
         }
         int upper_error = upper->lock_mutex();
-        if (upper_error == FT_ERR_SUCCESSS)
+        if (upper_error == FT_ERR_SUCCESS)
         {
-            return (FT_ERR_SUCCESSS);
+            return (FT_ERR_SUCCESS);
         }
         if (upper_error != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -84,7 +84,7 @@ circle::circle()
     this->_center_x = 0.0;
     this->_center_y = 0.0;
     this->_radius = 0.0;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -93,7 +93,7 @@ circle::circle(double center_x, double center_y, double radius)
     this->_center_x = center_x;
     this->_center_y = center_y;
     this->_radius = radius;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -105,7 +105,7 @@ circle::circle(const circle &other)
     int lock_error;
 
     lock_error = this->lock_pair(other, lower, upper);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -114,7 +114,7 @@ circle::circle(const circle &other)
     this->_center_y = other._center_y;
     this->_radius = other._radius;
     this->unlock_pair(lower, upper);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -127,7 +127,7 @@ circle &circle::operator=(const circle &other)
     if (this == &other)
         return (*this);
     lock_error = this->lock_pair(other, lower, upper);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (*this);
@@ -136,7 +136,7 @@ circle &circle::operator=(const circle &other)
     this->_center_y = other._center_y;
     this->_radius = other._radius;
     this->unlock_pair(lower, upper);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (*this);
 }
 
@@ -148,7 +148,7 @@ circle::circle(circle &&other) noexcept
     int lock_error;
 
     lock_error = this->lock_pair(other, lower, upper);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -160,7 +160,7 @@ circle::circle(circle &&other) noexcept
     other._center_y = 0.0;
     other._radius = 0.0;
     this->unlock_pair(lower, upper);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -173,7 +173,7 @@ circle &circle::operator=(circle &&other) noexcept
     if (this == &other)
         return (*this);
     lock_error = this->lock_pair(other, lower, upper);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (*this);
@@ -185,7 +185,7 @@ circle &circle::operator=(circle &&other) noexcept
     other._center_y = 0.0;
     other._radius = 0.0;
     this->unlock_pair(lower, upper);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (*this);
 }
 
@@ -201,7 +201,7 @@ int circle::set_center(double center_x, double center_y)
     int unlock_error;
 
     lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (lock_error);
@@ -209,13 +209,13 @@ int circle::set_center(double center_x, double center_y)
     this->_center_x = center_x;
     this->_center_y = center_y;
     unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return (unlock_error);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 int circle::set_center_x(double center_x)
@@ -224,20 +224,20 @@ int circle::set_center_x(double center_x)
     int unlock_error;
 
     lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (lock_error);
     }
     this->_center_x = center_x;
     unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return (unlock_error);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 int circle::set_center_y(double center_y)
@@ -246,20 +246,20 @@ int circle::set_center_y(double center_y)
     int unlock_error;
 
     lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (lock_error);
     }
     this->_center_y = center_y;
     unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return (unlock_error);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 int circle::set_radius(double radius)
@@ -268,20 +268,20 @@ int circle::set_radius(double radius)
     int unlock_error;
 
     lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (lock_error);
     }
     this->_radius = radius;
     unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return (unlock_error);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 double  circle::get_center_x() const
@@ -291,19 +291,19 @@ double  circle::get_center_x() const
     int unlock_error;
 
     lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (0.0);
     }
     value = this->_center_x;
     unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return (value);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (value);
 }
 
@@ -314,19 +314,19 @@ double  circle::get_center_y() const
     int unlock_error;
 
     lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (0.0);
     }
     value = this->_center_y;
     unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return (value);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (value);
 }
 
@@ -337,19 +337,19 @@ double  circle::get_radius() const
     int unlock_error;
 
     lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (0.0);
     }
     value = this->_radius;
     unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return (value);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (value);
 }
 
@@ -366,7 +366,7 @@ bool    intersect_circle(const circle &first, const circle &second)
 
     result = false;
     lock_error = first.lock_pair(second, lower, upper);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         ft_global_error_stack_push(lock_error);
@@ -377,13 +377,13 @@ bool    intersect_circle(const circle &first, const circle &second)
     delta_y = first._center_y - second._center_y;
     radius_sum = first._radius + second._radius;
     distance_squared = delta_x * delta_x + delta_y * delta_y;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     first.unlock_pair(lower, upper);
     result = true;
     if (distance_squared > radius_sum * radius_sum)
         result = false;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     if (result)
         return (true);
     return (false);
@@ -418,24 +418,24 @@ int circle::prepare_thread_safety(void) noexcept
 {
     if (this->_mutex != ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-        return (FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     pt_recursive_mutex *mutex_pointer = ft_nullptr;
     int mutex_error = pt_recursive_mutex_create_with_error(&mutex_pointer);
-    if (mutex_error != FT_ERR_SUCCESSS)
+    if (mutex_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(mutex_error);
         return (mutex_error);
     }
     this->_mutex = mutex_pointer;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
-    return (FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 void circle::teardown_thread_safety(void) noexcept
 {
     pt_recursive_mutex_destroy(&this->_mutex);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }

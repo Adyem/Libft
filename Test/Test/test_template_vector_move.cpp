@@ -1,7 +1,11 @@
+#include "../test_internal.hpp"
 #include "../../Template/vector.hpp"
 #include "../../Template/move.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_ft_vector_move_constructor_rebuilds_thread_safety,
         "ft_vector move constructor recreates mutex and moves elements")

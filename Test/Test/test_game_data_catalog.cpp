@@ -1,6 +1,10 @@
+#include "../test_internal.hpp"
 #include "../../Game/game_data_catalog.hpp"
 #include "../../Game/game_crafting.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 static void populate_ingredient(ft_crafting_ingredient &ingredient, int item_id, int count, int rarity)
 {
@@ -57,8 +61,8 @@ FT_TEST(test_catalog_register_and_fetch_item, "register and fetch item definitio
     ft_item_definition definition(1, 2, 5, 3, 4, 6, 7);
     ft_item_definition fetched;
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, catalog.register_item_definition(definition));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, catalog.fetch_item_definition(1, fetched));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, catalog.register_item_definition(definition));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, catalog.fetch_item_definition(1, fetched));
     assert_item_definition_equals(fetched, 1, 2, 5, 3, 4, 6, 7);
     return (1);
 }
@@ -86,14 +90,14 @@ FT_TEST(test_catalog_recipe_copy_isolated, "recipe copy remains isolated")
     ingredients.push_back(ingredient);
     recipe.set_ingredients(ingredients);
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, catalog.register_recipe(recipe));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, catalog.fetch_recipe(5, first_fetch));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, catalog.register_recipe(recipe));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, catalog.fetch_recipe(5, first_fetch));
     assert_single_ingredient(first_fetch, 2, 3, 1);
 
     ft_vector<ft_crafting_ingredient> &first_ingredients = first_fetch.get_ingredients();
     first_ingredients[0].set_count(9);
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, catalog.fetch_recipe(5, second_fetch));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, catalog.fetch_recipe(5, second_fetch));
     assert_single_ingredient(second_fetch, 2, 3, 1);
     return (1);
 }
@@ -113,8 +117,8 @@ FT_TEST(test_catalog_loadout_copy_isolated, "loadout copy remains isolated")
     entries.push_back(entry);
     loadout.set_entries(entries);
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, catalog.register_loadout(loadout));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, catalog.fetch_loadout(7, first_fetch));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, catalog.register_loadout(loadout));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, catalog.fetch_loadout(7, first_fetch));
     const ft_vector<ft_loadout_entry> &first_entries = first_fetch.get_entries();
     FT_ASSERT_EQ(2u, first_entries.size());
     assert_loadout_entry_values(first_fetch, 0, 0, 10, 2);
@@ -123,7 +127,7 @@ FT_TEST(test_catalog_loadout_copy_isolated, "loadout copy remains isolated")
     ft_vector<ft_loadout_entry> &first_mutable_entries = first_fetch.get_entries();
     first_mutable_entries[0].set_quantity(5);
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, catalog.fetch_loadout(7, second_fetch));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, catalog.fetch_loadout(7, second_fetch));
     assert_loadout_entry_values(second_fetch, 0, 0, 10, 2);
     assert_loadout_entry_values(second_fetch, 1, 1, 11, 1);
     return (1);

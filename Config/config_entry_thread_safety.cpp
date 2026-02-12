@@ -8,7 +8,7 @@
 
 static void cnfg_entry_push_success(void)
 {
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -31,7 +31,7 @@ int cnfg_entry_prepare_thread_safety(cnfg_entry *entry)
         return (0);
     }
     int mutex_error = pt_mutex_create_with_error(&entry->mutex);
-    if (mutex_error != FT_ERR_SUCCESSS)
+    if (mutex_error != FT_ERR_SUCCESS)
     {
         cnfg_entry_push_error(mutex_error);
         return (-1);
@@ -64,7 +64,7 @@ int cnfg_entry_lock(cnfg_entry *entry, bool *lock_acquired)
         return (0);
     }
     int lock_error = pt_mutex_lock_if_valid(entry->mutex);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
         return (-1);
     if (lock_acquired)
         *lock_acquired = true;

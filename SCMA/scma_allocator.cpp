@@ -20,7 +20,7 @@ int32_t    scma_initialize(ft_size_t initial_capacity)
 
     initialization_result = 0;
     thread_safety_result = scma_enable_thread_safety();
-    if (thread_safety_result != FT_ERR_SUCCESSS)
+    if (thread_safety_result != FT_ERR_SUCCESS)
         return (0);
     if (scma_mutex_lock() != 0)
     {

@@ -11,10 +11,10 @@
 static int cnfg_config_lock_if_enabled(cnfg_config *config, bool *lock_acquired)
 {
     if (!config || !config->mutex)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     int lock_result = pt_mutex_lock_if_valid(config->mutex);
     ft_global_error_stack_drop_last_error();
-    if (lock_result == FT_ERR_SUCCESSS && lock_acquired)
+    if (lock_result == FT_ERR_SUCCESS && lock_acquired)
         *lock_acquired = true;
     return (lock_result);
 }
@@ -35,7 +35,7 @@ static int config_handle_write_failure(FILE *file)
     error_code = ft_global_error_stack_peek_last_error();
     if (file)
         ft_fclose(file);
-    if (error_code == FT_ERR_SUCCESSS)
+    if (error_code == FT_ERR_SUCCESS)
         error_code = FT_ERR_IO;
     ft_global_error_stack_push(error_code);
     return (-1);
@@ -92,7 +92,7 @@ static int config_write_ini(const cnfg_config *config, const char *filename)
     }
     if (ft_fclose(file) == EOF)
         return (-1);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -183,7 +183,7 @@ int config_write_file(const cnfg_config *config, const char *filename)
         return (-1);
     }
     lock_error = cnfg_config_lock_if_enabled(const_cast<cnfg_config*>(config), &mutex_locked);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (-1);

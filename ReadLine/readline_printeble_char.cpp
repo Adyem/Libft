@@ -19,7 +19,7 @@ int rl_handle_printable_char(readline_state_t *state, char c, const char *prompt
     lock_acquired = false;
     result = FT_ERR_INTERNAL;
     lock_error = rl_state_lock(state, &lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (state->buffer == ft_nullptr || state->bufsize <= 0)
         goto cleanup;
@@ -31,7 +31,7 @@ int rl_handle_printable_char(readline_state_t *state, char c, const char *prompt
             goto cleanup;
         new_bufsize = state->bufsize * 2;
         int resize_error = rl_resize_buffer(&state->buffer, &state->bufsize, new_bufsize);
-        if (resize_error != FT_ERR_SUCCESSS)
+        if (resize_error != FT_ERR_SUCCESS)
         {
             result = resize_error;
             goto cleanup;
@@ -41,16 +41,16 @@ int rl_handle_printable_char(readline_state_t *state, char c, const char *prompt
                ft_strlen(&state->buffer[state->pos]) + 1);
     state->buffer[state->pos] = c;
     state->pos++;
-    if (rl_update_display_metrics(state) != FT_ERR_SUCCESSS)
+    if (rl_update_display_metrics(state) != FT_ERR_SUCCESS)
         goto cleanup;
-    if (rl_clear_line(prompt, state->buffer) != FT_ERR_SUCCESSS)
+    if (rl_clear_line(prompt, state->buffer) != FT_ERR_SUCCESS)
         goto cleanup;
     pf_printf("%s%s", prompt, state->buffer);
     length_after_cursor = state->prev_display_columns - state->display_pos;
     if (length_after_cursor > 0)
         pf_printf("\033[%dD", length_after_cursor);
     fflush(stdout);
-    result = FT_ERR_SUCCESSS;
+    result = FT_ERR_SUCCESS;
 cleanup:
     (void)rl_state_unlock(state, lock_acquired);
     return (result);

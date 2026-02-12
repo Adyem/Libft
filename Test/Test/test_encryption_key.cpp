@@ -1,6 +1,10 @@
+#include "../test_internal.hpp"
 #include "../../Encryption/basic_encryption.hpp"
 #include "../../CMA/CMA.hpp"
 #include <cstring>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 int test_encryption_key_random(void)
 {

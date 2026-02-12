@@ -1,8 +1,12 @@
+#include "../test_internal.hpp"
 #include "../../Printf/printf.hpp"
 #include "../../Basic/basic.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include <fcntl.h>
 #include <unistd.h>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 int test_pf_printf_basic(void)
 {

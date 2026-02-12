@@ -1,3 +1,4 @@
+#include "../test_internal.hpp"
 #include "../../CPP_class/class_string.hpp"
 #include "../../CPP_class/class_data_buffer.hpp"
 #include "../../CPP_class/class_big_number.hpp"
@@ -12,6 +13,9 @@
 #include <cstring>
 #include <utility>
 #include <type_traits>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 static_assert(std::is_nothrow_move_constructible<DataBuffer>::value,
     "DataBuffer move constructor must be noexcept");
@@ -146,7 +150,7 @@ FT_TEST(test_ft_file_close_thread_safety,
     context.file = &file;
     context.final_error = -1;
     reader = ft_thread(ft_file_poll_error, &context);
-    if (reader.get_error() != FT_ERR_SUCCESSS)
+    if (reader.get_error() != FT_ERR_SUCCESS)
     {
         file.close();
         ::unlink(filename);
@@ -155,12 +159,12 @@ FT_TEST(test_ft_file_close_thread_safety,
     time_sleep_ms(1);
     file.close();
     reader.join();
-    if (context.final_error != FT_ERR_SUCCESSS)
+    if (context.final_error != FT_ERR_SUCCESS)
     {
         ::unlink(filename);
         return (0);
     }
-    if (file.get_error() != FT_ERR_SUCCESSS)
+    if (file.get_error() != FT_ERR_SUCCESS)
     {
         ::unlink(filename);
         return (0);

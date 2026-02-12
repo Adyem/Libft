@@ -1,9 +1,13 @@
+#include "../test_internal.hpp"
 #include "../../Template/thread_pool.hpp"
 #include "../../Template/cancellation.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../CMA/CMA.hpp"
 #include "../../Errno/errno.hpp"
 #include <atomic>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_thread_pool_resets_error_status,
     "ft_thread_pool resets error status after recovery")
@@ -26,18 +30,18 @@ FT_TEST(test_thread_pool_resets_error_status,
         execution_count.store(1);
         return ;
     });
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, pool_instance.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, pool_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     pool_instance.wait();
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, pool_instance.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, pool_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     int final_count;
 
     final_count = execution_count.load();
     FT_ASSERT_EQ(1, final_count);
     pool_instance.destroy();
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, pool_instance.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, pool_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_set_alloc_limit(0);
     return (1);
 }
@@ -104,7 +108,7 @@ FT_TEST(test_cancellation_token_callbacks_trigger,
         callback_count.fetch_add(1);
         return ;
     });
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, registration_status);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registration_status);
     cancellation_source.request_cancel();
     FT_ASSERT_EQ(1, callback_count.load());
     registration_status = cancellation_token.register_callback([&callback_count]()
@@ -112,7 +116,7 @@ FT_TEST(test_cancellation_token_callbacks_trigger,
         callback_count.fetch_add(1);
         return ;
     });
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, registration_status);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registration_status);
     FT_ASSERT_EQ(2, callback_count.load());
     return (1);
 }

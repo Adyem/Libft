@@ -1,6 +1,10 @@
+#include "../test_internal.hpp"
 #include "../../CMA/CMA.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../Basic/basic.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 int test_cma_checked_free_basic(void)
 {
@@ -12,7 +16,7 @@ int test_cma_checked_free_basic(void)
     if (!memory_pointer)
         return (0);
     free_result = cma_checked_free(memory_pointer);
-    return (free_result == 0 && ft_errno == FT_ERR_SUCCESSS);
+    return (free_result == 0 && ft_errno == FT_ERR_SUCCESS);
 }
 
 int test_cma_checked_free_offset(void)
@@ -25,7 +29,7 @@ int test_cma_checked_free_offset(void)
     if (!memory_pointer)
         return (0);
     free_result = cma_checked_free(memory_pointer + 10);
-    return (free_result == 0 && ft_errno == FT_ERR_SUCCESSS);
+    return (free_result == 0 && ft_errno == FT_ERR_SUCCESS);
 }
 
 int test_cma_checked_free_invalid(void)

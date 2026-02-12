@@ -1,7 +1,11 @@
+#include "../test_internal.hpp"
 #include "../../Game/game_event.hpp"
 #include "../../PThread/pthread.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 struct game_event_increment_args
 {
@@ -23,14 +27,14 @@ static void *game_event_increment_duration(void *argument)
     while (index < arguments->iteration_count)
     {
         add_result = arguments->event_pointer->add_duration(1);
-        if (add_result != FT_ERR_SUCCESSS)
+        if (add_result != FT_ERR_SUCCESS)
         {
             arguments->result_code = add_result;
             return (ft_nullptr);
         }
         index++;
     }
-    arguments->result_code = FT_ERR_SUCCESSS;
+    arguments->result_code = FT_ERR_SUCCESS;
     return (ft_nullptr);
 }
 
@@ -49,7 +53,7 @@ FT_TEST(test_game_event_add_duration_thread_safe, "ft_event::add_duration remain
     int failure_line;
 
     event_instance.set_duration(0);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, event_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, event_instance.get_error());
     created_thread_count = 0;
     test_failed = 0;
     failure_expression = ft_nullptr;
@@ -59,7 +63,7 @@ FT_TEST(test_game_event_add_duration_thread_safe, "ft_event::add_duration remain
     {
         arguments[index].event_pointer = &event_instance;
         arguments[index].iteration_count = 5000;
-        arguments[index].result_code = FT_ERR_SUCCESSS;
+        arguments[index].result_code = FT_ERR_SUCCESS;
         if (test_failed == 0)
         {
             create_result = pt_thread_create(&threads[index], ft_nullptr, game_event_increment_duration, &arguments[index]);
@@ -88,10 +92,10 @@ FT_TEST(test_game_event_add_duration_thread_safe, "ft_event::add_duration remain
         }
         if (join_result == 0)
         {
-            if (arguments[index].result_code != FT_ERR_SUCCESSS && test_failed == 0)
+            if (arguments[index].result_code != FT_ERR_SUCCESS && test_failed == 0)
             {
                 test_failed = 1;
-                failure_expression = "arguments[index].result_code == FT_ERR_SUCCESSS";
+                failure_expression = "arguments[index].result_code == FT_ERR_SUCCESS";
                 failure_line = __LINE__;
             }
         }
@@ -104,7 +108,7 @@ FT_TEST(test_game_event_add_duration_thread_safe, "ft_event::add_duration remain
     }
     expected_duration = 4 * 5000;
     FT_ASSERT_EQ(expected_duration, event_instance.get_duration());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, event_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, event_instance.get_error());
     return (1);
 }
 
@@ -129,11 +133,11 @@ static void *game_event_assignment_task(void *argument)
     {
         *arguments->destination_event = *arguments->source_event;
         arguments->result_code = arguments->destination_event->get_error();
-        if (arguments->result_code != FT_ERR_SUCCESSS)
+        if (arguments->result_code != FT_ERR_SUCCESS)
             return (ft_nullptr);
         index++;
     }
-    arguments->result_code = FT_ERR_SUCCESSS;
+    arguments->result_code = FT_ERR_SUCCESS;
     return (ft_nullptr);
 }
 
@@ -157,14 +161,14 @@ FT_TEST(test_game_event_assignment_thread_safe, "ft_event copy assignment synchr
     source_event.set_modifier2(4);
     source_event.set_modifier3(5);
     source_event.set_modifier4(6);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, source_event.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_event.get_error());
     destination_event.set_id(1);
     destination_event.set_duration(1);
     destination_event.set_modifier1(1);
     destination_event.set_modifier2(1);
     destination_event.set_modifier3(1);
     destination_event.set_modifier4(1);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, destination_event.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_event.get_error());
     created_thread_count = 0;
     test_failed = 0;
     failure_expression = ft_nullptr;
@@ -175,7 +179,7 @@ FT_TEST(test_game_event_assignment_thread_safe, "ft_event copy assignment synchr
         arguments[index].destination_event = &destination_event;
         arguments[index].source_event = &source_event;
         arguments[index].iteration_count = 4000;
-        arguments[index].result_code = FT_ERR_SUCCESSS;
+        arguments[index].result_code = FT_ERR_SUCCESS;
         if (test_failed == 0)
         {
             create_result = pt_thread_create(&threads[index], ft_nullptr, game_event_assignment_task, &arguments[index]);
@@ -204,10 +208,10 @@ FT_TEST(test_game_event_assignment_thread_safe, "ft_event copy assignment synchr
         }
         if (join_result == 0)
         {
-            if (arguments[index].result_code != FT_ERR_SUCCESSS && test_failed == 0)
+            if (arguments[index].result_code != FT_ERR_SUCCESS && test_failed == 0)
             {
                 test_failed = 1;
-                failure_expression = "arguments[index].result_code == FT_ERR_SUCCESSS";
+                failure_expression = "arguments[index].result_code == FT_ERR_SUCCESS";
                 failure_line = __LINE__;
             }
         }
@@ -224,6 +228,6 @@ FT_TEST(test_game_event_assignment_thread_safe, "ft_event copy assignment synchr
     FT_ASSERT_EQ(source_event.get_modifier2(), destination_event.get_modifier2());
     FT_ASSERT_EQ(source_event.get_modifier3(), destination_event.get_modifier3());
     FT_ASSERT_EQ(source_event.get_modifier4(), destination_event.get_modifier4());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, destination_event.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_event.get_error());
     return (1);
 }

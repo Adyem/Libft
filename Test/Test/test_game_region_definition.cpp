@@ -1,6 +1,10 @@
+#include "../test_internal.hpp"
 #include "../../Game/ft_region_definition.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Template/move.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_game_region_definition_defaults, "Region definition initializes default values")
 {
@@ -10,7 +14,7 @@ FT_TEST(test_game_region_definition_defaults, "Region definition initializes def
     FT_ASSERT_EQ(ft_string(), region.get_name());
     FT_ASSERT_EQ(ft_string(), region.get_description());
     FT_ASSERT_EQ(0, region.get_recommended_level());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, region.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     return (1);
 }
 
@@ -22,7 +26,7 @@ FT_TEST(test_game_region_definition_parameterized_constructor_sets_fields, "Regi
     FT_ASSERT_EQ(ft_string("forest"), region.get_name());
     FT_ASSERT_EQ(ft_string("dense woods"), region.get_description());
     FT_ASSERT_EQ(5, region.get_recommended_level());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, region.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     return (1);
 }
 
@@ -38,7 +42,7 @@ FT_TEST(test_game_region_definition_setters_update_fields, "Region definition se
     FT_ASSERT_EQ(ft_string("cove"), region.get_name());
     FT_ASSERT_EQ(ft_string("hidden bay"), region.get_description());
     FT_ASSERT_EQ(9, region.get_recommended_level());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, region.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     return (1);
 }
 
@@ -51,8 +55,8 @@ FT_TEST(test_game_region_definition_copy_constructor_clones_state, "Region defin
     FT_ASSERT_EQ(ft_string("harbor"), copy.get_name());
     FT_ASSERT_EQ(ft_string("busy docks"), copy.get_description());
     FT_ASSERT_EQ(4, copy.get_recommended_level());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, copy.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, original.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, copy.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.get_error());
     return (1);
 }
 
@@ -69,7 +73,7 @@ FT_TEST(test_game_region_definition_move_constructor_transfers_state, "Region de
     FT_ASSERT_EQ(ft_string(), source.get_name());
     FT_ASSERT_EQ(ft_string(), source.get_description());
     FT_ASSERT_EQ(0, source.get_recommended_level());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, moved.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, source.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
     return (1);
 }

@@ -1,5 +1,9 @@
+#include "../test_internal.hpp"
 #include "../../Game/game_dialogue_table.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_dialogue_table_setters, "dialogue table setter copies replace maps")
 {
@@ -23,9 +27,9 @@ FT_TEST(test_dialogue_table_setters, "dialogue table setter copies replace maps"
 
     FT_ASSERT_EQ(1, table.get_lines().size());
     FT_ASSERT_EQ(1, table.get_scripts().size());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.fetch_line(2, fetched_line));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.fetch_line(2, fetched_line));
     FT_ASSERT_EQ(ft_string("hi"), fetched_line.get_text());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.fetch_script(8, fetched_script));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.fetch_script(8, fetched_script));
     FT_ASSERT_EQ(ft_string("intro"), fetched_script.get_title());
 
     table.get_lines().clear();

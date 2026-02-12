@@ -1,8 +1,12 @@
+#include "../test_internal.hpp"
 #include "../../Math/roll.hpp"
 #include "../../CMA/CMA.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_math_roll_null_input, "math_roll rejects null input")
 {
@@ -30,7 +34,7 @@ FT_TEST(test_math_roll_empty_expression, "math_roll rejects empty expression")
         cma_free(value);
         return (0);
     }
-    FT_ASSERT(ft_errno == FT_ERR_INVALID_ARGUMENT || ft_errno == FT_ERR_SUCCESSS);
+    FT_ASSERT(ft_errno == FT_ERR_INVALID_ARGUMENT || ft_errno == FT_ERR_SUCCESS);
     return (1);
 }
 
@@ -45,7 +49,7 @@ FT_TEST(test_math_roll_invalid_character, "math_roll rejects invalid characters"
         cma_free(value);
         return (0);
     }
-    FT_ASSERT(ft_errno == FT_ERR_INVALID_ARGUMENT || ft_errno == FT_ERR_SUCCESSS);
+    FT_ASSERT(ft_errno == FT_ERR_INVALID_ARGUMENT || ft_errno == FT_ERR_SUCCESS);
     return (1);
 }
 
@@ -60,7 +64,7 @@ FT_TEST(test_math_roll_unbalanced_parentheses, "math_roll rejects unbalanced par
         cma_free(value);
         return (0);
     }
-    FT_ASSERT(ft_errno == FT_ERR_INVALID_ARGUMENT || ft_errno == FT_ERR_SUCCESSS);
+    FT_ASSERT(ft_errno == FT_ERR_INVALID_ARGUMENT || ft_errno == FT_ERR_SUCCESS);
     return (1);
 }
 
@@ -75,7 +79,7 @@ FT_TEST(test_math_roll_division_by_zero, "math_roll rejects division by zero")
         cma_free(value);
         return (0);
     }
-    FT_ASSERT(ft_errno == FT_ERR_INVALID_ARGUMENT || ft_errno == FT_ERR_SUCCESSS);
+    FT_ASSERT(ft_errno == FT_ERR_INVALID_ARGUMENT || ft_errno == FT_ERR_SUCCESS);
     return (1);
 }
 
@@ -90,7 +94,7 @@ FT_TEST(test_math_roll_detects_overflow, "math_roll rejects overflowing results"
         cma_free(value);
         return (0);
     }
-    FT_ASSERT(ft_errno == FT_ERR_INVALID_ARGUMENT || ft_errno == FT_ERR_SUCCESSS);
+    FT_ASSERT(ft_errno == FT_ERR_INVALID_ARGUMENT || ft_errno == FT_ERR_SUCCESS);
     return (1);
 }
 

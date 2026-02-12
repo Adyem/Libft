@@ -210,5 +210,5 @@
 
 - Command: `./Test/libft_tests` (instrumented run with fallback logging)
   - Status: Failed (KO at test 29, hang at test 30).
-  - Observed behavior: The new instrumentation shows the plain-HTTP fallback returns `FT_ERR_IO` (`error_code=12`) even though `ft_errno` has already been reset to `FT_ERR_SUCCESSS`, so callers still see a null body without an error code while the suite wedges waiting on the retry scenario.【e58ef4†L1-L1】【7932a5†L1-L3】
+  - Observed behavior: The new instrumentation shows the plain-HTTP fallback returns `FT_ERR_IO` (`error_code=12`) even though `ft_errno` has already been reset to `FT_ERR_SUCCESS`, so callers still see a null body without an error code while the suite wedges waiting on the retry scenario.【e58ef4†L1-L1】【7932a5†L1-L3】
   - Suggested follow-up: Propagate the fallback’s `FT_ERR_IO` status back through `api_request_string_http2` (instead of zeroing the error code before returning) so the regression test fails with a meaningful errno and the retry harness can bail out cleanly.

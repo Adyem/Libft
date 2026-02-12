@@ -1,6 +1,7 @@
 #ifndef MATH_FFT_HPP
 #define MATH_FFT_HPP
 
+#include "../Template/move.hpp"
 #include "../Template/vector.hpp"
 
 int     math_fft(const ft_vector<double> &input_real,

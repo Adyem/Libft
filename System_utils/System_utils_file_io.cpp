@@ -15,7 +15,7 @@ static ssize_t    su_default_write_syscall(int file_descriptor, const void *buff
 
     bytes_written = 0;
     error_code = cmp_write(file_descriptor, buffer, count, &bytes_written);
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
         return (-1);
     return (static_cast<ssize_t>(bytes_written));
 }
@@ -25,18 +25,18 @@ void    su_set_write_syscall_hook(t_su_write_syscall_hook hook)
     if (hook != ft_nullptr)
     {
         g_su_write_syscall_hook = hook;
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return ;
     }
     g_su_write_syscall_hook = ft_nullptr;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
 void    su_reset_write_syscall_hook(void)
 {
     g_su_write_syscall_hook = ft_nullptr;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -52,9 +52,9 @@ ssize_t su_read(int file_descriptor, void *buffer, size_t count)
 
         bytes_read_value = 0;
         error_code = cmp_read(file_descriptor, buffer, count, &bytes_read_value);
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
         {
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
+            ft_global_error_stack_push(FT_ERR_SUCCESS);
             return (static_cast<ssize_t>(bytes_read_value));
         }
 #if defined(__linux__) || defined(__APPLE__)
@@ -114,7 +114,7 @@ ssize_t su_write(int file_descriptor, const void *buffer, size_t count)
             bytes_written_value = 0;
             error_code = cmp_write(file_descriptor, byte_buffer + total_written,
                 count - total_written, &bytes_written_value);
-            if (error_code == FT_ERR_SUCCESSS)
+            if (error_code == FT_ERR_SUCCESS)
                 write_result = static_cast<ssize_t>(bytes_written_value);
             else
                 write_result = -1;
@@ -126,7 +126,7 @@ ssize_t su_write(int file_descriptor, const void *buffer, size_t count)
             if (write_result < 0)
             {
                 error_code = ft_map_system_error(errno);
-                if (error_code == FT_ERR_SUCCESSS)
+                if (error_code == FT_ERR_SUCCESS)
                     error_code = FT_ERR_IO;
             }
         }
@@ -171,7 +171,7 @@ ssize_t su_write(int file_descriptor, const void *buffer, size_t count)
 #endif
         }
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (total_written);
 }
 
@@ -184,11 +184,11 @@ int su_close(int file_descriptor)
     if (close_result != 0)
     {
         error_code = ft_map_system_error(errno);
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_IO;
         ft_global_error_stack_push(error_code);
         return (close_result);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }

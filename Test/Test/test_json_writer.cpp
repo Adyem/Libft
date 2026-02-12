@@ -1,9 +1,13 @@
+#include "../test_internal.hpp"
 #include "../../JSon/json.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../CMA/CMA.hpp"
 #include "../../Basic/basic.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 static json_group *create_sample_group(void)
 {
@@ -22,7 +26,7 @@ static json_group *create_sample_group(void)
 
 FT_TEST(test_json_write_to_string_initial_alloc_failure_sets_errno, "json_write_to_string reports errno when the initial buffer allocation fails")
 {
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     cma_set_alloc_limit(1);
     char *result = json_write_to_string(ft_nullptr);
     cma_set_alloc_limit(0);
@@ -55,7 +59,7 @@ FT_TEST(test_json_write_to_string_success_resets_errno, "json_write_to_string cl
     FT_ASSERT(result != ft_nullptr);
     const char *expected = "{\n  \"sample\": {\n    \"key\": \"value\"\n  }\n}\n";
     FT_ASSERT_EQ(0, ft_strcmp(expected, result));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_free(result);
     json_free_groups(group);
     return (1);

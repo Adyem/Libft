@@ -1,4 +1,8 @@
+#include "../test_internal.hpp"
 #include "../../Template/queue.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 int test_queue_basic(void)
 {

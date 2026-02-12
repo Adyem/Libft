@@ -1,13 +1,17 @@
+#include "../test_internal.hpp"
 #include "../../XML/xml.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../CMA/CMA.hpp"
 #include <cstring>
 
+#ifndef LIBFT_TEST_BUILD
+#endif
+
 int test_xml_parse_simple(void)
 {
     const char *xml = "<root><child>value</child></root>";
     xml_document doc;
-    if (doc.load_from_string(xml) != FT_ERR_SUCCESSS)
+    if (doc.load_from_string(xml) != FT_ERR_SUCCESS)
         return (0);
     xml_node *root = doc.get_root();
     if (!root)

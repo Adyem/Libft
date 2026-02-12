@@ -1,7 +1,11 @@
+#include "../test_internal.hpp"
 #include "../../CPP_class/class_big_number.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_ft_big_number_operation_stack_ctor_records_success,
         "ft_big_number ctor records success in operation stack")
@@ -9,7 +13,7 @@ FT_TEST(test_ft_big_number_operation_stack_ctor_records_success,
     ft_big_number::pop_operation_errors();
     ft_big_number number_value;
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_big_number::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_operation_error());
     FT_ASSERT_EQ(0, ft_big_number::operation_error_index());
     return (1);
 }
@@ -21,8 +25,8 @@ FT_TEST(test_ft_big_number_operation_stack_append_digit_success,
     ft_big_number number_value;
 
     number_value.append_digit('3');
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_big_number::last_operation_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_big_number::operation_error_at(1));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::operation_error_at(1));
     FT_ASSERT_EQ(0, ft_big_number::operation_error_index());
     return (1);
 }
@@ -47,8 +51,8 @@ FT_TEST(test_ft_big_number_operation_stack_assign_success,
     ft_big_number number_value;
 
     number_value.assign("42");
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_big_number::last_operation_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_big_number::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_operation_error());
     FT_ASSERT_EQ(0, ft_big_number::operation_error_index());
     return (1);
 }
@@ -72,8 +76,8 @@ FT_TEST(test_ft_big_number_operation_stack_assign_base_success,
     ft_big_number number_value;
 
     number_value.assign_base("1f", 16);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_big_number::last_operation_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_big_number::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_operation_error());
     FT_ASSERT_EQ(0, ft_big_number::operation_error_index());
     return (1);
 }
@@ -109,7 +113,7 @@ FT_TEST(test_ft_big_number_operation_stack_out_of_range_index_success,
     ft_big_number number_value;
 
     number_value.append_digit('2');
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_big_number::operation_error_at(4));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::operation_error_at(4));
     return (1);
 }
 

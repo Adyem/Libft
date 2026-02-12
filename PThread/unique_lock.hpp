@@ -60,14 +60,14 @@ int32_t ft_unique_lock<MutexType>::initialize(MutexType &mutex)
         return (FT_ERR_INVALID_STATE);
     this->_mutex = &mutex;
     this->_initialized = true;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 template <typename MutexType>
 int32_t ft_unique_lock<MutexType>::destroy()
 {
     if (!this->_initialized)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     if (this->_owns_lock && this->_mutex != ft_nullptr)
     {
         this->unlock();
@@ -75,7 +75,7 @@ int32_t ft_unique_lock<MutexType>::destroy()
     this->_mutex = ft_nullptr;
     this->_owns_lock = false;
     this->_initialized = false;
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 template <typename MutexType>
@@ -90,7 +90,7 @@ int32_t ft_unique_lock<MutexType>::lock()
         return (FT_ERR_MUTEX_ALREADY_LOCKED);
     }
     int32_t mutex_error = this->_mutex->lock();
-    this->_owns_lock = (mutex_error == FT_ERR_SUCCESSS);
+    this->_owns_lock = (mutex_error == FT_ERR_SUCCESS);
     return (mutex_error);
 }
 

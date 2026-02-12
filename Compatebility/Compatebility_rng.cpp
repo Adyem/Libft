@@ -42,7 +42,7 @@ int32_t cmp_rng_secure_bytes(unsigned char *buffer, ft_size_t length)
         error_code = cmp_rng_windows_error(GetLastError());
         return (error_code);
     }
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 #else
@@ -178,6 +178,6 @@ int32_t cmp_rng_secure_bytes(unsigned char *buffer, ft_size_t length)
         error_code = cmp_map_system_error_to_ft(errno);
         return (error_code);
     }
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 #endif

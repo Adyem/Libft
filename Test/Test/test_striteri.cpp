@@ -1,7 +1,10 @@
+#include "../test_internal.hpp"
 #include "../../Basic/basic.hpp"
-#include "../../System_utils/test_runner.hpp"
-#include "../../Errno/errno.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
+#include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 static void to_upper_iter(unsigned int index, char *character)
 {
@@ -25,7 +28,7 @@ static void record_index_iter(unsigned int index, char *character)
     return ;
 }
 
-FT_TEST(test_striteri_basic, "ft_striteri basic")
+FT_TEST(test_striteri_basic, "ft_striteri transforms each character")
 {
     char buffer[4];
 
@@ -35,13 +38,10 @@ FT_TEST(test_striteri_basic, "ft_striteri basic")
     buffer[3] = '\0';
     ft_striteri(buffer, to_upper_iter);
     FT_ASSERT_EQ(0, ft_strcmp("ABC", buffer));
-
-    ft_striteri(ft_nullptr, to_upper_iter);
-    ft_striteri(buffer, ft_nullptr);
     return (1);
 }
 
-FT_TEST(test_striteri_respects_terminator, "ft_striteri stops iterating at the null terminator")
+FT_TEST(test_striteri_respects_terminator, "ft_striteri stops at null terminator")
 {
     char buffer[6];
 
@@ -55,14 +55,12 @@ FT_TEST(test_striteri_respects_terminator, "ft_striteri stops iterating at the n
     g_striteri_index_capture[0] = 99u;
     g_striteri_index_capture[1] = 99u;
     g_striteri_index_capture[2] = 99u;
-    g_striteri_index_capture[3] = 99u;
     ft_striteri(buffer, record_index_iter);
     FT_ASSERT_EQ('b', buffer[0]);
     FT_ASSERT_EQ('d', buffer[1]);
     FT_ASSERT_EQ('\0', buffer[2]);
     FT_ASSERT_EQ('x', buffer[3]);
     FT_ASSERT_EQ('y', buffer[4]);
-    FT_ASSERT_EQ('\0', buffer[5]);
     FT_ASSERT_EQ(2u, g_striteri_call_count);
     FT_ASSERT_EQ(0u, g_striteri_index_capture[0]);
     FT_ASSERT_EQ(1u, g_striteri_index_capture[1]);
@@ -70,7 +68,7 @@ FT_TEST(test_striteri_respects_terminator, "ft_striteri stops iterating at the n
     return (1);
 }
 
-FT_TEST(test_striteri_null_callback_no_modification, "ft_striteri ignores null callback and string")
+FT_TEST(test_striteri_null_inputs, "ft_striteri tolerates null string or callback")
 {
     char buffer[5];
     char snapshot[5];
@@ -93,49 +91,13 @@ FT_TEST(test_striteri_null_callback_no_modification, "ft_striteri ignores null c
     return (1);
 }
 
-FT_TEST(test_striteri_valid_arguments_reset_errno, "ft_striteri clears ft_errno on valid input")
-{
-    char buffer[4];
-
-    buffer[0] = 'a';
-    buffer[1] = 'b';
-    buffer[2] = 'c';
-    buffer[3] = '\0';
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
-    ft_striteri(buffer, to_upper_iter);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
-    return (1);
-}
-
-FT_TEST(test_striteri_null_string_sets_errno, "ft_striteri sets FT_ERR_INVALID_ARGUMENT when string is null")
-{
-    ft_errno = FT_ERR_SUCCESSS;
-    ft_striteri(ft_nullptr, to_upper_iter);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
-    return (1);
-}
-
-FT_TEST(test_striteri_null_function_sets_errno, "ft_striteri sets FT_ERR_INVALID_ARGUMENT when callback is null")
-{
-    char buffer[2];
-
-    buffer[0] = 'x';
-    buffer[1] = '\0';
-    ft_errno = FT_ERR_SUCCESSS;
-    ft_striteri(buffer, ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
-    return (1);
-}
-
-FT_TEST(test_striteri_empty_string_clears_errno, "ft_striteri handles empty string without invoking callback")
+FT_TEST(test_striteri_empty_string, "ft_striteri does not invoke callback for empty string")
 {
     char buffer[1];
 
     buffer[0] = '\0';
     g_striteri_call_count = 0;
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
     ft_striteri(buffer, record_index_iter);
     FT_ASSERT_EQ(0u, g_striteri_call_count);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }

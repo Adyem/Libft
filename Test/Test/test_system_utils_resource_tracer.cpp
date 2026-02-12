@@ -1,8 +1,12 @@
+#include "../test_internal.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../CPP_class/class_string.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/system_utils.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 static int              g_su_tracer_invocations = 0;
 static ft_string        g_su_tracer_reason;
@@ -19,7 +23,7 @@ static void su_test_tracer(const char *reason)
 
 FT_TEST(test_su_register_resource_tracer_rejects_null, "su_register_resource_tracer rejects null")
 {
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     if (su_register_resource_tracer(ft_nullptr) != -1)
         return (0);
     if (ft_errno != FT_ERR_INVALID_ARGUMENT)
@@ -35,7 +39,7 @@ FT_TEST(test_su_resource_tracer_runs_with_reason, "su_run_resource_tracers invok
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     if (su_register_resource_tracer(&su_test_tracer) != 0)
         return (0);
-    if (ft_errno != FT_ERR_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESS)
         return (0);
     su_run_resource_tracers("unit test reason");
     if (g_su_tracer_invocations != 1)
@@ -78,7 +82,7 @@ FT_TEST(test_su_unregister_resource_tracer_succeeds, "su_unregister_resource_tra
         return (0);
     if (su_unregister_resource_tracer(&su_test_tracer) != 0)
         return (0);
-    if (ft_errno != FT_ERR_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESS)
         return (0);
     su_run_resource_tracers("after unregister");
     if (g_su_tracer_invocations != 0)

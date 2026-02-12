@@ -1,4 +1,8 @@
+#include "../test_internal.hpp"
 #include "../../Math/math.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 int test_math_isnan_nan(void)
 {

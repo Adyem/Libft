@@ -13,7 +13,7 @@ typedef uint64_t ft_size_t;
 
 enum PTErrorCode : int32_t
 {
-    FT_ERR_SUCCESSS = 0,
+    FT_ERR_SUCCESS = 0,
     FT_ERR_NO_MEMORY = 1,
     FT_ERR_FILE_OPEN_FAILED = 2,
     FT_ERR_INVALID_ARGUMENT = 3,
@@ -85,7 +85,7 @@ enum PTErrorCode : int32_t
     FT_ERR_API_CIRCUIT_OPEN = 2007,
 };
 
-#define FT_SYS_ERR_SUCCESS FT_ERR_SUCCESSS
+#define FT_SYS_ERR_SUCCESS FT_ERR_SUCCESS
 #define FT_SYS_ERR_NO_MEMORY FT_ERR_SYS_NO_MEMORY
 
 const char* ft_strerror(int32_t error_code);

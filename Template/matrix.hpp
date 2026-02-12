@@ -66,7 +66,7 @@ ft_matrix<ElementType>::ft_matrix(size_t rows, size_t cols)
     if (rows > 0 && cols > 0)
         this->init(rows, cols);
     else
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 template <typename ElementType>
@@ -74,7 +74,7 @@ ft_matrix<ElementType>::~ft_matrix()
 {
     clear();
     teardown_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 template <typename ElementType>
@@ -84,7 +84,7 @@ ft_matrix<ElementType>::ft_matrix(ft_matrix&& other) noexcept
     bool has_lock = false;
     int lock_result = other.lock_internal(&has_lock);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return ;
@@ -99,10 +99,10 @@ ft_matrix<ElementType>::ft_matrix(ft_matrix&& other) noexcept
     other.unlock_internal(has_lock);
     if (other_thread_safe)
     {
-        if (this->enable_thread_safety() != FT_ERR_SUCCESSS)
+        if (this->enable_thread_safety() != FT_ERR_SUCCESS)
             return ;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 template <typename ElementType>
@@ -110,13 +110,13 @@ ft_matrix<ElementType>& ft_matrix<ElementType>::operator=(ft_matrix&& other) noe
 {
     if (this == &other)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (*this);
     }
     bool this_lock_acquired = false;
     int this_lock_result = this->lock_internal(&this_lock_acquired);
 
-    if (this_lock_result != FT_ERR_SUCCESSS)
+    if (this_lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(this_lock_result);
         return (*this);
@@ -124,7 +124,7 @@ ft_matrix<ElementType>& ft_matrix<ElementType>::operator=(ft_matrix&& other) noe
     bool other_lock_acquired = false;
     int other_lock_result = other.lock_internal(&other_lock_acquired);
 
-    if (other_lock_result != FT_ERR_SUCCESSS)
+    if (other_lock_result != FT_ERR_SUCCESS)
     {
         this->unlock_internal(this_lock_acquired);
         ft_global_error_stack_push(other_lock_result);
@@ -142,10 +142,10 @@ ft_matrix<ElementType>& ft_matrix<ElementType>::operator=(ft_matrix&& other) noe
     teardown_thread_safety();
     if (other._mutex != ft_nullptr)
     {
-        if (this->enable_thread_safety() != FT_ERR_SUCCESSS)
+        if (this->enable_thread_safety() != FT_ERR_SUCCESS)
             return (*this);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (*this);
 }
 
@@ -154,8 +154,8 @@ int ft_matrix<ElementType>::enable_thread_safety()
 {
     if (this->_mutex != ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
-        return (FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     int result = prepare_thread_safety();
     ft_global_error_stack_push(result);
@@ -166,14 +166,14 @@ template <typename ElementType>
 void ft_matrix<ElementType>::disable_thread_safety()
 {
     teardown_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 template <typename ElementType>
 bool ft_matrix<ElementType>::is_thread_safe() const
 {
     bool enabled = (this->_mutex != ft_nullptr);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (enabled);
 }
 
@@ -182,7 +182,7 @@ int ft_matrix<ElementType>::lock(bool *lock_acquired) const
 {
     int result = lock_internal(lock_acquired);
     ft_global_error_stack_push(result);
-    if (result != FT_ERR_SUCCESSS)
+    if (result != FT_ERR_SUCCESS)
         return (-1);
     return (0);
 }
@@ -200,7 +200,7 @@ bool ft_matrix<ElementType>::init(size_t rows, size_t cols)
     bool lock_acquired = false;
     int lock_result = lock_internal(&lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return (false);
@@ -212,7 +212,7 @@ bool ft_matrix<ElementType>::init(size_t rows, size_t cols)
         _rows = rows;
         _cols = cols;
         unlock_internal(lock_acquired);
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (true);
     }
     ElementType *allocated_data = static_cast<ElementType*>(cma_malloc(sizeof(ElementType) * total));
@@ -232,7 +232,7 @@ bool ft_matrix<ElementType>::init(size_t rows, size_t cols)
     _rows = rows;
     _cols = cols;
     unlock_internal(lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -243,7 +243,7 @@ ElementType& ft_matrix<ElementType>::at(size_t r, size_t c)
     bool lock_acquired = false;
     int lock_result = lock_internal(&lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return (error_element);
@@ -256,7 +256,7 @@ ElementType& ft_matrix<ElementType>::at(size_t r, size_t c)
     }
     ElementType& element = _data[r * _cols + c];
     unlock_internal(lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (element);
 }
 
@@ -267,7 +267,7 @@ const ElementType& ft_matrix<ElementType>::at(size_t r, size_t c) const
     bool lock_acquired = false;
     int lock_result = lock_internal(&lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return (error_element);
@@ -280,7 +280,7 @@ const ElementType& ft_matrix<ElementType>::at(size_t r, size_t c) const
     }
     const ElementType& element = _data[r * _cols + c];
     unlock_internal(lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (element);
 }
 
@@ -290,14 +290,14 @@ size_t ft_matrix<ElementType>::rows() const
     bool lock_acquired = false;
     int lock_result = lock_internal(&lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return (0);
     }
     size_t current_rows = _rows;
     unlock_internal(lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (current_rows);
 }
 
@@ -307,14 +307,14 @@ size_t ft_matrix<ElementType>::cols() const
     bool lock_acquired = false;
     int lock_result = lock_internal(&lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return (0);
     }
     size_t current_cols = _cols;
     unlock_internal(lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (current_cols);
 }
 
@@ -325,7 +325,7 @@ ft_matrix<ElementType> ft_matrix<ElementType>::add(const ft_matrix& other) const
     bool this_lock_acquired = false;
     int this_lock_result = lock_internal(&this_lock_acquired);
 
-    if (this_lock_result != FT_ERR_SUCCESSS)
+    if (this_lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(this_lock_result);
         return (result);
@@ -333,7 +333,7 @@ ft_matrix<ElementType> ft_matrix<ElementType>::add(const ft_matrix& other) const
     bool other_lock_acquired = false;
     int other_lock_result = other.lock_internal(&other_lock_acquired);
 
-    if (other_lock_result != FT_ERR_SUCCESSS)
+    if (other_lock_result != FT_ERR_SUCCESS)
     {
         unlock_internal(this_lock_acquired);
         ft_global_error_stack_push(other_lock_result);
@@ -357,7 +357,7 @@ ft_matrix<ElementType> ft_matrix<ElementType>::add(const ft_matrix& other) const
         result._data[index] = _data[index] + other._data[index];
     unlock_internal(this_lock_acquired);
     other.unlock_internal(other_lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (result);
 }
 
@@ -368,7 +368,7 @@ ft_matrix<ElementType> ft_matrix<ElementType>::multiply(const ft_matrix& other) 
     bool this_lock_acquired = false;
     int this_lock_result = lock_internal(&this_lock_acquired);
 
-    if (this_lock_result != FT_ERR_SUCCESSS)
+    if (this_lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(this_lock_result);
         return (result);
@@ -376,7 +376,7 @@ ft_matrix<ElementType> ft_matrix<ElementType>::multiply(const ft_matrix& other) 
     bool other_lock_acquired = false;
     int other_lock_result = other.lock_internal(&other_lock_acquired);
 
-    if (other_lock_result != FT_ERR_SUCCESSS)
+    if (other_lock_result != FT_ERR_SUCCESS)
     {
         unlock_internal(this_lock_acquired);
         ft_global_error_stack_push(other_lock_result);
@@ -407,7 +407,7 @@ ft_matrix<ElementType> ft_matrix<ElementType>::multiply(const ft_matrix& other) 
     }
     unlock_internal(this_lock_acquired);
     other.unlock_internal(other_lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (result);
 }
 
@@ -418,7 +418,7 @@ ft_matrix<ElementType> ft_matrix<ElementType>::transpose() const
     bool lock_acquired = false;
     int lock_result = lock_internal(&lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return (result);
@@ -436,7 +436,7 @@ ft_matrix<ElementType> ft_matrix<ElementType>::transpose() const
         }
     }
     unlock_internal(lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (result);
 }
 
@@ -447,7 +447,7 @@ ElementType ft_matrix<ElementType>::determinant() const
     bool lock_acquired = false;
     int lock_result = lock_internal(&lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return (det);
@@ -507,7 +507,7 @@ ElementType ft_matrix<ElementType>::determinant() const
     }
     cma_free(temp);
     unlock_internal(lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (result);
 }
 
@@ -517,14 +517,14 @@ void ft_matrix<ElementType>::clear()
     bool lock_acquired = false;
     int lock_result = lock_internal(&lock_acquired);
 
-    if (lock_result != FT_ERR_SUCCESSS)
+    if (lock_result != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_result);
         return ;
     }
     clear_unlocked();
     unlock_internal(lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
 }
 
 template <typename ElementType>
@@ -548,9 +548,9 @@ int ft_matrix<ElementType>::lock_internal(bool *lock_acquired) const
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     int result = pt_recursive_mutex_lock_with_error(*_mutex);
-    if (result == FT_ERR_SUCCESSS && lock_acquired != ft_nullptr)
+    if (result == FT_ERR_SUCCESS && lock_acquired != ft_nullptr)
         *lock_acquired = true;
     return (result);
 }
@@ -559,7 +559,7 @@ template <typename ElementType>
 int ft_matrix<ElementType>::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || _mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     return (pt_recursive_mutex_unlock_with_error(*_mutex));
 }
 
@@ -567,9 +567,9 @@ template <typename ElementType>
 int ft_matrix<ElementType>::prepare_thread_safety()
 {
     if (_mutex != ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     int result = pt_recursive_mutex_create_with_error(&_mutex);
-    if (result != FT_ERR_SUCCESSS && _mutex != ft_nullptr)
+    if (result != FT_ERR_SUCCESS && _mutex != ft_nullptr)
         pt_recursive_mutex_destroy(&_mutex);
     return (result);
 }

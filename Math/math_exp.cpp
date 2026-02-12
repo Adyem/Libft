@@ -16,6 +16,5 @@ double math_exp(double value)
         result += current_term;
         iteration++;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
     return (result);
 }

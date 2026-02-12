@@ -1,5 +1,9 @@
+#include "../test_internal.hpp"
 #include "../../CrossProcess/cross_process.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 #include <cerrno>
 #include <cstddef>

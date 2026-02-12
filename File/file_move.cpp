@@ -18,12 +18,12 @@ int file_move(const char *source_path, const char *destination_path)
     move_result = cmp_file_move(source_path, destination_path, &error_code);
     if (move_result == 0)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0);
     }
     if (error_code != FT_ERR_INVALID_OPERATION)
     {
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_INTERNAL;
         ft_global_error_stack_push(error_code);
         return (-1);
@@ -33,11 +33,11 @@ int file_move(const char *source_path, const char *destination_path)
     if (cmp_file_delete(source_path, &delete_error) != 0)
     {
         cmp_file_delete(destination_path, &cleanup_error);
-        if (delete_error == FT_ERR_SUCCESSS)
+        if (delete_error == FT_ERR_SUCCESS)
             delete_error = FT_ERR_INTERNAL;
         ft_global_error_stack_push(delete_error);
         return (-1);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }

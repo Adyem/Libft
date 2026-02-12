@@ -49,7 +49,7 @@ unsigned char    *ft_base64_encode(const unsigned char *input_buffer, std::size_
     int             has_byte_two;
     int             has_byte_three;
 
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     if (encoded_size == ft_nullptr)
     {
         ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
@@ -119,7 +119,7 @@ unsigned char    *ft_base64_encode(const unsigned char *input_buffer, std::size_
     }
     output_buffer[output_index] = '\0';
     *encoded_size = output_index;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (output_buffer);
 }
 
@@ -143,7 +143,7 @@ unsigned char    *ft_base64_decode(const unsigned char *input_buffer, std::size_
     int             has_char_three;
     int             has_char_four;
 
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     if (!input_buffer || !decoded_size)
     {
         ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
@@ -168,7 +168,7 @@ unsigned char    *ft_base64_decode(const unsigned char *input_buffer, std::size_
             return (ft_nullptr);
         }
         output_buffer[0] = '\0';
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (output_buffer);
     }
     if (sanitized_length % 4 == 1)
@@ -302,6 +302,6 @@ unsigned char    *ft_base64_decode(const unsigned char *input_buffer, std::size_
         }
     }
     *decoded_size = output_index;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (output_buffer);
 }

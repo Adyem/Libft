@@ -13,11 +13,11 @@ static int logger_context_rollback(size_t count)
     {
         g_log_context_entries.pop_back();
         int vector_error = g_log_context_entries.get_error();
-        if (vector_error != FT_ERR_SUCCESSS)
+        if (vector_error != FT_ERR_SUCCESS)
             return (vector_error);
         index += 1;
     }
-    return (FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESS);
 }
 
 int logger_context_push(const s_log_field *fields, size_t field_count,
@@ -33,7 +33,7 @@ int logger_context_push(const s_log_field *fields, size_t field_count,
     *pushed_count = 0;
     if (field_count == 0)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0);
     }
     if (!fields)
@@ -52,7 +52,7 @@ int logger_context_push(const s_log_field *fields, size_t field_count,
         field = &fields[index];
         lock_acquired = false;
         error_code = log_field_lock(field, &lock_acquired);
-        if (error_code != FT_ERR_SUCCESSS)
+        if (error_code != FT_ERR_SUCCESS)
         {
             logger_context_rollback(index);
             return (-1);
@@ -66,7 +66,7 @@ int logger_context_push(const s_log_field *fields, size_t field_count,
         }
         entry.key = field->key;
         error_code = entry.key.get_error();
-        if (error_code != FT_ERR_SUCCESSS)
+        if (error_code != FT_ERR_SUCCESS)
         {
             log_field_unlock(field, lock_acquired);
             logger_context_rollback(index);
@@ -77,7 +77,7 @@ int logger_context_push(const s_log_field *fields, size_t field_count,
         {
             entry.value = field->value;
             error_code = entry.value.get_error();
-            if (error_code != FT_ERR_SUCCESSS)
+            if (error_code != FT_ERR_SUCCESS)
             {
                 log_field_unlock(field, lock_acquired);
                 logger_context_rollback(index);
@@ -94,7 +94,7 @@ int logger_context_push(const s_log_field *fields, size_t field_count,
         log_field_unlock(field, lock_acquired);
         g_log_context_entries.push_back(entry);
         error_code = g_log_context_entries.get_error();
-        if (error_code != FT_ERR_SUCCESSS)
+        if (error_code != FT_ERR_SUCCESS)
         {
             logger_context_rollback(index);
             ft_global_error_stack_push(error_code);
@@ -103,7 +103,7 @@ int logger_context_push(const s_log_field *fields, size_t field_count,
         index += 1;
     }
     *pushed_count = field_count;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -114,7 +114,7 @@ void logger_context_pop(size_t count)
 
     available = g_log_context_entries.size();
     error_code = g_log_context_entries.get_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(error_code);
         return ;
@@ -125,12 +125,12 @@ void logger_context_pop(size_t count)
         count = available;
     }
     else
-        error_code = FT_ERR_SUCCESSS;
+        error_code = FT_ERR_SUCCESS;
     while (count > 0)
     {
         g_log_context_entries.pop_back();
         error_code = g_log_context_entries.get_error();
-        if (error_code != FT_ERR_SUCCESSS)
+        if (error_code != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(error_code);
             return ;
@@ -150,19 +150,19 @@ static int logger_context_format_prefix(ft_string &prefix)
 
     count = g_log_context_entries.size();
     error_code = g_log_context_entries.get_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(error_code);
         return (-1);
     }
     if (count == 0)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0);
     }
     prefix.append('[');
     error_code = prefix.get_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(error_code);
         return (-1);
@@ -174,7 +174,7 @@ static int logger_context_format_prefix(ft_string &prefix)
         const s_log_context_entry &entry = g_log_context_entries[index];
 
         error_code = g_log_context_entries.get_error();
-        if (error_code != FT_ERR_SUCCESSS)
+        if (error_code != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(error_code);
             return (-1);
@@ -183,7 +183,7 @@ static int logger_context_format_prefix(ft_string &prefix)
         {
             prefix.append(' ');
             error_code = prefix.get_error();
-            if (error_code != FT_ERR_SUCCESSS)
+            if (error_code != FT_ERR_SUCCESS)
             {
                 ft_global_error_stack_push(error_code);
                 return (-1);
@@ -193,7 +193,7 @@ static int logger_context_format_prefix(ft_string &prefix)
             first_entry = false;
         prefix.append(entry.key);
         error_code = prefix.get_error();
-        if (error_code != FT_ERR_SUCCESSS)
+        if (error_code != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(error_code);
             return (-1);
@@ -202,14 +202,14 @@ static int logger_context_format_prefix(ft_string &prefix)
         {
             prefix.append('=');
             error_code = prefix.get_error();
-            if (error_code != FT_ERR_SUCCESSS)
+            if (error_code != FT_ERR_SUCCESS)
             {
                 ft_global_error_stack_push(error_code);
                 return (-1);
             }
             prefix.append(entry.value);
             error_code = prefix.get_error();
-            if (error_code != FT_ERR_SUCCESSS)
+            if (error_code != FT_ERR_SUCCESS)
             {
                 ft_global_error_stack_push(error_code);
                 return (-1);
@@ -219,19 +219,19 @@ static int logger_context_format_prefix(ft_string &prefix)
     }
     prefix.append(']');
     error_code = prefix.get_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(error_code);
         return (-1);
     }
     prefix.append(' ');
     error_code = prefix.get_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(error_code);
         return (-1);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (1);
 }
 
@@ -244,36 +244,36 @@ int logger_context_apply_plain(ft_string &text)
     if (result <= 0)
     {
         if (result == 0)
-            ft_global_error_stack_push(FT_ERR_SUCCESSS);
+            ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (result);
     }
-    if (prefix.get_error() != FT_ERR_SUCCESSS)
+    if (prefix.get_error() != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(prefix.get_error());
         return (-1);
     }
     ft_string combined(prefix);
     int error_code = combined.get_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(error_code);
         return (-1);
     }
     combined.append(text);
     error_code = combined.get_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(error_code);
         return (-1);
     }
     text = combined;
     error_code = text.get_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(error_code);
         return (-1);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -311,17 +311,17 @@ static int logger_context_append_flat_value(ft_string &output, const char *value
     {
         output.append(value);
         error_code = output.get_error();
-        if (error_code != FT_ERR_SUCCESSS)
+        if (error_code != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(error_code);
             return (-1);
         }
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0);
     }
     output.append('"');
     error_code = output.get_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(error_code);
         return (-1);
@@ -336,14 +336,14 @@ static int logger_context_append_flat_value(ft_string &output, const char *value
         {
             output.append('\\');
             error_code = output.get_error();
-            if (error_code != FT_ERR_SUCCESSS)
+            if (error_code != FT_ERR_SUCCESS)
             {
                 ft_global_error_stack_push(error_code);
                 return (-1);
             }
             output.append(character);
             error_code = output.get_error();
-            if (error_code != FT_ERR_SUCCESSS)
+            if (error_code != FT_ERR_SUCCESS)
             {
                 ft_global_error_stack_push(error_code);
                 return (-1);
@@ -360,7 +360,7 @@ static int logger_context_append_flat_value(ft_string &output, const char *value
             escape_buffer[4] = '\0';
             output.append(escape_buffer);
             error_code = output.get_error();
-            if (error_code != FT_ERR_SUCCESSS)
+            if (error_code != FT_ERR_SUCCESS)
             {
                 ft_global_error_stack_push(error_code);
                 return (-1);
@@ -370,7 +370,7 @@ static int logger_context_append_flat_value(ft_string &output, const char *value
         {
             output.append(character);
             error_code = output.get_error();
-            if (error_code != FT_ERR_SUCCESSS)
+            if (error_code != FT_ERR_SUCCESS)
             {
                 ft_global_error_stack_push(error_code);
                 return (-1);
@@ -380,12 +380,12 @@ static int logger_context_append_flat_value(ft_string &output, const char *value
     }
     output.append('"');
     error_code = output.get_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(error_code);
         return (-1);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -398,21 +398,21 @@ int logger_context_format_flat(ft_string &output)
 
     output.clear();
     error_code = output.get_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(error_code);
         return (-1);
     }
     count = g_log_context_entries.size();
     error_code = g_log_context_entries.get_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(error_code);
         return (-1);
     }
     if (count == 0)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0);
     }
     index = 0;
@@ -422,7 +422,7 @@ int logger_context_format_flat(ft_string &output)
         const s_log_context_entry &entry = g_log_context_entries[index];
 
         error_code = g_log_context_entries.get_error();
-        if (error_code != FT_ERR_SUCCESSS)
+        if (error_code != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(error_code);
             return (-1);
@@ -431,7 +431,7 @@ int logger_context_format_flat(ft_string &output)
         {
             output.append(' ');
             error_code = output.get_error();
-            if (error_code != FT_ERR_SUCCESSS)
+            if (error_code != FT_ERR_SUCCESS)
             {
                 ft_global_error_stack_push(error_code);
                 return (-1);
@@ -441,7 +441,7 @@ int logger_context_format_flat(ft_string &output)
             first_entry = false;
         output.append(entry.key);
         error_code = output.get_error();
-        if (error_code != FT_ERR_SUCCESSS)
+        if (error_code != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(error_code);
             return (-1);
@@ -450,13 +450,13 @@ int logger_context_format_flat(ft_string &output)
         {
             output.append('=');
             error_code = output.get_error();
-            if (error_code != FT_ERR_SUCCESSS)
+            if (error_code != FT_ERR_SUCCESS)
             {
                 ft_global_error_stack_push(error_code);
                 return (-1);
             }
             error_code = entry.value.get_error();
-            if (error_code != FT_ERR_SUCCESSS)
+            if (error_code != FT_ERR_SUCCESS)
             {
                 ft_global_error_stack_push(error_code);
                 return (-1);
@@ -466,7 +466,7 @@ int logger_context_format_flat(ft_string &output)
         }
         index += 1;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -478,14 +478,14 @@ int logger_context_snapshot(ft_vector<s_log_context_view> &snapshot)
 
     snapshot.clear();
     error_code = snapshot.get_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(error_code);
         return (-1);
     }
     count = g_log_context_entries.size();
     error_code = g_log_context_entries.get_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(error_code);
         return (-1);
@@ -497,7 +497,7 @@ int logger_context_snapshot(ft_vector<s_log_context_view> &snapshot)
         s_log_context_view view;
 
         error_code = g_log_context_entries.get_error();
-        if (error_code != FT_ERR_SUCCESSS)
+        if (error_code != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(error_code);
             return (-1);
@@ -507,14 +507,14 @@ int logger_context_snapshot(ft_vector<s_log_context_view> &snapshot)
         view.has_value = entry.has_value;
         snapshot.push_back(view);
         error_code = snapshot.get_error();
-        if (error_code != FT_ERR_SUCCESSS)
+        if (error_code != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(error_code);
             return (-1);
         }
         index += 1;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -525,7 +525,7 @@ void logger_context_clear()
 
     count = g_log_context_entries.size();
     error_code = g_log_context_entries.get_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(error_code);
         return ;
@@ -534,14 +534,14 @@ void logger_context_clear()
     {
         g_log_context_entries.pop_back();
         error_code = g_log_context_entries.get_error();
-        if (error_code != FT_ERR_SUCCESSS)
+        if (error_code != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(error_code);
             return ;
         }
         count -= 1;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 

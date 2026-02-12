@@ -1,7 +1,11 @@
+#include "../test_internal.hpp"
 #include "../../Template/unique_ptr.hpp"
 #include "../../Template/move.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_ft_uniqueptr_move_constructor_rebuilds_mutex,
         "ft_uniqueptr move constructor reinitializes thread safety and transfers ownership")

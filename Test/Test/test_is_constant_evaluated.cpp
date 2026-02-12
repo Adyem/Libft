@@ -1,5 +1,9 @@
+#include "../test_internal.hpp"
 #include "../../Basic/basic.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 static constexpr bool g_compile_time_result = ft_is_constant_evaluated();
 static_assert(g_compile_time_result, "ft_is_constant_evaluated should return true during constant evaluation");

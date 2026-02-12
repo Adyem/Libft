@@ -16,7 +16,7 @@ int html_node_prepare_thread_safety(html_node *node)
     }
     if (node->thread_safe_enabled && node->mutex)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0);
     }
     mutex_pointer = new (std::nothrow) pt_mutex();
@@ -29,11 +29,11 @@ int html_node_prepare_thread_safety(html_node *node)
         int mutex_error;
 
         if (mutex_pointer == ft_nullptr)
-            mutex_error = FT_ERR_SUCCESSS;
+            mutex_error = FT_ERR_SUCCESS;
         else
             mutex_error = ft_global_error_stack_drop_last_error();
 
-        if (mutex_error != FT_ERR_SUCCESSS)
+        if (mutex_error != FT_ERR_SUCCESS)
         {
             delete mutex_pointer;
             ft_global_error_stack_push(mutex_error);
@@ -42,7 +42,7 @@ int html_node_prepare_thread_safety(html_node *node)
     }
     node->mutex = mutex_pointer;
     node->thread_safe_enabled = true;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -56,7 +56,7 @@ void html_node_teardown_thread_safety(html_node *node)
         node->mutex = ft_nullptr;
     }
     node->thread_safe_enabled = false;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -74,7 +74,7 @@ int html_node_lock(const html_node *node, bool *lock_acquired)
     mutable_node = const_cast<html_node *>(node);
     if (!mutable_node->thread_safe_enabled || !mutable_node->mutex)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0);
     }
     mutable_node->mutex->lock(THREAD_ID);
@@ -82,11 +82,11 @@ int html_node_lock(const html_node *node, bool *lock_acquired)
         int lock_error;
 
         if (mutable_node->mutex == ft_nullptr)
-            lock_error = FT_ERR_SUCCESSS;
+            lock_error = FT_ERR_SUCCESS;
         else
             lock_error = ft_global_error_stack_drop_last_error();
 
-        if (lock_error != FT_ERR_SUCCESSS)
+        if (lock_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(lock_error);
             return (-1);
@@ -94,7 +94,7 @@ int html_node_lock(const html_node *node, bool *lock_acquired)
     }
     if (lock_acquired)
         *lock_acquired = true;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -104,7 +104,7 @@ void html_node_unlock(const html_node *node, bool lock_acquired)
 
     if (!node || !lock_acquired)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return ;
     }
     mutable_node = const_cast<html_node *>(node);
@@ -115,17 +115,17 @@ void html_node_unlock(const html_node *node, bool lock_acquired)
         int unlock_error;
 
         if (mutable_node->mutex == ft_nullptr)
-            unlock_error = FT_ERR_SUCCESSS;
+            unlock_error = FT_ERR_SUCCESS;
         else
             unlock_error = ft_global_error_stack_drop_last_error();
 
-        if (unlock_error != FT_ERR_SUCCESSS)
+        if (unlock_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(unlock_error);
             return ;
         }
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 

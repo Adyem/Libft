@@ -1,7 +1,11 @@
+#include "../test_internal.hpp"
 #include "../../Time/time.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_time_high_resolution_now_requires_output,
         "time_high_resolution_now rejects null output pointers")
@@ -22,7 +26,7 @@ FT_TEST(test_time_high_resolution_now_reports_success,
 
     result = time_high_resolution_now(&first_point);
     FT_ASSERT(result == true);
-    FT_ASSERT(ft_errno == FT_ERR_SUCCESSS);
+    FT_ASSERT(ft_errno == FT_ERR_SUCCESS);
     return (1);
 }
 

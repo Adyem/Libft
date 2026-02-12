@@ -15,7 +15,7 @@ bool    time_get_monotonic_wall_anchor(t_monotonic_time_point &anchor_monotonic,
     before_sample = time_monotonic_point_now();
     wall_now_ms = time_now_ms();
     error_code = ft_global_error_stack_drop_last_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(error_code);
         return (false);
@@ -36,7 +36,7 @@ bool    time_get_monotonic_wall_anchor(t_monotonic_time_point &anchor_monotonic,
     }
     anchor_monotonic = midpoint_sample;
     anchor_wall_ms = static_cast<long long>(wall_now_ms);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -62,7 +62,7 @@ bool    time_monotonic_to_wall_ms(t_monotonic_time_point monotonic_point,
         return (false);
     }
     out_wall_ms = static_cast<long long>(wall_candidate);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -93,6 +93,6 @@ bool    time_wall_ms_to_monotonic(long long wall_time_ms,
         return (false);
     }
     out_monotonic = translated_point;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (true);
 }

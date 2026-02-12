@@ -23,7 +23,7 @@ int log_async_metrics_prepare_thread_safety(s_log_async_metrics *metrics)
         return (-1);
     }
     mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
+    if (mutex_pointer->get_error() != FT_ERR_SUCCESS)
     {
         int mutex_error;
 
@@ -64,7 +64,7 @@ int log_async_metrics_lock(s_log_async_metrics *metrics, bool *lock_acquired)
         return (0);
     }
     metrics->mutex->lock(THREAD_ID);
-    if (metrics->mutex->get_error() != FT_ERR_SUCCESSS)
+    if (metrics->mutex->get_error() != FT_ERR_SUCCESS)
     {
         return (-1);
     }
@@ -84,7 +84,7 @@ void log_async_metrics_unlock(s_log_async_metrics *metrics, bool lock_acquired)
         return ;
     }
     metrics->mutex->unlock(THREAD_ID);
-    if (metrics->mutex->get_error() != FT_ERR_SUCCESSS)
+    if (metrics->mutex->get_error() != FT_ERR_SUCCESS)
     {
         return ;
     }

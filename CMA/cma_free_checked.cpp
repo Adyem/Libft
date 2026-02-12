@@ -15,7 +15,7 @@ int32_t cma_checked_free(void* ptr)
     bool lock_acquired = false;
     int32_t lock_error = cma_lock_allocator(&lock_acquired);
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
         return (-1);
     Block* found = cma_find_block_for_pointer(ptr);
     if (!found)

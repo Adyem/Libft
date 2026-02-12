@@ -1,3 +1,4 @@
+#include "../test_internal.hpp"
 #include "../../Networking/socket_class.hpp"
 #include "../../Networking/networking.hpp"
 #include "../../System_utils/test_runner.hpp"
@@ -6,6 +7,9 @@
 #include <thread>
 #include <atomic>
 #include <cstring>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 #ifdef _WIN32
 # include <winsock2.h>
@@ -97,7 +101,7 @@ FT_TEST(test_ft_socket_send_all_thread_safety,
         return ;
     });
     client_socket = ft_socket(client_config);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, networking_fetch_last_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, networking_fetch_last_error());
     accept_thread.join();
     FT_ASSERT(accepted_fd >= 0);
     message_length = static_cast<int>(sizeof(message) - 1);
@@ -158,7 +162,7 @@ FT_TEST(test_ft_socket_send_all_thread_safety,
                 thread_failed.store(true);
                 return ;
             }
-            if (networking_fetch_last_error() != FT_ERR_SUCCESSS)
+            if (networking_fetch_last_error() != FT_ERR_SUCCESS)
             {
                 thread_failed.store(true);
                 return ;
@@ -210,7 +214,7 @@ FT_TEST(test_ft_socket_receive_close_thread_safety,
         return ;
     });
     client_socket = ft_socket(client_config);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, networking_fetch_last_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, networking_fetch_last_error());
     accept_thread.join();
     FT_ASSERT(accepted_fd >= 0);
     received_once.store(false);

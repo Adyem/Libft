@@ -1,5 +1,9 @@
+#include "../test_internal.hpp"
 #include "../../Game/game_dialogue_table.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 static int build_line(int id, const char *speaker, const char *text, const ft_vector<int> &next_ids,
         ft_dialogue_line &out_line)
@@ -18,8 +22,8 @@ FT_TEST(test_dialogue_register_and_fetch, "register and fetch dialogue entries")
     next_ids.push_back(2);
     next_ids.push_back(3);
     build_line(1, "npc", "hello", next_ids, line);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.register_line(line));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.fetch_line(1, fetched_line));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.register_line(line));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.fetch_line(1, fetched_line));
     FT_ASSERT_EQ(1, fetched_line.get_line_id());
     FT_ASSERT_EQ(ft_string("npc"), fetched_line.get_speaker());
     FT_ASSERT_EQ(ft_string("hello"), fetched_line.get_text());
@@ -40,10 +44,10 @@ FT_TEST(test_dialogue_script_isolation, "scripts fetch as copies")
     lines.push_back(ft_dialogue_line());
     build_line(10, "guide", "welcome", empty_next, lines[lines.size() - 1]);
     script = ft_dialogue_script(5, ft_string("intro"), ft_string("start"), 10, lines);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.register_script(script));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.fetch_script(5, fetched_first));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.register_script(script));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.fetch_script(5, fetched_first));
     fetched_first.get_lines()[0].set_text(ft_string("changed"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.fetch_script(5, fetched_second));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.fetch_script(5, fetched_second));
     FT_ASSERT_EQ(ft_string("welcome"), fetched_second.get_lines()[0].get_text());
     return (1);
 }

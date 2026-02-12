@@ -23,7 +23,7 @@ int pt_thread_join(pthread_t thread, void **retval)
         ft_global_error_stack_push(error_code);
         return (return_value);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (return_value);
 }
 
@@ -72,7 +72,7 @@ int pt_thread_timed_join(pthread_t thread, void **retval, long timeout_ms)
         ft_global_error_stack_push(error_code);
         return (return_value);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (return_value);
 #else
     (void)retval;

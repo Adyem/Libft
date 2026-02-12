@@ -1,8 +1,12 @@
+#include "../test_internal.hpp"
 #include "../../CMA/CMA.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../Basic/basic.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_cma_set_alloc_limit_resets_errno,
         "cma_set_alloc_limit sets ft_errno to success when locking")
@@ -11,7 +15,7 @@ FT_TEST(test_cma_set_alloc_limit_resets_errno,
     cma_set_alloc_limit(0);
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     cma_set_alloc_limit(64);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_set_alloc_limit(0);
     return (1);
 }
@@ -23,7 +27,7 @@ FT_TEST(test_cma_limit_blocks_large_allocations_with_lock,
 
     cma_set_thread_safety(true);
     cma_set_alloc_limit(16);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     allocation = cma_malloc(32);
     FT_ASSERT_EQ(ft_nullptr, allocation);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
@@ -39,7 +43,7 @@ FT_TEST(test_cma_limit_blocks_large_allocations_without_lock,
 
     cma_set_thread_safety(false);
     cma_set_alloc_limit(64);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     allowed_allocation = cma_malloc(32);
     if (allowed_allocation == ft_nullptr)
     {

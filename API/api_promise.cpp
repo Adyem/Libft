@@ -14,20 +14,20 @@ bool api_promise::request(const char *ip, uint16_t port,
     request_error = ft_global_error_stack_drop_last_error();
     if (!resp)
     {
-        if (request_error == FT_ERR_SUCCESSS)
+        if (request_error == FT_ERR_SUCCESS)
             request_error = FT_ERR_SOCKET_CONNECT_FAILED;
         this->set_error(request_error);
         ft_global_error_stack_push(request_error);
         return (false);
     }
-    if (request_error != FT_ERR_SUCCESSS)
+    if (request_error != FT_ERR_SUCCESS)
     {
         this->set_error(request_error);
         ft_global_error_stack_push(request_error);
         return (false);
     }
     set_value(resp);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -44,20 +44,20 @@ bool api_string_promise::request(const char *ip, uint16_t port,
     request_error = ft_global_error_stack_drop_last_error();
     if (!resp)
     {
-        if (request_error == FT_ERR_SUCCESSS)
+        if (request_error == FT_ERR_SUCCESS)
             request_error = FT_ERR_SOCKET_CONNECT_FAILED;
         this->set_error(request_error);
         ft_global_error_stack_push(request_error);
         return (false);
     }
-    if (request_error != FT_ERR_SUCCESSS)
+    if (request_error != FT_ERR_SUCCESS)
     {
         this->set_error(request_error);
         ft_global_error_stack_push(request_error);
         return (false);
     }
     set_value(resp);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -74,20 +74,20 @@ bool api_tls_promise::request(const char *host, uint16_t port,
     request_error = ft_global_error_stack_drop_last_error();
     if (!resp)
     {
-        if (request_error == FT_ERR_SUCCESSS)
+        if (request_error == FT_ERR_SUCCESS)
             request_error = FT_ERR_SOCKET_CONNECT_FAILED;
         this->set_error(request_error);
         ft_global_error_stack_push(request_error);
         return (false);
     }
-    if (request_error != FT_ERR_SUCCESSS)
+    if (request_error != FT_ERR_SUCCESS)
     {
         this->set_error(request_error);
         ft_global_error_stack_push(request_error);
         return (false);
     }
     set_value(resp);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -104,19 +104,19 @@ bool api_tls_string_promise::request(const char *host, uint16_t port,
     request_error = ft_global_error_stack_drop_last_error();
     if (!resp)
     {
-        if (request_error == FT_ERR_SUCCESSS)
+        if (request_error == FT_ERR_SUCCESS)
             request_error = FT_ERR_SOCKET_CONNECT_FAILED;
         this->set_error(request_error);
         ft_global_error_stack_push(request_error);
         return (false);
     }
-    if (request_error != FT_ERR_SUCCESSS)
+    if (request_error != FT_ERR_SUCCESS)
     {
         this->set_error(request_error);
         ft_global_error_stack_push(request_error);
         return (false);
     }
     set_value(resp);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (true);
 }

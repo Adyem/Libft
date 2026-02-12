@@ -55,7 +55,7 @@ static char *html_escape_attribute_value(const char *value, int *error_code)
     local_error = ft_global_error_stack_drop_last_error();
     if (!escaped_value)
     {
-        if (local_error == FT_ERR_SUCCESSS)
+        if (local_error == FT_ERR_SUCCESS)
             local_error = FT_ERR_NO_MEMORY;
         if (error_code != ft_nullptr)
             *error_code = local_error;
@@ -87,7 +87,7 @@ static char *html_escape_attribute_value(const char *value, int *error_code)
     }
     escaped_value[output_index] = '\0';
     if (error_code != ft_nullptr)
-        *error_code = FT_ERR_SUCCESSS;
+        *error_code = FT_ERR_SUCCESS;
     return (escaped_value);
 }
 
@@ -100,7 +100,7 @@ static char *html_attrs_to_string(html_attr *attribute, int *error_code)
     local_error = ft_global_error_stack_drop_last_error();
     if (!result)
     {
-        if (local_error == FT_ERR_SUCCESSS)
+        if (local_error == FT_ERR_SUCCESS)
             local_error = FT_ERR_NO_MEMORY;
         if (error_code != ft_nullptr)
             *error_code = local_error;
@@ -145,7 +145,7 @@ static char *html_attrs_to_string(html_attr *attribute, int *error_code)
             ft_global_error_stack_drop_last_error();
             cma_free(result);
             ft_global_error_stack_drop_last_error();
-            if (local_error == FT_ERR_SUCCESSS)
+            if (local_error == FT_ERR_SUCCESS)
                 local_error = FT_ERR_NO_MEMORY;
             if (error_code != ft_nullptr)
                 *error_code = local_error;
@@ -161,7 +161,7 @@ static char *html_attrs_to_string(html_attr *attribute, int *error_code)
             ft_global_error_stack_drop_last_error();
             cma_free(result);
             ft_global_error_stack_drop_last_error();
-            if (local_error == FT_ERR_SUCCESSS)
+            if (local_error == FT_ERR_SUCCESS)
                 local_error = FT_ERR_NO_MEMORY;
             if (error_code != ft_nullptr)
                 *error_code = local_error;
@@ -193,7 +193,7 @@ static char *html_attrs_to_string(html_attr *attribute, int *error_code)
         {
             cma_free(result);
             ft_global_error_stack_drop_last_error();
-            if (local_error == FT_ERR_SUCCESSS)
+            if (local_error == FT_ERR_SUCCESS)
                 local_error = FT_ERR_NO_MEMORY;
             if (error_code != ft_nullptr)
                 *error_code = local_error;
@@ -209,7 +209,7 @@ static char *html_attrs_to_string(html_attr *attribute, int *error_code)
         ft_global_error_stack_drop_last_error();
         if (!tmp)
         {
-            if (local_error == FT_ERR_SUCCESSS)
+            if (local_error == FT_ERR_SUCCESS)
                 local_error = FT_ERR_NO_MEMORY;
             if (error_code != ft_nullptr)
                 *error_code = local_error;
@@ -219,7 +219,7 @@ static char *html_attrs_to_string(html_attr *attribute, int *error_code)
         attribute = next_attribute;
     }
     if (error_code != ft_nullptr)
-        *error_code = FT_ERR_SUCCESSS;
+        *error_code = FT_ERR_SUCCESS;
     return (result);
 }
 
@@ -234,7 +234,7 @@ static char *html_indent(int indent, int *error_code)
     local_error = ft_global_error_stack_drop_last_error();
     if (!result)
     {
-        if (local_error == FT_ERR_SUCCESSS)
+        if (local_error == FT_ERR_SUCCESS)
             local_error = FT_ERR_NO_MEMORY;
         if (error_code != ft_nullptr)
             *error_code = local_error;
@@ -247,7 +247,7 @@ static char *html_indent(int indent, int *error_code)
         ++index;
     }
     if (error_code != ft_nullptr)
-        *error_code = FT_ERR_SUCCESSS;
+        *error_code = FT_ERR_SUCCESS;
     return (result);
 }
 
@@ -273,7 +273,7 @@ static char *html_node_to_string(html_node *node, int indent, int *error_code)
     {
         html_node_unlock(node, node_lock_acquired);
         ft_global_error_stack_drop_last_error();
-        if (local_error == FT_ERR_SUCCESSS)
+        if (local_error == FT_ERR_SUCCESS)
             local_error = FT_ERR_NO_MEMORY;
         if (error_code != ft_nullptr)
             *error_code = local_error;
@@ -300,7 +300,7 @@ static char *html_node_to_string(html_node *node, int indent, int *error_code)
     {
         html_node_unlock(node, node_lock_acquired);
         ft_global_error_stack_drop_last_error();
-        if (local_error == FT_ERR_SUCCESSS)
+        if (local_error == FT_ERR_SUCCESS)
             local_error = FT_ERR_NO_MEMORY;
         if (error_code != ft_nullptr)
             *error_code = local_error;
@@ -328,7 +328,7 @@ static char *html_node_to_string(html_node *node, int indent, int *error_code)
         ft_global_error_stack_drop_last_error();
         html_node_unlock(node, node_lock_acquired);
         ft_global_error_stack_drop_last_error();
-        if (local_error == FT_ERR_SUCCESSS)
+        if (local_error == FT_ERR_SUCCESS)
             local_error = FT_ERR_NO_MEMORY;
         if (error_code != ft_nullptr)
             *error_code = local_error;
@@ -346,7 +346,7 @@ static char *html_node_to_string(html_node *node, int indent, int *error_code)
             ft_global_error_stack_drop_last_error();
             html_node_unlock(node, node_lock_acquired);
             ft_global_error_stack_drop_last_error();
-            if (local_error == FT_ERR_SUCCESSS)
+            if (local_error == FT_ERR_SUCCESS)
                 local_error = FT_ERR_NO_MEMORY;
             if (error_code != ft_nullptr)
                 *error_code = local_error;
@@ -362,7 +362,7 @@ static char *html_node_to_string(html_node *node, int indent, int *error_code)
         {
             html_node_unlock(node, node_lock_acquired);
             ft_global_error_stack_drop_last_error();
-            if (local_error == FT_ERR_SUCCESSS)
+            if (local_error == FT_ERR_SUCCESS)
                 local_error = FT_ERR_NO_MEMORY;
             if (error_code != ft_nullptr)
                 *error_code = local_error;
@@ -372,7 +372,7 @@ static char *html_node_to_string(html_node *node, int indent, int *error_code)
         html_node_unlock(node, node_lock_acquired);
         ft_global_error_stack_drop_last_error();
         if (error_code != ft_nullptr)
-            *error_code = FT_ERR_SUCCESSS;
+            *error_code = FT_ERR_SUCCESS;
         return (result);
     }
     tmp = cma_strjoin_multiple(2, open, ">");
@@ -385,7 +385,7 @@ static char *html_node_to_string(html_node *node, int indent, int *error_code)
         ft_global_error_stack_drop_last_error();
         html_node_unlock(node, node_lock_acquired);
         ft_global_error_stack_drop_last_error();
-        if (local_error == FT_ERR_SUCCESSS)
+        if (local_error == FT_ERR_SUCCESS)
             local_error = FT_ERR_NO_MEMORY;
         if (error_code != ft_nullptr)
             *error_code = local_error;
@@ -401,7 +401,7 @@ static char *html_node_to_string(html_node *node, int indent, int *error_code)
     {
         html_node_unlock(node, node_lock_acquired);
         ft_global_error_stack_drop_last_error();
-        if (local_error == FT_ERR_SUCCESSS)
+        if (local_error == FT_ERR_SUCCESS)
             local_error = FT_ERR_NO_MEMORY;
         if (error_code != ft_nullptr)
             *error_code = local_error;
@@ -418,7 +418,7 @@ static char *html_node_to_string(html_node *node, int indent, int *error_code)
         {
             html_node_unlock(node, node_lock_acquired);
             ft_global_error_stack_drop_last_error();
-            if (local_error == FT_ERR_SUCCESSS)
+            if (local_error == FT_ERR_SUCCESS)
                 local_error = FT_ERR_NO_MEMORY;
             if (error_code != ft_nullptr)
                 *error_code = local_error;
@@ -436,7 +436,7 @@ static char *html_node_to_string(html_node *node, int indent, int *error_code)
         {
             html_node_unlock(node, node_lock_acquired);
             ft_global_error_stack_drop_last_error();
-            if (local_error == FT_ERR_SUCCESSS)
+            if (local_error == FT_ERR_SUCCESS)
                 local_error = FT_ERR_NO_MEMORY;
             if (error_code != ft_nullptr)
                 *error_code = local_error;
@@ -467,7 +467,7 @@ static char *html_node_to_string(html_node *node, int indent, int *error_code)
             {
                 html_node_unlock(node, node_lock_acquired);
                 ft_global_error_stack_drop_last_error();
-                if (local_error == FT_ERR_SUCCESSS)
+                if (local_error == FT_ERR_SUCCESS)
                     local_error = FT_ERR_NO_MEMORY;
                 if (error_code != ft_nullptr)
                     *error_code = local_error;
@@ -497,7 +497,7 @@ static char *html_node_to_string(html_node *node, int indent, int *error_code)
         {
             html_node_unlock(node, node_lock_acquired);
             ft_global_error_stack_drop_last_error();
-            if (local_error == FT_ERR_SUCCESSS)
+            if (local_error == FT_ERR_SUCCESS)
                 local_error = FT_ERR_NO_MEMORY;
             if (error_code != ft_nullptr)
                 *error_code = local_error;
@@ -513,7 +513,7 @@ static char *html_node_to_string(html_node *node, int indent, int *error_code)
         ft_global_error_stack_drop_last_error();
         html_node_unlock(node, node_lock_acquired);
         ft_global_error_stack_drop_last_error();
-        if (local_error == FT_ERR_SUCCESSS)
+        if (local_error == FT_ERR_SUCCESS)
             local_error = FT_ERR_NO_MEMORY;
         if (error_code != ft_nullptr)
             *error_code = local_error;
@@ -529,7 +529,7 @@ static char *html_node_to_string(html_node *node, int indent, int *error_code)
         ft_global_error_stack_drop_last_error();
         html_node_unlock(node, node_lock_acquired);
         ft_global_error_stack_drop_last_error();
-        if (local_error == FT_ERR_SUCCESSS)
+        if (local_error == FT_ERR_SUCCESS)
             local_error = FT_ERR_NO_MEMORY;
         if (error_code != ft_nullptr)
             *error_code = local_error;
@@ -545,7 +545,7 @@ static char *html_node_to_string(html_node *node, int indent, int *error_code)
     {
         html_node_unlock(node, node_lock_acquired);
         ft_global_error_stack_drop_last_error();
-        if (local_error == FT_ERR_SUCCESSS)
+        if (local_error == FT_ERR_SUCCESS)
             local_error = FT_ERR_NO_MEMORY;
         if (error_code != ft_nullptr)
             *error_code = local_error;
@@ -555,7 +555,7 @@ static char *html_node_to_string(html_node *node, int indent, int *error_code)
     html_node_unlock(node, node_lock_acquired);
     ft_global_error_stack_drop_last_error();
     if (error_code != ft_nullptr)
-        *error_code = FT_ERR_SUCCESSS;
+        *error_code = FT_ERR_SUCCESS;
     return (result);
 }
 
@@ -568,7 +568,7 @@ char *html_write_to_string(html_node *nodeList)
     error_code = ft_global_error_stack_drop_last_error();
     if (!result)
     {
-        if (error_code == FT_ERR_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_NO_MEMORY;
         ft_global_error_stack_push(error_code);
         return (ft_nullptr);
@@ -596,7 +596,7 @@ char *html_write_to_string(html_node *nodeList)
         {
             cma_free(result);
             ft_global_error_stack_drop_last_error();
-            if (error_code == FT_ERR_SUCCESSS)
+            if (error_code == FT_ERR_SUCCESS)
                 error_code = FT_ERR_NO_MEMORY;
             ft_global_error_stack_push(error_code);
             return (ft_nullptr);
@@ -609,7 +609,7 @@ char *html_write_to_string(html_node *nodeList)
         ft_global_error_stack_drop_last_error();
         if (!tmp)
         {
-            if (error_code == FT_ERR_SUCCESSS)
+            if (error_code == FT_ERR_SUCCESS)
                 error_code = FT_ERR_NO_MEMORY;
             ft_global_error_stack_push(error_code);
             return (ft_nullptr);
@@ -617,6 +617,6 @@ char *html_write_to_string(html_node *nodeList)
         result = tmp;
         current = next_node;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (result);
 }

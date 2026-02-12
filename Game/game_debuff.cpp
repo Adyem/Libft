@@ -14,7 +14,7 @@ static void game_debuff_finalize_lock(ft_unique_lock<pt_mutex> &guard)
 {
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
         ft_errno = guard.get_error();
     return ;
 }
@@ -31,15 +31,15 @@ int ft_debuff::lock_pair(const ft_debuff &first, const ft_debuff &second,
     {
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
 
-        if (single_guard.get_error() != FT_ERR_SUCCESSS)
+        if (single_guard.get_error() != FT_ERR_SUCCESS)
         {
             ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ERR_SUCCESSS;
-        return (FT_ERR_SUCCESSS);
+        ft_errno = FT_ERR_SUCCESS;
+        return (FT_ERR_SUCCESS);
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -57,13 +57,13 @@ int ft_debuff::lock_pair(const ft_debuff &first, const ft_debuff &second,
     {
         ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
 
-        if (lower_guard.get_error() != FT_ERR_SUCCESSS)
+        if (lower_guard.get_error() != FT_ERR_SUCCESS)
         {
             ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ERR_SUCCESSS)
+        if (upper_guard.get_error() == FT_ERR_SUCCESS)
         {
             if (!swapped)
             {
@@ -75,8 +75,8 @@ int ft_debuff::lock_pair(const ft_debuff &first, const ft_debuff &second,
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = FT_ERR_SUCCESSS;
-            return (FT_ERR_SUCCESSS);
+            ft_errno = FT_ERR_SUCCESS;
+            return (FT_ERR_SUCCESS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -91,19 +91,19 @@ int ft_debuff::lock_pair(const ft_debuff &first, const ft_debuff &second,
 
 ft_debuff::ft_debuff() noexcept
     : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0),
-      _modifier4(0), _error(FT_ERR_SUCCESSS), _mutex()
+      _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 ft_debuff::ft_debuff(const ft_debuff &other) noexcept
     : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0),
-      _modifier4(0), _error(FT_ERR_SUCCESSS), _mutex()
+      _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()
 {
 
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESSS)
+    if (other_guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(other_guard.get_error());
         game_debuff_finalize_lock(other_guard);
@@ -130,7 +130,7 @@ ft_debuff &ft_debuff::operator=(const ft_debuff &other) noexcept
     if (this == &other)
         return (*this);
     lock_error = ft_debuff::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         return (*this);
@@ -150,11 +150,11 @@ ft_debuff &ft_debuff::operator=(const ft_debuff &other) noexcept
 
 ft_debuff::ft_debuff(ft_debuff &&other) noexcept
     : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0),
-      _modifier4(0), _error(FT_ERR_SUCCESSS), _mutex()
+      _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()
 {
 
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESSS)
+    if (other_guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(other_guard.get_error());
         game_debuff_finalize_lock(other_guard);
@@ -173,9 +173,9 @@ ft_debuff::ft_debuff(ft_debuff &&other) noexcept
     other._modifier2 = 0;
     other._modifier3 = 0;
     other._modifier4 = 0;
-    other._error = FT_ERR_SUCCESSS;
+    other._error = FT_ERR_SUCCESS;
     this->set_error(this->_error);
-    other.set_error(FT_ERR_SUCCESSS);
+    other.set_error(FT_ERR_SUCCESS);
     game_debuff_finalize_lock(other_guard);
     return ;
 }
@@ -189,7 +189,7 @@ ft_debuff &ft_debuff::operator=(ft_debuff &&other) noexcept
     if (this == &other)
         return (*this);
     lock_error = ft_debuff::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         return (*this);
@@ -207,9 +207,9 @@ ft_debuff &ft_debuff::operator=(ft_debuff &&other) noexcept
     other._modifier2 = 0;
     other._modifier3 = 0;
     other._modifier4 = 0;
-    other._error = FT_ERR_SUCCESSS;
+    other._error = FT_ERR_SUCCESS;
     this->set_error(this->_error);
-    other.set_error(FT_ERR_SUCCESSS);
+    other.set_error(FT_ERR_SUCCESS);
     game_debuff_finalize_lock(this_guard);
     game_debuff_finalize_lock(other_guard);
     return (*this);
@@ -220,14 +220,14 @@ int ft_debuff::get_id() const noexcept
     int identifier;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_debuff *>(this)->set_error(guard.get_error());
         game_debuff_finalize_lock(guard);
         return (0);
     }
     identifier = this->_id;
-    const_cast<ft_debuff *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_debuff *>(this)->set_error(FT_ERR_SUCCESS);
     game_debuff_finalize_lock(guard);
     return (identifier);
 }
@@ -236,7 +236,7 @@ void ft_debuff::set_id(int id) noexcept
 {
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         game_debuff_finalize_lock(guard);
@@ -249,7 +249,7 @@ void ft_debuff::set_id(int id) noexcept
         return ;
     }
     this->_id = id;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_debuff_finalize_lock(guard);
     return ;
 }
@@ -259,14 +259,14 @@ int ft_debuff::get_duration() const noexcept
     int duration_value;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_debuff *>(this)->set_error(guard.get_error());
         game_debuff_finalize_lock(guard);
         return (0);
     }
     duration_value = this->_duration;
-    const_cast<ft_debuff *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_debuff *>(this)->set_error(FT_ERR_SUCCESS);
     game_debuff_finalize_lock(guard);
     return (duration_value);
 }
@@ -275,7 +275,7 @@ void ft_debuff::set_duration(int duration) noexcept
 {
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         game_debuff_finalize_lock(guard);
@@ -288,7 +288,7 @@ void ft_debuff::set_duration(int duration) noexcept
         return ;
     }
     this->_duration = duration;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_debuff_finalize_lock(guard);
     return ;
 }
@@ -297,7 +297,7 @@ void ft_debuff::add_duration(int duration) noexcept
 {
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         game_debuff_finalize_lock(guard);
@@ -310,7 +310,7 @@ void ft_debuff::add_duration(int duration) noexcept
         return ;
     }
     this->_duration += duration;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_debuff_finalize_lock(guard);
     return ;
 }
@@ -319,7 +319,7 @@ void ft_debuff::sub_duration(int duration) noexcept
 {
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         game_debuff_finalize_lock(guard);
@@ -332,7 +332,7 @@ void ft_debuff::sub_duration(int duration) noexcept
         return ;
     }
     this->_duration -= duration;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_debuff_finalize_lock(guard);
     return ;
 }
@@ -342,14 +342,14 @@ int ft_debuff::get_modifier1() const noexcept
     int modifier;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_debuff *>(this)->set_error(guard.get_error());
         game_debuff_finalize_lock(guard);
         return (0);
     }
     modifier = this->_modifier1;
-    const_cast<ft_debuff *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_debuff *>(this)->set_error(FT_ERR_SUCCESS);
     game_debuff_finalize_lock(guard);
     return (modifier);
 }
@@ -358,14 +358,14 @@ void ft_debuff::set_modifier1(int mod) noexcept
 {
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         game_debuff_finalize_lock(guard);
         return ;
     }
     this->_modifier1 = mod;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_debuff_finalize_lock(guard);
     return ;
 }
@@ -374,14 +374,14 @@ void ft_debuff::add_modifier1(int mod) noexcept
 {
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         game_debuff_finalize_lock(guard);
         return ;
     }
     this->_modifier1 += mod;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_debuff_finalize_lock(guard);
     return ;
 }
@@ -390,14 +390,14 @@ void ft_debuff::sub_modifier1(int mod) noexcept
 {
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         game_debuff_finalize_lock(guard);
         return ;
     }
     this->_modifier1 -= mod;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_debuff_finalize_lock(guard);
     return ;
 }
@@ -407,14 +407,14 @@ int ft_debuff::get_modifier2() const noexcept
     int modifier;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_debuff *>(this)->set_error(guard.get_error());
         game_debuff_finalize_lock(guard);
         return (0);
     }
     modifier = this->_modifier2;
-    const_cast<ft_debuff *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_debuff *>(this)->set_error(FT_ERR_SUCCESS);
     game_debuff_finalize_lock(guard);
     return (modifier);
 }
@@ -423,14 +423,14 @@ void ft_debuff::set_modifier2(int mod) noexcept
 {
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         game_debuff_finalize_lock(guard);
         return ;
     }
     this->_modifier2 = mod;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_debuff_finalize_lock(guard);
     return ;
 }
@@ -439,14 +439,14 @@ void ft_debuff::add_modifier2(int mod) noexcept
 {
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         game_debuff_finalize_lock(guard);
         return ;
     }
     this->_modifier2 += mod;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_debuff_finalize_lock(guard);
     return ;
 }
@@ -455,14 +455,14 @@ void ft_debuff::sub_modifier2(int mod) noexcept
 {
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         game_debuff_finalize_lock(guard);
         return ;
     }
     this->_modifier2 -= mod;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_debuff_finalize_lock(guard);
     return ;
 }
@@ -472,14 +472,14 @@ int ft_debuff::get_modifier3() const noexcept
     int modifier;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_debuff *>(this)->set_error(guard.get_error());
         game_debuff_finalize_lock(guard);
         return (0);
     }
     modifier = this->_modifier3;
-    const_cast<ft_debuff *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_debuff *>(this)->set_error(FT_ERR_SUCCESS);
     game_debuff_finalize_lock(guard);
     return (modifier);
 }
@@ -488,14 +488,14 @@ void ft_debuff::set_modifier3(int mod) noexcept
 {
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         game_debuff_finalize_lock(guard);
         return ;
     }
     this->_modifier3 = mod;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_debuff_finalize_lock(guard);
     return ;
 }
@@ -504,14 +504,14 @@ void ft_debuff::add_modifier3(int mod) noexcept
 {
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         game_debuff_finalize_lock(guard);
         return ;
     }
     this->_modifier3 += mod;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_debuff_finalize_lock(guard);
     return ;
 }
@@ -520,14 +520,14 @@ void ft_debuff::sub_modifier3(int mod) noexcept
 {
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         game_debuff_finalize_lock(guard);
         return ;
     }
     this->_modifier3 -= mod;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_debuff_finalize_lock(guard);
     return ;
 }
@@ -537,14 +537,14 @@ int ft_debuff::get_modifier4() const noexcept
     int modifier;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_debuff *>(this)->set_error(guard.get_error());
         game_debuff_finalize_lock(guard);
         return (0);
     }
     modifier = this->_modifier4;
-    const_cast<ft_debuff *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_debuff *>(this)->set_error(FT_ERR_SUCCESS);
     game_debuff_finalize_lock(guard);
     return (modifier);
 }
@@ -553,14 +553,14 @@ void ft_debuff::set_modifier4(int mod) noexcept
 {
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         game_debuff_finalize_lock(guard);
         return ;
     }
     this->_modifier4 = mod;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_debuff_finalize_lock(guard);
     return ;
 }
@@ -569,14 +569,14 @@ void ft_debuff::add_modifier4(int mod) noexcept
 {
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         game_debuff_finalize_lock(guard);
         return ;
     }
     this->_modifier4 += mod;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_debuff_finalize_lock(guard);
     return ;
 }
@@ -585,14 +585,14 @@ void ft_debuff::sub_modifier4(int mod) noexcept
 {
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         game_debuff_finalize_lock(guard);
         return ;
     }
     this->_modifier4 -= mod;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_debuff_finalize_lock(guard);
     return ;
 }
@@ -602,7 +602,7 @@ int ft_debuff::get_error() const noexcept
     int error_code;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_debuff *>(this)->set_error(guard.get_error());
         game_debuff_finalize_lock(guard);
@@ -619,7 +619,7 @@ const char *ft_debuff::get_error_str() const noexcept
     int error_code;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_debuff *>(this)->set_error(guard.get_error());
         game_debuff_finalize_lock(guard);

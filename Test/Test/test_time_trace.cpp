@@ -1,3 +1,4 @@
+#include "../test_internal.hpp"
 #include "../../Time/time.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
@@ -5,6 +6,9 @@
 #include <iterator>
 #include <string>
 #include <cstdio>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_time_trace_writes_events,
     "time trace emits Chrome tracing compatible duration and instant markers")
@@ -27,7 +31,7 @@ FT_TEST(test_time_trace_writes_events,
     FT_ASSERT_EQ(true, result);
     result = time_trace_end_session();
     FT_ASSERT_EQ(true, result);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     input.open(file_path, std::ios::binary);
     FT_ASSERT_EQ(true, input.good());
     contents.assign((std::istreambuf_iterator<char>(input)),
@@ -61,7 +65,7 @@ FT_TEST(test_time_trace_detects_unbalanced_events,
     FT_ASSERT_EQ(true, result);
     result = time_trace_end_session();
     FT_ASSERT_EQ(true, result);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     std::remove(file_path);
     return (1);
 }

@@ -1,9 +1,13 @@
+#include "../test_internal.hpp"
 #include "../../Networking/http_client.hpp"
 #include "../../Networking/http_server.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../PThread/thread.hpp"
 #include "../../Basic/basic.hpp"
 #include "../../Errno/errno.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 struct http_client_server_context
 {
@@ -37,7 +41,7 @@ FT_TEST(test_http_client_reuses_keep_alive_connection, "HTTP client reuses poole
     context.server = &server;
     context.result = -1;
     server_thread = ft_thread(http_client_server_run_once, &context);
-    if (server_thread.get_error() != FT_ERR_SUCCESSS)
+    if (server_thread.get_error() != FT_ERR_SUCCESS)
     {
         return (0);
     }

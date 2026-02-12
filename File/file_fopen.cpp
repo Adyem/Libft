@@ -34,7 +34,7 @@ FILE *ft_fopen(const char *filename, const char *mode)
         ft_global_error_stack_push(error_code);
         return (ft_nullptr);
     }
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     ft_global_error_stack_push(error_code);
     return (file_handle);
 }

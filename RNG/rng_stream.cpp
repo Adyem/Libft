@@ -12,9 +12,9 @@ static int rng_stream_capture_math_error(ft_size_t previous_depth)
     ft_size_t current_depth = ft_global_error_stack_depth();
 
     if (current_depth <= previous_depth)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     int error_code = ft_global_error_stack_drop_last_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
         ft_global_error_stack_push(error_code);
     return (error_code);
 }
@@ -30,11 +30,11 @@ int rng_stream::lock_internal(bool *lock_acquired) const
     mutex_result = this->_mutex.lock();
     global_error = ft_global_error_stack_drop_last_error();
     operation_error = global_error;
-    if (global_error == FT_ERR_SUCCESSS)
+    if (global_error == FT_ERR_SUCCESS)
         operation_error = mutex_result;
     else
         ft_global_error_stack_push(global_error);
-    if (operation_error == FT_ERR_SUCCESSS && lock_acquired != ft_nullptr)
+    if (operation_error == FT_ERR_SUCCESS && lock_acquired != ft_nullptr)
         *lock_acquired = true;
     return (operation_error);
 }
@@ -46,11 +46,11 @@ int rng_stream::unlock_internal(bool lock_acquired) const
     int operation_error;
 
     if (!lock_acquired)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     mutex_result = this->_mutex.unlock();
     global_error = ft_global_error_stack_drop_last_error();
     operation_error = global_error;
-    if (global_error == FT_ERR_SUCCESSS)
+    if (global_error == FT_ERR_SUCCESS)
         operation_error = mutex_result;
     else
         ft_global_error_stack_push(global_error);
@@ -72,14 +72,14 @@ rng_stream::rng_stream()
     std::random_device random_device;
 
     this->_engine.seed(random_device());
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
 rng_stream::rng_stream(uint32_t seed_value)
 {
     this->_engine.seed(static_cast<std::mt19937::result_type>(seed_value));
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -91,7 +91,7 @@ rng_stream::rng_stream(const rng_stream &other)
 
     lock_acquired = false;
     lock_error = other.lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -106,7 +106,7 @@ rng_stream &rng_stream::operator=(const rng_stream &other)
 {
     if (this == &other)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (*this);
     }
     bool this_lock_acquired;
@@ -119,16 +119,16 @@ rng_stream &rng_stream::operator=(const rng_stream &other)
     if (this < &other)
     {
         lock_error = this->lock_internal(&this_lock_acquired);
-        if (lock_error == FT_ERR_SUCCESSS)
+        if (lock_error == FT_ERR_SUCCESS)
             lock_error = other.lock_internal(&other_lock_acquired);
     }
     else
     {
         lock_error = other.lock_internal(&other_lock_acquired);
-        if (lock_error == FT_ERR_SUCCESSS)
+        if (lock_error == FT_ERR_SUCCESS)
             lock_error = this->lock_internal(&this_lock_acquired);
     }
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         if (other_lock_acquired)
             other.unlock_internal(other_lock_acquired);
@@ -138,12 +138,12 @@ rng_stream &rng_stream::operator=(const rng_stream &other)
         return (*this);
     }
     this->_engine = other._engine;
-    unlock_error = FT_ERR_SUCCESSS;
+    unlock_error = FT_ERR_SUCCESS;
     if (this < &other)
     {
         int other_unlock_error = other.unlock_internal(other_lock_acquired);
         int this_unlock_error = this->unlock_internal(this_lock_acquired);
-        if (other_unlock_error != FT_ERR_SUCCESSS)
+        if (other_unlock_error != FT_ERR_SUCCESS)
             unlock_error = other_unlock_error;
         else
             unlock_error = this_unlock_error;
@@ -152,7 +152,7 @@ rng_stream &rng_stream::operator=(const rng_stream &other)
     {
         int this_unlock_error = this->unlock_internal(this_lock_acquired);
         int other_unlock_error = other.unlock_internal(other_lock_acquired);
-        if (this_unlock_error != FT_ERR_SUCCESSS)
+        if (this_unlock_error != FT_ERR_SUCCESS)
             unlock_error = this_unlock_error;
         else
             unlock_error = other_unlock_error;
@@ -169,7 +169,7 @@ rng_stream::rng_stream(rng_stream &&other) noexcept
 
     lock_acquired = false;
     lock_error = other.lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -187,7 +187,7 @@ rng_stream &rng_stream::operator=(rng_stream &&other) noexcept
 {
     if (this == &other)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (*this);
     }
     bool this_lock_acquired;
@@ -200,16 +200,16 @@ rng_stream &rng_stream::operator=(rng_stream &&other) noexcept
     if (this < &other)
     {
         lock_error = this->lock_internal(&this_lock_acquired);
-        if (lock_error == FT_ERR_SUCCESSS)
+        if (lock_error == FT_ERR_SUCCESS)
             lock_error = other.lock_internal(&other_lock_acquired);
     }
     else
     {
         lock_error = other.lock_internal(&other_lock_acquired);
-        if (lock_error == FT_ERR_SUCCESSS)
+        if (lock_error == FT_ERR_SUCCESS)
             lock_error = this->lock_internal(&this_lock_acquired);
     }
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         if (other_lock_acquired)
             other.unlock_internal(other_lock_acquired);
@@ -222,12 +222,12 @@ rng_stream &rng_stream::operator=(rng_stream &&other) noexcept
     std::mt19937 default_engine;
 
     other._engine = default_engine;
-    unlock_error = FT_ERR_SUCCESSS;
+    unlock_error = FT_ERR_SUCCESS;
     if (this < &other)
     {
         int other_unlock_error = other.unlock_internal(other_lock_acquired);
         int this_unlock_error = this->unlock_internal(this_lock_acquired);
-        if (other_unlock_error != FT_ERR_SUCCESSS)
+        if (other_unlock_error != FT_ERR_SUCCESS)
             unlock_error = other_unlock_error;
         else
             unlock_error = this_unlock_error;
@@ -236,7 +236,7 @@ rng_stream &rng_stream::operator=(rng_stream &&other) noexcept
     {
         int this_unlock_error = this->unlock_internal(this_lock_acquired);
         int other_unlock_error = other.unlock_internal(other_lock_acquired);
-        if (this_unlock_error != FT_ERR_SUCCESSS)
+        if (this_unlock_error != FT_ERR_SUCCESS)
             unlock_error = this_unlock_error;
         else
             unlock_error = other_unlock_error;
@@ -258,10 +258,10 @@ void    rng_stream::reseed(uint32_t seed_value)
 
     lock_acquired = false;
     operation_error = this->lock_internal(&lock_acquired);
-    if (operation_error == FT_ERR_SUCCESSS)
+    if (operation_error == FT_ERR_SUCCESS)
         this->_engine.seed(static_cast<std::mt19937::result_type>(seed_value));
     unlock_error = this->unlock_internal(lock_acquired);
-    if (operation_error == FT_ERR_SUCCESSS)
+    if (operation_error == FT_ERR_SUCCESS)
         operation_error = unlock_error;
     ft_global_error_stack_push(operation_error);
     return ;
@@ -278,7 +278,7 @@ void    rng_stream::reseed_from_string(const char *seed_string)
 
     derived_seed = ft_random_seed(seed_string);
     int error_code = ft_global_error_stack_drop_last_error();
-    if (error_code != FT_ERR_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(error_code);
         return ;
@@ -315,10 +315,10 @@ int rng_stream::random_int()
     value = 0;
     lock_acquired = false;
     operation_error = this->lock_internal(&lock_acquired);
-    if (operation_error == FT_ERR_SUCCESSS)
+    if (operation_error == FT_ERR_SUCCESS)
         value = this->random_int_unlocked();
     unlock_error = this->unlock_internal(lock_acquired);
-    if (operation_error == FT_ERR_SUCCESSS)
+    if (operation_error == FT_ERR_SUCCESS)
         operation_error = unlock_error;
     ft_global_error_stack_push(operation_error);
     return (value);
@@ -328,7 +328,7 @@ int rng_stream::dice_roll(int number, int faces)
 {
     if (faces == 0 && number == 0)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0);
     }
     if (faces < 1 || number < 1)
@@ -338,7 +338,7 @@ int rng_stream::dice_roll(int number, int faces)
     }
     if (faces == 1)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (number);
     }
     int result;
@@ -353,7 +353,7 @@ int rng_stream::dice_roll(int number, int faces)
     overflowed = false;
     lock_acquired = false;
     operation_error = this->lock_internal(&lock_acquired);
-    if (operation_error == FT_ERR_SUCCESSS)
+    if (operation_error == FT_ERR_SUCCESS)
     {
         while (index < number)
         {
@@ -371,15 +371,15 @@ int rng_stream::dice_roll(int number, int faces)
         }
     }
     unlock_error = this->unlock_internal(lock_acquired);
-    if (operation_error == FT_ERR_SUCCESSS)
+    if (operation_error == FT_ERR_SUCCESS)
         operation_error = unlock_error;
     if (overflowed)
     {
         ft_global_error_stack_push(operation_error);
         return (-1);
     }
-    if (operation_error == FT_ERR_SUCCESSS)
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    if (operation_error == FT_ERR_SUCCESS)
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
     else
         ft_global_error_stack_push(operation_error);
     return (result);
@@ -395,10 +395,10 @@ float   rng_stream::random_float()
     value = 0.0f;
     lock_acquired = false;
     operation_error = this->lock_internal(&lock_acquired);
-    if (operation_error == FT_ERR_SUCCESSS)
+    if (operation_error == FT_ERR_SUCCESS)
         value = this->random_float_unlocked();
     unlock_error = this->unlock_internal(lock_acquired);
-    if (operation_error == FT_ERR_SUCCESSS)
+    if (operation_error == FT_ERR_SUCCESS)
         operation_error = unlock_error;
     ft_global_error_stack_push(operation_error);
     return (value);
@@ -424,35 +424,35 @@ float   rng_stream::random_normal()
     result = 0.0f;
     lock_acquired = false;
     operation_error = this->lock_internal(&lock_acquired);
-    if (operation_error == FT_ERR_SUCCESSS)
+    if (operation_error == FT_ERR_SUCCESS)
     {
         uniform_one = this->random_float_unlocked();
         if (uniform_one < 0.0000000001f)
             uniform_one = 0.0000000001f;
         uniform_two = this->random_float_unlocked();
     }
-    if (operation_error == FT_ERR_SUCCESSS)
+    if (operation_error == FT_ERR_SUCCESS)
     {
         ft_size_t log_depth = ft_global_error_stack_depth();
         radius = static_cast<float>(math_sqrt(-2.0 * math_log(uniform_one)));
         int math_error = rng_stream_capture_math_error(log_depth);
-        if (math_error != FT_ERR_SUCCESSS)
+        if (math_error != FT_ERR_SUCCESS)
             operation_error = math_error;
     }
-    if (operation_error == FT_ERR_SUCCESSS)
+    if (operation_error == FT_ERR_SUCCESS)
     {
         angle = 2.0f * pi_value * uniform_two;
         ft_size_t cos_depth = ft_global_error_stack_depth();
         result = radius * static_cast<float>(math_cos(angle));
         int math_error = rng_stream_capture_math_error(cos_depth);
-        if (math_error != FT_ERR_SUCCESSS)
+        if (math_error != FT_ERR_SUCCESS)
             operation_error = math_error;
     }
     unlock_error = this->unlock_internal(lock_acquired);
-    if (operation_error == FT_ERR_SUCCESSS)
+    if (operation_error == FT_ERR_SUCCESS)
         operation_error = unlock_error;
     ft_global_error_stack_push(operation_error);
-    if (operation_error != FT_ERR_SUCCESSS)
+    if (operation_error != FT_ERR_SUCCESS)
         return (0.0f);
     return (result);
 }
@@ -475,23 +475,23 @@ float   rng_stream::random_exponential(float lambda_value)
     result = 0.0f;
     lock_acquired = false;
     operation_error = this->lock_internal(&lock_acquired);
-    if (operation_error == FT_ERR_SUCCESSS)
+    if (operation_error == FT_ERR_SUCCESS)
         uniform_value = this->random_float_unlocked();
-    if (operation_error == FT_ERR_SUCCESSS)
+    if (operation_error == FT_ERR_SUCCESS)
     {
         if (uniform_value < 0.0000000001f)
             uniform_value = 0.0000000001f;
         ft_size_t log_depth = ft_global_error_stack_depth();
         result = static_cast<float>(-math_log(uniform_value)) / lambda_value;
         int math_error = rng_stream_capture_math_error(log_depth);
-        if (math_error != FT_ERR_SUCCESSS)
+        if (math_error != FT_ERR_SUCCESS)
             operation_error = math_error;
     }
     unlock_error = this->unlock_internal(lock_acquired);
-    if (operation_error == FT_ERR_SUCCESSS)
+    if (operation_error == FT_ERR_SUCCESS)
         operation_error = unlock_error;
     ft_global_error_stack_push(operation_error);
-    if (operation_error != FT_ERR_SUCCESSS)
+    if (operation_error != FT_ERR_SUCCESS)
         return (0.0f);
     return (result);
 }
@@ -510,7 +510,7 @@ int rng_stream::random_poisson(double lambda_value)
     ft_size_t exp_depth = ft_global_error_stack_depth();
     limit_value = math_exp(-lambda_value);
     int math_error = rng_stream_capture_math_error(exp_depth);
-    if (math_error != FT_ERR_SUCCESSS)
+    if (math_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(math_error);
         return (0);
@@ -523,7 +523,7 @@ int rng_stream::random_poisson(double lambda_value)
     count_value = 0;
     lock_acquired = false;
     operation_error = this->lock_internal(&lock_acquired);
-    if (operation_error == FT_ERR_SUCCESSS)
+    if (operation_error == FT_ERR_SUCCESS)
     {
         while (product_value > limit_value)
         {
@@ -535,10 +535,10 @@ int rng_stream::random_poisson(double lambda_value)
         }
     }
     unlock_error = this->unlock_internal(lock_acquired);
-    if (operation_error == FT_ERR_SUCCESSS)
+    if (operation_error == FT_ERR_SUCCESS)
         operation_error = unlock_error;
     ft_global_error_stack_push(operation_error);
-    if (operation_error != FT_ERR_SUCCESSS)
+    if (operation_error != FT_ERR_SUCCESS)
         return (0);
     return (count_value - 1);
 }
@@ -557,7 +557,7 @@ int rng_stream::random_binomial(int trial_count, double success_probability)
     }
     if (trial_count == 0)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0);
     }
     if (success_probability > 1.0)
@@ -568,12 +568,12 @@ int rng_stream::random_binomial(int trial_count, double success_probability)
     const double probability_epsilon = std::numeric_limits<double>::epsilon();
     if (success_probability <= probability_epsilon)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0);
     }
     if ((1.0 - success_probability) <= probability_epsilon)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (trial_count);
     }
     int trial_index;
@@ -587,7 +587,7 @@ int rng_stream::random_binomial(int trial_count, double success_probability)
 
     lock_acquired = false;
     operation_error = this->lock_internal(&lock_acquired);
-    if (operation_error == FT_ERR_SUCCESSS)
+    if (operation_error == FT_ERR_SUCCESS)
     {
         while (trial_index < trial_count)
         {
@@ -600,10 +600,10 @@ int rng_stream::random_binomial(int trial_count, double success_probability)
         }
     }
     unlock_error = this->unlock_internal(lock_acquired);
-    if (operation_error == FT_ERR_SUCCESSS)
+    if (operation_error == FT_ERR_SUCCESS)
         operation_error = unlock_error;
     ft_global_error_stack_push(operation_error);
-    if (operation_error != FT_ERR_SUCCESSS)
+    if (operation_error != FT_ERR_SUCCESS)
         return (0);
     return (success_count);
 }
@@ -623,7 +623,7 @@ int rng_stream::random_geometric(double success_probability)
     const double probability_epsilon = std::numeric_limits<double>::epsilon();
     if ((1.0 - success_probability) <= probability_epsilon)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (1);
     }
     int trial_count;
@@ -639,7 +639,7 @@ int rng_stream::random_geometric(double success_probability)
 
     lock_acquired = false;
     operation_error = this->lock_internal(&lock_acquired);
-    if (operation_error == FT_ERR_SUCCESSS)
+    if (operation_error == FT_ERR_SUCCESS)
     {
         while (1)
         {
@@ -656,12 +656,12 @@ int rng_stream::random_geometric(double success_probability)
         }
     }
     unlock_error = this->unlock_internal(lock_acquired);
-    if (operation_error == FT_ERR_SUCCESSS)
+    if (operation_error == FT_ERR_SUCCESS)
         operation_error = unlock_error;
-    if (found_success == 0 && operation_error == FT_ERR_SUCCESSS)
+    if (found_success == 0 && operation_error == FT_ERR_SUCCESS)
         operation_error = FT_ERR_INVALID_STATE;
     ft_global_error_stack_push(operation_error);
-    if (operation_error != FT_ERR_SUCCESSS)
+    if (operation_error != FT_ERR_SUCCESS)
         return (0);
     return (result);
 }
@@ -683,13 +683,13 @@ float   rng_stream::random_gamma(float shape, float scale)
     sample_value = 0.0f;
     lock_acquired = false;
     operation_error = this->lock_internal(&lock_acquired);
-    if (operation_error == FT_ERR_SUCCESSS)
+    if (operation_error == FT_ERR_SUCCESS)
         sample_value = distribution(this->_engine);
     unlock_error = this->unlock_internal(lock_acquired);
-    if (operation_error == FT_ERR_SUCCESSS)
+    if (operation_error == FT_ERR_SUCCESS)
         operation_error = unlock_error;
     ft_global_error_stack_push(operation_error);
-    if (operation_error != FT_ERR_SUCCESSS)
+    if (operation_error != FT_ERR_SUCCESS)
         return (0.0f);
     return (sample_value);
 }
@@ -717,21 +717,21 @@ float   rng_stream::random_beta(float alpha, float beta)
     result = 0.0f;
     lock_acquired = false;
     operation_error = this->lock_internal(&lock_acquired);
-    if (operation_error == FT_ERR_SUCCESSS)
+    if (operation_error == FT_ERR_SUCCESS)
     {
         alpha_sample = alpha_distribution(this->_engine);
         beta_sample = beta_distribution(this->_engine);
     }
     unlock_error = this->unlock_internal(lock_acquired);
-    if (operation_error == FT_ERR_SUCCESSS)
+    if (operation_error == FT_ERR_SUCCESS)
         operation_error = unlock_error;
     sum = alpha_sample + beta_sample;
-    if (operation_error == FT_ERR_SUCCESSS)
+    if (operation_error == FT_ERR_SUCCESS)
     {
         if (sum <= 0.0f)
             operation_error = FT_ERR_INVALID_STATE;
     }
-    if (operation_error == FT_ERR_SUCCESSS)
+    if (operation_error == FT_ERR_SUCCESS)
     {
         result = alpha_sample / sum;
         if (result < 0.0f)
@@ -740,7 +740,7 @@ float   rng_stream::random_beta(float alpha, float beta)
             result = 1.0f;
     }
     ft_global_error_stack_push(operation_error);
-    if (operation_error != FT_ERR_SUCCESSS)
+    if (operation_error != FT_ERR_SUCCESS)
         return (0.0f);
     return (result);
 }
@@ -762,15 +762,15 @@ float   rng_stream::random_chi_squared(float degrees_of_freedom)
     sample_value = 0.0f;
     lock_acquired = false;
     operation_error = this->lock_internal(&lock_acquired);
-    if (operation_error == FT_ERR_SUCCESSS)
+    if (operation_error == FT_ERR_SUCCESS)
         sample_value = distribution(this->_engine);
     unlock_error = this->unlock_internal(lock_acquired);
-    if (operation_error == FT_ERR_SUCCESSS)
+    if (operation_error == FT_ERR_SUCCESS)
         operation_error = unlock_error;
-    if (operation_error == FT_ERR_SUCCESSS && sample_value < 0.0f)
+    if (operation_error == FT_ERR_SUCCESS && sample_value < 0.0f)
         sample_value = 0.0f;
     ft_global_error_stack_push(operation_error);
-    if (operation_error != FT_ERR_SUCCESSS)
+    if (operation_error != FT_ERR_SUCCESS)
         return (0.0f);
     return (sample_value);
 }

@@ -148,8 +148,8 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 
 - Declares: _None_
 - Defines:
-  - `api_connection_pool_handle::api_connection_pool_handle() : _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false), key(), socket(), tls_session(ft_nullptr), tls_context(ft_nullptr), security_mode(api_connection_security_mode::PLAIN), has_socket(false), from_pool(false), should_store(false), negotiated_http2(false), plain_socket_timed_out(false), plain_socket_validated(false)`
-  - `api_connection_pool_handle::api_connection_pool_handle(api_connection_pool_handle &&other) : _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false), key(), socket(), tls_session(ft_nullptr), tls_context(ft_nullptr), security_mode(api_connection_security_mode::PLAIN), has_socket(false), from_pool(false), should_store(false), negotiated_http2(false), plain_socket_timed_out(false), plain_socket_validated(false)`
+  - `api_connection_pool_handle::api_connection_pool_handle() : _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), key(), socket(), tls_session(ft_nullptr), tls_context(ft_nullptr), security_mode(api_connection_security_mode::PLAIN), has_socket(false), from_pool(false), should_store(false), negotiated_http2(false), plain_socket_timed_out(false), plain_socket_validated(false)`
+  - `api_connection_pool_handle::api_connection_pool_handle(api_connection_pool_handle &&other) : _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), key(), socket(), tls_session(ft_nullptr), tls_context(ft_nullptr), security_mode(api_connection_security_mode::PLAIN), has_socket(false), from_pool(false), should_store(false), negotiated_http2(false), plain_socket_timed_out(false), plain_socket_validated(false)`
   - `api_connection_pool_handle::~api_connection_pool_handle()`
   - `int api_connection_pool_handle::enable_thread_safety()`
   - `bool api_connection_pool_handle::is_thread_safe() const`
@@ -502,9 +502,9 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `void api_retry_policy::record_operation_error_unlocked(int error_code) noexcept`
   - `void api_retry_policy::set_error(int error) const noexcept`
   - `int api_retry_policy::lock_pair(const api_retry_policy &first, const api_retry_policy &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard) noexcept`
-  - `api_retry_policy::api_retry_policy() noexcept : _max_attempts(0), _initial_delay_ms(0), _max_delay_ms(0), _backoff_multiplier(0), _circuit_breaker_threshold(0), _circuit_breaker_cooldown_ms(0), _circuit_breaker_half_open_successes(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `api_retry_policy::api_retry_policy(const api_retry_policy &other) noexcept : _max_attempts(0), _initial_delay_ms(0), _max_delay_ms(0), _backoff_multiplier(0), _circuit_breaker_threshold(0), _circuit_breaker_cooldown_ms(0), _circuit_breaker_half_open_successes(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `api_retry_policy::api_retry_policy(api_retry_policy &&other) noexcept : _max_attempts(0), _initial_delay_ms(0), _max_delay_ms(0), _backoff_multiplier(0), _circuit_breaker_threshold(0), _circuit_breaker_cooldown_ms(0), _circuit_breaker_half_open_successes(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `api_retry_policy::api_retry_policy() noexcept : _max_attempts(0), _initial_delay_ms(0), _max_delay_ms(0), _backoff_multiplier(0), _circuit_breaker_threshold(0), _circuit_breaker_cooldown_ms(0), _circuit_breaker_half_open_successes(0), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `api_retry_policy::api_retry_policy(const api_retry_policy &other) noexcept : _max_attempts(0), _initial_delay_ms(0), _max_delay_ms(0), _backoff_multiplier(0), _circuit_breaker_threshold(0), _circuit_breaker_cooldown_ms(0), _circuit_breaker_half_open_successes(0), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `api_retry_policy::api_retry_policy(api_retry_policy &&other) noexcept : _max_attempts(0), _initial_delay_ms(0), _max_delay_ms(0), _backoff_multiplier(0), _circuit_breaker_threshold(0), _circuit_breaker_cooldown_ms(0), _circuit_breaker_half_open_successes(0), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `api_retry_policy::~api_retry_policy()`
   - `void api_retry_policy::reset() noexcept`
   - `void api_retry_policy::set_max_attempts(int value) noexcept`
@@ -532,9 +532,9 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `void api_streaming_handler::record_operation_error_unlocked(int error_code) noexcept`
   - `void api_streaming_handler::set_error(int error) const noexcept`
   - `int api_streaming_handler::lock_pair(const api_streaming_handler &first, const api_streaming_handler &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard) noexcept`
-  - `api_streaming_handler::api_streaming_handler() noexcept : _headers_callback(ft_nullptr), _body_callback(ft_nullptr), _user_data(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `api_streaming_handler::api_streaming_handler(const api_streaming_handler &other) noexcept : _headers_callback(ft_nullptr), _body_callback(ft_nullptr), _user_data(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `api_streaming_handler::api_streaming_handler(api_streaming_handler &&other) noexcept : _headers_callback(ft_nullptr), _body_callback(ft_nullptr), _user_data(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `api_streaming_handler::api_streaming_handler() noexcept : _headers_callback(ft_nullptr), _body_callback(ft_nullptr), _user_data(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `api_streaming_handler::api_streaming_handler(const api_streaming_handler &other) noexcept : _headers_callback(ft_nullptr), _body_callback(ft_nullptr), _user_data(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `api_streaming_handler::api_streaming_handler(api_streaming_handler &&other) noexcept : _headers_callback(ft_nullptr), _body_callback(ft_nullptr), _user_data(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `api_streaming_handler::~api_streaming_handler()`
   - `void api_streaming_handler::reset() noexcept`
   - `void api_streaming_handler::set_headers_callback(api_stream_headers_callback callback) noexcept`
@@ -568,7 +568,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `static bool tls_fill_certificate_diagnostic(X509 *certificate, api_tls_certificate_diagnostics &diagnostic)`
   - `static bool tls_append_certificate_diagnostic(api_tls_handshake_diagnostics &diagnostics, X509 *certificate)`
   - `static void tls_log_handshake_diagnostics(const api_tls_handshake_diagnostics &diagnostics, const ft_string &host)`
-  - `api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms) : _ctx(ft_nullptr), _ssl(ft_nullptr), _sock(-1), _host( ), _timeout(timeout_ms), _error_code(FT_ERR_SUCCESSS)`
+  - `api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms) : _ctx(ft_nullptr), _ssl(ft_nullptr), _sock(-1), _host( ), _timeout(timeout_ms), _error_code(FT_ERR_SUCCESS)`
   - `api_tls_client::~api_tls_client()`
   - `bool api_tls_client::is_valid() const`
   - `char *api_tls_client::request(const char *method, const char *path, json_group *payload, const char *headers, int *status)`
@@ -664,7 +664,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 
 - Declares: _None_
 - Defines:
-  - `cma_alloc_limit_guard::cma_alloc_limit_guard(ft_size_t new_limit) : _previous_limit(0), _active(false), _error_code(FT_ERR_SUCCESSS)`
+  - `cma_alloc_limit_guard::cma_alloc_limit_guard(ft_size_t new_limit) : _previous_limit(0), _active(false), _error_code(FT_ERR_SUCCESS)`
   - `cma_alloc_limit_guard::~cma_alloc_limit_guard()`
   - `cma_alloc_limit_guard::cma_alloc_limit_guard(cma_alloc_limit_guard &&other) noexcept : _previous_limit(other._previous_limit), _active(other._active), _error_code(other._error_code)`
   - `void cma_alloc_limit_guard::set_error(int error_code) const`
@@ -700,8 +700,8 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Defines:
   - `static int cma_allocation_guard_release_locked(void *memory_pointer, bool *invalid_state_detected)`
   - `static int cma_allocation_guard_release_allocation(void *memory_pointer, bool *invalid_state_detected)`
-  - `cma_allocation_guard::cma_allocation_guard() : _pointer(ft_nullptr), _error_code(FT_ERR_SUCCESSS)`
-  - `cma_allocation_guard::cma_allocation_guard(void *memory_pointer) : _pointer(memory_pointer), _error_code(FT_ERR_SUCCESSS)`
+  - `cma_allocation_guard::cma_allocation_guard() : _pointer(ft_nullptr), _error_code(FT_ERR_SUCCESS)`
+  - `cma_allocation_guard::cma_allocation_guard(void *memory_pointer) : _pointer(memory_pointer), _error_code(FT_ERR_SUCCESS)`
   - `cma_allocation_guard::~cma_allocation_guard()`
   - `cma_allocation_guard::cma_allocation_guard(cma_allocation_guard &&other) noexcept : _pointer(other._pointer), _error_code(other._error_code)`
   - `void cma_allocation_guard::set_error(int error_code) const`
@@ -735,7 +735,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `static int cma_allocator_mutex_get_error()`
   - `static bool initialize_cma_allocator_mutex(pthread_mutex_t **mutex_storage)`
   - `static pthread_mutex_t *cma_allocator_mutex(void)`
-  - `cma_allocator_guard::cma_allocator_guard() : _lock_acquired(false), _active(false), _was_active(false), _error_code(FT_ERR_SUCCESSS), _failure_logged(false), _owned_mutexes(CMA_GUARD_VECTOR_MIN_CAPACITY)`
+  - `cma_allocator_guard::cma_allocator_guard() : _lock_acquired(false), _active(false), _was_active(false), _error_code(FT_ERR_SUCCESS), _failure_logged(false), _owned_mutexes(CMA_GUARD_VECTOR_MIN_CAPACITY)`
   - `cma_allocator_guard::~cma_allocator_guard()`
   - `bool cma_allocator_guard::is_active() const`
   - `bool cma_allocator_guard::lock_acquired() const`
@@ -1504,9 +1504,9 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 
 - Declares: _None_
 - Defines:
-  - `ft_istream::ft_istream() noexcept : _gcount(0) , _bad(false) , _error_code(FT_ERR_SUCCESSS) , _mutex()`
-  - `ft_istream::ft_istream(const ft_istream &other) noexcept : _gcount(0) , _bad(false) , _error_code(FT_ERR_SUCCESSS) , _mutex()`
-  - `ft_istream::ft_istream(ft_istream &&other) noexcept : _gcount(0) , _bad(false) , _error_code(FT_ERR_SUCCESSS) , _mutex()`
+  - `ft_istream::ft_istream() noexcept : _gcount(0) , _bad(false) , _error_code(FT_ERR_SUCCESS) , _mutex()`
+  - `ft_istream::ft_istream(const ft_istream &other) noexcept : _gcount(0) , _bad(false) , _error_code(FT_ERR_SUCCESS) , _mutex()`
+  - `ft_istream::ft_istream(ft_istream &&other) noexcept : _gcount(0) , _bad(false) , _error_code(FT_ERR_SUCCESS) , _mutex()`
   - `ft_istream::~ft_istream() noexcept`
   - `void ft_istream::record_operation_error(int error_code) noexcept`
   - `void ft_istream::set_error_unlocked(int error_code) const noexcept`
@@ -1582,7 +1582,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `void ft_string::reset_error_owner(const ft_string *owner) noexcept`
   - `static int ft_string_current_error() noexcept`
   - `void ft_string::sleep_backoff() noexcept`
-  - `ft_string::mutex_guard::mutex_guard() noexcept : _mutex(ft_nullptr), _owns_lock(false), _error_code(FT_ERR_SUCCESSS)`
+  - `ft_string::mutex_guard::mutex_guard() noexcept : _mutex(ft_nullptr), _owns_lock(false), _error_code(FT_ERR_SUCCESS)`
   - `ft_string::mutex_guard::~mutex_guard()`
   - `ft_string::mutex_guard::mutex_guard(mutex_guard &&other) noexcept : _mutex(other._mutex), _owns_lock(other._owns_lock), _error_code(other._error_code)`
   - `int ft_string::mutex_guard::lock(pt_recursive_mutex &mutex) noexcept`
@@ -1660,9 +1660,9 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `void ft_stringbuf::set_error(int error_code) const noexcept`
   - `int ft_stringbuf::lock_self(ft_unique_lock<pt_recursive_mutex> &guard) const noexcept`
   - `int ft_stringbuf::lock_pair(const ft_stringbuf &first, const ft_stringbuf &second, ft_unique_lock<pt_recursive_mutex> &first_guard, ft_unique_lock<pt_recursive_mutex> &second_guard) noexcept`
-  - `ft_stringbuf::ft_stringbuf(const ft_string &string) noexcept : _storage(string) , _position(0) , _error_code(FT_ERR_SUCCESSS) , _mutex()`
-  - `ft_stringbuf::ft_stringbuf(const ft_stringbuf &other) noexcept : _storage(other._storage) , _position(other._position) , _error_code(FT_ERR_SUCCESSS) , _mutex()`
-  - `ft_stringbuf::ft_stringbuf(ft_stringbuf &&other) noexcept : _storage(ft_move(other._storage)) , _position(other._position) , _error_code(FT_ERR_SUCCESSS) , _mutex()`
+  - `ft_stringbuf::ft_stringbuf(const ft_string &string) noexcept : _storage(string) , _position(0) , _error_code(FT_ERR_SUCCESS) , _mutex()`
+  - `ft_stringbuf::ft_stringbuf(const ft_stringbuf &other) noexcept : _storage(other._storage) , _position(other._position) , _error_code(FT_ERR_SUCCESS) , _mutex()`
+  - `ft_stringbuf::ft_stringbuf(ft_stringbuf &&other) noexcept : _storage(ft_move(other._storage)) , _position(other._position) , _error_code(FT_ERR_SUCCESS) , _mutex()`
   - `ft_stringbuf::~ft_stringbuf() noexcept`
   - `std::size_t ft_stringbuf::read(char *buffer, std::size_t count)`
   - `bool ft_stringbuf::is_valid() const noexcept`
@@ -3169,10 +3169,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `static void game_goal_sleep_backoff() noexcept`
   - `static void game_goal_unlock_guard(ft_unique_lock<pt_mutex> &guard) noexcept`
   - `int ft_goal::lock_pair(const ft_goal &first, const ft_goal &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_goal::ft_goal() noexcept : _target(0), _progress(0), _error(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_goal::ft_goal() noexcept : _target(0), _progress(0), _error(FT_ERR_SUCCESS), _mutex()`
   - `ft_goal::~ft_goal() noexcept`
-  - `ft_goal::ft_goal(const ft_goal &other) noexcept : _target(0), _progress(0), _error(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_goal::ft_goal(ft_goal &&other) noexcept : _target(0), _progress(0), _error(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_goal::ft_goal(const ft_goal &other) noexcept : _target(0), _progress(0), _error(FT_ERR_SUCCESS), _mutex()`
+  - `ft_goal::ft_goal(ft_goal &&other) noexcept : _target(0), _progress(0), _error(FT_ERR_SUCCESS), _mutex()`
   - `int ft_goal::get_target() const noexcept`
   - `void ft_goal::set_target(int target) noexcept`
   - `int ft_goal::get_progress() const noexcept`
@@ -3182,10 +3182,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `const char *ft_goal::get_error_str() const noexcept`
   - `void ft_goal::set_error(int error) const noexcept`
   - `int ft_achievement::lock_pair(const ft_achievement &first, const ft_achievement &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_achievement::ft_achievement() noexcept : _id(0), _goals(), _error(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_achievement::ft_achievement() noexcept : _id(0), _goals(), _error(FT_ERR_SUCCESS), _mutex()`
   - `ft_achievement::~ft_achievement() noexcept`
-  - `ft_achievement::ft_achievement(const ft_achievement &other) noexcept : _id(0), _goals(), _error(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_achievement::ft_achievement(ft_achievement &&other) noexcept : _id(0), _goals(), _error(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_achievement::ft_achievement(const ft_achievement &other) noexcept : _id(0), _goals(), _error(FT_ERR_SUCCESS), _mutex()`
+  - `ft_achievement::ft_achievement(ft_achievement &&other) noexcept : _id(0), _goals(), _error(FT_ERR_SUCCESS), _mutex()`
   - `int ft_achievement::get_id() const noexcept`
   - `void ft_achievement::set_id(int id) noexcept`
   - `ft_map<int, ft_goal> &ft_achievement::get_goals() noexcept`
@@ -3236,10 +3236,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Declares: _None_
 - Defines:
   - `int ft_behavior_action::lock_pair(const ft_behavior_action &first, const ft_behavior_action &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_behavior_action::ft_behavior_action() noexcept : _action_id(0), _weight(0.0), _cooldown_seconds(0.0), _error_code(FT_ERR_SUCCESSS)`
-  - `ft_behavior_action::ft_behavior_action(int action_id, double weight, double cooldown_seconds) noexcept : _action_id(action_id), _weight(weight), _cooldown_seconds(cooldown_seconds), _error_code(FT_ERR_SUCCESSS)`
-  - `ft_behavior_action::ft_behavior_action(const ft_behavior_action &other) noexcept : _action_id(0), _weight(0.0), _cooldown_seconds(0.0), _error_code(FT_ERR_SUCCESSS)`
-  - `ft_behavior_action::ft_behavior_action(ft_behavior_action &&other) noexcept : _action_id(0), _weight(0.0), _cooldown_seconds(0.0), _error_code(FT_ERR_SUCCESSS)`
+  - `ft_behavior_action::ft_behavior_action() noexcept : _action_id(0), _weight(0.0), _cooldown_seconds(0.0), _error_code(FT_ERR_SUCCESS)`
+  - `ft_behavior_action::ft_behavior_action(int action_id, double weight, double cooldown_seconds) noexcept : _action_id(action_id), _weight(weight), _cooldown_seconds(cooldown_seconds), _error_code(FT_ERR_SUCCESS)`
+  - `ft_behavior_action::ft_behavior_action(const ft_behavior_action &other) noexcept : _action_id(0), _weight(0.0), _cooldown_seconds(0.0), _error_code(FT_ERR_SUCCESS)`
+  - `ft_behavior_action::ft_behavior_action(ft_behavior_action &&other) noexcept : _action_id(0), _weight(0.0), _cooldown_seconds(0.0), _error_code(FT_ERR_SUCCESS)`
   - `int ft_behavior_action::get_action_id() const noexcept`
   - `void ft_behavior_action::set_action_id(int action_id) noexcept`
   - `double ft_behavior_action::get_weight() const noexcept`
@@ -3258,10 +3258,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `void ft_behavior_profile::clone_from_unlocked(const ft_behavior_profile &other) noexcept`
   - `void ft_behavior_profile::move_from_unlocked(ft_behavior_profile &other) noexcept`
   - `int ft_behavior_profile::lock_pair(const ft_behavior_profile &first, const ft_behavior_profile &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_behavior_profile::ft_behavior_profile() noexcept : _profile_id(0), _aggression_weight(0.0), _caution_weight(0.0), _actions(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_behavior_profile::ft_behavior_profile(int profile_id, double aggression_weight, double caution_weight, const ft_vector<ft_behavior_action> &actions) noexcept : _profile_id(profile_id), _aggression_weight(aggression_weight), _caution_weight(caution_weight), _actions(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_behavior_profile::ft_behavior_profile(const ft_behavior_profile &other) noexcept : _profile_id(0), _aggression_weight(0.0), _caution_weight(0.0), _actions(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_behavior_profile::ft_behavior_profile(ft_behavior_profile &&other) noexcept : _profile_id(0), _aggression_weight(0.0), _caution_weight(0.0), _actions(), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_behavior_profile::ft_behavior_profile() noexcept : _profile_id(0), _aggression_weight(0.0), _caution_weight(0.0), _actions(), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_behavior_profile::ft_behavior_profile(int profile_id, double aggression_weight, double caution_weight, const ft_vector<ft_behavior_action> &actions) noexcept : _profile_id(profile_id), _aggression_weight(aggression_weight), _caution_weight(caution_weight), _actions(), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_behavior_profile::ft_behavior_profile(const ft_behavior_profile &other) noexcept : _profile_id(0), _aggression_weight(0.0), _caution_weight(0.0), _actions(), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_behavior_profile::ft_behavior_profile(ft_behavior_profile &&other) noexcept : _profile_id(0), _aggression_weight(0.0), _caution_weight(0.0), _actions(), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `int ft_behavior_profile::get_profile_id() const noexcept`
   - `void ft_behavior_profile::set_profile_id(int profile_id) noexcept`
   - `double ft_behavior_profile::get_aggression_weight() const noexcept`
@@ -3281,11 +3281,11 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Defines:
   - `void ft_behavior_table::record_operation_error_unlocked(int error_code)`
   - `int ft_behavior_table::lock_pair(const ft_behavior_table &first, const ft_behavior_table &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_behavior_table::ft_behavior_table() noexcept : _profiles(), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_behavior_table::ft_behavior_table() noexcept : _profiles(), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `ft_behavior_table::~ft_behavior_table() noexcept`
   - `int ft_behavior_table::clone_profiles_from(const ft_behavior_table &other) noexcept`
-  - `ft_behavior_table::ft_behavior_table(const ft_behavior_table &other) noexcept : _profiles(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_behavior_table::ft_behavior_table(ft_behavior_table &&other) noexcept : _profiles(), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_behavior_table::ft_behavior_table(const ft_behavior_table &other) noexcept : _profiles(), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_behavior_table::ft_behavior_table(ft_behavior_table &&other) noexcept : _profiles(), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `ft_map<int, ft_behavior_profile> &ft_behavior_table::get_profiles() noexcept`
   - `const ft_map<int, ft_behavior_profile> &ft_behavior_table::get_profiles() const noexcept`
   - `void ft_behavior_table::set_profiles(const ft_map<int, ft_behavior_profile> &profiles) noexcept`
@@ -3322,7 +3322,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `void ft_behavior_context::set_character(ft_character *character) noexcept`
   - `void *ft_behavior_context::get_user_data() const noexcept`
   - `void ft_behavior_context::set_user_data(void *user_data) noexcept`
-  - `ft_behavior_node::ft_behavior_node() noexcept : _error_code(FT_ERR_SUCCESSS)`
+  - `ft_behavior_node::ft_behavior_node() noexcept : _error_code(FT_ERR_SUCCESS)`
   - `ft_behavior_node::~ft_behavior_node() noexcept`
   - `ft_behavior_node::ft_behavior_node(const ft_behavior_node &other) noexcept : _error_code(other._error_code)`
   - `void ft_behavior_node::set_error(int error_code) const noexcept`
@@ -3351,7 +3351,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_behavior_sequence::~ft_behavior_sequence() noexcept`
   - `ft_behavior_sequence::ft_behavior_sequence(const ft_behavior_sequence &other) noexcept : ft_behavior_composite(other)`
   - `int ft_behavior_sequence::tick(ft_behavior_context &context) noexcept`
-  - `ft_behavior_tree::ft_behavior_tree() noexcept : _root(), _error_code(FT_ERR_SUCCESSS)`
+  - `ft_behavior_tree::ft_behavior_tree() noexcept : _root(), _error_code(FT_ERR_SUCCESS)`
   - `ft_behavior_tree::~ft_behavior_tree() noexcept`
   - `ft_behavior_tree::ft_behavior_tree(const ft_behavior_tree &other) noexcept : _root(other._root), _error_code(other._error_code)`
   - `void ft_behavior_tree::set_error(int error_code) const noexcept`
@@ -3400,9 +3400,9 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `static void game_buff_sleep_backoff()`
   - `static void game_buff_finalize_lock(ft_unique_lock<pt_mutex> &guard)`
   - `int ft_buff::lock_pair(const ft_buff &first, const ft_buff &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_buff::ft_buff() noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_buff::ft_buff(const ft_buff &other) noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_buff::ft_buff(ft_buff &&other) noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_buff::ft_buff() noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()`
+  - `ft_buff::ft_buff(const ft_buff &other) noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()`
+  - `ft_buff::ft_buff(ft_buff &&other) noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()`
   - `int ft_buff::get_id() const noexcept`
   - `void ft_buff::set_id(int id) noexcept`
   - `int ft_buff::get_duration() const noexcept`
@@ -3604,7 +3604,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `int ft_character::lock_pair(const ft_character &first, const ft_character &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
   - `bool ft_character::handle_component_error(int error) noexcept`
   - `bool ft_character::check_internal_errors() noexcept`
-  - `ft_character::ft_character() noexcept : _hit_points(0), _physical_armor(0), _magic_armor(0), _current_physical_armor(0), _current_magic_armor(0), _physical_damage_multiplier(1.0), _magic_damage_multiplier(1.0), _damage_rule(FT_DAMAGE_RULE_FLAT), _might(0), _agility(0), _endurance(0), _reason(0), _insigh(0), _presence(0), _coins(0), _valor(0), _experience(0), _x(0), _y(0), _z(0), _fire_res(), _frost_res(), _lightning_res(), _air_res(), _earth_res(), _chaos_res(), _physical_res(), _skills(), _buffs(), _debuffs(), _upgrades(), _quests(), _achievements(), _reputation(), _inventory(), _equipment(), _error(FT_ERR_SUCCESSS), _mutex(), _operation_errors(`
+  - `ft_character::ft_character() noexcept : _hit_points(0), _physical_armor(0), _magic_armor(0), _current_physical_armor(0), _current_magic_armor(0), _physical_damage_multiplier(1.0), _magic_damage_multiplier(1.0), _damage_rule(FT_DAMAGE_RULE_FLAT), _might(0), _agility(0), _endurance(0), _reason(0), _insigh(0), _presence(0), _coins(0), _valor(0), _experience(0), _x(0), _y(0), _z(0), _fire_res(), _frost_res(), _lightning_res(), _air_res(), _earth_res(), _chaos_res(), _physical_res(), _skills(), _buffs(), _debuffs(), _upgrades(), _quests(), _achievements(), _reputation(), _inventory(), _equipment(), _error(FT_ERR_SUCCESS), _mutex(), _operation_errors(`
   - `ft_character::~ft_character() noexcept`
   - `ft_character::ft_character(const ft_character &other) noexcept : ft_character()`
   - `ft_character::ft_character(ft_character &&other) noexcept : ft_character()`
@@ -3739,10 +3739,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Defines:
   - `static void game_crafting_sleep_backoff()`
   - `int ft_crafting_ingredient::lock_pair(const ft_crafting_ingredient &first, const ft_crafting_ingredient &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_crafting_ingredient::ft_crafting_ingredient() noexcept : _item_id(0), _count(0), _rarity(-1), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_crafting_ingredient::ft_crafting_ingredient(int item_id, int count, int rarity) noexcept : _item_id(item_id), _count(count), _rarity(rarity), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_crafting_ingredient::ft_crafting_ingredient(const ft_crafting_ingredient &other) noexcept : _item_id(0), _count(0), _rarity(-1), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_crafting_ingredient::ft_crafting_ingredient(ft_crafting_ingredient &&other) noexcept : _item_id(0), _count(0), _rarity(-1), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_crafting_ingredient::ft_crafting_ingredient() noexcept : _item_id(0), _count(0), _rarity(-1), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_crafting_ingredient::ft_crafting_ingredient(int item_id, int count, int rarity) noexcept : _item_id(item_id), _count(count), _rarity(rarity), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_crafting_ingredient::ft_crafting_ingredient(const ft_crafting_ingredient &other) noexcept : _item_id(0), _count(0), _rarity(-1), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_crafting_ingredient::ft_crafting_ingredient(ft_crafting_ingredient &&other) noexcept : _item_id(0), _count(0), _rarity(-1), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `int ft_crafting_ingredient::get_item_id() const noexcept`
   - `void ft_crafting_ingredient::set_item_id(int item_id) noexcept`
   - `int ft_crafting_ingredient::get_count() const noexcept`
@@ -3753,9 +3753,9 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `const char *ft_crafting_ingredient::get_error_str() const noexcept`
   - `void ft_crafting_ingredient::set_error(int error_code) const noexcept`
   - `int ft_crafting::lock_pair(const ft_crafting &first, const ft_crafting &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_crafting::ft_crafting() noexcept : _recipes(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_crafting::ft_crafting(const ft_crafting &other) noexcept : _recipes(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_crafting::ft_crafting(ft_crafting &&other) noexcept : _recipes(), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_crafting::ft_crafting() noexcept : _recipes(), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_crafting::ft_crafting(const ft_crafting &other) noexcept : _recipes(), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_crafting::ft_crafting(ft_crafting &&other) noexcept : _recipes(), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `ft_map<int, ft_vector<ft_crafting_ingredient>> &ft_crafting::get_recipes() noexcept`
   - `const ft_map<int, ft_vector<ft_crafting_ingredient>> &ft_crafting::get_recipes() const noexcept`
   - `int ft_crafting::get_error() const noexcept`
@@ -3792,10 +3792,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Defines:
   - `void ft_currency_rate::record_operation_error_unlocked(int error_code)`
   - `int ft_currency_rate::lock_pair(const ft_currency_rate &first, const ft_currency_rate &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_currency_rate::ft_currency_rate() noexcept : _currency_id(0), _rate_to_base(1.0), _display_precision(2), _error_code(FT_ERR_SUCCESSS)`
-  - `ft_currency_rate::ft_currency_rate(int currency_id, double rate_to_base, int display_precision) noexcept : _currency_id(currency_id), _rate_to_base(rate_to_base), _display_precision(display_precision), _error_code(FT_ERR_SUCCESSS)`
-  - `ft_currency_rate::ft_currency_rate(const ft_currency_rate &other) noexcept : _currency_id(0), _rate_to_base(1.0), _display_precision(2), _error_code(FT_ERR_SUCCESSS)`
-  - `ft_currency_rate::ft_currency_rate(ft_currency_rate &&other) noexcept : _currency_id(0), _rate_to_base(1.0), _display_precision(2), _error_code(FT_ERR_SUCCESSS)`
+  - `ft_currency_rate::ft_currency_rate() noexcept : _currency_id(0), _rate_to_base(1.0), _display_precision(2), _error_code(FT_ERR_SUCCESS)`
+  - `ft_currency_rate::ft_currency_rate(int currency_id, double rate_to_base, int display_precision) noexcept : _currency_id(currency_id), _rate_to_base(rate_to_base), _display_precision(display_precision), _error_code(FT_ERR_SUCCESS)`
+  - `ft_currency_rate::ft_currency_rate(const ft_currency_rate &other) noexcept : _currency_id(0), _rate_to_base(1.0), _display_precision(2), _error_code(FT_ERR_SUCCESS)`
+  - `ft_currency_rate::ft_currency_rate(ft_currency_rate &&other) noexcept : _currency_id(0), _rate_to_base(1.0), _display_precision(2), _error_code(FT_ERR_SUCCESS)`
   - `int ft_currency_rate::get_currency_id() const noexcept`
   - `void ft_currency_rate::set_currency_id(int currency_id) noexcept`
   - `double ft_currency_rate::get_rate_to_base() const noexcept`
@@ -3815,10 +3815,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `static void game_data_catalog_copy_crafting_vector(const ft_vector<ft_crafting_ingredient> &source, ft_vector<ft_crafting_ingredient> &destination)`
   - `static void game_data_catalog_copy_loadout_vector(const ft_vector<ft_loadout_entry> &source, ft_vector<ft_loadout_entry> &destination)`
   - `int ft_item_definition::lock_pair(const ft_item_definition &first, const ft_item_definition &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_item_definition::ft_item_definition() noexcept : _item_id(0), _rarity(0), _max_stack(0), _width(0), _height(0), _weight(0), _slot_requirement(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_item_definition::ft_item_definition(int item_id, int rarity, int max_stack, int width, int height, int weight, int slot_requirement) noexcept : _item_id(item_id), _rarity(rarity), _max_stack(max_stack), _width(width), _height(height), _weight(weight), _slot_requirement(slot_requirement), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_item_definition::ft_item_definition(const ft_item_definition &other) noexcept : _item_id(0), _rarity(0), _max_stack(0), _width(0), _height(0), _weight(0), _slot_requirement(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_item_definition::ft_item_definition(ft_item_definition &&other) noexcept : _item_id(0), _rarity(0), _max_stack(0), _width(0), _height(0), _weight(0), _slot_requirement(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_item_definition::ft_item_definition() noexcept : _item_id(0), _rarity(0), _max_stack(0), _width(0), _height(0), _weight(0), _slot_requirement(0), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_item_definition::ft_item_definition(int item_id, int rarity, int max_stack, int width, int height, int weight, int slot_requirement) noexcept : _item_id(item_id), _rarity(rarity), _max_stack(max_stack), _width(width), _height(height), _weight(weight), _slot_requirement(slot_requirement), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_item_definition::ft_item_definition(const ft_item_definition &other) noexcept : _item_id(0), _rarity(0), _max_stack(0), _width(0), _height(0), _weight(0), _slot_requirement(0), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_item_definition::ft_item_definition(ft_item_definition &&other) noexcept : _item_id(0), _rarity(0), _max_stack(0), _width(0), _height(0), _weight(0), _slot_requirement(0), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `int ft_item_definition::get_item_id() const noexcept`
   - `void ft_item_definition::set_item_id(int item_id) noexcept`
   - `int ft_item_definition::get_rarity() const noexcept`
@@ -3837,10 +3837,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `const char *ft_item_definition::get_error_str() const noexcept`
   - `void ft_item_definition::set_error(int error_code) const noexcept`
   - `int ft_recipe_blueprint::lock_pair(const ft_recipe_blueprint &first, const ft_recipe_blueprint &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_recipe_blueprint::ft_recipe_blueprint() noexcept : _recipe_id(0), _result_item_id(0), _ingredients(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_recipe_blueprint::ft_recipe_blueprint(int recipe_id, int result_item_id, const ft_vector<ft_crafting_ingredient> &ingredients) noexcept : _recipe_id(recipe_id), _result_item_id(result_item_id), _ingredients(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_recipe_blueprint::ft_recipe_blueprint(const ft_recipe_blueprint &other) noexcept : _recipe_id(0), _result_item_id(0), _ingredients(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_recipe_blueprint::ft_recipe_blueprint(ft_recipe_blueprint &&other) noexcept : _recipe_id(0), _result_item_id(0), _ingredients(ft_move(other._ingredients)), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_recipe_blueprint::ft_recipe_blueprint() noexcept : _recipe_id(0), _result_item_id(0), _ingredients(), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_recipe_blueprint::ft_recipe_blueprint(int recipe_id, int result_item_id, const ft_vector<ft_crafting_ingredient> &ingredients) noexcept : _recipe_id(recipe_id), _result_item_id(result_item_id), _ingredients(), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_recipe_blueprint::ft_recipe_blueprint(const ft_recipe_blueprint &other) noexcept : _recipe_id(0), _result_item_id(0), _ingredients(), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_recipe_blueprint::ft_recipe_blueprint(ft_recipe_blueprint &&other) noexcept : _recipe_id(0), _result_item_id(0), _ingredients(ft_move(other._ingredients)), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `int ft_recipe_blueprint::get_recipe_id() const noexcept`
   - `void ft_recipe_blueprint::set_recipe_id(int recipe_id) noexcept`
   - `int ft_recipe_blueprint::get_result_item_id() const noexcept`
@@ -3852,10 +3852,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `const char *ft_recipe_blueprint::get_error_str() const noexcept`
   - `void ft_recipe_blueprint::set_error(int error_code) const noexcept`
   - `int ft_loadout_entry::lock_pair(const ft_loadout_entry &first, const ft_loadout_entry &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_loadout_entry::ft_loadout_entry() noexcept : _slot(0), _item_id(0), _quantity(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_loadout_entry::ft_loadout_entry(int slot, int item_id, int quantity) noexcept : _slot(slot), _item_id(item_id), _quantity(quantity), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_loadout_entry::ft_loadout_entry(const ft_loadout_entry &other) noexcept : _slot(0), _item_id(0), _quantity(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_loadout_entry::ft_loadout_entry(ft_loadout_entry &&other) noexcept : _slot(0), _item_id(0), _quantity(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_loadout_entry::ft_loadout_entry() noexcept : _slot(0), _item_id(0), _quantity(0), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_loadout_entry::ft_loadout_entry(int slot, int item_id, int quantity) noexcept : _slot(slot), _item_id(item_id), _quantity(quantity), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_loadout_entry::ft_loadout_entry(const ft_loadout_entry &other) noexcept : _slot(0), _item_id(0), _quantity(0), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_loadout_entry::ft_loadout_entry(ft_loadout_entry &&other) noexcept : _slot(0), _item_id(0), _quantity(0), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `int ft_loadout_entry::get_slot() const noexcept`
   - `void ft_loadout_entry::set_slot(int slot) noexcept`
   - `int ft_loadout_entry::get_item_id() const noexcept`
@@ -3866,10 +3866,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `const char *ft_loadout_entry::get_error_str() const noexcept`
   - `void ft_loadout_entry::set_error(int error_code) const noexcept`
   - `int ft_loadout_blueprint::lock_pair(const ft_loadout_blueprint &first, const ft_loadout_blueprint &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_loadout_blueprint::ft_loadout_blueprint() noexcept : _loadout_id(0), _entries(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_loadout_blueprint::ft_loadout_blueprint(int loadout_id, const ft_vector<ft_loadout_entry> &entries) noexcept : _loadout_id(loadout_id), _entries(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_loadout_blueprint::ft_loadout_blueprint(const ft_loadout_blueprint &other) noexcept : _loadout_id(0), _entries(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_loadout_blueprint::ft_loadout_blueprint(ft_loadout_blueprint &&other) noexcept : _loadout_id(0), _entries(ft_move(other._entries)), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_loadout_blueprint::ft_loadout_blueprint() noexcept : _loadout_id(0), _entries(), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_loadout_blueprint::ft_loadout_blueprint(int loadout_id, const ft_vector<ft_loadout_entry> &entries) noexcept : _loadout_id(loadout_id), _entries(), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_loadout_blueprint::ft_loadout_blueprint(const ft_loadout_blueprint &other) noexcept : _loadout_id(0), _entries(), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_loadout_blueprint::ft_loadout_blueprint(ft_loadout_blueprint &&other) noexcept : _loadout_id(0), _entries(ft_move(other._entries)), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `int ft_loadout_blueprint::get_loadout_id() const noexcept`
   - `void ft_loadout_blueprint::set_loadout_id(int loadout_id) noexcept`
   - `ft_vector<ft_loadout_entry> &ft_loadout_blueprint::get_entries() noexcept`
@@ -3879,10 +3879,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `const char *ft_loadout_blueprint::get_error_str() const noexcept`
   - `void ft_loadout_blueprint::set_error(int error_code) const noexcept`
   - `int ft_data_catalog::lock_pair(const ft_data_catalog &first, const ft_data_catalog &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_data_catalog::ft_data_catalog() noexcept : _item_definitions(), _recipes(), _loadouts(), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_data_catalog::ft_data_catalog() noexcept : _item_definitions(), _recipes(), _loadouts(), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `ft_data_catalog::~ft_data_catalog() noexcept`
-  - `ft_data_catalog::ft_data_catalog(const ft_data_catalog &other) noexcept : _item_definitions(), _recipes(), _loadouts(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_data_catalog::ft_data_catalog(ft_data_catalog &&other) noexcept : _item_definitions(), _recipes(), _loadouts(), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_data_catalog::ft_data_catalog(const ft_data_catalog &other) noexcept : _item_definitions(), _recipes(), _loadouts(), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_data_catalog::ft_data_catalog(ft_data_catalog &&other) noexcept : _item_definitions(), _recipes(), _loadouts(), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `ft_map<int, ft_item_definition> &ft_data_catalog::get_item_definitions() noexcept`
   - `const ft_map<int, ft_item_definition> &ft_data_catalog::get_item_definitions() const noexcept`
   - `ft_map<int, ft_recipe_blueprint> &ft_data_catalog::get_recipes() noexcept`
@@ -3965,9 +3965,9 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `static void game_debuff_sleep_backoff()`
   - `static void game_debuff_finalize_lock(ft_unique_lock<pt_mutex> &guard)`
   - `int ft_debuff::lock_pair(const ft_debuff &first, const ft_debuff &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_debuff::ft_debuff() noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_debuff::ft_debuff(const ft_debuff &other) noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_debuff::ft_debuff(ft_debuff &&other) noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_debuff::ft_debuff() noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()`
+  - `ft_debuff::ft_debuff(const ft_debuff &other) noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()`
+  - `ft_debuff::ft_debuff(ft_debuff &&other) noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()`
   - `int ft_debuff::get_id() const noexcept`
   - `void ft_debuff::set_id(int id) noexcept`
   - `int ft_debuff::get_duration() const noexcept`
@@ -4032,11 +4032,11 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Defines:
   - `static void game_dialogue_copy_int_vector(const ft_vector<int> &source, ft_vector<int> &destination)`
   - `int ft_dialogue_line::lock_pair(const ft_dialogue_line &first, const ft_dialogue_line &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_dialogue_line::ft_dialogue_line() noexcept : _line_id(0), _speaker(), _text(), _next_line_ids(), _error_code(FT_ERR_SUCCESSS)`
-  - `ft_dialogue_line::ft_dialogue_line(int line_id, const ft_string &speaker, const ft_string &text, const ft_vector<int> &next_line_ids) noexcept : _line_id(line_id), _speaker(speaker), _text(text), _next_line_ids(), _error_code(FT_ERR_SUCCESSS)`
+  - `ft_dialogue_line::ft_dialogue_line() noexcept : _line_id(0), _speaker(), _text(), _next_line_ids(), _error_code(FT_ERR_SUCCESS)`
+  - `ft_dialogue_line::ft_dialogue_line(int line_id, const ft_string &speaker, const ft_string &text, const ft_vector<int> &next_line_ids) noexcept : _line_id(line_id), _speaker(speaker), _text(text), _next_line_ids(), _error_code(FT_ERR_SUCCESS)`
   - `ft_dialogue_line::~ft_dialogue_line() noexcept`
-  - `ft_dialogue_line::ft_dialogue_line(const ft_dialogue_line &other) noexcept : _line_id(0), _speaker(), _text(), _next_line_ids(), _error_code(FT_ERR_SUCCESSS)`
-  - `ft_dialogue_line::ft_dialogue_line(ft_dialogue_line &&other) noexcept : _line_id(0), _speaker(), _text(), _next_line_ids(), _error_code(FT_ERR_SUCCESSS)`
+  - `ft_dialogue_line::ft_dialogue_line(const ft_dialogue_line &other) noexcept : _line_id(0), _speaker(), _text(), _next_line_ids(), _error_code(FT_ERR_SUCCESS)`
+  - `ft_dialogue_line::ft_dialogue_line(ft_dialogue_line &&other) noexcept : _line_id(0), _speaker(), _text(), _next_line_ids(), _error_code(FT_ERR_SUCCESS)`
   - `int ft_dialogue_line::get_line_id() const noexcept`
   - `void ft_dialogue_line::set_line_id(int line_id) noexcept`
   - `const ft_string &ft_dialogue_line::get_speaker() const noexcept`
@@ -4053,16 +4053,16 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 ### Game/game_dialogue_script.cpp
 
 - Declares:
-  - `ft_dialogue_script::record_operation_error_unlocked(FT_ERR_SUCCESSS)`
+  - `ft_dialogue_script::record_operation_error_unlocked(FT_ERR_SUCCESS)`
 - Defines:
   - `void ft_dialogue_script::record_operation_error_unlocked(int error_code)`
   - `static void game_dialogue_copy_line_vector(const ft_vector<ft_dialogue_line> &source, ft_vector<ft_dialogue_line> &destination)`
   - `int ft_dialogue_script::lock_pair(const ft_dialogue_script &first, const ft_dialogue_script &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_dialogue_script::ft_dialogue_script() noexcept : _script_id(0), _title(), _summary(), _start_line_id(0), _lines(), _error_code(FT_ERR_SUCCESSS)`
-  - `ft_dialogue_script::ft_dialogue_script(int script_id, const ft_string &title, const ft_string &summary, int start_line_id, const ft_vector<ft_dialogue_line> &lines) noexcept : _script_id(script_id), _title(title), _summary(summary), _start_line_id(start_line_id), _lines(), _error_code(FT_ERR_SUCCESSS)`
+  - `ft_dialogue_script::ft_dialogue_script() noexcept : _script_id(0), _title(), _summary(), _start_line_id(0), _lines(), _error_code(FT_ERR_SUCCESS)`
+  - `ft_dialogue_script::ft_dialogue_script(int script_id, const ft_string &title, const ft_string &summary, int start_line_id, const ft_vector<ft_dialogue_line> &lines) noexcept : _script_id(script_id), _title(title), _summary(summary), _start_line_id(start_line_id), _lines(), _error_code(FT_ERR_SUCCESS)`
   - `ft_dialogue_script::~ft_dialogue_script() noexcept`
-  - `ft_dialogue_script::ft_dialogue_script(const ft_dialogue_script &other) noexcept : _script_id(0), _title(), _summary(), _start_line_id(0), _lines(), _error_code(FT_ERR_SUCCESSS)`
-  - `ft_dialogue_script::ft_dialogue_script(ft_dialogue_script &&other) noexcept : _script_id(0), _title(), _summary(), _start_line_id(0), _lines(), _error_code(FT_ERR_SUCCESSS)`
+  - `ft_dialogue_script::ft_dialogue_script(const ft_dialogue_script &other) noexcept : _script_id(0), _title(), _summary(), _start_line_id(0), _lines(), _error_code(FT_ERR_SUCCESS)`
+  - `ft_dialogue_script::ft_dialogue_script(ft_dialogue_script &&other) noexcept : _script_id(0), _title(), _summary(), _start_line_id(0), _lines(), _error_code(FT_ERR_SUCCESS)`
   - `int ft_dialogue_script::get_script_id() const noexcept`
   - `void ft_dialogue_script::set_script_id(int script_id) noexcept`
   - `const ft_string &ft_dialogue_script::get_title() const noexcept`
@@ -4085,10 +4085,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `void ft_dialogue_table::record_operation_error_unlocked(int error_code)`
   - `static void game_dialogue_table_unlock_set_errno(ft_unique_lock<pt_mutex> &guard, int target_error)`
   - `int ft_dialogue_table::clone_from(const ft_dialogue_table &other) noexcept`
-  - `ft_dialogue_table::ft_dialogue_table() noexcept : _lines(), _scripts(), _error_code(FT_ERR_SUCCESSS)`
+  - `ft_dialogue_table::ft_dialogue_table() noexcept : _lines(), _scripts(), _error_code(FT_ERR_SUCCESS)`
   - `ft_dialogue_table::~ft_dialogue_table() noexcept`
-  - `ft_dialogue_table::ft_dialogue_table(const ft_dialogue_table &other) noexcept : _lines(), _scripts(), _error_code(FT_ERR_SUCCESSS)`
-  - `ft_dialogue_table::ft_dialogue_table(ft_dialogue_table &&other) noexcept : _lines(), _scripts(), _error_code(FT_ERR_SUCCESSS)`
+  - `ft_dialogue_table::ft_dialogue_table(const ft_dialogue_table &other) noexcept : _lines(), _scripts(), _error_code(FT_ERR_SUCCESS)`
+  - `ft_dialogue_table::ft_dialogue_table(ft_dialogue_table &&other) noexcept : _lines(), _scripts(), _error_code(FT_ERR_SUCCESS)`
   - `int ft_dialogue_table::register_line(const ft_dialogue_line &line) noexcept`
   - `int ft_dialogue_table::register_script(const ft_dialogue_script &script) noexcept`
   - `int ft_dialogue_table::fetch_line(int line_id, ft_dialogue_line &out_line) const noexcept`
@@ -4129,10 +4129,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Declares: _None_
 - Defines:
   - `int ft_economy_table::lock_pair(const ft_economy_table &first, const ft_economy_table &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_economy_table::ft_economy_table() noexcept : _error_code(FT_ERR_SUCCESSS)`
+  - `ft_economy_table::ft_economy_table() noexcept : _error_code(FT_ERR_SUCCESS)`
   - `ft_economy_table::~ft_economy_table() noexcept`
-  - `ft_economy_table::ft_economy_table(const ft_economy_table &other) noexcept : _error_code(FT_ERR_SUCCESSS) , _mutex()`
-  - `ft_economy_table::ft_economy_table(ft_economy_table &&other) noexcept : _error_code(FT_ERR_SUCCESSS) , _mutex()`
+  - `ft_economy_table::ft_economy_table(const ft_economy_table &other) noexcept : _error_code(FT_ERR_SUCCESS) , _mutex()`
+  - `ft_economy_table::ft_economy_table(ft_economy_table &&other) noexcept : _error_code(FT_ERR_SUCCESS) , _mutex()`
   - `ft_map<int, ft_price_definition> &ft_economy_table::get_price_definitions() noexcept`
   - `const ft_map<int, ft_price_definition> &ft_economy_table::get_price_definitions() const noexcept`
   - `ft_map<int, ft_rarity_band> &ft_economy_table::get_rarity_bands() noexcept`
@@ -4193,9 +4193,9 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `static void game_equipment_sleep_backoff()`
   - `static void game_equipment_restore_errno(ft_unique_lock<pt_mutex> &guard)`
   - `int ft_equipment::lock_pair(const ft_equipment &first, const ft_equipment &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_equipment::ft_equipment() noexcept : _head(ft_sharedptr<ft_item>()), _chest(ft_sharedptr<ft_item>()), _weapon(ft_sharedptr<ft_item>()), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_equipment::ft_equipment(const ft_equipment &other) noexcept : _head(ft_sharedptr<ft_item>()), _chest(ft_sharedptr<ft_item>()), _weapon(ft_sharedptr<ft_item>()), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_equipment::ft_equipment(ft_equipment &&other) noexcept : _head(ft_sharedptr<ft_item>()), _chest(ft_sharedptr<ft_item>()), _weapon(ft_sharedptr<ft_item>()), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_equipment::ft_equipment() noexcept : _head(ft_sharedptr<ft_item>()), _chest(ft_sharedptr<ft_item>()), _weapon(ft_sharedptr<ft_item>()), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_equipment::ft_equipment(const ft_equipment &other) noexcept : _head(ft_sharedptr<ft_item>()), _chest(ft_sharedptr<ft_item>()), _weapon(ft_sharedptr<ft_item>()), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_equipment::ft_equipment(ft_equipment &&other) noexcept : _head(ft_sharedptr<ft_item>()), _chest(ft_sharedptr<ft_item>()), _weapon(ft_sharedptr<ft_item>()), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `void ft_equipment::set_error(int err) const noexcept`
   - `bool ft_equipment::validate_item(const ft_sharedptr<ft_item> &item) noexcept`
   - `int ft_equipment::equip(int slot, const ft_sharedptr<ft_item> &item) noexcept`
@@ -4227,10 +4227,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `static void game_event_sleep_backoff()`
   - `static int game_event_restore_errno(ft_unique_lock<pt_mutex> &guard, int result_errno)`
   - `int ft_event::lock_pair(const ft_event &first, const ft_event &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_event::ft_event() noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _callback(), _error(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_event::ft_event() noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _callback(), _error(FT_ERR_SUCCESS), _mutex()`
   - `ft_event::~ft_event() noexcept`
-  - `ft_event::ft_event(const ft_event &other) noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _callback(), _error(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_event::ft_event(ft_event &&other) noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _callback(), _error(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_event::ft_event(const ft_event &other) noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _callback(), _error(FT_ERR_SUCCESS), _mutex()`
+  - `ft_event::ft_event(ft_event &&other) noexcept : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _callback(), _error(FT_ERR_SUCCESS), _mutex()`
   - `int ft_event::get_id() const noexcept`
   - `void ft_event::set_id(int id) noexcept`
   - `int ft_event::get_duration() const noexcept`
@@ -4305,10 +4305,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `void ft_event_scheduler::record_profile_locked(size_t ready_count, size_t rescheduled_count, size_t queue_depth, long long duration_ns) const noexcept`
   - `void ft_event_scheduler::finalize_update(ft_vector<ft_sharedptr<ft_event> > &events, size_t ready_count, size_t rescheduled_count, size_t queue_depth, bool profiling_active, bool start_valid, t_high_resolution_time_point start_time) noexcept`
   - `bool ft_event_compare_ptr::operator() (const ft_sharedptr<ft_event> &left, const ft_sharedptr<ft_event> &right) const noexcept`
-  - `ft_event_scheduler::ft_event_scheduler() noexcept : _events(), _error_code(FT_ERR_SUCCESSS), _mutex(), _profiling_enabled(false), _profile(), _ready_cache()`
+  - `ft_event_scheduler::ft_event_scheduler() noexcept : _events(), _error_code(FT_ERR_SUCCESS), _mutex(), _profiling_enabled(false), _profile(), _ready_cache()`
   - `ft_event_scheduler::~ft_event_scheduler()`
-  - `ft_event_scheduler::ft_event_scheduler(const ft_event_scheduler &other) noexcept : _events(), _error_code(FT_ERR_SUCCESSS), _mutex(), _profiling_enabled(false), _profile(), _ready_cache()`
-  - `ft_event_scheduler::ft_event_scheduler(ft_event_scheduler &&other) noexcept : _events(), _error_code(FT_ERR_SUCCESSS), _mutex(), _profiling_enabled(false), _profile(), _ready_cache()`
+  - `ft_event_scheduler::ft_event_scheduler(const ft_event_scheduler &other) noexcept : _events(), _error_code(FT_ERR_SUCCESS), _mutex(), _profiling_enabled(false), _profile(), _ready_cache()`
+  - `ft_event_scheduler::ft_event_scheduler(ft_event_scheduler &&other) noexcept : _events(), _error_code(FT_ERR_SUCCESS), _mutex(), _profiling_enabled(false), _profile(), _ready_cache()`
   - `void ft_event_scheduler::set_error(int error) const noexcept`
   - `void ft_event_scheduler::schedule_event(const ft_sharedptr<ft_event> &event) noexcept`
   - `void ft_event_scheduler::cancel_event(int id) noexcept`
@@ -4384,10 +4384,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `static void game_experience_table_sleep_backoff()`
   - `static void game_experience_table_finalize_lock(ft_unique_lock<pt_mutex> &guard)`
   - `int ft_experience_table::lock_pair(const ft_experience_table &first, const ft_experience_table &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_experience_table::ft_experience_table(int count) noexcept : _levels(ft_nullptr), _count(0), _error(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_experience_table::ft_experience_table(int count) noexcept : _levels(ft_nullptr), _count(0), _error(FT_ERR_SUCCESS), _mutex()`
   - `ft_experience_table::~ft_experience_table()`
-  - `ft_experience_table::ft_experience_table(const ft_experience_table &other) noexcept : _levels(ft_nullptr), _count(0), _error(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_experience_table::ft_experience_table(ft_experience_table &&other) noexcept : _levels(ft_nullptr), _count(0), _error(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_experience_table::ft_experience_table(const ft_experience_table &other) noexcept : _levels(ft_nullptr), _count(0), _error(FT_ERR_SUCCESS), _mutex()`
+  - `ft_experience_table::ft_experience_table(ft_experience_table &&other) noexcept : _levels(ft_nullptr), _count(0), _error(FT_ERR_SUCCESS), _mutex()`
   - `void ft_experience_table::set_error(int err) const noexcept`
   - `bool ft_experience_table::is_valid(int count, const int *array) const noexcept`
   - `int ft_experience_table::resize_locked(int new_count, ft_unique_lock<pt_mutex> &guard, bool validate_existing) noexcept`
@@ -4433,10 +4433,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_function<void(ft_game_hook_context&)> ft_game_hook_make_character_damage_adapter(ft_function<void(ft_character&, int, uint8_t)> &&callback) noexcept`
   - `ft_function<void(ft_game_hook_context&)> ft_game_hook_make_world_event_adapter(ft_function<void(ft_world&, ft_event&)> &&callback) noexcept`
   - `int ft_game_hooks::lock_pair(const ft_game_hooks &first, const ft_game_hooks &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_game_hooks::ft_game_hooks() noexcept : _legacy_item_crafted(), _legacy_character_damaged(), _legacy_event_triggered(), _listener_catalog(), _catalog_metadata(), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_game_hooks::ft_game_hooks() noexcept : _legacy_item_crafted(), _legacy_character_damaged(), _legacy_event_triggered(), _listener_catalog(), _catalog_metadata(), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `ft_game_hooks::~ft_game_hooks() noexcept`
   - `ft_game_hooks::ft_game_hooks(const ft_game_hooks &other) noexcept : _legacy_item_crafted(), _legacy_character_damaged(), _legacy_event_triggered(), _listener_catalog(), _catalog_metadata(), _error_code(other._error_code), _mutex()`
-  - `ft_game_hooks::ft_game_hooks(ft_game_hooks &&other) noexcept : _legacy_item_crafted(), _legacy_character_damaged(), _legacy_event_triggered(), _listener_catalog(), _catalog_metadata(), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_game_hooks::ft_game_hooks(ft_game_hooks &&other) noexcept : _legacy_item_crafted(), _legacy_character_damaged(), _legacy_event_triggered(), _listener_catalog(), _catalog_metadata(), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `void ft_game_hooks::remove_listener_unlocked(const ft_string &hook_identifier, const ft_string &listener_name) noexcept`
   - `void ft_game_hooks::insert_listener_unlocked(const ft_game_hook_listener_entry &entry) noexcept`
   - `void ft_game_hooks::append_metadata_unlocked(const ft_game_hook_metadata &metadata) noexcept`
@@ -4502,9 +4502,9 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `static void game_inventory_sleep_backoff()`
   - `static void game_inventory_set_errno(ft_unique_lock<pt_mutex> &guard, int errno_value)`
   - `int ft_inventory::lock_pair(const ft_inventory &first, const ft_inventory &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_inventory::ft_inventory(size_t capacity, int weight_limit) noexcept : _items(), _capacity(capacity), _used_slots(0), _weight_limit(weight_limit), _current_weight(0), _next_slot(0), _error(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_inventory::ft_inventory(const ft_inventory &other) noexcept : _items(), _capacity(0), _used_slots(0), _weight_limit(0), _current_weight(0), _next_slot(0), _error(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_inventory::ft_inventory(ft_inventory &&other) noexcept : _items(), _capacity(0), _used_slots(0), _weight_limit(0), _current_weight(0), _next_slot(0), _error(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_inventory::ft_inventory(size_t capacity, int weight_limit) noexcept : _items(), _capacity(capacity), _used_slots(0), _weight_limit(weight_limit), _current_weight(0), _next_slot(0), _error(FT_ERR_SUCCESS), _mutex()`
+  - `ft_inventory::ft_inventory(const ft_inventory &other) noexcept : _items(), _capacity(0), _used_slots(0), _weight_limit(0), _current_weight(0), _next_slot(0), _error(FT_ERR_SUCCESS), _mutex()`
+  - `ft_inventory::ft_inventory(ft_inventory &&other) noexcept : _items(), _capacity(0), _used_slots(0), _weight_limit(0), _current_weight(0), _next_slot(0), _error(FT_ERR_SUCCESS), _mutex()`
   - `ft_map<int, ft_sharedptr<ft_item> > &ft_inventory::get_items() noexcept`
   - `const ft_map<int, ft_sharedptr<ft_item> > &ft_inventory::get_items() const noexcept`
   - `size_t ft_inventory::get_capacity() const noexcept`
@@ -4565,10 +4565,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `static void game_item_modifier_unlock(ft_unique_lock<pt_mutex> &guard)`
   - `static int game_item_reset_modifier(ft_item_modifier &modifier)`
   - `int ft_item_modifier::lock_pair(const ft_item_modifier &first, const ft_item_modifier &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_item_modifier::ft_item_modifier() noexcept : _id(0), _value(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_item_modifier::ft_item_modifier(int id, int value) noexcept : _id(id), _value(value), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_item_modifier::ft_item_modifier(const ft_item_modifier &other) noexcept : _id(0), _value(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_item_modifier::ft_item_modifier(ft_item_modifier &&other) noexcept : _id(0), _value(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_item_modifier::ft_item_modifier() noexcept : _id(0), _value(0), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_item_modifier::ft_item_modifier(int id, int value) noexcept : _id(id), _value(value), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_item_modifier::ft_item_modifier(const ft_item_modifier &other) noexcept : _id(0), _value(0), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_item_modifier::ft_item_modifier(ft_item_modifier &&other) noexcept : _id(0), _value(0), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `int ft_item_modifier::get_id() const noexcept`
   - `void ft_item_modifier::set_id(int id) noexcept`
   - `int ft_item_modifier::get_value() const noexcept`
@@ -4579,9 +4579,9 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `static void game_item_sleep_backoff()`
   - `static void game_item_unlock(ft_unique_lock<pt_mutex> &guard)`
   - `int ft_item::lock_pair(const ft_item &first, const ft_item &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_item::ft_item() noexcept : _max_stack(0), _stack_size(0), _item_id(0), _rarity(0), _width(1), _height(1), _modifier1(), _modifier2(), _modifier3(), _modifier4(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_item::ft_item(const ft_item &other) noexcept : _max_stack(0), _stack_size(0), _item_id(0), _rarity(0), _width(1), _height(1), _modifier1(), _modifier2(), _modifier3(), _modifier4(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_item::ft_item(ft_item &&other) noexcept : _max_stack(0), _stack_size(0), _item_id(0), _rarity(0), _width(1), _height(1), _modifier1(), _modifier2(), _modifier3(), _modifier4(), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_item::ft_item() noexcept : _max_stack(0), _stack_size(0), _item_id(0), _rarity(0), _width(1), _height(1), _modifier1(), _modifier2(), _modifier3(), _modifier4(), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_item::ft_item(const ft_item &other) noexcept : _max_stack(0), _stack_size(0), _item_id(0), _rarity(0), _width(1), _height(1), _modifier1(), _modifier2(), _modifier3(), _modifier4(), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_item::ft_item(ft_item &&other) noexcept : _max_stack(0), _stack_size(0), _item_id(0), _rarity(0), _width(1), _height(1), _modifier1(), _modifier2(), _modifier3(), _modifier4(), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `int ft_item::get_max_stack() const noexcept`
   - `void ft_item::set_max_stack(int max) noexcept`
   - `int ft_item::get_stack_size() const noexcept`
@@ -4700,10 +4700,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `void ft_map3d::sleep_backoff() noexcept`
   - `void ft_map3d::finalize_lock(ft_unique_lock<pt_mutex> &guard) noexcept`
   - `int ft_map3d::lock_pair(const ft_map3d &first, const ft_map3d &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard) noexcept`
-  - `ft_map3d::ft_map3d(size_t width, size_t height, size_t depth, int value) : _data(ft_nullptr), _width(0), _height(0), _depth(0), _error(FT_ERR_SUCCESSS), _mutex(), _operation_errors(`
+  - `ft_map3d::ft_map3d(size_t width, size_t height, size_t depth, int value) : _data(ft_nullptr), _width(0), _height(0), _depth(0), _error(FT_ERR_SUCCESS), _mutex(), _operation_errors(`
   - `ft_map3d::~ft_map3d()`
-  - `ft_map3d::ft_map3d(const ft_map3d &other) : _data(ft_nullptr), _width(0), _height(0), _depth(0), _error(FT_ERR_SUCCESSS), _mutex(), _operation_errors(`
-  - `ft_map3d::ft_map3d(ft_map3d &&other) noexcept : _data(ft_nullptr), _width(0), _height(0), _depth(0), _error(FT_ERR_SUCCESSS), _mutex(), _operation_errors(`
+  - `ft_map3d::ft_map3d(const ft_map3d &other) : _data(ft_nullptr), _width(0), _height(0), _depth(0), _error(FT_ERR_SUCCESS), _mutex(), _operation_errors(`
+  - `ft_map3d::ft_map3d(ft_map3d &&other) noexcept : _data(ft_nullptr), _width(0), _height(0), _depth(0), _error(FT_ERR_SUCCESS), _mutex(), _operation_errors(`
   - `void ft_map3d::resize(size_t width, size_t height, size_t depth, int value)`
   - `int ft_map3d::get_error() const`
   - `const char *ft_map3d::get_error_str() const`
@@ -4769,11 +4769,11 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `static void game_pathfinding_sleep_backoff() noexcept`
   - `static void game_pathfinding_finalize_lock(ft_unique_lock<pt_mutex> &guard) noexcept`
   - `static void game_pathfinding_finalize_lock(ft_unique_lock<pt_recursive_mutex> &guard) noexcept`
-  - `ft_path_step::ft_path_step() noexcept : _x(0), _y(0), _z(0), _error_code(FT_ERR_SUCCESSS), _system_error_code(FT_SYS_ERR_SUCCESS), _mutex()`
+  - `ft_path_step::ft_path_step() noexcept : _x(0), _y(0), _z(0), _error_code(FT_ERR_SUCCESS), _system_error_code(FT_SYS_ERR_SUCCESS), _mutex()`
   - `ft_path_step::~ft_path_step() noexcept`
   - `int ft_path_step::lock_pair(const ft_path_step &first, const ft_path_step &second, ft_unique_lock<pt_recursive_mutex> &first_guard, ft_unique_lock<pt_recursive_mutex> &second_guard) noexcept`
-  - `ft_path_step::ft_path_step(const ft_path_step &other) noexcept : _x(0), _y(0), _z(0), _error_code(FT_ERR_SUCCESSS), _system_error_code(FT_SYS_ERR_SUCCESS), _mutex()`
-  - `ft_path_step::ft_path_step(ft_path_step &&other) noexcept : _x(0), _y(0), _z(0), _error_code(FT_ERR_SUCCESSS), _system_error_code(FT_SYS_ERR_SUCCESS), _mutex()`
+  - `ft_path_step::ft_path_step(const ft_path_step &other) noexcept : _x(0), _y(0), _z(0), _error_code(FT_ERR_SUCCESS), _system_error_code(FT_SYS_ERR_SUCCESS), _mutex()`
+  - `ft_path_step::ft_path_step(ft_path_step &&other) noexcept : _x(0), _y(0), _z(0), _error_code(FT_ERR_SUCCESS), _system_error_code(FT_SYS_ERR_SUCCESS), _mutex()`
   - `int ft_path_step::set_coordinates(size_t x, size_t y, size_t z) noexcept`
   - `int ft_path_step::set_x(size_t x) noexcept`
   - `int ft_path_step::set_y(size_t y) noexcept`
@@ -4786,13 +4786,13 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `void ft_path_step::set_error(int error) const noexcept`
   - `void ft_path_step::set_system_error(int error) const noexcept`
   - `void ft_path_step::reset_system_error() const noexcept`
-  - `ft_pathfinding::ft_pathfinding() noexcept : _error_code(FT_ERR_SUCCESSS), _current_path(), _needs_replan(false), _mutex()`
+  - `ft_pathfinding::ft_pathfinding() noexcept : _error_code(FT_ERR_SUCCESS), _current_path(), _needs_replan(false), _mutex()`
   - `ft_pathfinding::~ft_pathfinding()`
   - `void ft_pathfinding::sleep_backoff() noexcept`
   - `void ft_pathfinding::finalize_lock(ft_unique_lock<pt_mutex> &guard) noexcept`
   - `int ft_pathfinding::lock_pair(const ft_pathfinding &first, const ft_pathfinding &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard) noexcept`
-  - `ft_pathfinding::ft_pathfinding(const ft_pathfinding &other) noexcept : _error_code(FT_ERR_SUCCESSS), _current_path(), _needs_replan(false), _mutex()`
-  - `ft_pathfinding::ft_pathfinding(ft_pathfinding &&other) noexcept : _error_code(FT_ERR_SUCCESSS), _current_path(), _needs_replan(false), _mutex()`
+  - `ft_pathfinding::ft_pathfinding(const ft_pathfinding &other) noexcept : _error_code(FT_ERR_SUCCESS), _current_path(), _needs_replan(false), _mutex()`
+  - `ft_pathfinding::ft_pathfinding(ft_pathfinding &&other) noexcept : _error_code(FT_ERR_SUCCESS), _current_path(), _needs_replan(false), _mutex()`
   - `void ft_pathfinding::set_error(int error) const noexcept`
   - `void ft_pathfinding::update_obstacle(size_t x, size_t y, size_t z, int value) noexcept`
   - `int ft_pathfinding::recalculate_path(const ft_map3d &grid, size_t start_x, size_t start_y, size_t start_z, size_t goal_x, size_t goal_y, size_t goal_z, ft_vector<ft_path_step> &out_path) noexcept`
@@ -4841,10 +4841,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Declares: _None_
 - Defines:
   - `int ft_price_definition::lock_pair(const ft_price_definition &first, const ft_price_definition &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_price_definition::ft_price_definition() noexcept : _item_id(0), _rarity(0), _base_value(0), _minimum_value(0), _maximum_value(0), _error_code(FT_ERR_SUCCESSS)`
-  - `ft_price_definition::ft_price_definition(int item_id, int rarity, int base_value, int minimum_value, int maximum_value) noexcept : _item_id(item_id), _rarity(rarity), _base_value(base_value), _minimum_value(minimum_value), _maximum_value(maximum_value), _error_code(FT_ERR_SUCCESSS)`
-  - `ft_price_definition::ft_price_definition(const ft_price_definition &other) noexcept : _item_id(0), _rarity(0), _base_value(0), _minimum_value(0), _maximum_value(0), _error_code(FT_ERR_SUCCESSS)`
-  - `ft_price_definition::ft_price_definition(ft_price_definition &&other) noexcept : _item_id(0), _rarity(0), _base_value(0), _minimum_value(0), _maximum_value(0), _error_code(FT_ERR_SUCCESSS)`
+  - `ft_price_definition::ft_price_definition() noexcept : _item_id(0), _rarity(0), _base_value(0), _minimum_value(0), _maximum_value(0), _error_code(FT_ERR_SUCCESS)`
+  - `ft_price_definition::ft_price_definition(int item_id, int rarity, int base_value, int minimum_value, int maximum_value) noexcept : _item_id(item_id), _rarity(rarity), _base_value(base_value), _minimum_value(minimum_value), _maximum_value(maximum_value), _error_code(FT_ERR_SUCCESS)`
+  - `ft_price_definition::ft_price_definition(const ft_price_definition &other) noexcept : _item_id(0), _rarity(0), _base_value(0), _minimum_value(0), _maximum_value(0), _error_code(FT_ERR_SUCCESS)`
+  - `ft_price_definition::ft_price_definition(ft_price_definition &&other) noexcept : _item_id(0), _rarity(0), _base_value(0), _minimum_value(0), _maximum_value(0), _error_code(FT_ERR_SUCCESS)`
   - `int ft_price_definition::get_item_id() const noexcept`
   - `void ft_price_definition::set_item_id(int item_id) noexcept`
   - `int ft_price_definition::get_rarity() const noexcept`
@@ -4866,10 +4866,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `void ft_progress_tracker::record_operation_error_unlocked(int error_code)`
   - `static void game_progress_tracker_sleep_backoff()`
   - `int ft_progress_tracker::lock_pair(const ft_progress_tracker &first, const ft_progress_tracker &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_progress_tracker::ft_progress_tracker() noexcept : _achievements(), _quests(), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_progress_tracker::ft_progress_tracker() noexcept : _achievements(), _quests(), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `ft_progress_tracker::~ft_progress_tracker() noexcept`
-  - `ft_progress_tracker::ft_progress_tracker(const ft_progress_tracker &other) noexcept : _achievements(), _quests(), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_progress_tracker::ft_progress_tracker(ft_progress_tracker &&other) noexcept : _achievements(), _quests(), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_progress_tracker::ft_progress_tracker(const ft_progress_tracker &other) noexcept : _achievements(), _quests(), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_progress_tracker::ft_progress_tracker(ft_progress_tracker &&other) noexcept : _achievements(), _quests(), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `ft_map<int, ft_achievement> &ft_progress_tracker::get_achievements() noexcept`
   - `const ft_map<int, ft_achievement> &ft_progress_tracker::get_achievements() const noexcept`
   - `ft_map<int, ft_quest> &ft_progress_tracker::get_quests() noexcept`
@@ -4921,10 +4921,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `static void game_quest_sleep_backoff()`
   - `static void game_quest_unlock_guard(ft_unique_lock<pt_mutex> &guard)`
   - `int ft_quest::lock_pair(const ft_quest &first, const ft_quest &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_quest::ft_quest() noexcept : _id(0), _phases(0), _current_phase(0), _description(), _objective(), _reward_experience(0), _reward_items(), _error(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_quest::ft_quest() noexcept : _id(0), _phases(0), _current_phase(0), _description(), _objective(), _reward_experience(0), _reward_items(), _error(FT_ERR_SUCCESS), _mutex()`
   - `ft_quest::~ft_quest() noexcept`
-  - `ft_quest::ft_quest(const ft_quest &other) noexcept : _id(0), _phases(0), _current_phase(0), _description(), _objective(), _reward_experience(0), _reward_items(), _error(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_quest::ft_quest(ft_quest &&other) noexcept : _id(0), _phases(0), _current_phase(0), _description(), _objective(), _reward_experience(0), _reward_items(), _error(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_quest::ft_quest(const ft_quest &other) noexcept : _id(0), _phases(0), _current_phase(0), _description(), _objective(), _reward_experience(0), _reward_items(), _error(FT_ERR_SUCCESS), _mutex()`
+  - `ft_quest::ft_quest(ft_quest &&other) noexcept : _id(0), _phases(0), _current_phase(0), _description(), _objective(), _reward_experience(0), _reward_items(), _error(FT_ERR_SUCCESS), _mutex()`
   - `int ft_quest::get_id() const noexcept`
   - `void ft_quest::set_id(int id) noexcept`
   - `int ft_quest::get_phases() const noexcept`
@@ -4985,10 +4985,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Defines:
   - `void ft_rarity_band::record_operation_error_unlocked(int error_code)`
   - `int ft_rarity_band::lock_pair(const ft_rarity_band &first, const ft_rarity_band &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_rarity_band::ft_rarity_band() noexcept : _rarity(0), _value_multiplier(1.0), _error_code(FT_ERR_SUCCESSS)`
-  - `ft_rarity_band::ft_rarity_band(int rarity, double value_multiplier) noexcept : _rarity(rarity), _value_multiplier(value_multiplier), _error_code(FT_ERR_SUCCESSS)`
-  - `ft_rarity_band::ft_rarity_band(const ft_rarity_band &other) noexcept : _rarity(0), _value_multiplier(1.0), _error_code(FT_ERR_SUCCESSS)`
-  - `ft_rarity_band::ft_rarity_band(ft_rarity_band &&other) noexcept : _rarity(0), _value_multiplier(1.0), _error_code(FT_ERR_SUCCESSS)`
+  - `ft_rarity_band::ft_rarity_band() noexcept : _rarity(0), _value_multiplier(1.0), _error_code(FT_ERR_SUCCESS)`
+  - `ft_rarity_band::ft_rarity_band(int rarity, double value_multiplier) noexcept : _rarity(rarity), _value_multiplier(value_multiplier), _error_code(FT_ERR_SUCCESS)`
+  - `ft_rarity_band::ft_rarity_band(const ft_rarity_band &other) noexcept : _rarity(0), _value_multiplier(1.0), _error_code(FT_ERR_SUCCESS)`
+  - `ft_rarity_band::ft_rarity_band(ft_rarity_band &&other) noexcept : _rarity(0), _value_multiplier(1.0), _error_code(FT_ERR_SUCCESS)`
   - `int ft_rarity_band::get_rarity() const noexcept`
   - `void ft_rarity_band::set_rarity(int rarity) noexcept`
   - `double ft_rarity_band::get_value_multiplier() const noexcept`
@@ -5002,11 +5002,11 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Declares: _None_
 - Defines:
   - `int ft_region_definition::lock_pair(const ft_region_definition &first, const ft_region_definition &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_region_definition::ft_region_definition() noexcept : _region_id(0), _name(), _description(), _recommended_level(0), _error_code(FT_ERR_SUCCESSS)`
-  - `ft_region_definition::ft_region_definition(int region_id, const ft_string &name, const ft_string &description, int recommended_level) noexcept : _region_id(region_id), _name(name), _description(description), _recommended_level(recommended_level), _error_code(FT_ERR_SUCCESSS)`
+  - `ft_region_definition::ft_region_definition() noexcept : _region_id(0), _name(), _description(), _recommended_level(0), _error_code(FT_ERR_SUCCESS)`
+  - `ft_region_definition::ft_region_definition(int region_id, const ft_string &name, const ft_string &description, int recommended_level) noexcept : _region_id(region_id), _name(name), _description(description), _recommended_level(recommended_level), _error_code(FT_ERR_SUCCESS)`
   - `ft_region_definition::~ft_region_definition() noexcept`
-  - `ft_region_definition::ft_region_definition(const ft_region_definition &other) noexcept : _region_id(0), _name(), _description(), _recommended_level(0), _error_code(FT_ERR_SUCCESSS)`
-  - `ft_region_definition::ft_region_definition(ft_region_definition &&other) noexcept : _region_id(0), _name(), _description(), _recommended_level(0), _error_code(FT_ERR_SUCCESSS)`
+  - `ft_region_definition::ft_region_definition(const ft_region_definition &other) noexcept : _region_id(0), _name(), _description(), _recommended_level(0), _error_code(FT_ERR_SUCCESS)`
+  - `ft_region_definition::ft_region_definition(ft_region_definition &&other) noexcept : _region_id(0), _name(), _description(), _recommended_level(0), _error_code(FT_ERR_SUCCESS)`
   - `int ft_region_definition::get_region_id() const noexcept`
   - `void ft_region_definition::set_region_id(int region_id) noexcept`
   - `const ft_string &ft_region_definition::get_name() const noexcept`
@@ -5026,10 +5026,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `static void game_reputation_sleep_backoff()`
   - `static void game_reputation_restore_errno(ft_unique_lock<pt_mutex> &guard)`
   - `int ft_reputation::lock_pair(const ft_reputation &first, const ft_reputation &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_reputation::ft_reputation() noexcept : _milestones(), _reps(), _total_rep(0), _current_rep(0), _error(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_reputation::ft_reputation(const ft_map<int, int> &milestones, int total) noexcept : _milestones(milestones), _reps(), _total_rep(total), _current_rep(0), _error(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_reputation::ft_reputation(const ft_reputation &other) noexcept : _milestones(), _reps(), _total_rep(0), _current_rep(0), _error(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_reputation::ft_reputation(ft_reputation &&other) noexcept : _milestones(), _reps(), _total_rep(0), _current_rep(0), _error(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_reputation::ft_reputation() noexcept : _milestones(), _reps(), _total_rep(0), _current_rep(0), _error(FT_ERR_SUCCESS), _mutex()`
+  - `ft_reputation::ft_reputation(const ft_map<int, int> &milestones, int total) noexcept : _milestones(milestones), _reps(), _total_rep(total), _current_rep(0), _error(FT_ERR_SUCCESS), _mutex()`
+  - `ft_reputation::ft_reputation(const ft_reputation &other) noexcept : _milestones(), _reps(), _total_rep(0), _current_rep(0), _error(FT_ERR_SUCCESS), _mutex()`
+  - `ft_reputation::ft_reputation(ft_reputation &&other) noexcept : _milestones(), _reps(), _total_rep(0), _current_rep(0), _error(FT_ERR_SUCCESS), _mutex()`
   - `int ft_reputation::get_total_rep() const noexcept`
   - `void ft_reputation::set_total_rep(int rep) noexcept`
   - `void ft_reputation::add_total_rep(int rep) noexcept`
@@ -5086,11 +5086,11 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Defines:
   - `static void game_resistance_sleep_backoff() noexcept`
   - `static void game_resistance_restore_errno(ft_unique_lock<pt_mutex> &guard) noexcept`
-  - `ft_resistance::ft_resistance() noexcept : _percent_value(0), _flat_value(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_resistance::ft_resistance() noexcept : _percent_value(0), _flat_value(0), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `ft_resistance::~ft_resistance() noexcept`
   - `int ft_resistance::lock_pair(const ft_resistance &first, const ft_resistance &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_resistance::ft_resistance(const ft_resistance &other) noexcept : _percent_value(0), _flat_value(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_resistance::ft_resistance(ft_resistance &&other) noexcept : _percent_value(0), _flat_value(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_resistance::ft_resistance(const ft_resistance &other) noexcept : _percent_value(0), _flat_value(0), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_resistance::ft_resistance(ft_resistance &&other) noexcept : _percent_value(0), _flat_value(0), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `int ft_resistance::set_percent(int percent_value) noexcept`
   - `int ft_resistance::set_flat(int flat_value) noexcept`
   - `int ft_resistance::set_values(int percent_value, int flat_value) noexcept`
@@ -5135,8 +5135,8 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Defines:
   - `static void trim_whitespace(ft_string &target) noexcept`
   - `void ft_game_script_context::set_error(int error) const noexcept`
-  - `ft_game_script_context::ft_game_script_context() noexcept : _state(ft_nullptr), _world(), _variables(), _error_code(FT_ERR_SUCCESSS)`
-  - `ft_game_script_context::ft_game_script_context(ft_game_state *state, const ft_sharedptr<ft_world> &world) noexcept : _state(state), _world(world), _variables(), _error_code(FT_ERR_SUCCESSS)`
+  - `ft_game_script_context::ft_game_script_context() noexcept : _state(ft_nullptr), _world(), _variables(), _error_code(FT_ERR_SUCCESS)`
+  - `ft_game_script_context::ft_game_script_context(ft_game_state *state, const ft_sharedptr<ft_world> &world) noexcept : _state(state), _world(world), _variables(), _error_code(FT_ERR_SUCCESS)`
   - `ft_game_script_context::~ft_game_script_context() noexcept`
   - `ft_game_script_context::ft_game_script_context(const ft_game_script_context &other) noexcept : _state(other._state), _world(other._world), _variables(other._variables), _error_code(other._error_code)`
   - `ft_game_state *ft_game_script_context::get_state() const noexcept`
@@ -5151,7 +5151,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `const char *ft_game_script_context::get_error_str() const noexcept`
   - `void ft_game_script_bridge::set_error(int error) const noexcept`
   - `bool ft_game_script_bridge::is_supported_language(const ft_string &language) noexcept`
-  - `ft_game_script_bridge::ft_game_script_bridge(const ft_sharedptr<ft_world> &world, const char *language) noexcept : _world(world), _callbacks(), _language(), _max_operations(32), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_game_script_bridge::ft_game_script_bridge(const ft_sharedptr<ft_world> &world, const char *language) noexcept : _world(world), _callbacks(), _language(), _max_operations(32), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `ft_game_script_bridge::~ft_game_script_bridge() noexcept`
   - `ft_game_script_bridge::ft_game_script_bridge(const ft_game_script_bridge &other) noexcept : _world(other._world), _callbacks(other._callbacks), _language(other._language), _max_operations(other._max_operations), _error_code(other._error_code), _mutex()`
   - `ft_game_script_bridge::ft_game_script_bridge(ft_game_script_bridge &&other) noexcept : _world(ft_move(other._world)), _callbacks(ft_move(other._callbacks)), _language(ft_move(other._language)), _max_operations(other._max_operations), _error_code(other._error_code), _mutex()`
@@ -5214,10 +5214,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Defines:
   - `static void game_server_sleep_backoff() noexcept`
   - `int ft_game_server::lock_pair(const ft_game_server &first, const ft_game_server &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_game_server::ft_game_server(const ft_sharedptr<ft_world> &world, const char *auth_token) noexcept : _server(ft_nullptr), _world(world), _clients(), _auth_token(), _on_join(ft_nullptr), _on_leave(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_game_server::ft_game_server(const ft_sharedptr<ft_world> &world, const char *auth_token) noexcept : _server(ft_nullptr), _world(world), _clients(), _auth_token(), _on_join(ft_nullptr), _on_leave(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `ft_game_server::~ft_game_server()`
-  - `ft_game_server::ft_game_server(const ft_game_server &other) noexcept : _server(ft_nullptr), _world(), _clients(), _auth_token(), _on_join(ft_nullptr), _on_leave(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_game_server::ft_game_server(ft_game_server &&other) noexcept : _server(ft_nullptr), _world(), _clients(), _auth_token(), _on_join(ft_nullptr), _on_leave(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_game_server::ft_game_server(const ft_game_server &other) noexcept : _server(ft_nullptr), _world(), _clients(), _auth_token(), _on_join(ft_nullptr), _on_leave(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_game_server::ft_game_server(ft_game_server &&other) noexcept : _server(ft_nullptr), _world(), _clients(), _auth_token(), _on_join(ft_nullptr), _on_leave(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `void ft_game_server::set_error(int error) const noexcept`
   - `int ft_game_server::start(const char *ip, uint16_t port) noexcept`
   - `void ft_game_server::set_join_callback(void (*callback)(int)) noexcept`
@@ -5254,10 +5254,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `static void game_skill_sleep_backoff()`
   - `static void game_skill_unlock(ft_unique_lock<pt_mutex> &guard)`
   - `int ft_skill::lock_pair(const ft_skill &first, const ft_skill &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_skill::ft_skill() noexcept : _id(0), _level(0), _cooldown(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_skill::ft_skill() noexcept : _id(0), _level(0), _cooldown(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()`
   - `ft_skill::~ft_skill() noexcept`
-  - `ft_skill::ft_skill(const ft_skill &other) noexcept : _id(0), _level(0), _cooldown(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_skill::ft_skill(ft_skill &&other) noexcept : _id(0), _level(0), _cooldown(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_skill::ft_skill(const ft_skill &other) noexcept : _id(0), _level(0), _cooldown(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()`
+  - `ft_skill::ft_skill(ft_skill &&other) noexcept : _id(0), _level(0), _cooldown(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()`
   - `void ft_skill::set_error(int err) const noexcept`
   - `int ft_skill::get_id() const noexcept`
   - `void ft_skill::set_id(int id) noexcept`
@@ -5326,10 +5326,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Defines:
   - `static void game_state_sleep_backoff()`
   - `int ft_game_state::lock_pair(const ft_game_state &first, const ft_game_state &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_game_state::ft_game_state() noexcept : _worlds(), _characters(), _variables(), _hooks(), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_game_state::ft_game_state() noexcept : _worlds(), _characters(), _variables(), _hooks(), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `ft_game_state::~ft_game_state() noexcept`
   - `ft_game_state::ft_game_state(const ft_game_state &other) noexcept : _worlds(), _characters(), _variables(), _hooks(), _error_code(other._error_code), _mutex()`
-  - `ft_game_state::ft_game_state(ft_game_state &&other) noexcept : _worlds(), _characters(), _variables(), _hooks(), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_game_state::ft_game_state(ft_game_state &&other) noexcept : _worlds(), _characters(), _variables(), _hooks(), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `ft_vector<ft_sharedptr<ft_world> > &ft_game_state::get_worlds() noexcept`
   - `ft_vector<ft_sharedptr<ft_character> > &ft_game_state::get_characters() noexcept`
   - `void ft_game_state::set_variable(const ft_string &key, const ft_string &value) noexcept`
@@ -5378,10 +5378,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `static void game_upgrade_sleep_backoff()`
   - `static void game_upgrade_finalize_lock(ft_unique_lock<pt_mutex> &guard)`
   - `int ft_upgrade::lock_pair(const ft_upgrade &first, const ft_upgrade &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_upgrade::ft_upgrade() noexcept : _id(0), _current_level(0), _max_level(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_upgrade::ft_upgrade() noexcept : _id(0), _current_level(0), _max_level(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()`
   - `ft_upgrade::~ft_upgrade() noexcept`
-  - `ft_upgrade::ft_upgrade(const ft_upgrade &other) noexcept : _id(0), _current_level(0), _max_level(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_upgrade::ft_upgrade(ft_upgrade &&other) noexcept : _id(0), _current_level(0), _max_level(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_upgrade::ft_upgrade(const ft_upgrade &other) noexcept : _id(0), _current_level(0), _max_level(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()`
+  - `ft_upgrade::ft_upgrade(ft_upgrade &&other) noexcept : _id(0), _current_level(0), _max_level(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()`
   - `int ft_upgrade::get_id() const noexcept`
   - `void ft_upgrade::set_id(int id) noexcept`
   - `uint16_t ft_upgrade::get_current_level() const noexcept`
@@ -5450,10 +5450,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Defines:
   - `void ft_vendor_profile::record_operation_error_unlocked(int error_code)`
   - `int ft_vendor_profile::lock_pair(const ft_vendor_profile &first, const ft_vendor_profile &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_vendor_profile::ft_vendor_profile() noexcept : _vendor_id(0), _buy_markup(1.0), _sell_multiplier(1.0), _tax_rate(0.0), _error_code(FT_ERR_SUCCESSS)`
-  - `ft_vendor_profile::ft_vendor_profile(int vendor_id, double buy_markup, double sell_multiplier, double tax_rate) noexcept : _vendor_id(vendor_id), _buy_markup(buy_markup), _sell_multiplier(sell_multiplier), _tax_rate(tax_rate), _error_code(FT_ERR_SUCCESSS)`
-  - `ft_vendor_profile::ft_vendor_profile(const ft_vendor_profile &other) noexcept : _vendor_id(0), _buy_markup(1.0), _sell_multiplier(1.0), _tax_rate(0.0), _error_code(FT_ERR_SUCCESSS)`
-  - `ft_vendor_profile::ft_vendor_profile(ft_vendor_profile &&other) noexcept : _vendor_id(0), _buy_markup(1.0), _sell_multiplier(1.0), _tax_rate(0.0), _error_code(FT_ERR_SUCCESSS)`
+  - `ft_vendor_profile::ft_vendor_profile() noexcept : _vendor_id(0), _buy_markup(1.0), _sell_multiplier(1.0), _tax_rate(0.0), _error_code(FT_ERR_SUCCESS)`
+  - `ft_vendor_profile::ft_vendor_profile(int vendor_id, double buy_markup, double sell_multiplier, double tax_rate) noexcept : _vendor_id(vendor_id), _buy_markup(buy_markup), _sell_multiplier(sell_multiplier), _tax_rate(tax_rate), _error_code(FT_ERR_SUCCESS)`
+  - `ft_vendor_profile::ft_vendor_profile(const ft_vendor_profile &other) noexcept : _vendor_id(0), _buy_markup(1.0), _sell_multiplier(1.0), _tax_rate(0.0), _error_code(FT_ERR_SUCCESS)`
+  - `ft_vendor_profile::ft_vendor_profile(ft_vendor_profile &&other) noexcept : _vendor_id(0), _buy_markup(1.0), _sell_multiplier(1.0), _tax_rate(0.0), _error_code(FT_ERR_SUCCESS)`
   - `int ft_vendor_profile::get_vendor_id() const noexcept`
   - `void ft_vendor_profile::set_vendor_id(int vendor_id) noexcept`
   - `double ft_vendor_profile::get_buy_markup() const noexcept`
@@ -5481,7 +5481,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `static ft_function<void(ft_world&, ft_event&) > get_callback_by_id(int type_id) noexcept`
 - Defines:
   - `bool ft_world::propagate_scheduler_state_error() const noexcept`
-  - `ft_world::ft_world() noexcept : _event_scheduler(new (std::nothrow) ft_event_scheduler()), _world_registry(new (std::nothrow) ft_world_registry()), _replay_session(new (std::nothrow) ft_world_replay_session()), _economy_table(new (std::nothrow) ft_economy_table()), _crafting(new (std::nothrow) ft_crafting()), _dialogue_table(new (std::nothrow) ft_dialogue_table()), _world_region(new (std::nothrow) ft_world_region()), _quest(new (std::nothrow) ft_quest()), _vendor_profile(new (std::nothrow) ft_vendor_profile()), _upgrade(new (std::nothrow) ft_upgrade()), _error(FT_ERR_SUCCESSS)`
+  - `ft_world::ft_world() noexcept : _event_scheduler(new (std::nothrow) ft_event_scheduler()), _world_registry(new (std::nothrow) ft_world_registry()), _replay_session(new (std::nothrow) ft_world_replay_session()), _economy_table(new (std::nothrow) ft_economy_table()), _crafting(new (std::nothrow) ft_crafting()), _dialogue_table(new (std::nothrow) ft_dialogue_table()), _world_region(new (std::nothrow) ft_world_region()), _quest(new (std::nothrow) ft_quest()), _vendor_profile(new (std::nothrow) ft_vendor_profile()), _upgrade(new (std::nothrow) ft_upgrade()), _error(FT_ERR_SUCCESS)`
   - `ft_world::ft_world(const ft_world &other) noexcept : _event_scheduler(other._event_scheduler), _world_registry(other._world_registry), _replay_session(other._replay_session), _economy_table(other._economy_table), _crafting(other._crafting), _dialogue_table(other._dialogue_table), _world_region(other._world_region), _quest(other._quest), _vendor_profile(other._vendor_profile), _upgrade(other._upgrade), _error(other._error)`
   - `ft_world::ft_world(ft_world &&other) noexcept : _event_scheduler(ft_move(other._event_scheduler)), _world_registry(ft_move(other._world_registry)), _replay_session(ft_move(other._replay_session)), _economy_table(ft_move(other._economy_table)), _crafting(ft_move(other._crafting)), _dialogue_table(ft_move(other._dialogue_table)), _world_region(ft_move(other._world_region)), _quest(ft_move(other._quest)), _vendor_profile(ft_move(other._vendor_profile)), _upgrade(ft_move(other._upgrade)), _error(other._error)`
   - `void ft_world::schedule_event(const ft_sharedptr<ft_event> &event) noexcept`
@@ -5584,11 +5584,11 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Defines:
   - `static void game_world_copy_region_ids(const ft_vector<int> &source, ft_vector<int> &destination)`
   - `int ft_world_region::lock_pair(const ft_world_region &first, const ft_world_region &second, ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard)`
-  - `ft_world_region::ft_world_region() noexcept : _world_id(0), _region_ids(), _error_code(FT_ERR_SUCCESSS)`
-  - `ft_world_region::ft_world_region(int world_id, const ft_vector<int> &region_ids) noexcept : _world_id(world_id), _region_ids(), _error_code(FT_ERR_SUCCESSS)`
+  - `ft_world_region::ft_world_region() noexcept : _world_id(0), _region_ids(), _error_code(FT_ERR_SUCCESS)`
+  - `ft_world_region::ft_world_region(int world_id, const ft_vector<int> &region_ids) noexcept : _world_id(world_id), _region_ids(), _error_code(FT_ERR_SUCCESS)`
   - `ft_world_region::~ft_world_region() noexcept`
-  - `ft_world_region::ft_world_region(const ft_world_region &other) noexcept : _world_id(0), _region_ids(), _error_code(FT_ERR_SUCCESSS)`
-  - `ft_world_region::ft_world_region(ft_world_region &&other) noexcept : _world_id(0), _region_ids(), _error_code(FT_ERR_SUCCESSS)`
+  - `ft_world_region::ft_world_region(const ft_world_region &other) noexcept : _world_id(0), _region_ids(), _error_code(FT_ERR_SUCCESS)`
+  - `ft_world_region::ft_world_region(ft_world_region &&other) noexcept : _world_id(0), _region_ids(), _error_code(FT_ERR_SUCCESS)`
   - `int ft_world_region::get_world_id() const noexcept`
   - `void ft_world_region::set_world_id(int world_id) noexcept`
   - `const ft_vector<int> &ft_world_region::get_region_ids() const noexcept`
@@ -5602,11 +5602,11 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 
 - Declares: _None_
 - Defines:
-  - `ft_world_registry::ft_world_registry() noexcept : _regions(), _world_regions(), _error_code(FT_ERR_SUCCESSS)`
+  - `ft_world_registry::ft_world_registry() noexcept : _regions(), _world_regions(), _error_code(FT_ERR_SUCCESS)`
   - `ft_world_registry::~ft_world_registry() noexcept`
   - `void ft_world_registry::copy_registry_unlocked(const ft_world_registry &other) noexcept`
-  - `ft_world_registry::ft_world_registry(const ft_world_registry &other) noexcept : _regions(), _world_regions(), _error_code(FT_ERR_SUCCESSS)`
-  - `ft_world_registry::ft_world_registry(ft_world_registry &&other) noexcept : _regions(), _world_regions(), _error_code(FT_ERR_SUCCESSS)`
+  - `ft_world_registry::ft_world_registry(const ft_world_registry &other) noexcept : _regions(), _world_regions(), _error_code(FT_ERR_SUCCESS)`
+  - `ft_world_registry::ft_world_registry(ft_world_registry &&other) noexcept : _regions(), _world_regions(), _error_code(FT_ERR_SUCCESS)`
   - `int ft_world_registry::register_region(const ft_region_definition &region) noexcept`
   - `int ft_world_registry::register_world(const ft_world_region &world_region) noexcept`
   - `int ft_world_registry::fetch_region(int region_id, ft_region_definition &out_region) const noexcept`
@@ -5647,7 +5647,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Defines:
   - `static int world_replay_collect_callbacks(ft_world &world, ft_vector<ft_function<void(ft_world&, ft_event&)> > &callbacks) noexcept`
   - `static int world_replay_restore_callbacks(ft_world &world, const ft_vector<ft_function<void(ft_world&, ft_event&)> > &callbacks) noexcept`
-  - `ft_world_replay_session::ft_world_replay_session() noexcept : _snapshot_payload(), _event_callbacks(), _error_code(FT_ERR_SUCCESSS)`
+  - `ft_world_replay_session::ft_world_replay_session() noexcept : _snapshot_payload(), _event_callbacks(), _error_code(FT_ERR_SUCCESS)`
   - `ft_world_replay_session::~ft_world_replay_session() noexcept`
   - `ft_world_replay_session::ft_world_replay_session(const ft_world_replay_session &other) noexcept : _snapshot_payload(other._snapshot_payload), _event_callbacks(), _error_code(other._error_code)`
   - `ft_world_replay_session::ft_world_replay_session(ft_world_replay_session &&other) noexcept : _snapshot_payload(ft_move(other._snapshot_payload)), _event_callbacks(ft_move(other._event_callbacks)), _error_code(other._error_code)`
@@ -5910,7 +5910,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `void gnl_stream::set_error_unlocked(int error_code) const noexcept`
   - `void gnl_stream::set_error(int error_code) const noexcept`
   - `int gnl_stream::lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept`
-  - `gnl_stream::gnl_stream() noexcept : _read_callback(ft_nullptr) , _user_data(ft_nullptr) , _file_descriptor(-1) , _file_handle(ft_nullptr) , _close_on_reset(false) , _error_code(FT_ERR_SUCCESSS) , _mutex()`
+  - `gnl_stream::gnl_stream() noexcept : _read_callback(ft_nullptr) , _user_data(ft_nullptr) , _file_descriptor(-1) , _file_handle(ft_nullptr) , _close_on_reset(false) , _error_code(FT_ERR_SUCCESS) , _mutex()`
   - `gnl_stream::~gnl_stream() noexcept`
   - `ssize_t gnl_stream::read_from_descriptor(int file_descriptor, char *buffer, size_t max_size) const noexcept`
   - `ssize_t gnl_stream::read_from_file(FILE *file_handle, char *buffer, size_t max_size) const noexcept`
@@ -6246,7 +6246,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `int json_document::lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept`
   - `void json_document::clear_unlocked() noexcept`
   - `char *json_document::write_to_string_unlocked() const noexcept`
-  - `json_document::json_document() noexcept : _groups(ft_nullptr) , _error_code(FT_ERR_SUCCESSS) , _mutex()`
+  - `json_document::json_document() noexcept : _groups(ft_nullptr) , _error_code(FT_ERR_SUCCESS) , _mutex()`
   - `json_document::~json_document() noexcept`
   - `json_group *json_document::create_group(const char *name) noexcept`
   - `json_item *json_document::create_item(const char *key, const char *value) noexcept`
@@ -7016,7 +7016,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_logger::thread_guard::~thread_guard() noexcept`
   - `int ft_logger::thread_guard::get_status() const noexcept`
   - `bool ft_logger::thread_guard::lock_acquired() const noexcept`
-  - `ft_logger::ft_logger(const char *path, size_t max_size, t_log_level level) noexcept : _mutex(ft_nullptr), _thread_safe_enabled(false), _alloc_logging(false), _api_logging(false), _error_code(FT_ERR_SUCCESSS)`
+  - `ft_logger::ft_logger(const char *path, size_t max_size, t_log_level level) noexcept : _mutex(ft_nullptr), _thread_safe_enabled(false), _alloc_logging(false), _api_logging(false), _error_code(FT_ERR_SUCCESS)`
   - `ft_logger::~ft_logger() noexcept`
   - `void ft_logger::set_global() noexcept`
   - `void ft_logger::set_level(t_log_level level) noexcept`
@@ -7311,8 +7311,8 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 
 - Declares: _None_
 - Defines:
-  - `ft_log_context_guard::ft_log_context_guard() noexcept : _pushed_count(0), _active(false), _error_code(FT_ERR_SUCCESSS)`
-  - `ft_log_context_guard::ft_log_context_guard(const s_log_field *fields, size_t field_count) noexcept : _pushed_count(0), _active(false), _error_code(FT_ERR_SUCCESSS)`
+  - `ft_log_context_guard::ft_log_context_guard() noexcept : _pushed_count(0), _active(false), _error_code(FT_ERR_SUCCESS)`
+  - `ft_log_context_guard::ft_log_context_guard(const s_log_field *fields, size_t field_count) noexcept : _pushed_count(0), _active(false), _error_code(FT_ERR_SUCCESS)`
   - `ft_log_context_guard::~ft_log_context_guard() noexcept`
   - `ft_log_context_guard::ft_log_context_guard(ft_log_context_guard &&other) noexcept : _pushed_count(other._pushed_count), _active(other._active), _error_code(other._error_code)`
   - `void ft_log_context_guard::set_error(int error_code) const`
@@ -7913,11 +7913,11 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_recursive_mutex_pair_guard guard(this->_mutex, other._mutex)`
 - Defines:
   - `static void math_autodiff_push_error(int error_code)`
-  - `ft_dual_number::ft_dual_number() noexcept : _value(0.0) , _derivative(0.0) , _error_code(FT_ERR_SUCCESSS) , _operation_errors(`
+  - `ft_dual_number::ft_dual_number() noexcept : _value(0.0) , _derivative(0.0) , _error_code(FT_ERR_SUCCESS) , _operation_errors(`
   - `, _mutex()`
-  - `ft_dual_number::ft_dual_number(double value, double derivative) noexcept : _value(value) , _derivative(derivative) , _error_code(FT_ERR_SUCCESSS) , _operation_errors(`
-  - `ft_dual_number::ft_dual_number(const ft_dual_number &other) noexcept : _value(0.0) , _derivative(0.0) , _error_code(FT_ERR_SUCCESSS) , _operation_errors(`
-  - `ft_dual_number::ft_dual_number(ft_dual_number &&other) noexcept : _value(0.0) , _derivative(0.0) , _error_code(FT_ERR_SUCCESSS) , _operation_errors(`
+  - `ft_dual_number::ft_dual_number(double value, double derivative) noexcept : _value(value) , _derivative(derivative) , _error_code(FT_ERR_SUCCESS) , _operation_errors(`
+  - `ft_dual_number::ft_dual_number(const ft_dual_number &other) noexcept : _value(0.0) , _derivative(0.0) , _error_code(FT_ERR_SUCCESS) , _operation_errors(`
+  - `ft_dual_number::ft_dual_number(ft_dual_number &&other) noexcept : _value(0.0) , _derivative(0.0) , _error_code(FT_ERR_SUCCESS) , _operation_errors(`
   - `ft_dual_number::~ft_dual_number() noexcept`
   - `void ft_dual_number::set_error(int error_code) const noexcept`
   - `ft_dual_number ft_dual_number::constant(double value) noexcept`
@@ -8214,9 +8214,9 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `static int math_vector2_last_error(const vector2 &subject) noexcept`
   - `static void math_polynomial_push_error(int error_code) noexcept`
   - `static void math_polynomial_copy_vector(const ft_vector<double> &source, ft_vector<double> &destination, size_t count, int &error_code) noexcept`
-  - `ft_cubic_spline::ft_cubic_spline() noexcept : _error_code(FT_ERR_SUCCESSS) , _operation_errors(`
+  - `ft_cubic_spline::ft_cubic_spline() noexcept : _error_code(FT_ERR_SUCCESS) , _operation_errors(`
   - `, _mutex()`
-  - `ft_cubic_spline::ft_cubic_spline(ft_cubic_spline &&other) noexcept : _error_code(FT_ERR_SUCCESSS) , _operation_errors(`
+  - `ft_cubic_spline::ft_cubic_spline(ft_cubic_spline &&other) noexcept : _error_code(FT_ERR_SUCCESS) , _operation_errors(`
   - `ft_cubic_spline::~ft_cubic_spline() noexcept`
   - `int ft_cubic_spline::get_error() const noexcept`
   - `const char *ft_cubic_spline::get_error_str() const noexcept`
@@ -8416,14 +8416,14 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 
 - Declares:
   - `const_cast<http2_header_field &>(other) .unlock(lock_acquired)`
-  - `&& ft_string::last_operation_error() != FT_ERR_SUCCESSS) success_state = false`
+  - `&& ft_string::last_operation_error() != FT_ERR_SUCCESS) success_state = false`
   - `const_cast<http2_frame &>(other) .unlock(lock_acquired)`
 - Defines:
   - `static void http2_append_raw_byte(ft_string &target, unsigned char value)`
-  - `http2_header_field::http2_header_field() noexcept : _name(), _value(), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr)`
+  - `http2_header_field::http2_header_field() noexcept : _name(), _value(), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr)`
   - `http2_header_field::~http2_header_field() noexcept`
-  - `http2_header_field::http2_header_field(const http2_header_field &other) noexcept : _name(), _value(), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr)`
-  - `http2_header_field::http2_header_field(http2_header_field &&other) noexcept : _name(), _value(), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr)`
+  - `http2_header_field::http2_header_field(const http2_header_field &other) noexcept : _name(), _value(), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr)`
+  - `http2_header_field::http2_header_field(http2_header_field &&other) noexcept : _name(), _value(), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr)`
   - `int http2_header_field::prepare_thread_safety() noexcept`
   - `void http2_header_field::teardown_thread_safety() noexcept`
   - `int http2_header_field::lock(bool *lock_acquired) const noexcept`
@@ -8442,10 +8442,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `void http2_header_field::clear() noexcept`
   - `int http2_header_field::get_error() const noexcept`
   - `const char *http2_header_field::get_error_str() const noexcept`
-  - `http2_frame::http2_frame() noexcept : _type(0), _flags(0), _stream_identifier(0), _payload(), _error_code(FT_ERR_SUCCESSS), _thread_safe_enabled(false), _mutex(ft_nullptr)`
+  - `http2_frame::http2_frame() noexcept : _type(0), _flags(0), _stream_identifier(0), _payload(), _error_code(FT_ERR_SUCCESS), _thread_safe_enabled(false), _mutex(ft_nullptr)`
   - `http2_frame::~http2_frame() noexcept`
-  - `http2_frame::http2_frame(const http2_frame &other) noexcept : _type(0), _flags(0), _stream_identifier(0), _payload(), _error_code(FT_ERR_SUCCESSS), _thread_safe_enabled(false), _mutex(ft_nullptr)`
-  - `http2_frame::http2_frame(http2_frame &&other) noexcept : _type(0), _flags(0), _stream_identifier(0), _payload(), _error_code(FT_ERR_SUCCESSS), _thread_safe_enabled(false), _mutex(ft_nullptr)`
+  - `http2_frame::http2_frame(const http2_frame &other) noexcept : _type(0), _flags(0), _stream_identifier(0), _payload(), _error_code(FT_ERR_SUCCESS), _thread_safe_enabled(false), _mutex(ft_nullptr)`
+  - `http2_frame::http2_frame(http2_frame &&other) noexcept : _type(0), _flags(0), _stream_identifier(0), _payload(), _error_code(FT_ERR_SUCCESS), _thread_safe_enabled(false), _mutex(ft_nullptr)`
   - `int http2_frame::enable_thread_safety() noexcept`
   - `void http2_frame::teardown_thread_safety() noexcept`
   - `void http2_frame::disable_thread_safety() noexcept`
@@ -8468,7 +8468,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `void http2_frame::set_error(int error_code) const noexcept`
   - `http2_stream_state::http2_stream_state() noexcept : buffer(), dependency_identifier(0), weight(16), exclusive_dependency(false), remote_window(65535), local_window(65535)`
   - `http2_stream_state::~http2_stream_state() noexcept`
-  - `http2_stream_manager::http2_stream_manager() noexcept : _streams(), _stream_identifiers(), _initial_remote_window(65535), _initial_local_window(65535), _connection_remote_window(65535), _connection_local_window(65535), _error_code(FT_ERR_SUCCESSS), _thread_safe_enabled(false), _mutex(ft_nullptr)`
+  - `http2_stream_manager::http2_stream_manager() noexcept : _streams(), _stream_identifiers(), _initial_remote_window(65535), _initial_local_window(65535), _connection_remote_window(65535), _connection_local_window(65535), _error_code(FT_ERR_SUCCESS), _thread_safe_enabled(false), _mutex(ft_nullptr)`
   - `http2_stream_manager::~http2_stream_manager() noexcept`
   - `int http2_stream_manager::prepare_thread_safety() noexcept`
   - `void http2_stream_manager::teardown_thread_safety() noexcept`
@@ -8504,7 +8504,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `const char *http2_stream_manager::get_error_str() const noexcept`
   - `void http2_settings_state::set_error(int error_code) const noexcept`
   - `bool http2_settings_state::apply_single_setting(uint16_t identifier, uint32_t value, http2_stream_manager &streams) noexcept`
-  - `http2_settings_state::http2_settings_state() noexcept : _header_table_size(4096), _enable_push(true), _max_concurrent_streams(0xFFFFFFFFu), _initial_local_window(65535), _initial_remote_window(65535), _max_frame_size(16384), _max_header_list_size(0), _error_code(FT_ERR_SUCCESSS)`
+  - `http2_settings_state::http2_settings_state() noexcept : _header_table_size(4096), _enable_push(true), _max_concurrent_streams(0xFFFFFFFFu), _initial_local_window(65535), _initial_remote_window(65535), _max_frame_size(16384), _max_header_list_size(0), _error_code(FT_ERR_SUCCESS)`
   - `http2_settings_state::~http2_settings_state() noexcept`
   - `bool http2_settings_state::apply_remote_settings(const http2_frame &frame, http2_stream_manager &streams) noexcept`
   - `bool http2_settings_state::update_local_initial_window(uint32_t new_window, http2_stream_manager &streams) noexcept`
@@ -8654,7 +8654,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 
 - Declares: _None_
 - Defines:
-  - `ft_http_server::ft_http_server() : _server_socket(), _error_code(FT_ERR_SUCCESSS), _non_blocking(false), _mutex()`
+  - `ft_http_server::ft_http_server() : _server_socket(), _error_code(FT_ERR_SUCCESS), _non_blocking(false), _mutex()`
   - `ft_http_server::~ft_http_server()`
   - `void ft_http_server::set_error(int error_code) const`
   - `int ft_http_server::start(const char *ip, uint16_t port, int address_family, bool non_blocking)`
@@ -8682,11 +8682,11 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 ### Networking/networking.cpp
 
 - Declares:
-  - `&& ft_string::last_operation_error() != FT_ERR_SUCCESSS) this->set_error(ft_string::last_operation_error())`
+  - `&& ft_string::last_operation_error() != FT_ERR_SUCCESS) this->set_error(ft_string::last_operation_error())`
 - Defines:
-  - `SocketConfig::SocketConfig() : _error_code(FT_ERR_SUCCESSS), _thread_safe_enabled(false), _mutex(ft_nullptr), _type(SocketType::SERVER), _ip( ), _port(8080), _backlog(10), _protocol(IPPROTO_TCP), _address_family(AF_INET), _reuse_address(true), _non_blocking(false), _recv_timeout(5000), _send_timeout(5000), _multicast_group( ), _multicast_interface( )`
-  - `SocketConfig::SocketConfig(const SocketConfig& other) noexcept : _error_code(FT_ERR_SUCCESSS), _thread_safe_enabled(false), _mutex(ft_nullptr), _type(SocketType::SERVER), _ip( ), _port(8080), _backlog(10), _protocol(IPPROTO_TCP), _address_family(AF_INET), _reuse_address(true), _non_blocking(false), _recv_timeout(5000), _send_timeout(5000), _multicast_group( ), _multicast_interface( )`
-  - `SocketConfig::SocketConfig(SocketConfig&& other) noexcept : _error_code(FT_ERR_SUCCESSS), _thread_safe_enabled(false), _mutex(ft_nullptr), _type(SocketType::SERVER), _ip( ), _port(8080), _backlog(10), _protocol(IPPROTO_TCP), _address_family(AF_INET), _reuse_address(true), _non_blocking(false), _recv_timeout(5000), _send_timeout(5000), _multicast_group( ), _multicast_interface( )`
+  - `SocketConfig::SocketConfig() : _error_code(FT_ERR_SUCCESS), _thread_safe_enabled(false), _mutex(ft_nullptr), _type(SocketType::SERVER), _ip( ), _port(8080), _backlog(10), _protocol(IPPROTO_TCP), _address_family(AF_INET), _reuse_address(true), _non_blocking(false), _recv_timeout(5000), _send_timeout(5000), _multicast_group( ), _multicast_interface( )`
+  - `SocketConfig::SocketConfig(const SocketConfig& other) noexcept : _error_code(FT_ERR_SUCCESS), _thread_safe_enabled(false), _mutex(ft_nullptr), _type(SocketType::SERVER), _ip( ), _port(8080), _backlog(10), _protocol(IPPROTO_TCP), _address_family(AF_INET), _reuse_address(true), _non_blocking(false), _recv_timeout(5000), _send_timeout(5000), _multicast_group( ), _multicast_interface( )`
+  - `SocketConfig::SocketConfig(SocketConfig&& other) noexcept : _error_code(FT_ERR_SUCCESS), _thread_safe_enabled(false), _mutex(ft_nullptr), _type(SocketType::SERVER), _ip( ), _port(8080), _backlog(10), _protocol(IPPROTO_TCP), _address_family(AF_INET), _reuse_address(true), _non_blocking(false), _recv_timeout(5000), _send_timeout(5000), _multicast_group( ), _multicast_interface( )`
   - `SocketConfig::~SocketConfig()`
   - `int SocketConfig::get_error()`
   - `const char *SocketConfig::get_error_str()`
@@ -8883,7 +8883,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `static inline int setsockopt_reuse(int fd, int opt)`
   - `static inline int set_timeout_recv(int fd, int ms)`
   - `static inline int set_timeout_send(int fd, int ms)`
-  - `udp_socket::udp_socket() : _address(), _socket_fd(-1), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `udp_socket::udp_socket() : _address(), _socket_fd(-1), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `udp_socket::~udp_socket()`
   - `void udp_socket::set_error(int error_code) const noexcept`
   - `int udp_socket::create_socket(const SocketConfig &config)`
@@ -8913,9 +8913,9 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ssize_t ft_socket::receive_data_locked(void *buffer, size_t size, int flags)`
   - `bool ft_socket::close_socket_locked()`
   - `void ft_socket::reset_to_empty_state_locked()`
-  - `ft_socket::ft_socket() : _address(), _connected(), _socket_fd(-1), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_socket::ft_socket(int fd, const sockaddr_storage &addr) : _address(), _connected(), _socket_fd(-1), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_socket::ft_socket(const SocketConfig &config) : _address(), _connected(), _socket_fd(-1), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_socket::ft_socket() : _address(), _connected(), _socket_fd(-1), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_socket::ft_socket(int fd, const sockaddr_storage &addr) : _address(), _connected(), _socket_fd(-1), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_socket::ft_socket(const SocketConfig &config) : _address(), _connected(), _socket_fd(-1), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `ft_socket::~ft_socket()`
   - `ssize_t ft_socket::send_data(const void *data, size_t size, int flags)`
   - `ssize_t ft_socket::send_all(const void *data, size_t size, int flags)`
@@ -8934,7 +8934,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `int ft_socket::get_error() const`
   - `const char* ft_socket::get_error_str() const`
   - `void ft_socket::reset_to_empty_state()`
-  - `ft_socket::ft_socket(ft_socket &&other) noexcept : _address(), _connected(), _socket_fd(-1), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_socket::ft_socket(ft_socket &&other) noexcept : _address(), _connected(), _socket_fd(-1), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `int ft_socket::initialize(const SocketConfig &config)`
 
 ### Networking/networking_socket_config_thread_safety.cpp
@@ -9059,8 +9059,8 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `static int &ft_socket_runtime_reference_count()`
   - `static bool &ft_socket_runtime_initialized()`
   - `void ft_socket_handle::set_error(int error_code) const noexcept`
-  - `ft_socket_handle::ft_socket_handle() : _socket_fd(-1), _error_code(FT_ERR_SUCCESSS)`
-  - `ft_socket_handle::ft_socket_handle(int socket_fd) : _socket_fd(-1), _error_code(FT_ERR_SUCCESSS)`
+  - `ft_socket_handle::ft_socket_handle() : _socket_fd(-1), _error_code(FT_ERR_SUCCESS)`
+  - `ft_socket_handle::ft_socket_handle(int socket_fd) : _socket_fd(-1), _error_code(FT_ERR_SUCCESS)`
   - `ft_socket_handle::~ft_socket_handle()`
   - `ft_socket_handle::ft_socket_handle(ft_socket_handle &&other) noexcept : _socket_fd(other._socket_fd), _error_code(other._error_code)`
   - `bool ft_socket_handle::reset(int socket_fd)`
@@ -9119,7 +9119,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Declares: _None_
 - Defines:
   - `static void compute_accept_key(const ft_string &key, ft_string &accept)`
-  - `ft_websocket_client::ft_websocket_client() : _socket(), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_websocket_client::ft_websocket_client() : _socket(), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `ft_websocket_client::~ft_websocket_client()`
   - `void ft_websocket_client::set_error(int error_code) const`
   - `int ft_websocket_client::close_locked(ft_unique_lock<pt_mutex> &guard)`
@@ -9164,7 +9164,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `static int websocket_permessage_deflate_deflate(const ft_string &message, ft_vector<unsigned char> &compressed)`
   - `static void compute_accept_key(const ft_string &key, ft_string &accept)`
   - `void ft_websocket_server::finalize_lock(ft_unique_lock<pt_mutex> &guard) noexcept`
-  - `ft_websocket_server::ft_websocket_server() : _server_socket(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_websocket_server::ft_websocket_server() : _server_socket(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `ft_websocket_server::~ft_websocket_server()`
   - `void ft_websocket_server::set_error(int error_code) const`
   - `void ft_websocket_server::store_connection_state_locked(int client_fd, bool permessage_deflate_enabled)`
@@ -9304,7 +9304,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Defines:
   - `void ft_lock_guard<MutexType>::set_error(int error) const`
   - `void ft_lock_guard<MutexType>::record_error(int error, bool push_global) const`
-  - `ft_lock_guard<MutexType>::ft_lock_guard(MutexType &mutex) : _mutex(&mutex), _owns_lock(false), _error_code(FT_ERR_SUCCESSS)`
+  - `ft_lock_guard<MutexType>::ft_lock_guard(MutexType &mutex) : _mutex(&mutex), _owns_lock(false), _error_code(FT_ERR_SUCCESS)`
   - `ft_lock_guard<MutexType>::~ft_lock_guard()`
   - `int ft_lock_guard<MutexType>::get_error() const`
   - `const char *ft_lock_guard<MutexType>::get_error_str() const`
@@ -9422,7 +9422,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Declares: _None_
 - Defines:
   - `static bool compute_wait_deadline(const struct timespec &relative_time, struct timespec *absolute_time, int *error_code)`
-  - `pt_condition_variable::pt_condition_variable() : _condition(), _mutex(), _condition_initialized(false), _mutex_initialized(false), _error_code(FT_ERR_SUCCESSS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `pt_condition_variable::pt_condition_variable() : _condition(), _mutex(), _condition_initialized(false), _mutex_initialized(false), _error_code(FT_ERR_SUCCESS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
   - `pt_condition_variable::~pt_condition_variable()`
   - `void pt_condition_variable::set_error(int error) const`
   - `int pt_condition_variable::lock_internal(bool *lock_acquired) const`
@@ -9736,9 +9736,9 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_thread::start_payload::~start_payload()`
   - `void *ft_thread::start_routine(void *data)`
   - `void ft_thread::set_error(int error) const`
-  - `ft_thread::ft_thread() : _thread(), _joinable(false), _error_code(FT_ERR_SUCCESSS), _start_payload(), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `ft_thread::ft_thread() : _thread(), _joinable(false), _error_code(FT_ERR_SUCCESS), _start_payload(), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
   - `ft_thread::~ft_thread()`
-  - `ft_thread::ft_thread(ft_thread &&other) : _thread(), _joinable(false), _error_code(FT_ERR_SUCCESSS), _start_payload(), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `ft_thread::ft_thread(ft_thread &&other) : _thread(), _joinable(false), _error_code(FT_ERR_SUCCESS), _start_payload(), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
   - `bool ft_thread::joinable() const`
   - `void ft_thread::join()`
   - `void ft_thread::detach()`
@@ -9979,7 +9979,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `int lock(bool *lock_acquired) const`
   - `void unlock(bool lock_acquired) const`
 - Defines:
-  - `ft_thread::ft_thread(FunctionType function, Args... args) : _thread(), _joinable(false), _error_code(FT_ERR_SUCCESSS), _start_payload(), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `ft_thread::ft_thread(FunctionType function, Args... args) : _thread(), _joinable(false), _error_code(FT_ERR_SUCCESS), _start_payload(), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
 
 ### PThread/unique_lock.hpp
 
@@ -10058,7 +10058,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_dom_node::thread_guard::~thread_guard() noexcept`
   - `int ft_dom_node::thread_guard::get_status() const noexcept`
   - `bool ft_dom_node::thread_guard::lock_acquired() const noexcept`
-  - `ft_dom_node::ft_dom_node() noexcept : _error_code(FT_ERR_SUCCESSS), _type(FT_DOM_NODE_NULL), _name(), _value(), _children(), _attribute_keys(), _attribute_values(), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `ft_dom_node::ft_dom_node() noexcept : _error_code(FT_ERR_SUCCESS), _type(FT_DOM_NODE_NULL), _name(), _value(), _children(), _attribute_keys(), _attribute_values(), _mutex(ft_nullptr), _thread_safe_enabled(false)`
   - `ft_dom_node::~ft_dom_node() noexcept`
   - `void ft_dom_node::set_error(int error_code) const noexcept`
   - `int ft_dom_node::prepare_thread_safety() noexcept`
@@ -10088,7 +10088,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_dom_document::thread_guard::~thread_guard() noexcept`
   - `int ft_dom_document::thread_guard::get_status() const noexcept`
   - `bool ft_dom_document::thread_guard::lock_acquired() const noexcept`
-  - `ft_dom_document::ft_dom_document() noexcept : _root(ft_nullptr), _mutex(ft_nullptr), _thread_safe_enabled(false), _error_code(FT_ERR_SUCCESSS)`
+  - `ft_dom_document::ft_dom_document() noexcept : _root(ft_nullptr), _mutex(ft_nullptr), _thread_safe_enabled(false), _error_code(FT_ERR_SUCCESS)`
   - `ft_dom_document::~ft_dom_document() noexcept`
   - `void ft_dom_document::set_error(int error_code) const noexcept`
   - `int ft_dom_document::prepare_thread_safety() noexcept`
@@ -10106,7 +10106,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_dom_validation_error::ft_dom_validation_error() noexcept : path(), message()`
   - `ft_dom_validation_error::~ft_dom_validation_error() noexcept`
   - `void ft_dom_validation_report::set_error(int error_code) const noexcept`
-  - `ft_dom_validation_report::ft_dom_validation_report() noexcept : _valid(true), _errors(), _error_code(FT_ERR_SUCCESSS)`
+  - `ft_dom_validation_report::ft_dom_validation_report() noexcept : _valid(true), _errors(), _error_code(FT_ERR_SUCCESS)`
   - `ft_dom_validation_report::~ft_dom_validation_report() noexcept`
   - `void ft_dom_validation_report::mark_valid() noexcept`
   - `void ft_dom_validation_report::mark_invalid() noexcept`
@@ -10116,7 +10116,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `int ft_dom_validation_report::add_error(const ft_string &path, const ft_string &message) noexcept`
   - `const ft_vector<ft_dom_validation_error> &ft_dom_validation_report::errors() const noexcept`
   - `void ft_dom_schema::set_error(int error_code) const noexcept`
-  - `ft_dom_schema::ft_dom_schema() noexcept : _rules(), _error_code(FT_ERR_SUCCESSS)`
+  - `ft_dom_schema::ft_dom_schema() noexcept : _rules(), _error_code(FT_ERR_SUCCESS)`
   - `ft_dom_schema::~ft_dom_schema() noexcept`
   - `int ft_dom_schema::add_rule(const ft_string &path, ft_dom_node_type type, bool required) noexcept`
   - `static ft_string ft_dom_build_path(const ft_string &base, const ft_string &segment) noexcept`
@@ -10172,13 +10172,13 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 
 - Declares: _None_
 - Defines:
-  - `ft_document_source::ft_document_source() noexcept : _error_code(FT_ERR_SUCCESSS)`
+  - `ft_document_source::ft_document_source() noexcept : _error_code(FT_ERR_SUCCESS)`
   - `ft_document_source::~ft_document_source()`
   - `int ft_document_source::get_error() const noexcept`
   - `const char *ft_document_source::get_error_str() const noexcept`
   - `void ft_document_source::set_error(int error_code) const noexcept`
   - `void ft_document_source::assign_error(int error_code) const noexcept`
-  - `ft_document_sink::ft_document_sink() noexcept : _error_code(FT_ERR_SUCCESSS)`
+  - `ft_document_sink::ft_document_sink() noexcept : _error_code(FT_ERR_SUCCESS)`
   - `ft_document_sink::~ft_document_sink()`
   - `int ft_document_sink::get_error() const noexcept`
   - `const char *ft_document_sink::get_error_str() const noexcept`
@@ -10431,9 +10431,9 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `void ft_loot_entry<ElementType>::set_error_unlocked(int error_code) const noexcept`
   - `void ft_loot_entry<ElementType>::set_error(int error_code) const noexcept`
   - `int ft_loot_entry<ElementType>::lock_entry(ft_unique_lock<pt_mutex> &guard) const noexcept`
-  - `ft_loot_entry<ElementType>::ft_loot_entry() noexcept : _item(ft_nullptr) , _weight(1) , _rarity(0) , _error_code(FT_ERR_SUCCESSS) , _mutex()`
-  - `ft_loot_entry<ElementType>::ft_loot_entry(ElementType *item, int weight, int rarity) noexcept : _item(item) , _weight(1) , _rarity(0) , _error_code(FT_ERR_SUCCESSS) , _mutex()`
-  - `ft_loot_entry<ElementType>::ft_loot_entry(const ft_loot_entry<ElementType> &other) noexcept : _item(ft_nullptr) , _weight(1) , _rarity(0) , _error_code(FT_ERR_SUCCESSS) , _mutex()`
+  - `ft_loot_entry<ElementType>::ft_loot_entry() noexcept : _item(ft_nullptr) , _weight(1) , _rarity(0) , _error_code(FT_ERR_SUCCESS) , _mutex()`
+  - `ft_loot_entry<ElementType>::ft_loot_entry(ElementType *item, int weight, int rarity) noexcept : _item(item) , _weight(1) , _rarity(0) , _error_code(FT_ERR_SUCCESS) , _mutex()`
+  - `ft_loot_entry<ElementType>::ft_loot_entry(const ft_loot_entry<ElementType> &other) noexcept : _item(ft_nullptr) , _weight(1) , _rarity(0) , _error_code(FT_ERR_SUCCESS) , _mutex()`
   - `ft_loot_entry<ElementType>::~ft_loot_entry() noexcept`
   - `void ft_loot_entry<ElementType>::set_item(ElementType *item) noexcept`
   - `ElementType *ft_loot_entry<ElementType>::get_item() const noexcept`
@@ -11230,7 +11230,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Defines:
   - `static int storage_kv_move_string_error(ft_string &value) noexcept`
   - `static int storage_kv_pop_newest_error(ContainerType &container) noexcept`
-  - `kv_store::kv_store(const char *file_path, const char *encryption_key, bool enable_encryption) : _data() , _file_path() , _encryption_key() , _encryption_enabled(false) , _backend_type(KV_STORE_BACKEND_JSON) , _background_thread_active(false) , _background_stop_requested(false) , _background_interval_seconds(0) , _background_thread() , _background_mutex() , _error_code(FT_ERR_SUCCESSS) , _mutex() , _metrics_set_operations(0) , _metrics_delete_operations(0) , _metrics_get_hits(0) , _metrics_get_misses(0) , _metrics_prune_operations(0) , _metrics_pruned_entries(0) , _metrics_total_prune_duration_ms(0) , _metrics_last_prune_duration_ms(0) , _replication_sinks() , _replication_mutex()`
+  - `kv_store::kv_store(const char *file_path, const char *encryption_key, bool enable_encryption) : _data() , _file_path() , _encryption_key() , _encryption_enabled(false) , _backend_type(KV_STORE_BACKEND_JSON) , _background_thread_active(false) , _background_stop_requested(false) , _background_interval_seconds(0) , _background_thread() , _background_mutex() , _error_code(FT_ERR_SUCCESS) , _mutex() , _metrics_set_operations(0) , _metrics_delete_operations(0) , _metrics_get_hits(0) , _metrics_get_misses(0) , _metrics_prune_operations(0) , _metrics_pruned_entries(0) , _metrics_total_prune_duration_ms(0) , _metrics_last_prune_duration_ms(0) , _replication_sinks() , _replication_mutex()`
   - `kv_store::~kv_store()`
 
 ### Storage/storage_kv_store_encryption.cpp
@@ -11250,9 +11250,9 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `void kv_store_entry::set_error(int error_code) const noexcept`
   - `void kv_store_entry::reinitialize_mutex() noexcept`
   - `int kv_store_entry::lock_entry(ft_unique_lock<pt_mutex> &guard) const noexcept`
-  - `kv_store_entry::kv_store_entry() noexcept : _value() , _has_expiration(false) , _expiration_timestamp(0) , _error_code(FT_ERR_SUCCESSS) , _mutex()`
-  - `kv_store_entry::kv_store_entry(const kv_store_entry &other) noexcept : _value() , _has_expiration(false) , _expiration_timestamp(0) , _error_code(FT_ERR_SUCCESSS) , _mutex()`
-  - `kv_store_entry::kv_store_entry(kv_store_entry &&other) noexcept : _value() , _has_expiration(false) , _expiration_timestamp(0) , _error_code(FT_ERR_SUCCESSS) , _mutex()`
+  - `kv_store_entry::kv_store_entry() noexcept : _value() , _has_expiration(false) , _expiration_timestamp(0) , _error_code(FT_ERR_SUCCESS) , _mutex()`
+  - `kv_store_entry::kv_store_entry(const kv_store_entry &other) noexcept : _value() , _has_expiration(false) , _expiration_timestamp(0) , _error_code(FT_ERR_SUCCESS) , _mutex()`
+  - `kv_store_entry::kv_store_entry(kv_store_entry &&other) noexcept : _value() , _has_expiration(false) , _expiration_timestamp(0) , _error_code(FT_ERR_SUCCESS) , _mutex()`
   - `kv_store_entry::~kv_store_entry() noexcept`
   - `int kv_store_entry::set_value(const ft_string &value) noexcept`
   - `int kv_store_entry::set_value(const char *value_string) noexcept`
@@ -11672,9 +11672,9 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `inline size_t ft_bitset::block_index(size_t pos) const`
   - `inline size_t ft_bitset::bit_mask(size_t pos) const`
   - `inline void ft_bitset::set_error(int error) const`
-  - `inline ft_bitset::ft_bitset(size_t bits) : _size(bits), _blockCount((bits + BITS_PER_BLOCK - 1) / BITS_PER_BLOCK), _data(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `inline ft_bitset::ft_bitset(size_t bits) : _size(bits), _blockCount((bits + BITS_PER_BLOCK - 1) / BITS_PER_BLOCK), _data(ft_nullptr), _error_code(FT_ERR_SUCCESS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
   - `inline ft_bitset::~ft_bitset()`
-  - `inline ft_bitset::ft_bitset(ft_bitset&& other) noexcept : _size(0), _blockCount(0), _data(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `inline ft_bitset::ft_bitset(ft_bitset&& other) noexcept : _size(0), _blockCount(0), _data(ft_nullptr), _error_code(FT_ERR_SUCCESS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
   - `inline void ft_bitset::set(size_t pos)`
   - `inline void ft_bitset::reset(size_t pos)`
   - `inline void ft_bitset::flip(size_t pos)`
@@ -11710,7 +11710,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_cancellation_token get_token() const noexcept`
 - Defines:
   - `inline void ft_cancellation_state::set_error(int error_code) const`
-  - `inline ft_cancellation_state::ft_cancellation_state() noexcept : _error_code(FT_ERR_SUCCESSS), _cancelled(false), _callbacks(), _mutex(), _mutex_initialized(false)`
+  - `inline ft_cancellation_state::ft_cancellation_state() noexcept : _error_code(FT_ERR_SUCCESS), _cancelled(false), _callbacks(), _mutex(), _mutex_initialized(false)`
   - `inline ft_cancellation_state::~ft_cancellation_state() noexcept`
   - `inline int ft_cancellation_state::register_callback(const ft_function<void()> &callback) noexcept`
   - `inline void ft_cancellation_state::request_cancel() noexcept`
@@ -11718,20 +11718,20 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `inline int ft_cancellation_state::get_error() const noexcept`
   - `inline const char *ft_cancellation_state::get_error_str() const noexcept`
   - `inline void ft_cancellation_token::set_error(int error_code) const noexcept`
-  - `inline ft_cancellation_token::ft_cancellation_token() noexcept : _state(), _error_code(FT_ERR_SUCCESSS)`
+  - `inline ft_cancellation_token::ft_cancellation_token() noexcept : _state(), _error_code(FT_ERR_SUCCESS)`
   - `inline ft_cancellation_token::~ft_cancellation_token() noexcept`
-  - `inline ft_cancellation_token::ft_cancellation_token(const ft_cancellation_token &other) noexcept : _state(other._state), _error_code(FT_ERR_SUCCESSS)`
-  - `inline ft_cancellation_token::ft_cancellation_token(ft_cancellation_token &&other) noexcept : _state(ft_move(other._state)), _error_code(FT_ERR_SUCCESSS)`
+  - `inline ft_cancellation_token::ft_cancellation_token(const ft_cancellation_token &other) noexcept : _state(other._state), _error_code(FT_ERR_SUCCESS)`
+  - `inline ft_cancellation_token::ft_cancellation_token(ft_cancellation_token &&other) noexcept : _state(ft_move(other._state)), _error_code(FT_ERR_SUCCESS)`
   - `inline bool ft_cancellation_token::is_valid() const noexcept`
   - `inline bool ft_cancellation_token::is_cancellation_requested() const noexcept`
   - `inline int ft_cancellation_token::get_error() const noexcept`
   - `inline const char *ft_cancellation_token::get_error_str() const noexcept`
   - `inline int ft_cancellation_token::register_callback(const ft_function<void()> &callback) const noexcept`
   - `inline void ft_cancellation_source::set_error(int error_code) const noexcept`
-  - `inline ft_cancellation_source::ft_cancellation_source() noexcept : _state(), _error_code(FT_ERR_SUCCESSS)`
+  - `inline ft_cancellation_source::ft_cancellation_source() noexcept : _state(), _error_code(FT_ERR_SUCCESS)`
   - `inline ft_cancellation_source::~ft_cancellation_source() noexcept`
-  - `inline ft_cancellation_source::ft_cancellation_source(const ft_cancellation_source &other) noexcept : _state(other._state), _error_code(FT_ERR_SUCCESSS)`
-  - `inline ft_cancellation_source::ft_cancellation_source(ft_cancellation_source &&other) noexcept : _state(ft_move(other._state)), _error_code(FT_ERR_SUCCESSS)`
+  - `inline ft_cancellation_source::ft_cancellation_source(const ft_cancellation_source &other) noexcept : _state(other._state), _error_code(FT_ERR_SUCCESS)`
+  - `inline ft_cancellation_source::ft_cancellation_source(ft_cancellation_source &&other) noexcept : _state(ft_move(other._state)), _error_code(FT_ERR_SUCCESS)`
   - `inline ft_cancellation_token ft_cancellation_source::get_token() const noexcept`
   - `inline void ft_cancellation_source::request_cancel() noexcept`
   - `inline bool ft_cancellation_source::is_cancellation_requested() const noexcept`
@@ -11766,9 +11766,9 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `const char* get_error_str() const`
   - `void clear()`
 - Defines:
-  - `ft_circular_buffer<ElementType>::ft_circular_buffer(size_t capacity) : _buffer(ft_nullptr), _capacity(capacity), _head(0), _tail(0), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `ft_circular_buffer<ElementType>::ft_circular_buffer(size_t capacity) : _buffer(ft_nullptr), _capacity(capacity), _head(0), _tail(0), _size(0), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
   - `ft_circular_buffer<ElementType>::~ft_circular_buffer()`
-  - `ft_circular_buffer<ElementType>::ft_circular_buffer(ft_circular_buffer&& other) noexcept : _buffer(ft_nullptr), _capacity(0), _head(0), _tail(0), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `ft_circular_buffer<ElementType>::ft_circular_buffer(ft_circular_buffer&& other) noexcept : _buffer(ft_nullptr), _capacity(0), _head(0), _tail(0), _size(0), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
   - `void ft_circular_buffer<ElementType>::set_error_unlocked(int error) const`
   - `void ft_circular_buffer<ElementType>::set_error(int error) const`
   - `void ft_circular_buffer<ElementType>::push(const ElementType& value)`
@@ -11843,9 +11843,9 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `const char* get_error_str() const`
   - `void clear()`
 - Defines:
-  - `ft_deque<ElementType>::ft_deque() : _front(ft_nullptr), _back(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `ft_deque<ElementType>::ft_deque() : _front(ft_nullptr), _back(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
   - `ft_deque<ElementType>::~ft_deque()`
-  - `ft_deque<ElementType>::ft_deque(ft_deque&& other) noexcept : _front(ft_nullptr), _back(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `ft_deque<ElementType>::ft_deque(ft_deque&& other) noexcept : _front(ft_nullptr), _back(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
   - `void ft_deque<ElementType>::set_error(int error) const`
   - `int ft_deque<ElementType>::enable_thread_safety()`
   - `void ft_deque<ElementType>::disable_thread_safety()`
@@ -11891,7 +11891,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `std::lock_guard<std::mutex> mutex_guard(this->_mutex)`
   - `construct_at(&new_data[listener_index], ft_move(this->_listeners[listener_index]) )`
 - Defines:
-  - `: _listeners(ft_nullptr) , _capacity(0), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `: _listeners(ft_nullptr) , _capacity(0), _size(0), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `static bool ensure_capacity(ft_event_emitter<EventType, Args...> &emitter, size_t desired)`
 
 ### Template/function.hpp
@@ -12020,9 +12020,9 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `void unlock(bool lock_acquired) const`
 - Defines:
   - `void ft_graph<VertexType>::record_operation_error(int error_code) const noexcept`
-  - `ft_graph<VertexType>::ft_graph(size_t initialCapacity) : _nodes(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false), _operation_errors(`
+  - `ft_graph<VertexType>::ft_graph(size_t initialCapacity) : _nodes(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), _operation_errors(`
   - `ft_graph<VertexType>::~ft_graph()`
-  - `ft_graph<VertexType>::ft_graph(ft_graph&& other) noexcept : _nodes(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false), _operation_errors(`
+  - `ft_graph<VertexType>::ft_graph(ft_graph&& other) noexcept : _nodes(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), _operation_errors(`
   - `void ft_graph<VertexType>::set_error(int error_code) const`
   - `bool ft_graph<VertexType>::ensure_node_capacity(size_t desired)`
   - `bool ft_graph<VertexType>::ensure_edge_capacity(GraphNode& node, size_t desired)`
@@ -12080,11 +12080,11 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `int lock(bool *lock_acquired) const`
   - `void unlock(bool lock_acquired) const`
   - `const_cast<Iterator<ValueType> *>(this) ->set_error(this->get_error())`
-  - `const_cast<Iterator<ValueType> *>(this) ->set_error(FT_ERR_SUCCESSS)`
+  - `const_cast<Iterator<ValueType> *>(this) ->set_error(FT_ERR_SUCCESS)`
 - Defines:
-  - `Iterator<ValueType>::Iterator(ValueType* ptr) noexcept : _ptr(ptr), _error_code(FT_ERR_SUCCESSS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
-  - `Iterator<ValueType>::Iterator(const Iterator& other) noexcept : _ptr(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
-  - `Iterator<ValueType>::Iterator(Iterator&& other) noexcept : _ptr(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `Iterator<ValueType>::Iterator(ValueType* ptr) noexcept : _ptr(ptr), _error_code(FT_ERR_SUCCESS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `Iterator<ValueType>::Iterator(const Iterator& other) noexcept : _ptr(ft_nullptr), _error_code(FT_ERR_SUCCESS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `Iterator<ValueType>::Iterator(Iterator&& other) noexcept : _ptr(ft_nullptr), _error_code(FT_ERR_SUCCESS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
   - `Iterator<ValueType>::~Iterator()`
   - `Iterator<ValueType> Iterator<ValueType>::operator++() noexcept`
   - `ValueType& Iterator<ValueType>::operator*() const noexcept`
@@ -12213,9 +12213,9 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `const char* get_error_str() const`
   - `void clear()`
 - Defines:
-  - `ft_matrix<ElementType>::ft_matrix(size_t rows, size_t cols) : _data(ft_nullptr), _rows(0), _cols(0), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `ft_matrix<ElementType>::ft_matrix(size_t rows, size_t cols) : _data(ft_nullptr), _rows(0), _cols(0), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
   - `ft_matrix<ElementType>::~ft_matrix()`
-  - `ft_matrix<ElementType>::ft_matrix(ft_matrix&& other) noexcept : _data(ft_nullptr), _rows(0), _cols(0), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `ft_matrix<ElementType>::ft_matrix(ft_matrix&& other) noexcept : _data(ft_nullptr), _rows(0), _cols(0), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
   - `int ft_matrix<ElementType>::enable_thread_safety()`
   - `void ft_matrix<ElementType>::disable_thread_safety()`
   - `bool ft_matrix<ElementType>::is_thread_safe() const`
@@ -12259,11 +12259,11 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `int get_error() const`
   - `const char* get_error_str() const`
 - Defines:
-  - `ft_optional<T>::ft_optional() : _value(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_optional<T>::ft_optional(const T& value) : _value(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_optional<T>::ft_optional(T&& value) : _value(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_optional<T>::ft_optional() : _value(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_optional<T>::ft_optional(const T& value) : _value(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_optional<T>::ft_optional(T&& value) : _value(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `ft_optional<T>::~ft_optional()`
-  - `ft_optional<T>::ft_optional(ft_optional&& other) noexcept : _value(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_optional<T>::ft_optional(ft_optional&& other) noexcept : _value(ft_nullptr), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `void ft_optional<T>::set_error(int error) const`
   - `bool ft_optional<T>::has_value() const`
   - `T& ft_optional<T>::value()`
@@ -12325,16 +12325,16 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Defines:
   - `void Pool<T>::release(size_t idx) noexcept`
   - `T* Pool<T>::ptrAt(size_t idx) noexcept`
-  - `Pool<T>::Pool() : _buffer() , _freeIndices() , _error_code(FT_ERR_SUCCESSS) , _state_mutex(ft_nullptr) , _thread_safe_enabled(false)`
-  - `Pool<T>::Pool(Pool&& other) : _buffer() , _freeIndices() , _error_code(FT_ERR_SUCCESSS) , _state_mutex(ft_nullptr) , _thread_safe_enabled(false)`
+  - `Pool<T>::Pool() : _buffer() , _freeIndices() , _error_code(FT_ERR_SUCCESS) , _state_mutex(ft_nullptr) , _thread_safe_enabled(false)`
+  - `Pool<T>::Pool(Pool&& other) : _buffer() , _freeIndices() , _error_code(FT_ERR_SUCCESS) , _state_mutex(ft_nullptr) , _thread_safe_enabled(false)`
   - `Pool<T>::~Pool()`
   - `void Pool<T>::resize(size_t new_size)`
   - `int Pool<T>::get_error() const noexcept`
   - `const char* Pool<T>::get_error_str() const noexcept`
   - `void Pool<T>::set_error_unlocked(int error_code) const noexcept`
   - `void Pool<T>::set_error(int error_code) const noexcept`
-  - `Pool<T>::Object::Object() noexcept : _pool(ft_nullptr) , _idx(0) , _ptr(ft_nullptr) , _error_code(FT_ERR_SUCCESSS) , _state_mutex(ft_nullptr) , _thread_safe_enabled(false)`
-  - `Pool<T>::Object::Object(Pool<T>* pool, size_t idx, T* ptr) noexcept : _pool(pool) , _idx(idx) , _ptr(ptr) , _error_code(FT_ERR_SUCCESSS) , _state_mutex(ft_nullptr) , _thread_safe_enabled(false)`
+  - `Pool<T>::Object::Object() noexcept : _pool(ft_nullptr) , _idx(0) , _ptr(ft_nullptr) , _error_code(FT_ERR_SUCCESS) , _state_mutex(ft_nullptr) , _thread_safe_enabled(false)`
+  - `Pool<T>::Object::Object(Pool<T>* pool, size_t idx, T* ptr) noexcept : _pool(pool) , _idx(idx) , _ptr(ptr) , _error_code(FT_ERR_SUCCESS) , _state_mutex(ft_nullptr) , _thread_safe_enabled(false)`
   - `Pool<T>::Object::~Object() noexcept`
   - `T* Pool<T>::Object::operator->() const noexcept`
   - `Pool<T>::Object::operator bool() const noexcept`
@@ -12386,7 +12386,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `const char* get_error_str() const`
   - `void clear()`
 - Defines:
-  - `ft_priority_queue<ElementType, Compare>::ft_priority_queue(size_t initialCapacity, const Compare& comp) : _data(ft_nullptr), _capacity(0), _size(0), _comp(comp), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `ft_priority_queue<ElementType, Compare>::ft_priority_queue(size_t initialCapacity, const Compare& comp) : _data(ft_nullptr), _capacity(0), _size(0), _comp(comp), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
   - `ft_priority_queue<ElementType, Compare>::~ft_priority_queue()`
   - `ft_priority_queue<ElementType, Compare>::ft_priority_queue(ft_priority_queue&& other) noexcept : _data(other._data), _capacity(other._capacity), _size(other._size), _comp(other._comp), _error_code(other._error_code), _mutex(ft_nullptr), _thread_safe_enabled(false)`
   - `void ft_priority_queue<ElementType, Compare>::set_error(int error) const`
@@ -12437,10 +12437,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `void get() const`
   - `const char *get_error_str() const`
 - Defines:
-  - `ft_promise<ValueType>::ft_promise() : _value(), _ready(false), _error_code(FT_ERR_SUCCESSS), _thread_safe_enabled(false), _operation_errors(`
+  - `ft_promise<ValueType>::ft_promise() : _value(), _ready(false), _error_code(FT_ERR_SUCCESS), _thread_safe_enabled(false), _operation_errors(`
   - `_thread_safe_enabled(false), _operation_errors({{}, {}, 0}), _mutex(ft_nullptr)`
   - `ft_promise<ValueType>::~ft_promise()`
-  - `inline ft_promise<void>::ft_promise() : _ready(false), _error_code(FT_ERR_SUCCESSS), _thread_safe_enabled(false), _operation_errors(`
+  - `inline ft_promise<void>::ft_promise() : _ready(false), _error_code(FT_ERR_SUCCESS), _thread_safe_enabled(false), _operation_errors(`
   - `inline ft_promise<void>::~ft_promise()`
   - `void ft_promise<ValueType>::set_error(int error) const`
   - `inline void ft_promise<void>::set_error(int error) const`
@@ -12521,11 +12521,11 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `void ft_queue<ElementType>::pop_operation_errors() noexcept`
   - `int ft_queue<ElementType>::pop_oldest_operation_error() noexcept`
   - `int ft_queue<ElementType>::pop_newest_operation_error() noexcept`
-  - `ft_queue<ElementType>::ft_queue() : _front(ft_nullptr), _rear(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESSS), _operation_errors(`
+  - `ft_queue<ElementType>::ft_queue() : _front(ft_nullptr), _rear(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESS), _operation_errors(`
   - `_operation_errors({{}, {}, 0}), _mutex(ft_nullptr) , _thread_safe_enabled(false)`
   - `ft_queue<ElementType>::~ft_queue()`
-  - `ft_queue<ElementType>::ft_queue(ft_queue&& other) noexcept : _front(ft_nullptr), _rear(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESSS), _operation_errors(`
-  - `_error_code(FT_ERR_SUCCESSS), _operation_errors({{}, {}, 0}), _mutex(ft_nullptr) , _thread_safe_enabled(false)`
+  - `ft_queue<ElementType>::ft_queue(ft_queue&& other) noexcept : _front(ft_nullptr), _rear(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESS), _operation_errors(`
+  - `_error_code(FT_ERR_SUCCESS), _operation_errors({{}, {}, 0}), _mutex(ft_nullptr) , _thread_safe_enabled(false)`
   - `void ft_queue<ElementType>::set_error(int error_code) const`
   - `int ft_queue<ElementType>::lock_internal(bool *lock_acquired) const`
   - `int ft_queue<ElementType>::unlock_internal(bool lock_acquired) const`
@@ -12573,9 +12573,9 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `void clear()`
   - `::destroy_at(&previous_data[index])`
 - Defines:
-  - `ft_set<ElementType>::ft_set(size_t initial_capacity) : _data(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `ft_set<ElementType>::ft_set(size_t initial_capacity) : _data(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
   - `ft_set<ElementType>::~ft_set()`
-  - `ft_set<ElementType>::ft_set(ft_set&& other) noexcept : _data(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `ft_set<ElementType>::ft_set(ft_set&& other) noexcept : _data(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
   - `void ft_set<ElementType>::set_error(int error) const`
   - `int ft_set<ElementType>::enable_thread_safety()`
   - `void ft_set<ElementType>::disable_thread_safety()`
@@ -12638,21 +12638,21 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `const_cast<ft_sharedptr<ManagedType>*>(this) ->set_error_internal(FT_ERR_INVALID_OPERATION)`
   - `const_cast<ft_sharedptr<ManagedType>*>(this) ->set_error_internal(FT_ERR_INVALID_POINTER)`
   - `const_cast<ft_sharedptr<ManagedType>*>(this) ->set_error_internal(FT_ERR_OUT_OF_RANGE)`
-  - `const_cast<ft_sharedptr<ManagedType>*>(this) ->set_error_internal(FT_ERR_SUCCESSS)`
+  - `const_cast<ft_sharedptr<ManagedType>*>(this) ->set_error_internal(FT_ERR_SUCCESS)`
 - Defines:
-  - `ft_sharedptr<ManagedType>::ft_sharedptr(Args&&... args) requires (!is_single_convertible_to_size_t<Args...>::value && ft_constructible_from<ManagedType, Args&&...>) : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr)`
-  - `ft_sharedptr<ManagedType>::ft_sharedptr(Args&&... args) : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr)`
-  - `ft_sharedptr<ManagedType>::ft_sharedptr(ManagedType* pointer, bool isArray, size_t arraySize) : _managedPointer(pointer), _referenceCount(ft_nullptr), _arraySize(isArray ? arraySize : (pointer ? 1 : 0)), _isArrayType(isArray), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr)`
-  - `ft_sharedptr<ManagedType>::ft_sharedptr() : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr)`
-  - `ft_sharedptr<ManagedType>::ft_sharedptr(size_t size) : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(size), _isArrayType(true), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr)`
-  - `ft_sharedptr<ManagedType>::ft_sharedptr(const ft_sharedptr<ManagedType>& other) : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr)`
-  - `ft_sharedptr<ManagedType>::ft_sharedptr(ft_sharedptr<ManagedType>&& other) noexcept : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr)`
+  - `ft_sharedptr<ManagedType>::ft_sharedptr(Args&&... args) requires (!is_single_convertible_to_size_t<Args...>::value && ft_constructible_from<ManagedType, Args&&...>) : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr)`
+  - `ft_sharedptr<ManagedType>::ft_sharedptr(Args&&... args) : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr)`
+  - `ft_sharedptr<ManagedType>::ft_sharedptr(ManagedType* pointer, bool isArray, size_t arraySize) : _managedPointer(pointer), _referenceCount(ft_nullptr), _arraySize(isArray ? arraySize : (pointer ? 1 : 0)), _isArrayType(isArray), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr)`
+  - `ft_sharedptr<ManagedType>::ft_sharedptr() : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr)`
+  - `ft_sharedptr<ManagedType>::ft_sharedptr(size_t size) : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(size), _isArrayType(true), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr)`
+  - `ft_sharedptr<ManagedType>::ft_sharedptr(const ft_sharedptr<ManagedType>& other) : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr)`
+  - `ft_sharedptr<ManagedType>::ft_sharedptr(ft_sharedptr<ManagedType>&& other) noexcept : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr)`
   - `ft_sharedptr<ManagedType>::~ft_sharedptr()`
   - `void ft_sharedptr<ManagedType>::release_current_locked()`
-  - `ft_sharedptr<ManagedType>::ft_sharedptr(const ft_sharedptr<Other>& other) requires ft_convertible_to<Other*, ManagedType*> : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr)`
-  - `ft_sharedptr<ManagedType>::ft_sharedptr(const ft_sharedptr<Other>& other) : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr)`
-  - `ft_sharedptr<ManagedType>::ft_sharedptr(ft_sharedptr<Other>&& other) noexcept requires ft_convertible_to<Other*, ManagedType*> : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr)`
-  - `ft_sharedptr<ManagedType>::ft_sharedptr(ft_sharedptr<Other>&& other) noexcept : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr)`
+  - `ft_sharedptr<ManagedType>::ft_sharedptr(const ft_sharedptr<Other>& other) requires ft_convertible_to<Other*, ManagedType*> : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr)`
+  - `ft_sharedptr<ManagedType>::ft_sharedptr(const ft_sharedptr<Other>& other) : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr)`
+  - `ft_sharedptr<ManagedType>::ft_sharedptr(ft_sharedptr<Other>&& other) noexcept requires ft_convertible_to<Other*, ManagedType*> : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr)`
+  - `ft_sharedptr<ManagedType>::ft_sharedptr(ft_sharedptr<Other>&& other) noexcept : _managedPointer(ft_nullptr), _referenceCount(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false), _shared_thread_safe_flag(ft_nullptr)`
   - `ManagedType& ft_sharedptr<ManagedType>::operator*()`
   - `const ManagedType& ft_sharedptr<ManagedType>::operator*() const`
   - `ManagedType* ft_sharedptr<ManagedType>::operator->()`
@@ -12767,12 +12767,12 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `const char* get_error_str() const`
   - `const_cast<ft_string_view*>(this) ->set_error(lock_error)`
   - `const_cast<ft_string_view*>(this) ->set_error(FT_ERR_INVALID_ARGUMENT)`
-  - `const_cast<ft_string_view*>(this) ->set_error(FT_ERR_SUCCESSS)`
+  - `const_cast<ft_string_view*>(this) ->set_error(FT_ERR_SUCCESS)`
 - Defines:
-  - `ft_string_view<CharType>::ft_string_view() : _data(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_string_view<CharType>::ft_string_view(const CharType* string) : _data(string), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_string_view<CharType>::ft_string_view(const CharType* string, size_t size) : _data(string), _size(size), _error_code(FT_ERR_SUCCESSS), _mutex()`
-  - `ft_string_view<CharType>::ft_string_view(const ft_string_view& other) : _data(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESSS), _mutex()`
+  - `ft_string_view<CharType>::ft_string_view() : _data(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_string_view<CharType>::ft_string_view(const CharType* string) : _data(string), _size(0), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_string_view<CharType>::ft_string_view(const CharType* string, size_t size) : _data(string), _size(size), _error_code(FT_ERR_SUCCESS), _mutex()`
+  - `ft_string_view<CharType>::ft_string_view(const ft_string_view& other) : _data(ft_nullptr), _size(0), _error_code(FT_ERR_SUCCESS), _mutex()`
   - `ft_string_view<CharType>::~ft_string_view()`
   - `const CharType* ft_string_view<CharType>::data() const`
   - `size_t ft_string_view<CharType>::size() const`
@@ -12820,7 +12820,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Defines:
   - `inline void ft_thread_pool::worker()`
   - `inline void ft_thread_pool::set_error(int error) const`
-  - `inline ft_thread_pool::ft_thread_pool(size_t thread_count, size_t max_tasks) : _workers(), _tasks(), _max_tasks(max_tasks), _stop(false), _active(0), _error_code(FT_ERR_SUCCESSS), _mutex(), _cond(), _mutex_initialized(false), _cond_initialized(false), _external_mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `inline ft_thread_pool::ft_thread_pool(size_t thread_count, size_t max_tasks) : _workers(), _tasks(), _max_tasks(max_tasks), _stop(false), _active(0), _error_code(FT_ERR_SUCCESS), _mutex(), _cond(), _mutex_initialized(false), _cond_initialized(false), _external_mutex(ft_nullptr), _thread_safe_enabled(false)`
   - `inline ft_thread_pool::~ft_thread_pool()`
   - `inline void ft_thread_pool::submit(Function &&function)`
   - `inline void ft_thread_pool::submit(Function &&function, const ft_cancellation_token &token)`
@@ -12858,7 +12858,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `int lock(bool *lock_acquired) const`
   - `void unlock(bool lock_acquired) const`
 - Defines:
-  - `ft_trie<ValueType>::ft_trie() : _data(ft_nullptr), _children(), _error_code(FT_ERR_SUCCESSS), _last_error(FT_ERR_SUCCESSS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `ft_trie<ValueType>::ft_trie() : _data(ft_nullptr), _children(), _error_code(FT_ERR_SUCCESS), _last_error(FT_ERR_SUCCESS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
   - `ft_trie<ValueType>::~ft_trie()`
   - `int ft_trie<ValueType>::insert_helper(const char *key, int unset_value, ValueType *value_pointer)`
   - `int ft_trie<ValueType>::insert(const char *key, ValueType *value_pointer, int unset_value)`
@@ -12900,11 +12900,11 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `int get_error() const`
   - `const char* get_error_str() const`
   - `const_cast<ft_tuple*>(this) ->set_error_unlocked(FT_ERR_INVALID_OPERATION)`
-  - `const_cast<ft_tuple*>(this) ->set_error_unlocked(FT_ERR_SUCCESSS)`
+  - `const_cast<ft_tuple*>(this) ->set_error_unlocked(FT_ERR_SUCCESS)`
   - `const_cast<ft_tuple*>(this) ->set_error_unlocked(ft_errno)`
   - `const_cast<ft_tuple*>(this) ->set_error_unlocked(this->_mutex->get_error())`
 - Defines:
-  - `: _data(ft_nullptr) , _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `: _data(ft_nullptr) , _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
 
 ### Template/unique_ptr.hpp
 
@@ -12940,12 +12940,12 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `const_cast<ft_uniqueptr<ManagedType>*>(this) ->set_error_unlocked(FT_ERR_INVALID_POINTER)`
   - `const_cast<ft_uniqueptr<ManagedType>*>(this) ->set_error_unlocked(FT_ERR_OUT_OF_RANGE)`
 - Defines:
-  - `ft_uniqueptr<ManagedType>::ft_uniqueptr(Args&&... args) requires (!is_single_convertible_to_size_t<Args...>::value && ft_constructible_from<ManagedType, Args&&...>) : _managedPointer(new (std::nothrow) ManagedType(std::forward<Args>(args)...)), _arraySize(1), _isArrayType(false), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
-  - `ft_uniqueptr<ManagedType>::ft_uniqueptr(Args&&... args) : _managedPointer(new (std::nothrow) ManagedType(std::forward<Args>(args)...)), _arraySize(1), _isArrayType(false), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
-  - `ft_uniqueptr<ManagedType>::ft_uniqueptr(ManagedType* pointer, bool isArray, size_t arraySize) : _managedPointer(pointer), _arraySize(arraySize), _isArrayType(isArray), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
-  - `ft_uniqueptr<ManagedType>::ft_uniqueptr() : _managedPointer(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
-  - `ft_uniqueptr<ManagedType>::ft_uniqueptr(size_t size) : _managedPointer(new (std::nothrow) ManagedType[size]), _arraySize(size), _isArrayType(true), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
-  - `ft_uniqueptr<ManagedType>::ft_uniqueptr(ft_uniqueptr&& other) noexcept : _managedPointer(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `ft_uniqueptr<ManagedType>::ft_uniqueptr(Args&&... args) requires (!is_single_convertible_to_size_t<Args...>::value && ft_constructible_from<ManagedType, Args&&...>) : _managedPointer(new (std::nothrow) ManagedType(std::forward<Args>(args)...)), _arraySize(1), _isArrayType(false), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `ft_uniqueptr<ManagedType>::ft_uniqueptr(Args&&... args) : _managedPointer(new (std::nothrow) ManagedType(std::forward<Args>(args)...)), _arraySize(1), _isArrayType(false), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `ft_uniqueptr<ManagedType>::ft_uniqueptr(ManagedType* pointer, bool isArray, size_t arraySize) : _managedPointer(pointer), _arraySize(arraySize), _isArrayType(isArray), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `ft_uniqueptr<ManagedType>::ft_uniqueptr() : _managedPointer(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `ft_uniqueptr<ManagedType>::ft_uniqueptr(size_t size) : _managedPointer(new (std::nothrow) ManagedType[size]), _arraySize(size), _isArrayType(true), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `ft_uniqueptr<ManagedType>::ft_uniqueptr(ft_uniqueptr&& other) noexcept : _managedPointer(ft_nullptr), _arraySize(0), _isArrayType(false), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
   - `ft_uniqueptr<ManagedType>::~ft_uniqueptr()`
   - `void ft_uniqueptr<ManagedType>::destroy_locked()`
   - `ManagedType& ft_uniqueptr<ManagedType>::operator*()`
@@ -13034,7 +13034,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `static inline int ft_unordered_map_last_global_error() noexcept`
   - `ft_pair<Key, MappedType>::ft_pair() : first(), second()`
   - `ft_pair<Key, MappedType>::ft_pair(const Key& k, const MappedType& m) : first(k), second(m)`
-  - `ft_unordered_map<Key, MappedType>::iterator::iterator(ft_pair<Key, MappedType>* data, bool* occ, size_t idx, size_t cap) : _data(data), _occupied(occ), _index(idx), _capacity(cap), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `ft_unordered_map<Key, MappedType>::iterator::iterator(ft_pair<Key, MappedType>* data, bool* occ, size_t idx, size_t cap) : _data(data), _occupied(occ), _index(idx), _capacity(cap), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
   - `ft_unordered_map<Key, MappedType>::iterator::iterator(const iterator& other) : _data(other._data), _occupied(other._occupied), _index(other._index), _capacity(other._capacity), _error_code(other._error_code), _mutex(ft_nullptr), _thread_safe_enabled(false)`
   - `ft_unordered_map<Key, MappedType>::iterator::iterator(iterator&& other) noexcept : _data(other._data), _occupied(other._occupied), _index(other._index), _capacity(other._capacity), _error_code(other._error_code), _mutex(ft_nullptr), _thread_safe_enabled(false)`
   - `ft_unordered_map<Key, MappedType>::iterator::~iterator()`
@@ -13052,7 +13052,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `void ft_unordered_map<Key, MappedType>::iterator::unlock(bool lock_acquired) const`
   - `int ft_unordered_map<Key, MappedType>::iterator::get_error() const`
   - `const char* ft_unordered_map<Key, MappedType>::iterator::get_error_str() const`
-  - `ft_unordered_map<Key, MappedType>::const_iterator::const_iterator(const ft_pair<Key, MappedType>* data, const bool* occ, size_t idx, size_t cap) : _data(data), _occupied(occ), _index(idx), _capacity(cap), _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `ft_unordered_map<Key, MappedType>::const_iterator::const_iterator(const ft_pair<Key, MappedType>* data, const bool* occ, size_t idx, size_t cap) : _data(data), _occupied(occ), _index(idx), _capacity(cap), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
   - `ft_unordered_map<Key, MappedType>::const_iterator::const_iterator(const const_iterator& other) : _data(other._data), _occupied(other._occupied), _index(other._index), _capacity(other._capacity), _error_code(other._error_code), _mutex(ft_nullptr), _thread_safe_enabled(false)`
   - `ft_unordered_map<Key, MappedType>::const_iterator::const_iterator(const_iterator&& other) noexcept : _data(other._data), _occupied(other._occupied), _index(other._index), _capacity(other._capacity), _error_code(other._error_code), _mutex(ft_nullptr), _thread_safe_enabled(false)`
   - `ft_unordered_map<Key, MappedType>::const_iterator::~const_iterator()`
@@ -13070,7 +13070,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `void ft_unordered_map<Key, MappedType>::const_iterator::unlock(bool lock_acquired) const`
   - `int ft_unordered_map<Key, MappedType>::const_iterator::get_error() const`
   - `const char* ft_unordered_map<Key, MappedType>::const_iterator::get_error_str() const`
-  - `ft_unordered_map<Key, MappedType>::ft_unordered_map(size_t initial_capacity) : _data(ft_nullptr), _occupied(ft_nullptr), _capacity(initial_capacity), _size(0), _error(FT_ERR_SUCCESSS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `ft_unordered_map<Key, MappedType>::ft_unordered_map(size_t initial_capacity) : _data(ft_nullptr), _occupied(ft_nullptr), _capacity(initial_capacity), _size(0), _error(FT_ERR_SUCCESS), _mutex(ft_nullptr), _thread_safe_enabled(false)`
   - `ft_unordered_map<Key, MappedType>::ft_unordered_map(const ft_unordered_map<Key, MappedType>& other) : _data(ft_nullptr), _occupied(ft_nullptr), _capacity(other._capacity), _size(other._size), _error(other._error), _mutex(ft_nullptr), _thread_safe_enabled(false)`
   - `ft_unordered_map<Key, MappedType>::ft_unordered_map(ft_unordered_map<Key, MappedType>&& other) noexcept : _data(other._data), _occupied(other._occupied), _capacity(other._capacity), _size(other._size), _error(other._error), _mutex(ft_nullptr), _thread_safe_enabled(false)`
   - `ft_unordered_map<Key, MappedType>::~ft_unordered_map()`
@@ -13132,7 +13132,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `void unlock(bool lock_acquired) const`
   - `construct_at( reinterpret_cast<std::decay_t<T>*>(this->_data) , std::forward<T>(value))`
   - `const_cast<ft_variant*>(this) ->set_error(ft_errno)`
-  - `const_cast<ft_variant*>(this) ->set_error(FT_ERR_SUCCESSS)`
+  - `const_cast<ft_variant*>(this) ->set_error(FT_ERR_SUCCESS)`
   - `const_cast<ft_variant*>(this) ->set_error(FT_ERR_INVALID_OPERATION)`
   - `const_cast<ft_variant*>(this) ->set_error(mutex_error)`
 - Defines:
@@ -13140,9 +13140,9 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `static void destroy(size_t index, void* data)`
   - `static void apply(size_t, void*, Visitor&&)`
   - `static void apply(size_t index, void* data, Visitor&& vis)`
-  - `: _data(static_cast<storage_t*>(cma_malloc(sizeof(storage_t)))) , _index(npos), _error_code(FT_ERR_SUCCESSS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `: _data(static_cast<storage_t*>(cma_malloc(sizeof(storage_t)))) , _index(npos), _error_code(FT_ERR_SUCCESS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
   - `: ft_variant()`
-  - `: _data(ft_nullptr) , _index(npos), _error_code(FT_ERR_SUCCESSS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
+  - `: _data(ft_nullptr) , _index(npos), _error_code(FT_ERR_SUCCESS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)`
 
 ### Template/vector.hpp
 
@@ -13184,9 +13184,9 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `const_cast<ft_vector<ElementType> *>(this) ->set_error(FT_ERR_OUT_OF_RANGE)`
 - Defines:
   - `void ft_vector<ElementType>::record_operation_error(int error_code) const noexcept`
-  - `ft_vector<ElementType>::ft_vector(size_t initial_capacity) : _data(ft_nullptr), _size(0), _capacity(0), _error_code(FT_ERR_SUCCESSS), _operation_errors(`
+  - `ft_vector<ElementType>::ft_vector(size_t initial_capacity) : _data(ft_nullptr), _size(0), _capacity(0), _error_code(FT_ERR_SUCCESS), _operation_errors(`
   - `ft_vector<ElementType>::~ft_vector()`
-  - `ft_vector<ElementType>::ft_vector(ft_vector<ElementType>&& other) noexcept : _data(ft_nullptr), _size(0), _capacity(0), _error_code(FT_ERR_SUCCESSS), _operation_errors(`
+  - `ft_vector<ElementType>::ft_vector(ft_vector<ElementType>&& other) noexcept : _data(ft_nullptr), _size(0), _capacity(0), _error_code(FT_ERR_SUCCESS), _operation_errors(`
   - `void ft_vector<ElementType>::destroy_elements_unlocked(size_t from, size_t to)`
   - `size_t ft_vector<ElementType>::size() const`
   - `size_t ft_vector<ElementType>::capacity() const`
@@ -13598,11 +13598,11 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `static std::atomic<int> g_api_async_retry_server_last_recv_result(0)`
   - `static std::atomic<int> g_api_async_retry_server_last_errno(0)`
   - `static std::atomic<bool> g_api_request_success_server_ready(false)`
-  - `static std::atomic<int> g_api_request_success_server_start_error(FT_ERR_SUCCESSS)`
+  - `static std::atomic<int> g_api_request_success_server_start_error(FT_ERR_SUCCESS)`
   - `static std::atomic<bool> g_api_request_stream_large_server_ready(false)`
-  - `static std::atomic<int> g_api_request_stream_large_server_start_error(FT_ERR_SUCCESSS)`
+  - `static std::atomic<int> g_api_request_stream_large_server_start_error(FT_ERR_SUCCESS)`
   - `static std::atomic<bool> g_api_request_stream_chunked_server_ready(false)`
-  - `static std::atomic<int> g_api_request_stream_chunked_server_start_error(FT_ERR_SUCCESSS)`
+  - `static std::atomic<int> g_api_request_stream_chunked_server_start_error(FT_ERR_SUCCESS)`
   - `std::atomic<bool> callback_completed(false)`
   - `std::atomic<int> callback_status(0)`
   - `std::atomic<char*> callback_body(ft_nullptr)`
@@ -13751,11 +13751,11 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 ### Test/Test/test_big_number_errno.cpp
 
 - Declares:
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_big_number::last_operation_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_operation_error() )`
   - `ft_big_number copied_number(seeded_number)`
   - `ft_big_number moved_number(ft_move(copied_number))`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_big_number::last_error() )`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_big_number::error_for(ft_big_number::last_op_id()) )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::error_for(ft_big_number::last_op_id()) )`
   - `FT_ASSERT( !(left_number < ft_big_number()) )`
   - `FT_ASSERT_EQ( static_cast<ft_size_t>(2) , right_number.size())`
   - `FT_ASSERT_EQ(0, std::strcmp(right_number.c_str(), "25") )`
@@ -13818,7 +13818,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `FT_ASSERT_EQ(false, invalid_mutex->lockState() )`
   - `FT_ASSERT_EQ(false, valid_mutex->lockState() )`
   - `FT_ASSERT_EQ(false, string_mutex->lockState() )`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_string::last_operation_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::last_operation_error() )`
 - Defines: _None_
 
 ### Test/Test/test_bzero.cpp
@@ -14005,7 +14005,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `FT_ASSERT_EQ( static_cast<std::size_t>(16384) , options.get_output_buffer_size())`
   - `FT_ASSERT_EQ( static_cast<std::size_t>(32768) , ratio_options.get_input_buffer_size())`
   - `FT_ASSERT_EQ( static_cast<std::size_t>(32768) , ratio_options.get_output_buffer_size())`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_string::last_operation_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::last_operation_error() )`
   - `FT_ASSERT_EQ( static_cast<ssize_t>(ft_strlen_size_t(payload)) , written)`
   - `FT_ASSERT_EQ( static_cast<ssize_t>(compressed_size - sizeof(uint32_t)) , written_bytes)`
   - `FT_ASSERT_EQ( static_cast<ssize_t>(compressed_size - sizeof(uint32_t)) , payload_written)`
@@ -14075,16 +14075,16 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `FT_ASSERT( strcmp(first_item->value, "10") == 0)`
   - `FT_ASSERT( strcmp(second_item->value, "-4") == 0)`
   - `FT_ASSERT_EQ(0, ft_vector_deserialize_json(serialized, parsed) )`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_string::last_operation_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::last_operation_error() )`
   - `FT_ASSERT_EQ(0, ft_vector_serialize_json(entries, "inventory", ft_entry_serializer, serialized, "count", "entry_") )`
   - `FT_ASSERT_EQ(0, ft_vector_deserialize_json(serialized, "count", "entry_", parsed, ft_entry_deserializer) )`
   - `FT_ASSERT_EQ(0, ft_vector_serialize_yaml(numbers, serialized) )`
   - `FT_ASSERT_EQ(YAML_LIST, serialized->get_type() )`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, serialized->get_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, serialized->get_error() )`
   - `FT_ASSERT(children[0] ->get_scalar() == )`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, children[0] ->get_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, children[0] ->get_error() )`
   - `FT_ASSERT(children[1] ->get_scalar() == )`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, children[1] ->get_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, children[1] ->get_error() )`
   - `FT_ASSERT_EQ(0, ft_vector_deserialize_yaml(*serialized, parsed) )`
 - Defines:
   - `static int ft_entry_serializer(const ft_serialized_entry &entry, ft_string &output) noexcept`
@@ -14105,12 +14105,12 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 
 - Declares:
   - `ft_big_number::pop_operation_errors()`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_big_number::last_operation_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_operation_error() )`
   - `FT_ASSERT_EQ(0, ft_big_number::operation_error_index() )`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_big_number::operation_error_at(1) )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::operation_error_at(1) )`
   - `FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_big_number::last_operation_error() )`
   - `FT_ASSERT_EQ(1, ft_big_number::operation_error_index() )`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_big_number::operation_error_at(4) )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::operation_error_at(4) )`
   - `FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_big_number::pop_oldest_operation_error() )`
 - Defines: _None_
 
@@ -14125,21 +14125,21 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_string move_constructor_source(FT_ERR_INVALID_ARGUMENT)`
   - `FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_string::last_operation_error() )`
   - `ft_string moved_string(ft_move(move_constructor_source))`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_string::last_operation_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::last_operation_error() )`
   - `ft_string move_assignment_source(FT_ERR_INVALID_ARGUMENT)`
   - `FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_big_number::last_operation_error() )`
   - `ft_big_number copy_number(error_number)`
   - `ft_big_number moved_number(std::move(move_constructor_source))`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_big_number::last_operation_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_operation_error() )`
   - `ft_string::pop_operation_errors()`
   - `ft_string string_value("abc")`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_string::operation_error_at(1) )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::operation_error_at(1) )`
   - `FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_string::operation_error_at(2) )`
   - `FT_ASSERT_EQ(2, ft_string::operation_error_index() )`
   - `FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_string::pop_oldest_operation_error() )`
   - `FT_ASSERT_EQ(0, ft_string::operation_error_index() )`
   - `ft_big_number::pop_operation_errors()`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_big_number::operation_error_at(1) )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::operation_error_at(1) )`
   - `FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_big_number::operation_error_at(2) )`
   - `FT_ASSERT_EQ(2, ft_big_number::operation_error_index() )`
   - `FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_big_number::pop_oldest_operation_error() )`
@@ -14160,10 +14160,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 ### Test/Test/test_cpp_class_file_copy_move.cpp
 
 - Declares:
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, create_pipe(&read_end, &write_end) )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, create_pipe(&read_end, &write_end) )`
   - `std::this_thread::sleep_for(std::chrono::milliseconds(1))`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, create_pipe(&source_read_end, &source_write_end) )`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, create_pipe(&target_read_end, &target_write_end) )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, create_pipe(&source_read_end, &source_write_end) )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, create_pipe(&target_read_end, &target_write_end) )`
 - Defines:
   - `static int create_pipe(int *read_end, int *write_end)`
   - `static void fill_pipe(int write_end, const char *data)`
@@ -14208,7 +14208,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `std::atomic<unsigned int> total_consumed(0)`
   - `std::this_thread::sleep_for(std::chrono::milliseconds(1))`
   - `ft_string pattern("0123456789")`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_string::last_operation_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::last_operation_error() )`
   - `ft_istringstream stream(repeated)`
   - `std::atomic<unsigned int> total_count(0)`
   - `std::atomic<bool> mismatch(false)`
@@ -14289,13 +14289,13 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 
 - Declares:
   - `ft_string::pop_operation_errors()`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_string::last_operation_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::last_operation_error() )`
   - `FT_ASSERT_EQ(0, ft_string::operation_error_index() )`
   - `ft_string string_value("abc")`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_string::operation_error_at(1) )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::operation_error_at(1) )`
   - `FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_string::last_operation_error() )`
   - `FT_ASSERT_EQ(1, ft_string::operation_error_index() )`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_string::operation_error_at(4) )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::operation_error_at(4) )`
   - `FT_ASSERT_EQ(2, ft_string::operation_error_index() )`
   - `FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_string::pop_oldest_operation_error() )`
 - Defines: _None_
@@ -14303,10 +14303,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 ### Test/Test/test_cpp_class_string_thread_safety.cpp
 
 - Declares:
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_string::last_operation_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::last_operation_error() )`
   - `std::this_thread::sleep_for(std::chrono::milliseconds(1))`
   - `ft_string healthy_string("ok")`
-  - `FT_ASSERT_EQ( ft_string::last_operation_error() , FT_ERR_SUCCESSS)`
+  - `FT_ASSERT_EQ( ft_string::last_operation_error() , FT_ERR_SUCCESS)`
   - `ft_string failing_string("hello world")`
   - `FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::last_operation_error() )`
 - Defines: _None_
@@ -14453,7 +14453,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 ### Test/Test/test_encryption_hardware_acceleration.cpp
 
 - Declares:
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, encryption_register_hardware_hooks(hooks) )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, encryption_register_hardware_hooks(hooks) )`
   - `FT_ASSERT_EQ( static_cast<int>(expected_cipher[index]) , static_cast<int>(cipher[index]))`
   - `FT_ASSERT_EQ( static_cast<int>(expected_plain[index]) , static_cast<int>(decrypted[index]))`
 - Defines:
@@ -14801,7 +14801,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `FT_ASSERT_EQ(true, static_cast<bool>(region_pointer) )`
   - `FT_ASSERT_EQ(0, region_pointer->get_world_id() )`
   - `FT_ASSERT_EQ(0u, region_pointer->get_region_ids() .size())`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, region_pointer->get_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, region_pointer->get_error() )`
   - `ft_inventory inventory(0, 5)`
   - `ft_sharedptr<ft_item> heavy(new ft_item())`
   - `ft_inventory inventory(2, 50)`
@@ -14864,18 +14864,18 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 ### Test/Test/test_game_behavior_table_copy_move.cpp
 
 - Declares:
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, register_profile(reassigned, 25, 0.4, 0.6) )`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, register_profile(source, 30, 0.8, 0.2) )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, register_profile(reassigned, 25, 0.4, 0.6) )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, register_profile(source, 30, 0.8, 0.2) )`
   - `ft_behavior_table copy(source)`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, register_profile(source, 44, 0.25, 0.75) )`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, register_profile(destination, 50, 0.6, 0.4) )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, register_profile(source, 44, 0.25, 0.75) )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, register_profile(destination, 50, 0.6, 0.4) )`
 - Defines:
   - `static int register_profile(ft_behavior_table &table, int id, double aggression, double caution)`
 
 ### Test/Test/test_game_behavior_table_errno_set.cpp
 
 - Declares:
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, const_table->get_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, const_table->get_error() )`
 - Defines:
   - `static ft_behavior_profile build_profile(int profile_id, double aggression, double caution, int action_id)`
 
@@ -14915,20 +14915,20 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_sharedptr<ft_world> world_instance(new (std::nothrow) ft_world())`
   - `ft_inventory hero_inventory(6)`
   - `ft_sharedptr<ft_item> oak_plank(new (std::nothrow) ft_item())`
-  - `FT_ASSERT_EQ( oak_plank->get_error() , FT_ERR_SUCCESSS)`
+  - `FT_ASSERT_EQ( oak_plank->get_error() , FT_ERR_SUCCESS)`
   - `ft_sharedptr<ft_item> iron_ingot(new (std::nothrow) ft_item())`
-  - `FT_ASSERT_EQ( iron_ingot->get_error() , FT_ERR_SUCCESSS)`
+  - `FT_ASSERT_EQ( iron_ingot->get_error() , FT_ERR_SUCCESS)`
   - `ft_crafting_ingredient oak_requirement(101, 2, 1)`
   - `ft_crafting_ingredient iron_requirement(102, 1, 2)`
   - `ft_sharedptr<ft_item> crafted_sword(new (std::nothrow) ft_item())`
-  - `FT_ASSERT_EQ( crafted_sword->get_error() , FT_ERR_SUCCESSS)`
+  - `FT_ASSERT_EQ( crafted_sword->get_error() , FT_ERR_SUCCESS)`
   - `ft_sharedptr<ft_event> crafting_event(new (std::nothrow) ft_event())`
-  - `FT_ASSERT_EQ( crafting_event->get_error() , FT_ERR_SUCCESSS)`
+  - `FT_ASSERT_EQ( crafting_event->get_error() , FT_ERR_SUCCESS)`
   - `ft_sharedptr<ft_event> combat_event(new (std::nothrow) ft_event())`
-  - `FT_ASSERT_EQ( combat_event->get_error() , FT_ERR_SUCCESSS)`
+  - `FT_ASSERT_EQ( combat_event->get_error() , FT_ERR_SUCCESS)`
   - `ft_sharedptr<ft_event> completion_event(new (std::nothrow) ft_event())`
-  - `FT_ASSERT_EQ( completion_event->get_error() , FT_ERR_SUCCESSS)`
-  - `FT_ASSERT_EQ( world_instance->get_error() , FT_ERR_SUCCESSS)`
+  - `FT_ASSERT_EQ( completion_event->get_error() , FT_ERR_SUCCESS)`
+  - `FT_ASSERT_EQ( world_instance->get_error() , FT_ERR_SUCCESS)`
   - `FT_ASSERT_EQ( world_instance->get_event_scheduler() ->size(), 0)`
 - Defines: _None_
 
@@ -14963,7 +14963,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_dialogue_line line(3, ft_string("npc"), ft_string("line"), ft_vector<int>())`
   - `ft_dialogue_line line(7, ft_string("guide"), ft_string("path"), ft_vector<int>())`
   - `ft_dialogue_line line(5, ft_string("narrator"), ft_string("description"), ft_vector<int>())`
-  - `FT_ASSERT_EQ( ft_strerror(FT_ERR_SUCCESSS) , line.get_error_str())`
+  - `FT_ASSERT_EQ( ft_strerror(FT_ERR_SUCCESS) , line.get_error_str())`
   - `ft_dialogue_line moved(ft_move(original))`
   - `FT_ASSERT_EQ( ft_string("villain") , moved.get_speaker())`
   - `FT_ASSERT_EQ( ft_string("threat") , moved.get_text())`
@@ -15048,7 +15048,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `FT_ASSERT_EQ( ft_string("title") , script.get_title())`
   - `FT_ASSERT_EQ( ft_string("summary") , script.get_summary())`
   - `ft_dialogue_line line(2, ft_string("hero"), ft_string("hello"), ft_vector<int>())`
-  - `FT_ASSERT_EQ( ft_string(ft_strerror(FT_ERR_SUCCESSS)) , ft_string(script.get_error_str()))`
+  - `FT_ASSERT_EQ( ft_string(ft_strerror(FT_ERR_SUCCESS)) , ft_string(script.get_error_str()))`
 - Defines:
   - `static ft_dialogue_line create_dialogue_line(int line_id, const ft_string &speaker, const ft_string &text)`
 
@@ -15077,7 +15077,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `FT_ASSERT_EQ( ft_string("greeting") , fetched.get_title())`
   - `FT_ASSERT_EQ( ft_string("hello") , fetched.get_text())`
   - `FT_ASSERT_EQ( ft_string("quest") , fetched.get_title())`
-  - `FT_ASSERT( ft_strcmp(ft_strerror(FT_ERR_SUCCESSS), message) == 0)`
+  - `FT_ASSERT( ft_strcmp(ft_strerror(FT_ERR_SUCCESS), message) == 0)`
   - `FT_ASSERT( ft_strcmp(ft_strerror(FT_ERR_NOT_FOUND), message) == 0)`
 - Defines:
   - `static void build_dialogue_entries(ft_dialogue_line &line, ft_dialogue_script &script)`
@@ -15103,15 +15103,15 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_price_definition original(9, 2, 150, 90, 210)`
   - `ft_price_definition copy(original)`
   - `ft_price_definition source(12, 7, 640, 120, 980)`
-  - `FT_ASSERT_STR_EQ( ft_strerror(FT_ERR_SUCCESSS) , definition.get_error_str())`
+  - `FT_ASSERT_STR_EQ( ft_strerror(FT_ERR_SUCCESS) , definition.get_error_str())`
   - `ft_currency_rate rate(5, 2.25, 3)`
   - `ft_currency_rate original(18, 4.5, 1)`
   - `ft_currency_rate moved(ft_move(original))`
-  - `FT_ASSERT_STR_EQ( ft_strerror(FT_ERR_SUCCESSS) , rate.get_error_str())`
+  - `FT_ASSERT_STR_EQ( ft_strerror(FT_ERR_SUCCESS) , rate.get_error_str())`
   - `ft_rarity_band band(6, 3.25)`
   - `ft_rarity_band source(14, 2.8)`
   - `ft_rarity_band destination(3, 0.9)`
-  - `FT_ASSERT_STR_EQ( ft_strerror(FT_ERR_SUCCESSS) , band.get_error_str())`
+  - `FT_ASSERT_STR_EQ( ft_strerror(FT_ERR_SUCCESS) , band.get_error_str())`
 - Defines: _None_
 
 ### Test/Test/test_game_economy_rate_additional.cpp
@@ -15141,7 +15141,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_price_definition original(12, 5, 250, 100, 400)`
   - `ft_price_definition copy(original)`
   - `ft_price_definition source(14, 6, 950, 600, 1200)`
-  - `FT_ASSERT_STR_EQ( ft_strerror(FT_ERR_SUCCESSS) , definition.get_error_str())`
+  - `FT_ASSERT_STR_EQ( ft_strerror(FT_ERR_SUCCESS) , definition.get_error_str())`
 - Defines: _None_
 
 ### Test/Test/test_game_economy_record_behavior.cpp
@@ -15261,7 +15261,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `FT_ASSERT_EQ(1, static_cast<int>(event_id < expected_total) )`
   - `ft_sharedptr<ft_event> event_instance(new (std::nothrow) ft_event())`
   - `FT_ASSERT_EQ(1, static_cast<int>(static_cast<bool>(event_instance)) )`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, event_instance->get_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, event_instance->get_error() )`
   - `FT_ASSERT_EQ( static_cast<size_t>(3) , events.size())`
   - `FT_ASSERT_EQ(1, static_cast<int>(event_id < 3) )`
 - Defines:
@@ -15311,7 +15311,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 
 - Declares:
   - `FT_ASSERT( static_cast<bool>(hooks) )`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, hooks->get_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, hooks->get_error() )`
 - Defines: _None_
 
 ### Test/Test/test_game_inventory_core.cpp
@@ -15355,12 +15355,12 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `FT_ASSERT_EQ( su_fclose(store_file) , 0)`
   - `kv_store persistence_store(store_path)`
   - `ft_sharedptr<ft_event> scheduled_event(new (std::nothrow) ft_event())`
-  - `FT_ASSERT_EQ( scheduled_event->get_error() , FT_ERR_SUCCESSS)`
+  - `FT_ASSERT_EQ( scheduled_event->get_error() , FT_ERR_SUCCESS)`
   - `ft_inventory backpack(6)`
   - `ft_sharedptr<ft_item> potion(new (std::nothrow) ft_item())`
-  - `FT_ASSERT_EQ( potion->get_error() , FT_ERR_SUCCESSS)`
+  - `FT_ASSERT_EQ( potion->get_error() , FT_ERR_SUCCESS)`
   - `ft_inventory restored_inventory(1)`
-  - `FT_ASSERT_EQ( restored_scheduler->get_error() , FT_ERR_SUCCESSS)`
+  - `FT_ASSERT_EQ( restored_scheduler->get_error() , FT_ERR_SUCCESS)`
   - `FT_ASSERT_EQ(restored_events[0] ->get_id() , scheduled_event->get_id())`
   - `FT_ASSERT_EQ( cmp_file_delete(store_path, &error_code) , 0)`
 - Defines: _None_
@@ -15376,7 +15376,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 
 - Declares:
   - `ft_rarity_band rarity_band(3, 2.5)`
-  - `FT_ASSERT_STR_EQ( ft_strerror(FT_ERR_SUCCESSS) , rarity_band.get_error_str())`
+  - `FT_ASSERT_STR_EQ( ft_strerror(FT_ERR_SUCCESS) , rarity_band.get_error_str())`
   - `ft_rarity_band original(7, 4.0)`
   - `ft_rarity_band copy(original)`
   - `ft_rarity_band source(6, 2.0)`
@@ -15431,7 +15431,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `FT_ASSERT_EQ( ft_string("delta") , region.get_name())`
   - `FT_ASSERT_EQ( ft_string("river maze") , region.get_description())`
   - `ft_region_definition region(1, ft_string("marsh"), ft_string("foggy wetland"), 2)`
-  - `FT_ASSERT_STR_EQ( ft_strerror(FT_ERR_SUCCESSS) , region.get_error_str())`
+  - `FT_ASSERT_STR_EQ( ft_strerror(FT_ERR_SUCCESS) , region.get_error_str())`
   - `ft_region_definition region(10, ft_string("gorge"), ft_string("steep cliffs"), 12)`
   - `ft_region_definition region(21, ft_string("plateau"), ft_string("broad rise"), 7)`
   - `FT_ASSERT_EQ( ft_string("plateau") , region.get_name())`
@@ -15467,7 +15467,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 ### Test/Test/test_game_resistance_additional.cpp
 
 - Declares:
-  - `FT_ASSERT_STR_EQ( ft_strerror(FT_ERR_SUCCESSS) , resistance.get_error_str())`
+  - `FT_ASSERT_STR_EQ( ft_strerror(FT_ERR_SUCCESS) , resistance.get_error_str())`
   - `ft_resistance copy(original)`
   - `ft_resistance moved(ft_move(original))`
 - Defines: _None_
@@ -15528,7 +15528,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_game_script_context destination(&first_state, ft_sharedptr<ft_world>(new ft_world()))`
   - `ft_sharedptr<ft_world> first_world(new ft_world())`
   - `ft_sharedptr<ft_world> second_world(new ft_world())`
-  - `FT_ASSERT( ft_strncmp(message, ft_strerror(FT_ERR_SUCCESSS), 32) == 0)`
+  - `FT_ASSERT( ft_strncmp(message, ft_strerror(FT_ERR_SUCCESS), 32) == 0)`
   - `ft_game_script_bridge bridge(world_pointer)`
   - `ft_string script("set score 1\ncall adjust\nunset score\n")`
   - `ft_string script("jump now\n")`
@@ -15552,7 +15552,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_sharedptr<ft_item> weapon(new ft_item())`
   - `ft_sharedptr<ft_item> reward(new ft_item())`
   - `FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, deserialize_inventory(inventory, group) )`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, deserialize_inventory(inventory, group) )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, deserialize_inventory(inventory, group) )`
 - Defines: _None_
 
 ### Test/Test/test_game_server_thread_safety.cpp
@@ -15705,9 +15705,9 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `FT_ASSERT_EQ( ft_string("Shrine") , fetched_region.get_name())`
   - `FT_ASSERT_EQ(7, world_region->get_world_id() )`
   - `FT_ASSERT_EQ(3, upgrade->get_current_level() )`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, upgrade->get_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, upgrade->get_error() )`
   - `FT_ASSERT_EQ(88, vendor_profile->get_vendor_id() )`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, vendor_profile->get_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, vendor_profile->get_error() )`
 - Defines: _None_
 
 ### Test/Test/test_game_world_events.cpp
@@ -15725,7 +15725,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `FT_ASSERT_EQ(3, queued[0] ->get_duration() )`
   - `ft_sharedptr<ft_world> world(new ft_world())`
   - `ft_sharedptr<ft_event> immediate(new ft_event())`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, world->get_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, world->get_error() )`
   - `ft_sharedptr<ft_event> short_event(new ft_event())`
   - `ft_sharedptr<ft_event> long_event(new ft_event())`
   - `FT_ASSERT_EQ(32, remaining[0] ->get_id() )`
@@ -15762,7 +15762,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_sharedptr<ft_item> valid_item(new ft_item())`
   - `FT_ASSERT_EQ((size_t)1, quest->get_reward_items() .size())`
   - `FT_ASSERT_EQ(505, quest->get_reward_items() [0]->get_item_id())`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, quest->get_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, quest->get_error() )`
 - Defines: _None_
 
 ### Test/Test/test_game_world_registry.cpp
@@ -15831,9 +15831,9 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_inventory hero_inventory(4)`
   - `ft_sharedptr<ft_item> healing_potion(new (std::nothrow) ft_item())`
   - `ft_sharedptr<ft_event> damage_event(new (std::nothrow) ft_event())`
-  - `FT_ASSERT_EQ( healing_potion->get_error() , FT_ERR_SUCCESSS)`
-  - `FT_ASSERT_EQ( damage_event->get_error() , FT_ERR_SUCCESSS)`
-  - `FT_ASSERT_EQ( world_pointer->get_error() , FT_ERR_SUCCESSS)`
+  - `FT_ASSERT_EQ( healing_potion->get_error() , FT_ERR_SUCCESS)`
+  - `FT_ASSERT_EQ( damage_event->get_error() , FT_ERR_SUCCESS)`
+  - `FT_ASSERT_EQ( world_pointer->get_error() , FT_ERR_SUCCESS)`
   - `FT_ASSERT_EQ( world_pointer->get_event_scheduler() ->size(), static_cast<size_t>(1))`
   - `FT_ASSERT_EQ( world_pointer->get_event_scheduler() ->size(), static_cast<size_t>(0))`
   - `ft_inventory hero_inventory(2)`
@@ -15883,7 +15883,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 ### Test/Test/test_get_next_line.cpp
 
 - Declares:
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, gnl_clear_stream(file_descriptor) )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, gnl_clear_stream(file_descriptor) )`
 - Defines:
   - `static int create_temp_fd_with_content(const char *content)`
   - `static void close_temp_fd(int file_descriptor)`
@@ -16838,7 +16838,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Declares:
   - `FT_ASSERT_EQ(-1, observability_game_metrics_initialize(ft_nullptr) )`
   - `FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, observability_game_metrics_get_error() )`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, observability_game_metrics_get_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, observability_game_metrics_get_error() )`
   - `FT_ASSERT_EQ(0, observability_game_metrics_initialize(observability_game_test_exporter) )`
   - `FT_ASSERT( observability_game_strings_equal("ok", g_game_last_sample.error_tag) )`
   - `FT_ASSERT_EQ(0, observability_game_metrics_shutdown() )`
@@ -16859,7 +16859,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
 - Declares:
   - `FT_ASSERT_EQ(-1, observability_networking_metrics_initialize(ft_nullptr) )`
   - `FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, observability_networking_metrics_get_error() )`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, observability_networking_metrics_get_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, observability_networking_metrics_get_error() )`
   - `FT_ASSERT_EQ(0, observability_networking_metrics_initialize(observability_test_exporter) )`
   - `FT_ASSERT( observability_strings_equal("ok", g_observability_last_sample.error_tag) )`
   - `FT_ASSERT_EQ(0, observability_networking_metrics_shutdown() )`
@@ -16892,23 +16892,23 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_string child_path("child")`
   - `FT_ASSERT_EQ(0, ft_dom_find_path(root_node, child_path, &found_node) )`
   - `FT_ASSERT( std::string(found_node->get_name().c_str()) == )`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, root_node->get_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, root_node->get_error() )`
   - `ft_string missing_path("missing")`
   - `FT_ASSERT_EQ(-1, ft_dom_find_path(root_node, missing_path, &found_node) )`
   - `FT_ASSERT_EQ( static_cast<size_t>(1) , errors.size())`
   - `FT_ASSERT( std::string(error_entry.path.c_str()) == )`
   - `FT_ASSERT( std::string(error_entry.message.c_str()) == )`
   - `FT_ASSERT_EQ( static_cast<size_t>(1) , children_pointer->size())`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, children_pointer->get_error() )`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, child_node->get_error() )`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_big_number::last_operation_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, children_pointer->get_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, child_node->get_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_operation_error() )`
   - `FT_ASSERT_EQ(0, json_document_to_dom(source_document, dom_document) )`
   - `FT_ASSERT( std::string(dom_root->get_name().c_str()) == )`
   - `FT_ASSERT_EQ( static_cast<size_t>(1) , group_nodes.size())`
   - `FT_ASSERT( std::string(group_node->get_name().c_str()) == )`
   - `FT_ASSERT_EQ( static_cast<size_t>(3) , item_nodes.size())`
   - `ft_string attribute_key("json:type")`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, item_node->get_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, item_node->get_error() )`
   - `FT_ASSERT( std::string(attribute_value.c_str()) == )`
   - `FT_ASSERT_EQ(0, json_document_from_dom(dom_document, round_trip_document) )`
   - `FT_ASSERT( std::string(round_trip_name->value) == )`
@@ -16916,7 +16916,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `FT_ASSERT_EQ(-1, json_document_from_dom(dom_document, document) )`
   - `FT_ASSERT_EQ(0, xml_document_to_dom(source_document, dom_document) )`
   - `ft_string attribute_key("attr")`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, dom_root->get_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, dom_root->get_error() )`
   - `FT_ASSERT_EQ( static_cast<size_t>(1) , child_nodes.size())`
   - `FT_ASSERT( std::string(child_node->get_name().c_str()) == )`
   - `FT_ASSERT( std::string(child_node->get_value().c_str()) == )`
@@ -16929,19 +16929,19 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `FT_ASSERT_EQ( static_cast<size_t>(1) , root_children.size())`
   - `FT_ASSERT( std::string(items_node->get_name().c_str()) == )`
   - `FT_ASSERT_EQ(FT_DOM_NODE_ARRAY, items_node->get_type() )`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, items_node->get_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, items_node->get_error() )`
   - `FT_ASSERT_EQ( static_cast<size_t>(2) , item_children.size())`
   - `FT_ASSERT( std::string(first_item_node->get_value().c_str()) == )`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, first_item_node->get_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, first_item_node->get_error() )`
   - `FT_ASSERT_EQ(YAML_MAP, round_trip_pointer->get_type() )`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, round_trip_pointer->get_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, round_trip_pointer->get_error() )`
   - `FT_ASSERT_EQ(YAML_LIST, round_trip_items->get_type() )`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, round_trip_items->get_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, round_trip_items->get_error() )`
   - `FT_ASSERT_EQ( static_cast<size_t>(2) , round_trip_list.size())`
   - `FT_ASSERT( std::string(round_trip_first_value->get_scalar().c_str()) == )`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, round_trip_first_value->get_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, round_trip_first_value->get_error() )`
   - `FT_ASSERT( std::string(round_trip_second_value->get_scalar().c_str()) == )`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, round_trip_second_value->get_error() )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, round_trip_second_value->get_error() )`
 - Defines:
   - `static void yaml_value_deleter(yaml_value *value)`
   - `static void initialize_simple_dom_document(ft_dom_document &document)`
@@ -17695,7 +17695,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `FT_ASSERT_EQ(0, ft_strlen(ft_nullptr) )`
   - `FT_ASSERT( ft_assert_single_stack_error(FT_ERR_INVALID_ARGUMENT) )`
   - `FT_ASSERT_EQ( static_cast<size_t>(2) , ft_strlen(buffer))`
-  - `FT_ASSERT( ft_assert_single_stack_error(FT_ERR_SUCCESSS) )`
+  - `FT_ASSERT( ft_assert_single_stack_error(FT_ERR_SUCCESS) )`
   - `FT_ASSERT_EQ(4, ft_strlen("test") )`
   - `FT_ASSERT_EQ(1024, ft_strlen(buffer) )`
   - `FT_ASSERT_EQ(0, ft_strlen("") )`
@@ -17989,7 +17989,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `FT_ASSERT_EQ(-1, su_copy_directory_recursive(ft_nullptr, "target") )`
   - `FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_global_error_stack_drop_last_error() )`
   - `FT_ASSERT_EQ(-1, su_copy_directory_recursive("missing", "target") )`
-  - `FT_ASSERT( ft_global_error_stack_drop_last_error() != FT_ERR_SUCCESSS)`
+  - `FT_ASSERT( ft_global_error_stack_drop_last_error() != FT_ERR_SUCCESS)`
   - `FT_ASSERT_EQ(-1, su_inspect_permissions("any", ft_nullptr) )`
 - Defines:
   - `#if defined(_WIN32) || defined(_WIN64) # include <direct.h> #else # include <unistd.h> #endif static void su_cleanup_path(const char *path)`
@@ -18089,10 +18089,10 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_map<int, int> map_instance(0)`
   - `FT_ASSERT_EQ( static_cast<size_t>(1) , map_instance.size())`
 - Defines:
-  - `vector_destructor_tracker::vector_destructor_tracker() : _value(0), _error_code(FT_ERR_SUCCESSS)`
-  - `vector_destructor_tracker::vector_destructor_tracker(int value) : _value(value), _error_code(FT_ERR_SUCCESSS)`
-  - `vector_destructor_tracker::vector_destructor_tracker(const vector_destructor_tracker &other) : _value(other._value), _error_code(FT_ERR_SUCCESSS)`
-  - `vector_destructor_tracker::vector_destructor_tracker(vector_destructor_tracker &&other) noexcept : _value(other._value), _error_code(FT_ERR_SUCCESSS)`
+  - `vector_destructor_tracker::vector_destructor_tracker() : _value(0), _error_code(FT_ERR_SUCCESS)`
+  - `vector_destructor_tracker::vector_destructor_tracker(int value) : _value(value), _error_code(FT_ERR_SUCCESS)`
+  - `vector_destructor_tracker::vector_destructor_tracker(const vector_destructor_tracker &other) : _value(other._value), _error_code(FT_ERR_SUCCESS)`
+  - `vector_destructor_tracker::vector_destructor_tracker(vector_destructor_tracker &&other) noexcept : _value(other._value), _error_code(FT_ERR_SUCCESS)`
   - `vector_destructor_tracker::~vector_destructor_tracker()`
   - `void vector_destructor_tracker::reset()`
   - `int vector_destructor_tracker::live_count()`
@@ -18231,8 +18231,8 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_sharedptr<shared_ptr_base_type> moved_pointer(ft_sharedptr<shared_ptr_derived_type>(new shared_ptr_derived_type(29)))`
   - `FT_ASSERT_EQ(29, moved_pointer->get_marker() )`
 - Defines:
-  - `variadic_constructible::variadic_constructible() : _first(0), _second(0.0), _error_code(FT_ERR_SUCCESSS)`
-  - `variadic_constructible::variadic_constructible(int first, double second) : _first(first), _second(second), _error_code(FT_ERR_SUCCESSS)`
+  - `variadic_constructible::variadic_constructible() : _first(0), _second(0.0), _error_code(FT_ERR_SUCCESS)`
+  - `variadic_constructible::variadic_constructible(int first, double second) : _first(first), _second(second), _error_code(FT_ERR_SUCCESS)`
   - `variadic_constructible::variadic_constructible(const variadic_constructible &other) : _first(other._first), _second(other._second), _error_code(other._error_code)`
   - `variadic_constructible::~variadic_constructible()`
   - `void variadic_constructible::set_error(int error) const`
@@ -18240,16 +18240,16 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `double variadic_constructible::second() const`
   - `int variadic_constructible::get_error() const`
   - `const char *variadic_constructible::get_error_str() const`
-  - `shared_ptr_base_type::shared_ptr_base_type() : _marker(0), _error_code(FT_ERR_SUCCESSS)`
-  - `shared_ptr_base_type::shared_ptr_base_type(int marker) : _marker(marker), _error_code(FT_ERR_SUCCESSS)`
+  - `shared_ptr_base_type::shared_ptr_base_type() : _marker(0), _error_code(FT_ERR_SUCCESS)`
+  - `shared_ptr_base_type::shared_ptr_base_type(int marker) : _marker(marker), _error_code(FT_ERR_SUCCESS)`
   - `shared_ptr_base_type::shared_ptr_base_type(const shared_ptr_base_type &other) : _marker(other._marker), _error_code(other._error_code)`
   - `shared_ptr_base_type::~shared_ptr_base_type()`
   - `void shared_ptr_base_type::set_error(int error) const`
   - `int shared_ptr_base_type::get_marker() const`
   - `int shared_ptr_base_type::get_error() const`
   - `const char *shared_ptr_base_type::get_error_str() const`
-  - `shared_ptr_derived_type::shared_ptr_derived_type() : shared_ptr_base_type(), _error_code(FT_ERR_SUCCESSS)`
-  - `shared_ptr_derived_type::shared_ptr_derived_type(int marker) : shared_ptr_base_type(marker), _error_code(FT_ERR_SUCCESSS)`
+  - `shared_ptr_derived_type::shared_ptr_derived_type() : shared_ptr_base_type(), _error_code(FT_ERR_SUCCESS)`
+  - `shared_ptr_derived_type::shared_ptr_derived_type(int marker) : shared_ptr_base_type(marker), _error_code(FT_ERR_SUCCESS)`
   - `shared_ptr_derived_type::shared_ptr_derived_type(const shared_ptr_derived_type &other) : shared_ptr_base_type(other), _error_code(other._error_code)`
   - `shared_ptr_derived_type::~shared_ptr_derived_type()`
   - `void shared_ptr_derived_type::set_error(int error) const`
@@ -18455,7 +18455,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `ft_optional<no_default_optional_value> value_optional(no_default_optional_value(42))`
   - `ft_optional<no_default_optional_value> moved_optional(no_default_optional_value(64))`
 - Defines:
-  - `no_default_optional_value::no_default_optional_value(int value) : _value(value), _error_code(FT_ERR_SUCCESSS)`
+  - `no_default_optional_value::no_default_optional_value(int value) : _value(value), _error_code(FT_ERR_SUCCESS)`
   - `no_default_optional_value::no_default_optional_value(const no_default_optional_value &other) : _value(other._value), _error_code(other._error_code)`
   - `no_default_optional_value::~no_default_optional_value()`
   - `void no_default_optional_value::set_error(int error) const`
@@ -18733,7 +18733,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `FT_ASSERT( std::fabs(snapshot.jitter_ms - 2.0) < 0.0001)`
   - `FT_ASSERT( std::fabs(snapshot.minimum_ms - 10.0) < 0.0001)`
   - `FT_ASSERT( std::fabs(snapshot.maximum_ms - 14.0) < 0.0001)`
-  - `FT_ASSERT_EQ(FT_ERR_SUCCESSS, time_benchmark_get_error(&benchmark) )`
+  - `FT_ASSERT_EQ(FT_ERR_SUCCESS, time_benchmark_get_error(&benchmark) )`
   - `FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, time_benchmark_get_error(&benchmark) )`
   - `FT_ASSERT_EQ( static_cast<size_t>(1) , snapshot.sample_count)`
   - `FT_ASSERT( std::fabs(snapshot.average_ms - 5.0) < 0.0001)`
@@ -19390,7 +19390,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `xml_node::xml_node() noexcept : mutex(ft_nullptr), thread_safe_enabled(false), name(ft_nullptr), namespace_prefix(ft_nullptr), local_name(ft_nullptr), namespace_uri(ft_nullptr), namespace_bindings(ft_nullptr), text(ft_nullptr), children(), attributes()`
   - `xml_node::~xml_node() noexcept`
   - `static const char *parse_node(const char *string, xml_node **out_node, const xml_namespace_entry *scope_head)`
-  - `xml_document::xml_document() noexcept : _root(ft_nullptr), _mutex(ft_nullptr), _thread_safe_enabled(false), _error_code(FT_ERR_SUCCESSS)`
+  - `xml_document::xml_document() noexcept : _root(ft_nullptr), _mutex(ft_nullptr), _thread_safe_enabled(false), _error_code(FT_ERR_SUCCESS)`
   - `xml_document::~xml_document() noexcept`
   - `void xml_document::set_error(int error_code) const noexcept`
   - `int xml_document::load_from_string(const char *xml) noexcept`

@@ -11,7 +11,7 @@ ft_string *adv_locale_casefold(const char *input, const char *locale_name)
     ft_string *folded_result = new (std::nothrow) ft_string();
     if (folded_result == ft_nullptr)
         return (ft_nullptr);
-    if (folded_result->initialize() != FT_ERR_SUCCESSS)
+    if (folded_result->initialize() != FT_ERR_SUCCESS)
     {
         delete folded_result;
         return (ft_nullptr);

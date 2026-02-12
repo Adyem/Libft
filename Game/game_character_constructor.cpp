@@ -29,11 +29,11 @@ int ft_character::lock_pair(const ft_character &first, const ft_character &secon
     {
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
 
-        if (single_guard.get_error() != FT_ERR_SUCCESSS)
+        if (single_guard.get_error() != FT_ERR_SUCCESS)
             return (single_guard.get_error());
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -51,11 +51,11 @@ int ft_character::lock_pair(const ft_character &first, const ft_character &secon
     {
         ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
 
-        if (lower_guard.get_error() != FT_ERR_SUCCESSS)
+        if (lower_guard.get_error() != FT_ERR_SUCCESS)
             return (lower_guard.get_error());
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
         int upper_error = upper_guard.get_error();
-        if (upper_error == FT_ERR_SUCCESSS)
+        if (upper_error == FT_ERR_SUCCESS)
         {
             if (!swapped)
             {
@@ -67,7 +67,7 @@ int ft_character::lock_pair(const ft_character &first, const ft_character &secon
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            return (FT_ERR_SUCCESSS);
+            return (FT_ERR_SUCCESS);
         }
         if (upper_error != FT_ERR_MUTEX_ALREADY_LOCKED)
             return (upper_error);
@@ -79,7 +79,7 @@ int ft_character::lock_pair(const ft_character &first, const ft_character &secon
 
 bool ft_character::handle_component_error(int error) noexcept
 {
-    if (error == FT_ERR_SUCCESSS)
+    if (error == FT_ERR_SUCCESS)
         return (false);
     this->set_error(error);
     return (true);
@@ -132,11 +132,11 @@ ft_character::ft_character() noexcept
       _fire_res(), _frost_res(), _lightning_res(),
       _air_res(), _earth_res(), _chaos_res(),
       _physical_res(), _skills(), _buffs(), _debuffs(), _upgrades(), _quests(), _achievements(), _reputation(), _inventory(), _equipment(),
-      _error(FT_ERR_SUCCESSS), _mutex(), _operation_errors({{}, {}, 0})
+      _error(FT_ERR_SUCCESS), _mutex(), _operation_errors({{}, {}, 0})
 {
     if (this->check_internal_errors() == true)
         return ;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -161,7 +161,7 @@ ft_character &ft_character::operator=(const ft_character &other) noexcept
     if (this == &other)
         return (*this);
     lock_error = ft_character::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         return (*this);
@@ -233,7 +233,7 @@ ft_character &ft_character::operator=(ft_character &&other) noexcept
     if (this == &other)
         return (*this);
     lock_error = ft_character::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         return (*this);
@@ -321,7 +321,7 @@ ft_character &ft_character::operator=(ft_character &&other) noexcept
     other._inventory = ft_inventory();
     other._equipment = ft_equipment();
     this->set_error(this->_error);
-    other.set_error(FT_ERR_SUCCESSS);
+    other.set_error(FT_ERR_SUCCESS);
     game_character_restore_errno(this_guard);
     game_character_restore_errno(other_guard);
     return (*this);

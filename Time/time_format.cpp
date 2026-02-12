@@ -32,13 +32,13 @@ ft_string    time_format_iso8601(t_time time_value)
     standard_time = static_cast<std::time_t>(time_value);
     mutex_result = g_gmtime_mutex.lock();
     if ((&g_gmtime_mutex) == ft_nullptr)
-        mutex_error = FT_ERR_SUCCESSS;
+        mutex_error = FT_ERR_SUCCESS;
     else
         mutex_error = ft_global_error_stack_drop_last_error();
     {
         int reported_error;
 
-        if (mutex_error != FT_ERR_SUCCESSS)
+        if (mutex_error != FT_ERR_SUCCESS)
             reported_error = mutex_error;
         else
             reported_error = mutex_result;
@@ -51,13 +51,13 @@ ft_string    time_format_iso8601(t_time time_value)
     {
         mutex_result = g_gmtime_mutex.unlock();
         if ((&g_gmtime_mutex) == ft_nullptr)
-            mutex_error = FT_ERR_SUCCESSS;
+            mutex_error = FT_ERR_SUCCESS;
         else
             mutex_error = ft_global_error_stack_drop_last_error();
         {
             int reported_error;
 
-            if (mutex_error != FT_ERR_SUCCESSS)
+            if (mutex_error != FT_ERR_SUCCESS)
                 reported_error = mutex_error;
             else
                 reported_error = mutex_result;
@@ -70,13 +70,13 @@ ft_string    time_format_iso8601(t_time time_value)
     time_storage = *time_pointer;
     mutex_result = g_gmtime_mutex.unlock();
     if ((&g_gmtime_mutex) == ft_nullptr)
-        mutex_error = FT_ERR_SUCCESSS;
+        mutex_error = FT_ERR_SUCCESS;
     else
         mutex_error = ft_global_error_stack_drop_last_error();
     {
         int reported_error;
 
-        if (mutex_error != FT_ERR_SUCCESSS)
+        if (mutex_error != FT_ERR_SUCCESS)
             reported_error = mutex_error;
         else
             reported_error = mutex_result;
@@ -90,7 +90,7 @@ ft_string    time_format_iso8601(t_time time_value)
         return (time_format_failure(FT_ERR_INVALID_ARGUMENT));
     }
     formatted = ft_string(buffer);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (formatted);
 }
 
@@ -123,13 +123,13 @@ ft_string    time_format_iso8601_with_offset(t_time time_value, int offset_minut
     adjusted_time = static_cast<std::time_t>(adjusted_epoch);
     mutex_result = g_gmtime_mutex.lock();
     if ((&g_gmtime_mutex) == ft_nullptr)
-        mutex_error = FT_ERR_SUCCESSS;
+        mutex_error = FT_ERR_SUCCESS;
     else
         mutex_error = ft_global_error_stack_drop_last_error();
     {
         int reported_error;
 
-        if (mutex_error != FT_ERR_SUCCESSS)
+        if (mutex_error != FT_ERR_SUCCESS)
             reported_error = mutex_error;
         else
             reported_error = mutex_result;
@@ -142,13 +142,13 @@ ft_string    time_format_iso8601_with_offset(t_time time_value, int offset_minut
     {
         mutex_result = g_gmtime_mutex.unlock();
         if ((&g_gmtime_mutex) == ft_nullptr)
-            mutex_error = FT_ERR_SUCCESSS;
+            mutex_error = FT_ERR_SUCCESS;
         else
             mutex_error = ft_global_error_stack_drop_last_error();
         {
             int reported_error;
 
-            if (mutex_error != FT_ERR_SUCCESSS)
+            if (mutex_error != FT_ERR_SUCCESS)
                 reported_error = mutex_error;
             else
                 reported_error = mutex_result;
@@ -161,13 +161,13 @@ ft_string    time_format_iso8601_with_offset(t_time time_value, int offset_minut
     time_storage = *time_pointer;
     mutex_result = g_gmtime_mutex.unlock();
     if ((&g_gmtime_mutex) == ft_nullptr)
-        mutex_error = FT_ERR_SUCCESSS;
+        mutex_error = FT_ERR_SUCCESS;
     else
         mutex_error = ft_global_error_stack_drop_last_error();
     {
         int reported_error;
 
-        if (mutex_error != FT_ERR_SUCCESSS)
+        if (mutex_error != FT_ERR_SUCCESS)
             reported_error = mutex_error;
         else
             reported_error = mutex_result;
@@ -195,6 +195,6 @@ ft_string    time_format_iso8601_with_offset(t_time time_value, int offset_minut
         return (time_format_failure(FT_ERR_INTERNAL));
     formatted = ft_string(buffer);
     formatted += offset_buffer;
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (formatted);
 }

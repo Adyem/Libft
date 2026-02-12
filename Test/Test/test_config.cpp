@@ -1,3 +1,4 @@
+#include "../test_internal.hpp"
 #include "../../Config/config.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../CMA/CMA.hpp"
@@ -6,6 +7,9 @@
 #include "../../System_utils/test_runner.hpp"
 #include <cstdio>
 #include <cstring>
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 static void cleanup_file(const char *filename)
 {
@@ -37,7 +41,7 @@ static cnfg_config *create_test_config(size_t entry_count)
 
 FT_TEST(test_cnfg_parse_null_filename_sets_errno, "cnfg_parse rejects null filename")
 {
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     cnfg_config *config = cnfg_parse(ft_nullptr);
     FT_ASSERT(config == ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
@@ -46,7 +50,7 @@ FT_TEST(test_cnfg_parse_null_filename_sets_errno, "cnfg_parse rejects null filen
 
 FT_TEST(test_config_load_file_null_filename_sets_errno, "config_load_file rejects null filename")
 {
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESS;
     cnfg_config *config = config_load_file(ft_nullptr);
     FT_ASSERT(config == ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
@@ -88,7 +92,7 @@ FT_TEST(test_cnfg_parse_success_sets_errno_success, "cnfg_parse loads ini files 
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     cnfg_config *config = cnfg_parse(filename);
     FT_ASSERT(config != ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT(config->entry_count == 1);
     FT_ASSERT(config->entries[0].section != ft_nullptr);
     FT_ASSERT(std::strcmp(config->entries[0].section, "section") == 0);
@@ -130,7 +134,7 @@ FT_TEST(test_cnfg_parse_missing_value_handles_entries, "cnfg_parse accepts missi
     ft_errno = FT_ERR_NO_MEMORY;
     cnfg_config *config = cnfg_parse(filename);
     FT_ASSERT(config != ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT(config->entry_count == 2);
     FT_ASSERT(config->entries[0].key != ft_nullptr);
     FT_ASSERT(std::strcmp(config->entries[0].key, "key_without_value") == 0);
@@ -437,7 +441,7 @@ FT_TEST(test_config_merge_prefers_override_entries, "config_merge replaces dupli
     }
     cnfg_config *merged = config_merge(base, override_config);
     FT_ASSERT(merged != ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT(merged->entry_count == 3);
     FT_ASSERT(std::strcmp(base->entries[0].value, "base") == 0);
     size_t index = 0;

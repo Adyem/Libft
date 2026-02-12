@@ -62,7 +62,7 @@ int su_register_resource_tracer(t_su_resource_tracer tracer)
     {
         return (su_resource_tracer_report(FT_ERR_NO_MEMORY, -1));
     }
-    return (su_resource_tracer_report(FT_ERR_SUCCESSS, 0));
+    return (su_resource_tracer_report(FT_ERR_SUCCESS, 0));
 }
 
 int su_unregister_resource_tracer(t_su_resource_tracer tracer)
@@ -79,7 +79,7 @@ int su_unregister_resource_tracer(t_su_resource_tracer tracer)
         if (g_su_resource_tracers[index] == tracer)
         {
             g_su_resource_tracers.erase(g_su_resource_tracers.begin() + static_cast<t_tracer_vector::difference_type>(index));
-            return (su_resource_tracer_report(FT_ERR_SUCCESSS, 0));
+            return (su_resource_tracer_report(FT_ERR_SUCCESS, 0));
         }
         index += 1;
     }
@@ -90,7 +90,7 @@ void su_clear_resource_tracers(void)
 {
     std::lock_guard<std::mutex> guard(g_su_resource_tracers_mutex);
     g_su_resource_tracers.clear();
-    su_resource_tracer_report_void(FT_ERR_SUCCESSS);
+    su_resource_tracer_report_void(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -134,7 +134,7 @@ void su_run_resource_tracers(const char *reason)
             tracer(reason);
         run_index += 1;
     }
-    su_resource_tracer_report_void(FT_ERR_SUCCESSS);
+    su_resource_tracer_report_void(FT_ERR_SUCCESS);
     return ;
 }
 

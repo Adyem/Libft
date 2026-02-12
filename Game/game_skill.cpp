@@ -28,15 +28,15 @@ int ft_skill::lock_pair(const ft_skill &first, const ft_skill &second,
     {
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
 
-        if (single_guard.get_error() != FT_ERR_SUCCESSS)
+        if (single_guard.get_error() != FT_ERR_SUCCESS)
         {
             ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ERR_SUCCESSS;
-        return (FT_ERR_SUCCESSS);
+        ft_errno = FT_ERR_SUCCESS;
+        return (FT_ERR_SUCCESS);
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -54,13 +54,13 @@ int ft_skill::lock_pair(const ft_skill &first, const ft_skill &second,
     {
         ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
 
-        if (lower_guard.get_error() != FT_ERR_SUCCESSS)
+        if (lower_guard.get_error() != FT_ERR_SUCCESS)
         {
             ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ERR_SUCCESSS)
+        if (upper_guard.get_error() == FT_ERR_SUCCESS)
         {
             if (!swapped)
             {
@@ -72,8 +72,8 @@ int ft_skill::lock_pair(const ft_skill &first, const ft_skill &second,
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = FT_ERR_SUCCESSS;
-            return (FT_ERR_SUCCESSS);
+            ft_errno = FT_ERR_SUCCESS;
+            return (FT_ERR_SUCCESS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -88,9 +88,9 @@ int ft_skill::lock_pair(const ft_skill &first, const ft_skill &second,
 
 ft_skill::ft_skill() noexcept
     : _id(0), _level(0), _cooldown(0), _modifier1(0), _modifier2(0),
-      _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESSS), _mutex()
+      _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()
 {
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -101,10 +101,10 @@ ft_skill::~ft_skill() noexcept
 
 ft_skill::ft_skill(const ft_skill &other) noexcept
     : _id(0), _level(0), _cooldown(0), _modifier1(0), _modifier2(0),
-      _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESSS), _mutex()
+      _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()
 {
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESSS)
+    if (other_guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(other_guard.get_error());
         return ;
@@ -130,7 +130,7 @@ ft_skill &ft_skill::operator=(const ft_skill &other) noexcept
     if (this == &other)
         return (*this);
     lock_error = ft_skill::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         return (*this);
@@ -149,10 +149,10 @@ ft_skill &ft_skill::operator=(const ft_skill &other) noexcept
 
 ft_skill::ft_skill(ft_skill &&other) noexcept
     : _id(0), _level(0), _cooldown(0), _modifier1(0), _modifier2(0),
-      _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESSS), _mutex()
+      _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()
 {
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESSS)
+    if (other_guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(other_guard.get_error());
         return ;
@@ -172,9 +172,9 @@ ft_skill::ft_skill(ft_skill &&other) noexcept
     other._modifier2 = 0;
     other._modifier3 = 0;
     other._modifier4 = 0;
-    other._error = FT_ERR_SUCCESSS;
+    other._error = FT_ERR_SUCCESS;
     this->set_error(this->_error);
-    other.set_error(FT_ERR_SUCCESSS);
+    other.set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -187,7 +187,7 @@ ft_skill &ft_skill::operator=(ft_skill &&other) noexcept
     if (this == &other)
         return (*this);
     lock_error = ft_skill::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         return (*this);
@@ -207,9 +207,9 @@ ft_skill &ft_skill::operator=(ft_skill &&other) noexcept
     other._modifier2 = 0;
     other._modifier3 = 0;
     other._modifier4 = 0;
-    other._error = FT_ERR_SUCCESSS;
+    other._error = FT_ERR_SUCCESS;
     this->set_error(this->_error);
-    other.set_error(FT_ERR_SUCCESSS);
+    other.set_error(FT_ERR_SUCCESS);
     return (*this);
 }
 
@@ -225,13 +225,13 @@ int ft_skill::get_id() const noexcept
     int identifier;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_skill *>(this)->set_error(guard.get_error());
         return (0);
     }
     identifier = this->_id;
-    const_cast<ft_skill *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_skill *>(this)->set_error(FT_ERR_SUCCESS);
     game_skill_unlock(guard);
     return (identifier);
 }
@@ -239,7 +239,7 @@ int ft_skill::get_id() const noexcept
 void ft_skill::set_id(int id) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
@@ -251,7 +251,7 @@ void ft_skill::set_id(int id) noexcept
         return ;
     }
     this->_id = id;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_skill_unlock(guard);
     return ;
 }
@@ -261,13 +261,13 @@ int ft_skill::get_level() const noexcept
     int level_value;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_skill *>(this)->set_error(guard.get_error());
         return (0);
     }
     level_value = this->_level;
-    const_cast<ft_skill *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_skill *>(this)->set_error(FT_ERR_SUCCESS);
     game_skill_unlock(guard);
     return (level_value);
 }
@@ -275,7 +275,7 @@ int ft_skill::get_level() const noexcept
 void ft_skill::set_level(int level) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
@@ -286,7 +286,7 @@ void ft_skill::set_level(int level) noexcept
         return ;
     }
     this->_level = level;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_skill_unlock(guard);
     return ;
 }
@@ -296,13 +296,13 @@ int ft_skill::get_cooldown() const noexcept
     int cooldown_value;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_skill *>(this)->set_error(guard.get_error());
         return (0);
     }
     cooldown_value = this->_cooldown;
-    const_cast<ft_skill *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_skill *>(this)->set_error(FT_ERR_SUCCESS);
     game_skill_unlock(guard);
     return (cooldown_value);
 }
@@ -310,7 +310,7 @@ int ft_skill::get_cooldown() const noexcept
 void ft_skill::set_cooldown(int cooldown) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
@@ -321,7 +321,7 @@ void ft_skill::set_cooldown(int cooldown) noexcept
         return ;
     }
     this->_cooldown = cooldown;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_skill_unlock(guard);
     return ;
 }
@@ -329,7 +329,7 @@ void ft_skill::set_cooldown(int cooldown) noexcept
 void ft_skill::add_cooldown(int cooldown) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
@@ -340,7 +340,7 @@ void ft_skill::add_cooldown(int cooldown) noexcept
         return ;
     }
     this->_cooldown += cooldown;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_skill_unlock(guard);
     return ;
 }
@@ -348,7 +348,7 @@ void ft_skill::add_cooldown(int cooldown) noexcept
 void ft_skill::sub_cooldown(int cooldown) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
@@ -359,7 +359,7 @@ void ft_skill::sub_cooldown(int cooldown) noexcept
         return ;
     }
     this->_cooldown -= cooldown;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_skill_unlock(guard);
     return ;
 }
@@ -369,13 +369,13 @@ int ft_skill::get_modifier1() const noexcept
     int modifier;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_skill *>(this)->set_error(guard.get_error());
         return (0);
     }
     modifier = this->_modifier1;
-    const_cast<ft_skill *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_skill *>(this)->set_error(FT_ERR_SUCCESS);
     game_skill_unlock(guard);
     return (modifier);
 }
@@ -383,13 +383,13 @@ int ft_skill::get_modifier1() const noexcept
 void ft_skill::set_modifier1(int mod) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
     }
     this->_modifier1 = mod;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_skill_unlock(guard);
     return ;
 }
@@ -397,7 +397,7 @@ void ft_skill::set_modifier1(int mod) noexcept
 void ft_skill::add_modifier1(int mod) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
@@ -408,7 +408,7 @@ void ft_skill::add_modifier1(int mod) noexcept
         return ;
     }
     this->_modifier1 += mod;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_skill_unlock(guard);
     return ;
 }
@@ -416,7 +416,7 @@ void ft_skill::add_modifier1(int mod) noexcept
 void ft_skill::sub_modifier1(int mod) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
@@ -427,7 +427,7 @@ void ft_skill::sub_modifier1(int mod) noexcept
         return ;
     }
     this->_modifier1 -= mod;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_skill_unlock(guard);
     return ;
 }
@@ -437,13 +437,13 @@ int ft_skill::get_modifier2() const noexcept
     int modifier;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_skill *>(this)->set_error(guard.get_error());
         return (0);
     }
     modifier = this->_modifier2;
-    const_cast<ft_skill *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_skill *>(this)->set_error(FT_ERR_SUCCESS);
     game_skill_unlock(guard);
     return (modifier);
 }
@@ -451,13 +451,13 @@ int ft_skill::get_modifier2() const noexcept
 void ft_skill::set_modifier2(int mod) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
     }
     this->_modifier2 = mod;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_skill_unlock(guard);
     return ;
 }
@@ -465,7 +465,7 @@ void ft_skill::set_modifier2(int mod) noexcept
 void ft_skill::add_modifier2(int mod) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
@@ -476,7 +476,7 @@ void ft_skill::add_modifier2(int mod) noexcept
         return ;
     }
     this->_modifier2 += mod;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_skill_unlock(guard);
     return ;
 }
@@ -484,7 +484,7 @@ void ft_skill::add_modifier2(int mod) noexcept
 void ft_skill::sub_modifier2(int mod) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
@@ -495,7 +495,7 @@ void ft_skill::sub_modifier2(int mod) noexcept
         return ;
     }
     this->_modifier2 -= mod;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_skill_unlock(guard);
     return ;
 }
@@ -505,13 +505,13 @@ int ft_skill::get_modifier3() const noexcept
     int modifier;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_skill *>(this)->set_error(guard.get_error());
         return (0);
     }
     modifier = this->_modifier3;
-    const_cast<ft_skill *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_skill *>(this)->set_error(FT_ERR_SUCCESS);
     game_skill_unlock(guard);
     return (modifier);
 }
@@ -519,13 +519,13 @@ int ft_skill::get_modifier3() const noexcept
 void ft_skill::set_modifier3(int mod) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
     }
     this->_modifier3 = mod;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_skill_unlock(guard);
     return ;
 }
@@ -533,7 +533,7 @@ void ft_skill::set_modifier3(int mod) noexcept
 void ft_skill::add_modifier3(int mod) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
@@ -544,7 +544,7 @@ void ft_skill::add_modifier3(int mod) noexcept
         return ;
     }
     this->_modifier3 += mod;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_skill_unlock(guard);
     return ;
 }
@@ -552,7 +552,7 @@ void ft_skill::add_modifier3(int mod) noexcept
 void ft_skill::sub_modifier3(int mod) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
@@ -563,7 +563,7 @@ void ft_skill::sub_modifier3(int mod) noexcept
         return ;
     }
     this->_modifier3 -= mod;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_skill_unlock(guard);
     return ;
 }
@@ -573,13 +573,13 @@ int ft_skill::get_modifier4() const noexcept
     int modifier;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_skill *>(this)->set_error(guard.get_error());
         return (0);
     }
     modifier = this->_modifier4;
-    const_cast<ft_skill *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_skill *>(this)->set_error(FT_ERR_SUCCESS);
     game_skill_unlock(guard);
     return (modifier);
 }
@@ -587,13 +587,13 @@ int ft_skill::get_modifier4() const noexcept
 void ft_skill::set_modifier4(int mod) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
     }
     this->_modifier4 = mod;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_skill_unlock(guard);
     return ;
 }
@@ -601,7 +601,7 @@ void ft_skill::set_modifier4(int mod) noexcept
 void ft_skill::add_modifier4(int mod) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
@@ -612,7 +612,7 @@ void ft_skill::add_modifier4(int mod) noexcept
         return ;
     }
     this->_modifier4 += mod;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_skill_unlock(guard);
     return ;
 }
@@ -620,7 +620,7 @@ void ft_skill::add_modifier4(int mod) noexcept
 void ft_skill::sub_modifier4(int mod) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
         return ;
@@ -631,7 +631,7 @@ void ft_skill::sub_modifier4(int mod) noexcept
         return ;
     }
     this->_modifier4 -= mod;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESS);
     game_skill_unlock(guard);
     return ;
 }
@@ -641,7 +641,7 @@ int ft_skill::get_error() const noexcept
     int error_code;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_skill *>(this)->set_error(guard.get_error());
         return (guard.get_error());
@@ -657,7 +657,7 @@ const char *ft_skill::get_error_str() const noexcept
     int error_code;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_skill *>(this)->set_error(guard.get_error());
         return (ft_strerror(guard.get_error()));

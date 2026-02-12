@@ -58,7 +58,7 @@ template <typename T>
 ft_optional<T>::ft_optional()
     : _value(ft_nullptr), _mutex(ft_nullptr)
 {
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -73,7 +73,7 @@ ft_optional<T>::ft_optional(const T& value)
         return ;
     }
     construct_at(this->_value, value);
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -88,7 +88,7 @@ ft_optional<T>::ft_optional(T&& value)
         return ;
     }
     construct_at(this->_value, ft_move(value));
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -108,7 +108,7 @@ ft_optional<T>::ft_optional(ft_optional&& other) noexcept
     const ft_optional *upper = ft_nullptr;
     int lock_error = ft_optional::lock_pair(*this, other, lower, upper);
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -117,12 +117,12 @@ ft_optional<T>::ft_optional(ft_optional&& other) noexcept
     other._value = ft_nullptr;
     int unlock_error = ft_optional::unlock_pair(lower, upper);
 
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return ;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -131,14 +131,14 @@ ft_optional<T>& ft_optional<T>::operator=(ft_optional&& other) noexcept
 {
     if (this == &other)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESSS);
+        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (*this);
     }
     const ft_optional *lower = ft_nullptr;
     const ft_optional *upper = ft_nullptr;
     int lock_error = ft_optional::lock_pair(*this, other, lower, upper);
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (*this);
@@ -153,12 +153,12 @@ ft_optional<T>& ft_optional<T>::operator=(ft_optional&& other) noexcept
     other._value = ft_nullptr;
     int unlock_error = ft_optional::unlock_pair(lower, upper);
 
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return (*this);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (*this);
 }
 
@@ -168,7 +168,7 @@ bool ft_optional<T>::has_value() const
     int lock_error = this->lock_mutex();
     bool result = false;
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (false);
@@ -176,12 +176,12 @@ bool ft_optional<T>::has_value() const
     result = (this->_value != ft_nullptr);
     int unlock_error = this->unlock_mutex();
 
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return (result);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (result);
 }
 
@@ -190,7 +190,7 @@ T& ft_optional<T>::value()
 {
     int lock_error = this->lock_mutex();
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (ft_optional<T>::fallback_reference());
@@ -199,7 +199,7 @@ T& ft_optional<T>::value()
     {
         int unlock_error = this->unlock_mutex();
 
-        if (unlock_error != FT_ERR_SUCCESSS)
+        if (unlock_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(unlock_error);
             return (ft_optional<T>::fallback_reference());
@@ -210,12 +210,12 @@ T& ft_optional<T>::value()
     T &reference = *(this->_value);
     int unlock_error = this->unlock_mutex();
 
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return (ft_optional<T>::fallback_reference());
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (reference);
 }
 
@@ -224,7 +224,7 @@ const T& ft_optional<T>::value() const
 {
     int lock_error = this->lock_mutex();
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return (ft_optional<T>::fallback_reference());
@@ -233,7 +233,7 @@ const T& ft_optional<T>::value() const
     {
         int unlock_error = this->unlock_mutex();
 
-        if (unlock_error != FT_ERR_SUCCESSS)
+        if (unlock_error != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(unlock_error);
             return (ft_optional<T>::fallback_reference());
@@ -244,12 +244,12 @@ const T& ft_optional<T>::value() const
     const T &reference = *(this->_value);
     int unlock_error = this->unlock_mutex();
 
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return (ft_optional<T>::fallback_reference());
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (reference);
 }
 
@@ -279,7 +279,7 @@ template <typename T>
 int ft_optional<T>::lock_mutex() const noexcept
 {
     if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     return (pt_recursive_mutex_lock_with_error(*this->_mutex));
 }
 
@@ -287,7 +287,7 @@ template <typename T>
 int ft_optional<T>::unlock_mutex() const noexcept
 {
     if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     return (pt_recursive_mutex_unlock_with_error(*this->_mutex));
 }
 
@@ -295,9 +295,9 @@ template <typename T>
 int ft_optional<T>::prepare_thread_safety() noexcept
 {
     if (this->_mutex != ft_nullptr)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     int result = pt_recursive_mutex_create_with_error(&this->_mutex);
-    if (result != FT_ERR_SUCCESSS && this->_mutex != ft_nullptr)
+    if (result != FT_ERR_SUCCESS && this->_mutex != ft_nullptr)
         pt_recursive_mutex_destroy(&this->_mutex);
     return (result);
 }
@@ -320,7 +320,7 @@ template <typename T>
 void ft_optional<T>::disable_thread_safety() noexcept
 {
     this->teardown_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -344,12 +344,12 @@ int ft_optional<T>::lock_pair(ft_optional &first, ft_optional &second,
     {
         int lower_error = lower->lock_mutex();
 
-        if (lower_error != FT_ERR_SUCCESSS)
+        if (lower_error != FT_ERR_SUCCESS)
             return (lower_error);
         int upper_error = upper->lock_mutex();
 
-        if (upper_error == FT_ERR_SUCCESSS)
-            return (FT_ERR_SUCCESSS);
+        if (upper_error == FT_ERR_SUCCESS)
+            return (FT_ERR_SUCCESS);
         if (upper_error != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
             lower->unlock_mutex();
@@ -364,18 +364,18 @@ template <typename T>
 int ft_optional<T>::unlock_pair(const ft_optional *lower, const ft_optional *upper) noexcept
 {
     int error;
-    int final_error = FT_ERR_SUCCESSS;
+    int final_error = FT_ERR_SUCCESS;
 
     if (upper != ft_nullptr)
     {
         error = upper->unlock_mutex();
-        if (error != FT_ERR_SUCCESSS)
+        if (error != FT_ERR_SUCCESS)
             final_error = error;
     }
     if (lower != ft_nullptr && lower != upper)
     {
         error = lower->unlock_mutex();
-        if (error != FT_ERR_SUCCESSS && final_error == FT_ERR_SUCCESSS)
+        if (error != FT_ERR_SUCCESS && final_error == FT_ERR_SUCCESS)
             final_error = error;
     }
     return (final_error);
@@ -386,7 +386,7 @@ void ft_optional<T>::reset()
 {
     int lock_error = this->lock_mutex();
 
-    if (lock_error != FT_ERR_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(lock_error);
         return ;
@@ -399,12 +399,12 @@ void ft_optional<T>::reset()
     }
     int unlock_error = this->unlock_mutex();
 
-    if (unlock_error != FT_ERR_SUCCESSS)
+    if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_global_error_stack_push(unlock_error);
         return ;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESSS);
+    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 

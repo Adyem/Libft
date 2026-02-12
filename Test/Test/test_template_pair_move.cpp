@@ -1,6 +1,10 @@
+#include "../test_internal.hpp"
 #include "../../Template/pair.hpp"
 #include "../../Template/move.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_pair_copy_constructor_clones_values,
         "Pair copy constructor duplicates the stored key/value")

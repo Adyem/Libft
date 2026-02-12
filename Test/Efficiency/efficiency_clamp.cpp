@@ -1,5 +1,9 @@
+#include "../test_internal.hpp"
 #include "../../Math/math.hpp"
 #include "utils.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 #include <algorithm>
 

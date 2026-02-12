@@ -15,7 +15,7 @@ void rl_add_suggestion(const char *word)
     {
         if (strcmp(suggestions[index], word) == 0)
         {
-            error_code = FT_ERR_SUCCESSS;
+            error_code = FT_ERR_SUCCESS;
             ft_global_error_stack_push(error_code);
             return ;
         }
@@ -29,14 +29,14 @@ void rl_add_suggestion(const char *word)
         if (new_suggestion == ft_nullptr)
         {
             error_code = ft_global_error_stack_drop_last_error();
-            if (error_code == FT_ERR_SUCCESSS)
+            if (error_code == FT_ERR_SUCCESS)
                 error_code = FT_ERR_NO_MEMORY;
             ft_global_error_stack_push(error_code);
             return ;
         }
         suggestions[suggestion_count] = new_suggestion;
         suggestion_count++;
-        error_code = FT_ERR_SUCCESSS;
+        error_code = FT_ERR_SUCCESS;
         ft_global_error_stack_push(error_code);
     }
     else
@@ -56,7 +56,7 @@ void rl_clear_suggestions()
     {
         cma_free(suggestions[index]);
         error_code = ft_global_error_stack_drop_last_error();
-        if (error_code != FT_ERR_SUCCESSS)
+        if (error_code != FT_ERR_SUCCESS)
         {
             ft_global_error_stack_push(error_code);
             suggestion_count = 0;
@@ -65,7 +65,7 @@ void rl_clear_suggestions()
         index++;
     }
     suggestion_count = 0;
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     ft_global_error_stack_push(error_code);
     return ;
 }

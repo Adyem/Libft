@@ -1,6 +1,10 @@
+#include "../test_internal.hpp"
 #include "../../Template/unordered_map.hpp"
 #include "../../Template/swap.hpp"
 #include "utils.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 #include <unordered_map>
 #include <utility>

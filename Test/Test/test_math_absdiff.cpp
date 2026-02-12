@@ -1,6 +1,10 @@
+#include "../test_internal.hpp"
 #include "../../Math/math.hpp"
 #include "../../Basic/limits.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 FT_TEST(test_math_absdiff_int_symmetry, "math_absdiff handles int inputs symmetrically")
 {

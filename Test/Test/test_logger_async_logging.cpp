@@ -1,7 +1,11 @@
+#include "../test_internal.hpp"
 #include "../../Logger/logger.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../Errno/errno.hpp"
+
+#ifndef LIBFT_TEST_BUILD
+#endif
 
 struct logger_async_sink_context
 {
@@ -32,15 +36,15 @@ FT_TEST(test_logger_async_logging_teardown, "logger async logging")
     sink_registered = 0;
     success = 1;
     ft_log_enable_async(false);
-    if (ft_errno != FT_ERR_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESS)
         success = 0;
     original_limit = ft_log_get_async_queue_limit();
-    if (ft_errno != FT_ERR_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESS)
         success = 0;
     if (success)
     {
         ft_log_set_async_queue_limit(0);
-        if (ft_errno != FT_ERR_SUCCESSS)
+        if (ft_errno != FT_ERR_SUCCESS)
             success = 0;
     }
     if (success)
@@ -53,13 +57,13 @@ FT_TEST(test_logger_async_logging_teardown, "logger async logging")
     if (success)
     {
         ft_log_reset_async_metrics();
-        if (ft_errno != FT_ERR_SUCCESSS)
+        if (ft_errno != FT_ERR_SUCCESS)
             success = 0;
     }
     if (success)
     {
         ft_log_enable_async(true);
-        if (ft_errno != FT_ERR_SUCCESSS)
+        if (ft_errno != FT_ERR_SUCCESS)
             success = 0;
     }
     if (success)
@@ -72,12 +76,12 @@ FT_TEST(test_logger_async_logging_teardown, "logger async logging")
         }
     }
     ft_log_enable_async(false);
-    if (ft_errno != FT_ERR_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESS)
         success = 0;
     if (sink_registered)
         ft_log_remove_sink(logger_async_sink, &context);
     ft_log_set_async_queue_limit(original_limit);
-    if (ft_errno != FT_ERR_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESS)
         success = 0;
     if (!success)
         return (0);

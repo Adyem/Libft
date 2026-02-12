@@ -14,12 +14,12 @@ int file_sink_prepare_thread_safety(s_file_sink *sink)
     if (!sink)
         return (FT_ERR_INVALID_ARGUMENT);
     if (sink->thread_safe_enabled && sink->mutex)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     memory = std::malloc(sizeof(pt_mutex));
     if (!memory)
         return (FT_ERR_NO_MEMORY);
     mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
+    if (mutex_pointer->get_error() != FT_ERR_SUCCESS)
     {
         int mutex_error;
 
@@ -30,7 +30,7 @@ int file_sink_prepare_thread_safety(s_file_sink *sink)
     }
     sink->mutex = mutex_pointer;
     sink->thread_safe_enabled = true;
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     return (error_code);
 }
 
@@ -59,13 +59,13 @@ int file_sink_lock(const s_file_sink *sink, bool *lock_acquired)
         return (FT_ERR_INVALID_ARGUMENT);
     mutable_sink = const_cast<s_file_sink *>(sink);
     if (!mutable_sink->thread_safe_enabled || !mutable_sink->mutex)
-        return (FT_ERR_SUCCESSS);
+        return (FT_ERR_SUCCESS);
     mutable_sink->mutex->lock(THREAD_ID);
-    if (mutable_sink->mutex->get_error() != FT_ERR_SUCCESSS)
+    if (mutable_sink->mutex->get_error() != FT_ERR_SUCCESS)
         return (mutable_sink->mutex->get_error());
     if (lock_acquired)
         *lock_acquired = true;
-    error_code = FT_ERR_SUCCESSS;
+    error_code = FT_ERR_SUCCESS;
     return (error_code);
 }
 
@@ -81,7 +81,7 @@ void file_sink_unlock(const s_file_sink *sink, bool lock_acquired)
     if (!mutable_sink->mutex)
         return ;
     mutable_sink->mutex->unlock(THREAD_ID);
-    if (mutable_sink->mutex->get_error() != FT_ERR_SUCCESSS)
+    if (mutable_sink->mutex->get_error() != FT_ERR_SUCCESS)
         return ;
     return ;
 }

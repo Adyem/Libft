@@ -1,3 +1,4 @@
+#include "../test_internal.hpp"
 #include "../../Geometry/geometry.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
@@ -6,15 +7,18 @@
 #include <thread>
 #include <utility>
 
+#ifndef LIBFT_TEST_BUILD
+#endif
+
 FT_TEST(test_intersect_sphere_overlap, "intersect_sphere detects overlapping spheres")
 {
     sphere first;
     sphere second;
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, first.set_center(1.0, 2.0, 3.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, first.set_radius(5.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, second.set_center(4.0, 3.0, 5.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, second.set_radius(4.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first.set_center(1.0, 2.0, 3.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first.set_radius(5.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second.set_center(4.0, 3.0, 5.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second.set_radius(4.0));
     FT_ASSERT(intersect_sphere(first, second));
     FT_ASSERT(intersect_sphere(second, first));
     return (1);
@@ -25,10 +29,10 @@ FT_TEST(test_intersect_sphere_separated, "intersect_sphere returns false when ce
     sphere first;
     sphere second;
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, first.set_center(-4.0, -4.0, -4.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, first.set_radius(1.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, second.set_center(4.0, 4.0, 4.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, second.set_radius(1.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first.set_center(-4.0, -4.0, -4.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first.set_radius(1.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second.set_center(4.0, 4.0, 4.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second.set_radius(1.0));
     FT_ASSERT_EQ(false, intersect_sphere(first, second));
     FT_ASSERT_EQ(false, intersect_sphere(second, first));
     return (1);
@@ -39,10 +43,10 @@ FT_TEST(test_intersect_sphere_touching, "intersect_sphere treats tangential cont
     sphere first;
     sphere second;
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, first.set_center(0.0, 0.0, 0.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, first.set_radius(2.5));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, second.set_center(5.0, 0.0, 0.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, second.set_radius(2.5));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first.set_center(0.0, 0.0, 0.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first.set_radius(2.5));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second.set_center(5.0, 0.0, 0.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second.set_radius(2.5));
     FT_ASSERT(intersect_sphere(first, second));
     FT_ASSERT(intersect_sphere(second, first));
     return (1);
@@ -58,10 +62,10 @@ FT_TEST(test_intersect_sphere_parallel_access, "intersect_sphere handles concurr
     std::thread worker_thread;
     int iteration_index;
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, first.set_center(0.0, 0.0, 0.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, first.set_radius(6.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, second.set_center(2.0, 2.0, 2.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, second.set_radius(5.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first.set_center(0.0, 0.0, 0.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first.set_radius(6.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second.set_center(2.0, 2.0, 2.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second.set_radius(5.0));
 
     worker_ready.store(false);
     worker_failed.store(false);
@@ -81,12 +85,12 @@ FT_TEST(test_intersect_sphere_parallel_access, "intersect_sphere handles concurr
                 worker_failed.store(true);
                 break;
             }
-            if (first.get_error() != FT_ERR_SUCCESSS)
+            if (first.get_error() != FT_ERR_SUCCESS)
             {
                 worker_failed.store(true);
                 break;
             }
-            if (second.get_error() != FT_ERR_SUCCESSS)
+            if (second.get_error() != FT_ERR_SUCCESS)
             {
                 worker_failed.store(true);
                 break;
@@ -118,17 +122,17 @@ FT_TEST(test_intersect_sphere_parallel_access, "intersect_sphere handles concurr
             failure_line = __LINE__;
             break;
         }
-        if (first.get_error() != FT_ERR_SUCCESSS && test_failed == 0)
+        if (first.get_error() != FT_ERR_SUCCESS && test_failed == 0)
         {
             test_failed = 1;
-            failure_expression = "first.get_error() == FT_ERR_SUCCESSS";
+            failure_expression = "first.get_error() == FT_ERR_SUCCESS";
             failure_line = __LINE__;
             break;
         }
-        if (second.get_error() != FT_ERR_SUCCESSS && test_failed == 0)
+        if (second.get_error() != FT_ERR_SUCCESS && test_failed == 0)
         {
             test_failed = 1;
-            failure_expression = "second.get_error() == FT_ERR_SUCCESSS";
+            failure_expression = "second.get_error() == FT_ERR_SUCCESS";
             failure_line = __LINE__;
             break;
         }
@@ -145,8 +149,8 @@ FT_TEST(test_intersect_sphere_parallel_access, "intersect_sphere handles concurr
 
     FT_ASSERT(worker_completed.load());
     FT_ASSERT(worker_failed.load() == false);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, first.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, second.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second.get_error());
     return (1);
 }
 
@@ -154,11 +158,11 @@ FT_TEST(test_intersect_sphere_self_reference, "intersect_sphere supports self co
 {
     sphere shape;
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, shape.set_center(1.0, -2.0, 3.5));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, shape.set_radius(4.5));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.set_center(1.0, -2.0, 3.5));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.set_radius(4.5));
     ft_errno = FT_ERR_ALREADY_EXISTS;
     FT_ASSERT(intersect_sphere(shape, shape));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, shape.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.get_error());
     FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, ft_errno);
     return (1);
 }
@@ -176,10 +180,10 @@ FT_TEST(test_sphere_move_assignment_resets_source, "sphere move assignment trans
     double source_center_z;
     double source_radius;
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, source.set_center(7.0, -3.0, 2.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, source.set_radius(9.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, destination.set_center(-1.0, 1.0, -1.0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, destination.set_radius(1.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.set_center(7.0, -3.0, 2.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.set_radius(9.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.set_center(-1.0, 1.0, -1.0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.set_radius(1.0));
     destination = std::move(source);
     destination_center_x = destination.get_center_x();
     destination_center_y = destination.get_center_y();
@@ -197,7 +201,7 @@ FT_TEST(test_sphere_move_assignment_resets_source, "sphere move assignment trans
     FT_ASSERT_EQ(0.0, source_center_y);
     FT_ASSERT_EQ(0.0, source_center_z);
     FT_ASSERT_EQ(0.0, source_radius);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, destination.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, source.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
     return (1);
 }

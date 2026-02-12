@@ -45,7 +45,7 @@ endif
 
 CXX       := g++
 
-COMPILE_FLAGS := -Wall -Wextra -Werror -std=c++17 -Wuseless-cast $(OPT_FLAGS) -pthread -Wno-missing-declarations -DLIBFT_TEST_BUILD
+COMPILE_FLAGS := -Wall -Wextra -Werror -std=c++17 -Wuseless-cast $(OPT_FLAGS) -pthread -Wno-missing-declarations
 CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Libft\"
 LDFLAGS := -lz -lssl -lcrypto -ldl -lsqlite3
 export COMPILE_FLAGS
@@ -106,7 +106,11 @@ $(OBJDIR)/Test/test_template_graph_move_errors.o: CFLAGS := $(COMPILE_FLAGS) -DT
 $(OBJDIR)/Test/test_template_deque_move.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Template\"
 $(OBJDIR)/Test/test_template_deque_move_errors.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Template\"
 $(OBJDIR)/Test/test_template_iterator_copy_move.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Template\"
+$(OBJDIR)/Test/test_template_unordered_map_allocation_failure_paths.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Template\"
 $(OBJDIR)/Test/test_template_trie_copy_move_deleted.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Template\"
+$(OBJDIR)/Test/test_advanced_memory.o $(OBJDIR)/Test/test_advanced_numeric.o $(OBJDIR)/Test/test_advanced_strings.o \
+$(OBJDIR)/Test/test_atoi.o $(OBJDIR)/Test/test_strjoin_multiple.o $(OBJDIR)/Test/test_to_string.o \
+$(OBJDIR)/Test/test_wide_char.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Advanced\"
 $(OBJDIR)/Test/test_networking.o $(OBJDIR)/Test/test_http_server.o $(OBJDIR)/Test/test_websocket.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Networking\"
 $(OBJDIR)/Test/test_networking_quic.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Networking\"
 $(OBJDIR)/Test/test_logger.o $(OBJDIR)/Test/test_logger_async.o $(OBJDIR)/Test/test_logger_network.o \
