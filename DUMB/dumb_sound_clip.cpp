@@ -133,7 +133,14 @@ int ft_sound_clip::initialize(const ft_sound_clip &other)
         return (FT_ERR_INVALID_STATE);
     }
     if (other._initialized_state != ft_sound_clip::_state_initialized)
+    {
+        other.abort_lifecycle_error(
+            "ft_sound_clip::initialize(const ft_sound_clip &) source",
+            "called with source object that is not initialized");
         return (FT_ERR_INVALID_STATE);
+    }
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
     if (this->initialize() != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_STATE);
     lock_error = lock_recursive_mutex_if_valid(other._mutex);
@@ -167,7 +174,14 @@ int ft_sound_clip::initialize(ft_sound_clip &&other)
         return (FT_ERR_INVALID_STATE);
     }
     if (other._initialized_state != ft_sound_clip::_state_initialized)
+    {
+        other.abort_lifecycle_error(
+            "ft_sound_clip::initialize(ft_sound_clip &&) source",
+            "called with source object that is not initialized");
         return (FT_ERR_INVALID_STATE);
+    }
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
     initialization_error = this->initialize();
     if (initialization_error != FT_ERR_SUCCESS)
         return (initialization_error);
@@ -203,9 +217,6 @@ int ft_sound_clip::move(ft_sound_clip &other)
     int this_unlock_error;
     int other_unlock_error;
 
-    this->abort_if_not_initialized("ft_sound_clip::move destination");
-    if (this == &other)
-        return (FT_ERR_SUCCESS);
     if (other._initialized_state == ft_sound_clip::_state_uninitialized)
     {
         other.abort_lifecycle_error("ft_sound_clip::move source",
@@ -213,7 +224,18 @@ int ft_sound_clip::move(ft_sound_clip &other)
         return (FT_ERR_INVALID_STATE);
     }
     if (other._initialized_state != ft_sound_clip::_state_initialized)
+    {
+        other.abort_lifecycle_error("ft_sound_clip::move source",
+            "called with source object that is not initialized");
         return (FT_ERR_INVALID_STATE);
+    }
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (this->_initialized_state != ft_sound_clip::_state_initialized)
+    {
+        if (this->initialize() != FT_ERR_SUCCESS)
+            return (FT_ERR_INVALID_STATE);
+    }
     this_lock_error = lock_recursive_mutex_if_valid(this->_mutex);
     if (this_lock_error != FT_ERR_SUCCESS)
         return (this_lock_error);

@@ -111,11 +111,39 @@ class ft_string
 #endif
 };
 
-ft_string   operator+(const ft_string &left, const ft_string &right) noexcept;
-ft_string   operator+(const ft_string &left, const char *right) noexcept;
-ft_string   operator+(const char *left, const ft_string &right) noexcept;
-ft_string   operator+(const ft_string &left, char right) noexcept;
-ft_string   operator+(char left, const ft_string &right) noexcept;
+class ft_string_proxy
+{
+    private:
+        ft_string   _value;
+        int32_t     _last_error;
+
+    public:
+        ft_string_proxy() noexcept;
+        explicit ft_string_proxy(int32_t error_code) noexcept;
+        ft_string_proxy(const ft_string &value, int32_t error_code) noexcept;
+        ft_string_proxy(const ft_string_proxy &other) noexcept;
+        ft_string_proxy(ft_string_proxy &&other) noexcept;
+        ~ft_string_proxy();
+
+        ft_string_proxy &operator=(const ft_string_proxy &other) noexcept;
+        ft_string_proxy &operator=(ft_string_proxy &&other) noexcept;
+
+        ft_string_proxy operator+(const ft_string &right) const noexcept;
+        ft_string_proxy operator+(const char *right) const noexcept;
+        ft_string_proxy operator+(char right) const noexcept;
+
+        operator ft_string() const noexcept;
+        int32_t get_error() const noexcept;
+};
+
+ft_string_proxy operator+(const ft_string &left, const ft_string &right) noexcept;
+ft_string_proxy operator+(const ft_string &left, const char *right) noexcept;
+ft_string_proxy operator+(const char *left, const ft_string &right) noexcept;
+ft_string_proxy operator+(const ft_string &left, char right) noexcept;
+ft_string_proxy operator+(char left, const ft_string &right) noexcept;
+ft_string_proxy operator+(const ft_string_proxy &left, const ft_string &right) noexcept;
+ft_string_proxy operator+(const ft_string_proxy &left, const char *right) noexcept;
+ft_string_proxy operator+(const ft_string_proxy &left, char right) noexcept;
 bool        operator==(const char *left, const ft_string &right) noexcept;
 bool        operator!=(const char *left, const ft_string &right) noexcept;
 

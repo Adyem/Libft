@@ -4,6 +4,7 @@
 #include "../Errno/errno.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include <cstdint>
 
 class vector2
 {
@@ -11,11 +12,15 @@ class vector2
         double _x;
         double _y;
         pt_recursive_mutex *_mutex = ft_nullptr;
+        uint8_t _initialized_state = 0;
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
 
         friend class matrix2;
-
-        int prepare_thread_safety(void) noexcept;
-        void teardown_thread_safety(void) noexcept;
+        void abort_lifecycle_error(const char *method_name,
+                const char *reason) const noexcept;
+        void abort_if_not_initialized(const char *method_name) const noexcept;
 
         int lock_mutex() const noexcept;
         int unlock_mutex() const noexcept;
@@ -32,6 +37,12 @@ class vector2
         vector2(vector2 &&other) = delete;
         vector2 &operator=(vector2 &&other) = delete;
         ~vector2();
+        int initialize() noexcept;
+        int initialize(double x, double y) noexcept;
+        int initialize(const vector2 &other) noexcept;
+        int initialize(vector2 &&other) noexcept;
+        int destroy() noexcept;
+        int move(vector2 &other) noexcept;
         double  get_x() const;
         double  get_y() const;
         vector2 add(const vector2 &other) const;
@@ -54,11 +65,15 @@ class vector3
         double _y;
         double _z;
         pt_recursive_mutex *_mutex = ft_nullptr;
+        uint8_t _initialized_state = 0;
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
 
         friend class matrix3;
-
-        int prepare_thread_safety(void) noexcept;
-        void teardown_thread_safety(void) noexcept;
+        void abort_lifecycle_error(const char *method_name,
+                const char *reason) const noexcept;
+        void abort_if_not_initialized(const char *method_name) const noexcept;
 
         int lock_mutex() const noexcept;
         int unlock_mutex() const noexcept;
@@ -75,6 +90,12 @@ class vector3
         vector3(vector3 &&other) = delete;
         vector3 &operator=(vector3 &&other) = delete;
         ~vector3();
+        int initialize() noexcept;
+        int initialize(double x, double y, double z) noexcept;
+        int initialize(const vector3 &other) noexcept;
+        int initialize(vector3 &&other) noexcept;
+        int destroy() noexcept;
+        int move(vector3 &other) noexcept;
         double  get_x() const;
         double  get_y() const;
         double  get_z() const;
@@ -100,11 +121,15 @@ class vector4
         double _z;
         double _w;
         pt_recursive_mutex *_mutex = ft_nullptr;
+        uint8_t _initialized_state = 0;
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
 
         friend class matrix4;
-
-        int prepare_thread_safety(void) noexcept;
-        void teardown_thread_safety(void) noexcept;
+        void abort_lifecycle_error(const char *method_name,
+                const char *reason) const noexcept;
+        void abort_if_not_initialized(const char *method_name) const noexcept;
 
         int lock_mutex() const noexcept;
         int unlock_mutex() const noexcept;
@@ -121,6 +146,12 @@ class vector4
         vector4(vector4 &&other) = delete;
         vector4 &operator=(vector4 &&other) = delete;
         ~vector4();
+        int initialize() noexcept;
+        int initialize(double x, double y, double z, double w) noexcept;
+        int initialize(const vector4 &other) noexcept;
+        int initialize(vector4 &&other) noexcept;
+        int destroy() noexcept;
+        int move(vector4 &other) noexcept;
         double  get_x() const;
         double  get_y() const;
         double  get_z() const;
@@ -143,9 +174,14 @@ class matrix2
     private:
         double _m[2][2];
         pt_recursive_mutex *_mutex = ft_nullptr;
+        uint8_t _initialized_state = 0;
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
 
-        int prepare_thread_safety(void) noexcept;
-        void teardown_thread_safety(void) noexcept;
+        void abort_lifecycle_error(const char *method_name,
+                const char *reason) const noexcept;
+        void abort_if_not_initialized(const char *method_name) const noexcept;
 
         int lock_mutex() const noexcept;
         int unlock_mutex() const noexcept;
@@ -163,6 +199,12 @@ class matrix2
         matrix2(matrix2 &&other) = delete;
         matrix2 &operator=(matrix2 &&other) = delete;
         ~matrix2();
+        int initialize() noexcept;
+        int initialize(double m00, double m01, double m10, double m11) noexcept;
+        int initialize(const matrix2 &other) noexcept;
+        int initialize(matrix2 &&other) noexcept;
+        int destroy() noexcept;
+        int move(matrix2 &other) noexcept;
         vector2 transform(const vector2 &vector) const;
         matrix2 multiply(const matrix2 &other) const;
         matrix2 invert() const;
@@ -179,9 +221,14 @@ class matrix3
     private:
         double _m[3][3];
         pt_recursive_mutex *_mutex = ft_nullptr;
+        uint8_t _initialized_state = 0;
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
 
-        int prepare_thread_safety(void) noexcept;
-        void teardown_thread_safety(void) noexcept;
+        void abort_lifecycle_error(const char *method_name,
+                const char *reason) const noexcept;
+        void abort_if_not_initialized(const char *method_name) const noexcept;
 
         int lock_mutex() const noexcept;
         int unlock_mutex() const noexcept;
@@ -195,11 +242,19 @@ class matrix3
         matrix3(double m00, double m01, double m02,
                 double m10, double m11, double m12,
                 double m20, double m21, double m22);
-        matrix3(const matrix3 &other);
-        matrix3 &operator=(const matrix3 &other);
-        matrix3(matrix3 &&other);
-        matrix3 &operator=(matrix3 &&other);
+        matrix3(const matrix3 &other) = delete;
+        matrix3 &operator=(const matrix3 &other) = delete;
+        matrix3(matrix3 &&other) = delete;
+        matrix3 &operator=(matrix3 &&other) = delete;
         ~matrix3();
+        int initialize() noexcept;
+        int initialize(double m00, double m01, double m02,
+                double m10, double m11, double m12,
+                double m20, double m21, double m22) noexcept;
+        int initialize(const matrix3 &other) noexcept;
+        int initialize(matrix3 &&other) noexcept;
+        int destroy() noexcept;
+        int move(matrix3 &other) noexcept;
         vector3 transform(const vector3 &vector) const;
         matrix3 multiply(const matrix3 &other) const;
         matrix3 invert() const;
@@ -216,9 +271,14 @@ class matrix4
     private:
         double _m[4][4];
         pt_recursive_mutex *_mutex = ft_nullptr;
+        uint8_t _initialized_state = 0;
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
 
-        int prepare_thread_safety(void) noexcept;
-        void teardown_thread_safety(void) noexcept;
+        void abort_lifecycle_error(const char *method_name,
+                const char *reason) const noexcept;
+        void abort_if_not_initialized(const char *method_name) const noexcept;
 
         int lock_mutex() const noexcept;
         int unlock_mutex() const noexcept;
@@ -233,11 +293,20 @@ class matrix4
                 double m10, double m11, double m12, double m13,
                 double m20, double m21, double m22, double m23,
                 double m30, double m31, double m32, double m33);
-        matrix4(const matrix4 &other);
-        matrix4 &operator=(const matrix4 &other);
-        matrix4(matrix4 &&other);
-        matrix4 &operator=(matrix4 &&other);
+        matrix4(const matrix4 &other) = delete;
+        matrix4 &operator=(const matrix4 &other) = delete;
+        matrix4(matrix4 &&other) = delete;
+        matrix4 &operator=(matrix4 &&other) = delete;
         ~matrix4();
+        int initialize() noexcept;
+        int initialize(double m00, double m01, double m02, double m03,
+                double m10, double m11, double m12, double m13,
+                double m20, double m21, double m22, double m23,
+                double m30, double m31, double m32, double m33) noexcept;
+        int initialize(const matrix4 &other) noexcept;
+        int initialize(matrix4 &&other) noexcept;
+        int destroy() noexcept;
+        int move(matrix4 &other) noexcept;
         static matrix4 make_translation(double x, double y, double z);
         static matrix4 make_scale(double x, double y, double z);
         static matrix4 make_rotation_x(double angle);

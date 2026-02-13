@@ -2,7 +2,6 @@
 #include <new>
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/recursive_mutex.hpp"
-#include "../PThread/pthread_internal.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 
 #include "../Errno/errno.hpp"
@@ -23,28 +22,36 @@ int rl_terminal_dimensions_prepare_thread_safety(terminal_dimensions *dimensions
     if (dimensions == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     if (dimensions->mutex != ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
-    }
-    pt_recursive_mutex *mutex_pointer = ft_nullptr;
-    int mutex_error = pt_recursive_mutex_create_with_error(&mutex_pointer);
+    pt_recursive_mutex *mutex_pointer;
+    int mutex_error;
+
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
+    if (mutex_pointer == ft_nullptr)
+        return (FT_ERR_NO_MEMORY);
+    mutex_error = mutex_pointer->initialize();
     if (mutex_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(mutex_error);
+        delete mutex_pointer;
         return (mutex_error);
     }
     dimensions->mutex = mutex_pointer;
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
 void rl_terminal_dimensions_teardown_thread_safety(terminal_dimensions *dimensions)
 {
+    int destroy_error;
+
     if (dimensions == ft_nullptr)
         return ;
-    pt_recursive_mutex_destroy(&dimensions->mutex);
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    if (dimensions->mutex == ft_nullptr)
+        return ;
+    destroy_error = dimensions->mutex->destroy();
+    if (destroy_error != FT_ERR_SUCCESS)
+        return ;
+    delete dimensions->mutex;
+    dimensions->mutex = ft_nullptr;
     return ;
 }
 
@@ -56,13 +63,9 @@ int rl_terminal_dimensions_lock(terminal_dimensions *dimensions, bool *lock_acqu
         return (FT_ERR_INVALID_ARGUMENT);
     if (dimensions->mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
-    int mutex_error = pt_recursive_mutex_lock_with_error(*dimensions->mutex);
-    int stack_error = ft_global_error_stack_drop_last_error();
+    int mutex_error = dimensions->mutex->lock();
     if (mutex_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(stack_error);
         return (mutex_error);
-    }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
     return (FT_ERR_SUCCESS);
@@ -74,13 +77,9 @@ int rl_terminal_dimensions_unlock(terminal_dimensions *dimensions, bool lock_acq
         return (FT_ERR_INVALID_ARGUMENT);
     if (dimensions->mutex == ft_nullptr)
         return (FT_ERR_INVALID_STATE);
-    int mutex_error = pt_recursive_mutex_unlock_with_error(*dimensions->mutex);
-    int stack_error = ft_global_error_stack_drop_last_error();
+    int mutex_error = dimensions->mutex->unlock();
     if (mutex_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(stack_error);
         return (mutex_error);
-    }
     return (FT_ERR_SUCCESS);
 }
 

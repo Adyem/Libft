@@ -6,6 +6,8 @@
 #include "../PThread/recursive_mutex.hpp"
 #include <new>
 #include "../Template/move.hpp"
+#include "../Printf/printf.hpp"
+#include "../System_utils/system_utils.hpp"
 static void math_polynomial_copy_vector(const ft_vector<double> &source,
     ft_vector<double> &destination,
     size_t count,
@@ -32,6 +34,7 @@ static void math_polynomial_copy_vector(const ft_vector<double> &source,
 
 int ft_cubic_spline::lock_mutex() const noexcept
 {
+    this->abort_if_not_initialized("ft_cubic_spline::lock_mutex");
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
     return (this->_mutex->lock());
@@ -44,15 +47,36 @@ int ft_cubic_spline::unlock_mutex() const noexcept
     return (this->_mutex->unlock());
 }
 
-int ft_cubic_spline::prepare_thread_safety(void) const noexcept
+void ft_cubic_spline::abort_lifecycle_error(const char *method_name,
+    const char *reason) const noexcept
 {
-    if (this->_mutex != ft_nullptr)
-    {
-        return (FT_ERR_SUCCESS);
-    }
+    if (method_name == ft_nullptr)
+        method_name = "unknown";
+    if (reason == ft_nullptr)
+        reason = "unknown";
+    pf_printf_fd(2, "ft_cubic_spline lifecycle error: %s: %s\n",
+        method_name, reason);
+    su_abort();
+    return ;
+}
+
+void ft_cubic_spline::abort_if_not_initialized(const char *method_name) const noexcept
+{
+    if (this->_initialized_state == ft_cubic_spline::_state_initialized)
+        return ;
+    this->abort_lifecycle_error(method_name,
+        "called while object is not initialized");
+    return ;
+}
+
+int ft_cubic_spline::enable_thread_safety() noexcept
+{
     pt_recursive_mutex *mutex_pointer;
     int mutex_error;
 
+    this->abort_if_not_initialized("ft_cubic_spline::enable_thread_safety");
+    if (this->_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
@@ -66,8 +90,10 @@ int ft_cubic_spline::prepare_thread_safety(void) const noexcept
     return (FT_ERR_SUCCESS);
 }
 
-void ft_cubic_spline::teardown_thread_safety(void) const noexcept
-{    if (this->_mutex != ft_nullptr)
+void ft_cubic_spline::disable_thread_safety() noexcept
+{
+    this->abort_if_not_initialized("ft_cubic_spline::disable_thread_safety");
+    if (this->_mutex != ft_nullptr)
     {
         this->_mutex->destroy();
         delete this->_mutex;
@@ -76,115 +102,297 @@ void ft_cubic_spline::teardown_thread_safety(void) const noexcept
     return ;
 }
 
-int ft_cubic_spline::enable_thread_safety() noexcept
-{
-    return (this->prepare_thread_safety());
-}
-
-void ft_cubic_spline::disable_thread_safety() noexcept
-{
-    this->teardown_thread_safety();
-    return ;
-}
-
 bool ft_cubic_spline::is_thread_safe_enabled() const noexcept
 {
+    this->abort_if_not_initialized("ft_cubic_spline::is_thread_safe_enabled");
     return (this->_mutex != ft_nullptr);
 }
 
 ft_cubic_spline::ft_cubic_spline() noexcept
     : _mutex(ft_nullptr)
 {
+    this->_initialized_state = ft_cubic_spline::_state_uninitialized;
     return ;
 }
 
 ft_cubic_spline::ft_cubic_spline(ft_cubic_spline &&other) noexcept
     : _mutex(ft_nullptr)
 {
-    pt_recursive_mutex *moved_mutex = other._mutex;
-    int lock_error;
     int initialize_error;
-    int unlock_error;
 
-    lock_error = other.lock_mutex();
-    if (lock_error != FT_ERR_SUCCESS)
-        return ;
-    initialize_error = this->x_values.initialize(other.x_values);
-    if (initialize_error == FT_ERR_SUCCESS)
-        initialize_error = this->a_coefficients.initialize(other.a_coefficients);
-    if (initialize_error == FT_ERR_SUCCESS)
-        initialize_error = this->b_coefficients.initialize(other.b_coefficients);
-    if (initialize_error == FT_ERR_SUCCESS)
-        initialize_error = this->c_coefficients.initialize(other.c_coefficients);
-    if (initialize_error == FT_ERR_SUCCESS)
-        initialize_error = this->d_coefficients.initialize(other.d_coefficients);
-    unlock_error = other.unlock_mutex();
-    if (initialize_error != FT_ERR_SUCCESS)
-        return ;
-    if (unlock_error != FT_ERR_SUCCESS)
-        return ;
-    this->_mutex = moved_mutex;
-    other._mutex = ft_nullptr;
+    this->_initialized_state = ft_cubic_spline::_state_uninitialized;
+    initialize_error = this->initialize(ft_move(other));
+    if (initialize_error != FT_ERR_SUCCESS
+        && this->_initialized_state == ft_cubic_spline::_state_uninitialized)
+        this->_initialized_state = ft_cubic_spline::_state_destroyed;
     return ;
 }
 
-ft_cubic_spline &ft_cubic_spline::operator=(ft_cubic_spline &&other) noexcept
+int ft_cubic_spline::initialize() noexcept
 {
-    int destroy_error;
     int initialize_error;
+
+    if (this->_initialized_state == ft_cubic_spline::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_cubic_spline::initialize",
+            "called while object is already initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    initialize_error = this->x_values.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialized_state = ft_cubic_spline::_state_destroyed;
+        return (initialize_error);
+    }
+    initialize_error = this->a_coefficients.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        (void)this->x_values.destroy();
+        this->_initialized_state = ft_cubic_spline::_state_destroyed;
+        return (initialize_error);
+    }
+    initialize_error = this->b_coefficients.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        (void)this->a_coefficients.destroy();
+        (void)this->x_values.destroy();
+        this->_initialized_state = ft_cubic_spline::_state_destroyed;
+        return (initialize_error);
+    }
+    initialize_error = this->c_coefficients.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        (void)this->b_coefficients.destroy();
+        (void)this->a_coefficients.destroy();
+        (void)this->x_values.destroy();
+        this->_initialized_state = ft_cubic_spline::_state_destroyed;
+        return (initialize_error);
+    }
+    initialize_error = this->d_coefficients.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        (void)this->c_coefficients.destroy();
+        (void)this->b_coefficients.destroy();
+        (void)this->a_coefficients.destroy();
+        (void)this->x_values.destroy();
+        this->_initialized_state = ft_cubic_spline::_state_destroyed;
+        return (initialize_error);
+    }
+    this->_initialized_state = ft_cubic_spline::_state_initialized;
+    return (FT_ERR_SUCCESS);
+}
+
+int ft_cubic_spline::initialize(const ft_cubic_spline &other) noexcept
+{
+    int copy_error;
     int lock_error;
     int unlock_error;
 
-    if (this != &other)
+    if (other._initialized_state != ft_cubic_spline::_state_initialized)
     {
-        lock_error = other.lock_mutex();
-        if (lock_error != FT_ERR_SUCCESS)
-            return (*this);
-        this->disable_thread_safety();
-        destroy_error = this->x_values.destroy();
-        if (destroy_error == FT_ERR_SUCCESS)
-            destroy_error = this->a_coefficients.destroy();
-        if (destroy_error == FT_ERR_SUCCESS)
-            destroy_error = this->b_coefficients.destroy();
-        if (destroy_error == FT_ERR_SUCCESS)
-            destroy_error = this->c_coefficients.destroy();
-        if (destroy_error == FT_ERR_SUCCESS)
-            destroy_error = this->d_coefficients.destroy();
-        if (destroy_error != FT_ERR_SUCCESS)
-        {
-            other.unlock_mutex();
-            return (*this);
-        }
-        initialize_error = this->x_values.initialize(other.x_values);
-        if (initialize_error == FT_ERR_SUCCESS)
-            initialize_error = this->a_coefficients.initialize(other.a_coefficients);
-        if (initialize_error == FT_ERR_SUCCESS)
-            initialize_error = this->b_coefficients.initialize(other.b_coefficients);
-        if (initialize_error == FT_ERR_SUCCESS)
-            initialize_error = this->c_coefficients.initialize(other.c_coefficients);
-        if (initialize_error == FT_ERR_SUCCESS)
-            initialize_error = this->d_coefficients.initialize(other.d_coefficients);
-        unlock_error = other.unlock_mutex();
-        if (initialize_error != FT_ERR_SUCCESS)
-            return (*this);
-        if (unlock_error != FT_ERR_SUCCESS)
-            return (*this);
-        this->_mutex = other._mutex;
-        other._mutex = ft_nullptr;
+        if (other._initialized_state == ft_cubic_spline::_state_uninitialized)
+            other.abort_lifecycle_error("ft_cubic_spline::initialize(const ft_cubic_spline &) source",
+                "called with uninitialized source object");
+        else
+            other.abort_lifecycle_error("ft_cubic_spline::initialize(const ft_cubic_spline &) source",
+                "called with destroyed source object");
+        return (FT_ERR_INVALID_STATE);
     }
-    return (*this);
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    copy_error = this->initialize();
+    if (copy_error != FT_ERR_SUCCESS)
+        return (copy_error);
+    lock_error = other.lock_mutex();
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        (void)this->destroy();
+        return (lock_error);
+    }
+    copy_error = this->x_values.copy_from(other.x_values);
+    if (copy_error == FT_ERR_SUCCESS)
+        copy_error = this->a_coefficients.copy_from(other.a_coefficients);
+    if (copy_error == FT_ERR_SUCCESS)
+        copy_error = this->b_coefficients.copy_from(other.b_coefficients);
+    if (copy_error == FT_ERR_SUCCESS)
+        copy_error = this->c_coefficients.copy_from(other.c_coefficients);
+    if (copy_error == FT_ERR_SUCCESS)
+        copy_error = this->d_coefficients.copy_from(other.d_coefficients);
+    unlock_error = other.unlock_mutex();
+    if (copy_error != FT_ERR_SUCCESS || unlock_error != FT_ERR_SUCCESS)
+    {
+        (void)this->destroy();
+        if (copy_error != FT_ERR_SUCCESS)
+            return (copy_error);
+        return (unlock_error);
+    }
+    return (FT_ERR_SUCCESS);
+}
+
+int ft_cubic_spline::move(ft_cubic_spline &other) noexcept
+{
+    const ft_cubic_spline *lower;
+    const ft_cubic_spline *upper;
+    int initialize_error;
+    int lower_error;
+    int upper_error;
+    int move_error;
+
+    if (other._initialized_state != ft_cubic_spline::_state_initialized)
+    {
+        if (other._initialized_state == ft_cubic_spline::_state_uninitialized)
+            other.abort_lifecycle_error("ft_cubic_spline::move source",
+                "called with uninitialized source object");
+        else
+            other.abort_lifecycle_error("ft_cubic_spline::move source",
+                "called with destroyed source object");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (this->_initialized_state != ft_cubic_spline::_state_initialized)
+    {
+        initialize_error = this->initialize();
+        if (initialize_error != FT_ERR_SUCCESS)
+            return (initialize_error);
+    }
+    lower = this;
+    upper = &other;
+    if (lower > upper)
+    {
+        const ft_cubic_spline *temporary = lower;
+
+        lower = upper;
+        upper = temporary;
+    }
+    while (true)
+    {
+        lower_error = lower->lock_mutex();
+        if (lower_error != FT_ERR_SUCCESS)
+            return (lower_error);
+        upper_error = upper->lock_mutex();
+        if (upper_error == FT_ERR_SUCCESS)
+            break ;
+        if (upper_error != FT_ERR_MUTEX_ALREADY_LOCKED)
+        {
+            lower->unlock_mutex();
+            return (upper_error);
+        }
+        lower->unlock_mutex();
+    }
+    move_error = this->x_values.copy_from(other.x_values);
+    if (move_error == FT_ERR_SUCCESS)
+        move_error = this->a_coefficients.copy_from(other.a_coefficients);
+    if (move_error == FT_ERR_SUCCESS)
+        move_error = this->b_coefficients.copy_from(other.b_coefficients);
+    if (move_error == FT_ERR_SUCCESS)
+        move_error = this->c_coefficients.copy_from(other.c_coefficients);
+    if (move_error == FT_ERR_SUCCESS)
+        move_error = this->d_coefficients.copy_from(other.d_coefficients);
+    if (move_error == FT_ERR_SUCCESS)
+        other.x_values.clear();
+    if (move_error == FT_ERR_SUCCESS)
+        other.a_coefficients.clear();
+    if (move_error == FT_ERR_SUCCESS)
+        other.b_coefficients.clear();
+    if (move_error == FT_ERR_SUCCESS)
+        other.c_coefficients.clear();
+    if (move_error == FT_ERR_SUCCESS)
+        other.d_coefficients.clear();
+    upper->unlock_mutex();
+    if (lower != upper)
+        lower->unlock_mutex();
+    return (move_error);
+}
+
+int ft_cubic_spline::initialize(ft_cubic_spline &&other) noexcept
+{
+    int initialize_error;
+    int move_error;
+
+    if (other._initialized_state != ft_cubic_spline::_state_initialized)
+    {
+        if (other._initialized_state == ft_cubic_spline::_state_uninitialized)
+            other.abort_lifecycle_error("ft_cubic_spline::initialize(ft_cubic_spline &&) source",
+                "called with uninitialized source object");
+        else
+            other.abort_lifecycle_error("ft_cubic_spline::initialize(ft_cubic_spline &&) source",
+                "called with destroyed source object");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    initialize_error = this->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
+    move_error = this->move(other);
+    if (move_error != FT_ERR_SUCCESS)
+    {
+        (void)this->destroy();
+        return (move_error);
+    }
+    return (FT_ERR_SUCCESS);
+}
+
+int ft_cubic_spline::destroy() noexcept
+{
+    int destroy_error;
+
+    if (this->_initialized_state != ft_cubic_spline::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_cubic_spline::destroy",
+            "called while object is not initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    this->disable_thread_safety();
+    destroy_error = this->x_values.destroy();
+    if (destroy_error == FT_ERR_SUCCESS)
+        destroy_error = this->a_coefficients.destroy();
+    if (destroy_error == FT_ERR_SUCCESS)
+        destroy_error = this->b_coefficients.destroy();
+    if (destroy_error == FT_ERR_SUCCESS)
+        destroy_error = this->c_coefficients.destroy();
+    if (destroy_error == FT_ERR_SUCCESS)
+        destroy_error = this->d_coefficients.destroy();
+    this->_initialized_state = ft_cubic_spline::_state_destroyed;
+    if (destroy_error != FT_ERR_SUCCESS)
+        return (destroy_error);
+    return (FT_ERR_SUCCESS);
 }
 
 ft_cubic_spline::~ft_cubic_spline() noexcept
 {
-    this->disable_thread_safety();
+    if (this->_initialized_state == ft_cubic_spline::_state_uninitialized)
+    {
+        this->abort_lifecycle_error("ft_cubic_spline::~ft_cubic_spline",
+            "destructor called while object is uninitialized");
+        return ;
+    }
+    if (this->_initialized_state == ft_cubic_spline::_state_initialized)
+        (void)this->destroy();
     return ;
 }
 
 pt_recursive_mutex *ft_cubic_spline::get_mutex_for_validation() const noexcept
 {
+    pt_recursive_mutex *mutex_pointer;
+    int mutex_error;
+
+    if (this->_initialized_state != ft_cubic_spline::_state_initialized)
+        return (ft_nullptr);
     if (this->_mutex == ft_nullptr)
-        this->prepare_thread_safety();
+    {
+        mutex_pointer = new (std::nothrow) pt_recursive_mutex();
+        if (mutex_pointer == ft_nullptr)
+            return (ft_nullptr);
+        mutex_error = mutex_pointer->initialize();
+        if (mutex_error != FT_ERR_SUCCESS)
+        {
+            delete mutex_pointer;
+            return (ft_nullptr);
+        }
+        const_cast<ft_cubic_spline *>(this)->_mutex = mutex_pointer;
+    }
     return (this->_mutex);
 }
 
@@ -573,6 +781,7 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
     const ft_vector<double> &y_values) noexcept
 {
     ft_cubic_spline spline;
+    int spline_initialization_error;
     size_t count;
     size_t segment_count;
     ft_vector<double> h;
@@ -581,6 +790,9 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
     int error_code;
     double epsilon;
 
+    spline_initialization_error = spline.initialize();
+    if (spline_initialization_error != FT_ERR_SUCCESS)
+        return (spline);
     int x_error = FT_ERR_SUCCESS;
     if (x_error != FT_ERR_SUCCESS)
     {

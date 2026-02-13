@@ -11,14 +11,9 @@
 #include <stddef.h>
 #include <cstdio>
 
-int pf_string_pop_last_error(const ft_string &string_value)
+int pf_string_pop_last_error(const ft_string &)
 {
-    unsigned long long operation_id;
-
-    operation_id = string_value.last_operation_id();
-    if (operation_id == 0)
-        return (FT_ERR_SUCCESS);
-    return (string_value.pop_operation_error(operation_id));
+    return (ft_string::last_operation_error());
 }
 
 static const char g_decimal_pairs[200] =

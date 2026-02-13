@@ -79,6 +79,13 @@ For every class that has lifecycle methods, store lifecycle state in an explicit
 Behavior rules:
 - Constructors must never abort, and must leave objects in the `0` (uninitialized) state.
 - `initialize()` must abort only when called while already in state `2`.
+- For copy/move style operations (`initialize(copy)`, `initialize(move)`, copy/move constructors, copy/move assignment, and explicit `move(...)` helpers):
+  - the destination object may be in state `0` or `1` when the operation starts (it is valid to construct/initialize into an uninitialized destination),
+  - the source object must be in state `2`; if the source is in state `0` or `1`, the operation must print the lifecycle error and abort.
+  - Always apply checks in this order for copy/move paths:
+    1. Validate the source object is initialized (`state == 2`), abort otherwise.
+    2. Check `this == &other`; if true, treat as a no-op success.
+    3. Continue the operation (including lazy-initializing the destination if needed).
 - If any `initialize(...)` overload fails after it begins initialization work, it must leave the object in state `1` (destroyed), never in state `0`. This guarantees later destruction does not abort because of a failed initialization attempt.
 - `destroy()` must abort when called in state `0` or `1`, and move state `2 -> 1` on success.
 - All methods other than constructors and `initialize()` must abort when called in state `0` or `1`.

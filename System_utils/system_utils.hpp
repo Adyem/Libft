@@ -102,6 +102,8 @@ int     su_copy_file(const char *source_path, const char *destination_path);
 int     su_copy_directory_recursive(const char *source_path,
             const char *destination_path);
 int     su_inspect_permissions(const char *path, mode_t *permissions_out);
+int     su_chmod(const char *path, int owner_permissions,
+            int group_permissions, int other_permissions);
 
 typedef void (*t_su_service_signal_handler)(int signal_number, void *user_context);
 void    su_service_force_no_fork(bool enable);

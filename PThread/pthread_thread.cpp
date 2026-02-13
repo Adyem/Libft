@@ -1,7 +1,6 @@
 #include "thread.hpp"
 #include <cerrno>
 #include "mutex.hpp"
-#include "pthread_internal.hpp"
 #include <new>
 #include "../Template/move.hpp"
 
@@ -54,8 +53,6 @@ ft_thread::~ft_thread()
             this->_start_payload.reset();
         this->unlock_internal(lock_acquired);
     }
-    else
-        ft_global_error_stack_push(lock_error);
     this->teardown_thread_safety();
     return ;
 }
@@ -69,10 +66,7 @@ ft_thread::ft_thread(ft_thread &&other)
     lock_acquired = false;
     int lock_error = other.lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_error);
         return ;
-    }
     this->_thread = other._thread;
     this->_joinable = other._joinable;
     this->_start_payload = ft_move(other._start_payload);
@@ -98,16 +92,12 @@ ft_thread &ft_thread::operator=(ft_thread &&other)
         this_lock_acquired = false;
         int this_lock_error = this->lock_internal(&this_lock_acquired);
         if (this_lock_error != FT_ERR_SUCCESS)
-        {
-            ft_global_error_stack_push(this_lock_error);
             return (*this);
-        }
         other_lock_acquired = false;
         int other_lock_error = other.lock_internal(&other_lock_acquired);
         if (other_lock_error != FT_ERR_SUCCESS)
         {
             this->unlock_internal(this_lock_acquired);
-            ft_global_error_stack_push(other_lock_error);
             return (*this);
         }
         if (this->_joinable)
@@ -139,12 +129,8 @@ bool ft_thread::joinable() const
     lock_acquired = false;
     int lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_error);
         return (false);
-    }
     joinable_state = this->_joinable;
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (joinable_state);
 }
@@ -156,23 +142,16 @@ void ft_thread::join()
     lock_acquired = false;
     int lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_error);
         return ;
-    }
     if (!this->_joinable)
     {
         this->_start_payload.reset();
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
         this->unlock_internal(lock_acquired);
         return ;
     }
     int join_result = pt_thread_join(this->_thread, ft_nullptr);
     if (join_result != 0)
     {
-        int join_error = ft_global_error_stack_peek_last_error();
-
-        ft_global_error_stack_push(join_error);
         if (join_result == ESRCH || join_result == EINVAL)
         {
             this->_joinable = false;
@@ -183,7 +162,6 @@ void ft_thread::join()
     }
     this->_joinable = false;
     this->_start_payload.reset();
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -195,10 +173,7 @@ void ft_thread::detach()
     lock_acquired = false;
     int lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_error);
         return ;
-    }
     this->detach_locked();
     this->unlock_internal(lock_acquired);
     return ;
@@ -293,23 +268,19 @@ int ft_thread::detach_locked()
     if (!this->_joinable)
     {
         this->_start_payload.reset();
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
     int detach_result = pt_thread_detach(this->_thread);
-    int detach_error = ft_global_error_stack_peek_last_error();
     if (detach_result != 0)
     {
-        ft_global_error_stack_push(detach_error);
         if (detach_result == ESRCH || detach_result == EINVAL)
         {
             this->_joinable = false;
             this->_start_payload.reset();
         }
-        return (detach_error);
+        return (cmp_map_system_error_to_ft(detach_result));
     }
     this->_joinable = false;
     this->_start_payload.reset();
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }

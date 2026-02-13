@@ -11,7 +11,7 @@
 #include <new>
 #include <type_traits>
 #include "../PThread/recursive_mutex.hpp"
-#include "../PThread/pthread_internal.hpp"
+#include "../PThread/pthread.hpp"
 
 template <typename... Types>
 class ft_tuple

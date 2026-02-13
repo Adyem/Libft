@@ -69,10 +69,7 @@ ft_thread::ft_thread(FunctionType function, Args... args)
 
     payload_raw = new (std::nothrow) start_payload();
     if (!payload_raw)
-    {
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return ;
-    }
     payload = std::shared_ptr<start_payload>(payload_raw);
     this->_start_payload = payload;
     payload->function = ft_function<void()>([function, args...]() mutable
@@ -82,14 +79,12 @@ ft_thread::ft_thread(FunctionType function, Args... args)
     });
     if (!payload->function)
     {
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         this->_start_payload.reset();
         return ;
     }
     shared_capsule = new (std::nothrow) std::shared_ptr<start_payload>(payload);
     if (!shared_capsule)
     {
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         this->_start_payload.reset();
         return ;
     }
@@ -99,12 +94,6 @@ ft_thread::ft_thread(FunctionType function, Args... args)
             &ft_thread::start_routine, shared_capsule);
     if (create_result != 0)
     {
-        int create_error;
-
-        create_error = ft_global_error_stack_drop_last_error();
-        if (create_error == FT_ERR_SUCCESS)
-            create_error = ft_map_system_error(create_result);
-        ft_global_error_stack_push(create_error);
         delete shared_capsule;
         this->_start_payload.reset();
         return ;

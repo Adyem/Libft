@@ -23,10 +23,7 @@ static void su_test_tracer(const char *reason)
 
 FT_TEST(test_su_register_resource_tracer_rejects_null, "su_register_resource_tracer rejects null")
 {
-    ft_errno = FT_ERR_SUCCESS;
     if (su_register_resource_tracer(ft_nullptr) != -1)
-        return (0);
-    if (ft_errno != FT_ERR_INVALID_ARGUMENT)
         return (0);
     return (1);
 }
@@ -36,10 +33,7 @@ FT_TEST(test_su_resource_tracer_runs_with_reason, "su_run_resource_tracers invok
     g_su_tracer_invocations = 0;
     g_su_tracer_reason = "";
     su_clear_resource_tracers();
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
     if (su_register_resource_tracer(&su_test_tracer) != 0)
-        return (0);
-    if (ft_errno != FT_ERR_SUCCESS)
         return (0);
     su_run_resource_tracers("unit test reason");
     if (g_su_tracer_invocations != 1)
@@ -57,8 +51,6 @@ FT_TEST(test_su_register_resource_tracer_detects_duplicates, "su_register_resour
         return (0);
     if (su_register_resource_tracer(&su_test_tracer) != -1)
         return (0);
-    if (ft_errno != FT_ERR_ALREADY_EXISTS)
-        return (0);
     su_clear_resource_tracers();
     return (1);
 }
@@ -67,8 +59,6 @@ FT_TEST(test_su_unregister_resource_tracer_reports_missing, "su_unregister_resou
 {
     su_clear_resource_tracers();
     if (su_unregister_resource_tracer(&su_test_tracer) != -1)
-        return (0);
-    if (ft_errno != FT_ERR_NOT_FOUND)
         return (0);
     return (1);
 }
@@ -81,8 +71,6 @@ FT_TEST(test_su_unregister_resource_tracer_succeeds, "su_unregister_resource_tra
     if (su_register_resource_tracer(&su_test_tracer) != 0)
         return (0);
     if (su_unregister_resource_tracer(&su_test_tracer) != 0)
-        return (0);
-    if (ft_errno != FT_ERR_SUCCESS)
         return (0);
     su_run_resource_tracers("after unregister");
     if (g_su_tracer_invocations != 0)

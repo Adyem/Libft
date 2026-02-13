@@ -2,7 +2,6 @@
 #include "../../Math/roll.hpp"
 #include "../../CMA/CMA.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
-#include "../../Errno/errno.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif
@@ -37,9 +36,8 @@ int test_math_eval_dice_rejected(void)
 {
     int *value;
 
-    ft_errno = 0;
     value = math_eval("1d6");
-    if (value != ft_nullptr || ft_errno != FT_ERR_INVALID_ARGUMENT)
+    if (value != ft_nullptr)
     {
         if (value)
             cma_free(value);
@@ -47,4 +45,3 @@ int test_math_eval_dice_rejected(void)
     }
     return (1);
 }
-

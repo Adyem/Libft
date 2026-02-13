@@ -7,16 +7,7 @@
 char    *su_get_home_directory(void)
 {
     char *result;
-    int error_code;
 
     result = cmp_get_home_directory();
-    if (result == ft_nullptr)
-    {
-        error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_global_error_stack_push(error_code);
-        return (result);
-    }
-    error_code = FT_ERR_SUCCESS;
-    ft_global_error_stack_push(error_code);
     return (result);
 }

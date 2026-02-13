@@ -3,9 +3,46 @@
 #include "../Errno/errno.hpp"
 #include "../PThread/pthread.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "../Printf/printf.hpp"
+#include "../System_utils/system_utils.hpp"
 #include <new>
+
+static void quaternion_print_lifecycle_error(const char *method_name,
+    const char *reason)
+{
+    const char *resolved_method_name;
+    const char *resolved_reason;
+
+    resolved_method_name = method_name;
+    resolved_reason = reason;
+    if (resolved_method_name == ft_nullptr)
+        resolved_method_name = "unknown";
+    if (resolved_reason == ft_nullptr)
+        resolved_reason = "unknown";
+    pf_printf_fd(2, "quaternion lifecycle error: %s: %s\n",
+        resolved_method_name, resolved_reason);
+    su_abort();
+    return ;
+}
+
+void quaternion::abort_lifecycle_error(const char *method_name,
+    const char *reason) const noexcept
+{
+    quaternion_print_lifecycle_error(method_name, reason);
+    return ;
+}
+
+void quaternion::abort_if_not_initialized(const char *method_name) const noexcept
+{
+    if (this->_initialized_state == quaternion::_state_initialized)
+        return ;
+    this->abort_lifecycle_error(method_name,
+        "called while object is not initialized");
+    return ;
+}
 int quaternion::lock_mutex() const noexcept
 {
+    this->abort_if_not_initialized("quaternion::lock_mutex");
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
     return (this->_mutex->lock());
@@ -79,24 +116,19 @@ static double quaternion_compute_dot(double first_w, double first_x,
     double first_y, double first_z,
     double second_w, double second_x,
     double second_y, double second_z);
-static void quaternion_compute_product_components(quaternion &result,
+static void quaternion_compute_product_components(double &result_w,
+    double &result_x, double &result_y, double &result_z,
     double first_w, double first_x, double first_y, double first_z,
     double second_w, double second_x, double second_y, double second_z)
 {
-    double w_value;
-    double x_value;
-    double y_value;
-    double z_value;
-    w_value = quaternion_compute_dot(first_w, first_x, first_y, first_z,
+    result_w = quaternion_compute_dot(first_w, first_x, first_y, first_z,
             second_w, -second_x, -second_y, -second_z);
-    x_value = quaternion_compute_dot(first_w, first_x, first_y, first_z,
+    result_x = quaternion_compute_dot(first_w, first_x, first_y, first_z,
             second_x, second_w, second_z, -second_y);
-    y_value = quaternion_compute_dot(first_w, first_x, first_y, first_z,
+    result_y = quaternion_compute_dot(first_w, first_x, first_y, first_z,
             second_y, -second_z, second_w, second_x);
-    z_value = quaternion_compute_dot(first_w, first_x, first_y, first_z,
+    result_z = quaternion_compute_dot(first_w, first_x, first_y, first_z,
             second_z, second_y, -second_x, second_w);
-    quaternion composed_values_temp(w_value, x_value, y_value, z_value);
-    result = composed_values_temp;
     return ;
 }
 
@@ -106,21 +138,192 @@ quaternion::quaternion()
     this->_x = 0.0;
     this->_y = 0.0;
     this->_z = 0.0;
+    this->_initialized_state = quaternion::_state_uninitialized;
     return ;
 }
 
 quaternion::quaternion(double w, double x, double y, double z)
 {
+    int initialization_error;
+
+    this->_w = 1.0;
+    this->_x = 0.0;
+    this->_y = 0.0;
+    this->_z = 0.0;
+    this->_initialized_state = quaternion::_state_uninitialized;
+    initialization_error = this->initialize(w, x, y, z);
+    if (initialization_error != FT_ERR_SUCCESS
+        && this->_initialized_state == quaternion::_state_uninitialized)
+        this->_initialized_state = quaternion::_state_destroyed;
+    return ;
+}
+
+int quaternion::initialize() noexcept
+{
+    if (this->_initialized_state == quaternion::_state_initialized)
+    {
+        this->abort_lifecycle_error("quaternion::initialize",
+            "called while object is already initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    this->_w = 1.0;
+    this->_x = 0.0;
+    this->_y = 0.0;
+    this->_z = 0.0;
+    this->_initialized_state = quaternion::_state_initialized;
+    return (FT_ERR_SUCCESS);
+}
+
+int quaternion::initialize(double w, double x, double y, double z) noexcept
+{
+    int initialization_error;
+
+    initialization_error = this->initialize();
+    if (initialization_error != FT_ERR_SUCCESS)
+        return (initialization_error);
     this->_w = w;
     this->_x = x;
     this->_y = y;
     this->_z = z;
-    return ;
+    return (FT_ERR_SUCCESS);
+}
+
+int quaternion::initialize(const quaternion &other) noexcept
+{
+    int initialization_error;
+    int lock_error;
+    int unlock_error;
+
+    if (other._initialized_state != quaternion::_state_initialized)
+    {
+        if (other._initialized_state == quaternion::_state_uninitialized)
+            other.abort_lifecycle_error("quaternion::initialize(const quaternion &) source",
+                "called with uninitialized source object");
+        else
+            other.abort_lifecycle_error("quaternion::initialize(const quaternion &) source",
+                "called with destroyed source object");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    initialization_error = this->initialize();
+    if (initialization_error != FT_ERR_SUCCESS)
+        return (initialization_error);
+    lock_error = other.lock_mutex();
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        (void)this->destroy();
+        return (lock_error);
+    }
+    this->_w = other._w;
+    this->_x = other._x;
+    this->_y = other._y;
+    this->_z = other._z;
+    unlock_error = other.unlock_mutex();
+    if (unlock_error != FT_ERR_SUCCESS)
+    {
+        (void)this->destroy();
+        return (unlock_error);
+    }
+    return (FT_ERR_SUCCESS);
+}
+
+int quaternion::move(quaternion &other) noexcept
+{
+    const quaternion *lower;
+    const quaternion *upper;
+    int initialize_error;
+    int lock_error;
+
+    if (other._initialized_state != quaternion::_state_initialized)
+    {
+        if (other._initialized_state == quaternion::_state_uninitialized)
+            other.abort_lifecycle_error("quaternion::move source",
+                "called with uninitialized source object");
+        else
+            other.abort_lifecycle_error("quaternion::move source",
+                "called with destroyed source object");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (this->_initialized_state != quaternion::_state_initialized)
+    {
+        initialize_error = this->initialize();
+        if (initialize_error != FT_ERR_SUCCESS)
+            return (initialize_error);
+    }
+    lock_error = quaternion::lock_pair(*this, other, lower, upper);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
+    this->_w = other._w;
+    this->_x = other._x;
+    this->_y = other._y;
+    this->_z = other._z;
+    other._w = 1.0;
+    other._x = 0.0;
+    other._y = 0.0;
+    other._z = 0.0;
+    quaternion::unlock_pair(lower, upper);
+    return (FT_ERR_SUCCESS);
+}
+
+int quaternion::initialize(quaternion &&other) noexcept
+{
+    int initialization_error;
+    int move_error;
+
+    if (other._initialized_state != quaternion::_state_initialized)
+    {
+        if (other._initialized_state == quaternion::_state_uninitialized)
+            other.abort_lifecycle_error("quaternion::initialize(quaternion &&) source",
+                "called with uninitialized source object");
+        else
+            other.abort_lifecycle_error("quaternion::initialize(quaternion &&) source",
+                "called with destroyed source object");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    initialization_error = this->initialize();
+    if (initialization_error != FT_ERR_SUCCESS)
+        return (initialization_error);
+    move_error = this->move(other);
+    if (move_error != FT_ERR_SUCCESS)
+    {
+        (void)this->destroy();
+        return (move_error);
+    }
+    return (FT_ERR_SUCCESS);
+}
+
+int quaternion::destroy() noexcept
+{
+    if (this->_initialized_state != quaternion::_state_initialized)
+    {
+        this->abort_lifecycle_error("quaternion::destroy",
+            "called while object is not initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    this->_w = 1.0;
+    this->_x = 0.0;
+    this->_y = 0.0;
+    this->_z = 0.0;
+    this->disable_thread_safety();
+    this->_initialized_state = quaternion::_state_destroyed;
+    return (FT_ERR_SUCCESS);
 }
 
 quaternion::~quaternion()
 {
-    this->disable_thread_safety();
+    if (this->_initialized_state == quaternion::_state_uninitialized)
+    {
+        this->abort_lifecycle_error("quaternion::~quaternion",
+            "destructor called while object is uninitialized");
+        return ;
+    }
+    if (this->_initialized_state == quaternion::_state_initialized)
+        (void)this->destroy();
     return ;
 }
 
@@ -202,64 +405,73 @@ double  quaternion::get_z() const
 
 quaternion  quaternion::add(const quaternion &other) const
 {
-    quaternion result;
     const quaternion *lower;
     const quaternion *upper;
     int lock_error;
+    double result_w;
+    double result_x;
+    double result_y;
+    double result_z;
 
     lock_error = quaternion::lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        return (result);
+        return (quaternion());
     }
-    result._w = this->_w + other._w;
-    result._x = this->_x + other._x;
-    result._y = this->_y + other._y;
-    result._z = this->_z + other._z;
+    result_w = this->_w + other._w;
+    result_x = this->_x + other._x;
+    result_y = this->_y + other._y;
+    result_z = this->_z + other._z;
     quaternion::unlock_pair(lower, upper);
-    return (result);
+    return (quaternion(result_w, result_x, result_y, result_z));
 }
 
 quaternion  quaternion::multiply(const quaternion &other) const
 {
-    quaternion result;
     const quaternion *lower;
     const quaternion *upper;
     int lock_error;
+    double result_w;
+    double result_x;
+    double result_y;
+    double result_z;
 
     lock_error = quaternion::lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        return (result);
+        return (quaternion());
     }
-    quaternion_compute_product_components(result,
+    quaternion_compute_product_components(result_w, result_x, result_y, result_z,
         this->_w, this->_x, this->_y, this->_z,
         other._w, other._x, other._y, other._z);
     quaternion::unlock_pair(lower, upper);
-    return (result);
+    return (quaternion(result_w, result_x, result_y, result_z));
 }
 
 quaternion  quaternion::conjugate() const
 {
-    quaternion result;
     int lock_error;
     int unlock_error;
+    double result_w;
+    double result_x;
+    double result_y;
+    double result_z;
 
     lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
     {
-        return (result);
+        return (quaternion());
     }
-    result._w = this->_w;
-    result._x = -this->_x;
-    result._y = -this->_y;
-    result._z = -this->_z;
+    result_w = this->_w;
+    result_x = -this->_x;
+    result_y = -this->_y;
+    result_z = -this->_z;
     unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESS)
     {
-        return (result);
+        return (quaternion());
     }
-    return (result);
+    return (quaternion(result_w, result_x, result_y, result_z));
 }
 
 double  quaternion::length() const
@@ -286,7 +498,6 @@ double  quaternion::length() const
 
 quaternion  quaternion::normalize() const
 {
-    quaternion result;
     double length_value;
     double epsilon;
     double local_w;
@@ -299,7 +510,7 @@ quaternion  quaternion::normalize() const
     lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
     {
-        return (result);
+        return (quaternion());
     }
     local_w = this->_w;
     local_x = this->_x;
@@ -308,56 +519,50 @@ quaternion  quaternion::normalize() const
     unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESS)
     {
-        return (result);
+        return (quaternion());
     }
     length_value = math_sqrt(local_w * local_w + local_x * local_x
         + local_y * local_y + local_z * local_z);
     epsilon = 0.0000001;
     if (math_absdiff(length_value, 0.0) <= epsilon)
     {
-        return (result);
+        return (quaternion());
     }
-    result._w = local_w / length_value;
-    result._x = local_x / length_value;
-    result._y = local_y / length_value;
-    result._z = local_z / length_value;
-    return (result);
+    return (quaternion(local_w / length_value, local_x / length_value,
+            local_y / length_value, local_z / length_value));
 }
 
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *quaternion::get_mutex_for_testing() noexcept
 {
+    pt_recursive_mutex *mutex_pointer;
+    int mutex_error;
+
     if (this->_mutex == ft_nullptr)
-        this->prepare_thread_safety();
+    {
+        mutex_pointer = new (std::nothrow) pt_recursive_mutex();
+        if (mutex_pointer == ft_nullptr)
+            return (ft_nullptr);
+        mutex_error = mutex_pointer->initialize();
+        if (mutex_error != FT_ERR_SUCCESS)
+        {
+            delete mutex_pointer;
+            return (ft_nullptr);
+        }
+        this->_mutex = mutex_pointer;
+    }
     return (this->_mutex);
 }
 #endif
 
 int quaternion::enable_thread_safety() noexcept
 {
-    return (this->prepare_thread_safety());
-}
-
-void quaternion::disable_thread_safety() noexcept
-{
-    this->teardown_thread_safety();
-    return ;
-}
-
-bool quaternion::is_thread_safe_enabled() const noexcept
-{
-    return (this->_mutex != ft_nullptr);
-}
-
-int quaternion::prepare_thread_safety(void) noexcept
-{
-    if (this->_mutex != ft_nullptr)
-    {
-        return (FT_ERR_SUCCESS);
-    }
     pt_recursive_mutex *mutex_pointer;
     int mutex_error;
 
+    this->abort_if_not_initialized("quaternion::enable_thread_safety");
+    if (this->_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
@@ -371,14 +576,22 @@ int quaternion::prepare_thread_safety(void) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-void quaternion::teardown_thread_safety(void) noexcept
-{    if (this->_mutex != ft_nullptr)
+void quaternion::disable_thread_safety() noexcept
+{
+    this->abort_if_not_initialized("quaternion::disable_thread_safety");
+    if (this->_mutex != ft_nullptr)
     {
         this->_mutex->destroy();
         delete this->_mutex;
         this->_mutex = ft_nullptr;
     }
     return ;
+}
+
+bool quaternion::is_thread_safe_enabled() const noexcept
+{
+    this->abort_if_not_initialized("quaternion::is_thread_safe_enabled");
+    return (this->_mutex != ft_nullptr);
 }
 
 #if defined(__SSE2__)

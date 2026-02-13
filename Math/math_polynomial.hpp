@@ -7,6 +7,7 @@
 # include "../PThread/recursive_mutex.hpp"
 # include "linear_algebra.hpp"
 # include <cstddef>
+# include <cstdint>
 
 typedef double (*math_unary_function)(double value, void *user_data);
 
@@ -14,11 +15,16 @@ class ft_cubic_spline
 {
     private:
         mutable pt_recursive_mutex *_mutex = ft_nullptr;
+        uint8_t                    _initialized_state = 0;
+        static const uint8_t       _state_uninitialized = 0;
+        static const uint8_t       _state_destroyed = 1;
+        static const uint8_t       _state_initialized = 2;
 
+        void                        abort_lifecycle_error(const char *method_name,
+                                        const char *reason) const noexcept;
+        void                        abort_if_not_initialized(const char *method_name) const noexcept;
         int                         lock_mutex(void) const noexcept;
         int                         unlock_mutex(void) const noexcept;
-        int                         prepare_thread_safety(void) const noexcept;
-        void                        teardown_thread_safety(void) const noexcept;
 
     public:
         ft_vector<double> x_values;
@@ -29,10 +35,15 @@ class ft_cubic_spline
 
         ft_cubic_spline() noexcept;
         ft_cubic_spline(ft_cubic_spline &&other) noexcept;
-        ft_cubic_spline &operator=(ft_cubic_spline &&other) noexcept;
         ft_cubic_spline(const ft_cubic_spline &other) = delete;
         ft_cubic_spline &operator=(const ft_cubic_spline &other) = delete;
+        ft_cubic_spline &operator=(ft_cubic_spline &&other) noexcept = delete;
         ~ft_cubic_spline() noexcept;
+        int initialize() noexcept;
+        int initialize(const ft_cubic_spline &other) noexcept;
+        int initialize(ft_cubic_spline &&other) noexcept;
+        int destroy() noexcept;
+        int move(ft_cubic_spline &other) noexcept;
         pt_recursive_mutex *get_mutex_for_validation() const noexcept;
         int enable_thread_safety() noexcept;
         void disable_thread_safety() noexcept;

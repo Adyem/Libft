@@ -28,7 +28,7 @@ int pt_recursive_mutex::try_lock(pthread_t thread_id) const
     }
     catch (const std::system_error &error)
     {
-        return (ft_map_system_error(error.code().value()));
+        return (cmp_map_system_error_to_ft(error.code().value()));
     }
     if (!acquired)
         return (FT_ERR_MUTEX_ALREADY_LOCKED);

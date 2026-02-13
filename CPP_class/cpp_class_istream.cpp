@@ -1,17 +1,22 @@
 #include "class_istream.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/pthread.hpp"
-#include "../PThread/pthread_internal.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "class_nullptr.hpp"
+#include <new>
 
 int ft_istream::lock_mutex(void) const noexcept
 {
-    return (pt_recursive_mutex_lock_if_valid(this->_mutex));
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    return (this->_mutex->lock());
 }
 
 int ft_istream::unlock_mutex(void) const noexcept
 {
-    return (pt_recursive_mutex_unlock_if_valid(this->_mutex));
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    return (this->_mutex->unlock());
 }
 
 int ft_istream::prepare_thread_safety(void) noexcept
@@ -21,10 +26,18 @@ int ft_istream::prepare_thread_safety(void) noexcept
         ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    pt_recursive_mutex *mutex_pointer = ft_nullptr;
-    int mutex_error = pt_recursive_mutex_create_with_error(&mutex_pointer);
+    pt_recursive_mutex *mutex_pointer = new (std::nothrow) pt_recursive_mutex();
+    int mutex_error;
+
+    if (mutex_pointer == ft_nullptr)
+    {
+        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
+        return (FT_ERR_NO_MEMORY);
+    }
+    mutex_error = mutex_pointer->initialize();
     if (mutex_error != FT_ERR_SUCCESS)
     {
+        delete mutex_pointer;
         ft_global_error_stack_push(mutex_error);
         return (mutex_error);
     }
@@ -35,7 +48,12 @@ int ft_istream::prepare_thread_safety(void) noexcept
 
 void ft_istream::teardown_thread_safety(void) noexcept
 {
-    pt_recursive_mutex_destroy(&this->_mutex);
+    if (this->_mutex != ft_nullptr)
+    {
+        this->_mutex->destroy();
+        delete this->_mutex;
+        this->_mutex = ft_nullptr;
+    }
     ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }

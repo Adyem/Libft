@@ -5,6 +5,9 @@
     #include <windows.h>
 
 #endif
+#ifndef _WIN32
+    #include <pthread.h>
+#endif
 #include "../CPP_class/class_nullptr.hpp"
 #include <atomic>
 #include <cstddef>
@@ -30,6 +33,7 @@ int pt_thread_yield();
 int pt_thread_equal(pthread_t thread1, pthread_t thread2);
 int pt_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected_value);
 int pt_thread_wake_one_uint32(std::atomic<uint32_t> *address);
+int32_t cmp_map_system_error_to_ft(int32_t error_code);
 
 int pt_atomic_load(const std::atomic<int>& atomic_variable);
 void pt_atomic_store(std::atomic<int>& atomic_variable, int desired_value);

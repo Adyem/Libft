@@ -7,7 +7,7 @@
 #include "swap.hpp"
 #include "template_concepts.hpp"
 #include "../PThread/recursive_mutex.hpp"
-#include "../PThread/pthread_internal.hpp"
+#include "../PThread/pthread.hpp"
 #include <cstddef>
 #include <utility>
 #include <type_traits>

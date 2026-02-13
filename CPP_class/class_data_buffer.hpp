@@ -2,167 +2,241 @@
 # define DATA_BUFFER
 
 #include "../Template/vector.hpp"
-#include <cstdint>
-#include <sstream>
-#include "class_istringstream.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Basic/basic.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "../Advanced/advanced.hpp"
+#include "class_nullptr.hpp"
+#include "class_string.hpp"
+#include "class_istringstream.hpp"
+#include <cstdint>
+#include <sstream>
+
+class DataBuffer;
+
+class data_buffer_proxy
+{
+    private:
+        DataBuffer *_data_buffer;
+        int32_t _error_code;
+
+    public:
+        data_buffer_proxy() noexcept;
+        data_buffer_proxy(DataBuffer *data_buffer, int32_t error_code) noexcept;
+        data_buffer_proxy(const data_buffer_proxy &other) noexcept;
+        data_buffer_proxy(data_buffer_proxy &&other) noexcept;
+        ~data_buffer_proxy();
+
+        data_buffer_proxy &operator=(const data_buffer_proxy &other) noexcept;
+        data_buffer_proxy &operator=(data_buffer_proxy &&other) noexcept;
+
+        template <typename ValueType>
+        data_buffer_proxy operator<<(const ValueType &value) const noexcept;
+
+        template <typename ValueType>
+        data_buffer_proxy operator>>(ValueType &value) const noexcept;
+
+        int32_t get_error() const noexcept;
+};
 
 class DataBuffer
 {
+    friend class data_buffer_proxy;
+
     private:
         ft_vector<uint8_t> _buffer;
         size_t _read_pos;
         bool _ok;
         mutable pt_recursive_mutex *_mutex;
+        uint8_t _initialized_state;
+        int32_t _operation_error;
+        static thread_local int32_t _last_error;
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
 
+        static void abort_lifecycle_error(const char *method_name, const char *reason) noexcept;
+        void abort_if_not_initialized(const char *method_name) const noexcept;
+        static int32_t set_last_operation_error(int32_t error_code) noexcept;
+        void set_operation_error(int32_t error_code) noexcept;
         int lock_mutex(void) const noexcept;
         int unlock_mutex(void) const noexcept;
-        int prepare_thread_safety(void) noexcept;
-        void teardown_thread_safety(void) noexcept;
-        int enable_thread_safety(void) noexcept;
-        void disable_thread_safety(void) noexcept;
-        bool is_thread_safe_enabled(void) const noexcept;
-        static int lock_pair(const DataBuffer &first, const DataBuffer &second,
-                const DataBuffer *&lower, const DataBuffer *&upper) noexcept;
-        static int unlock_pair(const DataBuffer *lower, const DataBuffer *upper) noexcept;
-        static void sleep_backoff() noexcept;
-        int write_length_locked(size_t len) noexcept;
-        int read_length_locked(size_t &len) noexcept;
+        int write_length_locked(size_t length) noexcept;
+        int read_length_locked(size_t &length) noexcept;
+
+        template <typename ValueType>
+        int write_value(const ValueType &value) noexcept;
+
+        template <typename ValueType>
+        int read_value(ValueType &value) noexcept;
+
     public:
         DataBuffer() noexcept;
-        DataBuffer(const DataBuffer& other) noexcept;
-        DataBuffer(DataBuffer&& other) noexcept;
-        DataBuffer& operator=(const DataBuffer& other) noexcept;
-        DataBuffer& operator=(DataBuffer&& other) noexcept;
         ~DataBuffer() noexcept;
+
+        DataBuffer(const DataBuffer& other) noexcept = delete;
+        DataBuffer(DataBuffer&& other) noexcept = delete;
+        DataBuffer& operator=(const DataBuffer& other) noexcept = delete;
+        DataBuffer& operator=(DataBuffer&& other) noexcept = delete;
+
+        int initialize() noexcept;
+        int initialize(const DataBuffer &other) noexcept;
+        int initialize_move(DataBuffer &other) noexcept;
+        int destroy() noexcept;
+
         void clear() noexcept;
         size_t size() const noexcept;
         const ft_vector<uint8_t>& data() const noexcept;
         size_t tell() const noexcept;
-        bool seek(size_t pos) noexcept;
+        bool seek(size_t position) noexcept;
 
         explicit operator bool() const noexcept;
         bool good() const noexcept;
         bool bad() const noexcept;
 
-        template<typename T>
-        DataBuffer& operator<<(const T& value);
+        template <typename ValueType>
+        data_buffer_proxy operator<<(const ValueType &value) noexcept;
 
-        template<typename T>
-        DataBuffer& operator>>(T& value);
+        template <typename ValueType>
+        data_buffer_proxy operator>>(ValueType &value) noexcept;
 
-        DataBuffer& operator<<(size_t len);
-        DataBuffer& operator>>(size_t& len);
+        int enable_thread_safety(void) noexcept;
+        void disable_thread_safety(void) noexcept;
+        bool is_thread_safe(void) const noexcept;
+
+        static int32_t last_operation_error() noexcept;
+        static const char *last_operation_error_str() noexcept;
+        int32_t get_operation_error() const noexcept;
+        const char *get_operation_error_str() const noexcept;
+
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 
-template<typename T>
-DataBuffer& DataBuffer::operator<<(const T& value)
+template <typename ValueType>
+int DataBuffer::write_value(const ValueType &value) noexcept
 {
-    std::ostringstream oss;
-    oss << value;
-    int lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_error);
-        return (*this);
-    }
-    int final_error = FT_ERR_SUCCESS;
-    char *bytes = cma_strdup(oss.str().c_str());
+    std::ostringstream output_stream;
+    output_stream << value;
+    char *bytes = adv_strdup(output_stream.str().c_str());
     if (bytes == ft_nullptr)
-    {
-        this->_ok = false;
-        final_error = FT_ERR_NO_MEMORY;
-    }
-    else
-    {
-        size_t len = ft_strlen_size_t(bytes);
-        int length_error = this->write_length_locked(len);
-        if (length_error != FT_ERR_SUCCESS)
-        {
-            this->_ok = false;
-            final_error = length_error;
-        }
-        else
-        {
-            size_t index = 0;
-            while (index < len)
-            {
-                this->_buffer.push_back(static_cast<uint8_t>(bytes[index]));
-                int buffer_error = ft_global_error_stack_peek_last_error();
-                if (buffer_error != FT_ERR_SUCCESS)
-                {
-                    this->_ok = false;
-                    final_error = buffer_error;
-                    break ;
-                }
-                ++index;
-            }
-        }
-        cma_free(bytes);
-    }
-    this->_ok = (final_error == FT_ERR_SUCCESS);
-    {
-        int unlock_error = this->unlock_mutex();
-        if (unlock_error != FT_ERR_SUCCESS && final_error == FT_ERR_SUCCESS)
-            final_error = unlock_error;
-    }
-    ft_global_error_stack_push(final_error);
-    return (*this);
-}
-
-template<typename T>
-DataBuffer& DataBuffer::operator>>(T& value)
-{
-    int lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_error);
-        return (*this);
-    }
-    int final_error = FT_ERR_SUCCESS;
-    size_t len = 0;
-    char *bytes = ft_nullptr;
-    int length_error = this->read_length_locked(len);
+        return (FT_ERR_NO_MEMORY);
+    size_t length = ft_strlen_size_t(bytes);
+    int length_error = this->write_length_locked(length);
     if (length_error != FT_ERR_SUCCESS)
     {
-        final_error = length_error;
+        cma_free(bytes);
+        return (length_error);
     }
-    else if (this->_read_pos + len > this->_buffer.size())
+    size_t index = 0;
+    while (index < length)
     {
-        final_error = FT_ERR_INVALID_ARGUMENT;
-    }
-    else
-    {
-        bytes = static_cast<char*>(cma_calloc(len + 1, sizeof(char)));
-        if (bytes == ft_nullptr)
+        this->_buffer.push_back(static_cast<uint8_t>(bytes[index]));
+        int push_error = ft_vector<uint8_t>::last_operation_error();
+        if (push_error != FT_ERR_SUCCESS)
         {
-            final_error = FT_ERR_NO_MEMORY;
-        }
-        else
-        {
-            ft_memcpy(bytes, this->_buffer.begin() + this->_read_pos, len);
-            this->_read_pos += len;
-            ft_string string_value(bytes);
-            ft_istringstream iss(string_value);
-            iss >> value;
-            final_error = ft_global_error_stack_peek_last_error();
             cma_free(bytes);
+            return (push_error);
         }
+        index++;
     }
-    this->_ok = (final_error == FT_ERR_SUCCESS);
+    cma_free(bytes);
+    return (FT_ERR_SUCCESS);
+}
+
+template <typename ValueType>
+int DataBuffer::read_value(ValueType &value) noexcept
+{
+    size_t length = 0;
+    int length_error = this->read_length_locked(length);
+    if (length_error != FT_ERR_SUCCESS)
+        return (length_error);
+    if (this->_read_pos + length > this->_buffer.size())
+        return (FT_ERR_INVALID_ARGUMENT);
+    char *bytes = static_cast<char *>(adv_calloc(length + 1, sizeof(char)));
+    if (bytes == ft_nullptr)
+        return (FT_ERR_NO_MEMORY);
+    ft_memcpy(bytes, this->_buffer.begin() + this->_read_pos, length);
+    this->_read_pos += length;
+    ft_string string_value(bytes);
+    cma_free(bytes);
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+        return (ft_string::last_operation_error());
+    ft_istringstream input_stream(string_value);
+    input_stream >> value;
+    return (FT_ERR_SUCCESS);
+}
+
+template <typename ValueType>
+data_buffer_proxy DataBuffer::operator<<(const ValueType &value) noexcept
+{
+    this->abort_if_not_initialized("DataBuffer::operator<<");
+    int lock_error = this->lock_mutex();
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        int unlock_error = this->unlock_mutex();
-        if (unlock_error != FT_ERR_SUCCESS && final_error == FT_ERR_SUCCESS)
-            final_error = unlock_error;
+        this->set_operation_error(lock_error);
+        return (data_buffer_proxy(this, lock_error));
     }
-    ft_global_error_stack_push(final_error);
-    return (*this);
+    int write_error = this->write_value(value);
+    int unlock_error = this->unlock_mutex();
+    int final_error = write_error;
+    if (unlock_error != FT_ERR_SUCCESS && final_error == FT_ERR_SUCCESS)
+        final_error = unlock_error;
+    this->set_operation_error(final_error);
+    return (data_buffer_proxy(this, final_error));
+}
+
+template <typename ValueType>
+data_buffer_proxy DataBuffer::operator>>(ValueType &value) noexcept
+{
+    this->abort_if_not_initialized("DataBuffer::operator>>");
+    int lock_error = this->lock_mutex();
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->set_operation_error(lock_error);
+        return (data_buffer_proxy(this, lock_error));
+    }
+    int read_error = this->read_value(value);
+    int unlock_error = this->unlock_mutex();
+    int final_error = read_error;
+    if (unlock_error != FT_ERR_SUCCESS && final_error == FT_ERR_SUCCESS)
+        final_error = unlock_error;
+    this->set_operation_error(final_error);
+    return (data_buffer_proxy(this, final_error));
+}
+
+template <typename ValueType>
+data_buffer_proxy data_buffer_proxy::operator<<(const ValueType &value) const noexcept
+{
+    if (this->_error_code != FT_ERR_SUCCESS)
+    {
+        DataBuffer::set_last_operation_error(this->_error_code);
+        return (data_buffer_proxy(this->_data_buffer, this->_error_code));
+    }
+    if (this->_data_buffer == ft_nullptr)
+    {
+        DataBuffer::set_last_operation_error(FT_ERR_INVALID_ARGUMENT);
+        return (data_buffer_proxy(this->_data_buffer, FT_ERR_INVALID_ARGUMENT));
+    }
+    return (this->_data_buffer->operator<<(value));
+}
+
+template <typename ValueType>
+data_buffer_proxy data_buffer_proxy::operator>>(ValueType &value) const noexcept
+{
+    if (this->_error_code != FT_ERR_SUCCESS)
+    {
+        DataBuffer::set_last_operation_error(this->_error_code);
+        return (data_buffer_proxy(this->_data_buffer, this->_error_code));
+    }
+    if (this->_data_buffer == ft_nullptr)
+    {
+        DataBuffer::set_last_operation_error(FT_ERR_INVALID_ARGUMENT);
+        return (data_buffer_proxy(this->_data_buffer, FT_ERR_INVALID_ARGUMENT));
+    }
+    return (this->_data_buffer->operator>>(value));
 }
 
 #endif

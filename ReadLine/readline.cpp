@@ -45,15 +45,11 @@ static char *rl_error(readline_state_t *state)
 char *rl_readline(const char *prompt)
 {
     readline_state_t     state;
-    int                 error_code;
     int                 init_error;
 
     init_error = rl_initialize_state(&state);
     if (init_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(init_error);
         return (ft_nullptr);
-    }
     pf_printf("%s", prompt);
     fflush(stdout);
     while (1)
@@ -63,9 +59,7 @@ char *rl_readline(const char *prompt)
 
         if (read_error != FT_ERR_SUCCESS)
         {
-            error_code = read_error;
             rl_error(&state);
-            ft_global_error_stack_push(error_code);
             return (ft_nullptr);
         }
         int key_code = static_cast<unsigned char>(character);
@@ -73,9 +67,7 @@ char *rl_readline(const char *prompt)
 
         if (custom_result == -1)
         {
-            error_code = FT_ERR_INTERNAL;
             rl_error(&state);
-            ft_global_error_stack_push(error_code);
             return (ft_nullptr);
         }
         if (custom_result == 1)
@@ -98,9 +90,7 @@ char *rl_readline(const char *prompt)
             int backspace_error = rl_handle_backspace(&state, prompt);
             if (backspace_error != FT_ERR_SUCCESS)
             {
-                error_code = backspace_error;
                 rl_error(&state);
-                ft_global_error_stack_push(error_code);
                 return (ft_nullptr);
             }
         }
@@ -109,9 +99,7 @@ char *rl_readline(const char *prompt)
             int escape_error = rl_handle_escape_sequence(&state, prompt);
             if (escape_error != FT_ERR_SUCCESS)
             {
-                error_code = escape_error;
                 rl_error(&state);
-                ft_global_error_stack_push(error_code);
                 return (ft_nullptr);
             }
         }
@@ -120,9 +108,7 @@ char *rl_readline(const char *prompt)
             int completion_error = rl_handle_tab_completion(&state, prompt);
             if (completion_error != FT_ERR_SUCCESS)
             {
-                error_code = completion_error;
                 rl_error(&state);
-                ft_global_error_stack_push(error_code);
                 return (ft_nullptr);
             }
         }
@@ -131,9 +117,7 @@ char *rl_readline(const char *prompt)
             int printable_error = rl_handle_printable_char(&state, character, prompt);
             if (printable_error != FT_ERR_SUCCESS)
             {
-                error_code = printable_error;
                 rl_error(&state);
-                ft_global_error_stack_push(error_code);
                 return (ft_nullptr);
             }
         }
@@ -145,7 +129,5 @@ char *rl_readline(const char *prompt)
     rl_state_teardown_thread_safety(&state);
     if (DEBUG == 1)
         pf_printf("returning %s\n", state.buffer);
-    error_code = FT_ERR_SUCCESS;
-    ft_global_error_stack_push(error_code);
     return (state.buffer);
 }

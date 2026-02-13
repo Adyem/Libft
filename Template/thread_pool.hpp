@@ -5,7 +5,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/condition.hpp"
 #include "../PThread/recursive_mutex.hpp"
-#include "../PThread/pthread_internal.hpp"
+#include "../PThread/pthread.hpp"
 
 #include "vector.hpp"
 #include "queue.hpp"

@@ -874,6 +874,18 @@ int ft_unordered_map<Key, MappedType>::initialize(const ft_unordered_map& other)
     int initialize_error;
     int copy_error;
 
+    if (other._initialized_state != ft_unordered_map<Key, MappedType>::_state_initialized)
+    {
+        if (other._initialized_state == ft_unordered_map<Key, MappedType>::_state_uninitialized)
+            other.abort_lifecycle_error("ft_unordered_map::initialize(const ft_unordered_map&)",
+                "called with uninitialized source object");
+        else
+            other.abort_lifecycle_error("ft_unordered_map::initialize(const ft_unordered_map&)",
+                "called with destroyed source object");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
         return (initialize_error);
@@ -893,6 +905,18 @@ int ft_unordered_map<Key, MappedType>::initialize(ft_unordered_map&& other)
     int initialize_error;
     int move_error;
 
+    if (other._initialized_state != ft_unordered_map<Key, MappedType>::_state_initialized)
+    {
+        if (other._initialized_state == ft_unordered_map<Key, MappedType>::_state_uninitialized)
+            other.abort_lifecycle_error("ft_unordered_map::initialize(ft_unordered_map&&)",
+                "called with uninitialized source object");
+        else
+            other.abort_lifecycle_error("ft_unordered_map::initialize(ft_unordered_map&&)",
+                "called with destroyed source object");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
         return (initialize_error);
@@ -954,8 +978,26 @@ int ft_unordered_map<Key, MappedType>::destroy()
 template <typename Key, typename MappedType>
 int ft_unordered_map<Key, MappedType>::move(ft_unordered_map& other)
 {
-    this->abort_if_not_initialized("ft_unordered_map::move");
-    other.abort_if_not_initialized("ft_unordered_map::move source");
+    int initialize_error;
+
+    if (other._initialized_state != ft_unordered_map<Key, MappedType>::_state_initialized)
+    {
+        if (other._initialized_state == ft_unordered_map<Key, MappedType>::_state_uninitialized)
+            other.abort_lifecycle_error("ft_unordered_map::move source",
+                "called with uninitialized source object");
+        else
+            other.abort_lifecycle_error("ft_unordered_map::move source",
+                "called with destroyed source object");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (this->_initialized_state != ft_unordered_map<Key, MappedType>::_state_initialized)
+    {
+        initialize_error = this->initialize();
+        if (initialize_error != FT_ERR_SUCCESS)
+            return (initialize_error);
+    }
     this->operator=(ft_move(other));
     return (ft_unordered_map<Key, MappedType>::last_operation_error());
 }

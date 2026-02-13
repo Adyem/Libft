@@ -1,6 +1,5 @@
 #include "printf_internal.hpp"
 #include "printf_engine.hpp"
-#include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../System_utils/system_utils.hpp"
 #include <cstdarg>
@@ -41,11 +40,7 @@ int pf_printf_fd_v(int fd, const char *format, va_list args)
     int error_code;
 
     if (fd < 0 || format == ft_nullptr)
-    {
-        error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_global_error_stack_push(error_code);
         return (-1);
-    }
     pf_fd_writer_context context;
     context.file_descriptor = fd;
     size_t written_count;
@@ -56,16 +51,10 @@ int pf_printf_fd_v(int fd, const char *format, va_list args)
     if (error_code != FT_ERR_SUCCESS)
     {
         va_end(current_args);
-        ft_global_error_stack_push(error_code);
         return (-1);
     }
     va_end(current_args);
     if (written_count > static_cast<size_t>(INT_MAX))
-    {
-        error_code = FT_ERR_OUT_OF_RANGE;
-        ft_global_error_stack_push(error_code);
         return (-1);
-    }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (static_cast<int>(written_count));
 }

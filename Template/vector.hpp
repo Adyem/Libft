@@ -5,6 +5,7 @@
 #include "../Errno/errno.hpp"
 #include "../CMA/CMA.hpp"
 #include "constructor.hpp"
+#include "move.hpp"
 #include <cstddef>
 #include <type_traits>
 #include <cstdint>
@@ -47,6 +48,7 @@ class ft_vector
         ft_size_t       _size;
         ft_size_t       _capacity;
         mutable pt_recursive_mutex *_mutex;
+        static thread_local int32_t _last_error;
 
         void    destroy_elements_unlocked(ft_size_t from, ft_size_t to);
         int32_t reserve_internal_unlocked(ft_size_t new_capacity);
@@ -56,6 +58,7 @@ class ft_vector
         void    reset_to_small_buffer();
 	int32_t     lock_internal(bool *lock_acquired) const;
 	int32_t     unlock_internal(bool lock_acquired) const;
+        static int32_t set_last_operation_error(int32_t error_code) noexcept;
 
     protected:
         ElementType release_at(ft_size_t index);
@@ -84,6 +87,8 @@ class ft_vector
 	    bool    is_thread_safe() const;
 	    int32_t     lock(bool *lock_acquired) const;
 	    void    unlock(bool lock_acquired) const;
+        static int32_t last_operation_error() noexcept;
+        static const char *last_operation_error_str() noexcept;
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex* get_mutex_for_validation() const noexcept;
 #endif
@@ -110,6 +115,28 @@ class ft_vector
         iterator end();
         const_iterator end() const;
 };
+
+template <typename ElementType>
+thread_local int32_t ft_vector<ElementType>::_last_error = FT_ERR_SUCCESS;
+
+template <typename ElementType>
+int32_t ft_vector<ElementType>::set_last_operation_error(int32_t error_code) noexcept
+{
+    ft_vector<ElementType>::_last_error = error_code;
+    return (error_code);
+}
+
+template <typename ElementType>
+int32_t ft_vector<ElementType>::last_operation_error() noexcept
+{
+    return (ft_vector<ElementType>::_last_error);
+}
+
+template <typename ElementType>
+const char *ft_vector<ElementType>::last_operation_error_str() noexcept
+{
+    return (ft_strerror(ft_vector<ElementType>::last_operation_error()));
+}
 
 template <typename ElementType>
 ft_vector<ElementType>::ft_vector(ft_size_t initial_capacity)
@@ -145,7 +172,7 @@ int32_t ft_vector<ElementType>::initialize() noexcept
 {
     this->reset_to_small_buffer();
     this->_size = 0;
-    return (FT_ERR_SUCCESS);
+    return (ft_vector<ElementType>::set_last_operation_error(FT_ERR_SUCCESS));
 }
 
 template <typename ElementType>
@@ -163,7 +190,7 @@ int32_t ft_vector<ElementType>::destroy() noexcept
         this->_size = 0;
         this->unlock_internal(lock_acquired);
     }
-    return (lock_error);
+    return (ft_vector<ElementType>::set_last_operation_error(lock_error));
 }
 
 template <typename ElementType>
@@ -171,22 +198,22 @@ int32_t ft_vector<ElementType>::initialize(const ft_vector<ElementType> &other)
 {
     int32_t initialization_error = this->initialize();
     if (initialization_error != FT_ERR_SUCCESS)
-        return (initialization_error);
-    return (this->copy_from(other));
+        return (ft_vector<ElementType>::set_last_operation_error(initialization_error));
+    return (ft_vector<ElementType>::set_last_operation_error(this->copy_from(other)));
 }
 
 template <typename ElementType>
 int32_t ft_vector<ElementType>::initialize(ft_vector<ElementType> &&other)
 {
     if (this == &other)
-        return (FT_ERR_SUCCESS);
+        return (ft_vector<ElementType>::set_last_operation_error(FT_ERR_SUCCESS));
     int32_t initialization_error = this->initialize();
     if (initialization_error != FT_ERR_SUCCESS)
-        return (initialization_error);
+        return (ft_vector<ElementType>::set_last_operation_error(initialization_error));
     bool other_lock_acquired = false;
     int32_t other_lock_error = other.lock_internal(&other_lock_acquired);
     if (other_lock_error != FT_ERR_SUCCESS)
-        return (other_lock_error);
+        return (ft_vector<ElementType>::set_last_operation_error(other_lock_error));
     if (other.using_small_buffer())
     {
         ft_size_t index = 0;
@@ -212,24 +239,24 @@ int32_t ft_vector<ElementType>::initialize(ft_vector<ElementType> &&other)
     pt_recursive_mutex *moved_mutex = other._mutex;
     other._mutex = ft_nullptr;
     this->_mutex = moved_mutex;
-    return (FT_ERR_SUCCESS);
+    return (ft_vector<ElementType>::set_last_operation_error(FT_ERR_SUCCESS));
 }
 
 template <typename ElementType>
 int32_t ft_vector<ElementType>::copy_from(const ft_vector<ElementType> &other)
 {
     if (this == &other)
-        return (FT_ERR_SUCCESS);
+        return (ft_vector<ElementType>::set_last_operation_error(FT_ERR_SUCCESS));
     bool self_lock_acquired = false;
     int32_t self_lock_error = this->lock_internal(&self_lock_acquired);
     if (self_lock_error != FT_ERR_SUCCESS)
-        return (self_lock_error);
+        return (ft_vector<ElementType>::set_last_operation_error(self_lock_error));
     bool other_lock_acquired = false;
     int32_t other_lock_error = other.lock_internal(&other_lock_acquired);
     if (other_lock_error != FT_ERR_SUCCESS)
     {
         this->unlock_internal(self_lock_acquired);
-        return (other_lock_error);
+        return (ft_vector<ElementType>::set_last_operation_error(other_lock_error));
     }
     this->destroy_elements_unlocked(0, this->_size);
     if (this->_data != ft_nullptr && this->using_small_buffer() == false)
@@ -241,7 +268,7 @@ int32_t ft_vector<ElementType>::copy_from(const ft_vector<ElementType> &other)
     {
         other.unlock_internal(other_lock_acquired);
         this->unlock_internal(self_lock_acquired);
-        return (reserve_error);
+        return (ft_vector<ElementType>::set_last_operation_error(reserve_error));
     }
     size_t index = 0;
     while (index < other._size)
@@ -252,7 +279,7 @@ int32_t ft_vector<ElementType>::copy_from(const ft_vector<ElementType> &other)
     this->_size = other._size;
     other.unlock_internal(other_lock_acquired);
     this->unlock_internal(self_lock_acquired);
-    return (FT_ERR_SUCCESS);
+    return (ft_vector<ElementType>::set_last_operation_error(FT_ERR_SUCCESS));
 }
 
 
@@ -261,30 +288,30 @@ int32_t ft_vector<ElementType>::enable_thread_safety()
 {
     if (this->_mutex != ft_nullptr)
     {
-        return (FT_ERR_SUCCESS);
+        return (ft_vector<ElementType>::set_last_operation_error(FT_ERR_SUCCESS));
     }
     pt_recursive_mutex *mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
-        return (FT_ERR_NO_MEMORY);
+        return (ft_vector<ElementType>::set_last_operation_error(FT_ERR_NO_MEMORY));
     int32_t initialize_error = mutex_pointer->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
     {
         delete mutex_pointer;
-        return (initialize_error);
+        return (ft_vector<ElementType>::set_last_operation_error(initialize_error));
     }
     this->_mutex = mutex_pointer;
-    return (FT_ERR_SUCCESS);
+    return (ft_vector<ElementType>::set_last_operation_error(FT_ERR_SUCCESS));
 }
 
 template <typename ElementType>
 int32_t ft_vector<ElementType>::disable_thread_safety()
 {
     if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
+        return (ft_vector<ElementType>::set_last_operation_error(FT_ERR_SUCCESS));
     int32_t destroy_error = this->_mutex->destroy();
     delete this->_mutex;
     this->_mutex = ft_nullptr;
-    return (destroy_error);
+    return (ft_vector<ElementType>::set_last_operation_error(destroy_error));
 }
 
 template <typename ElementType>
@@ -305,9 +332,11 @@ int32_t ft_vector<ElementType>::lock(bool *lock_acquired) const
     lock_error = this->lock_internal(lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
+        ft_vector<ElementType>::set_last_operation_error(lock_error);
         return (-1);
     }
     result = 0;
+    ft_vector<ElementType>::set_last_operation_error(FT_ERR_SUCCESS);
     return (result);
 }
 
@@ -317,6 +346,7 @@ void ft_vector<ElementType>::unlock(bool lock_acquired) const
     int32_t unlock_error;
 
     unlock_error = this->unlock_internal(lock_acquired);
+    ft_vector<ElementType>::set_last_operation_error(unlock_error);
     return ;
 }
 
@@ -825,11 +855,11 @@ template <typename ElementType>
 int32_t ft_vector<ElementType>::reserve_internal_unlocked(ft_size_t new_capacity)
 {
     if (new_capacity <= this->_capacity)
-        return (FT_ERR_SUCCESS);
+        return (ft_vector<ElementType>::set_last_operation_error(FT_ERR_SUCCESS));
     ElementType* new_data = static_cast<ElementType*>(cma_malloc(new_capacity * sizeof(ElementType)));
     if (new_data == ft_nullptr)
     {
-        return (FT_ERR_NO_MEMORY);
+        return (ft_vector<ElementType>::set_last_operation_error(FT_ERR_NO_MEMORY));
     }
     bool had_small_buffer = this->using_small_buffer();
     ElementType* old_data = this->_data;
@@ -863,7 +893,7 @@ int32_t ft_vector<ElementType>::reserve_internal_unlocked(ft_size_t new_capacity
         cma_free(old_data);
     this->_data = new_data;
     this->_capacity = new_capacity;
-    return (FT_ERR_SUCCESS);
+    return (ft_vector<ElementType>::set_last_operation_error(FT_ERR_SUCCESS));
 }
 
 template <typename ElementType>
@@ -873,22 +903,22 @@ int32_t ft_vector<ElementType>::lock_internal(bool *lock_acquired) const
         *lock_acquired = false;
     if (this->_mutex == ft_nullptr)
     {
-        return (FT_ERR_SUCCESS);
+        return (ft_vector<ElementType>::set_last_operation_error(FT_ERR_SUCCESS));
     }
     int32_t result = this->_mutex->lock();
     if (result != FT_ERR_SUCCESS)
-        return (result);
+        return (ft_vector<ElementType>::set_last_operation_error(result));
     if (lock_acquired)
         *lock_acquired = true;
-    return (FT_ERR_SUCCESS);
+    return (ft_vector<ElementType>::set_last_operation_error(FT_ERR_SUCCESS));
 }
 
 template <typename ElementType>
 int32_t ft_vector<ElementType>::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->unlock());
+        return (ft_vector<ElementType>::set_last_operation_error(FT_ERR_SUCCESS));
+    return (ft_vector<ElementType>::set_last_operation_error(this->_mutex->unlock()));
 }
 
 

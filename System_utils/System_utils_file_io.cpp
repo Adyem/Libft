@@ -25,18 +25,15 @@ void    su_set_write_syscall_hook(t_su_write_syscall_hook hook)
     if (hook != ft_nullptr)
     {
         g_su_write_syscall_hook = hook;
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return ;
     }
     g_su_write_syscall_hook = ft_nullptr;
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
 void    su_reset_write_syscall_hook(void)
 {
     g_su_write_syscall_hook = ft_nullptr;
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -53,17 +50,14 @@ ssize_t su_read(int file_descriptor, void *buffer, size_t count)
         bytes_read_value = 0;
         error_code = cmp_read(file_descriptor, buffer, count, &bytes_read_value);
         if (error_code == FT_ERR_SUCCESS)
-        {
-            ft_global_error_stack_push(FT_ERR_SUCCESS);
             return (static_cast<ssize_t>(bytes_read_value));
-        }
 #if defined(__linux__) || defined(__APPLE__)
         const int32_t max_retries = 10;
         const int32_t retry_delay_ms = 500;
-        if (error_code == ft_map_system_error(EINTR))
+        if (error_code == cmp_map_system_error_to_ft(EINTR))
             continue ;
-        else if (error_code == ft_map_system_error(EAGAIN)
-            || error_code == ft_map_system_error(EWOULDBLOCK))
+        else if (error_code == cmp_map_system_error_to_ft(EAGAIN)
+            || error_code == cmp_map_system_error_to_ft(EWOULDBLOCK))
         {
             if (retry_attempts < static_cast<int>(max_retries))
             {
@@ -72,19 +66,11 @@ ssize_t su_read(int file_descriptor, void *buffer, size_t count)
                 nanosleep(&delay, ft_nullptr);
                 continue ;
             }
-            else
-            {
-                ft_global_error_stack_push(error_code);
-                return (-1);
-            }
-        }
-        else
-        {
-            ft_global_error_stack_push(error_code);
             return (-1);
         }
+        return (-1);
 #else
-        ft_global_error_stack_push(error_code);
+        (void)error_code;
         return (-1);
 #endif
     }
@@ -125,7 +111,7 @@ ssize_t su_write(int file_descriptor, const void *buffer, size_t count)
                 byte_buffer + total_written, count - total_written);
             if (write_result < 0)
             {
-                error_code = ft_map_system_error(errno);
+                error_code = cmp_map_system_error_to_ft(errno);
                 if (error_code == FT_ERR_SUCCESS)
                     error_code = FT_ERR_IO;
             }
@@ -135,17 +121,14 @@ ssize_t su_write(int file_descriptor, const void *buffer, size_t count)
         else
         {
             if (write_result == 0)
-            {
-                ft_global_error_stack_push(FT_ERR_IO);
                 return (-1);
-            }
 #if defined(__linux__) || defined(__APPLE__)
             const int32_t max_retries = 10;
             const int32_t retry_delay_ms = 500;
-            if (error_code == ft_map_system_error(EINTR))
+            if (error_code == cmp_map_system_error_to_ft(EINTR))
                 continue ;
-            else if (error_code == ft_map_system_error(EAGAIN)
-                || error_code == ft_map_system_error(EWOULDBLOCK))
+            else if (error_code == cmp_map_system_error_to_ft(EAGAIN)
+                || error_code == cmp_map_system_error_to_ft(EWOULDBLOCK))
             {
                 if (retry_attempts < static_cast<int>(max_retries))
                 {
@@ -154,41 +137,24 @@ ssize_t su_write(int file_descriptor, const void *buffer, size_t count)
                     nanosleep(&delay, ft_nullptr);
                     continue ;
                 }
-                else
-                {
-                    ft_global_error_stack_push(error_code);
-                    return (-1);
-                }
-            }
-            else
-            {
-                ft_global_error_stack_push(error_code);
                 return (-1);
             }
+            return (-1);
 #else
-            ft_global_error_stack_push(error_code);
+            (void)error_code;
             return (-1);
 #endif
         }
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (total_written);
 }
 
 int su_close(int file_descriptor)
 {
     int close_result;
-    int error_code;
 
     close_result = cmp_close(file_descriptor);
     if (close_result != 0)
-    {
-        error_code = ft_map_system_error(errno);
-        if (error_code == FT_ERR_SUCCESS)
-            error_code = FT_ERR_IO;
-        ft_global_error_stack_push(error_code);
         return (close_result);
-    }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }

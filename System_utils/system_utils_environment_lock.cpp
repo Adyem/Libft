@@ -1,68 +1,61 @@
-#include "../Basic/environment_lock.hpp"
+#include "environment_lock.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include <cstdlib>
+#include <pthread.h>
 
-#if LIBFT_ENABLE_ENVIRONMENT_HELPERS
-#include "../Errno/errno.hpp"
-#include "../PThread/pthread.hpp"
-#include "../PThread/pthread_internal.hpp"
-
-static pt_mutex *g_environment_mutex = ft_nullptr;
-
-static int ft_environment_enable_thread_safety_internal(void)
-{
-    if (g_environment_mutex != ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (pt_mutex_create_with_error(&g_environment_mutex));
-}
-
-static void ft_environment_disable_thread_safety_internal(void)
-{
-    pt_mutex_destroy(&g_environment_mutex);
-    return ;
-}
+static pthread_mutex_t *g_environment_mutex = ft_nullptr;
 
 int ft_environment_lock(void)
 {
+    int pthread_error;
+
     if (g_environment_mutex == ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
-    }
-    int lock_result = g_environment_mutex->lock();
-    if (lock_result != FT_ERR_SUCCESS)
+    pthread_error = pthread_mutex_lock(g_environment_mutex);
+    if (pthread_error != 0)
         return (-1);
-    ft_global_error_stack_drop_last_error();
     return (0);
 }
 
 int ft_environment_unlock(void)
 {
+    int pthread_error;
+
     if (g_environment_mutex == ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
-    }
-    int unlock_result = g_environment_mutex->unlock();
-    if (unlock_result != FT_ERR_SUCCESS)
+    pthread_error = pthread_mutex_unlock(g_environment_mutex);
+    if (pthread_error != 0)
         return (-1);
-    ft_global_error_stack_drop_last_error();
     return (0);
 }
 
 int ft_environment_enable_thread_safety(void)
 {
-    int result = ft_environment_enable_thread_safety_internal();
-    ft_global_error_stack_push(result);
-    if (result != FT_ERR_SUCCESS)
+    pthread_mutex_t  *mutex_pointer;
+    int             pthread_error;
+
+    if (g_environment_mutex != ft_nullptr)
+        return (0);
+    mutex_pointer = static_cast<pthread_mutex_t *>(std::malloc(sizeof(pthread_mutex_t)));
+    if (mutex_pointer == ft_nullptr)
         return (-1);
+    pthread_error = pthread_mutex_init(mutex_pointer, ft_nullptr);
+    if (pthread_error != 0)
+    {
+        std::free(mutex_pointer);
+        return (-1);
+    }
+    g_environment_mutex = mutex_pointer;
     return (0);
 }
 
 void ft_environment_disable_thread_safety(void)
 {
-    ft_environment_disable_thread_safety_internal();
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    if (g_environment_mutex != ft_nullptr)
+    {
+        pthread_mutex_destroy(g_environment_mutex);
+        std::free(g_environment_mutex);
+        g_environment_mutex = ft_nullptr;
+    }
     return ;
 }
-
-#endif

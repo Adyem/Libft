@@ -149,22 +149,31 @@ FT_TEST(test_math_free_parse_releases_allocated_strings, "math_free_parse releas
     ft_size_t free_count_before;
     ft_size_t free_count_after;
 
-    strings = static_cast<char **>(cma_calloc(3, sizeof(char *)));
+    strings = static_cast<char **>(cma_malloc(3 * sizeof(char *)));
     if (!strings)
         return (0);
-    strings[0] = cma_strdup("10");
+    strings[0] = ft_nullptr;
+    strings[1] = ft_nullptr;
+    strings[2] = ft_nullptr;
+    strings[0] = static_cast<char *>(cma_malloc(3));
     if (!strings[0])
     {
         cma_free(strings);
         return (0);
     }
-    strings[1] = cma_strdup("-5");
+    strings[0][0] = '1';
+    strings[0][1] = '0';
+    strings[0][2] = '\0';
+    strings[1] = static_cast<char *>(cma_malloc(3));
     if (!strings[1])
     {
         cma_free(strings[0]);
         cma_free(strings);
         return (0);
     }
+    strings[1][0] = '-';
+    strings[1][1] = '5';
+    strings[1][2] = '\0';
     cma_get_stats(ft_nullptr, &free_count_before);
     math_free_parse(strings);
     cma_get_stats(ft_nullptr, &free_count_after);

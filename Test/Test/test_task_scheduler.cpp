@@ -16,6 +16,7 @@
 FT_TEST(test_task_scheduler_submit, "ft_task_scheduler submit")
 {
     ft_task_scheduler scheduler_instance(2);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.initialize());
     auto future_value = scheduler_instance.submit([]() { return (7); });
     FT_ASSERT_EQ(7, future_value.get());
     return (1);
@@ -24,6 +25,7 @@ FT_TEST(test_task_scheduler_submit, "ft_task_scheduler submit")
 FT_TEST(test_task_scheduler_schedule_after, "ft_task_scheduler schedule_after")
 {
     ft_task_scheduler scheduler_instance(1);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.initialize());
     t_monotonic_time_point start_time;
     t_monotonic_time_point end_time;
     long long elapsed_milliseconds;
@@ -44,6 +46,7 @@ FT_TEST(test_task_scheduler_schedule_after, "ft_task_scheduler schedule_after")
 FT_TEST(test_task_scheduler_schedule_every, "ft_task_scheduler schedule_every")
 {
     ft_task_scheduler scheduler_instance(1);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.initialize());
     std::atomic<int> call_counter;
     call_counter.store(0);
     ft_scheduled_task_handle periodic_handle = scheduler_instance.schedule_every(std::chrono::milliseconds(10), [&call_counter]()
@@ -62,6 +65,7 @@ FT_TEST(test_task_scheduler_queue_failure_releases_mutex,
     "ft_task_scheduler handles queue push failures")
 {
     ft_task_scheduler scheduler_instance(1);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.initialize());
     ft_promise<int> completion_promise;
     ft_future<int> completion_future(completion_promise);
     std::atomic<int> execution_count;
@@ -90,4 +94,3 @@ FT_TEST(test_task_scheduler_queue_failure_releases_mutex,
     FT_ASSERT_EQ(2, execution_count.load());
     return (1);
 }
-

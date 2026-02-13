@@ -25,7 +25,7 @@ int pt_mutex::unlock() const
     }
     catch (const std::system_error &error)
     {
-        unlock_error = ft_map_system_error(error.code().value());
+        unlock_error = cmp_map_system_error_to_ft(error.code().value());
     }
     if (unlock_error != FT_ERR_SUCCESS)
         return (unlock_error);

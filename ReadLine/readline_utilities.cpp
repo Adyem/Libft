@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <unistd.h>
+#include "../Advanced/advanced.hpp"
 #include "../System_utils/system_utils.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../CMA/CMA.hpp"
@@ -110,7 +111,7 @@ void rl_update_history(const char *buffer)
 
     if (history_count < MAX_HISTORY)
     {
-        duplicated_entry = cma_strdup(buffer);
+        duplicated_entry = adv_strdup(buffer);
         if (duplicated_entry == ft_nullptr)
             return ;
         history[history_count] = duplicated_entry;
@@ -118,7 +119,7 @@ void rl_update_history(const char *buffer)
         rl_history_notify_updated();
         return ;
     }
-    duplicated_entry = cma_strdup(buffer);
+    duplicated_entry = adv_strdup(buffer);
     if (duplicated_entry == ft_nullptr)
         return ;
     cma_free(history[0]);
@@ -168,13 +169,8 @@ int rl_history_search(const char *query, int start_index,
         return (FT_ERR_INVALID_ARGUMENT);
     *match_index = -1;
     query_code_points = ft_utf8_to_utf32(query, 0, &query_length);
-    int conversion_error = ft_global_error_stack_drop_last_error();
-        if (query_code_points == ft_nullptr)
-        {
-            if (conversion_error == FT_ERR_SUCCESS)
-                return (FT_ERR_INVALID_ARGUMENT);
-            return (conversion_error);
-        }
+    if (query_code_points == ft_nullptr)
+        return (FT_ERR_INVALID_ARGUMENT);
     if (query_length == 0)
     {
         cma_free(query_code_points);
@@ -198,7 +194,6 @@ int rl_history_search(const char *query, int start_index,
             char32_t *entry_code_points;
             size_t entry_length;
             int contains_result;
-            int entry_error;
 
             history_entry = history[current_index];
             if (history_entry == ft_nullptr)
@@ -207,13 +202,10 @@ int rl_history_search(const char *query, int start_index,
                 continue ;
             }
             entry_code_points = ft_utf8_to_utf32(history_entry, 0, &entry_length);
-            entry_error = ft_global_error_stack_drop_last_error();
             if (entry_code_points == ft_nullptr)
             {
                 cma_free(query_code_points);
-                if (entry_error == FT_ERR_SUCCESS)
-                    return (FT_ERR_INVALID_ARGUMENT);
-                return (entry_error);
+                return (FT_ERR_INVALID_ARGUMENT);
             }
             contains_result = rl_history_utf32_contains(entry_code_points,
                     entry_length, query_code_points, query_length);
@@ -244,7 +236,6 @@ int rl_history_search(const char *query, int start_index,
             char32_t *entry_code_points;
             size_t entry_length;
             int contains_result;
-            int entry_error;
 
             history_entry = history[current_index];
             if (history_entry == ft_nullptr)
@@ -253,13 +244,10 @@ int rl_history_search(const char *query, int start_index,
                 continue ;
             }
             entry_code_points = ft_utf8_to_utf32(history_entry, 0, &entry_length);
-            entry_error = ft_global_error_stack_drop_last_error();
             if (entry_code_points == ft_nullptr)
             {
                 cma_free(query_code_points);
-                if (entry_error == FT_ERR_SUCCESS)
-                    return (FT_ERR_INVALID_ARGUMENT);
-                return (entry_error);
+                return (FT_ERR_INVALID_ARGUMENT);
             }
             contains_result = rl_history_utf32_contains(entry_code_points,
                     entry_length, query_code_points, query_length);

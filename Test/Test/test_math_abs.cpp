@@ -28,8 +28,8 @@ FT_TEST(test_math_abs_long_min_value_clamps_to_max, "math_abs clamps long minimu
 {
     long result;
 
-    result = math_abs(FT_LONG_MIN);
-    FT_ASSERT_EQ(FT_LONG_MAX, result);
+    result = math_abs(static_cast<long>(FT_LLONG_MIN));
+    FT_ASSERT_EQ(static_cast<long>(FT_LLONG_MAX), result);
     return (1);
 }
 
@@ -55,7 +55,7 @@ FT_TEST(test_math_abs_int_min_clamps_to_max, "math_abs clamps FT_INT_MIN to FT_I
 {
     int result;
 
-    result = math_abs(FT_INT_MIN);
-    FT_ASSERT_EQ(FT_INT_MAX, result);
+    result = math_abs(FT_INT32_MIN);
+    FT_ASSERT_EQ(FT_INT32_MAX, result);
     return (1);
 }

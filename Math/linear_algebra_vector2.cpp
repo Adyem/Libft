@@ -4,7 +4,6 @@
 #include "../PThread/pthread.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include <new>
-#include "../Template/move.hpp"
 
 #if defined(__SSE2__)
 # include <immintrin.h>
@@ -18,6 +17,7 @@ static void vector2_sleep_backoff()
 
 int vector2::lock_mutex() const noexcept
 {
+    this->abort_if_not_initialized("vector2::lock_mutex");
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
     return (this->_mutex->lock());
@@ -148,17 +148,18 @@ vector2 vector2::add(const vector2 &other) const
     const vector2 *lower;
     const vector2 *upper;
     int lock_error;
-    vector2 result;
+    double result_x;
+    double result_y;
 
     lock_error = this->lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        return (result);
+        return (vector2());
     }
-    result._x = this->_x + other._x;
-    result._y = this->_y + other._y;
+    result_x = this->_x + other._x;
+    result_y = this->_y + other._y;
     this->unlock_pair(lower, upper);
-    return (result);
+    return (vector2(result_x, result_y));
 }
 
 vector2 vector2::subtract(const vector2 &other) const
@@ -166,17 +167,18 @@ vector2 vector2::subtract(const vector2 &other) const
     const vector2 *lower;
     const vector2 *upper;
     int lock_error;
-    vector2 result;
+    double result_x;
+    double result_y;
 
     lock_error = this->lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        return (result);
+        return (vector2());
     }
-    result._x = this->_x - other._x;
-    result._y = this->_y - other._y;
+    result_x = this->_x - other._x;
+    result_y = this->_y - other._y;
     this->unlock_pair(lower, upper);
-    return (result);
+    return (vector2(result_x, result_y));
 }
 
 double vector2::dot(const vector2 &other) const
@@ -220,15 +222,16 @@ vector2 vector2::normalize() const
 {
     int lock_error;
     int unlock_error;
-    vector2 result;
     double squared_length;
     double length_value;
     double epsilon;
+    double normalized_x;
+    double normalized_y;
 
     lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
     {
-        return (result);
+        return (vector2());
     }
     squared_length = this->_x * this->_x + this->_y * this->_y;
     length_value = math_sqrt(squared_length);
@@ -238,45 +241,28 @@ vector2 vector2::normalize() const
         unlock_error = this->unlock_mutex();
         if (unlock_error != FT_ERR_SUCCESS)
         {
-            return (result);
+            return (vector2());
         }
-        return (result);
+        return (vector2());
     }
-    result._x = this->_x / length_value;
-    result._y = this->_y / length_value;
+    normalized_x = this->_x / length_value;
+    normalized_y = this->_y / length_value;
     unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESS)
     {
-        return (result);
+        return (vector2());
     }
-    return (result);
+    return (vector2(normalized_x, normalized_y));
 }
 
 int vector2::enable_thread_safety() noexcept
 {
-    return (this->prepare_thread_safety());
-}
-
-void vector2::disable_thread_safety() noexcept
-{
-    this->teardown_thread_safety();
-    return ;
-}
-
-bool vector2::is_thread_safe_enabled() const noexcept
-{
-    return (this->_mutex != ft_nullptr);
-}
-
-int vector2::prepare_thread_safety(void) noexcept
-{
-    if (this->_mutex != ft_nullptr)
-    {
-        return (FT_ERR_SUCCESS);
-    }
     pt_recursive_mutex *mutex_pointer;
     int mutex_error;
 
+    this->abort_if_not_initialized("vector2::enable_thread_safety");
+    if (this->_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
@@ -290,8 +276,10 @@ int vector2::prepare_thread_safety(void) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-void vector2::teardown_thread_safety(void) noexcept
-{    if (this->_mutex != ft_nullptr)
+void vector2::disable_thread_safety() noexcept
+{
+    this->abort_if_not_initialized("vector2::disable_thread_safety");
+    if (this->_mutex != ft_nullptr)
     {
         this->_mutex->destroy();
         delete this->_mutex;
@@ -300,11 +288,31 @@ void vector2::teardown_thread_safety(void) noexcept
     return ;
 }
 
+bool vector2::is_thread_safe_enabled() const noexcept
+{
+    this->abort_if_not_initialized("vector2::is_thread_safe_enabled");
+    return (this->_mutex != ft_nullptr);
+}
+
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *vector2::get_mutex_for_testing() noexcept
 {
+    pt_recursive_mutex *mutex_pointer;
+    int mutex_error;
+
     if (this->_mutex == ft_nullptr)
-        this->prepare_thread_safety();
+    {
+        mutex_pointer = new (std::nothrow) pt_recursive_mutex();
+        if (mutex_pointer == ft_nullptr)
+            return (ft_nullptr);
+        mutex_error = mutex_pointer->initialize();
+        if (mutex_error != FT_ERR_SUCCESS)
+        {
+            delete mutex_pointer;
+            return (ft_nullptr);
+        }
+        this->_mutex = mutex_pointer;
+    }
     return (this->_mutex);
 }
 #endif

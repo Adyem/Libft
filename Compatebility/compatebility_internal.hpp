@@ -81,6 +81,8 @@ int32_t cmp_file_move(const char *source_path, const char *destination_path, int
 int32_t cmp_file_copy(const char *source_path, const char *destination_path, int32_t *error_code_out);
 int32_t cmp_file_create_directory(const char *path, mode_t mode, int32_t *error_code_out);
 int32_t cmp_file_get_permissions(const char *path, mode_t *mode_out, int32_t *error_code_out);
+int32_t cmp_file_set_permissions(const char *path, int32_t owner_permissions,
+    int32_t group_permissions, int32_t other_permissions, int32_t *error_code_out);
 
 int32_t cmp_thread_equal(pthread_t thread1, pthread_t thread2);
 int32_t cmp_thread_cancel(pthread_t thread);

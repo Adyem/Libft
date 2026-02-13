@@ -27,27 +27,13 @@ static void pt_lock_tracking_try_shrink_owned_mutexes(pt_mutex_vector &owned_mut
 
 int pt_lock_tracking::lock_registry_mutex(void)
 {
-    try
-    {
-        pt_lock_tracking::get_registry_mutex()->lock();
-    }
-    catch (const std::system_error &)
-    {
-        return (FT_ERR_INVALID_STATE);
-    }
+    pt_lock_tracking::get_registry_mutex()->lock();
     return (FT_ERR_SUCCESS);
 }
 
 int pt_lock_tracking::unlock_registry_mutex(void)
 {
-    try
-    {
-        pt_lock_tracking::get_registry_mutex()->unlock();
-    }
-    catch (const std::system_error &)
-    {
-        return (FT_ERR_INVALID_STATE);
-    }
+    pt_lock_tracking::get_registry_mutex()->unlock();
     return (FT_ERR_SUCCESS);
 }
 
@@ -108,7 +94,6 @@ pt_mutex_vector pt_lock_tracking::get_owned_mutexes
 {
     pt_mutex_vector owned_mutexes;
     s_pt_thread_lock_info *info;
-    ft_size_t index;
     int lock_error;
     bool lock_acquired;
     int error_code;
@@ -575,6 +560,7 @@ int pt_lock_tracking::get_thread_state(pt_thread_id_type thread_identifier,
 {
     int lock_error;
     s_pt_thread_lock_info *info;
+    int copy_error;
     bool lock_acquired = false;
     int error_code = FT_ERR_SUCCESS;
     int result_code = FT_ERR_SUCCESS;
@@ -601,7 +587,7 @@ int pt_lock_tracking::get_thread_state(pt_thread_id_type thread_identifier,
     state.thread_identifier = info->thread_identifier;
     state.waiting_mutex = info->waiting_mutex;
     state.wait_started_ms = info->wait_started_ms;
-    int copy_error = pt_buffer_copy(state.owned_mutexes, info->owned_mutexes);
+    copy_error = pt_buffer_copy(state.owned_mutexes, info->owned_mutexes);
     if (copy_error != FT_ERR_SUCCESS)
         result_code = copy_error;
 cleanup_state:

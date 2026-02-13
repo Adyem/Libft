@@ -572,8 +572,24 @@ bool ft_string::empty() const noexcept
 
 int32_t ft_string::move(ft_string& other) noexcept
 {
-    this->abort_if_not_initialized("ft_string::move");
-    other.abort_if_not_initialized("ft_string::move");
+    if (other._initialized_state != ft_string::_state_initialized)
+    {
+        if (other._initialized_state == ft_string::_state_uninitialized)
+            other.abort_lifecycle_error("ft_string::move source",
+                "called with uninitialized source object");
+        else
+            other.abort_lifecycle_error("ft_string::move source",
+                "called with destroyed source object");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (this->_initialized_state != ft_string::_state_initialized)
+    {
+        int32_t initialize_error = this->initialize();
+        if (initialize_error != FT_ERR_SUCCESS)
+            return (initialize_error);
+    }
     bool self_locked = false;
     bool other_locked = false;
     pt_recursive_mutex *first = this->_mutex;
@@ -913,13 +929,8 @@ ft_string::operator const char*() const noexcept
 
 ft_string &ft_string::operator+=(const ft_string &string) noexcept
 {
-    if (this->_initialized_state != ft_string::_state_initialized
-        || string._initialized_state != ft_string::_state_initialized)
-    {
-        this->_operation_error = FT_ERR_INVALID_STATE;
-        ft_string::set_last_operation_error(this->_operation_error);
-        return (*this);
-    }
+    this->abort_if_not_initialized("ft_string::operator+=(const ft_string &)");
+    string.abort_if_not_initialized("ft_string::operator+=(const ft_string &) source");
     this->_operation_error = this->append(string);
     ft_string::set_last_operation_error(this->_operation_error);
     return (*this);
@@ -927,12 +938,7 @@ ft_string &ft_string::operator+=(const ft_string &string) noexcept
 
 ft_string &ft_string::operator+=(const char *string) noexcept
 {
-    if (this->_initialized_state != ft_string::_state_initialized)
-    {
-        this->_operation_error = FT_ERR_INVALID_STATE;
-        ft_string::set_last_operation_error(this->_operation_error);
-        return (*this);
-    }
+    this->abort_if_not_initialized("ft_string::operator+=(const char *)");
     this->_operation_error = this->append(string);
     ft_string::set_last_operation_error(this->_operation_error);
     return (*this);
@@ -940,12 +946,7 @@ ft_string &ft_string::operator+=(const char *string) noexcept
 
 ft_string &ft_string::operator+=(char character) noexcept
 {
-    if (this->_initialized_state != ft_string::_state_initialized)
-    {
-        this->_operation_error = FT_ERR_INVALID_STATE;
-        ft_string::set_last_operation_error(this->_operation_error);
-        return (*this);
-    }
+    this->abort_if_not_initialized("ft_string::operator+=(char)");
     this->_operation_error = this->append(character);
     ft_string::set_last_operation_error(this->_operation_error);
     return (*this);
@@ -955,12 +956,8 @@ bool ft_string::operator==(const ft_string &other) const noexcept
 {
     ft_size_t index;
 
-    if (this->_initialized_state != ft_string::_state_initialized
-        || other._initialized_state != ft_string::_state_initialized)
-    {
-        ft_string::set_last_operation_error(FT_ERR_INVALID_STATE);
-        return (false);
-    }
+    this->abort_if_not_initialized("ft_string::operator==(const ft_string &)");
+    other.abort_if_not_initialized("ft_string::operator==(const ft_string &) source");
     if (this->_length != other._length)
     {
         ft_string::set_last_operation_error(FT_ERR_SUCCESS);
@@ -984,11 +981,7 @@ bool ft_string::operator==(const char *string) const noexcept
 {
     ft_size_t index;
 
-    if (this->_initialized_state != ft_string::_state_initialized)
-    {
-        ft_string::set_last_operation_error(FT_ERR_INVALID_STATE);
-        return (false);
-    }
+    this->abort_if_not_initialized("ft_string::operator==(const char *)");
     if (string == ft_nullptr)
     {
         ft_string::set_last_operation_error(FT_ERR_INVALID_ARGUMENT);
@@ -1025,11 +1018,7 @@ bool ft_string::operator!=(const char *string) const noexcept
 
 char ft_string::operator[](ft_size_t index) const noexcept
 {
-    if (this->_initialized_state != ft_string::_state_initialized)
-    {
-        ft_string::set_last_operation_error(FT_ERR_INVALID_STATE);
-        return ('\0');
-    }
+    this->abort_if_not_initialized("ft_string::operator[]");
     if (index >= this->_length)
     {
         ft_string::set_last_operation_error(FT_ERR_OUT_OF_RANGE);
@@ -1039,74 +1028,211 @@ char ft_string::operator[](ft_size_t index) const noexcept
     return (this->_data[index]);
 }
 
-ft_string operator+(const ft_string &left, const ft_string &right) noexcept
+ft_string_proxy::ft_string_proxy() noexcept
+    : _value("")
+    , _last_error(FT_ERR_SUCCESS)
+{
+    return ;
+}
+
+ft_string_proxy::ft_string_proxy(int32_t error_code) noexcept
+    : _value("")
+    , _last_error(error_code)
+{
+    return ;
+}
+
+ft_string_proxy::ft_string_proxy(const ft_string &value, int32_t error_code) noexcept
+    : _value(value)
+    , _last_error(error_code)
+{
+    return ;
+}
+
+ft_string_proxy::ft_string_proxy(const ft_string_proxy &other) noexcept
+    : _value(other._value)
+    , _last_error(other._last_error)
+{
+    return ;
+}
+
+ft_string_proxy::ft_string_proxy(ft_string_proxy &&other) noexcept
+    : _value(static_cast<ft_string &&>(other._value))
+    , _last_error(other._last_error)
+{
+    other._last_error = FT_ERR_SUCCESS;
+    return ;
+}
+
+ft_string_proxy::~ft_string_proxy()
+{
+    return ;
+}
+
+ft_string_proxy &ft_string_proxy::operator=(const ft_string_proxy &other) noexcept
+{
+    this->_value = other._value;
+    this->_last_error = other._last_error;
+    return (*this);
+}
+
+ft_string_proxy &ft_string_proxy::operator=(ft_string_proxy &&other) noexcept
+{
+    this->_value = static_cast<ft_string &&>(other._value);
+    this->_last_error = other._last_error;
+    other._last_error = FT_ERR_SUCCESS;
+    return (*this);
+}
+
+ft_string_proxy ft_string_proxy::operator+(const ft_string &right) const noexcept
+{
+    return (::operator+(*this, right));
+}
+
+ft_string_proxy ft_string_proxy::operator+(const char *right) const noexcept
+{
+    return (::operator+(*this, right));
+}
+
+ft_string_proxy ft_string_proxy::operator+(char right) const noexcept
+{
+    return (::operator+(*this, right));
+}
+
+ft_string_proxy::operator ft_string() const noexcept
+{
+    if (this->_last_error != FT_ERR_SUCCESS)
+        return (ft_string(this->_last_error));
+    return (this->_value);
+}
+
+int32_t ft_string_proxy::get_error() const noexcept
+{
+    return (this->_last_error);
+}
+
+ft_string_proxy operator+(const ft_string &left, const ft_string &right) noexcept
 {
     ft_string result;
     int32_t error_code;
 
     error_code = result.initialize(left);
     if (error_code != FT_ERR_SUCCESS)
-        return (ft_string(error_code));
+        return (ft_string_proxy(error_code));
     error_code = result.append(right);
     if (error_code != FT_ERR_SUCCESS)
-        return (ft_string(error_code));
-    return (result);
+        return (ft_string_proxy(error_code));
+    return (ft_string_proxy(result, FT_ERR_SUCCESS));
 }
 
-ft_string operator+(const ft_string &left, const char *right) noexcept
+ft_string_proxy operator+(const ft_string &left, const char *right) noexcept
 {
     ft_string result;
     int32_t error_code;
 
     error_code = result.initialize(left);
     if (error_code != FT_ERR_SUCCESS)
-        return (ft_string(error_code));
+        return (ft_string_proxy(error_code));
     error_code = result.append(right);
     if (error_code != FT_ERR_SUCCESS)
-        return (ft_string(error_code));
-    return (result);
+        return (ft_string_proxy(error_code));
+    return (ft_string_proxy(result, FT_ERR_SUCCESS));
 }
 
-ft_string operator+(const char *left, const ft_string &right) noexcept
+ft_string_proxy operator+(const char *left, const ft_string &right) noexcept
 {
     ft_string result;
     int32_t error_code;
 
     error_code = result.initialize(left);
     if (error_code != FT_ERR_SUCCESS)
-        return (ft_string(error_code));
+        return (ft_string_proxy(error_code));
     error_code = result.append(right);
     if (error_code != FT_ERR_SUCCESS)
-        return (ft_string(error_code));
-    return (result);
+        return (ft_string_proxy(error_code));
+    return (ft_string_proxy(result, FT_ERR_SUCCESS));
 }
 
-ft_string operator+(const ft_string &left, char right) noexcept
+ft_string_proxy operator+(const ft_string &left, char right) noexcept
 {
     ft_string result;
     int32_t error_code;
 
     error_code = result.initialize(left);
     if (error_code != FT_ERR_SUCCESS)
-        return (ft_string(error_code));
+        return (ft_string_proxy(error_code));
     error_code = result.append(right);
     if (error_code != FT_ERR_SUCCESS)
-        return (ft_string(error_code));
-    return (result);
+        return (ft_string_proxy(error_code));
+    return (ft_string_proxy(result, FT_ERR_SUCCESS));
 }
 
-ft_string operator+(char left, const ft_string &right) noexcept
+ft_string_proxy operator+(char left, const ft_string &right) noexcept
 {
     ft_string result;
     int32_t error_code;
 
     error_code = result.initialize(1, left);
     if (error_code != FT_ERR_SUCCESS)
-        return (ft_string(error_code));
+        return (ft_string_proxy(error_code));
     error_code = result.append(right);
     if (error_code != FT_ERR_SUCCESS)
-        return (ft_string(error_code));
-    return (result);
+        return (ft_string_proxy(error_code));
+    return (ft_string_proxy(result, FT_ERR_SUCCESS));
+}
+
+ft_string_proxy operator+(const ft_string_proxy &left, const ft_string &right) noexcept
+{
+    ft_string result;
+    int32_t error_code;
+    ft_string left_value;
+
+    if (left.get_error() != FT_ERR_SUCCESS)
+        return (ft_string_proxy(left.get_error()));
+    left_value = static_cast<ft_string>(left);
+    error_code = result.initialize(left_value);
+    if (error_code != FT_ERR_SUCCESS)
+        return (ft_string_proxy(error_code));
+    error_code = result.append(right);
+    if (error_code != FT_ERR_SUCCESS)
+        return (ft_string_proxy(error_code));
+    return (ft_string_proxy(result, FT_ERR_SUCCESS));
+}
+
+ft_string_proxy operator+(const ft_string_proxy &left, const char *right) noexcept
+{
+    ft_string result;
+    int32_t error_code;
+    ft_string left_value;
+
+    if (left.get_error() != FT_ERR_SUCCESS)
+        return (ft_string_proxy(left.get_error()));
+    left_value = static_cast<ft_string>(left);
+    error_code = result.initialize(left_value);
+    if (error_code != FT_ERR_SUCCESS)
+        return (ft_string_proxy(error_code));
+    error_code = result.append(right);
+    if (error_code != FT_ERR_SUCCESS)
+        return (ft_string_proxy(error_code));
+    return (ft_string_proxy(result, FT_ERR_SUCCESS));
+}
+
+ft_string_proxy operator+(const ft_string_proxy &left, char right) noexcept
+{
+    ft_string result;
+    int32_t error_code;
+    ft_string left_value;
+
+    if (left.get_error() != FT_ERR_SUCCESS)
+        return (ft_string_proxy(left.get_error()));
+    left_value = static_cast<ft_string>(left);
+    error_code = result.initialize(left_value);
+    if (error_code != FT_ERR_SUCCESS)
+        return (ft_string_proxy(error_code));
+    error_code = result.append(right);
+    if (error_code != FT_ERR_SUCCESS)
+        return (ft_string_proxy(error_code));
+    return (ft_string_proxy(result, FT_ERR_SUCCESS));
 }
 
 bool operator==(const char *left, const ft_string &right) noexcept

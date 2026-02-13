@@ -4,6 +4,7 @@
 #include "../Errno/errno.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include <cstdint>
 
 class quaternion
 {
@@ -13,12 +14,17 @@ class quaternion
         double _y;
         double _z;
         pt_recursive_mutex *_mutex = ft_nullptr;
+        uint8_t _initialized_state = 0;
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
 
         static int lock_pair(const quaternion &first, const quaternion &second,
                 const quaternion *&lower, const quaternion *&upper);
         static void unlock_pair(const quaternion *lower, const quaternion *upper);
-        int prepare_thread_safety(void) noexcept;
-        void teardown_thread_safety(void) noexcept;
+        void abort_lifecycle_error(const char *method_name,
+                const char *reason) const noexcept;
+        void abort_if_not_initialized(const char *method_name) const noexcept;
 
     protected:
         int lock_mutex() const noexcept;
@@ -32,6 +38,12 @@ class quaternion
         quaternion(quaternion &&other) noexcept = delete;
         quaternion &operator=(quaternion &&other) noexcept = delete;
         ~quaternion();
+        int initialize() noexcept;
+        int initialize(double w, double x, double y, double z) noexcept;
+        int initialize(const quaternion &other) noexcept;
+        int initialize(quaternion &&other) noexcept;
+        int destroy() noexcept;
+        int move(quaternion &other) noexcept;
         double      get_w() const;
         double      get_x() const;
         double      get_y() const;

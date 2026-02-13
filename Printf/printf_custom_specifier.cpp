@@ -1,83 +1,57 @@
 #include "printf_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
-#include "../PThread/pthread_internal.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include <climits>
-#include <cstdlib>
-#include <pthread.h>
+#include <new>
 
-static pthread_mutex_t *g_pf_custom_specifiers_mutex = ft_nullptr;
+static pt_recursive_mutex *g_pf_custom_specifiers_mutex = ft_nullptr;
 
 static int pf_custom_specifiers_lock(void)
 {
     if (g_pf_custom_specifiers_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
-    int mutex_error = pt_pthread_mutex_lock_with_error(g_pf_custom_specifiers_mutex);
-    int stack_error = ft_global_error_stack_drop_last_error();
-    if (mutex_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(stack_error);
-        return (mutex_error);
-    }
-    return (FT_ERR_SUCCESS);
+    return (g_pf_custom_specifiers_mutex->lock());
 }
 
 static int pf_custom_specifiers_unlock(void)
 {
     if (g_pf_custom_specifiers_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
-    int mutex_error = pt_pthread_mutex_unlock_with_error(g_pf_custom_specifiers_mutex);
-    int stack_error = ft_global_error_stack_drop_last_error();
-    if (mutex_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(stack_error);
-        return (mutex_error);
-    }
-    return (FT_ERR_SUCCESS);
+    return (g_pf_custom_specifiers_mutex->unlock());
 }
 
 int pf_enable_thread_safety(void)
 {
+    pt_recursive_mutex *mutex_pointer;
+    int mutex_error;
+
     if (g_pf_custom_specifiers_mutex != ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
-    }
-    pthread_mutex_t *mutex_pointer = static_cast<pthread_mutex_t*>(std::malloc(sizeof(pthread_mutex_t)));
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (FT_ERR_NO_MEMORY);
-    }
-    int pthread_error = pthread_mutex_init(mutex_pointer, ft_nullptr);
-    if (pthread_error != 0)
+    mutex_error = mutex_pointer->initialize();
+    if (mutex_error != FT_ERR_SUCCESS)
     {
-        int error_code = ft_map_system_error(pthread_error);
-        std::free(mutex_pointer);
-        ft_global_error_stack_push(error_code);
-        return (error_code);
+        delete mutex_pointer;
+        return (mutex_error);
     }
     g_pf_custom_specifiers_mutex = mutex_pointer;
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
 void pf_disable_thread_safety(void)
 {
+    int destroy_error;
+
     if (g_pf_custom_specifiers_mutex == ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return ;
-    }
-    int pthread_error = pthread_mutex_destroy(g_pf_custom_specifiers_mutex);
-    std::free(g_pf_custom_specifiers_mutex);
+    destroy_error = g_pf_custom_specifiers_mutex->destroy();
+    if (destroy_error != FT_ERR_SUCCESS)
+        return ;
+    delete g_pf_custom_specifiers_mutex;
     g_pf_custom_specifiers_mutex = ft_nullptr;
-    if (pthread_error != 0)
-    {
-        ft_global_error_stack_push(ft_map_system_error(pthread_error));
-        return ;
-    }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -106,33 +80,20 @@ int pf_register_custom_specifier(char specifier, t_pf_custom_formatter handler, 
 
     lock_error = pf_custom_specifiers_lock();
     if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(FT_ERR_SYS_MUTEX_LOCK_FAILED);
         return (-1);
-    }
     if (handler == ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_INVALID_POINTER);
         goto unlock;
-    }
     index = static_cast<unsigned char>(specifier);
     entry = &g_pf_custom_specifiers[index];
     if (entry->handler != ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_ALREADY_EXISTS);
         goto unlock;
-    }
     entry->handler = handler;
     entry->context = context;
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     result = 0;
 unlock:
     unlock_error = pf_custom_specifiers_unlock();
     if (unlock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
         return (-1);
-    }
     return (result);
 }
 
@@ -144,19 +105,12 @@ int pf_unregister_custom_specifier(char specifier)
 
     lock_error = pf_custom_specifiers_lock();
     if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(FT_ERR_SYS_MUTEX_LOCK_FAILED);
         return (-1);
-    }
     index = static_cast<unsigned char>(specifier);
     pf_clear_entry(g_pf_custom_specifiers[index]);
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     unlock_error = pf_custom_specifiers_unlock();
     if (unlock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
         return (-1);
-    }
     return (0);
 }
 

@@ -8,7 +8,7 @@
 #include "../Basic/basic.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread.hpp"
-#include "../PThread/pthread_internal.hpp"
+#include "../PThread/pthread.hpp"
 #include <cstddef>
 #include <utility>
 #include "move.hpp"

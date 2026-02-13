@@ -7,45 +7,32 @@
 int pt_thread_join(pthread_t thread, void **retval)
 {
     int return_value;
-    int error_code;
 
     if (!thread)
     {
         return_value = ESRCH;
-        error_code = ft_map_system_error(return_value);
-        ft_global_error_stack_push(error_code);
         return (return_value);
     }
     return_value = pthread_join(thread, retval);
     if (return_value != 0)
-    {
-        error_code = ft_map_system_error(return_value);
-        ft_global_error_stack_push(error_code);
         return (return_value);
-    }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (return_value);
 }
 
 int pt_thread_timed_join(pthread_t thread, void **retval, long timeout_ms)
 {
     int return_value;
-    int error_code;
     struct timespec absolute_timeout;
     long additional_nanoseconds;
 
     if (!thread)
     {
         return_value = ESRCH;
-        error_code = ft_map_system_error(return_value);
-        ft_global_error_stack_push(error_code);
         return (return_value);
     }
     if (timeout_ms < 0)
     {
         return_value = EINVAL;
-        error_code = ft_map_system_error(return_value);
-        ft_global_error_stack_push(error_code);
         return (return_value);
     }
 #ifdef __linux__
@@ -53,8 +40,6 @@ int pt_thread_timed_join(pthread_t thread, void **retval, long timeout_ms)
     if (return_value != 0)
     {
         return_value = errno;
-        error_code = ft_map_system_error(return_value);
-        ft_global_error_stack_push(error_code);
         return (return_value);
     }
     absolute_timeout.tv_sec += timeout_ms / 1000;
@@ -67,18 +52,11 @@ int pt_thread_timed_join(pthread_t thread, void **retval, long timeout_ms)
     }
     return_value = pthread_timedjoin_np(thread, retval, &absolute_timeout);
     if (return_value != 0)
-    {
-        error_code = ft_map_system_error(return_value);
-        ft_global_error_stack_push(error_code);
         return (return_value);
-    }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (return_value);
 #else
     (void)retval;
     (void)timeout_ms;
-    error_code = FT_ERR_INVALID_STATE;
-    ft_global_error_stack_push(error_code);
     return (EINVAL);
 #endif
 }

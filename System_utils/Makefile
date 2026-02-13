@@ -4,10 +4,10 @@ DEBUG_TARGET := System_utils_debug.a
 
 SRCS := System_utils_assert.cpp \
         System_utils_env.cpp \
-        System_utils_environment_lock.cpp \
-        System_utils_getenv.cpp \
-        System_utils_setenv.cpp \
-        System_utils_unsetenv.cpp \
+        system_utils_environment_lock.cpp \
+        system_utils_getenv.cpp \
+        system_utils_setenv.cpp \
+        system_utils_unsetenv.cpp \
         System_utils_abort.cpp \
         System_utils_sigabrt.cpp \
         System_utils_sigfpe.cpp \

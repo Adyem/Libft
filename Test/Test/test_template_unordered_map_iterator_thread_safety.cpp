@@ -2,147 +2,348 @@
 #include "../../Template/unordered_map.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
-#include <atomic>
-#include <chrono>
-#include <thread>
+#include <csignal>
+#include <sys/wait.h>
+#include <unistd.h>
 
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-FT_TEST(test_ft_unordered_map_iterator_enable_thread_safety_controls,
-        "ft_unordered_map iterator exposes optional mutex guards")
+typedef ft_unordered_map<int, int> unordered_map_int_int;
+typedef unordered_map_int_int::iterator unordered_map_iterator;
+typedef unordered_map_int_int::const_iterator unordered_map_const_iterator;
+
+static int unordered_map_iterator_expect_sigabrt(void (*operation)())
 {
-    ft_unordered_map<int, int> map_instance;
+    pid_t child_process_id;
+    int child_status;
+
+    child_process_id = fork();
+    if (child_process_id == 0)
+    {
+        operation();
+        _exit(0);
+    }
+    if (child_process_id < 0)
+        return (0);
+    child_status = 0;
+    if (waitpid(child_process_id, &child_status, 0) < 0)
+        return (0);
+    if (WIFSIGNALED(child_status) == 0)
+        return (0);
+    return (WTERMSIG(child_status) == SIGABRT);
+}
+
+static void unordered_map_iterator_uninitialized_destructor_aborts_operation()
+{
+    unordered_map_iterator iterator_instance;
+
+    (void)iterator_instance;
+    return ;
+}
+
+static void unordered_map_iterator_destroy_uninitialized_aborts_operation()
+{
+    unordered_map_iterator iterator_instance;
+
+    (void)iterator_instance.destroy();
+    return ;
+}
+
+static void unordered_map_iterator_initialize_twice_aborts_operation()
+{
+    unordered_map_int_int map_instance;
+    unordered_map_iterator iterator_instance;
 
     map_instance.insert(1, 10);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.last_operation_error());
+    iterator_instance.initialize(map_instance.begin());
+    iterator_instance.initialize(map_instance.begin());
+    return ;
+}
+
+static void unordered_map_iterator_destroy_twice_aborts_operation()
+{
+    unordered_map_int_int map_instance;
+    unordered_map_iterator iterator_instance;
+
+    map_instance.insert(1, 10);
+    iterator_instance.initialize(map_instance.begin());
+    (void)iterator_instance.destroy();
+    (void)iterator_instance.destroy();
+    return ;
+}
+
+static void unordered_map_iterator_move_self_uninitialized_aborts_operation()
+{
+    unordered_map_iterator iterator_instance;
+
+    (void)iterator_instance.move(iterator_instance);
+    return ;
+}
+
+static void unordered_map_const_iterator_uninitialized_destructor_aborts_operation()
+{
+    unordered_map_const_iterator iterator_instance;
+
+    (void)iterator_instance;
+    return ;
+}
+
+static void unordered_map_const_iterator_destroy_uninitialized_aborts_operation()
+{
+    unordered_map_const_iterator iterator_instance;
+
+    (void)iterator_instance.destroy();
+    return ;
+}
+
+static void unordered_map_const_iterator_initialize_twice_aborts_operation()
+{
+    unordered_map_int_int map_instance;
+    unordered_map_const_iterator iterator_instance;
+
+    map_instance.insert(1, 10);
+    iterator_instance.initialize(static_cast<const unordered_map_int_int &>(map_instance).begin());
+    iterator_instance.initialize(static_cast<const unordered_map_int_int &>(map_instance).begin());
+    return ;
+}
+
+static void unordered_map_const_iterator_destroy_twice_aborts_operation()
+{
+    unordered_map_int_int map_instance;
+    unordered_map_const_iterator iterator_instance;
+
+    map_instance.insert(1, 10);
+    iterator_instance.initialize(static_cast<const unordered_map_int_int &>(map_instance).begin());
+    (void)iterator_instance.destroy();
+    (void)iterator_instance.destroy();
+    return ;
+}
+
+static void unordered_map_const_iterator_move_self_uninitialized_aborts_operation()
+{
+    unordered_map_const_iterator iterator_instance;
+
+    (void)iterator_instance.move(iterator_instance);
+    return ;
+}
+
+FT_TEST(test_unordered_map_iterator_destroy_and_reinitialize_copy_success,
+    "unordered_map iterator destroy then initialize(copy) succeeds")
+{
+    unordered_map_int_int map_instance;
+    unordered_map_iterator source_iterator;
+    unordered_map_iterator destination_iterator;
+
+    map_instance.insert(1, 10);
     map_instance.insert(2, 20);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.last_operation_error());
-
-    ft_unordered_map<int, int>::iterator iterator_instance = map_instance.begin();
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.last_operation_error());
-
-    FT_ASSERT_EQ(0, iterator_instance.enable_thread_safety());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, iterator_instance.get_error());
-    FT_ASSERT(iterator_instance.is_thread_safe());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, iterator_instance.get_error());
-
-    bool lock_acquired = false;
-    FT_ASSERT_EQ(0, iterator_instance.lock(&lock_acquired));
-    FT_ASSERT(lock_acquired);
-    iterator_instance.unlock(lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, iterator_instance.get_error());
-
-    FT_ASSERT_EQ(1, (*iterator_instance).first);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, iterator_instance.get_error());
-
-    iterator_instance.disable_thread_safety();
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, iterator_instance.get_error());
+    source_iterator.initialize(map_instance.begin());
+    destination_iterator.initialize(map_instance.end());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_iterator.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_iterator.initialize(source_iterator));
+    FT_ASSERT_EQ(1, (*destination_iterator).first);
+    FT_ASSERT_EQ(10, (*destination_iterator).second);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_iterator.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_iterator.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_iterator.destroy());
     return (1);
 }
 
-FT_TEST(test_ft_unordered_map_iterator_lock_blocks_until_release,
-        "ft_unordered_map iterator lock waits for mutex holders to release")
+FT_TEST(test_unordered_map_iterator_destroy_and_reinitialize_move_success,
+    "unordered_map iterator destroy then initialize(move) succeeds")
 {
-    ft_unordered_map<int, int> map_instance;
-    ft_unordered_map<int, int>::iterator iterator_instance(map_instance.begin());
-    bool main_lock_acquired;
-    std::atomic<bool> ready;
-    std::atomic<bool> worker_succeeded;
-    std::atomic<long long> wait_duration_ms;
-    std::thread worker;
+    unordered_map_int_int map_instance;
+    unordered_map_iterator source_iterator;
+    unordered_map_iterator destination_iterator;
 
-    map_instance.insert(1, 1);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.last_operation_error());
-
-    iterator_instance = map_instance.begin();
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.last_operation_error());
-    FT_ASSERT_EQ(0, iterator_instance.enable_thread_safety());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, iterator_instance.get_error());
-
-    main_lock_acquired = false;
-    FT_ASSERT_EQ(0, iterator_instance.lock(&main_lock_acquired));
-    FT_ASSERT(main_lock_acquired);
-
-    ready.store(false);
-    worker_succeeded.store(false);
-    wait_duration_ms.store(0);
-    worker = std::thread([&iterator_instance, &ready, &worker_succeeded, &wait_duration_ms]() {
-        bool worker_lock_acquired;
-        std::chrono::steady_clock::time_point start_time;
-        std::chrono::steady_clock::time_point end_time;
-
-        worker_lock_acquired = false;
-        ready.store(true);
-        start_time = std::chrono::steady_clock::now();
-        if (iterator_instance.lock(&worker_lock_acquired) != 0)
-        {
-            worker_succeeded.store(false);
-            wait_duration_ms.store(-1);
-            return ;
-        }
-        end_time = std::chrono::steady_clock::now();
-        wait_duration_ms.store(std::chrono::duration_cast<std::chrono::milliseconds>(
-                    end_time - start_time).count());
-        worker_succeeded.store(worker_lock_acquired);
-        iterator_instance.unlock(worker_lock_acquired);
-    });
-
-    while (!ready.load())
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    iterator_instance.unlock(main_lock_acquired);
-
-    worker.join();
-
-    FT_ASSERT(worker_succeeded.load());
-    FT_ASSERT(wait_duration_ms.load() >= 40);
-
-    iterator_instance.disable_thread_safety();
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, iterator_instance.get_error());
+    map_instance.insert(4, 40);
+    map_instance.insert(5, 50);
+    source_iterator.initialize(map_instance.begin());
+    destination_iterator.initialize(map_instance.end());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_iterator.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS,
+        destination_iterator.initialize(static_cast<unordered_map_iterator &&>(source_iterator)));
+    FT_ASSERT_EQ(4, (*destination_iterator).first);
+    FT_ASSERT_EQ(40, (*destination_iterator).second);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_iterator.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_iterator.destroy());
     return (1);
 }
 
-FT_TEST(test_ft_unordered_map_iterators_inherit_container_thread_safety,
-        "ft_unordered_map propagates thread-safety toggles to iterators")
+FT_TEST(test_unordered_map_iterator_end_dereference_reports_out_of_range,
+    "unordered_map iterator dereference on end reports out of range")
 {
-    ft_unordered_map<int, int> map_instance;
+    unordered_map_int_int map_instance;
+    unordered_map_iterator iterator_instance;
 
-    FT_ASSERT_EQ(0, map_instance.enable_thread_safety());
-    FT_ASSERT(map_instance.is_thread_safe());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.last_operation_error());
+    map_instance.insert(10, 100);
+    iterator_instance.initialize(map_instance.end());
+    (void)(*iterator_instance);
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, iterator_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, iterator_instance.destroy());
+    return (1);
+}
 
-    map_instance.insert(42, 100);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.last_operation_error());
+FT_TEST(test_unordered_map_iterator_end_arrow_reports_out_of_range,
+    "unordered_map iterator arrow on end reports out of range")
+{
+    unordered_map_int_int map_instance;
+    unordered_map_iterator iterator_instance;
 
-    ft_unordered_map<int, int>::iterator iterator_instance = map_instance.begin();
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.last_operation_error());
-    FT_ASSERT(iterator_instance.is_thread_safe());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, iterator_instance.get_error());
+    map_instance.insert(10, 100);
+    iterator_instance.initialize(map_instance.end());
+    (void)iterator_instance.operator->();
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, iterator_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, iterator_instance.destroy());
+    return (1);
+}
 
-    bool iterator_lock_acquired = false;
-    FT_ASSERT_EQ(0, iterator_instance.lock(&iterator_lock_acquired));
-    FT_ASSERT(iterator_lock_acquired);
-    iterator_instance.unlock(iterator_lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, iterator_instance.get_error());
+FT_TEST(test_unordered_map_const_iterator_destroy_and_reinitialize_copy_success,
+    "unordered_map const_iterator destroy then initialize(copy) succeeds")
+{
+    unordered_map_int_int map_instance;
+    unordered_map_const_iterator source_iterator;
+    unordered_map_const_iterator destination_iterator;
 
-    const ft_unordered_map<int, int>& const_map_ref = map_instance;
-    ft_unordered_map<int, int>::const_iterator const_iterator_instance = const_map_ref.begin();
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, const_map_ref.last_operation_error());
-    FT_ASSERT(const_iterator_instance.is_thread_safe());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, const_iterator_instance.get_error());
+    map_instance.insert(1, 10);
+    map_instance.insert(2, 20);
+    source_iterator.initialize(static_cast<const unordered_map_int_int &>(map_instance).begin());
+    destination_iterator.initialize(static_cast<const unordered_map_int_int &>(map_instance).end());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_iterator.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_iterator.initialize(source_iterator));
+    FT_ASSERT_EQ(1, (*destination_iterator).first);
+    FT_ASSERT_EQ(10, (*destination_iterator).second);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_iterator.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_iterator.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_iterator.destroy());
+    return (1);
+}
 
-    bool const_lock_acquired = false;
-    FT_ASSERT_EQ(0, const_iterator_instance.lock(&const_lock_acquired));
-    FT_ASSERT(const_lock_acquired);
-    const_iterator_instance.unlock(const_lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, const_iterator_instance.get_error());
+FT_TEST(test_unordered_map_const_iterator_destroy_and_reinitialize_move_success,
+    "unordered_map const_iterator destroy then initialize(move) succeeds")
+{
+    unordered_map_int_int map_instance;
+    unordered_map_const_iterator source_iterator;
+    unordered_map_const_iterator destination_iterator;
 
-    iterator_instance.disable_thread_safety();
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, iterator_instance.get_error());
-    const_iterator_instance.disable_thread_safety();
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, const_iterator_instance.get_error());
-    map_instance.disable_thread_safety();
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.last_operation_error());
+    map_instance.insert(4, 40);
+    map_instance.insert(5, 50);
+    source_iterator.initialize(static_cast<const unordered_map_int_int &>(map_instance).begin());
+    destination_iterator.initialize(static_cast<const unordered_map_int_int &>(map_instance).end());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_iterator.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS,
+        destination_iterator.initialize(static_cast<unordered_map_const_iterator &&>(source_iterator)));
+    FT_ASSERT_EQ(4, (*destination_iterator).first);
+    FT_ASSERT_EQ(40, (*destination_iterator).second);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_iterator.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_iterator.destroy());
+    return (1);
+}
+
+FT_TEST(test_unordered_map_const_iterator_end_dereference_reports_out_of_range,
+    "unordered_map const_iterator dereference on end reports out of range")
+{
+    unordered_map_int_int map_instance;
+    unordered_map_const_iterator iterator_instance;
+
+    map_instance.insert(10, 100);
+    iterator_instance.initialize(static_cast<const unordered_map_int_int &>(map_instance).end());
+    (void)(*iterator_instance);
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, iterator_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, iterator_instance.destroy());
+    return (1);
+}
+
+FT_TEST(test_unordered_map_const_iterator_end_arrow_reports_out_of_range,
+    "unordered_map const_iterator arrow on end reports out of range")
+{
+    unordered_map_int_int map_instance;
+    unordered_map_const_iterator iterator_instance;
+
+    map_instance.insert(10, 100);
+    iterator_instance.initialize(static_cast<const unordered_map_int_int &>(map_instance).end());
+    (void)iterator_instance.operator->();
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, iterator_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, iterator_instance.destroy());
+    return (1);
+}
+
+FT_TEST(test_unordered_map_iterator_uninitialized_destructor_aborts,
+    "unordered_map iterator destructor aborts on uninitialized instance")
+{
+    FT_ASSERT_EQ(1, unordered_map_iterator_expect_sigabrt(
+        unordered_map_iterator_uninitialized_destructor_aborts_operation));
+    return (1);
+}
+
+FT_TEST(test_unordered_map_iterator_destroy_uninitialized_aborts,
+    "unordered_map iterator destroy aborts on uninitialized instance")
+{
+    FT_ASSERT_EQ(1, unordered_map_iterator_expect_sigabrt(
+        unordered_map_iterator_destroy_uninitialized_aborts_operation));
+    return (1);
+}
+
+FT_TEST(test_unordered_map_iterator_initialize_twice_aborts,
+    "unordered_map iterator initialize aborts when called while initialized")
+{
+    FT_ASSERT_EQ(1, unordered_map_iterator_expect_sigabrt(
+        unordered_map_iterator_initialize_twice_aborts_operation));
+    return (1);
+}
+
+FT_TEST(test_unordered_map_iterator_destroy_twice_aborts,
+    "unordered_map iterator destroy aborts when called after destroy")
+{
+    FT_ASSERT_EQ(1, unordered_map_iterator_expect_sigabrt(
+        unordered_map_iterator_destroy_twice_aborts_operation));
+    return (1);
+}
+
+FT_TEST(test_unordered_map_iterator_move_self_uninitialized_aborts,
+    "unordered_map iterator move(self) aborts on uninitialized instance")
+{
+    FT_ASSERT_EQ(1, unordered_map_iterator_expect_sigabrt(
+        unordered_map_iterator_move_self_uninitialized_aborts_operation));
+    return (1);
+}
+
+FT_TEST(test_unordered_map_const_iterator_uninitialized_destructor_aborts,
+    "unordered_map const_iterator destructor aborts on uninitialized instance")
+{
+    FT_ASSERT_EQ(1, unordered_map_iterator_expect_sigabrt(
+        unordered_map_const_iterator_uninitialized_destructor_aborts_operation));
+    return (1);
+}
+
+FT_TEST(test_unordered_map_const_iterator_destroy_uninitialized_aborts,
+    "unordered_map const_iterator destroy aborts on uninitialized instance")
+{
+    FT_ASSERT_EQ(1, unordered_map_iterator_expect_sigabrt(
+        unordered_map_const_iterator_destroy_uninitialized_aborts_operation));
+    return (1);
+}
+
+FT_TEST(test_unordered_map_const_iterator_initialize_twice_aborts,
+    "unordered_map const_iterator initialize aborts when called while initialized")
+{
+    FT_ASSERT_EQ(1, unordered_map_iterator_expect_sigabrt(
+        unordered_map_const_iterator_initialize_twice_aborts_operation));
+    return (1);
+}
+
+FT_TEST(test_unordered_map_const_iterator_destroy_twice_aborts,
+    "unordered_map const_iterator destroy aborts when called after destroy")
+{
+    FT_ASSERT_EQ(1, unordered_map_iterator_expect_sigabrt(
+        unordered_map_const_iterator_destroy_twice_aborts_operation));
+    return (1);
+}
+
+FT_TEST(test_unordered_map_const_iterator_move_self_uninitialized_aborts,
+    "unordered_map const_iterator move(self) aborts on uninitialized instance")
+{
+    FT_ASSERT_EQ(1, unordered_map_iterator_expect_sigabrt(
+        unordered_map_const_iterator_move_self_uninitialized_aborts_operation));
     return (1);
 }

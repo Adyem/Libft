@@ -9,7 +9,7 @@
 #include "vector.hpp"
 #include "move.hpp"
 #include "../PThread/recursive_mutex.hpp"
-#include "../PThread/pthread_internal.hpp"
+#include "../PThread/pthread.hpp"
 #include <atomic>
 #include <new>
 

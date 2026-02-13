@@ -102,7 +102,14 @@ int ft_sound_device::initialize(const ft_sound_device &other)
         return (FT_ERR_INVALID_STATE);
     }
     if (other._initialized_state != ft_sound_device::_state_initialized)
+    {
+        other.abort_lifecycle_error(
+            "ft_sound_device::initialize(const ft_sound_device &) source",
+            "called with source object that is not initialized");
         return (FT_ERR_INVALID_STATE);
+    }
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
     return (this->initialize());
 }
 
@@ -116,7 +123,14 @@ int ft_sound_device::initialize(ft_sound_device &&other)
         return (FT_ERR_INVALID_STATE);
     }
     if (other._initialized_state != ft_sound_device::_state_initialized)
+    {
+        other.abort_lifecycle_error(
+            "ft_sound_device::initialize(ft_sound_device &&) source",
+            "called with source object that is not initialized");
         return (FT_ERR_INVALID_STATE);
+    }
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
     if (this->initialize() != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_STATE);
     return (this->move(other));
@@ -137,9 +151,6 @@ int ft_sound_device::destroy(void)
 
 int ft_sound_device::move(ft_sound_device &other)
 {
-    this->abort_if_not_initialized("ft_sound_device::move destination");
-    if (&other == this)
-        return (FT_ERR_SUCCESS);
     if (other._initialized_state == ft_sound_device::_state_uninitialized)
     {
         other.abort_lifecycle_error("ft_sound_device::move source",
@@ -147,7 +158,18 @@ int ft_sound_device::move(ft_sound_device &other)
         return (FT_ERR_INVALID_STATE);
     }
     if (other._initialized_state != ft_sound_device::_state_initialized)
+    {
+        other.abort_lifecycle_error("ft_sound_device::move source",
+            "called with source object that is not initialized");
         return (FT_ERR_INVALID_STATE);
+    }
+    if (&other == this)
+        return (FT_ERR_SUCCESS);
+    if (this->_initialized_state != ft_sound_device::_state_initialized)
+    {
+        if (this->initialize() != FT_ERR_SUCCESS)
+            return (FT_ERR_INVALID_STATE);
+    }
     if (this->_mutex != ft_nullptr)
         this->disable_thread_safety();
     if (other._mutex != ft_nullptr)

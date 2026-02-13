@@ -4,7 +4,6 @@
 #include "../PThread/pthread.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include <new>
-#include "../Template/move.hpp"
 
 #if defined(__SSE2__)
 # include <immintrin.h>
@@ -18,6 +17,7 @@ static void vector3_sleep_backoff()
 
 int vector3::lock_mutex() const noexcept
 {
+    this->abort_if_not_initialized("vector3::lock_mutex");
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
     return (this->_mutex->lock());
@@ -183,18 +183,20 @@ vector3 vector3::add(const vector3 &other) const
     const vector3 *lower;
     const vector3 *upper;
     int lock_error;
-    vector3 result;
+    double result_x;
+    double result_y;
+    double result_z;
 
     lock_error = this->lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        return (result);
+        return (vector3());
     }
-    result._x = this->_x + other._x;
-    result._y = this->_y + other._y;
-    result._z = this->_z + other._z;
+    result_x = this->_x + other._x;
+    result_y = this->_y + other._y;
+    result_z = this->_z + other._z;
     this->unlock_pair(lower, upper);
-    return (result);
+    return (vector3(result_x, result_y, result_z));
 }
 
 vector3 vector3::subtract(const vector3 &other) const
@@ -202,18 +204,20 @@ vector3 vector3::subtract(const vector3 &other) const
     const vector3 *lower;
     const vector3 *upper;
     int lock_error;
-    vector3 result;
+    double result_x;
+    double result_y;
+    double result_z;
 
     lock_error = this->lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        return (result);
+        return (vector3());
     }
-    result._x = this->_x - other._x;
-    result._y = this->_y - other._y;
-    result._z = this->_z - other._z;
+    result_x = this->_x - other._x;
+    result_y = this->_y - other._y;
+    result_z = this->_z - other._z;
     this->unlock_pair(lower, upper);
-    return (result);
+    return (vector3(result_x, result_y, result_z));
 }
 
 double vector3::dot(const vector3 &other) const
@@ -239,18 +243,20 @@ vector3 vector3::cross(const vector3 &other) const
     const vector3 *lower;
     const vector3 *upper;
     int lock_error;
-    vector3 result;
+    double result_x;
+    double result_y;
+    double result_z;
 
     lock_error = this->lock_pair(*this, other, lower, upper);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        return (result);
+        return (vector3());
     }
-    result._x = this->_y * other._z - this->_z * other._y;
-    result._y = this->_z * other._x - this->_x * other._z;
-    result._z = this->_x * other._y - this->_y * other._x;
+    result_x = this->_y * other._z - this->_z * other._y;
+    result_y = this->_z * other._x - this->_x * other._z;
+    result_z = this->_x * other._y - this->_y * other._x;
     this->unlock_pair(lower, upper);
-    return (result);
+    return (vector3(result_x, result_y, result_z));
 }
 
 double vector3::length() const
@@ -279,16 +285,18 @@ double vector3::length() const
 vector3 vector3::normalize() const
 {
     int lock_error;
-    vector3 result;
     double squared_length;
     double length_value;
     double epsilon;
     int unlock_error;
+    double normalized_x;
+    double normalized_y;
+    double normalized_z;
 
     lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
     {
-        return (result);
+        return (vector3());
     }
     squared_length = this->_x * this->_x + this->_y * this->_y + this->_z * this->_z;
     length_value = math_sqrt(squared_length);
@@ -298,46 +306,29 @@ vector3 vector3::normalize() const
         unlock_error = this->unlock_mutex();
         if (unlock_error != FT_ERR_SUCCESS)
         {
-            return (result);
+            return (vector3());
         }
-        return (result);
+        return (vector3());
     }
-    result._x = this->_x / length_value;
-    result._y = this->_y / length_value;
-    result._z = this->_z / length_value;
+    normalized_x = this->_x / length_value;
+    normalized_y = this->_y / length_value;
+    normalized_z = this->_z / length_value;
     unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESS)
     {
-        return (result);
+        return (vector3());
     }
-    return (result);
+    return (vector3(normalized_x, normalized_y, normalized_z));
 }
 
 int vector3::enable_thread_safety() noexcept
 {
-    return (this->prepare_thread_safety());
-}
-
-void vector3::disable_thread_safety() noexcept
-{
-    this->teardown_thread_safety();
-    return ;
-}
-
-bool vector3::is_thread_safe_enabled() const noexcept
-{
-    return (this->_mutex != ft_nullptr);
-}
-
-int vector3::prepare_thread_safety(void) noexcept
-{
-    if (this->_mutex != ft_nullptr)
-    {
-        return (FT_ERR_SUCCESS);
-    }
     pt_recursive_mutex *mutex_pointer;
     int mutex_error;
 
+    this->abort_if_not_initialized("vector3::enable_thread_safety");
+    if (this->_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
@@ -351,8 +342,10 @@ int vector3::prepare_thread_safety(void) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-void vector3::teardown_thread_safety(void) noexcept
-{    if (this->_mutex != ft_nullptr)
+void vector3::disable_thread_safety() noexcept
+{
+    this->abort_if_not_initialized("vector3::disable_thread_safety");
+    if (this->_mutex != ft_nullptr)
     {
         this->_mutex->destroy();
         delete this->_mutex;
@@ -361,11 +354,31 @@ void vector3::teardown_thread_safety(void) noexcept
     return ;
 }
 
+bool vector3::is_thread_safe_enabled() const noexcept
+{
+    this->abort_if_not_initialized("vector3::is_thread_safe_enabled");
+    return (this->_mutex != ft_nullptr);
+}
+
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *vector3::get_mutex_for_testing() noexcept
 {
+    pt_recursive_mutex *mutex_pointer;
+    int mutex_error;
+
     if (this->_mutex == ft_nullptr)
-        this->prepare_thread_safety();
+    {
+        mutex_pointer = new (std::nothrow) pt_recursive_mutex();
+        if (mutex_pointer == ft_nullptr)
+            return (ft_nullptr);
+        mutex_error = mutex_pointer->initialize();
+        if (mutex_error != FT_ERR_SUCCESS)
+        {
+            delete mutex_pointer;
+            return (ft_nullptr);
+        }
+        this->_mutex = mutex_pointer;
+    }
     return (this->_mutex);
 }
 #endif

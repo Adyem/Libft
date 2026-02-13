@@ -4,6 +4,7 @@
 #if SQLITE3_AVAILABLE
 # include <sqlite3.h>
 #endif
+#include "../Advanced/advanced.hpp"
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../CPP_class/class_file.hpp"
@@ -13,7 +14,6 @@
 #include "../JSon/json.hpp"
 #include "../Printf/printf.hpp"
 #include "../PThread/recursive_mutex.hpp"
-#include "../PThread/pthread_internal.hpp"
 #include "readline_internal.hpp"
 #include "readline.hpp"
 
@@ -27,6 +27,7 @@ struct rl_key_binding_entry
 };
 
 static pt_recursive_mutex g_customization_mutex;
+static bool g_customization_mutex_initialized = false;
 static rl_key_binding_entry g_key_bindings[RL_MAX_KEY_BINDINGS];
 static int g_key_binding_count = 0;
 static t_rl_completion_callback g_completion_callback = ft_nullptr;
@@ -67,12 +68,23 @@ static rl_history_backend_state g_history_backend_state = {ft_nullptr, ft_nullpt
 
 static int rl_customization_lock_mutex(void)
 {
-    return (pt_recursive_mutex_lock_with_error(g_customization_mutex));
+    int initialize_error;
+
+    if (g_customization_mutex_initialized == false)
+    {
+        initialize_error = g_customization_mutex.initialize();
+        if (initialize_error != FT_ERR_SUCCESS)
+            return (initialize_error);
+        g_customization_mutex_initialized = true;
+    }
+    return (g_customization_mutex.lock());
 }
 
 static int rl_customization_unlock_mutex(void)
 {
-    return (pt_recursive_mutex_unlock_with_error(g_customization_mutex));
+    if (g_customization_mutex_initialized == false)
+        return (FT_ERR_SUCCESS);
+    return (g_customization_mutex.unlock());
 }
 
 static int rl_customization_lock(bool *lock_acquired)
@@ -105,7 +117,7 @@ static int rl_history_assign_path(char **target_path, const char *location)
     {
         return (-1);
     }
-    new_path = cma_strdup(location);
+    new_path = adv_strdup(location);
     if (new_path == ft_nullptr)
     {
         return (-1);
@@ -270,15 +282,8 @@ static int rl_history_json_load(void *context_pointer)
         return (-1);
     }
     group_head = json_read_from_file(path_context->path);
-    int json_error = ft_global_error_stack_pop_last();
     if (group_head == ft_nullptr)
-    {
-        if (json_error == FT_ERR_NOT_FOUND)
-        {
-            return (0);
-        }
-        return (-1);
-    }
+        return (0);
     history_group = json_find_group(group_head, "history");
     if (history_group == ft_nullptr)
     {
@@ -320,19 +325,20 @@ static int rl_history_json_save(void *context_pointer)
     while (history_index < history_count)
     {
         const char *history_entry;
-        ft_string key_string;
+        char *key_string;
         json_item *item_pointer;
 
         history_entry = history[history_index];
         if (history_entry == ft_nullptr)
             history_entry = "";
-        key_string = ft_to_string(history_index);
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+        key_string = adv_itoa(history_index);
+        if (key_string == ft_nullptr)
         {
             json_free_groups(history_group);
             return (-1);
         }
-        item_pointer = json_create_item(key_string.c_str(), history_entry);
+        item_pointer = json_create_item(key_string, history_entry);
+        cma_free(key_string);
         if (item_pointer == ft_nullptr)
         {
             json_free_groups(history_group);
@@ -344,7 +350,6 @@ static int rl_history_json_save(void *context_pointer)
     root_group = ft_nullptr;
     json_append_group(&root_group, history_group);
     int write_result = json_write_to_file(path_context->path, root_group);
-    ft_global_error_stack_pop_last();
     if (write_result != 0)
     {
         json_free_groups(root_group);
@@ -793,7 +798,7 @@ int rl_state_insert_text(readline_state_t *state, const char *text)
     suffix_length = ft_strlen(&state->buffer[state->pos]);
     total_length = static_cast<long long>(state->pos) + static_cast<long long>(text_length) + static_cast<long long>(suffix_length);
     required_size = static_cast<int>(total_length) + 1;
-    if (total_length > static_cast<long long>(FT_INT_MAX))
+    if (total_length > static_cast<long long>(FT_INT32_MAX))
     {
         result = -1;
         goto cleanup;
@@ -807,7 +812,7 @@ int rl_state_insert_text(readline_state_t *state, const char *text)
             new_bufsize = 1;
         while (required_size > new_bufsize)
         {
-            if (new_bufsize > FT_INT_MAX / 2)
+            if (new_bufsize > FT_INT32_MAX / 2)
             {
                 result = -1;
                 goto cleanup;
@@ -988,7 +993,7 @@ int rl_completion_add_candidate(const char *candidate)
         rl_customization_unlock(lock_acquired);
         return (-1);
     }
-    duplicated = cma_strdup(candidate);
+    duplicated = adv_strdup(candidate);
     if (duplicated == ft_nullptr)
     {
         rl_customization_unlock(lock_acquired);

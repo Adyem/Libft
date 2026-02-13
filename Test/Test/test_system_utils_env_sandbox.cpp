@@ -2,6 +2,7 @@
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../Basic/basic.hpp"
+#include "../../Template/move.hpp"
 #include "../../System_utils/system_utils.hpp"
 #include "../../System_utils/test_runner.hpp"
 
@@ -11,10 +12,7 @@
 FT_TEST(test_su_environment_snapshot_capture_rejects_null,
     "su_environment_snapshot_capture rejects null snapshot")
 {
-    ft_errno = FT_ERR_SUCCESS;
     if (su_environment_snapshot_capture(ft_nullptr) != -1)
-        return (0);
-    if (ft_errno != FT_ERR_INVALID_ARGUMENT)
         return (0);
     return (1);
 }

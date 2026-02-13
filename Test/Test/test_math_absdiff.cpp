@@ -59,11 +59,12 @@ FT_TEST(test_math_absdiff_extreme_integers, "math_absdiff prevents overflow for 
     long long_difference;
     long long long_long_difference;
 
-    int_difference = math_absdiff(FT_INT_MIN, FT_INT_MAX);
-    long_difference = math_absdiff(FT_LONG_MIN, FT_LONG_MAX);
+    int_difference = math_absdiff(FT_INT32_MIN, FT_INT32_MAX);
+    long_difference = math_absdiff(static_cast<long>(FT_LLONG_MIN),
+            static_cast<long>(FT_LLONG_MAX));
     long_long_difference = math_absdiff(FT_LLONG_MIN, FT_LLONG_MAX);
-    FT_ASSERT_EQ(FT_INT_MAX, int_difference);
-    FT_ASSERT_EQ(FT_LONG_MAX, long_difference);
+    FT_ASSERT_EQ(FT_INT32_MAX, int_difference);
+    FT_ASSERT_EQ(static_cast<long>(FT_LLONG_MAX), long_difference);
     FT_ASSERT_EQ(FT_LLONG_MAX, long_long_difference);
     return (1);
 }

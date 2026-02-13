@@ -35,18 +35,19 @@ FT_TEST(test_future_move_transfers_thread_safety,
 {
     ft_promise<int> base_promise;
     ft_future<int> original(base_promise);
+    ft_future<int> moved;
 
     FT_ASSERT_EQ(0, original.enable_thread_safety());
     FT_ASSERT_EQ(true, original.is_thread_safe_enabled());
 
-    ft_future<int> moved(ft_move(original));
+    FT_ASSERT_EQ(0, moved.initialize(ft_move(original)));
     FT_ASSERT_EQ(true, moved.is_thread_safe_enabled());
     FT_ASSERT_EQ(false, original.is_thread_safe_enabled());
 
     ft_promise<int> extra_promise;
     ft_future<int> assigned(extra_promise);
     FT_ASSERT_EQ(0, assigned.enable_thread_safety());
-    assigned = ft_move(moved);
+    FT_ASSERT_EQ(0, assigned.initialize(ft_move(moved)));
     FT_ASSERT_EQ(true, assigned.is_thread_safe_enabled());
     FT_ASSERT_EQ(false, moved.is_thread_safe_enabled());
     return (1);

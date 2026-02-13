@@ -31,15 +31,12 @@ static int assign_locale(const char *locale_name, std::locale &locale_object)
     }
     catch (const std::bad_alloc &)
     {
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (-1);
     }
     catch (const std::runtime_error &)
     {
-        ft_global_error_stack_push(FT_ERR_CONFIGURATION);
         return (-1);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -50,46 +47,27 @@ int su_locale_compare(const char *left, const char *right, const char *locale_na
     size_t left_length;
     size_t right_length;
     int comparison_value;
-    int error_code;
 
     if (left == ft_nullptr || right == ft_nullptr || result == ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
-    }
     if (assign_locale(locale_name, locale_object) != 0)
-    {
-        error_code = ft_global_error_stack_drop_last_error();
-        if (error_code == FT_ERR_SUCCESS)
-            error_code = FT_ERR_CONFIGURATION;
-        ft_global_error_stack_push(error_code);
         return (-1);
-    }
-    error_code = ft_global_error_stack_drop_last_error();
-    if (error_code != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(error_code);
-        return (-1);
-    }
     try
     {
         collate_facet = &std::use_facet<std::collate<char> >(locale_object);
     }
     catch (const std::bad_cast &)
     {
-        ft_global_error_stack_push(FT_ERR_CONFIGURATION);
         return (-1);
     }
     catch (const std::bad_alloc &)
     {
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (-1);
     }
     left_length = std::char_traits<char>::length(left);
     right_length = std::char_traits<char>::length(right);
     comparison_value = collate_facet->compare(left, left + left_length, right, right + right_length);
     *result = comparison_value;
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -100,39 +78,22 @@ int su_locale_casefold(const char *input, const char *locale_name, ft_string &ou
     size_t input_length;
     std::string transformed_string;
     size_t index;
-    int error_code;
+    int output_error;
 
     if (input == ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
-    }
     if (assign_locale(locale_name, locale_object) != 0)
-    {
-        error_code = ft_global_error_stack_drop_last_error();
-        if (error_code == FT_ERR_SUCCESS)
-            error_code = FT_ERR_CONFIGURATION;
-        ft_global_error_stack_push(error_code);
         return (-1);
-    }
-    error_code = ft_global_error_stack_drop_last_error();
-    if (error_code != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(error_code);
-        return (-1);
-    }
     try
     {
         ctype_facet = &std::use_facet<std::ctype<char> >(locale_object);
     }
     catch (const std::bad_cast &)
     {
-        ft_global_error_stack_push(FT_ERR_CONFIGURATION);
         return (-1);
     }
     catch (const std::bad_alloc &)
     {
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (-1);
     }
     input_length = std::char_traits<char>::length(input);
@@ -142,7 +103,6 @@ int su_locale_casefold(const char *input, const char *locale_name, ft_string &ou
     }
     catch (const std::bad_alloc &)
     {
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (-1);
     }
     index = 0;
@@ -151,19 +111,8 @@ int su_locale_casefold(const char *input, const char *locale_name, ft_string &ou
         transformed_string[index] = ctype_facet->tolower(transformed_string[index]);
         index++;
     }
-    output.assign(transformed_string.c_str(), transformed_string.size());
-    {
-        unsigned long long operation_id = output.last_operation_id();
-        int output_error = FT_ERR_SUCCESS;
-
-        if (operation_id != 0)
-            output_error = output.pop_operation_error(operation_id);
-        if (output_error != FT_ERR_SUCCESS)
-        {
-            ft_global_error_stack_push(output_error);
-            return (-1);
-        }
-    }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    output_error = output.assign(transformed_string.c_str(), transformed_string.size());
+    if (output_error != FT_ERR_SUCCESS)
+        return (-1);
     return (0);
 }

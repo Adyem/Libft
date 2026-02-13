@@ -1,7 +1,6 @@
 #ifndef PAIR_HPP
 # define PAIR_HPP
 
-#include <utility>
 #include "move.hpp"
 
 template <typename KeyType, typename ValueType>
@@ -132,7 +131,6 @@ void Pair<KeyType, ValueType>::set_value(ValueType &&input_value)
     return ;
 }
 
-
 template <typename Type, Type Value>
 struct ft_integral_constant
 {
@@ -143,6 +141,24 @@ struct ft_integral_constant
 
 typedef ft_integral_constant<bool, true> ft_true_type;
 typedef ft_integral_constant<bool, false> ft_false_type;
+
+template <typename Type>
+struct ft_remove_reference
+{
+    typedef Type type;
+};
+
+template <typename Type>
+struct ft_remove_reference<Type &>
+{
+    typedef Type type;
+};
+
+template <typename Type>
+struct ft_remove_reference<Type &&>
+{
+    typedef Type type;
+};
 
 template <typename Type>
 struct ft_remove_const
@@ -181,7 +197,7 @@ struct ft_is_array
 };
 
 template <typename Type>
-struct ft_is_array<Type []>
+struct ft_is_array<Type[]>
         : ft_true_type
 {
 };
@@ -199,7 +215,7 @@ struct ft_remove_extent
 };
 
 template <typename Type>
-struct ft_remove_extent<Type []>
+struct ft_remove_extent<Type[]>
 {
     typedef Type type;
 };
@@ -234,18 +250,6 @@ struct ft_is_function<ReturnType(Arguments..., ...)>
 {
 };
 
-template <typename ReturnType, typename... Arguments>
-struct ft_is_function<ReturnType(Arguments...) noexcept>
-        : ft_true_type
-{
-};
-
-template <typename ReturnType, typename... Arguments>
-struct ft_is_function<ReturnType(Arguments..., ...) noexcept>
-        : ft_true_type
-{
-};
-
 template <typename Type, bool IsArray, bool IsFunction>
 struct ft_decay_selector
 {
@@ -274,6 +278,18 @@ struct ft_decay
     >::type type;
 };
 
+template <typename Type>
+constexpr Type &&ft_forward(typename ft_remove_reference<Type>::type &value) noexcept
+{
+    return (static_cast<Type &&>(value));
+}
+
+template <typename Type>
+constexpr Type &&ft_forward(typename ft_remove_reference<Type>::type &&value) noexcept
+{
+    return (static_cast<Type &&>(value));
+}
+
 template <typename KeyType, typename ValueType>
 Pair<typename ft_decay<KeyType>::type, typename ft_decay<ValueType>::type>
 ft_make_pair(KeyType &&key, ValueType &&value)
@@ -282,8 +298,8 @@ ft_make_pair(KeyType &&key, ValueType &&value)
     typedef typename ft_decay<ValueType>::type value_type;
 
     return (Pair<key_type, value_type>(
-        std::forward<KeyType>(key),
-        std::forward<ValueType>(value)));
+        ft_forward<KeyType>(key),
+        ft_forward<ValueType>(value)));
 }
 
 #endif

@@ -1,37 +1,48 @@
 #ifndef GEOMETRY_AABB_HPP
 # define GEOMETRY_AABB_HPP
 
-#include "../Errno/errno.hpp"
-#include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include <cstdint>
 
 class aabb
 {
     private:
-        double          _minimum_x;
-        double          _minimum_y;
-        double          _maximum_x;
-        double          _maximum_y;
-        mutable pt_recursive_mutex *_mutex = ft_nullptr;
+        double                    _minimum_x;
+        double                    _minimum_y;
+        double                    _maximum_x;
+        double                    _maximum_y;
+        mutable pt_recursive_mutex *_mutex;
+        uint8_t                   _initialized_state;
+        static const uint8_t      _state_uninitialized = 0;
+        static const uint8_t      _state_destroyed = 1;
+        static const uint8_t      _state_initialized = 2;
 
-        int     prepare_thread_safety(void) noexcept;
-        void    teardown_thread_safety(void) noexcept;
-
+        void    abort_lifecycle_error(const char *method_name,
+                    const char *reason) const noexcept;
+        void    abort_if_not_initialized(const char *method_name) const noexcept;
         int     lock_mutex() const noexcept;
         int     unlock_mutex() const noexcept;
         int     lock_pair(const aabb &other, const aabb *&lower,
-                const aabb *&upper) const;
+                    const aabb *&upper) const;
         static void unlock_pair(const aabb *lower, const aabb *upper);
 
     public:
         aabb();
         aabb(double minimum_x, double minimum_y,
                 double maximum_x, double maximum_y);
-        aabb(const aabb &other);
-        aabb &operator=(const aabb &other);
-        aabb(aabb &&other) noexcept;
-        aabb &operator=(aabb &&other) noexcept;
+        aabb(const aabb &other) = delete;
+        aabb &operator=(const aabb &other) = delete;
+        aabb(aabb &&other) noexcept = delete;
+        aabb &operator=(aabb &&other) noexcept = delete;
         ~aabb();
+
+        int     initialize() noexcept;
+        int     initialize(double minimum_x, double minimum_y,
+                double maximum_x, double maximum_y) noexcept;
+        int     initialize(const aabb &other) noexcept;
+        int     initialize(aabb &&other) noexcept;
+        int     destroy() noexcept;
+        int     move(aabb &other) noexcept;
 
         int     set_bounds(double minimum_x, double minimum_y,
                 double maximum_x, double maximum_y);

@@ -54,6 +54,7 @@ FT_TEST(test_ft_task_scheduler_thread_safety_resets_errno,
     ft_task_scheduler scheduler(1);
     bool              lock_acquired;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler.initialize());
     FT_ASSERT_EQ(false, scheduler.is_thread_safe_enabled());
     FT_ASSERT_EQ(0, scheduler.enable_thread_safety());
     FT_ASSERT_EQ(true, scheduler.is_thread_safe_enabled());

@@ -9,6 +9,7 @@ static ft_vector<task_scheduler_trace_sink> g_task_scheduler_trace_sinks(4);
 static std::mutex g_task_scheduler_trace_mutex;
 static std::atomic<unsigned long long> g_task_scheduler_trace_counter(1);
 thread_local unsigned long long g_task_scheduler_trace_current = 0;
+static thread_local int g_task_scheduler_trace_last_error = FT_ERR_SUCCESS;
 
 const char *const g_ft_task_trace_label_async = "async_task";
 const char *const g_ft_task_trace_label_schedule_once = "scheduled_once";
@@ -16,7 +17,7 @@ const char *const g_ft_task_trace_label_schedule_repeat = "scheduled_repeat";
 
 static void task_scheduler_trace_set_error(int error)
 {
-    ft_global_error_stack_push(error);
+    g_task_scheduler_trace_last_error = error;
     return ;
 }
 
@@ -44,7 +45,7 @@ int task_scheduler_register_trace_sink(task_scheduler_trace_sink sink)
             index += 1;
         }
         g_task_scheduler_trace_sinks.push_back(sink);
-        int push_error = ft_global_error_stack_peek_last_error();
+        int push_error = ft_vector<task_scheduler_trace_sink>::last_operation_error();
         if (push_error != FT_ERR_SUCCESS)
         {
             task_scheduler_trace_set_error(push_error);
@@ -74,7 +75,7 @@ int task_scheduler_unregister_trace_sink(task_scheduler_trace_sink sink)
             if (g_task_scheduler_trace_sinks[index] == sink)
             {
                 g_task_scheduler_trace_sinks.erase(g_task_scheduler_trace_sinks.begin() + index);
-                int erase_error = ft_global_error_stack_peek_last_error();
+                int erase_error = ft_vector<task_scheduler_trace_sink>::last_operation_error();
                 if (erase_error != FT_ERR_SUCCESS)
                 {
                     task_scheduler_trace_set_error(erase_error);
@@ -107,7 +108,7 @@ void task_scheduler_trace_emit(const ft_task_trace_event &event)
 
             sink_instance = g_task_scheduler_trace_sinks[index];
             sinks_copy.push_back(sink_instance);
-            int push_error = ft_global_error_stack_peek_last_error();
+            int push_error = ft_vector<task_scheduler_trace_sink>::last_operation_error();
             if (push_error != FT_ERR_SUCCESS)
             {
                 task_scheduler_trace_set_error(push_error);
@@ -141,13 +142,13 @@ unsigned long long task_scheduler_trace_generate_span_id(void)
     next_value = g_task_scheduler_trace_counter.fetch_add(1);
     if (next_value == 0)
         next_value = g_task_scheduler_trace_counter.fetch_add(1);
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    task_scheduler_trace_set_error(FT_ERR_SUCCESS);
     return (next_value);
 }
 
 unsigned long long task_scheduler_trace_current_span(void)
 {
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    task_scheduler_trace_set_error(FT_ERR_SUCCESS);
     return (g_task_scheduler_trace_current);
 }
 
@@ -157,13 +158,13 @@ unsigned long long task_scheduler_trace_push_span(unsigned long long span_id)
 
     previous_span = g_task_scheduler_trace_current;
     g_task_scheduler_trace_current = span_id;
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    task_scheduler_trace_set_error(FT_ERR_SUCCESS);
     return (previous_span);
 }
 
 void task_scheduler_trace_pop_span(unsigned long long previous_span)
 {
     g_task_scheduler_trace_current = previous_span;
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    task_scheduler_trace_set_error(FT_ERR_SUCCESS);
     return ;
 }

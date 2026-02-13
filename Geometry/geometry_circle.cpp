@@ -1,10 +1,9 @@
 #include "geometry_circle.hpp"
 #include "../Errno/errno.hpp"
-#include "../Basic/basic.hpp"
 #include "../PThread/pthread.hpp"
-#include "../PThread/pthread_internal.hpp"
-
-#include <cstddef>
+#include "../Printf/printf.hpp"
+#include "../System_utils/system_utils.hpp"
+#include <new>
 
 static void circle_sleep_backoff()
 {
@@ -12,32 +11,56 @@ static void circle_sleep_backoff()
     return ;
 }
 
+void circle::abort_lifecycle_error(const char *method_name,
+    const char *reason) const noexcept
+{
+    if (method_name == ft_nullptr)
+        method_name = "unknown";
+    if (reason == ft_nullptr)
+        reason = "unknown";
+    pf_printf_fd(2, "circle lifecycle error: %s: %s\n", method_name, reason);
+    su_abort();
+    return ;
+}
+
+void circle::abort_if_not_initialized(const char *method_name) const noexcept
+{
+    if (this->_initialized_state == circle::_state_initialized)
+        return ;
+    this->abort_lifecycle_error(method_name,
+        "called while object is not initialized");
+    return ;
+}
+
 int circle::lock_mutex() const noexcept
 {
-    return (pt_recursive_mutex_lock_if_valid(this->_mutex));
+    this->abort_if_not_initialized("circle::lock_mutex");
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    return (this->_mutex->lock());
 }
 
 int circle::unlock_mutex() const noexcept
 {
-    return (pt_recursive_mutex_unlock_if_valid(this->_mutex));
+    this->abort_if_not_initialized("circle::unlock_mutex");
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    return (this->_mutex->unlock());
 }
 
 int circle::lock_pair(const circle &other, const circle *&lower,
-        const circle *&upper) const
+    const circle *&upper) const
 {
-    const circle *ordered_first = this;
-    const circle *ordered_second = &other;
+    const circle *ordered_first;
+    const circle *ordered_second;
 
+    ordered_first = this;
+    ordered_second = &other;
     if (ordered_first == ordered_second)
     {
         lower = this;
         upper = this;
-        int self_error = this->lock_mutex();
-        if (self_error != FT_ERR_SUCCESS)
-        {
-            ft_global_error_stack_push(self_error);
-        }
-        return (self_error);
+        return (this->lock_mutex());
     }
     if (ordered_first > ordered_second)
     {
@@ -48,21 +71,18 @@ int circle::lock_pair(const circle &other, const circle *&lower,
     upper = ordered_second;
     while (true)
     {
-        int lower_error = lower->lock_mutex();
+        int lower_error;
+        int upper_error;
+
+        lower_error = lower->lock_mutex();
         if (lower_error != FT_ERR_SUCCESS)
-        {
-            ft_global_error_stack_push(lower_error);
             return (lower_error);
-        }
-        int upper_error = upper->lock_mutex();
+        upper_error = upper->lock_mutex();
         if (upper_error == FT_ERR_SUCCESS)
-        {
             return (FT_ERR_SUCCESS);
-        }
         if (upper_error != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
             lower->unlock_mutex();
-            ft_global_error_stack_push(upper_error);
             return (upper_error);
         }
         lower->unlock_mutex();
@@ -80,79 +100,126 @@ void circle::unlock_pair(const circle *lower, const circle *upper)
 }
 
 circle::circle()
+    : _center_x(0.0)
+    , _center_y(0.0)
+    , _radius(0.0)
+    , _mutex(ft_nullptr)
+    , _initialized_state(circle::_state_uninitialized)
 {
-    this->_center_x = 0.0;
-    this->_center_y = 0.0;
-    this->_radius = 0.0;
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
 circle::circle(double center_x, double center_y, double radius)
+    : _center_x(0.0)
+    , _center_y(0.0)
+    , _radius(0.0)
+    , _mutex(ft_nullptr)
+    , _initialized_state(circle::_state_uninitialized)
 {
+    int initialize_error;
+
+    initialize_error = this->initialize(center_x, center_y, radius);
+    if (initialize_error != FT_ERR_SUCCESS
+        && this->_initialized_state == circle::_state_uninitialized)
+        this->_initialized_state = circle::_state_destroyed;
+    return ;
+}
+
+int circle::initialize() noexcept
+{
+    if (this->_initialized_state == circle::_state_initialized)
+    {
+        this->abort_lifecycle_error("circle::initialize",
+            "called while object is already initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    this->_center_x = 0.0;
+    this->_center_y = 0.0;
+    this->_radius = 0.0;
+    this->_initialized_state = circle::_state_initialized;
+    return (FT_ERR_SUCCESS);
+}
+
+int circle::initialize(double center_x, double center_y, double radius) noexcept
+{
+    int initialize_error;
+
+    initialize_error = this->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
     this->_center_x = center_x;
     this->_center_y = center_y;
     this->_radius = radius;
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
-    return ;
+    return (FT_ERR_SUCCESS);
 }
 
-circle::circle(const circle &other)
-    : _center_x(0.0), _center_y(0.0), _radius(0.0)
+int circle::initialize(const circle &other) noexcept
 {
-    const circle *lower;
-    const circle *upper;
+    int initialize_error;
     int lock_error;
+    int unlock_error;
 
-    lock_error = this->lock_pair(other, lower, upper);
-    if (lock_error != FT_ERR_SUCCESS)
+    if (other._initialized_state != circle::_state_initialized)
     {
-        ft_global_error_stack_push(lock_error);
-        return ;
+        if (other._initialized_state == circle::_state_uninitialized)
+            other.abort_lifecycle_error("circle::initialize(const circle &) source",
+                "called with uninitialized source object");
+        else
+            other.abort_lifecycle_error("circle::initialize(const circle &) source",
+                "called with destroyed source object");
+        return (FT_ERR_INVALID_STATE);
     }
-    this->_center_x = other._center_x;
-    this->_center_y = other._center_y;
-    this->_radius = other._radius;
-    this->unlock_pair(lower, upper);
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
-    return ;
-}
-
-circle &circle::operator=(const circle &other)
-{
-    const circle *lower;
-    const circle *upper;
-    int lock_error;
-
     if (this == &other)
-        return (*this);
-    lock_error = this->lock_pair(other, lower, upper);
+        return (FT_ERR_SUCCESS);
+    initialize_error = this->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
+    lock_error = other.lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(lock_error);
-        return (*this);
+        (void)this->destroy();
+        return (lock_error);
     }
     this->_center_x = other._center_x;
     this->_center_y = other._center_y;
     this->_radius = other._radius;
-    this->unlock_pair(lower, upper);
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
-    return (*this);
+    unlock_error = other.unlock_mutex();
+    if (unlock_error != FT_ERR_SUCCESS)
+    {
+        (void)this->destroy();
+        return (unlock_error);
+    }
+    return (FT_ERR_SUCCESS);
 }
 
-circle::circle(circle &&other) noexcept
-    : _center_x(0.0), _center_y(0.0), _radius(0.0)
+int circle::move(circle &other) noexcept
 {
     const circle *lower;
     const circle *upper;
+    int initialize_error;
     int lock_error;
 
+    if (other._initialized_state != circle::_state_initialized)
+    {
+        if (other._initialized_state == circle::_state_uninitialized)
+            other.abort_lifecycle_error("circle::move source",
+                "called with uninitialized source object");
+        else
+            other.abort_lifecycle_error("circle::move source",
+                "called with destroyed source object");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (this->_initialized_state != circle::_state_initialized)
+    {
+        initialize_error = this->initialize();
+        if (initialize_error != FT_ERR_SUCCESS)
+            return (initialize_error);
+    }
     lock_error = this->lock_pair(other, lower, upper);
     if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_error);
-        return ;
-    }
+        return (lock_error);
     this->_center_x = other._center_x;
     this->_center_y = other._center_y;
     this->_radius = other._radius;
@@ -160,38 +227,64 @@ circle::circle(circle &&other) noexcept
     other._center_y = 0.0;
     other._radius = 0.0;
     this->unlock_pair(lower, upper);
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
-    return ;
+    return (FT_ERR_SUCCESS);
 }
 
-circle &circle::operator=(circle &&other) noexcept
+int circle::initialize(circle &&other) noexcept
 {
-    const circle *lower;
-    const circle *upper;
-    int lock_error;
+    int initialize_error;
+    int move_error;
 
-    if (this == &other)
-        return (*this);
-    lock_error = this->lock_pair(other, lower, upper);
-    if (lock_error != FT_ERR_SUCCESS)
+    if (other._initialized_state != circle::_state_initialized)
     {
-        ft_global_error_stack_push(lock_error);
-        return (*this);
+        if (other._initialized_state == circle::_state_uninitialized)
+            other.abort_lifecycle_error("circle::initialize(circle &&) source",
+                "called with uninitialized source object");
+        else
+            other.abort_lifecycle_error("circle::initialize(circle &&) source",
+                "called with destroyed source object");
+        return (FT_ERR_INVALID_STATE);
     }
-    this->_center_x = other._center_x;
-    this->_center_y = other._center_y;
-    this->_radius = other._radius;
-    other._center_x = 0.0;
-    other._center_y = 0.0;
-    other._radius = 0.0;
-    this->unlock_pair(lower, upper);
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
-    return (*this);
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    initialize_error = this->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
+    move_error = this->move(other);
+    if (move_error != FT_ERR_SUCCESS)
+    {
+        (void)this->destroy();
+        return (move_error);
+    }
+    return (FT_ERR_SUCCESS);
+}
+
+int circle::destroy() noexcept
+{
+    if (this->_initialized_state != circle::_state_initialized)
+    {
+        this->abort_lifecycle_error("circle::destroy",
+            "called while object is not initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    this->disable_thread_safety();
+    this->_center_x = 0.0;
+    this->_center_y = 0.0;
+    this->_radius = 0.0;
+    this->_initialized_state = circle::_state_destroyed;
+    return (FT_ERR_SUCCESS);
 }
 
 circle::~circle()
 {
-    this->disable_thread_safety();
+    if (this->_initialized_state == circle::_state_uninitialized)
+    {
+        this->abort_lifecycle_error("circle::~circle",
+            "destructor called while object is uninitialized");
+        return ;
+    }
+    if (this->_initialized_state == circle::_state_initialized)
+        (void)this->destroy();
     return ;
 }
 
@@ -200,21 +293,15 @@ int circle::set_center(double center_x, double center_y)
     int lock_error;
     int unlock_error;
 
+    this->abort_if_not_initialized("circle::set_center");
     lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_error);
         return (lock_error);
-    }
     this->_center_x = center_x;
     this->_center_y = center_y;
     unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(unlock_error);
         return (unlock_error);
-    }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
@@ -223,20 +310,14 @@ int circle::set_center_x(double center_x)
     int lock_error;
     int unlock_error;
 
+    this->abort_if_not_initialized("circle::set_center_x");
     lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_error);
         return (lock_error);
-    }
     this->_center_x = center_x;
     unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(unlock_error);
         return (unlock_error);
-    }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
@@ -245,20 +326,14 @@ int circle::set_center_y(double center_y)
     int lock_error;
     int unlock_error;
 
+    this->abort_if_not_initialized("circle::set_center_y");
     lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_error);
         return (lock_error);
-    }
     this->_center_y = center_y;
     unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(unlock_error);
         return (unlock_error);
-    }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
@@ -267,175 +342,117 @@ int circle::set_radius(double radius)
     int lock_error;
     int unlock_error;
 
+    this->abort_if_not_initialized("circle::set_radius");
     lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_error);
         return (lock_error);
-    }
     this->_radius = radius;
     unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(unlock_error);
         return (unlock_error);
-    }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
-double  circle::get_center_x() const
+double circle::get_center_x() const
 {
     int lock_error;
-    double value;
     int unlock_error;
+    double value;
 
+    this->abort_if_not_initialized("circle::get_center_x");
     lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_error);
         return (0.0);
-    }
     value = this->_center_x;
     unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(unlock_error);
         return (value);
-    }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (value);
 }
 
-double  circle::get_center_y() const
+double circle::get_center_y() const
 {
     int lock_error;
-    double value;
     int unlock_error;
+    double value;
 
+    this->abort_if_not_initialized("circle::get_center_y");
     lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_error);
         return (0.0);
-    }
     value = this->_center_y;
     unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(unlock_error);
         return (value);
-    }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (value);
 }
 
-double  circle::get_radius() const
+double circle::get_radius() const
 {
     int lock_error;
-    double value;
     int unlock_error;
+    double value;
 
+    this->abort_if_not_initialized("circle::get_radius");
     lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_error);
         return (0.0);
-    }
     value = this->_radius;
     unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(unlock_error);
         return (value);
-    }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (value);
-}
-
-bool    intersect_circle(const circle &first, const circle &second)
-{
-    bool result;
-    const circle *lower;
-    const circle *upper;
-    int lock_error;
-    double  delta_x;
-    double  delta_y;
-    double  radius_sum;
-    double  distance_squared;
-
-    result = false;
-    lock_error = first.lock_pair(second, lower, upper);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_error);
-        ft_global_error_stack_push(lock_error);
-        ft_global_error_stack_push(lock_error);
-        return (false);
-    }
-    delta_x = first._center_x - second._center_x;
-    delta_y = first._center_y - second._center_y;
-    radius_sum = first._radius + second._radius;
-    distance_squared = delta_x * delta_x + delta_y * delta_y;
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
-    first.unlock_pair(lower, upper);
-    result = true;
-    if (distance_squared > radius_sum * radius_sum)
-        result = false;
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
-    if (result)
-        return (true);
-    return (false);
 }
 
 int circle::enable_thread_safety() noexcept
 {
-    return (this->prepare_thread_safety());
+    pt_recursive_mutex *mutex_pointer;
+    int mutex_error;
+
+    this->abort_if_not_initialized("circle::enable_thread_safety");
+    if (this->_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
+    if (mutex_pointer == ft_nullptr)
+        return (FT_ERR_NO_MEMORY);
+    mutex_error = mutex_pointer->initialize();
+    if (mutex_error != FT_ERR_SUCCESS)
+    {
+        delete mutex_pointer;
+        return (mutex_error);
+    }
+    this->_mutex = mutex_pointer;
+    return (FT_ERR_SUCCESS);
 }
 
 void circle::disable_thread_safety() noexcept
 {
-    this->teardown_thread_safety();
+    this->abort_if_not_initialized("circle::disable_thread_safety");
+    if (this->_mutex != ft_nullptr)
+    {
+        this->_mutex->destroy();
+        delete this->_mutex;
+        this->_mutex = ft_nullptr;
+    }
     return ;
 }
 
 bool circle::is_thread_safe_enabled() const noexcept
 {
+    this->abort_if_not_initialized("circle::is_thread_safe_enabled");
     return (this->_mutex != ft_nullptr);
 }
 
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *circle::get_mutex_for_testing() noexcept
 {
+    if (this->_initialized_state != circle::_state_initialized)
+        return (ft_nullptr);
     if (this->_mutex == ft_nullptr)
-        this->prepare_thread_safety();
+    {
+        if (this->enable_thread_safety() != FT_ERR_SUCCESS)
+            return (ft_nullptr);
+    }
     return (this->_mutex);
 }
 #endif
-
-int circle::prepare_thread_safety(void) noexcept
-{
-    if (this->_mutex != ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
-    }
-    pt_recursive_mutex *mutex_pointer = ft_nullptr;
-    int mutex_error = pt_recursive_mutex_create_with_error(&mutex_pointer);
-    if (mutex_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(mutex_error);
-        return (mutex_error);
-    }
-    this->_mutex = mutex_pointer;
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
-    return (FT_ERR_SUCCESS);
-}
-
-void circle::teardown_thread_safety(void) noexcept
-{
-    pt_recursive_mutex_destroy(&this->_mutex);
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
-    return ;
-}

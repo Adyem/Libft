@@ -73,7 +73,7 @@ static int rl_resize_buffer_if_needed(readline_state_t *state, int required_size
             new_bufsize = 1;
         while (required_size >= new_bufsize)
         {
-            if (new_bufsize > FT_INT_MAX / 2)
+            if (new_bufsize > FT_INT32_MAX / 2)
                 return (FT_ERR_OUT_OF_RANGE);
             new_bufsize *= 2;
         }
@@ -98,7 +98,7 @@ static int rl_apply_completion(readline_state_t *state, const char *completion)
     total_length = static_cast<long long>(state->word_start)
         + static_cast<long long>(completion_length)
         + static_cast<long long>(suffix_length);
-    if (total_length > static_cast<long long>(FT_INT_MAX))
+    if (total_length > static_cast<long long>(FT_INT32_MAX))
         return (FT_ERR_OUT_OF_RANGE);
     state->pos = state->word_start;
     required_size = static_cast<int>(total_length);

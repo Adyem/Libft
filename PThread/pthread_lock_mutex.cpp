@@ -3,6 +3,7 @@
 #include "pthread_lock_tracking.hpp"
 #include "../Errno/errno.hpp"
 #include "../Basic/basic.hpp"
+#include <system_error>
 
 int pt_mutex::lock() const
 {
@@ -35,7 +36,7 @@ int pt_mutex::lock() const
     }
     catch (const std::system_error &error)
     {
-        mutex_error = ft_map_system_error(error.code().value());
+        mutex_error = cmp_map_system_error_to_ft(error.code().value());
     }
     if (mutex_error != FT_ERR_SUCCESS)
     {

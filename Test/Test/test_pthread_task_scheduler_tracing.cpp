@@ -59,6 +59,7 @@ FT_TEST(test_task_scheduler_tracing_submit, "ft_task_scheduler emits trace event
     task_scheduler_trace_clear_events();
     FT_ASSERT_EQ(0, task_scheduler_register_trace_sink(&task_scheduler_trace_test_sink));
     ft_task_scheduler scheduler_instance(1);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.initialize());
     unsigned long long root_span;
     unsigned long long previous_span;
 
@@ -112,6 +113,7 @@ FT_TEST(test_task_scheduler_tracing_schedule_after, "ft_task_scheduler traces sc
     task_scheduler_trace_clear_events();
     FT_ASSERT_EQ(0, task_scheduler_register_trace_sink(&task_scheduler_trace_test_sink));
     ft_task_scheduler scheduler_instance(1);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.initialize());
     unsigned long long root_span;
     unsigned long long previous_span;
 

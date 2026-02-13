@@ -54,38 +54,19 @@ int rl_initialize_state(readline_state_t *state)
     if (state->buffer != ft_nullptr)
     {
         cma_free(state->buffer);
-        result = ft_global_error_stack_drop_last_error();
-        if (result != FT_ERR_SUCCESS)
-        {
-            rl_state_unlock(state, lock_acquired);
-            rl_disable_raw_mode();
-            if (thread_safety_created == true)
-                rl_state_teardown_thread_safety(state);
-            return (result);
-        }
         state->buffer = ft_nullptr;
     }
     state->bufsize = INITIAL_BUFFER_SIZE;
-    state->buffer = static_cast<char *>(cma_calloc(state->bufsize, sizeof(char)));
-    result = ft_global_error_stack_drop_last_error();
+    state->buffer = static_cast<char *>(cma_malloc(static_cast<ft_size_t>(state->bufsize)));
     if (state->buffer == ft_nullptr)
     {
-        if (result == FT_ERR_SUCCESS)
-            result = FT_ERR_NO_MEMORY;
         rl_state_unlock(state, lock_acquired);
         rl_disable_raw_mode();
         if (thread_safety_created == true)
             rl_state_teardown_thread_safety(state);
-        return (result);
+        return (FT_ERR_NO_MEMORY);
     }
-    if (result != FT_ERR_SUCCESS)
-    {
-        rl_state_unlock(state, lock_acquired);
-        rl_disable_raw_mode();
-        if (thread_safety_created == true)
-            rl_state_teardown_thread_safety(state);
-        return (result);
-    }
+    ft_bzero(state->buffer, static_cast<ft_size_t>(state->bufsize));
     state->pos = 0;
     state->prev_buffer_length = 0;
     state->display_pos = 0;

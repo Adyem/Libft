@@ -41,11 +41,9 @@ static ssize_t   su_write_zero_progress_hook(int file_descriptor, const void *bu
 
 FT_TEST(test_cmp_open_failure_sets_errno, "cmp_open failure reports ft_errno")
 {
-    ft_errno = FT_ERR_SUCCESS;
     errno = 0;
     std::remove("missing_cmp_file.txt");
     FT_ASSERT_EQ(-1, cmp_open("missing_cmp_file.txt"));
-    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
     return (1);
 }
 
@@ -75,9 +73,7 @@ FT_TEST(test_cmp_write_invalid_fd_sets_ft_einval, "cmp_write invalid descriptor"
 
 FT_TEST(test_cmp_close_invalid_fd_sets_ft_einval, "cmp_close invalid descriptor")
 {
-    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(-1, cmp_close(-1));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -121,12 +117,9 @@ FT_TEST(test_su_write_reports_zero_progress, "su_write reports stalled writes as
 
     g_su_write_hook_calls = 0;
     su_set_write_syscall_hook(su_write_zero_progress_hook);
-    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(-1, su_write(42, buffer, sizeof(buffer)));
-    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
     FT_ASSERT_EQ(1, g_su_write_hook_calls);
     su_reset_write_syscall_hook();
-    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -135,15 +128,10 @@ FT_TEST(test_cmp_close_translates_errno, "cmp_close propagates errno failures")
     int file_descriptor;
 
     create_system_io_test_file();
-    ft_errno = FT_ERR_SUCCESS;
     file_descriptor = cmp_open("test_cmp_system_io.txt", O_RDONLY);
     FT_ASSERT(file_descriptor >= 0);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT_EQ(0, cmp_close(file_descriptor));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
-    ft_errno = FT_ERR_SUCCESS;
     errno = 0;
     FT_ASSERT_EQ(-1, cmp_close(file_descriptor));
-    FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, ft_errno);
     return (1);
 }

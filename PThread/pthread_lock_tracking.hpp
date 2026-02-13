@@ -76,6 +76,4 @@ class pt_lock_tracking
                 s_pt_lock_tracking_thread_state &state);
 };
 
-#include "pthread_lock_tracking.tpp"
-
 #endif

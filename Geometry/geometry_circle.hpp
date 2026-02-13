@@ -1,35 +1,45 @@
 #ifndef GEOMETRY_CIRCLE_HPP
 # define GEOMETRY_CIRCLE_HPP
 
-#include "../Errno/errno.hpp"
-#include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include <cstdint>
 
 class circle
 {
     private:
-        double          _center_x;
-        double          _center_y;
-        double          _radius;
-        mutable pt_recursive_mutex *_mutex = ft_nullptr;
+        double                    _center_x;
+        double                    _center_y;
+        double                    _radius;
+        mutable pt_recursive_mutex *_mutex;
+        uint8_t                   _initialized_state;
+        static const uint8_t      _state_uninitialized = 0;
+        static const uint8_t      _state_destroyed = 1;
+        static const uint8_t      _state_initialized = 2;
 
-        int     prepare_thread_safety(void) noexcept;
-        void    teardown_thread_safety(void) noexcept;
-
+        void    abort_lifecycle_error(const char *method_name,
+                    const char *reason) const noexcept;
+        void    abort_if_not_initialized(const char *method_name) const noexcept;
         int     lock_mutex() const noexcept;
         int     unlock_mutex() const noexcept;
         int     lock_pair(const circle &other, const circle *&lower,
-                const circle *&upper) const;
+                    const circle *&upper) const;
         static void unlock_pair(const circle *lower, const circle *upper);
 
     public:
         circle();
         circle(double center_x, double center_y, double radius);
-        circle(const circle &other);
-        circle &operator=(const circle &other);
-        circle(circle &&other) noexcept;
-        circle &operator=(circle &&other) noexcept;
+        circle(const circle &other) = delete;
+        circle &operator=(const circle &other) = delete;
+        circle(circle &&other) noexcept = delete;
+        circle &operator=(circle &&other) noexcept = delete;
         ~circle();
+
+        int     initialize() noexcept;
+        int     initialize(double center_x, double center_y, double radius) noexcept;
+        int     initialize(const circle &other) noexcept;
+        int     initialize(circle &&other) noexcept;
+        int     destroy() noexcept;
+        int     move(circle &other) noexcept;
 
         int     set_center(double center_x, double center_y);
         int     set_center_x(double center_x);

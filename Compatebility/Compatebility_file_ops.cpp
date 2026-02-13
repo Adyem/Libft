@@ -13,6 +13,7 @@ static void cmp_set_error_code(int32_t *error_code_out, int32_t error_code)
 # include <windows.h>
 # include <stdio.h>
 # include <errno.h>
+# include <sys/stat.h>
 
 void cmp_set_force_cross_device_move(int32_t force_cross_device_move);
 
@@ -224,12 +225,53 @@ int32_t cmp_file_get_permissions(const char *path, mode_t *mode_out, int32_t *er
     return (error_code);
 }
 
+int32_t cmp_file_set_permissions(const char *path, int32_t owner_permissions,
+    int32_t group_permissions, int32_t other_permissions, int32_t *error_code_out)
+{
+    int32_t error_code;
+    int32_t windows_mode;
+
+    if (path == ft_nullptr)
+    {
+        error_code = FT_ERR_INVALID_ARGUMENT;
+        cmp_set_error_code(error_code_out, error_code);
+        return (error_code);
+    }
+    if (owner_permissions < 0 || owner_permissions > 7
+        || group_permissions < 0 || group_permissions > 7
+        || other_permissions < 0 || other_permissions > 7)
+    {
+        error_code = FT_ERR_INVALID_ARGUMENT;
+        cmp_set_error_code(error_code_out, error_code);
+        return (error_code);
+    }
+    windows_mode = 0;
+    if ((owner_permissions & 4) != 0 || (group_permissions & 4) != 0
+        || (other_permissions & 4) != 0)
+        windows_mode |= _S_IREAD;
+    if ((owner_permissions & 2) != 0 || (group_permissions & 2) != 0
+        || (other_permissions & 2) != 0)
+        windows_mode |= _S_IWRITE;
+    if (_chmod(path, windows_mode) == 0)
+    {
+        cmp_set_error_code(error_code_out, FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
+    }
+    if (errno != 0)
+        error_code = cmp_map_system_error_to_ft(errno);
+    else
+        error_code = FT_ERR_INVALID_ARGUMENT;
+    cmp_set_error_code(error_code_out, error_code);
+    return (error_code);
+}
+
 #else
 # include <filesystem>
 # include <cstdio>
 # include <cerrno>
 # include <system_error>
 # include <new>
+# include <sys/stat.h>
 
 void cmp_set_force_cross_device_move(int32_t force_cross_device_move);
 
@@ -455,6 +497,55 @@ int32_t cmp_file_get_permissions(const char *path, mode_t *mode_out, int32_t *er
     if (stat(path, &file_info) == 0)
     {
         *mode_out = file_info.st_mode;
+        cmp_set_error_code(error_code_out, FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
+    }
+    error_code = cmp_map_system_error_to_ft(errno);
+    cmp_set_error_code(error_code_out, error_code);
+    return (error_code);
+}
+
+int32_t cmp_file_set_permissions(const char *path, int32_t owner_permissions,
+    int32_t group_permissions, int32_t other_permissions, int32_t *error_code_out)
+{
+    int32_t error_code;
+    mode_t mode_value;
+
+    if (path == ft_nullptr)
+    {
+        error_code = FT_ERR_INVALID_ARGUMENT;
+        cmp_set_error_code(error_code_out, error_code);
+        return (error_code);
+    }
+    if (owner_permissions < 0 || owner_permissions > 7
+        || group_permissions < 0 || group_permissions > 7
+        || other_permissions < 0 || other_permissions > 7)
+    {
+        error_code = FT_ERR_INVALID_ARGUMENT;
+        cmp_set_error_code(error_code_out, error_code);
+        return (error_code);
+    }
+    mode_value = 0;
+    if ((owner_permissions & 4) != 0)
+        mode_value |= S_IRUSR;
+    if ((owner_permissions & 2) != 0)
+        mode_value |= S_IWUSR;
+    if ((owner_permissions & 1) != 0)
+        mode_value |= S_IXUSR;
+    if ((group_permissions & 4) != 0)
+        mode_value |= S_IRGRP;
+    if ((group_permissions & 2) != 0)
+        mode_value |= S_IWGRP;
+    if ((group_permissions & 1) != 0)
+        mode_value |= S_IXGRP;
+    if ((other_permissions & 4) != 0)
+        mode_value |= S_IROTH;
+    if ((other_permissions & 2) != 0)
+        mode_value |= S_IWOTH;
+    if ((other_permissions & 1) != 0)
+        mode_value |= S_IXOTH;
+    if (chmod(path, mode_value) == 0)
+    {
         cmp_set_error_code(error_code_out, FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }

@@ -1,148 +1,82 @@
 #include "system_utils.hpp"
 #include "../Basic/basic.hpp"
-#include "../PThread/pthread.hpp"
-#include "../PThread/pthread_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
+#include "../Template/move.hpp"
 #if defined(_WIN32) || defined(_WIN64)
 # include <winsock2.h>
 #endif
-#include <cstdlib>
 #include <cerrno>
+#include <cstdlib>
 #include <utility>
-#include "../Template/move.hpp"
 
 static pthread_mutex_t *g_env_mutex = ft_nullptr;
 
 static int su_environment_lock_mutex(void)
 {
+    int pthread_error;
+
     if (g_env_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
-    int lock_error = pt_pthread_mutex_lock_with_error(g_env_mutex);
-    ft_global_error_stack_drop_last_error();
-    return (lock_error);
+    pthread_error = pthread_mutex_lock(g_env_mutex);
+    if (pthread_error != 0)
+        return (cmp_map_system_error_to_ft(pthread_error));
+    return (FT_ERR_SUCCESS);
 }
 
 static int su_environment_unlock_mutex(void)
 {
+    int pthread_error;
+
     if (g_env_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
-    int unlock_error = pt_pthread_mutex_unlock_with_error(g_env_mutex);
-    ft_global_error_stack_drop_last_error();
-    return (unlock_error);
+    pthread_error = pthread_mutex_unlock(g_env_mutex);
+    if (pthread_error != 0)
+        return (cmp_map_system_error_to_ft(pthread_error));
+    return (FT_ERR_SUCCESS);
 }
 
 int su_environment_enable_thread_safety(void)
 {
+    pthread_mutex_t  *mutex_pointer;
+    int             pthread_error;
+
     if (g_env_mutex != ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
-    }
-    pthread_mutex_t *mutex_pointer = static_cast<pthread_mutex_t*>(std::malloc(sizeof(pthread_mutex_t)));
+    mutex_pointer = static_cast<pthread_mutex_t *>(std::malloc(sizeof(pthread_mutex_t)));
     if (mutex_pointer == ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (FT_ERR_NO_MEMORY);
-    }
-    int pthread_error = pthread_mutex_init(mutex_pointer, ft_nullptr);
+    pthread_error = pthread_mutex_init(mutex_pointer, ft_nullptr);
     if (pthread_error != 0)
     {
-        int error_code = ft_map_system_error(pthread_error);
         std::free(mutex_pointer);
-        ft_global_error_stack_push(error_code);
-        return (error_code);
+        return (cmp_map_system_error_to_ft(pthread_error));
     }
     g_env_mutex = mutex_pointer;
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
 void su_environment_disable_thread_safety(void)
 {
-    if (g_env_mutex == ft_nullptr)
+    if (g_env_mutex != ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
-        return ;
+        pthread_mutex_destroy(g_env_mutex);
+        std::free(g_env_mutex);
+        g_env_mutex = ft_nullptr;
     }
-    int pthread_error = pthread_mutex_destroy(g_env_mutex);
-    std::free(g_env_mutex);
-    g_env_mutex = ft_nullptr;
-    if (pthread_error != 0)
-    {
-        ft_global_error_stack_push(ft_map_system_error(pthread_error));
-        return ;
-    }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
 static int g_environment_thread_safety_initializer = su_environment_enable_thread_safety();
 
-static int su_environment_unlock_with_error(int error_code)
+static char **su_environment_entries(void)
 {
-    if (g_env_mutex == ft_nullptr)
-        return (error_code);
-    int unlock_error = su_environment_unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESS)
-        return (FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
-    return (error_code);
-}
-
-static int su_environment_snapshot_contains(
-    const t_su_environment_snapshot *snapshot,
-    const ft_string &name,
-    int *is_present)
-{
-    size_t  snapshot_count;
-    size_t  index;
-    size_t  target_length;
-
-    if (snapshot == ft_nullptr || is_present == ft_nullptr)
-    {
-        return (FT_ERR_INVALID_ARGUMENT);
-    }
-    snapshot_count = snapshot->entries.size();
-    {
-        int entries_error = ft_global_error_stack_peek_last_error();
-        if (entries_error != FT_ERR_SUCCESS)
-            return (entries_error);
-    }
-    target_length = name.size();
-    {
-        int    string_error;
-
-        string_error = name.pop_operation_error(name.last_operation_id());
-        if (string_error != FT_ERR_SUCCESS)
-        {
-            return (string_error);
-        }
-    }
-    index = 0;
-    while (index < snapshot_count)
-    {
-        const ft_string &entry = snapshot->entries[index];
-        const char      *entry_data;
-        const char      *equals_location;
-        size_t          entry_length;
-
-        entry_data = entry.c_str();
-        equals_location = ft_strchr(entry_data, '=');
-        if (equals_location != ft_nullptr)
-            entry_length = static_cast<size_t>(equals_location - entry_data);
-        else
-            entry_length = ft_strlen_size_t(entry_data);
-        if (entry_length == target_length
-            && ft_strncmp(entry_data, name.c_str(), target_length) == 0)
-        {
-            *is_present = 1;
-            return (FT_ERR_SUCCESS);
-        }
-        index += 1;
-    }
-    *is_present = 0;
-    return (FT_ERR_SUCCESS);
+#if defined(_WIN32) || defined(_WIN64)
+    return (_environ);
+#else
+    return (environ);
+#endif
 }
 
 static int su_environment_split_entry(
@@ -152,36 +86,31 @@ static int su_environment_split_entry(
     int *has_value)
 {
     const char  *equals_location;
-    size_t      name_length;
-    int         string_error;
+    ft_size_t   name_length;
+    int32_t     string_error;
 
     if (entry == ft_nullptr)
-    {
         return (FT_ERR_INVALID_ARGUMENT);
-    }
     equals_location = ft_strchr(entry, '=');
     if (equals_location == ft_nullptr)
     {
-        name.assign(entry, ft_strlen_size_t(entry));
-        string_error = name.pop_operation_error(name.last_operation_id());
+        string_error = name.assign(entry, ft_strlen_size_t(entry));
         if (string_error != FT_ERR_SUCCESS)
             return (string_error);
-        value.clear();
-        string_error = value.pop_operation_error(value.last_operation_id());
+        string_error = value.clear();
         if (string_error != FT_ERR_SUCCESS)
             return (string_error);
         if (has_value != ft_nullptr)
             *has_value = 0;
         return (FT_ERR_SUCCESS);
     }
-    name_length = static_cast<size_t>(equals_location - entry);
-    name.assign(entry, name_length);
-    string_error = name.pop_operation_error(name.last_operation_id());
+    name_length = static_cast<ft_size_t>(equals_location - entry);
+    string_error = name.assign(entry, name_length);
     if (string_error != FT_ERR_SUCCESS)
         return (string_error);
-    value.assign(equals_location + 1,
-        ft_strlen_size_t(equals_location + 1));
-    string_error = value.pop_operation_error(value.last_operation_id());
+    string_error = value.assign(
+            equals_location + 1,
+            ft_strlen_size_t(equals_location + 1));
     if (string_error != FT_ERR_SUCCESS)
         return (string_error);
     if (has_value != ft_nullptr)
@@ -189,414 +118,182 @@ static int su_environment_split_entry(
     return (FT_ERR_SUCCESS);
 }
 
-char    *su_getenv(const char *name)
+char *su_getenv(const char *name)
 {
     char    *result;
-    int     error_code;
-    int     mutex_error;
+    int     lock_error;
+    int     unlock_error;
 
-    mutex_error = su_environment_lock_mutex();
-    if (mutex_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(FT_ERR_SYS_MUTEX_LOCK_FAILED);
+    lock_error = su_environment_lock_mutex();
+    if (lock_error != FT_ERR_SUCCESS)
         return (ft_nullptr);
-    }
     result = ft_getenv(name);
-    error_code = ft_global_error_stack_drop_last_error();
-    mutex_error = su_environment_unlock_mutex();
-    if (mutex_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
+    unlock_error = su_environment_unlock_mutex();
+    if (unlock_error != FT_ERR_SUCCESS)
         return (ft_nullptr);
-    }
-    if (error_code != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(error_code);
-        return (ft_nullptr);
-    }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (result);
 }
 
 int su_setenv(const char *name, const char *value, int overwrite)
 {
     int result;
-    int error_code;
-    int mutex_error;
+    int lock_error;
+    int unlock_error;
 
-    mutex_error = su_environment_lock_mutex();
-    if (mutex_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(FT_ERR_SYS_MUTEX_LOCK_FAILED);
+    lock_error = su_environment_lock_mutex();
+    if (lock_error != FT_ERR_SUCCESS)
         return (-1);
-    }
     result = ft_setenv(name, value, overwrite);
-    error_code = ft_global_error_stack_drop_last_error();
-    mutex_error = su_environment_unlock_mutex();
-    if (mutex_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
+    unlock_error = su_environment_unlock_mutex();
+    if (unlock_error != FT_ERR_SUCCESS)
         return (-1);
-    }
-    if (result != 0)
-    {
-        if (error_code == FT_ERR_SUCCESS)
-            error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_global_error_stack_push(error_code);
-        return (-1);
-    }
-    if (error_code != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(error_code);
-        return (-1);
-    }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (result);
 }
 
 int su_putenv(char *string)
 {
     int result;
-    int error_code;
-    int mutex_error;
+    int lock_error;
+    int unlock_error;
 
     if (string == ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
+        return (FT_ERR_INVALID_ARGUMENT);
+    lock_error = su_environment_lock_mutex();
+    if (lock_error != FT_ERR_SUCCESS)
         return (-1);
-    }
-    mutex_error = su_environment_lock_mutex();
-    if (mutex_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(FT_ERR_SYS_MUTEX_LOCK_FAILED);
+    result = putenv(string);
+    unlock_error = su_environment_unlock_mutex();
+    if (unlock_error != FT_ERR_SUCCESS)
         return (-1);
-    }
-    errno = 0;
-    result = cmp_putenv(string);
-    if (result != 0)
-    {
-#if defined(_WIN32) || defined(_WIN64)
-        int last_error;
-        int socket_error;
-
-        last_error = GetLastError();
-        socket_error = WSAGetLastError();
-        if (last_error != 0)
-            error_code = ft_map_system_error(last_error);
-        else if (socket_error != 0)
-            error_code = ft_map_system_error(socket_error);
-        else if (errno != 0)
-            error_code = ft_map_system_error(errno);
-        else
-            error_code = FT_ERR_INVALID_ARGUMENT;
-#else
-        if (errno != 0)
-            error_code = ft_map_system_error(errno);
-        else
-            error_code = FT_ERR_INVALID_ARGUMENT;
-#endif
-    }
-    else
-        error_code = FT_ERR_SUCCESS;
-    mutex_error = su_environment_unlock_mutex();
-    if (mutex_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
-        return (-1);
-    }
-    if (result != 0)
-    {
-        ft_global_error_stack_push(error_code);
-        return (-1);
-    }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (result);
 }
 
 int su_environment_snapshot_capture(t_su_environment_snapshot *snapshot)
 {
-    char    **environment_entries;
-    size_t  index;
-    int     error_code;
-    int     mutex_error;
+    int     lock_error;
+    int     unlock_error;
+    char    **entries;
+    ft_size_t   index;
+    ft_string   entry_copy;
+    int32_t     string_error;
 
     if (snapshot == ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
-        return (-1);
-    }
+        return (FT_ERR_INVALID_ARGUMENT);
+    lock_error = su_environment_lock_mutex();
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
     snapshot->entries.clear();
+    entries = su_environment_entries();
+    if (entries != ft_nullptr)
     {
-        int entries_error = ft_global_error_stack_peek_last_error();
-        if (entries_error != FT_ERR_SUCCESS)
+        index = 0;
+        while (entries[index] != ft_nullptr)
         {
-            error_code = entries_error;
-            ft_global_error_stack_push(error_code);
-            return (-1);
-        }
-    }
-    mutex_error = su_environment_lock_mutex();
-    if (mutex_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(FT_ERR_SYS_MUTEX_LOCK_FAILED);
-        return (-1);
-    }
-    environment_entries = cmp_get_environ_entries();
-    index = 0;
-    if (environment_entries != ft_nullptr)
-    {
-        while (environment_entries[index] != ft_nullptr)
-        {
-            ft_string entry_copy(environment_entries[index]);
-
+            string_error = entry_copy.initialize(entries[index]);
+            if (string_error != FT_ERR_SUCCESS)
             {
-                int string_error = entry_copy.pop_operation_error(
-                    entry_copy.last_operation_id());
-
-                if (string_error != FT_ERR_SUCCESS)
-                {
-                    error_code = su_environment_unlock_with_error(string_error);
-                    ft_global_error_stack_push(error_code);
-                    return (-1);
-                }
+                (void)su_environment_unlock_mutex();
+                return (string_error);
             }
             snapshot->entries.push_back(ft_move(entry_copy));
-            if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESS)
-            {
-                error_code = su_environment_unlock_with_error(ft_global_error_stack_peek_last_error());
-                ft_global_error_stack_push(error_code);
-                return (-1);
-            }
-            index += 1;
+            index = index + 1;
         }
     }
-    mutex_error = su_environment_unlock_mutex();
-    if (mutex_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
-        return (-1);
-    }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
-    return (0);
+    unlock_error = su_environment_unlock_mutex();
+    if (unlock_error != FT_ERR_SUCCESS)
+        return (unlock_error);
+    return (FT_ERR_SUCCESS);
 }
 
 int su_environment_snapshot_restore(const t_su_environment_snapshot *snapshot)
 {
-    ft_vector<ft_string>    current_environment(4);
-    char                    **environment_entries;
-    size_t                  index;
-    int                     error_code;
-    int                     mutex_error;
+    int         lock_error;
+    int         unlock_error;
+    char        **entries;
+    ft_string   name;
+    ft_string   value;
+    int         has_value;
+    int         error_code;
+    ft_size_t   index;
 
     if (snapshot == ft_nullptr)
+        return (FT_ERR_INVALID_ARGUMENT);
+    lock_error = su_environment_lock_mutex();
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
+    entries = su_environment_entries();
+    while (entries != ft_nullptr && entries[0] != ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
-        return (-1);
-    }
-    {
-        int entries_error = ft_global_error_stack_peek_last_error();
-        if (entries_error != FT_ERR_SUCCESS)
-        {
-            error_code = entries_error;
-            ft_global_error_stack_push(error_code);
-            return (-1);
-        }
-    }
-    mutex_error = su_environment_lock_mutex();
-    if (mutex_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(FT_ERR_SYS_MUTEX_LOCK_FAILED);
-        return (-1);
-    }
-    environment_entries = cmp_get_environ_entries();
-    index = 0;
-    if (environment_entries != ft_nullptr)
-    {
-        while (environment_entries[index] != ft_nullptr)
-        {
-            ft_string entry_copy(environment_entries[index]);
-
-            {
-                int string_error = entry_copy.pop_operation_error(
-                    entry_copy.last_operation_id());
-
-                if (string_error != FT_ERR_SUCCESS)
-                {
-                    error_code = su_environment_unlock_with_error(string_error);
-                    ft_global_error_stack_push(error_code);
-                    return (-1);
-                }
-            }
-            current_environment.push_back(ft_move(entry_copy));
-            if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESS)
-            {
-                error_code = su_environment_unlock_with_error(ft_global_error_stack_peek_last_error());
-                ft_global_error_stack_push(error_code);
-                return (-1);
-            }
-            index += 1;
-        }
-    }
-    size_t current_count = current_environment.size();
-    if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESS)
-    {
-        error_code = su_environment_unlock_with_error(ft_global_error_stack_peek_last_error());
-        ft_global_error_stack_push(error_code);
-        return (-1);
-    }
-    index = 0;
-    while (index < current_count)
-    {
-        ft_string &entry = current_environment[index];
-        ft_string name;
-        ft_string value;
-        int       is_present;
-
-        error_code = su_environment_split_entry(entry.c_str(), name, value, ft_nullptr);
+        error_code = su_environment_split_entry(entries[0], name, value, &has_value);
         if (error_code != FT_ERR_SUCCESS)
         {
-            error_code = su_environment_unlock_with_error(error_code);
-            ft_global_error_stack_push(error_code);
-            return (-1);
+            (void)su_environment_unlock_mutex();
+            return (error_code);
         }
-        error_code = su_environment_snapshot_contains(snapshot, name, &is_present);
+        if (ft_unsetenv(name.c_str()) != 0)
+        {
+            error_code = cmp_map_system_error_to_ft(errno);
+            (void)su_environment_unlock_mutex();
+            return (error_code);
+        }
+        entries = su_environment_entries();
+    }
+    index = 0;
+    while (index < snapshot->entries.size())
+    {
+        error_code = su_environment_split_entry(
+                snapshot->entries[index].c_str(),
+                name,
+                value,
+                &has_value);
         if (error_code != FT_ERR_SUCCESS)
         {
-            error_code = su_environment_unlock_with_error(error_code);
-            ft_global_error_stack_push(error_code);
-            return (-1);
+            (void)su_environment_unlock_mutex();
+            return (error_code);
         }
-        if (is_present == 0)
+        if (has_value == 0)
         {
             if (ft_unsetenv(name.c_str()) != 0)
             {
-                error_code = ft_global_error_stack_drop_last_error();
-                if (error_code == FT_ERR_SUCCESS)
-                    error_code = FT_ERR_INVALID_ARGUMENT;
-                error_code = su_environment_unlock_with_error(error_code);
-                ft_global_error_stack_push(error_code);
-                return (-1);
+                error_code = cmp_map_system_error_to_ft(errno);
+                (void)su_environment_unlock_mutex();
+                return (error_code);
             }
-            ft_global_error_stack_drop_last_error();
-        }
-        index += 1;
-    }
-    size_t snapshot_count = snapshot->entries.size();
-    if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESS)
-    {
-        error_code = su_environment_unlock_with_error(ft_global_error_stack_peek_last_error());
-        ft_global_error_stack_push(error_code);
-        return (-1);
-    }
-    index = 0;
-    while (index < snapshot_count)
-    {
-        const ft_string &entry = snapshot->entries[index];
-        ft_string        name;
-        ft_string        value;
-        int              has_value;
-
-        error_code = su_environment_split_entry(entry.c_str(), name, value, &has_value);
-        if (error_code != FT_ERR_SUCCESS)
-        {
-            error_code = su_environment_unlock_with_error(error_code);
-            ft_global_error_stack_push(error_code);
-            return (-1);
-        }
-        if (has_value != 0)
-        {
-            if (ft_setenv(name.c_str(), value.c_str(), 1) != 0)
-            {
-                error_code = ft_global_error_stack_drop_last_error();
-                if (error_code == FT_ERR_SUCCESS)
-                    error_code = FT_ERR_INVALID_ARGUMENT;
-                error_code = su_environment_unlock_with_error(error_code);
-                ft_global_error_stack_push(error_code);
-                return (-1);
-            }
-            ft_global_error_stack_drop_last_error();
         }
         else
         {
-            if (ft_unsetenv(name.c_str()) != 0)
+            if (ft_setenv(name.c_str(), value.c_str(), 1) != 0)
             {
-                error_code = ft_global_error_stack_drop_last_error();
-                if (error_code == FT_ERR_SUCCESS)
-                    error_code = FT_ERR_INVALID_ARGUMENT;
-                error_code = su_environment_unlock_with_error(error_code);
-                ft_global_error_stack_push(error_code);
-                return (-1);
+                error_code = cmp_map_system_error_to_ft(errno);
+                (void)su_environment_unlock_mutex();
+                return (error_code);
             }
-            ft_global_error_stack_drop_last_error();
         }
-        index += 1;
+        index = index + 1;
     }
-    mutex_error = su_environment_unlock_mutex();
-    if (mutex_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
-        return (-1);
-    }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
-    return (0);
+    unlock_error = su_environment_unlock_mutex();
+    if (unlock_error != FT_ERR_SUCCESS)
+        return (unlock_error);
+    return (FT_ERR_SUCCESS);
 }
 
 void su_environment_snapshot_dispose(t_su_environment_snapshot *snapshot)
 {
-    if (snapshot == ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
-        return ;
-    }
-    snapshot->entries.clear();
-    int entries_error = ft_global_error_stack_peek_last_error();
-    if (entries_error != FT_ERR_SUCCESS)
-        ft_global_error_stack_push(entries_error);
-    else
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
+    if (snapshot != ft_nullptr)
+        snapshot->entries.clear();
     return ;
 }
 
 int su_environment_sandbox_begin(t_su_environment_snapshot *snapshot)
 {
-    int capture_result;
-    int error_code;
-
-    capture_result = su_environment_snapshot_capture(snapshot);
-    error_code = ft_global_error_stack_drop_last_error();
-    if (capture_result != 0)
-    {
-        if (error_code == FT_ERR_SUCCESS)
-            error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_global_error_stack_push(error_code);
-        return (-1);
-    }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
-    return (0);
+    return (su_environment_snapshot_capture(snapshot));
 }
 
 int su_environment_sandbox_end(t_su_environment_snapshot *snapshot)
 {
-    int restore_result;
     int restore_error;
-    int dispose_error;
 
-    restore_result = su_environment_snapshot_restore(snapshot);
-    restore_error = ft_global_error_stack_drop_last_error();
+    restore_error = su_environment_snapshot_restore(snapshot);
     su_environment_snapshot_dispose(snapshot);
-    dispose_error = ft_global_error_stack_drop_last_error();
-    if (restore_result != 0)
-    {
-        if (restore_error == FT_ERR_SUCCESS)
-            restore_error = FT_ERR_INVALID_ARGUMENT;
-        ft_global_error_stack_push(restore_error);
-        return (-1);
-    }
-    if (dispose_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(dispose_error);
-        return (-1);
-    }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
-    return (0);
+    return (restore_error);
 }

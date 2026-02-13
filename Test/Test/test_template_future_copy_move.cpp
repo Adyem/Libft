@@ -8,12 +8,12 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-FT_TEST(test_ft_future_copy_constructor_rebuilds_mutex,
-        "ft_future copy constructor rebuilds mutex for shared promise")
+FT_TEST(test_ft_future_initialize_copy_from_uninitialized_rebuilds_mutex,
+        "ft_future initialize(copy) from uninitialized rebuilds mutex for shared promise")
 {
     ft_promise<int> promise;
     ft_future<int> original_future(promise);
-    ft_future<int> copied_future(original_future);
+    ft_future<int> copied_future;
     bool original_lock_acquired;
     bool copy_lock_acquired;
 
@@ -21,6 +21,7 @@ FT_TEST(test_ft_future_copy_constructor_rebuilds_mutex,
     original_lock_acquired = false;
     copy_lock_acquired = false;
     FT_ASSERT_EQ(0, original_future.enable_thread_safety());
+    FT_ASSERT_EQ(0, copied_future.initialize(original_future));
     FT_ASSERT(original_future.is_thread_safe_enabled());
     FT_ASSERT(copied_future.is_thread_safe_enabled());
     FT_ASSERT_EQ(0, original_future.lock(&original_lock_acquired));
@@ -34,8 +35,8 @@ FT_TEST(test_ft_future_copy_constructor_rebuilds_mutex,
     return (1);
 }
 
-FT_TEST(test_ft_future_copy_assignment_recreates_mutex,
-        "ft_future copy assignment reinstates mutex for shared state")
+FT_TEST(test_ft_future_initialize_copy_recreates_mutex,
+        "ft_future initialize(copy) reinstates mutex for shared state")
 {
     ft_promise<int> source_promise;
     ft_future<int> source_future(source_promise);
@@ -49,7 +50,7 @@ FT_TEST(test_ft_future_copy_assignment_recreates_mutex,
     destination_lock_acquired = false;
     FT_ASSERT_EQ(0, source_future.enable_thread_safety());
     FT_ASSERT_EQ(0, destination_future.enable_thread_safety());
-    destination_future = source_future;
+    FT_ASSERT_EQ(0, destination_future.initialize(source_future));
     FT_ASSERT(destination_future.is_thread_safe_enabled());
     FT_ASSERT(source_future.is_thread_safe_enabled());
     FT_ASSERT_EQ(0, source_future.lock(&source_lock_acquired));
@@ -63,11 +64,12 @@ FT_TEST(test_ft_future_copy_assignment_recreates_mutex,
     return (1);
 }
 
-FT_TEST(test_ft_future_move_constructor_rebuilds_mutex,
-        "ft_future move constructor recreates mutex and keeps moved-from reusable")
+FT_TEST(test_ft_future_initialize_move_from_uninitialized_rebuilds_mutex,
+        "ft_future initialize(move) from uninitialized recreates mutex and keeps moved-from reusable")
 {
     ft_promise<int> promise;
     ft_future<int> original_future(promise);
+    ft_future<int> moved_future;
     bool moved_lock_acquired;
     bool source_lock_acquired;
 
@@ -76,7 +78,7 @@ FT_TEST(test_ft_future_move_constructor_rebuilds_mutex,
     source_lock_acquired = false;
     FT_ASSERT_EQ(0, original_future.enable_thread_safety());
     FT_ASSERT(original_future.is_thread_safe_enabled());
-    ft_future<int> moved_future(ft_move(original_future));
+    FT_ASSERT_EQ(0, moved_future.initialize(ft_move(original_future)));
     FT_ASSERT(moved_future.is_thread_safe_enabled());
     FT_ASSERT_EQ(false, original_future.is_thread_safe_enabled());
     FT_ASSERT_EQ(0, moved_future.lock(&moved_lock_acquired));
@@ -91,8 +93,8 @@ FT_TEST(test_ft_future_move_constructor_rebuilds_mutex,
     return (1);
 }
 
-FT_TEST(test_ft_future_move_assignment_rebuilds_mutex,
-        "ft_future move assignment reinstates mutex and preserves destination usability")
+FT_TEST(test_ft_future_initialize_move_rebuilds_mutex,
+        "ft_future initialize(move) reinstates mutex and preserves destination usability")
 {
     ft_promise<int> source_promise;
     ft_future<int> source_future(source_promise);
@@ -106,7 +108,7 @@ FT_TEST(test_ft_future_move_assignment_rebuilds_mutex,
     source_lock_acquired = false;
     FT_ASSERT_EQ(0, source_future.enable_thread_safety());
     FT_ASSERT_EQ(0, destination_future.enable_thread_safety());
-    destination_future = ft_move(source_future);
+    FT_ASSERT_EQ(0, destination_future.initialize(ft_move(source_future)));
     FT_ASSERT(destination_future.is_thread_safe_enabled());
     FT_ASSERT_EQ(false, source_future.is_thread_safe_enabled());
     FT_ASSERT_EQ(0, destination_future.lock(&destination_lock_acquired));
@@ -126,12 +128,13 @@ FT_TEST(test_ft_future_void_move_rebuilds_mutex,
 {
     ft_promise<void> promise;
     ft_future<void> original_future(promise);
+    ft_future<void> moved_future;
     bool moved_lock_acquired;
 
     moved_lock_acquired = false;
     FT_ASSERT_EQ(0, original_future.enable_thread_safety());
     FT_ASSERT(original_future.is_thread_safe_enabled());
-    ft_future<void> moved_future(ft_move(original_future));
+    FT_ASSERT_EQ(0, moved_future.initialize(ft_move(original_future)));
     FT_ASSERT(moved_future.is_thread_safe_enabled());
     FT_ASSERT_EQ(false, original_future.is_thread_safe_enabled());
     FT_ASSERT_EQ(0, moved_future.lock(&moved_lock_acquired));

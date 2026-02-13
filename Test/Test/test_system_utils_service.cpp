@@ -43,10 +43,8 @@ FT_TEST(test_su_service_daemonize_creates_pid_file,
 #endif
     remove_file_if_exists(pid_path);
     su_service_force_no_fork(true);
-    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(0, su_service_daemonize(".", pid_path, false));
     su_service_force_no_fork(false);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     pid_file = std::fopen(pid_path, "r");
     FT_ASSERT(pid_file != ft_nullptr);
     std::memset(buffer, 0, sizeof(buffer));
@@ -66,9 +64,7 @@ FT_TEST(test_su_service_daemonize_creates_pid_file,
 FT_TEST(test_su_service_install_signal_handlers_rejects_null,
         "su_service_install_signal_handlers validates handler")
 {
-    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(-1, su_service_install_signal_handlers(ft_nullptr, ft_nullptr));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -85,10 +81,8 @@ FT_TEST(test_su_service_install_signal_handlers_dispatches,
         "su_service_install_signal_handlers catches SIGTERM")
 {
     g_su_service_signal_value = 0;
-    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(0, su_service_install_signal_handlers(test_su_service_signal_handler,
         ft_nullptr));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     std::raise(SIGTERM);
     FT_ASSERT_EQ(SIGTERM, g_su_service_signal_value);
     su_service_clear_signal_handlers();

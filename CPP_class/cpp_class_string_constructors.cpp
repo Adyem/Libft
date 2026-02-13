@@ -143,6 +143,8 @@ int ft_string::initialize(const ft_string &other) noexcept
     }
     if (other._initialized_state != ft_string::_state_initialized)
         return (FT_ERR_INVALID_STATE);
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
     int initialization_error = this->initialize();
     if (initialization_error != FT_ERR_SUCCESS)
         return (initialization_error);
@@ -193,6 +195,8 @@ int ft_string::initialize(ft_string &&other) noexcept
     }
     if (other._initialized_state != ft_string::_state_initialized)
         return (FT_ERR_INVALID_STATE);
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
     int initialization_error = this->initialize();
     if (initialization_error != FT_ERR_SUCCESS)
         return (initialization_error);

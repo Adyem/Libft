@@ -145,7 +145,14 @@ int ft_render_window::initialize(const ft_render_window &other)
         return (FT_ERR_INVALID_STATE);
     }
     if (other._initialized_state != ft_render_window::_state_initialized)
+    {
+        other.abort_lifecycle_error(
+            "ft_render_window::initialize(const ft_render_window &) source",
+            "called with source object that is not initialized");
         return (FT_ERR_INVALID_STATE);
+    }
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
     if (other._is_initialized == true)
         return (FT_ERR_INVALID_OPERATION);
     if (this->initialize() != FT_ERR_SUCCESS)
@@ -167,7 +174,14 @@ int ft_render_window::initialize(ft_render_window &&other)
         return (FT_ERR_INVALID_STATE);
     }
     if (other._initialized_state != ft_render_window::_state_initialized)
+    {
+        other.abort_lifecycle_error(
+            "ft_render_window::initialize(ft_render_window &&) source",
+            "called with source object that is not initialized");
         return (FT_ERR_INVALID_STATE);
+    }
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
     initialization_error = this->initialize();
     if (initialization_error != FT_ERR_SUCCESS)
         return (initialization_error);
@@ -197,9 +211,6 @@ int ft_render_window::destroy(void)
 
 int ft_render_window::move(ft_render_window &other)
 {
-    this->abort_if_not_initialized("ft_render_window::move destination");
-    if (this == &other)
-        return (FT_ERR_SUCCESS);
     if (other._initialized_state == ft_render_window::_state_uninitialized)
     {
         other.abort_lifecycle_error("ft_render_window::move source",
@@ -207,7 +218,18 @@ int ft_render_window::move(ft_render_window &other)
         return (FT_ERR_INVALID_STATE);
     }
     if (other._initialized_state != ft_render_window::_state_initialized)
+    {
+        other.abort_lifecycle_error("ft_render_window::move source",
+            "called with source object that is not initialized");
         return (FT_ERR_INVALID_STATE);
+    }
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (this->_initialized_state != ft_render_window::_state_initialized)
+    {
+        if (this->initialize() != FT_ERR_SUCCESS)
+            return (FT_ERR_INVALID_STATE);
+    }
     this->_framebuffer = other._framebuffer;
     this->_is_initialized = other._is_initialized;
     this->_should_close = other._should_close;

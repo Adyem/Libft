@@ -1,7 +1,6 @@
 #include "condition.hpp"
 #include "mutex.hpp"
 #include "pthread.hpp"
-#include "pthread_internal.hpp"
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Basic/basic.hpp"
@@ -29,7 +28,7 @@ static bool compute_wait_deadline(const struct timespec &relative_time, struct t
     if (clock_gettime(CLOCK_REALTIME, &current_time) != 0)
 #endif
     {
-        *error_code = ft_map_system_error(errno);
+        *error_code = cmp_map_system_error_to_ft(errno);
         return (false);
     }
     absolute_time->tv_sec = current_time.tv_sec + relative_time.tv_sec;
@@ -197,7 +196,7 @@ int pt_condition_variable::wait_until(pt_mutex &mutex, const struct timespec &ab
 
     int native_lock_error = pthread_mutex_lock(&this->_mutex);
     if (native_lock_error != 0)
-        return (ft_map_system_error(native_lock_error));
+        return (cmp_map_system_error_to_ft(native_lock_error));
     int unlock_error = mutex.unlock();
     if (unlock_error != FT_ERR_SUCCESS)
     {
@@ -212,7 +211,7 @@ int pt_condition_variable::wait_until(pt_mutex &mutex, const struct timespec &ab
     {
         if (relock_error != FT_ERR_SUCCESS)
             return (relock_error);
-        return (ft_map_system_error(native_unlock_error));
+        return (cmp_map_system_error_to_ft(native_unlock_error));
     }
     if (relock_error != FT_ERR_SUCCESS)
         return (relock_error);
@@ -220,7 +219,7 @@ int pt_condition_variable::wait_until(pt_mutex &mutex, const struct timespec &ab
         return (FT_ERR_SUCCESS);
     if (wait_result == ETIMEDOUT)
         return (ETIMEDOUT);
-    return (ft_map_system_error(wait_result));
+    return (cmp_map_system_error_to_ft(wait_result));
 }
 
 int pt_condition_variable::signal()
@@ -229,17 +228,17 @@ int pt_condition_variable::signal()
         return (FT_ERR_INVALID_ARGUMENT);
     int native_lock_error = pthread_mutex_lock(&this->_mutex);
     if (native_lock_error != 0)
-        return (ft_map_system_error(native_lock_error));
+        return (cmp_map_system_error_to_ft(native_lock_error));
     int signal_error = pt_cond_signal(&this->_condition);
     int native_unlock_error = pthread_mutex_unlock(&this->_mutex);
     if (signal_error != 0)
     {
         if (native_unlock_error != 0)
-            return (ft_map_system_error(native_unlock_error));
-        return (ft_map_system_error(signal_error));
+            return (cmp_map_system_error_to_ft(native_unlock_error));
+        return (cmp_map_system_error_to_ft(signal_error));
     }
     if (native_unlock_error != 0)
-        return (ft_map_system_error(native_unlock_error));
+        return (cmp_map_system_error_to_ft(native_unlock_error));
     return (FT_ERR_SUCCESS);
 }
 
@@ -249,16 +248,16 @@ int pt_condition_variable::broadcast()
         return (FT_ERR_INVALID_ARGUMENT);
     int native_lock_error = pthread_mutex_lock(&this->_mutex);
     if (native_lock_error != 0)
-        return (ft_map_system_error(native_lock_error));
+        return (cmp_map_system_error_to_ft(native_lock_error));
     int broadcast_error = pt_cond_broadcast(&this->_condition);
     int native_unlock_error = pthread_mutex_unlock(&this->_mutex);
     if (broadcast_error != 0)
     {
         if (native_unlock_error != 0)
-            return (ft_map_system_error(native_unlock_error));
-        return (ft_map_system_error(broadcast_error));
+            return (cmp_map_system_error_to_ft(native_unlock_error));
+        return (cmp_map_system_error_to_ft(broadcast_error));
     }
     if (native_unlock_error != 0)
-        return (ft_map_system_error(native_unlock_error));
+        return (cmp_map_system_error_to_ft(native_unlock_error));
     return (FT_ERR_SUCCESS);
 }

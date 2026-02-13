@@ -12,6 +12,7 @@
 FT_TEST(test_task_scheduler_metrics_flow, "ft_task_scheduler tracks queue and worker metrics")
 {
     ft_task_scheduler scheduler_instance(1);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.initialize());
     long long queue_size;
     long long scheduled_count;
     long long idle_count;
@@ -107,4 +108,3 @@ FT_TEST(test_task_scheduler_metrics_flow, "ft_task_scheduler tracks queue and wo
     FT_ASSERT_EQ(ft_errno, scheduler_instance.operation_error_last_error());
     return (1);
 }
-

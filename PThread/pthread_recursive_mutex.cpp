@@ -1,6 +1,5 @@
 #include "pthread.hpp"
 #include "recursive_mutex.hpp"
-#include "pthread_internal.hpp"
 #include "../Errno/errno.hpp"
 #include "../Basic/basic.hpp"
 #include "../CPP_class/class_nullptr.hpp"
@@ -152,7 +151,11 @@ int pt_recursive_mutex::unlock_internal(bool lock_acquired) const
 
 void pt_recursive_mutex::teardown_thread_safety()
 {
-    pt_mutex_destroy(&this->_state_mutex);
+    if (this->_state_mutex == ft_nullptr)
+        return ;
+    (void)this->_state_mutex->destroy();
+    delete this->_state_mutex;
+    this->_state_mutex = ft_nullptr;
     return ;
 }
 

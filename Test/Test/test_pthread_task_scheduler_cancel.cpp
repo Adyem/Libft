@@ -12,6 +12,7 @@
 FT_TEST(test_task_scheduler_cancel_after_handle, "ft_task_scheduler cancels delayed task")
 {
     ft_task_scheduler scheduler_instance(1);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.initialize());
     std::atomic<int> execution_count;
 
     execution_count.store(0);
@@ -50,6 +51,7 @@ FT_TEST(test_task_scheduler_cancel_after_handle, "ft_task_scheduler cancels dela
 FT_TEST(test_task_scheduler_cancel_periodic_handle, "ft_task_scheduler cancels periodic task")
 {
     ft_task_scheduler scheduler_instance(1);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.initialize());
     std::atomic<int> execution_count;
 
     execution_count.store(0);

@@ -116,9 +116,6 @@ static int test_is_selected(const s_test_case *test)
 static int execute_test_function(const s_test_case *test)
 {
     int result;
-    int error_code;
-
-    ft_global_error_stack_pop_all();
 
     try
     {
@@ -128,8 +125,6 @@ static int execute_test_function(const s_test_case *test)
     {
         FILE *log_file;
 
-        error_code = FT_ERR_INTERNAL;
-        ft_global_error_stack_push(error_code);
         log_file = fopen("test_failures.log", "a");
         if (log_file)
         {
@@ -143,8 +138,6 @@ static int execute_test_function(const s_test_case *test)
     {
         FILE *log_file;
 
-        error_code = FT_ERR_INTERNAL;
-        ft_global_error_stack_push(error_code);
         log_file = fopen("test_failures.log", "a");
         if (log_file)
         {
@@ -154,8 +147,6 @@ static int execute_test_function(const s_test_case *test)
         }
         return (0);
     }
-    error_code = FT_ERR_SUCCESS;
-    ft_global_error_stack_push(error_code);
     return (result);
 }
 

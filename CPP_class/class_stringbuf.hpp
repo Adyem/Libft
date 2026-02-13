@@ -3,7 +3,6 @@
 
 #include "class_string.hpp"
 #include "../PThread/recursive_mutex.hpp"
-#include "../PThread/pthread_internal.hpp"
 
 class ft_stringbuf
 {

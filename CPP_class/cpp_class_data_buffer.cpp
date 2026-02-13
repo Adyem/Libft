@@ -1,525 +1,489 @@
 #include "class_data_buffer.hpp"
-#include "../Basic/basic.hpp"
-#include <utility>
-#include "../Template/move.hpp"
-#include "../PThread/pthread.hpp"
-#include "../PThread/pthread_internal.hpp"
+#include "../Printf/printf.hpp"
+#include "../System_utils/system_utils.hpp"
+#include <new>
+
+thread_local int32_t DataBuffer::_last_error = FT_ERR_SUCCESS;
+
+data_buffer_proxy::data_buffer_proxy() noexcept
+    : _data_buffer(ft_nullptr), _error_code(FT_ERR_SUCCESS)
+{
+    return ;
+}
+
+data_buffer_proxy::data_buffer_proxy(DataBuffer *data_buffer, int32_t error_code) noexcept
+    : _data_buffer(data_buffer), _error_code(error_code)
+{
+    return ;
+}
+
+data_buffer_proxy::data_buffer_proxy(const data_buffer_proxy &other) noexcept
+    : _data_buffer(other._data_buffer), _error_code(other._error_code)
+{
+    return ;
+}
+
+data_buffer_proxy::data_buffer_proxy(data_buffer_proxy &&other) noexcept
+    : _data_buffer(other._data_buffer), _error_code(other._error_code)
+{
+    other._data_buffer = ft_nullptr;
+    other._error_code = FT_ERR_SUCCESS;
+    return ;
+}
+
+data_buffer_proxy::~data_buffer_proxy()
+{
+    return ;
+}
+
+data_buffer_proxy &data_buffer_proxy::operator=(const data_buffer_proxy &other) noexcept
+{
+    this->_data_buffer = other._data_buffer;
+    this->_error_code = other._error_code;
+    return (*this);
+}
+
+data_buffer_proxy &data_buffer_proxy::operator=(data_buffer_proxy &&other) noexcept
+{
+    this->_data_buffer = other._data_buffer;
+    this->_error_code = other._error_code;
+    other._data_buffer = ft_nullptr;
+    other._error_code = FT_ERR_SUCCESS;
+    return (*this);
+}
+
+int32_t data_buffer_proxy::get_error() const noexcept
+{
+    return (this->_error_code);
+}
+
+void DataBuffer::abort_lifecycle_error(const char *method_name, const char *reason) noexcept
+{
+    if (method_name == ft_nullptr)
+        method_name = "unknown";
+    if (reason == ft_nullptr)
+        reason = "unknown";
+    pf_printf_fd(2, "DataBuffer lifecycle error: %s: %s\n", method_name, reason);
+    su_abort();
+    return ;
+}
+
+void DataBuffer::abort_if_not_initialized(const char *method_name) const noexcept
+{
+    if (this->_initialized_state == DataBuffer::_state_initialized)
+        return ;
+    DataBuffer::abort_lifecycle_error(method_name, "called while object is not initialized");
+    return ;
+}
+
+int32_t DataBuffer::set_last_operation_error(int32_t error_code) noexcept
+{
+    DataBuffer::_last_error = error_code;
+    return (error_code);
+}
+
+void DataBuffer::set_operation_error(int32_t error_code) noexcept
+{
+    this->_operation_error = error_code;
+    this->_ok = (error_code == FT_ERR_SUCCESS);
+    DataBuffer::set_last_operation_error(error_code);
+    return ;
+}
 
 int DataBuffer::lock_mutex(void) const noexcept
 {
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
-    return (pt_recursive_mutex_lock_with_error(*this->_mutex));
+    return (this->_mutex->lock());
 }
 
 int DataBuffer::unlock_mutex(void) const noexcept
 {
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
-    return (pt_recursive_mutex_unlock_with_error(*this->_mutex));
+    return (this->_mutex->unlock());
 }
 
-int DataBuffer::prepare_thread_safety(void) noexcept
+int DataBuffer::write_length_locked(size_t length) noexcept
 {
-    if (this->_mutex != ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
-    }
-    pt_recursive_mutex *mutex_pointer = ft_nullptr;
-    int mutex_error = pt_recursive_mutex_create_with_error(&mutex_pointer);
-    if (mutex_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(mutex_error);
-        return (mutex_error);
-    }
-    this->_mutex = mutex_pointer;
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
-    return (FT_ERR_SUCCESS);
-}
-
-void DataBuffer::teardown_thread_safety(void) noexcept
-{
-    pt_recursive_mutex_destroy(&this->_mutex);
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
-    return ;
-}
-
-int DataBuffer::enable_thread_safety(void) noexcept
-{
-    return (this->prepare_thread_safety());
-}
-
-void DataBuffer::disable_thread_safety(void) noexcept
-{
-    this->teardown_thread_safety();
-    return ;
-}
-
-bool DataBuffer::is_thread_safe_enabled(void) const noexcept
-{
-    return (this->_mutex != ft_nullptr);
-}
-
-int DataBuffer::lock_pair(const DataBuffer &first, const DataBuffer &second,
-        const DataBuffer *&lower, const DataBuffer *&upper) noexcept
-{
-    const DataBuffer *ordered_first;
-    const DataBuffer *ordered_second;
-
-    if (&first == &second)
-    {
-        lower = &first;
-        upper = &first;
-        return (first.lock_mutex());
-    }
-    ordered_first = &first;
-    ordered_second = &second;
-    if (ordered_first > ordered_second)
-    {
-        const DataBuffer *temporary = ordered_first;
-
-        ordered_first = ordered_second;
-        ordered_second = temporary;
-    }
-    lower = ordered_first;
-    upper = ordered_second;
-    while (true)
-    {
-        int lower_error = lower->lock_mutex();
-
-        if (lower_error != FT_ERR_SUCCESS)
-            return (lower_error);
-        int upper_error = upper->lock_mutex();
-
-        if (upper_error == FT_ERR_SUCCESS)
-            return (FT_ERR_SUCCESS);
-        if (upper_error != FT_ERR_MUTEX_ALREADY_LOCKED)
-        {
-            lower->unlock_mutex();
-            return (upper_error);
-        }
-        lower->unlock_mutex();
-        DataBuffer::sleep_backoff();
-    }
-}
-
-int DataBuffer::unlock_pair(const DataBuffer *lower, const DataBuffer *upper) noexcept
-{
-    int error;
-    int final_error = FT_ERR_SUCCESS;
-
-    if (upper != ft_nullptr)
-    {
-        error = upper->unlock_mutex();
-        if (error != FT_ERR_SUCCESS)
-            final_error = error;
-    }
-    if (lower != ft_nullptr && lower != upper)
-    {
-        error = lower->unlock_mutex();
-        if (error != FT_ERR_SUCCESS && final_error == FT_ERR_SUCCESS)
-            final_error = error;
-    }
-    return (final_error);
-}
-
-void DataBuffer::sleep_backoff() noexcept
-{
-    pt_thread_sleep(1);
-    return ;
-}
-
-int DataBuffer::write_length_locked(size_t len) noexcept
-{
-    const uint8_t *ptr = reinterpret_cast<const uint8_t*>(&len);
+    const uint8_t *pointer = reinterpret_cast<const uint8_t *>(&length);
     size_t index = 0;
 
     while (index < sizeof(size_t))
     {
-        this->_buffer.push_back(ptr[index]);
-        int buffer_error = ft_global_error_stack_peek_last_error();
-        if (buffer_error != FT_ERR_SUCCESS)
-            return (buffer_error);
-        ++index;
+        this->_buffer.push_back(pointer[index]);
+        int push_error = ft_vector<uint8_t>::last_operation_error();
+        if (push_error != FT_ERR_SUCCESS)
+            return (push_error);
+        index++;
     }
     return (FT_ERR_SUCCESS);
 }
 
-int DataBuffer::read_length_locked(size_t &len) noexcept
+int DataBuffer::read_length_locked(size_t &length) noexcept
 {
     if (this->_read_pos + sizeof(size_t) > this->_buffer.size())
         return (FT_ERR_INVALID_ARGUMENT);
-    ft_memcpy(&len, this->_buffer.begin() + this->_read_pos, sizeof(size_t));
+    ft_memcpy(&length, this->_buffer.begin() + this->_read_pos, sizeof(size_t));
     this->_read_pos += sizeof(size_t);
     return (FT_ERR_SUCCESS);
 }
 
 DataBuffer::DataBuffer() noexcept
-    : _buffer(), _read_pos(0), _ok(true), _mutex(ft_nullptr)
+    : _buffer(), _read_pos(0), _ok(true), _mutex(ft_nullptr),
+      _initialized_state(DataBuffer::_state_uninitialized), _operation_error(FT_ERR_SUCCESS)
 {
-    this->enable_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
-}
-
-DataBuffer::DataBuffer(const DataBuffer &other) noexcept
-    : _buffer(), _read_pos(0), _ok(true), _mutex(ft_nullptr)
-{
-    this->enable_thread_safety();
-    int lock_error;
-    const DataBuffer *lower = ft_nullptr;
-    const DataBuffer *upper = ft_nullptr;
-    int final_error = FT_ERR_SUCCESS;
-
-    lock_error = DataBuffer::lock_pair(*this, other, lower, upper);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_error);
-        return ;
-    }
-    size_t other_size = other._buffer.size();
-    size_t index = 0;
-    while (index < other_size)
-    {
-        this->_buffer.push_back(other._buffer[index]);
-        int buffer_error = ft_global_error_stack_peek_last_error();
-        if (buffer_error != FT_ERR_SUCCESS)
-        {
-            this->_ok = false;
-            final_error = buffer_error;
-            break ;
-        }
-        ++index;
-    }
-    if (final_error == FT_ERR_SUCCESS)
-    {
-        this->_read_pos = other._read_pos;
-        this->_ok = other._ok;
-    }
-    int unlock_error = DataBuffer::unlock_pair(lower, upper);
-    if (unlock_error != FT_ERR_SUCCESS && final_error == FT_ERR_SUCCESS)
-        final_error = unlock_error;
-    ft_global_error_stack_push(final_error);
-    return ;
-}
-
-DataBuffer::DataBuffer(DataBuffer&& other) noexcept
-    : _buffer(), _read_pos(0), _ok(true), _mutex(ft_nullptr)
-{
-    this->enable_thread_safety();
-    int lock_error;
-    const DataBuffer *lower = ft_nullptr;
-    const DataBuffer *upper = ft_nullptr;
-    int final_error = FT_ERR_SUCCESS;
-
-    lock_error = DataBuffer::lock_pair(*this, other, lower, upper);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_error);
-        return ;
-    }
-    this->_buffer = ft_move(other._buffer);
-    this->_read_pos = other._read_pos;
-    this->_ok = other._ok;
-    other._buffer.clear();
-    other._read_pos = 0;
-    other._ok = true;
-    int unlock_error = DataBuffer::unlock_pair(lower, upper);
-    if (unlock_error != FT_ERR_SUCCESS && final_error == FT_ERR_SUCCESS)
-        final_error = unlock_error;
-    ft_global_error_stack_push(final_error);
-    return ;
-}
-
-DataBuffer &DataBuffer::operator=(const DataBuffer &other) noexcept
-{
-    if (this == &other)
-    {
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
-        return (*this);
-    }
-    int lock_error;
-    const DataBuffer *lower = ft_nullptr;
-    const DataBuffer *upper = ft_nullptr;
-    int final_error = FT_ERR_SUCCESS;
-
-    lock_error = DataBuffer::lock_pair(*this, other, lower, upper);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_error);
-        return (*this);
-    }
-    this->_buffer.clear();
-    size_t other_size = other._buffer.size();
-    size_t index = 0;
-    while (index < other_size)
-    {
-        this->_buffer.push_back(other._buffer[index]);
-        int buffer_error = ft_global_error_stack_peek_last_error();
-        if (buffer_error != FT_ERR_SUCCESS)
-        {
-            this->_ok = false;
-            final_error = buffer_error;
-            break ;
-        }
-        ++index;
-    }
-    if (final_error == FT_ERR_SUCCESS)
-    {
-        this->_read_pos = other._read_pos;
-        this->_ok = other._ok;
-    }
-    int unlock_error = DataBuffer::unlock_pair(lower, upper);
-    if (unlock_error != FT_ERR_SUCCESS && final_error == FT_ERR_SUCCESS)
-        final_error = unlock_error;
-    ft_global_error_stack_push(final_error);
-    return (*this);
-}
-
-DataBuffer &DataBuffer::operator=(DataBuffer &&other) noexcept
-{
-    if (this == &other)
-    {
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
-        return (*this);
-    }
-    int lock_error;
-    const DataBuffer *lower = ft_nullptr;
-    const DataBuffer *upper = ft_nullptr;
-    int final_error = FT_ERR_SUCCESS;
-
-    lock_error = DataBuffer::lock_pair(*this, other, lower, upper);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_error);
-        return (*this);
-    }
-    this->_buffer = ft_move(other._buffer);
-    this->_read_pos = other._read_pos;
-    this->_ok = other._ok;
-    other._buffer.clear();
-    other._read_pos = 0;
-    other._ok = true;
-    int unlock_error = DataBuffer::unlock_pair(lower, upper);
-    if (unlock_error != FT_ERR_SUCCESS && final_error == FT_ERR_SUCCESS)
-        final_error = unlock_error;
-    ft_global_error_stack_push(final_error);
-    return (*this);
 }
 
 DataBuffer::~DataBuffer() noexcept
 {
-    this->disable_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    if (this->_initialized_state == DataBuffer::_state_uninitialized)
+    {
+        DataBuffer::abort_lifecycle_error("DataBuffer::~DataBuffer",
+            "destructor called while object is uninitialized");
+        return ;
+    }
+    if (this->_initialized_state == DataBuffer::_state_initialized)
+    {
+        int destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            DataBuffer::set_last_operation_error(destroy_error);
+    }
     return ;
 }
 
-void DataBuffer::clear() noexcept
+int DataBuffer::initialize() noexcept
 {
-    int lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESS)
+    if (this->_initialized_state == DataBuffer::_state_initialized)
     {
-        ft_global_error_stack_push(lock_error);
-        return ;
+        DataBuffer::abort_lifecycle_error("DataBuffer::initialize",
+            "called while object is already initialized");
+        return (FT_ERR_INVALID_STATE);
     }
     this->_buffer.clear();
     this->_read_pos = 0;
     this->_ok = true;
+    this->_operation_error = FT_ERR_SUCCESS;
+    this->_initialized_state = DataBuffer::_state_initialized;
+    DataBuffer::set_last_operation_error(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
+}
+
+int DataBuffer::initialize(const DataBuffer &other) noexcept
+{
+    if (other._initialized_state != DataBuffer::_state_initialized)
+    {
+        DataBuffer::abort_lifecycle_error("DataBuffer::initialize(const DataBuffer &)",
+            "source is not initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (&other == this)
+    {
+        this->set_operation_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
+    }
+    if (this->_initialized_state == DataBuffer::_state_initialized)
+    {
+        int destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+    }
+    this->_read_pos = 0;
+    this->_ok = true;
+    this->_operation_error = FT_ERR_SUCCESS;
+    this->_initialized_state = DataBuffer::_state_initialized;
+    int self_lock_error = this->lock_mutex();
+    if (self_lock_error != FT_ERR_SUCCESS)
+        return (self_lock_error);
+    int other_lock_error = other.lock_mutex();
+    if (other_lock_error != FT_ERR_SUCCESS)
+    {
+        this->unlock_mutex();
+        return (other_lock_error);
+    }
+    this->_buffer.clear();
+    int copy_error = FT_ERR_SUCCESS;
+    size_t index = 0;
+    while (index < other._buffer.size() && copy_error == FT_ERR_SUCCESS)
+    {
+        this->_buffer.push_back(other._buffer[index]);
+        copy_error = ft_vector<uint8_t>::last_operation_error();
+        index++;
+    }
+    if (copy_error == FT_ERR_SUCCESS)
+        this->_read_pos = other._read_pos;
+    if (copy_error == FT_ERR_SUCCESS)
+        this->_ok = other._ok;
+    int other_unlock_error = other.unlock_mutex();
+    int self_unlock_error = this->unlock_mutex();
+    int final_error = copy_error;
+    if (other_unlock_error != FT_ERR_SUCCESS && final_error == FT_ERR_SUCCESS)
+        final_error = other_unlock_error;
+    if (self_unlock_error != FT_ERR_SUCCESS && final_error == FT_ERR_SUCCESS)
+        final_error = self_unlock_error;
+    this->set_operation_error(final_error);
+    return (final_error);
+}
+
+int DataBuffer::initialize_move(DataBuffer &other) noexcept
+{
+    if (&other == this)
+    {
+        if (this->_initialized_state != DataBuffer::_state_initialized)
+        {
+            DataBuffer::abort_lifecycle_error("DataBuffer::initialize_move(DataBuffer &)",
+                "self move on uninitialized object");
+            return (FT_ERR_INVALID_STATE);
+        }
+        this->set_operation_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
+    }
+    if (other._initialized_state != DataBuffer::_state_initialized)
+    {
+        DataBuffer::abort_lifecycle_error("DataBuffer::initialize_move(DataBuffer &)",
+            "source is not initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (this->_initialized_state == DataBuffer::_state_initialized)
+    {
+        int destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+    }
+    this->_read_pos = 0;
+    this->_ok = true;
+    this->_operation_error = FT_ERR_SUCCESS;
+    this->_initialized_state = DataBuffer::_state_initialized;
+    int self_lock_error = this->lock_mutex();
+    if (self_lock_error != FT_ERR_SUCCESS)
+        return (self_lock_error);
+    int other_lock_error = other.lock_mutex();
+    if (other_lock_error != FT_ERR_SUCCESS)
+    {
+        this->unlock_mutex();
+        return (other_lock_error);
+    }
+    this->_buffer.clear();
+    int move_error = FT_ERR_SUCCESS;
+    size_t index = 0;
+    while (index < other._buffer.size() && move_error == FT_ERR_SUCCESS)
+    {
+        this->_buffer.push_back(other._buffer[index]);
+        move_error = ft_vector<uint8_t>::last_operation_error();
+        index++;
+    }
+    if (move_error == FT_ERR_SUCCESS)
+        this->_read_pos = other._read_pos;
+    if (move_error == FT_ERR_SUCCESS)
+        this->_ok = other._ok;
+    if (move_error == FT_ERR_SUCCESS)
+        other._buffer.clear();
+    if (move_error == FT_ERR_SUCCESS)
+        other._read_pos = 0;
+    if (move_error == FT_ERR_SUCCESS)
+        other._ok = true;
+    int other_unlock_error = other.unlock_mutex();
+    int self_unlock_error = this->unlock_mutex();
+    int final_error = move_error;
+    if (other_unlock_error != FT_ERR_SUCCESS && final_error == FT_ERR_SUCCESS)
+        final_error = other_unlock_error;
+    if (self_unlock_error != FT_ERR_SUCCESS && final_error == FT_ERR_SUCCESS)
+        final_error = self_unlock_error;
+    this->set_operation_error(final_error);
+    return (final_error);
+}
+
+int DataBuffer::destroy() noexcept
+{
+    if (this->_initialized_state != DataBuffer::_state_initialized)
+    {
+        DataBuffer::abort_lifecycle_error("DataBuffer::destroy",
+            "called while object is not initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    this->_buffer.clear();
+    this->_read_pos = 0;
+    this->_ok = true;
+    if (this->_mutex != ft_nullptr)
+    {
+        int destroy_error = this->_mutex->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            this->_operation_error = destroy_error;
+        delete this->_mutex;
+        this->_mutex = ft_nullptr;
+    }
+    this->_operation_error = FT_ERR_SUCCESS;
+    this->_initialized_state = DataBuffer::_state_destroyed;
+    DataBuffer::set_last_operation_error(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
+}
+
+void DataBuffer::clear() noexcept
+{
+    this->abort_if_not_initialized("DataBuffer::clear");
+    int lock_error = this->lock_mutex();
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->set_operation_error(lock_error);
+        return ;
+    }
+    this->_buffer.clear();
+    this->_read_pos = 0;
     int unlock_error = this->unlock_mutex();
-    int final_error = FT_ERR_SUCCESS;
-    if (unlock_error != FT_ERR_SUCCESS)
-        final_error = unlock_error;
-    ft_global_error_stack_push(final_error);
+    this->set_operation_error(unlock_error);
     return ;
 }
 
 size_t DataBuffer::size() const noexcept
 {
+    this->abort_if_not_initialized("DataBuffer::size");
     int lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(lock_error);
+        const_cast<DataBuffer *>(this)->set_operation_error(lock_error);
         return (0);
     }
-    size_t result = this->_buffer.size();
+    size_t value = this->_buffer.size();
     int unlock_error = this->unlock_mutex();
-    int final_error = FT_ERR_SUCCESS;
-    if (unlock_error != FT_ERR_SUCCESS)
-        final_error = unlock_error;
-    ft_global_error_stack_push(final_error);
-    return (result);
+    const_cast<DataBuffer *>(this)->set_operation_error(unlock_error);
+    return (value);
 }
 
 const ft_vector<uint8_t>& DataBuffer::data() const noexcept
 {
-    int lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_error);
-        return (this->_buffer);
-    }
-    const ft_vector<uint8_t> *buffer_reference = &this->_buffer;
-    int unlock_error = this->unlock_mutex();
-    int final_error = FT_ERR_SUCCESS;
-    if (unlock_error != FT_ERR_SUCCESS)
-        final_error = unlock_error;
-    ft_global_error_stack_push(final_error);
-    return (*buffer_reference);
+    this->abort_if_not_initialized("DataBuffer::data");
+    const_cast<DataBuffer *>(this)->set_operation_error(FT_ERR_SUCCESS);
+    return (this->_buffer);
 }
 
 size_t DataBuffer::tell() const noexcept
 {
+    this->abort_if_not_initialized("DataBuffer::tell");
     int lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(lock_error);
+        const_cast<DataBuffer *>(this)->set_operation_error(lock_error);
         return (0);
     }
-    size_t position = this->_read_pos;
+    size_t value = this->_read_pos;
     int unlock_error = this->unlock_mutex();
-    int final_error = FT_ERR_SUCCESS;
-    if (unlock_error != FT_ERR_SUCCESS)
-        final_error = unlock_error;
-    ft_global_error_stack_push(final_error);
-    return (position);
+    const_cast<DataBuffer *>(this)->set_operation_error(unlock_error);
+    return (value);
 }
 
-bool DataBuffer::seek(size_t pos) noexcept
+bool DataBuffer::seek(size_t position) noexcept
 {
+    this->abort_if_not_initialized("DataBuffer::seek");
     int lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(lock_error);
+        this->set_operation_error(lock_error);
         return (false);
     }
-    bool result;
-    int final_error;
-
-    if (pos <= this->_buffer.size())
-    {
-        this->_read_pos = pos;
-        this->_ok = true;
-        result = true;
-        final_error = FT_ERR_SUCCESS;
-    }
-    else
-    {
-        this->_ok = false;
-        result = false;
-        final_error = FT_ERR_INVALID_ARGUMENT;
-    }
+    int operation_error = FT_ERR_SUCCESS;
+    if (position > this->_buffer.size())
+        operation_error = FT_ERR_INVALID_ARGUMENT;
+    if (operation_error == FT_ERR_SUCCESS)
+        this->_read_pos = position;
     int unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESS && final_error == FT_ERR_SUCCESS)
-        final_error = unlock_error;
-    ft_global_error_stack_push(final_error);
-    return (result);
+    if (unlock_error != FT_ERR_SUCCESS && operation_error == FT_ERR_SUCCESS)
+        operation_error = unlock_error;
+    this->set_operation_error(operation_error);
+    return (operation_error == FT_ERR_SUCCESS);
 }
 
 DataBuffer::operator bool() const noexcept
 {
-    int lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_error);
-        return (false);
-    }
-    bool state = this->_ok;
-    int final_error;
-
-    if (state)
-        final_error = FT_ERR_SUCCESS;
-    else
-        final_error = FT_ERR_INTERNAL;
-    int unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESS && final_error == FT_ERR_SUCCESS)
-        final_error = unlock_error;
-    ft_global_error_stack_push(final_error);
-    return (state);
+    this->abort_if_not_initialized("DataBuffer::operator bool");
+    const_cast<DataBuffer *>(this)->set_operation_error(FT_ERR_SUCCESS);
+    return (this->_ok);
 }
 
 bool DataBuffer::good() const noexcept
 {
-    int lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_error);
-        return (false);
-    }
-    bool state = this->_ok;
-    int final_error;
-
-    if (state)
-        final_error = FT_ERR_SUCCESS;
-    else
-        final_error = FT_ERR_INTERNAL;
-    int unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESS && final_error == FT_ERR_SUCCESS)
-        final_error = unlock_error;
-    ft_global_error_stack_push(final_error);
-    return (state);
+    this->abort_if_not_initialized("DataBuffer::good");
+    const_cast<DataBuffer *>(this)->set_operation_error(FT_ERR_SUCCESS);
+    return (this->_ok);
 }
 
 bool DataBuffer::bad() const noexcept
 {
-    int lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_error);
-        return (true);
-    }
-    bool result = !this->_ok;
-    int final_error = FT_ERR_SUCCESS;
-    int unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESS && final_error == FT_ERR_SUCCESS)
-        final_error = unlock_error;
-    ft_global_error_stack_push(final_error);
-    return (result);
+    this->abort_if_not_initialized("DataBuffer::bad");
+    const_cast<DataBuffer *>(this)->set_operation_error(FT_ERR_SUCCESS);
+    return (!this->_ok);
 }
 
-DataBuffer &DataBuffer::operator<<(size_t len)
+int DataBuffer::enable_thread_safety(void) noexcept
 {
-    int lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESS)
+    this->abort_if_not_initialized("DataBuffer::enable_thread_safety");
+    if (this->_mutex != ft_nullptr)
     {
-        ft_global_error_stack_push(lock_error);
-        return (*this);
+        this->set_operation_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
-    int final_error = this->write_length_locked(len);
-    if (final_error == FT_ERR_SUCCESS)
-        this->_ok = true;
-    else
-        this->_ok = false;
-    int unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESS && final_error == FT_ERR_SUCCESS)
-        final_error = unlock_error;
-    ft_global_error_stack_push(final_error);
-    return (*this);
+    pt_recursive_mutex *mutex_pointer = new (std::nothrow) pt_recursive_mutex();
+    if (mutex_pointer == ft_nullptr)
+    {
+        this->set_operation_error(FT_ERR_NO_MEMORY);
+        return (FT_ERR_NO_MEMORY);
+    }
+    int initialization_error = mutex_pointer->initialize();
+    if (initialization_error != FT_ERR_SUCCESS)
+    {
+        delete mutex_pointer;
+        this->set_operation_error(initialization_error);
+        return (initialization_error);
+    }
+    this->_mutex = mutex_pointer;
+    this->set_operation_error(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
-DataBuffer &DataBuffer::operator>>(size_t &len)
+void DataBuffer::disable_thread_safety(void) noexcept
 {
-    int lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESS)
+    this->abort_if_not_initialized("DataBuffer::disable_thread_safety");
+    if (this->_mutex != ft_nullptr)
     {
-        ft_global_error_stack_push(lock_error);
-        return (*this);
+        int destroy_error = this->_mutex->destroy();
+        (void)destroy_error;
+        delete this->_mutex;
+        this->_mutex = ft_nullptr;
     }
-    int final_error = this->read_length_locked(len);
-    if (final_error == FT_ERR_SUCCESS)
-        this->_ok = true;
-    else
-        this->_ok = false;
-    int unlock_error = this->unlock_mutex();
-    if (unlock_error != FT_ERR_SUCCESS && final_error == FT_ERR_SUCCESS)
-        final_error = unlock_error;
-    ft_global_error_stack_push(final_error);
-    return (*this);
+    this->set_operation_error(FT_ERR_SUCCESS);
+    return ;
+}
+
+bool DataBuffer::is_thread_safe(void) const noexcept
+{
+    this->abort_if_not_initialized("DataBuffer::is_thread_safe");
+    const_cast<DataBuffer *>(this)->set_operation_error(FT_ERR_SUCCESS);
+    return (this->_mutex != ft_nullptr);
+}
+
+int32_t DataBuffer::last_operation_error() noexcept
+{
+    return (DataBuffer::_last_error);
+}
+
+const char *DataBuffer::last_operation_error_str() noexcept
+{
+    return (ft_strerror(DataBuffer::last_operation_error()));
+}
+
+int32_t DataBuffer::get_operation_error() const noexcept
+{
+    return (this->_operation_error);
+}
+
+const char *DataBuffer::get_operation_error_str() const noexcept
+{
+    return (ft_strerror(this->_operation_error));
 }
 
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *DataBuffer::get_mutex_for_validation() const noexcept
 {
-    return (&(this->_mutex));
+    return (this->_mutex);
 }
 #endif

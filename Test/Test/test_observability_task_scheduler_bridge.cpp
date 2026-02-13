@@ -74,6 +74,7 @@ FT_TEST(test_observability_bridge_async_span, "observability bridge exports asyn
     observability_test_clear_spans();
     FT_ASSERT_EQ(0, observability_task_scheduler_bridge_initialize(&observability_test_exporter));
     ft_task_scheduler scheduler_instance(1);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.initialize());
     unsigned long long root_span;
     unsigned long long previous_span;
 
@@ -109,6 +110,7 @@ FT_TEST(test_observability_bridge_cancelled_span, "observability bridge marks ca
     observability_test_clear_spans();
     FT_ASSERT_EQ(0, observability_task_scheduler_bridge_initialize(&observability_test_exporter));
     ft_task_scheduler scheduler_instance(1);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.initialize());
     unsigned long long root_span;
     unsigned long long previous_span;
 
