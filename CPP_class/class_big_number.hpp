@@ -6,19 +6,26 @@
 #include "../PThread/recursive_mutex.hpp"
 #include <cstdint>
 
+class ft_big_number_proxy;
+
 class ft_big_number
 {
+    friend class ft_big_number_proxy;
+
     private:
         char*           _digits;
         ft_size_t       _size;
         ft_size_t       _capacity;
         bool            _is_negative;
         mutable pt_recursive_mutex *_mutex;
+        int             _operation_error;
+        static thread_local int _last_error;
 
         void    reserve(ft_size_t new_capacity) noexcept;
         void    shrink_capacity() noexcept;
         void    push_error_unlocked(int error_code) const noexcept;
         void    push_error(int error_code) const noexcept;
+        static int set_last_operation_error(int error_code) noexcept;
         int     lock_mutex(void) const noexcept;
         int     unlock_mutex(void) const noexcept;
         int     prepare_thread_safety(void) noexcept;
@@ -53,11 +60,11 @@ class ft_big_number
 
         ft_big_number& operator=(const ft_big_number& other) noexcept;
         ft_big_number& operator=(ft_big_number&& other) noexcept;
-        ft_big_number operator+(const ft_big_number& other) const noexcept;
-        ft_big_number operator-(const ft_big_number& other) const noexcept;
-        ft_big_number operator*(const ft_big_number& other) const noexcept;
-        ft_big_number operator/(const ft_big_number& other) const noexcept;
-        ft_big_number operator%(const ft_big_number& other) const noexcept;
+        ft_big_number_proxy operator+(const ft_big_number& other) const noexcept;
+        ft_big_number_proxy operator-(const ft_big_number& other) const noexcept;
+        ft_big_number_proxy operator*(const ft_big_number& other) const noexcept;
+        ft_big_number_proxy operator/(const ft_big_number& other) const noexcept;
+        ft_big_number_proxy operator%(const ft_big_number& other) const noexcept;
         bool          operator==(const ft_big_number& other) const noexcept;
         bool          operator!=(const ft_big_number& other) const noexcept;
         bool          operator<(const ft_big_number& other) const noexcept;
@@ -85,8 +92,6 @@ class ft_big_number
         static const char *operation_error_str_at(ft_size_t index) noexcept;
         void        reset_system_error() const noexcept;
         static int  last_error() noexcept;
-        static unsigned long long last_op_id() noexcept;
-        static int  error_for(unsigned long long operation_id) noexcept;
         static int  last_operation_error() noexcept;
         static int  operation_error_at(ft_size_t index) noexcept;
         static void pop_operation_errors() noexcept;
@@ -97,6 +102,40 @@ class ft_big_number
         pt_recursive_mutex    *get_mutex_for_testing() noexcept;
 #endif
 };
+
+class ft_big_number_proxy
+{
+    private:
+        ft_big_number _value;
+        int _last_error;
+
+    public:
+        ft_big_number_proxy() noexcept;
+        explicit ft_big_number_proxy(int error_code) noexcept;
+        ft_big_number_proxy(const ft_big_number &value) noexcept;
+        ft_big_number_proxy(const ft_big_number &value, int error_code) noexcept;
+        ft_big_number_proxy(const ft_big_number_proxy &other) noexcept;
+        ft_big_number_proxy(ft_big_number_proxy &&other) noexcept;
+        ~ft_big_number_proxy();
+
+        ft_big_number_proxy &operator=(const ft_big_number_proxy &other) noexcept;
+        ft_big_number_proxy &operator=(ft_big_number_proxy &&other) noexcept;
+
+        ft_big_number_proxy operator+(const ft_big_number &right) const noexcept;
+        ft_big_number_proxy operator-(const ft_big_number &right) const noexcept;
+        ft_big_number_proxy operator*(const ft_big_number &right) const noexcept;
+        ft_big_number_proxy operator/(const ft_big_number &right) const noexcept;
+        ft_big_number_proxy operator%(const ft_big_number &right) const noexcept;
+
+        operator ft_big_number() const noexcept;
+        int get_error() const noexcept;
+};
+
+ft_big_number_proxy operator+(const ft_big_number_proxy &left, const ft_big_number &right) noexcept;
+ft_big_number_proxy operator-(const ft_big_number_proxy &left, const ft_big_number &right) noexcept;
+ft_big_number_proxy operator*(const ft_big_number_proxy &left, const ft_big_number &right) noexcept;
+ft_big_number_proxy operator/(const ft_big_number_proxy &left, const ft_big_number &right) noexcept;
+ft_big_number_proxy operator%(const ft_big_number_proxy &left, const ft_big_number &right) noexcept;
 
 ft_string   big_number_to_hex_string(const ft_big_number& number) noexcept;
 ft_big_number   big_number_from_hex_string(const char* hex_digits) noexcept;

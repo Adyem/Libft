@@ -1,4 +1,5 @@
 #include "class_big_number.hpp"
+#include "class_string.hpp"
 
 ft_string big_number_to_hex_string(const ft_big_number& number) noexcept
 {

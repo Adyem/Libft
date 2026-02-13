@@ -2,29 +2,70 @@
 #include "../Errno/errno.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Basic/basic.hpp"
+#include "../Advanced/advanced.hpp"
 #include "../File/file_utils.hpp"
 #include "../JSon/json.hpp"
 #include "../PThread/mutex.hpp"
-#include "../PThread/pthread_internal.hpp"
+#include <new>
 #include <cstdio>
+
+static int cnfg_mutex_lock(pt_mutex *mutex, bool *lock_acquired)
+{
+    if (!mutex)
+        return (FT_ERR_SUCCESS);
+    int lock_result = mutex->lock();
+    if (lock_result == FT_ERR_SUCCESS && lock_acquired)
+        *lock_acquired = true;
+    return (lock_result);
+}
 
 static int cnfg_config_lock_if_enabled(cnfg_config *config, bool *lock_acquired)
 {
     if (!config || !config->mutex)
         return (FT_ERR_SUCCESS);
-    int lock_result = pt_mutex_lock_if_valid(config->mutex);
-    ft_global_error_stack_drop_last_error();
-    if (lock_result == FT_ERR_SUCCESS && lock_acquired)
-        *lock_acquired = true;
-    return (lock_result);
+    return (cnfg_mutex_lock(config->mutex, lock_acquired));
+}
+static int cnfg_mutex_unlock(pt_mutex *mutex)
+{
+    if (!mutex)
+        return (FT_ERR_SUCCESS);
+    return (mutex->unlock());
+}
+
+static int cnfg_mutex_create(pt_mutex **mutex_pointer)
+{
+    if (!mutex_pointer)
+        return (FT_ERR_INVALID_ARGUMENT);
+    if (*mutex_pointer != ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    pt_mutex *mutex = new (std::nothrow) pt_mutex();
+    if (!mutex)
+        return (FT_ERR_NO_MEMORY);
+    int initialize_error = mutex->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        delete mutex;
+        return (initialize_error);
+    }
+    *mutex_pointer = mutex;
+    return (FT_ERR_SUCCESS);
+}
+
+static void cnfg_mutex_destroy(pt_mutex **mutex_pointer)
+{
+    if (!mutex_pointer || *mutex_pointer == ft_nullptr)
+        return ;
+    pt_mutex *mutex = *mutex_pointer;
+    mutex->destroy();
+    delete mutex;
+    *mutex_pointer = ft_nullptr;
 }
 
 static void cnfg_config_unlock_guard(cnfg_config *config, bool lock_acquired)
 {
     if (!config || !config->mutex || !lock_acquired)
         return ;
-    pt_mutex_unlock_if_valid(config->mutex);
-    ft_global_error_stack_drop_last_error();
+    cnfg_mutex_unlock(config->mutex);
     return ;
 }
 
@@ -32,10 +73,9 @@ cnfg_config *cnfg_config_create()
 {
     cnfg_config *config;
 
-    config = static_cast<cnfg_config*>(cma_calloc(1, sizeof(cnfg_config)));
+    config = static_cast<cnfg_config*>(adv_calloc(1, sizeof(cnfg_config)));
     if (!config)
     {
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     if (cnfg_config_prepare_thread_safety(config) != 0)
@@ -43,7 +83,6 @@ cnfg_config *cnfg_config_create()
         cma_free(config);
         return (ft_nullptr);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (config);
 }
 
@@ -51,21 +90,17 @@ int cnfg_config_prepare_thread_safety(cnfg_config *config)
 {
     if (!config)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (config->mutex)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0);
     }
-    int mutex_error = pt_mutex_create_with_error(&config->mutex);
+    int mutex_error = cnfg_mutex_create(&config->mutex);
     if (mutex_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(mutex_error);
         return (-1);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -73,7 +108,7 @@ void cnfg_config_teardown_thread_safety(cnfg_config *config)
 {
     if (!config)
         return ;
-    pt_mutex_destroy(&config->mutex);
+    cnfg_mutex_destroy(&config->mutex);
     return ;
 }
 
@@ -94,7 +129,6 @@ void cnfg_free(cnfg_config *config)
 {
     if (!config)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     bool mutex_locked = false;
@@ -126,25 +160,9 @@ void cnfg_free(cnfg_config *config)
     }
     cma_free(config->entries);
     if (already_owned)
-    {
-        config->mutex->unlock(THREAD_ID);
-        int unlock_error;
-
-        if (config->mutex == ft_nullptr)
-            unlock_error = FT_ERR_SUCCESS;
-        else
-            unlock_error = ft_global_error_stack_drop_last_error();
-
-        if (unlock_error != FT_ERR_SUCCESS)
-            ft_global_error_stack_push(unlock_error);
-        else
-            ft_global_error_stack_push(FT_ERR_SUCCESS);
-    }
+        cnfg_mutex_unlock(config->mutex);
     else
-    {
         cnfg_config_unlock_guard(config, mutex_locked);
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
-    }
     cnfg_config_teardown_thread_safety(config);
     cma_free(config);
     return ;
@@ -154,7 +172,6 @@ cnfg_config *cnfg_parse(const char *filename)
 {
     if (!filename)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     FILE *file = ft_fopen(filename, "r");
@@ -183,10 +200,9 @@ cnfg_config *cnfg_parse(const char *filename)
                 current_section = ft_nullptr;
                 if (*(line_string + 1))
                 {
-                    current_section = cma_strdup(line_string + 1);
+                    current_section = adv_strdup(line_string + 1);
                     if (!current_section)
                     {
-                        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
                         cnfg_free(config);
                         ft_fclose(file);
                         return (ft_nullptr);
@@ -205,10 +221,9 @@ cnfg_config *cnfg_parse(const char *filename)
             char *value_start = trim_whitespace(equals_sign + 1);
             if (*key_start)
             {
-                key = cma_strdup(key_start);
+                key = adv_strdup(key_start);
                 if (!key)
                 {
-                    ft_global_error_stack_push(FT_ERR_NO_MEMORY);
                     cma_free(value);
                     cnfg_free(config);
                     if (current_section)
@@ -219,10 +234,9 @@ cnfg_config *cnfg_parse(const char *filename)
             }
             if (*value_start)
             {
-                value = cma_strdup(value_start);
+                value = adv_strdup(value_start);
                 if (!value)
                 {
-                    ft_global_error_stack_push(FT_ERR_NO_MEMORY);
                     cma_free(key);
                     cnfg_free(config);
                     if (current_section)
@@ -237,10 +251,9 @@ cnfg_config *cnfg_parse(const char *filename)
             char *key_start = trim_whitespace(line_string);
             if (*key_start)
             {
-                key = cma_strdup(key_start);
+                key = adv_strdup(key_start);
                 if (!key)
                 {
-                    ft_global_error_stack_push(FT_ERR_NO_MEMORY);
                     cnfg_free(config);
                     if (current_section)
                         cma_free(current_section);
@@ -252,7 +265,6 @@ cnfg_config *cnfg_parse(const char *filename)
         cnfg_entry *new_entries = static_cast<cnfg_entry*>(cma_realloc(config->entries, sizeof(cnfg_entry) * (config->entry_count + 1)));
         if (!new_entries)
         {
-            ft_global_error_stack_push(FT_ERR_NO_MEMORY);
             cma_free(key);
             cma_free(value);
             cnfg_free(config);
@@ -266,10 +278,9 @@ cnfg_config *cnfg_parse(const char *filename)
         new_entry->mutex = ft_nullptr;
         if (current_section)
         {
-            new_entry->section = cma_strdup(current_section);
+            new_entry->section = adv_strdup(current_section);
             if (!new_entry->section)
             {
-                ft_global_error_stack_push(FT_ERR_NO_MEMORY);
                 cma_free(key);
                 cma_free(value);
                 new_entry->key = ft_nullptr;
@@ -304,7 +315,6 @@ cnfg_config *cnfg_parse(const char *filename)
     if (current_section)
         cma_free(current_section);
     ft_fclose(file);
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (config);
 }
 
@@ -312,7 +322,6 @@ static cnfg_config *cnfg_parse_json(const char *filename)
 {
     if (!filename)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     FILE *file;
@@ -345,10 +354,9 @@ static cnfg_config *cnfg_parse_json(const char *filename)
     }
     if (count)
     {
-        config->entries = static_cast<cnfg_entry*>(cma_calloc(count, sizeof(cnfg_entry)));
+        config->entries = static_cast<cnfg_entry*>(adv_calloc(count, sizeof(cnfg_entry)));
         if (!config->entries)
         {
-            ft_global_error_stack_push(FT_ERR_NO_MEMORY);
             cnfg_config_teardown_thread_safety(config);
             cma_free(config);
             json_free_groups(groups);
@@ -366,10 +374,9 @@ static cnfg_config *cnfg_parse_json(const char *filename)
             entry->mutex = ft_nullptr;
             if (group_pointer->name)
             {
-                entry->section = cma_strdup(group_pointer->name);
+                entry->section = adv_strdup(group_pointer->name);
                 if (!entry->section)
                 {
-                    ft_global_error_stack_push(FT_ERR_NO_MEMORY);
                     config->entry_count = index;
                     cnfg_free(config);
                     json_free_groups(groups);
@@ -378,10 +385,9 @@ static cnfg_config *cnfg_parse_json(const char *filename)
             }
             if (item_pointer->key)
             {
-                entry->key = cma_strdup(item_pointer->key);
+                entry->key = adv_strdup(item_pointer->key);
                 if (!entry->key)
                 {
-                    ft_global_error_stack_push(FT_ERR_NO_MEMORY);
                     config->entry_count = index + 1;
                     cnfg_free(config);
                     json_free_groups(groups);
@@ -390,10 +396,9 @@ static cnfg_config *cnfg_parse_json(const char *filename)
             }
             if (item_pointer->value)
             {
-                entry->value = cma_strdup(item_pointer->value);
+                entry->value = adv_strdup(item_pointer->value);
                 if (!entry->value)
                 {
-                    ft_global_error_stack_push(FT_ERR_NO_MEMORY);
                     config->entry_count = index + 1;
                     cnfg_free(config);
                     json_free_groups(groups);
@@ -414,7 +419,6 @@ static cnfg_config *cnfg_parse_json(const char *filename)
     }
     config->entry_count = count;
     json_free_groups(groups);
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (config);
 }
 
@@ -432,13 +436,11 @@ cnfg_config *config_load_env()
     }
     if (!count)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (config);
     }
-    config->entries = static_cast<cnfg_entry*>(cma_calloc(count, sizeof(cnfg_entry)));
+    config->entries = static_cast<cnfg_entry*>(adv_calloc(count, sizeof(cnfg_entry)));
     if (!config->entries)
     {
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         cnfg_config_teardown_thread_safety(config);
         cma_free(config);
         return (ft_nullptr);
@@ -455,10 +457,9 @@ cnfg_config *config_load_env()
         if (equals_sign)
         {
             size_t key_length = static_cast<size_t>(equals_sign - pair);
-            entry->key = static_cast<char*>(cma_calloc(key_length + 1, sizeof(char)));
+            entry->key = static_cast<char*>(adv_calloc(key_length + 1, sizeof(char)));
             if (!entry->key)
             {
-                ft_global_error_stack_push(FT_ERR_NO_MEMORY);
                 config->entry_count = index;
                 cnfg_free(config);
                 return (ft_nullptr);
@@ -466,10 +467,9 @@ cnfg_config *config_load_env()
             ft_memcpy(entry->key, pair, key_length);
             if (equals_sign[1])
             {
-                entry->value = cma_strdup(equals_sign + 1);
+                entry->value = adv_strdup(equals_sign + 1);
                 if (!entry->value)
                 {
-                    ft_global_error_stack_push(FT_ERR_NO_MEMORY);
                     config->entry_count = index + 1;
                     cnfg_free(config);
                     return (ft_nullptr);
@@ -478,10 +478,9 @@ cnfg_config *config_load_env()
         }
         else if (pair)
         {
-            entry->key = cma_strdup(pair);
+            entry->key = adv_strdup(pair);
             if (!entry->key)
             {
-                ft_global_error_stack_push(FT_ERR_NO_MEMORY);
                 config->entry_count = index;
                 cnfg_free(config);
                 return (ft_nullptr);
@@ -497,27 +496,26 @@ cnfg_config *config_load_env()
         ++index;
     }
     config->entry_count = count;
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (config);
 }
 
 cnfg_config *config_load_file(const char *filename)
 {
+    cnfg_config *config;
+
     if (!filename)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     const char *dot = ft_strrchr(filename, '.');
     if (dot && ft_strcmp(dot, ".json") == 0)
     {
-        cnfg_config *config = cnfg_parse_json(filename);
+        config = cnfg_parse_json(filename);
         if (config)
-            ft_global_error_stack_push(FT_ERR_SUCCESS);
-        return (config);
+            return (config);
     }
-    cnfg_config *config = cnfg_parse(filename);
+    config = cnfg_parse(filename);
     if (config)
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
-    return (config);
+        return (config);
+    return (ft_nullptr);
 }

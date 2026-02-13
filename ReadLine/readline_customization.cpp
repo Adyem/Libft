@@ -181,23 +181,13 @@ static int rl_history_plain_load(void *context_pointer)
 
     path_context = static_cast<rl_history_path_context *>(context_pointer);
     if (path_context == ft_nullptr || path_context->path == ft_nullptr)
-    {
         return (-1);
-    }
     open_result = history_file.open(path_context->path, O_RDONLY);
     if (open_result != 0)
-    {
-        int error_code = history_file.get_error();
-
-        if (error_code == FT_ERR_NOT_FOUND)
-        {
-            return (0);
-        }
         return (-1);
-    }
     rl_clear_history();
     file_descriptor = history_file.get_fd();
-    if (history_file.get_error() != FT_ERR_SUCCESS)
+    if (file_descriptor == -1)
     {
         history_file.close();
         return (-1);

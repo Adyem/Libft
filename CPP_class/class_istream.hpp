@@ -2,6 +2,8 @@
 #define FT_ISTREAM_HPP
 
 #include <cstddef>
+#include <cstdint>
+#include <sys/types.h>
 #include "../PThread/recursive_mutex.hpp"
 
 class ft_istream
@@ -10,31 +12,35 @@ class ft_istream
         std::size_t _gcount;
         bool _is_valid;
         mutable pt_recursive_mutex *_mutex;
+        uint8_t _initialized_state;
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
 
+        static void abort_lifecycle_error(const char *method_name,
+                const char *reason) noexcept;
+        void abort_if_not_initialized(const char *method_name) const noexcept;
         int lock_mutex(void) const noexcept;
         int unlock_mutex(void) const noexcept;
-        int prepare_thread_safety(void) noexcept;
-        void teardown_thread_safety(void) noexcept;
-        int enable_thread_safety(void) noexcept;
-        void disable_thread_safety(void) noexcept;
-        bool is_thread_safe_enabled(void) const noexcept;
-        static int lock_pair(const ft_istream &first, const ft_istream &second,
-                const ft_istream *&lower, const ft_istream *&upper) noexcept;
-        static int unlock_pair(const ft_istream *lower, const ft_istream *upper) noexcept;
 
     protected:
         ft_istream() noexcept;
-        ft_istream(const ft_istream &other) noexcept;
-        ft_istream(ft_istream &&other) noexcept;
-        virtual std::size_t do_read(char *buffer, std::size_t count) = 0;
+        virtual ssize_t do_read(char *buffer, std::size_t count) = 0;
 
     public:
         virtual ~ft_istream() noexcept;
 
-        ft_istream &operator=(const ft_istream &other) noexcept;
-        ft_istream &operator=(ft_istream &&other) noexcept;
+        ft_istream(const ft_istream &other) noexcept = delete;
+        ft_istream(ft_istream &&other) noexcept = delete;
+        ft_istream &operator=(const ft_istream &other) noexcept = delete;
+        ft_istream &operator=(ft_istream &&other) noexcept = delete;
 
-        void read(char *buffer, std::size_t count);
+        int initialize() noexcept;
+        int destroy() noexcept;
+        int enable_thread_safety(void) noexcept;
+        void disable_thread_safety(void) noexcept;
+        bool is_thread_safe(void) const noexcept;
+        ssize_t read(char *buffer, std::size_t count) noexcept;
         std::size_t gcount() const noexcept;
         bool is_valid() const noexcept;
 #ifdef LIBFT_TEST_BUILD

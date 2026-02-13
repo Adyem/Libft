@@ -20,7 +20,7 @@ class ft_istringstream : public ft_istream
         ft_string str() const;
 
     protected:
-        std::size_t do_read(char *buffer, std::size_t count);
+        ssize_t do_read(char *buffer, std::size_t count);
 };
 
 ft_istringstream &operator>>(ft_istringstream &input, int &value);

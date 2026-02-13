@@ -1,231 +1,156 @@
 #include "class_fd_istream.hpp"
-#include "../Template/move.hpp"
-#include "../Errno/errno.hpp"
-#include "../PThread/pthread_internal.hpp"
 #include "class_nullptr.hpp"
+#include "../Errno/errno.hpp"
+#include "../Printf/printf.hpp"
+#include "../System_utils/system_utils.hpp"
+#include <new>
+
+void ft_fd_istream::abort_lifecycle_error(const char *method_name,
+    const char *reason) noexcept
+{
+    if (method_name == ft_nullptr)
+        method_name = "unknown";
+    if (reason == ft_nullptr)
+        reason = "unknown";
+    pf_printf_fd(2, "ft_fd_istream lifecycle error: %s: %s\n", method_name, reason);
+    su_abort();
+    return ;
+}
+
+void ft_fd_istream::abort_if_not_initialized(const char *method_name) const noexcept
+{
+    if (this->_initialized_state == ft_fd_istream::_state_initialized)
+        return ;
+    ft_fd_istream::abort_lifecycle_error(method_name, "called while object is not initialized");
+    return ;
+}
 
 int ft_fd_istream::lock_mutex(void) const noexcept
 {
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
-    return (pt_recursive_mutex_lock_with_error(*this->_mutex));
+    return (this->_mutex->lock());
 }
 
 int ft_fd_istream::unlock_mutex(void) const noexcept
 {
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
-    return (pt_recursive_mutex_unlock_with_error(*this->_mutex));
-}
-
-int ft_fd_istream::prepare_thread_safety(void) noexcept
-{
-    if (this->_mutex != ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
-    }
-    pt_recursive_mutex *mutex_pointer = ft_nullptr;
-    int mutex_error = pt_recursive_mutex_create_with_error(&mutex_pointer);
-    if (mutex_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(mutex_error);
-        return (mutex_error);
-    }
-    this->_mutex = mutex_pointer;
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
-    return (FT_ERR_SUCCESS);
-}
-
-void ft_fd_istream::teardown_thread_safety(void) noexcept
-{
-    pt_recursive_mutex_destroy(&this->_mutex);
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
-    return ;
+    return (this->_mutex->unlock());
 }
 
 int ft_fd_istream::enable_thread_safety(void) noexcept
 {
-    return (this->prepare_thread_safety());
+    pt_recursive_mutex *mutex_pointer;
+    int initialize_error;
+
+    this->abort_if_not_initialized("ft_fd_istream::enable_thread_safety");
+    if (this->_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
+    if (mutex_pointer == ft_nullptr)
+        return (FT_ERR_NO_MEMORY);
+    initialize_error = mutex_pointer->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        delete mutex_pointer;
+        return (initialize_error);
+    }
+    this->_mutex = mutex_pointer;
+    return (FT_ERR_SUCCESS);
 }
 
 void ft_fd_istream::disable_thread_safety(void) noexcept
 {
-    this->teardown_thread_safety();
+    this->abort_if_not_initialized("ft_fd_istream::disable_thread_safety");
+    if (this->_mutex == ft_nullptr)
+        return ;
+    this->_mutex->destroy();
+    delete this->_mutex;
+    this->_mutex = ft_nullptr;
     return ;
 }
 
-bool ft_fd_istream::is_thread_safe_enabled(void) const noexcept
+bool ft_fd_istream::is_thread_safe(void) const noexcept
 {
+    this->abort_if_not_initialized("ft_fd_istream::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
 ft_fd_istream::ft_fd_istream(int fd) noexcept
-    : _fd(fd)
-    , _mutex(ft_nullptr)
+    : ft_istream(), _fd(fd), _mutex(ft_nullptr),
+      _initialized_state(ft_fd_istream::_state_uninitialized)
 {
-    this->enable_thread_safety();
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
-    return ;
-}
-
-ft_fd_istream::ft_fd_istream(const ft_fd_istream &other) noexcept
-    : ft_istream(other)
-    , _fd(0)
-    , _mutex(ft_nullptr)
-{
-    int lock_error;
-
-    lock_error = other.lock_mutex();
-    if (lock_error != FT_ERR_SUCCESS)
+    int initialize_error = this->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(lock_error);
+        this->_initialized_state = ft_fd_istream::_state_destroyed;
         return ;
     }
-    this->_fd = other._fd;
-    other.unlock_mutex();
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
-    return ;
-}
-
-ft_fd_istream::ft_fd_istream(ft_fd_istream &&other) noexcept
-    : ft_istream(ft_move(other))
-    , _fd(0)
-    , _mutex(ft_nullptr)
-{
-    int lock_error;
-
-    lock_error = other.lock_mutex();
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_error);
-        return ;
-    }
-    this->_fd = other._fd;
-    other._fd = -1;
-    other.unlock_mutex();
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    this->_initialized_state = ft_fd_istream::_state_initialized;
+    initialize_error = this->enable_thread_safety();
+    if (initialize_error != FT_ERR_SUCCESS)
+        this->_initialized_state = ft_fd_istream::_state_destroyed;
     return ;
 }
 
 ft_fd_istream::~ft_fd_istream() noexcept
 {
-    this->disable_thread_safety();
+    if (this->_initialized_state == ft_fd_istream::_state_uninitialized)
+    {
+        ft_fd_istream::abort_lifecycle_error("ft_fd_istream::~ft_fd_istream",
+            "destructor called while object is uninitialized");
+        return ;
+    }
+    if (this->_initialized_state == ft_fd_istream::_state_initialized)
+    {
+        if (this->_mutex != ft_nullptr)
+            this->disable_thread_safety();
+        this->_initialized_state = ft_fd_istream::_state_destroyed;
+    }
     return ;
-}
-
-ft_fd_istream &ft_fd_istream::operator=(const ft_fd_istream &other) noexcept
-{
-    int lock_error;
-    int descriptor;
-
-    if (this == &other)
-    {
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
-        return (*this);
-    }
-    ft_istream::operator=(other);
-    lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_error);
-        return (*this);
-    }
-    descriptor = other.get_fd();
-    this->_fd = descriptor;
-    this->unlock_mutex();
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
-    return (*this);
-}
-
-ft_fd_istream &ft_fd_istream::operator=(ft_fd_istream &&other) noexcept
-{
-    int lock_error;
-    int descriptor;
-
-    if (this == &other)
-    {
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
-        return (*this);
-    }
-    ft_istream::operator=(ft_move(other));
-    lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_error);
-        return (*this);
-    }
-    descriptor = other.get_fd();
-    this->_fd = descriptor;
-    other.set_fd(-1);
-    this->unlock_mutex();
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
-    return (*this);
 }
 
 void ft_fd_istream::set_fd(int fd) noexcept
 {
-    int lock_error;
-
-    lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_error);
+    this->abort_if_not_initialized("ft_fd_istream::set_fd");
+    if (this->lock_mutex() != FT_ERR_SUCCESS)
         return ;
-    }
     this->_fd = fd;
     this->unlock_mutex();
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
 int ft_fd_istream::get_fd() const noexcept
 {
-    int lock_error;
     int descriptor;
 
-    lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_error);
+    this->abort_if_not_initialized("ft_fd_istream::get_fd");
+    if (this->lock_mutex() != FT_ERR_SUCCESS)
         return (-1);
-    }
     descriptor = this->_fd;
-    this->unlock_mutex();
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    if (this->unlock_mutex() != FT_ERR_SUCCESS)
+        return (-1);
     return (descriptor);
 }
 
-std::size_t ft_fd_istream::do_read(char *buffer, std::size_t count)
+ssize_t ft_fd_istream::do_read(char *buffer, std::size_t count)
 {
-    int lock_error;
     int descriptor;
+    int unlock_error;
     ssize_t result;
 
-    lock_error = this->lock_mutex();
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_error);
-        return (0);
-    }
+    this->abort_if_not_initialized("ft_fd_istream::do_read");
+    if (this->lock_mutex() != FT_ERR_SUCCESS)
+        return (-1);
     descriptor = this->_fd;
-    this->unlock_mutex();
+    unlock_error = this->unlock_mutex();
+    if (unlock_error != FT_ERR_SUCCESS)
+        return (-1);
     result = su_read(descriptor, buffer, count);
-    int read_error = ft_global_error_stack_drop_last_error();
     if (result < 0)
-    {
-        if (read_error == FT_ERR_SUCCESS)
-            read_error = FT_ERR_INVALID_HANDLE;
-        ft_global_error_stack_push(read_error);
-        return (0);
-    }
-    if (read_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(read_error);
-        return (0);
-    }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
-    return (static_cast<std::size_t>(result));
+        return (-1);
+    return (result);
 }
 
 #ifdef LIBFT_TEST_BUILD

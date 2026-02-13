@@ -1,12 +1,15 @@
 #include "class_big_number.hpp"
+#include "class_string.hpp"
 #include "../Errno/errno.hpp"
 #include "class_nullptr.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Basic/basic.hpp"
 #include "../PThread/pthread.hpp"
-#include "../PThread/pthread_internal.hpp"
 #include "../Template/move.hpp"
 #include <limits>
+#include <new>
+
+thread_local int ft_big_number::_last_error = FT_ERR_SUCCESS;
 
 struct ft_big_number_digit_entry
 {
@@ -65,12 +68,16 @@ static char ft_big_number_digit_symbol(int value) noexcept
 
 int ft_big_number::lock_mutex(void) const noexcept
 {
-    return (pt_recursive_mutex_lock_if_valid(this->_mutex));
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    return (this->_mutex->lock());
 }
 
 int ft_big_number::unlock_mutex(void) const noexcept
 {
-    return (pt_recursive_mutex_unlock_if_valid(this->_mutex));
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    return (this->_mutex->unlock());
 }
 
 int ft_big_number::lock_pair(const ft_big_number &first, const ft_big_number &second,
@@ -128,27 +135,45 @@ int ft_big_number::unlock_pair(const ft_big_number *lower, const ft_big_number *
 
 int ft_big_number::prepare_thread_safety(void) noexcept
 {
+    pt_recursive_mutex *mutex_pointer;
+    int mutex_error;
+
     if (this->_mutex != ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
+        this->push_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    pt_recursive_mutex *mutex_pointer = ft_nullptr;
-    int mutex_error = pt_recursive_mutex_create_with_error(&mutex_pointer);
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
+    if (mutex_pointer == ft_nullptr)
+    {
+        this->push_error(FT_ERR_NO_MEMORY);
+        return (FT_ERR_NO_MEMORY);
+    }
+    mutex_error = mutex_pointer->initialize();
     if (mutex_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(mutex_error);
+        delete mutex_pointer;
+        this->push_error(mutex_error);
         return (mutex_error);
     }
     this->_mutex = mutex_pointer;
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    this->push_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
 void ft_big_number::teardown_thread_safety(void) noexcept
 {
-    pt_recursive_mutex_destroy(&this->_mutex);
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    int destroy_error;
+
+    if (this->_mutex == ft_nullptr)
+    {
+        this->push_error(FT_ERR_SUCCESS);
+        return ;
+    }
+    destroy_error = this->_mutex->destroy();
+    delete this->_mutex;
+    this->_mutex = ft_nullptr;
+    this->push_error(destroy_error);
     return ;
 }
 
@@ -188,64 +213,40 @@ void ft_big_number::finalize_errno_keeper(int stored_errno) noexcept
 
 int ft_big_number::last_error() noexcept
 {
-
     return (ft_big_number::last_operation_error());
-}
-
-unsigned long long ft_big_number::last_op_id() noexcept
-{
-    ft_size_t depth = ft_global_error_stack_depth();
-
-    if (depth == 0)
-        return (0);
-    return (ft_global_error_stack_get_id_at(depth));
-}
-
-int ft_big_number::error_for(unsigned long long operation_id) noexcept
-{
-    ft_size_t index;
-
-    if (operation_id == 0)
-        return (FT_ERR_SUCCESS);
-    index = ft_global_error_stack_find_by_id(operation_id);
-    if (index == 0)
-        return (FT_ERR_SUCCESS);
-    return (ft_global_error_stack_error_at(index));
 }
 
 int ft_big_number::last_operation_error() noexcept
 {
-    return (ft_global_error_stack_peek_last_error());
+    return (ft_big_number::_last_error);
 }
 
 int ft_big_number::operation_error_at(ft_size_t index) noexcept
 {
-    return (ft_global_error_stack_error_at(index));
+    if (index == 0 || index > 1)
+        return (FT_ERR_SUCCESS);
+    return (ft_big_number::_last_error);
 }
 
 void ft_big_number::pop_operation_errors() noexcept
 {
-    ft_global_error_stack_pop_last();
+    ft_big_number::_last_error = FT_ERR_SUCCESS;
+    return ;
 }
 
 int ft_big_number::pop_oldest_operation_error() noexcept
 {
-    return (ft_global_error_stack_pop_last());
+    int error_code;
+
+    error_code = ft_big_number::_last_error;
+    ft_big_number::pop_operation_errors();
+    return (error_code);
 }
 
 int ft_big_number::operation_error_index() noexcept
 {
-    ft_size_t count;
-    ft_size_t index;
-
-    count = ft_global_error_stack_depth();
-    index = 1;
-    while (index <= count)
-    {
-        if (ft_global_error_stack_error_at(index) != FT_ERR_SUCCESS)
-            return (static_cast<int>(index));
-        index++;
-    }
+    if (ft_big_number::_last_error != FT_ERR_SUCCESS)
+        return (1);
     return (0);
 }
 
@@ -257,7 +258,8 @@ void ft_big_number::sleep_backoff() noexcept
 
 void ft_big_number::push_error_unlocked(int error_code) const noexcept
 {
-    ft_global_error_stack_push(error_code);
+    const_cast<ft_big_number *>(this)->_operation_error = error_code;
+    ft_big_number::set_last_operation_error(error_code);
     return ;
 }
 
@@ -265,6 +267,12 @@ void ft_big_number::push_error(int error_code) const noexcept
 {
     this->push_error_unlocked(error_code);
     return ;
+}
+
+int ft_big_number::set_last_operation_error(int error_code) noexcept
+{
+    ft_big_number::_last_error = error_code;
+    return (error_code);
 }
 
 void ft_big_number::clear_unlocked() noexcept
@@ -414,8 +422,10 @@ ft_big_number::ft_big_number() noexcept
     , _size(0)
     , _capacity(0)
     , _is_negative(false)
-    , _mutex()
+    , _mutex(ft_nullptr)
+    , _operation_error(FT_ERR_SUCCESS)
 {
+    this->enable_thread_safety();
     this->push_error(FT_ERR_SUCCESS);
     return ;
 }
@@ -426,6 +436,7 @@ ft_big_number::ft_big_number(const ft_big_number& other) noexcept
     , _capacity(0)
     , _is_negative(false)
     , _mutex(ft_nullptr)
+    , _operation_error(FT_ERR_SUCCESS)
 {
     this->enable_thread_safety();
     int lock_error = other.lock_mutex();
@@ -440,7 +451,7 @@ ft_big_number::ft_big_number(const ft_big_number& other) noexcept
     this->_is_negative = other._is_negative;
     if (other._digits && other._capacity > 0)
     {
-        this->_digits = static_cast<char*>(cma_calloc(other._capacity, sizeof(char)));
+        this->_digits = static_cast<char*>(cma_malloc(other._capacity * sizeof(char)));
         if (!this->_digits)
         {
             this->_size = 0;
@@ -453,6 +464,7 @@ ft_big_number::ft_big_number(const ft_big_number& other) noexcept
             this->push_error(FT_SYS_ERR_NO_MEMORY);
             return ;
         }
+        ft_bzero(this->_digits, other._capacity * sizeof(char));
         ft_memcpy(this->_digits, other._digits, other._size + 1);
     }
     int unlock_error = other.unlock_mutex();
@@ -471,6 +483,7 @@ ft_big_number::ft_big_number(ft_big_number&& other) noexcept
     , _capacity(0)
     , _is_negative(false)
     , _mutex(ft_nullptr)
+    , _operation_error(FT_ERR_SUCCESS)
 {
     this->enable_thread_safety();
     int lock_error = other.lock_mutex();
@@ -511,7 +524,7 @@ ft_big_number& ft_big_number::operator=(const ft_big_number& other) noexcept
 {
     if (this == &other)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
+        this->push_error(FT_ERR_SUCCESS);
         return (*this);
     }
     const ft_big_number *lower = ft_nullptr;
@@ -527,7 +540,7 @@ ft_big_number& ft_big_number::operator=(const ft_big_number& other) noexcept
     char *new_digits = ft_nullptr;
     if (other._digits && other._capacity > 0)
     {
-        new_digits = static_cast<char*>(cma_calloc(other._capacity, sizeof(char)));
+        new_digits = static_cast<char*>(cma_malloc(other._capacity * sizeof(char)));
         if (!new_digits)
         {
             ft_big_number::unlock_pair(lower, upper);
@@ -535,6 +548,7 @@ ft_big_number& ft_big_number::operator=(const ft_big_number& other) noexcept
             this->push_error(FT_SYS_ERR_NO_MEMORY);
             return (*this);
         }
+        ft_bzero(new_digits, other._capacity * sizeof(char));
         ft_memcpy(new_digits, other._digits, other._size + 1);
     }
     cma_free(this->_digits);
@@ -556,7 +570,7 @@ ft_big_number& ft_big_number::operator=(ft_big_number&& other) noexcept
 {
     if (this == &other)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
+        this->push_error(FT_ERR_SUCCESS);
         return (*this);
     }
     const ft_big_number *lower = ft_nullptr;
@@ -808,7 +822,7 @@ void ft_big_number::reserve(ft_size_t new_capacity) noexcept
     if (this->_digits)
         new_digits = static_cast<char*>(cma_realloc(this->_digits, new_capacity));
     else
-        new_digits = static_cast<char*>(cma_calloc(new_capacity, sizeof(char)));
+        new_digits = static_cast<char*>(cma_malloc(new_capacity * sizeof(char)));
     if (!new_digits)
     {
         this->push_error(FT_ERR_NO_MEMORY);
@@ -1247,7 +1261,7 @@ void ft_big_number::clear() noexcept
     return ;
 }
 
-ft_big_number ft_big_number::operator+(const ft_big_number& other) const noexcept
+ft_big_number_proxy ft_big_number::operator+(const ft_big_number& other) const noexcept
 {
     ft_big_number result;
     const ft_big_number *lower = ft_nullptr;
@@ -1326,7 +1340,7 @@ finalize_add:
     return (result);
 }
 
-ft_big_number ft_big_number::operator-(const ft_big_number& other) const noexcept
+ft_big_number_proxy ft_big_number::operator-(const ft_big_number& other) const noexcept
 {
     ft_big_number result;
     const ft_big_number *lower = ft_nullptr;
@@ -1425,7 +1439,7 @@ finalize_subtract:
     return (result);
 }
 
-ft_big_number ft_big_number::operator*(const ft_big_number& other) const noexcept
+ft_big_number_proxy ft_big_number::operator*(const ft_big_number& other) const noexcept
 {
     ft_big_number result;
     const ft_big_number *lower = ft_nullptr;
@@ -1541,7 +1555,7 @@ finalize_multiply:
     return (result);
 }
 
-ft_big_number ft_big_number::operator/(const ft_big_number& other) const noexcept
+ft_big_number_proxy ft_big_number::operator/(const ft_big_number& other) const noexcept
 {
     int stored_errno;
     ft_big_number result;
@@ -1701,7 +1715,7 @@ cleanup_division:
     return (result);
 }
 
-ft_big_number ft_big_number::operator%(const ft_big_number& other) const noexcept
+ft_big_number_proxy ft_big_number::operator%(const ft_big_number& other) const noexcept
 {
     int stored_errno;
     ft_big_number result;
@@ -2322,9 +2336,160 @@ ft_big_number ft_big_number::mod_pow(const ft_big_number& exponent, const ft_big
     return (accumulator);
 }
 
+ft_big_number_proxy::ft_big_number_proxy() noexcept
+    : _value(), _last_error(FT_ERR_SUCCESS)
+{
+    this->_value.push_error(this->_last_error);
+    return ;
+}
+
+ft_big_number_proxy::ft_big_number_proxy(int error_code) noexcept
+    : _value(), _last_error(error_code)
+{
+    this->_value.push_error(error_code);
+    return ;
+}
+
+ft_big_number_proxy::ft_big_number_proxy(const ft_big_number &value) noexcept
+    : _value(value), _last_error(ft_big_number::last_operation_error())
+{
+    this->_value.push_error(this->_last_error);
+    return ;
+}
+
+ft_big_number_proxy::ft_big_number_proxy(const ft_big_number &value, int error_code) noexcept
+    : _value(value), _last_error(error_code)
+{
+    this->_value.push_error(error_code);
+    return ;
+}
+
+ft_big_number_proxy::ft_big_number_proxy(const ft_big_number_proxy &other) noexcept
+    : _value(other._value), _last_error(other._last_error)
+{
+    this->_value.push_error(this->_last_error);
+    return ;
+}
+
+ft_big_number_proxy::ft_big_number_proxy(ft_big_number_proxy &&other) noexcept
+    : _value(ft_move(other._value)), _last_error(other._last_error)
+{
+    this->_value.push_error(this->_last_error);
+    other._last_error = FT_ERR_SUCCESS;
+    return ;
+}
+
+ft_big_number_proxy::~ft_big_number_proxy()
+{
+    return ;
+}
+
+ft_big_number_proxy &ft_big_number_proxy::operator=(const ft_big_number_proxy &other) noexcept
+{
+    this->_value = other._value;
+    this->_last_error = other._last_error;
+    this->_value.push_error(this->_last_error);
+    return (*this);
+}
+
+ft_big_number_proxy &ft_big_number_proxy::operator=(ft_big_number_proxy &&other) noexcept
+{
+    this->_value = ft_move(other._value);
+    this->_last_error = other._last_error;
+    this->_value.push_error(this->_last_error);
+    other._last_error = FT_ERR_SUCCESS;
+    return (*this);
+}
+
+ft_big_number_proxy ft_big_number_proxy::operator+(const ft_big_number &right) const noexcept
+{
+    if (this->_last_error != FT_ERR_SUCCESS)
+    {
+        ft_big_number::set_last_operation_error(this->_last_error);
+        return (ft_big_number_proxy(this->_last_error));
+    }
+    return (this->_value + right);
+}
+
+ft_big_number_proxy ft_big_number_proxy::operator-(const ft_big_number &right) const noexcept
+{
+    if (this->_last_error != FT_ERR_SUCCESS)
+    {
+        ft_big_number::set_last_operation_error(this->_last_error);
+        return (ft_big_number_proxy(this->_last_error));
+    }
+    return (this->_value - right);
+}
+
+ft_big_number_proxy ft_big_number_proxy::operator*(const ft_big_number &right) const noexcept
+{
+    if (this->_last_error != FT_ERR_SUCCESS)
+    {
+        ft_big_number::set_last_operation_error(this->_last_error);
+        return (ft_big_number_proxy(this->_last_error));
+    }
+    return (this->_value * right);
+}
+
+ft_big_number_proxy ft_big_number_proxy::operator/(const ft_big_number &right) const noexcept
+{
+    if (this->_last_error != FT_ERR_SUCCESS)
+    {
+        ft_big_number::set_last_operation_error(this->_last_error);
+        return (ft_big_number_proxy(this->_last_error));
+    }
+    return (this->_value / right);
+}
+
+ft_big_number_proxy ft_big_number_proxy::operator%(const ft_big_number &right) const noexcept
+{
+    if (this->_last_error != FT_ERR_SUCCESS)
+    {
+        ft_big_number::set_last_operation_error(this->_last_error);
+        return (ft_big_number_proxy(this->_last_error));
+    }
+    return (this->_value % right);
+}
+
+ft_big_number_proxy::operator ft_big_number() const noexcept
+{
+    this->_value.push_error(this->_last_error);
+    return (this->_value);
+}
+
+int ft_big_number_proxy::get_error() const noexcept
+{
+    return (this->_last_error);
+}
+
+ft_big_number_proxy operator+(const ft_big_number_proxy &left, const ft_big_number &right) noexcept
+{
+    return (left.operator+(right));
+}
+
+ft_big_number_proxy operator-(const ft_big_number_proxy &left, const ft_big_number &right) noexcept
+{
+    return (left.operator-(right));
+}
+
+ft_big_number_proxy operator*(const ft_big_number_proxy &left, const ft_big_number &right) noexcept
+{
+    return (left.operator*(right));
+}
+
+ft_big_number_proxy operator/(const ft_big_number_proxy &left, const ft_big_number &right) noexcept
+{
+    return (left.operator/(right));
+}
+
+ft_big_number_proxy operator%(const ft_big_number_proxy &left, const ft_big_number &right) noexcept
+{
+    return (left.operator%(right));
+}
+
 const char* ft_big_number::last_operation_error_str() noexcept
 {
-    const char* error_string = ft_global_error_stack_peek_last_error_str();
+    const char* error_string = ft_strerror(ft_big_number::last_operation_error());
 
     if (!error_string || error_string[0] == '\0')
         error_string = "unknown error";
@@ -2333,7 +2498,7 @@ const char* ft_big_number::last_operation_error_str() noexcept
 
 const char* ft_big_number::operation_error_str_at(ft_size_t index) noexcept
 {
-    const char* error_string = ft_global_error_stack_error_str_at(index);
+    const char* error_string = ft_strerror(ft_big_number::operation_error_at(index));
 
     if (!error_string || error_string[0] == '\0')
         error_string = "unknown error";
@@ -2362,6 +2527,6 @@ void ft_big_number::reset_system_error() const noexcept
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex* ft_big_number::get_mutex_for_testing() noexcept
 {
-    return (&(this->_mutex));
+    return (this->_mutex);
 }
 #endif
