@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 
-void blake2b_hash(const void *data, size_t length, unsigned char *digest, size_t digest_length);
-void blake2s_hash(const void *data, size_t length, unsigned char *digest, size_t digest_length);
+int blake2b_hash(const void *data, size_t length, unsigned char *digest, size_t digest_length);
+int blake2s_hash(const void *data, size_t length, unsigned char *digest, size_t digest_length);
 
 #endif

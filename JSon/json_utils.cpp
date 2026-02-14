@@ -6,15 +6,17 @@
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
 
+static thread_local int g_json_utils_last_error = FT_ERR_SUCCESS;
+
 static void json_utils_push_error(int error_code)
 {
-    ft_global_error_stack_push(error_code);
+    g_json_utils_last_error = error_code;
     return ;
 }
 
 static int json_utils_pop_error(void)
 {
-    return (ft_global_error_stack_drop_last_error());
+    return (g_json_utils_last_error);
 }
 
 static json_item *json_find_item_locked(json_group *group, const char *key)
@@ -198,7 +200,7 @@ void json_update_item(json_group *group, const char *key, const char *value)
     item->is_big_number = false;
     if (item->value)
         cma_free(item->value);
-    item->value = cma_strdup(value);
+    item->value = adv_strdup(value);
     if (!item->value)
     {
         json_item_set_error_unlocked(item, FT_ERR_NO_MEMORY);
@@ -269,7 +271,7 @@ void json_update_item(json_group *group, const char *key, const int value)
     item->is_big_number = false;
     if (item->value)
         cma_free(item->value);
-    item->value = cma_itoa(value);
+    item->value = adv_itoa(value);
     if (!item->value)
     {
         json_item_set_error_unlocked(item, FT_ERR_NO_MEMORY);
@@ -341,9 +343,9 @@ void json_update_item(json_group *group, const char *key, const bool value)
     if (item->value)
         cma_free(item->value);
     if (value == true)
-        item->value = cma_strdup("true");
+        item->value = adv_strdup("true");
     else
-        item->value = cma_strdup("false");
+        item->value = adv_strdup("false");
     if (!item->value)
     {
         json_item_set_error_unlocked(item, FT_ERR_NO_MEMORY);
@@ -414,7 +416,7 @@ void json_update_item(json_group *group, const char *key, const ft_big_number &v
     item->is_big_number = false;
     if (item->value)
         cma_free(item->value);
-    item->value = cma_strdup(value.c_str());
+    item->value = adv_strdup(value.c_str());
     if (!item->value)
     {
         json_item_set_error_unlocked(item, FT_ERR_NO_MEMORY);

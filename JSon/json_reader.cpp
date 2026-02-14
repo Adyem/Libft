@@ -9,6 +9,8 @@
 #include <cstdio>
 #include <limits>
 
+static thread_local int g_json_reader_last_error = FT_ERR_SUCCESS;
+
 static void skip_whitespace(const char *json_string, size_t &index)
 {
     while (json_string[index]
@@ -19,13 +21,13 @@ static void skip_whitespace(const char *json_string, size_t &index)
 
 static void json_reader_push_error(int error_code)
 {
-    ft_global_error_stack_push(error_code);
+    g_json_reader_last_error = error_code;
     return ;
 }
 
 static int json_reader_pop_error(void)
 {
-    return (ft_global_error_stack_drop_last_error());
+    return (g_json_reader_last_error);
 }
 
 static void json_reader_set_io_error(int last_error)
@@ -575,7 +577,7 @@ static char *parse_number(const char *json_string, size_t &index)
         json_reader_push_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
-    char *number = cma_substr(json_string,
+    char *number = adv_substr(json_string,
                                static_cast<unsigned int>(start_index),
                                index - start_index);
     int substr_error = json_reader_pop_error();
@@ -612,7 +614,7 @@ static char *parse_value(const char *json_string, size_t &index)
     if (length - index >= 4 && ft_strncmp(json_string + index, "true", 4) == 0)
     {
         index += 4;
-        char *value = cma_strdup("true");
+        char *value = adv_strdup("true");
         int string_error = json_reader_pop_error();
         if (!value)
         {
@@ -625,7 +627,7 @@ static char *parse_value(const char *json_string, size_t &index)
     if (length - index >= 5 && ft_strncmp(json_string + index, "false", 5) == 0)
     {
         index += 5;
-        char *value = cma_strdup("false");
+        char *value = adv_strdup("false");
         int string_error = json_reader_pop_error();
         if (!value)
         {

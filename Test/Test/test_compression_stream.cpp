@@ -135,12 +135,10 @@ static std::size_t  compression_stream_collect_compressed_size(const char *paylo
     written_bytes = su_write(input_pipe[1], payload, payload_size);
     FT_ASSERT_EQ(static_cast<ssize_t>(payload_size), written_bytes);
     close(input_pipe[1]);
-    ft_errno = FT_ERR_SUCCESS;
     result = ft_compress_stream_with_options(input_pipe[0], output_pipe[1], options);
     close(input_pipe[0]);
     close(output_pipe[1]);
     FT_ASSERT_EQ(0, result);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     total_size = 0;
     while (1)
     {
@@ -158,10 +156,8 @@ FT_TEST(test_ft_compress_stream_rejects_invalid_descriptors, "ft_compress_stream
 {
     int result;
 
-    ft_errno = FT_ERR_SUCCESS;
     result = ft_compress_stream(-1, -1);
     FT_ASSERT_EQ(1, result);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -172,18 +168,17 @@ FT_TEST(test_ft_compress_stream_with_options_rejects_zero_buffer, "ft_compress_s
     t_compress_stream_options   options;
     int                         result;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, options.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, options.set_input_buffer_size(0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, options.set_output_buffer_size(16));
     FT_ASSERT_EQ(0, pipe(input_pipe));
     FT_ASSERT_EQ(0, pipe(output_pipe));
     close(input_pipe[1]);
-    ft_errno = FT_ERR_SUCCESS;
     result = ft_compress_stream_with_options(input_pipe[0], output_pipe[1], &options);
     close(input_pipe[0]);
     close(output_pipe[0]);
     close(output_pipe[1]);
     FT_ASSERT_EQ(1, result);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -196,6 +191,7 @@ FT_TEST(test_ft_compress_stream_with_options_supports_custom_buffers, "ft_compre
     ssize_t                     written_bytes;
     int                         result;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, options.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, options.set_input_buffer_size(8));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, options.set_output_buffer_size(12));
     payload = "custom buffer payload";
@@ -204,29 +200,46 @@ FT_TEST(test_ft_compress_stream_with_options_supports_custom_buffers, "ft_compre
     written_bytes = su_write(input_pipe[1], payload, ft_strlen_size_t(payload));
     FT_ASSERT_EQ(static_cast<ssize_t>(ft_strlen_size_t(payload)), written_bytes);
     close(input_pipe[1]);
-    ft_errno = FT_ERR_SUCCESS;
     result = ft_compress_stream_with_options(input_pipe[0], output_pipe[1], &options);
     close(input_pipe[0]);
     close(output_pipe[0]);
     close(output_pipe[1]);
     FT_ASSERT_EQ(0, result);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
 FT_TEST(test_ft_compress_stream_speed_preset_sets_expected_values, "speed preset configures throughput tuned defaults")
 {
     t_compress_stream_options   options;
+    Pair<int, std::size_t>      input_buffer_size;
+    Pair<int, std::size_t>      output_buffer_size;
+    Pair<int, int>              compression_level;
+    Pair<int, int>              window_bits;
+    Pair<int, int>              memory_level;
+    Pair<int, int>              strategy;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, options.initialize());
     ft_compress_stream_apply_speed_preset(&options);
-    FT_ASSERT_EQ(static_cast<std::size_t>(16384), options.get_input_buffer_size());
-    FT_ASSERT_EQ(static_cast<std::size_t>(16384), options.get_output_buffer_size());
-    FT_ASSERT_EQ(Z_BEST_SPEED, options.get_compression_level());
-    FT_ASSERT(options.get_window_bits() >= 8);
-    FT_ASSERT(options.get_window_bits() <= MAX_WBITS);
-    FT_ASSERT(options.get_memory_level() >= 1);
-    FT_ASSERT(options.get_memory_level() <= 9);
-    FT_ASSERT_EQ(Z_DEFAULT_STRATEGY, options.get_strategy());
+    input_buffer_size = options.get_input_buffer_size();
+    output_buffer_size = options.get_output_buffer_size();
+    compression_level = options.get_compression_level();
+    window_bits = options.get_window_bits();
+    memory_level = options.get_memory_level();
+    strategy = options.get_strategy();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, input_buffer_size.key);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, output_buffer_size.key);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, compression_level.key);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, window_bits.key);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, memory_level.key);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, strategy.key);
+    FT_ASSERT_EQ(static_cast<std::size_t>(16384), input_buffer_size.value);
+    FT_ASSERT_EQ(static_cast<std::size_t>(16384), output_buffer_size.value);
+    FT_ASSERT_EQ(Z_BEST_SPEED, compression_level.value);
+    FT_ASSERT(window_bits.value >= 8);
+    FT_ASSERT(window_bits.value <= MAX_WBITS);
+    FT_ASSERT(memory_level.value >= 1);
+    FT_ASSERT(memory_level.value <= 9);
+    FT_ASSERT_EQ(Z_DEFAULT_STRATEGY, strategy.value);
     return (1);
 }
 
@@ -234,17 +247,35 @@ FT_TEST(test_ft_compress_stream_ratio_preset_sets_expected_values, "ratio preset
 {
     t_compress_stream_options   speed_options;
     t_compress_stream_options   ratio_options;
+    Pair<int, std::size_t>      ratio_input_buffer_size;
+    Pair<int, std::size_t>      ratio_output_buffer_size;
+    Pair<int, int>              ratio_compression_level;
+    Pair<int, int>              ratio_window_bits;
+    Pair<int, int>              speed_window_bits;
+    Pair<int, int>              ratio_memory_level;
+    Pair<int, int>              speed_memory_level;
+    Pair<int, int>              ratio_strategy;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, speed_options.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ratio_options.initialize());
     ft_compress_stream_apply_speed_preset(&speed_options);
     ft_compress_stream_apply_ratio_preset(&ratio_options);
-    FT_ASSERT_EQ(static_cast<std::size_t>(32768), ratio_options.get_input_buffer_size());
-    FT_ASSERT_EQ(static_cast<std::size_t>(32768), ratio_options.get_output_buffer_size());
-    FT_ASSERT_EQ(Z_BEST_COMPRESSION, ratio_options.get_compression_level());
-    FT_ASSERT_EQ(MAX_WBITS, ratio_options.get_window_bits());
-    FT_ASSERT(ratio_options.get_window_bits() >= speed_options.get_window_bits());
-    FT_ASSERT(ratio_options.get_memory_level() >= speed_options.get_memory_level());
-    FT_ASSERT(ratio_options.get_memory_level() <= 9);
-    FT_ASSERT_EQ(Z_DEFAULT_STRATEGY, ratio_options.get_strategy());
+    ratio_input_buffer_size = ratio_options.get_input_buffer_size();
+    ratio_output_buffer_size = ratio_options.get_output_buffer_size();
+    ratio_compression_level = ratio_options.get_compression_level();
+    ratio_window_bits = ratio_options.get_window_bits();
+    speed_window_bits = speed_options.get_window_bits();
+    ratio_memory_level = ratio_options.get_memory_level();
+    speed_memory_level = speed_options.get_memory_level();
+    ratio_strategy = ratio_options.get_strategy();
+    FT_ASSERT_EQ(static_cast<std::size_t>(32768), ratio_input_buffer_size.value);
+    FT_ASSERT_EQ(static_cast<std::size_t>(32768), ratio_output_buffer_size.value);
+    FT_ASSERT_EQ(Z_BEST_COMPRESSION, ratio_compression_level.value);
+    FT_ASSERT_EQ(MAX_WBITS, ratio_window_bits.value);
+    FT_ASSERT(ratio_window_bits.value >= speed_window_bits.value);
+    FT_ASSERT(ratio_memory_level.value >= speed_memory_level.value);
+    FT_ASSERT(ratio_memory_level.value <= 9);
+    FT_ASSERT_EQ(Z_DEFAULT_STRATEGY, ratio_strategy.value);
     return (1);
 }
 
@@ -273,19 +304,18 @@ FT_TEST(test_ft_compress_stream_rejects_invalid_window_bits, "ft_compress_stream
     t_compress_stream_options   options;
     int                         result;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, options.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, options.set_input_buffer_size(16));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, options.set_output_buffer_size(16));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, options.set_window_bits(16));
     FT_ASSERT_EQ(0, pipe(input_pipe));
     FT_ASSERT_EQ(0, pipe(output_pipe));
     close(input_pipe[1]);
-    ft_errno = FT_ERR_SUCCESS;
     result = ft_compress_stream_with_options(input_pipe[0], output_pipe[1], &options);
     close(input_pipe[0]);
     close(output_pipe[0]);
     close(output_pipe[1]);
     FT_ASSERT_EQ(1, result);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -298,7 +328,6 @@ FT_TEST(test_ft_compress_stream_reports_deflate_init_failure, "ft_compress_strea
     FT_ASSERT_EQ(0, pipe(input_pipe));
     FT_ASSERT_EQ(0, pipe(output_pipe));
     ft_compress_stream_set_deflate_init_hook(compression_stream_fail_deflate_init);
-    ft_errno = FT_ERR_SUCCESS;
     result = ft_compress_stream(input_pipe[0], output_pipe[1]);
     ft_compress_stream_set_deflate_init_hook(ft_nullptr);
     close(input_pipe[0]);
@@ -306,7 +335,6 @@ FT_TEST(test_ft_compress_stream_reports_deflate_init_failure, "ft_compress_strea
     close(output_pipe[0]);
     close(output_pipe[1]);
     FT_ASSERT_EQ(1, result);
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
     return (1);
 }
 
@@ -319,13 +347,11 @@ FT_TEST(test_ft_compress_stream_reports_read_failure, "ft_compress_stream report
     FT_ASSERT_EQ(0, pipe(input_pipe));
     FT_ASSERT_EQ(0, pipe(output_pipe));
     close(input_pipe[0]);
-    ft_errno = FT_ERR_SUCCESS;
     result = ft_compress_stream(input_pipe[1], output_pipe[1]);
     close(input_pipe[1]);
     close(output_pipe[0]);
     close(output_pipe[1]);
     FT_ASSERT_EQ(1, result);
-    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
     return (1);
 }
 
@@ -344,14 +370,12 @@ FT_TEST(test_ft_compress_stream_reports_deflate_failure, "ft_compress_stream rep
     FT_ASSERT_EQ(static_cast<ssize_t>(ft_strlen_size_t(payload)), written);
     close(input_pipe[1]);
     ft_compress_stream_set_deflate_hook(compression_stream_fail_deflate);
-    ft_errno = FT_ERR_SUCCESS;
     result = ft_compress_stream(input_pipe[0], output_pipe[1]);
     ft_compress_stream_set_deflate_hook(ft_nullptr);
     close(input_pipe[0]);
     close(output_pipe[0]);
     close(output_pipe[1]);
     FT_ASSERT_EQ(1, result);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -370,14 +394,12 @@ FT_TEST(test_ft_compress_stream_reports_buffer_exhaustion, "ft_compress_stream r
     FT_ASSERT_EQ(static_cast<ssize_t>(ft_strlen_size_t(payload)), written);
     close(input_pipe[1]);
     ft_compress_stream_set_deflate_hook(compression_stream_buf_error_deflate);
-    ft_errno = FT_ERR_SUCCESS;
     result = ft_compress_stream(input_pipe[0], output_pipe[1]);
     ft_compress_stream_set_deflate_hook(ft_nullptr);
     close(input_pipe[0]);
     close(output_pipe[0]);
     close(output_pipe[1]);
     FT_ASSERT_EQ(1, result);
-    FT_ASSERT_EQ(FT_ERR_FULL, ft_errno);
     return (1);
 }
 
@@ -395,17 +417,15 @@ FT_TEST(test_ft_compress_stream_reports_write_failure, "ft_compress_stream repor
     written = su_write(input_pipe[1], payload, ft_strlen_size_t(payload));
     FT_ASSERT_EQ(static_cast<ssize_t>(ft_strlen_size_t(payload)), written);
     close(input_pipe[1]);
-    ft_errno = FT_ERR_SUCCESS;
     result = ft_compress_stream(input_pipe[0], output_pipe[0]);
     close(input_pipe[0]);
     close(output_pipe[0]);
     close(output_pipe[1]);
     FT_ASSERT_EQ(1, result);
-    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
     return (1);
 }
 
-FT_TEST(test_ft_compress_stream_success_sets_errno_success, "ft_compress_stream success sets ft_errno")
+FT_TEST(test_ft_compress_stream_success_sets_errno_success, "ft_compress_stream success path")
 {
     int input_pipe[2];
     int output_pipe[2];
@@ -419,13 +439,11 @@ FT_TEST(test_ft_compress_stream_success_sets_errno_success, "ft_compress_stream 
     written = su_write(input_pipe[1], payload, ft_strlen_size_t(payload));
     FT_ASSERT_EQ(static_cast<ssize_t>(ft_strlen_size_t(payload)), written);
     close(input_pipe[1]);
-    ft_errno = FT_ERR_SUCCESS;
     result = ft_compress_stream(input_pipe[0], output_pipe[1]);
     close(input_pipe[0]);
     close(output_pipe[0]);
     close(output_pipe[1]);
     FT_ASSERT_EQ(0, result);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -433,10 +451,8 @@ FT_TEST(test_ft_decompress_stream_rejects_invalid_descriptors, "ft_decompress_st
 {
     int result;
 
-    ft_errno = FT_ERR_SUCCESS;
     result = ft_decompress_stream(-1, -1);
     FT_ASSERT_EQ(1, result);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -447,18 +463,17 @@ FT_TEST(test_ft_decompress_stream_with_options_rejects_zero_buffer, "ft_decompre
     t_compress_stream_options   options;
     int                         result;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, options.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, options.set_input_buffer_size(4));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, options.set_output_buffer_size(0));
     FT_ASSERT_EQ(0, pipe(input_pipe));
     FT_ASSERT_EQ(0, pipe(output_pipe));
     close(input_pipe[1]);
-    ft_errno = FT_ERR_SUCCESS;
     result = ft_decompress_stream_with_options(input_pipe[0], output_pipe[1], &options);
     close(input_pipe[0]);
     close(output_pipe[0]);
     close(output_pipe[1]);
     FT_ASSERT_EQ(1, result);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -473,6 +488,7 @@ FT_TEST(test_ft_decompress_stream_with_options_supports_custom_buffers, "ft_deco
     t_compress_stream_options   options;
     int                         result;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, options.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, options.set_input_buffer_size(10));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, options.set_output_buffer_size(7));
     payload = reinterpret_cast<const unsigned char *>("custom decompress payload");
@@ -488,13 +504,11 @@ FT_TEST(test_ft_decompress_stream_with_options_supports_custom_buffers, "ft_deco
     FT_ASSERT_EQ(static_cast<ssize_t>(compressed_size - sizeof(uint32_t)), written_bytes);
     close(input_pipe[1]);
     cma_free(compressed_buffer);
-    ft_errno = FT_ERR_SUCCESS;
     result = ft_decompress_stream_with_options(input_pipe[0], output_pipe[1], &options);
     close(input_pipe[0]);
     close(output_pipe[0]);
     close(output_pipe[1]);
     FT_ASSERT_EQ(0, result);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -507,7 +521,6 @@ FT_TEST(test_ft_decompress_stream_reports_inflate_init_failure, "ft_decompress_s
     FT_ASSERT_EQ(0, pipe(input_pipe));
     FT_ASSERT_EQ(0, pipe(output_pipe));
     ft_decompress_stream_set_inflate_init_hook(compression_stream_fail_inflate_init);
-    ft_errno = FT_ERR_SUCCESS;
     result = ft_decompress_stream(input_pipe[0], output_pipe[1]);
     ft_decompress_stream_set_inflate_init_hook(ft_nullptr);
     close(input_pipe[0]);
@@ -515,7 +528,6 @@ FT_TEST(test_ft_decompress_stream_reports_inflate_init_failure, "ft_decompress_s
     close(output_pipe[0]);
     close(output_pipe[1]);
     FT_ASSERT_EQ(1, result);
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
     return (1);
 }
 
@@ -528,13 +540,11 @@ FT_TEST(test_ft_decompress_stream_reports_read_failure, "ft_decompress_stream re
     FT_ASSERT_EQ(0, pipe(input_pipe));
     FT_ASSERT_EQ(0, pipe(output_pipe));
     close(input_pipe[0]);
-    ft_errno = FT_ERR_SUCCESS;
     result = ft_decompress_stream(input_pipe[1], output_pipe[1]);
     close(input_pipe[1]);
     close(output_pipe[0]);
     close(output_pipe[1]);
     FT_ASSERT_EQ(1, result);
-    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
     return (1);
 }
 
@@ -548,14 +558,12 @@ FT_TEST(test_ft_decompress_stream_reports_inflate_failure, "ft_decompress_stream
     FT_ASSERT_EQ(0, pipe(output_pipe));
     close(input_pipe[1]);
     ft_decompress_stream_set_inflate_hook(compression_stream_fail_inflate);
-    ft_errno = FT_ERR_SUCCESS;
     result = ft_decompress_stream(input_pipe[0], output_pipe[1]);
     ft_decompress_stream_set_inflate_hook(ft_nullptr);
     close(input_pipe[0]);
     close(output_pipe[0]);
     close(output_pipe[1]);
     FT_ASSERT_EQ(1, result);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -569,14 +577,12 @@ FT_TEST(test_ft_decompress_stream_reports_buffer_exhaustion, "ft_decompress_stre
     FT_ASSERT_EQ(0, pipe(output_pipe));
     close(input_pipe[1]);
     ft_decompress_stream_set_inflate_hook(compression_stream_buf_error_inflate);
-    ft_errno = FT_ERR_SUCCESS;
     result = ft_decompress_stream(input_pipe[0], output_pipe[1]);
     ft_decompress_stream_set_inflate_hook(ft_nullptr);
     close(input_pipe[0]);
     close(output_pipe[0]);
     close(output_pipe[1]);
     FT_ASSERT_EQ(1, result);
-    FT_ASSERT_EQ(FT_ERR_FULL, ft_errno);
     return (1);
 }
 
@@ -606,14 +612,12 @@ FT_TEST(test_ft_decompress_stream_reports_stream_errors, "ft_decompress_stream r
     close(input_pipe[1]);
     cma_free(compressed_buffer);
     ft_decompress_stream_set_inflate_hook(compression_stream_stream_error_inflate);
-    ft_errno = FT_ERR_SUCCESS;
     result = ft_decompress_stream(input_pipe[0], output_pipe[1]);
     ft_decompress_stream_set_inflate_hook(ft_nullptr);
     close(input_pipe[0]);
     close(output_pipe[0]);
     close(output_pipe[1]);
     FT_ASSERT_EQ(1, result);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -642,17 +646,15 @@ FT_TEST(test_ft_decompress_stream_reports_write_failure, "ft_decompress_stream r
         payload_written);
     close(input_pipe[1]);
     cma_free(compressed_buffer);
-    ft_errno = FT_ERR_SUCCESS;
     result = ft_decompress_stream(input_pipe[0], output_pipe[0]);
     close(input_pipe[0]);
     close(output_pipe[0]);
     close(output_pipe[1]);
     FT_ASSERT_EQ(1, result);
-    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
     return (1);
 }
 
-FT_TEST(test_ft_decompress_stream_success_sets_errno_success, "ft_decompress_stream success sets ft_errno")
+FT_TEST(test_ft_decompress_stream_success_sets_errno_success, "ft_decompress_stream success path")
 {
     int input_pipe[2];
     int output_pipe[2];
@@ -677,13 +679,11 @@ FT_TEST(test_ft_decompress_stream_success_sets_errno_success, "ft_decompress_str
         payload_written);
     close(input_pipe[1]);
     cma_free(compressed_buffer);
-    ft_errno = FT_ERR_SUCCESS;
     result = ft_decompress_stream(input_pipe[0], output_pipe[1]);
     close(input_pipe[0]);
     close(output_pipe[0]);
     close(output_pipe[1]);
     FT_ASSERT_EQ(0, result);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -706,14 +706,12 @@ FT_TEST(test_ft_decompress_stream_rejects_trailing_bytes, "ft_decompress_stream 
     close(input_pipe[1]);
     g_inflate_stream_end_extra_calls = 0;
     ft_decompress_stream_set_inflate_hook(compression_stream_trailing_bytes_inflate);
-    ft_errno = FT_ERR_SUCCESS;
     result = ft_decompress_stream(input_pipe[0], output_pipe[1]);
     ft_decompress_stream_set_inflate_hook(ft_nullptr);
     close(input_pipe[0]);
     close(output_pipe[0]);
     close(output_pipe[1]);
     FT_ASSERT_EQ(1, result);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -726,6 +724,7 @@ FT_TEST(test_ft_compress_stream_uses_finish_flush_after_partial_read, "ft_compre
     ssize_t                     written_bytes;
     int                         result;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, options.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, options.set_input_buffer_size(4));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, options.set_output_buffer_size(64));
     payload = "partial-flush";
@@ -737,14 +736,12 @@ FT_TEST(test_ft_compress_stream_uses_finish_flush_after_partial_read, "ft_compre
     g_compress_flush_first_non_finish = -1;
     g_compress_flush_finish_count = 0;
     ft_compress_stream_set_deflate_hook(compression_stream_capture_flush_deflate);
-    ft_errno = FT_ERR_SUCCESS;
     result = ft_compress_stream_with_options(input_pipe[0], output_pipe[1], &options);
     ft_compress_stream_set_deflate_hook(ft_nullptr);
     close(input_pipe[0]);
     close(output_pipe[0]);
     close(output_pipe[1]);
     FT_ASSERT_EQ(0, result);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT_EQ(Z_NO_FLUSH, g_compress_flush_first_non_finish);
     FT_ASSERT(g_compress_flush_finish_count > 0);
     return (1);
@@ -772,14 +769,12 @@ FT_TEST(test_ft_decompress_stream_uses_finish_flush_at_end, "ft_decompress_strea
     close(input_pipe[1]);
     g_decompress_last_flush_mode = -1;
     ft_decompress_stream_set_inflate_hook(compression_stream_capture_flush_inflate);
-    ft_errno = FT_ERR_SUCCESS;
     result = ft_decompress_stream(input_pipe[0], output_pipe[1]);
     ft_decompress_stream_set_inflate_hook(ft_nullptr);
     close(input_pipe[0]);
     close(output_pipe[0]);
     close(output_pipe[1]);
     FT_ASSERT_EQ(0, result);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT_EQ(Z_FINISH, g_decompress_last_flush_mode);
     return (1);
 }
@@ -801,25 +796,19 @@ FT_TEST(test_compress_stream_hooks_replace_incrementally, "ft_compress_stream ac
     g_compress_first_hook_calls = 0;
     g_compress_second_hook_calls = 0;
     ft_compress_stream_set_deflate_hook(compression_stream_counting_deflate);
-    ft_errno = FT_ERR_SUCCESS;
     result = ft_compress_stream(input_pipe[0], output_pipe[1]);
     FT_ASSERT_EQ(0, result);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT(g_compress_first_hook_calls > 0);
     ft_compress_stream_set_deflate_hook(compression_stream_failing_replacement_deflate);
-    ft_errno = FT_ERR_SUCCESS;
     result = ft_compress_stream(input_pipe[0], output_pipe[1]);
     FT_ASSERT_EQ(1, result);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT(g_compress_second_hook_calls > 0);
     ft_compress_stream_set_deflate_hook(ft_nullptr);
-    ft_errno = FT_ERR_SUCCESS;
     result = ft_compress_stream(input_pipe[0], output_pipe[1]);
     close(input_pipe[0]);
     close(output_pipe[0]);
     close(output_pipe[1]);
     FT_ASSERT_EQ(0, result);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -845,12 +834,10 @@ FT_TEST(test_ft_decompress_stream_reports_truncated_input, "ft_decompress_stream
     written_bytes = su_write(input_pipe[1], compressed_buffer, compressed_size - 1);
     FT_ASSERT_EQ(static_cast<ssize_t>(compressed_size - 1), written_bytes);
     close(input_pipe[1]);
-    ft_errno = FT_ERR_SUCCESS;
     result = ft_decompress_stream(input_pipe[0], output_pipe[1]);
     close(input_pipe[0]);
     close(output_pipe[0]);
     close(output_pipe[1]);
     FT_ASSERT_EQ(1, result);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }

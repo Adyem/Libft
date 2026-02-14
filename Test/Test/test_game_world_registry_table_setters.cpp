@@ -14,6 +14,8 @@ FT_TEST(test_world_registry_setters, "world registry setter copies replace maps"
     ft_region_definition fetched_region;
     ft_world_region fetched_world;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, regions.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, worlds.initialize());
     regions.insert(2, ft_region_definition(2, ft_string("cave"), ft_string("dark"), 8));
     region_ids.push_back(2);
     worlds.insert(5, ft_world_region(5, region_ids));

@@ -6,7 +6,7 @@
 #define LIBFT_ENABLE_TIME_HELPERS 0
 #define LIBFT_ENABLE_BOUNDS_CHECKED_HELPERS 0
 #define LIBFT_ENABLE_LOCALE_HELPERS 0
-#include "../../Basic/basic.hpp"
+#include "../../Basic/config.hpp"
 #include "../../System_utils/test_runner.hpp"
 
 static_assert(LIBFT_HAS_ENVIRONMENT_HELPERS == 1, "environment helpers are always enabled");

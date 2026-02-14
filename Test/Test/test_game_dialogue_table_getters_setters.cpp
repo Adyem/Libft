@@ -92,6 +92,7 @@ FT_TEST(test_dialogue_table_set_lines_replaces_entries, "set_lines replaces stor
     ft_map<int, ft_dialogue_line> lines;
     ft_dialogue_line fetched;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, lines.initialize());
     build_dialogue_entries(line, script);
     table.register_line(line);
     table.fetch_line(99, fetched);
@@ -114,6 +115,7 @@ FT_TEST(test_dialogue_table_set_scripts_replaces_entries, "set_scripts swaps sto
     ft_map<int, ft_dialogue_script> scripts;
     ft_dialogue_script fetched;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scripts.initialize());
     build_dialogue_entries(line, script);
     table.register_script(script);
     table.fetch_script(11, fetched);

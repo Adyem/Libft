@@ -1,5 +1,4 @@
 #include "rng.hpp"
-#include "../Errno/errno.hpp"
 
 static uint64_t rng_splitmix64_next(uint64_t *state)
 {
@@ -21,28 +20,18 @@ static uint64_t rng_initialize_state(uint64_t base_seed, uint64_t stream_identif
 int rng_stream_seed(uint64_t base_seed, uint64_t stream_identifier, uint64_t *stream_seed)
 {
     if (stream_seed == ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
-    }
     uint64_t state = rng_initialize_state(base_seed, stream_identifier);
     *stream_seed = rng_splitmix64_next(&state);
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
 int rng_stream_seed_sequence(uint64_t base_seed, uint64_t stream_identifier, uint32_t *buffer, size_t count)
 {
     if (buffer == ft_nullptr && count > 0)
-    {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
-    }
     if (count == 0)
-    {
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0);
-    }
     uint64_t state = rng_initialize_state(base_seed, stream_identifier);
     size_t index = 0;
     while (index < count)
@@ -56,40 +45,21 @@ int rng_stream_seed_sequence(uint64_t base_seed, uint64_t stream_identifier, uin
             index++;
         }
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
 int rng_stream_seed_from_string(const char *seed_string, uint64_t stream_identifier, uint64_t *stream_seed)
 {
     if (seed_string == ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
-    }
     uint32_t base_seed_32 = ft_random_seed(seed_string);
-    int error_code = ft_global_error_stack_drop_last_error();
-    if (error_code != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(error_code);
-        return (-1);
-    }
     return (rng_stream_seed(static_cast<uint64_t>(base_seed_32), stream_identifier, stream_seed));
 }
 
 int rng_stream_seed_sequence_from_string(const char *seed_string, uint64_t stream_identifier, uint32_t *buffer, size_t count)
 {
     if (seed_string == ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
-    }
     uint32_t base_seed_32 = ft_random_seed(seed_string);
-    int error_code = ft_global_error_stack_drop_last_error();
-    if (error_code != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(error_code);
-        return (-1);
-    }
     return (rng_stream_seed_sequence(static_cast<uint64_t>(base_seed_32), stream_identifier, buffer, count));
 }

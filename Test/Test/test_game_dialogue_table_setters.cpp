@@ -15,6 +15,8 @@ FT_TEST(test_dialogue_table_setters, "dialogue table setter copies replace maps"
     ft_dialogue_line fetched_line;
     ft_dialogue_script fetched_script;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, lines.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scripts.initialize());
     followups.push_back(3);
     lines.insert(2, ft_dialogue_line(2, ft_string("npc"), ft_string("hi"), followups));
     script_lines.push_back(ft_dialogue_line(5, ft_string("npc"), ft_string("start"), followups));

@@ -55,22 +55,14 @@ static int sha3_hash_internal(const EVP_MD *algorithm, const void *data,
     return (FT_ERR_SUCCESS);
 }
 
-void sha3_256_hash(const void *data, size_t length, unsigned char *digest)
+int sha3_256_hash(const void *data, size_t length, unsigned char *digest)
 {
-    int error_code;
-
-    error_code = sha3_hash_internal(EVP_sha3_256(), data, length, digest, 32);
-    ft_global_error_stack_push(error_code);
-    return ;
+    return (sha3_hash_internal(EVP_sha3_256(), data, length, digest, 32));
 }
 
-void sha3_512_hash(const void *data, size_t length, unsigned char *digest)
+int sha3_512_hash(const void *data, size_t length, unsigned char *digest)
 {
-    int error_code;
-
-    error_code = sha3_hash_internal(EVP_sha3_512(), data, length, digest, 64);
-    ft_global_error_stack_push(error_code);
-    return ;
+    return (sha3_hash_internal(EVP_sha3_512(), data, length, digest, 64));
 }
 
 #endif

@@ -1,7 +1,6 @@
 #include "document.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
-#include "../Template/move.hpp"
 
 #include <cstdio>
 #include <cstddef>
@@ -9,9 +8,11 @@
 #include "../CMA/CMA.hpp"
 #include "../Basic/basic.hpp"
 
+static thread_local int g_json_document_last_error = FT_ERR_SUCCESS;
+
 static void json_document_push_error(int error_code)
 {
-    ft_global_error_stack_push(error_code);
+    g_json_document_last_error = error_code;
     return ;
 }
 
@@ -23,7 +24,7 @@ static void json_document_push_error(int error_code)
 
 static int json_document_last_error(void)
 {
-    return (ft_global_error_stack_peek_last_error());
+    return (g_json_document_last_error);
 }
 
 static char *json_document_unescape_pointer_token(const char *start, size_t length) noexcept
@@ -71,10 +72,14 @@ static char *json_document_unescape_pointer_token(const char *start, size_t leng
 static void json_document_finalize_guard(ft_unique_lock<pt_mutex> &guard) noexcept
 {
     int operation_error = json_document_last_error();
+    int guard_error;
 
     if (guard.owns_lock())
-        guard.unlock();
-    int guard_error = ft_global_error_stack_drop_last_error();
+        guard_error = guard.unlock();
+    else
+        guard_error = FT_ERR_SUCCESS;
+    if (guard.is_initialized())
+        guard.destroy();
 
     if (guard_error != FT_ERR_SUCCESS)
     {
@@ -105,18 +110,22 @@ void json_document::set_error(int error_code) const noexcept
 
 int json_document::lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept
 {
-    ft_unique_lock<pt_mutex> local_guard(this->_mutex);
-    {
-        int lock_error = ft_global_error_stack_drop_last_error();
+    int initialize_error;
+    int lock_error;
 
-        if (lock_error != FT_ERR_SUCCESS)
-        {
-            json_document_push_error(lock_error);
-            guard = ft_unique_lock<pt_mutex>();
-            return (lock_error);
-        }
+    initialize_error = guard.initialize(this->_mutex);
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        json_document_push_error(initialize_error);
+        return (initialize_error);
     }
-    guard = ft_move(local_guard);
+    lock_error = guard.lock();
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        guard.destroy();
+        json_document_push_error(lock_error);
+        return (lock_error);
+    }
     json_document_push_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }

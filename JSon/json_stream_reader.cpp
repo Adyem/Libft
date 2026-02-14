@@ -8,6 +8,8 @@
 
 #include <cctype>
 
+static thread_local int g_json_stream_last_error = FT_ERR_SUCCESS;
+
 static const size_t JSON_STREAM_READ_ERROR = static_cast<size_t>(-1);
 
 #define JSON_STREAM_STATUS_OK 0
@@ -16,13 +18,13 @@ static const size_t JSON_STREAM_READ_ERROR = static_cast<size_t>(-1);
 
 static void json_stream_push_error(int error_code)
 {
-    ft_global_error_stack_push(error_code);
+    g_json_stream_last_error = error_code;
     return ;
 }
 
 static int json_stream_pop_error(void)
 {
-    return (ft_global_error_stack_drop_last_error());
+    return (g_json_stream_last_error);
 }
 
 #define JSON_STREAM_ERROR_RETURN(code, value) \
@@ -41,14 +43,14 @@ struct json_stream_reader_error_guard
     }
     ~json_stream_reader_error_guard()
     {
-        ft_global_error_stack_push(*this->code);
+        g_json_stream_last_error = *this->code;
         return ;
     }
 };
 
 static int json_stream_last_error(void)
 {
-    return (ft_global_error_stack_peek_last_error());
+    return (g_json_stream_last_error);
 }
 
 static size_t json_stream_reader_file_callback(void *user_data, char *buffer, size_t max_size)
@@ -625,7 +627,7 @@ static char *json_stream_parse_value(json_stream_reader *reader)
     {
         if (json_stream_match_literal(reader, "true") != 0)
             return (ft_nullptr);
-        char *value = cma_strdup("true");
+        char *value = adv_strdup("true");
         if (!value)
         {
             JSON_STREAM_ERROR_RETURN(FT_ERR_NO_MEMORY, ft_nullptr);
@@ -636,7 +638,7 @@ static char *json_stream_parse_value(json_stream_reader *reader)
     {
         if (json_stream_match_literal(reader, "false") != 0)
             return (ft_nullptr);
-        char *value = cma_strdup("false");
+        char *value = adv_strdup("false");
         if (!value)
         {
             JSON_STREAM_ERROR_RETURN(FT_ERR_NO_MEMORY, ft_nullptr);

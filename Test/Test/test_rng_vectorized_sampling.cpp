@@ -15,13 +15,9 @@ FT_TEST(test_rng_vectorized_int_matches_scalar,
     size_t value_index;
 
     ft_seed_random_engine(123456789u);
-    if (ft_errno != FT_ERR_SUCCESS)
-        return (0);
     if (ft_random_int_vector(0, std::numeric_limits<int>::max(), vector_values, 8) != 0)
         return (0);
     ft_seed_random_engine(123456789u);
-    if (ft_errno != FT_ERR_SUCCESS)
-        return (0);
     value_index = 0;
     while (value_index < 8)
     {
@@ -47,13 +43,9 @@ FT_TEST(test_rng_vectorized_float_matches_scalar,
     float difference;
 
     ft_seed_random_engine(362436069u);
-    if (ft_errno != FT_ERR_SUCCESS)
-        return (0);
     if (ft_random_float_vector(vector_values, 8) != 0)
         return (0);
     ft_seed_random_engine(362436069u);
-    if (ft_errno != FT_ERR_SUCCESS)
-        return (0);
     value_index = 0;
     while (value_index < 8)
     {

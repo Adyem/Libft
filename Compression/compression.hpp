@@ -5,6 +5,7 @@
 #include <cstdint>
 #include "../CPP_class/class_string.hpp"
 #include "../PThread/mutex.hpp"
+#include "../Template/pair.hpp"
 #include "../Template/vector.hpp"
 
 static const std::size_t   compression_max_size = static_cast<std::size_t>(UINT32_MAX);
@@ -39,13 +40,27 @@ class t_compress_stream_options
         int                                     _memory_level;
         int                                     _strategy;
         mutable pt_mutex                        *_mutex;
+        uint8_t                                 _initialized_state;
+        static const uint8_t                    _state_uninitialized = 0;
+        static const uint8_t                    _state_destroyed = 1;
+        static const uint8_t                    _state_initialized = 2;
 
         int     lock_mutex() const;
         int     unlock_mutex() const;
+        void    abort_lifecycle_error(const char *method_name,
+                    const char *reason) const;
+        void    abort_if_not_initialized(const char *method_name) const;
+
+        t_compress_stream_options(const t_compress_stream_options &other) = delete;
+        t_compress_stream_options(t_compress_stream_options &&other) = delete;
+        t_compress_stream_options &operator=(const t_compress_stream_options &other) = delete;
+        t_compress_stream_options &operator=(t_compress_stream_options &&other) = delete;
 
     public:
         t_compress_stream_options(void);
         ~t_compress_stream_options(void);
+        int     initialize(void);
+        int     destroy(void);
         int     enable_thread_safety();
         void    disable_thread_safety();
 
@@ -61,15 +76,15 @@ class t_compress_stream_options
         int         set_window_bits(int window_bits);
         int         set_memory_level(int memory_level);
         int         set_strategy(int strategy);
-        std::size_t get_input_buffer_size() const;
-        std::size_t get_output_buffer_size() const;
-        t_compress_stream_progress_callback    get_progress_callback() const;
-        t_compress_stream_cancel_callback      get_cancel_callback() const;
-        void        *get_callback_user_data() const;
-        int         get_compression_level() const;
-        int         get_window_bits() const;
-        int         get_memory_level() const;
-        int         get_strategy() const;
+        Pair<int, std::size_t> get_input_buffer_size() const;
+        Pair<int, std::size_t> get_output_buffer_size() const;
+        Pair<int, t_compress_stream_progress_callback> get_progress_callback() const;
+        Pair<int, t_compress_stream_cancel_callback> get_cancel_callback() const;
+        Pair<int, void *> get_callback_user_data() const;
+        Pair<int, int> get_compression_level() const;
+        Pair<int, int> get_window_bits() const;
+        Pair<int, int> get_memory_level() const;
+        Pair<int, int> get_strategy() const;
         int         snapshot(struct s_compress_stream_options_snapshot *snapshot) const;
 };
 

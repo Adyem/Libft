@@ -372,7 +372,6 @@ FT_TEST(test_yaml_dom_bridge_round_trip, "yaml dom bridge round trips maps and a
     FT_ASSERT_EQ(FT_ERR_SUCCESS, round_trip_pointer->get_error());
     round_trip_items = round_trip_map.at(items_key);
     FT_ASSERT(round_trip_items != ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, round_trip_map.last_operation_error());
     FT_ASSERT_EQ(YAML_LIST, round_trip_items->get_type());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, round_trip_items->get_error());
     const ft_vector<yaml_value*> &round_trip_list = round_trip_items->get_list();

@@ -82,10 +82,7 @@ static uint64_t rsa_mod_pow(uint64_t base_value, uint64_t exponent_value, uint64
 int rsa_generate_key_pair(uint64_t *public_key, uint64_t *private_key, uint64_t *modulus, int bit_size)
 {
     if (!public_key || !private_key || !modulus)
-    {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (1);
-    }
     uint64_t limit_value = 1ULL << (bit_size / 2);
     uint64_t prime_one = rsa_generate_prime(limit_value);
     uint64_t prime_two = rsa_generate_prime(limit_value);
@@ -106,13 +103,9 @@ int rsa_generate_key_pair(uint64_t *public_key, uint64_t *private_key, uint64_t 
     else
         private_exponent = rsa_mod_inverse(public_exponent, phi_value);
     if (private_exponent == 0)
-    {
-        ft_global_error_stack_push(FT_ERR_TERMINATED);
         return (1);
-    }
     *public_key = public_exponent;
     *private_key = private_exponent;
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 

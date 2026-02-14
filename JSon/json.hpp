@@ -5,6 +5,7 @@
 #include "json_stream_reader.hpp"
 #include "json_stream_writer.hpp"
 #include "../Parser/document_backend.hpp"
+#include "../Advanced/advanced.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
 

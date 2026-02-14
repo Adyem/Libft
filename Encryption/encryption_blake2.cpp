@@ -65,26 +65,18 @@ static int blake2_hash_internal(const EVP_MD *algorithm, const void *data,
     return (FT_ERR_SUCCESS);
 }
 
-void blake2b_hash(const void *data, size_t length, unsigned char *digest,
+int blake2b_hash(const void *data, size_t length, unsigned char *digest,
     size_t digest_length)
 {
-    int error_code;
-
-    error_code = blake2_hash_internal(EVP_blake2b512(), data, length, digest,
-            digest_length, 64);
-    ft_global_error_stack_push(error_code);
-    return ;
+    return (blake2_hash_internal(EVP_blake2b512(), data, length, digest,
+            digest_length, 64));
 }
 
-void blake2s_hash(const void *data, size_t length, unsigned char *digest,
+int blake2s_hash(const void *data, size_t length, unsigned char *digest,
     size_t digest_length)
 {
-    int error_code;
-
-    error_code = blake2_hash_internal(EVP_blake2s256(), data, length, digest,
-            digest_length, 32);
-    ft_global_error_stack_push(error_code);
-    return ;
+    return (blake2_hash_internal(EVP_blake2s256(), data, length, digest,
+            digest_length, 32));
 }
 
 #endif

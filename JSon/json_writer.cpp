@@ -13,9 +13,11 @@
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
 
+static thread_local int g_json_writer_last_error = FT_ERR_SUCCESS;
+
 static void json_writer_push_error(int error_code)
 {
-    ft_global_error_stack_push(error_code);
+    g_json_writer_last_error = error_code;
     return ;
 }
 
@@ -27,7 +29,7 @@ static void json_writer_push_error(int error_code)
 
 static char *json_writer_return_failure(void)
 {
-    if (ft_global_error_stack_peek_last_error() == FT_ERR_SUCCESS)
+    if (g_json_writer_last_error == FT_ERR_SUCCESS)
         json_writer_push_error(FT_ERR_NO_MEMORY);
     return (ft_nullptr);
 }
@@ -110,19 +112,19 @@ int json_write_to_backend(ft_document_sink &sink, json_group *groups)
 
 char *json_write_to_string(json_group *groups)
 {
-    char *result = cma_strdup("{\n");
+    char *result = adv_strdup("{\n");
     if (!result)
         return (json_writer_return_failure());
     json_group *group_iterator = groups;
     while (group_iterator)
     {
-        char *line = cma_strjoin_multiple(3, "  \"", group_iterator->name, "\": {\n");
+        char *line = adv_strjoin_multiple(3, "  \"", group_iterator->name, "\": {\n");
         if (!line)
         {
             cma_free(result);
             return (json_writer_return_failure());
         }
-        char *temporary = cma_strjoin(result, line);
+        char *temporary = adv_strjoin(result, line);
         cma_free(result);
         cma_free(line);
         if (!temporary)
@@ -141,23 +143,23 @@ char *json_write_to_string(json_group *groups)
             if (item_iterator->next)
             {
                 if (is_big_number_value == true)
-                    line = cma_strjoin_multiple(5, "    \"", item_iterator->key, "\": ", value_text, ",\n");
+                    line = adv_strjoin_multiple(5, "    \"", item_iterator->key, "\": ", value_text, ",\n");
                 else
-                    line = cma_strjoin_multiple(5, "    \"", item_iterator->key, "\": \"", value_text, "\",\n");
+                    line = adv_strjoin_multiple(5, "    \"", item_iterator->key, "\": \"", value_text, "\",\n");
             }
             else
             {
                 if (is_big_number_value == true)
-                    line = cma_strjoin_multiple(5, "    \"", item_iterator->key, "\": ", value_text, "\n");
+                    line = adv_strjoin_multiple(5, "    \"", item_iterator->key, "\": ", value_text, "\n");
                 else
-                    line = cma_strjoin_multiple(5, "    \"", item_iterator->key, "\": \"", value_text, "\"\n");
+                    line = adv_strjoin_multiple(5, "    \"", item_iterator->key, "\": \"", value_text, "\"\n");
             }
             if (!line)
             {
                 cma_free(result);
                 return (json_writer_return_failure());
             }
-            temporary = cma_strjoin(result, line);
+            temporary = adv_strjoin(result, line);
             cma_free(result);
             cma_free(line);
             if (!temporary)
@@ -166,15 +168,15 @@ char *json_write_to_string(json_group *groups)
             item_iterator = item_iterator->next;
         }
         if (group_iterator->next)
-            line = cma_strdup("  },\n");
+            line = adv_strdup("  },\n");
         else
-            line = cma_strdup("  }\n");
+            line = adv_strdup("  }\n");
         if (!line)
         {
             cma_free(result);
             return (json_writer_return_failure());
         }
-        temporary = cma_strjoin(result, line);
+        temporary = adv_strjoin(result, line);
         cma_free(result);
         cma_free(line);
         if (!temporary)
@@ -182,13 +184,13 @@ char *json_write_to_string(json_group *groups)
         result = temporary;
         group_iterator = group_iterator->next;
     }
-    char *end_line = cma_strdup("}\n");
+    char *end_line = adv_strdup("}\n");
     if (!end_line)
     {
         cma_free(result);
         return (json_writer_return_failure());
     }
-    char *temporary = cma_strjoin(result, end_line);
+    char *temporary = adv_strjoin(result, end_line);
     cma_free(result);
     cma_free(end_line);
     if (!temporary)

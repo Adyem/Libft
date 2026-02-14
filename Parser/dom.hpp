@@ -8,6 +8,11 @@
 
 class pt_mutex;
 
+typedef struct s_ft_operation_error_stack
+{
+    int last_error;
+} ft_operation_error_stack;
+
 enum ft_dom_node_type
 {
     FT_DOM_NODE_NULL,

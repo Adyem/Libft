@@ -3,17 +3,16 @@
 #include "../Errno/errno.hpp"
 #include "../Basic/basic.hpp"
 #include "../Printf/printf.hpp"
+#include "../File/file_utils.hpp"
 #include "../JSon/json.hpp"
 #include <cstddef>
 #include "../PThread/mutex.hpp"
-#include "../PThread/pthread_internal.hpp"
 
 static int cnfg_config_lock_if_enabled(cnfg_config *config, bool *lock_acquired)
 {
     if (!config || !config->mutex)
         return (FT_ERR_SUCCESS);
-    int lock_result = pt_mutex_lock_if_valid(config->mutex);
-    ft_global_error_stack_drop_last_error();
+    int lock_result = config->mutex->lock();
     if (lock_result == FT_ERR_SUCCESS && lock_acquired)
         *lock_acquired = true;
     return (lock_result);
@@ -23,22 +22,15 @@ static void cnfg_config_unlock_guard(cnfg_config *config, bool lock_acquired)
 {
     if (!config || !config->mutex || !lock_acquired)
         return ;
-    pt_mutex_unlock_if_valid(config->mutex);
-    ft_global_error_stack_drop_last_error();
+    config->mutex->unlock();
     return ;
 }
 
 static int config_handle_write_failure(FILE *file)
 {
-    int error_code;
-
-    error_code = ft_global_error_stack_peek_last_error();
     if (file)
         ft_fclose(file);
-    if (error_code == FT_ERR_SUCCESS)
-        error_code = FT_ERR_IO;
-    ft_global_error_stack_push(error_code);
-    return (-1);
+    return (FT_ERR_IO);
 }
 
 static int config_write_ini(const cnfg_config *config, const char *filename)
@@ -92,7 +84,6 @@ static int config_write_ini(const cnfg_config *config, const char *filename)
     }
     if (ft_fclose(file) == EOF)
         return (-1);
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -103,7 +94,6 @@ static json_group *config_find_or_create_group(json_group **groups_head, const c
 
     if (!groups_head)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     name = section_name;
@@ -143,7 +133,6 @@ static int config_write_json(const cnfg_config *config, const char *filename)
         const cnfg_entry *entry = &config->entries[entry_index];
         if (!entry->key || !entry->value)
         {
-            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
             json_free_groups(groups);
             return (-1);
         }
@@ -179,18 +168,15 @@ int config_write_file(const cnfg_config *config, const char *filename)
 
     if (!config || !filename)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     lock_error = cnfg_config_lock_if_enabled(const_cast<cnfg_config*>(config), &mutex_locked);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(lock_error);
         return (-1);
     }
     if (config->entry_count && !config->entries)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         cnfg_config_unlock_guard(const_cast<cnfg_config*>(config), mutex_locked);
         return (-1);
     }

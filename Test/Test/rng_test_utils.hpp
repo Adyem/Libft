@@ -4,6 +4,7 @@
 #include "../../Basic/basic.hpp"
 #include "../../RNG/rng.hpp"
 #include "../../RNG/rng_internal.hpp"
+#include "../../System_utils/system_utils.hpp"
 
 static uint32_t    ft_rng_test_seed_value(uint32_t default_seed, const char *context)
 {

@@ -78,6 +78,7 @@ FT_TEST(test_behavior_table_set_profiles_replaces_contents, "set_profiles swaps 
     ft_map<int, ft_behavior_profile> profiles;
     ft_behavior_profile fetched;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profiles.initialize());
     table.register_profile(build_profile(5, 0.6, 0.4, 11));
     profiles.insert(9, build_profile(9, 0.2, 0.8, 15));
     table.set_profiles(profiles);
@@ -92,6 +93,7 @@ FT_TEST(test_behavior_table_set_profiles_resets_errno, "set_profiles resets call
     ft_behavior_table table;
     ft_map<int, ft_behavior_profile> profiles;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profiles.initialize());
     profiles.insert(3, build_profile(3, 0.3, 0.7, 8));
     ft_errno = FT_ERR_INVALID_OPERATION;
     table.set_profiles(profiles);

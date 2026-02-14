@@ -59,6 +59,7 @@ FT_TEST(test_world_registry_set_world_regions_sets_errno_success, "set_world_reg
     ft_vector<int> region_ids;
     ft_world_region fetched_world;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world_regions.initialize());
     region_ids.push_back(12);
     world_regions.insert(3, ft_world_region(3, region_ids));
     ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;

@@ -42,7 +42,7 @@ bool ft_dom_node::thread_guard::lock_acquired() const noexcept
 
 ft_dom_node::ft_dom_node() noexcept
     : _type(FT_DOM_NODE_NULL), _name(), _value(),
-    _children(), _attribute_keys(), _attribute_values(), _operation_errors({{}, {}, 0}),
+    _children(), _attribute_keys(), _attribute_values(), _operation_errors({FT_ERR_SUCCESS}),
     _mutex(ft_nullptr), _thread_safe_enabled(false)
 {
     this->_name = "";
@@ -115,12 +115,7 @@ ft_dom_node::~ft_dom_node() noexcept
 
 void ft_dom_node::record_operation_error(int error_code) const noexcept
 {
-    unsigned long long operation_id;
-
-    operation_id = ft_errno_next_operation_id();
-    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(&this->_operation_errors,
-            error_code, operation_id);
+    this->_operation_errors.last_error = error_code;
     ft_errno = error_code;
     return ;
 }
@@ -627,7 +622,7 @@ bool ft_dom_node::is_thread_safe_enabled() const noexcept
 
 int ft_dom_node::get_error() const noexcept
 {
-    return (ft_operation_error_stack_last_error(&this->_operation_errors));
+    return (this->_operation_errors.last_error);
 }
 
 pt_mutex *ft_dom_node::mutex_handle() const noexcept
@@ -681,7 +676,7 @@ bool ft_dom_document::thread_guard::lock_acquired() const noexcept
 }
 
 ft_dom_document::ft_dom_document() noexcept
-    : _root(ft_nullptr), _mutex(ft_nullptr), _thread_safe_enabled(false), _operation_errors({{}, {}, 0})
+    : _root(ft_nullptr), _mutex(ft_nullptr), _thread_safe_enabled(false), _operation_errors({FT_ERR_SUCCESS})
 {
     if (this->prepare_thread_safety() != 0)
     {
@@ -701,12 +696,7 @@ ft_dom_document::~ft_dom_document() noexcept
 
 void ft_dom_document::record_operation_error(int error_code) const noexcept
 {
-    unsigned long long operation_id;
-
-    operation_id = ft_errno_next_operation_id();
-    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(&this->_operation_errors,
-            error_code, operation_id);
+    this->_operation_errors.last_error = error_code;
     ft_errno = error_code;
     return ;
 }
@@ -854,12 +844,12 @@ void ft_dom_document::clear() noexcept
 
 int ft_dom_document::get_error() const noexcept
 {
-    return (ft_operation_error_stack_last_error(&this->_operation_errors));
+    return (this->_operation_errors.last_error);
 }
 
 const char *ft_dom_document::get_error_str() const noexcept
 {
-    return (ft_strerror(ft_operation_error_stack_last_error(&this->_operation_errors)));
+    return (ft_strerror(this->_operation_errors.last_error));
 }
 
 pt_mutex *ft_dom_document::mutex_handle() const noexcept
@@ -919,18 +909,13 @@ ft_dom_validation_error::~ft_dom_validation_error() noexcept
 
 void ft_dom_validation_report::record_operation_error(int error_code) const noexcept
 {
-    unsigned long long operation_id;
-
-    operation_id = ft_errno_next_operation_id();
-    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(&this->_operation_errors,
-            error_code, operation_id);
+    this->_operation_errors.last_error = error_code;
     ft_errno = error_code;
     return ;
 }
 
 ft_dom_validation_report::ft_dom_validation_report() noexcept
-    : _valid(true), _errors(), _operation_errors({{}, {}, 0})
+    : _valid(true), _errors(), _operation_errors({FT_ERR_SUCCESS})
 {
     this->record_operation_error(FT_ERR_SUCCESS);
     return ;
@@ -975,12 +960,12 @@ bool ft_dom_validation_report::valid() const noexcept
 
 int ft_dom_validation_report::get_error() const noexcept
 {
-    return (ft_operation_error_stack_last_error(&this->_operation_errors));
+    return (this->_operation_errors.last_error);
 }
 
 const char *ft_dom_validation_report::get_error_str() const noexcept
 {
-    return (ft_strerror(ft_operation_error_stack_last_error(&this->_operation_errors)));
+    return (ft_strerror(this->_operation_errors.last_error));
 }
 
 const ft_operation_error_stack *ft_dom_validation_report::operation_error_stack_handle() const noexcept
@@ -1021,12 +1006,7 @@ const ft_vector<ft_dom_validation_error> &ft_dom_validation_report::errors() con
 
 void ft_dom_schema::record_operation_error(int error_code) const noexcept
 {
-    unsigned long long operation_id;
-
-    operation_id = ft_errno_next_operation_id();
-    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(&this->_operation_errors,
-            error_code, operation_id);
+    this->_operation_errors.last_error = error_code;
     ft_errno = error_code;
     return ;
 }
@@ -1037,7 +1017,7 @@ const ft_operation_error_stack *ft_dom_schema::operation_error_stack_handle() co
 }
 
 ft_dom_schema::ft_dom_schema() noexcept
-    : _rules(), _operation_errors({{}, {}, 0})
+    : _rules(), _operation_errors({FT_ERR_SUCCESS})
 {
     this->record_operation_error(FT_ERR_SUCCESS);
     return ;
@@ -1219,7 +1199,7 @@ int ft_dom_schema::validate(const ft_dom_document &document, ft_dom_validation_r
         }
         if (this->validate_rule(rule, root, ft_string(""), report) != 0)
         {
-            if (ft_operation_error_stack_last_error(&this->_operation_errors) != FT_ERR_SUCCESS)
+            if (this->_operation_errors.last_error != FT_ERR_SUCCESS)
                 return (-1);
         }
         index += 1;

@@ -111,6 +111,8 @@ FT_TEST(test_game_reputation_set_reps_replaces_entries, "ft_reputation::set_reps
     ft_map<int, int> initial_reps;
     ft_map<int, int> replacement_reps;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, initial_reps.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, replacement_reps.initialize());
     initial_reps.insert(1, 4);
     replacement_reps.insert(2, 6);
 
@@ -136,4 +138,3 @@ int test_reputation_subtracters(void)
     rep.sub_current_rep(3);
     return (rep.get_total_rep() == 12 && rep.get_current_rep() == 7);
 }
-

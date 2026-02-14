@@ -49,15 +49,12 @@ unsigned char    *ft_base64_encode(const unsigned char *input_buffer, std::size_
     int             has_byte_two;
     int             has_byte_three;
 
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     if (encoded_size == ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     if (input_buffer == ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         *encoded_size = 0;
         return (ft_nullptr);
     }
@@ -66,7 +63,6 @@ unsigned char    *ft_base64_encode(const unsigned char *input_buffer, std::size_
     output_buffer = static_cast<unsigned char *>(cma_malloc(output_length + 1));
     if (!output_buffer)
     {
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         *encoded_size = 0;
         return (ft_nullptr);
     }
@@ -119,7 +115,6 @@ unsigned char    *ft_base64_encode(const unsigned char *input_buffer, std::size_
     }
     output_buffer[output_index] = '\0';
     *encoded_size = output_index;
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (output_buffer);
 }
 
@@ -143,10 +138,8 @@ unsigned char    *ft_base64_decode(const unsigned char *input_buffer, std::size_
     int             has_char_three;
     int             has_char_four;
 
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     if (!input_buffer || !decoded_size)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     *decoded_size = 0;
@@ -163,24 +156,20 @@ unsigned char    *ft_base64_decode(const unsigned char *input_buffer, std::size_
         output_buffer = static_cast<unsigned char *>(cma_malloc(1));
         if (!output_buffer)
         {
-            ft_global_error_stack_push(FT_ERR_NO_MEMORY);
             *decoded_size = 0;
             return (ft_nullptr);
         }
         output_buffer[0] = '\0';
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (output_buffer);
     }
     if (sanitized_length % 4 == 1)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     output_length = ((sanitized_length + 3) / 4) * 3;
     output_buffer = static_cast<unsigned char *>(cma_malloc(output_length));
     if (!output_buffer)
     {
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         *decoded_size = 0;
         return (ft_nullptr);
     }
@@ -206,7 +195,6 @@ unsigned char    *ft_base64_decode(const unsigned char *input_buffer, std::size_
         {
             cma_free(output_buffer);
             *decoded_size = 0;
-            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
             return (ft_nullptr);
         }
         value_one = base64_char_value(chunk[0]);
@@ -214,7 +202,6 @@ unsigned char    *ft_base64_decode(const unsigned char *input_buffer, std::size_
         {
             cma_free(output_buffer);
             *decoded_size = 0;
-            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
             return (ft_nullptr);
         }
         value_two = base64_char_value(chunk[1]);
@@ -222,7 +209,6 @@ unsigned char    *ft_base64_decode(const unsigned char *input_buffer, std::size_
         {
             cma_free(output_buffer);
             *decoded_size = 0;
-            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
             return (ft_nullptr);
         }
         has_char_three = 0;
@@ -254,7 +240,6 @@ unsigned char    *ft_base64_decode(const unsigned char *input_buffer, std::size_
             {
                 cma_free(output_buffer);
                 *decoded_size = 0;
-                ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
                 return (ft_nullptr);
             }
         }
@@ -267,7 +252,6 @@ unsigned char    *ft_base64_decode(const unsigned char *input_buffer, std::size_
             {
                 cma_free(output_buffer);
                 *decoded_size = 0;
-                ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
                 return (ft_nullptr);
             }
         }
@@ -275,7 +259,6 @@ unsigned char    *ft_base64_decode(const unsigned char *input_buffer, std::size_
         {
             cma_free(output_buffer);
             *decoded_size = 0;
-            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
             return (ft_nullptr);
         }
         if ((has_char_three && char_three == '=') || (has_char_four && char_four == '='))
@@ -284,7 +267,6 @@ unsigned char    *ft_base64_decode(const unsigned char *input_buffer, std::size_
             {
                 cma_free(output_buffer);
                 *decoded_size = 0;
-                ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
                 return (ft_nullptr);
             }
         }
@@ -302,6 +284,5 @@ unsigned char    *ft_base64_decode(const unsigned char *input_buffer, std::size_
         }
     }
     *decoded_size = output_index;
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (output_buffer);
 }

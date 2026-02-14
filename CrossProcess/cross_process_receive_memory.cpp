@@ -4,8 +4,6 @@
 #include <cstring>
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Compatebility/compatebility_cross_process.hpp"
-#include "../Errno/errno.hpp"
-#include "../Basic/basic.hpp"
 
 namespace
 {
@@ -13,13 +11,7 @@ namespace
     {
         if (pointer_value < base_value)
             return (0);
-        return (static_cast<ft_size_t>(pointer_value - base_value));
-    }
-
-    static int cp_push_errno(void)
-    {
-        ft_global_error_stack_push(ft_map_system_error(errno));
-        return (-1);
+        return (pointer_value - base_value);
     }
 }
 
@@ -37,14 +29,14 @@ int cp_receive_memory(int socket_fd, cross_process_read_result &result)
     mapping.mutex_address = ft_nullptr;
     mutex_state.platform_mutex = ft_nullptr;
     if (cmp_cross_process_receive_descriptor(socket_fd, message) != 0)
-        return (cp_push_errno());
+        return (-1);
     result.shared_memory_name = message.shared_memory_name;
     if (cmp_cross_process_open_mapping(message, &mapping) != 0)
-        return (cp_push_errno());
+        return (-1);
     if (cmp_cross_process_lock_mutex(message, &mapping, &mutex_state) != 0)
     {
         cmp_cross_process_close_mapping(&mapping);
-        return (cp_push_errno());
+        return (-1);
     }
     data_offset = compute_offset(message.remote_memory_address, message.stack_base_address);
     if (data_offset >= message.remote_memory_size)
@@ -53,15 +45,15 @@ int cp_receive_memory(int socket_fd, cross_process_read_result &result)
         {
             cmp_cross_process_close_mapping(&mapping);
             errno = EINVAL;
-            return (cp_push_errno());
+            return (-1);
         }
         if (cmp_cross_process_close_mapping(&mapping) != 0)
         {
             errno = EINVAL;
-            return (cp_push_errno());
+            return (-1);
         }
         errno = EINVAL;
-        return (cp_push_errno());
+        return (-1);
     }
     payload_length = message.remote_memory_size - data_offset;
     result.payload.assign(reinterpret_cast<char *>(mapping.mapping_address + data_offset), payload_length);
@@ -70,21 +62,21 @@ int cp_receive_memory(int socket_fd, cross_process_read_result &result)
         ft_size_t error_offset;
 
         error_offset = compute_offset(message.error_memory_address, message.stack_base_address);
-        if (error_offset + static_cast<ft_size_t>(sizeof(int)) > message.remote_memory_size)
+        if (error_offset + sizeof(int) > message.remote_memory_size)
         {
         if (cmp_cross_process_unlock_mutex(message, &mapping, &mutex_state) != 0)
         {
             cmp_cross_process_close_mapping(&mapping);
             errno = EINVAL;
-            return (cp_push_errno());
+            return (-1);
         }
         if (cmp_cross_process_close_mapping(&mapping) != 0)
         {
             errno = EINVAL;
-            return (cp_push_errno());
+            return (-1);
         }
         errno = EINVAL;
-        return (cp_push_errno());
+        return (-1);
     }
         std::memset(mapping.mapping_address + error_offset, 0, sizeof(int));
     }
@@ -92,10 +84,9 @@ int cp_receive_memory(int socket_fd, cross_process_read_result &result)
     if (cmp_cross_process_unlock_mutex(message, &mapping, &mutex_state) != 0)
     {
         cmp_cross_process_close_mapping(&mapping);
-        return (cp_push_errno());
+        return (-1);
     }
     if (cmp_cross_process_close_mapping(&mapping) != 0)
-        return (cp_push_errno());
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+        return (-1);
     return (0);
 }

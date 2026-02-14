@@ -6,9 +6,11 @@
 #include "../Basic/basic.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 
+static thread_local int g_json_stream_writer_last_error = FT_ERR_SUCCESS;
+
 static void json_stream_writer_push_error(int error_code)
 {
-    ft_global_error_stack_push(error_code);
+    g_json_stream_writer_last_error = error_code;
     return ;
 }
 
@@ -20,7 +22,7 @@ static void json_stream_writer_push_error(int error_code)
 
 static int json_stream_writer_last_error(void)
 {
-    return (ft_global_error_stack_peek_last_error());
+    return (g_json_stream_writer_last_error);
 }
 
 static int json_stream_writer_write_chunk(json_stream_writer *writer,

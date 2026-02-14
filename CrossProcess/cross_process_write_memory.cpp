@@ -4,8 +4,6 @@
 #include <cstring>
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Compatebility/compatebility_cross_process.hpp"
-#include "../Errno/errno.hpp"
-#include "../Basic/basic.hpp"
 
 namespace
 {
@@ -13,13 +11,7 @@ namespace
     {
         if (pointer_value < base_value)
             return (0);
-        return (static_cast<ft_size_t>(pointer_value - base_value));
-    }
-
-    static int cp_push_errno(void)
-    {
-        ft_global_error_stack_push(ft_map_system_error(errno));
-        return (-1);
+        return (pointer_value - base_value);
     }
 }
 
@@ -38,13 +30,13 @@ int cp_write_memory(const cross_process_message &message, const unsigned char *p
     if (payload == ft_nullptr && payload_length != 0)
     {
         errno = EINVAL;
-        return (cp_push_errno());
+        return (-1);
     }
     data_offset = compute_offset(message.remote_memory_address, message.stack_base_address);
     if (data_offset >= message.remote_memory_size)
     {
         errno = EINVAL;
-        return (cp_push_errno());
+        return (-1);
     }
     full_capacity = message.remote_memory_size - data_offset;
     payload_capacity = full_capacity;
@@ -56,7 +48,7 @@ int cp_write_memory(const cross_process_message &message, const unsigned char *p
     if (has_error_slot)
     {
         error_offset = compute_offset(message.error_memory_address, message.stack_base_address);
-        if (error_offset + static_cast<ft_size_t>(sizeof(int)) > message.remote_memory_size || error_offset < data_offset)
+        if (error_offset + sizeof(int) > message.remote_memory_size || error_offset < data_offset)
         {
             has_failure = true;
             failure_errno = EINVAL;
@@ -81,11 +73,11 @@ int cp_write_memory(const cross_process_message &message, const unsigned char *p
     mapping.mutex_address = ft_nullptr;
     mutex_state.platform_mutex = ft_nullptr;
     if (cmp_cross_process_open_mapping(message, &mapping) != 0)
-        return (cp_push_errno());
+        return (-1);
     if (cmp_cross_process_lock_mutex(message, &mapping, &mutex_state) != 0)
     {
         cmp_cross_process_close_mapping(&mapping);
-        return (cp_push_errno());
+        return (-1);
     }
     zero_length = payload_capacity;
     if (zero_length > 0 && (!has_failure || zero_on_failure))
@@ -99,15 +91,14 @@ int cp_write_memory(const cross_process_message &message, const unsigned char *p
     if (cmp_cross_process_unlock_mutex(message, &mapping, &mutex_state) != 0)
     {
         cmp_cross_process_close_mapping(&mapping);
-        return (cp_push_errno());
+        return (-1);
     }
     if (cmp_cross_process_close_mapping(&mapping) != 0)
-        return (cp_push_errno());
+        return (-1);
     if (has_failure)
     {
         errno = failure_errno;
-        return (cp_push_errno());
+        return (-1);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }

@@ -16,7 +16,6 @@ json_item* json_create_item(const char *key, const char *value)
     json_item *item = new(std::nothrow) json_item;
     if (!item)
     {
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     item->key = ft_nullptr;
@@ -29,19 +28,17 @@ json_item* json_create_item(const char *key, const char *value)
         delete item;
         return (ft_nullptr);
     }
-    item->key = cma_strdup(key);
+    item->key = adv_strdup(key);
     if (!item->key)
     {
         delete item;
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
-    item->value = cma_strdup(value);
+    item->value = adv_strdup(value);
     if (!item->value)
     {
         cma_free(item->key);
         delete item;
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_item_refresh_numeric_state(item);
@@ -53,7 +50,6 @@ json_item* json_create_item(const char *key, const bool value)
     json_item *item = new(std::nothrow) json_item;
     if (!item)
     {
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     item->key = ft_nullptr;
@@ -66,22 +62,20 @@ json_item* json_create_item(const char *key, const bool value)
         delete item;
         return (ft_nullptr);
     }
-    item->key = cma_strdup(key);
+    item->key = adv_strdup(key);
     if (!item->key)
     {
         delete item;
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     if (value == true)
-        item->value = cma_strdup("true");
+        item->value = adv_strdup("true");
     else
-        item->value = cma_strdup("false");
+        item->value = adv_strdup("false");
     if (!item->value)
     {
         cma_free(item->key);
         delete item;
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_item_refresh_numeric_state(item);
@@ -93,7 +87,6 @@ json_item* json_create_item(const char *key, const int value)
     json_item *item = new(std::nothrow) json_item;
     if (!item)
     {
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     item->key = ft_nullptr;
@@ -106,19 +99,17 @@ json_item* json_create_item(const char *key, const int value)
         delete item;
         return (ft_nullptr);
     }
-    item->key = cma_strdup(key);
+    item->key = adv_strdup(key);
     if (!item->key)
     {
         delete item;
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
-    item->value = cma_itoa(value);
+    item->value = adv_itoa(value);
     if (!item->value)
     {
         cma_free(item->key);
         delete item;
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_item_refresh_numeric_state(item);

@@ -5,6 +5,7 @@
 #include <cstdint>
 
 #include "../PThread/recursive_mutex.hpp"
+#include "../Template/pair.hpp"
 
 class rng_stream
 {
@@ -25,20 +26,20 @@ class rng_stream
         rng_stream &operator=(rng_stream &&other) noexcept;
         ~rng_stream();
 
-        void    reseed(uint32_t seed_value);
-        void    reseed_from_string(const char *seed_string);
+        int     reseed(uint32_t seed_value);
+        int     reseed_from_string(const char *seed_string);
 
-        int     random_int();
-        int     dice_roll(int number, int faces);
-        float   random_float();
-        float   random_normal();
-        float   random_exponential(float lambda_value);
-        int     random_poisson(double lambda_value);
-        int     random_binomial(int trial_count, double success_probability);
-        int     random_geometric(double success_probability);
-        float   random_gamma(float shape, float scale);
-        float   random_beta(float alpha, float beta);
-        float   random_chi_squared(float degrees_of_freedom);
+        Pair<int, int> random_int();
+        Pair<int, int> dice_roll(int number, int faces);
+        Pair<int, float> random_float();
+        Pair<int, float> random_normal();
+        Pair<int, float> random_exponential(float lambda_value);
+        Pair<int, int> random_poisson(double lambda_value);
+        Pair<int, int> random_binomial(int trial_count, double success_probability);
+        Pair<int, int> random_geometric(double success_probability);
+        Pair<int, float> random_gamma(float shape, float scale);
+        Pair<int, float> random_beta(float alpha, float beta);
+        Pair<int, float> random_chi_squared(float degrees_of_freedom);
 
         pt_recursive_mutex   *mutex_handle();
         const pt_recursive_mutex   *mutex_handle() const;

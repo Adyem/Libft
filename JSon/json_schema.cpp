@@ -36,23 +36,14 @@ bool json_validate_schema(json_group *group, const json_schema &schema)
     int lock_error;
 
     if (!group)
-    {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (false);
-    }
     schema_mutable = const_cast<json_schema *>(&schema);
     validation_error = json_schema_enable_thread_safety(schema_mutable);
     if (validation_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(validation_error);
         return (false);
-    }
     lock_error = json_schema_lock(schema_mutable, schema_guard);
     if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_error);
         return (false);
-    }
     field = schema_mutable->fields;
     validation_result = true;
     validation_error = FT_ERR_SUCCESS;
@@ -132,11 +123,9 @@ bool json_validate_schema(json_group *group, const json_schema &schema)
     if (validation_result == true)
     {
         json_schema_set_error_unlocked(schema_mutable, FT_ERR_SUCCESS);
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (true);
     }
     if (validation_error == FT_ERR_SUCCESS)
         validation_error = schema_mutable->_error_code;
-    ft_global_error_stack_push(validation_error);
     return (false);
 }

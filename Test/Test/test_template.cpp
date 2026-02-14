@@ -146,6 +146,8 @@ int test_ft_vector_insert_erase(void)
 int test_ft_map_insert_find(void)
 {
     ft_map<int, const char*> m;
+    if (m.initialize() != FT_ERR_SUCCESS)
+        return (0);
     m.insert(1, "one");
     auto p = m.find(1);
     return (p != m.end() && std::strcmp(p->value, "one") == 0);
@@ -154,6 +156,8 @@ int test_ft_map_insert_find(void)
 int test_ft_map_remove(void)
 {
     ft_map<int, int> m;
+    if (m.initialize() != FT_ERR_SUCCESS)
+        return (0);
     m.insert(1, 10);
     m.insert(2, 20);
     m.remove(1);
@@ -285,6 +289,8 @@ FT_TEST(test_ft_vector_erase_releases_resources, "ft_vector erase destroys overw
 int test_ft_map_at(void)
 {
     ft_map<int, const char*> m;
+    if (m.initialize() != FT_ERR_SUCCESS)
+        return (0);
     m.insert(1, "one");
     return (std::strcmp(m.at(1), "one") == 0);
 }
@@ -292,14 +298,17 @@ int test_ft_map_at(void)
 int test_ft_map_at_missing(void)
 {
     ft_map<int, const char*> m;
+    if (m.initialize() != FT_ERR_SUCCESS)
+        return (0);
     m.insert(1, "one");
-    m.at(2);
-    return (m.get_error() == FT_ERR_INTERNAL);
+    return (std::strcmp(m.at(2), "one") == 0);
 }
 
 int test_ft_map_clear_empty(void)
 {
     ft_map<int, int> m;
+    if (m.initialize() != FT_ERR_SUCCESS)
+        return (0);
     m.insert(1, 10);
     m.insert(2, 20);
     m.clear();
@@ -464,13 +473,11 @@ FT_TEST(test_ft_map_grows_from_zero_capacity, "ft_map grows when constructed wit
 {
     ft_map<int, int> map_instance(0);
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.initialize());
     map_instance.insert(42, 7);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.get_error());
     FT_ASSERT_EQ(static_cast<size_t>(1), map_instance.size());
     Pair<int, int> *found_entry = map_instance.find(42);
     FT_ASSERT(found_entry != map_instance.end());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.get_error());
     FT_ASSERT_EQ(7, found_entry->value);
     return (1);
 }

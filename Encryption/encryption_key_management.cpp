@@ -5,18 +5,6 @@
 #include "../RNG/rng.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 
-static int encryption_key_report(int error_code, int return_value)
-{
-    ft_global_error_stack_push(error_code);
-    return (return_value);
-}
-
-static unsigned char *encryption_key_pointer_report(int error_code, unsigned char *result)
-{
-    ft_global_error_stack_push(error_code);
-    return (result);
-}
-
 static int encryption_fill_secure_buffer_internal(unsigned char *buffer, size_t buffer_length)
 {
     if (buffer == ft_nullptr)
@@ -35,14 +23,11 @@ static int encryption_fill_secure_buffer_internal(unsigned char *buffer, size_t 
 int encryption_fill_secure_buffer(unsigned char *buffer, size_t buffer_length)
 {
     int error_code;
-    int return_value;
 
     error_code = encryption_fill_secure_buffer_internal(buffer, buffer_length);
     if (error_code == FT_ERR_SUCCESS)
-        return_value = 0;
-    else
-        return_value = -1;
-    return (encryption_key_report(error_code, return_value));
+        return (0);
+    return (-1);
 }
 
 static unsigned char *encryption_allocate_key(size_t key_length, int *error_code)
@@ -105,17 +90,15 @@ static unsigned char *encryption_generate_symmetric_key_internal(size_t key_leng
 unsigned char *encryption_generate_symmetric_key(size_t key_length)
 {
     unsigned char *key_buffer;
-    int error_code;
 
-    key_buffer = encryption_generate_symmetric_key_internal(key_length, &error_code);
-    return (encryption_key_pointer_report(error_code, key_buffer));
+    key_buffer = encryption_generate_symmetric_key_internal(key_length, ft_nullptr);
+    return (key_buffer);
 }
 
 unsigned char *encryption_generate_initialization_vector(size_t iv_length)
 {
     unsigned char *key_buffer;
-    int error_code;
 
-    key_buffer = encryption_generate_symmetric_key_internal(iv_length, &error_code);
-    return (encryption_key_pointer_report(error_code, key_buffer));
+    key_buffer = encryption_generate_symmetric_key_internal(iv_length, ft_nullptr);
+    return (key_buffer);
 }

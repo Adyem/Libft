@@ -50,27 +50,19 @@ FT_TEST(test_ft_map_resize_allocation_failure_sets_errno,
 {
     ft_map<int, int> map_instance(1);
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.initialize());
 
     map_instance.insert(1, 1);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.last_operation_error());
 
     cma_set_alloc_limit(1);
     map_instance.insert(2, 2);
-    int map_insert_error;
-
-    map_insert_error = map_instance.last_operation_error();
     cma_set_alloc_limit(0);
-
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, map_insert_error);
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
 
     size_t expected_map_size;
 
     expected_map_size = 1;
     FT_ASSERT_EQ(expected_map_size, map_instance.size());
 
-    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 

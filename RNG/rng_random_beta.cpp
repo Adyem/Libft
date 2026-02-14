@@ -1,7 +1,5 @@
 #include "rng.hpp"
 #include "rng_internal.hpp"
-#include "../Errno/errno.hpp"
-#include "../PThread/unique_lock.hpp"
 #include <random>
 
 float ft_random_beta(float alpha, float beta)
@@ -12,38 +10,29 @@ float ft_random_beta(float alpha, float beta)
     float beta_sample;
     float sum;
     float result;
+    int lock_error;
+    int unlock_error;
 
     ft_init_random_engine();
     if (alpha <= 0.0f || beta <= 0.0f)
-    {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (0.0f);
-    }
     alpha_distribution = std::gamma_distribution<float>(alpha, 1.0f);
     beta_distribution = std::gamma_distribution<float>(beta, 1.0f);
-    {
-        ft_unique_lock<pt_mutex> guard(g_random_engine_mutex);
-        int error_code = ft_global_error_stack_drop_last_error();
-
-        if (error_code != FT_ERR_SUCCESS)
-        {
-            ft_global_error_stack_push(error_code);
-            return (0.0f);
-        }
-        alpha_sample = alpha_distribution(g_random_engine);
-        beta_sample = beta_distribution(g_random_engine);
-    }
+    lock_error = g_random_engine_mutex.lock();
+    if (lock_error != 0)
+        return (0.0f);
+    alpha_sample = alpha_distribution(g_random_engine);
+    beta_sample = beta_distribution(g_random_engine);
+    unlock_error = g_random_engine_mutex.unlock();
+    if (unlock_error != 0)
+        return (0.0f);
     sum = alpha_sample + beta_sample;
     if (sum <= 0.0f)
-    {
-        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
         return (0.0f);
-    }
     result = alpha_sample / sum;
     if (result < 0.0f)
         result = 0.0f;
     if (result > 1.0f)
         result = 1.0f;
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (result);
 }

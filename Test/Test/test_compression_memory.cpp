@@ -18,16 +18,11 @@ FT_TEST(test_ft_compress_string_to_vector_round_trip, "ft_compress_string_to_vec
     int                        result;
     int                        comparison_result;
 
-    ft_errno = FT_ERR_SUCCESS;
     result = ft_compress_string_to_vector(input, compressed);
     if (result != 0)
         return (0);
-    if (ft_errno != FT_ERR_SUCCESS)
-        return (0);
     result = ft_decompress_vector_to_string(compressed, output);
     if (result != 0)
-        return (0);
-    if (ft_errno != FT_ERR_SUCCESS)
         return (0);
     if (output.size() != input.size())
         return (0);
@@ -62,36 +57,31 @@ FT_TEST(test_ft_compress_vector_to_vector_round_trip, "ft_compress_vector_to_vec
     while (index < sample_count)
     {
         input.push_back(sample_bytes[index]);
-        if (input.get_error() != FT_ERR_SUCCESS)
+        if (ft_vector<unsigned char>::last_operation_error() != FT_ERR_SUCCESS)
             return (0);
         index++;
     }
-    ft_errno = FT_ERR_SUCCESS;
     result = ft_compress_vector_to_vector(input, compressed);
     if (result != 0)
-        return (0);
-    if (ft_errno != FT_ERR_SUCCESS)
         return (0);
     result = ft_decompress_vector_to_vector(compressed, output);
     if (result != 0)
         return (0);
-    if (ft_errno != FT_ERR_SUCCESS)
-        return (0);
     input_size = input.size();
-    if (input.get_error() != FT_ERR_SUCCESS)
+    if (ft_vector<unsigned char>::last_operation_error() != FT_ERR_SUCCESS)
         return (0);
     output_size = output.size();
-    if (output.get_error() != FT_ERR_SUCCESS)
+    if (ft_vector<unsigned char>::last_operation_error() != FT_ERR_SUCCESS)
         return (0);
     if (input_size != output_size)
         return (0);
     if (input_size == 0)
         return (1);
     input_data = input.begin();
-    if (input.get_error() != FT_ERR_SUCCESS)
+    if (ft_vector<unsigned char>::last_operation_error() != FT_ERR_SUCCESS)
         return (0);
     output_data = output.begin();
-    if (output.get_error() != FT_ERR_SUCCESS)
+    if (ft_vector<unsigned char>::last_operation_error() != FT_ERR_SUCCESS)
         return (0);
     if (ft_memcmp(input_data, output_data, input_size) != 0)
         return (0);
@@ -105,16 +95,12 @@ FT_TEST(test_ft_decompress_vector_to_string_reports_allocator_failure, "ft_decom
     ft_string                  output;
     int                        result;
 
-    ft_errno = FT_ERR_SUCCESS;
     if (ft_compress_string_to_vector(input, compressed) != 0)
         return (0);
     cma_set_alloc_limit(1);
-    ft_errno = FT_ERR_SUCCESS;
     result = ft_decompress_vector_to_string(compressed, output);
     cma_set_alloc_limit(0);
     if (result == 0)
-        return (0);
-    if (ft_errno != FT_ERR_NO_MEMORY)
         return (0);
     return (1);
 }

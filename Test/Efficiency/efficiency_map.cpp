@@ -16,6 +16,8 @@ int test_efficiency_map_insert_find(void)
     ft_map<int, int> ftm;
     long long sum = 0;
 
+    if (ftm.initialize() != FT_ERR_SUCCESS)
+        return (0);
     auto start_std = clock_type::now();
     for (int i = 0; i < iterations; ++i)
     {
@@ -59,6 +61,8 @@ int test_efficiency_map_insert_remove(void)
     std::map<int, int> stdm;
     ft_map<int, int> ftm;
 
+    if (ftm.initialize() != FT_ERR_SUCCESS)
+        return (0);
     auto start_std = clock_type::now();
     for (int i = 0; i < iterations; ++i)
     {
@@ -98,6 +102,8 @@ int test_efficiency_map_iterate(void)
     ft_map<int, int> ftm;
     long long sum = 0;
 
+    if (ftm.initialize() != FT_ERR_SUCCESS)
+        return (0);
     for (int i = 0; i < iterations; ++i)
     {
         stdm.insert(std::make_pair(i, i));
@@ -129,6 +135,8 @@ int test_efficiency_map_copy(void)
     ft_map<int, int> ft_src;
     long long sum = 0;
 
+    if (ft_src.initialize() != FT_ERR_SUCCESS)
+        return (0);
     for (int i = 0; i < iterations; ++i)
     {
         std_src.insert(std::make_pair(i, i));
@@ -140,7 +148,9 @@ int test_efficiency_map_copy(void)
     auto end_std = clock_type::now();
 
     auto start_ft = clock_type::now();
-    ft_map<int, int> ft_copy(ft_src);
+    ft_map<int, int> ft_copy;
+    if (ft_copy.copy_from(ft_src) != FT_ERR_SUCCESS)
+        return (0);
     auto end_ft = clock_type::now();
 
     for (std::map<int, int>::iterator it = std_copy.begin(); it != std_copy.end(); ++it)
@@ -163,6 +173,8 @@ int test_efficiency_map_move(void)
     ft_map<int, int> ft_src;
     long long sum = 0;
 
+    if (ft_src.initialize() != FT_ERR_SUCCESS)
+        return (0);
     for (int i = 0; i < iterations; ++i)
     {
         std_src.insert(std::make_pair(i, i));
@@ -174,7 +186,9 @@ int test_efficiency_map_move(void)
     auto end_std = clock_type::now();
 
     auto start_ft = clock_type::now();
-    ft_map<int, int> ft_moved(std::move(ft_src));
+    ft_map<int, int> ft_moved;
+    if (ft_moved.move_from(ft_src) != FT_ERR_SUCCESS)
+        return (0);
     auto end_ft = clock_type::now();
 
     for (std::map<int, int>::iterator it = std_moved.begin(); it != std_moved.end(); ++it)
@@ -197,6 +211,10 @@ int test_efficiency_map_swap(void)
     std::map<int, int> std_a, std_b;
     ft_map<int, int> ft_a, ft_b;
 
+    if (ft_a.initialize() != FT_ERR_SUCCESS)
+        return (0);
+    if (ft_b.initialize() != FT_ERR_SUCCESS)
+        return (0);
     for (int i = 0; i < elements; ++i)
     {
         std_a.insert(std::make_pair(i, i));
@@ -220,7 +238,13 @@ int test_efficiency_map_swap(void)
     {
         prevent_optimization((void*)&ft_a);
         prevent_optimization((void*)&ft_b);
-        ft_swap(ft_a, ft_b);
+        ft_map<int, int> temp;
+        if (temp.move_from(ft_a) != FT_ERR_SUCCESS)
+            return (0);
+        if (ft_a.move_from(ft_b) != FT_ERR_SUCCESS)
+            return (0);
+        if (ft_b.move_from(temp) != FT_ERR_SUCCESS)
+            return (0);
     }
     auto end_ft = clock_type::now();
 
@@ -243,6 +267,8 @@ int test_efficiency_map_clear(void)
     std::map<int, int> stdm;
     ft_map<int, int> ftm;
 
+    if (ftm.initialize() != FT_ERR_SUCCESS)
+        return (0);
     for (int i = 0; i < elements; ++i)
     {
         stdm.insert(std::make_pair(i, i));
@@ -268,4 +294,3 @@ int test_efficiency_map_clear(void)
         return (1);
     return (0);
 }
-

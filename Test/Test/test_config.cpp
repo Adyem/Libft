@@ -1,5 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../Config/config.hpp"
+#include "../../Advanced/advanced.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../CMA/CMA.hpp"
 #include "../../Errno/errno.hpp"
@@ -28,7 +29,7 @@ static cnfg_config *create_test_config(size_t entry_count)
         return (ft_nullptr);
     if (entry_count)
     {
-        config->entries = static_cast<cnfg_entry*>(cma_calloc(entry_count, sizeof(cnfg_entry)));
+        config->entries = static_cast<cnfg_entry*>(adv_calloc(entry_count, sizeof(cnfg_entry)));
         if (!config->entries)
         {
             cnfg_free(config);
@@ -41,19 +42,15 @@ static cnfg_config *create_test_config(size_t entry_count)
 
 FT_TEST(test_cnfg_parse_null_filename_sets_errno, "cnfg_parse rejects null filename")
 {
-    ft_errno = FT_ERR_SUCCESS;
     cnfg_config *config = cnfg_parse(ft_nullptr);
     FT_ASSERT(config == ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
 FT_TEST(test_config_load_file_null_filename_sets_errno, "config_load_file rejects null filename")
 {
-    ft_errno = FT_ERR_SUCCESS;
     cnfg_config *config = config_load_file(ft_nullptr);
     FT_ASSERT(config == ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -63,25 +60,24 @@ FT_TEST(test_cnfg_parse_success_sets_errno_success, "cnfg_parse loads ini files 
     cnfg_config *source = create_test_config(1);
     if (!source)
         return (0);
-    source->entries[0].section = cma_strdup("section");
+    source->entries[0].section = adv_strdup("section");
     if (!source->entries[0].section)
     {
         cnfg_free(source);
         return (0);
     }
-    source->entries[0].key = cma_strdup("key");
+    source->entries[0].key = adv_strdup("key");
     if (!source->entries[0].key)
     {
         cnfg_free(source);
         return (0);
     }
-    source->entries[0].value = cma_strdup("value");
+    source->entries[0].value = adv_strdup("value");
     if (!source->entries[0].value)
     {
         cnfg_free(source);
         return (0);
     }
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
     if (config_write_file(source, filename) != 0)
     {
         cnfg_free(source);
@@ -89,10 +85,8 @@ FT_TEST(test_cnfg_parse_success_sets_errno_success, "cnfg_parse loads ini files 
         return (0);
     }
     cnfg_free(source);
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
     cnfg_config *config = cnfg_parse(filename);
     FT_ASSERT(config != ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT(config->entry_count == 1);
     FT_ASSERT(config->entries[0].section != ft_nullptr);
     FT_ASSERT(std::strcmp(config->entries[0].section, "section") == 0);
@@ -112,13 +106,13 @@ FT_TEST(test_cnfg_parse_missing_value_handles_entries, "cnfg_parse accepts missi
     cnfg_config *source = create_test_config(2);
     if (!source)
         return (0);
-    source->entries[0].key = cma_strdup("key_without_value");
+    source->entries[0].key = adv_strdup("key_without_value");
     if (!source->entries[0].key)
     {
         cnfg_free(source);
         return (0);
     }
-    source->entries[1].value = cma_strdup("value_without_key");
+    source->entries[1].value = adv_strdup("value_without_key");
     if (!source->entries[1].value)
     {
         cnfg_free(source);
@@ -131,10 +125,8 @@ FT_TEST(test_cnfg_parse_missing_value_handles_entries, "cnfg_parse accepts missi
         return (0);
     }
     cnfg_free(source);
-    ft_errno = FT_ERR_NO_MEMORY;
     cnfg_config *config = cnfg_parse(filename);
     FT_ASSERT(config != ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT(config->entry_count == 2);
     FT_ASSERT(config->entries[0].key != ft_nullptr);
     FT_ASSERT(std::strcmp(config->entries[0].key, "key_without_value") == 0);
@@ -154,43 +146,43 @@ FT_TEST(test_config_write_ini_round_trip, "config_write_file supports ini round 
     cnfg_config *source = create_test_config(3);
     if (!source)
         return (0);
-    source->entries[0].section = cma_strdup("alpha");
+    source->entries[0].section = adv_strdup("alpha");
     if (!source->entries[0].section)
     {
         cnfg_free(source);
         return (0);
     }
-    source->entries[0].key = cma_strdup("first");
+    source->entries[0].key = adv_strdup("first");
     if (!source->entries[0].key)
     {
         cnfg_free(source);
         return (0);
     }
-    source->entries[0].value = cma_strdup("one");
+    source->entries[0].value = adv_strdup("one");
     if (!source->entries[0].value)
     {
         cnfg_free(source);
         return (0);
     }
-    source->entries[1].section = cma_strdup("alpha");
+    source->entries[1].section = adv_strdup("alpha");
     if (!source->entries[1].section)
     {
         cnfg_free(source);
         return (0);
     }
-    source->entries[1].key = cma_strdup("second");
+    source->entries[1].key = adv_strdup("second");
     if (!source->entries[1].key)
     {
         cnfg_free(source);
         return (0);
     }
-    source->entries[2].key = cma_strdup("global");
+    source->entries[2].key = adv_strdup("global");
     if (!source->entries[2].key)
     {
         cnfg_free(source);
         return (0);
     }
-    source->entries[2].value = cma_strdup("value");
+    source->entries[2].value = adv_strdup("value");
     if (!source->entries[2].value)
     {
         cnfg_free(source);
@@ -291,37 +283,37 @@ FT_TEST(test_config_write_json_round_trip, "config_write_file supports json roun
     cnfg_config *source = create_test_config(2);
     if (!source)
         return (0);
-    source->entries[0].section = cma_strdup("alpha");
+    source->entries[0].section = adv_strdup("alpha");
     if (!source->entries[0].section)
     {
         cnfg_free(source);
         return (0);
     }
-    source->entries[0].key = cma_strdup("first");
+    source->entries[0].key = adv_strdup("first");
     if (!source->entries[0].key)
     {
         cnfg_free(source);
         return (0);
     }
-    source->entries[0].value = cma_strdup("one");
+    source->entries[0].value = adv_strdup("one");
     if (!source->entries[0].value)
     {
         cnfg_free(source);
         return (0);
     }
-    source->entries[1].section = cma_strdup("beta");
+    source->entries[1].section = adv_strdup("beta");
     if (!source->entries[1].section)
     {
         cnfg_free(source);
         return (0);
     }
-    source->entries[1].key = cma_strdup("second");
+    source->entries[1].key = adv_strdup("second");
     if (!source->entries[1].key)
     {
         cnfg_free(source);
         return (0);
     }
-    source->entries[1].value = cma_strdup("two");
+    source->entries[1].value = adv_strdup("two");
     if (!source->entries[1].value)
     {
         cnfg_free(source);
@@ -355,37 +347,37 @@ FT_TEST(test_config_merge_prefers_override_entries, "config_merge replaces dupli
     cnfg_config *base = create_test_config(2);
     if (!base)
         return (0);
-    base->entries[0].section = cma_strdup("shared");
+    base->entries[0].section = adv_strdup("shared");
     if (!base->entries[0].section)
     {
         cnfg_free(base);
         return (0);
     }
-    base->entries[0].key = cma_strdup("key");
+    base->entries[0].key = adv_strdup("key");
     if (!base->entries[0].key)
     {
         cnfg_free(base);
         return (0);
     }
-    base->entries[0].value = cma_strdup("base");
+    base->entries[0].value = adv_strdup("base");
     if (!base->entries[0].value)
     {
         cnfg_free(base);
         return (0);
     }
-    base->entries[1].section = cma_strdup("base_only");
+    base->entries[1].section = adv_strdup("base_only");
     if (!base->entries[1].section)
     {
         cnfg_free(base);
         return (0);
     }
-    base->entries[1].key = cma_strdup("flag");
+    base->entries[1].key = adv_strdup("flag");
     if (!base->entries[1].key)
     {
         cnfg_free(base);
         return (0);
     }
-    base->entries[1].value = cma_strdup("true");
+    base->entries[1].value = adv_strdup("true");
     if (!base->entries[1].value)
     {
         cnfg_free(base);
@@ -397,42 +389,42 @@ FT_TEST(test_config_merge_prefers_override_entries, "config_merge replaces dupli
         cnfg_free(base);
         return (0);
     }
-    override_config->entries[0].section = cma_strdup("shared");
+    override_config->entries[0].section = adv_strdup("shared");
     if (!override_config->entries[0].section)
     {
         cnfg_free(base);
         cnfg_free(override_config);
         return (0);
     }
-    override_config->entries[0].key = cma_strdup("key");
+    override_config->entries[0].key = adv_strdup("key");
     if (!override_config->entries[0].key)
     {
         cnfg_free(base);
         cnfg_free(override_config);
         return (0);
     }
-    override_config->entries[0].value = cma_strdup("override");
+    override_config->entries[0].value = adv_strdup("override");
     if (!override_config->entries[0].value)
     {
         cnfg_free(base);
         cnfg_free(override_config);
         return (0);
     }
-    override_config->entries[1].section = cma_strdup("override_only");
+    override_config->entries[1].section = adv_strdup("override_only");
     if (!override_config->entries[1].section)
     {
         cnfg_free(base);
         cnfg_free(override_config);
         return (0);
     }
-    override_config->entries[1].key = cma_strdup("flag");
+    override_config->entries[1].key = adv_strdup("flag");
     if (!override_config->entries[1].key)
     {
         cnfg_free(base);
         cnfg_free(override_config);
         return (0);
     }
-    override_config->entries[1].value = cma_strdup("false");
+    override_config->entries[1].value = adv_strdup("false");
     if (!override_config->entries[1].value)
     {
         cnfg_free(base);
@@ -441,7 +433,6 @@ FT_TEST(test_config_merge_prefers_override_entries, "config_merge replaces dupli
     }
     cnfg_config *merged = config_merge(base, override_config);
     FT_ASSERT(merged != ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT(merged->entry_count == 3);
     FT_ASSERT(std::strcmp(base->entries[0].value, "base") == 0);
     size_t index = 0;

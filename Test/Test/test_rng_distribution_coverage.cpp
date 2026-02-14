@@ -18,16 +18,12 @@ FT_TEST(test_rng_gamma_pdf_cdf_reference,
     expected_pdf = 0.19196788093577974;
     expected_cdf = 0.45058404864721977;
     pdf_value = rng_gamma_pdf(2.5, 1.5, 3.0);
-    if (ft_errno != FT_ERR_SUCCESS)
-        return (0);
     difference = pdf_value - expected_pdf;
     if (difference < 0.0)
         difference = -difference;
     if (difference > 0.000001)
         return (0);
     cdf_value = rng_gamma_cdf(2.5, 1.5, 3.0);
-    if (ft_errno != FT_ERR_SUCCESS)
-        return (0);
     difference = cdf_value - expected_cdf;
     if (difference < 0.0)
         difference = -difference;
@@ -48,16 +44,12 @@ FT_TEST(test_rng_beta_pdf_cdf_reference,
     expected_pdf = 1.5552;
     expected_cdf = 0.76672;
     pdf_value = rng_beta_pdf(2.0, 5.0, 0.4);
-    if (ft_errno != FT_ERR_SUCCESS)
-        return (0);
     difference = pdf_value - expected_pdf;
     if (difference < 0.0)
         difference = -difference;
     if (difference > 0.0001)
         return (0);
     cdf_value = rng_beta_cdf(2.0, 5.0, 0.4);
-    if (ft_errno != FT_ERR_SUCCESS)
-        return (0);
     difference = cdf_value - expected_cdf;
     if (difference < 0.0)
         difference = -difference;
@@ -78,16 +70,12 @@ FT_TEST(test_rng_chi_squared_pdf_cdf_reference,
     expected_pdf = 0.08790080915922291;
     expected_cdf = 0.7602705204748466;
     pdf_value = rng_chi_squared_pdf(4.0, 5.5);
-    if (ft_errno != FT_ERR_SUCCESS)
-        return (0);
     difference = pdf_value - expected_pdf;
     if (difference < 0.0)
         difference = -difference;
     if (difference > 0.0001)
         return (0);
     cdf_value = rng_chi_squared_cdf(4.0, 5.5);
-    if (ft_errno != FT_ERR_SUCCESS)
-        return (0);
     difference = cdf_value - expected_cdf;
     if (difference < 0.0)
         difference = -difference;
@@ -111,8 +99,6 @@ FT_TEST(test_rng_gamma_sampling_mean,
     while (index < sample_total)
     {
         sum = sum + static_cast<double>(ft_random_gamma(2.0f, 3.0f));
-        if (ft_errno != FT_ERR_SUCCESS)
-            return (0);
         index = index + 1;
     }
     mean_value = sum / static_cast<double>(sample_total);
@@ -140,8 +126,6 @@ FT_TEST(test_rng_beta_sampling_mean,
     while (index < sample_total)
     {
         sum = sum + static_cast<double>(ft_random_beta(2.0f, 5.0f));
-        if (ft_errno != FT_ERR_SUCCESS)
-            return (0);
         index = index + 1;
     }
     mean_value = sum / static_cast<double>(sample_total);
@@ -169,8 +153,6 @@ FT_TEST(test_rng_chi_squared_sampling_mean,
     while (index < sample_total)
     {
         sum = sum + static_cast<double>(ft_random_chi_squared(5.0f));
-        if (ft_errno != FT_ERR_SUCCESS)
-            return (0);
         index = index + 1;
     }
     mean_value = sum / static_cast<double>(sample_total);

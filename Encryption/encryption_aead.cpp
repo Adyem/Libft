@@ -2,7 +2,10 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../Basic/basic.hpp"
-#include "../PThread/pthread_internal.hpp"
+#include "../Printf/printf.hpp"
+#include "../System_utils/system_utils.hpp"
+#include <new>
+#include <cstdio>
 
 #if NETWORKING_HAS_OPENSSL
 
@@ -19,65 +22,36 @@ static const EVP_CIPHER *encryption_aead_select_cipher(size_t key_length)
 
 static int encryption_aead_initialize_mutex(pt_recursive_mutex **mutex_pointer)
 {
+    pt_recursive_mutex *new_mutex;
+    int mutex_error;
+
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     *mutex_pointer = ft_nullptr;
-    return (pt_recursive_mutex_create_with_error(mutex_pointer));
+    new_mutex = new (std::nothrow) pt_recursive_mutex();
+    if (new_mutex == ft_nullptr)
+        return (FT_ERR_NO_MEMORY);
+    mutex_error = new_mutex->initialize();
+    if (mutex_error != FT_ERR_SUCCESS)
+    {
+        delete new_mutex;
+        return (mutex_error);
+    }
+    *mutex_pointer = new_mutex;
+    return (FT_ERR_SUCCESS);
 }
 
 static void encryption_aead_destroy_mutex(pt_recursive_mutex **mutex_pointer)
 {
-    pt_recursive_mutex_destroy(mutex_pointer);
+    if (mutex_pointer == ft_nullptr || *mutex_pointer == ft_nullptr)
+        return ;
+    (void)(*mutex_pointer)->destroy();
+    delete *mutex_pointer;
+    *mutex_pointer = ft_nullptr;
+    return ;
 }
 
 encryption_aead_context::encryption_aead_context()
-{
-    this->_context = EVP_CIPHER_CTX_new();
-    this->_cipher = NULL;
-    this->_encrypt_mode = false;
-    this->_initialized = false;
-    this->_iv_length = 0;
-    this->_mutex = ft_nullptr;
-    int mutex_error = encryption_aead_initialize_mutex(&this->_mutex);
-    if (mutex_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(mutex_error);
-        return ;
-    }
-    if (this->_context == NULL)
-    {
-        encryption_aead_destroy_mutex(&this->_mutex);
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
-        return ;
-    }
-    return ;
-}
-
-encryption_aead_context::~encryption_aead_context()
-{
-    if (this->_context != NULL)
-    {
-        EVP_CIPHER_CTX_free(this->_context);
-        this->_context = NULL;
-    }
-    encryption_aead_destroy_mutex(&this->_mutex);
-    return ;
-}
-
-int encryption_aead_context::finalize_operation(int result) const
-{
-    int unlock_error = pt_recursive_mutex_unlock_if_valid(this->_mutex);
-    ft_global_error_stack_drop_last_error();
-    if (unlock_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(unlock_error);
-        return (unlock_error);
-    }
-    ft_global_error_stack_push(result);
-    return (result);
-}
-
-encryption_aead_context::encryption_aead_context(encryption_aead_context &&other) noexcept
 {
     this->_context = NULL;
     this->_cipher = NULL;
@@ -85,94 +59,101 @@ encryption_aead_context::encryption_aead_context(encryption_aead_context &&other
     this->_initialized = false;
     this->_iv_length = 0;
     this->_mutex = ft_nullptr;
-    encryption_aead_initialize_mutex(&this->_mutex);
-    int self_lock = pt_recursive_mutex_lock_if_valid(this->_mutex);
-    ft_global_error_stack_drop_last_error();
-    if (self_lock != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(self_lock);
-        return ;
-    }
-    int other_lock = pt_recursive_mutex_lock_if_valid(other._mutex);
-    ft_global_error_stack_drop_last_error();
-    if (other_lock != FT_ERR_SUCCESS)
-    {
-        pt_recursive_mutex_unlock_if_valid(this->_mutex);
-        ft_global_error_stack_drop_last_error();
-        ft_global_error_stack_push(other_lock);
-        return ;
-    }
-    this->_context = other._context;
-    this->_cipher = other._cipher;
-    this->_encrypt_mode = other._encrypt_mode;
-    this->_initialized = other._initialized;
-    this->_iv_length = other._iv_length;
-    other._context = NULL;
-    other._cipher = NULL;
-    other._encrypt_mode = false;
-    other._initialized = false;
-    other._iv_length = 0;
-    pt_recursive_mutex_unlock_if_valid(other._mutex);
-    ft_global_error_stack_drop_last_error();
-    pt_recursive_mutex_unlock_if_valid(this->_mutex);
-    ft_global_error_stack_drop_last_error();
+    this->_initialized_state = this->_state_uninitialized;
     return ;
 }
 
-encryption_aead_context &encryption_aead_context::operator=(encryption_aead_context &&other) noexcept
+encryption_aead_context::~encryption_aead_context()
 {
-    if (this == &other)
-        return (*this);
-    int self_lock = pt_recursive_mutex_lock_if_valid(this->_mutex);
-    ft_global_error_stack_drop_last_error();
-    if (self_lock != FT_ERR_SUCCESS)
+    if (this->_initialized_state == this->_state_initialized)
+        (void)this->destroy();
+    else if (this->_initialized_state == this->_state_uninitialized)
+        this->abort_lifecycle_error("~encryption_aead_context",
+            "destroyed while uninitialized");
+    return ;
+}
+
+void encryption_aead_context::abort_lifecycle_error(const char *method_name,
+    const char *reason) const
+{
+    if (method_name == ft_nullptr)
+        method_name = "unknown";
+    if (reason == ft_nullptr)
+        reason = "unknown";
+    ft_fprintf(stderr, "encryption_aead_context::%s lifecycle error: %s\n",
+        method_name, reason);
+    su_abort();
+}
+
+void encryption_aead_context::abort_if_not_initialized(
+    const char *method_name) const
+{
+    if (this->_initialized_state != this->_state_initialized)
+        this->abort_lifecycle_error(method_name, "object is not initialized");
+}
+
+int encryption_aead_context::initialize()
+{
+    int mutex_error;
+
+    if (this->_initialized_state == this->_state_initialized)
+        return (FT_ERR_INVALID_STATE);
+    mutex_error = encryption_aead_initialize_mutex(&this->_mutex);
+    if (mutex_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(self_lock);
-        return (*this);
+        this->_initialized_state = this->_state_destroyed;
+        return (mutex_error);
     }
-    int other_lock = pt_recursive_mutex_lock_if_valid(other._mutex);
-    ft_global_error_stack_drop_last_error();
-    if (other_lock != FT_ERR_SUCCESS)
+    this->_context = EVP_CIPHER_CTX_new();
+    if (this->_context == NULL)
     {
-        pt_recursive_mutex_unlock_if_valid(this->_mutex);
-        ft_global_error_stack_drop_last_error();
-        ft_global_error_stack_push(other_lock);
-        return (*this);
+        encryption_aead_destroy_mutex(&this->_mutex);
+        this->_initialized_state = this->_state_destroyed;
+        return (FT_ERR_NO_MEMORY);
     }
+    this->_initialized_state = this->_state_initialized;
+    return (FT_ERR_SUCCESS);
+}
+
+int encryption_aead_context::destroy()
+{
+    if (this->_initialized_state != this->_state_initialized)
+        return (FT_ERR_INVALID_STATE);
     if (this->_context != NULL)
+    {
         EVP_CIPHER_CTX_free(this->_context);
-    this->_context = other._context;
-    this->_cipher = other._cipher;
-    this->_encrypt_mode = other._encrypt_mode;
-    this->_initialized = other._initialized;
-    this->_iv_length = other._iv_length;
-    other._context = NULL;
-    other._cipher = NULL;
-    other._encrypt_mode = false;
-    other._initialized = false;
-    other._iv_length = 0;
-    pt_recursive_mutex_unlock_if_valid(other._mutex);
-    ft_global_error_stack_drop_last_error();
-    pt_recursive_mutex_unlock_if_valid(this->_mutex);
-    ft_global_error_stack_drop_last_error();
-    return (*this);
+        this->_context = NULL;
+    }
+    encryption_aead_destroy_mutex(&this->_mutex);
+    this->_cipher = NULL;
+    this->_encrypt_mode = false;
+    this->_initialized = false;
+    this->_iv_length = 0;
+    this->_initialized_state = this->_state_destroyed;
+    return (FT_ERR_SUCCESS);
+}
+
+int encryption_aead_context::finalize_operation(int result) const
+{
+    this->abort_if_not_initialized("finalize_operation");
+    int unlock_error = ((this->_mutex) == ft_nullptr ? FT_ERR_SUCCESS : (this->_mutex)->unlock());
+    if (unlock_error != FT_ERR_SUCCESS)
+        return (unlock_error);
+    return (result);
 }
 
 int encryption_aead_context::configure_cipher(const unsigned char *key, size_t key_length,
         const unsigned char *iv, size_t iv_length, bool encrypt_mode)
 {
+    this->abort_if_not_initialized("configure_cipher");
     const EVP_CIPHER *cipher;
     int control_result;
     int iv_length_value;
     int encrypt_flag = 0;
-    int lock_result = pt_recursive_mutex_lock_if_valid(this->_mutex);
-    ft_global_error_stack_drop_last_error();
+    int lock_result = ((this->_mutex) == ft_nullptr ? FT_ERR_SUCCESS : (this->_mutex)->lock());
 
     if (lock_result != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_result);
         return (lock_result);
-    }
     if (this->_context == NULL)
         return (this->finalize_operation(FT_ERR_INVALID_STATE));
     cipher = encryption_aead_select_cipher(key_length);
@@ -208,25 +189,24 @@ int encryption_aead_context::configure_cipher(const unsigned char *key, size_t k
 int encryption_aead_context::initialize_encrypt(const unsigned char *key, size_t key_length,
         const unsigned char *iv, size_t iv_length)
 {
+    this->abort_if_not_initialized("initialize_encrypt");
     return (this->configure_cipher(key, key_length, iv, iv_length, true));
 }
 
 int encryption_aead_context::initialize_decrypt(const unsigned char *key, size_t key_length,
         const unsigned char *iv, size_t iv_length)
 {
+    this->abort_if_not_initialized("initialize_decrypt");
     return (this->configure_cipher(key, key_length, iv, iv_length, false));
 }
 
 int encryption_aead_context::update_aad(const unsigned char *aad, size_t aad_length)
 {
-    int lock_result = pt_recursive_mutex_lock_if_valid(this->_mutex);
-    ft_global_error_stack_drop_last_error();
+    this->abort_if_not_initialized("update_aad");
+    int lock_result = ((this->_mutex) == ft_nullptr ? FT_ERR_SUCCESS : (this->_mutex)->lock());
 
     if (lock_result != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_result);
         return (lock_result);
-    }
     if (!this->_initialized)
         return (this->finalize_operation(FT_ERR_INVALID_STATE));
     if (aad_length == 0)
@@ -244,15 +224,12 @@ int encryption_aead_context::update_aad(const unsigned char *aad, size_t aad_len
 int encryption_aead_context::update(const unsigned char *input, size_t input_length,
         unsigned char *output, size_t &output_length)
 {
-    int lock_result = pt_recursive_mutex_lock_if_valid(this->_mutex);
-    ft_global_error_stack_drop_last_error();
+    this->abort_if_not_initialized("update");
+    int lock_result = ((this->_mutex) == ft_nullptr ? FT_ERR_SUCCESS : (this->_mutex)->lock());
 
     output_length = 0;
     if (lock_result != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_result);
         return (lock_result);
-    }
     if (!this->_initialized)
         return (this->finalize_operation(FT_ERR_INVALID_STATE));
     if (input_length == 0)
@@ -270,14 +247,11 @@ int encryption_aead_context::update(const unsigned char *input, size_t input_len
 
 int encryption_aead_context::finalize(unsigned char *tag, size_t tag_length)
 {
-    int lock_result = pt_recursive_mutex_lock_if_valid(this->_mutex);
-    ft_global_error_stack_drop_last_error();
+    this->abort_if_not_initialized("finalize");
+    int lock_result = ((this->_mutex) == ft_nullptr ? FT_ERR_SUCCESS : (this->_mutex)->lock());
 
     if (lock_result != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_result);
         return (lock_result);
-    }
     if (!this->_initialized)
         return (this->finalize_operation(FT_ERR_INVALID_STATE));
     int final_result = 0;
@@ -314,14 +288,11 @@ int encryption_aead_context::finalize(unsigned char *tag, size_t tag_length)
 
 int encryption_aead_context::set_tag(const unsigned char *tag, size_t tag_length)
 {
-    int lock_result = pt_recursive_mutex_lock_if_valid(this->_mutex);
-    ft_global_error_stack_drop_last_error();
+    this->abort_if_not_initialized("set_tag");
+    int lock_result = ((this->_mutex) == ft_nullptr ? FT_ERR_SUCCESS : (this->_mutex)->lock());
 
     if (lock_result != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_result);
         return (lock_result);
-    }
     if (!this->_initialized)
         return (this->finalize_operation(FT_ERR_INVALID_STATE));
     if (this->_encrypt_mode)
@@ -338,25 +309,21 @@ int encryption_aead_context::set_tag(const unsigned char *tag, size_t tag_length
 
 void    encryption_aead_context::reset()
 {
-    int lock_result = pt_recursive_mutex_lock_if_valid(this->_mutex);
-    ft_global_error_stack_drop_last_error();
+    this->abort_if_not_initialized("reset");
+    int lock_result = ((this->_mutex) == ft_nullptr ? FT_ERR_SUCCESS : (this->_mutex)->lock());
 
     if (lock_result != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(lock_result);
         return ;
-    }
     if (this->_context != NULL)
         EVP_CIPHER_CTX_reset(this->_context);
     this->_cipher = NULL;
     this->_encrypt_mode = false;
     this->_initialized = false;
     this->_iv_length = 0;
-    int unlock_result = pt_recursive_mutex_unlock_if_valid(this->_mutex);
-    ft_global_error_stack_drop_last_error();
+    int unlock_result = ((this->_mutex) == ft_nullptr ? FT_ERR_SUCCESS : (this->_mutex)->unlock());
     if (unlock_result != FT_ERR_SUCCESS)
         return ;
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    return ;
 }
 
 bool    encryption_aead_encrypt(const unsigned char *key, size_t key_length,
@@ -368,6 +335,8 @@ bool    encryption_aead_encrypt(const unsigned char *key, size_t key_length,
     encryption_aead_context context;
     size_t output_length;
 
+    if (context.initialize() != FT_ERR_SUCCESS)
+        return (false);
     if (context.initialize_encrypt(key, key_length, iv, iv_length) != FT_ERR_SUCCESS)
         return (false);
     if (context.update_aad(aad, aad_length) != FT_ERR_SUCCESS)
@@ -376,18 +345,12 @@ bool    encryption_aead_encrypt(const unsigned char *key, size_t key_length,
     if (plaintext_length > 0)
     {
         if (ciphertext == NULL)
-        {
-            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
             return (false);
-        }
         if (context.update(plaintext, plaintext_length, ciphertext,
                 output_length) != FT_ERR_SUCCESS)
             return (false);
         if (output_length != plaintext_length)
-        {
-            ft_global_error_stack_push(FT_ERR_INTERNAL);
             return (false);
-        }
     }
     if (context.finalize(tag, tag_length) != FT_ERR_SUCCESS)
         return (false);
@@ -404,6 +367,8 @@ bool    encryption_aead_decrypt(const unsigned char *key, size_t key_length,
     encryption_aead_context context;
     size_t output_length;
 
+    if (context.initialize() != FT_ERR_SUCCESS)
+        return (false);
     if (context.initialize_decrypt(key, key_length, iv, iv_length) != FT_ERR_SUCCESS)
         return (false);
     if (context.set_tag(tag, tag_length) != FT_ERR_SUCCESS)
@@ -414,18 +379,12 @@ bool    encryption_aead_decrypt(const unsigned char *key, size_t key_length,
     if (ciphertext_length > 0)
     {
         if (plaintext == NULL)
-        {
-            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
             return (false);
-        }
         if (context.update(ciphertext, ciphertext_length, plaintext,
                 output_length) != FT_ERR_SUCCESS)
             return (false);
         if (output_length != ciphertext_length)
-        {
-            ft_global_error_stack_push(FT_ERR_INTERNAL);
             return (false);
-        }
     }
     if (context.finalize(NULL, 0) != FT_ERR_SUCCESS)
         return (false);
