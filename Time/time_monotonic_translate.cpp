@@ -14,29 +14,29 @@ bool    time_get_monotonic_wall_anchor(t_monotonic_time_point &anchor_monotonic,
 
     before_sample = time_monotonic_point_now();
     wall_now_ms = time_now_ms();
-    error_code = ft_global_error_stack_drop_last_error();
+    error_code = FT_ERR_SUCCESS;
     if (error_code != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(error_code);
+        (void)(error_code);
         return (false);
     }
     after_sample = time_monotonic_point_now();
     midpoint_offset = time_monotonic_point_diff_ms(before_sample, after_sample);
     if (midpoint_offset == LLONG_MAX || midpoint_offset == LLONG_MIN)
     {
-        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
+        (void)(FT_ERR_OUT_OF_RANGE);
         return (false);
     }
     midpoint_offset /= 2;
     midpoint_sample = time_monotonic_point_add_ms(before_sample, midpoint_offset);
     if (time_monotonic_point_diff_ms(before_sample, midpoint_sample) != midpoint_offset)
     {
-        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
+        (void)(FT_ERR_OUT_OF_RANGE);
         return (false);
     }
     anchor_monotonic = midpoint_sample;
     anchor_wall_ms = static_cast<long long>(wall_now_ms);
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    (void)(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -50,7 +50,7 @@ bool    time_monotonic_to_wall_ms(t_monotonic_time_point monotonic_point,
     delta_ms = time_monotonic_point_diff_ms(anchor_monotonic, monotonic_point);
     if (delta_ms == LLONG_MAX || delta_ms == LLONG_MIN)
     {
-        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
+        (void)(FT_ERR_OUT_OF_RANGE);
         return (false);
     }
     wall_candidate = static_cast<__int128>(anchor_wall_ms);
@@ -58,11 +58,11 @@ bool    time_monotonic_to_wall_ms(t_monotonic_time_point monotonic_point,
     if (wall_candidate > static_cast<__int128>(LLONG_MAX)
         || wall_candidate < static_cast<__int128>(LLONG_MIN))
     {
-        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
+        (void)(FT_ERR_OUT_OF_RANGE);
         return (false);
     }
     out_wall_ms = static_cast<long long>(wall_candidate);
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    (void)(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -80,7 +80,7 @@ bool    time_wall_ms_to_monotonic(long long wall_time_ms,
     if (delta_ms > static_cast<__int128>(LLONG_MAX)
         || delta_ms < static_cast<__int128>(LLONG_MIN))
     {
-        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
+        (void)(FT_ERR_OUT_OF_RANGE);
         return (false);
     }
     bounded_delta = static_cast<long long>(delta_ms);
@@ -89,10 +89,10 @@ bool    time_wall_ms_to_monotonic(long long wall_time_ms,
             translated_point);
     if (verification_delta != bounded_delta)
     {
-        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
+        (void)(FT_ERR_OUT_OF_RANGE);
         return (false);
     }
     out_monotonic = translated_point;
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    (void)(FT_ERR_SUCCESS);
     return (true);
 }

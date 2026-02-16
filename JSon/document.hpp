@@ -3,18 +3,24 @@
 
 #include "json.hpp"
 #include "../PThread/mutex.hpp"
-#include "../PThread/unique_lock.hpp"
+#include <cstdint>
 
 class json_document
 {
     private:
         json_group *_groups;
         mutable int _error_code;
-        mutable pt_mutex _mutex;
+        mutable pt_mutex *_mutex;
+        uint8_t _initialized_state;
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
 
+        void abort_lifecycle_error(const char *method_name, const char *reason) const;
+        void abort_if_not_initialized(const char *method_name) const;
         void set_error_unlocked(int error_code) const noexcept;
         void set_error(int error_code) const noexcept;
-        int lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept;
+        int lock_self() const noexcept;
         void clear_unlocked() noexcept;
         char *write_to_string_unlocked() const noexcept;
         json_item *find_item_by_pointer_unlocked(const char *pointer) const noexcept;
@@ -22,6 +28,17 @@ class json_document
     public:
         json_document() noexcept;
         ~json_document() noexcept;
+
+        json_document(const json_document &) = delete;
+        json_document &operator=(const json_document &) = delete;
+        json_document(json_document &&) = delete;
+        json_document &operator=(json_document &&) = delete;
+
+        int          initialize() noexcept;
+        int          destroy() noexcept;
+        int          enable_thread_safety() noexcept;
+        int          disable_thread_safety() noexcept;
+        bool         is_thread_safe() const noexcept;
 
         json_group   *create_group(const char *name) noexcept;
         json_item    *create_item(const char *key, const char *value) noexcept;
@@ -52,6 +69,10 @@ class json_document
         void         set_manual_error(int error_code) noexcept;
         int          get_error() const noexcept;
         const char   *get_error_str() const noexcept;
+
+#ifdef LIBFT_TEST_BUILD
+        pt_mutex     *get_mutex_for_validation() const noexcept;
+#endif
 };
 
 #endif

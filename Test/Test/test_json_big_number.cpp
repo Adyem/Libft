@@ -31,6 +31,8 @@ FT_TEST(test_json_big_number_roundtrip, "json serialization preserves large inte
 {
     const char *content = "{ \"numbers\": { \"massive\": 18446744073709551616 } }";
     json_document document;
+    if (document.initialize() != FT_ERR_SUCCESS)
+        return (0);
     FT_ASSERT_EQ(0, document.read_from_string(content));
     json_group *numbers_group = document.find_group("numbers");
     FT_ASSERT(numbers_group != ft_nullptr);
@@ -44,6 +46,8 @@ FT_TEST(test_json_big_number_roundtrip, "json serialization preserves large inte
     const char *expected = "{\n  \"numbers\": {\n    \"massive\": 18446744073709551616\n  }\n}\n";
     FT_ASSERT_EQ(0, ft_strcmp(expected, serialized));
     json_document roundtrip;
+    if (roundtrip.initialize() != FT_ERR_SUCCESS)
+        return (0);
     FT_ASSERT_EQ(0, roundtrip.read_from_string(serialized));
     json_group *roundtrip_group = roundtrip.find_group("numbers");
     FT_ASSERT(roundtrip_group != ft_nullptr);

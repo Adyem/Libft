@@ -2,19 +2,19 @@ include ../compiler_flags.mk
 TARGET := encryption.a
 DEBUG_TARGET := encryption_debug.a
 
-SRCS := encryption_basic_encryption.cpp \
-        encryption_aead.cpp \
-        encryption_key.cpp \
-        encryption_aes.cpp \
-        encryption_rsa.cpp \
-        encryption_secure_wipe.cpp \
-        encryption_hardware_acceleration.cpp \
-        encryption_sha256.cpp \
-        encryption_sha3.cpp \
-        encryption_blake2.cpp \
-        encryption_sha1.cpp \
-        encryption_hmac_sha256.cpp \
-        encryption_key_management.cpp
+SRCS := Encryption_basic_encryption.cpp \
+        Encryption_aead.cpp \
+        Encryption_key.cpp \
+        Encryption_aes.cpp \
+        Encryption_rsa.cpp \
+        Encryption_secure_wipe.cpp \
+        Encryption_hardware_acceleration.cpp \
+        Encryption_sha256.cpp \
+        Encryption_sha3.cpp \
+        Encryption_blake2.cpp \
+        Encryption_sha1.cpp \
+        Encryption_hmac_sha256.cpp \
+        Encryption_key_management.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
@@ -114,4 +114,3 @@ re: fclean all
 both: all debug
 
 .PHONY: all clean fclean re debug both
-

@@ -81,23 +81,12 @@ int html_write_to_file(const char *file_path, html_node *node_list)
     html_node *next_node;
     bool       node_lock_acquired;
     int        lock_status;
-    int        open_error;
-    int        close_error;
 
     if (!file_path)
-    {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
-    }
     file_descriptor = su_open(file_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    open_error = ft_global_error_stack_drop_last_error();
     if (file_descriptor < 0)
-    {
-        if (open_error == FT_ERR_SUCCESS)
-            open_error = FT_ERR_INTERNAL;
-        ft_global_error_stack_push(open_error);
         return (-1);
-    }
     current_node = node_list;
     while (current_node)
     {
@@ -114,14 +103,6 @@ int html_write_to_file(const char *file_path, html_node *node_list)
         current_node = next_node;
     }
     if (su_close(file_descriptor) != 0)
-    {
-        close_error = ft_global_error_stack_drop_last_error();
-        if (close_error == FT_ERR_SUCCESS)
-            close_error = FT_ERR_IO;
-        ft_global_error_stack_push(close_error);
         return (-1);
-    }
-    ft_global_error_stack_drop_last_error();
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }

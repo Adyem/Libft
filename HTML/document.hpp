@@ -2,6 +2,7 @@
 #define HTML_DOCUMENT_HPP
 
 #include "parser.hpp"
+#include <cstdint>
 
 class pt_mutex;
 
@@ -9,34 +10,19 @@ class html_document
 {
     private:
         html_node *_root;
-        mutable pt_mutex *_mutex;
-        mutable bool _thread_safe_enabled;
+        pt_mutex *_mutex;
+        uint8_t _state;
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
 
-        void set_error(int error_code) const noexcept;
-        void record_operation_error(int error_code) const noexcept;
-        pt_mutex *get_mutex_for_validation() const noexcept;
-
-        int prepare_thread_safety() noexcept;
-        void teardown_thread_safety() noexcept;
-        int lock(bool *lock_acquired) const noexcept;
-        void unlock(bool lock_acquired) const noexcept;
+        void abort_lifecycle_error(const char *method_name,
+                    const char *reason) const noexcept;
+        void abort_if_not_initialized(const char *method_name) const noexcept;
+        int lock_document(bool *lock_acquired) const noexcept;
+        int unlock_document(bool lock_acquired) const noexcept;
 
     public:
-        class thread_guard
-        {
-            private:
-                const html_document *_document;
-                bool _lock_acquired;
-                int _status;
-
-            public:
-                thread_guard(const html_document *document) noexcept;
-                ~thread_guard() noexcept;
-
-                int get_status() const noexcept;
-                bool lock_acquired() const noexcept;
-        };
-
         html_document() noexcept;
         ~html_document() noexcept;
 
@@ -45,6 +31,11 @@ class html_document
         html_document(html_document &&) = delete;
         html_document &operator=(html_document &&) = delete;
 
+        int         initialize() noexcept;
+        int         destroy() noexcept;
+        int         enable_thread_safety() noexcept;
+        int         disable_thread_safety() noexcept;
+        bool        is_thread_safe() const noexcept;
         html_node   *create_node(const char *tag_name, const char *text_content) noexcept;
         html_attr   *create_attr(const char *key, const char *value) noexcept;
         void        add_attr(html_node *target_node, html_attr *new_attribute) noexcept;
@@ -66,6 +57,9 @@ class html_document
         const char  *get_error_str() const noexcept;
         void        clear() noexcept;
         bool        is_thread_safe_enabled() const noexcept;
+#ifdef LIBFT_TEST_BUILD
+        pt_mutex    *get_mutex_for_validation() const noexcept;
+#endif
 };
 
 #endif

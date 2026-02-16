@@ -228,22 +228,16 @@ int DataBuffer::initialize(const DataBuffer &other) noexcept
 
 int DataBuffer::initialize_move(DataBuffer &other) noexcept
 {
-    if (&other == this)
-    {
-        if (this->_initialized_state != DataBuffer::_state_initialized)
-        {
-            DataBuffer::abort_lifecycle_error("DataBuffer::initialize_move(DataBuffer &)",
-                "self move on uninitialized object");
-            return (FT_ERR_INVALID_STATE);
-        }
-        this->set_operation_error(FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
-    }
     if (other._initialized_state != DataBuffer::_state_initialized)
     {
         DataBuffer::abort_lifecycle_error("DataBuffer::initialize_move(DataBuffer &)",
             "source is not initialized");
         return (FT_ERR_INVALID_STATE);
+    }
+    if (&other == this)
+    {
+        this->set_operation_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     if (this->_initialized_state == DataBuffer::_state_initialized)
     {
@@ -440,18 +434,19 @@ int DataBuffer::enable_thread_safety(void) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-void DataBuffer::disable_thread_safety(void) noexcept
+int DataBuffer::disable_thread_safety(void) noexcept
 {
     this->abort_if_not_initialized("DataBuffer::disable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         int destroy_error = this->_mutex->destroy();
-        (void)destroy_error;
         delete this->_mutex;
         this->_mutex = ft_nullptr;
+        this->set_operation_error(destroy_error);
+        return (destroy_error);
     }
     this->set_operation_error(FT_ERR_SUCCESS);
-    return ;
+    return (FT_ERR_SUCCESS);
 }
 
 bool DataBuffer::is_thread_safe(void) const noexcept

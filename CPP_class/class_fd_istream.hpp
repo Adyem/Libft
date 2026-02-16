@@ -20,9 +20,6 @@ class ft_fd_istream : public ft_istream
         static void abort_lifecycle_error(const char *method_name,
                 const char *reason) noexcept;
         void abort_if_not_initialized(const char *method_name) const noexcept;
-        int enable_thread_safety(void) noexcept;
-        void disable_thread_safety(void) noexcept;
-        bool is_thread_safe(void) const noexcept;
     public:
         ft_fd_istream(int fd) noexcept;
         ft_fd_istream(const ft_fd_istream &other) noexcept = delete;
@@ -34,6 +31,9 @@ class ft_fd_istream : public ft_istream
 
         void set_fd(int fd) noexcept;
         int get_fd() const noexcept;
+        int enable_thread_safety(void) noexcept;
+        int disable_thread_safety(void) noexcept;
+        bool is_thread_safe(void) const noexcept;
 
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex *get_mutex_for_validation() const noexcept;

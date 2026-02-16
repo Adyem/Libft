@@ -45,7 +45,6 @@ ft_deck<ElementType>::ft_deck() noexcept
     : ft_vector<ElementType*>()
     , _mutex(ft_nullptr)
 {
-    (void)this->enable_thread_safety();
     return ;
 }
 

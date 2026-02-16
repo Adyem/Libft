@@ -1,7 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../HTML/parser.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
-#include "../../Errno/errno.hpp"
 #include "../../CMA/CMA.hpp"
 #include "../../System_utils/test_runner.hpp"
 
@@ -59,20 +58,17 @@ FT_TEST(test_html_attr_prepare_thread_safety_restores_mutex,
 }
 
 FT_TEST(test_html_attr_lock_resets_errno,
-        "html_attr_lock unlock cycle sets ft_errno to success")
+        "html_attr_lock unlock cycle succeeds")
 {
     html_attr *attribute;
     bool       lock_acquired;
 
     attribute = html_create_attr("data", "value");
     FT_ASSERT(attribute != ft_nullptr);
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
     lock_acquired = false;
     FT_ASSERT_EQ(0, html_attr_lock(attribute, &lock_acquired));
     FT_ASSERT_EQ(true, lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     html_attr_unlock(attribute, lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     release_html_attribute(attribute);
     return (1);
 }
@@ -113,26 +109,21 @@ FT_TEST(test_html_attr_lock_after_teardown_skips_mutex,
 }
 
 FT_TEST(test_html_attr_lock_null_sets_errno,
-        "html_attr_lock null attribute sets FT_ERR_INVALID_ARGUMENT")
+        "html_attr_lock null attribute fails")
 {
     bool lock_acquired;
     int  lock_result;
 
     lock_acquired = true;
-    ft_errno = FT_ERR_SUCCESS;
     lock_result = html_attr_lock(ft_nullptr, &lock_acquired);
     FT_ASSERT_EQ(-1, lock_result);
     FT_ASSERT_EQ(false, lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
 FT_TEST(test_html_attr_unlock_null_resets_errno,
-        "html_attr_unlock null attribute resets ft_errno to success")
+        "html_attr_unlock null attribute is a no-op")
 {
-    ft_errno = FT_ERR_INVALID_OPERATION;
     html_attr_unlock(ft_nullptr, true);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
-

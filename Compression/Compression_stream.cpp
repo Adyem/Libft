@@ -66,37 +66,15 @@ void t_compress_stream_options::abort_if_not_initialized(const char *method_name
         this->abort_lifecycle_error(method_name, "object is not initialized");
 }
 
-int t_compress_stream_options::lock_mutex() const
-{
-    this->abort_if_not_initialized("lock_mutex");
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    int mutex_error = this->_mutex->lock();
-    if (mutex_error != FT_ERR_SUCCESS)
-        return (mutex_error);
-    return (FT_ERR_SUCCESS);
-}
-
-int t_compress_stream_options::unlock_mutex() const
-{
-    this->abort_if_not_initialized("unlock_mutex");
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    int mutex_error = this->_mutex->unlock();
-    if (mutex_error != FT_ERR_SUCCESS)
-        return (mutex_error);
-    return (FT_ERR_SUCCESS);
-}
-
 int t_compress_stream_options::enable_thread_safety()
 {
     this->abort_if_not_initialized("enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
-    pt_mutex *mutex_pointer = ft_nullptr;
+    pt_recursive_mutex *mutex_pointer = ft_nullptr;
     int mutex_error;
 
-    mutex_pointer = new (std::nothrow) pt_mutex();
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     mutex_error = mutex_pointer->initialize();
@@ -109,16 +87,23 @@ int t_compress_stream_options::enable_thread_safety()
     return (FT_ERR_SUCCESS);
 }
 
-void t_compress_stream_options::disable_thread_safety()
+int t_compress_stream_options::disable_thread_safety()
 {
+    int destroy_error;
+
     this->abort_if_not_initialized("disable_thread_safety");
-    if (this->_mutex != ft_nullptr)
-    {
-        (void)this->_mutex->destroy();
-        delete this->_mutex;
-        this->_mutex = ft_nullptr;
-    }
-    return ;
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    destroy_error = this->_mutex->destroy();
+    delete this->_mutex;
+    this->_mutex = ft_nullptr;
+    return (destroy_error);
+}
+
+bool t_compress_stream_options::is_thread_safe() const
+{
+    this->abort_if_not_initialized("is_thread_safe");
+    return (this->_mutex != ft_nullptr);
 }
 
 t_compress_stream_options::t_compress_stream_options(void)
@@ -164,11 +149,13 @@ int t_compress_stream_options::initialize(void)
 
 int t_compress_stream_options::destroy(void)
 {
+    int disable_error;
+
     if (this->_initialized_state != this->_state_initialized)
         return (FT_ERR_INVALID_STATE);
-    this->disable_thread_safety();
+    disable_error = this->disable_thread_safety();
     this->_initialized_state = this->_state_destroyed;
-    return (FT_ERR_SUCCESS);
+    return (disable_error);
 }
 
 int t_compress_stream_options::reset(void)
@@ -176,7 +163,10 @@ int t_compress_stream_options::reset(void)
     int lock_error;
     int unlock_error;
 
-    lock_error = this->lock_mutex();
+    if (this->_mutex == ft_nullptr)
+        lock_error = FT_ERR_SUCCESS;
+    else
+        lock_error = this->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
     {
         return (lock_error);
@@ -190,7 +180,10 @@ int t_compress_stream_options::reset(void)
     this->_window_bits = 0;
     this->_memory_level = 0;
     this->_strategy = Z_DEFAULT_STRATEGY;
-    unlock_error = this->unlock_mutex();
+    if (this->_mutex == ft_nullptr)
+        unlock_error = FT_ERR_SUCCESS;
+    else
+        unlock_error = this->_mutex->unlock();
     if (unlock_error != FT_ERR_SUCCESS)
     {
         return (unlock_error);
@@ -203,13 +196,19 @@ int t_compress_stream_options::set_input_buffer_size(std::size_t input_buffer_si
     int lock_error;
     int unlock_error;
 
-    lock_error = this->lock_mutex();
+    if (this->_mutex == ft_nullptr)
+        lock_error = FT_ERR_SUCCESS;
+    else
+        lock_error = this->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
     {
         return (lock_error);
     }
     this->_input_buffer_size = input_buffer_size;
-    unlock_error = this->unlock_mutex();
+    if (this->_mutex == ft_nullptr)
+        unlock_error = FT_ERR_SUCCESS;
+    else
+        unlock_error = this->_mutex->unlock();
     if (unlock_error != FT_ERR_SUCCESS)
     {
         return (unlock_error);
@@ -222,13 +221,19 @@ int t_compress_stream_options::set_output_buffer_size(std::size_t output_buffer_
     int lock_error;
     int unlock_error;
 
-    lock_error = this->lock_mutex();
+    if (this->_mutex == ft_nullptr)
+        lock_error = FT_ERR_SUCCESS;
+    else
+        lock_error = this->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
     {
         return (lock_error);
     }
     this->_output_buffer_size = output_buffer_size;
-    unlock_error = this->unlock_mutex();
+    if (this->_mutex == ft_nullptr)
+        unlock_error = FT_ERR_SUCCESS;
+    else
+        unlock_error = this->_mutex->unlock();
     if (unlock_error != FT_ERR_SUCCESS)
     {
         return (unlock_error);
@@ -241,14 +246,20 @@ int t_compress_stream_options::set_progress_callback(t_compress_stream_progress_
     int lock_error;
     int unlock_error;
 
-    lock_error = this->lock_mutex();
+    if (this->_mutex == ft_nullptr)
+        lock_error = FT_ERR_SUCCESS;
+    else
+        lock_error = this->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
     {
         return (lock_error);
     }
     this->_progress_callback = callback;
     this->_callback_user_data = user_data;
-    unlock_error = this->unlock_mutex();
+    if (this->_mutex == ft_nullptr)
+        unlock_error = FT_ERR_SUCCESS;
+    else
+        unlock_error = this->_mutex->unlock();
     if (unlock_error != FT_ERR_SUCCESS)
     {
         return (unlock_error);
@@ -261,14 +272,20 @@ int t_compress_stream_options::set_cancel_callback(t_compress_stream_cancel_call
     int lock_error;
     int unlock_error;
 
-    lock_error = this->lock_mutex();
+    if (this->_mutex == ft_nullptr)
+        lock_error = FT_ERR_SUCCESS;
+    else
+        lock_error = this->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
     {
         return (lock_error);
     }
     this->_cancel_callback = callback;
     this->_callback_user_data = user_data;
-    unlock_error = this->unlock_mutex();
+    if (this->_mutex == ft_nullptr)
+        unlock_error = FT_ERR_SUCCESS;
+    else
+        unlock_error = this->_mutex->unlock();
     if (unlock_error != FT_ERR_SUCCESS)
     {
         return (unlock_error);
@@ -283,7 +300,10 @@ int t_compress_stream_options::set_callbacks(t_compress_stream_progress_callback
     int lock_error;
     int unlock_error;
 
-    lock_error = this->lock_mutex();
+    if (this->_mutex == ft_nullptr)
+        lock_error = FT_ERR_SUCCESS;
+    else
+        lock_error = this->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
     {
         return (lock_error);
@@ -291,7 +311,10 @@ int t_compress_stream_options::set_callbacks(t_compress_stream_progress_callback
     this->_progress_callback = progress_callback;
     this->_cancel_callback = cancel_callback;
     this->_callback_user_data = user_data;
-    unlock_error = this->unlock_mutex();
+    if (this->_mutex == ft_nullptr)
+        unlock_error = FT_ERR_SUCCESS;
+    else
+        unlock_error = this->_mutex->unlock();
     if (unlock_error != FT_ERR_SUCCESS)
     {
         return (unlock_error);
@@ -304,13 +327,19 @@ int t_compress_stream_options::set_compression_level(int compression_level)
     int lock_error;
     int unlock_error;
 
-    lock_error = this->lock_mutex();
+    if (this->_mutex == ft_nullptr)
+        lock_error = FT_ERR_SUCCESS;
+    else
+        lock_error = this->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
     {
         return (lock_error);
     }
     this->_compression_level = compression_level;
-    unlock_error = this->unlock_mutex();
+    if (this->_mutex == ft_nullptr)
+        unlock_error = FT_ERR_SUCCESS;
+    else
+        unlock_error = this->_mutex->unlock();
     if (unlock_error != FT_ERR_SUCCESS)
     {
         return (unlock_error);
@@ -323,13 +352,19 @@ int t_compress_stream_options::set_window_bits(int window_bits)
     int lock_error;
     int unlock_error;
 
-    lock_error = this->lock_mutex();
+    if (this->_mutex == ft_nullptr)
+        lock_error = FT_ERR_SUCCESS;
+    else
+        lock_error = this->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
     {
         return (lock_error);
     }
     this->_window_bits = window_bits;
-    unlock_error = this->unlock_mutex();
+    if (this->_mutex == ft_nullptr)
+        unlock_error = FT_ERR_SUCCESS;
+    else
+        unlock_error = this->_mutex->unlock();
     if (unlock_error != FT_ERR_SUCCESS)
     {
         return (unlock_error);
@@ -342,13 +377,19 @@ int t_compress_stream_options::set_memory_level(int memory_level)
     int lock_error;
     int unlock_error;
 
-    lock_error = this->lock_mutex();
+    if (this->_mutex == ft_nullptr)
+        lock_error = FT_ERR_SUCCESS;
+    else
+        lock_error = this->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
     {
         return (lock_error);
     }
     this->_memory_level = memory_level;
-    unlock_error = this->unlock_mutex();
+    if (this->_mutex == ft_nullptr)
+        unlock_error = FT_ERR_SUCCESS;
+    else
+        unlock_error = this->_mutex->unlock();
     if (unlock_error != FT_ERR_SUCCESS)
     {
         return (unlock_error);
@@ -361,13 +402,19 @@ int t_compress_stream_options::set_strategy(int strategy)
     int lock_error;
     int unlock_error;
 
-    lock_error = this->lock_mutex();
+    if (this->_mutex == ft_nullptr)
+        lock_error = FT_ERR_SUCCESS;
+    else
+        lock_error = this->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
     {
         return (lock_error);
     }
     this->_strategy = strategy;
-    unlock_error = this->unlock_mutex();
+    if (this->_mutex == ft_nullptr)
+        unlock_error = FT_ERR_SUCCESS;
+    else
+        unlock_error = this->_mutex->unlock();
     if (unlock_error != FT_ERR_SUCCESS)
     {
         return (unlock_error);
@@ -381,11 +428,17 @@ Pair<int, std::size_t> t_compress_stream_options::get_input_buffer_size() const
     int unlock_error;
     std::size_t input_buffer_size;
 
-    lock_error = this->lock_mutex();
+    if (this->_mutex == ft_nullptr)
+        lock_error = FT_ERR_SUCCESS;
+    else
+        lock_error = this->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
         return (Pair<int, std::size_t>(lock_error, 0));
     input_buffer_size = this->_input_buffer_size;
-    unlock_error = this->unlock_mutex();
+    if (this->_mutex == ft_nullptr)
+        unlock_error = FT_ERR_SUCCESS;
+    else
+        unlock_error = this->_mutex->unlock();
     if (unlock_error != FT_ERR_SUCCESS)
         return (Pair<int, std::size_t>(unlock_error, 0));
     return (Pair<int, std::size_t>(FT_ERR_SUCCESS, input_buffer_size));
@@ -397,11 +450,17 @@ Pair<int, std::size_t> t_compress_stream_options::get_output_buffer_size() const
     int unlock_error;
     std::size_t output_buffer_size;
 
-    lock_error = this->lock_mutex();
+    if (this->_mutex == ft_nullptr)
+        lock_error = FT_ERR_SUCCESS;
+    else
+        lock_error = this->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
         return (Pair<int, std::size_t>(lock_error, 0));
     output_buffer_size = this->_output_buffer_size;
-    unlock_error = this->unlock_mutex();
+    if (this->_mutex == ft_nullptr)
+        unlock_error = FT_ERR_SUCCESS;
+    else
+        unlock_error = this->_mutex->unlock();
     if (unlock_error != FT_ERR_SUCCESS)
         return (Pair<int, std::size_t>(unlock_error, 0));
     return (Pair<int, std::size_t>(FT_ERR_SUCCESS, output_buffer_size));
@@ -413,11 +472,17 @@ Pair<int, t_compress_stream_progress_callback> t_compress_stream_options::get_pr
     int unlock_error;
     t_compress_stream_progress_callback progress_callback;
 
-    lock_error = this->lock_mutex();
+    if (this->_mutex == ft_nullptr)
+        lock_error = FT_ERR_SUCCESS;
+    else
+        lock_error = this->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
         return (Pair<int, t_compress_stream_progress_callback>(lock_error, ft_nullptr));
     progress_callback = this->_progress_callback;
-    unlock_error = this->unlock_mutex();
+    if (this->_mutex == ft_nullptr)
+        unlock_error = FT_ERR_SUCCESS;
+    else
+        unlock_error = this->_mutex->unlock();
     if (unlock_error != FT_ERR_SUCCESS)
         return (Pair<int, t_compress_stream_progress_callback>(unlock_error, ft_nullptr));
     return (Pair<int, t_compress_stream_progress_callback>(FT_ERR_SUCCESS, progress_callback));
@@ -429,11 +494,17 @@ Pair<int, t_compress_stream_cancel_callback> t_compress_stream_options::get_canc
     int unlock_error;
     t_compress_stream_cancel_callback cancel_callback;
 
-    lock_error = this->lock_mutex();
+    if (this->_mutex == ft_nullptr)
+        lock_error = FT_ERR_SUCCESS;
+    else
+        lock_error = this->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
         return (Pair<int, t_compress_stream_cancel_callback>(lock_error, ft_nullptr));
     cancel_callback = this->_cancel_callback;
-    unlock_error = this->unlock_mutex();
+    if (this->_mutex == ft_nullptr)
+        unlock_error = FT_ERR_SUCCESS;
+    else
+        unlock_error = this->_mutex->unlock();
     if (unlock_error != FT_ERR_SUCCESS)
         return (Pair<int, t_compress_stream_cancel_callback>(unlock_error, ft_nullptr));
     return (Pair<int, t_compress_stream_cancel_callback>(FT_ERR_SUCCESS, cancel_callback));
@@ -445,11 +516,17 @@ Pair<int, void *> t_compress_stream_options::get_callback_user_data() const
     int unlock_error;
     void *user_data;
 
-    lock_error = this->lock_mutex();
+    if (this->_mutex == ft_nullptr)
+        lock_error = FT_ERR_SUCCESS;
+    else
+        lock_error = this->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
         return (Pair<int, void *>(lock_error, ft_nullptr));
     user_data = this->_callback_user_data;
-    unlock_error = this->unlock_mutex();
+    if (this->_mutex == ft_nullptr)
+        unlock_error = FT_ERR_SUCCESS;
+    else
+        unlock_error = this->_mutex->unlock();
     if (unlock_error != FT_ERR_SUCCESS)
         return (Pair<int, void *>(unlock_error, ft_nullptr));
     return (Pair<int, void *>(FT_ERR_SUCCESS, user_data));
@@ -461,11 +538,17 @@ Pair<int, int> t_compress_stream_options::get_compression_level() const
     int unlock_error;
     int compression_level;
 
-    lock_error = this->lock_mutex();
+    if (this->_mutex == ft_nullptr)
+        lock_error = FT_ERR_SUCCESS;
+    else
+        lock_error = this->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
         return (Pair<int, int>(lock_error, Z_BEST_COMPRESSION));
     compression_level = this->_compression_level;
-    unlock_error = this->unlock_mutex();
+    if (this->_mutex == ft_nullptr)
+        unlock_error = FT_ERR_SUCCESS;
+    else
+        unlock_error = this->_mutex->unlock();
     if (unlock_error != FT_ERR_SUCCESS)
         return (Pair<int, int>(unlock_error, Z_BEST_COMPRESSION));
     return (Pair<int, int>(FT_ERR_SUCCESS, compression_level));
@@ -477,11 +560,17 @@ Pair<int, int> t_compress_stream_options::get_window_bits() const
     int unlock_error;
     int window_bits;
 
-    lock_error = this->lock_mutex();
+    if (this->_mutex == ft_nullptr)
+        lock_error = FT_ERR_SUCCESS;
+    else
+        lock_error = this->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
         return (Pair<int, int>(lock_error, 0));
     window_bits = this->_window_bits;
-    unlock_error = this->unlock_mutex();
+    if (this->_mutex == ft_nullptr)
+        unlock_error = FT_ERR_SUCCESS;
+    else
+        unlock_error = this->_mutex->unlock();
     if (unlock_error != FT_ERR_SUCCESS)
         return (Pair<int, int>(unlock_error, 0));
     return (Pair<int, int>(FT_ERR_SUCCESS, window_bits));
@@ -493,11 +582,17 @@ Pair<int, int> t_compress_stream_options::get_memory_level() const
     int unlock_error;
     int memory_level;
 
-    lock_error = this->lock_mutex();
+    if (this->_mutex == ft_nullptr)
+        lock_error = FT_ERR_SUCCESS;
+    else
+        lock_error = this->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
         return (Pair<int, int>(lock_error, 0));
     memory_level = this->_memory_level;
-    unlock_error = this->unlock_mutex();
+    if (this->_mutex == ft_nullptr)
+        unlock_error = FT_ERR_SUCCESS;
+    else
+        unlock_error = this->_mutex->unlock();
     if (unlock_error != FT_ERR_SUCCESS)
         return (Pair<int, int>(unlock_error, 0));
     return (Pair<int, int>(FT_ERR_SUCCESS, memory_level));
@@ -509,11 +604,17 @@ Pair<int, int> t_compress_stream_options::get_strategy() const
     int unlock_error;
     int strategy;
 
-    lock_error = this->lock_mutex();
+    if (this->_mutex == ft_nullptr)
+        lock_error = FT_ERR_SUCCESS;
+    else
+        lock_error = this->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
         return (Pair<int, int>(lock_error, Z_DEFAULT_STRATEGY));
     strategy = this->_strategy;
-    unlock_error = this->unlock_mutex();
+    if (this->_mutex == ft_nullptr)
+        unlock_error = FT_ERR_SUCCESS;
+    else
+        unlock_error = this->_mutex->unlock();
     if (unlock_error != FT_ERR_SUCCESS)
         return (Pair<int, int>(unlock_error, Z_DEFAULT_STRATEGY));
     return (Pair<int, int>(FT_ERR_SUCCESS, strategy));
@@ -525,7 +626,10 @@ int t_compress_stream_options::snapshot(struct s_compress_stream_options_snapsho
     int unlock_error;
     int result;
 
-    lock_error = this->lock_mutex();
+    if (this->_mutex == ft_nullptr)
+        lock_error = FT_ERR_SUCCESS;
+    else
+        lock_error = this->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
     {
         return (lock_error);
@@ -545,13 +649,23 @@ int t_compress_stream_options::snapshot(struct s_compress_stream_options_snapsho
         snapshot->strategy = this->_strategy;
         result = FT_ERR_SUCCESS;
     }
-    unlock_error = this->unlock_mutex();
+    if (this->_mutex == ft_nullptr)
+        unlock_error = FT_ERR_SUCCESS;
+    else
+        unlock_error = this->_mutex->unlock();
     if (unlock_error != FT_ERR_SUCCESS)
     {
         return (unlock_error);
     }
     return (result);
 }
+
+#ifdef LIBFT_TEST_BUILD
+pt_recursive_mutex *t_compress_stream_options::get_mutex_for_validation() const
+{
+    return (this->_mutex);
+}
+#endif
 
 void    ft_compress_stream_apply_speed_preset(t_compress_stream_options *options)
 {

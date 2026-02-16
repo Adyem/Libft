@@ -64,20 +64,20 @@ int cp_receive_memory(int socket_fd, cross_process_read_result &result)
         error_offset = compute_offset(message.error_memory_address, message.stack_base_address);
         if (error_offset + sizeof(int) > message.remote_memory_size)
         {
-        if (cmp_cross_process_unlock_mutex(message, &mapping, &mutex_state) != 0)
-        {
-            cmp_cross_process_close_mapping(&mapping);
+            if (cmp_cross_process_unlock_mutex(message, &mapping, &mutex_state) != 0)
+            {
+                cmp_cross_process_close_mapping(&mapping);
+                errno = EINVAL;
+                return (-1);
+            }
+            if (cmp_cross_process_close_mapping(&mapping) != 0)
+            {
+                errno = EINVAL;
+                return (-1);
+            }
             errno = EINVAL;
             return (-1);
         }
-        if (cmp_cross_process_close_mapping(&mapping) != 0)
-        {
-            errno = EINVAL;
-            return (-1);
-        }
-        errno = EINVAL;
-        return (-1);
-    }
         std::memset(mapping.mapping_address + error_offset, 0, sizeof(int));
     }
     std::memset(mapping.mapping_address + data_offset, 0, payload_length);

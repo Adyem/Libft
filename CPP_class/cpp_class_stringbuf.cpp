@@ -66,6 +66,7 @@ ft_stringbuf::~ft_stringbuf() noexcept
 int ft_stringbuf::initialize(const ft_string &string) noexcept
 {
     int assign_error;
+    int storage_initialize_error;
 
     if (this->_initialized_state == ft_stringbuf::_state_initialized)
     {
@@ -74,13 +75,20 @@ int ft_stringbuf::initialize(const ft_string &string) noexcept
         return (FT_ERR_INVALID_STATE);
     }
     this->_position = 0;
+    storage_initialize_error = this->_storage.initialize();
+    if (storage_initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialized_state = ft_stringbuf::_state_destroyed;
+        return (storage_initialize_error);
+    }
+    this->_initialized_state = ft_stringbuf::_state_initialized;
     assign_error = this->_storage.assign(string.c_str(), string.size());
     if (assign_error != FT_ERR_SUCCESS)
     {
+        (void)this->_storage.destroy();
         this->_initialized_state = ft_stringbuf::_state_destroyed;
         return (assign_error);
     }
-    this->_initialized_state = ft_stringbuf::_state_initialized;
     return (FT_ERR_SUCCESS);
 }
 
@@ -191,15 +199,15 @@ int ft_stringbuf::enable_thread_safety(void) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-void ft_stringbuf::disable_thread_safety(void) noexcept
+int ft_stringbuf::disable_thread_safety(void) noexcept
 {
     this->abort_if_not_initialized("ft_stringbuf::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
-        return ;
-    this->_mutex->destroy();
+        return (FT_ERR_SUCCESS);
+    int destroy_error = this->_mutex->destroy();
     delete this->_mutex;
     this->_mutex = ft_nullptr;
-    return ;
+    return (destroy_error);
 }
 
 bool ft_stringbuf::is_thread_safe(void) const noexcept

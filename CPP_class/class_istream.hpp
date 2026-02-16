@@ -38,7 +38,7 @@ class ft_istream
         int initialize() noexcept;
         int destroy() noexcept;
         int enable_thread_safety(void) noexcept;
-        void disable_thread_safety(void) noexcept;
+        int disable_thread_safety(void) noexcept;
         bool is_thread_safe(void) const noexcept;
         ssize_t read(char *buffer, std::size_t count) noexcept;
         std::size_t gcount() const noexcept;

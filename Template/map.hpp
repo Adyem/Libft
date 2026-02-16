@@ -316,17 +316,22 @@ bool ft_map<Key, MappedType>::ensure_capacity(size_t desired_capacity)
     {
         construct_at(&new_data[index]);
         new_data[index].key = this->_data[index].key;
-        int initialize_error = new_data[index].value.initialize(this->_data[index].value);
-        if (initialize_error != FT_ERR_SUCCESS)
+        if constexpr (std::is_pointer<MappedType>::value)
+            new_data[index].value = this->_data[index].value;
+        else
         {
-            size_t cleanup_index = 0;
-            while (cleanup_index <= index)
+            int initialize_error = new_data[index].value.initialize(this->_data[index].value);
+            if (initialize_error != FT_ERR_SUCCESS)
             {
-                destroy_at(&new_data[cleanup_index]);
-                cleanup_index++;
+                size_t cleanup_index = 0;
+                while (cleanup_index <= index)
+                {
+                    destroy_at(&new_data[cleanup_index]);
+                    cleanup_index++;
+                }
+                cma_free(new_data);
+                return (false);
             }
-            cma_free(new_data);
-            return (false);
         }
         destroy_at(&this->_data[index]);
         index++;
@@ -474,18 +479,24 @@ void ft_map<Key, MappedType>::insert(const Key& key, const MappedType& value)
 
     if (index != this->_size)
     {
-        int destroy_error = this->_data[index].value.destroy();
-        if (destroy_error != FT_ERR_SUCCESS)
+        if constexpr (ft_map<Key, MappedType>::template has_destroy<MappedType>::value
+            && ft_map<Key, MappedType>::template has_initialize_move<MappedType>::value)
         {
-            (void)this->unlock_internal(lock_acquired);
-            return ;
+            int destroy_error = this->_data[index].value.destroy();
+            if (destroy_error != FT_ERR_SUCCESS)
+            {
+                (void)this->unlock_internal(lock_acquired);
+                return ;
+            }
+            int initialize_error = this->_data[index].value.initialize(ft_move(value));
+            if (initialize_error != FT_ERR_SUCCESS)
+            {
+                (void)this->unlock_internal(lock_acquired);
+                return ;
+            }
         }
-        int initialize_error = this->_data[index].value.initialize(ft_move(value));
-        if (initialize_error != FT_ERR_SUCCESS)
-        {
-            (void)this->unlock_internal(lock_acquired);
-            return ;
-        }
+        else
+            this->_data[index].value = value;
         (void)this->unlock_internal(lock_acquired);
         return ;
     }
@@ -514,13 +525,18 @@ void ft_map<Key, MappedType>::insert(const Key& key, const MappedType& value)
     }
     construct_at(&this->_data[this->_size]);
     this->_data[this->_size].key = key;
-    int initialize_error = this->_data[this->_size].value.initialize(ft_move(value));
-    if (initialize_error != FT_ERR_SUCCESS)
+    if constexpr (ft_map<Key, MappedType>::template has_initialize_move<MappedType>::value)
     {
-        destroy_at(&this->_data[this->_size]);
-        (void)this->unlock_internal(lock_acquired);
-        return ;
+        int initialize_error = this->_data[this->_size].value.initialize(ft_move(value));
+        if (initialize_error != FT_ERR_SUCCESS)
+        {
+            destroy_at(&this->_data[this->_size]);
+            (void)this->unlock_internal(lock_acquired);
+            return ;
+        }
     }
+    else
+        this->_data[this->_size].value = value;
     this->_size += 1;
     (void)this->unlock_internal(lock_acquired);
     return ;
@@ -539,18 +555,24 @@ void ft_map<Key, MappedType>::insert(const Key& key, MappedType&& value)
 
     if (index != this->_size)
     {
-        int destroy_error = this->_data[index].value.destroy();
-        if (destroy_error != FT_ERR_SUCCESS)
+        if constexpr (ft_map<Key, MappedType>::template has_destroy<MappedType>::value
+            && ft_map<Key, MappedType>::template has_initialize_move<MappedType>::value)
         {
-            (void)this->unlock_internal(lock_acquired);
-            return ;
+            int destroy_error = this->_data[index].value.destroy();
+            if (destroy_error != FT_ERR_SUCCESS)
+            {
+                (void)this->unlock_internal(lock_acquired);
+                return ;
+            }
+            int initialize_error = this->_data[index].value.initialize(ft_move(value));
+            if (initialize_error != FT_ERR_SUCCESS)
+            {
+                (void)this->unlock_internal(lock_acquired);
+                return ;
+            }
         }
-        int initialize_error = this->_data[index].value.initialize(ft_move(value));
-        if (initialize_error != FT_ERR_SUCCESS)
-        {
-            (void)this->unlock_internal(lock_acquired);
-            return ;
-        }
+        else
+            this->_data[index].value = ft_move(value);
         (void)this->unlock_internal(lock_acquired);
         return ;
     }
@@ -579,13 +601,18 @@ void ft_map<Key, MappedType>::insert(const Key& key, MappedType&& value)
     }
     construct_at(&this->_data[this->_size]);
     this->_data[this->_size].key = key;
-    int initialize_error = this->_data[this->_size].value.initialize(ft_move(value));
-    if (initialize_error != FT_ERR_SUCCESS)
+    if constexpr (ft_map<Key, MappedType>::template has_initialize_move<MappedType>::value)
     {
-        destroy_at(&this->_data[this->_size]);
-        (void)this->unlock_internal(lock_acquired);
-        return ;
+        int initialize_error = this->_data[this->_size].value.initialize(ft_move(value));
+        if (initialize_error != FT_ERR_SUCCESS)
+        {
+            destroy_at(&this->_data[this->_size]);
+            (void)this->unlock_internal(lock_acquired);
+            return ;
+        }
     }
+    else
+        this->_data[this->_size].value = ft_move(value);
     this->_size += 1;
     (void)this->unlock_internal(lock_acquired);
     return ;

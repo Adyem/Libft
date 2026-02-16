@@ -11,20 +11,32 @@ class rng_stream
 {
     private:
         std::mt19937 _engine;
-        mutable pt_recursive_mutex _mutex;
-        int     lock_internal(bool *lock_acquired) const;
-        int     unlock_internal(bool lock_acquired) const;
+        mutable pt_recursive_mutex *_mutex;
+        uint8_t _initialized_state;
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
+        void    abort_lifecycle_error(const char *method_name, const char *reason) const;
+        void    abort_if_not_initialized(const char *method_name) const;
         int     random_int_unlocked();
         float   random_float_unlocked();
 
     public:
         rng_stream();
         explicit rng_stream(uint32_t seed_value);
-        rng_stream(const rng_stream &other);
-        rng_stream &operator=(const rng_stream &other);
-        rng_stream(rng_stream &&other) noexcept;
-        rng_stream &operator=(rng_stream &&other) noexcept;
+        rng_stream(const rng_stream &other) = delete;
+        rng_stream &operator=(const rng_stream &other) = delete;
+        rng_stream(rng_stream &&other) noexcept = delete;
+        rng_stream &operator=(rng_stream &&other) noexcept = delete;
         ~rng_stream();
+
+        int     initialize();
+        int     initialize(const rng_stream &other);
+        int     initialize(rng_stream &&other);
+        int     destroy();
+        int     enable_thread_safety();
+        int     disable_thread_safety();
+        bool    is_thread_safe() const;
 
         int     reseed(uint32_t seed_value);
         int     reseed_from_string(const char *seed_string);
@@ -41,8 +53,9 @@ class rng_stream
         Pair<int, float> random_beta(float alpha, float beta);
         Pair<int, float> random_chi_squared(float degrees_of_freedom);
 
-        pt_recursive_mutex   *mutex_handle();
-        const pt_recursive_mutex   *mutex_handle() const;
+#ifdef LIBFT_TEST_BUILD
+        pt_recursive_mutex   *get_mutex_for_validation() const;
+#endif
 };
 
 #endif

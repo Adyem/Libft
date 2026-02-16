@@ -1,7 +1,7 @@
 #include "../test_internal.hpp"
 #include "../../Basic/basic.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
-#include "../../Errno/errno.hpp"
+#include "../../File/file_utils.hpp"
 #include "../../File/open_dir.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <cerrno>
@@ -50,21 +50,15 @@ FT_TEST(test_fopen_valid, "ft_fopen and ft_fclose basic")
     FILE *file;
 
     create_test_file();
-    ft_errno = FT_ERR_INVALID_HANDLE;
     file = ft_fopen("test_file_io.txt", "r");
     FT_ASSERT(file != ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
-    ft_errno = FT_ERR_INVALID_HANDLE;
     FT_ASSERT_EQ(FT_SUCCESS, ft_fclose(file));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
 FT_TEST(test_fopen_invalid, "ft_fopen invalid path")
 {
-    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, ft_fopen("missing_file.txt", "r"));
-    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
     return (1);
 }
 
@@ -74,29 +68,21 @@ FT_TEST(test_fopen_invalid_mode_sets_errno, "ft_fopen invalid mode reports EINVA
 
     create_test_file();
     errno = 0;
-    ft_errno = FT_ERR_SUCCESS;
     file = ft_fopen("test_file_io.txt", "invalid");
     FT_ASSERT_EQ(ft_nullptr, file);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
 FT_TEST(test_fopen_null, "ft_fopen with null")
 {
-    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, ft_fopen(ft_nullptr, "r"));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
-    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, ft_fopen("test_file_io.txt", ft_nullptr));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
 FT_TEST(test_fclose_null, "ft_fclose with null")
 {
-    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(EOF, ft_fclose(ft_nullptr));
-    FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, ft_errno);
     return (1);
 }
 
@@ -109,9 +95,7 @@ FT_TEST(test_fclose_failure_sets_errno, "ft_fclose propagates fclose failures")
     if (file == ft_nullptr)
         return (0);
     force_file_descriptor_failure(file);
-    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(EOF, ft_fclose(file));
-    FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, ft_errno);
     return (1);
 }
 
@@ -121,22 +105,14 @@ FT_TEST(test_fgets_basic, "ft_fgets basic")
     FILE *file;
 
     create_test_file();
-    ft_errno = FT_ERR_INVALID_HANDLE;
     file = ft_fopen("test_file_io.txt", "r");
     if (file == ft_nullptr)
         return (0);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
-    ft_errno = FT_ERR_INVALID_HANDLE;
     FT_ASSERT_EQ(buffer, ft_fgets(buffer, 16, file));
     FT_ASSERT_EQ(0, ft_strcmp(buffer, "Line1\n"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
-    ft_errno = FT_ERR_INVALID_HANDLE;
     FT_ASSERT_EQ(buffer, ft_fgets(buffer, 16, file));
     FT_ASSERT_EQ(0, ft_strcmp(buffer, "Line2\n"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
-    ft_errno = FT_ERR_INVALID_HANDLE;
     FT_ASSERT_EQ(ft_nullptr, ft_fgets(buffer, 16, file));
-    FT_ASSERT_EQ(FT_ERR_END_OF_FILE, ft_errno);
     FT_ASSERT_EQ(FT_SUCCESS, ft_fclose(file));
     return (1);
 }
@@ -147,24 +123,14 @@ FT_TEST(test_fgets_edge_cases, "ft_fgets edge cases")
     FILE *file;
 
     create_test_file();
-    ft_errno = FT_ERR_INVALID_HANDLE;
     file = ft_fopen("test_file_io.txt", "r");
     if (file == ft_nullptr)
         return (0);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
-    ft_errno = FT_ERR_INVALID_HANDLE;
     FT_ASSERT_EQ(buffer, ft_fgets(buffer, 5, file));
     FT_ASSERT_EQ(0, ft_strcmp(buffer, "Line"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
-    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, ft_fgets(ft_nullptr, 5, file));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
-    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, ft_fgets(buffer, 0, file));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
-    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, ft_fgets(buffer, 5, ft_nullptr));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(FT_SUCCESS, ft_fclose(file));
     return (1);
 }
@@ -180,15 +146,11 @@ FT_TEST(test_fgets_negative_size_sets_errno, "ft_fgets rejects negative sizes an
     file = ft_fopen("test_file_io.txt", "r");
     if (file == ft_nullptr)
         return (0);
-    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, ft_fgets(buffer, -1, file));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ('X', buffer[0]);
     FT_ASSERT_EQ('\0', buffer[1]);
-    ft_errno = FT_ERR_INVALID_HANDLE;
     FT_ASSERT_EQ(buffer, ft_fgets(buffer, sizeof(buffer), file));
     FT_ASSERT_EQ(0, ft_strcmp(buffer, "Line1\n"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT_EQ(FT_SUCCESS, ft_fclose(file));
     return (1);
 }
@@ -203,9 +165,7 @@ FT_TEST(test_fgets_stream_error_sets_errno, "ft_fgets reports stream errors")
     if (file == ft_nullptr)
         return (0);
     force_file_descriptor_failure(file);
-    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, ft_fgets(buffer, sizeof(buffer), file));
-    FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, ft_errno);
     return (1);
 }
 

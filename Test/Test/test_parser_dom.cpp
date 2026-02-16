@@ -307,6 +307,8 @@ FT_TEST(test_yaml_dom_bridge_round_trip, "yaml dom bridge round trips maps and a
     if (!root_guard.get())
         return (0);
     root_pointer = root_guard.get();
+    if (root_pointer->initialize() != FT_ERR_SUCCESS)
+        return (0);
     root_pointer->set_type(YAML_MAP);
     if (root_pointer->get_error() != FT_ERR_SUCCESS)
         return (0);
@@ -314,11 +316,15 @@ FT_TEST(test_yaml_dom_bridge_round_trip, "yaml dom bridge round trips maps and a
     if (!items_guard.get())
         return (0);
     items_pointer = items_guard.get();
+    if (items_pointer->initialize() != FT_ERR_SUCCESS)
+        return (0);
     items_pointer->set_type(YAML_LIST);
     if (items_pointer->get_error() != FT_ERR_SUCCESS)
         return (0);
     first_value_guard.reset(new (std::nothrow) yaml_value());
     if (!first_value_guard.get())
+        return (0);
+    if (first_value_guard->initialize() != FT_ERR_SUCCESS)
         return (0);
     first_value_guard->set_scalar("one");
     if (first_value_guard->get_error() != FT_ERR_SUCCESS)
@@ -329,6 +335,8 @@ FT_TEST(test_yaml_dom_bridge_round_trip, "yaml dom bridge round trips maps and a
     first_value_guard.release();
     second_value_guard.reset(new (std::nothrow) yaml_value());
     if (!second_value_guard.get())
+        return (0);
+    if (second_value_guard->initialize() != FT_ERR_SUCCESS)
         return (0);
     second_value_guard->set_scalar("two");
     if (second_value_guard->get_error() != FT_ERR_SUCCESS)

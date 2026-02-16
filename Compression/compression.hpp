@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include "../CPP_class/class_string.hpp"
-#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "../Template/pair.hpp"
 #include "../Template/vector.hpp"
 
@@ -39,14 +39,12 @@ class t_compress_stream_options
         int                                     _window_bits;
         int                                     _memory_level;
         int                                     _strategy;
-        mutable pt_mutex                        *_mutex;
+        mutable pt_recursive_mutex              *_mutex;
         uint8_t                                 _initialized_state;
         static const uint8_t                    _state_uninitialized = 0;
         static const uint8_t                    _state_destroyed = 1;
         static const uint8_t                    _state_initialized = 2;
 
-        int     lock_mutex() const;
-        int     unlock_mutex() const;
         void    abort_lifecycle_error(const char *method_name,
                     const char *reason) const;
         void    abort_if_not_initialized(const char *method_name) const;
@@ -62,7 +60,8 @@ class t_compress_stream_options
         int     initialize(void);
         int     destroy(void);
         int     enable_thread_safety();
-        void    disable_thread_safety();
+        int     disable_thread_safety();
+        bool    is_thread_safe() const;
 
         int         reset(void);
         int         set_input_buffer_size(std::size_t input_buffer_size);
@@ -86,6 +85,9 @@ class t_compress_stream_options
         Pair<int, int> get_memory_level() const;
         Pair<int, int> get_strategy() const;
         int         snapshot(struct s_compress_stream_options_snapshot *snapshot) const;
+#ifdef LIBFT_TEST_BUILD
+        pt_recursive_mutex *get_mutex_for_validation() const;
+#endif
 };
 
 int              ft_compress_stream_with_options(int input_fd, int output_fd, const t_compress_stream_options *options);

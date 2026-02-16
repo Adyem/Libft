@@ -13,6 +13,8 @@
 FT_TEST(test_json_document_find_item_by_pointer_success, "json document resolves pointers to items")
 {
     json_document document;
+    if (document.initialize() != FT_ERR_SUCCESS)
+        return (0);
     json_group *group = document.create_group("config");
     FT_ASSERT(group != ft_nullptr);
     json_item *item = document.create_item("name", "value");
@@ -32,6 +34,8 @@ FT_TEST(test_json_document_find_item_by_pointer_success, "json document resolves
 FT_TEST(test_json_document_find_item_by_pointer_missing_path_sets_error, "json document reports missing pointer paths")
 {
     json_document document;
+    if (document.initialize() != FT_ERR_SUCCESS)
+        return (0);
     json_group *group = document.create_group("config");
     FT_ASSERT(group != ft_nullptr);
     document.append_group(group);
@@ -44,6 +48,8 @@ FT_TEST(test_json_document_find_item_by_pointer_missing_path_sets_error, "json d
 FT_TEST(test_json_document_pointer_unescapes_tokens, "json document pointer decoding supports escaped segments")
 {
     json_document document;
+    if (document.initialize() != FT_ERR_SUCCESS)
+        return (0);
     json_group *group = document.create_group("config/advanced");
     FT_ASSERT(group != ft_nullptr);
     json_item *item = document.create_item("name~value", "42");
@@ -63,6 +69,8 @@ FT_TEST(test_json_document_pointer_unescapes_tokens, "json document pointer deco
 FT_TEST(test_json_document_pointer_requires_leading_slash, "json document pointer requires a leading slash")
 {
     json_document document;
+    if (document.initialize() != FT_ERR_SUCCESS)
+        return (0);
     json_group *group = document.create_group("config");
     FT_ASSERT(group != ft_nullptr);
     json_item *item = document.create_item("name", "value");
@@ -78,6 +86,8 @@ FT_TEST(test_json_document_pointer_requires_leading_slash, "json document pointe
 FT_TEST(test_json_document_pointer_rejects_empty_segment, "json document pointer rejects empty path segments")
 {
     json_document document;
+    if (document.initialize() != FT_ERR_SUCCESS)
+        return (0);
     json_group *group = document.create_group("config");
     FT_ASSERT(group != ft_nullptr);
     json_item *item = document.create_item("name", "value");
@@ -93,6 +103,8 @@ FT_TEST(test_json_document_pointer_rejects_empty_segment, "json document pointer
 FT_TEST(test_json_document_pointer_invalid_escape_sets_error, "json document pointer invalid escapes set errors")
 {
     json_document document;
+    if (document.initialize() != FT_ERR_SUCCESS)
+        return (0);
     json_group *group = document.create_group("config");
     FT_ASSERT(group != ft_nullptr);
     json_item *item = document.create_item("name", "value");

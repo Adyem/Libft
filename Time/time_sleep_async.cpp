@@ -1,7 +1,8 @@
 #include "time.hpp"
 #include "../Errno/errno.hpp"
-#include "../Networking/networking.hpp"
 #include <climits>
+
+int event_loop_run(event_loop *loop, int timeout_milliseconds);
 
 void    time_async_sleep_init(t_time_async_sleep *sleep_state, long long delay_milliseconds)
 {
@@ -10,7 +11,7 @@ void    time_async_sleep_init(t_time_async_sleep *sleep_state, long long delay_m
 
     if (!sleep_state)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
+        (void)(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     now_point = time_monotonic_point_now();
@@ -22,7 +23,7 @@ void    time_async_sleep_init(t_time_async_sleep *sleep_state, long long delay_m
         sleep_state->completed = true;
     else
         sleep_state->completed = false;
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    (void)(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -30,10 +31,10 @@ bool    time_async_sleep_is_complete(const t_time_async_sleep *sleep_state)
 {
     if (!sleep_state)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
+        (void)(FT_ERR_INVALID_ARGUMENT);
         return (true);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    (void)(FT_ERR_SUCCESS);
     return (sleep_state->completed);
 }
 
@@ -44,12 +45,12 @@ long long   time_async_sleep_remaining_ms(t_time_async_sleep *sleep_state)
 
     if (!sleep_state)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
+        (void)(FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
     if (sleep_state->completed)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
+        (void)(FT_ERR_SUCCESS);
         return (0);
     }
     now_point = time_monotonic_point_now();
@@ -57,10 +58,10 @@ long long   time_async_sleep_remaining_ms(t_time_async_sleep *sleep_state)
     if (remaining <= 0)
     {
         sleep_state->completed = true;
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
+        (void)(FT_ERR_SUCCESS);
         return (0);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    (void)(FT_ERR_SUCCESS);
     return (remaining);
 }
 
@@ -73,19 +74,19 @@ int time_async_sleep_poll(event_loop *loop, t_time_async_sleep *sleep_state)
 
     if (!loop || !sleep_state)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
+        (void)(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     remaining = time_async_sleep_remaining_ms(sleep_state);
-    error_code = ft_global_error_stack_drop_last_error();
+    error_code = FT_ERR_SUCCESS;
     if (error_code != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(error_code);
+        (void)(error_code);
         return (-1);
     }
     if (sleep_state->completed)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
+        (void)(FT_ERR_SUCCESS);
         return (0);
     }
     if (remaining > static_cast<long long>(INT_MAX))
@@ -95,24 +96,24 @@ int time_async_sleep_poll(event_loop *loop, t_time_async_sleep *sleep_state)
     poll_result = event_loop_run(loop, timeout);
     if (poll_result < 0)
     {
-        ft_global_error_stack_push(FT_ERR_IO);
+        (void)(FT_ERR_IO);
         return (-1);
     }
     if (poll_result == 0)
     {
         remaining = time_async_sleep_remaining_ms(sleep_state);
-        error_code = ft_global_error_stack_drop_last_error();
+        error_code = FT_ERR_SUCCESS;
         if (error_code != FT_ERR_SUCCESS)
         {
-            ft_global_error_stack_push(error_code);
+            (void)(error_code);
             return (-1);
         }
         if (sleep_state->completed)
         {
-            ft_global_error_stack_push(FT_ERR_SUCCESS);
+            (void)(FT_ERR_SUCCESS);
             return (0);
         }
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    (void)(FT_ERR_SUCCESS);
     return (1);
 }

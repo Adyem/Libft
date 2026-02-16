@@ -60,15 +60,15 @@ int ft_fd_istream::enable_thread_safety(void) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-void ft_fd_istream::disable_thread_safety(void) noexcept
+int ft_fd_istream::disable_thread_safety(void) noexcept
 {
     this->abort_if_not_initialized("ft_fd_istream::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
-        return ;
-    this->_mutex->destroy();
+        return (FT_ERR_SUCCESS);
+    int destroy_error = this->_mutex->destroy();
     delete this->_mutex;
     this->_mutex = ft_nullptr;
-    return ;
+    return (destroy_error);
 }
 
 bool ft_fd_istream::is_thread_safe(void) const noexcept
@@ -88,9 +88,6 @@ ft_fd_istream::ft_fd_istream(int fd) noexcept
         return ;
     }
     this->_initialized_state = ft_fd_istream::_state_initialized;
-    initialize_error = this->enable_thread_safety();
-    if (initialize_error != FT_ERR_SUCCESS)
-        this->_initialized_state = ft_fd_istream::_state_destroyed;
     return ;
 }
 

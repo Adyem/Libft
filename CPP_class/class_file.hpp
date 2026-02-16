@@ -20,11 +20,6 @@ class ft_file
 
         int lock_mutex(void) const noexcept;
         int unlock_mutex(void) const noexcept;
-        int prepare_thread_safety(void) noexcept;
-        void teardown_thread_safety(void) noexcept;
-        int enable_thread_safety(void) noexcept;
-        void disable_thread_safety(void) noexcept;
-        bool is_thread_safe_enabled(void) const noexcept;
 
     public:
         ft_file() noexcept;
@@ -48,6 +43,9 @@ class ft_file
                         __attribute__((format(printf, 2, 3), hot));
         int            copy_to(const char *destination_path) noexcept;
         int            copy_to_with_buffer(const char *destination_path, size_t buffer_size) noexcept;
+        int            enable_thread_safety(void) noexcept;
+        int            disable_thread_safety(void) noexcept;
+        bool           is_thread_safe(void) const noexcept;
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex &recursive_mutex(void) noexcept;
 #endif

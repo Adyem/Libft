@@ -72,6 +72,8 @@ typedef struct s_time_benchmark_snapshot
 }   t_time_benchmark_snapshot;
 
 t_time  time_now(void);
+long int    ft_time_ms(void);
+char    *ft_time_format(char *buffer, size_t buffer_size);
 long    time_now_ms(void);
 long long   time_monotonic(void);
 t_monotonic_time_point   time_monotonic_point_now(void);

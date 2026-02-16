@@ -26,7 +26,7 @@ int ft_file::unlock_mutex(void) const noexcept
     return (this->_mutex->unlock());
 }
 
-int ft_file::prepare_thread_safety(void) noexcept
+int ft_file::enable_thread_safety(void) noexcept
 {
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
@@ -45,30 +45,18 @@ int ft_file::prepare_thread_safety(void) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-void ft_file::teardown_thread_safety(void) noexcept
+int ft_file::disable_thread_safety(void) noexcept
 {
     if (this->_mutex == ft_nullptr)
-        return ;
+        return (FT_ERR_SUCCESS);
     int destroy_error = this->_mutex->destroy();
 
-    (void)destroy_error;
     delete this->_mutex;
     this->_mutex = ft_nullptr;
-    return ;
+    return (destroy_error);
 }
 
-int ft_file::enable_thread_safety(void) noexcept
-{
-    return (this->prepare_thread_safety());
-}
-
-void ft_file::disable_thread_safety(void) noexcept
-{
-    this->teardown_thread_safety();
-    return ;
-}
-
-bool ft_file::is_thread_safe_enabled(void) const noexcept
+bool ft_file::is_thread_safe(void) const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }

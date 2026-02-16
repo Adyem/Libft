@@ -114,15 +114,15 @@ int ft_ofstream::enable_thread_safety(void) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-void ft_ofstream::disable_thread_safety(void) noexcept
+int ft_ofstream::disable_thread_safety(void) noexcept
 {
     this->abort_if_not_initialized("ft_ofstream::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
-        return ;
-    this->_mutex->destroy();
+        return (FT_ERR_SUCCESS);
+    int destroy_error = this->_mutex->destroy();
     delete this->_mutex;
     this->_mutex = ft_nullptr;
-    return ;
+    return (destroy_error);
 }
 
 bool ft_ofstream::is_thread_safe(void) const noexcept

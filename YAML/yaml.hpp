@@ -5,6 +5,8 @@
 #include "../Template/vector.hpp"
 #include "../Template/map.hpp"
 #include "../Parser/document_backend.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include <cstdint>
 
 enum yaml_type
 {
@@ -16,37 +18,25 @@ enum yaml_type
 class yaml_value
 {
     private:
-        
+        uint8_t _state;
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
         yaml_type _type;
         ft_string _scalar;
         ft_vector<yaml_value*> _list;
         ft_map<ft_string, yaml_value*> _map;
         ft_vector<ft_string> _map_keys;
 
-        mutable pt_mutex *_mutex;
-        mutable bool _thread_safe_enabled;
+        mutable pt_recursive_mutex *_mutex;
 
-        int prepare_thread_safety() noexcept;
-        void teardown_thread_safety() noexcept;
         int lock(bool *lock_acquired) const noexcept;
         int unlock(bool lock_acquired) const noexcept;
+        void abort_lifecycle_error(const char *method_name,
+            const char *reason) const noexcept;
+        void abort_if_not_initialized(const char *method_name) const noexcept;
 
     public:
-        class thread_guard
-        {
-            private:
-                const yaml_value *_value;
-                bool _lock_acquired;
-                int _status;
-
-            public:
-                thread_guard(const yaml_value *value) noexcept;
-                ~thread_guard() noexcept;
-
-                int get_status() const noexcept;
-                bool lock_acquired() const noexcept;
-        };
-
         yaml_value() noexcept;
         ~yaml_value() noexcept;
 
@@ -54,6 +44,12 @@ class yaml_value
         yaml_value &operator=(const yaml_value &) = delete;
         yaml_value(yaml_value &&) = delete;
         yaml_value &operator=(yaml_value &&) = delete;
+
+        int initialize() noexcept;
+        int destroy() noexcept;
+        int enable_thread_safety() noexcept;
+        int disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
 
         void set_type(yaml_type type) noexcept;
         yaml_type get_type() const noexcept;
@@ -68,9 +64,9 @@ class yaml_value
         const ft_map<ft_string, yaml_value*> &get_map() const noexcept;
         const ft_vector<ft_string> &get_map_keys() const noexcept;
 
-        bool is_thread_safe_enabled() const noexcept;
-        // Low-level mutex access for validation after construction.
-        pt_mutex *mutex_handle() const noexcept;
+#ifdef LIBFT_TEST_BUILD
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
+#endif
 };
 
 size_t      yaml_find_char(const ft_string &string, char character) noexcept;

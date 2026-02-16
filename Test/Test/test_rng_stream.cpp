@@ -17,6 +17,10 @@ FT_TEST(test_rng_stream_independent_seeds, "rng_stream instances keep independen
     Pair<int, int> first_result;
     Pair<int, int> second_result;
 
+    if (first_stream.initialize() != FT_ERR_SUCCESS)
+        return (0);
+    if (second_stream.initialize() != FT_ERR_SUCCESS)
+        return (0);
     index = 0;
     while (index < 3)
     {
@@ -46,6 +50,8 @@ FT_TEST(test_rng_stream_reseed_from_string, "rng_stream can reseed from string a
     Pair<int, int> value_result;
     int reseed_error;
 
+    if (stream_instance.initialize() != FT_ERR_SUCCESS)
+        return (0);
     value_result = stream_instance.random_int();
     if (value_result.key != FT_ERR_SUCCESS)
         return (0);
@@ -68,16 +74,20 @@ FT_TEST(test_rng_stream_reseed_from_string, "rng_stream can reseed from string a
 FT_TEST(test_rng_stream_copy_preserves_state, "rng_stream copy produces identical subsequent samples")
 {
     rng_stream original_stream(987u);
+    rng_stream copied_stream;
     int first_sample;
     int second_sample_original;
     int second_sample_copy;
     Pair<int, int> sample_result;
 
+    if (original_stream.initialize() != FT_ERR_SUCCESS)
+        return (0);
     sample_result = original_stream.random_int();
     if (sample_result.key != FT_ERR_SUCCESS)
         return (0);
     first_sample = sample_result.value;
-    rng_stream copied_stream(original_stream);
+    if (copied_stream.initialize(original_stream) != FT_ERR_SUCCESS)
+        return (0);
     sample_result = original_stream.random_int();
     if (sample_result.key != FT_ERR_SUCCESS)
         return (0);

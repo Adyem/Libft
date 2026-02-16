@@ -38,7 +38,7 @@ class ft_stringbuf
         bool is_valid() const noexcept;
         int str(ft_string &value) const noexcept;
         int enable_thread_safety(void) noexcept;
-        void disable_thread_safety(void) noexcept;
+        int disable_thread_safety(void) noexcept;
         bool is_thread_safe(void) const noexcept;
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex *get_mutex_for_validation() const noexcept;

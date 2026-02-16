@@ -2,9 +2,9 @@ include ../compiler_flags.mk
 TARGET := compression.a
 DEBUG_TARGET := compression_debug.a
 
-SRCS := compression_zlib.cpp \
-        compression_stream.cpp \
-        compression_base64.cpp
+SRCS := Compression_zlib.cpp \
+        Compression_stream.cpp \
+        Compression_base64.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
@@ -97,4 +97,3 @@ re: fclean all
 both: all debug
 
 .PHONY: all clean fclean re debug both
-

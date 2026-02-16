@@ -16,14 +16,14 @@ static bool load_utc_time(std::time_t standard_time, std::tm *utc_out)
 
     if (!utc_out)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
+        (void)(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
     mutex_result = g_gmtime_mutex.lock();
     if ((&g_gmtime_mutex) == ft_nullptr)
         mutex_error = FT_ERR_SUCCESS;
     else
-        mutex_error = ft_global_error_stack_drop_last_error();
+        mutex_error = FT_ERR_SUCCESS;
     {
         int reported_error;
 
@@ -34,7 +34,7 @@ static bool load_utc_time(std::time_t standard_time, std::tm *utc_out)
 
         if (reported_error != FT_SUCCESS)
         {
-            ft_global_error_stack_push(reported_error);
+            (void)(reported_error);
             return (false);
         }
     }
@@ -45,7 +45,7 @@ static bool load_utc_time(std::time_t standard_time, std::tm *utc_out)
         if ((&g_gmtime_mutex) == ft_nullptr)
             mutex_error = FT_ERR_SUCCESS;
         else
-            mutex_error = ft_global_error_stack_drop_last_error();
+            mutex_error = FT_ERR_SUCCESS;
         {
             int reported_error;
 
@@ -56,11 +56,11 @@ static bool load_utc_time(std::time_t standard_time, std::tm *utc_out)
 
             if (reported_error != FT_SUCCESS)
             {
-                ft_global_error_stack_push(reported_error);
+                (void)(reported_error);
                 return (false);
             }
         }
-        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
+        (void)(FT_ERR_OUT_OF_RANGE);
         return (false);
     }
     *utc_out = *utc_pointer;
@@ -68,7 +68,7 @@ static bool load_utc_time(std::time_t standard_time, std::tm *utc_out)
     if ((&g_gmtime_mutex) == ft_nullptr)
         mutex_error = FT_ERR_SUCCESS;
     else
-        mutex_error = ft_global_error_stack_drop_last_error();
+        mutex_error = FT_ERR_SUCCESS;
     {
         int reported_error;
 
@@ -79,11 +79,11 @@ static bool load_utc_time(std::time_t standard_time, std::tm *utc_out)
 
         if (reported_error != FT_SUCCESS)
         {
-            ft_global_error_stack_push(reported_error);
+            (void)(reported_error);
             return (false);
         }
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    (void)(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -100,48 +100,48 @@ bool    time_get_local_offset(t_time time_value, int *offset_minutes, bool *is_d
 
     if (!offset_minutes && !is_daylight_saving)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
+        (void)(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
     standard_time = static_cast<std::time_t>(time_value);
     if (cmp_localtime(&standard_time, &local_time) != 0)
     {
-        error_code = ft_global_error_stack_drop_last_error();
+        error_code = FT_ERR_SUCCESS;
         if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_INTERNAL;
-        ft_global_error_stack_push(error_code);
+        (void)(error_code);
         return (false);
     }
     if (!load_utc_time(standard_time, &utc_time))
     {
-        error_code = ft_global_error_stack_drop_last_error();
+        error_code = FT_ERR_SUCCESS;
         if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_INTERNAL;
-        ft_global_error_stack_push(error_code);
+        (void)(error_code);
         return (false);
     }
     local_epoch = std::mktime(&local_time);
     if (local_epoch == static_cast<std::time_t>(-1))
     {
-        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
+        (void)(FT_ERR_OUT_OF_RANGE);
         return (false);
     }
     utc_epoch = std::mktime(&utc_time);
     if (utc_epoch == static_cast<std::time_t>(-1))
     {
-        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
+        (void)(FT_ERR_OUT_OF_RANGE);
         return (false);
     }
     difference_seconds = static_cast<long long>(local_epoch) - static_cast<long long>(utc_epoch);
     minute_difference = difference_seconds / 60;
     if (minute_difference > static_cast<long long>(std::numeric_limits<int>::max()))
     {
-        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
+        (void)(FT_ERR_OUT_OF_RANGE);
         return (false);
     }
     if (minute_difference < static_cast<long long>(std::numeric_limits<int>::min()))
     {
-        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
+        (void)(FT_ERR_OUT_OF_RANGE);
         return (false);
     }
     if (offset_minutes)
@@ -153,7 +153,7 @@ bool    time_get_local_offset(t_time time_value, int *offset_minutes, bool *is_d
         else
             *is_daylight_saving = false;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    (void)(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -167,7 +167,7 @@ bool    time_convert_timezone(t_time time_value, int source_offset_minutes, int 
 
     if (!converted_time)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
+        (void)(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
     base_seconds = static_cast<long long>(time_value);
@@ -177,15 +177,15 @@ bool    time_convert_timezone(t_time time_value, int source_offset_minutes, int 
     converted_seconds = utc_seconds + target_offset_seconds;
     if (converted_seconds > static_cast<long long>(std::numeric_limits<t_time>::max()))
     {
-        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
+        (void)(FT_ERR_OUT_OF_RANGE);
         return (false);
     }
     if (converted_seconds < static_cast<long long>(std::numeric_limits<t_time>::min()))
     {
-        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
+        (void)(FT_ERR_OUT_OF_RANGE);
         return (false);
     }
     *converted_time = static_cast<t_time>(converted_seconds);
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    (void)(FT_ERR_SUCCESS);
     return (true);
 }

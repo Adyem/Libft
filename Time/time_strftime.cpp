@@ -28,7 +28,7 @@ static size_t   format_time_component(char *destination, size_t destination_size
     {
         if (digit_count >= sizeof(reversed_digits))
         {
-            ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
+            (void)(FT_ERR_OUT_OF_RANGE);
             return (0);
         }
         reversed_digits[digit_count] = '0';
@@ -38,7 +38,7 @@ static size_t   format_time_component(char *destination, size_t destination_size
     {
         if (digit_count >= sizeof(reversed_digits))
         {
-            ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
+            (void)(FT_ERR_OUT_OF_RANGE);
             return (0);
         }
         reversed_digits[digit_count] = static_cast<char>('0' + (magnitude % 10));
@@ -49,7 +49,7 @@ static size_t   format_time_component(char *destination, size_t destination_size
     {
         if (digit_count >= sizeof(reversed_digits))
         {
-            ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
+            (void)(FT_ERR_OUT_OF_RANGE);
             return (0);
         }
         reversed_digits[digit_count] = '-';
@@ -60,7 +60,7 @@ static size_t   format_time_component(char *destination, size_t destination_size
         required_length = static_cast<size_t>(minimum_width);
     if (required_length >= destination_size)
     {
-        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
+        (void)(FT_ERR_OUT_OF_RANGE);
         return (0);
     }
     destination[required_length] = '\0';
@@ -77,7 +77,7 @@ static size_t   format_time_component(char *destination, size_t destination_size
         index--;
         destination[index] = '0';
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    (void)(FT_ERR_SUCCESS);
     return (required_length);
 }
 
@@ -96,17 +96,17 @@ size_t  time_strftime(char *buffer, size_t size, const char *format, const t_tim
 
     if (!buffer || size == 0 || !format || !time_info)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
+        (void)(FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
     lock_acquired = false;
     lock_error = time_info_lock(time_info, &lock_acquired);
-    error_code = ft_global_error_stack_drop_last_error();
+    error_code = FT_ERR_SUCCESS;
     if (lock_error != 0 || error_code != FT_ERR_SUCCESS)
     {
         if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_INVALID_STATE;
-        ft_global_error_stack_push(error_code);
+        (void)(error_code);
         return (0);
     }
     format_index = 0;
@@ -149,7 +149,7 @@ size_t  time_strftime(char *buffer, size_t size, const char *format, const t_tim
                 else
                     minimum_width = 2;
                 length = format_time_component(number_buffer, sizeof(number_buffer), value, minimum_width);
-                error_code = ft_global_error_stack_drop_last_error();
+                error_code = FT_ERR_SUCCESS;
                 if (length == 0 && error_code != FT_ERR_SUCCESS)
                 {
                     if (output_index < size)
@@ -198,17 +198,17 @@ size_t  time_strftime(char *buffer, size_t size, const char *format, const t_tim
             error_code = FT_ERR_OUT_OF_RANGE;
     }
     time_info_unlock(time_info, lock_acquired);
-    error_code = ft_global_error_stack_drop_last_error();
+    error_code = FT_ERR_SUCCESS;
     if (error_code != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(error_code);
+        (void)(error_code);
         return (0);
     }
     if (formatted_length == 0)
     {
-        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
+        (void)(FT_ERR_OUT_OF_RANGE);
         return (0);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    (void)(FT_ERR_SUCCESS);
     return (formatted_length);
 }

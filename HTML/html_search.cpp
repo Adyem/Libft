@@ -1,6 +1,7 @@
 #include "parser.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Basic/basic.hpp"
+#include "../Advanced/advanced.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
 
@@ -9,16 +10,10 @@ static int normalize_selector_value(char *value_string)
     size_t value_length;
     char opening_character;
     char closing_character;
-    int length_error;
 
     if (!value_string)
         return (0);
     value_length = ft_strlen_size_t(value_string);
-    length_error = ft_global_error_stack_drop_last_error();
-    if (length_error != FT_ERR_SUCCESS)
-    {
-        return (-1);
-    }
     if (value_length < 2)
         return (0);
     opening_character = value_string[0];
@@ -209,10 +204,10 @@ html_node *html_find_by_selector(html_node *node_list, const char *selector)
         equal_sign = ft_strchr(selector + 1, '=');
         if (equal_sign && equal_sign < close_bracket)
         {
-            key = cma_substr(selector + 1, 0, static_cast<size_t>(equal_sign - selector - 1));
+            key = adv_strndup(selector + 1, static_cast<size_t>(equal_sign - selector - 1));
             if (!key)
                 return (ft_nullptr);
-            value = cma_substr(equal_sign + 1, 0, static_cast<size_t>(close_bracket - equal_sign - 1));
+            value = adv_strndup(equal_sign + 1, static_cast<size_t>(close_bracket - equal_sign - 1));
             if (!value)
             {
                 cma_free(key);
@@ -229,7 +224,7 @@ html_node *html_find_by_selector(html_node *node_list, const char *selector)
             cma_free(value);
             return (result);
         }
-        key = cma_substr(selector + 1, 0, static_cast<size_t>(close_bracket - selector - 1));
+        key = adv_strndup(selector + 1, static_cast<size_t>(close_bracket - selector - 1));
         if (!key)
             return (ft_nullptr);
         result = html_find_by_attr(node_list, key, ft_nullptr);

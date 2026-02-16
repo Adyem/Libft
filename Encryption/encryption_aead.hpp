@@ -41,6 +41,9 @@ class encryption_aead_context
 
         int     initialize();
         int     destroy();
+        int     enable_thread_safety();
+        int     disable_thread_safety();
+        bool    is_thread_safe() const;
 
         int     initialize_encrypt(const unsigned char *key, size_t key_length,
                     const unsigned char *iv, size_t iv_length);
@@ -52,6 +55,9 @@ class encryption_aead_context
         int     finalize(unsigned char *tag, size_t tag_length);
         int     set_tag(const unsigned char *tag, size_t tag_length);
         void    reset();
+#ifdef LIBFT_TEST_BUILD
+        pt_recursive_mutex *get_mutex_for_validation() const;
+#endif
 };
 
 bool    encryption_aead_encrypt(const unsigned char *key, size_t key_length,

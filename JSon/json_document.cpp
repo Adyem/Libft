@@ -1,14 +1,18 @@
 #include "document.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../Printf/printf.hpp"
+#include "../System_utils/system_utils.hpp"
 
 #include <cstdio>
 #include <cstddef>
+#include <new>
 
 #include "../CMA/CMA.hpp"
 #include "../Basic/basic.hpp"
 
 static thread_local int g_json_document_last_error = FT_ERR_SUCCESS;
+static thread_local pt_mutex *g_json_document_locked_mutex = ft_nullptr;
 
 static void json_document_push_error(int error_code)
 {
@@ -25,6 +29,25 @@ static void json_document_push_error(int error_code)
 static int json_document_last_error(void)
 {
     return (g_json_document_last_error);
+}
+
+void json_document::abort_lifecycle_error(const char *method_name, const char *reason) const
+{
+    if (method_name == ft_nullptr)
+        method_name = "unknown";
+    if (reason == ft_nullptr)
+        reason = "unknown";
+    pf_printf_fd(2, "json_document lifecycle error: %s: %s\n", method_name, reason);
+    su_abort();
+    return ;
+}
+
+void json_document::abort_if_not_initialized(const char *method_name) const
+{
+    if (this->_initialized_state == json_document::_state_initialized)
+        return ;
+    this->abort_lifecycle_error(method_name, "called while object is not initialized");
+    return ;
 }
 
 static char *json_document_unescape_pointer_token(const char *start, size_t length) noexcept
@@ -69,17 +92,18 @@ static char *json_document_unescape_pointer_token(const char *start, size_t leng
     JSON_DOCUMENT_SUCCESS_RETURN(token);
 }
 
-static void json_document_finalize_guard(ft_unique_lock<pt_mutex> &guard) noexcept
+static void json_document_finalize_guard() noexcept
 {
     int operation_error = json_document_last_error();
     int guard_error;
 
-    if (guard.owns_lock())
-        guard_error = guard.unlock();
+        if (g_json_document_locked_mutex != ft_nullptr)
+    {
+        guard_error = g_json_document_locked_mutex->unlock();
+        g_json_document_locked_mutex = ft_nullptr;
+    }
     else
         guard_error = FT_ERR_SUCCESS;
-    if (guard.is_initialized())
-        guard.destroy();
 
     if (guard_error != FT_ERR_SUCCESS)
     {
@@ -108,24 +132,23 @@ void json_document::set_error(int error_code) const noexcept
     return ;
 }
 
-int json_document::lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept
+int json_document::lock_self() const noexcept
 {
-    int initialize_error;
     int lock_error;
 
-    initialize_error = guard.initialize(this->_mutex);
-    if (initialize_error != FT_ERR_SUCCESS)
+        this->abort_if_not_initialized("json_document::lock_self");
+    if (this->_mutex == ft_nullptr)
     {
-        json_document_push_error(initialize_error);
-        return (initialize_error);
+        json_document_push_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
-    lock_error = guard.lock();
+    lock_error = this->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
     {
-        guard.destroy();
         json_document_push_error(lock_error);
         return (lock_error);
     }
+    g_json_document_locked_mutex = this->_mutex;
     json_document_push_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
@@ -160,7 +183,8 @@ char *json_document::write_to_string_unlocked() const noexcept
 json_document::json_document() noexcept
     : _groups(ft_nullptr)
     , _error_code(FT_ERR_SUCCESS)
-    , _mutex()
+    , _mutex(ft_nullptr)
+    , _initialized_state(json_document::_state_uninitialized)
 {
     this->set_error_unlocked(FT_ERR_SUCCESS);
     return ;
@@ -168,28 +192,124 @@ json_document::json_document() noexcept
 
 json_document::~json_document() noexcept
 {
-    this->clear();
+    if (this->_initialized_state == json_document::_state_uninitialized)
+    {
+        this->abort_lifecycle_error("json_document::~json_document",
+            "destructor called while object is uninitialized");
+        return ;
+    }
+    if (this->_initialized_state == json_document::_state_initialized)
+        (void)this->destroy();
     return ;
 }
 
+int json_document::initialize() noexcept
+{
+    if (this->_initialized_state == json_document::_state_initialized)
+    {
+        this->abort_lifecycle_error("json_document::initialize",
+            "called while object is already initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    this->_initialized_state = json_document::_state_initialized;
+    this->set_error_unlocked(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
+}
+
+int json_document::destroy() noexcept
+{
+    int lock_error;
+    int unlock_error;
+    int disable_error;
+
+    if (this->_initialized_state != json_document::_state_initialized)
+    {
+        this->abort_lifecycle_error("json_document::destroy",
+            "called while object is not initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    lock_error = FT_ERR_SUCCESS;
+    unlock_error = FT_ERR_SUCCESS;
+    if (this->_mutex != ft_nullptr)
+        lock_error = this->_mutex->lock();
+    if (lock_error == FT_ERR_SUCCESS)
+        this->clear_unlocked();
+    if (this->_mutex != ft_nullptr && lock_error == FT_ERR_SUCCESS)
+        unlock_error = this->_mutex->unlock();
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
+    if (unlock_error != FT_ERR_SUCCESS)
+        return (unlock_error);
+    disable_error = this->disable_thread_safety();
+    this->_initialized_state = json_document::_state_destroyed;
+    return (disable_error);
+}
+
+int json_document::enable_thread_safety() noexcept
+{
+    pt_mutex *mutex_pointer;
+    int initialize_error;
+
+    this->abort_if_not_initialized("json_document::enable_thread_safety");
+    if (this->_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    mutex_pointer = new (std::nothrow) pt_mutex();
+    if (mutex_pointer == ft_nullptr)
+        return (FT_ERR_NO_MEMORY);
+    initialize_error = mutex_pointer->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        delete mutex_pointer;
+        return (initialize_error);
+    }
+    this->_mutex = mutex_pointer;
+    return (FT_ERR_SUCCESS);
+}
+
+int json_document::disable_thread_safety() noexcept
+{
+    int destroy_error;
+
+    this->abort_if_not_initialized("json_document::disable_thread_safety");
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    destroy_error = this->_mutex->destroy();
+    delete this->_mutex;
+    this->_mutex = ft_nullptr;
+    return (destroy_error);
+}
+
+bool json_document::is_thread_safe() const noexcept
+{
+    this->abort_if_not_initialized("json_document::is_thread_safe");
+    return (this->_mutex != ft_nullptr);
+}
+
+#ifdef LIBFT_TEST_BUILD
+pt_mutex *json_document::get_mutex_for_validation() const noexcept
+{
+    this->abort_if_not_initialized("json_document::get_mutex_for_validation");
+    return (this->_mutex);
+}
+#endif
+
 json_group *json_document::create_group(const char *name) noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int lock_error;
     json_group *group;
     int current_error;
 
-    lock_error = this->lock_self(guard);
+    lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (ft_nullptr);
     }
     if (!name)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (ft_nullptr);
     }
     group = json_create_json_group(name);
@@ -199,32 +319,31 @@ json_group *json_document::create_group(const char *name) noexcept
         if (current_error == FT_ERR_SUCCESS)
             current_error = FT_ERR_NO_MEMORY;
         this->set_error_unlocked(current_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (ft_nullptr);
     }
     this->set_error_unlocked(FT_ERR_SUCCESS);
-    json_document_finalize_guard(guard);
+    json_document_finalize_guard();
     return (group);
 }
 
 json_item *json_document::create_item(const char *key, const char *value) noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int lock_error;
     json_item *item;
     int current_error;
 
-    lock_error = this->lock_self(guard);
+    lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (ft_nullptr);
     }
     if (!key || !value)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (ft_nullptr);
     }
     item = json_create_item(key, value);
@@ -234,32 +353,31 @@ json_item *json_document::create_item(const char *key, const char *value) noexce
         if (current_error == FT_ERR_SUCCESS)
             current_error = FT_ERR_NO_MEMORY;
         this->set_error_unlocked(current_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (ft_nullptr);
     }
     this->set_error_unlocked(FT_ERR_SUCCESS);
-    json_document_finalize_guard(guard);
+    json_document_finalize_guard();
     return (item);
 }
 
 json_item *json_document::create_item(const char *key, const ft_big_number &value) noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int lock_error;
     json_item *item;
     int current_error;
 
-    lock_error = this->lock_self(guard);
+    lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (ft_nullptr);
     }
     if (!key)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (ft_nullptr);
     }
     item = json_create_item(key, value);
@@ -269,32 +387,31 @@ json_item *json_document::create_item(const char *key, const ft_big_number &valu
         if (current_error == FT_ERR_SUCCESS)
             current_error = FT_ERR_NO_MEMORY;
         this->set_error_unlocked(current_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (ft_nullptr);
     }
     this->set_error_unlocked(FT_ERR_SUCCESS);
-    json_document_finalize_guard(guard);
+    json_document_finalize_guard();
     return (item);
 }
 
 json_item *json_document::create_item(const char *key, const int value) noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int lock_error;
     json_item *item;
     int current_error;
 
-    lock_error = this->lock_self(guard);
+    lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (ft_nullptr);
     }
     if (!key)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (ft_nullptr);
     }
     item = json_create_item(key, value);
@@ -304,32 +421,31 @@ json_item *json_document::create_item(const char *key, const int value) noexcept
         if (current_error == FT_ERR_SUCCESS)
             current_error = FT_ERR_NO_MEMORY;
         this->set_error_unlocked(current_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (ft_nullptr);
     }
     this->set_error_unlocked(FT_ERR_SUCCESS);
-    json_document_finalize_guard(guard);
+    json_document_finalize_guard();
     return (item);
 }
 
 json_item *json_document::create_item(const char *key, const bool value) noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int lock_error;
     json_item *item;
     int current_error;
 
-    lock_error = this->lock_self(guard);
+    lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (ft_nullptr);
     }
     if (!key)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (ft_nullptr);
     }
     item = json_create_item(key, value);
@@ -339,80 +455,77 @@ json_item *json_document::create_item(const char *key, const bool value) noexcep
         if (current_error == FT_ERR_SUCCESS)
             current_error = FT_ERR_NO_MEMORY;
         this->set_error_unlocked(current_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (ft_nullptr);
     }
     this->set_error_unlocked(FT_ERR_SUCCESS);
-    json_document_finalize_guard(guard);
+    json_document_finalize_guard();
     return (item);
 }
 
 void json_document::add_item(json_group *group, json_item *item) noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int lock_error;
 
-    lock_error = this->lock_self(guard);
+    lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return ;
     }
     if (!group || !item)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return ;
     }
     json_add_item_to_group(group, item);
     this->set_error_unlocked(FT_ERR_SUCCESS);
-    json_document_finalize_guard(guard);
+    json_document_finalize_guard();
     return ;
 }
 
 void json_document::append_group(json_group *group) noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int lock_error;
 
-    lock_error = this->lock_self(guard);
+    lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return ;
     }
     if (!group)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return ;
     }
     json_append_group(&this->_groups, group);
     this->set_error_unlocked(FT_ERR_SUCCESS);
-    json_document_finalize_guard(guard);
+    json_document_finalize_guard();
     return ;
 }
 
 int json_document::write_to_file(const char *file_path) const noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int lock_error;
     int result;
     int current_error;
 
-    lock_error = this->lock_self(guard);
+    lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (-1);
     }
     if (!file_path)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (-1);
     }
     result = json_write_to_file(file_path, this->_groups);
@@ -422,34 +535,33 @@ int json_document::write_to_file(const char *file_path) const noexcept
         if (current_error == FT_ERR_SUCCESS)
             current_error = FT_ERR_INVALID_HANDLE;
         this->set_error_unlocked(current_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (result);
     }
     this->set_error_unlocked(FT_ERR_SUCCESS);
-    json_document_finalize_guard(guard);
+    json_document_finalize_guard();
     return (0);
 }
 
 int json_document::write_to_backend(ft_document_sink &sink) const noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int lock_error;
     char *serialized_content;
     size_t serialized_length;
     int write_result;
     int sink_error;
 
-    lock_error = this->lock_self(guard);
+    lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (-1);
     }
     serialized_content = this->write_to_string_unlocked();
     if (!serialized_content)
     {
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (-1);
     }
     serialized_length = ft_strlen(serialized_content);
@@ -461,51 +573,49 @@ int json_document::write_to_backend(ft_document_sink &sink) const noexcept
         if (sink_error != FT_ERR_SUCCESS)
             write_result = sink_error;
         this->set_error_unlocked(write_result);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (-1);
     }
     this->set_error_unlocked(FT_ERR_SUCCESS);
-    json_document_finalize_guard(guard);
+    json_document_finalize_guard();
     return (0);
 }
 
 char *json_document::write_to_string() const noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int lock_error;
     char *result;
 
-    lock_error = this->lock_self(guard);
+    lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (ft_nullptr);
     }
     result = this->write_to_string_unlocked();
-    json_document_finalize_guard(guard);
+    json_document_finalize_guard();
     return (result);
 }
 
 int json_document::read_from_file(const char *file_path) noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int lock_error;
     json_group *groups;
     int current_error;
 
-    lock_error = this->lock_self(guard);
+    lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (-1);
     }
     if (!file_path)
     {
         this->clear_unlocked();
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (-1);
     }
     this->clear_unlocked();
@@ -516,27 +626,26 @@ int json_document::read_from_file(const char *file_path) noexcept
         if (current_error == FT_ERR_SUCCESS)
             current_error = FT_ERR_INVALID_ARGUMENT;
         this->set_error_unlocked(current_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (-1);
     }
     this->_groups = groups;
     this->set_error_unlocked(FT_ERR_SUCCESS);
-    json_document_finalize_guard(guard);
+    json_document_finalize_guard();
     return (0);
 }
 
 int json_document::read_from_backend(ft_document_source &source) noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int lock_error;
     json_group *groups;
     int error_code;
 
-    lock_error = this->lock_self(guard);
+    lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (-1);
     }
     this->clear_unlocked();
@@ -549,35 +658,34 @@ int json_document::read_from_backend(ft_document_source &source) noexcept
         if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_INVALID_ARGUMENT;
         this->set_error_unlocked(error_code);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (-1);
     }
     this->_groups = groups;
     this->set_error_unlocked(FT_ERR_SUCCESS);
-    json_document_finalize_guard(guard);
+    json_document_finalize_guard();
     return (0);
 }
 
 int json_document::read_from_file_streaming(const char *file_path, size_t buffer_capacity) noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int lock_error;
     FILE *file;
     json_group *groups;
     int current_error;
 
-    lock_error = this->lock_self(guard);
+    lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (-1);
     }
     if (!file_path || buffer_capacity == 0)
     {
         this->clear_unlocked();
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (-1);
     }
     file = fopen(file_path, "rb");
@@ -585,7 +693,7 @@ int json_document::read_from_file_streaming(const char *file_path, size_t buffer
     {
         this->clear_unlocked();
         this->set_error_unlocked(FT_ERR_IO);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (-1);
     }
     this->clear_unlocked();
@@ -597,34 +705,33 @@ int json_document::read_from_file_streaming(const char *file_path, size_t buffer
         if (current_error == FT_ERR_SUCCESS)
             current_error = FT_ERR_INVALID_ARGUMENT;
         this->set_error_unlocked(current_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (-1);
     }
     this->_groups = groups;
     this->set_error_unlocked(FT_ERR_SUCCESS);
-    json_document_finalize_guard(guard);
+    json_document_finalize_guard();
     return (0);
 }
 
 int json_document::read_from_string(const char *content) noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int lock_error;
     json_group *groups;
     int current_error;
 
-    lock_error = this->lock_self(guard);
+    lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (-1);
     }
     if (!content)
     {
         this->clear_unlocked();
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (-1);
     }
     this->clear_unlocked();
@@ -635,62 +742,60 @@ int json_document::read_from_string(const char *content) noexcept
         if (current_error == FT_ERR_SUCCESS)
             current_error = FT_ERR_INVALID_ARGUMENT;
         this->set_error_unlocked(current_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (-1);
     }
     this->_groups = groups;
     this->set_error_unlocked(FT_ERR_SUCCESS);
-    json_document_finalize_guard(guard);
+    json_document_finalize_guard();
     return (0);
 }
 
 json_group *json_document::find_group(const char *name) const noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int lock_error;
     json_group *group;
 
-    lock_error = this->lock_self(guard);
+    lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (ft_nullptr);
     }
     if (!name)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (ft_nullptr);
     }
     group = json_find_group(this->_groups, name);
     this->set_error_unlocked(FT_ERR_SUCCESS);
-    json_document_finalize_guard(guard);
+    json_document_finalize_guard();
     return (group);
 }
 
 json_item *json_document::find_item(json_group *group, const char *key) const noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int lock_error;
     json_item *item;
 
-    lock_error = this->lock_self(guard);
+    lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (ft_nullptr);
     }
     if (!group || !key)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (ft_nullptr);
     }
     item = json_find_item(group, key);
     this->set_error_unlocked(FT_ERR_SUCCESS);
-    json_document_finalize_guard(guard);
+    json_document_finalize_guard();
     return (item);
 }
 
@@ -795,125 +900,120 @@ json_item *json_document::find_item_by_pointer_unlocked(const char *pointer) con
 
 json_item *json_document::find_item_by_pointer(const char *pointer) const noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int lock_error;
     json_item *item;
 
-    lock_error = this->lock_self(guard);
+    lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (ft_nullptr);
     }
     item = this->find_item_by_pointer_unlocked(pointer);
-    json_document_finalize_guard(guard);
+    json_document_finalize_guard();
     return (item);
 }
 
 const char *json_document::get_value_by_pointer(const char *pointer) const noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int lock_error;
     json_item *item;
 
-    lock_error = this->lock_self(guard);
+    lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (ft_nullptr);
     }
     item = this->find_item_by_pointer_unlocked(pointer);
     if (!item)
     {
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (ft_nullptr);
     }
     if (!item->value)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (ft_nullptr);
     }
     this->set_error_unlocked(FT_ERR_SUCCESS);
-    json_document_finalize_guard(guard);
+    json_document_finalize_guard();
     return (item->value);
 }
 
 void json_document::remove_group(const char *name) noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int lock_error;
 
-    lock_error = this->lock_self(guard);
+    lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return ;
     }
     if (!name)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return ;
     }
     json_remove_group(&this->_groups, name);
     this->set_error_unlocked(FT_ERR_SUCCESS);
-    json_document_finalize_guard(guard);
+    json_document_finalize_guard();
     return ;
 }
 
 void json_document::remove_item(json_group *group, const char *key) noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int lock_error;
 
-    lock_error = this->lock_self(guard);
+    lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return ;
     }
     if (!group || !key)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return ;
     }
     json_remove_item(group, key);
     this->set_error_unlocked(FT_ERR_SUCCESS);
-    json_document_finalize_guard(guard);
+    json_document_finalize_guard();
     return ;
 }
 
 void json_document::update_item(json_group *group, const char *key, const char *value) noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int lock_error;
     json_item *item;
     int current_error;
 
-    lock_error = this->lock_self(guard);
+    lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return ;
     }
     if (!group || !key || !value)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return ;
     }
     item = json_find_item(group, key);
     if (!item)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return ;
     }
     json_update_item(group, key, value);
@@ -923,39 +1023,38 @@ void json_document::update_item(json_group *group, const char *key, const char *
         if (current_error == FT_ERR_SUCCESS)
             current_error = FT_ERR_NO_MEMORY;
         this->set_error_unlocked(current_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return ;
     }
     this->set_error_unlocked(FT_ERR_SUCCESS);
-    json_document_finalize_guard(guard);
+    json_document_finalize_guard();
     return ;
 }
 
 void json_document::update_item(json_group *group, const char *key, const int value) noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int lock_error;
     json_item *item;
     int current_error;
 
-    lock_error = this->lock_self(guard);
+    lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return ;
     }
     if (!group || !key)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return ;
     }
     item = json_find_item(group, key);
     if (!item)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return ;
     }
     json_update_item(group, key, value);
@@ -965,39 +1064,38 @@ void json_document::update_item(json_group *group, const char *key, const int va
         if (current_error == FT_ERR_SUCCESS)
             current_error = FT_ERR_NO_MEMORY;
         this->set_error_unlocked(current_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return ;
     }
     this->set_error_unlocked(FT_ERR_SUCCESS);
-    json_document_finalize_guard(guard);
+    json_document_finalize_guard();
     return ;
 }
 
 void json_document::update_item(json_group *group, const char *key, const bool value) noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int lock_error;
     json_item *item;
     int current_error;
 
-    lock_error = this->lock_self(guard);
+    lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return ;
     }
     if (!group || !key)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return ;
     }
     item = json_find_item(group, key);
     if (!item)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return ;
     }
     json_update_item(group, key, value);
@@ -1007,39 +1105,38 @@ void json_document::update_item(json_group *group, const char *key, const bool v
         if (current_error == FT_ERR_SUCCESS)
             current_error = FT_ERR_NO_MEMORY;
         this->set_error_unlocked(current_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return ;
     }
     this->set_error_unlocked(FT_ERR_SUCCESS);
-    json_document_finalize_guard(guard);
+    json_document_finalize_guard();
     return ;
 }
 
 void json_document::update_item(json_group *group, const char *key, const ft_big_number &value) noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int lock_error;
     json_item *item;
     int current_error;
 
-    lock_error = this->lock_self(guard);
+    lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return ;
     }
     if (!group || !key)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return ;
     }
     item = json_find_item(group, key);
     if (!item)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return ;
     }
     json_update_item(group, key, value);
@@ -1049,88 +1146,85 @@ void json_document::update_item(json_group *group, const char *key, const ft_big
         if (current_error == FT_ERR_SUCCESS)
             current_error = FT_ERR_NO_MEMORY;
         this->set_error_unlocked(current_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return ;
     }
     this->set_error_unlocked(FT_ERR_SUCCESS);
-    json_document_finalize_guard(guard);
+    json_document_finalize_guard();
     return ;
 }
 
 void json_document::clear() noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int lock_error;
 
-    lock_error = this->lock_self(guard);
+    lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return ;
     }
     this->clear_unlocked();
-    json_document_finalize_guard(guard);
+    json_document_finalize_guard();
     return ;
 }
 
 json_group *json_document::get_groups() const noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int lock_error;
     json_group *groups;
 
-    lock_error = this->lock_self(guard);
+    lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (ft_nullptr);
     }
     groups = this->_groups;
     this->set_error_unlocked(FT_ERR_SUCCESS);
-    json_document_finalize_guard(guard);
+    json_document_finalize_guard();
     return (groups);
 }
 
 void json_document::set_manual_error(int error_code) noexcept
 {
+    this->abort_if_not_initialized("json_document::set_manual_error");
     this->set_error(error_code);
     return ;
 }
 
 int json_document::get_error() const noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int lock_error;
     int error_value;
 
-    lock_error = this->lock_self(guard);
+    lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (lock_error);
     }
     error_value = this->_error_code;
-    json_document_finalize_guard(guard);
+    json_document_finalize_guard();
     return (error_value);
 }
 
 const char *json_document::get_error_str() const noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int lock_error;
     const char *error_string;
 
-    lock_error = this->lock_self(guard);
+    lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
-        json_document_finalize_guard(guard);
+        json_document_finalize_guard();
         return (ft_strerror(lock_error));
     }
     error_string = ft_strerror(this->_error_code);
-    json_document_finalize_guard(guard);
+    json_document_finalize_guard();
     return (error_string);
 }

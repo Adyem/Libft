@@ -23,7 +23,7 @@ static void time_duration_ms_disable_thread_safety(t_duration_milliseconds *dura
 
 static int  time_duration_ms_report_result(int error_code, int return_value)
 {
-    ft_global_error_stack_push(error_code);
+    (void)(error_code);
     return (return_value);
 }
 
@@ -46,7 +46,7 @@ int time_duration_ms_prepare_thread_safety(t_duration_milliseconds *duration)
         if (mutex_pointer == ft_nullptr)
             mutex_error = FT_ERR_SUCCESS;
         else
-            mutex_error = ft_global_error_stack_drop_last_error();
+            mutex_error = FT_ERR_SUCCESS;
 
         if (mutex_error != FT_ERR_SUCCESS)
         {
@@ -79,15 +79,10 @@ int time_duration_ms_lock(const t_duration_milliseconds *duration, bool *lock_ac
     mutable_duration = const_cast<t_duration_milliseconds *>(duration);
     if (!mutable_duration->thread_safe_enabled || !mutable_duration->mutex)
         return (time_duration_ms_report_result(FT_ERR_SUCCESS, 0));
-    mutable_duration->mutex->lock(THREAD_ID);
     {
         int lock_error;
 
-        if (mutable_duration->mutex == ft_nullptr)
-            lock_error = FT_ERR_SUCCESS;
-        else
-            lock_error = ft_global_error_stack_drop_last_error();
-
+        lock_error = mutable_duration->mutex->lock();
         if (lock_error != FT_ERR_SUCCESS)
             return (time_duration_ms_report_result(lock_error, -1));
     }
@@ -102,36 +97,31 @@ void    time_duration_ms_unlock(const t_duration_milliseconds *duration, bool lo
 
     if (!duration)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
+        (void)(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     if (!lock_acquired)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
+        (void)(FT_ERR_SUCCESS);
         return ;
     }
     mutable_duration = const_cast<t_duration_milliseconds *>(duration);
     if (!mutable_duration->mutex)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_STATE);
+        (void)(FT_ERR_INVALID_STATE);
         return ;
     }
-    mutable_duration->mutex->unlock(THREAD_ID);
     {
         int unlock_error;
 
-        if (mutable_duration->mutex == ft_nullptr)
-            unlock_error = FT_ERR_SUCCESS;
-        else
-            unlock_error = ft_global_error_stack_drop_last_error();
-
+        unlock_error = mutable_duration->mutex->unlock();
         if (unlock_error != FT_ERR_SUCCESS)
         {
-            ft_global_error_stack_push(unlock_error);
+            (void)(unlock_error);
             return ;
         }
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    (void)(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -139,14 +129,14 @@ bool    time_duration_ms_is_thread_safe_enabled(const t_duration_milliseconds *d
 {
     if (!duration)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
+        (void)(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
     if (!duration->thread_safe_enabled || !duration->mutex)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
+        (void)(FT_ERR_SUCCESS);
         return (false);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    (void)(FT_ERR_SUCCESS);
     return (true);
 }

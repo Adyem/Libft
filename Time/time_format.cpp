@@ -13,7 +13,7 @@ static ft_string time_format_failure(int error_code)
 {
     ft_string failure;
 
-    ft_global_error_stack_push(error_code);
+    (void)(error_code);
     return (failure);
 }
 
@@ -34,7 +34,7 @@ ft_string    time_format_iso8601(t_time time_value)
     if ((&g_gmtime_mutex) == ft_nullptr)
         mutex_error = FT_ERR_SUCCESS;
     else
-        mutex_error = ft_global_error_stack_drop_last_error();
+        mutex_error = FT_ERR_SUCCESS;
     {
         int reported_error;
 
@@ -53,7 +53,7 @@ ft_string    time_format_iso8601(t_time time_value)
         if ((&g_gmtime_mutex) == ft_nullptr)
             mutex_error = FT_ERR_SUCCESS;
         else
-            mutex_error = ft_global_error_stack_drop_last_error();
+            mutex_error = FT_ERR_SUCCESS;
         {
             int reported_error;
 
@@ -72,7 +72,7 @@ ft_string    time_format_iso8601(t_time time_value)
     if ((&g_gmtime_mutex) == ft_nullptr)
         mutex_error = FT_ERR_SUCCESS;
     else
-        mutex_error = ft_global_error_stack_drop_last_error();
+        mutex_error = FT_ERR_SUCCESS;
     {
         int reported_error;
 
@@ -90,7 +90,7 @@ ft_string    time_format_iso8601(t_time time_value)
         return (time_format_failure(FT_ERR_INVALID_ARGUMENT));
     }
     formatted = ft_string(buffer);
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    (void)(FT_ERR_SUCCESS);
     return (formatted);
 }
 
@@ -125,7 +125,7 @@ ft_string    time_format_iso8601_with_offset(t_time time_value, int offset_minut
     if ((&g_gmtime_mutex) == ft_nullptr)
         mutex_error = FT_ERR_SUCCESS;
     else
-        mutex_error = ft_global_error_stack_drop_last_error();
+        mutex_error = FT_ERR_SUCCESS;
     {
         int reported_error;
 
@@ -144,7 +144,7 @@ ft_string    time_format_iso8601_with_offset(t_time time_value, int offset_minut
         if ((&g_gmtime_mutex) == ft_nullptr)
             mutex_error = FT_ERR_SUCCESS;
         else
-            mutex_error = ft_global_error_stack_drop_last_error();
+            mutex_error = FT_ERR_SUCCESS;
         {
             int reported_error;
 
@@ -163,7 +163,7 @@ ft_string    time_format_iso8601_with_offset(t_time time_value, int offset_minut
     if ((&g_gmtime_mutex) == ft_nullptr)
         mutex_error = FT_ERR_SUCCESS;
     else
-        mutex_error = ft_global_error_stack_drop_last_error();
+        mutex_error = FT_ERR_SUCCESS;
     {
         int reported_error;
 
@@ -195,6 +195,6 @@ ft_string    time_format_iso8601_with_offset(t_time time_value, int offset_minut
         return (time_format_failure(FT_ERR_INTERNAL));
     formatted = ft_string(buffer);
     formatted += offset_buffer;
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    (void)(FT_ERR_SUCCESS);
     return (formatted);
 }

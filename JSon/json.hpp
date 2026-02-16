@@ -7,7 +7,6 @@
 #include "../Parser/document_backend.hpp"
 #include "../Advanced/advanced.hpp"
 #include "../PThread/mutex.hpp"
-#include "../PThread/unique_lock.hpp"
 
 class ft_big_number;
 
@@ -18,7 +17,7 @@ typedef struct json_item
     bool is_big_number;
     ft_big_number *big_number;
     struct json_item *next;
-    mutable pt_mutex _mutex;
+    mutable pt_mutex *_mutex;
     mutable int _error_code;
 } json_item;
 
@@ -27,7 +26,7 @@ typedef struct json_group
     char *name;
     json_item *items;
     struct json_group *next;
-    mutable pt_mutex _mutex;
+    mutable pt_mutex *_mutex;
     mutable int _error_code;
 } json_group;
 
@@ -64,30 +63,43 @@ void        json_update_item(json_group *group, const char *key, const int value
 void        json_update_item(json_group *group, const char *key, const bool value);
 void        json_update_item(json_group *group, const char *key, const ft_big_number &value);
 int         json_group_enable_thread_safety(json_group *group);
-int         json_group_lock(json_group *group, ft_unique_lock<pt_mutex> &guard);
+int         json_group_disable_thread_safety(json_group *group);
+bool        json_group_is_thread_safe(const json_group *group);
+int         json_group_lock(json_group *group);
 void        json_group_set_error(json_group *group, int error_code);
 void        json_group_set_error_unlocked(json_group *group, int error_code);
 int         json_group_get_error(const json_group *group);
 const char  *json_group_get_error_str(const json_group *group);
-int         json_group_list_lock(ft_unique_lock<pt_mutex> &guard);
-void        json_group_list_finalize_lock(ft_unique_lock<pt_mutex> &guard);
+int         json_group_list_lock_manual();
+int         json_group_list_unlock_manual();
+int         json_group_list_lock();
+void        json_group_list_finalize_lock();
 int         json_item_enable_thread_safety(json_item *item);
-int         json_item_lock(json_item *item, ft_unique_lock<pt_mutex> &guard);
+int         json_item_disable_thread_safety(json_item *item);
+bool        json_item_is_thread_safe(const json_item *item);
+int         json_item_lock(json_item *item);
 void        json_item_set_error(json_item *item, int error_code);
 void        json_item_set_error_unlocked(json_item *item, int error_code);
 int         json_item_get_error(const json_item *item);
 const char  *json_item_get_error_str(const json_item *item);
 int         json_schema_enable_thread_safety(json_schema *schema);
-int         json_schema_lock(json_schema *schema, ft_unique_lock<pt_mutex> &guard);
+int         json_schema_disable_thread_safety(json_schema *schema);
+bool        json_schema_is_thread_safe(const json_schema *schema);
+int         json_schema_lock(json_schema *schema);
 void        json_schema_set_error(json_schema *schema, int error_code);
 void        json_schema_set_error_unlocked(json_schema *schema, int error_code);
 int         json_schema_get_error(const json_schema *schema);
 const char  *json_schema_get_error_str(const json_schema *schema);
 int         json_schema_field_enable_thread_safety(json_schema_field *field);
-int         json_schema_field_lock(json_schema_field *field, ft_unique_lock<pt_mutex> &guard);
+int         json_schema_field_disable_thread_safety(json_schema_field *field);
+bool        json_schema_field_is_thread_safe(const json_schema_field *field);
+int         json_schema_field_lock(json_schema_field *field);
 void        json_schema_field_set_error(json_schema_field *field, int error_code);
 void        json_schema_field_set_error_unlocked(json_schema_field *field, int error_code);
 int         json_schema_field_get_error(const json_schema_field *field);
 const char  *json_schema_field_get_error_str(const json_schema_field *field);
+
+int         json_stream_reader_disable_thread_safety(json_stream_reader *reader);
+bool        json_stream_reader_is_thread_safe(const json_stream_reader *reader);
 
 #endif

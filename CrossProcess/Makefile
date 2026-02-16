@@ -2,10 +2,10 @@ include ../compiler_flags.mk
 TARGET := CrossProcess.a
 DEBUG_TARGET := CrossProcess_debug.a
 
-SRCS := cross_process_send_descriptor.cpp \
-        cross_process_receive_descriptor.cpp \
-        cross_process_receive_memory.cpp \
-        cross_process_write_memory.cpp
+SRCS := CrossProcess_send_descriptor.cpp \
+        CrossProcess_receive_descriptor.cpp \
+        CrossProcess_receive_memory.cpp \
+        CrossProcess_write_memory.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
@@ -98,4 +98,3 @@ re: fclean all
 both: all debug
 
 .PHONY: all clean fclean re debug both
-

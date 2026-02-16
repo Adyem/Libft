@@ -27,13 +27,14 @@ static bool json_is_bool(const char *string)
 
 bool json_validate_schema(json_group *group, const json_schema &schema)
 {
-    ft_unique_lock<pt_mutex> schema_guard;
-    ft_unique_lock<pt_mutex> field_guard;
     json_schema *schema_mutable;
     json_schema_field *field;
     bool validation_result;
     int validation_error;
     int lock_error;
+    int unlock_error;
+    int field_lock_error;
+    int field_unlock_error;
 
     if (!group)
         return (false);
@@ -41,7 +42,9 @@ bool json_validate_schema(json_group *group, const json_schema &schema)
     validation_error = json_schema_enable_thread_safety(schema_mutable);
     if (validation_error != FT_ERR_SUCCESS)
         return (false);
-    lock_error = json_schema_lock(schema_mutable, schema_guard);
+    if (schema_mutable->_mutex == ft_nullptr)
+        return (false);
+    lock_error = schema_mutable->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
         return (false);
     field = schema_mutable->fields;
@@ -60,11 +63,18 @@ bool json_validate_schema(json_group *group, const json_schema &schema)
             validation_result = false;
             break;
         }
-        field_error = json_schema_field_lock(field, field_guard);
-        if (field_error != FT_ERR_SUCCESS)
+        if (field->_mutex == ft_nullptr)
         {
-            json_schema_set_error_unlocked(schema_mutable, field_error);
-            validation_error = field_error;
+            json_schema_set_error_unlocked(schema_mutable, FT_ERR_INVALID_STATE);
+            validation_error = FT_ERR_INVALID_STATE;
+            validation_result = false;
+            break ;
+        }
+        field_lock_error = field->_mutex->lock();
+        if (field_lock_error != FT_ERR_SUCCESS)
+        {
+            json_schema_set_error_unlocked(schema_mutable, field_lock_error);
+            validation_error = field_lock_error;
             validation_result = false;
             break;
         }
@@ -117,9 +127,24 @@ bool json_validate_schema(json_group *group, const json_schema &schema)
             }
         }
         if (validation_result == false)
+        {
+            field_unlock_error = field->_mutex->unlock();
+            (void)field_unlock_error;
             break;
+        }
+        field_unlock_error = field->_mutex->unlock();
+        if (field_unlock_error != FT_ERR_SUCCESS)
+        {
+            json_schema_set_error_unlocked(schema_mutable, field_unlock_error);
+            validation_error = field_unlock_error;
+            validation_result = false;
+            break ;
+        }
         field = next_field;
     }
+    unlock_error = schema_mutable->_mutex->unlock();
+    if (unlock_error != FT_ERR_SUCCESS)
+        return (false);
     if (validation_result == true)
     {
         json_schema_set_error_unlocked(schema_mutable, FT_ERR_SUCCESS);

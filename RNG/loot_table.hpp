@@ -337,7 +337,6 @@ ft_loot_table<ElementType>::ft_loot_table() noexcept
     , _capacity(0)
     , _mutex(ft_nullptr)
 {
-    (void)this->enable_thread_safety();
     return ;
 }
 

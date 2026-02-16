@@ -37,14 +37,14 @@ long    time_now_ms(void)
     milliseconds_count = milliseconds.count();
     if (milliseconds_count > static_cast<long long>(LONG_MAX))
     {
-        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
+        (void)(FT_ERR_OUT_OF_RANGE);
         return (LONG_MAX);
     }
     if (milliseconds_count < static_cast<long long>(LONG_MIN))
     {
-        ft_global_error_stack_push(FT_ERR_OUT_OF_RANGE);
+        (void)(FT_ERR_OUT_OF_RANGE);
         return (LONG_MIN);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    (void)(FT_ERR_SUCCESS);
     return (static_cast<long>(milliseconds_count));
 }

@@ -1021,8 +1021,8 @@ int json_stream_reader_traverse(json_stream_reader *reader,
     json_stream_event_callback callback,
     void *user_data)
 {
-    ft_unique_lock<pt_mutex> guard;
     int lock_error;
+    int unlock_error;
     int status;
     int error_code = FT_ERR_SUCCESS;
     json_stream_reader_error_guard stack_guard(&error_code);
@@ -1034,7 +1034,12 @@ int json_stream_reader_traverse(json_stream_reader *reader,
     }
     if (json_stream_reader_enable_thread_safety(reader) != 0)
         return (-1);
-    lock_error = json_stream_reader_lock(reader, guard);
+    if (reader->_mutex == ft_nullptr)
+    {
+        error_code = FT_ERR_INVALID_STATE;
+        return (-1);
+    }
+    lock_error = reader->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
     {
         error_code = lock_error;
@@ -1048,14 +1053,14 @@ int json_stream_reader_traverse(json_stream_reader *reader,
             false) != 0)
     {
         reader->error_code = error_code = json_stream_last_error();
-        json_stream_reader_finalize_lock(reader, guard);
+        (void)reader->_mutex->unlock();
         return (-1);
     }
     if (json_stream_read_value(reader, callback, user_data) != 0)
     {
         if (reader->error_code == FT_ERR_SUCCESS)
             reader->error_code = error_code = json_stream_last_error();
-        json_stream_reader_finalize_lock(reader, guard);
+        (void)reader->_mutex->unlock();
         return (-1);
     }
     status = json_stream_skip_whitespace(reader);
@@ -1063,14 +1068,14 @@ int json_stream_reader_traverse(json_stream_reader *reader,
     {
         if (reader->error_code == FT_ERR_SUCCESS)
             reader->error_code = error_code = json_stream_last_error();
-        json_stream_reader_finalize_lock(reader, guard);
+        (void)reader->_mutex->unlock();
         return (-1);
     }
     if (status == JSON_STREAM_STATUS_OK)
     {
         error_code = FT_ERR_INVALID_ARGUMENT;
         reader->error_code = FT_ERR_INVALID_ARGUMENT;
-        json_stream_reader_finalize_lock(reader, guard);
+        (void)reader->_mutex->unlock();
         return (-1);
     }
     if (json_stream_dispatch_event(callback,
@@ -1081,12 +1086,17 @@ int json_stream_reader_traverse(json_stream_reader *reader,
     {
         if (reader->error_code == FT_ERR_SUCCESS)
             reader->error_code = error_code = json_stream_last_error();
-        json_stream_reader_finalize_lock(reader, guard);
+        (void)reader->_mutex->unlock();
         return (-1);
     }
     reader->error_code = FT_ERR_SUCCESS;
     error_code = FT_ERR_SUCCESS;
-    json_stream_reader_finalize_lock(reader, guard);
+    unlock_error = reader->_mutex->unlock();
+    if (unlock_error != FT_ERR_SUCCESS)
+    {
+        error_code = unlock_error;
+        return (-1);
+    }
     return (0);
 }
 
@@ -1153,8 +1163,8 @@ int json_stream_read_from_stream_events(json_stream_read_callback callback,
 
 json_group *json_stream_reader_parse(json_stream_reader *reader)
 {
-    ft_unique_lock<pt_mutex> guard;
     int lock_error;
+    int unlock_error;
     int status;
     json_group *head;
     json_group *tail;
@@ -1169,7 +1179,12 @@ json_group *json_stream_reader_parse(json_stream_reader *reader)
     }
     if (json_stream_reader_enable_thread_safety(reader) != 0)
         return (ft_nullptr);
-    lock_error = json_stream_reader_lock(reader, guard);
+    if (reader->_mutex == ft_nullptr)
+    {
+        error_code = FT_ERR_INVALID_STATE;
+        return (ft_nullptr);
+    }
+    lock_error = reader->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
     {
         error_code = lock_error;
@@ -1181,13 +1196,13 @@ json_group *json_stream_reader_parse(json_stream_reader *reader)
     {
         reader->error_code = FT_ERR_INVALID_ARGUMENT;
         error_code = FT_ERR_INVALID_ARGUMENT;
-        json_stream_reader_finalize_lock(reader, guard);
+        (void)reader->_mutex->unlock();
         return (ft_nullptr);
     }
     if (json_stream_reader_expect(reader, '{') != 0)
     {
         reader->error_code = FT_ERR_INVALID_ARGUMENT;
-        json_stream_reader_finalize_lock(reader, guard);
+        (void)reader->_mutex->unlock();
         return (ft_nullptr);
     }
     head = ft_nullptr;
@@ -1201,7 +1216,7 @@ json_group *json_stream_reader_parse(json_stream_reader *reader)
             json_free_groups(head);
             reader->error_code = FT_ERR_INVALID_ARGUMENT;
             error_code = FT_ERR_INVALID_ARGUMENT;
-            json_stream_reader_finalize_lock(reader, guard);
+            (void)reader->_mutex->unlock();
             return (ft_nullptr);
         }
         char current_char;
@@ -1211,7 +1226,7 @@ json_group *json_stream_reader_parse(json_stream_reader *reader)
             json_free_groups(head);
             reader->error_code = FT_ERR_INVALID_ARGUMENT;
             error_code = FT_ERR_INVALID_ARGUMENT;
-            json_stream_reader_finalize_lock(reader, guard);
+            (void)reader->_mutex->unlock();
             return (ft_nullptr);
         }
         if (current_char == '}')
@@ -1226,7 +1241,7 @@ json_group *json_stream_reader_parse(json_stream_reader *reader)
             json_free_groups(head);
             error_code = json_stream_last_error();
             reader->error_code = error_code;
-            json_stream_reader_finalize_lock(reader, guard);
+            (void)reader->_mutex->unlock();
             return (ft_nullptr);
         }
         if (json_stream_skip_whitespace(reader) != JSON_STREAM_STATUS_OK)
@@ -1235,7 +1250,7 @@ json_group *json_stream_reader_parse(json_stream_reader *reader)
             json_free_groups(head);
             reader->error_code = FT_ERR_INVALID_ARGUMENT;
             error_code = FT_ERR_INVALID_ARGUMENT;
-            json_stream_reader_finalize_lock(reader, guard);
+            (void)reader->_mutex->unlock();
             return (ft_nullptr);
         }
         if (json_stream_reader_expect(reader, ':') != 0)
@@ -1243,7 +1258,7 @@ json_group *json_stream_reader_parse(json_stream_reader *reader)
             cma_free(group_name);
             json_free_groups(head);
             reader->error_code = FT_ERR_INVALID_ARGUMENT;
-            json_stream_reader_finalize_lock(reader, guard);
+            (void)reader->_mutex->unlock();
             return (ft_nullptr);
         }
         if (json_stream_skip_whitespace(reader) != JSON_STREAM_STATUS_OK)
@@ -1252,7 +1267,7 @@ json_group *json_stream_reader_parse(json_stream_reader *reader)
             json_free_groups(head);
             reader->error_code = FT_ERR_INVALID_ARGUMENT;
             json_stream_push_error(FT_ERR_INVALID_ARGUMENT);
-            json_stream_reader_finalize_lock(reader, guard);
+            (void)reader->_mutex->unlock();
             return (ft_nullptr);
         }
         json_item *items = json_stream_parse_items(reader);
@@ -1262,7 +1277,7 @@ json_group *json_stream_reader_parse(json_stream_reader *reader)
             json_free_groups(head);
             error_code = json_stream_last_error();
             reader->error_code = error_code;
-            json_stream_reader_finalize_lock(reader, guard);
+            (void)reader->_mutex->unlock();
             return (ft_nullptr);
         }
         json_group *group = json_create_json_group(group_name);
@@ -1273,7 +1288,7 @@ json_group *json_stream_reader_parse(json_stream_reader *reader)
             json_free_groups(head);
             error_code = json_stream_last_error();
             reader->error_code = error_code;
-            json_stream_reader_finalize_lock(reader, guard);
+            (void)reader->_mutex->unlock();
             return (ft_nullptr);
         }
         group->items = items;
@@ -1293,7 +1308,7 @@ json_group *json_stream_reader_parse(json_stream_reader *reader)
             json_free_groups(head);
             reader->error_code = FT_ERR_INVALID_ARGUMENT;
             error_code = FT_ERR_INVALID_ARGUMENT;
-            json_stream_reader_finalize_lock(reader, guard);
+            (void)reader->_mutex->unlock();
             return (ft_nullptr);
         }
         status = json_stream_reader_peek(reader, &current_char);
@@ -1302,7 +1317,7 @@ json_group *json_stream_reader_parse(json_stream_reader *reader)
             json_free_groups(head);
             reader->error_code = FT_ERR_INVALID_ARGUMENT;
             error_code = FT_ERR_INVALID_ARGUMENT;
-            json_stream_reader_finalize_lock(reader, guard);
+            (void)reader->_mutex->unlock();
             return (ft_nullptr);
         }
         if (current_char == ',')
@@ -1315,7 +1330,7 @@ json_group *json_stream_reader_parse(json_stream_reader *reader)
         json_free_groups(head);
         reader->error_code = FT_ERR_INVALID_ARGUMENT;
         error_code = FT_ERR_INVALID_ARGUMENT;
-        json_stream_reader_finalize_lock(reader, guard);
+        (void)reader->_mutex->unlock();
         return (ft_nullptr);
     }
     if (!object_closed)
@@ -1323,26 +1338,33 @@ json_group *json_stream_reader_parse(json_stream_reader *reader)
         json_free_groups(head);
         reader->error_code = FT_ERR_INVALID_ARGUMENT;
         error_code = FT_ERR_INVALID_ARGUMENT;
-        json_stream_reader_finalize_lock(reader, guard);
+        (void)reader->_mutex->unlock();
         return (ft_nullptr);
     }
     reader->error_code = FT_ERR_SUCCESS;
     json_stream_push_error(FT_ERR_SUCCESS);
-    json_stream_reader_finalize_lock(reader, guard);
+    unlock_error = reader->_mutex->unlock();
+    if (unlock_error != FT_ERR_SUCCESS)
+    {
+        error_code = unlock_error;
+        return (ft_nullptr);
+    }
     return (head);
 }
 
 int json_stream_reader_init_callback(json_stream_reader *reader, json_stream_read_callback callback, void *user_data, size_t buffer_capacity)
 {
-    ft_unique_lock<pt_mutex> guard;
     int lock_error;
+    int unlock_error;
     char *new_buffer;
 
     if (!reader || !callback || buffer_capacity == 0)
         JSON_STREAM_ERROR_RETURN(FT_ERR_INVALID_ARGUMENT, -1);
     if (json_stream_reader_enable_thread_safety(reader) != 0)
         return (-1);
-    lock_error = json_stream_reader_lock(reader, guard);
+    if (reader->_mutex == ft_nullptr)
+        return (-1);
+    lock_error = reader->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
     {
         json_stream_push_error(lock_error);
@@ -1354,7 +1376,7 @@ int json_stream_reader_init_callback(json_stream_reader *reader, json_stream_rea
         reader->error_code = FT_ERR_NO_MEMORY;
         json_stream_reader_set_error_unlocked(reader, FT_ERR_NO_MEMORY);
         json_stream_push_error(FT_ERR_NO_MEMORY);
-        json_stream_reader_finalize_lock(reader, guard);
+        (void)reader->_mutex->unlock();
         return (-1);
     }
     if (reader->buffer)
@@ -1368,7 +1390,9 @@ int json_stream_reader_init_callback(json_stream_reader *reader, json_stream_rea
     reader->end_of_stream = false;
     reader->error_code = FT_ERR_SUCCESS;
     json_stream_reader_set_error_unlocked(reader, FT_ERR_SUCCESS);
-    json_stream_reader_finalize_lock(reader, guard);
+    unlock_error = reader->_mutex->unlock();
+    if (unlock_error != FT_ERR_SUCCESS)
+        return (-1);
     return (0);
 }
 
@@ -1381,14 +1405,16 @@ int json_stream_reader_init_file(json_stream_reader *reader, FILE *file, size_t 
 
 void json_stream_reader_destroy(json_stream_reader *reader)
 {
-    ft_unique_lock<pt_mutex> guard;
     int lock_error;
+    int unlock_error;
 
     if (!reader)
         return ;
     if (json_stream_reader_enable_thread_safety(reader) != 0)
         return ;
-    lock_error = json_stream_reader_lock(reader, guard);
+    if (reader->_mutex == ft_nullptr)
+        return ;
+    lock_error = reader->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
     {
         json_stream_push_error(lock_error);
@@ -1405,7 +1431,9 @@ void json_stream_reader_destroy(json_stream_reader *reader)
     reader->read_callback = ft_nullptr;
     reader->user_data = ft_nullptr;
     json_stream_reader_set_error_unlocked(reader, FT_ERR_SUCCESS);
-    json_stream_reader_finalize_lock(reader, guard);
+    unlock_error = reader->_mutex->unlock();
+    (void)unlock_error;
+    (void)json_stream_reader_disable_thread_safety(reader);
     return ;
 }
 

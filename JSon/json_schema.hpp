@@ -18,14 +18,14 @@ typedef struct json_schema_field
     json_type   type;
     bool        required;
     struct json_schema_field *next;
-    mutable pt_mutex _mutex;
+    mutable pt_mutex *_mutex;
     mutable int _error_code;
 } json_schema_field;
 
 typedef struct json_schema
 {
     json_schema_field *fields;
-    mutable pt_mutex _mutex;
+    mutable pt_mutex *_mutex;
     mutable int _error_code;
 } json_schema;
 

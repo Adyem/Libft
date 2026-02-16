@@ -28,11 +28,6 @@ class ft_big_number
         static int set_last_operation_error(int error_code) noexcept;
         int     lock_mutex(void) const noexcept;
         int     unlock_mutex(void) const noexcept;
-        int     prepare_thread_safety(void) noexcept;
-        void    teardown_thread_safety(void) noexcept;
-        int     enable_thread_safety(void) noexcept;
-        void    disable_thread_safety(void) noexcept;
-        bool    is_thread_safe_enabled(void) const noexcept;
         static int  lock_pair(const ft_big_number &first, const ft_big_number &second,
                 const ft_big_number *&lower,
                 const ft_big_number *&upper) noexcept;
@@ -97,6 +92,9 @@ class ft_big_number
         static void pop_operation_errors() noexcept;
         static int  pop_oldest_operation_error() noexcept;
         static int  operation_error_index() noexcept;
+        int     enable_thread_safety(void) noexcept;
+        int     disable_thread_safety(void) noexcept;
+        bool    is_thread_safe(void) const noexcept;
 
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex    *get_mutex_for_testing() noexcept;

@@ -81,10 +81,7 @@ void html_remove_nodes_by_tag(html_node **nodeList, const char *tagName)
     bool       previous_lock_acquired;
 
     if (nodeList == ft_nullptr || tagName == ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return ;
-    }
     currentNode = *nodeList;
     previousNode = ft_nullptr;
     previous_lock_acquired = false;
@@ -129,7 +126,7 @@ void html_remove_nodes_by_tag(html_node **nodeList, const char *tagName)
     }
     if (previousNode)
         html_node_unlock(previousNode, previous_lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    return ;
 }
 
 void html_remove_nodes_by_attr(html_node **nodeList, const char *key, const char *value)
@@ -139,10 +136,7 @@ void html_remove_nodes_by_attr(html_node **nodeList, const char *key, const char
     bool       previous_lock_acquired;
 
     if (nodeList == ft_nullptr || key == ft_nullptr || value == ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return ;
-    }
     currentNode = *nodeList;
     previousNode = ft_nullptr;
     previous_lock_acquired = false;
@@ -216,7 +210,7 @@ void html_remove_nodes_by_attr(html_node **nodeList, const char *key, const char
     }
     if (previousNode)
         html_node_unlock(previousNode, previous_lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    return ;
 }
 
 void html_remove_nodes_by_text(html_node **nodeList, const char *textContent)
@@ -226,10 +220,7 @@ void html_remove_nodes_by_text(html_node **nodeList, const char *textContent)
     bool       previous_lock_acquired;
 
     if (nodeList == ft_nullptr || textContent == ft_nullptr)
-    {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return ;
-    }
     currentNode = *nodeList;
     previousNode = ft_nullptr;
     previous_lock_acquired = false;
@@ -274,5 +265,5 @@ void html_remove_nodes_by_text(html_node **nodeList, const char *textContent)
     }
     if (previousNode)
         html_node_unlock(previousNode, previous_lock_acquired);
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    return ;
 }

@@ -5,13 +5,10 @@
 int file_create_directory(const char *path, mode_t mode)
 {
     int result;
-    int error_code;
+    int create_error_code;
 
-    result = cmp_file_create_directory(path, mode, &error_code);
-    if (result != 0 && error_code == FT_ERR_SUCCESS)
-        error_code = FT_ERR_INTERNAL;
-    if (result == 0)
-        error_code = FT_ERR_SUCCESS;
-    ft_global_error_stack_push(error_code);
+    result = cmp_file_create_directory(path, mode, &create_error_code);
+    if (result != 0 && create_error_code == FT_ERR_SUCCESS)
+        return (-1);
     return (result);
 }

@@ -133,7 +133,7 @@ int ft_big_number::unlock_pair(const ft_big_number *lower, const ft_big_number *
     return (final_error);
 }
 
-int ft_big_number::prepare_thread_safety(void) noexcept
+int ft_big_number::enable_thread_safety(void) noexcept
 {
     pt_recursive_mutex *mutex_pointer;
     int mutex_error;
@@ -161,34 +161,23 @@ int ft_big_number::prepare_thread_safety(void) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-void ft_big_number::teardown_thread_safety(void) noexcept
+int ft_big_number::disable_thread_safety(void) noexcept
 {
     int destroy_error;
 
     if (this->_mutex == ft_nullptr)
     {
         this->push_error(FT_ERR_SUCCESS);
-        return ;
+        return (FT_ERR_SUCCESS);
     }
     destroy_error = this->_mutex->destroy();
     delete this->_mutex;
     this->_mutex = ft_nullptr;
     this->push_error(destroy_error);
-    return ;
+    return (destroy_error);
 }
 
-int ft_big_number::enable_thread_safety(void) noexcept
-{
-    return (this->prepare_thread_safety());
-}
-
-void ft_big_number::disable_thread_safety(void) noexcept
-{
-    this->teardown_thread_safety();
-    return ;
-}
-
-bool ft_big_number::is_thread_safe_enabled(void) const noexcept
+bool ft_big_number::is_thread_safe(void) const noexcept
 {
     return (this->_mutex != ft_nullptr);
 }
@@ -425,7 +414,6 @@ ft_big_number::ft_big_number() noexcept
     , _mutex(ft_nullptr)
     , _operation_error(FT_ERR_SUCCESS)
 {
-    this->enable_thread_safety();
     this->push_error(FT_ERR_SUCCESS);
     return ;
 }
@@ -438,7 +426,6 @@ ft_big_number::ft_big_number(const ft_big_number& other) noexcept
     , _mutex(ft_nullptr)
     , _operation_error(FT_ERR_SUCCESS)
 {
-    this->enable_thread_safety();
     int lock_error = other.lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -485,7 +472,6 @@ ft_big_number::ft_big_number(ft_big_number&& other) noexcept
     , _mutex(ft_nullptr)
     , _operation_error(FT_ERR_SUCCESS)
 {
-    this->enable_thread_safety();
     int lock_error = other.lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
     {

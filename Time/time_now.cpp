@@ -13,13 +13,10 @@ t_time  time_now(void)
     if (standard_time == static_cast<std::time_t>(-1))
     {
         error_code = errno;
-        if (error_code != 0)
-            error_code = ft_map_system_error(error_code);
-        else
+        if (error_code == 0)
             error_code = FT_ERR_TERMINATED;
-        ft_global_error_stack_push(error_code);
+        (void)(error_code);
         return (static_cast<t_time>(-1));
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (static_cast<t_time>(standard_time));
 }

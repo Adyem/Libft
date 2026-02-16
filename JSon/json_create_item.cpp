@@ -23,6 +23,7 @@ json_item* json_create_item(const char *key, const char *value)
     item->is_big_number = false;
     item->big_number = ft_nullptr;
     item->next = ft_nullptr;
+    item->_mutex = ft_nullptr;
     if (json_item_enable_thread_safety(item) != 0)
     {
         delete item;
@@ -57,6 +58,7 @@ json_item* json_create_item(const char *key, const bool value)
     item->is_big_number = false;
     item->big_number = ft_nullptr;
     item->next = ft_nullptr;
+    item->_mutex = ft_nullptr;
     if (json_item_enable_thread_safety(item) != 0)
     {
         delete item;
@@ -94,6 +96,7 @@ json_item* json_create_item(const char *key, const int value)
     item->is_big_number = false;
     item->big_number = ft_nullptr;
     item->next = ft_nullptr;
+    item->_mutex = ft_nullptr;
     if (json_item_enable_thread_safety(item) != 0)
     {
         delete item;
