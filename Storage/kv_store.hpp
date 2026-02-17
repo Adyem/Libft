@@ -9,10 +9,10 @@
 #include "../Template/vector.hpp"
 #include "../Parser/document_backend.hpp"
 #include "../PThread/mutex.hpp"
-#include "../PThread/unique_lock.hpp"
 #include "../PThread/thread.hpp"
 #include "../PThread/pthread.hpp"
 #include "../sqlite_support.hpp"
+#include <cstdint>
 
 typedef enum e_kv_store_backend_type
 {
@@ -52,22 +52,28 @@ class kv_store_entry
         ft_string _value;
         bool _has_expiration;
         long long _expiration_timestamp;
-        mutable int _error_code;
+        uint8_t _initialized_state;
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
         mutable pt_mutex _mutex;
 
-        void set_error_unlocked(int error_code) const noexcept;
-        void set_error(int error_code) const noexcept;
-        void reinitialize_mutex() noexcept;
-        int lock_entry(ft_unique_lock<pt_mutex> &guard) const noexcept;
-        static void unlock_store_guard(ft_unique_lock<pt_mutex> &guard, int error_code) noexcept;
+        void abort_lifecycle_error(const char *method_name,
+            const char *reason) const noexcept;
+        void abort_if_not_initialized(const char *method_name) const noexcept;
+        int lock_entry() const noexcept;
+        int unlock_entry() const noexcept;
 
     public:
         kv_store_entry() noexcept;
-        kv_store_entry(const kv_store_entry &other) noexcept;
-        kv_store_entry(kv_store_entry &&other) noexcept;
-        kv_store_entry &operator=(const kv_store_entry &other) noexcept;
-        kv_store_entry &operator=(kv_store_entry &&other) noexcept;
+        kv_store_entry(const kv_store_entry &other) noexcept = delete;
+        kv_store_entry(kv_store_entry &&other) noexcept = delete;
+        kv_store_entry &operator=(const kv_store_entry &other) noexcept = delete;
+        kv_store_entry &operator=(kv_store_entry &&other) noexcept = delete;
         ~kv_store_entry() noexcept;
+        int initialize() noexcept;
+        int initialize(const kv_store_entry &other) noexcept;
+        int destroy() noexcept;
 
         int set_value(const ft_string &value) noexcept;
         int set_value(const char *value_string) noexcept;
@@ -79,8 +85,6 @@ class kv_store_entry
         int get_expiration(long long &expiration_timestamp) const noexcept;
         int is_expired(long long current_time, bool &expired) const noexcept;
 
-        int get_error() const noexcept;
-        const char *get_error_str() const noexcept;
 };
 
 typedef enum e_kv_store_operation_type
@@ -112,6 +116,10 @@ typedef struct s_kv_store_replication_sink
 class kv_store
 {
     private:
+        uint8_t _initialized_state;
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
         ft_map<ft_string, kv_store_entry> _data;
         ft_string _file_path;
         ft_string _encryption_key;
@@ -122,7 +130,6 @@ class kv_store
         long long _background_interval_seconds;
         ft_thread _background_thread;
         mutable pt_mutex _background_mutex;
-        mutable int _error_code;
         mutable pt_mutex _mutex;
         mutable long long _metrics_set_operations;
         mutable long long _metrics_delete_operations;
@@ -135,13 +142,14 @@ class kv_store
         ft_vector<kv_store_replication_sink> _replication_sinks;
         mutable pt_mutex _replication_mutex;
 
-        void set_error_unlocked(int error_code) const noexcept;
-        void set_error(int error_code) const noexcept;
-        int lock_store(ft_unique_lock<pt_mutex> &guard) const noexcept;
-        void unlock_store_guard(ft_unique_lock<pt_mutex> &guard, int error_code) const noexcept;
+        void abort_lifecycle_error(const char *method_name,
+            const char *reason) const noexcept;
+        void abort_if_not_initialized(const char *method_name) const noexcept;
+        int lock_store(bool *lock_acquired) const noexcept;
+        void unlock_store_guard(bool lock_acquired, int error_code) const noexcept;
         int encrypt_value(const ft_string &plain_string, ft_string &encoded_string) const;
         int decrypt_value(const ft_string &encoded_string, ft_string &plain_string) const;
-        int prune_expired_locked(ft_unique_lock<pt_mutex> &guard);
+        int prune_expired_locked();
         int compute_expiration(long long ttl_seconds, bool &has_expiration, long long &expiration_timestamp) const;
         long long current_time_seconds() const;
         int parse_expiration_timestamp(const char *value_string, long long &expiration_timestamp) const;
@@ -150,8 +158,7 @@ class kv_store
         void record_get_hit() const noexcept;
         void record_get_miss() const noexcept;
         void record_prune_metrics(long long removed_entries, long long duration_ms) const noexcept;
-        void record_operation_error(int error_code) const noexcept;
-        int lock_background(ft_unique_lock<pt_mutex> &guard) const noexcept;
+        int lock_background(bool *lock_acquired) const noexcept;
         int start_background_thread_locked(long long interval_seconds) noexcept;
         void stop_background_thread_locked(ft_thread &thread_holder) noexcept;
         static void background_compaction_worker(kv_store *store) noexcept;
@@ -170,13 +177,19 @@ class kv_store
         int flush_backend_entries(const ft_vector<kv_store_snapshot_entry> &entries) const;
         int load_backend_entries(kv_store_backend_type backend_type, const char *location, ft_vector<kv_store_snapshot_entry> &out_entries);
         int assign_backend_location(const char *location);
-        int lock_replication(ft_unique_lock<pt_mutex> &guard) const noexcept;
+        int lock_replication(bool *lock_acquired) const noexcept;
         int notify_replication_listeners(const ft_vector<kv_store_operation> &operations) const;
         int dispatch_snapshot_to_sink(kv_store_replication_snapshot_callback snapshot_callback, void *user_data) const;
 
     public:
         kv_store(const char *file_path, const char *encryption_key = ft_nullptr, bool enable_encryption = false);
+        kv_store(const kv_store &other) = delete;
+        kv_store(kv_store &&other) = delete;
+        kv_store &operator=(const kv_store &other) = delete;
+        kv_store &operator=(kv_store &&other) = delete;
         ~kv_store();
+        int initialize(const char *file_path, const char *encryption_key = ft_nullptr, bool enable_encryption = false);
+        int destroy();
 
         int prune_expired();
         int kv_set(const char *key_string, const char *value_string, long long ttl_seconds = -1);
@@ -188,9 +201,9 @@ class kv_store
         kv_store_backend_type get_backend() const;
         int kv_apply(const ft_vector<kv_store_operation> &operations);
         int kv_compare_and_swap(const char *key_string, const char *expected_value, const char *new_value, long long ttl_seconds = -1);
-        int get_error() const;
-        const char *get_error_str() const;
+#ifdef LIBFT_TEST_BUILD
         pt_mutex *get_mutex_for_validation() const noexcept;
+#endif
         int get_metrics(kv_store_metrics &out_metrics) const;
         int export_snapshot(ft_vector<kv_store_snapshot_entry> &out_entries) const;
         int export_snapshot_to_file(const char *file_path) const;

@@ -6,6 +6,7 @@
 #include "../Errno/errno.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Parser/document_backend.hpp"
+#include <cstdint>
 
 class pt_mutex;
 
@@ -39,10 +40,18 @@ class xml_document
         xml_node *_root;
         mutable pt_mutex *_mutex;
         mutable bool _thread_safe_enabled;
+        uint8_t _initialized_state;
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
 
+        void abort_lifecycle_error(const char *method_name,
+            const char *reason) const noexcept;
+        void abort_if_not_initialized(const char *method_name) const noexcept;
         void record_operation_error(int error_code) const noexcept;
-        int prepare_thread_safety() noexcept;
-        void teardown_thread_safety() noexcept;
+        int enable_thread_safety() noexcept;
+        void disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
         int lock(bool *lock_acquired) const noexcept;
         void unlock(bool lock_acquired) const noexcept;
         pt_mutex *get_mutex_for_validation() const noexcept;
@@ -66,6 +75,8 @@ class xml_document
         xml_document() noexcept;
         ~xml_document() noexcept;
 
+        int initialize() noexcept;
+        int destroy() noexcept;
         int load_from_string(const char *xml) noexcept;
         int load_from_file(const char *file_path) noexcept;
         int load_from_backend(ft_document_source &source) noexcept;

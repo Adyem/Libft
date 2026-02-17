@@ -101,22 +101,6 @@ ssize_t udp_event_loop_send(event_loop *loop, udp_socket &socket, const void *da
 
 int networking_check_socket_after_send(int socket_fd);
 
-static inline int networking_fetch_last_error(bool repush_failure = true)
-{
-    unsigned long long operation_id = ft_global_error_stack_get_id_at(1);
-    int error_code = ft_global_error_stack_peek_last_error();
-
-    ft_global_error_stack_drop_last_error();
-    if (repush_failure && error_code != FT_ERR_SUCCESS)
-    {
-        if (operation_id != 0)
-            ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-        else
-            ft_global_error_stack_push(error_code);
-    }
-    return (error_code);
-}
-
 enum class SocketType
 {
     SERVER,
@@ -131,7 +115,6 @@ class SocketConfig
         mutable bool _thread_safe_enabled;
         mutable pt_mutex *_mutex;
 
-        void record_operation_error(int error_code) const noexcept;
         void report_operation_result(int error_code) const noexcept;
 
         friend int socket_config_prepare_thread_safety(SocketConfig *config);

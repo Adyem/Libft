@@ -60,6 +60,15 @@ static void create_cross_device_test_file(const char *path)
     return ;
 }
 
+static void cleanup_file_utils_artifacts(void)
+{
+    file_delete("test_file_copy_with_buffer_small_chunks_source.bin");
+    file_delete("test_file_copy_with_buffer_small_chunks_destination.bin");
+    file_delete("test_ft_file_copy_to_streams_payload_source.bin");
+    file_delete("test_ft_file_copy_to_streams_payload_destination.bin");
+    return ;
+}
+
 static void write_payload(const char *path, const unsigned char *payload, size_t payload_size)
 {
     FILE *file_pointer;
@@ -289,16 +298,14 @@ FT_TEST(test_file_copy_with_buffer_small_chunks, "file_copy_with_buffer streams 
         payload[index] = static_cast<unsigned char>(index * 7 + 3);
         index += 1;
     }
-    file_delete(source_path);
-    file_delete(destination_path);
+    cleanup_file_utils_artifacts();
     write_payload(source_path, payload, sizeof(payload));
     FT_ASSERT_EQ(0, file_copy_with_buffer(source_path, destination_path, 5));
     source_size = read_payload(source_path, read_source, sizeof(read_source));
     destination_size = read_payload(destination_path, read_destination, sizeof(read_destination));
     FT_ASSERT_EQ(source_size, destination_size);
     FT_ASSERT_EQ(0, ft_memcmp(read_source, read_destination, source_size));
-    file_delete(source_path);
-    file_delete(destination_path);
+    cleanup_file_utils_artifacts();
     return (1);
 }
 
@@ -337,8 +344,7 @@ FT_TEST(test_ft_file_copy_to_streams_payload, "ft_file copy_to streams using sha
         payload[index] = static_cast<unsigned char>(index * 5 + 11);
         index += 1;
     }
-    file_delete(source_path);
-    file_delete(destination_path);
+    cleanup_file_utils_artifacts();
     write_payload(source_path, payload, sizeof(payload));
     open_flags = O_RDONLY | TEST_FILE_BINARY_FLAG;
     FT_ASSERT_EQ(0, source_file.open(source_path, open_flags));
@@ -347,8 +353,7 @@ FT_TEST(test_ft_file_copy_to_streams_payload, "ft_file copy_to streams using sha
     destination_size = read_payload(destination_path, destination_payload, sizeof(destination_payload));
     FT_ASSERT_EQ(source_size, destination_size);
     FT_ASSERT_EQ(0, ft_memcmp(source_payload, destination_payload, source_size));
-    file_delete(source_path);
-    file_delete(destination_path);
+    cleanup_file_utils_artifacts();
     return (1);
 }
 

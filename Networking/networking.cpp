@@ -2,25 +2,6 @@
 #include "../Errno/errno.hpp"
 #include <cstring>
 
-static int networking_consume_global_error(void) noexcept
-{
-    int error_code;
-
-    error_code = ft_global_error_stack_peek_last_error();
-    ft_global_error_stack_drop_last_error();
-    return (error_code);
-}
-
-static void networking_update_operation_result(int &operation_result) noexcept
-{
-    int error_code;
-
-    error_code = networking_consume_global_error();
-    if (error_code != FT_ERR_SUCCESS)
-        operation_result = error_code;
-    return ;
-}
-
 #ifdef _WIN32
 # include <winsock2.h>
 # include <ws2tcpip.h>
@@ -59,7 +40,6 @@ SocketConfig::SocketConfig()
         && ft_string::last_operation_error() != FT_ERR_SUCCESS)
         operation_result = ft_string::last_operation_error();
     socket_config_prepare_thread_safety(this);
-    networking_update_operation_result(operation_result);
     this->report_operation_result(operation_result);
     return ;
 }
@@ -89,7 +69,6 @@ SocketConfig::SocketConfig(const SocketConfig& other) noexcept
     other_locked = false;
     operation_result = FT_ERR_SUCCESS;
     bool lock_failed = socket_config_lock(mutable_other, &other_locked) != 0;
-    networking_update_operation_result(operation_result);
     if (!lock_failed)
     {
         operation_result = other._error_code;
@@ -106,7 +85,6 @@ SocketConfig::SocketConfig(const SocketConfig& other) noexcept
         this->_multicast_group = other._multicast_group;
         this->_multicast_interface = other._multicast_interface;
         socket_config_unlock(mutable_other, other_locked);
-        networking_consume_global_error();
     }
     if (operation_result == FT_ERR_SUCCESS
         && ft_string::last_operation_error() != FT_ERR_SUCCESS)
@@ -118,7 +96,6 @@ SocketConfig::SocketConfig(const SocketConfig& other) noexcept
         && ft_string::last_operation_error() != FT_ERR_SUCCESS)
         operation_result = ft_string::last_operation_error();
     socket_config_prepare_thread_safety(this);
-    networking_update_operation_result(operation_result);
     this->report_operation_result(operation_result);
     return ;
 }
@@ -143,7 +120,6 @@ SocketConfig& SocketConfig::operator=(const SocketConfig& other) noexcept
     {
         proceed = true;
         bool prepare_failed = socket_config_prepare_thread_safety(this) != 0;
-        networking_update_operation_result(operation_result);
         if (prepare_failed)
             proceed = false;
         if (proceed && first > second)
@@ -154,14 +130,12 @@ SocketConfig& SocketConfig::operator=(const SocketConfig& other) noexcept
         if (proceed)
         {
             bool first_lock_failed = socket_config_lock(first, &first_locked) != 0;
-            networking_update_operation_result(operation_result);
             if (first_lock_failed)
                 proceed = false;
         }
         if (proceed)
         {
             bool second_lock_failed = socket_config_lock(second, &second_locked) != 0;
-            networking_update_operation_result(operation_result);
             if (second_lock_failed)
                 proceed = false;
         }
@@ -184,12 +158,10 @@ SocketConfig& SocketConfig::operator=(const SocketConfig& other) noexcept
         if (second_locked)
         {
             socket_config_unlock(second, second_locked);
-            networking_consume_global_error();
         }
         if (first_locked)
         {
             socket_config_unlock(first, first_locked);
-            networking_consume_global_error();
         }
     }
     if (operation_result == FT_ERR_SUCCESS
@@ -202,7 +174,6 @@ SocketConfig& SocketConfig::operator=(const SocketConfig& other) noexcept
         && ft_string::last_operation_error() != FT_ERR_SUCCESS)
         operation_result = ft_string::last_operation_error();
     socket_config_prepare_thread_safety(this);
-    networking_update_operation_result(operation_result);
     this->report_operation_result(operation_result);
     return (*this);
 }
@@ -230,7 +201,6 @@ SocketConfig::SocketConfig(SocketConfig&& other) noexcept
     other_locked = false;
     operation_result = FT_ERR_SUCCESS;
     bool lock_failed = socket_config_lock(&other, &other_locked) != 0;
-    networking_update_operation_result(operation_result);
     if (!lock_failed)
     {
         operation_result = other._error_code;
@@ -260,7 +230,6 @@ SocketConfig::SocketConfig(SocketConfig&& other) noexcept
         other._multicast_interface.clear();
         other.report_operation_result(FT_ERR_SUCCESS);
         socket_config_unlock(&other, other_locked);
-        networking_consume_global_error();
     }
     if (operation_result == FT_ERR_SUCCESS
         && ft_string::last_operation_error() != FT_ERR_SUCCESS)
@@ -272,7 +241,6 @@ SocketConfig::SocketConfig(SocketConfig&& other) noexcept
         && ft_string::last_operation_error() != FT_ERR_SUCCESS)
         operation_result = ft_string::last_operation_error();
     socket_config_prepare_thread_safety(this);
-    networking_update_operation_result(operation_result);
     this->report_operation_result(operation_result);
     return ;
 }
@@ -295,7 +263,6 @@ SocketConfig& SocketConfig::operator=(SocketConfig&& other) noexcept
     {
         proceed = true;
         bool prepare_failed = socket_config_prepare_thread_safety(this) != 0;
-        networking_update_operation_result(operation_result);
         if (prepare_failed)
             proceed = false;
         if (proceed && first > second)
@@ -306,14 +273,12 @@ SocketConfig& SocketConfig::operator=(SocketConfig&& other) noexcept
         if (proceed)
         {
             bool first_lock_failed = socket_config_lock(first, &first_locked) != 0;
-            networking_update_operation_result(operation_result);
             if (first_lock_failed)
                 proceed = false;
         }
         if (proceed)
         {
             bool second_lock_failed = socket_config_lock(second, &second_locked) != 0;
-            networking_update_operation_result(operation_result);
             if (second_lock_failed)
                 proceed = false;
         }
@@ -349,12 +314,10 @@ SocketConfig& SocketConfig::operator=(SocketConfig&& other) noexcept
         if (second_locked)
         {
             socket_config_unlock(second, second_locked);
-            networking_consume_global_error();
         }
         if (first_locked)
         {
             socket_config_unlock(first, first_locked);
-            networking_consume_global_error();
         }
     }
     if (operation_result == FT_ERR_SUCCESS
@@ -367,7 +330,6 @@ SocketConfig& SocketConfig::operator=(SocketConfig&& other) noexcept
         && ft_string::last_operation_error() != FT_ERR_SUCCESS)
         operation_result = ft_string::last_operation_error();
     socket_config_prepare_thread_safety(this);
-    networking_update_operation_result(operation_result);
     this->report_operation_result(operation_result);
     return (*this);
 }
@@ -378,18 +340,8 @@ SocketConfig::~SocketConfig()
     return ;
 }
 
-void SocketConfig::record_operation_error(int error_code) const noexcept
-{
-    unsigned long long operation_id;
-
-    operation_id = ft_errno_next_operation_id();
-    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    return ;
-}
-
 void SocketConfig::report_operation_result(int error_code) const noexcept
 {
     this->_error_code = error_code;
-    this->record_operation_error(error_code);
     return ;
 }

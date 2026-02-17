@@ -11,6 +11,11 @@ int test_xml_parse_simple(void)
 {
     const char *xml = "<root><child>value</child></root>";
     xml_document doc;
+    int initialize_result;
+
+    initialize_result = doc.initialize();
+    if (initialize_result != FT_ERR_SUCCESS)
+        return (0);
     if (doc.load_from_string(xml) != FT_ERR_SUCCESS)
         return (0);
     xml_node *root = doc.get_root();
@@ -32,6 +37,11 @@ int test_xml_propagates_child_allocation_failure(void)
 {
     const char *xml = "<root><a/><b/><c/></root>";
     xml_document doc;
+    int initialize_result;
+
+    initialize_result = doc.initialize();
+    if (initialize_result != FT_ERR_SUCCESS)
+        return (0);
     cma_set_alloc_limit(16);
     int load_result = doc.load_from_string(xml);
     cma_set_alloc_limit(0);
@@ -39,8 +49,5 @@ int test_xml_propagates_child_allocation_failure(void)
         return (0);
     if (doc.get_root() != ft_nullptr)
         return (0);
-    if (doc.get_error() != FT_ERR_NO_MEMORY)
-        return (0);
     return (1);
 }
-

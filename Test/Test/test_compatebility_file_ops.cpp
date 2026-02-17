@@ -57,6 +57,15 @@ static void write_test_file(const char *path)
     return ;
 }
 
+static void cleanup_compatebility_file_artifacts(void)
+{
+    remove_file_if_present("cmp_file_copy_permission_source.txt");
+    remove_file_if_present("cmp_file_copy_success_source.txt");
+    remove_file_if_present("cmp_file_move_cross_device_directory_destination_source.txt");
+    remove_file_if_present("cmp_file_move_cross_device_failure_source.txt");
+    return ;
+}
+
 FT_TEST(test_cmp_file_exists_null_pointer_sets_errno, "cmp_file_exists reports FT_ERR_INVALID_ARGUMENT for null path")
 {
     int error_code = FT_ERR_SUCCESS;
@@ -210,7 +219,7 @@ FT_TEST(test_cmp_file_copy_permission_error_sets_errno, "cmp_file_copy reports p
     const char *stale_destination_path = "cmp_file_copy_permission_dir/destination.txt";
     int error_code = FT_ERR_SUCCESS;
 
-    remove_file_if_present(source_path);
+    cleanup_compatebility_file_artifacts();
     remove_file_if_present(stale_destination_path);
     remove_directory_if_present(destination_directory);
     write_test_file(source_path);
@@ -221,7 +230,7 @@ FT_TEST(test_cmp_file_copy_permission_error_sets_errno, "cmp_file_copy reports p
 #endif
     FT_ASSERT_EQ(-1, cmp_file_copy(source_path, destination_directory, &error_code));
     FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, error_code);
-    remove_file_if_present(source_path);
+    cleanup_compatebility_file_artifacts();
     remove_directory_if_present(destination_directory);
     remove_file_if_present(stale_destination_path);
     return (1);
@@ -246,13 +255,14 @@ FT_TEST(test_cmp_file_copy_success_clears_errno, "cmp_file_copy clears errno on 
     const char *destination_path = "cmp_file_copy_success_destination.txt";
     int error_code = FT_ERR_INVALID_ARGUMENT;
 
-    remove_file_if_present(source_path);
+    cleanup_compatebility_file_artifacts();
     remove_file_if_present(destination_path);
     write_test_file(source_path);
     FT_ASSERT_EQ(0, cmp_file_copy(source_path, destination_path, &error_code));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, error_code);
     cmp_file_delete(source_path, &error_code);
     cmp_file_delete(destination_path, &error_code);
+    cleanup_compatebility_file_artifacts();
     return (1);
 }
 

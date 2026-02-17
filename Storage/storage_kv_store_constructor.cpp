@@ -4,17 +4,28 @@
 #include <cstring>
 #include <ctime>
 
-static int storage_kv_move_string_error(ft_string &value) noexcept
-{
-    unsigned long long operation_id = value.last_operation_id();
+#include "../Printf/printf.hpp"
+#include "../System_utils/system_utils.hpp"
 
-    if (operation_id == 0)
-        return (FT_ERR_SUCCESS);
-    return (value.pop_operation_error(operation_id));
+void kv_store::abort_lifecycle_error(const char *method_name,
+    const char *reason) const noexcept
+{
+    pf_printf_fd(2, "kv_store lifecycle error in %s: %s\n", method_name, reason);
+    su_abort();
+    return ;
 }
 
-kv_store::kv_store(const char *file_path, const char *encryption_key, bool enable_encryption)
-    : _data()
+void kv_store::abort_if_not_initialized(const char *method_name) const noexcept
+{
+    if (this->_initialized_state == kv_store::_state_initialized)
+        return ;
+    this->abort_lifecycle_error(method_name, "instance is not initialized");
+    return ;
+}
+
+kv_store::kv_store(const char *, const char *, bool)
+    : _initialized_state(kv_store::_state_uninitialized)
+    , _data()
     , _file_path()
     , _encryption_key()
     , _encryption_enabled(false)
@@ -24,7 +35,6 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
     , _background_interval_seconds(0)
     , _background_thread()
     , _background_mutex()
-    , _error_code(FT_ERR_SUCCESS)
     , _mutex()
     , _metrics_set_operations(0)
     , _metrics_delete_operations(0)
@@ -37,42 +47,83 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
     , _replication_sinks()
     , _replication_mutex()
 {
+    return ;
+}
+
+int kv_store::initialize(const char *file_path, const char *encryption_key, bool enable_encryption)
+{
     json_group *group_head;
     json_group *store_group;
     json_item *item_pointer;
     ft_map<ft_string, long long> ttl_metadata;
     size_t ttl_prefix_length;
+
+    if (this->_initialized_state == kv_store::_state_initialized)
+        this->abort_lifecycle_error("kv_store::initialize", "initialize called on initialized instance");
+    if (this->_mutex.initialize() != FT_ERR_SUCCESS)
+    {
+        this->_initialized_state = kv_store::_state_destroyed;
+        return (FT_ERR_INVALID_OPERATION);
+    }
+    if (this->_background_mutex.initialize() != FT_ERR_SUCCESS)
+    {
+        (void)this->_mutex.destroy();
+        this->_initialized_state = kv_store::_state_destroyed;
+        return (FT_ERR_INVALID_OPERATION);
+    }
+    if (this->_replication_mutex.initialize() != FT_ERR_SUCCESS)
+    {
+        (void)this->_background_mutex.destroy();
+        (void)this->_mutex.destroy();
+        this->_initialized_state = kv_store::_state_destroyed;
+        return (FT_ERR_INVALID_OPERATION);
+    }
+    this->_initialized_state = kv_store::_state_initialized;
+    this->_data.clear();
+    this->_file_path.clear();
+    this->_encryption_key.clear();
+    this->_backend_type = KV_STORE_BACKEND_JSON;
+    this->_encryption_enabled = false;
+    this->_background_thread_active = false;
+    this->_background_stop_requested = false;
+    this->_background_interval_seconds = 0;
+    this->_metrics_set_operations = 0;
+    this->_metrics_delete_operations = 0;
+    this->_metrics_get_hits = 0;
+    this->_metrics_get_misses = 0;
+    this->_metrics_prune_operations = 0;
+    this->_metrics_pruned_entries = 0;
+    this->_metrics_total_prune_duration_ms = 0;
+    this->_metrics_last_prune_duration_ms = 0;
+    this->_replication_sinks.clear();
     if (file_path == ft_nullptr)
     {
         this->_file_path.clear();
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
-        return ;
+        this->_initialized_state = kv_store::_state_destroyed;
+        (void)this->_replication_mutex.destroy();
+        (void)this->_background_mutex.destroy();
+        (void)this->_mutex.destroy();
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     this->_file_path = file_path;
-    int file_path_error = storage_kv_move_string_error(this->_file_path);
-    if (file_path_error != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(file_path_error);
-        return ;
-    }
     if (enable_encryption)
     {
         if (encryption_key == ft_nullptr)
         {
-            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
-            return ;
+            this->_initialized_state = kv_store::_state_destroyed;
+            (void)this->_replication_mutex.destroy();
+            (void)this->_background_mutex.destroy();
+            (void)this->_mutex.destroy();
+            return (FT_ERR_INVALID_ARGUMENT);
         }
         this->_encryption_key = encryption_key;
-        int encryption_key_error = storage_kv_move_string_error(this->_encryption_key);
-        if (encryption_key_error != FT_ERR_SUCCESS)
-        {
-            ft_global_error_stack_push(encryption_key_error);
-            return ;
-        }
         if (this->_encryption_key.size() != 16)
         {
-            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
-            return ;
+            this->_initialized_state = kv_store::_state_destroyed;
+            (void)this->_replication_mutex.destroy();
+            (void)this->_background_mutex.destroy();
+            (void)this->_mutex.destroy();
+            return (FT_ERR_INVALID_ARGUMENT);
         }
         this->_encryption_enabled = true;
     }
@@ -82,12 +133,6 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
         if (encryption_key != ft_nullptr)
         {
             this->_encryption_key = encryption_key;
-            int encryption_key_error = storage_kv_move_string_error(this->_encryption_key);
-            if (encryption_key_error != FT_ERR_SUCCESS)
-            {
-                ft_global_error_stack_push(encryption_key_error);
-                return ;
-            }
         }
         else
             this->_encryption_key.clear();
@@ -96,15 +141,21 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
     group_head = json_read_from_file(file_path);
     if (group_head == ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_IO);
-        return ;
+        this->_initialized_state = kv_store::_state_destroyed;
+        (void)this->_replication_mutex.destroy();
+        (void)this->_background_mutex.destroy();
+        (void)this->_mutex.destroy();
+        return (FT_ERR_IO);
     }
     store_group = json_find_group(group_head, "kv_store");
     if (store_group == ft_nullptr)
     {
         json_free_groups(group_head);
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
-        return ;
+        this->_initialized_state = kv_store::_state_destroyed;
+        (void)this->_replication_mutex.destroy();
+        (void)this->_background_mutex.destroy();
+        (void)this->_mutex.destroy();
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     ttl_prefix_length = std::strlen(g_kv_store_ttl_prefix);
     item_pointer = store_group->items;
@@ -117,15 +168,21 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
                 if (this->_encryption_enabled == false)
                 {
                     json_free_groups(group_head);
-                    ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
-                    return ;
+                    this->_initialized_state = kv_store::_state_destroyed;
+                    (void)this->_replication_mutex.destroy();
+                    (void)this->_background_mutex.destroy();
+                    (void)this->_mutex.destroy();
+                    return (FT_ERR_INVALID_ARGUMENT);
                 }
             }
             else
             {
                 json_free_groups(group_head);
-                ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
-                return ;
+                this->_initialized_state = kv_store::_state_destroyed;
+                (void)this->_replication_mutex.destroy();
+                (void)this->_background_mutex.destroy();
+                (void)this->_mutex.destroy();
+                return (FT_ERR_INVALID_ARGUMENT);
             }
             item_pointer = item_pointer->next;
             continue;
@@ -134,108 +191,81 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
         {
             ft_string ttl_key(item_pointer->key + ttl_prefix_length);
             long long expiration_timestamp;
-
-            int ttl_key_error = storage_kv_move_string_error(ttl_key);
-            if (ttl_key_error != FT_ERR_SUCCESS)
-            {
-                json_free_groups(group_head);
-                ft_global_error_stack_push(ttl_key_error);
-                return ;
-            }
             if (this->parse_expiration_timestamp(item_pointer->value, expiration_timestamp) != 0)
             {
                 json_free_groups(group_head);
-                return ;
+                this->_initialized_state = kv_store::_state_destroyed;
+                (void)this->_replication_mutex.destroy();
+                (void)this->_background_mutex.destroy();
+                (void)this->_mutex.destroy();
+                return (FT_ERR_INVALID_ARGUMENT);
             }
             ttl_metadata.insert(ttl_key, expiration_timestamp);
-            int ttl_metadata_pop_error = ft_global_error_stack_peek_last_error();
-            if (ttl_metadata_pop_error != FT_ERR_SUCCESS)
-            {
-                json_free_groups(group_head);
-                ft_global_error_stack_push(ttl_metadata_pop_error);
-                return ;
-            }
             item_pointer = item_pointer->next;
             continue;
         }
         ft_string key_storage(item_pointer->key);
         kv_store_entry entry;
-
-        int key_storage_error = storage_kv_move_string_error(key_storage);
-        if (key_storage_error != FT_ERR_SUCCESS)
+        if (entry.initialize() != FT_ERR_SUCCESS)
         {
             json_free_groups(group_head);
-            ft_global_error_stack_push(key_storage_error);
-            return ;
+            this->_initialized_state = kv_store::_state_destroyed;
+            (void)this->_replication_mutex.destroy();
+            (void)this->_background_mutex.destroy();
+            (void)this->_mutex.destroy();
+            return (FT_ERR_INVALID_OPERATION);
         }
         if (entry.configure_expiration(false, 0) != 0)
         {
             json_free_groups(group_head);
-            ft_global_error_stack_push(entry.get_error());
-            return ;
+            this->_initialized_state = kv_store::_state_destroyed;
+            (void)this->_replication_mutex.destroy();
+            (void)this->_background_mutex.destroy();
+            (void)this->_mutex.destroy();
+            return (FT_ERR_INVALID_OPERATION);
         }
         if (this->_encryption_enabled)
         {
             ft_string encoded_value(item_pointer->value);
             ft_string decrypted_value;
-
-            int encoded_value_error = storage_kv_move_string_error(encoded_value);
-            if (encoded_value_error != FT_ERR_SUCCESS)
-            {
-                json_free_groups(group_head);
-                ft_global_error_stack_push(encoded_value_error);
-                return ;
-            }
             if (this->decrypt_value(encoded_value, decrypted_value) != 0)
             {
                 json_free_groups(group_head);
-                return ;
+                this->_initialized_state = kv_store::_state_destroyed;
+                (void)this->_replication_mutex.destroy();
+                (void)this->_background_mutex.destroy();
+                (void)this->_mutex.destroy();
+                return (FT_ERR_INVALID_ARGUMENT);
             }
             if (entry.set_value(decrypted_value) != 0)
             {
                 json_free_groups(group_head);
-                ft_global_error_stack_push(entry.get_error());
-                return ;
+                this->_initialized_state = kv_store::_state_destroyed;
+                (void)this->_replication_mutex.destroy();
+                (void)this->_background_mutex.destroy();
+                (void)this->_mutex.destroy();
+                return (FT_ERR_INVALID_OPERATION);
             }
         }
         else
         {
             ft_string plain_value(item_pointer->value);
-
-            int plain_value_error = storage_kv_move_string_error(plain_value);
-            if (plain_value_error != FT_ERR_SUCCESS)
-            {
-                json_free_groups(group_head);
-                ft_global_error_stack_push(plain_value_error);
-                return ;
-            }
             if (entry.set_value(plain_value) != 0)
             {
                 json_free_groups(group_head);
-                ft_global_error_stack_push(entry.get_error());
-                return ;
+                this->_initialized_state = kv_store::_state_destroyed;
+                (void)this->_replication_mutex.destroy();
+                (void)this->_background_mutex.destroy();
+                (void)this->_mutex.destroy();
+                return (FT_ERR_INVALID_OPERATION);
             }
         }
         this->_data.insert(key_storage, entry);
-        int data_insert_pop_error = ft_global_error_stack_peek_last_error();
-        if (data_insert_pop_error != FT_ERR_SUCCESS)
-        {
-            json_free_groups(group_head);
-            ft_global_error_stack_push(data_insert_pop_error);
-            return ;
-        }
         item_pointer = item_pointer->next;
     }
     size_t ttl_size;
 
     ttl_size = ttl_metadata.size();
-    int ttl_metadata_size_pop_error = ft_global_error_stack_peek_last_error();
-    if (ttl_metadata_size_pop_error != FT_ERR_SUCCESS)
-    {
-        json_free_groups(group_head);
-        ft_global_error_stack_push(ttl_metadata_size_pop_error);
-        return ;
-    }
     if (ttl_size > 0)
     {
         const Pair<ft_string, long long> *ttl_end;
@@ -243,13 +273,6 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
         size_t ttl_index;
 
         ttl_end = ttl_metadata.end();
-        int ttl_metadata_range_pop_error = ft_global_error_stack_peek_last_error();
-        if (ttl_metadata_range_pop_error != FT_ERR_SUCCESS)
-        {
-            json_free_groups(group_head);
-            ft_global_error_stack_push(ttl_metadata_range_pop_error);
-            return ;
-        }
         ttl_begin = ttl_end - static_cast<std::ptrdiff_t>(ttl_size);
         ttl_index = 0;
         while (ttl_index < ttl_size)
@@ -258,20 +281,16 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
             Pair<ft_string, kv_store_entry> *data_pair;
 
             data_pair = this->_data.find(ttl_entry.key);
-            int data_iteration_pop_error = ft_global_error_stack_peek_last_error();
-            if (data_iteration_pop_error != FT_ERR_SUCCESS)
-            {
-                json_free_groups(group_head);
-                ft_global_error_stack_push(data_iteration_pop_error);
-                return ;
-            }
             if (data_pair != ft_nullptr)
             {
                 if (data_pair->value.configure_expiration(true, ttl_entry.value) != 0)
                 {
                     json_free_groups(group_head);
-                    ft_global_error_stack_push(data_pair->value.get_error());
-                    return ;
+                    this->_initialized_state = kv_store::_state_destroyed;
+                    (void)this->_replication_mutex.destroy();
+                    (void)this->_background_mutex.destroy();
+                    (void)this->_mutex.destroy();
+                    return (FT_ERR_INVALID_OPERATION);
                 }
             }
             ttl_index++;
@@ -280,15 +299,52 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
     if (this->prune_expired() != 0)
     {
         json_free_groups(group_head);
-        return ;
+        this->_initialized_state = kv_store::_state_destroyed;
+        (void)this->_replication_mutex.destroy();
+        (void)this->_background_mutex.destroy();
+        (void)this->_mutex.destroy();
+        return (FT_ERR_INVALID_OPERATION);
     }
     json_free_groups(group_head);
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
-    return ;
+    return (FT_ERR_SUCCESS);
+}
+
+int kv_store::destroy()
+{
+    if (this->_initialized_state != kv_store::_state_initialized)
+        this->abort_lifecycle_error("kv_store::destroy", "destroy called on non-initialized instance");
+    (void)this->stop_background_compaction();
+    this->_data.clear();
+    this->_replication_sinks.clear();
+    this->_file_path.clear();
+    this->_encryption_key.clear();
+    this->_encryption_enabled = false;
+    this->_background_thread_active = false;
+    this->_background_stop_requested = false;
+    this->_background_interval_seconds = 0;
+    this->_metrics_set_operations = 0;
+    this->_metrics_delete_operations = 0;
+    this->_metrics_get_hits = 0;
+    this->_metrics_get_misses = 0;
+    this->_metrics_prune_operations = 0;
+    this->_metrics_pruned_entries = 0;
+    this->_metrics_total_prune_duration_ms = 0;
+    this->_metrics_last_prune_duration_ms = 0;
+    (void)this->_replication_mutex.destroy();
+    (void)this->_background_mutex.destroy();
+    (void)this->_mutex.destroy();
+    this->_initialized_state = kv_store::_state_destroyed;
+    return (FT_ERR_SUCCESS);
 }
 
 kv_store::~kv_store()
 {
-    this->stop_background_compaction();
+    if (this->_initialized_state == kv_store::_state_uninitialized)
+    {
+        su_abort();
+        return ;
+    }
+    if (this->_initialized_state == kv_store::_state_initialized)
+        (void)this->destroy();
     return ;
 }

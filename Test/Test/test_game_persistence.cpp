@@ -17,20 +17,22 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
+static void cleanup_game_persistence_store(void)
+{
+    int error_code;
+
+    error_code = FT_ERR_SUCCESS;
+    cmp_file_delete("./Test/world_persistence_store.json", &error_code);
+    return ;
+}
+
 FT_TEST(test_game_world_persistence_round_trip,
     "Game world save/load integrates kv_store persistence backends")
 {
     const char *store_path = "./Test/world_persistence_store.json";
     int error_code = FT_ERR_SUCCESS;
-    int file_exists = 0;
-    int file_status;
 
-    file_status = cmp_file_exists(store_path, &file_exists, &error_code);
-    if (file_status == FT_ERR_SUCCESS && file_exists == 1)
-    {
-        int delete_status = cmp_file_delete(store_path, &error_code);
-        (void)delete_status;
-    }
+    cleanup_game_persistence_store();
     su_file *store_file = su_fopen(store_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     FT_ASSERT(store_file != ft_nullptr);
     const char *initial_content = "{\n  \"kv_store\": {\n  }\n}\n";
@@ -97,6 +99,7 @@ FT_TEST(test_game_world_persistence_round_trip,
     FT_ASSERT_EQ(restored_events[0]->get_id(), scheduled_event->get_id());
 
     FT_ASSERT_EQ(cmp_file_delete(store_path, &error_code), 0);
+    cleanup_game_persistence_store();
 
     return (1);
 }

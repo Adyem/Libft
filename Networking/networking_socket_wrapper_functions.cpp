@@ -355,13 +355,13 @@ int nw_close(int sockfd)
         close_error = ft_map_system_error(WSAGetLastError());
         if (close_error == FT_ERR_SUCCESS)
             close_error = FT_ERR_SOCKET_CLOSE_FAILED;
-        ft_global_error_stack_push(close_error);
+        (void)(close_error);
         return (-1);
     }
     ft_socket_runtime_release();
-    if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESS)
+    if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
         return (-1);
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    (void)(FT_ERR_SUCCESS);
     return (0);
 #else
     int close_error;
@@ -371,10 +371,10 @@ int nw_close(int sockfd)
         close_error = ft_map_system_error(errno);
         if (close_error == FT_ERR_SUCCESS)
             close_error = FT_ERR_SOCKET_CLOSE_FAILED;
-        ft_global_error_stack_push(close_error);
+        (void)(close_error);
         return (-1);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    (void)(FT_ERR_SUCCESS);
     return (0);
 #endif
 }

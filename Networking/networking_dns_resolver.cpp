@@ -64,24 +64,15 @@ static ft_map<ft_string, networking_dns_cache_entry>   g_networking_dns_cache;
 static pt_mutex                                        g_networking_dns_cache_mutex;
 static const long                                      g_networking_dns_cache_ttl_ms = 60000;
 
-static int networking_consume_global_error(void) noexcept
-{
-    int error_code;
-
-    error_code = ft_global_error_stack_peek_last_error();
-    ft_global_error_stack_drop_last_error();
-    return (error_code);
-}
-
 static void networking_push_failure(int error_code) noexcept
 {
-    ft_global_error_stack_push(error_code);
+    (void)(error_code);
 }
 
 static int networking_dns_cache_lock(ft_unique_lock<pt_mutex> &cache_lock) noexcept
 {
     cache_lock = ft_unique_lock<pt_mutex>(g_networking_dns_cache_mutex);
-    return (ft_global_error_stack_drop_last_error());
+    return (FT_ERR_SUCCESS);
 }
 
 static int networking_dns_cache_unlock(ft_unique_lock<pt_mutex> &cache_lock) noexcept
@@ -89,7 +80,7 @@ static int networking_dns_cache_unlock(ft_unique_lock<pt_mutex> &cache_lock) noe
     if (!cache_lock.owns_lock())
         return (FT_ERR_SUCCESS);
     cache_lock.unlock();
-    return (ft_global_error_stack_drop_last_error());
+    return (FT_ERR_SUCCESS);
 }
 
 static bool networking_dns_append_literal(ft_string &target, const char *literal) noexcept
@@ -100,36 +91,18 @@ static bool networking_dns_append_literal(ft_string &target, const char *literal
     if (value == ft_nullptr)
         value = "";
     target.append(value);
-    int string_error = networking_fetch_last_error(false);
-    if (string_error != FT_ERR_SUCCESS)
-    {
-        networking_push_failure(string_error);
-        return (false);
-    }
     return (true);
 }
 
 static bool networking_dns_append_string(ft_string &target, const ft_string &value) noexcept
 {
     target.append(value);
-    int string_error = networking_fetch_last_error(false);
-    if (string_error != FT_ERR_SUCCESS)
-    {
-        networking_push_failure(string_error);
-        return (false);
-    }
     return (true);
 }
 
 static bool networking_dns_append_separator(ft_string &target) noexcept
 {
     target.append('|');
-    int string_error = networking_fetch_last_error(false);
-    if (string_error != FT_ERR_SUCCESS)
-    {
-        networking_push_failure(string_error);
-        return (false);
-    }
     return (true);
 }
 
@@ -289,14 +262,6 @@ bool networking_dns_resolve(const char *host, const char *service,
         return (false);
     }
     cache_key = host;
-    {
-        int string_error = networking_fetch_last_error(false);
-        if (string_error != FT_ERR_SUCCESS)
-        {
-            networking_push_failure(string_error);
-            return (false);
-        }
-    }
     if (!networking_dns_append_separator(cache_key))
         return (false);
     service_string = service;
@@ -307,53 +272,21 @@ bool networking_dns_resolve(const char *host, const char *service,
     if (!networking_dns_append_separator(cache_key))
         return (false);
     number_string = ft_to_string(static_cast<long>(family));
-    {
-        int string_error = networking_fetch_last_error(false);
-        if (string_error != FT_ERR_SUCCESS)
-        {
-            networking_push_failure(string_error);
-            return (false);
-        }
-    }
     if (!networking_dns_append_string(cache_key, number_string))
         return (false);
     if (!networking_dns_append_separator(cache_key))
         return (false);
     number_string = ft_to_string(static_cast<long>(socktype));
-    {
-        int string_error = networking_fetch_last_error(false);
-        if (string_error != FT_ERR_SUCCESS)
-        {
-            networking_push_failure(string_error);
-            return (false);
-        }
-    }
     if (!networking_dns_append_string(cache_key, number_string))
         return (false);
     if (!networking_dns_append_separator(cache_key))
         return (false);
     number_string = ft_to_string(static_cast<long>(protocol));
-    {
-        int string_error = networking_fetch_last_error(false);
-        if (string_error != FT_ERR_SUCCESS)
-        {
-            networking_push_failure(string_error);
-            return (false);
-        }
-    }
     if (!networking_dns_append_string(cache_key, number_string))
         return (false);
     if (!networking_dns_append_separator(cache_key))
         return (false);
     number_string = ft_to_string(static_cast<long>(flags));
-    {
-        int string_error = networking_fetch_last_error(false);
-        if (string_error != FT_ERR_SUCCESS)
-        {
-            networking_push_failure(string_error);
-            return (false);
-        }
-    }
     if (!networking_dns_append_string(cache_key, number_string))
         return (false);
     lookup_start_ms = time_now_ms();
@@ -381,7 +314,6 @@ bool networking_dns_resolve(const char *host, const char *service,
 
                 if (cache_unlock_error != FT_ERR_SUCCESS)
                 {
-                    networking_consume_global_error();
                     networking_push_failure(cache_unlock_error);
                 }
                 return (false);
@@ -395,7 +327,7 @@ bool networking_dns_resolve(const char *host, const char *service,
                     return (false);
                 }
             }
-            ft_global_error_stack_push(FT_ERR_SUCCESS);
+            (void)(FT_ERR_SUCCESS);
             return (true);
         }
         g_networking_dns_cache.remove(cache_key);
@@ -499,7 +431,7 @@ bool networking_dns_resolve(const char *host, const char *service,
             }
         }
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    (void)(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -529,7 +461,7 @@ bool networking_dns_resolve_first(const char *host, const char *service,
         networking_push_failure(results.get_error());
         return (false);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    (void)(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -553,6 +485,6 @@ void networking_dns_clear_cache(void) noexcept
             return ;
         }
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    (void)(FT_ERR_SUCCESS);
     return ;
 }

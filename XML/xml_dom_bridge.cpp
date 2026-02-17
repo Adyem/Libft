@@ -6,19 +6,18 @@
 
 static int xml_dom_report_error(int error_code) noexcept
 {
-    ft_global_error_stack_push(error_code);
+    (void)error_code;
     return (-1);
 }
 
 static void xml_dom_record_success(void) noexcept
 {
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
 static int xml_dom_last_error(void) noexcept
 {
-    return (ft_global_error_stack_peek_last_error());
+    return (FT_ERR_INTERNAL);
 }
 
 static void xml_dom_delete_node(ft_dom_node *node) noexcept
@@ -98,7 +97,9 @@ static int xml_dom_populate_node_locked(const xml_node *source, ft_dom_node *tar
         xml_node *child_source;
 
         child_source = source->children[index];
-        int child_error_code = ft_global_error_stack_peek_last_error();
+        int child_error_code;
+
+        child_error_code = ft_vector<xml_node *>::last_operation_error();
         if (child_error_code != FT_ERR_SUCCESS)
             return (xml_dom_report_error(child_error_code));
         if (!child_source)
@@ -180,25 +181,12 @@ int xml_document_to_dom(const xml_document &document, ft_dom_document &dom) noex
     return (0);
 }
 
-static int xml_dom_pop_last_string_error(const ft_string &value) noexcept
-{
-    unsigned long long operation_id;
-
-    operation_id = value.last_operation_id();
-    if (operation_id == 0)
-        return (FT_ERR_SUCCESS);
-    return (value.pop_operation_error(operation_id));
-}
-
 static int xml_dom_check_string_error(const ft_string &value) noexcept
 {
     int error_code;
 
-    error_code = xml_dom_pop_last_string_error(value);
-    if (error_code != FT_ERR_SUCCESS)
-        ft_global_error_stack_push(error_code);
-    else
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
+    (void)value;
+    error_code = ft_string::last_operation_error();
     return (error_code);
 }
 
@@ -247,10 +235,14 @@ static int xml_dom_serialize_node(ft_dom_node *node, ft_string &output) noexcept
         const ft_string &attribute_name = attribute_keys[attribute_index];
         const ft_string &attribute_value = attribute_values[attribute_index];
 
-        int attribute_keys_error = ft_global_error_stack_peek_last_error();
+        int attribute_keys_error;
+
+        attribute_keys_error = ft_vector<ft_string>::last_operation_error();
         if (attribute_keys_error != FT_ERR_SUCCESS)
             return (xml_dom_report_error(attribute_keys_error));
-        int attribute_values_error = ft_global_error_stack_peek_last_error();
+        int attribute_values_error;
+
+        attribute_values_error = ft_vector<ft_string>::last_operation_error();
         if (attribute_values_error != FT_ERR_SUCCESS)
             return (xml_dom_report_error(attribute_values_error));
         output += " ";
@@ -283,7 +275,9 @@ static int xml_dom_serialize_node(ft_dom_node *node, ft_string &output) noexcept
 
     has_children = children.size() > 0;
     has_value = value.size() > 0;
-    int children_error_code = ft_global_error_stack_peek_last_error();
+    int children_error_code;
+
+    children_error_code = ft_vector<ft_dom_node *>::last_operation_error();
     if (children_error_code != FT_ERR_SUCCESS)
         return (xml_dom_report_error(children_error_code));
     if (!has_children && !has_value)
@@ -310,7 +304,9 @@ static int xml_dom_serialize_node(ft_dom_node *node, ft_string &output) noexcept
     {
         ft_dom_node *child_node = children[index];
 
-        int child_vector_error = ft_global_error_stack_peek_last_error();
+        int child_vector_error;
+
+        child_vector_error = ft_vector<ft_dom_node *>::last_operation_error();
         if (child_vector_error != FT_ERR_SUCCESS)
             return (xml_dom_report_error(child_vector_error));
         if (xml_dom_serialize_node(child_node, output) != 0)

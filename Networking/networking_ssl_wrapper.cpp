@@ -46,7 +46,7 @@ static ssize_t ssl_translate_result(SSL *ssl, int result, int *error_code)
 
 static ssize_t ssl_report(int error_code, ssize_t result)
 {
-    ft_global_error_stack_push(error_code);
+    (void)(error_code);
     return (result);
 }
 

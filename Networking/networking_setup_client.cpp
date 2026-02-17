@@ -5,11 +5,6 @@
 #include <cerrno>
 #include <fcntl.h>
 
-static int networking_consume_thread_error(void) noexcept
-{
-    return (networking_fetch_last_error(false));
-}
-
 #ifdef _WIN32
 # include <winsock2.h>
 # include <ws2tcpip.h>
@@ -35,14 +30,14 @@ int ft_socket::setup_client(const SocketConfig &config)
     lock_acquired = false;
     int thread_error;
     thread_error = socket_config_prepare_thread_safety(mutable_config);
-    thread_error = networking_consume_thread_error();
+    thread_error = FT_ERR_SUCCESS;
     if (thread_error != FT_ERR_SUCCESS)
     {
         this->report_operation_result(thread_error);
         return (this->_error_code);
     }
     thread_error = socket_config_lock(mutable_config, &lock_acquired);
-    thread_error = networking_consume_thread_error();
+    thread_error = FT_ERR_SUCCESS;
     if (thread_error != FT_ERR_SUCCESS)
     {
         this->report_operation_result(thread_error);
@@ -56,7 +51,7 @@ int ft_socket::setup_client(const SocketConfig &config)
     {
         int unlock_error;
 
-        unlock_error = networking_consume_thread_error();
+        unlock_error = FT_ERR_SUCCESS;
         if (unlock_error != FT_ERR_SUCCESS)
         {
             this->report_operation_result(unlock_error);

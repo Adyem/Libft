@@ -62,9 +62,9 @@ int nw_poll(int *read_file_descriptors, int read_count,
 
         select_error = WSAGetLastError();
         if (ready_descriptors == 0)
-            ft_global_error_stack_push(FT_ERR_SUCCESS);
+            (void)(FT_ERR_SUCCESS);
         else
-            ft_global_error_stack_push(ft_map_system_error(select_error));
+            (void)(ft_map_system_error(select_error));
         return (ready_descriptors);
     }
     index = 0;
@@ -88,7 +88,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
             total_ready++;
         index++;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    (void)(FT_ERR_SUCCESS);
     return (total_ready);
 #else
     fd_set read_set;
@@ -139,9 +139,9 @@ int nw_poll(int *read_file_descriptors, int read_count,
 
         select_error = errno;
         if (ready_descriptors == 0)
-            ft_global_error_stack_push(FT_ERR_SUCCESS);
+            (void)(FT_ERR_SUCCESS);
         else
-            ft_global_error_stack_push(ft_map_system_error(select_error));
+            (void)(ft_map_system_error(select_error));
         return (ready_descriptors);
     }
     index = 0;
@@ -165,7 +165,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
             total_ready++;
         index++;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
+    (void)(FT_ERR_SUCCESS);
     return (total_ready);
 #endif
 }
