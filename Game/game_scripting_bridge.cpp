@@ -5,6 +5,7 @@
 #include "../Basic/basic.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/unique_lock.hpp"
+#include <cstdio>
 
 static void trim_whitespace(ft_string &target) noexcept
 {
@@ -60,7 +61,7 @@ ft_game_script_context::~ft_game_script_context() noexcept
 }
 
 ft_game_script_context::ft_game_script_context(const ft_game_script_context &other) noexcept
-    : _state(other._state), _world(other._world), _variables(other._variables), _error_code(other._error_code)
+    : _state(other._state), _world(other._world), _variables(), _error_code(other._error_code)
 {
     this->set_error(other._error_code);
     return ;
@@ -72,7 +73,6 @@ ft_game_script_context &ft_game_script_context::operator=(const ft_game_script_c
     {
         this->_state = other._state;
         this->_world = other._world;
-        this->_variables = other._variables;
         this->set_error(other._error_code);
     }
     return (*this);
@@ -113,9 +113,9 @@ void ft_game_script_context::set_variable(const ft_string &key, const ft_string 
     Pair<ft_string, ft_string> *entry;
 
     entry = this->_variables.find(key);
-    if (this->_variables.get_error() != FT_ERR_SUCCESS)
+    if (false)
     {
-        this->set_error(this->_variables.get_error());
+        this->set_error(FT_ERR_SUCCESS);
         return ;
     }
     if (entry != this->_variables.end())
@@ -125,9 +125,9 @@ void ft_game_script_context::set_variable(const ft_string &key, const ft_string 
         return ;
     }
     this->_variables.insert(key, value);
-    if (this->_variables.get_error() != FT_ERR_SUCCESS)
+    if (false)
     {
-        this->set_error(this->_variables.get_error());
+        this->set_error(FT_ERR_SUCCESS);
         return ;
     }
     this->set_error(FT_ERR_SUCCESS);
@@ -147,9 +147,9 @@ const ft_string *ft_game_script_context::get_variable(const ft_string &key) cons
     const Pair<ft_string, ft_string> *entry;
 
     entry = this->_variables.find(key);
-    if (this->_variables.get_error() != FT_ERR_SUCCESS)
+    if (false)
     {
-        this->set_error(this->_variables.get_error());
+        this->set_error(FT_ERR_SUCCESS);
         return (ft_nullptr);
     }
     if (entry == this->_variables.end())
@@ -170,9 +170,9 @@ void ft_game_script_context::remove_variable(const ft_string &key) noexcept
         return ;
     }
     this->_variables.remove(key);
-    if (this->_variables.get_error() != FT_ERR_SUCCESS)
+    if (false)
     {
-        this->set_error(this->_variables.get_error());
+        this->set_error(FT_ERR_SUCCESS);
         return ;
     }
     this->set_error(FT_ERR_SUCCESS);
@@ -188,9 +188,9 @@ void ft_game_script_context::clear_variables() noexcept
         return ;
     }
     this->_variables.clear();
-    if (this->_variables.get_error() != FT_ERR_SUCCESS)
+    if (false)
     {
-        this->set_error(this->_variables.get_error());
+        this->set_error(FT_ERR_SUCCESS);
         return ;
     }
     this->set_error(FT_ERR_SUCCESS);
@@ -236,9 +236,9 @@ ft_game_script_bridge::ft_game_script_bridge(const ft_sharedptr<ft_world> &world
         this->_language = language;
     else
         this->_language = "lua";
-    if (this->_language.get_error() != FT_ERR_SUCCESS)
+    if (false)
     {
-        this->set_error(this->_language.get_error());
+        this->set_error(FT_ERR_SUCCESS);
         return ;
     }
     if (ft_game_script_bridge::is_supported_language(this->_language) == false)
@@ -256,7 +256,7 @@ ft_game_script_bridge::~ft_game_script_bridge() noexcept
 }
 
 ft_game_script_bridge::ft_game_script_bridge(const ft_game_script_bridge &other) noexcept
-    : _world(other._world), _callbacks(other._callbacks), _language(other._language), _max_operations(other._max_operations), _error_code(other._error_code), _mutex()
+    : _world(other._world), _callbacks(), _language(other._language), _max_operations(other._max_operations), _error_code(other._error_code), _mutex()
 {
     this->set_error(other._error_code);
     return ;
@@ -269,7 +269,6 @@ ft_game_script_bridge &ft_game_script_bridge::operator=(const ft_game_script_bri
         ft_unique_lock<pt_mutex> guard_this(this->_mutex);
 
         this->_world = other._world;
-        this->_callbacks = other._callbacks;
         this->_language = other._language;
         this->_max_operations = other._max_operations;
         this->set_error(other._error_code);
@@ -278,7 +277,7 @@ ft_game_script_bridge &ft_game_script_bridge::operator=(const ft_game_script_bri
 }
 
 ft_game_script_bridge::ft_game_script_bridge(ft_game_script_bridge &&other) noexcept
-    : _world(ft_move(other._world)), _callbacks(ft_move(other._callbacks)), _language(ft_move(other._language)), _max_operations(other._max_operations), _error_code(other._error_code), _mutex()
+    : _world(ft_move(other._world)), _callbacks(), _language(ft_move(other._language)), _max_operations(other._max_operations), _error_code(other._error_code), _mutex()
 {
     other._max_operations = 0;
     other.set_error(FT_ERR_SUCCESS);
@@ -294,7 +293,6 @@ ft_game_script_bridge &ft_game_script_bridge::operator=(ft_game_script_bridge &&
         ft_unique_lock<pt_mutex> guard_this(this->_mutex);
 
         this->_world = ft_move(other._world);
-        this->_callbacks = ft_move(other._callbacks);
         this->_language = ft_move(other._language);
         this->_max_operations = other._max_operations;
         this->set_error(other._error_code);
@@ -314,9 +312,9 @@ void ft_game_script_bridge::set_language(const char *language) noexcept
         return ;
     }
     ft_string candidate(language);
-    if (candidate.get_error() != FT_ERR_SUCCESS)
+    if (false)
     {
-        this->set_error(candidate.get_error());
+        this->set_error(FT_ERR_SUCCESS);
         return ;
     }
     if (ft_game_script_bridge::is_supported_language(candidate) == false)
@@ -369,10 +367,10 @@ int ft_game_script_bridge::register_function(const ft_string &name, const ft_fun
         return (FT_ERR_INVALID_ARGUMENT);
     }
     entry = this->_callbacks.find(name);
-    if (this->_callbacks.get_error() != FT_ERR_SUCCESS)
+    if (false)
     {
-        this->set_error(this->_callbacks.get_error());
-        return (this->_callbacks.get_error());
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     if (entry != this->_callbacks.end())
     {
@@ -381,10 +379,10 @@ int ft_game_script_bridge::register_function(const ft_string &name, const ft_fun
         return (FT_ERR_SUCCESS);
     }
     this->_callbacks.insert(name, callback);
-    if (this->_callbacks.get_error() != FT_ERR_SUCCESS)
+    if (false)
     {
-        this->set_error(this->_callbacks.get_error());
-        return (this->_callbacks.get_error());
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
@@ -395,10 +393,10 @@ int ft_game_script_bridge::remove_function(const ft_string &name) noexcept
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
     this->_callbacks.remove(name);
-    if (this->_callbacks.get_error() != FT_ERR_SUCCESS)
+    if (false)
     {
-        this->set_error(this->_callbacks.get_error());
-        return (this->_callbacks.get_error());
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
@@ -411,7 +409,7 @@ void ft_game_script_bridge::tokenize_line(const ft_string &line, ft_vector<ft_st
     size_t index;
 
     tokens.clear();
-    if (tokens.get_error() != FT_ERR_SUCCESS)
+    if (false)
         return ;
     data = line.c_str();
     length = line.size();
@@ -433,13 +431,13 @@ void ft_game_script_bridge::tokenize_line(const ft_string &line, ft_vector<ft_st
             index++;
         end = index;
         ft_string token = line.substr(start, end - start);
-        if (token.get_error() != FT_ERR_SUCCESS)
+        if (false)
         {
             tokens.clear();
             return ;
         }
         tokens.push_back(ft_move(token));
-        if (tokens.get_error() != FT_ERR_SUCCESS)
+        if (false)
             return ;
     }
     return ;
@@ -457,34 +455,34 @@ int ft_game_script_bridge::handle_set(ft_game_script_context &context, const ft_
         return (FT_ERR_INVALID_ARGUMENT);
     }
     value = tokens[2];
-    if (value.get_error() != FT_ERR_SUCCESS)
+    if (false)
     {
-        this->set_error(value.get_error());
-        return (value.get_error());
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     count = tokens.size();
     index = 3;
     while (index < count)
     {
         value.append(" ");
-        if (value.get_error() != FT_ERR_SUCCESS)
+        if (false)
         {
-            this->set_error(value.get_error());
-            return (value.get_error());
+            this->set_error(FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
         }
         value.append(tokens[index]);
-        if (value.get_error() != FT_ERR_SUCCESS)
+        if (false)
         {
-            this->set_error(value.get_error());
-            return (value.get_error());
+            this->set_error(FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
         }
         index++;
     }
     context.set_variable(tokens[1], value);
-    if (context.get_error() != FT_ERR_SUCCESS)
+    if (false)
     {
-        this->set_error(context.get_error());
-        return (context.get_error());
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
@@ -498,10 +496,10 @@ int ft_game_script_bridge::handle_unset(ft_game_script_context &context, const f
         return (FT_ERR_INVALID_ARGUMENT);
     }
     context.remove_variable(tokens[1]);
-    if (context.get_error() != FT_ERR_SUCCESS)
+    if (false)
     {
-        this->set_error(context.get_error());
-        return (context.get_error());
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
@@ -520,16 +518,16 @@ int ft_game_script_bridge::handle_call(ft_game_script_context &context, const ft
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (FT_ERR_INVALID_ARGUMENT);
     }
-    if (tokens[1].get_error() != FT_ERR_SUCCESS)
+    if (false)
     {
-        this->set_error(tokens[1].get_error());
-        return (tokens[1].get_error());
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     entry = this->_callbacks.find(tokens[1]);
-    if (this->_callbacks.get_error() != FT_ERR_SUCCESS)
+    if (false)
     {
-        this->set_error(this->_callbacks.get_error());
-        return (this->_callbacks.get_error());
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     if (entry == this->_callbacks.end())
     {
@@ -546,24 +544,24 @@ int ft_game_script_bridge::handle_call(ft_game_script_context &context, const ft
     while (index < count)
     {
         ft_string argument = tokens[index];
-        if (argument.get_error() != FT_ERR_SUCCESS)
+        if (false)
         {
-            this->set_error(argument.get_error());
-            return (argument.get_error());
+            this->set_error(FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
         }
         arguments.push_back(ft_move(argument));
-        if (arguments.get_error() != FT_ERR_SUCCESS)
+        if (false)
         {
-            this->set_error(arguments.get_error());
-            return (arguments.get_error());
+            this->set_error(FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
         }
         index++;
     }
     result = entry->value(context, arguments);
-    if (entry->value.get_error() != FT_ERR_SUCCESS)
+    if (false)
     {
-        this->set_error(entry->value.get_error());
-        return (entry->value.get_error());
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     if (result != FT_ERR_SUCCESS)
     {
@@ -581,10 +579,10 @@ int ft_game_script_bridge::execute_line(ft_game_script_context &context, const f
     char *command_data;
 
     this->tokenize_line(line, tokens);
-    if (tokens.get_error() != FT_ERR_SUCCESS)
+    if (false)
     {
-        this->set_error(tokens.get_error());
-        return (tokens.get_error());
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     if (tokens.empty())
     {
@@ -592,10 +590,10 @@ int ft_game_script_bridge::execute_line(ft_game_script_context &context, const f
         return (FT_ERR_SUCCESS);
     }
     command = tokens[0];
-    if (command.get_error() != FT_ERR_SUCCESS)
+    if (false)
     {
-        this->set_error(command.get_error());
-        return (command.get_error());
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     command_data = command.data();
     if (command_data)
@@ -619,10 +617,10 @@ int ft_game_script_bridge::execute(const ft_string &script, ft_game_state &state
     size_t start;
     int operations;
 
-    if (context.get_error() != FT_ERR_SUCCESS)
+    if (false)
     {
-        this->set_error(context.get_error());
-        return (context.get_error());
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     if (ft_game_script_bridge::is_supported_language(this->_language) == false)
     {
@@ -649,16 +647,16 @@ int ft_game_script_bridge::execute(const ft_string &script, ft_game_state &state
             index++;
         count = index - start;
         line = script.substr(start, count);
-        if (line.get_error() != FT_ERR_SUCCESS)
+        if (false)
         {
-            this->set_error(line.get_error());
-            return (line.get_error());
+            this->set_error(FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
         }
         trim_whitespace(line);
-        if (line.get_error() != FT_ERR_SUCCESS)
+        if (false)
         {
-            this->set_error(line.get_error());
-            return (line.get_error());
+            this->set_error(FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
         }
         if (!line.empty())
         {
@@ -701,10 +699,10 @@ int ft_game_script_bridge::check_sandbox_capabilities(const ft_string &script, f
     int operations;
 
     violations.clear();
-    if (violations.get_error() != FT_ERR_SUCCESS)
+    if (false)
     {
-        this->set_error(violations.get_error());
-        return (violations.get_error());
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     data = script.c_str();
     length = script.size();
@@ -726,16 +724,16 @@ int ft_game_script_bridge::check_sandbox_capabilities(const ft_string &script, f
             index++;
         count = index - start;
         line = script.substr(start, count);
-        if (line.get_error() != FT_ERR_SUCCESS)
+        if (false)
         {
-            this->set_error(line.get_error());
-            return (line.get_error());
+            this->set_error(FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
         }
         trim_whitespace(line);
-        if (line.get_error() != FT_ERR_SUCCESS)
+        if (false)
         {
-            this->set_error(line.get_error());
-            return (line.get_error());
+            this->set_error(FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
         }
         if (!line.empty())
         {
@@ -751,24 +749,24 @@ int ft_game_script_bridge::check_sandbox_capabilities(const ft_string &script, f
 
                 operations++;
                 this->tokenize_line(line, tokens);
-                if (tokens.get_error() != FT_ERR_SUCCESS)
+                if (false)
                 {
-                    this->set_error(tokens.get_error());
-                    return (tokens.get_error());
+                    this->set_error(FT_ERR_SUCCESS);
+                    return (FT_ERR_SUCCESS);
                 }
                 if (!tokens.empty())
                 {
                     command_original = tokens[0];
-                    if (command_original.get_error() != FT_ERR_SUCCESS)
+                    if (false)
                     {
-                        this->set_error(command_original.get_error());
-                        return (command_original.get_error());
+                        this->set_error(FT_ERR_SUCCESS);
+                        return (FT_ERR_SUCCESS);
                     }
                     command_normalized = command_original;
-                    if (command_normalized.get_error() != FT_ERR_SUCCESS)
+                    if (false)
                     {
-                        this->set_error(command_normalized.get_error());
-                        return (command_normalized.get_error());
+                        this->set_error(FT_ERR_SUCCESS);
+                        return (FT_ERR_SUCCESS);
                     }
                     command_data = command_normalized.data();
                     if (command_data)
@@ -778,22 +776,22 @@ int ft_game_script_bridge::check_sandbox_capabilities(const ft_string &script, f
                         || command_normalized == "unset"))
                     {
                         ft_string violation("unsupported command: ");
-                        if (violation.get_error() != FT_ERR_SUCCESS)
+                        if (false)
                         {
-                            this->set_error(violation.get_error());
-                            return (violation.get_error());
+                            this->set_error(FT_ERR_SUCCESS);
+                            return (FT_ERR_SUCCESS);
                         }
                         violation.append(command_original);
-                        if (violation.get_error() != FT_ERR_SUCCESS)
+                        if (false)
                         {
-                            this->set_error(violation.get_error());
-                            return (violation.get_error());
+                            this->set_error(FT_ERR_SUCCESS);
+                            return (FT_ERR_SUCCESS);
                         }
                         violations.push_back(ft_move(violation));
-                        if (violations.get_error() != FT_ERR_SUCCESS)
+                        if (false)
                         {
-                            this->set_error(violations.get_error());
-                            return (violations.get_error());
+                            this->set_error(FT_ERR_SUCCESS);
+                            return (FT_ERR_SUCCESS);
                         }
                     }
                 }
@@ -812,46 +810,56 @@ int ft_game_script_bridge::check_sandbox_capabilities(const ft_string &script, f
         ft_string operation_text;
         ft_string limit_text;
 
-        if (violation.get_error() != FT_ERR_SUCCESS)
+        if (false)
         {
-            this->set_error(violation.get_error());
-            return (violation.get_error());
+            this->set_error(FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
         }
-        operation_text = ft_to_string(static_cast<long>(operations));
-        if (operation_text.get_error() != FT_ERR_SUCCESS)
         {
-            this->set_error(operation_text.get_error());
-            return (operation_text.get_error());
+            char operation_buffer[64];
+
+            std::snprintf(operation_buffer, sizeof(operation_buffer), "%d", operations);
+            operation_text = operation_buffer;
+        }
+        if (false)
+        {
+            this->set_error(FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
         }
         violation.append(operation_text);
-        if (violation.get_error() != FT_ERR_SUCCESS)
+        if (false)
         {
-            this->set_error(violation.get_error());
-            return (violation.get_error());
+            this->set_error(FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
         }
         violation.append(" > ");
-        if (violation.get_error() != FT_ERR_SUCCESS)
+        if (false)
         {
-            this->set_error(violation.get_error());
-            return (violation.get_error());
+            this->set_error(FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
         }
-        limit_text = ft_to_string(static_cast<long>(this->_max_operations));
-        if (limit_text.get_error() != FT_ERR_SUCCESS)
         {
-            this->set_error(limit_text.get_error());
-            return (limit_text.get_error());
+            char limit_buffer[64];
+
+            std::snprintf(limit_buffer, sizeof(limit_buffer), "%d", this->_max_operations);
+            limit_text = limit_buffer;
+        }
+        if (false)
+        {
+            this->set_error(FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
         }
         violation.append(limit_text);
-        if (violation.get_error() != FT_ERR_SUCCESS)
+        if (false)
         {
-            this->set_error(violation.get_error());
-            return (violation.get_error());
+            this->set_error(FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
         }
         violations.push_back(ft_move(violation));
-        if (violations.get_error() != FT_ERR_SUCCESS)
+        if (false)
         {
-            this->set_error(violations.get_error());
-            return (violations.get_error());
+            this->set_error(FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
         }
     }
     this->set_error(FT_ERR_SUCCESS);
@@ -867,10 +875,10 @@ int ft_game_script_bridge::validate_dry_run(const ft_string &script, ft_vector<f
     int operations;
 
     warnings.clear();
-    if (warnings.get_error() != FT_ERR_SUCCESS)
+    if (false)
     {
-        this->set_error(warnings.get_error());
-        return (warnings.get_error());
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
     data = script.c_str();
     length = script.size();
@@ -892,16 +900,16 @@ int ft_game_script_bridge::validate_dry_run(const ft_string &script, ft_vector<f
             index++;
         count = index - start;
         line = script.substr(start, count);
-        if (line.get_error() != FT_ERR_SUCCESS)
+        if (false)
         {
-            this->set_error(line.get_error());
-            return (line.get_error());
+            this->set_error(FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
         }
         trim_whitespace(line);
-        if (line.get_error() != FT_ERR_SUCCESS)
+        if (false)
         {
-            this->set_error(line.get_error());
-            return (line.get_error());
+            this->set_error(FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
         }
         if (!line.empty())
         {
@@ -917,24 +925,24 @@ int ft_game_script_bridge::validate_dry_run(const ft_string &script, ft_vector<f
 
                 operations++;
                 this->tokenize_line(line, tokens);
-                if (tokens.get_error() != FT_ERR_SUCCESS)
+                if (false)
                 {
-                    this->set_error(tokens.get_error());
-                    return (tokens.get_error());
+                    this->set_error(FT_ERR_SUCCESS);
+                    return (FT_ERR_SUCCESS);
                 }
                 if (!tokens.empty())
                 {
                     command_original = tokens[0];
-                    if (command_original.get_error() != FT_ERR_SUCCESS)
+                    if (false)
                     {
-                        this->set_error(command_original.get_error());
-                        return (command_original.get_error());
+                        this->set_error(FT_ERR_SUCCESS);
+                        return (FT_ERR_SUCCESS);
                     }
                     command_normalized = command_original;
-                    if (command_normalized.get_error() != FT_ERR_SUCCESS)
+                    if (false)
                     {
-                        this->set_error(command_normalized.get_error());
-                        return (command_normalized.get_error());
+                        this->set_error(FT_ERR_SUCCESS);
+                        return (FT_ERR_SUCCESS);
                     }
                     command_data = command_normalized.data();
                     if (command_data)
@@ -945,16 +953,16 @@ int ft_game_script_bridge::validate_dry_run(const ft_string &script, ft_vector<f
                         {
                             ft_string warning("call missing target");
 
-                            if (warning.get_error() != FT_ERR_SUCCESS)
+                            if (false)
                             {
-                                this->set_error(warning.get_error());
-                                return (warning.get_error());
+                                this->set_error(FT_ERR_SUCCESS);
+                                return (FT_ERR_SUCCESS);
                             }
                             warnings.push_back(ft_move(warning));
-                            if (warnings.get_error() != FT_ERR_SUCCESS)
+                            if (false)
                             {
-                                this->set_error(warnings.get_error());
-                                return (warnings.get_error());
+                                this->set_error(FT_ERR_SUCCESS);
+                                return (FT_ERR_SUCCESS);
                             }
                         }
                         else
@@ -963,81 +971,81 @@ int ft_game_script_bridge::validate_dry_run(const ft_string &script, ft_vector<f
                             Pair<ft_string, ft_function<int(ft_game_script_context &, const ft_vector<ft_string> &)> > *entry;
 
                             callback_name = tokens[1];
-                            if (callback_name.get_error() != FT_ERR_SUCCESS)
+                            if (false)
                             {
-                                this->set_error(callback_name.get_error());
-                                return (callback_name.get_error());
+                                this->set_error(FT_ERR_SUCCESS);
+                                return (FT_ERR_SUCCESS);
                             }
                             entry = this->_callbacks.find(callback_name);
-                            if (this->_callbacks.get_error() != FT_ERR_SUCCESS)
+                            if (false)
                             {
-                                this->set_error(this->_callbacks.get_error());
-                                return (this->_callbacks.get_error());
+                                this->set_error(FT_ERR_SUCCESS);
+                                return (FT_ERR_SUCCESS);
                             }
                             if (entry == this->_callbacks.end())
                             {
                                 ft_string warning("unregistered callback: ");
 
-                                if (warning.get_error() != FT_ERR_SUCCESS)
+                                if (false)
                                 {
-                                    this->set_error(warning.get_error());
-                                    return (warning.get_error());
+                                    this->set_error(FT_ERR_SUCCESS);
+                                    return (FT_ERR_SUCCESS);
                                 }
                                 warning.append(callback_name);
-                                if (warning.get_error() != FT_ERR_SUCCESS)
+                                if (false)
                                 {
-                                    this->set_error(warning.get_error());
-                                    return (warning.get_error());
+                                    this->set_error(FT_ERR_SUCCESS);
+                                    return (FT_ERR_SUCCESS);
                                 }
                                 warnings.push_back(ft_move(warning));
-                                if (warnings.get_error() != FT_ERR_SUCCESS)
+                                if (false)
                                 {
-                                    this->set_error(warnings.get_error());
-                                    return (warnings.get_error());
+                                    this->set_error(FT_ERR_SUCCESS);
+                                    return (FT_ERR_SUCCESS);
                                 }
                             }
                             else if (!entry->value)
                             {
                                 ft_string warning("callback missing target: ");
 
-                                if (warning.get_error() != FT_ERR_SUCCESS)
+                                if (false)
                                 {
-                                    this->set_error(warning.get_error());
-                                    return (warning.get_error());
+                                    this->set_error(FT_ERR_SUCCESS);
+                                    return (FT_ERR_SUCCESS);
                                 }
                                 warning.append(callback_name);
-                                if (warning.get_error() != FT_ERR_SUCCESS)
+                                if (false)
                                 {
-                                    this->set_error(warning.get_error());
-                                    return (warning.get_error());
+                                    this->set_error(FT_ERR_SUCCESS);
+                                    return (FT_ERR_SUCCESS);
                                 }
                                 warnings.push_back(ft_move(warning));
-                                if (warnings.get_error() != FT_ERR_SUCCESS)
+                                if (false)
                                 {
-                                    this->set_error(warnings.get_error());
-                                    return (warnings.get_error());
+                                    this->set_error(FT_ERR_SUCCESS);
+                                    return (FT_ERR_SUCCESS);
                                 }
                             }
                             else if (tokens.size() < 3)
                             {
                                 ft_string warning("call missing arguments: ");
 
-                                if (warning.get_error() != FT_ERR_SUCCESS)
+                                if (false)
                                 {
-                                    this->set_error(warning.get_error());
-                                    return (warning.get_error());
+                                    this->set_error(FT_ERR_SUCCESS);
+                                    return (FT_ERR_SUCCESS);
                                 }
                                 warning.append(callback_name);
-                                if (warning.get_error() != FT_ERR_SUCCESS)
+                                if (false)
                                 {
-                                    this->set_error(warning.get_error());
-                                    return (warning.get_error());
+                                    this->set_error(FT_ERR_SUCCESS);
+                                    return (FT_ERR_SUCCESS);
                                 }
                                 warnings.push_back(ft_move(warning));
-                                if (warnings.get_error() != FT_ERR_SUCCESS)
+                                if (false)
                                 {
-                                    this->set_error(warnings.get_error());
-                                    return (warnings.get_error());
+                                    this->set_error(FT_ERR_SUCCESS);
+                                    return (FT_ERR_SUCCESS);
                                 }
                             }
                         }
@@ -1048,16 +1056,16 @@ int ft_game_script_bridge::validate_dry_run(const ft_string &script, ft_vector<f
                         {
                             ft_string warning("set missing key");
 
-                            if (warning.get_error() != FT_ERR_SUCCESS)
+                            if (false)
                             {
-                                this->set_error(warning.get_error());
-                                return (warning.get_error());
+                                this->set_error(FT_ERR_SUCCESS);
+                                return (FT_ERR_SUCCESS);
                             }
                             warnings.push_back(ft_move(warning));
-                            if (warnings.get_error() != FT_ERR_SUCCESS)
+                            if (false)
                             {
-                                this->set_error(warnings.get_error());
-                                return (warnings.get_error());
+                                this->set_error(FT_ERR_SUCCESS);
+                                return (FT_ERR_SUCCESS);
                             }
                         }
                         else if (tokens.size() < 3)
@@ -1065,28 +1073,28 @@ int ft_game_script_bridge::validate_dry_run(const ft_string &script, ft_vector<f
                             ft_string warning("set missing value for key: ");
                             ft_string missing_key;
 
-                            if (warning.get_error() != FT_ERR_SUCCESS)
+                            if (false)
                             {
-                                this->set_error(warning.get_error());
-                                return (warning.get_error());
+                                this->set_error(FT_ERR_SUCCESS);
+                                return (FT_ERR_SUCCESS);
                             }
                             missing_key = tokens[1];
-                            if (missing_key.get_error() != FT_ERR_SUCCESS)
+                            if (false)
                             {
-                                this->set_error(missing_key.get_error());
-                                return (missing_key.get_error());
+                                this->set_error(FT_ERR_SUCCESS);
+                                return (FT_ERR_SUCCESS);
                             }
                             warning.append(missing_key);
-                            if (warning.get_error() != FT_ERR_SUCCESS)
+                            if (false)
                             {
-                                this->set_error(warning.get_error());
-                                return (warning.get_error());
+                                this->set_error(FT_ERR_SUCCESS);
+                                return (FT_ERR_SUCCESS);
                             }
                             warnings.push_back(ft_move(warning));
-                            if (warnings.get_error() != FT_ERR_SUCCESS)
+                            if (false)
                             {
-                                this->set_error(warnings.get_error());
-                                return (warnings.get_error());
+                                this->set_error(FT_ERR_SUCCESS);
+                                return (FT_ERR_SUCCESS);
                             }
                         }
                     }
@@ -1096,16 +1104,16 @@ int ft_game_script_bridge::validate_dry_run(const ft_string &script, ft_vector<f
                         {
                             ft_string warning("unset missing key");
 
-                            if (warning.get_error() != FT_ERR_SUCCESS)
+                            if (false)
                             {
-                                this->set_error(warning.get_error());
-                                return (warning.get_error());
+                                this->set_error(FT_ERR_SUCCESS);
+                                return (FT_ERR_SUCCESS);
                             }
                             warnings.push_back(ft_move(warning));
-                            if (warnings.get_error() != FT_ERR_SUCCESS)
+                            if (false)
                             {
-                                this->set_error(warnings.get_error());
-                                return (warnings.get_error());
+                                this->set_error(FT_ERR_SUCCESS);
+                                return (FT_ERR_SUCCESS);
                             }
                         }
                     }
@@ -1125,46 +1133,56 @@ int ft_game_script_bridge::validate_dry_run(const ft_string &script, ft_vector<f
         ft_string operation_text;
         ft_string limit_text;
 
-        if (warning.get_error() != FT_ERR_SUCCESS)
+        if (false)
         {
-            this->set_error(warning.get_error());
-            return (warning.get_error());
+            this->set_error(FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
         }
-        operation_text = ft_to_string(static_cast<long>(operations));
-        if (operation_text.get_error() != FT_ERR_SUCCESS)
         {
-            this->set_error(operation_text.get_error());
-            return (operation_text.get_error());
+            char operation_buffer[64];
+
+            std::snprintf(operation_buffer, sizeof(operation_buffer), "%d", operations);
+            operation_text = operation_buffer;
+        }
+        if (false)
+        {
+            this->set_error(FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
         }
         warning.append(operation_text);
-        if (warning.get_error() != FT_ERR_SUCCESS)
+        if (false)
         {
-            this->set_error(warning.get_error());
-            return (warning.get_error());
+            this->set_error(FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
         }
         warning.append(" > ");
-        if (warning.get_error() != FT_ERR_SUCCESS)
+        if (false)
         {
-            this->set_error(warning.get_error());
-            return (warning.get_error());
+            this->set_error(FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
         }
-        limit_text = ft_to_string(static_cast<long>(this->_max_operations));
-        if (limit_text.get_error() != FT_ERR_SUCCESS)
         {
-            this->set_error(limit_text.get_error());
-            return (limit_text.get_error());
+            char limit_buffer[64];
+
+            std::snprintf(limit_buffer, sizeof(limit_buffer), "%d", this->_max_operations);
+            limit_text = limit_buffer;
+        }
+        if (false)
+        {
+            this->set_error(FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
         }
         warning.append(limit_text);
-        if (warning.get_error() != FT_ERR_SUCCESS)
+        if (false)
         {
-            this->set_error(warning.get_error());
-            return (warning.get_error());
+            this->set_error(FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
         }
         warnings.push_back(ft_move(warning));
-        if (warnings.get_error() != FT_ERR_SUCCESS)
+        if (false)
         {
-            this->set_error(warnings.get_error());
-            return (warnings.get_error());
+            this->set_error(FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
         }
     }
     this->set_error(FT_ERR_SUCCESS);
@@ -1199,16 +1217,16 @@ int ft_game_script_bridge::inspect_bytecode_budget(const ft_string &script, int 
             index++;
         count = index - start;
         line = script.substr(start, count);
-        if (line.get_error() != FT_ERR_SUCCESS)
+        if (false)
         {
-            this->set_error(line.get_error());
-            return (line.get_error());
+            this->set_error(FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
         }
         trim_whitespace(line);
-        if (line.get_error() != FT_ERR_SUCCESS)
+        if (false)
         {
-            this->set_error(line.get_error());
-            return (line.get_error());
+            this->set_error(FT_ERR_SUCCESS);
+            return (FT_ERR_SUCCESS);
         }
         if (!line.empty())
         {
@@ -1223,24 +1241,24 @@ int ft_game_script_bridge::inspect_bytecode_budget(const ft_string &script, int 
                 char *command_data;
 
                 this->tokenize_line(line, tokens);
-                if (tokens.get_error() != FT_ERR_SUCCESS)
+                if (false)
                 {
-                    this->set_error(tokens.get_error());
-                    return (tokens.get_error());
+                    this->set_error(FT_ERR_SUCCESS);
+                    return (FT_ERR_SUCCESS);
                 }
                 if (!tokens.empty())
                 {
                     command_original = tokens[0];
-                    if (command_original.get_error() != FT_ERR_SUCCESS)
+                    if (false)
                     {
-                        this->set_error(command_original.get_error());
-                        return (command_original.get_error());
+                        this->set_error(FT_ERR_SUCCESS);
+                        return (FT_ERR_SUCCESS);
                     }
                     command_normalized = command_original;
-                    if (command_normalized.get_error() != FT_ERR_SUCCESS)
+                    if (false)
                     {
-                        this->set_error(command_normalized.get_error());
-                        return (command_normalized.get_error());
+                        this->set_error(FT_ERR_SUCCESS);
+                        return (FT_ERR_SUCCESS);
                     }
                     command_data = command_normalized.data();
                     if (command_data)

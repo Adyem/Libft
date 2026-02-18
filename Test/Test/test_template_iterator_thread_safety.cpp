@@ -7,8 +7,8 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-FT_TEST(test_iterator_thread_safety_resets_errno,
-        "Iterator installs optional mutex guards and resets errno to success")
+FT_TEST(test_iterator_thread_safety_sets_last_error_success,
+        "Iterator installs optional mutex guards and reports success")
 {
     int values[2] = {1, 2};
     Iterator<int> iterator(values);
@@ -17,13 +17,12 @@ FT_TEST(test_iterator_thread_safety_resets_errno,
     FT_ASSERT_EQ(false, iterator.is_thread_safe_enabled());
     FT_ASSERT_EQ(0, iterator.enable_thread_safety());
     FT_ASSERT_EQ(true, iterator.is_thread_safe_enabled());
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
     lock_acquired = false;
     FT_ASSERT_EQ(0, iterator.lock(&lock_acquired));
     FT_ASSERT_EQ(true, lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, Iterator<int>::last_operation_error());
     iterator.unlock(lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, Iterator<int>::last_operation_error());
     iterator.disable_thread_safety();
     FT_ASSERT_EQ(false, iterator.is_thread_safe_enabled());
     return (1);

@@ -425,7 +425,7 @@ FT_TEST(test_api_tls_client_populates_handshake_diagnostics,
         TLS_TEST_UNLINK(cert_path.c_str());
         return (0);
     }
-    original_cert_file = ft_getenv("SSL_CERT_FILE");
+    original_cert_file = getenv("SSL_CERT_FILE");
     has_original_cert_file = (original_cert_file != ft_nullptr);
     if (has_original_cert_file)
     {
@@ -438,7 +438,7 @@ FT_TEST(test_api_tls_client_populates_handshake_diagnostics,
             return (0);
         }
     }
-    if (ft_setenv("SSL_CERT_FILE", ca_path.c_str(), 1) != 0)
+    if (setenv("SSL_CERT_FILE", ca_path.c_str(), 1) != 0)
     {
         TLS_TEST_UNLINK(ca_path.c_str());
         TLS_TEST_UNLINK(cert_path.c_str());
@@ -453,12 +453,12 @@ FT_TEST(test_api_tls_client_populates_handshake_diagnostics,
     server_context.listen_fd = -1;
     server_context.client_fd = -1;
     server_thread = ft_thread(tls_test_server_run, &server_context);
-    if (server_thread.get_error() != FT_ERR_SUCCESS)
+    if (server_thread.joinable() == false)
     {
         if (has_original_cert_file)
-            ft_setenv("SSL_CERT_FILE", original_cert_file_copy.c_str(), 1);
+            setenv("SSL_CERT_FILE", original_cert_file_copy.c_str(), 1);
         else
-            ft_unsetenv("SSL_CERT_FILE");
+            unsetenv("SSL_CERT_FILE");
         TLS_TEST_UNLINK(ca_path.c_str());
         TLS_TEST_UNLINK(cert_path.c_str());
         TLS_TEST_UNLINK(key_path.c_str());
@@ -471,9 +471,9 @@ FT_TEST(test_api_tls_client_populates_handshake_diagnostics,
         tls_signal_server_stop(server_context);
         server_thread.join();
         if (has_original_cert_file)
-            ft_setenv("SSL_CERT_FILE", original_cert_file_copy.c_str(), 1);
+            setenv("SSL_CERT_FILE", original_cert_file_copy.c_str(), 1);
         else
-            ft_unsetenv("SSL_CERT_FILE");
+            unsetenv("SSL_CERT_FILE");
         TLS_TEST_UNLINK(ca_path.c_str());
         TLS_TEST_UNLINK(cert_path.c_str());
         TLS_TEST_UNLINK(key_path.c_str());
@@ -490,9 +490,9 @@ FT_TEST(test_api_tls_client_populates_handshake_diagnostics,
             tls_signal_server_stop(server_context);
             server_thread.join();
             if (has_original_cert_file)
-                ft_setenv("SSL_CERT_FILE", original_cert_file_copy.c_str(), 1);
+                setenv("SSL_CERT_FILE", original_cert_file_copy.c_str(), 1);
             else
-                ft_unsetenv("SSL_CERT_FILE");
+                unsetenv("SSL_CERT_FILE");
             TLS_TEST_UNLINK(ca_path.c_str());
             TLS_TEST_UNLINK(cert_path.c_str());
             TLS_TEST_UNLINK(key_path.c_str());
@@ -505,9 +505,9 @@ FT_TEST(test_api_tls_client_populates_handshake_diagnostics,
             tls_signal_server_stop(server_context);
             server_thread.join();
             if (has_original_cert_file)
-                ft_setenv("SSL_CERT_FILE", original_cert_file_copy.c_str(), 1);
+                setenv("SSL_CERT_FILE", original_cert_file_copy.c_str(), 1);
             else
-                ft_unsetenv("SSL_CERT_FILE");
+                unsetenv("SSL_CERT_FILE");
             TLS_TEST_UNLINK(ca_path.c_str());
             TLS_TEST_UNLINK(cert_path.c_str());
             TLS_TEST_UNLINK(key_path.c_str());
@@ -520,9 +520,9 @@ FT_TEST(test_api_tls_client_populates_handshake_diagnostics,
             tls_signal_server_stop(server_context);
             server_thread.join();
             if (has_original_cert_file)
-                ft_setenv("SSL_CERT_FILE", original_cert_file_copy.c_str(), 1);
+                setenv("SSL_CERT_FILE", original_cert_file_copy.c_str(), 1);
             else
-                ft_unsetenv("SSL_CERT_FILE");
+                unsetenv("SSL_CERT_FILE");
             TLS_TEST_UNLINK(ca_path.c_str());
             TLS_TEST_UNLINK(cert_path.c_str());
             TLS_TEST_UNLINK(key_path.c_str());
@@ -533,9 +533,9 @@ FT_TEST(test_api_tls_client_populates_handshake_diagnostics,
             tls_signal_server_stop(server_context);
             server_thread.join();
             if (has_original_cert_file)
-                ft_setenv("SSL_CERT_FILE", original_cert_file_copy.c_str(), 1);
+                setenv("SSL_CERT_FILE", original_cert_file_copy.c_str(), 1);
             else
-                ft_unsetenv("SSL_CERT_FILE");
+                unsetenv("SSL_CERT_FILE");
             TLS_TEST_UNLINK(ca_path.c_str());
             TLS_TEST_UNLINK(cert_path.c_str());
             TLS_TEST_UNLINK(key_path.c_str());
@@ -546,9 +546,9 @@ FT_TEST(test_api_tls_client_populates_handshake_diagnostics,
             tls_signal_server_stop(server_context);
             server_thread.join();
             if (has_original_cert_file)
-                ft_setenv("SSL_CERT_FILE", original_cert_file_copy.c_str(), 1);
+                setenv("SSL_CERT_FILE", original_cert_file_copy.c_str(), 1);
             else
-                ft_unsetenv("SSL_CERT_FILE");
+                unsetenv("SSL_CERT_FILE");
             TLS_TEST_UNLINK(ca_path.c_str());
             TLS_TEST_UNLINK(cert_path.c_str());
             TLS_TEST_UNLINK(key_path.c_str());
@@ -561,9 +561,9 @@ FT_TEST(test_api_tls_client_populates_handshake_diagnostics,
             tls_signal_server_stop(server_context);
             server_thread.join();
             if (has_original_cert_file)
-                ft_setenv("SSL_CERT_FILE", original_cert_file_copy.c_str(), 1);
+                setenv("SSL_CERT_FILE", original_cert_file_copy.c_str(), 1);
             else
-                ft_unsetenv("SSL_CERT_FILE");
+                unsetenv("SSL_CERT_FILE");
             TLS_TEST_UNLINK(ca_path.c_str());
             TLS_TEST_UNLINK(cert_path.c_str());
             TLS_TEST_UNLINK(key_path.c_str());
@@ -574,9 +574,9 @@ FT_TEST(test_api_tls_client_populates_handshake_diagnostics,
             tls_signal_server_stop(server_context);
             server_thread.join();
             if (has_original_cert_file)
-                ft_setenv("SSL_CERT_FILE", original_cert_file_copy.c_str(), 1);
+                setenv("SSL_CERT_FILE", original_cert_file_copy.c_str(), 1);
             else
-                ft_unsetenv("SSL_CERT_FILE");
+                unsetenv("SSL_CERT_FILE");
             TLS_TEST_UNLINK(ca_path.c_str());
             TLS_TEST_UNLINK(cert_path.c_str());
             TLS_TEST_UNLINK(key_path.c_str());
@@ -587,9 +587,9 @@ FT_TEST(test_api_tls_client_populates_handshake_diagnostics,
             tls_signal_server_stop(server_context);
             server_thread.join();
             if (has_original_cert_file)
-                ft_setenv("SSL_CERT_FILE", original_cert_file_copy.c_str(), 1);
+                setenv("SSL_CERT_FILE", original_cert_file_copy.c_str(), 1);
             else
-                ft_unsetenv("SSL_CERT_FILE");
+                unsetenv("SSL_CERT_FILE");
             TLS_TEST_UNLINK(ca_path.c_str());
             TLS_TEST_UNLINK(cert_path.c_str());
             TLS_TEST_UNLINK(key_path.c_str());
@@ -601,9 +601,9 @@ FT_TEST(test_api_tls_client_populates_handshake_diagnostics,
             tls_signal_server_stop(server_context);
             server_thread.join();
             if (has_original_cert_file)
-                ft_setenv("SSL_CERT_FILE", original_cert_file_copy.c_str(), 1);
+                setenv("SSL_CERT_FILE", original_cert_file_copy.c_str(), 1);
             else
-                ft_unsetenv("SSL_CERT_FILE");
+                unsetenv("SSL_CERT_FILE");
             TLS_TEST_UNLINK(ca_path.c_str());
             TLS_TEST_UNLINK(cert_path.c_str());
             TLS_TEST_UNLINK(key_path.c_str());
@@ -614,9 +614,9 @@ FT_TEST(test_api_tls_client_populates_handshake_diagnostics,
             tls_signal_server_stop(server_context);
             server_thread.join();
             if (has_original_cert_file)
-                ft_setenv("SSL_CERT_FILE", original_cert_file_copy.c_str(), 1);
+                setenv("SSL_CERT_FILE", original_cert_file_copy.c_str(), 1);
             else
-                ft_unsetenv("SSL_CERT_FILE");
+                unsetenv("SSL_CERT_FILE");
             TLS_TEST_UNLINK(ca_path.c_str());
             TLS_TEST_UNLINK(cert_path.c_str());
             TLS_TEST_UNLINK(key_path.c_str());
@@ -627,9 +627,9 @@ FT_TEST(test_api_tls_client_populates_handshake_diagnostics,
     }
     server_thread.join();
     if (has_original_cert_file)
-        ft_setenv("SSL_CERT_FILE", original_cert_file_copy.c_str(), 1);
+        setenv("SSL_CERT_FILE", original_cert_file_copy.c_str(), 1);
     else
-        ft_unsetenv("SSL_CERT_FILE");
+        unsetenv("SSL_CERT_FILE");
     TLS_TEST_UNLINK(ca_path.c_str());
     TLS_TEST_UNLINK(cert_path.c_str());
     TLS_TEST_UNLINK(key_path.c_str());

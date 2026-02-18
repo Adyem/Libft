@@ -6,6 +6,7 @@
 #include "../Time/time.hpp"
 #include "../Basic/basic.hpp"
 #include "../CMA/CMA.hpp"
+#include "../Printf/printf.hpp"
 
 struct api_request_metrics_guard
 {
@@ -43,10 +44,12 @@ struct api_request_metrics_guard
         }
         if (port != 0)
         {
-            char *port_string;
+            char port_string[32];
+            int write_result;
 
-            port_string = cma_itoa(static_cast<int>(port));
-            if (!port_string)
+            write_result = pf_snprintf(port_string, sizeof(port_string), "%u",
+                    static_cast<unsigned int>(port));
+            if (write_result < 0)
             {
                 _enabled = false;
                 return ;
@@ -55,11 +58,9 @@ struct api_request_metrics_guard
             if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
             {
                 _enabled = false;
-                cma_free(port_string);
                 return ;
             }
             _endpoint.append(port_string);
-            cma_free(port_string);
             if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
             {
                 _enabled = false;

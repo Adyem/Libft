@@ -31,14 +31,12 @@ int ft_experience_table::lock_pair(const ft_experience_table &first,
     {
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
 
-        if (single_guard.get_error() != FT_ERR_SUCCESS)
+        if (single_guard.last_operation_error() != FT_ERR_SUCCESS)
         {
-            ft_errno = single_guard.get_error();
-            return (single_guard.get_error());
+            return (single_guard.last_operation_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ERR_SUCCESS;
         return (FT_ERR_SUCCESS);
     }
     ordered_first = &first;
@@ -57,13 +55,12 @@ int ft_experience_table::lock_pair(const ft_experience_table &first,
     {
         ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
 
-        if (lower_guard.get_error() != FT_ERR_SUCCESS)
+        if (lower_guard.last_operation_error() != FT_ERR_SUCCESS)
         {
-            ft_errno = lower_guard.get_error();
-            return (lower_guard.get_error());
+            return (lower_guard.last_operation_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ERR_SUCCESS)
+        if (upper_guard.last_operation_error() == FT_ERR_SUCCESS)
         {
             if (!swapped)
             {
@@ -75,13 +72,11 @@ int ft_experience_table::lock_pair(const ft_experience_table &first,
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = FT_ERR_SUCCESS;
             return (FT_ERR_SUCCESS);
         }
-        if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
+        if (upper_guard.last_operation_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            ft_errno = upper_guard.get_error();
-            return (upper_guard.get_error());
+            return (upper_guard.last_operation_error());
         }
         if (lower_guard.owns_lock())
             lower_guard.unlock();
@@ -94,7 +89,7 @@ ft_experience_table::ft_experience_table(int count) noexcept
 {
     if (count > 0)
     {
-        this->_levels = static_cast<int*>(cma_calloc(count, sizeof(int)));
+        this->_levels = static_cast<int*>(cma_malloc((count) * (sizeof(int))));
         if (!this->_levels)
         {
             this->set_error(FT_ERR_NO_MEMORY);
@@ -110,11 +105,11 @@ ft_experience_table::~ft_experience_table()
 {
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
         this->_levels = ft_nullptr;
         this->_count = 0;
-        this->set_error(guard.get_error());
+        this->set_error(guard.last_operation_error());
         game_experience_table_finalize_lock(guard);
         return ;
     }
@@ -132,9 +127,9 @@ ft_experience_table::ft_experience_table(const ft_experience_table &other) noexc
 {
 
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESS)
+    if (other_guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(other_guard.get_error());
+        this->set_error(other_guard.last_operation_error());
         game_experience_table_finalize_lock(other_guard);
         return ;
     }
@@ -148,7 +143,7 @@ ft_experience_table::ft_experience_table(const ft_experience_table &other) noexc
             game_experience_table_finalize_lock(other_guard);
             return ;
         }
-        this->_levels = static_cast<int*>(cma_calloc(this->_count, sizeof(int)));
+        this->_levels = static_cast<int*>(cma_malloc((this->_count) * (sizeof(int))));
         if (!this->_levels)
         {
             this->_count = 0;
@@ -196,7 +191,7 @@ ft_experience_table &ft_experience_table::operator=(const ft_experience_table &o
             game_experience_table_finalize_lock(other_guard);
             return (*this);
         }
-        new_levels = static_cast<int*>(cma_calloc(other._count, sizeof(int)));
+        new_levels = static_cast<int*>(cma_malloc((other._count) * (sizeof(int))));
         if (!new_levels)
         {
             this->set_error(FT_ERR_NO_MEMORY);
@@ -228,9 +223,9 @@ ft_experience_table::ft_experience_table(ft_experience_table &&other) noexcept
 {
 
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESS)
+    if (other_guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(other_guard.get_error());
+        this->set_error(other_guard.last_operation_error());
         game_experience_table_finalize_lock(other_guard);
         return ;
     }
@@ -277,7 +272,6 @@ ft_experience_table &ft_experience_table::operator=(ft_experience_table &&other)
 
 void ft_experience_table::set_error(int err) const noexcept
 {
-    ft_errno = err;
     this->_error = err;
     return ;
 }
@@ -357,9 +351,9 @@ int ft_experience_table::get_count() const noexcept
     int count_value;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        const_cast<ft_experience_table *>(this)->set_error(guard.get_error());
+        const_cast<ft_experience_table *>(this)->set_error(guard.last_operation_error());
         game_experience_table_finalize_lock(guard);
         return (0);
     }
@@ -374,11 +368,11 @@ int ft_experience_table::resize(int new_count) noexcept
     int result;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(guard.get_error());
+        this->set_error(guard.last_operation_error());
         game_experience_table_finalize_lock(guard);
-        return (guard.get_error());
+        return (guard.last_operation_error());
     }
     result = this->resize_locked(new_count, guard);
     game_experience_table_finalize_lock(guard);
@@ -390,9 +384,9 @@ int ft_experience_table::get_level(int experience) const noexcept
     int level;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        const_cast<ft_experience_table *>(this)->set_error(guard.get_error());
+        const_cast<ft_experience_table *>(this)->set_error(guard.last_operation_error());
         game_experience_table_finalize_lock(guard);
         return (0);
     }
@@ -415,9 +409,9 @@ int ft_experience_table::get_value(int index) const noexcept
     int value;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        const_cast<ft_experience_table *>(this)->set_error(guard.get_error());
+        const_cast<ft_experience_table *>(this)->set_error(guard.last_operation_error());
         game_experience_table_finalize_lock(guard);
         return (0);
     }
@@ -437,9 +431,9 @@ void ft_experience_table::set_value(int index, int value) noexcept
 {
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(guard.get_error());
+        this->set_error(guard.last_operation_error());
         game_experience_table_finalize_lock(guard);
         return ;
     }
@@ -467,11 +461,11 @@ int ft_experience_table::set_levels(const int *levels, int count) noexcept
     int level_index;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(guard.get_error());
+        this->set_error(guard.last_operation_error());
         game_experience_table_finalize_lock(guard);
-        return (guard.get_error());
+        return (guard.last_operation_error());
     }
     this->set_error(FT_ERR_SUCCESS);
     if (count <= 0 || !levels)
@@ -511,11 +505,11 @@ int ft_experience_table::generate_levels_total(int count, int base,
     int level_index;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(guard.get_error());
+        this->set_error(guard.last_operation_error());
         game_experience_table_finalize_lock(guard);
-        return (guard.get_error());
+        return (guard.last_operation_error());
     }
     this->set_error(FT_ERR_SUCCESS);
     if (count <= 0)
@@ -560,11 +554,11 @@ int ft_experience_table::generate_levels_scaled(int count, int base,
     int index;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(guard.get_error());
+        this->set_error(guard.last_operation_error());
         game_experience_table_finalize_lock(guard);
-        return (guard.get_error());
+        return (guard.last_operation_error());
     }
     this->set_error(FT_ERR_SUCCESS);
     if (count <= 0)
@@ -606,11 +600,11 @@ int ft_experience_table::check_for_error() const noexcept
     int index;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        const_cast<ft_experience_table *>(this)->set_error(guard.get_error());
+        const_cast<ft_experience_table *>(this)->set_error(guard.last_operation_error());
         game_experience_table_finalize_lock(guard);
-        return (guard.get_error());
+        return (guard.last_operation_error());
     }
     if (!this->_levels)
     {
@@ -639,11 +633,11 @@ int ft_experience_table::get_error() const noexcept
     int error_code;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        const_cast<ft_experience_table *>(this)->set_error(guard.get_error());
+        const_cast<ft_experience_table *>(this)->set_error(guard.last_operation_error());
         game_experience_table_finalize_lock(guard);
-        return (guard.get_error());
+        return (guard.last_operation_error());
     }
     error_code = this->_error;
     const_cast<ft_experience_table *>(this)->set_error(error_code);
@@ -656,11 +650,11 @@ const char *ft_experience_table::get_error_str() const noexcept
     int error_code;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        const_cast<ft_experience_table *>(this)->set_error(guard.get_error());
+        const_cast<ft_experience_table *>(this)->set_error(guard.last_operation_error());
         game_experience_table_finalize_lock(guard);
-        return (ft_strerror(guard.get_error()));
+        return (ft_strerror(guard.last_operation_error()));
     }
     error_code = this->_error;
     const_cast<ft_experience_table *>(this)->set_error(error_code);

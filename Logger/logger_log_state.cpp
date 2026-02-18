@@ -28,12 +28,12 @@ int logger_lock_sinks()
 
     once_result = pthread_once(&g_sinks_mutex_once, logger_initialize_sinks_mutex);
     if (once_result != 0)
-        return (ft_map_system_error(once_result));
+        return (once_result);
     if (g_sinks_mutex_init_error != 0)
-        return (ft_map_system_error(g_sinks_mutex_init_error));
+        return (g_sinks_mutex_init_error);
     lock_result = pthread_mutex_lock(&g_sinks_mutex);
     if (lock_result != 0)
-        return (ft_map_system_error(lock_result));
+        return (lock_result);
     return (FT_ERR_SUCCESS);
 }
 
@@ -44,11 +44,11 @@ int logger_unlock_sinks()
 
     once_result = pthread_once(&g_sinks_mutex_once, logger_initialize_sinks_mutex);
     if (once_result != 0)
-        return (ft_map_system_error(once_result));
+        return (once_result);
     if (g_sinks_mutex_init_error != 0)
-        return (ft_map_system_error(g_sinks_mutex_init_error));
+        return (g_sinks_mutex_init_error);
     unlock_result = pthread_mutex_unlock(&g_sinks_mutex);
     if (unlock_result != 0)
-        return (ft_map_system_error(unlock_result));
+        return (unlock_result);
     return (FT_ERR_SUCCESS);
 }

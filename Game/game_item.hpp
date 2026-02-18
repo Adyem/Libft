@@ -10,14 +10,7 @@ class ft_item_modifier
     private:
         int             _id;
         int             _value;
-        mutable int     _error_code;
         mutable pt_mutex _mutex;
-
-        void set_error(int error_code) const noexcept;
-        static int lock_pair(const ft_item_modifier &first,
-                const ft_item_modifier &second,
-                ft_unique_lock<pt_mutex> &first_guard,
-                ft_unique_lock<pt_mutex> &second_guard);
 
     public:
         ft_item_modifier() noexcept;

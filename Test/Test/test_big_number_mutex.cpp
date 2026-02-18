@@ -1,6 +1,8 @@
 #include "../test_internal.hpp"
 #include "../../CPP_class/class_big_number.hpp"
+#include "../../CPP_class/class_string.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
+#include "../../Template/move.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
 
@@ -41,7 +43,6 @@ FT_TEST(test_big_number_mutex_construction_and_assignment_unlocks, "ft_big_numbe
     FT_ASSERT_EQ(false, moved_mutex->lockState());
     FT_ASSERT_EQ(false, assigned_mutex->lockState());
     FT_ASSERT_EQ(false, move_assigned_mutex->lockState());
-    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -92,7 +93,6 @@ FT_TEST(test_big_number_mutex_arithmetic_unlocks, "ft_big_number arithmetic oper
     FT_ASSERT_EQ(false, product_mutex->lockState());
     FT_ASSERT_EQ(false, quotient_mutex->lockState());
     FT_ASSERT_EQ(false, remainder_mutex->lockState());
-    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -131,7 +131,6 @@ FT_TEST(test_big_number_mutex_comparisons_unlock, "ft_big_number comparison oper
     FT_ASSERT_EQ(true, less_or_equal_result);
     FT_ASSERT_EQ(true, greater_result);
     FT_ASSERT_EQ(true, greater_or_equal_result);
-    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -154,7 +153,6 @@ FT_TEST(test_big_number_mutex_mutators_unlock, "ft_big_number mutator methods un
 
     FT_ASSERT_EQ(false, number_mutex->lockState());
     FT_ASSERT_EQ(true, number.empty());
-    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -206,7 +204,6 @@ FT_TEST(test_big_number_mutex_observers_unlock, "ft_big_number observer methods 
     FT_ASSERT_EQ(3, size_value);
     FT_ASSERT_EQ('F', hex_string[0]);
     FT_ASSERT_EQ('F', hex_string[1]);
-    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -228,7 +225,6 @@ FT_TEST(test_big_number_mutex_error_helpers_unlock, "ft_big_number error helpers
 
     FT_ASSERT_EQ(false, number_mutex->lockState());
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_value);
-    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -252,7 +248,6 @@ FT_TEST(test_big_number_mutex_division_unlocks_on_divide_by_zero, "ft_big_number
     FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, ft_big_number::last_operation_error());
     FT_ASSERT_EQ(false, dividend_mutex->lockState());
     FT_ASSERT_EQ(false, divisor_mutex->lockState());
-    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -277,7 +272,6 @@ FT_TEST(test_big_number_mutex_modulus_unlocks_on_operand_error, "ft_big_number m
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_big_number::last_operation_error());
     FT_ASSERT_EQ(false, left_mutex->lockState());
     FT_ASSERT_EQ(false, right_mutex->lockState());
-    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -296,7 +290,6 @@ FT_TEST(test_big_number_mutex_to_string_invalid_base_unlocks,
 
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_string::last_operation_error());
     FT_ASSERT_EQ(false, number_mutex->lockState());
-    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -313,7 +306,6 @@ FT_TEST(test_big_number_mutex_assign_base_invalid_digits_unlocks,
 
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_big_number::last_operation_error());
     FT_ASSERT_EQ(false, number_mutex->lockState());
-    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -329,7 +321,6 @@ FT_TEST(test_big_number_mutex_append_digit_invalid_unlocks,
     FT_ASSERT(number_mutex != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_big_number::last_operation_error());
     FT_ASSERT_EQ(false, number_mutex->lockState());
-    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -345,7 +336,6 @@ FT_TEST(test_big_number_mutex_append_unsigned_unlocks,
     FT_ASSERT(number_mutex != ft_nullptr);
     FT_ASSERT_EQ(false, number_mutex->lockState());
     FT_ASSERT_EQ(false, number.empty());
-    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -380,7 +370,6 @@ FT_TEST(test_big_number_mutex_mod_pow_zero_modulus_unlocks,
     FT_ASSERT_EQ(false, exponent_mutex->lockState());
     FT_ASSERT_EQ(false, modulus_mutex->lockState());
     FT_ASSERT_EQ(false, result_mutex->lockState());
-    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -409,7 +398,6 @@ FT_TEST(test_big_number_mutex_addition_with_error_operand_unlocks,
     FT_ASSERT_EQ(false, invalid_mutex->lockState());
     FT_ASSERT_EQ(false, valid_mutex->lockState());
     FT_ASSERT_EQ(false, sum_mutex->lockState());
-    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -426,7 +414,6 @@ FT_TEST(test_big_number_mutex_clear_after_error_unlocks,
     FT_ASSERT(number_mutex != ft_nullptr);
     FT_ASSERT_EQ(false, number_mutex->lockState());
     FT_ASSERT_EQ(true, number.empty());
-    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -442,7 +429,6 @@ FT_TEST(test_big_number_mutex_assign_base_zero_unlocks,
     FT_ASSERT(number_mutex != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_big_number::last_operation_error());
     FT_ASSERT_EQ(false, number_mutex->lockState());
-    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -471,7 +457,6 @@ FT_TEST(test_big_number_mutex_multiplication_with_error_operand_unlocks,
     FT_ASSERT_EQ(false, invalid_mutex->lockState());
     FT_ASSERT_EQ(false, valid_mutex->lockState());
     FT_ASSERT_EQ(false, product_mutex->lockState());
-    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -495,7 +480,6 @@ FT_TEST(test_big_number_mutex_to_string_valid_unlocks,
     FT_ASSERT_EQ(false, string_mutex->lockState());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::last_operation_error());
     FT_ASSERT_EQ(3, decimal_string.size());
-    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -530,7 +514,6 @@ FT_TEST(test_big_number_mutex_mod_pow_with_error_operand_unlocks,
     FT_ASSERT_EQ(false, exponent_mutex->lockState());
     FT_ASSERT_EQ(false, modulus_mutex->lockState());
     FT_ASSERT_EQ(false, result_mutex->lockState());
-    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -547,7 +530,6 @@ FT_TEST(test_big_number_mutex_trim_leading_zeros_after_error_unlocks,
     FT_ASSERT(number_mutex != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_big_number::last_operation_error());
     FT_ASSERT_EQ(false, number_mutex->lockState());
-    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -563,7 +545,6 @@ FT_TEST(test_big_number_mutex_assign_nullptr_unlocks,
     FT_ASSERT(number_mutex != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_big_number::last_operation_error());
     FT_ASSERT_EQ(false, number_mutex->lockState());
-    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -579,7 +560,6 @@ FT_TEST(test_big_number_mutex_append_nullptr_unlocks,
     FT_ASSERT(number_mutex != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_big_number::last_operation_error());
     FT_ASSERT_EQ(false, number_mutex->lockState());
-    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -614,7 +594,6 @@ FT_TEST(test_big_number_mutex_mod_pow_invalid_exponent_unlocks,
     FT_ASSERT_EQ(false, exponent_mutex->lockState());
     FT_ASSERT_EQ(false, modulus_mutex->lockState());
     FT_ASSERT_EQ(false, result_mutex->lockState());
-    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -637,7 +616,6 @@ FT_TEST(test_big_number_mutex_to_string_negative_base_unlocks,
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_string::last_operation_error());
     FT_ASSERT_EQ(false, number_mutex->lockState());
     FT_ASSERT_EQ(false, string_mutex->lockState());
-    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }
 
@@ -653,6 +631,5 @@ FT_TEST(test_big_number_mutex_from_hex_string_null_unlocks,
     FT_ASSERT(result_mutex != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_big_number::last_operation_error());
     FT_ASSERT_EQ(false, result_mutex->lockState());
-    ft_errno = FT_ERR_SUCCESS;
     return (1);
 }

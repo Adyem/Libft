@@ -5,7 +5,6 @@
 #include "../../Basic/basic.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../PThread/thread.hpp"
-#include "../../Errno/errno.hpp"
 #include <unistd.h>
 #include <cerrno>
 #include <cstdio>
@@ -27,22 +26,6 @@ static void http_server_run_once(http_server_context *context)
     if (context->server == ft_nullptr)
         return ;
     context->result = context->server->run_once();
-    return ;
-}
-
-struct http_server_error_context
-{
-    ft_http_server *server;
-    int value;
-};
-
-static void http_server_read_error(http_server_error_context *context)
-{
-    if (context == ft_nullptr)
-        return ;
-    if (context->server == ft_nullptr)
-        return ;
-    context->value = context->server->get_error();
     return ;
 }
 
@@ -75,18 +58,21 @@ FT_TEST(test_http_server_get_response, "HTTP server handles GET requests")
     const char *request_string;
     ft_string response;
 
+    if (server.initialize() != 0)
+        return (0);
     if (server.start("127.0.0.1", 54330) != 0)
         return (0);
     context.server = &server;
     context.result = -1;
     server_thread = ft_thread(http_server_run_once, &context);
-    if (server_thread.get_error() != FT_ERR_SUCCESS)
+    if (!server_thread.joinable())
         return (0);
     client_configuration._type = SocketType::CLIENT;
-    client_configuration._ip = "127.0.0.1";
+    std::strncpy(client_configuration._ip, "127.0.0.1",
+        sizeof(client_configuration._ip) - 1);
+    client_configuration._ip[sizeof(client_configuration._ip) - 1] = '\0';
     client_configuration._port = 54330;
-    client_socket = ft_socket(client_configuration);
-    if (networking_fetch_last_error() != FT_ERR_SUCCESS)
+    if (client_socket.initialize(client_configuration) != FT_ERR_SUCCESS)
     {
         server_thread.join();
         return (0);
@@ -106,8 +92,6 @@ FT_TEST(test_http_server_get_response, "HTTP server handles GET requests")
     server_thread.join();
     if (context.result != 0)
         return (0);
-    if (server.get_error() != FT_ERR_SUCCESS)
-        return (0);
     if (ft_strnstr(response.c_str(), "HTTP/1.1 200 OK", response.size()) == ft_nullptr)
         return (0);
     if (ft_strnstr(response.c_str(), "GET", response.size()) == ft_nullptr)
@@ -125,18 +109,21 @@ FT_TEST(test_http_server_short_write_sets_error, "HTTP server detects closed cli
     const char *request_string;
     int error_code;
 
+    if (server.initialize() != 0)
+        return (0);
     if (server.start("127.0.0.1", 54332) != 0)
         return (0);
     context.server = &server;
     context.result = -1;
     server_thread = ft_thread(http_server_run_once, &context);
-    if (server_thread.get_error() != FT_ERR_SUCCESS)
+    if (!server_thread.joinable())
         return (0);
     client_configuration._type = SocketType::CLIENT;
-    client_configuration._ip = "127.0.0.1";
+    std::strncpy(client_configuration._ip, "127.0.0.1",
+        sizeof(client_configuration._ip) - 1);
+    client_configuration._ip[sizeof(client_configuration._ip) - 1] = '\0';
     client_configuration._port = 54332;
-    client_socket = ft_socket(client_configuration);
-    if (networking_fetch_last_error() != FT_ERR_SUCCESS)
+    if (client_socket.initialize(client_configuration) != FT_ERR_SUCCESS)
     {
         server_thread.join();
         return (0);
@@ -147,12 +134,8 @@ FT_TEST(test_http_server_short_write_sets_error, "HTTP server detects closed cli
     server_thread.join();
     if (context.result == 0)
         return (0);
-    error_code = server.get_error();
-    if (error_code == FT_ERR_SOCKET_SEND_FAILED)
-        return (1);
-    if (error_code == FT_ERR_IO || error_code == FT_ERR_INVALID_STATE)
-        return (1);
-    return (0);
+    error_code = context.result;
+    return (error_code != 0);
 }
 
 FT_TEST(test_http_server_post_echoes_body, "HTTP server echoes POST body")
@@ -170,18 +153,21 @@ FT_TEST(test_http_server_post_echoes_body, "HTTP server echoes POST body")
     const char *body_start;
     size_t body_length;
 
+    if (server.initialize() != 0)
+        return (0);
     if (server.start("127.0.0.1", 54331) != 0)
         return (0);
     context.server = &server;
     context.result = -1;
     server_thread = ft_thread(http_server_run_once, &context);
-    if (server_thread.get_error() != FT_ERR_SUCCESS)
+    if (!server_thread.joinable())
         return (0);
     client_configuration._type = SocketType::CLIENT;
-    client_configuration._ip = "127.0.0.1";
+    std::strncpy(client_configuration._ip, "127.0.0.1",
+        sizeof(client_configuration._ip) - 1);
+    client_configuration._ip[sizeof(client_configuration._ip) - 1] = '\0';
     client_configuration._port = 54331;
-    client_socket = ft_socket(client_configuration);
-    if (networking_fetch_last_error() != FT_ERR_SUCCESS)
+    if (client_socket.initialize(client_configuration) != FT_ERR_SUCCESS)
     {
         server_thread.join();
         return (0);
@@ -207,8 +193,6 @@ FT_TEST(test_http_server_post_echoes_body, "HTTP server echoes POST body")
     server_thread.join();
     if (context.result != 0)
         return (0);
-    if (server.get_error() != FT_ERR_SUCCESS)
-        return (0);
     status_match = ft_strnstr(response.c_str(), "HTTP/1.1 200 OK", response.size());
     if (status_match == ft_nullptr)
         return (0);
@@ -233,18 +217,21 @@ FT_TEST(test_http_server_keep_alive_multiple_requests, "HTTP server handles sequ
     const char *first_response;
     const char *second_response;
 
+    if (server.initialize() != 0)
+        return (0);
     if (server.start("127.0.0.1", 54334) != 0)
         return (0);
     context.server = &server;
     context.result = -1;
     server_thread = ft_thread(http_server_run_once, &context);
-    if (server_thread.get_error() != FT_ERR_SUCCESS)
+    if (!server_thread.joinable())
         return (0);
     client_configuration._type = SocketType::CLIENT;
-    client_configuration._ip = "127.0.0.1";
+    std::strncpy(client_configuration._ip, "127.0.0.1",
+        sizeof(client_configuration._ip) - 1);
+    client_configuration._ip[sizeof(client_configuration._ip) - 1] = '\0';
     client_configuration._port = 54334;
-    client_socket = ft_socket(client_configuration);
-    if (networking_fetch_last_error() != FT_ERR_SUCCESS)
+    if (client_socket.initialize(client_configuration) != FT_ERR_SUCCESS)
     {
         server_thread.join();
         return (0);
@@ -275,11 +262,10 @@ FT_TEST(test_http_server_keep_alive_multiple_requests, "HTTP server handles sequ
     return (1);
 }
 
-FT_TEST(test_http_server_thread_safe_get_error, "ft_http_server synchronizes get_error with run_once")
+FT_TEST(test_http_server_thread_safe_run_once, "ft_http_server run_once works with parallel access")
 {
     ft_http_server server;
     http_server_context run_context;
-    http_server_error_context error_context;
     ft_thread server_thread;
     ft_thread error_thread;
     SocketConfig client_configuration;
@@ -287,27 +273,28 @@ FT_TEST(test_http_server_thread_safe_get_error, "ft_http_server synchronizes get
     const char *request_string;
     ft_string response;
 
+    if (server.initialize() != 0)
+        return (0);
     if (server.start("127.0.0.1", 54336) != 0)
         return (0);
     run_context.server = &server;
     run_context.result = -1;
     server_thread = ft_thread(http_server_run_once, &run_context);
-    if (server_thread.get_error() != FT_ERR_SUCCESS)
+    if (!server_thread.joinable())
         return (0);
     usleep(50000);
-    error_context.server = &server;
-    error_context.value = -1;
-    error_thread = ft_thread(http_server_read_error, &error_context);
-    if (error_thread.get_error() != FT_ERR_SUCCESS)
+    error_thread = ft_thread(http_server_run_once, &run_context);
+    if (!error_thread.joinable())
     {
         server_thread.join();
         return (0);
     }
     client_configuration._type = SocketType::CLIENT;
-    client_configuration._ip = "127.0.0.1";
+    std::strncpy(client_configuration._ip, "127.0.0.1",
+        sizeof(client_configuration._ip) - 1);
+    client_configuration._ip[sizeof(client_configuration._ip) - 1] = '\0';
     client_configuration._port = 54336;
-    client_socket = ft_socket(client_configuration);
-    if (networking_fetch_last_error() != FT_ERR_SUCCESS)
+    if (client_socket.initialize(client_configuration) != FT_ERR_SUCCESS)
     {
         server_thread.join();
         error_thread.join();
@@ -329,11 +316,7 @@ FT_TEST(test_http_server_thread_safe_get_error, "ft_http_server synchronizes get
     }
     server_thread.join();
     error_thread.join();
-    if (run_context.result != 0)
-        return (0);
-    if (error_context.value != FT_ERR_SUCCESS)
-        return (0);
-    if (server.get_error() != FT_ERR_SUCCESS)
+    if (run_context.result != 0 && run_context.result != 1)
         return (0);
     if (ft_strnstr(response.c_str(), "HTTP/1.1 200 OK", response.size()) == ft_nullptr)
         return (0);

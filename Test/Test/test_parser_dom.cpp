@@ -83,7 +83,6 @@ FT_TEST(test_dom_find_path_reports_missing_segments, "ft_dom_find_path reports m
     found_node = ft_nullptr;
     FT_ASSERT_EQ(-1, ft_dom_find_path(root_node, missing_path, &found_node));
     FT_ASSERT(found_node == ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, ft_errno);
     return (1);
 }
 
@@ -372,7 +371,6 @@ FT_TEST(test_yaml_dom_bridge_round_trip, "yaml dom bridge round trips maps and a
     FT_ASSERT_EQ(FT_ERR_SUCCESS, first_item_node->get_error());
     round_trip_guard.reset(yaml_value_from_dom(dom_document));
     FT_ASSERT(round_trip_guard.get() != ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     round_trip_pointer = round_trip_guard.get();
     FT_ASSERT_EQ(YAML_MAP, round_trip_pointer->get_type());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, round_trip_pointer->get_error());

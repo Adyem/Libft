@@ -3,7 +3,9 @@
 static int check_optional_usage()
 {
     ft_optional<int> initial_value(21);
-    ft_optional<int> moved_value(ft_move(initial_value));
+    ft_optional<int> moved_value;
+    (void)moved_value.initialize(ft_move(initial_value.value()));
+    initial_value.reset();
 
     if (moved_value.has_value())
     {

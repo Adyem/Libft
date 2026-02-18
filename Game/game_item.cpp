@@ -9,296 +9,245 @@ static void game_item_modifier_sleep_backoff()
     return ;
 }
 
-static void game_item_modifier_unlock(ft_unique_lock<pt_mutex> &guard)
-{
-    if (guard.owns_lock())
-        guard.unlock();
-    return ;
-}
-
 static int game_item_reset_modifier(ft_item_modifier &modifier)
 {
     modifier.set_id(0);
-    if (modifier.get_error() != FT_ERR_SUCCESS)
-        return (modifier.get_error());
     modifier.set_value(0);
-    if (modifier.get_error() != FT_ERR_SUCCESS)
-        return (modifier.get_error());
     return (FT_ERR_SUCCESS);
 }
 
-int ft_item_modifier::lock_pair(const ft_item_modifier &first,
-        const ft_item_modifier &second,
-        ft_unique_lock<pt_mutex> &first_guard,
-        ft_unique_lock<pt_mutex> &second_guard)
-{
-    const ft_item_modifier *ordered_first;
-    const ft_item_modifier *ordered_second;
-    bool swapped;
-
-    if (&first == &second)
-    {
-        ft_unique_lock<pt_mutex> single_guard(first._mutex);
-
-        if (single_guard.get_error() != FT_ERR_SUCCESS)
-        {
-            ft_errno = single_guard.get_error();
-            return (single_guard.get_error());
-        }
-        first_guard = ft_move(single_guard);
-        second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ERR_SUCCESS;
-        return (FT_ERR_SUCCESS);
-    }
-    ordered_first = &first;
-    ordered_second = &second;
-    swapped = false;
-    if (ordered_first > ordered_second)
-    {
-        const ft_item_modifier *temporary;
-
-        temporary = ordered_first;
-        ordered_first = ordered_second;
-        ordered_second = temporary;
-        swapped = true;
-    }
-    while (true)
-    {
-        ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
-
-        if (lower_guard.get_error() != FT_ERR_SUCCESS)
-        {
-            ft_errno = lower_guard.get_error();
-            return (lower_guard.get_error());
-        }
-        ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ERR_SUCCESS)
-        {
-            if (!swapped)
-            {
-                first_guard = ft_move(lower_guard);
-                second_guard = ft_move(upper_guard);
-            }
-            else
-            {
-                first_guard = ft_move(upper_guard);
-                second_guard = ft_move(lower_guard);
-            }
-            ft_errno = FT_ERR_SUCCESS;
-            return (FT_ERR_SUCCESS);
-        }
-        if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
-        {
-            ft_errno = upper_guard.get_error();
-            return (upper_guard.get_error());
-        }
-        if (lower_guard.owns_lock())
-            lower_guard.unlock();
-        game_item_modifier_sleep_backoff();
-    }
-}
-
 ft_item_modifier::ft_item_modifier() noexcept
-    : _id(0), _value(0), _error_code(FT_ERR_SUCCESS), _mutex()
+    : _id(0), _value(0), _mutex()
 {
-    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 ft_item_modifier::ft_item_modifier(int id, int value) noexcept
-    : _id(id), _value(value), _error_code(FT_ERR_SUCCESS), _mutex()
+    : _id(id), _value(value), _mutex()
 {
-    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 ft_item_modifier::ft_item_modifier(const ft_item_modifier &other) noexcept
-    : _id(0), _value(0), _error_code(FT_ERR_SUCCESS), _mutex()
+    : _id(0), _value(0), _mutex()
 {
-    ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(other_guard.get_error());
+    int lock_error;
+    int unlock_error;
+
+    lock_error = other._mutex.lock();
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
     this->_id = other._id;
     this->_value = other._value;
-    this->_error_code = other._error_code;
-    this->set_error(other._error_code);
-    game_item_modifier_unlock(other_guard);
+    unlock_error = other._mutex.unlock();
+    (void)unlock_error;
     return ;
 }
 
 ft_item_modifier &ft_item_modifier::operator=(const ft_item_modifier &other) noexcept
 {
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
     int lock_error;
+    int unlock_error;
+    const ft_item_modifier *lower;
+    const ft_item_modifier *upper;
+    bool swapped;
 
     if (this == &other)
         return (*this);
-    lock_error = ft_item_modifier::lock_pair(*this, other,
-            this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESS)
+    lower = this;
+    upper = &other;
+    swapped = false;
+    if (lower > upper)
     {
-        this->set_error(lock_error);
+        lower = &other;
+        upper = this;
+        swapped = true;
+    }
+    lock_error = lower->_mutex.lock();
+    if (lock_error != FT_ERR_SUCCESS)
         return (*this);
+    while (true)
+    {
+        lock_error = upper->_mutex.lock();
+        if (lock_error == FT_ERR_SUCCESS)
+            break ;
+        if (lock_error != FT_ERR_MUTEX_ALREADY_LOCKED)
+        {
+            unlock_error = lower->_mutex.unlock();
+            (void)unlock_error;
+            return (*this);
+        }
+        unlock_error = lower->_mutex.unlock();
+        (void)unlock_error;
+        game_item_modifier_sleep_backoff();
+        lock_error = lower->_mutex.lock();
+        if (lock_error != FT_ERR_SUCCESS)
+            return (*this);
     }
     this->_id = other._id;
     this->_value = other._value;
-    this->_error_code = other._error_code;
-    this->set_error(other._error_code);
-    game_item_modifier_unlock(this_guard);
-    game_item_modifier_unlock(other_guard);
+    if (!swapped)
+    {
+        unlock_error = upper->_mutex.unlock();
+        (void)unlock_error;
+        unlock_error = lower->_mutex.unlock();
+        (void)unlock_error;
+    }
+    else
+    {
+        unlock_error = lower->_mutex.unlock();
+        (void)unlock_error;
+        unlock_error = upper->_mutex.unlock();
+        (void)unlock_error;
+    }
     return (*this);
 }
 
 ft_item_modifier::ft_item_modifier(ft_item_modifier &&other) noexcept
-    : _id(0), _value(0), _error_code(FT_ERR_SUCCESS), _mutex()
+    : _id(0), _value(0), _mutex()
 {
-    ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(other_guard.get_error());
+    int lock_error;
+    int unlock_error;
+
+    lock_error = other._mutex.lock();
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
     this->_id = other._id;
     this->_value = other._value;
-    this->_error_code = other._error_code;
     other._id = 0;
     other._value = 0;
-    other._error_code = FT_ERR_SUCCESS;
-    this->set_error(this->_error_code);
-    other.set_error(FT_ERR_SUCCESS);
-    game_item_modifier_unlock(other_guard);
+    unlock_error = other._mutex.unlock();
+    (void)unlock_error;
     return ;
 }
 
 ft_item_modifier &ft_item_modifier::operator=(ft_item_modifier &&other) noexcept
 {
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
     int lock_error;
+    int unlock_error;
+    const ft_item_modifier *lower;
+    const ft_item_modifier *upper;
+    bool swapped;
 
     if (this == &other)
         return (*this);
-    lock_error = ft_item_modifier::lock_pair(*this, other,
-            this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESS)
+    lower = this;
+    upper = &other;
+    swapped = false;
+    if (lower > upper)
     {
-        this->set_error(lock_error);
+        lower = &other;
+        upper = this;
+        swapped = true;
+    }
+    lock_error = lower->_mutex.lock();
+    if (lock_error != FT_ERR_SUCCESS)
         return (*this);
+    while (true)
+    {
+        lock_error = upper->_mutex.lock();
+        if (lock_error == FT_ERR_SUCCESS)
+            break ;
+        if (lock_error != FT_ERR_MUTEX_ALREADY_LOCKED)
+        {
+            unlock_error = lower->_mutex.unlock();
+            (void)unlock_error;
+            return (*this);
+        }
+        unlock_error = lower->_mutex.unlock();
+        (void)unlock_error;
+        game_item_modifier_sleep_backoff();
+        lock_error = lower->_mutex.lock();
+        if (lock_error != FT_ERR_SUCCESS)
+            return (*this);
     }
     this->_id = other._id;
     this->_value = other._value;
-    this->_error_code = other._error_code;
     other._id = 0;
     other._value = 0;
-    other._error_code = FT_ERR_SUCCESS;
-    this->set_error(this->_error_code);
-    other.set_error(FT_ERR_SUCCESS);
-    game_item_modifier_unlock(this_guard);
-    game_item_modifier_unlock(other_guard);
+    if (!swapped)
+    {
+        unlock_error = upper->_mutex.unlock();
+        (void)unlock_error;
+        unlock_error = lower->_mutex.unlock();
+        (void)unlock_error;
+    }
+    else
+    {
+        unlock_error = lower->_mutex.unlock();
+        (void)unlock_error;
+        unlock_error = upper->_mutex.unlock();
+        (void)unlock_error;
+    }
     return (*this);
 }
 
 int ft_item_modifier::get_id() const noexcept
 {
     int modifier_id;
+    int lock_error;
+    int unlock_error;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_item_modifier *>(this)->set_error(guard.get_error());
+    lock_error = this->_mutex.lock();
+    if (lock_error != FT_ERR_SUCCESS)
         return (0);
-    }
     modifier_id = this->_id;
-    const_cast<ft_item_modifier *>(this)->set_error(FT_ERR_SUCCESS);
-    game_item_modifier_unlock(guard);
+    unlock_error = this->_mutex.unlock();
+    (void)unlock_error;
     return (modifier_id);
 }
 
 void ft_item_modifier::set_id(int id) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
+    int lock_error;
+    int unlock_error;
+
+    lock_error = this->_mutex.lock();
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
     this->_id = id;
-    this->set_error(FT_ERR_SUCCESS);
-    game_item_modifier_unlock(guard);
+    unlock_error = this->_mutex.unlock();
+    (void)unlock_error;
     return ;
 }
 
 int ft_item_modifier::get_value() const noexcept
 {
     int modifier_value;
+    int lock_error;
+    int unlock_error;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_item_modifier *>(this)->set_error(guard.get_error());
+    lock_error = this->_mutex.lock();
+    if (lock_error != FT_ERR_SUCCESS)
         return (0);
-    }
     modifier_value = this->_value;
-    const_cast<ft_item_modifier *>(this)->set_error(FT_ERR_SUCCESS);
-    game_item_modifier_unlock(guard);
+    unlock_error = this->_mutex.unlock();
+    (void)unlock_error;
     return (modifier_value);
 }
 
 void ft_item_modifier::set_value(int value) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
+    int lock_error;
+    int unlock_error;
+
+    lock_error = this->_mutex.lock();
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
     this->_value = value;
-    this->set_error(FT_ERR_SUCCESS);
-    game_item_modifier_unlock(guard);
+    unlock_error = this->_mutex.unlock();
+    (void)unlock_error;
     return ;
 }
 
 int ft_item_modifier::get_error() const noexcept
 {
-    int error_code;
-
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_item_modifier *>(this)->set_error(guard.get_error());
-        return (guard.get_error());
-    }
-    error_code = this->_error_code;
-    const_cast<ft_item_modifier *>(this)->set_error(error_code);
-    game_item_modifier_unlock(guard);
-    return (error_code);
+    return (FT_ERR_SUCCESS);
 }
 
 const char *ft_item_modifier::get_error_str() const noexcept
 {
-    int error_code;
-
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_item_modifier *>(this)->set_error(guard.get_error());
-        return (ft_strerror(guard.get_error()));
-    }
-    error_code = this->_error_code;
-    const_cast<ft_item_modifier *>(this)->set_error(error_code);
-    game_item_modifier_unlock(guard);
-    return (ft_strerror(error_code));
-}
-
-void ft_item_modifier::set_error(int error_code) const noexcept
-{
-    ft_errno = error_code;
-    this->_error_code = error_code;
-    return ;
+    return (ft_strerror(FT_ERR_SUCCESS));
 }
 
 static void game_item_sleep_backoff()
@@ -326,14 +275,12 @@ int ft_item::lock_pair(const ft_item &first, const ft_item &second,
     {
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
 
-        if (single_guard.get_error() != FT_ERR_SUCCESS)
+        if (single_guard.last_operation_error() != FT_ERR_SUCCESS)
         {
-            ft_errno = single_guard.get_error();
-            return (single_guard.get_error());
+            return (single_guard.last_operation_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ERR_SUCCESS;
         return (FT_ERR_SUCCESS);
     }
     ordered_first = &first;
@@ -352,13 +299,12 @@ int ft_item::lock_pair(const ft_item &first, const ft_item &second,
     {
         ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
 
-        if (lower_guard.get_error() != FT_ERR_SUCCESS)
+        if (lower_guard.last_operation_error() != FT_ERR_SUCCESS)
         {
-            ft_errno = lower_guard.get_error();
-            return (lower_guard.get_error());
+            return (lower_guard.last_operation_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ERR_SUCCESS)
+        if (upper_guard.last_operation_error() == FT_ERR_SUCCESS)
         {
             if (!swapped)
             {
@@ -370,13 +316,11 @@ int ft_item::lock_pair(const ft_item &first, const ft_item &second,
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = FT_ERR_SUCCESS;
             return (FT_ERR_SUCCESS);
         }
-        if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
+        if (upper_guard.last_operation_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            ft_errno = upper_guard.get_error();
-            return (upper_guard.get_error());
+            return (upper_guard.last_operation_error());
         }
         if (lower_guard.owns_lock())
             lower_guard.unlock();
@@ -399,9 +343,9 @@ ft_item::ft_item(const ft_item &other) noexcept
       _modifier3(), _modifier4(), _error_code(FT_ERR_SUCCESS), _mutex()
 {
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESS)
+    if (other_guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(other_guard.get_error());
+        this->set_error(other_guard.last_operation_error());
         return ;
     }
     this->_max_stack = other._max_stack;
@@ -459,9 +403,9 @@ ft_item::ft_item(ft_item &&other) noexcept
     int modifier_error;
 
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESS)
+    if (other_guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(other_guard.get_error());
+        this->set_error(other_guard.last_operation_error());
         return ;
     }
     this->_max_stack = other._max_stack;
@@ -590,9 +534,9 @@ int ft_item::get_max_stack() const noexcept
     int max_stack_value;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        const_cast<ft_item *>(this)->set_error(guard.get_error());
+        const_cast<ft_item *>(this)->set_error(guard.last_operation_error());
         return (0);
     }
     max_stack_value = this->_max_stack;
@@ -604,9 +548,9 @@ int ft_item::get_max_stack() const noexcept
 void ft_item::set_max_stack(int max) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(guard.get_error());
+        this->set_error(guard.last_operation_error());
         return ;
     }
     this->_max_stack = max;
@@ -620,9 +564,9 @@ int ft_item::get_stack_size() const noexcept
     int stack_size_value;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        const_cast<ft_item *>(this)->set_error(guard.get_error());
+        const_cast<ft_item *>(this)->set_error(guard.last_operation_error());
         return (0);
     }
     stack_size_value = this->_stack_size;
@@ -634,9 +578,9 @@ int ft_item::get_stack_size() const noexcept
 void ft_item::set_stack_size(int amount) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(guard.get_error());
+        this->set_error(guard.last_operation_error());
         return ;
     }
     this->_stack_size = amount;
@@ -648,9 +592,9 @@ void ft_item::set_stack_size(int amount) noexcept
 void ft_item::add_to_stack(int amount) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(guard.get_error());
+        this->set_error(guard.last_operation_error());
         return ;
     }
     this->_stack_size += amount;
@@ -664,9 +608,9 @@ void ft_item::add_to_stack(int amount) noexcept
 void ft_item::sub_from_stack(int amount) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(guard.get_error());
+        this->set_error(guard.last_operation_error());
         return ;
     }
     this->_stack_size -= amount;
@@ -682,9 +626,9 @@ int ft_item::get_item_id() const noexcept
     int item_identifier;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        const_cast<ft_item *>(this)->set_error(guard.get_error());
+        const_cast<ft_item *>(this)->set_error(guard.last_operation_error());
         return (0);
     }
     item_identifier = this->_item_id;
@@ -696,9 +640,9 @@ int ft_item::get_item_id() const noexcept
 void ft_item::set_item_id(int id) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(guard.get_error());
+        this->set_error(guard.last_operation_error());
         return ;
     }
     this->_item_id = id;
@@ -712,9 +656,9 @@ int ft_item::get_width() const noexcept
     int width_value;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        const_cast<ft_item *>(this)->set_error(guard.get_error());
+        const_cast<ft_item *>(this)->set_error(guard.last_operation_error());
         return (0);
     }
     width_value = this->_width;
@@ -726,9 +670,9 @@ int ft_item::get_width() const noexcept
 void ft_item::set_width(int width) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(guard.get_error());
+        this->set_error(guard.last_operation_error());
         return ;
     }
     this->_width = width;
@@ -742,9 +686,9 @@ int ft_item::get_height() const noexcept
     int height_value;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        const_cast<ft_item *>(this)->set_error(guard.get_error());
+        const_cast<ft_item *>(this)->set_error(guard.last_operation_error());
         return (0);
     }
     height_value = this->_height;
@@ -756,9 +700,9 @@ int ft_item::get_height() const noexcept
 void ft_item::set_height(int height) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(guard.get_error());
+        this->set_error(guard.last_operation_error());
         return ;
     }
     this->_height = height;
@@ -772,9 +716,9 @@ int ft_item::get_rarity() const noexcept
     int rarity_value;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        const_cast<ft_item *>(this)->set_error(guard.get_error());
+        const_cast<ft_item *>(this)->set_error(guard.last_operation_error());
         return (0);
     }
     rarity_value = this->_rarity;
@@ -786,9 +730,9 @@ int ft_item::get_rarity() const noexcept
 void ft_item::set_rarity(int rarity) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(guard.get_error());
+        this->set_error(guard.last_operation_error());
         return ;
     }
     this->_rarity = rarity;
@@ -803,13 +747,13 @@ ft_item_modifier ft_item::get_modifier1() const noexcept
     int modifier_error;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        const_cast<ft_item *>(this)->set_error(guard.get_error());
+        const_cast<ft_item *>(this)->set_error(guard.last_operation_error());
         return (ft_item_modifier());
     }
     modifier = this->_modifier1;
-    modifier_error = modifier.get_error();
+    modifier_error = FT_ERR_SUCCESS;
     if (modifier_error != FT_ERR_SUCCESS)
     {
         const_cast<ft_item *>(this)->set_error(modifier_error);
@@ -824,19 +768,19 @@ void ft_item::set_modifier1(const ft_item_modifier &mod) noexcept
     int modifier_error;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(guard.get_error());
+        this->set_error(guard.last_operation_error());
         return ;
     }
-    modifier_error = mod.get_error();
+    modifier_error = FT_ERR_SUCCESS;
     if (modifier_error != FT_ERR_SUCCESS)
     {
         this->set_error(modifier_error);
         return ;
     }
     this->_modifier1 = mod;
-    modifier_error = this->_modifier1.get_error();
+    modifier_error = FT_ERR_SUCCESS;
     if (modifier_error != FT_ERR_SUCCESS)
     {
         this->set_error(modifier_error);
@@ -852,13 +796,13 @@ int ft_item::get_modifier1_id() const noexcept
     int modifier_error;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        const_cast<ft_item *>(this)->set_error(guard.get_error());
+        const_cast<ft_item *>(this)->set_error(guard.last_operation_error());
         return (0);
     }
     modifier_identifier = this->_modifier1.get_id();
-    modifier_error = this->_modifier1.get_error();
+    modifier_error = FT_ERR_SUCCESS;
     if (modifier_error != FT_ERR_SUCCESS)
     {
         const_cast<ft_item *>(this)->set_error(modifier_error);
@@ -873,13 +817,13 @@ void ft_item::set_modifier1_id(int id) noexcept
     int modifier_error;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(guard.get_error());
+        this->set_error(guard.last_operation_error());
         return ;
     }
     this->_modifier1.set_id(id);
-    modifier_error = this->_modifier1.get_error();
+    modifier_error = FT_ERR_SUCCESS;
     if (modifier_error != FT_ERR_SUCCESS)
     {
         this->set_error(modifier_error);
@@ -895,13 +839,13 @@ int ft_item::get_modifier1_value() const noexcept
     int modifier_error;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        const_cast<ft_item *>(this)->set_error(guard.get_error());
+        const_cast<ft_item *>(this)->set_error(guard.last_operation_error());
         return (0);
     }
     modifier_value = this->_modifier1.get_value();
-    modifier_error = this->_modifier1.get_error();
+    modifier_error = FT_ERR_SUCCESS;
     if (modifier_error != FT_ERR_SUCCESS)
     {
         const_cast<ft_item *>(this)->set_error(modifier_error);
@@ -916,13 +860,13 @@ void ft_item::set_modifier1_value(int value) noexcept
     int modifier_error;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(guard.get_error());
+        this->set_error(guard.last_operation_error());
         return ;
     }
     this->_modifier1.set_value(value);
-    modifier_error = this->_modifier1.get_error();
+    modifier_error = FT_ERR_SUCCESS;
     if (modifier_error != FT_ERR_SUCCESS)
     {
         this->set_error(modifier_error);
@@ -938,13 +882,13 @@ ft_item_modifier ft_item::get_modifier2() const noexcept
     int modifier_error;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        const_cast<ft_item *>(this)->set_error(guard.get_error());
+        const_cast<ft_item *>(this)->set_error(guard.last_operation_error());
         return (ft_item_modifier());
     }
     modifier = this->_modifier2;
-    modifier_error = modifier.get_error();
+    modifier_error = FT_ERR_SUCCESS;
     if (modifier_error != FT_ERR_SUCCESS)
     {
         const_cast<ft_item *>(this)->set_error(modifier_error);
@@ -959,19 +903,19 @@ void ft_item::set_modifier2(const ft_item_modifier &mod) noexcept
     int modifier_error;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(guard.get_error());
+        this->set_error(guard.last_operation_error());
         return ;
     }
-    modifier_error = mod.get_error();
+    modifier_error = FT_ERR_SUCCESS;
     if (modifier_error != FT_ERR_SUCCESS)
     {
         this->set_error(modifier_error);
         return ;
     }
     this->_modifier2 = mod;
-    modifier_error = this->_modifier2.get_error();
+    modifier_error = FT_ERR_SUCCESS;
     if (modifier_error != FT_ERR_SUCCESS)
     {
         this->set_error(modifier_error);
@@ -987,13 +931,13 @@ int ft_item::get_modifier2_id() const noexcept
     int modifier_error;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        const_cast<ft_item *>(this)->set_error(guard.get_error());
+        const_cast<ft_item *>(this)->set_error(guard.last_operation_error());
         return (0);
     }
     modifier_identifier = this->_modifier2.get_id();
-    modifier_error = this->_modifier2.get_error();
+    modifier_error = FT_ERR_SUCCESS;
     if (modifier_error != FT_ERR_SUCCESS)
     {
         const_cast<ft_item *>(this)->set_error(modifier_error);
@@ -1008,13 +952,13 @@ void ft_item::set_modifier2_id(int id) noexcept
     int modifier_error;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(guard.get_error());
+        this->set_error(guard.last_operation_error());
         return ;
     }
     this->_modifier2.set_id(id);
-    modifier_error = this->_modifier2.get_error();
+    modifier_error = FT_ERR_SUCCESS;
     if (modifier_error != FT_ERR_SUCCESS)
     {
         this->set_error(modifier_error);
@@ -1030,13 +974,13 @@ int ft_item::get_modifier2_value() const noexcept
     int modifier_error;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        const_cast<ft_item *>(this)->set_error(guard.get_error());
+        const_cast<ft_item *>(this)->set_error(guard.last_operation_error());
         return (0);
     }
     modifier_value = this->_modifier2.get_value();
-    modifier_error = this->_modifier2.get_error();
+    modifier_error = FT_ERR_SUCCESS;
     if (modifier_error != FT_ERR_SUCCESS)
     {
         const_cast<ft_item *>(this)->set_error(modifier_error);
@@ -1051,13 +995,13 @@ void ft_item::set_modifier2_value(int value) noexcept
     int modifier_error;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(guard.get_error());
+        this->set_error(guard.last_operation_error());
         return ;
     }
     this->_modifier2.set_value(value);
-    modifier_error = this->_modifier2.get_error();
+    modifier_error = FT_ERR_SUCCESS;
     if (modifier_error != FT_ERR_SUCCESS)
     {
         this->set_error(modifier_error);
@@ -1073,13 +1017,13 @@ ft_item_modifier ft_item::get_modifier3() const noexcept
     int modifier_error;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        const_cast<ft_item *>(this)->set_error(guard.get_error());
+        const_cast<ft_item *>(this)->set_error(guard.last_operation_error());
         return (ft_item_modifier());
     }
     modifier = this->_modifier3;
-    modifier_error = modifier.get_error();
+    modifier_error = FT_ERR_SUCCESS;
     if (modifier_error != FT_ERR_SUCCESS)
     {
         const_cast<ft_item *>(this)->set_error(modifier_error);
@@ -1094,19 +1038,19 @@ void ft_item::set_modifier3(const ft_item_modifier &mod) noexcept
     int modifier_error;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(guard.get_error());
+        this->set_error(guard.last_operation_error());
         return ;
     }
-    modifier_error = mod.get_error();
+    modifier_error = FT_ERR_SUCCESS;
     if (modifier_error != FT_ERR_SUCCESS)
     {
         this->set_error(modifier_error);
         return ;
     }
     this->_modifier3 = mod;
-    modifier_error = this->_modifier3.get_error();
+    modifier_error = FT_ERR_SUCCESS;
     if (modifier_error != FT_ERR_SUCCESS)
     {
         this->set_error(modifier_error);
@@ -1122,13 +1066,13 @@ int ft_item::get_modifier3_id() const noexcept
     int modifier_error;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        const_cast<ft_item *>(this)->set_error(guard.get_error());
+        const_cast<ft_item *>(this)->set_error(guard.last_operation_error());
         return (0);
     }
     modifier_identifier = this->_modifier3.get_id();
-    modifier_error = this->_modifier3.get_error();
+    modifier_error = FT_ERR_SUCCESS;
     if (modifier_error != FT_ERR_SUCCESS)
     {
         const_cast<ft_item *>(this)->set_error(modifier_error);
@@ -1143,13 +1087,13 @@ void ft_item::set_modifier3_id(int id) noexcept
     int modifier_error;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(guard.get_error());
+        this->set_error(guard.last_operation_error());
         return ;
     }
     this->_modifier3.set_id(id);
-    modifier_error = this->_modifier3.get_error();
+    modifier_error = FT_ERR_SUCCESS;
     if (modifier_error != FT_ERR_SUCCESS)
     {
         this->set_error(modifier_error);
@@ -1165,13 +1109,13 @@ int ft_item::get_modifier3_value() const noexcept
     int modifier_error;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        const_cast<ft_item *>(this)->set_error(guard.get_error());
+        const_cast<ft_item *>(this)->set_error(guard.last_operation_error());
         return (0);
     }
     modifier_value = this->_modifier3.get_value();
-    modifier_error = this->_modifier3.get_error();
+    modifier_error = FT_ERR_SUCCESS;
     if (modifier_error != FT_ERR_SUCCESS)
     {
         const_cast<ft_item *>(this)->set_error(modifier_error);
@@ -1186,13 +1130,13 @@ void ft_item::set_modifier3_value(int value) noexcept
     int modifier_error;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(guard.get_error());
+        this->set_error(guard.last_operation_error());
         return ;
     }
     this->_modifier3.set_value(value);
-    modifier_error = this->_modifier3.get_error();
+    modifier_error = FT_ERR_SUCCESS;
     if (modifier_error != FT_ERR_SUCCESS)
     {
         this->set_error(modifier_error);
@@ -1208,13 +1152,13 @@ ft_item_modifier ft_item::get_modifier4() const noexcept
     int modifier_error;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        const_cast<ft_item *>(this)->set_error(guard.get_error());
+        const_cast<ft_item *>(this)->set_error(guard.last_operation_error());
         return (ft_item_modifier());
     }
     modifier = this->_modifier4;
-    modifier_error = modifier.get_error();
+    modifier_error = FT_ERR_SUCCESS;
     if (modifier_error != FT_ERR_SUCCESS)
     {
         const_cast<ft_item *>(this)->set_error(modifier_error);
@@ -1230,19 +1174,19 @@ void ft_item::set_modifier4(const ft_item_modifier &mod) noexcept
     int modifier_error;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(guard.get_error());
+        this->set_error(guard.last_operation_error());
         return ;
     }
-    modifier_error = mod.get_error();
+    modifier_error = FT_ERR_SUCCESS;
     if (modifier_error != FT_ERR_SUCCESS)
     {
         this->set_error(modifier_error);
         return ;
     }
     this->_modifier4 = mod;
-    modifier_error = this->_modifier4.get_error();
+    modifier_error = FT_ERR_SUCCESS;
     if (modifier_error != FT_ERR_SUCCESS)
     {
         this->set_error(modifier_error);
@@ -1259,13 +1203,13 @@ int ft_item::get_modifier4_id() const noexcept
     int modifier_error;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        const_cast<ft_item *>(this)->set_error(guard.get_error());
+        const_cast<ft_item *>(this)->set_error(guard.last_operation_error());
         return (0);
     }
     modifier_identifier = this->_modifier4.get_id();
-    modifier_error = this->_modifier4.get_error();
+    modifier_error = FT_ERR_SUCCESS;
     if (modifier_error != FT_ERR_SUCCESS)
     {
         const_cast<ft_item *>(this)->set_error(modifier_error);
@@ -1281,13 +1225,13 @@ void ft_item::set_modifier4_id(int id) noexcept
     int modifier_error;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(guard.get_error());
+        this->set_error(guard.last_operation_error());
         return ;
     }
     this->_modifier4.set_id(id);
-    modifier_error = this->_modifier4.get_error();
+    modifier_error = FT_ERR_SUCCESS;
     if (modifier_error != FT_ERR_SUCCESS)
     {
         this->set_error(modifier_error);
@@ -1304,13 +1248,13 @@ int ft_item::get_modifier4_value() const noexcept
     int modifier_error;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        const_cast<ft_item *>(this)->set_error(guard.get_error());
+        const_cast<ft_item *>(this)->set_error(guard.last_operation_error());
         return (0);
     }
     modifier_value = this->_modifier4.get_value();
-    modifier_error = this->_modifier4.get_error();
+    modifier_error = FT_ERR_SUCCESS;
     if (modifier_error != FT_ERR_SUCCESS)
     {
         const_cast<ft_item *>(this)->set_error(modifier_error);
@@ -1326,13 +1270,13 @@ void ft_item::set_modifier4_value(int value) noexcept
     int modifier_error;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(guard.get_error());
+        this->set_error(guard.last_operation_error());
         return ;
     }
     this->_modifier4.set_value(value);
-    modifier_error = this->_modifier4.get_error();
+    modifier_error = FT_ERR_SUCCESS;
     if (modifier_error != FT_ERR_SUCCESS)
     {
         this->set_error(modifier_error);
@@ -1346,7 +1290,6 @@ void ft_item::set_modifier4_value(int value) noexcept
 void ft_item::set_error(int err) const noexcept
 {
     this->_error_code = err;
-    ft_errno = err;
     return ;
 }
 
@@ -1355,10 +1298,10 @@ int ft_item::get_error() const noexcept
     int error_code;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        const_cast<ft_item *>(this)->set_error(guard.get_error());
-        return (guard.get_error());
+        const_cast<ft_item *>(this)->set_error(guard.last_operation_error());
+        return (guard.last_operation_error());
     }
     error_code = this->_error_code;
     const_cast<ft_item *>(this)->set_error(error_code);
@@ -1371,10 +1314,10 @@ const char *ft_item::get_error_str() const noexcept
     int error_code;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        const_cast<ft_item *>(this)->set_error(guard.get_error());
-        return (ft_strerror(guard.get_error()));
+        const_cast<ft_item *>(this)->set_error(guard.last_operation_error());
+        return (ft_strerror(guard.last_operation_error()));
     }
     error_code = this->_error_code;
     const_cast<ft_item *>(this)->set_error(error_code);

@@ -20,7 +20,6 @@ FT_TEST(test_cma_block_size_reports_allocation, "cma_block_size returns the alig
     ft_size_t expected_minimum_size;
 
     cma_set_alloc_limit(0);
-    ft_errno = FT_ERR_SUCCESS;
     allocation_pointer = cma_malloc(48);
     if (!allocation_pointer)
         return (0);
@@ -28,7 +27,6 @@ FT_TEST(test_cma_block_size_reports_allocation, "cma_block_size returns the alig
     expected_minimum_size = align_16(48);
     FT_ASSERT(reported_size >= expected_minimum_size);
     FT_ASSERT((reported_size % 16) == 0);
-    FT_ASSERT_EQ(ft_errno, FT_ERR_SUCCESS);
     cma_free(allocation_pointer);
     return (1);
 }
@@ -37,10 +35,8 @@ FT_TEST(test_cma_block_size_null_pointer_sets_einval, "cma_block_size treats nul
 {
     ft_size_t reported_size;
 
-    ft_errno = FT_ERR_SUCCESS;
     reported_size = cma_block_size(ft_nullptr);
     FT_ASSERT_EQ(reported_size, 0);
-    FT_ASSERT_EQ(ft_errno, FT_ERR_INVALID_ARGUMENT);
     return (1);
 }
 
@@ -56,29 +52,25 @@ FT_TEST(test_cma_checked_block_size_reports_success, "cma_checked_block_size ret
     if (!allocation_pointer)
         return (0);
     reported_size = 0;
-    ft_errno = FT_ERR_NO_MEMORY;
     query_result = cma_checked_block_size(allocation_pointer, &reported_size);
     FT_ASSERT_EQ(query_result, 0);
     expected_minimum_size = align_16(96);
     FT_ASSERT(reported_size >= expected_minimum_size);
     FT_ASSERT((reported_size % 16) == 0);
-    FT_ASSERT_EQ(ft_errno, FT_ERR_SUCCESS);
     cma_free(allocation_pointer);
     return (1);
 }
 
 FT_TEST(test_cma_checked_block_size_rejects_invalid_pointer, "cma_checked_block_size detects non-CMA pointers")
 {
-    int stack_local;
+    int stack_local = 0;
     ft_size_t reported_size;
     int query_result;
 
     reported_size = 123;
-    ft_errno = FT_ERR_SUCCESS;
     query_result = cma_checked_block_size(&stack_local, &reported_size);
     FT_ASSERT_EQ(query_result, -1);
     FT_ASSERT_EQ(reported_size, 0);
-    FT_ASSERT_EQ(ft_errno, FT_ERR_INVALID_POINTER);
     return (1);
 }
 
@@ -91,10 +83,8 @@ FT_TEST(test_cma_checked_block_size_null_output_pointer, "cma_checked_block_size
     allocation_pointer = cma_malloc(24);
     if (!allocation_pointer)
         return (0);
-    ft_errno = FT_ERR_SUCCESS;
     query_result = cma_checked_block_size(allocation_pointer, ft_nullptr);
     FT_ASSERT_EQ(query_result, -1);
-    FT_ASSERT_EQ(ft_errno, FT_ERR_INVALID_ARGUMENT);
     cma_free(allocation_pointer);
     return (1);
 }
@@ -109,25 +99,21 @@ FT_TEST(test_cma_alloc_size_reports_success, "cma_alloc_size mirrors cma_checked
     allocation_pointer = cma_malloc(128);
     if (!allocation_pointer)
         return (0);
-    ft_errno = FT_ERR_NO_MEMORY;
     reported_size = cma_alloc_size(allocation_pointer);
     expected_minimum_size = align_16(128);
     FT_ASSERT(reported_size >= expected_minimum_size);
     FT_ASSERT((reported_size % 16) == 0);
-    FT_ASSERT_EQ(ft_errno, FT_ERR_SUCCESS);
     cma_free(allocation_pointer);
     return (1);
 }
 
 FT_TEST(test_cma_alloc_size_rejects_invalid_pointer, "cma_alloc_size reports errors for non-CMA pointers")
 {
-    int stack_local;
+    int stack_local = 0;
     ft_size_t reported_size;
 
-    ft_errno = FT_ERR_SUCCESS;
     reported_size = cma_alloc_size(&stack_local);
     FT_ASSERT_EQ(reported_size, 0);
-    FT_ASSERT_EQ(ft_errno, FT_ERR_INVALID_POINTER);
     return (1);
 }
 
@@ -135,10 +121,8 @@ FT_TEST(test_cma_alloc_size_null_pointer_sets_einval, "cma_alloc_size treats nul
 {
     ft_size_t reported_size;
 
-    ft_errno = FT_ERR_SUCCESS;
     reported_size = cma_alloc_size(ft_nullptr);
     FT_ASSERT_EQ(reported_size, 0);
-    FT_ASSERT_EQ(ft_errno, FT_ERR_INVALID_ARGUMENT);
     return (1);
 }
 
@@ -152,21 +136,17 @@ FT_TEST(test_cma_alloc_size_reports_block_size, "cma_alloc_size returns the stor
     allocation_pointer = cma_malloc(64);
     if (!allocation_pointer)
         return (0);
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
     reported_size = cma_alloc_size(allocation_pointer);
     expected_minimum_size = align_16(64);
     FT_ASSERT(reported_size >= expected_minimum_size);
     FT_ASSERT((reported_size % 16) == 0);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_free(allocation_pointer);
     return (1);
 }
 
 FT_TEST(test_cma_alloc_size_null_pointer_sets_errno, "cma_alloc_size sets FT_ERR_INVALID_ARGUMENT for null pointers")
 {
-    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(static_cast<ft_size_t>(0), cma_alloc_size(ft_nullptr));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -179,10 +159,8 @@ FT_TEST(test_cma_alloc_size_rejects_non_cma_pointer, "cma_alloc_size detects poi
     allocation_pointer = static_cast<char *>(cma_malloc(32));
     if (!allocation_pointer)
         return (0);
-    ft_errno = FT_ERR_SUCCESS;
     reported_size = cma_alloc_size(allocation_pointer + 1);
     FT_ASSERT_EQ(static_cast<ft_size_t>(0), reported_size);
-    FT_ASSERT_EQ(FT_ERR_INVALID_POINTER, ft_errno);
     cma_free(allocation_pointer);
     return (1);
 }

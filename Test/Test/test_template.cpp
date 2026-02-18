@@ -169,7 +169,7 @@ int test_ft_shared_ptr_basic(void)
     ft_sharedptr<int> sp(new int(42));
     bool operations_ok = (sp.use_count() == 1 && *sp == 42);
 
-    return (operations_ok && ft_global_error_stack_peek_last_error() == FT_ERR_SUCCESS);
+    return (operations_ok && ft_sharedptr<int>::last_operation_error() == FT_ERR_SUCCESS);
 }
 
 int test_ft_unique_ptr_basic(void)
@@ -318,7 +318,7 @@ int test_ft_map_clear_empty(void)
 int test_ft_shared_ptr_array(void)
 {
     ft_sharedptr<int> sp(3);
-    if (ft_global_error_stack_peek_last_error() != FT_ERR_SUCCESS)
+    if (ft_sharedptr<int>::last_operation_error() != FT_ERR_SUCCESS)
         return (0);
     sp[0] = 1;
     sp[1] = 2;

@@ -14,10 +14,8 @@ FT_TEST(test_utf8_count_ascii, "ft_utf8_count counts ascii code points")
     size_t code_point_count;
 
     code_point_count = 0;
-    ft_errno = FT_ERR_OUT_OF_RANGE;
     FT_ASSERT_EQ(FT_SUCCESS, ft_utf8_count("hello", &code_point_count));
     FT_ASSERT_EQ(static_cast<size_t>(5), code_point_count);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -86,10 +84,8 @@ FT_TEST(test_utf8_next_invalid_sequence_sets_errno, "ft_utf8_next reports invali
     string_length = static_cast<size_t>(2);
     index_pointer = 0;
     code_point_value = 0;
-    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(FT_FAILURE, ft_utf8_next(invalid_sequence, string_length,
             &index_pointer, &code_point_value, ft_nullptr));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -109,21 +105,17 @@ FT_TEST(test_utf8_next_recovers_after_invalid_sequence, "ft_utf8_next clears err
     index_pointer = 0;
     code_point_value = 0;
     sequence_length = 0;
-    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(FT_FAILURE, ft_utf8_next(invalid_sequence, string_length,
             &index_pointer, &code_point_value, &sequence_length));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     valid_string = "A";
     string_length = ft_strlen_size_t(valid_string);
     index_pointer = 0;
     code_point_value = 0;
     sequence_length = 0;
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(FT_SUCCESS, ft_utf8_next(valid_string, string_length,
             &index_pointer, &code_point_value, &sequence_length));
     FT_ASSERT_EQ(static_cast<uint32_t>('A'), code_point_value);
     FT_ASSERT_EQ(static_cast<size_t>(1), sequence_length);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -132,14 +124,10 @@ FT_TEST(test_utf8_count_null_pointer_sets_errno, "ft_utf8_count rejects null inp
     size_t code_point_count;
 
     code_point_count = 1;
-    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(FT_FAILURE, ft_utf8_count(ft_nullptr, &code_point_count));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(static_cast<size_t>(1), code_point_count);
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(FT_SUCCESS, ft_utf8_count("ok", &code_point_count));
     FT_ASSERT_EQ(static_cast<size_t>(2), code_point_count);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -205,9 +193,7 @@ FT_TEST(test_utf8_count_invalid_sets_errno, "ft_utf8_count mirrors invalid bytes
     invalid_sequence[1] = static_cast<char>(0x80);
     invalid_sequence[2] = '\0';
     code_point_count = 0;
-    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(FT_FAILURE, ft_utf8_count(invalid_sequence, &code_point_count));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -240,9 +226,7 @@ FT_TEST(test_utf8_encode_reports_small_buffer, "ft_utf8_encode mirrors range err
     buffer[0] = '\0';
     buffer[1] = '\0';
     buffer[2] = '\0';
-    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(FT_FAILURE, ft_utf8_encode(0x20AC, buffer, sizeof(buffer), ft_nullptr));
-    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
     return (1);
 }
 
@@ -257,11 +241,9 @@ FT_TEST(test_utf8_next_rejects_surrogate, "ft_utf8_next rejects utf16 surrogate 
     string_length = static_cast<size_t>(3);
     index_pointer = 0;
     code_point_value = 0;
-    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(FT_FAILURE, ft_utf8_next(invalid_string, string_length,
             &index_pointer, &code_point_value, ft_nullptr));
     FT_ASSERT_EQ(static_cast<size_t>(0), index_pointer);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -276,11 +258,9 @@ FT_TEST(test_utf8_next_detects_truncated_sequence, "ft_utf8_next rejects truncat
     string_length = static_cast<size_t>(2);
     index_pointer = 0;
     code_point_value = 0;
-    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(FT_FAILURE, ft_utf8_next(invalid_string, string_length,
             &index_pointer, &code_point_value, ft_nullptr));
     FT_ASSERT_EQ(static_cast<size_t>(0), index_pointer);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -291,10 +271,8 @@ FT_TEST(test_utf8_next_null_pointer_guard, "ft_utf8_next validates pointers befo
 
     index_pointer = 0;
     code_point_value = 0;
-    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(FT_FAILURE, ft_utf8_next(ft_nullptr, static_cast<size_t>(0),
             &index_pointer, &code_point_value, ft_nullptr));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -306,9 +284,7 @@ FT_TEST(test_utf8_encode_rejects_surrogate, "ft_utf8_encode rejects utf16 surrog
     buffer[1] = '\0';
     buffer[2] = '\0';
     buffer[3] = '\0';
-    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(FT_FAILURE, ft_utf8_encode(0xD800, buffer, sizeof(buffer), ft_nullptr));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -317,10 +293,8 @@ FT_TEST(test_utf8_transform_alloc_propagates_hook_error, "ft_utf8_transform_allo
     char *transformed_string;
 
     transformed_string = ft_nullptr;
-    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(FT_FAILURE, ft_utf8_transform_alloc("abc", &transformed_string,
             ft_utf8_test_invalid_hook));
     FT_ASSERT_EQ(ft_nullptr, transformed_string);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }

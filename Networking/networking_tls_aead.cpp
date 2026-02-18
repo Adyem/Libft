@@ -27,7 +27,7 @@ static bool networking_tls_prepare_buffer(ft_vector<unsigned char> &buffer,
         size_t length)
 {
     buffer.resize(length, 0);
-    if (buffer.get_error() != FT_ERR_SUCCESS)
+    if (ft_vector<unsigned char>::last_operation_error() != FT_ERR_SUCCESS)
         return (false);
     return (true);
 }

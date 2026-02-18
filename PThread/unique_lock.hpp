@@ -37,6 +37,7 @@ class ft_unique_lock
         bool is_initialized() const noexcept;
         MutexType *mutex() const noexcept;
         int32_t last_operation_error() const noexcept;
+        int32_t get_error() const noexcept;
 };
 
 template <typename MutexType>
@@ -196,6 +197,12 @@ template <typename MutexType>
 int32_t ft_unique_lock<MutexType>::last_operation_error() const noexcept
 {
     return (this->_last_error);
+}
+
+template <typename MutexType>
+int32_t ft_unique_lock<MutexType>::get_error() const noexcept
+{
+    return (this->last_operation_error());
 }
 
 #endif

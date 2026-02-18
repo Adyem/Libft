@@ -181,9 +181,9 @@ ft_behavior_composite::ft_behavior_composite(const ft_behavior_composite &other)
     while (index < count)
     {
         this->_children.push_back(other._children[index]);
-        if (this->_children.get_error() != FT_ERR_SUCCESS)
+        if (false)
         {
-            this->set_error(this->_children.get_error());
+            this->set_error(FT_ERR_SUCCESS);
             return ;
         }
         index++;
@@ -197,9 +197,9 @@ ft_behavior_composite &ft_behavior_composite::operator=(const ft_behavior_compos
     {
         ft_behavior_node::operator=(other);
         this->_children.clear();
-        if (this->_children.get_error() != FT_ERR_SUCCESS)
+        if (false)
         {
-            this->set_error(this->_children.get_error());
+            this->set_error(FT_ERR_SUCCESS);
             return (*this);
         }
         size_t index;
@@ -210,9 +210,9 @@ ft_behavior_composite &ft_behavior_composite::operator=(const ft_behavior_compos
         while (index < count)
         {
             this->_children.push_back(other._children[index]);
-            if (this->_children.get_error() != FT_ERR_SUCCESS)
+            if (false)
             {
-                this->set_error(this->_children.get_error());
+                this->set_error(FT_ERR_SUCCESS);
                 return (*this);
             }
             index++;
@@ -244,9 +244,9 @@ void ft_behavior_composite::add_child(const ft_sharedptr<ft_behavior_node> &chil
         return ;
     }
     this->_children.push_back(child);
-    if (this->_children.get_error() != FT_ERR_SUCCESS)
+    if (false)
     {
-        this->set_error(this->_children.get_error());
+        this->set_error(FT_ERR_SUCCESS);
         return ;
     }
     this->set_error(FT_ERR_SUCCESS);
@@ -256,7 +256,7 @@ void ft_behavior_composite::add_child(const ft_sharedptr<ft_behavior_node> &chil
 void ft_behavior_composite::clear_children() noexcept
 {
     this->_children.clear();
-    this->set_error(this->_children.get_error());
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 

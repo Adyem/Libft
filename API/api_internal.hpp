@@ -3,7 +3,7 @@
 
 #include "../CPP_class/class_string.hpp"
 #include "../Networking/socket_class.hpp"
-#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include <cstddef>
 #include <cstdint>
 
@@ -21,16 +21,15 @@ enum class api_connection_security_mode
 class api_connection_pool_handle
 {
     private:
-        mutable int                 _error_code;
-        mutable pt_mutex            *_mutex;
+        uint8_t                     _initialized_state;
+        static const uint8_t        _state_uninitialized = 0;
+        static const uint8_t        _state_destroyed = 1;
+        static const uint8_t        _state_initialized = 2;
+        mutable pt_recursive_mutex  *_mutex;
 
-        void set_error(int error) const;
-        int lock_internal(bool *lock_acquired) const;
-        void unlock_internal(bool lock_acquired) const;
-        void teardown_thread_safety();
-        int initialize_thread_safety();
-        static thread_local ft_operation_error_stack _operation_errors;
-        static void record_operation_error_unlocked(int error_code);
+        void abort_lifecycle_error(const char *method_name,
+            const char *reason) const noexcept;
+        void abort_if_not_initialized(const char *method_name) const noexcept;
 
     public:
         ft_string key;
@@ -47,31 +46,23 @@ class api_connection_pool_handle
 
         api_connection_pool_handle();
         api_connection_pool_handle(const api_connection_pool_handle &other) = delete;
-        api_connection_pool_handle(api_connection_pool_handle &&other);
+        api_connection_pool_handle(api_connection_pool_handle &&other) = delete;
         ~api_connection_pool_handle();
 
         api_connection_pool_handle &operator=(const api_connection_pool_handle &other) = delete;
-        api_connection_pool_handle &operator=(api_connection_pool_handle &&other);
+        api_connection_pool_handle &operator=(api_connection_pool_handle &&other) = delete;
+
+        int initialize() noexcept;
+        int destroy() noexcept;
+        int enable_thread_safety() noexcept;
+        int disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
 
         int lock(bool *lock_acquired) const;
         void unlock(bool lock_acquired) const;
-
-        int get_error() const;
-        const char *get_error_str() const;
-};
-
-class api_connection_pool_handle_lock_guard
-{
-    private:
-        api_connection_pool_handle &_handle;
-        bool                        _lock_acquired;
-        int                         _lock_result;
-
-    public:
-        api_connection_pool_handle_lock_guard(api_connection_pool_handle &handle);
-        ~api_connection_pool_handle_lock_guard();
-
-        bool is_locked() const;
+#ifdef LIBFT_TEST_BUILD
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
+#endif
 };
 
 bool api_connection_pool_acquire(api_connection_pool_handle &handle,

@@ -10,8 +10,8 @@
 #include "../Template/map.hpp"
 #include "../CPP_class/class_string.hpp"
 #include "../PThread/mutex.hpp"
-#include "../PThread/unique_lock.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include <stdint.h>
 
 struct ft_game_hook_metadata
 {
@@ -54,27 +54,41 @@ class ft_game_hooks
         ft_function<void(ft_world&, ft_event&)> _legacy_event_triggered;
         ft_map<ft_string, ft_vector<ft_game_hook_listener_entry> > _listener_catalog;
         ft_vector<ft_game_hook_metadata> _catalog_metadata;
-        mutable int _error_code;
-        mutable pt_mutex _mutex;
+        pt_mutex *_mutex;
+        uint8_t _initialized_state;
 
-        void set_error(int error) const noexcept;
-        void remove_listener_unlocked(const ft_string &hook_identifier, const ft_string &listener_name) noexcept;
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
+
+        void abort_lifecycle_error(const char *method_name,
+            const char *reason) const;
+        void abort_if_not_initialized(const char *method_name) const;
+        int lock_internal(bool *lock_acquired) const noexcept;
+        int unlock_internal(bool lock_acquired) const noexcept;
+
+        void remove_listener_unlocked(const ft_string &hook_identifier,
+            const ft_string &listener_name) noexcept;
         void insert_listener_unlocked(const ft_game_hook_listener_entry &entry) noexcept;
         void append_metadata_unlocked(const ft_game_hook_metadata &metadata) noexcept;
-        void collect_listeners_unlocked(const ft_string &hook_identifier, ft_vector<ft_game_hook_listener_entry> &out_listeners) const noexcept;
-        void collect_metadata_unlocked(ft_vector<ft_game_hook_metadata> &out_metadata) const noexcept;
-        void clone_catalog_from(const ft_game_hooks &other) noexcept;
-        static int lock_pair(const ft_game_hooks &first, const ft_game_hooks &second,
-                ft_unique_lock<pt_mutex> &first_guard,
-                ft_unique_lock<pt_mutex> &second_guard);
 
     public:
         ft_game_hooks() noexcept;
         ~ft_game_hooks() noexcept;
-        ft_game_hooks(const ft_game_hooks &other) noexcept;
-        ft_game_hooks &operator=(const ft_game_hooks &other) noexcept;
-        ft_game_hooks(ft_game_hooks &&other) noexcept;
-        ft_game_hooks &operator=(ft_game_hooks &&other) noexcept;
+        ft_game_hooks(const ft_game_hooks &other) noexcept = delete;
+        ft_game_hooks &operator=(const ft_game_hooks &other) noexcept = delete;
+        ft_game_hooks(ft_game_hooks &&other) noexcept = delete;
+        ft_game_hooks &operator=(ft_game_hooks &&other) noexcept = delete;
+
+        int initialize() noexcept;
+        int initialize(const ft_game_hooks &other) noexcept;
+        int initialize(ft_game_hooks &&other) noexcept;
+        int destroy() noexcept;
+        int enable_thread_safety() noexcept;
+        int disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
+        int lock(bool *lock_acquired) const noexcept;
+        void unlock(bool lock_acquired) const noexcept;
 
         void set_on_item_crafted(ft_function<void(ft_character&, ft_item&)> &&callback) noexcept;
         void set_on_character_damaged(ft_function<void(ft_character&, int, uint8_t)> &&callback) noexcept;
@@ -88,16 +102,20 @@ class ft_game_hooks
         void invoke_on_character_damaged(ft_character &character, int damage, uint8_t type) const noexcept;
         void invoke_on_event_triggered(ft_world &world, ft_event &event) const noexcept;
 
-        void register_listener(const ft_game_hook_metadata &metadata, int priority, ft_function<void(ft_game_hook_context&)> &&callback) noexcept;
-        void unregister_listener(const ft_string &hook_identifier, const ft_string &listener_name) noexcept;
+        void register_listener(const ft_game_hook_metadata &metadata, int priority,
+            ft_function<void(ft_game_hook_context&)> &&callback) noexcept;
+        void unregister_listener(const ft_string &hook_identifier,
+            const ft_string &listener_name) noexcept;
         ft_vector<ft_game_hook_metadata> get_catalog_metadata() const noexcept;
         ft_vector<ft_game_hook_metadata> get_catalog_metadata_for(const ft_string &hook_identifier) const noexcept;
-        void invoke_hook(const ft_string &hook_identifier, ft_game_hook_context &context) const noexcept;
+        void invoke_hook(const ft_string &hook_identifier,
+            ft_game_hook_context &context) const noexcept;
 
         void reset() noexcept;
 
-        int get_error() const noexcept;
-        const char *get_error_str() const noexcept;
+#ifdef LIBFT_TEST_BUILD
+        pt_mutex *get_mutex_for_validation() const noexcept;
+#endif
 };
 
 #endif

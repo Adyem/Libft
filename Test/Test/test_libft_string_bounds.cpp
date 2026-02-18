@@ -28,7 +28,6 @@ FT_TEST(test_strncpy_s_copies_within_bounds, "ft_strncpy_s copies strings when w
     ft_memset(destination, 'X', sizeof(destination));
     FT_ASSERT_EQ(0, ft_strncpy_s(destination, sizeof(destination), source, 10));
     FT_ASSERT_EQ(0, ft_strcmp(source, destination));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -40,7 +39,6 @@ FT_TEST(test_strncpy_s_detects_truncation, "ft_strncpy_s reports truncation as a
     source = "toolong";
     ft_memset(destination, 'Y', sizeof(destination));
     FT_ASSERT_EQ(-1, ft_strncpy_s(destination, sizeof(destination), source, 4));
-    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
     if (!assert_buffer_zeroed(destination, sizeof(destination)))
         return (0);
     return (1);
@@ -54,7 +52,6 @@ FT_TEST(test_strncat_s_appends_without_truncation, "ft_strncat_s appends when bo
     FT_ASSERT_EQ(0, ft_strcpy_s(buffer, sizeof(buffer), "foo"));
     FT_ASSERT_EQ(0, ft_strncat_s(buffer, sizeof(buffer), "bar", 8));
     FT_ASSERT_EQ(0, ft_strcmp("foobar", buffer));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -64,7 +61,6 @@ FT_TEST(test_strncat_s_detects_capacity_overflow, "ft_strncat_s rejects when des
 
     FT_ASSERT_EQ(0, ft_strcpy_s(buffer, sizeof(buffer), "data"));
     FT_ASSERT_EQ(-1, ft_strncat_s(buffer, sizeof(buffer), "more", 4));
-    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
     if (!assert_buffer_zeroed(buffer, sizeof(buffer)))
         return (0);
     return (1);
@@ -76,7 +72,6 @@ FT_TEST(test_strncat_s_respects_append_length_limit, "ft_strncat_s enforces maxi
 
     FT_ASSERT_EQ(0, ft_strcpy_s(buffer, sizeof(buffer), "base"));
     FT_ASSERT_EQ(-1, ft_strncat_s(buffer, sizeof(buffer), "suffix", 2));
-    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
     if (!assert_buffer_zeroed(buffer, sizeof(buffer)))
         return (0);
     return (1);

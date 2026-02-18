@@ -1,525 +1,476 @@
 #include "game_economy_table.hpp"
-#include "../Template/move.hpp"
-
+#include "../Printf/printf.hpp"
+#include "../System_utils/system_utils.hpp"
 #include <new>
 
-int ft_economy_table::lock_pair(const ft_economy_table &first, const ft_economy_table &second,
-        ft_unique_lock<pt_mutex> &first_guard,
-        ft_unique_lock<pt_mutex> &second_guard)
-{
-    const ft_economy_table *ordered_first;
-    const ft_economy_table *ordered_second;
-    bool swapped;
-
-    if (&first == &second)
-    {
-        ft_unique_lock<pt_mutex> single_guard(first._mutex);
-
-        if (single_guard.get_error() != FT_ERR_SUCCESS)
-        {
-            ft_errno = single_guard.get_error();
-            return (single_guard.get_error());
-        }
-        first_guard = ft_move(single_guard);
-        second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ERR_SUCCESS;
-        return (FT_ERR_SUCCESS);
-    }
-    ordered_first = &first;
-    ordered_second = &second;
-    swapped = false;
-    if (ordered_first > ordered_second)
-    {
-        const ft_economy_table *temporary;
-
-        temporary = ordered_first;
-        ordered_first = ordered_second;
-        ordered_second = temporary;
-        swapped = true;
-    }
-    while (true)
-    {
-        ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
-
-        if (lower_guard.get_error() != FT_ERR_SUCCESS)
-        {
-            ft_errno = lower_guard.get_error();
-            return (lower_guard.get_error());
-        }
-        ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ERR_SUCCESS)
-        {
-            if (!swapped)
-            {
-                first_guard = ft_move(lower_guard);
-                second_guard = ft_move(upper_guard);
-            }
-            else
-            {
-                first_guard = ft_move(upper_guard);
-                second_guard = ft_move(lower_guard);
-            }
-            ft_errno = FT_ERR_SUCCESS;
-            return (FT_ERR_SUCCESS);
-        }
-        if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
-        {
-            ft_errno = upper_guard.get_error();
-            return (upper_guard.get_error());
-        }
-        if (lower_guard.owns_lock())
-            lower_guard.unlock();
-        pt_thread_sleep(1);
-    }
-}
-
 ft_economy_table::ft_economy_table() noexcept
-    : _error_code(FT_ERR_SUCCESS)
+    : _price_definitions(), _rarity_bands(), _vendor_profiles(), _currency_rates(),
+      _mutex(ft_nullptr), _initialized_state(ft_economy_table::_state_uninitialized)
 {
     return ;
 }
 
 ft_economy_table::~ft_economy_table() noexcept
 {
-    return ;
-}
-
-ft_economy_table::ft_economy_table(const ft_economy_table &other) noexcept
-    : _error_code(FT_ERR_SUCCESS)
-    , _mutex()
-{
-    int lock_error;
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
-
-    lock_error = ft_economy_table::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESS)
+    if (this->_initialized_state == ft_economy_table::_state_uninitialized)
     {
-        this->set_error(lock_error);
+        this->abort_lifecycle_error("ft_economy_table::~ft_economy_table",
+            "destructor called while object is uninitialized");
         return ;
     }
-    this->_price_definitions = other._price_definitions;
-    this->_rarity_bands = other._rarity_bands;
-    this->_vendor_profiles = other._vendor_profiles;
-    this->_currency_rates = other._currency_rates;
-    this->_error_code = other._error_code;
-    this->set_error(this->_error_code);
+    if (this->_initialized_state == ft_economy_table::_state_initialized)
+        (void)this->destroy();
     return ;
 }
 
-ft_economy_table &ft_economy_table::operator=(const ft_economy_table &other) noexcept
+void ft_economy_table::abort_lifecycle_error(const char *method_name,
+    const char *reason) const
 {
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
-    int lock_error;
-
-    if (this == &other)
-        return (*this);
-    lock_error = ft_economy_table::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        this->set_error(lock_error);
-        return (*this);
-    }
-    this->_price_definitions = other._price_definitions;
-    this->_rarity_bands = other._rarity_bands;
-    this->_vendor_profiles = other._vendor_profiles;
-    this->_currency_rates = other._currency_rates;
-    this->_error_code = other._error_code;
-    this->set_error(this->_error_code);
-    return (*this);
-}
-
-ft_economy_table::ft_economy_table(ft_economy_table &&other) noexcept
-    : _error_code(FT_ERR_SUCCESS)
-    , _mutex()
-{
-    this->_price_definitions = ft_move(other._price_definitions);
-    this->_rarity_bands = ft_move(other._rarity_bands);
-    this->_vendor_profiles = ft_move(other._vendor_profiles);
-    this->_currency_rates = ft_move(other._currency_rates);
-    this->_error_code = other._error_code;
-    other._price_definitions.clear();
-    other._rarity_bands.clear();
-    other._vendor_profiles.clear();
-    other._currency_rates.clear();
-    other._error_code = FT_ERR_SUCCESS;
-    this->set_error(this->_error_code);
-    other.set_error(FT_ERR_SUCCESS);
+    if (method_name == ft_nullptr)
+        method_name = "unknown";
+    if (reason == ft_nullptr)
+        reason = "unknown";
+    pf_printf_fd(2, "ft_economy_table lifecycle error: %s: %s\n",
+        method_name, reason);
+    su_abort();
     return ;
 }
 
-ft_economy_table &ft_economy_table::operator=(ft_economy_table &&other) noexcept
+void ft_economy_table::abort_if_not_initialized(const char *method_name) const
 {
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
+    if (this->_initialized_state == ft_economy_table::_state_initialized)
+        return ;
+    this->abort_lifecycle_error(method_name,
+        "called while object is not initialized");
+    return ;
+}
+
+int ft_economy_table::initialize() noexcept
+{
+    if (this->_initialized_state == ft_economy_table::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_economy_table::initialize",
+            "called while object is already initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    this->_price_definitions.clear();
+    this->_rarity_bands.clear();
+    this->_vendor_profiles.clear();
+    this->_currency_rates.clear();
+    this->_initialized_state = ft_economy_table::_state_initialized;
+    return (FT_ERR_SUCCESS);
+}
+
+int ft_economy_table::initialize(const ft_economy_table &other) noexcept
+{
+    int initialize_error;
+    size_t count;
+    size_t index;
+    const Pair<int, ft_price_definition> *price_entry;
+    const Pair<int, ft_price_definition> *price_end;
+    const Pair<int, ft_rarity_band> *rarity_entry;
+    const Pair<int, ft_rarity_band> *rarity_end;
+    const Pair<int, ft_vendor_profile> *vendor_entry;
+    const Pair<int, ft_vendor_profile> *vendor_end;
+    const Pair<int, ft_currency_rate> *currency_entry;
+    const Pair<int, ft_currency_rate> *currency_end;
+
+    if (other._initialized_state != ft_economy_table::_state_initialized)
+    {
+        other.abort_lifecycle_error("ft_economy_table::initialize(copy)",
+            "source object is not initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (&other == this)
+        return (FT_ERR_SUCCESS);
+    initialize_error = this->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
+    count = other._price_definitions.size();
+    price_end = other._price_definitions.end();
+    price_entry = price_end - count;
+    index = 0;
+    while (index < count)
+    {
+        this->_price_definitions.insert(price_entry->key, price_entry->value);
+        price_entry++;
+        index += 1;
+    }
+    count = other._rarity_bands.size();
+    rarity_end = other._rarity_bands.end();
+    rarity_entry = rarity_end - count;
+    index = 0;
+    while (index < count)
+    {
+        this->_rarity_bands.insert(rarity_entry->key, rarity_entry->value);
+        rarity_entry++;
+        index += 1;
+    }
+    count = other._vendor_profiles.size();
+    vendor_end = other._vendor_profiles.end();
+    vendor_entry = vendor_end - count;
+    index = 0;
+    while (index < count)
+    {
+        this->_vendor_profiles.insert(vendor_entry->key, vendor_entry->value);
+        vendor_entry++;
+        index += 1;
+    }
+    count = other._currency_rates.size();
+    currency_end = other._currency_rates.end();
+    currency_entry = currency_end - count;
+    index = 0;
+    while (index < count)
+    {
+        this->_currency_rates.insert(currency_entry->key, currency_entry->value);
+        currency_entry++;
+        index += 1;
+    }
+    return (FT_ERR_SUCCESS);
+}
+
+int ft_economy_table::initialize(ft_economy_table &&other) noexcept
+{
+    return (this->initialize(static_cast<const ft_economy_table &>(other)));
+}
+
+int ft_economy_table::destroy() noexcept
+{
+    int disable_error;
+
+    if (this->_initialized_state != ft_economy_table::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_economy_table::destroy",
+            "called while object is not initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    this->_price_definitions.clear();
+    this->_rarity_bands.clear();
+    this->_vendor_profiles.clear();
+    this->_currency_rates.clear();
+    disable_error = this->disable_thread_safety();
+    this->_initialized_state = ft_economy_table::_state_destroyed;
+    return (disable_error);
+}
+
+int ft_economy_table::enable_thread_safety() noexcept
+{
+    pt_mutex *mutex_pointer;
+    int initialize_error;
+
+    this->abort_if_not_initialized("ft_economy_table::enable_thread_safety");
+    if (this->_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    mutex_pointer = new (std::nothrow) pt_mutex();
+    if (mutex_pointer == ft_nullptr)
+        return (FT_ERR_NO_MEMORY);
+    initialize_error = mutex_pointer->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        delete mutex_pointer;
+        return (initialize_error);
+    }
+    this->_mutex = mutex_pointer;
+    return (FT_ERR_SUCCESS);
+}
+
+int ft_economy_table::disable_thread_safety() noexcept
+{
+    int destroy_error;
+
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    destroy_error = this->_mutex->destroy();
+    delete this->_mutex;
+    this->_mutex = ft_nullptr;
+    return (destroy_error);
+}
+
+bool ft_economy_table::is_thread_safe() const noexcept
+{
+    this->abort_if_not_initialized("ft_economy_table::is_thread_safe");
+    return (this->_mutex != ft_nullptr);
+}
+
+int ft_economy_table::lock_internal(bool *lock_acquired) const noexcept
+{
     int lock_error;
 
-    if (this == &other)
-        return (*this);
-    lock_error = ft_economy_table::lock_pair(*this, other, this_guard, other_guard);
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = false;
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    lock_error = this->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
-    {
-        this->set_error(lock_error);
-        return (*this);
-    }
-    this->_price_definitions = ft_move(other._price_definitions);
-    this->_rarity_bands = ft_move(other._rarity_bands);
-    this->_vendor_profiles = ft_move(other._vendor_profiles);
-    this->_currency_rates = ft_move(other._currency_rates);
-    this->_error_code = other._error_code;
-    other._price_definitions.clear();
-    other._rarity_bands.clear();
-    other._vendor_profiles.clear();
-    other._currency_rates.clear();
-    other._error_code = FT_ERR_SUCCESS;
-    this->set_error(this->_error_code);
-    other.set_error(FT_ERR_SUCCESS);
-    return (*this);
+        return (lock_error);
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = true;
+    return (FT_ERR_SUCCESS);
+}
+
+int ft_economy_table::unlock_internal(bool lock_acquired) const noexcept
+{
+    if (lock_acquired == false)
+        return (FT_ERR_SUCCESS);
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    return (this->_mutex->unlock());
+}
+
+int ft_economy_table::lock(bool *lock_acquired) const noexcept
+{
+    this->abort_if_not_initialized("ft_economy_table::lock");
+    return (this->lock_internal(lock_acquired));
+}
+
+void ft_economy_table::unlock(bool lock_acquired) const noexcept
+{
+    this->abort_if_not_initialized("ft_economy_table::unlock");
+    (void)this->unlock_internal(lock_acquired);
+    return ;
 }
 
 ft_map<int, ft_price_definition> &ft_economy_table::get_price_definitions() noexcept
 {
+    this->abort_if_not_initialized("ft_economy_table::get_price_definitions");
     return (this->_price_definitions);
 }
 
 const ft_map<int, ft_price_definition> &ft_economy_table::get_price_definitions() const noexcept
 {
+    this->abort_if_not_initialized("ft_economy_table::get_price_definitions const");
     return (this->_price_definitions);
 }
 
 ft_map<int, ft_rarity_band> &ft_economy_table::get_rarity_bands() noexcept
 {
+    this->abort_if_not_initialized("ft_economy_table::get_rarity_bands");
     return (this->_rarity_bands);
 }
 
 const ft_map<int, ft_rarity_band> &ft_economy_table::get_rarity_bands() const noexcept
 {
+    this->abort_if_not_initialized("ft_economy_table::get_rarity_bands const");
     return (this->_rarity_bands);
 }
 
 ft_map<int, ft_vendor_profile> &ft_economy_table::get_vendor_profiles() noexcept
 {
+    this->abort_if_not_initialized("ft_economy_table::get_vendor_profiles");
     return (this->_vendor_profiles);
 }
 
 const ft_map<int, ft_vendor_profile> &ft_economy_table::get_vendor_profiles() const noexcept
 {
+    this->abort_if_not_initialized("ft_economy_table::get_vendor_profiles const");
     return (this->_vendor_profiles);
 }
 
 ft_map<int, ft_currency_rate> &ft_economy_table::get_currency_rates() noexcept
 {
+    this->abort_if_not_initialized("ft_economy_table::get_currency_rates");
     return (this->_currency_rates);
 }
 
 const ft_map<int, ft_currency_rate> &ft_economy_table::get_currency_rates() const noexcept
 {
+    this->abort_if_not_initialized("ft_economy_table::get_currency_rates const");
     return (this->_currency_rates);
 }
 
-void ft_economy_table::set_price_definitions(const ft_map<int, ft_price_definition> &price_definitions) noexcept
+void ft_economy_table::set_price_definitions(
+    const ft_map<int, ft_price_definition> &price_definitions) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    this->abort_if_not_initialized("ft_economy_table::set_price_definitions");
+    this->_price_definitions.clear();
     {
-        this->set_error(guard.get_error());
-        return ;
+        size_t count;
+        size_t index;
+        const Pair<int, ft_price_definition> *entry;
+        const Pair<int, ft_price_definition> *entry_end;
+
+        count = price_definitions.size();
+        entry_end = price_definitions.end();
+        entry = entry_end - count;
+        index = 0;
+        while (index < count)
+        {
+            this->_price_definitions.insert(entry->key, entry->value);
+            entry++;
+            index += 1;
+        }
     }
-    this->_price_definitions = price_definitions;
-    this->set_error(this->_price_definitions.get_error());
     return ;
 }
 
-void ft_economy_table::set_rarity_bands(const ft_map<int, ft_rarity_band> &rarity_bands) noexcept
+void ft_economy_table::set_rarity_bands(
+    const ft_map<int, ft_rarity_band> &rarity_bands) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    this->abort_if_not_initialized("ft_economy_table::set_rarity_bands");
+    this->_rarity_bands.clear();
     {
-        this->set_error(guard.get_error());
-        return ;
+        size_t count;
+        size_t index;
+        const Pair<int, ft_rarity_band> *entry;
+        const Pair<int, ft_rarity_band> *entry_end;
+
+        count = rarity_bands.size();
+        entry_end = rarity_bands.end();
+        entry = entry_end - count;
+        index = 0;
+        while (index < count)
+        {
+            this->_rarity_bands.insert(entry->key, entry->value);
+            entry++;
+            index += 1;
+        }
     }
-    this->_rarity_bands = rarity_bands;
-    this->set_error(this->_rarity_bands.get_error());
     return ;
 }
 
-void ft_economy_table::set_vendor_profiles(ft_map<int, ft_vendor_profile> &&vendor_profiles) noexcept
+void ft_economy_table::set_vendor_profiles(
+    const ft_map<int, ft_vendor_profile> &vendor_profiles) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    this->abort_if_not_initialized("ft_economy_table::set_vendor_profiles");
+    this->_vendor_profiles.clear();
     {
-        this->set_error(guard.get_error());
-        return ;
+        size_t count;
+        size_t index;
+        const Pair<int, ft_vendor_profile> *entry;
+        const Pair<int, ft_vendor_profile> *entry_end;
+
+        count = vendor_profiles.size();
+        entry_end = vendor_profiles.end();
+        entry = entry_end - count;
+        index = 0;
+        while (index < count)
+        {
+            this->_vendor_profiles.insert(entry->key, entry->value);
+            entry++;
+            index += 1;
+        }
     }
-    this->_vendor_profiles = ft_move(vendor_profiles);
-    this->set_error(this->_vendor_profiles.get_error());
     return ;
 }
 
-void ft_economy_table::set_currency_rates(const ft_map<int, ft_currency_rate> &currency_rates) noexcept
+void ft_economy_table::set_currency_rates(
+    const ft_map<int, ft_currency_rate> &currency_rates) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    this->abort_if_not_initialized("ft_economy_table::set_currency_rates");
+    this->_currency_rates.clear();
     {
-        this->set_error(guard.get_error());
-        return ;
+        size_t count;
+        size_t index;
+        const Pair<int, ft_currency_rate> *entry;
+        const Pair<int, ft_currency_rate> *entry_end;
+
+        count = currency_rates.size();
+        entry_end = currency_rates.end();
+        entry = entry_end - count;
+        index = 0;
+        while (index < count)
+        {
+            this->_currency_rates.insert(entry->key, entry->value);
+            entry++;
+            index += 1;
+        }
     }
-    this->_currency_rates = currency_rates;
-    this->set_error(this->_currency_rates.get_error());
     return ;
 }
 
-int ft_economy_table::register_price_definition(const ft_price_definition &definition) noexcept
+int ft_economy_table::register_price_definition(
+    const ft_price_definition &definition) noexcept
 {
-    int identifier;
-
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return (guard.get_error());
-    }
-    if (definition.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(definition.get_error());
-        return (definition.get_error());
-    }
-    identifier = definition.get_item_id();
-    this->_price_definitions.insert(identifier, definition);
-    if (this->_price_definitions.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(this->_price_definitions.get_error());
-        return (this->_price_definitions.get_error());
-    }
-    this->set_error(FT_ERR_SUCCESS);
+    this->abort_if_not_initialized("ft_economy_table::register_price_definition");
+    this->_price_definitions.insert(definition.get_item_id(), definition);
     return (FT_ERR_SUCCESS);
 }
 
 int ft_economy_table::register_rarity_band(const ft_rarity_band &band) noexcept
 {
-    int identifier;
-
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return (guard.get_error());
-    }
-    if (band.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(band.get_error());
-        return (band.get_error());
-    }
-    identifier = band.get_rarity();
-    this->_rarity_bands.insert(identifier, band);
-    if (this->_rarity_bands.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(this->_rarity_bands.get_error());
-        return (this->_rarity_bands.get_error());
-    }
-    this->set_error(FT_ERR_SUCCESS);
+    this->abort_if_not_initialized("ft_economy_table::register_rarity_band");
+    this->_rarity_bands.insert(band.get_rarity(), band);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_economy_table::register_vendor_profile(const ft_vendor_profile &profile) noexcept
+int ft_economy_table::register_vendor_profile(
+    const ft_vendor_profile &profile) noexcept
 {
-    int identifier;
-    ft_vendor_profile stored_profile;
-
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return (guard.get_error());
-    }
-    if (profile.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(profile.get_error());
-        return (profile.get_error());
-    }
-    identifier = profile.get_vendor_id();
-    stored_profile.set_vendor_id(identifier);
-    stored_profile.set_buy_markup(profile.get_buy_markup());
-    stored_profile.set_sell_multiplier(profile.get_sell_multiplier());
-    stored_profile.set_tax_rate(profile.get_tax_rate());
-    this->_vendor_profiles.insert(identifier, ft_move(stored_profile));
-    if (this->_vendor_profiles.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(this->_vendor_profiles.get_error());
-        return (this->_vendor_profiles.get_error());
-    }
-    this->set_error(FT_ERR_SUCCESS);
+    this->abort_if_not_initialized("ft_economy_table::register_vendor_profile");
+    this->_vendor_profiles.insert(profile.get_vendor_id(), profile);
     return (FT_ERR_SUCCESS);
 }
 
 int ft_economy_table::register_currency_rate(const ft_currency_rate &rate) noexcept
 {
-    int identifier;
-
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return (guard.get_error());
-    }
-    if (rate.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(rate.get_error());
-        return (rate.get_error());
-    }
-    identifier = rate.get_currency_id();
-    this->_currency_rates.insert(identifier, rate);
-    if (this->_currency_rates.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(this->_currency_rates.get_error());
-        return (this->_currency_rates.get_error());
-    }
-    this->set_error(FT_ERR_SUCCESS);
+    this->abort_if_not_initialized("ft_economy_table::register_currency_rate");
+    this->_currency_rates.insert(rate.get_currency_id(), rate);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_economy_table::fetch_price_definition(int item_id, ft_price_definition &definition) const noexcept
+int ft_economy_table::fetch_price_definition(int item_id,
+    ft_price_definition &definition) const noexcept
 {
-    const ft_economy_table *self;
     const Pair<int, ft_price_definition> *entry;
 
-    self = this;
-    ft_unique_lock<pt_mutex> guard(self->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_economy_table *>(self)->set_error(guard.get_error());
-        return (guard.get_error());
-    }
-    entry = self->_price_definitions.find(item_id);
-    if (entry == self->_price_definitions.end())
-    {
-        const_cast<ft_economy_table *>(self)->set_error(FT_ERR_NOT_FOUND);
+    this->abort_if_not_initialized("ft_economy_table::fetch_price_definition");
+    entry = this->_price_definitions.find(item_id);
+    if (entry == this->_price_definitions.end())
         return (FT_ERR_NOT_FOUND);
-    }
-    definition = entry->value;
-    if (entry->value.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_economy_table *>(self)->set_error(entry->value.get_error());
-        return (entry->value.get_error());
-    }
-    return (entry->value.get_error());
+    definition.set_item_id(entry->value.get_item_id());
+    definition.set_rarity(entry->value.get_rarity());
+    definition.set_base_value(entry->value.get_base_value());
+    definition.set_minimum_value(entry->value.get_minimum_value());
+    definition.set_maximum_value(entry->value.get_maximum_value());
+    return (FT_ERR_SUCCESS);
 }
 
-int ft_economy_table::fetch_rarity_band(int rarity, ft_rarity_band &band) const noexcept
+int ft_economy_table::fetch_rarity_band(int rarity,
+    ft_rarity_band &band) const noexcept
 {
-    const ft_economy_table *self;
     const Pair<int, ft_rarity_band> *entry;
 
-    self = this;
-    ft_unique_lock<pt_mutex> guard(self->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_economy_table *>(self)->set_error(guard.get_error());
-        return (guard.get_error());
-    }
-    entry = self->_rarity_bands.find(rarity);
-    if (entry == self->_rarity_bands.end())
-    {
-        const_cast<ft_economy_table *>(self)->set_error(FT_ERR_NOT_FOUND);
+    this->abort_if_not_initialized("ft_economy_table::fetch_rarity_band");
+    entry = this->_rarity_bands.find(rarity);
+    if (entry == this->_rarity_bands.end())
         return (FT_ERR_NOT_FOUND);
-    }
-    band = entry->value;
-    if (entry->value.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_economy_table *>(self)->set_error(entry->value.get_error());
-        return (entry->value.get_error());
-    }
-    return (entry->value.get_error());
+    band.set_rarity(entry->value.get_rarity());
+    band.set_value_multiplier(entry->value.get_value_multiplier());
+    return (FT_ERR_SUCCESS);
 }
 
-int ft_economy_table::fetch_vendor_profile(int vendor_id, ft_vendor_profile &profile) const noexcept
+int ft_economy_table::fetch_vendor_profile(int vendor_id,
+    ft_vendor_profile &profile) const noexcept
 {
-    const ft_economy_table *self;
     const Pair<int, ft_vendor_profile> *entry;
 
-    self = this;
-    ft_unique_lock<pt_mutex> guard(self->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_economy_table *>(self)->set_error(guard.get_error());
-        return (guard.get_error());
-    }
-    entry = self->_vendor_profiles.find(vendor_id);
-    if (entry == self->_vendor_profiles.end())
-    {
-        const_cast<ft_economy_table *>(self)->set_error(FT_ERR_NOT_FOUND);
+    this->abort_if_not_initialized("ft_economy_table::fetch_vendor_profile");
+    entry = this->_vendor_profiles.find(vendor_id);
+    if (entry == this->_vendor_profiles.end())
         return (FT_ERR_NOT_FOUND);
-    }
-    profile.set_vendor_id(entry->value.get_vendor_id());
-    profile.set_buy_markup(entry->value.get_buy_markup());
-    profile.set_sell_multiplier(entry->value.get_sell_multiplier());
-    profile.set_tax_rate(entry->value.get_tax_rate());
-    if (entry->value.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_economy_table *>(self)->set_error(entry->value.get_error());
-        return (entry->value.get_error());
-    }
-    return (entry->value.get_error());
+    profile.initialize(entry->value);
+    return (FT_ERR_SUCCESS);
 }
 
-int ft_economy_table::fetch_currency_rate(int currency_id, ft_currency_rate &rate) const noexcept
+int ft_economy_table::fetch_currency_rate(int currency_id,
+    ft_currency_rate &rate) const noexcept
 {
-    const ft_economy_table *self;
     const Pair<int, ft_currency_rate> *entry;
 
-    self = this;
-    ft_unique_lock<pt_mutex> guard(self->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_economy_table *>(self)->set_error(guard.get_error());
-        return (guard.get_error());
-    }
-    entry = self->_currency_rates.find(currency_id);
-    if (entry == self->_currency_rates.end())
-    {
-        const_cast<ft_economy_table *>(self)->set_error(FT_ERR_NOT_FOUND);
+    this->abort_if_not_initialized("ft_economy_table::fetch_currency_rate");
+    entry = this->_currency_rates.find(currency_id);
+    if (entry == this->_currency_rates.end())
         return (FT_ERR_NOT_FOUND);
-    }
-    rate = entry->value;
-    if (entry->value.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_economy_table *>(self)->set_error(entry->value.get_error());
-        return (entry->value.get_error());
-    }
-    return (entry->value.get_error());
+    rate.set_currency_id(entry->value.get_currency_id());
+    rate.set_rate_to_base(entry->value.get_rate_to_base());
+    rate.set_display_precision(entry->value.get_display_precision());
+    return (FT_ERR_SUCCESS);
 }
 
-int ft_economy_table::get_error() const noexcept
+#ifdef LIBFT_TEST_BUILD
+pt_mutex *ft_economy_table::get_mutex_for_validation() const noexcept
 {
-    int error_value;
-
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_economy_table *>(this)->set_error(guard.get_error());
-        return (guard.get_error());
-    }
-    error_value = this->_error_code;
-    const_cast<ft_economy_table *>(this)->set_error(error_value);
-    return (error_value);
+    this->abort_if_not_initialized("ft_economy_table::get_mutex_for_validation");
+    return (this->_mutex);
 }
-
-const char *ft_economy_table::get_error_str() const noexcept
-{
-    int error_value;
-
-    error_value = this->get_error();
-    return (ft_strerror(error_value));
-}
-
-void ft_economy_table::set_error(int error_code) const noexcept
-{
-    ft_errno = error_code;
-    this->_error_code = error_code;
-    return ;
-}
+#endif

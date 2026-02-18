@@ -1144,7 +1144,6 @@ int xml_document::write_to_backend(ft_document_sink &sink) const noexcept
     char *content;
     size_t length;
     int write_result;
-    int sink_error;
 
     this->abort_if_not_initialized("xml_document::write_to_backend");
     content = this->write_to_string();
@@ -1152,11 +1151,8 @@ int xml_document::write_to_backend(ft_document_sink &sink) const noexcept
         return (this->get_error());
     length = ft_strlen(content);
     write_result = sink.write_all(content, length);
-    sink_error = sink.get_error();
     cma_free(content);
     int final_error = write_result;
-    if (sink_error != FT_ERR_SUCCESS)
-        final_error = sink_error;
     if (final_error != FT_ERR_SUCCESS)
     {
         this->record_operation_error(final_error);

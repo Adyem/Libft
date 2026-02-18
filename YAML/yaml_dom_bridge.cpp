@@ -23,17 +23,13 @@ static int yaml_dom_populate_node(const yaml_value *value, ft_dom_node *node) no
     {
         const ft_string &scalar = value->get_scalar();
         node->set_type(FT_DOM_NODE_VALUE);
-        if (node->get_error() != FT_ERR_SUCCESS)
-            return (node->get_error());
         if (node->set_value(scalar) != 0)
-            return (node->get_error());
+            return (FT_ERR_INVALID_ARGUMENT);
         return (FT_ERR_SUCCESS);
     }
     if (type == YAML_LIST)
     {
         node->set_type(FT_DOM_NODE_ARRAY);
-        if (node->get_error() != FT_ERR_SUCCESS)
-            return (node->get_error());
         const ft_vector<yaml_value*> &list = value->get_list();
         size_t index;
         size_t count;
@@ -53,7 +49,7 @@ static int yaml_dom_populate_node(const yaml_value *value, ft_dom_node *node) no
             if (child_node->set_name("item") != 0)
             {
                 yaml_dom_delete_node(child_node);
-                return (child_node->get_error());
+                return (FT_ERR_INVALID_ARGUMENT);
             }
             int populate_error;
 
@@ -66,7 +62,7 @@ static int yaml_dom_populate_node(const yaml_value *value, ft_dom_node *node) no
             if (node->add_child(child_node) != 0)
             {
                 yaml_dom_delete_node(child_node);
-                return (node->get_error());
+                return (FT_ERR_INVALID_STATE);
             }
             index += 1;
         }
@@ -75,8 +71,6 @@ static int yaml_dom_populate_node(const yaml_value *value, ft_dom_node *node) no
     if (type == YAML_MAP)
     {
         node->set_type(FT_DOM_NODE_OBJECT);
-        if (node->get_error() != FT_ERR_SUCCESS)
-            return (node->get_error());
         const ft_vector<ft_string> &keys = value->get_map_keys();
         const ft_map<ft_string, yaml_value*> &map_reference = value->get_map();
         size_t key_index;
@@ -103,7 +97,7 @@ static int yaml_dom_populate_node(const yaml_value *value, ft_dom_node *node) no
             if (child_node->set_name(key_cstr) != 0)
             {
                 yaml_dom_delete_node(child_node);
-                return (child_node->get_error());
+                return (FT_ERR_INVALID_ARGUMENT);
             }
             int populate_error;
 
@@ -116,7 +110,7 @@ static int yaml_dom_populate_node(const yaml_value *value, ft_dom_node *node) no
             if (node->add_child(child_node) != 0)
             {
                 yaml_dom_delete_node(child_node);
-                return (node->get_error());
+                return (FT_ERR_INVALID_STATE);
             }
             key_index += 1;
         }
@@ -130,8 +124,6 @@ int yaml_value_to_dom(const yaml_value *value, ft_dom_document &dom) noexcept
     if (!value)
         return (-1);
     dom.clear();
-    if (dom.get_error() != FT_ERR_SUCCESS)
-        return (-1);
     ft_dom_node *root_node;
 
     root_node = new(std::nothrow) ft_dom_node();
@@ -151,11 +143,6 @@ int yaml_value_to_dom(const yaml_value *value, ft_dom_document &dom) noexcept
         return (-1);
     }
     dom.set_root(root_node);
-    if (dom.get_error() != FT_ERR_SUCCESS)
-    {
-        yaml_dom_delete_node(root_node);
-        return (-1);
-    }
     return (0);
 }
 
@@ -172,12 +159,6 @@ static yaml_value *yaml_dom_build_value(ft_dom_node *node, int *status) noexcept
     ft_dom_node_type node_type;
 
     node_type = node->get_type();
-    if (node->get_error() != FT_ERR_SUCCESS)
-    {
-        if (status)
-            *status = node->get_error();
-        return (ft_nullptr);
-    }
     yaml_value *result;
 
     result = new(std::nothrow) yaml_value();
@@ -197,14 +178,6 @@ static yaml_value *yaml_dom_build_value(ft_dom_node *node, int *status) noexcept
     if (node_type == FT_DOM_NODE_VALUE)
     {
         const ft_string &scalar = node->get_value();
-
-        if (node->get_error() != FT_ERR_SUCCESS)
-        {
-            if (status)
-                *status = node->get_error();
-            delete result;
-            return (ft_nullptr);
-        }
         result->set_type(YAML_SCALAR);
         result->set_scalar(scalar);
         return (result);
@@ -212,14 +185,6 @@ static yaml_value *yaml_dom_build_value(ft_dom_node *node, int *status) noexcept
     if (node_type == FT_DOM_NODE_ARRAY)
     {
         const ft_vector<ft_dom_node*> &children = node->get_children();
-
-        if (node->get_error() != FT_ERR_SUCCESS)
-        {
-            if (status)
-                *status = node->get_error();
-            delete result;
-            return (ft_nullptr);
-        }
         size_t index;
         size_t count;
 
@@ -247,14 +212,6 @@ static yaml_value *yaml_dom_build_value(ft_dom_node *node, int *status) noexcept
     if (node_type == FT_DOM_NODE_OBJECT)
     {
         const ft_vector<ft_dom_node*> &children = node->get_children();
-
-        if (node->get_error() != FT_ERR_SUCCESS)
-        {
-            if (status)
-                *status = node->get_error();
-            delete result;
-            return (ft_nullptr);
-        }
         size_t index;
         size_t count;
 
@@ -265,13 +222,6 @@ static yaml_value *yaml_dom_build_value(ft_dom_node *node, int *status) noexcept
             ft_dom_node *child_node = children[index];
             const ft_string &child_name = child_node->get_name();
 
-            if (child_node->get_error() != FT_ERR_SUCCESS)
-            {
-                if (status)
-                    *status = child_node->get_error();
-                delete result;
-                return (ft_nullptr);
-            }
             int child_status;
             yaml_value *child_value;
 
@@ -297,12 +247,8 @@ static yaml_value *yaml_dom_build_value(ft_dom_node *node, int *status) noexcept
 yaml_value *yaml_value_from_dom(const ft_dom_document &dom) noexcept
 {
     ft_dom_node *root_node;
-    int dom_error;
 
     root_node = dom.get_root();
-    dom_error = dom.get_error();
-    if (dom_error != FT_ERR_SUCCESS)
-        return (ft_nullptr);
     if (!root_node)
         return (ft_nullptr);
     int status;

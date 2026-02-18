@@ -7,9 +7,9 @@ void ft_character::add_coins(int coins) noexcept
     long long delta_value;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         return ;
     }
     previous_total = static_cast<long long>(this->_coins);
@@ -27,9 +27,9 @@ void ft_character::sub_coins(int coins) noexcept
     long long delta_value;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         return ;
     }
     previous_total = static_cast<long long>(this->_coins);
@@ -47,9 +47,9 @@ void ft_character::add_valor(int valor) noexcept
     long long delta_value;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         return ;
     }
     previous_total = static_cast<long long>(this->_valor);
@@ -67,9 +67,9 @@ void ft_character::sub_valor(int valor) noexcept
     long long delta_value;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         return ;
     }
     previous_total = static_cast<long long>(this->_valor);
@@ -87,9 +87,9 @@ void ft_character::add_experience(int experience) noexcept
     long long delta_value;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         return ;
     }
     previous_total = static_cast<long long>(this->_experience);
@@ -107,9 +107,9 @@ void ft_character::sub_experience(int experience) noexcept
     long long delta_value;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         return ;
     }
     previous_total = static_cast<long long>(this->_experience);
@@ -123,40 +123,26 @@ void ft_character::sub_experience(int experience) noexcept
 
 int ft_character::add_skill(const ft_skill &skill) noexcept
 {
-    int component_error;
-
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         return (this->_error);
     }
     this->_skills.insert(skill.get_id(), skill);
-    component_error = this->_skills.last_operation_error();
-    if (this->handle_component_error(component_error) == true)
-    {
-        return (this->_error);
-    }
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
 void ft_character::remove_skill(int id) noexcept
 {
-    int component_error;
-
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         return ;
     }
     this->_skills.remove(id);
-    component_error = this->_skills.last_operation_error();
-    if (this->handle_component_error(component_error) == true)
-    {
-        return ;
-    }
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }

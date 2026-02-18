@@ -71,7 +71,8 @@ static int instantiate_free_functions()
     default_string_serializer<const char *>("abc", serialized);
     ft_string_view<char> view("hello");
     (void)view.size();
-    auto substring = view.substr(1, 3);
+    ft_string_view<char> substring;
+    (void)view.substr(1, substring);
     (void)substring.compare(view);
     return (max_value + min_value);
 }

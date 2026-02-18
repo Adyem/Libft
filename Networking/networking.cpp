@@ -1,5 +1,7 @@
 #include "networking.hpp"
-#include "../Errno/errno.hpp"
+#include "../Printf/printf.hpp"
+#include "../System_utils/system_utils.hpp"
+
 #include <cstring>
 
 #ifdef _WIN32
@@ -11,337 +13,95 @@
 #endif
 
 SocketConfig::SocketConfig()
-    : _error_code(FT_ERR_SUCCESS),
-      _thread_safe_enabled(false),
-      _mutex(ft_nullptr),
+    : _initialized_state(SocketConfig::_state_uninitialized),
       _type(SocketType::SERVER),
-      _ip("127.0.0.1"),
-      _port(8080),
-      _backlog(10),
-      _protocol(IPPROTO_TCP),
-      _address_family(AF_INET),
-      _reuse_address(true),
+      _ip(),
+      _port(0),
+      _backlog(0),
+      _protocol(0),
+      _address_family(0),
+      _reuse_address(false),
       _non_blocking(false),
-      _recv_timeout(5000),
-      _send_timeout(5000),
-      _multicast_group(""),
-      _multicast_interface("")
+      _recv_timeout(0),
+      _send_timeout(0),
+      _multicast_group(),
+      _multicast_interface()
 {
-    int operation_result;
-
-    operation_result = FT_ERR_SUCCESS;
-    if (operation_result == FT_ERR_SUCCESS
-        && ft_string::last_operation_error() != FT_ERR_SUCCESS)
-        operation_result = ft_string::last_operation_error();
-    if (operation_result == FT_ERR_SUCCESS
-        && ft_string::last_operation_error() != FT_ERR_SUCCESS)
-        operation_result = ft_string::last_operation_error();
-    if (operation_result == FT_ERR_SUCCESS
-        && ft_string::last_operation_error() != FT_ERR_SUCCESS)
-        operation_result = ft_string::last_operation_error();
-    socket_config_prepare_thread_safety(this);
-    this->report_operation_result(operation_result);
     return ;
 }
 
-SocketConfig::SocketConfig(const SocketConfig& other) noexcept
-    : _error_code(FT_ERR_SUCCESS),
-      _thread_safe_enabled(false),
-      _mutex(ft_nullptr),
-      _type(SocketType::SERVER),
-      _ip("127.0.0.1"),
-      _port(8080),
-      _backlog(10),
-      _protocol(IPPROTO_TCP),
-      _address_family(AF_INET),
-      _reuse_address(true),
-      _non_blocking(false),
-      _recv_timeout(5000),
-      _send_timeout(5000),
-      _multicast_group(""),
-      _multicast_interface("")
+void SocketConfig::abort_lifecycle_error(const char *method_name,
+    const char *reason) const noexcept
 {
-    bool          other_locked;
-    SocketConfig *mutable_other;
-    int           operation_result;
-
-    mutable_other = const_cast<SocketConfig*>(&other);
-    other_locked = false;
-    operation_result = FT_ERR_SUCCESS;
-    bool lock_failed = socket_config_lock(mutable_other, &other_locked) != 0;
-    if (!lock_failed)
-    {
-        operation_result = other._error_code;
-        this->_type = other._type;
-        this->_ip = other._ip;
-        this->_port = other._port;
-        this->_backlog = other._backlog;
-        this->_protocol = other._protocol;
-        this->_address_family = other._address_family;
-        this->_reuse_address = other._reuse_address;
-        this->_non_blocking = other._non_blocking;
-        this->_recv_timeout = other._recv_timeout;
-        this->_send_timeout = other._send_timeout;
-        this->_multicast_group = other._multicast_group;
-        this->_multicast_interface = other._multicast_interface;
-        socket_config_unlock(mutable_other, other_locked);
-    }
-    if (operation_result == FT_ERR_SUCCESS
-        && ft_string::last_operation_error() != FT_ERR_SUCCESS)
-        operation_result = ft_string::last_operation_error();
-    if (operation_result == FT_ERR_SUCCESS
-        && ft_string::last_operation_error() != FT_ERR_SUCCESS)
-        operation_result = ft_string::last_operation_error();
-    if (operation_result == FT_ERR_SUCCESS
-        && ft_string::last_operation_error() != FT_ERR_SUCCESS)
-        operation_result = ft_string::last_operation_error();
-    socket_config_prepare_thread_safety(this);
-    this->report_operation_result(operation_result);
+    if (method_name == ft_nullptr)
+        method_name = "unknown";
+    if (reason == ft_nullptr)
+        reason = "unknown";
+    pf_printf_fd(2, "SocketConfig lifecycle error: %s: %s\n",
+        method_name, reason);
+    su_abort();
     return ;
 }
 
-SocketConfig& SocketConfig::operator=(const SocketConfig& other) noexcept
+void SocketConfig::abort_if_not_initialized(const char *method_name) const noexcept
 {
-    SocketConfig *mutable_other;
-    SocketConfig *first;
-    SocketConfig *second;
-    bool          first_locked;
-    bool          second_locked;
-    bool          proceed;
-    int           operation_result;
-
-    mutable_other = const_cast<SocketConfig*>(&other);
-    first = this;
-    second = mutable_other;
-    first_locked = false;
-    second_locked = false;
-    operation_result = this->_error_code;
-    if (this != &other)
-    {
-        proceed = true;
-        bool prepare_failed = socket_config_prepare_thread_safety(this) != 0;
-        if (prepare_failed)
-            proceed = false;
-        if (proceed && first > second)
-        {
-            first = mutable_other;
-            second = this;
-        }
-        if (proceed)
-        {
-            bool first_lock_failed = socket_config_lock(first, &first_locked) != 0;
-            if (first_lock_failed)
-                proceed = false;
-        }
-        if (proceed)
-        {
-            bool second_lock_failed = socket_config_lock(second, &second_locked) != 0;
-            if (second_lock_failed)
-                proceed = false;
-        }
-        if (proceed)
-        {
-            operation_result = other._error_code;
-            this->_type = other._type;
-            this->_ip = other._ip;
-            this->_port = other._port;
-            this->_backlog = other._backlog;
-            this->_protocol = other._protocol;
-            this->_address_family = other._address_family;
-            this->_reuse_address = other._reuse_address;
-            this->_non_blocking = other._non_blocking;
-            this->_recv_timeout = other._recv_timeout;
-            this->_send_timeout = other._send_timeout;
-            this->_multicast_group = other._multicast_group;
-            this->_multicast_interface = other._multicast_interface;
-        }
-        if (second_locked)
-        {
-            socket_config_unlock(second, second_locked);
-        }
-        if (first_locked)
-        {
-            socket_config_unlock(first, first_locked);
-        }
-    }
-    if (operation_result == FT_ERR_SUCCESS
-        && ft_string::last_operation_error() != FT_ERR_SUCCESS)
-        operation_result = ft_string::last_operation_error();
-    if (operation_result == FT_ERR_SUCCESS
-        && ft_string::last_operation_error() != FT_ERR_SUCCESS)
-        operation_result = ft_string::last_operation_error();
-    if (operation_result == FT_ERR_SUCCESS
-        && ft_string::last_operation_error() != FT_ERR_SUCCESS)
-        operation_result = ft_string::last_operation_error();
-    socket_config_prepare_thread_safety(this);
-    this->report_operation_result(operation_result);
-    return (*this);
-}
-
-SocketConfig::SocketConfig(SocketConfig&& other) noexcept
-    : _error_code(FT_ERR_SUCCESS),
-      _thread_safe_enabled(false),
-      _mutex(ft_nullptr),
-      _type(SocketType::SERVER),
-      _ip("127.0.0.1"),
-      _port(8080),
-      _backlog(10),
-      _protocol(IPPROTO_TCP),
-      _address_family(AF_INET),
-      _reuse_address(true),
-      _non_blocking(false),
-      _recv_timeout(5000),
-      _send_timeout(5000),
-      _multicast_group(""),
-      _multicast_interface("")
-{
-    bool other_locked;
-    int  operation_result;
-
-    other_locked = false;
-    operation_result = FT_ERR_SUCCESS;
-    bool lock_failed = socket_config_lock(&other, &other_locked) != 0;
-    if (!lock_failed)
-    {
-        operation_result = other._error_code;
-        this->_type = other._type;
-        this->_ip.move(other._ip);
-        this->_port = other._port;
-        this->_backlog = other._backlog;
-        this->_protocol = other._protocol;
-        this->_address_family = other._address_family;
-        this->_reuse_address = other._reuse_address;
-        this->_non_blocking = other._non_blocking;
-        this->_recv_timeout = other._recv_timeout;
-        this->_send_timeout = other._send_timeout;
-        this->_multicast_group.move(other._multicast_group);
-        this->_multicast_interface.move(other._multicast_interface);
-        other._type = SocketType::CLIENT;
-        other._ip.clear();
-        other._port = 0;
-        other._backlog = 0;
-        other._protocol = 0;
-        other._address_family = 0;
-        other._reuse_address = false;
-        other._non_blocking = false;
-        other._recv_timeout = 0;
-        other._send_timeout = 0;
-        other._multicast_group.clear();
-        other._multicast_interface.clear();
-        other.report_operation_result(FT_ERR_SUCCESS);
-        socket_config_unlock(&other, other_locked);
-    }
-    if (operation_result == FT_ERR_SUCCESS
-        && ft_string::last_operation_error() != FT_ERR_SUCCESS)
-        operation_result = ft_string::last_operation_error();
-    if (operation_result == FT_ERR_SUCCESS
-        && ft_string::last_operation_error() != FT_ERR_SUCCESS)
-        operation_result = ft_string::last_operation_error();
-    if (operation_result == FT_ERR_SUCCESS
-        && ft_string::last_operation_error() != FT_ERR_SUCCESS)
-        operation_result = ft_string::last_operation_error();
-    socket_config_prepare_thread_safety(this);
-    this->report_operation_result(operation_result);
+    if (this->_initialized_state == SocketConfig::_state_initialized)
+        return ;
+    this->abort_lifecycle_error(method_name, "called while object is not initialized");
     return ;
 }
 
-SocketConfig& SocketConfig::operator=(SocketConfig&& other) noexcept
+int SocketConfig::initialize() noexcept
 {
-    SocketConfig *first;
-    SocketConfig *second;
-    bool          first_locked;
-    bool          second_locked;
-    bool          proceed;
-    int           operation_result;
+    if (this->_initialized_state == SocketConfig::_state_initialized)
+        this->abort_lifecycle_error("SocketConfig::initialize",
+            "initialize called on initialized instance");
+    this->_type = SocketType::SERVER;
+    std::strncpy(this->_ip, "127.0.0.1", sizeof(this->_ip) - 1);
+    this->_ip[sizeof(this->_ip) - 1] = '\0';
+    this->_port = 8080;
+    this->_backlog = 10;
+    this->_protocol = IPPROTO_TCP;
+    this->_address_family = AF_INET;
+    this->_reuse_address = true;
+    this->_non_blocking = false;
+    this->_recv_timeout = 5000;
+    this->_send_timeout = 5000;
+    this->_multicast_group[0] = '\0';
+    this->_multicast_interface[0] = '\0';
+    this->_initialized_state = SocketConfig::_state_initialized;
+    return (FT_ERR_SUCCESS);
+}
 
-    first = this;
-    second = &other;
-    first_locked = false;
-    second_locked = false;
-    operation_result = this->_error_code;
-    if (this != &other)
-    {
-        proceed = true;
-        bool prepare_failed = socket_config_prepare_thread_safety(this) != 0;
-        if (prepare_failed)
-            proceed = false;
-        if (proceed && first > second)
-        {
-            first = &other;
-            second = this;
-        }
-        if (proceed)
-        {
-            bool first_lock_failed = socket_config_lock(first, &first_locked) != 0;
-            if (first_lock_failed)
-                proceed = false;
-        }
-        if (proceed)
-        {
-            bool second_lock_failed = socket_config_lock(second, &second_locked) != 0;
-            if (second_lock_failed)
-                proceed = false;
-        }
-        if (proceed)
-        {
-            operation_result = other._error_code;
-            this->_type = other._type;
-            this->_ip.move(other._ip);
-            this->_port = other._port;
-            this->_backlog = other._backlog;
-            this->_protocol = other._protocol;
-            this->_address_family = other._address_family;
-            this->_reuse_address = other._reuse_address;
-            this->_non_blocking = other._non_blocking;
-            this->_recv_timeout = other._recv_timeout;
-            this->_send_timeout = other._send_timeout;
-            this->_multicast_group.move(other._multicast_group);
-            this->_multicast_interface.move(other._multicast_interface);
-            other._type = SocketType::CLIENT;
-            other._ip.clear();
-            other._port = 0;
-            other._backlog = 0;
-            other._protocol = 0;
-            other._address_family = 0;
-            other._reuse_address = false;
-            other._non_blocking = false;
-            other._recv_timeout = 0;
-            other._send_timeout = 0;
-            other._multicast_group.clear();
-            other._multicast_interface.clear();
-            other.report_operation_result(FT_ERR_SUCCESS);
-        }
-        if (second_locked)
-        {
-            socket_config_unlock(second, second_locked);
-        }
-        if (first_locked)
-        {
-            socket_config_unlock(first, first_locked);
-        }
-    }
-    if (operation_result == FT_ERR_SUCCESS
-        && ft_string::last_operation_error() != FT_ERR_SUCCESS)
-        operation_result = ft_string::last_operation_error();
-    if (operation_result == FT_ERR_SUCCESS
-        && ft_string::last_operation_error() != FT_ERR_SUCCESS)
-        operation_result = ft_string::last_operation_error();
-    if (operation_result == FT_ERR_SUCCESS
-        && ft_string::last_operation_error() != FT_ERR_SUCCESS)
-        operation_result = ft_string::last_operation_error();
-    socket_config_prepare_thread_safety(this);
-    this->report_operation_result(operation_result);
-    return (*this);
+int SocketConfig::destroy() noexcept
+{
+    if (this->_initialized_state != SocketConfig::_state_initialized)
+        this->abort_lifecycle_error("SocketConfig::destroy",
+            "destroy called on non-initialized instance");
+    this->_ip[0] = '\0';
+    this->_port = 0;
+    this->_backlog = 0;
+    this->_protocol = 0;
+    this->_address_family = 0;
+    this->_reuse_address = false;
+    this->_non_blocking = false;
+    this->_recv_timeout = 0;
+    this->_send_timeout = 0;
+    this->_multicast_group[0] = '\0';
+    this->_multicast_interface[0] = '\0';
+    this->_initialized_state = SocketConfig::_state_destroyed;
+    return (FT_ERR_SUCCESS);
 }
 
 SocketConfig::~SocketConfig()
 {
-    socket_config_teardown_thread_safety(this);
-    return ;
-}
-
-void SocketConfig::report_operation_result(int error_code) const noexcept
-{
-    this->_error_code = error_code;
+    if (this->_initialized_state == SocketConfig::_state_uninitialized)
+    {
+        pf_printf_fd(2, "SocketConfig lifecycle error: %s\n",
+            "destructor called on uninitialized instance");
+        su_abort();
+    }
+    if (this->_initialized_state == SocketConfig::_state_initialized)
+        (void)this->destroy();
     return ;
 }

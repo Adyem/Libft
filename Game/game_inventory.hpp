@@ -12,36 +12,49 @@
 #include "game_item.hpp"
 #include "../Template/map.hpp"
 #include "../Template/shared_ptr.hpp"
-#include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
-#include "../PThread/unique_lock.hpp"
+#include <stdint.h>
 
 class ft_inventory
 {
     private:
         ft_map<int, ft_sharedptr<ft_item> > _items;
-        size_t              _capacity;
-        size_t              _used_slots;
-        int                 _weight_limit;
-        int                 _current_weight;
-        int                 _next_slot;
-        mutable int         _error;
-        mutable pt_mutex    _mutex;
+        size_t                              _capacity;
+        size_t                              _used_slots;
+        int                                 _weight_limit;
+        int                                 _current_weight;
+        int                                 _next_slot;
+        pt_mutex                           *_mutex;
+        uint8_t                             _initialized_state;
 
-        void set_error(int err) const noexcept;
-        bool handle_items_error() noexcept;
-        bool check_item_errors(const ft_sharedptr<ft_item> &item) const noexcept;
-        static int lock_pair(const ft_inventory &first, const ft_inventory &second,
-                ft_unique_lock<pt_mutex> &first_guard,
-                ft_unique_lock<pt_mutex> &second_guard);
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
+
+        bool check_item_valid(const ft_sharedptr<ft_item> &item) const noexcept;
+        void abort_lifecycle_error(const char *method_name,
+            const char *reason) const;
+        void abort_if_not_initialized(const char *method_name) const;
+        int lock_internal(bool *lock_acquired) const noexcept;
+        int unlock_internal(bool lock_acquired) const noexcept;
 
     public:
         ft_inventory(size_t capacity = 0, int weight_limit = 0) noexcept;
-        virtual ~ft_inventory() = default;
-        ft_inventory(const ft_inventory &other) noexcept;
-        ft_inventory &operator=(const ft_inventory &other) noexcept;
-        ft_inventory(ft_inventory &&other) noexcept;
-        ft_inventory &operator=(ft_inventory &&other) noexcept;
+        virtual ~ft_inventory() noexcept;
+        ft_inventory(const ft_inventory &other) noexcept = delete;
+        ft_inventory &operator=(const ft_inventory &other) noexcept = delete;
+        ft_inventory(ft_inventory &&other) noexcept = delete;
+        ft_inventory &operator=(ft_inventory &&other) noexcept = delete;
+
+        int initialize() noexcept;
+        int initialize(const ft_inventory &other) noexcept;
+        int initialize(ft_inventory &&other) noexcept;
+        int destroy() noexcept;
+        int enable_thread_safety() noexcept;
+        int disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
+        int lock(bool *lock_acquired) const noexcept;
+        void unlock(bool lock_acquired) const noexcept;
 
         ft_map<int, ft_sharedptr<ft_item> >       &get_items() noexcept;
         const ft_map<int, ft_sharedptr<ft_item> > &get_items() const noexcept;
@@ -56,9 +69,6 @@ class ft_inventory
         int    get_current_weight() const noexcept;
         void   set_current_weight(int weight) noexcept;
 
-        int get_error() const noexcept;
-        const char *get_error_str() const noexcept;
-
         int  add_item(const ft_sharedptr<ft_item> &item) noexcept;
         void remove_item(int slot) noexcept;
 
@@ -67,6 +77,10 @@ class ft_inventory
 
         int  count_rarity(int rarity) const noexcept;
         bool has_rarity(int rarity) const noexcept;
+
+#ifdef LIBFT_TEST_BUILD
+        pt_mutex *get_mutex_for_validation() const noexcept;
+#endif
 };
 
 #endif

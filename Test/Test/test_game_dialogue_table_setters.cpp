@@ -1,4 +1,5 @@
 #include "../test_internal.hpp"
+#include "../../CPP_class/class_shared_ptr.hpp"
 #include "../../Game/game_dialogue_table.hpp"
 #include "../../System_utils/test_runner.hpp"
 
@@ -8,18 +9,20 @@
 FT_TEST(test_dialogue_table_setters, "dialogue table setter copies replace maps")
 {
     ft_dialogue_table table;
-    ft_map<int, ft_dialogue_line> lines;
+    ft_map<int, ft_sharedptr<ft_dialogue_line>> lines;
     ft_map<int, ft_dialogue_script> scripts;
     ft_vector<int> followups;
-    ft_vector<ft_dialogue_line> script_lines;
+    ft_vector<ft_sharedptr<ft_dialogue_line>> script_lines;
     ft_dialogue_line fetched_line;
     ft_dialogue_script fetched_script;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, lines.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scripts.initialize());
     followups.push_back(3);
-    lines.insert(2, ft_dialogue_line(2, ft_string("npc"), ft_string("hi"), followups));
-    script_lines.push_back(ft_dialogue_line(5, ft_string("npc"), ft_string("start"), followups));
+    lines.insert(2, ft_sharedptr<ft_dialogue_line>(new (std::nothrow)
+            ft_dialogue_line(2, ft_string("npc"), ft_string("hi"), followups)));
+    script_lines.push_back(ft_sharedptr<ft_dialogue_line>(new (std::nothrow)
+            ft_dialogue_line(5, ft_string("npc"), ft_string("start"), followups)));
     scripts.insert(8, ft_dialogue_script(8, ft_string("intro"), ft_string("summary"), 5, script_lines));
 
     table.set_lines(lines);

@@ -132,11 +132,9 @@ FT_TEST(test_currency_rate_getters_reset_errno, "Currency rate getters set errno
 {
     ft_currency_rate rate(3, 1.1, 4);
 
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(3, rate.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(1.1, rate.get_rate_to_base());
     FT_ASSERT_EQ(4, rate.get_display_precision());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.get_error());
     return (1);
 }

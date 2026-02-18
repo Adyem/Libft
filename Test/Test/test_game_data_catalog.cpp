@@ -73,7 +73,6 @@ FT_TEST(test_catalog_fetch_missing_item, "fetch missing item returns error")
     ft_item_definition definition;
 
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, catalog.fetch_item_definition(99, definition));
-    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, catalog.get_error());
     return (1);
 }
 

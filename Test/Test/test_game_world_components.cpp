@@ -94,12 +94,10 @@ FT_TEST(test_game_world_get_quest_propagates_errors, "Game world getters propaga
     ft_world world;
     ft_sharedptr<ft_quest> quest = world.get_quest();
 
-    ft_errno = FT_ERR_SUCCESS;
     quest->set_phases(-5);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, quest->get_error());
     world.get_quest();
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, world.get_error());
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -110,10 +108,8 @@ FT_TEST(test_game_world_get_vendor_profile_propagates_null_pointer_error, "Game 
     ft_sharedptr<ft_vendor_profile> &vendor_profile = world.get_vendor_profile();
 
     vendor_profile.reset();
-    ft_errno = FT_ERR_SUCCESS;
     world.get_vendor_profile();
     FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, world.get_error());
-    FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, ft_errno);
     FT_ASSERT_EQ(true, vendor_profile.get() == ft_nullptr);
     return (1);
 }
@@ -124,12 +120,10 @@ FT_TEST(test_game_world_get_vendor_profile_propagates_errors, "Game world getter
     ft_world world;
     ft_sharedptr<ft_vendor_profile> vendor_profile = world.get_vendor_profile();
 
-    ft_errno = FT_ERR_SUCCESS;
     vendor_profile->set_vendor_id(-9);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, vendor_profile->get_error());
     world.get_vendor_profile();
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, world.get_error());
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -140,15 +134,12 @@ FT_TEST(test_game_world_vendor_profile_recovers_after_replacement, "Game world v
     ft_sharedptr<ft_vendor_profile> &vendor_profile = world.get_vendor_profile();
 
     vendor_profile.reset();
-    ft_errno = FT_ERR_SUCCESS;
     world.get_vendor_profile();
     FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, world.get_error());
-    FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, ft_errno);
     vendor_profile = ft_sharedptr<ft_vendor_profile>(new ft_vendor_profile());
     vendor_profile->set_vendor_id(17);
     world.get_vendor_profile();
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT_EQ(17, vendor_profile->get_vendor_id());
     return (1);
 }
@@ -160,14 +151,11 @@ FT_TEST(test_game_world_get_upgrade_recovers_after_replacement, "Game world upgr
     ft_sharedptr<ft_upgrade> &upgrade = world.get_upgrade();
 
     upgrade.reset();
-    ft_errno = FT_ERR_SUCCESS;
     world.get_upgrade();
     FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, world.get_error());
-    FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, ft_errno);
     upgrade = ft_sharedptr<ft_upgrade>(new ft_upgrade());
     world.get_upgrade();
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT_EQ(false, upgrade.get() == ft_nullptr);
     return (1);
 }
@@ -178,12 +166,10 @@ FT_TEST(test_game_world_get_upgrade_propagates_errors, "Game world getters propa
     ft_world world;
     ft_sharedptr<ft_upgrade> upgrade = world.get_upgrade();
 
-    ft_errno = FT_ERR_SUCCESS;
     upgrade->set_id(-3);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, upgrade->get_error());
     world.get_upgrade();
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, world.get_error());
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -381,10 +367,8 @@ FT_TEST(test_game_world_get_world_region_propagates_null_pointer_error, "Game wo
     ft_sharedptr<ft_world_region> &world_region = world.get_world_region();
 
     world_region.reset();
-    ft_errno = FT_ERR_SUCCESS;
     world.get_world_region();
     FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, world.get_error());
-    FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, ft_errno);
     FT_ASSERT_EQ(true, world_region.get() == ft_nullptr);
     return (1);
 }
@@ -396,15 +380,12 @@ FT_TEST(test_game_world_get_world_region_recovers_after_replacement, "Game world
     ft_sharedptr<ft_world_region> &world_region = world.get_world_region();
 
     world_region.reset();
-    ft_errno = FT_ERR_SUCCESS;
     world.get_world_region();
     FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, world.get_error());
-    FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, ft_errno);
     world_region = ft_sharedptr<ft_world_region>(new ft_world_region());
     world_region->set_world_id(7);
     world.get_world_region();
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT_EQ(7, world_region->get_world_id());
     return (1);
 }
@@ -480,10 +461,8 @@ FT_TEST(test_game_world_get_upgrade_propagates_level_error, "Game world upgrade 
     upgrade->set_max_level(2);
     upgrade->set_current_level(5);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, upgrade->get_error());
-    ft_errno = FT_ERR_SUCCESS;
     world.get_upgrade();
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, world.get_error());
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 

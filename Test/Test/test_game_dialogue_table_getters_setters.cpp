@@ -1,4 +1,5 @@
 #include "../test_internal.hpp"
+#include "../../CPP_class/class_shared_ptr.hpp"
 #include "../../Game/game_dialogue_table.hpp"
 #include "../../Game/ft_dialogue_line.hpp"
 #include "../../Game/ft_dialogue_script.hpp"
@@ -11,15 +12,24 @@
 static void build_dialogue_entries(ft_dialogue_line &line, ft_dialogue_script &script)
 {
     ft_vector<int> followups;
-    ft_vector<ft_dialogue_line> script_lines;
+    ft_vector<ft_sharedptr<ft_dialogue_line>> script_lines;
 
     followups.push_back(4);
     line = ft_dialogue_line(3, ft_string("ally"), ft_string("welcome"), followups);
-    script_lines.push_back(line);
+    script_lines.push_back(ft_sharedptr<ft_dialogue_line>(new (std::nothrow)
+            ft_dialogue_line(3, ft_string("ally"), ft_string("welcome"), followups)));
     followups.clear();
-    script_lines.push_back(ft_dialogue_line(4, ft_string("ally"), ft_string("farewell"), followups));
+    script_lines.push_back(ft_sharedptr<ft_dialogue_line>(new (std::nothrow)
+            ft_dialogue_line(4, ft_string("ally"), ft_string("farewell"), followups)));
     script = ft_dialogue_script(6, ft_string("greeting"), ft_string("intro"), 3, script_lines);
     return ;
+}
+
+static ft_sharedptr<ft_dialogue_line> make_shared_line(int id, const char *speaker,
+        const char *text, const ft_vector<int> &next_ids)
+{
+    return (ft_sharedptr<ft_dialogue_line>(new (std::nothrow) ft_dialogue_line(
+            id, ft_string(speaker), ft_string(text), next_ids)));
 }
 
 FT_TEST(test_dialogue_table_register_line_sets_success, "register line stores entry and sets success error")
@@ -89,14 +99,14 @@ FT_TEST(test_dialogue_table_set_lines_replaces_entries, "set_lines replaces stor
     ft_dialogue_table table;
     ft_dialogue_line line;
     ft_dialogue_script script;
-    ft_map<int, ft_dialogue_line> lines;
+    ft_map<int, ft_sharedptr<ft_dialogue_line>> lines;
     ft_dialogue_line fetched;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, lines.initialize());
     build_dialogue_entries(line, script);
     table.register_line(line);
     table.fetch_line(99, fetched);
-    lines.insert(10, ft_dialogue_line(10, ft_string("npc"), ft_string("hello"), ft_vector<int>()));
+    lines.insert(10, make_shared_line(10, "npc", "hello", ft_vector<int>()));
     ft_errno = FT_ERR_INVALID_STATE;
     table.set_lines(lines);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
@@ -135,12 +145,13 @@ FT_TEST(test_dialogue_table_get_lines_sets_success_errno, "get_lines sets succes
     ft_dialogue_table table;
     ft_dialogue_line line;
     ft_dialogue_script script;
-    ft_map<int, ft_dialogue_line> &lines = table.get_lines();
+    ft_map<int, ft_sharedptr<ft_dialogue_line>> &lines = table.get_lines();
 
     build_dialogue_entries(line, script);
-    lines.insert(7, line);
+    lines.insert(7, make_shared_line(line.get_line_id(), line.get_speaker(),
+            line.get_text(), line.get_next_line_ids()));
     ft_errno = FT_ERR_INVALID_STATE;
-    const ft_map<int, ft_dialogue_line> &const_lines = table.get_lines();
+    const ft_map<int, ft_sharedptr<ft_dialogue_line>> &const_lines = table.get_lines();
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT_EQ(1, const_lines.size());

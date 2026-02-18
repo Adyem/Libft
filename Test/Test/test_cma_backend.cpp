@@ -30,12 +30,10 @@ static void *test_backend_allocate(ft_size_t size, void *user_data)
     void *memory_pointer = std::malloc(static_cast<size_t>(size));
     if (!memory_pointer)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     state->allocation_sizes[memory_pointer] = size;
     state->allocation_count++;
-    ft_errno = FT_ERR_SUCCESS;
     return (memory_pointer);
 }
 
@@ -51,18 +49,15 @@ static void *test_backend_reallocate(void *memory_pointer, ft_size_t size,
             state->allocation_sizes.erase(memory_pointer);
         std::free(memory_pointer);
         state->free_count++;
-        ft_errno = FT_ERR_SUCCESS;
         return (ft_nullptr);
     }
     void *new_pointer = std::realloc(memory_pointer, static_cast<size_t>(size));
     if (!new_pointer)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     state->allocation_sizes.erase(memory_pointer);
     state->allocation_sizes[new_pointer] = size;
-    ft_errno = FT_ERR_SUCCESS;
     return (new_pointer);
 }
 
@@ -74,7 +69,6 @@ static void test_backend_deallocate(void *memory_pointer, void *user_data)
     state->allocation_sizes.erase(memory_pointer);
     state->free_count++;
     std::free(memory_pointer);
-    ft_errno = FT_ERR_SUCCESS;
     return ;
 }
 
@@ -118,7 +112,6 @@ int test_cma_backend_hooks(void)
     hooks.owns_allocation = &test_backend_owns_allocation;
     hooks.user_data = &backend_state;
 
-    ft_errno = FT_ERR_SUCCESS;
     if (cma_set_backend(&hooks) != 0)
         return (0);
     if (cma_backend_is_enabled() != 1)
@@ -126,8 +119,6 @@ int test_cma_backend_hooks(void)
 
     void *memory_pointer = cma_malloc(64);
     if (!memory_pointer)
-        return (0);
-    if (ft_errno != FT_ERR_SUCCESS)
         return (0);
     if (backend_state.allocation_sizes.find(memory_pointer)
         == backend_state.allocation_sizes.end())
@@ -138,8 +129,6 @@ int test_cma_backend_hooks(void)
     ft_memset(memory_pointer, 0x5A, 32);
     void *reallocated_pointer = cma_realloc(memory_pointer, 128);
     if (!reallocated_pointer)
-        return (0);
-    if (ft_errno != FT_ERR_SUCCESS)
         return (0);
     if (cma_alloc_size(reallocated_pointer) != 128)
         return (0);

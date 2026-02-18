@@ -102,8 +102,6 @@ static api_circuit_state *api_retry_circuit_get_state(
     new_state.half_open = false;
     new_state.half_open_success_count = 0;
     states.push_back(new_state);
-    if (states.get_error() != FT_ERR_SUCCESS)
-        return (ft_nullptr);
     size_t last_index;
 
     last_index = states.size();

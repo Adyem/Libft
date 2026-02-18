@@ -549,7 +549,6 @@ int json_document::write_to_backend(ft_document_sink &sink) const noexcept
     char *serialized_content;
     size_t serialized_length;
     int write_result;
-    int sink_error;
 
     lock_error = this->lock_self();
     if (lock_error != FT_ERR_SUCCESS)
@@ -566,12 +565,9 @@ int json_document::write_to_backend(ft_document_sink &sink) const noexcept
     }
     serialized_length = ft_strlen(serialized_content);
     write_result = sink.write_all(serialized_content, serialized_length);
-    sink_error = sink.get_error();
     cma_free(serialized_content);
     if (write_result != FT_ERR_SUCCESS)
     {
-        if (sink_error != FT_ERR_SUCCESS)
-            write_result = sink_error;
         this->set_error_unlocked(write_result);
         json_document_finalize_guard();
         return (-1);
@@ -653,8 +649,6 @@ int json_document::read_from_backend(ft_document_source &source) noexcept
     if (!groups)
     {
         error_code = json_document_last_error();
-        if (error_code == FT_ERR_SUCCESS)
-            error_code = source.get_error();
         if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_INVALID_ARGUMENT;
         this->set_error_unlocked(error_code);

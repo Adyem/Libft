@@ -3,7 +3,6 @@
 #include "networking.hpp"
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
-#include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread.hpp"
 
@@ -200,14 +199,11 @@ int event_loop_prepare_thread_safety(event_loop *loop)
         return (-1);
     }
     mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ERR_SUCCESS)
+    if (mutex_pointer->initialize() != FT_ERR_SUCCESS)
     {
-        int mutex_error;
-
-        mutex_error = mutex_pointer->get_error();
+        (void)mutex_pointer->destroy();
         mutex_pointer->~pt_mutex();
         std::free(memory);
-        (void)(mutex_error);
         return (-1);
     }
     loop->mutex = mutex_pointer;
@@ -244,12 +240,8 @@ int event_loop_lock(event_loop *loop, bool *lock_acquired)
         (void)(FT_ERR_SUCCESS);
         return (0);
     }
-    loop->mutex->lock(THREAD_ID);
-    if (loop->mutex->get_error() != FT_ERR_SUCCESS)
-    {
-        (void)(loop->mutex->get_error());
+    if (loop->mutex->lock() != FT_ERR_SUCCESS)
         return (-1);
-    }
     if (lock_acquired)
         *lock_acquired = true;
     (void)(FT_ERR_SUCCESS);
@@ -268,12 +260,8 @@ void event_loop_unlock(event_loop *loop, bool lock_acquired)
         (void)(FT_ERR_SUCCESS);
         return ;
     }
-    loop->mutex->unlock(THREAD_ID);
-    if (loop->mutex->get_error() != FT_ERR_SUCCESS)
-    {
-        (void)(loop->mutex->get_error());
+    if (loop->mutex->unlock() != FT_ERR_SUCCESS)
         return ;
-    }
     (void)(FT_ERR_SUCCESS);
     return ;
 }

@@ -10,294 +10,225 @@
 # include <sys/socket.h>
 # include <netinet/in.h>
 # include <arpa/inet.h>
-# include <errno.h>
 #endif
 #include "socket_class.hpp"
 #include "socket_handle.hpp"
-#include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 
 #ifdef _WIN32
-static inline int bind_platform(int sockfd, const struct sockaddr *addr, socklen_t len)
+static inline int bind_platform(int socket_file_descriptor, const struct sockaddr *address_value, socklen_t address_length)
 {
-    if (bind(static_cast<SOCKET>(sockfd), addr, len) == SOCKET_ERROR)
-    {
-        ft_errno = ft_map_system_error(WSAGetLastError());
+    if (bind(static_cast<SOCKET>(socket_file_descriptor), address_value, address_length) == SOCKET_ERROR)
         return (-1);
-    }
-    ft_errno = FT_ERR_SUCCESS;
     return (0);
 }
 
-static inline int listen_platform(int sockfd, int backlog)
+static inline int listen_platform(int socket_file_descriptor, int backlog_value)
 {
-    if (listen(static_cast<SOCKET>(sockfd), backlog) == SOCKET_ERROR)
-    {
-        ft_errno = ft_map_system_error(WSAGetLastError());
+    if (listen(static_cast<SOCKET>(socket_file_descriptor), backlog_value) == SOCKET_ERROR)
         return (-1);
-    }
-    ft_errno = FT_ERR_SUCCESS;
     return (0);
 }
 
-static inline int accept_platform(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
+static inline int accept_platform(int socket_file_descriptor, struct sockaddr *address_value, socklen_t *address_length)
 {
-    SOCKET new_fd = accept(static_cast<SOCKET>(sockfd), addr, addrlen);
-    if (new_fd == INVALID_SOCKET)
-    {
-        ft_errno = ft_map_system_error(WSAGetLastError());
+    SOCKET new_file_descriptor;
+
+    new_file_descriptor = accept(static_cast<SOCKET>(socket_file_descriptor), address_value, address_length);
+    if (new_file_descriptor == INVALID_SOCKET)
         return (-1);
-    }
-    ft_errno = FT_ERR_SUCCESS;
-    return (static_cast<int>(new_fd));
+    return (static_cast<int>(new_file_descriptor));
 }
 
-static inline int socket_platform(int domain, int type, int protocol)
+static inline int socket_platform(int domain_value, int type_value, int protocol_value)
 {
+    SOCKET socket_file_descriptor;
+
     if (ft_socket_runtime_acquire() != FT_ERR_SUCCESS)
-    {
         return (-1);
-    }
-    SOCKET sockfd = socket(domain, type, protocol);
-    if (sockfd == INVALID_SOCKET)
+    socket_file_descriptor = socket(domain_value, type_value, protocol_value);
+    if (socket_file_descriptor == INVALID_SOCKET)
     {
-        ft_errno = ft_map_system_error(WSAGetLastError());
         ft_socket_runtime_release();
         return (-1);
     }
-    ft_errno = FT_ERR_SUCCESS;
-    return (static_cast<int>(sockfd));
+    return (static_cast<int>(socket_file_descriptor));
 }
 
-static inline int connect_platform(int sockfd, const struct sockaddr *addr, socklen_t len)
+static inline int connect_platform(int socket_file_descriptor, const struct sockaddr *address_value, socklen_t address_length)
 {
-    if (connect(static_cast<SOCKET>(sockfd), addr, len) == SOCKET_ERROR)
-    {
-        ft_errno = ft_map_system_error(WSAGetLastError());
+    if (connect(static_cast<SOCKET>(socket_file_descriptor), address_value, address_length) == SOCKET_ERROR)
         return (-1);
-    }
-    ft_errno = FT_ERR_SUCCESS;
     return (0);
 }
 
-static inline ssize_t send_platform(int sockfd, const void *buf, size_t len, int flags)
+static inline ssize_t send_platform(int socket_file_descriptor, const void *buffer_value, size_t buffer_length, int send_flags)
 {
-    int ret = ::send(static_cast<SOCKET>(sockfd), static_cast<const char*>(buf), static_cast<int>(len), flags);
-    if (ret == SOCKET_ERROR)
-    {
-        ft_errno = ft_map_system_error(WSAGetLastError());
+    int send_result;
+
+    send_result = ::send(static_cast<SOCKET>(socket_file_descriptor), static_cast<const char *>(buffer_value), static_cast<int>(buffer_length), send_flags);
+    if (send_result == SOCKET_ERROR)
         return (-1);
-    }
-    ft_errno = FT_ERR_SUCCESS;
-    return (ret);
+    return (send_result);
 }
 
-static inline ssize_t recv_platform(int sockfd, void *buf, size_t len, int flags)
+static inline ssize_t recv_platform(int socket_file_descriptor, void *buffer_value, size_t buffer_length, int receive_flags)
 {
-    int ret = ::recv(static_cast<SOCKET>(sockfd), static_cast<char*>(buf), static_cast<int>(len), flags);
-    if (ret == SOCKET_ERROR)
-    {
-        ft_errno = ft_map_system_error(WSAGetLastError());
+    int receive_result;
+
+    receive_result = ::recv(static_cast<SOCKET>(socket_file_descriptor), static_cast<char *>(buffer_value), static_cast<int>(buffer_length), receive_flags);
+    if (receive_result == SOCKET_ERROR)
         return (-1);
-    }
-    ft_errno = FT_ERR_SUCCESS;
-    return (ret);
+    return (receive_result);
 }
 
-static inline int shutdown_platform(int sockfd, int how)
+static inline int shutdown_platform(int socket_file_descriptor, int shutdown_mode)
 {
-    if (::shutdown(static_cast<SOCKET>(sockfd), how) == SOCKET_ERROR)
-    {
-        ft_errno = ft_map_system_error(WSAGetLastError());
+    if (::shutdown(static_cast<SOCKET>(socket_file_descriptor), shutdown_mode) == SOCKET_ERROR)
         return (-1);
-    }
-    ft_errno = FT_ERR_SUCCESS;
     return (0);
 }
 
-static inline ssize_t sendto_platform(int sockfd, const void *buf, size_t len, int flags,
-                                      const struct sockaddr *dest_addr, socklen_t addrlen)
+static inline ssize_t sendto_platform(int socket_file_descriptor, const void *buffer_value, size_t buffer_length, int send_flags,
+    const struct sockaddr *destination_address, socklen_t address_length)
 {
-    int ret = ::sendto(static_cast<SOCKET>(sockfd), static_cast<const char*>(buf),
-                       static_cast<int>(len), flags, dest_addr, addrlen);
-    if (ret == SOCKET_ERROR)
-    {
-        ft_errno = ft_map_system_error(WSAGetLastError());
+    int send_result;
+
+    send_result = ::sendto(static_cast<SOCKET>(socket_file_descriptor), static_cast<const char *>(buffer_value),
+            static_cast<int>(buffer_length), send_flags, destination_address, address_length);
+    if (send_result == SOCKET_ERROR)
         return (-1);
-    }
-    ft_errno = FT_ERR_SUCCESS;
-    return (ret);
+    return (send_result);
 }
 
-static inline ssize_t recvfrom_platform(int sockfd, void *buf, size_t len, int flags,
-                                        struct sockaddr *src_addr, socklen_t *addrlen)
+static inline ssize_t recvfrom_platform(int socket_file_descriptor, void *buffer_value, size_t buffer_length, int receive_flags,
+    struct sockaddr *source_address, socklen_t *address_length)
 {
-    int ret = ::recvfrom(static_cast<SOCKET>(sockfd), static_cast<char*>(buf),
-                         static_cast<int>(len), flags, src_addr, addrlen);
-    if (ret == SOCKET_ERROR)
-    {
-        ft_errno = ft_map_system_error(WSAGetLastError());
+    int receive_result;
+
+    receive_result = ::recvfrom(static_cast<SOCKET>(socket_file_descriptor), static_cast<char *>(buffer_value),
+            static_cast<int>(buffer_length), receive_flags, source_address, address_length);
+    if (receive_result == SOCKET_ERROR)
         return (-1);
-    }
-    ft_errno = FT_ERR_SUCCESS;
-    return (ret);
+    return (receive_result);
 }
 #else
-static inline int bind_platform(int sockfd, const struct sockaddr *addr, socklen_t len)
+static inline int bind_platform(int socket_file_descriptor, const struct sockaddr *address_value, socklen_t address_length)
 {
-    if (bind(sockfd, addr, len) == -1)
-    {
-        ft_errno = ft_map_system_error(errno);
+    if (bind(socket_file_descriptor, address_value, address_length) == -1)
         return (-1);
-    }
-    ft_errno = FT_ERR_SUCCESS;
     return (0);
 }
 
-static inline int listen_platform(int sockfd, int backlog)
+static inline int listen_platform(int socket_file_descriptor, int backlog_value)
 {
-    if (listen(sockfd, backlog) == -1)
-    {
-        ft_errno = ft_map_system_error(errno);
+    if (listen(socket_file_descriptor, backlog_value) == -1)
         return (-1);
-    }
-    ft_errno = FT_ERR_SUCCESS;
     return (0);
 }
 
-static inline int accept_platform(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
+static inline int accept_platform(int socket_file_descriptor, struct sockaddr *address_value, socklen_t *address_length)
 {
-    int new_fd = accept(sockfd, addr, addrlen);
-    if (new_fd == -1)
-    {
-        ft_errno = ft_map_system_error(errno);
+    int new_file_descriptor;
+
+    new_file_descriptor = accept(socket_file_descriptor, address_value, address_length);
+    if (new_file_descriptor == -1)
         return (-1);
-    }
-    ft_errno = FT_ERR_SUCCESS;
-    return (new_fd);
+    return (new_file_descriptor);
 }
 
-static inline int socket_platform(int domain, int type, int protocol)
+static inline int socket_platform(int domain_value, int type_value, int protocol_value)
 {
-    int sockfd = socket(domain, type, protocol);
-    if (sockfd == -1)
-    {
-        ft_errno = ft_map_system_error(errno);
+    int socket_file_descriptor;
+
+    socket_file_descriptor = socket(domain_value, type_value, protocol_value);
+    if (socket_file_descriptor == -1)
         return (-1);
-    }
-    ft_errno = FT_ERR_SUCCESS;
-    return (sockfd);
+    return (socket_file_descriptor);
 }
 
-static inline int connect_platform(int sockfd, const struct sockaddr *addr, socklen_t len)
+static inline int connect_platform(int socket_file_descriptor, const struct sockaddr *address_value, socklen_t address_length)
 {
-    if (connect(sockfd, addr, len) == -1)
-    {
-        ft_errno = ft_map_system_error(errno);
+    if (connect(socket_file_descriptor, address_value, address_length) == -1)
         return (-1);
-    }
-    ft_errno = FT_ERR_SUCCESS;
     return (0);
 }
 
-static inline ssize_t send_platform(int sockfd, const void *buf, size_t len, int flags)
+static inline ssize_t send_platform(int socket_file_descriptor, const void *buffer_value, size_t buffer_length, int send_flags)
 {
-    ssize_t result;
+    ssize_t send_result;
 
-    result = ::send(sockfd, buf, len, flags);
-    if (result == -1)
-    {
-        ft_errno = ft_map_system_error(errno);
+    send_result = ::send(socket_file_descriptor, buffer_value, buffer_length, send_flags);
+    if (send_result == -1)
         return (-1);
-    }
-    ft_errno = FT_ERR_SUCCESS;
-    return (result);
+    return (send_result);
 }
 
-static inline ssize_t recv_platform(int sockfd, void *buf, size_t len, int flags)
+static inline ssize_t recv_platform(int socket_file_descriptor, void *buffer_value, size_t buffer_length, int receive_flags)
 {
-    ssize_t result;
+    ssize_t receive_result;
 
-    result = ::recv(sockfd, buf, len, flags);
-    if (result == -1)
-    {
-        ft_errno = ft_map_system_error(errno);
+    receive_result = ::recv(socket_file_descriptor, buffer_value, buffer_length, receive_flags);
+    if (receive_result == -1)
         return (-1);
-    }
-    ft_errno = FT_ERR_SUCCESS;
-    return (result);
+    return (receive_result);
 }
 
-static inline int shutdown_platform(int sockfd, int how)
+static inline int shutdown_platform(int socket_file_descriptor, int shutdown_mode)
 {
-    if (::shutdown(sockfd, how) == -1)
-    {
-        ft_errno = ft_map_system_error(errno);
+    if (::shutdown(socket_file_descriptor, shutdown_mode) == -1)
         return (-1);
-    }
-    ft_errno = FT_ERR_SUCCESS;
     return (0);
 }
 
-static inline ssize_t sendto_platform(int sockfd, const void *buf, size_t len, int flags,
-                                      const struct sockaddr *dest_addr, socklen_t addrlen)
+static inline ssize_t sendto_platform(int socket_file_descriptor, const void *buffer_value, size_t buffer_length, int send_flags,
+    const struct sockaddr *destination_address, socklen_t address_length)
 {
-    ssize_t result;
+    ssize_t send_result;
 
-    result = ::sendto(sockfd, buf, len, flags, dest_addr, addrlen);
-    if (result == -1)
-    {
-        ft_errno = ft_map_system_error(errno);
+    send_result = ::sendto(socket_file_descriptor, buffer_value, buffer_length, send_flags, destination_address, address_length);
+    if (send_result == -1)
         return (-1);
-    }
-    ft_errno = FT_ERR_SUCCESS;
-    return (result);
+    return (send_result);
 }
 
-static inline ssize_t recvfrom_platform(int sockfd, void *buf, size_t len, int flags,
-                                        struct sockaddr *src_addr, socklen_t *addrlen)
+static inline ssize_t recvfrom_platform(int socket_file_descriptor, void *buffer_value, size_t buffer_length, int receive_flags,
+    struct sockaddr *source_address, socklen_t *address_length)
 {
-    ssize_t result;
+    ssize_t receive_result;
 
-    result = ::recvfrom(sockfd, buf, len, flags, src_addr, addrlen);
-    if (result == -1)
-    {
-        ft_errno = ft_map_system_error(errno);
+    receive_result = ::recvfrom(socket_file_descriptor, buffer_value, buffer_length, receive_flags, source_address, address_length);
+    if (receive_result == -1)
         return (-1);
-    }
-    ft_errno = FT_ERR_SUCCESS;
-    return (result);
+    return (receive_result);
 }
 #endif
 
-int nw_bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
+int nw_bind(int socket_file_descriptor, const struct sockaddr *address_value, socklen_t address_length)
 {
-    return (bind_platform(sockfd, addr, addrlen));
+    return (bind_platform(socket_file_descriptor, address_value, address_length));
 }
 
-int nw_listen(int sockfd, int backlog)
+int nw_listen(int socket_file_descriptor, int backlog_value)
 {
-    return (listen_platform(sockfd, backlog));
+    return (listen_platform(socket_file_descriptor, backlog_value));
 }
 
-int nw_accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
+int nw_accept(int socket_file_descriptor, struct sockaddr *address_value, socklen_t *address_length)
 {
-    int accepted_fd;
-    int acquire_error;
+    int accepted_file_descriptor;
 
-    accepted_fd = accept_platform(sockfd, addr, addrlen);
-    if (accepted_fd < 0)
-    {
+    accepted_file_descriptor = accept_platform(socket_file_descriptor, address_value, address_length);
+    if (accepted_file_descriptor < 0)
         return (-1);
-    }
+#ifdef _WIN32
     if (ft_socket_runtime_acquire() != FT_ERR_SUCCESS)
     {
-        acquire_error = ft_errno;
-        nw_close(accepted_fd);
-        ft_errno = acquire_error;
+        nw_close(accepted_file_descriptor);
         return (-1);
     }
-    return (accepted_fd);
+#endif
+    return (accepted_file_descriptor);
 }
 
 static t_nw_socket_hook g_nw_socket_hook = socket_platform;
@@ -313,140 +244,67 @@ void nw_set_socket_hook(t_nw_socket_hook hook)
     return ;
 }
 
-int nw_socket(int domain, int type, int protocol)
+int nw_socket(int domain_value, int type_value, int protocol_value)
 {
-    return (g_nw_socket_hook(domain, type, protocol));
+    return (g_nw_socket_hook(domain_value, type_value, protocol_value));
 }
 
-int nw_connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
+int nw_connect(int socket_file_descriptor, const struct sockaddr *address_value, socklen_t address_length)
 {
-    return (connect_platform(sockfd, addr, addrlen));
+    return (connect_platform(socket_file_descriptor, address_value, address_length));
 }
 
-ssize_t nw_send(int sockfd, const void *buf, size_t len, int flags)
+ssize_t nw_send(int socket_file_descriptor, const void *buffer_value, size_t buffer_length, int send_flags)
 {
-    return (send_platform(sockfd, buf, len, flags));
+    return (send_platform(socket_file_descriptor, buffer_value, buffer_length, send_flags));
 }
 
-ssize_t nw_recv(int sockfd, void *buf, size_t len, int flags)
+ssize_t nw_recv(int socket_file_descriptor, void *buffer_value, size_t buffer_length, int receive_flags)
 {
-    return (recv_platform(sockfd, buf, len, flags));
+    return (recv_platform(socket_file_descriptor, buffer_value, buffer_length, receive_flags));
 }
 
-ssize_t nw_sendto(int sockfd, const void *buf, size_t len, int flags,
-                  const struct sockaddr *dest_addr, socklen_t addrlen)
+ssize_t nw_sendto(int socket_file_descriptor, const void *buffer_value, size_t buffer_length, int send_flags,
+    const struct sockaddr *destination_address, socklen_t address_length)
 {
-    return (sendto_platform(sockfd, buf, len, flags, dest_addr, addrlen));
+    return (sendto_platform(socket_file_descriptor, buffer_value, buffer_length, send_flags, destination_address, address_length));
 }
 
-ssize_t nw_recvfrom(int sockfd, void *buf, size_t len, int flags,
-                    struct sockaddr *src_addr, socklen_t *addrlen)
+ssize_t nw_recvfrom(int socket_file_descriptor, void *buffer_value, size_t buffer_length, int receive_flags,
+    struct sockaddr *source_address, socklen_t *address_length)
 {
-    return (recvfrom_platform(sockfd, buf, len, flags, src_addr, addrlen));
+    return (recvfrom_platform(socket_file_descriptor, buffer_value, buffer_length, receive_flags, source_address, address_length));
 }
 
-int nw_close(int sockfd)
+int nw_close(int socket_file_descriptor)
 {
 #ifdef _WIN32
-    int close_error;
-
-    if (closesocket(static_cast<SOCKET>(sockfd)) == SOCKET_ERROR)
-    {
-        close_error = ft_map_system_error(WSAGetLastError());
-        if (close_error == FT_ERR_SUCCESS)
-            close_error = FT_ERR_SOCKET_CLOSE_FAILED;
-        (void)(close_error);
+    if (closesocket(static_cast<SOCKET>(socket_file_descriptor)) == SOCKET_ERROR)
         return (-1);
-    }
     ft_socket_runtime_release();
-    if (FT_ERR_SUCCESS != FT_ERR_SUCCESS)
-        return (-1);
-    (void)(FT_ERR_SUCCESS);
     return (0);
 #else
-    int close_error;
-
-    if (close(sockfd) == -1)
-    {
-        close_error = ft_map_system_error(errno);
-        if (close_error == FT_ERR_SUCCESS)
-            close_error = FT_ERR_SOCKET_CLOSE_FAILED;
-        (void)(close_error);
+    if (close(socket_file_descriptor) == -1)
         return (-1);
-    }
-    (void)(FT_ERR_SUCCESS);
     return (0);
 #endif
 }
 
-int nw_shutdown(int sockfd, int how)
+int nw_shutdown(int socket_file_descriptor, int shutdown_mode)
 {
-#ifdef _WIN32
-    int previous_error;
-
-    previous_error = ft_errno;
-    if (shutdown_platform(sockfd, how) != 0)
-    {
-        if (ft_errno == FT_ERR_SUCCESS)
-        {
-            ft_errno = FT_ERR_SOCKET_CLOSE_FAILED;
-        }
-        return (-1);
-    }
-    ft_errno = previous_error;
-    return (0);
-#else
-    int previous_error;
-
-    previous_error = ft_errno;
-    if (shutdown_platform(sockfd, how) != 0)
-    {
-        if (ft_errno == FT_ERR_SUCCESS)
-        {
-            ft_errno = FT_ERR_SOCKET_CLOSE_FAILED;
-        }
-        return (-1);
-    }
-    ft_errno = previous_error;
-    return (0);
-#endif
+    return (shutdown_platform(socket_file_descriptor, shutdown_mode));
 }
 
-int nw_inet_pton(int family, const char *ip_address, void *destination)
+int nw_inet_pton(int family_value, const char *ip_address, void *destination)
 {
-    int result;
+    int conversion_result;
 
     if (ip_address == ft_nullptr || destination == ft_nullptr)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
-    }
-    result = inet_pton(family, ip_address, destination);
-    if (result == 1)
-    {
-        ft_errno = FT_ERR_SUCCESS;
+    conversion_result = inet_pton(family_value, ip_address, destination);
+    if (conversion_result == 1)
         return (1);
-    }
-    if (result == 0)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+    if (conversion_result == 0)
         return (0);
-    }
-#ifdef _WIN32
-    {
-        int error_code;
-
-        error_code = WSAGetLastError();
-        if (error_code != 0)
-            ft_errno = ft_map_system_error(error_code);
-        else
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
-    }
-#else
-    if (errno != 0)
-        ft_errno = ft_map_system_error(errno);
-    else
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-#endif
     return (-1);
 }

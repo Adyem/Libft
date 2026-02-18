@@ -59,12 +59,12 @@ int api_request_set_resolve_error(int resolver_status)
     if (resolver_status == EAI_SYSTEM)
     {
 #ifdef _WIN32
-        return (ft_map_system_error(WSAGetLastError()));
+        return (cmp_map_system_error_to_ft(WSAGetLastError()));
 #else
         int system_error = errno;
 
         if (system_error != 0)
-            return (ft_map_system_error(system_error));
+            return (cmp_map_system_error_to_ft(system_error));
         return (FT_ERR_SOCKET_RESOLVE_FAIL);
 #endif
     }

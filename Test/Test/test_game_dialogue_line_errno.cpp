@@ -40,9 +40,7 @@ FT_TEST(test_dialogue_line_set_line_id_sets_errno_success, "set_line_id updates 
 {
     ft_dialogue_line line(1, ft_string("ally"), ft_string("start"), ft_vector<int>());
 
-    ft_errno = FT_ERR_TERMINATED;
     line.set_line_id(7);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT_EQ(7, line.get_line_id());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, line.get_error());
     return (1);
@@ -52,9 +50,7 @@ FT_TEST(test_dialogue_line_set_speaker_sets_errno_success, "set_speaker updates 
 {
     ft_dialogue_line line(1, ft_string("ally"), ft_string("start"), ft_vector<int>());
 
-    ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
     line.set_speaker(ft_string("guide"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT_EQ(ft_string("guide"), line.get_speaker());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, line.get_error());
     return (1);
@@ -64,9 +60,7 @@ FT_TEST(test_dialogue_line_set_text_sets_errno_success, "set_text updates dialog
 {
     ft_dialogue_line line(1, ft_string("ally"), ft_string("start"), ft_vector<int>());
 
-    ft_errno = FT_ERR_MUTEX_NOT_OWNER;
     line.set_text(ft_string("updated"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT_EQ(ft_string("updated"), line.get_text());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, line.get_error());
     return (1);
@@ -79,10 +73,8 @@ FT_TEST(test_dialogue_line_set_next_line_ids_copies_values_and_clears_errno, "se
 
     next_lines.push_back(2);
     next_lines.push_back(4);
-    ft_errno = FT_ERR_END_OF_FILE;
     line.set_next_line_ids(next_lines);
     next_lines.push_back(6);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT_EQ(2ul, line.get_next_line_ids().size());
     FT_ASSERT_EQ(2, line.get_next_line_ids()[0]);
     FT_ASSERT_EQ(4, line.get_next_line_ids()[1]);
@@ -138,9 +130,7 @@ FT_TEST(test_dialogue_line_self_assignment_resets_errno, "self copy assignment r
 
     next_lines.push_back(15);
     line = ft_dialogue_line(8, ft_string("ally"), ft_string("hint"), next_lines);
-    ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
     line = line;
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT_EQ(8, line.get_line_id());
     FT_ASSERT_EQ(ft_string("ally"), line.get_speaker());
     FT_ASSERT_EQ(ft_string("hint"), line.get_text());
@@ -157,13 +147,11 @@ FT_TEST(test_dialogue_line_getters_reset_errno_to_success, "getters reset errno 
 
     next_lines.push_back(21);
     line = ft_dialogue_line(13, ft_string("guide"), ft_string("tip"), next_lines);
-    ft_errno = FT_ERR_CONFIGURATION;
     FT_ASSERT_EQ(13, line.get_line_id());
     FT_ASSERT_EQ(ft_string("guide"), line.get_speaker());
     FT_ASSERT_EQ(ft_string("tip"), line.get_text());
     FT_ASSERT_EQ(1ul, line.get_next_line_ids().size());
     FT_ASSERT_EQ(21, line.get_next_line_ids()[0]);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, line.get_error());
     return (1);
 }

@@ -28,11 +28,6 @@ static int json_dom_append_item(const json_item *item, ft_dom_node *group_node) 
         return (-1);
     }
     item_node->set_type(FT_DOM_NODE_VALUE);
-    if (item_node->get_error() != FT_ERR_SUCCESS)
-    {
-        json_dom_delete_node(item_node);
-        return (-1);
-    }
     const char *item_key;
 
     item_key = item->key;
@@ -104,11 +99,6 @@ static int json_dom_append_group(const json_group *group, ft_dom_node *root_node
         return (-1);
     }
     group_node->set_type(FT_DOM_NODE_OBJECT);
-    if (group_node->get_error() != FT_ERR_SUCCESS)
-    {
-        json_dom_delete_node(group_node);
-        return (-1);
-    }
     const char *group_name;
 
     group_name = group->name;
@@ -142,8 +132,6 @@ static int json_dom_append_group(const json_group *group, ft_dom_node *root_node
 int json_document_to_dom(const json_document &document, ft_dom_document &dom) noexcept
 {
     dom.clear();
-    if (dom.get_error() != FT_ERR_SUCCESS)
-        return (-1);
     ft_dom_node *root_node;
 
     root_node = new(std::nothrow) ft_dom_node();
@@ -152,11 +140,6 @@ int json_document_to_dom(const json_document &document, ft_dom_document &dom) no
         return (-1);
     }
     root_node->set_type(FT_DOM_NODE_OBJECT);
-    if (root_node->get_error() != FT_ERR_SUCCESS)
-    {
-        json_dom_delete_node(root_node);
-        return (-1);
-    }
     if (root_node->set_name("json" ) != 0)
     {
         json_dom_delete_node(root_node);
@@ -165,11 +148,6 @@ int json_document_to_dom(const json_document &document, ft_dom_document &dom) no
     json_group *group_iterator;
 
     group_iterator = document.get_groups();
-    if (document.get_error() != FT_ERR_SUCCESS)
-    {
-        json_dom_delete_node(root_node);
-        return (-1);
-    }
     while (group_iterator)
     {
         if (json_dom_append_group(group_iterator, root_node) != 0)
@@ -180,11 +158,6 @@ int json_document_to_dom(const json_document &document, ft_dom_document &dom) no
         group_iterator = group_iterator->next;
     }
     dom.set_root(root_node);
-    if (dom.get_error() != FT_ERR_SUCCESS)
-    {
-        json_dom_delete_node(root_node);
-        return (-1);
-    }
     return (0);
 }
 
@@ -196,12 +169,6 @@ static int json_dom_apply_item(ft_dom_node *item_node, json_group *group, json_d
         return (-1);
     }
     const ft_string &item_name = item_node->get_name();
-
-    if (item_node->get_error() != FT_ERR_SUCCESS)
-    {
-        document.set_manual_error(item_node->get_error());
-        return (-1);
-    }
     const char *item_key;
 
     item_key = item_name.c_str();
@@ -211,12 +178,6 @@ static int json_dom_apply_item(ft_dom_node *item_node, json_group *group, json_d
         return (-1);
     }
     const ft_string &item_value_string = item_node->get_value();
-
-    if (item_node->get_error() != FT_ERR_SUCCESS)
-    {
-        document.set_manual_error(item_node->get_error());
-        return (-1);
-    }
     const char *item_value;
 
     item_value = item_value_string.c_str();
@@ -228,7 +189,7 @@ static int json_dom_apply_item(ft_dom_node *item_node, json_group *group, json_d
     ft_string type_attribute = item_node->get_attribute("json:type");
     bool has_type_attribute;
 
-    has_type_attribute = (item_node->get_error() == FT_ERR_SUCCESS);
+    has_type_attribute = (type_attribute.size() > 0);
     if (has_type_attribute && type_attribute == "big_number")
     {
         ft_big_number big_number_value;
@@ -247,8 +208,6 @@ static int json_dom_apply_item(ft_dom_node *item_node, json_group *group, json_d
         if (!json_item_pointer)
             return (-1);
         document.add_item(group, json_item_pointer);
-        if (document.get_error() != FT_ERR_SUCCESS)
-            return (-1);
         return (0);
     }
     json_item *json_item_pointer;
@@ -257,8 +216,6 @@ static int json_dom_apply_item(ft_dom_node *item_node, json_group *group, json_d
     if (!json_item_pointer)
         return (-1);
     document.add_item(group, json_item_pointer);
-    if (document.get_error() != FT_ERR_SUCCESS)
-        return (-1);
     return (0);
 }
 
@@ -270,12 +227,6 @@ static int json_dom_apply_group(ft_dom_node *group_node, json_document &document
         return (-1);
     }
     const ft_string &group_name = group_node->get_name();
-
-    if (group_node->get_error() != FT_ERR_SUCCESS)
-    {
-        document.set_manual_error(group_node->get_error());
-        return (-1);
-    }
     const char *group_name_cstr;
 
     group_name_cstr = group_name.c_str();
@@ -290,15 +241,7 @@ static int json_dom_apply_group(ft_dom_node *group_node, json_document &document
     if (!group_pointer)
         return (-1);
     document.append_group(group_pointer);
-    if (document.get_error() != FT_ERR_SUCCESS)
-        return (-1);
     const ft_vector<ft_dom_node*> &children = group_node->get_children();
-
-    if (group_node->get_error() != FT_ERR_SUCCESS)
-    {
-        document.set_manual_error(group_node->get_error());
-        return (-1);
-    }
     size_t index;
     size_t count;
 
@@ -317,29 +260,17 @@ static int json_dom_apply_group(ft_dom_node *group_node, json_document &document
 int json_document_from_dom(const ft_dom_document &dom, json_document &document) noexcept
 {
     document.clear();
-    if (document.get_error() != FT_ERR_SUCCESS)
-        return (-1);
     ft_dom_node *root_node;
+    ft_dom_node_type root_type;
 
     root_node = dom.get_root();
-    if (dom.get_error() != FT_ERR_SUCCESS)
-    {
-        document.set_manual_error(dom.get_error());
-        return (-1);
-    }
     if (!root_node)
     {
         document.set_manual_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
-    ft_dom_node_type root_type;
 
     root_type = root_node->get_type();
-    if (root_node->get_error() != FT_ERR_SUCCESS)
-    {
-        document.set_manual_error(root_node->get_error());
-        return (-1);
-    }
     if (root_type != FT_DOM_NODE_OBJECT)
     {
         document.set_manual_error(FT_ERR_INVALID_ARGUMENT);
@@ -347,11 +278,6 @@ int json_document_from_dom(const ft_dom_document &dom, json_document &document) 
     }
     const ft_vector<ft_dom_node*> &groups = root_node->get_children();
 
-    if (root_node->get_error() != FT_ERR_SUCCESS)
-    {
-        document.set_manual_error(root_node->get_error());
-        return (-1);
-    }
     size_t index;
     size_t count;
 

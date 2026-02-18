@@ -2,34 +2,48 @@
 # define FT_REGION_DEFINITION_HPP
 
 #include "../CPP_class/class_string.hpp"
-#include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
-#include "../PThread/unique_lock.hpp"
+#include <stdint.h>
 
 class ft_region_definition
 {
     private:
-        int _region_id;
-        ft_string _name;
-        ft_string _description;
-        int _recommended_level;
-        mutable int _error_code;
-        mutable pt_mutex _mutex;
+        int         _region_id;
+        ft_string   _name;
+        ft_string   _description;
+        int         _recommended_level;
+        pt_mutex   *_mutex;
+        uint8_t     _initialized_state;
 
-        void set_error(int error_code) const noexcept;
-        static int lock_pair(const ft_region_definition &first, const ft_region_definition &second,
-                ft_unique_lock<pt_mutex> &first_guard,
-                ft_unique_lock<pt_mutex> &second_guard);
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
+
+        void abort_lifecycle_error(const char *method_name,
+            const char *reason) const;
+        void abort_if_not_initialized(const char *method_name) const;
+        int lock_internal(bool *lock_acquired) const noexcept;
+        int unlock_internal(bool lock_acquired) const noexcept;
 
     public:
         ft_region_definition() noexcept;
-        ft_region_definition(int region_id, const ft_string &name, const ft_string &description,
-                int recommended_level) noexcept;
+        ft_region_definition(int region_id, const ft_string &name,
+                const ft_string &description, int recommended_level) noexcept;
         virtual ~ft_region_definition() noexcept;
-        ft_region_definition(const ft_region_definition &other) noexcept;
-        ft_region_definition &operator=(const ft_region_definition &other) noexcept;
-        ft_region_definition(ft_region_definition &&other) noexcept;
-        ft_region_definition &operator=(ft_region_definition &&other) noexcept;
+        ft_region_definition(const ft_region_definition &other) noexcept = delete;
+        ft_region_definition &operator=(const ft_region_definition &other) noexcept = delete;
+        ft_region_definition(ft_region_definition &&other) noexcept = delete;
+        ft_region_definition &operator=(ft_region_definition &&other) noexcept = delete;
+
+        int initialize() noexcept;
+        int initialize(const ft_region_definition &other) noexcept;
+        int initialize(ft_region_definition &&other) noexcept;
+        int destroy() noexcept;
+        int enable_thread_safety() noexcept;
+        int disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
+        int lock(bool *lock_acquired) const noexcept;
+        void unlock(bool lock_acquired) const noexcept;
 
         int get_region_id() const noexcept;
         void set_region_id(int region_id) noexcept;
@@ -43,8 +57,9 @@ class ft_region_definition
         int get_recommended_level() const noexcept;
         void set_recommended_level(int recommended_level) noexcept;
 
-        int get_error() const noexcept;
-        const char *get_error_str() const noexcept;
+#ifdef LIBFT_TEST_BUILD
+        pt_mutex *get_mutex_for_validation() const noexcept;
+#endif
 };
 
 #endif

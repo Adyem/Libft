@@ -2,8 +2,6 @@
 #include "../Errno/errno.hpp"
 #include "../Template/unordered_map.hpp"
 #include "../PThread/mutex.hpp"
-#include "../PThread/unique_lock.hpp"
-#include "../PThread/lock_guard.hpp"
 
 struct ft_otel_span_state
 {
@@ -21,14 +19,6 @@ static pt_mutex g_observability_bridge_mutex;
 static bool g_observability_bridge_initialized = false;
 static ft_otel_span_exporter g_observability_bridge_exporter = ft_nullptr;
 static ft_unordered_map<unsigned long long, ft_otel_span_state> g_observability_span_states;
-static int g_observability_bridge_error = FT_ERR_SUCCESS;
-
-static void observability_bridge_set_error(int error)
-{
-    g_observability_bridge_error = error;
-    return ;
-}
-
 static ft_otel_span_state observability_span_state_create(void)
 {
     ft_otel_span_state state;
@@ -72,29 +62,26 @@ static void observability_task_scheduler_bridge_trace_sink(const ft_task_trace_e
     ft_otel_span_metrics completed_metrics;
     ft_otel_span_exporter exporter_copy;
     bool should_emit;
+    int lock_result;
+    int unlock_result;
 
     completed_metrics = observability_span_metrics_create();
     exporter_copy = ft_nullptr;
     should_emit = false;
+    lock_result = g_observability_bridge_mutex.lock();
+    if (lock_result != FT_ERR_SUCCESS)
+        return ;
+    if (!g_observability_bridge_initialized || g_observability_bridge_exporter == ft_nullptr)
     {
-        ft_unique_lock<pt_mutex> guard(g_observability_bridge_mutex);
-
-        if (guard.get_error() != FT_ERR_SUCCESS)
-        {
-            observability_bridge_set_error(guard.get_error());
-            return ;
-        }
-        if (!g_observability_bridge_initialized || g_observability_bridge_exporter == ft_nullptr)
-        {
-            observability_bridge_set_error(FT_ERR_SUCCESS);
-            return ;
-        }
+        (void)g_observability_bridge_mutex.unlock();
+        return ;
+    }
         ft_otel_span_state new_state;
         ft_otel_span_state *state_pointer;
         ft_unordered_map<unsigned long long, ft_otel_span_state>::iterator iterator(g_observability_span_states.find(event.trace_id));
         if (g_observability_span_states.last_operation_error() != FT_ERR_SUCCESS)
         {
-            observability_bridge_set_error(g_observability_span_states.last_operation_error());
+            (void)g_observability_bridge_mutex.unlock();
             return ;
         }
         if (iterator == g_observability_span_states.end())
@@ -103,7 +90,7 @@ static void observability_task_scheduler_bridge_trace_sink(const ft_task_trace_e
             g_observability_span_states.insert(event.trace_id, new_state);
             if (g_observability_span_states.last_operation_error() != FT_ERR_SUCCESS)
             {
-                observability_bridge_set_error(g_observability_span_states.last_operation_error());
+                (void)g_observability_bridge_mutex.unlock();
                 return ;
             }
             ft_unordered_map<unsigned long long, ft_otel_span_state>::iterator
@@ -111,7 +98,7 @@ static void observability_task_scheduler_bridge_trace_sink(const ft_task_trace_e
             if (g_observability_span_states.last_operation_error() != FT_ERR_SUCCESS
                 || inserted_iterator == g_observability_span_states.end())
             {
-                observability_bridge_set_error(FT_ERR_INTERNAL);
+                (void)g_observability_bridge_mutex.unlock();
                 return ;
             }
             state_pointer = &inserted_iterator->second;
@@ -172,14 +159,15 @@ static void observability_task_scheduler_bridge_trace_sink(const ft_task_trace_e
             g_observability_span_states.erase(event.trace_id);
             if (g_observability_span_states.last_operation_error() != FT_ERR_SUCCESS)
             {
-                observability_bridge_set_error(g_observability_span_states.last_operation_error());
+                (void)g_observability_bridge_mutex.unlock();
                 return ;
             }
             exporter_copy = g_observability_bridge_exporter;
             should_emit = true;
         }
-        observability_bridge_set_error(FT_ERR_SUCCESS);
-    }
+    unlock_result = g_observability_bridge_mutex.unlock();
+    if (unlock_result != FT_ERR_SUCCESS)
+        return ;
     if (should_emit && exporter_copy != ft_nullptr)
         exporter_copy(completed_metrics);
     return ;
@@ -187,174 +175,94 @@ static void observability_task_scheduler_bridge_trace_sink(const ft_task_trace_e
 
 int observability_task_scheduler_bridge_initialize(ft_otel_span_exporter exporter)
 {
-    int error_code;
+    int lock_result;
+    int unlock_result;
 
     if (exporter == ft_nullptr)
-    {
-        error_code = FT_ERR_INVALID_ARGUMENT;
-        observability_bridge_set_error(error_code);
-        ft_global_error_stack_push(error_code);
         return (-1);
-    }
+    lock_result = g_observability_bridge_mutex.lock();
+    if (lock_result != FT_ERR_SUCCESS)
+        return (-1);
+    if (g_observability_bridge_initialized)
     {
-        ft_lock_guard<pt_mutex> guard(g_observability_bridge_mutex);
-
-        if (guard.get_error() != FT_ERR_SUCCESS)
-        {
-            error_code = guard.get_error();
-            observability_bridge_set_error(error_code);
-            ft_global_error_stack_push(error_code);
-            return (-1);
-        }
-        if (g_observability_bridge_initialized)
-        {
-            g_observability_bridge_exporter = exporter;
-            error_code = FT_ERR_SUCCESS;
-            observability_bridge_set_error(error_code);
-            ft_global_error_stack_push(error_code);
-            return (0);
-        }
         g_observability_bridge_exporter = exporter;
-        observability_bridge_set_error(FT_ERR_SUCCESS);
+        (void)g_observability_bridge_mutex.unlock();
+        return (0);
     }
+    g_observability_bridge_exporter = exporter;
+    unlock_result = g_observability_bridge_mutex.unlock();
+    if (unlock_result != FT_ERR_SUCCESS)
+        return (-1);
     int register_result;
 
     register_result = task_scheduler_register_trace_sink(&observability_task_scheduler_bridge_trace_sink);
-    int register_error;
-    register_error = ft_global_error_stack_drop_last_error();
     if (register_result != 0)
     {
-        if (register_error == FT_ERR_SUCCESS)
-            error_code = FT_ERR_INTERNAL;
-        else
-            error_code = register_error;
-        observability_bridge_set_error(error_code);
-        {
-            ft_lock_guard<pt_mutex> guard(g_observability_bridge_mutex);
-
-            if (guard.get_error() == FT_ERR_SUCCESS)
-            {
-                g_observability_bridge_exporter = ft_nullptr;
-                g_observability_bridge_initialized = false;
-            }
-            else
-            {
-                error_code = guard.get_error();
-                observability_bridge_set_error(error_code);
-            }
-        }
-        ft_global_error_stack_push(error_code);
-        return (-1);
-    }
-    {
-        ft_lock_guard<pt_mutex> guard(g_observability_bridge_mutex);
-
-        if (guard.get_error() != FT_ERR_SUCCESS)
-        {
-            error_code = guard.get_error();
-            observability_bridge_set_error(error_code);
-            ft_global_error_stack_push(error_code);
-            return (-1);
-        }
-        g_observability_span_states.clear();
-        if (g_observability_span_states.last_operation_error() != FT_ERR_SUCCESS)
+        lock_result = g_observability_bridge_mutex.lock();
+        if (lock_result == FT_ERR_SUCCESS)
         {
             g_observability_bridge_exporter = ft_nullptr;
             g_observability_bridge_initialized = false;
-            error_code = g_observability_span_states.last_operation_error();
-            observability_bridge_set_error(error_code);
-            ft_global_error_stack_push(error_code);
-            return (-1);
+            (void)g_observability_bridge_mutex.unlock();
         }
-        g_observability_bridge_initialized = true;
-        observability_bridge_set_error(FT_ERR_SUCCESS);
+        return (-1);
     }
-    error_code = FT_ERR_SUCCESS;
-    observability_bridge_set_error(error_code);
-    ft_global_error_stack_push(error_code);
+    lock_result = g_observability_bridge_mutex.lock();
+    if (lock_result != FT_ERR_SUCCESS)
+        return (-1);
+    g_observability_span_states.clear();
+    if (g_observability_span_states.last_operation_error() != FT_ERR_SUCCESS)
+    {
+        g_observability_bridge_exporter = ft_nullptr;
+        g_observability_bridge_initialized = false;
+        (void)g_observability_bridge_mutex.unlock();
+        return (-1);
+    }
+    g_observability_bridge_initialized = true;
+    unlock_result = g_observability_bridge_mutex.unlock();
+    if (unlock_result != FT_ERR_SUCCESS)
+        return (-1);
     return (0);
 }
 
 int observability_task_scheduler_bridge_shutdown(void)
 {
-    int error_code;
+    int lock_result;
+    int unlock_result;
 
-    {
-        ft_lock_guard<pt_mutex> guard(g_observability_bridge_mutex);
-
-        if (guard.get_error() != FT_ERR_SUCCESS)
-        {
-            error_code = guard.get_error();
-            observability_bridge_set_error(error_code);
-            ft_global_error_stack_push(error_code);
-            return (-1);
-        }
-        if (!g_observability_bridge_initialized)
-        {
-            g_observability_bridge_exporter = ft_nullptr;
-            g_observability_span_states.clear();
-            if (g_observability_span_states.last_operation_error() != FT_ERR_SUCCESS)
-            {
-                error_code = g_observability_span_states.last_operation_error();
-                observability_bridge_set_error(error_code);
-                ft_global_error_stack_push(error_code);
-                return (-1);
-            }
-            error_code = FT_ERR_SUCCESS;
-            observability_bridge_set_error(error_code);
-            ft_global_error_stack_push(error_code);
-            return (0);
-        }
-    }
-    int unregister_result;
-    int unregister_error;
-
-    unregister_result = task_scheduler_unregister_trace_sink(&observability_task_scheduler_bridge_trace_sink);
-    unregister_error = ft_global_error_stack_drop_last_error();
-    if (unregister_result != 0)
-    {
-        if (unregister_error == FT_ERR_SUCCESS)
-            error_code = FT_ERR_INTERNAL;
-        else
-            error_code = unregister_error;
-        observability_bridge_set_error(error_code);
-        ft_global_error_stack_push(error_code);
+    lock_result = g_observability_bridge_mutex.lock();
+    if (lock_result != FT_ERR_SUCCESS)
         return (-1);
-    }
+    if (!g_observability_bridge_initialized)
     {
-        ft_lock_guard<pt_mutex> guard(g_observability_bridge_mutex);
-
-        if (guard.get_error() != FT_ERR_SUCCESS)
-        {
-            error_code = guard.get_error();
-            observability_bridge_set_error(error_code);
-            ft_global_error_stack_push(error_code);
-            return (-1);
-        }
-        g_observability_bridge_initialized = false;
         g_observability_bridge_exporter = ft_nullptr;
         g_observability_span_states.clear();
-        if (g_observability_span_states.last_operation_error() != FT_ERR_SUCCESS)
-        {
-            error_code = g_observability_span_states.last_operation_error();
-            observability_bridge_set_error(error_code);
-            ft_global_error_stack_push(error_code);
+        unlock_result = g_observability_bridge_mutex.unlock();
+        if (unlock_result != FT_ERR_SUCCESS)
             return (-1);
-        }
-        observability_bridge_set_error(FT_ERR_SUCCESS);
+        if (g_observability_span_states.last_operation_error() != FT_ERR_SUCCESS)
+            return (-1);
+        return (0);
     }
-    error_code = FT_ERR_SUCCESS;
-    observability_bridge_set_error(error_code);
-    ft_global_error_stack_push(error_code);
+    unlock_result = g_observability_bridge_mutex.unlock();
+    if (unlock_result != FT_ERR_SUCCESS)
+        return (-1);
+    int unregister_result;
+    unregister_result = task_scheduler_unregister_trace_sink(&observability_task_scheduler_bridge_trace_sink);
+    if (unregister_result != 0)
+    {
+        return (-1);
+    }
+    lock_result = g_observability_bridge_mutex.lock();
+    if (lock_result != FT_ERR_SUCCESS)
+        return (-1);
+    g_observability_bridge_initialized = false;
+    g_observability_bridge_exporter = ft_nullptr;
+    g_observability_span_states.clear();
+    unlock_result = g_observability_bridge_mutex.unlock();
+    if (unlock_result != FT_ERR_SUCCESS)
+        return (-1);
+    if (g_observability_span_states.last_operation_error() != FT_ERR_SUCCESS)
+        return (-1);
     return (0);
-}
-
-int observability_task_scheduler_bridge_get_error(void)
-{
-    return (g_observability_bridge_error);
-}
-
-const char *observability_task_scheduler_bridge_get_error_str(void)
-{
-    return (ft_strerror(g_observability_bridge_error));
 }

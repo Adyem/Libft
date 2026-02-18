@@ -3,7 +3,6 @@
 
 #include "../CPP_class/class_string.hpp"
 #include "../PThread/mutex.hpp"
-#include "../PThread/unique_lock.hpp"
 #include <cstdint>
 #include <map>
 
@@ -18,35 +17,41 @@ class ft_socket;
 class ft_websocket_server
 {
     private:
+        uint8_t _initialized_state;
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
+        void abort_lifecycle_error(const char *method_name, const char *reason) const;
+        void abort_if_not_initialized(const char *method_name) const;
         struct s_connection_state
         {
             bool _permessage_deflate_enabled;
         };
 
         ft_socket *_server_socket;
-        mutable int _error_code;
         mutable pt_mutex _mutex;
         std::map<int, s_connection_state> _connection_states;
 
-        static void finalize_lock(ft_unique_lock<pt_mutex> &guard) noexcept;
-
-        void set_error(int error_code) const;
         void store_connection_state_locked(int client_fd, bool permessage_deflate_enabled);
         void remove_connection_state_locked(int client_fd);
         bool connection_supports_permessage_deflate_locked(int client_fd) const;
-        int perform_handshake_locked(int client_fd, ft_unique_lock<pt_mutex> &guard);
-        int receive_frame_locked(int client_fd, ft_string &message, ft_unique_lock<pt_mutex> &guard);
-        int send_pong_locked(int client_fd, const unsigned char *payload, std::size_t length, ft_unique_lock<pt_mutex> &guard);
+        int perform_handshake_locked(int client_fd);
+        int receive_frame_locked(int client_fd, ft_string &message);
+        int send_pong_locked(int client_fd, const unsigned char *payload, std::size_t length);
 
     public:
         ft_websocket_server();
         ~ft_websocket_server();
+        ft_websocket_server(const ft_websocket_server &other) = delete;
+        ft_websocket_server &operator=(const ft_websocket_server &other) = delete;
+        ft_websocket_server(ft_websocket_server &&other) noexcept = delete;
+        ft_websocket_server &operator=(ft_websocket_server &&other) noexcept = delete;
 
+        int initialize();
+        int destroy();
         int start(const char *ip, uint16_t port, int address_family = AF_INET, bool non_blocking = false);
         int run_once(int &client_fd, ft_string &message);
         int send_text(int client_fd, const ft_string &message);
-        int get_error() const;
-        const char *get_error_str() const;
         int get_port(unsigned short &port_value) const;
 };
 

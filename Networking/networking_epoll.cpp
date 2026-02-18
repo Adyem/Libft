@@ -1,10 +1,8 @@
 #include "networking.hpp"
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
-#include "../Errno/errno.hpp"
 #include <unistd.h>
 #include <sys/epoll.h>
-#include <cerrno>
 
 int nw_poll(int *read_file_descriptors, int read_count,
             int *write_file_descriptors, int write_count,
@@ -27,7 +25,6 @@ int nw_poll(int *read_file_descriptors, int read_count,
     epoll_descriptor = epoll_create1(0);
     if (epoll_descriptor == -1)
     {
-        (void)(ft_map_system_error(errno));
         return (-1);
     }
     index = 0;
@@ -40,11 +37,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
             event.data.fd = read_file_descriptors[index];
             if (epoll_ctl(epoll_descriptor, EPOLL_CTL_ADD, read_file_descriptors[index], &event) == -1)
             {
-                int last_error;
-
-                last_error = errno;
                 close(epoll_descriptor);
-                (void)(ft_map_system_error(last_error));
                 return (-1);
             }
             valid_read_count++;
@@ -61,11 +54,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
             event.data.fd = write_file_descriptors[index];
             if (epoll_ctl(epoll_descriptor, EPOLL_CTL_ADD, write_file_descriptors[index], &event) == -1)
             {
-                int last_error;
-
-                last_error = errno;
                 close(epoll_descriptor);
-                (void)(ft_map_system_error(last_error));
                 return (-1);
             }
             valid_write_count++;
@@ -88,14 +77,12 @@ int nw_poll(int *read_file_descriptors, int read_count,
             index++;
         }
         close(epoll_descriptor);
-        (void)(FT_ERR_SUCCESS);
         return (0);
     }
     events = static_cast<epoll_event *>(cma_malloc(sizeof(epoll_event) * maximum_events));
     if (!events)
     {
         close(epoll_descriptor);
-        (void)(FT_ERR_NO_MEMORY);
         return (-1);
     }
     read_ready_flags = ft_nullptr;
@@ -107,7 +94,6 @@ int nw_poll(int *read_file_descriptors, int read_count,
         {
             cma_free(events);
             close(epoll_descriptor);
-            (void)(FT_ERR_NO_MEMORY);
             return (-1);
         }
         index = 0;
@@ -126,7 +112,6 @@ int nw_poll(int *read_file_descriptors, int read_count,
                 cma_free(read_ready_flags);
             cma_free(events);
             close(epoll_descriptor);
-            (void)(FT_ERR_NO_MEMORY);
             return (-1);
         }
         index = 0;
@@ -139,19 +124,12 @@ int nw_poll(int *read_file_descriptors, int read_count,
     ready_descriptors = epoll_wait(epoll_descriptor, events, maximum_events, timeout_milliseconds);
     if (ready_descriptors <= 0)
     {
-        int wait_error;
-
-        wait_error = errno;
         if (read_ready_flags)
             cma_free(read_ready_flags);
         if (write_ready_flags)
             cma_free(write_ready_flags);
         cma_free(events);
         close(epoll_descriptor);
-        if (ready_descriptors == 0)
-            (void)(FT_ERR_SUCCESS);
-        else
-            (void)(ft_map_system_error(wait_error));
         return (ready_descriptors);
     }
     ready_index = 0;
@@ -206,6 +184,5 @@ int nw_poll(int *read_file_descriptors, int read_count,
     if (write_ready_flags)
         cma_free(write_ready_flags);
     close(epoll_descriptor);
-    (void)(FT_ERR_SUCCESS);
     return (ready_descriptors);
 }

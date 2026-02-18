@@ -9,6 +9,7 @@
 #include "../CPP_class/class_string.hpp"
 #include "../Template/vector.hpp"
 #include "../Template/shared_ptr.hpp"
+#include <cstdio>
 
 json_group *serialize_character(const ft_character &character);
 json_group *serialize_inventory(const ft_inventory &inventory);
@@ -89,17 +90,14 @@ json_group *serialize_inventory(const ft_inventory &inventory)
     json_group *group = json_create_json_group("inventory");
     if (!group)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     bool has_error = false;
-    int error_code = FT_ERR_SUCCESS;
     do
     {
         json_item *capacity_item = json_create_item("capacity", static_cast<int>(inventory.get_capacity()));
         if (!capacity_item)
         {
-            error_code = FT_ERR_NO_MEMORY;
             has_error = true;
             break;
         }
@@ -107,7 +105,6 @@ json_group *serialize_inventory(const ft_inventory &inventory)
         json_item *weight_limit_item = json_create_item("weight_limit", inventory.get_weight_limit());
         if (!weight_limit_item)
         {
-            error_code = FT_ERR_NO_MEMORY;
             has_error = true;
             break;
         }
@@ -115,7 +112,6 @@ json_group *serialize_inventory(const ft_inventory &inventory)
         json_item *current_weight_item = json_create_item("current_weight", inventory.get_current_weight());
         if (!current_weight_item)
         {
-            error_code = FT_ERR_NO_MEMORY;
             has_error = true;
             break;
         }
@@ -123,7 +119,6 @@ json_group *serialize_inventory(const ft_inventory &inventory)
         json_item *used_slots_item = json_create_item("used_slots", static_cast<int>(inventory.get_used()));
         if (!used_slots_item)
         {
-            error_code = FT_ERR_NO_MEMORY;
             has_error = true;
             break;
         }
@@ -132,7 +127,6 @@ json_group *serialize_inventory(const ft_inventory &inventory)
         json_item *count_item = json_create_item("item_count", static_cast<int>(item_count));
         if (!count_item)
         {
-            error_code = FT_ERR_NO_MEMORY;
             has_error = true;
             break;
         }
@@ -143,7 +137,6 @@ json_group *serialize_inventory(const ft_inventory &inventory)
         {
             if (!items_end)
             {
-                error_code = FT_ERR_GAME_GENERAL_ERROR;
                 has_error = true;
                 break;
             }
@@ -152,25 +145,19 @@ json_group *serialize_inventory(const ft_inventory &inventory)
         size_t item_index = 0;
         while (item_index < item_count)
         {
-            char *item_index_string = cma_itoa(static_cast<int>(item_index));
-            if (!item_index_string)
-            {
-                error_code = FT_ERR_NO_MEMORY;
-                has_error = true;
-                break;
-            }
+            char item_index_string[32];
+
+            std::snprintf(item_index_string, sizeof(item_index_string), "%d",
+                static_cast<int>(item_index));
             ft_string item_prefix = "item_";
             item_prefix += item_index_string;
-            cma_free(item_index_string);
             if (!item_start[item_index].value)
             {
-                error_code = FT_ERR_GAME_GENERAL_ERROR;
                 has_error = true;
                 break;
             }
             if (serialize_item_fields(group, *item_start[item_index].value, item_prefix) != FT_ERR_SUCCESS)
             {
-                error_code = FT_ERR_NO_MEMORY;
                 has_error = true;
                 break;
             }
@@ -182,10 +169,8 @@ json_group *serialize_inventory(const ft_inventory &inventory)
     if (has_error)
     {
         json_free_groups(group);
-        ft_errno = error_code;
         return (ft_nullptr);
     }
-    ft_errno = FT_ERR_SUCCESS;
     return (group);
 }
 
@@ -194,7 +179,6 @@ json_group *serialize_equipment(const ft_character &character)
     json_group *group = json_create_json_group("equipment");
     if (!group)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     ft_sharedptr<ft_item> head = character.get_equipped_item(EQUIP_HEAD);
@@ -208,14 +192,12 @@ json_group *serialize_equipment(const ft_character &character)
     if (!present)
     {
         json_free_groups(group);
-        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, present);
     if (head && serialize_item_fields(group, *head, "head") != FT_ERR_SUCCESS)
     {
         json_free_groups(group);
-        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     ft_sharedptr<ft_item> chest = character.get_equipped_item(EQUIP_CHEST);
@@ -229,14 +211,12 @@ json_group *serialize_equipment(const ft_character &character)
     if (!present)
     {
         json_free_groups(group);
-        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, present);
     if (chest && serialize_item_fields(group, *chest, "chest") != FT_ERR_SUCCESS)
     {
         json_free_groups(group);
-        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     ft_sharedptr<ft_item> weapon = character.get_equipped_item(EQUIP_WEAPON);
@@ -250,17 +230,14 @@ json_group *serialize_equipment(const ft_character &character)
     if (!present)
     {
         json_free_groups(group);
-        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, present);
     if (weapon && serialize_item_fields(group, *weapon, "weapon") != FT_ERR_SUCCESS)
     {
         json_free_groups(group);
-        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
-    ft_errno = FT_ERR_SUCCESS;
     return (group);
 }
 
@@ -269,17 +246,14 @@ json_group *serialize_quest(const ft_quest &quest)
     json_group *group = json_create_json_group("quest");
     if (!group)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     bool has_error = false;
-    int error_code = FT_ERR_SUCCESS;
     do
     {
         json_item *item = json_create_item("id", quest.get_id());
         if (!item)
         {
-            error_code = FT_ERR_NO_MEMORY;
             has_error = true;
             break;
         }
@@ -287,7 +261,6 @@ json_group *serialize_quest(const ft_quest &quest)
         item = json_create_item("phases", quest.get_phases());
         if (!item)
         {
-            error_code = FT_ERR_NO_MEMORY;
             has_error = true;
             break;
         }
@@ -295,7 +268,6 @@ json_group *serialize_quest(const ft_quest &quest)
         item = json_create_item("current_phase", quest.get_current_phase());
         if (!item)
         {
-            error_code = FT_ERR_NO_MEMORY;
             has_error = true;
             break;
         }
@@ -303,7 +275,6 @@ json_group *serialize_quest(const ft_quest &quest)
         item = json_create_item("description", quest.get_description().c_str());
         if (!item)
         {
-            error_code = FT_ERR_NO_MEMORY;
             has_error = true;
             break;
         }
@@ -311,7 +282,6 @@ json_group *serialize_quest(const ft_quest &quest)
         item = json_create_item("objective", quest.get_objective().c_str());
         if (!item)
         {
-            error_code = FT_ERR_NO_MEMORY;
             has_error = true;
             break;
         }
@@ -319,7 +289,6 @@ json_group *serialize_quest(const ft_quest &quest)
         item = json_create_item("reward_experience", quest.get_reward_experience());
         if (!item)
         {
-            error_code = FT_ERR_NO_MEMORY;
             has_error = true;
             break;
         }
@@ -328,7 +297,6 @@ json_group *serialize_quest(const ft_quest &quest)
         item = json_create_item("reward_item_count", static_cast<int>(item_count));
         if (!item)
         {
-            error_code = FT_ERR_NO_MEMORY;
             has_error = true;
             break;
         }
@@ -337,32 +305,25 @@ json_group *serialize_quest(const ft_quest &quest)
         const ft_sharedptr<ft_item> *item_start = reward_items.begin();
         if (item_count > 0 && !item_start)
         {
-            error_code = FT_ERR_GAME_GENERAL_ERROR;
             has_error = true;
             break;
         }
         size_t item_index = 0;
         while (item_index < item_count)
         {
-            char *item_index_string = cma_itoa(static_cast<int>(item_index));
-            if (!item_index_string)
-            {
-                error_code = FT_ERR_NO_MEMORY;
-                has_error = true;
-                break;
-            }
+            char item_index_string[32];
+
+            std::snprintf(item_index_string, sizeof(item_index_string), "%d",
+                static_cast<int>(item_index));
             ft_string item_prefix = "reward_item_";
             item_prefix += item_index_string;
-            cma_free(item_index_string);
             if (!item_start[item_index])
             {
-                error_code = FT_ERR_GAME_GENERAL_ERROR;
                 has_error = true;
                 break;
             }
             if (serialize_item_fields(group, *item_start[item_index], item_prefix) != FT_ERR_SUCCESS)
             {
-                error_code = FT_ERR_NO_MEMORY;
                 has_error = true;
                 break;
             }
@@ -374,9 +335,7 @@ json_group *serialize_quest(const ft_quest &quest)
     if (has_error)
     {
         json_free_groups(group);
-        ft_errno = error_code;
         return (ft_nullptr);
     }
-    ft_errno = FT_ERR_SUCCESS;
     return (group);
 }

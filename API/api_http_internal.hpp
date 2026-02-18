@@ -80,7 +80,7 @@ bool api_http_stream_process_chunked_buffer(ft_string &buffer,
     long long &chunk_remaining, bool &trailers_pending,
     bool &final_chunk_sent,
     const api_streaming_handler *streaming_handler, int &error_code);
-void api_request_set_resolve_error(int resolver_status);
+int api_request_set_resolve_error(int resolver_status);
 void api_request_set_ssl_error(SSL *ssl_session, int operation_result);
 
 inline int api_retry_get_max_attempts(const api_retry_policy *retry_policy)

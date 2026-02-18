@@ -10,7 +10,7 @@
 #include "../CMA/CMA.hpp"
 #include "../Logger/logger.hpp"
 #include "../Template/move.hpp"
-#include "../PThread/unique_lock.hpp"
+#include "../System_utils/system_utils.hpp"
 
 #ifdef _WIN32
 # include <winsock2.h>
@@ -36,17 +36,6 @@
 #if NETWORKING_HAS_OPENSSL
 
 static const size_t TLS_STRING_NPOS = static_cast<size_t>(-1);
-
-thread_local ft_operation_error_stack api_tls_client::_operation_errors = {{}, {}, 0};
-
-void api_tls_client::record_operation_error_unlocked(int error_code) noexcept
-{
-    unsigned long long operation_id;
-
-    operation_id = ft_global_error_stack_push_entry(error_code);
-    ft_operation_error_stack_push(api_tls_client::_operation_errors, error_code, operation_id);
-    return ;
-}
 
 static char tls_string_char_at(const ft_string &value, size_t index)
 {
@@ -225,7 +214,7 @@ static ssize_t ssl_send_all(SSL *ssl, const void *data, size_t size)
         }
         if (sent < 0)
             return (-1);
-        int last_error = ft_global_error_stack_drop_last_error();
+        int last_error = FT_ERR_CONFIGURATION;
         if (last_error == FT_ERR_SSL_WANT_READ || last_error == FT_ERR_SSL_WANT_WRITE)
         {
             if (ssl_pointer_supports_network_checks(ssl))
@@ -250,29 +239,24 @@ static bool tls_copy_bio_to_string(BIO *memory, ft_string &output)
         return (false);
     if (memory == ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
-        return (false);
+                return (false);
     }
     memory_length = BIO_get_mem_data(memory, &memory_data);
     if (memory_length < 0)
     {
-        ft_global_error_stack_push(FT_ERR_CONFIGURATION);
-        return (false);
+                return (false);
     }
     if (memory_length == 0)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
-        return (true);
+                return (true);
     }
     output.append(memory_data, static_cast<size_t>(memory_length));
     int string_error = ft_string::last_operation_error();
     if (string_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(string_error);
-        return (false);
+                return (false);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
-    return (true);
+        return (true);
 }
 
 static bool tls_extract_x509_name(X509_NAME *name, ft_string &output)
@@ -284,32 +268,27 @@ static bool tls_extract_x509_name(X509_NAME *name, ft_string &output)
     {
         output.clear();
         int string_error = ft_string::last_operation_error();
-        ft_global_error_stack_push(string_error);
-        return (string_error == FT_ERR_SUCCESS);
+                return (string_error == FT_ERR_SUCCESS);
     }
     memory = BIO_new(BIO_s_mem());
     if (memory == ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
-        return (false);
+                return (false);
     }
     if (X509_NAME_print_ex(memory, name, 0, XN_FLAG_RFC2253) < 0)
     {
         BIO_free(memory);
-        ft_global_error_stack_push(FT_ERR_CONFIGURATION);
-        return (false);
+                return (false);
     }
     copy_result = tls_copy_bio_to_string(memory, output);
     BIO_free(memory);
     if (!copy_result)
     {
-        int last_error = ft_global_error_stack_drop_last_error();
+        int last_error = FT_ERR_CONFIGURATION;
         if (last_error == FT_ERR_SUCCESS)
-            ft_global_error_stack_push(FT_ERR_CONFIGURATION);
-        return (false);
+                    return (false);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
-    return (true);
+        return (true);
 }
 
 static bool tls_extract_asn1_time(const ASN1_TIME *time_value, ft_string &output)
@@ -321,32 +300,27 @@ static bool tls_extract_asn1_time(const ASN1_TIME *time_value, ft_string &output
     {
         output.clear();
         int string_error = ft_string::last_operation_error();
-        ft_global_error_stack_push(string_error);
-        return (string_error == FT_ERR_SUCCESS);
+                return (string_error == FT_ERR_SUCCESS);
     }
     memory = BIO_new(BIO_s_mem());
     if (memory == ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
-        return (false);
+                return (false);
     }
     if (ASN1_TIME_print(memory, time_value) != 1)
     {
         BIO_free(memory);
-        ft_global_error_stack_push(FT_ERR_CONFIGURATION);
-        return (false);
+                return (false);
     }
     copy_result = tls_copy_bio_to_string(memory, output);
     BIO_free(memory);
     if (!copy_result)
     {
-        int last_error = ft_global_error_stack_drop_last_error();
+        int last_error = FT_ERR_CONFIGURATION;
         if (last_error == FT_ERR_SUCCESS)
-            ft_global_error_stack_push(FT_ERR_CONFIGURATION);
-        return (false);
+                    return (false);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
-    return (true);
+        return (true);
 }
 
 static bool tls_extract_serial_number(const ASN1_INTEGER *serial_value,
@@ -359,32 +333,27 @@ static bool tls_extract_serial_number(const ASN1_INTEGER *serial_value,
     {
         output.clear();
         int string_error = ft_string::last_operation_error();
-        ft_global_error_stack_push(string_error);
-        return (string_error == FT_ERR_SUCCESS);
+                return (string_error == FT_ERR_SUCCESS);
     }
     memory = BIO_new(BIO_s_mem());
     if (memory == ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
-        return (false);
+                return (false);
     }
     if (i2a_ASN1_INTEGER(memory, const_cast<ASN1_INTEGER*>(serial_value)) <= 0)
     {
         BIO_free(memory);
-        ft_global_error_stack_push(FT_ERR_CONFIGURATION);
-        return (false);
+                return (false);
     }
     copy_result = tls_copy_bio_to_string(memory, output);
     BIO_free(memory);
     if (!copy_result)
     {
-        int last_error = ft_global_error_stack_drop_last_error();
+        int last_error = FT_ERR_CONFIGURATION;
         if (last_error == FT_ERR_SUCCESS)
-            ft_global_error_stack_push(FT_ERR_CONFIGURATION);
-        return (false);
+                    return (false);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
-    return (true);
+        return (true);
 }
 
 static bool tls_compute_certificate_fingerprint(X509 *certificate,
@@ -397,20 +366,14 @@ static bool tls_compute_certificate_fingerprint(X509 *certificate,
 
     output.clear();
     if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
-    {
-        int string_error = ft_string::last_operation_error();
-        ft_global_error_stack_push(string_error);
         return (false);
-    }
     if (certificate == ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
-        return (false);
+                return (false);
     }
     if (X509_digest(certificate, EVP_sha256(), digest, &digest_length) != 1)
     {
-        ft_global_error_stack_push(FT_ERR_CONFIGURATION);
-        return (false);
+                return (false);
     }
     index = 0;
     while (index < digest_length)
@@ -418,15 +381,13 @@ static bool tls_compute_certificate_fingerprint(X509 *certificate,
         if (pf_snprintf(byte_buffer, sizeof(byte_buffer), "%02X",
                 digest[index]) < 0)
         {
-            ft_global_error_stack_push(FT_ERR_CONFIGURATION);
-            return (false);
+                        return (false);
         }
         output.append(byte_buffer, 2);
         int string_error = ft_string::last_operation_error();
         if (string_error != FT_ERR_SUCCESS)
         {
-            ft_global_error_stack_push(string_error);
-            return (false);
+                        return (false);
         }
         if (index + 1 < digest_length)
         {
@@ -434,14 +395,12 @@ static bool tls_compute_certificate_fingerprint(X509 *certificate,
             int separator_error = ft_string::last_operation_error();
             if (separator_error != FT_ERR_SUCCESS)
             {
-                ft_global_error_stack_push(separator_error);
-                return (false);
+                                return (false);
             }
         }
         index++;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
-    return (true);
+        return (true);
 }
 
 static bool tls_fill_certificate_diagnostic(X509 *certificate,
@@ -453,8 +412,7 @@ static bool tls_fill_certificate_diagnostic(X509 *certificate,
 
     if (certificate == ft_nullptr)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
-        return (false);
+                return (false);
     }
     if (!tls_extract_x509_name(X509_get_subject_name(certificate),
             diagnostic.subject))
@@ -474,7 +432,6 @@ static bool tls_fill_certificate_diagnostic(X509 *certificate,
     if (!tls_compute_certificate_fingerprint(certificate,
             diagnostic.fingerprint_sha256))
         return (false);
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -491,14 +448,7 @@ static bool tls_append_certificate_diagnostic(
     diagnostics.certificates.push_back(ft_move(entry));
     size_after = diagnostics.certificates.size();
     if (size_after < size_before + 1)
-    {
-        int vector_error = diagnostics.certificates.get_error();
-        if (vector_error == FT_ERR_SUCCESS)
-            vector_error = FT_ERR_NO_MEMORY;
-        ft_global_error_stack_push(vector_error);
         return (false);
-    }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -531,187 +481,202 @@ static void tls_log_handshake_diagnostics(
 }
 
 api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms)
-: _ctx(ft_nullptr), _ssl(ft_nullptr), _sock(-1), _host(""), _timeout(timeout_ms), _error_code(FT_ERR_SUCCESS)
+: _initialized_state(api_tls_client::_state_uninitialized), _ctx(ft_nullptr),
+  _ssl(ft_nullptr), _sock(-1), _host(""), _port(port), _timeout(timeout_ms),
+  _mutex(ft_nullptr), _is_shutting_down(false), _async_workers(),
+  _handshake_diagnostics()
 {
-    this->_is_shutting_down = false;
-    this->set_error(FT_ERR_SUCCESS);
-    if (!host_c)
+    if (host_c != ft_nullptr)
+        this->_host = host_c;
+    return ;
+}
+
+api_tls_client::~api_tls_client()
+{
+    if (this->_initialized_state == api_tls_client::_state_uninitialized)
     {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
-        return ;
+        pf_printf_fd(2, "api_tls_client lifecycle error: %s\n",
+            "destructor called on uninitialized instance");
+        su_abort();
     }
-    this->_host = host_c;
+    if (this->_initialized_state == api_tls_client::_state_initialized)
+        (void)this->destroy();
+    return ;
+}
+
+void api_tls_client::abort_lifecycle_error(const char *method_name,
+    const char *reason) const noexcept
+{
+    if (method_name == ft_nullptr)
+        method_name = "unknown";
+    if (reason == ft_nullptr)
+        reason = "unknown";
+    pf_printf_fd(2, "api_tls_client lifecycle error: %s: %s\n",
+        method_name, reason);
+    su_abort();
+    return ;
+}
+
+void api_tls_client::abort_if_not_initialized(const char *method_name) const noexcept
+{
+    if (this->_initialized_state == api_tls_client::_state_initialized)
+        return ;
+    this->abort_lifecycle_error(method_name,
+        "called while object is not initialized");
+    return ;
+}
+
+int api_tls_client::enable_thread_safety() noexcept
+{
+    pt_recursive_mutex *new_mutex;
+    int initialize_result;
+
+    this->abort_if_not_initialized("api_tls_client::enable_thread_safety");
+    if (this->_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    new_mutex = new (std::nothrow) pt_recursive_mutex();
+    if (new_mutex == ft_nullptr)
+        return (FT_ERR_NO_MEMORY);
+    initialize_result = new_mutex->initialize();
+    if (initialize_result != FT_ERR_SUCCESS)
+    {
+        delete new_mutex;
+        return (initialize_result);
+    }
+    this->_mutex = new_mutex;
+    return (FT_ERR_SUCCESS);
+}
+
+int api_tls_client::disable_thread_safety() noexcept
+{
+    pt_recursive_mutex *mutex_pointer;
+    int destroy_result;
+
+    this->abort_if_not_initialized("api_tls_client::disable_thread_safety");
+    mutex_pointer = this->_mutex;
+    if (mutex_pointer == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    this->_mutex = ft_nullptr;
+    destroy_result = mutex_pointer->destroy();
+    delete mutex_pointer;
+    if (destroy_result != FT_ERR_SUCCESS)
+        return (destroy_result);
+    return (FT_ERR_SUCCESS);
+}
+
+bool api_tls_client::is_thread_safe() const noexcept
+{
+    this->abort_if_not_initialized("api_tls_client::is_thread_safe");
+    return (this->_mutex != ft_nullptr);
+}
+
+int api_tls_client::lock(bool *lock_acquired) const noexcept
+{
+    api_tls_client *mutable_client;
+
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = false;
+    mutable_client = const_cast<api_tls_client *>(this);
+    mutable_client->abort_if_not_initialized("api_tls_client::lock");
+    if (mutable_client->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    if (mutable_client->_mutex->lock() != FT_ERR_SUCCESS)
+        return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = true;
+    return (FT_ERR_SUCCESS);
+}
+
+void api_tls_client::unlock(bool lock_acquired) const noexcept
+{
+    api_tls_client *mutable_client;
+
+    if (lock_acquired == false)
+        return ;
+    mutable_client = const_cast<api_tls_client *>(this);
+    if (mutable_client->_mutex == ft_nullptr)
+        return ;
+    (void)mutable_client->_mutex->unlock();
+    return ;
+}
+
+int api_tls_client::initialize() noexcept
+{
+    int thread_safety_result;
+
+    if (this->_initialized_state == api_tls_client::_state_initialized)
+        this->abort_lifecycle_error("api_tls_client::initialize",
+            "initialize called on initialized instance");
+    this->_ctx = ft_nullptr;
+    this->_ssl = ft_nullptr;
+    this->_sock = -1;
+    this->_is_shutting_down = false;
+    this->_async_workers.clear();
+    this->_initialized_state = api_tls_client::_state_initialized;
+    thread_safety_result = this->enable_thread_safety();
+    if (thread_safety_result != FT_ERR_SUCCESS)
+    {
+        this->_initialized_state = api_tls_client::_state_destroyed;
+        return (thread_safety_result);
+    }
+    if (this->_host.empty())
+    {
+        this->_initialized_state = api_tls_client::_state_destroyed;
+        return (FT_ERR_INVALID_ARGUMENT);
+    }
     if (!OPENSSL_init_ssl(0, ft_nullptr))
     {
-        this->set_error(FT_ERR_TERMINATED);
-        return ;
+        this->_initialized_state = api_tls_client::_state_destroyed;
+        return (FT_ERR_TERMINATED);
     }
-
     this->_ctx = SSL_CTX_new(TLS_client_method());
-    if (!this->_ctx)
+    if (this->_ctx == ft_nullptr)
     {
-        this->set_error(FT_ERR_NO_MEMORY);
-        return ;
+        this->_initialized_state = api_tls_client::_state_destroyed;
+        return (FT_ERR_NO_MEMORY);
     }
     if (SSL_CTX_set_default_verify_paths(this->_ctx) != 1)
     {
         SSL_CTX_free(this->_ctx);
         this->_ctx = ft_nullptr;
-        this->set_error(FT_ERR_CONFIGURATION);
-        return ;
+        this->_initialized_state = api_tls_client::_state_destroyed;
+        return (FT_ERR_CONFIGURATION);
     }
     SSL_CTX_set_verify(this->_ctx, SSL_VERIFY_PEER, ft_nullptr);
-
-    struct addrinfo hints;
-    struct addrinfo *address_results = ft_nullptr;
-    struct addrinfo *address_info;
-    ft_bzero(&hints, sizeof(hints));
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_family = AF_UNSPEC;
-    char port_string[6];
-    pf_snprintf(port_string, sizeof(port_string), "%u", port);
-    if (getaddrinfo(host_c, port_string, &hints, &address_results) != 0)
-    {
-        this->set_error(FT_ERR_CONFIGURATION);
-        return ;
-    }
-
-    address_info = address_results;
-    while (address_info != ft_nullptr)
-    {
-        this->_sock = nw_socket(address_info->ai_family, address_info->ai_socktype, address_info->ai_protocol);
-        if (this->_sock >= 0)
-        {
-            if (timeout_ms > 0)
-            {
-                struct timeval time_value;
-                time_value.tv_sec = timeout_ms / 1000;
-                time_value.tv_usec = (timeout_ms % 1000) * 1000;
-                setsockopt(this->_sock, SOL_SOCKET, SO_RCVTIMEO, &time_value, sizeof(time_value));
-                setsockopt(this->_sock, SOL_SOCKET, SO_SNDTIMEO, &time_value, sizeof(time_value));
-            }
-            if (nw_connect(this->_sock, address_info->ai_addr, static_cast<socklen_t>(address_info->ai_addrlen)) == 0)
-                break;
-            nw_close(this->_sock);
-            this->_sock = -1;
-        }
-        address_info = address_info->ai_next;
-    }
-    if (address_results)
-        freeaddrinfo(address_results);
-    if (this->_sock < 0)
-    {
-        this->set_error(FT_ERR_SOCKET_CONNECT_FAILED);
-        return ;
-    }
-
-    this->_ssl = SSL_new(this->_ctx);
-    if (!this->_ssl)
-    {
-        this->set_error(FT_ERR_NO_MEMORY);
-        return ;
-    }
-    if (SSL_set1_host(this->_ssl, this->_host.c_str()) != 1)
-    {
-        SSL_free(this->_ssl);
-        this->_ssl = ft_nullptr;
-        nw_close(this->_sock);
-        this->_sock = -1;
-        this->set_error(FT_ERR_CONFIGURATION);
-        return ;
-    }
-    SSL_set_hostflags(this->_ssl, X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS);
-    void *host_name_argument;
-
-    host_name_argument = static_cast<void*>(const_cast<char*>(this->_host.c_str()));
-    if (SSL_ctrl(this->_ssl, SSL_CTRL_SET_TLSEXT_HOSTNAME, TLSEXT_NAMETYPE_host_name, host_name_argument) != 1)
-    {
-        SSL_free(this->_ssl);
-        this->_ssl = ft_nullptr;
-        nw_close(this->_sock);
-        this->_sock = -1;
-        this->set_error(FT_ERR_CONFIGURATION);
-        return ;
-    }
-    if (SSL_set_fd(this->_ssl, this->_sock) != 1)
-    {
-        SSL_free(this->_ssl);
-        this->_ssl = ft_nullptr;
-        nw_close(this->_sock);
-        this->_sock = -1;
-        this->set_error(FT_ERR_CONFIGURATION);
-        return ;
-    }
-    if (SSL_connect(this->_ssl) <= 0)
-    {
-        SSL_free(this->_ssl);
-        this->_ssl = ft_nullptr;
-        nw_close(this->_sock);
-        this->_sock = -1;
-        this->set_error(FT_ERR_SOCKET_CONNECT_FAILED);
-        return ;
-    }
-    if (!this->populate_handshake_diagnostics())
-    {
-        int diagnostics_error;
-        const char *error_message;
-
-        diagnostics_error = this->_error_code;
-        if (diagnostics_error == FT_ERR_SUCCESS)
-            diagnostics_error = ft_global_error_stack_drop_last_error();
-        error_message = ft_strerror(diagnostics_error);
-        if (ft_log_get_api_logging())
-        {
-            ft_log_warn("api_tls_client::handshake diagnostics unavailable host=%s "
-                        "error=%d message=%s",
-                this->_host.c_str(), diagnostics_error, error_message);
-        }
-    }
-    this->set_error(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
-api_tls_client::~api_tls_client()
+int api_tls_client::destroy() noexcept
 {
-    ft_vector<ft_thread> workers_local;
     SSL *ssl_pointer;
     SSL_CTX *ctx_pointer;
     int socket_fd;
-    ft_unique_lock<pt_mutex> state_lock(this->_mutex);
+    bool lock_acquired;
 
-    if (state_lock.get_error() != FT_ERR_SUCCESS)
-        return ;
+    if (this->_initialized_state != api_tls_client::_state_initialized)
+        this->abort_lifecycle_error("api_tls_client::destroy",
+            "destroy called on non-initialized instance");
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
+        return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
     this->_is_shutting_down = true;
-    workers_local = ft_move(this->_async_workers);
     ssl_pointer = this->_ssl;
     ctx_pointer = this->_ctx;
     socket_fd = this->_sock;
     this->_ssl = ft_nullptr;
     this->_ctx = ft_nullptr;
     this->_sock = -1;
-    state_lock.unlock();
-    if (state_lock.get_error() != FT_ERR_SUCCESS)
-    {
-        if (ssl_pointer != ft_nullptr)
-        {
-            SSL_shutdown(ssl_pointer);
-            SSL_free(ssl_pointer);
-        }
-        if (socket_fd >= 0)
-            nw_close(socket_fd);
-        if (ctx_pointer != ft_nullptr)
-            SSL_CTX_free(ctx_pointer);
-        return ;
-    }
+    this->unlock(lock_acquired);
     size_t worker_index;
 
     worker_index = 0;
-    while (worker_index < workers_local.size())
+    while (worker_index < this->_async_workers.size())
     {
-        if (workers_local[worker_index].joinable())
-            workers_local[worker_index].join();
+        if (this->_async_workers[worker_index].joinable())
+            this->_async_workers[worker_index].join();
         worker_index += 1;
     }
-    workers_local.clear();
+    this->_async_workers.clear();
     if (ssl_pointer != ft_nullptr)
     {
         SSL_shutdown(ssl_pointer);
@@ -721,53 +686,47 @@ api_tls_client::~api_tls_client()
         nw_close(socket_fd);
     if (ctx_pointer != ft_nullptr)
         SSL_CTX_free(ctx_pointer);
-    return ;
+    (void)this->disable_thread_safety();
+    this->_initialized_state = api_tls_client::_state_destroyed;
+    return (FT_ERR_SUCCESS);
 }
 
 bool api_tls_client::is_valid() const
 {
-    ft_unique_lock<pt_mutex> state_lock(this->_mutex);
+    bool lock_acquired;
+    bool is_valid_value;
 
-    if (state_lock.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(state_lock.get_error());
+    this->abort_if_not_initialized("api_tls_client::is_valid");
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return (false);
-    }
-    if (this->_ssl != ft_nullptr)
-    {
-        this->set_error(FT_ERR_SUCCESS);
-        return (true);
-    }
-    this->set_error(FT_ERR_CONFIGURATION);
-    return (false);
+    is_valid_value = (this->_ssl != ft_nullptr);
+    this->unlock(lock_acquired);
+    return (is_valid_value);
 }
 
 char *api_tls_client::request(const char *method, const char *path, json_group *payload,
                               const char *headers, int *status)
 {
-    ft_unique_lock<pt_mutex> state_lock(this->_mutex);
+    bool lock_acquired;
 
+    this->abort_if_not_initialized("api_tls_client::request");
     if (method == ft_nullptr || path == ft_nullptr)
-    {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
-    }
-    if (state_lock.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(state_lock.get_error());
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return (ft_nullptr);
-    }
     if (this->_is_shutting_down)
     {
-        this->set_error(FT_ERR_INVALID_STATE);
+        this->unlock(lock_acquired);
         return (ft_nullptr);
     }
     if (this->_ssl == ft_nullptr)
     {
-        this->set_error(FT_ERR_CONFIGURATION);
+        this->unlock(lock_acquired);
         return (ft_nullptr);
     }
-    this->set_error(FT_ERR_SUCCESS);
+    this->unlock(lock_acquired);
     if (ft_log_get_api_logging())
     {
         const char *log_method = "(null)";
@@ -796,31 +755,19 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
     {
         char *temporary_string = json_write_to_string(payload);
         if (!temporary_string)
-        {
-            int json_error = ft_global_error_stack_drop_last_error();
-            if (json_error == FT_ERR_SUCCESS)
-                json_error = FT_ERR_NO_MEMORY;
-            this->set_error(json_error);
             return (ft_nullptr);
-        }
         body_string = temporary_string;
         cma_free(temporary_string);
         request += "\r\nContent-Type: application/json";
         if (!api_append_content_length_header(request, body_string.size()))
-        {
-            this->set_error(FT_ERR_IO);
             return (ft_nullptr);
-        }
     }
     request += "\r\nConnection: keep-alive\r\n\r\n";
     if (payload)
         request += body_string.c_str();
 
     if (ssl_send_all(this->_ssl, request.c_str(), request.size()) < 0)
-    {
-        this->set_error(FT_ERR_SOCKET_SEND_FAILED);
         return (ft_nullptr);
-    }
 
     ft_string response;
     char buffer[1024];
@@ -831,10 +778,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
     {
         bytes_received = nw_ssl_read(this->_ssl, buffer, sizeof(buffer) - 1);
         if (bytes_received <= 0)
-        {
-            this->set_error(FT_ERR_SOCKET_RECEIVE_FAILED);
             return (ft_nullptr);
-        }
         buffer[bytes_received] = '\0';
         response += buffer;
         header_end_ptr = ft_strstr(response.c_str(), "\r\n\r\n");
@@ -845,7 +789,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
         *status = -1;
         const char *space = ft_strchr(response.c_str(), ' ');
         if (space)
-            *status = ft_atoi(space + 1, ft_nullptr);
+            *status = ft_atoi(space + 1);
     }
 
     size_t header_len = static_cast<size_t>(header_end_ptr - response.c_str()) + 4;
@@ -879,41 +823,24 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
         if (tls_header_equals(header_name, "Content-Length") && !has_content_length)
         {
             unsigned long parsed_length;
-            int parse_error;
             unsigned long long parsed_length_ull;
             const char *header_value_cstr;
             char *header_parse_end;
 
             header_value_cstr = header_value.c_str();
             header_parse_end = ft_nullptr;
-            ft_global_error_stack_push(FT_ERR_SUCCESS);
             parsed_length = ft_strtoul(header_value_cstr, &header_parse_end, 10);
-            parse_error = ft_global_error_stack_drop_last_error();
-            if (parse_error != FT_ERR_SUCCESS)
-            {
-                this->set_error(parse_error);
-                return (ft_nullptr);
-            }
             if (!header_parse_end || header_parse_end == header_value_cstr)
-            {
-                this->set_error(FT_ERR_OUT_OF_RANGE);
                 return (ft_nullptr);
-            }
             while (*header_parse_end != '\0')
             {
                 if (*header_parse_end != ' ' && *header_parse_end != '\t')
-                {
-                    this->set_error(FT_ERR_OUT_OF_RANGE);
                     return (ft_nullptr);
-                }
                 header_parse_end += 1;
             }
             parsed_length_ull = static_cast<unsigned long long>(parsed_length);
             if (parsed_length_ull > FT_SYSTEM_SIZE_MAX)
-            {
-                this->set_error(FT_ERR_OUT_OF_RANGE);
                 return (ft_nullptr);
-            }
             content_length = static_cast<size_t>(parsed_length);
             has_content_length = true;
         }
@@ -958,10 +885,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
             {
                 bytes_received = nw_ssl_read(this->_ssl, buffer, sizeof(buffer) - 1);
                 if (bytes_received <= 0)
-                {
-                    this->set_error(FT_ERR_SOCKET_RECEIVE_FAILED);
                     return (ft_nullptr);
-                }
                 buffer[bytes_received] = '\0';
                 chunk_buffer += buffer;
                 chunk_start = chunk_buffer.c_str() + parse_offset;
@@ -988,23 +912,14 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
                 size_string.erase(size_trim - 1, 1);
                 size_trim--;
             }
-            ft_global_error_stack_push(FT_ERR_SUCCESS);
-            unsigned long chunk_length = ft_strtoul(size_string.c_str(), ft_nullptr, 16);
-            int chunk_error = ft_global_error_stack_drop_last_error();
-            if (chunk_error != FT_ERR_SUCCESS)
-            {
-                this->set_error(chunk_error);
-                return (ft_nullptr);
-            }
+            unsigned long chunk_length = ft_strtoul(size_string.c_str(),
+                    ft_nullptr, 16);
             parse_offset += line_length + 2;
             while (chunk_buffer.size() < parse_offset + chunk_length + 2)
             {
                 bytes_received = nw_ssl_read(this->_ssl, buffer, sizeof(buffer) - 1);
                 if (bytes_received <= 0)
-                {
-                    this->set_error(FT_ERR_SOCKET_RECEIVE_FAILED);
                     return (ft_nullptr);
-                }
                 buffer[bytes_received] = '\0';
                 chunk_buffer += buffer;
             }
@@ -1022,10 +937,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
                 {
                     bytes_received = nw_ssl_read(this->_ssl, buffer, sizeof(buffer) - 1);
                     if (bytes_received <= 0)
-                    {
-                        this->set_error(FT_ERR_SOCKET_RECEIVE_FAILED);
                         return (ft_nullptr);
-                    }
                     buffer[bytes_received] = '\0';
                     chunk_buffer += buffer;
                 }
@@ -1041,10 +953,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
                     {
                         bytes_received = nw_ssl_read(this->_ssl, buffer, sizeof(buffer) - 1);
                         if (bytes_received <= 0)
-                        {
-                            this->set_error(FT_ERR_SOCKET_RECEIVE_FAILED);
                             return (ft_nullptr);
-                        }
                         buffer[bytes_received] = '\0';
                         chunk_buffer += buffer;
                         trailer_ptr = chunk_buffer.c_str() + parse_offset;
@@ -1066,10 +975,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
         {
             bytes_received = nw_ssl_read(this->_ssl, buffer, sizeof(buffer) - 1);
             if (bytes_received <= 0)
-            {
-                this->set_error(FT_ERR_SOCKET_RECEIVE_FAILED);
                 return (ft_nullptr);
-            }
             buffer[bytes_received] = '\0';
             body += buffer;
         }
@@ -1084,19 +990,12 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
             body += buffer;
         }
         if (bytes_received < 0)
-        {
-            this->set_error(FT_ERR_SOCKET_RECEIVE_FAILED);
             return (ft_nullptr);
-        }
     }
 
-    char *result_body = cma_strdup(body.c_str());
+    char *result_body = adv_strdup(body.c_str());
     if (!result_body)
-    {
-        this->set_error(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
-    }
-    this->set_error(FT_ERR_SUCCESS);
     return (result_body);
 }
 
@@ -1110,14 +1009,7 @@ json_group *api_tls_client::request_json(const char *method, const char *path,
     json_group *result = json_read_from_string(body);
     cma_free(body);
     if (!result)
-    {
-        int json_error = ft_global_error_stack_drop_last_error();
-        if (json_error == FT_ERR_SUCCESS)
-            json_error = FT_ERR_NO_MEMORY;
-        this->set_error(json_error);
         return (ft_nullptr);
-    }
-    this->set_error(FT_ERR_SUCCESS);
     return (result);
 }
 
@@ -1127,125 +1019,58 @@ bool api_tls_client::request_async(const char *method, const char *path,
                                    api_callback callback,
                                    void *user_data)
 {
-    ft_unique_lock<pt_mutex> state_lock(this->_mutex);
+    bool lock_acquired;
 
+    this->abort_if_not_initialized("api_tls_client::request_async");
     if (!callback)
-    {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (false);
-    }
-    if (state_lock.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(state_lock.get_error());
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return (false);
-    }
     if (this->_is_shutting_down)
     {
-        this->set_error(FT_ERR_INVALID_STATE);
+        this->unlock(lock_acquired);
         return (false);
     }
-    state_lock.unlock();
-    if (state_lock.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(state_lock.get_error());
-        return (false);
-    }
+    this->unlock(lock_acquired);
     ft_thread worker([this, method, path, payload, headers, callback, user_data]()
     {
         int status_local = -1;
         char *result_body = this->request(method, path, payload, headers, &status_local);
         callback(result_body, status_local, user_data);
     });
-    if (worker.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(worker.get_error());
+    if (!worker.joinable())
         return (false);
-    }
-    state_lock.lock();
-    if (state_lock.get_error() != FT_ERR_SUCCESS)
-    {
-        if (worker.joinable())
-            worker.join();
-        this->set_error(state_lock.get_error());
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return (false);
-    }
     if (this->_is_shutting_down)
     {
-        state_lock.unlock();
-        if (state_lock.get_error() != FT_ERR_SUCCESS)
-        {
-            if (worker.joinable())
-                worker.join();
-            this->set_error(state_lock.get_error());
-            return (false);
-        }
+        this->unlock(lock_acquired);
         if (worker.joinable())
             worker.join();
-        this->set_error(FT_ERR_INVALID_STATE);
         return (false);
     }
     size_t worker_count_before;
     size_t worker_count_after;
-    int vector_error;
 
     worker_count_before = this->_async_workers.size();
     this->_async_workers.push_back(ft_move(worker));
     worker_count_after = this->_async_workers.size();
     if (worker_count_after < worker_count_before + 1)
     {
-        vector_error = this->_async_workers.get_error();
-        if (vector_error == FT_ERR_SUCCESS)
-            vector_error = FT_ERR_NO_MEMORY;
-        state_lock.unlock();
-        if (state_lock.get_error() != FT_ERR_SUCCESS)
-        {
-            if (worker.joinable())
-                worker.join();
-            this->set_error(state_lock.get_error());
-            return (false);
-        }
+        this->unlock(lock_acquired);
         if (worker.joinable())
             worker.join();
-        this->set_error(vector_error);
         return (false);
     }
-    state_lock.unlock();
-    if (state_lock.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(state_lock.get_error());
-        return (false);
-    }
-    this->set_error(FT_ERR_SUCCESS);
+    this->unlock(lock_acquired);
     return (true);
-}
-
-int api_tls_client::get_error() const noexcept
-{
-    int value;
-
-    value = this->_error_code.load(std::memory_order_relaxed);
-    return (value);
-}
-
-const char *api_tls_client::get_error_str() const noexcept
-{
-    int value;
-
-    value = this->_error_code.load(std::memory_order_relaxed);
-    return (ft_strerror(value));
-}
-
-void api_tls_client::set_error(int error_code) const noexcept
-{
-
-    this->_error_code.store(error_code, std::memory_order_relaxed);
-    api_tls_client::record_operation_error_unlocked(error_code);
-    return ;
 }
 
 bool api_tls_client::populate_handshake_diagnostics()
 {
-    ft_unique_lock<pt_mutex> state_lock(this->_mutex);
+    bool lock_acquired;
     const char *protocol_name;
     const SSL_CIPHER *cipher;
     const char *cipher_name;
@@ -1254,39 +1079,37 @@ bool api_tls_client::populate_handshake_diagnostics()
     int certificate_index;
     X509 *certificate;
     X509 *leaf_certificate;
-    int vector_error;
 
-    if (state_lock.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(state_lock.get_error());
+    this->abort_if_not_initialized("api_tls_client::populate_handshake_diagnostics");
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return (false);
-    }
     if (this->_is_shutting_down)
     {
-        this->set_error(FT_ERR_INVALID_STATE);
+        this->unlock(lock_acquired);
         return (false);
     }
     if (this->_ssl == ft_nullptr)
     {
-        this->set_error(FT_ERR_CONFIGURATION);
+        this->unlock(lock_acquired);
         return (false);
     }
     this->_handshake_diagnostics.protocol.clear();
     if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(ft_string::last_operation_error());
+        this->unlock(lock_acquired);
         return (false);
     }
     this->_handshake_diagnostics.cipher.clear();
     if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(ft_string::last_operation_error());
+        this->unlock(lock_acquired);
         return (false);
     }
     this->_handshake_diagnostics.certificates.clear();
-    if (this->_handshake_diagnostics.certificates.get_error() != FT_ERR_SUCCESS)
+    if (ft_vector<api_tls_certificate_diagnostics>::last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(this->_handshake_diagnostics.certificates.get_error());
+        this->unlock(lock_acquired);
         return (false);
     }
     protocol_name = SSL_get_version(this->_ssl);
@@ -1295,7 +1118,7 @@ bool api_tls_client::populate_handshake_diagnostics()
         this->_handshake_diagnostics.protocol.append(protocol_name);
         if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
-            this->set_error(ft_string::last_operation_error());
+            this->unlock(lock_acquired);
             return (false);
         }
     }
@@ -1308,7 +1131,7 @@ bool api_tls_client::populate_handshake_diagnostics()
             this->_handshake_diagnostics.cipher.append(cipher_name);
             if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
             {
-                this->set_error(ft_string::last_operation_error());
+                this->unlock(lock_acquired);
                 return (false);
             }
         }
@@ -1326,12 +1149,7 @@ bool api_tls_client::populate_handshake_diagnostics()
                 if (!tls_append_certificate_diagnostic(this->_handshake_diagnostics,
                         certificate))
                 {
-                    vector_error = this->_handshake_diagnostics.certificates.get_error();
-                    if (vector_error == FT_ERR_SUCCESS)
-                        vector_error = ft_global_error_stack_drop_last_error();
-                    if (vector_error == FT_ERR_SUCCESS)
-                        vector_error = FT_ERR_CONFIGURATION;
-                    this->set_error(vector_error);
+                    this->unlock(lock_acquired);
                     return (false);
                 }
             }
@@ -1343,63 +1161,54 @@ bool api_tls_client::populate_handshake_diagnostics()
         leaf_certificate = SSL_get1_peer_certificate(this->_ssl);
         if (leaf_certificate == ft_nullptr)
         {
-            this->set_error(FT_ERR_CONFIGURATION);
+            this->unlock(lock_acquired);
             return (false);
         }
         if (!tls_append_certificate_diagnostic(this->_handshake_diagnostics,
                 leaf_certificate))
         {
-            vector_error = this->_handshake_diagnostics.certificates.get_error();
-            if (vector_error == FT_ERR_SUCCESS)
-                vector_error = ft_global_error_stack_drop_last_error();
-            if (vector_error == FT_ERR_SUCCESS)
-                vector_error = FT_ERR_CONFIGURATION;
-            this->set_error(vector_error);
+            this->unlock(lock_acquired);
             X509_free(leaf_certificate);
             return (false);
         }
         X509_free(leaf_certificate);
     }
-    this->set_error(FT_ERR_SUCCESS);
+    this->unlock(lock_acquired);
     tls_log_handshake_diagnostics(this->_handshake_diagnostics, this->_host);
     return (true);
 }
 
 bool api_tls_client::refresh_handshake_diagnostics()
 {
-    ft_unique_lock<pt_mutex> state_lock(this->_mutex);
+    bool lock_acquired;
 
-    if (state_lock.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(state_lock.get_error());
+    this->abort_if_not_initialized("api_tls_client::refresh_handshake_diagnostics");
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return (false);
-    }
     if (this->_is_shutting_down)
     {
-        this->set_error(FT_ERR_INVALID_STATE);
+        this->unlock(lock_acquired);
         return (false);
     }
-    state_lock.unlock();
-    if (state_lock.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(state_lock.get_error());
-        return (false);
-    }
+    this->unlock(lock_acquired);
     if (!this->populate_handshake_diagnostics())
         return (false);
-    this->set_error(FT_ERR_SUCCESS);
     return (true);
 }
 
 const api_tls_handshake_diagnostics &api_tls_client::get_handshake_diagnostics() const noexcept
 {
-    ft_unique_lock<pt_mutex> state_lock(this->_mutex);
-
-    if (state_lock.get_error() != FT_ERR_SUCCESS)
-        this->set_error(state_lock.get_error());
-    else
-        this->set_error(FT_ERR_SUCCESS);
+    this->abort_if_not_initialized("api_tls_client::get_handshake_diagnostics");
     return (this->_handshake_diagnostics);
 }
+
+#ifdef LIBFT_TEST_BUILD
+pt_recursive_mutex *api_tls_client::get_mutex_for_validation() const noexcept
+{
+    this->abort_if_not_initialized("api_tls_client::get_mutex_for_validation");
+    return (this->_mutex);
+}
+#endif
 
 #endif

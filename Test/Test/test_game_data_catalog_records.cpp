@@ -19,7 +19,6 @@ FT_TEST(test_item_definition_copy_move, "copy and move item definitions")
     FT_ASSERT_EQ(4, copy.get_height());
     FT_ASSERT_EQ(6, copy.get_weight());
     FT_ASSERT_EQ(7, copy.get_slot_requirement());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, copy.get_error());
 
     FT_ASSERT_EQ(5, moved.get_item_id());
     FT_ASSERT_EQ(0, original.get_item_id());
@@ -29,8 +28,6 @@ FT_TEST(test_item_definition_copy_move, "copy and move item definitions")
     FT_ASSERT_EQ(0, original.get_height());
     FT_ASSERT_EQ(0, original.get_weight());
     FT_ASSERT_EQ(0, original.get_slot_requirement());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.get_error());
     return (1);
 }
 
@@ -60,8 +57,6 @@ FT_TEST(test_recipe_blueprint_copy_move, "copy and move recipe blueprints")
     FT_ASSERT_EQ(0, blueprint.get_recipe_id());
     FT_ASSERT_EQ(0, blueprint.get_result_item_id());
     FT_ASSERT_EQ(true, blueprint.get_ingredients().empty());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, blueprint.get_error());
     return (1);
 }
 
@@ -74,7 +69,6 @@ FT_TEST(test_loadout_entry_copy_move, "copy and move loadout entries")
     FT_ASSERT_EQ(2, copied.get_slot());
     FT_ASSERT_EQ(15, copied.get_item_id());
     FT_ASSERT_EQ(3, copied.get_quantity());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, copied.get_error());
 
     FT_ASSERT_EQ(2, moved.get_slot());
     FT_ASSERT_EQ(15, moved.get_item_id());
@@ -82,8 +76,6 @@ FT_TEST(test_loadout_entry_copy_move, "copy and move loadout entries")
     FT_ASSERT_EQ(0, entry.get_slot());
     FT_ASSERT_EQ(0, entry.get_item_id());
     FT_ASSERT_EQ(0, entry.get_quantity());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, entry.get_error());
     return (1);
 }
 
@@ -116,7 +108,5 @@ FT_TEST(test_loadout_blueprint_copy_move, "copy and move loadout blueprints")
     FT_ASSERT_EQ(0, blueprint.get_loadout_id());
     FT_ASSERT_EQ(true, blueprint.get_entries().empty());
     FT_ASSERT_EQ(2u, moved.get_entries().size());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, blueprint.get_error());
     return (1);
 }

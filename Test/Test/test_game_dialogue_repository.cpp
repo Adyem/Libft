@@ -1,4 +1,5 @@
 #include "../test_internal.hpp"
+#include "../../CPP_class/class_shared_ptr.hpp"
 #include "../../Game/game_dialogue_table.hpp"
 #include "../../System_utils/test_runner.hpp"
 
@@ -10,6 +11,13 @@ static int build_line(int id, const char *speaker, const char *text, const ft_ve
 {
     out_line = ft_dialogue_line(id, ft_string(speaker), ft_string(text), next_ids);
     return (1);
+}
+
+static ft_sharedptr<ft_dialogue_line> build_line_shared(int id, const char *speaker,
+        const char *text, const ft_vector<int> &next_ids)
+{
+    return (ft_sharedptr<ft_dialogue_line>(new (std::nothrow)
+            ft_dialogue_line(id, ft_string(speaker), ft_string(text), next_ids)));
 }
 
 FT_TEST(test_dialogue_register_and_fetch, "register and fetch dialogue entries")
@@ -38,15 +46,14 @@ FT_TEST(test_dialogue_script_isolation, "scripts fetch as copies")
     ft_dialogue_script script;
     ft_dialogue_script fetched_first;
     ft_dialogue_script fetched_second;
-    ft_vector<ft_dialogue_line> lines;
+    ft_vector<ft_sharedptr<ft_dialogue_line>> lines;
     ft_vector<int> empty_next;
 
-    lines.push_back(ft_dialogue_line());
-    build_line(10, "guide", "welcome", empty_next, lines[lines.size() - 1]);
+    lines.push_back(build_line_shared(10, "guide", "welcome", empty_next));
     script = ft_dialogue_script(5, ft_string("intro"), ft_string("start"), 10, lines);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.register_script(script));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.fetch_script(5, fetched_first));
-    fetched_first.get_lines()[0].set_text(ft_string("changed"));
+    fetched_first.get_lines()[0]->set_text(ft_string("changed"));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.fetch_script(5, fetched_second));
     FT_ASSERT_EQ(ft_string("welcome"), fetched_second.get_lines()[0].get_text());
     return (1);

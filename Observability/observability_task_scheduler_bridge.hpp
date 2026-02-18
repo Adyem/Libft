@@ -29,7 +29,5 @@ typedef void (*ft_otel_span_exporter)(const ft_otel_span_metrics &span);
 
 int observability_task_scheduler_bridge_initialize(ft_otel_span_exporter exporter);
 int observability_task_scheduler_bridge_shutdown(void);
-int observability_task_scheduler_bridge_get_error(void);
-const char *observability_task_scheduler_bridge_get_error_str(void);
 
 #endif

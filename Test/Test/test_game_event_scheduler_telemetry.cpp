@@ -29,7 +29,6 @@ static int game_event_scheduler_reset_samples_state(void)
     error = g_scheduler_samples.get_error();
     if (error != FT_ERR_SUCCESS)
         return (-1);
-    ft_errno = FT_ERR_SUCCESS;
     return (0);
 }
 
@@ -50,7 +49,6 @@ static int game_event_scheduler_capture_sample_state(const ft_game_observability
     error = g_scheduler_samples.get_error();
     if (error != FT_ERR_SUCCESS)
         return (-1);
-    ft_errno = FT_ERR_SUCCESS;
     return (0);
 }
 
@@ -191,11 +189,9 @@ FT_TEST(test_game_event_scheduler_telemetry_rejects_null_scheduler_name,
     profile.last_update_processing_ns = 1000000;
     profile.last_error_code = FT_ERR_SUCCESS;
 
-    ft_errno = FT_ERR_SUCCESS;
     game_event_scheduler_telemetry_record(state, profile);
 
     FT_ASSERT_EQ(0, static_cast<int>(g_scheduler_samples.size()));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
 
     FT_ASSERT_EQ(0, observability_game_metrics_shutdown());
     return (1);

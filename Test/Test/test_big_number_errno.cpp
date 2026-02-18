@@ -1,5 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../CPP_class/class_big_number.hpp"
+#include "../../CPP_class/class_string.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../Template/move.hpp"
@@ -75,31 +76,24 @@ FT_TEST(test_big_number_errno_resets_accessors, "ft_big_number accessors and com
 
     FT_ASSERT(left_number == left_number);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::error_for(ft_big_number::last_op_id()));
 
     FT_ASSERT(left_number != right_number);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::error_for(ft_big_number::last_op_id()));
 
     FT_ASSERT(left_number > right_number);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::error_for(ft_big_number::last_op_id()));
 
     FT_ASSERT(left_number >= right_number);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::error_for(ft_big_number::last_op_id()));
 
     FT_ASSERT(left_number >= left_number);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::error_for(ft_big_number::last_op_id()));
 
     FT_ASSERT(!(left_number < ft_big_number()));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::error_for(ft_big_number::last_op_id()));
 
     FT_ASSERT(right_number <= left_number);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::error_for(ft_big_number::last_op_id()));
 
     FT_ASSERT_EQ(static_cast<ft_size_t>(2), right_number.size());
 
@@ -157,7 +151,6 @@ FT_TEST(test_big_number_errno_resets_arithmetic, "ft_big_number arithmetic prese
     ft_big_number error_quotient = left_number / error_divisor;
     FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, ft_big_number::last_operation_error());
     FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, ft_big_number::last_error());
-    FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, ft_big_number::error_for(ft_big_number::last_op_id()));
     return (1);
 }
 

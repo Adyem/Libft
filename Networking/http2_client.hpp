@@ -14,12 +14,17 @@
 class http2_header_field
 {
     private:
+        uint8_t             _initialized_state;
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
+        void    abort_lifecycle_error(const char *method_name,
+                    const char *reason) const noexcept;
+        void    abort_if_not_initialized(const char *method_name) const noexcept;
         ft_string           _name;
         ft_string           _value;
-        mutable int         _error_code;
         mutable pt_mutex   *_mutex;
 
-        void    set_error(int error_code) const noexcept;
         int     lock(bool *lock_acquired) const noexcept;
         void    unlock(bool lock_acquired) const noexcept;
         void    teardown_thread_safety() noexcept;
@@ -33,6 +38,8 @@ class http2_header_field
         http2_header_field(http2_header_field &&other) noexcept;
         http2_header_field &operator=(const http2_header_field &other) noexcept;
         http2_header_field &operator=(http2_header_field &&other) noexcept;
+        int     initialize() noexcept;
+        int     destroy() noexcept;
 
         bool    set_name(const ft_string &name_value) noexcept;
         bool    set_name_from_cstr(const char *name_value) noexcept;
@@ -51,23 +58,24 @@ class http2_header_field
         bool    copy_value(ft_string &out_value) const noexcept;
 
         void    clear() noexcept;
-
-        int         get_error() const noexcept;
-        const char  *get_error_str() const noexcept;
 };
 
 class http2_frame
 {
     private:
+        uint8_t             _initialized_state;
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
+        void    abort_lifecycle_error(const char *method_name,
+                    const char *reason) const noexcept;
+        void    abort_if_not_initialized(const char *method_name) const noexcept;
         uint8_t             _type;
         uint8_t             _flags;
         uint32_t            _stream_identifier;
         ft_string           _payload;
-        mutable int         _error_code;
-        mutable bool        _thread_safe_enabled;
         mutable pt_mutex   *_mutex;
 
-        void    set_error(int error_code) const noexcept;
         int     lock(bool *lock_acquired) const noexcept;
         void    unlock(bool lock_acquired) const noexcept;
         void    teardown_thread_safety() noexcept;
@@ -80,6 +88,8 @@ class http2_frame
         http2_frame(http2_frame &&other) noexcept;
         http2_frame &operator=(const http2_frame &other) noexcept;
         http2_frame &operator=(http2_frame &&other) noexcept;
+        int     initialize() noexcept;
+        int     destroy() noexcept;
 
         int     enable_thread_safety() noexcept;
         void    disable_thread_safety() noexcept;
@@ -98,9 +108,6 @@ class http2_frame
         bool    set_payload_from_buffer(const char *buffer, size_t length) noexcept;
         bool    copy_payload(ft_string &out_payload) const noexcept;
         void    clear_payload() noexcept;
-
-        int         get_error() const noexcept;
-        const char  *get_error_str() const noexcept;
 };
 
 struct http2_stream_state
@@ -119,7 +126,13 @@ struct http2_stream_state
 class http2_stream_manager
 {
     private:
-        void        set_error(int error_code) const noexcept;
+        uint8_t                                     _initialized_state;
+        static const uint8_t                        _state_uninitialized = 0;
+        static const uint8_t                        _state_destroyed = 1;
+        static const uint8_t                        _state_initialized = 2;
+        void        abort_lifecycle_error(const char *method_name,
+                        const char *reason) const noexcept;
+        void        abort_if_not_initialized(const char *method_name) const noexcept;
         bool        validate_receive_window(uint32_t stream_identifier,
                         uint32_t length) noexcept;
         bool        record_received_data(uint32_t stream_identifier,
@@ -134,8 +147,6 @@ class http2_stream_manager
         uint32_t                                _initial_local_window;
         uint32_t                                _connection_remote_window;
         uint32_t                                _connection_local_window;
-        mutable int                              _error_code;
-        mutable bool                             _thread_safe_enabled;
         mutable pt_mutex                        *_mutex;
 
         int         prepare_thread_safety() noexcept;
@@ -151,6 +162,8 @@ class http2_stream_manager
         http2_stream_manager &operator=(const http2_stream_manager &other) = delete;
         http2_stream_manager(http2_stream_manager &&other) = delete;
         http2_stream_manager &operator=(http2_stream_manager &&other) = delete;
+        int         initialize() noexcept;
+        int         destroy() noexcept;
 
         int         enable_thread_safety() noexcept;
         void        disable_thread_safety() noexcept;
@@ -182,14 +195,18 @@ class http2_stream_manager
         bool        update_connection_remote_window(uint32_t increment) noexcept;
         uint32_t    get_connection_local_window() const noexcept;
         uint32_t    get_connection_remote_window() const noexcept;
-        int         get_error() const noexcept;
-        const char  *get_error_str() const noexcept;
 };
 
 class http2_settings_state
 {
     private:
-        void        set_error(int error_code) const noexcept;
+        uint8_t     _initialized_state;
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
+        void        abort_lifecycle_error(const char *method_name,
+                        const char *reason) const noexcept;
+        void        abort_if_not_initialized(const char *method_name) const noexcept;
         bool        apply_single_setting(uint16_t identifier, uint32_t value,
                         http2_stream_manager &streams) noexcept;
 
@@ -200,11 +217,12 @@ class http2_settings_state
         uint32_t    _initial_remote_window;
         uint32_t    _max_frame_size;
         uint32_t    _max_header_list_size;
-        mutable int _error_code;
 
     public:
         http2_settings_state() noexcept;
         ~http2_settings_state() noexcept;
+        int         initialize() noexcept;
+        int         destroy() noexcept;
 
         bool        apply_remote_settings(const http2_frame &frame,
                         http2_stream_manager &streams) noexcept;
@@ -219,8 +237,6 @@ class http2_settings_state
         uint32_t    get_initial_remote_window() const noexcept;
         uint32_t    get_max_frame_size() const noexcept;
         uint32_t    get_max_header_list_size() const noexcept;
-        int         get_error() const noexcept;
-        const char  *get_error_str() const noexcept;
 };
 
 bool    http2_encode_frame(const http2_frame &frame, ft_string &out_buffer,

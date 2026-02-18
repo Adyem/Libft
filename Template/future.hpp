@@ -171,8 +171,7 @@ ft_future<ValueType>::ft_future(ft_sharedptr<ft_promise<ValueType> > promise_poi
     : _promise(ft_nullptr), _shared_promise(),
       _mutex(ft_nullptr)
 {
-    this->_shared_promise = promise_pointer;
-    this->_promise = this->_shared_promise.get();
+    this->_promise = promise_pointer.get();
     return ;
 }
 
@@ -190,7 +189,6 @@ int ft_future<ValueType>::initialize(const ft_future<ValueType> &other)
     bool this_lock_acquired;
     bool other_lock_acquired;
     ft_promise<ValueType> *other_promise;
-    ft_sharedptr<ft_promise<ValueType> > other_shared;
     int other_error;
 
     if (this == &other)
@@ -211,10 +209,8 @@ int ft_future<ValueType>::initialize(const ft_future<ValueType> &other)
         return (other_lock_result);
     }
     other_promise = other._promise;
-    other_shared = other._shared_promise;
     other_error = other.last_error_code();
     this->_promise = other_promise;
-    this->_shared_promise = other_shared;
     other.unlock_internal(other_lock_acquired);
     this->unlock_internal(this_lock_acquired);
     return (other_error);
@@ -226,7 +222,6 @@ int ft_future<ValueType>::initialize(ft_future<ValueType> &&other)
     bool this_lock_acquired;
     bool other_lock_acquired;
     ft_promise<ValueType> *transferred_promise;
-    ft_sharedptr<ft_promise<ValueType> > transferred_shared;
     int transferred_error;
 
     if (this == &other)
@@ -247,12 +242,9 @@ int ft_future<ValueType>::initialize(ft_future<ValueType> &&other)
         return (other_lock_result);
     }
     transferred_promise = other._promise;
-    transferred_shared = ft_move(other._shared_promise);
     transferred_error = other.last_error_code();
     this->_promise = transferred_promise;
-    this->_shared_promise = ft_move(transferred_shared);
     other._promise = ft_nullptr;
-    other._shared_promise = ft_sharedptr<ft_promise<ValueType> >();
     other.unlock_internal(other_lock_acquired);
     this->unlock_internal(this_lock_acquired);
     return (transferred_error);
@@ -421,8 +413,7 @@ inline ft_future<void>::ft_future(ft_sharedptr<ft_promise<void> > promise_pointe
     : _promise(ft_nullptr), _shared_promise(),
       _mutex(ft_nullptr)
 {
-    this->_shared_promise = promise_pointer;
-    this->_promise = this->_shared_promise.get();
+    this->_promise = promise_pointer.get();
     return ;
 }
 
@@ -438,7 +429,6 @@ inline int ft_future<void>::initialize(const ft_future<void> &other)
     bool this_lock_acquired;
     bool other_lock_acquired;
     ft_promise<void> *other_promise;
-    ft_sharedptr<ft_promise<void> > other_shared;
     int other_error;
 
     if (this == &other)
@@ -459,10 +449,8 @@ inline int ft_future<void>::initialize(const ft_future<void> &other)
         return (other_lock_result);
     }
     other_promise = other._promise;
-    other_shared = other._shared_promise;
     other_error = other.last_error_code();
     this->_promise = other_promise;
-    this->_shared_promise = other_shared;
     other.unlock_internal(other_lock_acquired);
     this->unlock_internal(this_lock_acquired);
     return (other_error);
@@ -473,7 +461,6 @@ inline int ft_future<void>::initialize(ft_future<void> &&other)
     bool this_lock_acquired;
     bool other_lock_acquired;
     ft_promise<void> *transferred_promise;
-    ft_sharedptr<ft_promise<void> > transferred_shared;
     int transferred_error;
 
     if (this == &other)
@@ -494,12 +481,9 @@ inline int ft_future<void>::initialize(ft_future<void> &&other)
         return (other_lock_result);
     }
     transferred_promise = other._promise;
-    transferred_shared = ft_move(other._shared_promise);
     transferred_error = other.last_error_code();
     this->_promise = transferred_promise;
-    this->_shared_promise = ft_move(transferred_shared);
     other._promise = ft_nullptr;
-    other._shared_promise = ft_sharedptr<ft_promise<void> >();
     other.unlock_internal(other_lock_acquired);
     this->unlock_internal(this_lock_acquired);
     return (transferred_error);

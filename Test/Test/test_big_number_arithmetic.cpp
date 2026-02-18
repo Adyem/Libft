@@ -231,7 +231,6 @@ FT_TEST(test_big_number_division_by_zero_error, "ft_big_number division reports 
     ft_big_number result_number = numerator_number / zero_number;
     FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, ft_big_number::last_operation_error());
     FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, ft_big_number::last_error());
-    FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, ft_big_number::error_for(ft_big_number::last_op_id()));
     return (1);
 }
 
@@ -275,7 +274,6 @@ FT_TEST(test_big_number_modulus_basic, "ft_big_number modulus returns signed rem
     ft_big_number error_remainder = positive_dividend % zero_divisor;
     FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, ft_big_number::last_operation_error());
     FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, ft_big_number::last_error());
-    FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, ft_big_number::error_for(ft_big_number::last_op_id()));
     return (1);
 }
 
@@ -324,7 +322,6 @@ FT_TEST(test_big_number_modular_exponentiation, "ft_big_number mod_pow performs 
     ft_big_number modulus_error = base_number.mod_pow(exponent_one, zero_modulus);
     FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, ft_big_number::last_operation_error());
     FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, ft_big_number::last_error());
-    FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, ft_big_number::error_for(ft_big_number::last_op_id()));
 
     ft_big_number negative_exponent;
 
@@ -333,7 +330,6 @@ FT_TEST(test_big_number_modular_exponentiation, "ft_big_number mod_pow performs 
         = base_number.mod_pow(negative_exponent, modulus_number);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_big_number::last_operation_error());
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_big_number::last_error());
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_big_number::error_for(ft_big_number::last_op_id()));
     return (1);
 }
 

@@ -179,7 +179,6 @@ FT_TEST(test_get_next_line_zero_buffer_sets_errno, "get_next_line reports FT_ERR
     return (1);
 }
 
-FT_TEST(test_get_next_line_stream_error_sets_errno, "get_next_line propagates stream errors via ft_errno")
 {
     int     file_descriptor;
     char    *line;

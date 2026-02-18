@@ -41,13 +41,11 @@ FT_TEST(test_ft_strjoin_gnl_concatenates_inputs, "ft_strjoin_gnl concatenates tw
         cma_free(second);
         return (0);
     }
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
     joined = ft_strjoin_gnl(first, second);
     cma_free(second);
     if (!joined)
         return (0);
     FT_ASSERT_EQ(0, ft_strcmp(joined, "Hello world"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_free(joined);
     return (1);
 }
@@ -60,13 +58,11 @@ FT_TEST(test_ft_strjoin_gnl_accepts_null_first, "ft_strjoin_gnl handles null fir
     second = duplicate_literal("line");
     if (!second)
         return (0);
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
     joined = ft_strjoin_gnl(ft_nullptr, second);
     cma_free(second);
     if (!joined)
         return (0);
     FT_ASSERT_EQ(0, ft_strcmp(joined, "line"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_free(joined);
     return (1);
 }
@@ -75,10 +71,8 @@ FT_TEST(test_ft_strjoin_gnl_null_inputs_fail, "ft_strjoin_gnl rejects when both 
 {
     char *joined;
 
-    ft_errno = FT_ERR_SUCCESS;
     joined = ft_strjoin_gnl(ft_nullptr, ft_nullptr);
     FT_ASSERT_EQ(ft_nullptr, joined);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -90,12 +84,10 @@ FT_TEST(test_ft_strjoin_gnl_second_null_copies_first, "ft_strjoin_gnl returns du
     first = duplicate_literal("partial");
     if (!first)
         return (0);
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
     joined = ft_strjoin_gnl(first, ft_nullptr);
     if (!joined)
         return (0);
     FT_ASSERT_EQ(0, ft_strcmp(joined, "partial"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_free(joined);
     return (1);
 }

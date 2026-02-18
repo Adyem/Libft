@@ -1,5 +1,7 @@
 #include "networking_quic_experimental.hpp"
 #include "openssl_support.hpp"
+#include "../Printf/printf.hpp"
+#include "../System_utils/system_utils.hpp"
 
 #if NETWORKING_HAS_OPENSSL
 
@@ -38,14 +40,12 @@ quic_datagram_plaintext::~quic_datagram_plaintext() noexcept
 bool    networking_quic_enable_experimental() noexcept
 {
     g_quic_experimental_enabled.store(true);
-    ft_errno = FT_ERR_SUCCESS;
     return (true);
 }
 
 bool    networking_quic_disable_experimental() noexcept
 {
     g_quic_experimental_enabled.store(false);
-    ft_errno = FT_ERR_SUCCESS;
     return (true);
 }
 
@@ -54,40 +54,89 @@ bool    networking_quic_is_experimental_enabled() noexcept
     bool enabled;
 
     enabled = g_quic_experimental_enabled.load();
-    ft_errno = FT_ERR_SUCCESS;
     return (enabled);
 }
 
 quic_experimental_session::quic_experimental_session() noexcept
 {
+    this->_initialized_state = quic_experimental_session::_state_uninitialized;
     this->_ssl_session = ft_nullptr;
     this->_outbound = false;
     this->_configured = false;
     this->_send_sequence = 0;
     this->_receive_sequence = 0;
-    this->_error_code = FT_ERR_SUCCESS;
     this->_feature_configuration = quic_feature_configuration();
-    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 quic_experimental_session::~quic_experimental_session() noexcept
 {
-    this->clear_key_material();
-    this->_ssl_session = ft_nullptr;
-    this->_configured = false;
+    if (this->_initialized_state == quic_experimental_session::_state_uninitialized)
+    {
+        pf_printf_fd(2, "quic_experimental_session lifecycle error: %s\n",
+            "destructor called on uninitialized instance");
+        su_abort();
+    }
+    if (this->_initialized_state == quic_experimental_session::_state_initialized)
+        (void)this->destroy();
     return ;
 }
 
-void    quic_experimental_session::set_error(int error_code) const noexcept
+void    quic_experimental_session::abort_lifecycle_error(const char *method_name,
+        const char *reason) const noexcept
 {
-    this->_error_code = error_code;
-    ft_errno = error_code;
+    if (method_name == ft_nullptr)
+        method_name = "unknown";
+    if (reason == ft_nullptr)
+        reason = "unknown";
+    pf_printf_fd(2, "quic_experimental_session lifecycle error: %s: %s\n",
+        method_name, reason);
+    su_abort();
     return ;
+}
+
+void    quic_experimental_session::abort_if_not_initialized(const char *method_name) const noexcept
+{
+    if (this->_initialized_state == quic_experimental_session::_state_initialized)
+        return ;
+    this->abort_lifecycle_error(method_name, "called while object is not initialized");
+    return ;
+}
+
+int quic_experimental_session::initialize() noexcept
+{
+    if (this->_initialized_state == quic_experimental_session::_state_initialized)
+        this->abort_lifecycle_error("quic_experimental_session::initialize",
+            "initialize called on initialized instance");
+    this->_ssl_session = ft_nullptr;
+    this->_outbound = false;
+    this->_configured = false;
+    this->_send_sequence = 0;
+    this->_receive_sequence = 0;
+    this->_initialized_state = quic_experimental_session::_state_initialized;
+    this->_feature_configuration = quic_feature_configuration();
+    this->clear_key_material();
+    return (FT_ERR_SUCCESS);
+}
+
+int quic_experimental_session::destroy() noexcept
+{
+    if (this->_initialized_state != quic_experimental_session::_state_initialized)
+        this->abort_lifecycle_error("quic_experimental_session::destroy",
+            "destroy called on non-initialized instance");
+    this->clear_key_material();
+    this->_ssl_session = ft_nullptr;
+    this->_outbound = false;
+    this->_configured = false;
+    this->_send_sequence = 0;
+    this->_receive_sequence = 0;
+    this->_initialized_state = quic_experimental_session::_state_destroyed;
+    return (FT_ERR_SUCCESS);
 }
 
 void    quic_experimental_session::clear_key_material() noexcept
 {
+    this->abort_if_not_initialized("quic_experimental_session::clear_key_material");
     if (this->_send_key.size() > 0)
         ft_memset(this->_send_key.begin(), 0, this->_send_key.size());
     if (this->_receive_key.size() > 0)
@@ -105,48 +154,30 @@ void    quic_experimental_session::clear_key_material() noexcept
 
 bool    quic_experimental_session::ensure_feature_enabled() const noexcept
 {
+    this->abort_if_not_initialized("quic_experimental_session::ensure_feature_enabled");
     if (!networking_quic_is_experimental_enabled())
-    {
-        this->set_error(FT_ERR_INVALID_OPERATION);
         return (false);
-    }
     return (true);
 }
 
 bool    quic_experimental_session::ensure_configured() const noexcept
 {
+    this->abort_if_not_initialized("quic_experimental_session::ensure_configured");
     if (!this->_configured)
-    {
-        this->set_error(FT_ERR_INVALID_STATE);
         return (false);
-    }
     return (true);
 }
 
 bool    quic_experimental_session::derive_keys(SSL *ssl_session, bool outbound) noexcept
 {
+    this->abort_if_not_initialized("quic_experimental_session::derive_keys");
     if (!networking_tls_export_aead_keys(ssl_session, outbound,
             this->_send_key, this->_send_iv, this->_receive_key, this->_receive_iv))
-    {
-        int export_error;
-
-        export_error = ft_errno;
-        if (export_error != FT_ERR_SUCCESS)
-            this->set_error(export_error);
-        else
-            this->set_error(FT_ERR_INTERNAL);
         return (false);
-    }
     if (this->_send_key.size() == 0 || this->_receive_key.size() == 0)
-    {
-        this->set_error(FT_ERR_INVALID_STATE);
         return (false);
-    }
     if (this->_send_iv.size() == 0 || this->_receive_iv.size() == 0)
-    {
-        this->set_error(FT_ERR_INVALID_STATE);
         return (false);
-    }
     return (true);
 }
 
@@ -154,24 +185,12 @@ bool    quic_experimental_session::prepare_nonce(uint64_t sequence_number,
         const ft_vector<unsigned char> &base_iv,
         ft_vector<unsigned char> &out_nonce) noexcept
 {
+    this->abort_if_not_initialized("quic_experimental_session::prepare_nonce");
     if (base_iv.size() == 0)
-    {
-        this->set_error(FT_ERR_INVALID_STATE);
         return (false);
-    }
     out_nonce.resize(base_iv.size(), 0);
-    if (out_nonce.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(out_nonce.get_error());
-        return (false);
-    }
     ft_vector<unsigned char> sequence_bytes;
     sequence_bytes.resize(base_iv.size(), 0);
-    if (sequence_bytes.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(sequence_bytes.get_error());
-        return (false);
-    }
     size_t index;
 
     index = 0;
@@ -199,7 +218,6 @@ bool    quic_experimental_session::prepare_nonce(uint64_t sequence_number,
         out_nonce[index] = base_iv[index] ^ sequence_bytes[index];
         index++;
     }
-    this->set_error(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -207,18 +225,13 @@ bool    quic_experimental_session::configure(SSL *ssl_session,
         const quic_feature_configuration &configuration,
         bool outbound) noexcept
 {
+    this->abort_if_not_initialized("quic_experimental_session::configure");
     if (!this->ensure_feature_enabled())
         return (false);
     if (ssl_session == ft_nullptr)
-    {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (false);
-    }
     if (SSL_is_init_finished(ssl_session) != 1)
-    {
-        this->set_error(FT_ERR_INVALID_STATE);
         return (false);
-    }
     this->clear_key_material();
     if (!this->derive_keys(ssl_session, outbound))
         return (false);
@@ -228,7 +241,6 @@ bool    quic_experimental_session::configure(SSL *ssl_session,
     this->_feature_configuration = configuration;
     this->_send_sequence = 0;
     this->_receive_sequence = 0;
-    this->set_error(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -238,37 +250,24 @@ bool    quic_experimental_session::encrypt_datagram(const quic_datagram_plaintex
     ft_vector<unsigned char> nonce;
     size_t payload_length;
 
+    this->abort_if_not_initialized("quic_experimental_session::encrypt_datagram");
     if (!this->ensure_feature_enabled())
         return (false);
     if (!this->ensure_configured())
         return (false);
     if (this->_send_sequence == UINT64_MAX)
-    {
-        this->set_error(FT_ERR_FULL);
         return (false);
-    }
     payload_length = plaintext.payload_length;
     if (plaintext.payload_length > 0 && plaintext.payload == ft_nullptr)
-    {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (false);
-    }
     if (plaintext.associated_data_length > 0 && plaintext.associated_data == ft_nullptr)
-    {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (false);
-    }
     if (!this->prepare_nonce(this->_send_sequence, this->_send_iv, nonce))
         return (false);
     size_t ciphertext_size;
 
     ciphertext_size = payload_length + QUIC_EXPERIMENTAL_TAG_LENGTH;
     out_ciphertext.resize(ciphertext_size, 0);
-    if (out_ciphertext.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(out_ciphertext.get_error());
-        return (false);
-    }
     unsigned char *ciphertext_pointer;
     unsigned char *tag_pointer;
 
@@ -280,18 +279,8 @@ bool    quic_experimental_session::encrypt_datagram(const quic_datagram_plaintex
             nonce.begin(), nonce.size(), plaintext.associated_data,
             plaintext.associated_data_length, plaintext.payload, payload_length,
             ciphertext_pointer, tag_pointer, QUIC_EXPERIMENTAL_TAG_LENGTH))
-    {
-        int encryption_error;
-
-        encryption_error = ft_errno;
-        if (encryption_error != FT_ERR_SUCCESS)
-            this->set_error(encryption_error);
-        else
-            this->set_error(FT_ERR_INTERNAL);
         return (false);
-    }
     this->_send_sequence += 1;
-    this->set_error(FT_ERR_SUCCESS);
     return (true);
 }
 
@@ -304,35 +293,22 @@ bool    quic_experimental_session::decrypt_datagram(const ft_vector<unsigned cha
     size_t ciphertext_length;
     size_t payload_length;
 
+    this->abort_if_not_initialized("quic_experimental_session::decrypt_datagram");
     if (!this->ensure_feature_enabled())
         return (false);
     if (!this->ensure_configured())
         return (false);
     if (this->_receive_sequence == UINT64_MAX)
-    {
-        this->set_error(FT_ERR_FULL);
         return (false);
-    }
     ciphertext_length = ciphertext.size();
     if (ciphertext_length < QUIC_EXPERIMENTAL_TAG_LENGTH)
-    {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (false);
-    }
     if (associated_data_length > 0 && associated_data == ft_nullptr)
-    {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (false);
-    }
     if (!this->prepare_nonce(this->_receive_sequence, this->_receive_iv, nonce))
         return (false);
     payload_length = ciphertext_length - QUIC_EXPERIMENTAL_TAG_LENGTH;
     out_plaintext.resize(payload_length, 0);
-    if (out_plaintext.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(out_plaintext.get_error());
-        return (false);
-    }
     const unsigned char *ciphertext_pointer;
     const unsigned char *tag_pointer;
 
@@ -342,38 +318,18 @@ bool    quic_experimental_session::decrypt_datagram(const ft_vector<unsigned cha
             nonce.begin(), nonce.size(), associated_data, associated_data_length,
             ciphertext_pointer, payload_length, tag_pointer,
             QUIC_EXPERIMENTAL_TAG_LENGTH, out_plaintext.begin()))
-    {
-        int decryption_error;
-
-        decryption_error = ft_errno;
-        if (decryption_error != FT_ERR_SUCCESS)
-            this->set_error(decryption_error);
-        else
-            this->set_error(FT_ERR_INTERNAL);
         return (false);
-    }
     this->_receive_sequence += 1;
-    this->set_error(FT_ERR_SUCCESS);
     return (true);
 }
 
 bool    quic_experimental_session::get_feature_configuration(quic_feature_configuration &out_configuration) const noexcept
 {
+    this->abort_if_not_initialized("quic_experimental_session::get_feature_configuration");
     if (!this->ensure_configured())
         return (false);
     out_configuration = this->_feature_configuration;
-    this->set_error(FT_ERR_SUCCESS);
     return (true);
-}
-
-int     quic_experimental_session::get_error() const noexcept
-{
-    return (this->_error_code);
-}
-
-const char  *quic_experimental_session::get_error_str() const noexcept
-{
-    return (ft_strerror(this->_error_code));
 }
 
 #endif

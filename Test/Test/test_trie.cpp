@@ -15,18 +15,14 @@ FT_TEST(test_trie_insert_nullptr_sets_errno, "ft_trie insert nullptr key sets FT
     size_t valid_key_length = ft_strlen_size_t("valid");
     const char *valid_key = "valid";
 
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(0, trie.insert(valid_key, &stored_value));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     const auto *stored_node = trie.search(valid_key);
     FT_ASSERT(stored_node != ft_nullptr);
     FT_ASSERT_EQ(valid_key_length, stored_node->_key_length);
     FT_ASSERT_EQ(0, stored_node->_unset_value);
     FT_ASSERT_EQ(&stored_value, stored_node->_value_pointer);
 
-    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(1, trie.insert(ft_nullptr, &stored_value));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(1, trie.get_error());
     FT_ASSERT_EQ(valid_key_length, stored_node->_key_length);
     FT_ASSERT_EQ(0, stored_node->_unset_value);
@@ -43,13 +39,10 @@ FT_TEST(test_trie_thread_safety_controls_reset_errno,
     FT_ASSERT_EQ(false, trie.is_thread_safe_enabled());
     FT_ASSERT_EQ(0, trie.enable_thread_safety());
     FT_ASSERT_EQ(true, trie.is_thread_safe_enabled());
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
     lock_acquired = false;
     FT_ASSERT_EQ(0, trie.lock(&lock_acquired));
     FT_ASSERT_EQ(true, lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     trie.unlock(lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     int stored_value = 7;
     FT_ASSERT_EQ(0, trie.insert("key", &stored_value));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, trie.get_error());

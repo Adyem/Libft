@@ -4,7 +4,7 @@
 #include "../Template/map.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
-#include "../PThread/unique_lock.hpp"
+#include <stdint.h>
 
 #include "ft_price_definition.hpp"
 #include "ft_rarity_band.hpp"
@@ -18,21 +18,36 @@ class ft_economy_table
         ft_map<int, ft_rarity_band>      _rarity_bands;
         ft_map<int, ft_vendor_profile>   _vendor_profiles;
         ft_map<int, ft_currency_rate>    _currency_rates;
-        mutable int                      _error_code;
-        mutable pt_mutex                 _mutex;
+        pt_mutex                        *_mutex;
+        uint8_t                          _initialized_state;
 
-        void set_error(int error_code) const noexcept;
-        static int lock_pair(const ft_economy_table &first, const ft_economy_table &second,
-                ft_unique_lock<pt_mutex> &first_guard,
-                ft_unique_lock<pt_mutex> &second_guard);
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
+
+        void abort_lifecycle_error(const char *method_name,
+            const char *reason) const;
+        void abort_if_not_initialized(const char *method_name) const;
+        int lock_internal(bool *lock_acquired) const noexcept;
+        int unlock_internal(bool lock_acquired) const noexcept;
 
     public:
         ft_economy_table() noexcept;
         ~ft_economy_table() noexcept;
-        ft_economy_table(const ft_economy_table &other) noexcept;
-        ft_economy_table &operator=(const ft_economy_table &other) noexcept;
-        ft_economy_table(ft_economy_table &&other) noexcept;
-        ft_economy_table &operator=(ft_economy_table &&other) noexcept;
+        ft_economy_table(const ft_economy_table &other) noexcept = delete;
+        ft_economy_table &operator=(const ft_economy_table &other) noexcept = delete;
+        ft_economy_table(ft_economy_table &&other) noexcept = delete;
+        ft_economy_table &operator=(ft_economy_table &&other) noexcept = delete;
+
+        int initialize() noexcept;
+        int initialize(const ft_economy_table &other) noexcept;
+        int initialize(ft_economy_table &&other) noexcept;
+        int destroy() noexcept;
+        int enable_thread_safety() noexcept;
+        int disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
+        int lock(bool *lock_acquired) const noexcept;
+        void unlock(bool lock_acquired) const noexcept;
 
         ft_map<int, ft_price_definition> &get_price_definitions() noexcept;
         const ft_map<int, ft_price_definition> &get_price_definitions() const noexcept;
@@ -45,7 +60,7 @@ class ft_economy_table
 
         void set_price_definitions(const ft_map<int, ft_price_definition> &price_definitions) noexcept;
         void set_rarity_bands(const ft_map<int, ft_rarity_band> &rarity_bands) noexcept;
-        void set_vendor_profiles(ft_map<int, ft_vendor_profile> &&vendor_profiles) noexcept;
+        void set_vendor_profiles(const ft_map<int, ft_vendor_profile> &vendor_profiles) noexcept;
         void set_currency_rates(const ft_map<int, ft_currency_rate> &currency_rates) noexcept;
 
         int register_price_definition(const ft_price_definition &definition) noexcept;
@@ -58,8 +73,9 @@ class ft_economy_table
         int fetch_vendor_profile(int vendor_id, ft_vendor_profile &profile) const noexcept;
         int fetch_currency_rate(int currency_id, ft_currency_rate &rate) const noexcept;
 
-        int get_error() const noexcept;
-        const char *get_error_str() const noexcept;
+#ifdef LIBFT_TEST_BUILD
+        pt_mutex *get_mutex_for_validation() const noexcept;
+#endif
 };
 
 #endif

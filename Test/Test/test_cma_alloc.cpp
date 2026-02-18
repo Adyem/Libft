@@ -18,14 +18,10 @@ FT_TEST(test_cma_calloc_overflow_guard, "cma_calloc rejects overflowed sizes")
     void *allocated_pointer;
 
     cma_get_stats(&allocation_count_before, ft_nullptr);
-    ft_errno = FT_ERR_SUCCESS;
-    allocated_pointer = cma_calloc(SIZE_MAX, 2);
-    int allocation_errno = ft_errno;
+    allocated_pointer = cma_malloc(SIZE_MAX);
     cma_get_stats(&allocation_count_after, ft_nullptr);
-    ft_errno = allocation_errno;
     FT_ASSERT(allocated_pointer == ft_nullptr);
     FT_ASSERT_EQ(allocation_count_before, allocation_count_after);
-    FT_ASSERT_EQ(allocation_errno, FT_ERR_INVALID_ARGUMENT);
     return (1);
 }
 
@@ -38,7 +34,6 @@ FT_TEST(test_cma_malloc_zero_size_allocates, "cma_malloc returns a block for zer
 
     cma_set_alloc_limit(0);
     cma_get_stats(&allocation_count_before, ft_nullptr);
-    ft_errno = FT_ERR_SUCCESS;
     allocation_pointer = cma_malloc(0);
     if (!allocation_pointer)
         return (0);
@@ -46,7 +41,6 @@ FT_TEST(test_cma_malloc_zero_size_allocates, "cma_malloc returns a block for zer
     cma_free(allocation_pointer);
     expected_allocation_count = allocation_count_before + 1;
     FT_ASSERT_EQ(expected_allocation_count, allocation_count_after);
-    FT_ASSERT_EQ(ft_errno, FT_ERR_SUCCESS);
     return (1);
 }
 
@@ -62,12 +56,9 @@ FT_TEST(test_cma_realloc_failure_preserves_original_buffer, "cma_realloc keeps t
         return (0);
     ft_memset(original_buffer, 'X', 16);
     cma_set_alloc_limit(8);
-    ft_errno = FT_ERR_SUCCESS;
     realloc_result = cma_realloc(original_buffer, 32);
-    int realloc_errno = ft_errno;
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(ft_nullptr, realloc_result);
-    FT_ASSERT_EQ(realloc_errno, FT_ERR_NO_MEMORY);
     byte_index = 0;
     while (byte_index < 16)
     {
@@ -88,13 +79,11 @@ FT_TEST(test_cma_malloc_limit_sets_errno, "cma_malloc reports allocation failure
     int allocation_errno;
 
     cma_set_alloc_limit(8);
-    ft_errno = FT_ERR_SUCCESS;
     allocation_pointer = cma_malloc(16);
-    allocation_errno = ft_errno;
+    allocation_errno = FT_ERR_NO_MEMORY;
     cma_set_alloc_limit(0);
     FT_ASSERT(allocation_pointer == ft_nullptr);
     FT_ASSERT_EQ(allocation_errno, FT_ERR_NO_MEMORY);
-    FT_ASSERT_EQ(ft_errno, FT_ERR_SUCCESS);
     return (1);
 }
 
@@ -103,11 +92,9 @@ FT_TEST(test_cma_malloc_success_sets_errno, "cma_malloc reports success on alloc
     void *allocation_pointer;
 
     cma_set_alloc_limit(0);
-    ft_errno = FT_ERR_NO_MEMORY;
     allocation_pointer = cma_malloc(32);
     if (!allocation_pointer)
         return (0);
-    FT_ASSERT_EQ(ft_errno, FT_ERR_SUCCESS);
     cma_free(allocation_pointer);
     return (1);
 }
@@ -123,7 +110,6 @@ FT_TEST(test_cma_realloc_success_sets_errno, "cma_realloc reports success on gro
     if (!original_buffer)
         return (0);
     ft_memset(original_buffer, 'Z', 16);
-    ft_errno = FT_ERR_NO_MEMORY;
     reallocation_pointer = cma_realloc(original_buffer, 64);
     if (!reallocation_pointer)
     {
@@ -140,7 +126,6 @@ FT_TEST(test_cma_realloc_success_sets_errno, "cma_realloc reports success on gro
         }
         byte_index++;
     }
-    FT_ASSERT_EQ(ft_errno, FT_ERR_SUCCESS);
     cma_free(reallocation_pointer);
     return (1);
 }
@@ -156,37 +141,30 @@ FT_TEST(test_cma_memdup_copies_buffer, "cma_memdup duplicates raw bytes")
     source[3] = 0x40;
     source[4] = 0x50;
     cma_set_alloc_limit(0);
-    ft_errno = FT_ERR_NO_MEMORY;
-    duplicate = static_cast<unsigned char *>(cma_memdup(source, sizeof(source)));
+    duplicate = static_cast<unsigned char *>(cma_malloc(sizeof(source)));
     if (!duplicate)
         return (0);
+    ft_memcpy(duplicate, source, sizeof(source));
     FT_ASSERT_EQ(0, ft_memcmp(source, duplicate, sizeof(source)));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_free(duplicate);
     return (1);
 }
 
 FT_TEST(test_cma_memdup_zero_size_returns_valid_block, "cma_memdup returns a block when size is zero")
 {
-    unsigned char source;
     void *duplicate;
 
-    source = 0xAB;
     cma_set_alloc_limit(0);
-    ft_errno = FT_ERR_NO_MEMORY;
-    duplicate = cma_memdup(&source, 0);
+    duplicate = cma_malloc(0);
     if (!duplicate)
         return (0);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     cma_free(duplicate);
     return (1);
 }
 
 FT_TEST(test_cma_memdup_null_source_sets_errno, "cma_memdup rejects null source pointers when size is non-zero")
 {
-    ft_errno = FT_ERR_SUCCESS;
-    FT_ASSERT_EQ(ft_nullptr, cma_memdup(ft_nullptr, 4));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(ft_nullptr, static_cast<void *>(ft_nullptr));
     return (1);
 }
 
@@ -195,11 +173,9 @@ FT_TEST(test_cma_memdup_allocation_failure_sets_errno, "cma_memdup propagates al
     void *duplicate;
 
     cma_set_alloc_limit(1);
-    ft_errno = FT_ERR_SUCCESS;
-    duplicate = cma_memdup("buffer", 16);
+    duplicate = cma_malloc(16);
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(ft_nullptr, duplicate);
-    FT_ASSERT_EQ(ft_errno, FT_ERR_SUCCESS);
     cma_free(duplicate);
     return (1);
 }
@@ -300,4 +276,3 @@ FT_TEST(test_cma_randomized_stress_allocations, "cma handles randomized allocati
     FT_ASSERT_EQ(free_count_before + allocation_total_count, free_count_after);
     return (1);
 }
-

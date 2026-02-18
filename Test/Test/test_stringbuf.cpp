@@ -1,4 +1,5 @@
 #include "../test_internal.hpp"
+#include <unistd.h>
 #include "../../CPP_class/class_stringbuf.hpp"
 #include "../../CPP_class/class_string.hpp"
 #include "../../Errno/errno.hpp"
@@ -16,16 +17,13 @@ FT_TEST(test_ft_stringbuf_read_basic, "ft_stringbuf::read copies data sequential
     ft_string source("hello");
     ft_stringbuf buffer(source);
     char storage[8];
-    std::size_t bytes_read;
+    ssize_t bytes_read;
 
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
     bytes_read = buffer.read(storage, 5);
-    storage[bytes_read] = '\0';
-    FT_ASSERT_EQ(static_cast<std::size_t>(5), bytes_read);
+    storage[static_cast<std::size_t>(bytes_read)] = '\0';
+    FT_ASSERT_EQ(5, bytes_read);
     FT_ASSERT_EQ(0, ft_strcmp(storage, "hello"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_global_error_stack_peek_last_error());
     FT_ASSERT_EQ(true, buffer.is_valid());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -33,14 +31,11 @@ FT_TEST(test_ft_stringbuf_read_null_buffer_sets_error, "ft_stringbuf::read repor
 {
     ft_string source("data");
     ft_stringbuf buffer(source);
-    std::size_t bytes_read;
+    ssize_t bytes_read;
 
-    ft_errno = FT_ERR_SUCCESS;
     bytes_read = buffer.read(ft_nullptr, 3);
-    FT_ASSERT_EQ(static_cast<std::size_t>(0), bytes_read);
-    FT_ASSERT_EQ(false, buffer.is_valid());
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_global_error_stack_peek_last_error());
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(static_cast<ssize_t>(-1), bytes_read);
+    FT_ASSERT_EQ(true, buffer.is_valid());
     return (1);
 }
 
@@ -52,18 +47,15 @@ FT_TEST(test_ft_stringbuf_str_returns_remaining, "ft_stringbuf::str exposes unre
     std::size_t bytes_read;
     ft_string remaining;
 
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
     bytes_read = buffer.read(storage, 3);
     storage[bytes_read] = '\0';
     FT_ASSERT_EQ(static_cast<std::size_t>(3), bytes_read);
     FT_ASSERT_EQ(0, ft_strcmp(storage, "abc"));
 
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
-    remaining = buffer.str();
+    int str_error = buffer.str(remaining);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, str_error);
     FT_ASSERT_EQ(0, ft_strcmp(remaining.c_str(), "def"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_global_error_stack_peek_last_error());
     FT_ASSERT_EQ(true, buffer.is_valid());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -74,20 +66,14 @@ FT_TEST(test_ft_stringbuf_read_past_end_returns_zero, "ft_stringbuf::read return
     char storage[4];
     std::size_t bytes_read;
 
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
     bytes_read = buffer.read(storage, 2);
     storage[bytes_read] = '\0';
     FT_ASSERT_EQ(static_cast<std::size_t>(2), bytes_read);
     FT_ASSERT_EQ(0, ft_strcmp(storage, "xy"));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_global_error_stack_peek_last_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
 
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
     bytes_read = buffer.read(storage, 2);
     FT_ASSERT_EQ(static_cast<std::size_t>(0), bytes_read);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_global_error_stack_peek_last_error());
     FT_ASSERT_EQ(true, buffer.is_valid());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -143,7 +129,6 @@ FT_TEST(test_ft_stringbuf_concurrent_reads_are_serialized,
     worker_thread.join();
 
     FT_ASSERT_EQ(source.size(), worker_output.size() + main_output.size());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_global_error_stack_peek_last_error());
 
     ft_string remaining;
 

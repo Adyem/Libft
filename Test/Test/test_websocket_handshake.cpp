@@ -97,6 +97,8 @@ FT_TEST(test_websocket_handshake_and_echo, "websocket server echoes message")
     ft_string received;
     unsigned short server_port;
 
+    if (server.initialize() != 0)
+        return (0);
     if (server.start("127.0.0.1", 0) != 0)
         return (0);
     if (server.get_port(server_port) != 0)
@@ -105,7 +107,9 @@ FT_TEST(test_websocket_handshake_and_echo, "websocket server echoes message")
     context.result = -1;
     context.client_fd = -1;
     server_thread = ft_thread(websocket_server_worker, &context);
-    if (server_thread.get_error() != FT_ERR_SUCCESS)
+    if (!server_thread.joinable())
+        return (0);
+    if (client.initialize() != 0)
         return (0);
     if (client.connect("127.0.0.1", server_port, "/") != 0)
     {
@@ -182,6 +186,8 @@ FT_TEST(test_websocket_server_handles_fragmented_handshake, "websocket server ha
     size_t mask_index;
     unsigned short server_port;
 
+    if (server.initialize() != 0)
+        return (0);
     if (server.start("127.0.0.1", 0) != 0)
         return (0);
     if (server.get_port(server_port) != 0)
@@ -206,7 +212,7 @@ FT_TEST(test_websocket_server_handles_fragmented_handshake, "websocket server ha
     context.result = -1;
     context.client_fd = -1;
     server_thread = ft_thread(websocket_server_worker, &context);
-    if (server_thread.get_error() != FT_ERR_SUCCESS)
+    if (!server_thread.joinable())
     {
         nw_close(client_socket);
         return (0);
@@ -322,12 +328,18 @@ FT_TEST(test_websocket_client_rejects_invalid_handshake, "websocket client detec
     context.server_socket = server_socket;
     context.result = -1;
     server_thread = ft_thread(websocket_invalid_handshake_server, &context);
-    if (server_thread.get_error() != FT_ERR_SUCCESS)
+    if (!server_thread.joinable())
     {
         nw_close(server_socket);
         return (0);
     }
-    connect_result = client.connect("127.0.0.1", static_cast<int>(server_port), "/");
+    if (client.initialize() != 0)
+    {
+        server_thread.join();
+        nw_close(server_socket);
+        return (0);
+    }
+    connect_result = client.connect("127.0.0.1", server_port, "/");
     server_thread.join();
     nw_close(server_socket);
     if (context.result != 0)
@@ -336,11 +348,6 @@ FT_TEST(test_websocket_client_rejects_invalid_handshake, "websocket client detec
         return (0);
     }
     if (connect_result == 0)
-    {
-        client.close();
-        return (0);
-    }
-    if (client.get_error() != FT_ERR_INVALID_ARGUMENT)
     {
         client.close();
         return (0);

@@ -24,7 +24,6 @@ FT_TEST(test_ft_cancellation_token_callbacks_after_request,
     FT_ASSERT_EQ(FT_ERR_SUCCESS, cancellation_token.get_error());
 
     callback_count = 0;
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
     registration_result = cancellation_token.register_callback([&callback_count]() {
         callback_count = callback_count + 1;
         return ;
@@ -32,7 +31,6 @@ FT_TEST(test_ft_cancellation_token_callbacks_after_request,
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registration_result);
     FT_ASSERT_EQ(1, callback_count);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, cancellation_token.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 

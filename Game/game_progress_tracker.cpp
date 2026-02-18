@@ -1,512 +1,398 @@
 #include "game_progress_tracker.hpp"
-#include "../Errno/errno.hpp"
-#include "../Template/move.hpp"
-#include "../Template/pair.hpp"
-#include "../PThread/pthread.hpp"
-
-thread_local ft_operation_error_stack ft_progress_tracker::_operation_errors = {{}, {}, 0};
-
-void ft_progress_tracker::record_operation_error_unlocked(int error_code)
-{
-    unsigned long long operation_id;
-
-    operation_id = ft_global_error_stack_push_entry(error_code);
-    ft_operation_error_stack_push(ft_progress_tracker::_operation_errors,
-            error_code, operation_id);
-    return ;
-}
-
-static void game_progress_tracker_sleep_backoff()
-{
-    pt_thread_sleep(1);
-    return ;
-}
-
-int ft_progress_tracker::lock_pair(const ft_progress_tracker &first, const ft_progress_tracker &second,
-        ft_unique_lock<pt_mutex> &first_guard,
-        ft_unique_lock<pt_mutex> &second_guard)
-{
-    const ft_progress_tracker *ordered_first;
-    const ft_progress_tracker *ordered_second;
-    bool swapped;
-
-    if (&first == &second)
-    {
-        ft_unique_lock<pt_mutex> single_guard(first._mutex);
-
-        if (single_guard.get_error() != FT_ERR_SUCCESS)
-        {
-            return (single_guard.get_error());
-        }
-        first_guard = ft_move(single_guard);
-        second_guard = ft_unique_lock<pt_mutex>();
-        return (FT_ERR_SUCCESS);
-    }
-    ordered_first = &first;
-    ordered_second = &second;
-    swapped = false;
-    if (ordered_first > ordered_second)
-    {
-        const ft_progress_tracker *temporary;
-
-        temporary = ordered_first;
-        ordered_first = ordered_second;
-        ordered_second = temporary;
-        swapped = true;
-    }
-    while (true)
-    {
-        ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
-
-        if (lower_guard.get_error() != FT_ERR_SUCCESS)
-        {
-            return (lower_guard.get_error());
-        }
-        ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ERR_SUCCESS)
-        {
-            if (!swapped)
-            {
-                first_guard = ft_move(lower_guard);
-                second_guard = ft_move(upper_guard);
-            }
-            else
-            {
-                first_guard = ft_move(upper_guard);
-                second_guard = ft_move(lower_guard);
-            }
-            return (FT_ERR_SUCCESS);
-        }
-        if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
-        {
-            return (upper_guard.get_error());
-        }
-        if (lower_guard.owns_lock())
-            lower_guard.unlock();
-        game_progress_tracker_sleep_backoff();
-    }
-}
+#include "../Printf/printf.hpp"
+#include "../System_utils/system_utils.hpp"
+#include <new>
 
 ft_progress_tracker::ft_progress_tracker() noexcept
-    : _achievements(), _quests(), _error_code(FT_ERR_SUCCESS), _mutex()
+    : _achievements(), _quests(), _mutex(ft_nullptr),
+      _initialized_state(ft_progress_tracker::_state_uninitialized)
 {
-    if (this->_achievements.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(this->_achievements.get_error());
-        return ;
-    }
-    if (this->_quests.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(this->_quests.get_error());
-        return ;
-    }
-    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 ft_progress_tracker::~ft_progress_tracker() noexcept
 {
+    if (this->_initialized_state == ft_progress_tracker::_state_uninitialized)
+    {
+        this->abort_lifecycle_error("ft_progress_tracker::~ft_progress_tracker",
+            "destructor called while object is uninitialized");
+        return ;
+    }
+    if (this->_initialized_state == ft_progress_tracker::_state_initialized)
+        (void)this->destroy();
     return ;
 }
 
-ft_progress_tracker::ft_progress_tracker(const ft_progress_tracker &other) noexcept
-    : _achievements(), _quests(), _error_code(FT_ERR_SUCCESS), _mutex()
+void ft_progress_tracker::abort_lifecycle_error(const char *method_name,
+    const char *reason) const
 {
-    ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(other_guard.get_error());
-        return ;
-    }
-    this->_achievements = other._achievements;
-    if (this->_achievements.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(this->_achievements.get_error());
-        return ;
-    }
-    this->_quests = other._quests;
-    if (this->_quests.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(this->_quests.get_error());
-        return ;
-    }
-    this->_error_code = other._error_code;
-    this->set_error(other._error_code);
+    if (method_name == ft_nullptr)
+        method_name = "unknown";
+    if (reason == ft_nullptr)
+        reason = "unknown";
+    pf_printf_fd(2, "ft_progress_tracker lifecycle error: %s: %s\n",
+        method_name, reason);
+    su_abort();
     return ;
 }
 
-ft_progress_tracker &ft_progress_tracker::operator=(const ft_progress_tracker &other) noexcept
+void ft_progress_tracker::abort_if_not_initialized(const char *method_name) const
 {
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
+    if (this->_initialized_state == ft_progress_tracker::_state_initialized)
+        return ;
+    this->abort_lifecycle_error(method_name,
+        "called while object is not initialized");
+    return ;
+}
+
+int ft_progress_tracker::initialize() noexcept
+{
+    if (this->_initialized_state == ft_progress_tracker::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_progress_tracker::initialize",
+            "called while object is already initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    this->_achievements.clear();
+    this->_quests.clear();
+    this->_initialized_state = ft_progress_tracker::_state_initialized;
+    return (FT_ERR_SUCCESS);
+}
+
+int ft_progress_tracker::initialize(const ft_progress_tracker &other) noexcept
+{
+    int initialize_error;
+    size_t count;
+    size_t index;
+    const Pair<int, ft_achievement> *achievement_entry;
+    const Pair<int, ft_achievement> *achievement_end;
+    const Pair<int, ft_quest> *quest_entry;
+    const Pair<int, ft_quest> *quest_end;
+
+    if (other._initialized_state != ft_progress_tracker::_state_initialized)
+    {
+        other.abort_lifecycle_error("ft_progress_tracker::initialize(copy)",
+            "source object is not initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (&other == this)
+        return (FT_ERR_SUCCESS);
+    initialize_error = this->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
+    count = other._achievements.size();
+    achievement_end = other._achievements.end();
+    achievement_entry = achievement_end - count;
+    index = 0;
+    while (index < count)
+    {
+        this->_achievements.insert(achievement_entry->key, achievement_entry->value);
+        achievement_entry++;
+        index += 1;
+    }
+    count = other._quests.size();
+    quest_end = other._quests.end();
+    quest_entry = quest_end - count;
+    index = 0;
+    while (index < count)
+    {
+        this->_quests.insert(quest_entry->key, quest_entry->value);
+        quest_entry++;
+        index += 1;
+    }
+    return (FT_ERR_SUCCESS);
+}
+
+int ft_progress_tracker::initialize(ft_progress_tracker &&other) noexcept
+{
+    return (this->initialize(static_cast<const ft_progress_tracker &>(other)));
+}
+
+int ft_progress_tracker::destroy() noexcept
+{
+    int disable_error;
+
+    if (this->_initialized_state != ft_progress_tracker::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_progress_tracker::destroy",
+            "called while object is not initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    this->_achievements.clear();
+    this->_quests.clear();
+    disable_error = this->disable_thread_safety();
+    this->_initialized_state = ft_progress_tracker::_state_destroyed;
+    return (disable_error);
+}
+
+int ft_progress_tracker::enable_thread_safety() noexcept
+{
+    pt_mutex *mutex_pointer;
+    int initialize_error;
+
+    this->abort_if_not_initialized("ft_progress_tracker::enable_thread_safety");
+    if (this->_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    mutex_pointer = new (std::nothrow) pt_mutex();
+    if (mutex_pointer == ft_nullptr)
+        return (FT_ERR_NO_MEMORY);
+    initialize_error = mutex_pointer->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        delete mutex_pointer;
+        return (initialize_error);
+    }
+    this->_mutex = mutex_pointer;
+    return (FT_ERR_SUCCESS);
+}
+
+int ft_progress_tracker::disable_thread_safety() noexcept
+{
+    int destroy_error;
+
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    destroy_error = this->_mutex->destroy();
+    delete this->_mutex;
+    this->_mutex = ft_nullptr;
+    return (destroy_error);
+}
+
+bool ft_progress_tracker::is_thread_safe() const noexcept
+{
+    this->abort_if_not_initialized("ft_progress_tracker::is_thread_safe");
+    return (this->_mutex != ft_nullptr);
+}
+
+int ft_progress_tracker::lock_internal(bool *lock_acquired) const noexcept
+{
     int lock_error;
 
-    if (this == &other)
-        return (*this);
-    lock_error = ft_progress_tracker::lock_pair(*this, other, this_guard, other_guard);
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = false;
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    lock_error = this->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
-    {
-        this->set_error(lock_error);
-        return (*this);
-    }
-    this->_achievements = other._achievements;
-    if (this->_achievements.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(this->_achievements.get_error());
-        return (*this);
-    }
-    this->_quests = other._quests;
-    if (this->_quests.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(this->_quests.get_error());
-        return (*this);
-    }
-    this->_error_code = other._error_code;
-    this->set_error(other._error_code);
-    return (*this);
+        return (lock_error);
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = true;
+    return (FT_ERR_SUCCESS);
 }
 
-ft_progress_tracker::ft_progress_tracker(ft_progress_tracker &&other) noexcept
-    : _achievements(), _quests(), _error_code(FT_ERR_SUCCESS), _mutex()
+int ft_progress_tracker::unlock_internal(bool lock_acquired) const noexcept
 {
-    ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(other_guard.get_error());
-        return ;
-    }
-    this->_achievements = ft_move(other._achievements);
-    if (this->_achievements.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(this->_achievements.get_error());
-        return ;
-    }
-    this->_quests = ft_move(other._quests);
-    if (this->_quests.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(this->_quests.get_error());
-        return ;
-    }
-    this->_error_code = other._error_code;
-    other._error_code = FT_ERR_SUCCESS;
-    this->set_error(this->_error_code);
-    other.set_error(FT_ERR_SUCCESS);
+    if (lock_acquired == false)
+        return (FT_ERR_SUCCESS);
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    return (this->_mutex->unlock());
+}
+
+int ft_progress_tracker::lock(bool *lock_acquired) const noexcept
+{
+    this->abort_if_not_initialized("ft_progress_tracker::lock");
+    return (this->lock_internal(lock_acquired));
+}
+
+void ft_progress_tracker::unlock(bool lock_acquired) const noexcept
+{
+    this->abort_if_not_initialized("ft_progress_tracker::unlock");
+    (void)this->unlock_internal(lock_acquired);
     return ;
-}
-
-ft_progress_tracker &ft_progress_tracker::operator=(ft_progress_tracker &&other) noexcept
-{
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
-    int lock_error;
-
-    if (this == &other)
-        return (*this);
-    lock_error = ft_progress_tracker::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        this->set_error(lock_error);
-        return (*this);
-    }
-    this->_achievements = ft_move(other._achievements);
-    if (this->_achievements.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(this->_achievements.get_error());
-        return (*this);
-    }
-    this->_quests = ft_move(other._quests);
-    if (this->_quests.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(this->_quests.get_error());
-        return (*this);
-    }
-    this->_error_code = other._error_code;
-    other._error_code = FT_ERR_SUCCESS;
-    this->set_error(this->_error_code);
-    other.set_error(FT_ERR_SUCCESS);
-    return (*this);
 }
 
 ft_map<int, ft_achievement> &ft_progress_tracker::get_achievements() noexcept
 {
+    this->abort_if_not_initialized("ft_progress_tracker::get_achievements");
     return (this->_achievements);
 }
 
 const ft_map<int, ft_achievement> &ft_progress_tracker::get_achievements() const noexcept
 {
+    this->abort_if_not_initialized("ft_progress_tracker::get_achievements const");
     return (this->_achievements);
 }
 
 ft_map<int, ft_quest> &ft_progress_tracker::get_quests() noexcept
 {
+    this->abort_if_not_initialized("ft_progress_tracker::get_quests");
     return (this->_quests);
 }
 
 const ft_map<int, ft_quest> &ft_progress_tracker::get_quests() const noexcept
 {
+    this->abort_if_not_initialized("ft_progress_tracker::get_quests const");
     return (this->_quests);
 }
 
-void ft_progress_tracker::set_achievements(const ft_map<int, ft_achievement> &achievements) noexcept
+void ft_progress_tracker::set_achievements(
+    const ft_map<int, ft_achievement> &achievements) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
+    bool lock_acquired;
+    size_t count;
+    size_t index;
+    const Pair<int, ft_achievement> *entry;
+    const Pair<int, ft_achievement> *entry_end;
+
+    this->abort_if_not_initialized("ft_progress_tracker::set_achievements");
+    if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
-    }
-    this->_achievements = achievements;
-    if (this->_achievements.get_error() != FT_ERR_SUCCESS)
+    this->_achievements.clear();
+    count = achievements.size();
+    entry_end = achievements.end();
+    entry = entry_end - count;
+    index = 0;
+    while (index < count)
     {
-        this->set_error(this->_achievements.get_error());
-        return ;
+        this->_achievements.insert(entry->key, entry->value);
+        entry++;
+        index += 1;
     }
-    this->set_error(FT_ERR_SUCCESS);
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
 void ft_progress_tracker::set_quests(const ft_map<int, ft_quest> &quests) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
+    bool lock_acquired;
+    size_t count;
+    size_t index;
+    const Pair<int, ft_quest> *entry;
+    const Pair<int, ft_quest> *entry_end;
+
+    this->abort_if_not_initialized("ft_progress_tracker::set_quests");
+    if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
-    }
-    this->_quests = quests;
-    if (this->_quests.get_error() != FT_ERR_SUCCESS)
+    this->_quests.clear();
+    count = quests.size();
+    entry_end = quests.end();
+    entry = entry_end - count;
+    index = 0;
+    while (index < count)
     {
-        this->set_error(this->_quests.get_error());
-        return ;
+        this->_quests.insert(entry->key, entry->value);
+        entry++;
+        index += 1;
     }
-    this->set_error(FT_ERR_SUCCESS);
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
-int ft_progress_tracker::register_achievement(const ft_achievement &achievement) noexcept
+int ft_progress_tracker::register_achievement(
+    const ft_achievement &achievement) noexcept
 {
-    int identifier;
+    bool lock_acquired;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return (guard.get_error());
-    }
-    identifier = achievement.get_id();
-    this->_achievements.insert(identifier, achievement);
-    if (this->_achievements.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(this->_achievements.get_error());
-        return (this->_achievements.get_error());
-    }
-    this->set_error(FT_ERR_SUCCESS);
+    this->abort_if_not_initialized("ft_progress_tracker::register_achievement");
+    if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
+        return (FT_ERR_INVALID_STATE);
+    this->_achievements.insert(achievement.get_id(), achievement);
+    (void)this->unlock_internal(lock_acquired);
     return (FT_ERR_SUCCESS);
 }
 
 int ft_progress_tracker::register_quest(const ft_quest &quest) noexcept
 {
-    int identifier;
+    bool lock_acquired;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return (guard.get_error());
-    }
-    identifier = quest.get_id();
-    this->_quests.insert(identifier, quest);
-    if (this->_quests.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(this->_quests.get_error());
-        return (this->_quests.get_error());
-    }
-    this->set_error(FT_ERR_SUCCESS);
+    this->abort_if_not_initialized("ft_progress_tracker::register_quest");
+    if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
+        return (FT_ERR_INVALID_STATE);
+    this->_quests.insert(quest.get_id(), quest);
+    (void)this->unlock_internal(lock_acquired);
     return (FT_ERR_SUCCESS);
 }
 
-int ft_progress_tracker::update_goal_target(int achievement_id, int goal_id, int target) noexcept
+int ft_progress_tracker::update_goal_target(int achievement_id, int goal_id,
+    int target) noexcept
 {
-    Pair<int, ft_achievement> *achievement_pair;
+    Pair<int, ft_achievement> *achievement_entry;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return (guard.get_error());
-    }
-    achievement_pair = this->_achievements.find(achievement_id);
-    if (achievement_pair == this->_achievements.end())
-    {
-        this->set_error(FT_ERR_NOT_FOUND);
+    this->abort_if_not_initialized("ft_progress_tracker::update_goal_target");
+    achievement_entry = this->_achievements.find(achievement_id);
+    if (achievement_entry == this->_achievements.end())
         return (FT_ERR_NOT_FOUND);
-    }
-    achievement_pair->value.set_goal(goal_id, target);
-    this->set_error(achievement_pair->value.get_error());
-    return (this->_error_code);
+    achievement_entry->value.set_goal(goal_id, target);
+    return (FT_ERR_SUCCESS);
 }
 
-int ft_progress_tracker::update_goal_progress(int achievement_id, int goal_id, int progress) noexcept
+int ft_progress_tracker::update_goal_progress(int achievement_id, int goal_id,
+    int progress) noexcept
 {
-    Pair<int, ft_achievement> *achievement_pair;
+    Pair<int, ft_achievement> *achievement_entry;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return (guard.get_error());
-    }
-    achievement_pair = this->_achievements.find(achievement_id);
-    if (achievement_pair == this->_achievements.end())
-    {
-        this->set_error(FT_ERR_NOT_FOUND);
+    this->abort_if_not_initialized("ft_progress_tracker::update_goal_progress");
+    achievement_entry = this->_achievements.find(achievement_id);
+    if (achievement_entry == this->_achievements.end())
         return (FT_ERR_NOT_FOUND);
-    }
-    achievement_pair->value.set_progress(goal_id, progress);
-    this->set_error(achievement_pair->value.get_error());
-    return (this->_error_code);
+    achievement_entry->value.set_progress(goal_id, progress);
+    return (FT_ERR_SUCCESS);
 }
 
-int ft_progress_tracker::add_goal_progress(int achievement_id, int goal_id, int value) noexcept
+int ft_progress_tracker::add_goal_progress(int achievement_id, int goal_id,
+    int value) noexcept
 {
-    Pair<int, ft_achievement> *achievement_pair;
+    Pair<int, ft_achievement> *achievement_entry;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return (guard.get_error());
-    }
-    achievement_pair = this->_achievements.find(achievement_id);
-    if (achievement_pair == this->_achievements.end())
-    {
-        this->set_error(FT_ERR_NOT_FOUND);
+    this->abort_if_not_initialized("ft_progress_tracker::add_goal_progress");
+    achievement_entry = this->_achievements.find(achievement_id);
+    if (achievement_entry == this->_achievements.end())
         return (FT_ERR_NOT_FOUND);
-    }
-    achievement_pair->value.add_progress(goal_id, value);
-    this->set_error(achievement_pair->value.get_error());
-    return (this->_error_code);
+    achievement_entry->value.add_progress(goal_id, value);
+    return (FT_ERR_SUCCESS);
 }
 
 bool ft_progress_tracker::is_achievement_complete(int achievement_id) const noexcept
 {
-    const Pair<int, ft_achievement> *achievement_pair;
-    bool completed;
+    const Pair<int, ft_achievement> *achievement_entry;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_progress_tracker *>(this)->set_error(guard.get_error());
+    this->abort_if_not_initialized("ft_progress_tracker::is_achievement_complete");
+    achievement_entry = this->_achievements.find(achievement_id);
+    if (achievement_entry == this->_achievements.end())
         return (false);
-    }
-    achievement_pair = this->_achievements.find(achievement_id);
-    if (achievement_pair == this->_achievements.end())
-    {
-        const_cast<ft_progress_tracker *>(this)->set_error(FT_ERR_NOT_FOUND);
-        return (false);
-    }
-    completed = achievement_pair->value.is_complete();
-    const_cast<ft_progress_tracker *>(this)->set_error(achievement_pair->value.get_error());
-    return (completed);
+    return (achievement_entry->value.is_complete());
 }
 
 int ft_progress_tracker::set_quest_phase(int quest_id, int phase) noexcept
 {
-    Pair<int, ft_quest> *quest_pair;
+    Pair<int, ft_quest> *quest_entry;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return (guard.get_error());
-    }
-    quest_pair = this->_quests.find(quest_id);
-    if (quest_pair == this->_quests.end())
-    {
-        this->set_error(FT_ERR_NOT_FOUND);
+    this->abort_if_not_initialized("ft_progress_tracker::set_quest_phase");
+    quest_entry = this->_quests.find(quest_id);
+    if (quest_entry == this->_quests.end())
         return (FT_ERR_NOT_FOUND);
-    }
-    quest_pair->value.set_current_phase(phase);
-    this->set_error(quest_pair->value.get_error());
-    return (this->_error_code);
+    quest_entry->value.set_current_phase(phase);
+    return (FT_ERR_SUCCESS);
 }
 
 int ft_progress_tracker::advance_quest_phase(int quest_id) noexcept
 {
-    Pair<int, ft_quest> *quest_pair;
+    Pair<int, ft_quest> *quest_entry;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return (guard.get_error());
-    }
-    quest_pair = this->_quests.find(quest_id);
-    if (quest_pair == this->_quests.end())
-    {
-        this->set_error(FT_ERR_NOT_FOUND);
+    this->abort_if_not_initialized("ft_progress_tracker::advance_quest_phase");
+    quest_entry = this->_quests.find(quest_id);
+    if (quest_entry == this->_quests.end())
         return (FT_ERR_NOT_FOUND);
-    }
-    quest_pair->value.advance_phase();
-    this->set_error(quest_pair->value.get_error());
-    return (this->_error_code);
+    quest_entry->value.advance_phase();
+    return (FT_ERR_SUCCESS);
 }
 
 bool ft_progress_tracker::is_quest_complete(int quest_id) const noexcept
 {
-    const Pair<int, ft_quest> *quest_pair;
-    bool complete;
+    const Pair<int, ft_quest> *quest_entry;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_progress_tracker *>(this)->set_error(guard.get_error());
+    this->abort_if_not_initialized("ft_progress_tracker::is_quest_complete");
+    quest_entry = this->_quests.find(quest_id);
+    if (quest_entry == this->_quests.end())
         return (false);
-    }
-    quest_pair = this->_quests.find(quest_id);
-    if (quest_pair == this->_quests.end())
-    {
-        const_cast<ft_progress_tracker *>(this)->set_error(FT_ERR_NOT_FOUND);
-        return (false);
-    }
-    complete = quest_pair->value.is_complete();
-    const_cast<ft_progress_tracker *>(this)->set_error(quest_pair->value.get_error());
-    return (complete);
+    return (quest_entry->value.is_complete());
 }
 
-int ft_progress_tracker::get_error() const noexcept
+#ifdef LIBFT_TEST_BUILD
+pt_mutex *ft_progress_tracker::get_mutex_for_validation() const noexcept
 {
-    int error_code;
-
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_progress_tracker *>(this)->set_error(guard.get_error());
-        return (guard.get_error());
-    }
-    error_code = this->_error_code;
-    const_cast<ft_progress_tracker *>(this)->set_error(FT_ERR_SUCCESS);
-    return (error_code);
+    this->abort_if_not_initialized("ft_progress_tracker::get_mutex_for_validation");
+    return (this->_mutex);
 }
-
-const char *ft_progress_tracker::get_error_str() const noexcept
-{
-    const char *error_string;
-
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_progress_tracker *>(this)->set_error(guard.get_error());
-        return (ft_strerror(guard.get_error()));
-    }
-    error_string = ft_strerror(this->_error_code);
-    const_cast<ft_progress_tracker *>(this)->set_error(FT_ERR_SUCCESS);
-    return (error_string);
-}
-
-void ft_progress_tracker::set_error(int error) const noexcept
-{
-    const_cast<ft_progress_tracker *>(this)->_error_code = error;
-    ft_progress_tracker::record_operation_error_unlocked(error);
-    return ;
-}
+#endif

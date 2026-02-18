@@ -26,9 +26,8 @@ void ft_file_sink(const char *message, void *user_data)
     return ;
 }
 
-static int log_set_file_report(int error_code, int return_value)
+static int log_set_file_report(int return_value)
 {
-    ft_global_error_stack_push(error_code);
     return (return_value);
 }
 
@@ -39,56 +38,40 @@ int ft_log_set_file(const char *path, size_t max_size)
     int          prepare_error;
 
     if (!path)
-        return (log_set_file_report(FT_ERR_INVALID_ARGUMENT, -1));
+        return (log_set_file_report(-1));
     file_descriptor = open(path, O_CREAT | O_WRONLY | O_APPEND, 0644);
     if (file_descriptor == -1)
-    {
-        int saved_errno;
-        int error_code;
-
-        saved_errno = errno;
-        if (saved_errno != 0)
-            error_code = cmp_map_system_error_to_ft(saved_errno);
-        else
-            error_code = FT_ERR_INVALID_HANDLE;
-        return (log_set_file_report(error_code, -1));
-    }
+        return (log_set_file_report(-1));
     sink = new(std::nothrow) s_file_sink;
     if (!sink)
     {
         close(file_descriptor);
-        return (log_set_file_report(FT_ERR_NO_MEMORY, -1));
+        return (log_set_file_report(-1));
     }
     sink->fd = file_descriptor;
     sink->path = path;
     sink->max_size = max_size;
     sink->retention_count = 1;
     sink->max_age_seconds = 0;
-    if (sink->path.get_error() != FT_ERR_SUCCESS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
-        int error_code;
-
-        error_code = sink->path.get_error();
         close(file_descriptor);
         delete sink;
-        return (log_set_file_report(error_code, -1));
+        return (log_set_file_report(-1));
     }
     prepare_error = file_sink_prepare_thread_safety(sink);
     if (prepare_error != FT_ERR_SUCCESS)
     {
         close(file_descriptor);
         delete sink;
-        return (log_set_file_report(prepare_error, -1));
+        return (log_set_file_report(-1));
     }
     if (ft_log_add_sink(ft_file_sink, sink) != 0)
     {
-        int error_code;
-
-        error_code = FT_ERR_INVALID_ARGUMENT;
         close(file_descriptor);
         file_sink_teardown_thread_safety(sink);
         delete sink;
-        return (log_set_file_report(error_code, -1));
+        return (log_set_file_report(-1));
     }
-    return (log_set_file_report(FT_ERR_SUCCESS, 0));
+    return (log_set_file_report(0));
 }

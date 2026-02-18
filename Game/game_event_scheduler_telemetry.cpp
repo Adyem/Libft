@@ -78,7 +78,7 @@ void game_event_scheduler_telemetry_record(ft_event_scheduler_telemetry_state &s
 
     if (state.scheduler_name == ft_nullptr)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        
         return ;
     }
     if (profile.update_count < state.last_update_count
@@ -130,7 +130,7 @@ void game_event_scheduler_telemetry_record(ft_event_scheduler_telemetry_state &s
     if (!metrics_changed)
     {
         game_event_scheduler_telemetry_update_state(state, profile);
-        ft_errno = FT_ERR_SUCCESS;
+        
         return ;
     }
     events_per_update = 0;
@@ -179,7 +179,7 @@ void game_event_scheduler_telemetry_record(ft_event_scheduler_telemetry_state &s
         success,
         state.scheduler_name);
     game_event_scheduler_telemetry_update_state(state, profile);
-    ft_errno = FT_ERR_SUCCESS;
+    
     return ;
 }
 
@@ -190,7 +190,7 @@ void game_event_scheduler_publish_telemetry(ft_event_scheduler &scheduler,
     scheduler.snapshot_profile(profile);
     if (scheduler.get_error() != FT_ERR_SUCCESS)
     {
-        ft_errno = scheduler.get_error();
+        
         return ;
     }
     game_event_scheduler_telemetry_record(state, profile);

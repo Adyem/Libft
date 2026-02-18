@@ -111,20 +111,17 @@ enum class SocketType
 class SocketConfig
 {
     private:
-        mutable int _error_code;
-        mutable bool _thread_safe_enabled;
-        mutable pt_mutex *_mutex;
-
-        void report_operation_result(int error_code) const noexcept;
-
-        friend int socket_config_prepare_thread_safety(SocketConfig *config);
-        friend void socket_config_teardown_thread_safety(SocketConfig *config);
-        friend int socket_config_lock(const SocketConfig *config, bool *lock_acquired);
-        friend void socket_config_unlock(const SocketConfig *config, bool lock_acquired);
+        uint8_t _initialized_state;
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
+        void abort_lifecycle_error(const char *method_name,
+                    const char *reason) const noexcept;
+        void abort_if_not_initialized(const char *method_name) const noexcept;
 
     public:
         SocketType _type;
-        ft_string _ip;
+        char _ip[46];
         uint16_t _port;
         int _backlog;
         int _protocol;
@@ -133,16 +130,18 @@ class SocketConfig
         bool _non_blocking;
         int _recv_timeout;
         int _send_timeout;
-        ft_string _multicast_group;
-        ft_string _multicast_interface;
+        char _multicast_group[46];
+        char _multicast_interface[46];
 
         SocketConfig();
         ~SocketConfig();
 
-        SocketConfig(const SocketConfig& other) noexcept;
-        SocketConfig(SocketConfig&& other) noexcept;
-        SocketConfig& operator=(const SocketConfig& other) noexcept;
-        SocketConfig& operator=(SocketConfig&& other) noexcept;
+        SocketConfig(const SocketConfig& other) noexcept = delete;
+        SocketConfig(SocketConfig&& other) noexcept = delete;
+        SocketConfig& operator=(const SocketConfig& other) noexcept = delete;
+        SocketConfig& operator=(SocketConfig&& other) noexcept = delete;
+        int initialize() noexcept;
+        int destroy() noexcept;
 };
 
 int socket_config_prepare_thread_safety(SocketConfig *config);

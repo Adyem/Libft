@@ -16,7 +16,6 @@ FT_TEST(test_rng_secure_bytes_null_buffer_sets_ft_einval, "rng_secure_bytes null
     return (1);
 }
 
-FT_TEST(test_rng_secure_bytes_success_clears_errno, "rng_secure_bytes success clears ft_errno")
 {
     unsigned char buffer[8];
     if (rng_secure_bytes(buffer, 8) != FT_ERR_SUCCESS)

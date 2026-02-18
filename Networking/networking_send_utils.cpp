@@ -47,14 +47,12 @@ int networking_check_socket_after_send(int socket_fd)
                 attempt_count++;
                 continue ;
             }
-            (void)(ft_map_system_error(last_error));
 #else
             if (errno == EINTR)
             {
                 attempt_count++;
                 continue ;
             }
-            (void)(ft_map_system_error(errno));
 #endif
             return (-1);
         }
@@ -81,14 +79,12 @@ int networking_check_socket_after_send(int socket_fd)
                 attempt_count++;
                 continue ;
             }
-            (void)(ft_map_system_error(last_error));
 #else
             if (errno == EWOULDBLOCK || errno == EAGAIN || errno == EINTR)
             {
                 attempt_count++;
                 continue ;
             }
-            (void)(ft_map_system_error(errno));
 #endif
             return (-1);
         }
@@ -106,7 +102,6 @@ int networking_check_socket_after_send(int socket_fd)
                    reinterpret_cast<char*>(&socket_error),
                    &option_length) == SOCKET_ERROR)
     {
-        (void)(ft_map_system_error(WSAGetLastError()));
         return (-1);
     }
 #else
@@ -120,13 +115,11 @@ int networking_check_socket_after_send(int socket_fd)
                    &socket_error,
                    &option_length) < 0)
     {
-        (void)(ft_map_system_error(errno));
         return (-1);
     }
 #endif
     if (socket_error != 0)
     {
-        (void)(ft_map_system_error(socket_error));
         return (-1);
     }
     if (disconnect_detected)
@@ -180,14 +173,12 @@ int networking_check_ssl_after_send(SSL *ssl_connection)
                 attempt_count++;
                 continue ;
             }
-            (void)(ft_map_system_error(last_error));
 #else
             if (errno == EINTR)
             {
                 attempt_count++;
                 continue ;
             }
-            (void)(ft_map_system_error(errno));
 #endif
             return (-1);
         }
@@ -227,9 +218,7 @@ int networking_check_ssl_after_send(SSL *ssl_connection)
                 attempt_count++;
                 continue ;
             }
-            if (last_error != 0)
-                (void)(ft_map_system_error(last_error));
-            else
+            if (last_error == 0)
                 (void)(FT_ERR_SOCKET_SEND_FAILED);
             return (-1);
         }
@@ -241,9 +230,7 @@ int networking_check_ssl_after_send(SSL *ssl_connection)
                 attempt_count++;
                 continue ;
             }
-            if (errno != 0)
-                (void)(ft_map_system_error(errno));
-            else
+            if (errno == 0)
                 (void)(FT_ERR_SOCKET_SEND_FAILED);
             return (-1);
         }

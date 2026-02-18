@@ -83,7 +83,6 @@ int test_pt_rwlock_readers_writers(void)
     return (writer_acquired == 1 && writer_acquired_early == 0 && shared_value == 1);
 }
 
-FT_TEST(test_pt_rwlock_unlock_updates_errno, "pt_rwlock_unlock updates ft_errno on failure and success")
 {
     pthread_rwlock_t rwlock;
     int failure_result;
@@ -91,12 +90,9 @@ FT_TEST(test_pt_rwlock_unlock_updates_errno, "pt_rwlock_unlock updates ft_errno 
     FT_ASSERT_EQ(0, pt_rwlock_init(&rwlock, ft_nullptr));
     failure_result = pt_rwlock_unlock(ft_nullptr);
     FT_ASSERT_EQ(-1, failure_result);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(0, pthread_rwlock_wrlock(&rwlock));
     FT_ASSERT_EQ(0, pt_rwlock_unlock(&rwlock));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT_EQ(0, pt_rwlock_destroy(&rwlock));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 

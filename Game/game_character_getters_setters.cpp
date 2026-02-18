@@ -6,9 +6,9 @@ int ft_character::get_hit_points() const noexcept
 {
     int hit_points;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (0);
@@ -23,9 +23,9 @@ int ft_character::get_hit_points() const noexcept
 void ft_character::set_hit_points(int hp) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return ;
@@ -41,9 +41,9 @@ bool ft_character::is_alive() const noexcept
 {
     bool alive;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (false);
@@ -59,9 +59,9 @@ int ft_character::get_physical_armor() const noexcept
 {
     int armor_value;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (0);
@@ -76,9 +76,9 @@ int ft_character::get_physical_armor() const noexcept
 void ft_character::set_physical_armor(int armor) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return ;
@@ -94,9 +94,9 @@ int ft_character::get_magic_armor() const noexcept
 {
     int armor_value;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (0);
@@ -111,9 +111,9 @@ int ft_character::get_magic_armor() const noexcept
 void ft_character::set_magic_armor(int armor) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return ;
@@ -129,9 +129,9 @@ int ft_character::get_current_physical_armor() const noexcept
 {
     int armor_value;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (0);
@@ -146,9 +146,9 @@ int ft_character::get_current_physical_armor() const noexcept
 void ft_character::set_current_physical_armor(int armor) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return ;
@@ -164,9 +164,9 @@ int ft_character::get_current_magic_armor() const noexcept
 {
     int armor_value;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (0);
@@ -181,9 +181,9 @@ int ft_character::get_current_magic_armor() const noexcept
 void ft_character::set_current_magic_armor(int armor) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return ;
@@ -198,9 +198,9 @@ void ft_character::set_current_magic_armor(int armor) noexcept
 void ft_character::set_damage_rule(uint8_t rule) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return ;
@@ -216,9 +216,9 @@ uint8_t ft_character::get_damage_rule() const noexcept
 {
     uint8_t rule_value;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (FT_DAMAGE_RULE_FLAT);
@@ -234,9 +234,9 @@ int ft_character::get_might() const noexcept
 {
     int attribute;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (0);
@@ -251,9 +251,9 @@ int ft_character::get_might() const noexcept
 void ft_character::set_might(int might) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return ;
@@ -269,9 +269,9 @@ int ft_character::get_agility() const noexcept
 {
     int attribute;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (0);
@@ -286,9 +286,9 @@ int ft_character::get_agility() const noexcept
 void ft_character::set_agility(int agility) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return ;
@@ -304,9 +304,9 @@ int ft_character::get_endurance() const noexcept
 {
     int attribute;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (0);
@@ -321,9 +321,9 @@ int ft_character::get_endurance() const noexcept
 void ft_character::set_endurance(int endurance) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return ;
@@ -339,9 +339,9 @@ int ft_character::get_reason() const noexcept
 {
     int attribute;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (0);
@@ -356,9 +356,9 @@ int ft_character::get_reason() const noexcept
 void ft_character::set_reason(int reason) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return ;
@@ -374,9 +374,9 @@ int ft_character::get_insigh() const noexcept
 {
     int attribute;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (0);
@@ -391,9 +391,9 @@ int ft_character::get_insigh() const noexcept
 void ft_character::set_insigh(int insigh) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return ;
@@ -409,9 +409,9 @@ int ft_character::get_presence() const noexcept
 {
     int attribute;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (0);
@@ -426,9 +426,9 @@ int ft_character::get_presence() const noexcept
 void ft_character::set_presence(int presence) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return ;
@@ -444,9 +444,9 @@ int ft_character::get_coins() const noexcept
 {
     int coins_value;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (0);
@@ -461,9 +461,9 @@ int ft_character::get_coins() const noexcept
 void ft_character::set_coins(int coins) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return ;
@@ -479,9 +479,9 @@ int ft_character::get_valor() const noexcept
 {
     int valor_value;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (0);
@@ -496,9 +496,9 @@ int ft_character::get_valor() const noexcept
 void ft_character::set_valor(int valor) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return ;
@@ -514,9 +514,9 @@ int ft_character::get_experience() const noexcept
 {
     int experience_value;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (0);
@@ -531,9 +531,9 @@ int ft_character::get_experience() const noexcept
 void ft_character::set_experience(int experience) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return ;
@@ -549,9 +549,9 @@ int ft_character::get_x() const noexcept
 {
     int coordinate;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (0);
@@ -566,9 +566,9 @@ int ft_character::get_x() const noexcept
 void ft_character::set_x(int x) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return ;
@@ -584,9 +584,9 @@ int ft_character::get_y() const noexcept
 {
     int coordinate;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (0);
@@ -601,9 +601,9 @@ int ft_character::get_y() const noexcept
 void ft_character::set_y(int y) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return ;
@@ -619,9 +619,9 @@ int ft_character::get_z() const noexcept
 {
     int coordinate;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (0);
@@ -636,9 +636,9 @@ int ft_character::get_z() const noexcept
 void ft_character::set_z(int z) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return ;
@@ -654,9 +654,9 @@ ft_resistance ft_character::get_fire_res() const noexcept
 {
     ft_resistance resistance_copy;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (ft_resistance());
@@ -679,9 +679,9 @@ void ft_character::set_fire_res(int percent, int flat) noexcept
 {
     int error_code;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return ;
@@ -703,9 +703,9 @@ ft_resistance ft_character::get_frost_res() const noexcept
 {
     ft_resistance resistance_copy;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (ft_resistance());
@@ -728,9 +728,9 @@ void ft_character::set_frost_res(int percent, int flat) noexcept
 {
     int error_code;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return ;
@@ -752,9 +752,9 @@ ft_resistance ft_character::get_lightning_res() const noexcept
 {
     ft_resistance resistance_copy;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (ft_resistance());
@@ -777,9 +777,9 @@ void ft_character::set_lightning_res(int percent, int flat) noexcept
 {
     int error_code;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return ;
@@ -801,9 +801,9 @@ ft_resistance ft_character::get_air_res() const noexcept
 {
     ft_resistance resistance_copy;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (ft_resistance());
@@ -826,9 +826,9 @@ void ft_character::set_air_res(int percent, int flat) noexcept
 {
     int error_code;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return ;
@@ -850,9 +850,9 @@ ft_resistance ft_character::get_earth_res() const noexcept
 {
     ft_resistance resistance_copy;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (ft_resistance());
@@ -875,9 +875,9 @@ void ft_character::set_earth_res(int percent, int flat) noexcept
 {
     int error_code;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return ;
@@ -899,9 +899,9 @@ ft_resistance ft_character::get_chaos_res() const noexcept
 {
     ft_resistance resistance_copy;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (ft_resistance());
@@ -924,9 +924,9 @@ void ft_character::set_chaos_res(int percent, int flat) noexcept
 {
     int error_code;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return ;
@@ -948,9 +948,9 @@ ft_resistance ft_character::get_physical_res() const noexcept
 {
     ft_resistance resistance_copy;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (ft_resistance());
@@ -973,9 +973,9 @@ void ft_character::set_physical_res(int percent, int flat) noexcept
 {
     int error_code;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return ;
@@ -996,9 +996,9 @@ void ft_character::set_physical_res(int percent, int flat) noexcept
 ft_map<int, ft_skill> &ft_character::get_skills() noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (this->_skills);
@@ -1012,9 +1012,9 @@ ft_map<int, ft_skill> &ft_character::get_skills() noexcept
 const ft_map<int, ft_skill> &ft_character::get_skills() const noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (this->_skills);
@@ -1028,24 +1028,15 @@ const ft_map<int, ft_skill> &ft_character::get_skills() const noexcept
 ft_skill *ft_character::get_skill(int id) noexcept
 {
     Pair<int, ft_skill> *found;
-    int component_error;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (ft_nullptr);
     }
     found = this->_skills.find(id);
-    component_error = this->_skills.last_operation_error();
-    if (component_error != FT_ERR_SUCCESS)
-    {
-        this->set_error(component_error);
-        if (guard.owns_lock())
-            guard.unlock();
-        return (ft_nullptr);
-    }
     if (found == this->_skills.end())
     {
         this->set_error(FT_ERR_NOT_FOUND);
@@ -1062,24 +1053,15 @@ ft_skill *ft_character::get_skill(int id) noexcept
 const ft_skill *ft_character::get_skill(int id) const noexcept
 {
     const Pair<int, ft_skill> *found;
-    int component_error;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (ft_nullptr);
     }
     found = this->_skills.find(id);
-    component_error = this->_skills.last_operation_error();
-    if (component_error != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_character *>(this)->set_error(component_error);
-        if (guard.owns_lock())
-            guard.unlock();
-        return (ft_nullptr);
-    }
     if (found == this->_skills.end())
     {
         const_cast<ft_character *>(this)->set_error(FT_ERR_NOT_FOUND);
@@ -1096,9 +1078,9 @@ const ft_skill *ft_character::get_skill(int id) const noexcept
 ft_map<int, ft_buff> &ft_character::get_buffs() noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (this->_buffs);
@@ -1112,9 +1094,9 @@ ft_map<int, ft_buff> &ft_character::get_buffs() noexcept
 const ft_map<int, ft_buff> &ft_character::get_buffs() const noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (this->_buffs);
@@ -1128,9 +1110,9 @@ const ft_map<int, ft_buff> &ft_character::get_buffs() const noexcept
 ft_map<int, ft_debuff> &ft_character::get_debuffs() noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (this->_debuffs);
@@ -1144,9 +1126,9 @@ ft_map<int, ft_debuff> &ft_character::get_debuffs() noexcept
 const ft_map<int, ft_debuff> &ft_character::get_debuffs() const noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (this->_debuffs);
@@ -1160,9 +1142,9 @@ const ft_map<int, ft_debuff> &ft_character::get_debuffs() const noexcept
 ft_map<int, ft_upgrade> &ft_character::get_upgrades() noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (this->_upgrades);
@@ -1176,9 +1158,9 @@ ft_map<int, ft_upgrade> &ft_character::get_upgrades() noexcept
 const ft_map<int, ft_upgrade> &ft_character::get_upgrades() const noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (this->_upgrades);
@@ -1192,9 +1174,9 @@ const ft_map<int, ft_upgrade> &ft_character::get_upgrades() const noexcept
 ft_map<int, ft_quest> &ft_character::get_quests() noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (this->_quests);
@@ -1208,9 +1190,9 @@ ft_map<int, ft_quest> &ft_character::get_quests() noexcept
 const ft_map<int, ft_quest> &ft_character::get_quests() const noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (this->_quests);
@@ -1224,9 +1206,9 @@ const ft_map<int, ft_quest> &ft_character::get_quests() const noexcept
 ft_map<int, ft_achievement> &ft_character::get_achievements() noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (this->_achievements);
@@ -1240,9 +1222,9 @@ ft_map<int, ft_achievement> &ft_character::get_achievements() noexcept
 const ft_map<int, ft_achievement> &ft_character::get_achievements() const noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (this->_achievements);
@@ -1256,9 +1238,9 @@ const ft_map<int, ft_achievement> &ft_character::get_achievements() const noexce
 ft_reputation &ft_character::get_reputation() noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (this->_reputation);
@@ -1272,9 +1254,9 @@ ft_reputation &ft_character::get_reputation() noexcept
 const ft_reputation &ft_character::get_reputation() const noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (this->_reputation);
@@ -1288,9 +1270,9 @@ const ft_reputation &ft_character::get_reputation() const noexcept
 ft_experience_table &ft_character::get_experience_table() noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (this->_experience_table);
@@ -1304,9 +1286,9 @@ ft_experience_table &ft_character::get_experience_table() noexcept
 const ft_experience_table &ft_character::get_experience_table() const noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (this->_experience_table);
@@ -1322,9 +1304,9 @@ int ft_character::get_level() const noexcept
     int level_value;
     int experience_error;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (0);
@@ -1346,17 +1328,16 @@ int ft_character::get_level() const noexcept
 
 ft_sharedptr<ft_item> ft_character::get_equipped_item(int slot) noexcept
 {
-    ft_sharedptr<ft_item> item;
     int equipment_error;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        this->set_error(guard.get_error());
+        this->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (ft_sharedptr<ft_item>());
     }
-    item = this->_equipment.get_item(slot);
+    this->_equipment.get_item(slot);
     equipment_error = this->_equipment.get_error();
     if (equipment_error != FT_ERR_SUCCESS)
     {
@@ -1368,22 +1349,21 @@ ft_sharedptr<ft_item> ft_character::get_equipped_item(int slot) noexcept
     this->set_error(FT_ERR_SUCCESS);
     if (guard.owns_lock())
         guard.unlock();
-    return (item);
+    return (this->_equipment.get_item(slot));
 }
 
 ft_sharedptr<ft_item> ft_character::get_equipped_item(int slot) const noexcept
 {
-    ft_sharedptr<ft_item> item;
     int equipment_error;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
         return (ft_sharedptr<ft_item>());
     }
-    item = this->_equipment.get_item(slot);
+    this->_equipment.get_item(slot);
     equipment_error = this->_equipment.get_error();
     if (equipment_error != FT_ERR_SUCCESS)
     {
@@ -1395,19 +1375,19 @@ ft_sharedptr<ft_item> ft_character::get_equipped_item(int slot) const noexcept
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESS);
     if (guard.owns_lock())
         guard.unlock();
-    return (item);
+    return (this->_equipment.get_item(slot));
 }
 
 int ft_character::get_error() const noexcept
 {
     int error_code;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
-        return (guard.get_error());
+        return (FT_ERR_INVALID_STATE);
     }
     error_code = this->_error;
     const_cast<ft_character *>(this)->set_error(error_code);
@@ -1420,12 +1400,12 @@ const char *ft_character::get_error_str() const noexcept
 {
     int error_code;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.owns_lock() == false)
     {
-        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
         if (guard.owns_lock())
             guard.unlock();
-        return (ft_strerror(guard.get_error()));
+        return (ft_strerror(FT_ERR_INVALID_STATE));
     }
     error_code = this->_error;
     const_cast<ft_character *>(this)->set_error(error_code);
@@ -1481,27 +1461,5 @@ void ft_character::restore_magic_armor_internal() noexcept
 void ft_character::set_error(int err) const noexcept
 {
     this->_error = err;
-    this->record_operation_error(err);
     return ;
-}
-
-void ft_character::record_operation_error(int error_code) const noexcept
-{
-    unsigned long long operation_id;
-
-    operation_id = ft_errno_next_operation_id();
-    ft_global_error_stack_push_entry_with_id(error_code, operation_id);
-    ft_operation_error_stack_push(&this->_operation_errors,
-            error_code, operation_id);
-    return ;
-}
-
-ft_operation_error_stack *ft_character::get_operation_error_stack_for_validation() noexcept
-{
-    return (&this->_operation_errors);
-}
-
-const ft_operation_error_stack *ft_character::get_operation_error_stack_for_validation() const noexcept
-{
-    return (&this->_operation_errors);
 }

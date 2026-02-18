@@ -12,7 +12,7 @@ static int logger_context_rollback(size_t count)
     while (index < count)
     {
         g_log_context_entries.pop_back();
-        int vector_error = g_log_context_entries.get_error();
+        int vector_error = g_log_context_entries.last_operation_error();
         if (vector_error != FT_ERR_SUCCESS)
             return (vector_error);
         index += 1;
@@ -27,18 +27,15 @@ int logger_context_push(const s_log_field *fields, size_t field_count,
 
     if (!pushed_count)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     *pushed_count = 0;
     if (field_count == 0)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0);
     }
     if (!fields)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     index = 0;
@@ -61,27 +58,24 @@ int logger_context_push(const s_log_field *fields, size_t field_count,
         {
             log_field_unlock(field, lock_acquired);
             logger_context_rollback(index);
-            ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
             return (-1);
         }
         entry.key = field->key;
-        error_code = entry.key.get_error();
+        error_code = entry.key.last_operation_error();
         if (error_code != FT_ERR_SUCCESS)
         {
             log_field_unlock(field, lock_acquired);
             logger_context_rollback(index);
-            ft_global_error_stack_push(error_code);
             return (-1);
         }
         if (field->value)
         {
             entry.value = field->value;
-            error_code = entry.value.get_error();
+            error_code = entry.value.last_operation_error();
             if (error_code != FT_ERR_SUCCESS)
             {
                 log_field_unlock(field, lock_acquired);
                 logger_context_rollback(index);
-                ft_global_error_stack_push(error_code);
                 return (-1);
             }
             entry.has_value = true;
@@ -93,17 +87,15 @@ int logger_context_push(const s_log_field *fields, size_t field_count,
         }
         log_field_unlock(field, lock_acquired);
         g_log_context_entries.push_back(entry);
-        error_code = g_log_context_entries.get_error();
+        error_code = g_log_context_entries.last_operation_error();
         if (error_code != FT_ERR_SUCCESS)
         {
             logger_context_rollback(index);
-            ft_global_error_stack_push(error_code);
             return (-1);
         }
         index += 1;
     }
     *pushed_count = field_count;
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -113,10 +105,9 @@ void logger_context_pop(size_t count)
     int error_code;
 
     available = g_log_context_entries.size();
-    error_code = g_log_context_entries.get_error();
+    error_code = g_log_context_entries.last_operation_error();
     if (error_code != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(error_code);
         return ;
     }
     if (count > available)
@@ -129,15 +120,13 @@ void logger_context_pop(size_t count)
     while (count > 0)
     {
         g_log_context_entries.pop_back();
-        error_code = g_log_context_entries.get_error();
+        error_code = g_log_context_entries.last_operation_error();
         if (error_code != FT_ERR_SUCCESS)
         {
-            ft_global_error_stack_push(error_code);
             return ;
         }
         count -= 1;
     }
-    ft_global_error_stack_push(error_code);
     return ;
 }
 
@@ -149,22 +138,19 @@ static int logger_context_format_prefix(ft_string &prefix)
     int error_code;
 
     count = g_log_context_entries.size();
-    error_code = g_log_context_entries.get_error();
+    error_code = g_log_context_entries.last_operation_error();
     if (error_code != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(error_code);
         return (-1);
     }
     if (count == 0)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0);
     }
     prefix.append('[');
-    error_code = prefix.get_error();
+    error_code = prefix.last_operation_error();
     if (error_code != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(error_code);
         return (-1);
     }
     index = 0;
@@ -173,65 +159,57 @@ static int logger_context_format_prefix(ft_string &prefix)
     {
         const s_log_context_entry &entry = g_log_context_entries[index];
 
-        error_code = g_log_context_entries.get_error();
+        error_code = g_log_context_entries.last_operation_error();
         if (error_code != FT_ERR_SUCCESS)
         {
-            ft_global_error_stack_push(error_code);
             return (-1);
         }
         if (!first_entry)
         {
             prefix.append(' ');
-            error_code = prefix.get_error();
+            error_code = prefix.last_operation_error();
             if (error_code != FT_ERR_SUCCESS)
             {
-                ft_global_error_stack_push(error_code);
                 return (-1);
             }
         }
         else
             first_entry = false;
         prefix.append(entry.key);
-        error_code = prefix.get_error();
+        error_code = prefix.last_operation_error();
         if (error_code != FT_ERR_SUCCESS)
         {
-            ft_global_error_stack_push(error_code);
             return (-1);
         }
         if (entry.has_value)
         {
             prefix.append('=');
-            error_code = prefix.get_error();
+            error_code = prefix.last_operation_error();
             if (error_code != FT_ERR_SUCCESS)
             {
-                ft_global_error_stack_push(error_code);
                 return (-1);
             }
             prefix.append(entry.value);
-            error_code = prefix.get_error();
+            error_code = prefix.last_operation_error();
             if (error_code != FT_ERR_SUCCESS)
             {
-                ft_global_error_stack_push(error_code);
                 return (-1);
             }
         }
         index += 1;
     }
     prefix.append(']');
-    error_code = prefix.get_error();
+    error_code = prefix.last_operation_error();
     if (error_code != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(error_code);
         return (-1);
     }
     prefix.append(' ');
-    error_code = prefix.get_error();
+    error_code = prefix.last_operation_error();
     if (error_code != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(error_code);
         return (-1);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (1);
 }
 
@@ -244,36 +222,30 @@ int logger_context_apply_plain(ft_string &text)
     if (result <= 0)
     {
         if (result == 0)
-            ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (result);
     }
-    if (prefix.get_error() != FT_ERR_SUCCESS)
+    if (prefix.last_operation_error() != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(prefix.get_error());
         return (-1);
     }
     ft_string combined(prefix);
-    int error_code = combined.get_error();
+    int error_code = combined.last_operation_error();
     if (error_code != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(error_code);
         return (-1);
     }
     combined.append(text);
-    error_code = combined.get_error();
+    error_code = combined.last_operation_error();
     if (error_code != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(error_code);
         return (-1);
     }
     text = combined;
-    error_code = text.get_error();
+    error_code = text.last_operation_error();
     if (error_code != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(error_code);
         return (-1);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -304,26 +276,22 @@ static int logger_context_append_flat_value(ft_string &output, const char *value
 
     if (!value)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (!logger_context_value_needs_quotes(value))
     {
         output.append(value);
-        error_code = output.get_error();
+        error_code = output.last_operation_error();
         if (error_code != FT_ERR_SUCCESS)
         {
-            ft_global_error_stack_push(error_code);
             return (-1);
         }
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0);
     }
     output.append('"');
-    error_code = output.get_error();
+    error_code = output.last_operation_error();
     if (error_code != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(error_code);
         return (-1);
     }
     index = 0;
@@ -335,17 +303,15 @@ static int logger_context_append_flat_value(ft_string &output, const char *value
         if (character == '"' || character == '\\')
         {
             output.append('\\');
-            error_code = output.get_error();
+            error_code = output.last_operation_error();
             if (error_code != FT_ERR_SUCCESS)
             {
-                ft_global_error_stack_push(error_code);
                 return (-1);
             }
             output.append(character);
-            error_code = output.get_error();
+            error_code = output.last_operation_error();
             if (error_code != FT_ERR_SUCCESS)
             {
-                ft_global_error_stack_push(error_code);
                 return (-1);
             }
         }
@@ -359,33 +325,29 @@ static int logger_context_append_flat_value(ft_string &output, const char *value
             escape_buffer[3] = hex_digits[static_cast<unsigned char>(character) & 0x0F];
             escape_buffer[4] = '\0';
             output.append(escape_buffer);
-            error_code = output.get_error();
+            error_code = output.last_operation_error();
             if (error_code != FT_ERR_SUCCESS)
             {
-                ft_global_error_stack_push(error_code);
                 return (-1);
             }
         }
         else
         {
             output.append(character);
-            error_code = output.get_error();
+            error_code = output.last_operation_error();
             if (error_code != FT_ERR_SUCCESS)
             {
-                ft_global_error_stack_push(error_code);
                 return (-1);
             }
         }
         index += 1;
     }
     output.append('"');
-    error_code = output.get_error();
+    error_code = output.last_operation_error();
     if (error_code != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(error_code);
         return (-1);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -397,22 +359,19 @@ int logger_context_format_flat(ft_string &output)
     int error_code;
 
     output.clear();
-    error_code = output.get_error();
+    error_code = output.last_operation_error();
     if (error_code != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(error_code);
         return (-1);
     }
     count = g_log_context_entries.size();
-    error_code = g_log_context_entries.get_error();
+    error_code = g_log_context_entries.last_operation_error();
     if (error_code != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(error_code);
         return (-1);
     }
     if (count == 0)
     {
-        ft_global_error_stack_push(FT_ERR_SUCCESS);
         return (0);
     }
     index = 0;
@@ -421,44 +380,39 @@ int logger_context_format_flat(ft_string &output)
     {
         const s_log_context_entry &entry = g_log_context_entries[index];
 
-        error_code = g_log_context_entries.get_error();
+        error_code = g_log_context_entries.last_operation_error();
         if (error_code != FT_ERR_SUCCESS)
         {
-            ft_global_error_stack_push(error_code);
             return (-1);
         }
         if (!first_entry)
         {
             output.append(' ');
-            error_code = output.get_error();
+            error_code = output.last_operation_error();
             if (error_code != FT_ERR_SUCCESS)
             {
-                ft_global_error_stack_push(error_code);
                 return (-1);
             }
         }
         else
             first_entry = false;
         output.append(entry.key);
-        error_code = output.get_error();
+        error_code = output.last_operation_error();
         if (error_code != FT_ERR_SUCCESS)
         {
-            ft_global_error_stack_push(error_code);
             return (-1);
         }
         if (entry.has_value)
         {
             output.append('=');
-            error_code = output.get_error();
+            error_code = output.last_operation_error();
             if (error_code != FT_ERR_SUCCESS)
             {
-                ft_global_error_stack_push(error_code);
                 return (-1);
             }
-            error_code = entry.value.get_error();
+            error_code = entry.value.last_operation_error();
             if (error_code != FT_ERR_SUCCESS)
             {
-                ft_global_error_stack_push(error_code);
                 return (-1);
             }
             if (logger_context_append_flat_value(output, entry.value.c_str()) != 0)
@@ -466,7 +420,6 @@ int logger_context_format_flat(ft_string &output)
         }
         index += 1;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -477,17 +430,15 @@ int logger_context_snapshot(ft_vector<s_log_context_view> &snapshot)
     int error_code;
 
     snapshot.clear();
-    error_code = snapshot.get_error();
+    error_code = snapshot.last_operation_error();
     if (error_code != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(error_code);
         return (-1);
     }
     count = g_log_context_entries.size();
-    error_code = g_log_context_entries.get_error();
+    error_code = g_log_context_entries.last_operation_error();
     if (error_code != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(error_code);
         return (-1);
     }
     index = 0;
@@ -496,25 +447,22 @@ int logger_context_snapshot(ft_vector<s_log_context_view> &snapshot)
         const s_log_context_entry &entry = g_log_context_entries[index];
         s_log_context_view view;
 
-        error_code = g_log_context_entries.get_error();
+        error_code = g_log_context_entries.last_operation_error();
         if (error_code != FT_ERR_SUCCESS)
         {
-            ft_global_error_stack_push(error_code);
             return (-1);
         }
         view.key = entry.key.c_str();
         view.value = entry.value.c_str();
         view.has_value = entry.has_value;
         snapshot.push_back(view);
-        error_code = snapshot.get_error();
+        error_code = snapshot.last_operation_error();
         if (error_code != FT_ERR_SUCCESS)
         {
-            ft_global_error_stack_push(error_code);
             return (-1);
         }
         index += 1;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -524,24 +472,21 @@ void logger_context_clear()
     int error_code;
 
     count = g_log_context_entries.size();
-    error_code = g_log_context_entries.get_error();
+    error_code = g_log_context_entries.last_operation_error();
     if (error_code != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(error_code);
         return ;
     }
     while (count > 0)
     {
         g_log_context_entries.pop_back();
-        error_code = g_log_context_entries.get_error();
+        error_code = g_log_context_entries.last_operation_error();
         if (error_code != FT_ERR_SUCCESS)
         {
-            ft_global_error_stack_push(error_code);
             return ;
         }
         count -= 1;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 

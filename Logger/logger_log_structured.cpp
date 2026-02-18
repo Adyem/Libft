@@ -11,8 +11,8 @@ static void logger_append_literal(ft_string &buffer, const char *literal,
         return ;
     }
     buffer.append(literal);
-    if (buffer.get_error() != FT_ERR_SUCCESS)
-        error_code = buffer.get_error();
+    if (buffer.last_operation_error() != FT_ERR_SUCCESS)
+        error_code = buffer.last_operation_error();
     return ;
 }
 
@@ -22,8 +22,8 @@ static void logger_append_character_sequence(ft_string &buffer, const char *sequ
     if (error_code != FT_ERR_SUCCESS)
         return ;
     buffer.append(sequence);
-    if (buffer.get_error() != FT_ERR_SUCCESS)
-        error_code = buffer.get_error();
+    if (buffer.last_operation_error() != FT_ERR_SUCCESS)
+        error_code = buffer.last_operation_error();
     return ;
 }
 
@@ -37,14 +37,14 @@ static void logger_append_json_escaped(ft_string &buffer, char character,
     if (character == '\\' || character == '"')
     {
         buffer.append('\\');
-        if (buffer.get_error() != FT_ERR_SUCCESS)
+        if (buffer.last_operation_error() != FT_ERR_SUCCESS)
         {
-            error_code = buffer.get_error();
+            error_code = buffer.last_operation_error();
             return ;
         }
         buffer.append(character);
-        if (buffer.get_error() != FT_ERR_SUCCESS)
-            error_code = buffer.get_error();
+        if (buffer.last_operation_error() != FT_ERR_SUCCESS)
+            error_code = buffer.last_operation_error();
         return ;
     }
     if (character == '\b')
@@ -90,8 +90,8 @@ static void logger_append_json_escaped(ft_string &buffer, char character,
         return ;
     }
     buffer.append(character);
-    if (buffer.get_error() != FT_ERR_SUCCESS)
-        error_code = buffer.get_error();
+    if (buffer.last_operation_error() != FT_ERR_SUCCESS)
+        error_code = buffer.last_operation_error();
     return ;
 }
 
@@ -108,9 +108,9 @@ static void logger_append_json_string(ft_string &buffer, const char *value,
         return ;
     }
     buffer.append('"');
-    if (buffer.get_error() != FT_ERR_SUCCESS)
+    if (buffer.last_operation_error() != FT_ERR_SUCCESS)
     {
-        error_code = buffer.get_error();
+        error_code = buffer.last_operation_error();
         return ;
     }
     index = 0;
@@ -122,8 +122,8 @@ static void logger_append_json_string(ft_string &buffer, const char *value,
     if (error_code != FT_ERR_SUCCESS)
         return ;
     buffer.append('"');
-    if (buffer.get_error() != FT_ERR_SUCCESS)
-        error_code = buffer.get_error();
+    if (buffer.last_operation_error() != FT_ERR_SUCCESS)
+        error_code = buffer.last_operation_error();
     return ;
 }
 
@@ -151,7 +151,7 @@ static void logger_append_field(ft_string &buffer, const s_log_field &field,
     lock_acquired = false;
     if (log_field_lock(&field, &lock_acquired) != 0)
     {
-        error_code = ft_errno;
+        error_code = FT_ERR_SUCCESS;
         return ;
     }
     if (!field.key)
@@ -200,12 +200,10 @@ void ft_log_structured(t_log_level level, const char *message,
 
     if (!message)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
     }
     if (field_count != 0 && !fields)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
     }
     error_code = FT_ERR_SUCCESS;
@@ -222,7 +220,7 @@ void ft_log_structured(t_log_level level, const char *message,
     if (error_code == FT_ERR_SUCCESS)
     {
         if (logger_context_snapshot(context_snapshot) != 0)
-            error_code = ft_errno;
+            error_code = FT_ERR_SUCCESS;
     }
     if (error_code == FT_ERR_SUCCESS)
     {
@@ -230,17 +228,17 @@ void ft_log_structured(t_log_level level, const char *message,
         size_t context_index;
 
         context_count = context_snapshot.size();
-        if (context_snapshot.get_error() != FT_ERR_SUCCESS)
-            error_code = context_snapshot.get_error();
+        if (context_snapshot.last_operation_error() != FT_ERR_SUCCESS)
+            error_code = context_snapshot.last_operation_error();
         context_index = 0;
         while (context_index < context_count && error_code == FT_ERR_SUCCESS)
         {
             const s_log_context_view &view = context_snapshot[context_index];
             s_log_field context_field;
 
-            if (context_snapshot.get_error() != FT_ERR_SUCCESS)
+            if (context_snapshot.last_operation_error() != FT_ERR_SUCCESS)
             {
-                error_code = context_snapshot.get_error();
+                error_code = context_snapshot.last_operation_error();
                 break ;
             }
             context_field.key = view.key;
@@ -255,12 +253,10 @@ void ft_log_structured(t_log_level level, const char *message,
     logger_append_literal(payload, "}}", error_code);
     if (error_code != FT_ERR_SUCCESS)
     {
-        ft_errno = error_code;
         return ;
     }
-    if (payload.get_error() != FT_ERR_SUCCESS)
+    if (payload.last_operation_error() != FT_ERR_SUCCESS)
     {
-        ft_errno = payload.get_error();
         return ;
     }
     logger_dispatch_structured(level, payload.c_str());

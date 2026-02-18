@@ -5,6 +5,7 @@
 #include "../Template/vector.hpp"
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include <stdint.h>
 
 class pt_mutex;
 
@@ -31,32 +32,20 @@ class ft_dom_node
         ft_vector<ft_dom_node*> _children;
         ft_vector<ft_string> _attribute_keys;
         ft_vector<ft_string> _attribute_values;
-        mutable ft_operation_error_stack _operation_errors;
-        mutable pt_mutex *_mutex;
-        mutable bool _thread_safe_enabled;
+        pt_mutex *_mutex;
+        uint8_t _initialized_state;
 
-        void record_operation_error(int error_code) const noexcept;
-        int prepare_thread_safety() noexcept;
-        void teardown_thread_safety() noexcept;
-        int lock(bool *lock_acquired) const noexcept;
-        void unlock(bool lock_acquired) const noexcept;
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
+
+        void abort_lifecycle_error(const char *method_name,
+            const char *reason) const;
+        void abort_if_not_initialized(const char *method_name) const;
+        int lock_internal(bool *lock_acquired) const noexcept;
+        int unlock_internal(bool lock_acquired) const noexcept;
 
     public:
-        class thread_guard
-        {
-            private:
-                const ft_dom_node *_node;
-                bool _lock_acquired;
-                int _status;
-
-            public:
-                thread_guard(const ft_dom_node *node) noexcept;
-                ~thread_guard() noexcept;
-
-                int get_status() const noexcept;
-                bool lock_acquired() const noexcept;
-        };
-
         ft_dom_node() noexcept;
         ~ft_dom_node() noexcept;
 
@@ -64,6 +53,14 @@ class ft_dom_node
         ft_dom_node &operator=(const ft_dom_node &) = delete;
         ft_dom_node(ft_dom_node &&) = delete;
         ft_dom_node &operator=(ft_dom_node &&) = delete;
+
+        int initialize() noexcept;
+        int destroy() noexcept;
+        int enable_thread_safety() noexcept;
+        int disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
+        int lock(bool *lock_acquired) const noexcept;
+        void unlock(bool lock_acquired) const noexcept;
 
         ft_dom_node_type get_type() const noexcept;
         void set_type(ft_dom_node_type type) noexcept;
@@ -82,42 +79,30 @@ class ft_dom_node
         const ft_vector<ft_string> &get_attribute_keys() const noexcept;
         const ft_vector<ft_string> &get_attribute_values() const noexcept;
         ft_dom_node *find_child(const ft_string &name) const noexcept;
-        bool is_thread_safe_enabled() const noexcept;
-        int get_error() const noexcept;
-        pt_mutex *mutex_handle() const noexcept;
-        ft_operation_error_stack *operation_error_stack_handle() noexcept;
-        const ft_operation_error_stack *operation_error_stack_handle() const noexcept;
+
+#ifdef LIBFT_TEST_BUILD
+        pt_mutex *get_mutex_for_validation() const noexcept;
+#endif
 };
 
 class ft_dom_document
 {
     private:
         ft_dom_node *_root;
-        mutable pt_mutex *_mutex;
-        mutable bool _thread_safe_enabled;
-        mutable ft_operation_error_stack _operation_errors;
+        pt_mutex *_mutex;
+        uint8_t _initialized_state;
 
-        void record_operation_error(int error_code) const noexcept;
-        int prepare_thread_safety() noexcept;
-        void teardown_thread_safety() noexcept;
-        int lock(bool *lock_acquired) const noexcept;
-        void unlock(bool lock_acquired) const noexcept;
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
+
+        void abort_lifecycle_error(const char *method_name,
+            const char *reason) const;
+        void abort_if_not_initialized(const char *method_name) const;
+        int lock_internal(bool *lock_acquired) const noexcept;
+        int unlock_internal(bool lock_acquired) const noexcept;
 
     public:
-        class thread_guard
-        {
-            private:
-                const ft_dom_document *_document;
-                bool _lock_acquired;
-                int _status;
-
-            public:
-                thread_guard(const ft_dom_document *document) noexcept;
-                ~thread_guard() noexcept;
-
-                int get_status() const noexcept;
-                bool lock_acquired() const noexcept;
-        };
 
         ft_dom_document() noexcept;
         ~ft_dom_document() noexcept;
@@ -127,15 +112,21 @@ class ft_dom_document
         ft_dom_document(ft_dom_document &&) = delete;
         ft_dom_document &operator=(ft_dom_document &&) = delete;
 
+        int initialize() noexcept;
+        int destroy() noexcept;
+        int enable_thread_safety() noexcept;
+        int disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
+        int lock(bool *lock_acquired) const noexcept;
+        void unlock(bool lock_acquired) const noexcept;
+
         void set_root(ft_dom_node *root) noexcept;
         ft_dom_node *get_root() const noexcept;
         void clear() noexcept;
-        int get_error() const noexcept;
-        const char *get_error_str() const noexcept;
-        bool is_thread_safe_enabled() const noexcept;
-        pt_mutex *mutex_handle() const noexcept;
-        ft_operation_error_stack *operation_error_stack_handle() noexcept;
-        const ft_operation_error_stack *operation_error_stack_handle() const noexcept;
+
+#ifdef LIBFT_TEST_BUILD
+        pt_mutex *get_mutex_for_validation() const noexcept;
+#endif
 };
 
 struct ft_dom_schema_rule
@@ -162,41 +153,87 @@ class ft_dom_validation_report
     private:
         bool _valid;
         ft_vector<ft_dom_validation_error> _errors;
-        mutable ft_operation_error_stack _operation_errors;
+        pt_mutex *_mutex;
+        uint8_t _initialized_state;
 
-        void record_operation_error(int error_code) const noexcept;
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
+
+        void abort_lifecycle_error(const char *method_name,
+            const char *reason) const;
+        void abort_if_not_initialized(const char *method_name) const;
+        int lock_internal(bool *lock_acquired) const noexcept;
+        int unlock_internal(bool lock_acquired) const noexcept;
 
     public:
         ft_dom_validation_report() noexcept;
         ~ft_dom_validation_report() noexcept;
+        ft_dom_validation_report(const ft_dom_validation_report &) = delete;
+        ft_dom_validation_report &operator=(const ft_dom_validation_report &) = delete;
+        ft_dom_validation_report(ft_dom_validation_report &&) = delete;
+        ft_dom_validation_report &operator=(ft_dom_validation_report &&) = delete;
+
+        int initialize() noexcept;
+        int destroy() noexcept;
+        int enable_thread_safety() noexcept;
+        int disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
+        int lock(bool *lock_acquired) const noexcept;
+        void unlock(bool lock_acquired) const noexcept;
 
         void mark_valid() noexcept;
         void mark_invalid() noexcept;
         bool valid() const noexcept;
-        int get_error() const noexcept;
-        const char *get_error_str() const noexcept;
         int add_error(const ft_string &path, const ft_string &message) noexcept;
         const ft_vector<ft_dom_validation_error> &errors() const noexcept;
-        const ft_operation_error_stack *operation_error_stack_handle() const noexcept;
+
+#ifdef LIBFT_TEST_BUILD
+        pt_mutex *get_mutex_for_validation() const noexcept;
+#endif
 };
 
 class ft_dom_schema
 {
     private:
         ft_vector<ft_dom_schema_rule> _rules;
-        mutable ft_operation_error_stack _operation_errors;
+        pt_mutex *_mutex;
+        uint8_t _initialized_state;
 
-        void record_operation_error(int error_code) const noexcept;
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
+
+        void abort_lifecycle_error(const char *method_name,
+            const char *reason) const;
+        void abort_if_not_initialized(const char *method_name) const;
+        int lock_internal(bool *lock_acquired) const noexcept;
+        int unlock_internal(bool lock_acquired) const noexcept;
         int validate_rule(const ft_dom_schema_rule &rule, const ft_dom_node *node,
             const ft_string &base_path, ft_dom_validation_report &report) const noexcept;
 
     public:
         ft_dom_schema() noexcept;
         ~ft_dom_schema() noexcept;
+        ft_dom_schema(const ft_dom_schema &) = delete;
+        ft_dom_schema &operator=(const ft_dom_schema &) = delete;
+        ft_dom_schema(ft_dom_schema &&) = delete;
+        ft_dom_schema &operator=(ft_dom_schema &&) = delete;
+
+        int initialize() noexcept;
+        int destroy() noexcept;
+        int enable_thread_safety() noexcept;
+        int disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
+        int lock(bool *lock_acquired) const noexcept;
+        void unlock(bool lock_acquired) const noexcept;
 
         int add_rule(const ft_string &path, ft_dom_node_type type, bool required) noexcept;
         int validate(const ft_dom_document &document, ft_dom_validation_report &report) const noexcept;
-        const ft_operation_error_stack *operation_error_stack_handle() const noexcept;
+
+#ifdef LIBFT_TEST_BUILD
+        pt_mutex *get_mutex_for_validation() const noexcept;
+#endif
 };
 
 int ft_dom_find_path(const ft_dom_node *root, const ft_string &path, const ft_dom_node **out_node) noexcept;

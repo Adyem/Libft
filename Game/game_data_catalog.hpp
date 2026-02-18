@@ -18,10 +18,7 @@ class ft_item_definition
         int             _height;
         int             _weight;
         int             _slot_requirement;
-        mutable int     _error_code;
         mutable pt_mutex _mutex;
-
-        void set_error(int error_code) const noexcept;
         static int lock_pair(const ft_item_definition &first, const ft_item_definition &second,
                 ft_unique_lock<pt_mutex> &first_guard,
                 ft_unique_lock<pt_mutex> &second_guard);
@@ -56,8 +53,6 @@ class ft_item_definition
         int get_slot_requirement() const noexcept;
         void set_slot_requirement(int slot_requirement) noexcept;
 
-        int get_error() const noexcept;
-        const char *get_error_str() const noexcept;
 };
 
 class ft_recipe_blueprint
@@ -66,7 +61,6 @@ class ft_recipe_blueprint
         int                                  _recipe_id;
         int                                  _result_item_id;
         ft_vector<ft_crafting_ingredient>    _ingredients;
-        mutable int                          _error_code;
         mutable pt_mutex                     _mutex;
 
         void set_error(int error_code) const noexcept;
@@ -93,8 +87,6 @@ class ft_recipe_blueprint
         const ft_vector<ft_crafting_ingredient> &get_ingredients() const noexcept;
         void set_ingredients(const ft_vector<ft_crafting_ingredient> &ingredients) noexcept;
 
-        int get_error() const noexcept;
-        const char *get_error_str() const noexcept;
 };
 
 class ft_loadout_entry
@@ -103,7 +95,6 @@ class ft_loadout_entry
         int             _slot;
         int             _item_id;
         int             _quantity;
-        mutable int     _error_code;
         mutable pt_mutex _mutex;
 
         void set_error(int error_code) const noexcept;
@@ -129,8 +120,6 @@ class ft_loadout_entry
         int get_quantity() const noexcept;
         void set_quantity(int quantity) noexcept;
 
-        int get_error() const noexcept;
-        const char *get_error_str() const noexcept;
 };
 
 class ft_loadout_blueprint
@@ -138,7 +127,6 @@ class ft_loadout_blueprint
     private:
         int                           _loadout_id;
         ft_vector<ft_loadout_entry>   _entries;
-        mutable int                   _error_code;
         mutable pt_mutex              _mutex;
 
         void set_error(int error_code) const noexcept;
@@ -162,8 +150,6 @@ class ft_loadout_blueprint
         const ft_vector<ft_loadout_entry> &get_entries() const noexcept;
         void set_entries(const ft_vector<ft_loadout_entry> &entries) noexcept;
 
-        int get_error() const noexcept;
-        const char *get_error_str() const noexcept;
 };
 
 class ft_data_catalog
@@ -172,7 +158,6 @@ class ft_data_catalog
         ft_map<int, ft_item_definition>   _item_definitions;
         ft_map<int, ft_recipe_blueprint>  _recipes;
         ft_map<int, ft_loadout_blueprint> _loadouts;
-        mutable int                       _error_code;
         mutable pt_mutex                  _mutex;
 
         void set_error(int error_code) const noexcept;
@@ -203,8 +188,6 @@ class ft_data_catalog
         int fetch_recipe(int recipe_id, ft_recipe_blueprint &recipe) const noexcept;
         int fetch_loadout(int loadout_id, ft_loadout_blueprint &loadout) const noexcept;
 
-        int get_error() const noexcept;
-        const char *get_error_str() const noexcept;
 };
 
 #endif

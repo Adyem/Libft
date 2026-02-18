@@ -250,8 +250,8 @@ FT_TEST(test_networking_quic_configure_requires_feature, "QUIC session refuses c
     quic_experimental_session session;
     quic_feature_configuration configuration;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, session.initialize());
     FT_ASSERT(!session.configure(pair.client_ssl, configuration, true));
-    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, session.get_error());
     FT_ASSERT(networking_quic_enable_experimental());
     FT_ASSERT(session.configure(pair.client_ssl, configuration, true));
     quic_test_teardown_tls_pair(pair);
@@ -272,6 +272,8 @@ FT_TEST(test_networking_quic_encrypt_roundtrip, "QUIC experimental session encry
 
     client_configuration.enable_datagram_pacing = true;
     server_configuration.enable_loss_recovery = true;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, client_session.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, server_session.initialize());
     FT_ASSERT(client_session.configure(pair.client_ssl, client_configuration, true));
     FT_ASSERT(server_session.configure(pair.server_ssl, server_configuration, false));
     quic_datagram_plaintext plaintext;

@@ -4,20 +4,19 @@
 #include "../Basic/basic.hpp"
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_string.hpp"
+#include "../Printf/printf.hpp"
 
 json_group *serialize_character(const ft_character &character)
 {
     json_group *group = json_create_json_group("character");
     if (!group)
     {
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_item *item = json_create_item("hit_points", character.get_hit_points());
     if (!item)
     {
         json_free_groups(group);
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -25,7 +24,6 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -33,7 +31,6 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -41,7 +38,6 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -49,7 +45,6 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -57,7 +52,6 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -65,7 +59,6 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -73,7 +66,6 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -81,7 +73,6 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -89,7 +80,6 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -97,7 +87,6 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -105,7 +94,6 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -113,7 +101,6 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -121,7 +108,6 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -129,7 +115,6 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -137,7 +122,6 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -145,7 +129,6 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -153,22 +136,14 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
     const ft_map<int, ft_skill> &skills = character.get_skills();
-    if (skills.last_operation_error() != FT_ERR_SUCCESS)
-    {
-        json_free_groups(group);
-        ft_global_error_stack_push(FT_ERR_GAME_GENERAL_ERROR);
-        return (ft_nullptr);
-    }
     json_item *count = json_create_item("skill_count", static_cast<int>(skills.size()));
     if (!count)
     {
         json_free_groups(group);
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, count);
@@ -178,7 +153,6 @@ json_group *serialize_character(const ft_character &character)
     if (skill_count > 0 && !skills_end)
     {
         json_free_groups(group);
-        ft_global_error_stack_push(FT_ERR_GAME_GENERAL_ERROR);
         return (ft_nullptr);
     }
     const Pair<int, ft_skill> *skill_start = skills_end;
@@ -186,23 +160,21 @@ json_group *serialize_character(const ft_character &character)
         skill_start = skills_end - skill_count;
     while (skill_index < skill_count)
     {
-        char *skill_index_string = cma_itoa(static_cast<int>(skill_index));
-        if (!skill_index_string)
+        char skill_index_buffer[32];
+        if (pf_snprintf(skill_index_buffer, sizeof(skill_index_buffer), "%d",
+                static_cast<int>(skill_index)) < 0)
         {
             json_free_groups(group);
-            ft_global_error_stack_push(FT_ERR_NO_MEMORY);
             return (ft_nullptr);
         }
         ft_string prefix = "skill_";
-        prefix += skill_index_string;
-        cma_free(skill_index_string);
+        prefix += skill_index_buffer;
         ft_string key = prefix;
         key += "_id";
         item = json_create_item(key.c_str(), skill_start[skill_index].value.get_id());
         if (!item)
         {
             json_free_groups(group);
-            ft_global_error_stack_push(FT_ERR_NO_MEMORY);
             return (ft_nullptr);
         }
         json_add_item_to_group(group, item);
@@ -212,7 +184,6 @@ json_group *serialize_character(const ft_character &character)
         if (!item)
         {
             json_free_groups(group);
-            ft_global_error_stack_push(FT_ERR_NO_MEMORY);
             return (ft_nullptr);
         }
         json_add_item_to_group(group, item);
@@ -222,7 +193,6 @@ json_group *serialize_character(const ft_character &character)
         if (!item)
         {
             json_free_groups(group);
-            ft_global_error_stack_push(FT_ERR_NO_MEMORY);
             return (ft_nullptr);
         }
         json_add_item_to_group(group, item);
@@ -232,7 +202,6 @@ json_group *serialize_character(const ft_character &character)
         if (!item)
         {
             json_free_groups(group);
-            ft_global_error_stack_push(FT_ERR_NO_MEMORY);
             return (ft_nullptr);
         }
         json_add_item_to_group(group, item);
@@ -242,7 +211,6 @@ json_group *serialize_character(const ft_character &character)
         if (!item)
         {
             json_free_groups(group);
-            ft_global_error_stack_push(FT_ERR_NO_MEMORY);
             return (ft_nullptr);
         }
         json_add_item_to_group(group, item);
@@ -252,7 +220,6 @@ json_group *serialize_character(const ft_character &character)
         if (!item)
         {
             json_free_groups(group);
-            ft_global_error_stack_push(FT_ERR_NO_MEMORY);
             return (ft_nullptr);
         }
         json_add_item_to_group(group, item);
@@ -262,13 +229,11 @@ json_group *serialize_character(const ft_character &character)
         if (!item)
         {
             json_free_groups(group);
-            ft_global_error_stack_push(FT_ERR_NO_MEMORY);
             return (ft_nullptr);
         }
         json_add_item_to_group(group, item);
         skill_index++;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (group);
 }
 
@@ -276,74 +241,72 @@ int deserialize_character(ft_character &character, json_group *group)
 {
     json_item *item = json_find_item(group, "hit_points");
     if (item)
-        character.set_hit_points(ft_atoi(item->value, ft_nullptr));
+        character.set_hit_points(ft_atoi(item->value));
     item = json_find_item(group, "physical_armor");
     if (item)
-        character.set_physical_armor(ft_atoi(item->value, ft_nullptr));
+        character.set_physical_armor(ft_atoi(item->value));
     item = json_find_item(group, "magic_armor");
     if (item)
-        character.set_magic_armor(ft_atoi(item->value, ft_nullptr));
+        character.set_magic_armor(ft_atoi(item->value));
     item = json_find_item(group, "current_physical_armor");
     if (item)
-        character.set_current_physical_armor(ft_atoi(item->value, ft_nullptr));
+        character.set_current_physical_armor(ft_atoi(item->value));
     item = json_find_item(group, "current_magic_armor");
     if (item)
-        character.set_current_magic_armor(ft_atoi(item->value, ft_nullptr));
+        character.set_current_magic_armor(ft_atoi(item->value));
     item = json_find_item(group, "damage_rule");
     if (item)
-        character.set_damage_rule(static_cast<uint8_t>(ft_atoi(item->value, ft_nullptr)));
+        character.set_damage_rule(static_cast<uint8_t>(ft_atoi(item->value)));
     item = json_find_item(group, "might");
     if (item)
-        character.set_might(ft_atoi(item->value, ft_nullptr));
+        character.set_might(ft_atoi(item->value));
     item = json_find_item(group, "agility");
     if (item)
-        character.set_agility(ft_atoi(item->value, ft_nullptr));
+        character.set_agility(ft_atoi(item->value));
     item = json_find_item(group, "endurance");
     if (item)
-        character.set_endurance(ft_atoi(item->value, ft_nullptr));
+        character.set_endurance(ft_atoi(item->value));
     item = json_find_item(group, "reason");
     if (item)
-        character.set_reason(ft_atoi(item->value, ft_nullptr));
+        character.set_reason(ft_atoi(item->value));
     item = json_find_item(group, "insigh");
     if (item)
-        character.set_insigh(ft_atoi(item->value, ft_nullptr));
+        character.set_insigh(ft_atoi(item->value));
     item = json_find_item(group, "presence");
     if (item)
-        character.set_presence(ft_atoi(item->value, ft_nullptr));
+        character.set_presence(ft_atoi(item->value));
     item = json_find_item(group, "coins");
     if (item)
-        character.set_coins(ft_atoi(item->value, ft_nullptr));
+        character.set_coins(ft_atoi(item->value));
     item = json_find_item(group, "valor");
     if (item)
-        character.set_valor(ft_atoi(item->value, ft_nullptr));
+        character.set_valor(ft_atoi(item->value));
     item = json_find_item(group, "experience");
     if (item)
-        character.set_experience(ft_atoi(item->value, ft_nullptr));
+        character.set_experience(ft_atoi(item->value));
     item = json_find_item(group, "x");
     if (item)
-        character.set_x(ft_atoi(item->value, ft_nullptr));
+        character.set_x(ft_atoi(item->value));
     item = json_find_item(group, "y");
     if (item)
-        character.set_y(ft_atoi(item->value, ft_nullptr));
+        character.set_y(ft_atoi(item->value));
     item = json_find_item(group, "z");
     if (item)
-        character.set_z(ft_atoi(item->value, ft_nullptr));
+        character.set_z(ft_atoi(item->value));
     json_item *count_item = json_find_item(group, "skill_count");
     if (count_item)
     {
-        int skill_count = ft_atoi(count_item->value, ft_nullptr);
+        int skill_count = ft_atoi(count_item->value);
         int skill_index = 0;
         while (skill_index < skill_count)
         {
-            char *skill_index_string = cma_itoa(skill_index);
-            if (!skill_index_string)
-            {
-                ft_global_error_stack_push(FT_ERR_NO_MEMORY);
+            int add_skill_error;
+            char skill_index_buffer[32];
+            if (pf_snprintf(skill_index_buffer, sizeof(skill_index_buffer), "%d",
+                    skill_index) < 0)
                 return (FT_ERR_NO_MEMORY);
-            }
             ft_string prefix = "skill_";
-            prefix += skill_index_string;
-            cma_free(skill_index_string);
+            prefix += skill_index_buffer;
             ft_string key = prefix;
             key += "_id";
             json_item *id_item = json_find_item(group, key.c_str());
@@ -367,26 +330,23 @@ int deserialize_character(ft_character &character, json_group *group)
             json_item *mod4_item = json_find_item(group, key.c_str());
             if (!id_item || !level_item || !cool_item || !mod1_item || !mod2_item || !mod3_item || !mod4_item)
             {
-                ft_global_error_stack_push(FT_ERR_GAME_GENERAL_ERROR);
                 return (FT_ERR_GAME_GENERAL_ERROR);
             }
             ft_skill skill;
-            skill.set_id(ft_atoi(id_item->value, ft_nullptr));
-            skill.set_level(ft_atoi(level_item->value, ft_nullptr));
-            skill.set_cooldown(ft_atoi(cool_item->value, ft_nullptr));
-            skill.set_modifier1(ft_atoi(mod1_item->value, ft_nullptr));
-            skill.set_modifier2(ft_atoi(mod2_item->value, ft_nullptr));
-            skill.set_modifier3(ft_atoi(mod3_item->value, ft_nullptr));
-            skill.set_modifier4(ft_atoi(mod4_item->value, ft_nullptr));
-            if (character.add_skill(skill) != FT_ERR_SUCCESS)
+            skill.set_id(ft_atoi(id_item->value));
+            skill.set_level(ft_atoi(level_item->value));
+            skill.set_cooldown(ft_atoi(cool_item->value));
+            skill.set_modifier1(ft_atoi(mod1_item->value));
+            skill.set_modifier2(ft_atoi(mod2_item->value));
+            skill.set_modifier3(ft_atoi(mod3_item->value));
+            skill.set_modifier4(ft_atoi(mod4_item->value));
+            add_skill_error = character.add_skill(skill);
+            if (add_skill_error != FT_ERR_SUCCESS)
             {
-                int add_error = character.get_error();
-                ft_global_error_stack_push(add_error);
-                return (add_error);
+                return (add_skill_error);
             }
             skill_index++;
         }
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }

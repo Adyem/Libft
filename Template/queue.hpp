@@ -28,7 +28,6 @@ class ft_queue
         size_t                      _size;
         mutable pt_recursive_mutex* _mutex;
         mutable uint8_t             _initialized_state;
-        mutable int32_t             _operation_error;
 
         static const uint8_t _state_uninitialized = 0;
         static const uint8_t _state_destroyed = 1;
@@ -38,7 +37,6 @@ class ft_queue
         void destroy_all_unlocked();
         int lock_internal(bool *lock_acquired) const;
         int unlock_internal(bool lock_acquired) const;
-        int set_operation_error(int error_code) const;
         static int set_last_operation_error(int error_code) noexcept;
 
         void abort_lifecycle_error(const char *method_name,
@@ -73,14 +71,11 @@ class ft_queue
 
         ft_queue(const ft_queue&) = delete;
         ft_queue& operator=(const ft_queue&) = delete;
-
-        ft_queue(ft_queue&& other) noexcept;
-        ft_queue& operator=(ft_queue&& other) noexcept;
+        ft_queue(ft_queue&& other) = delete;
+        ft_queue& operator=(ft_queue&& other) = delete;
 
         int initialize();
-        int initialize(ft_queue&& other);
         int destroy();
-        int move(ft_queue& other);
 
         int enable_thread_safety();
         int disable_thread_safety();
@@ -117,13 +112,6 @@ int ft_queue<ElementType>::set_last_operation_error(int error_code) noexcept
 {
     ft_queue<ElementType>::_last_error = error_code;
     return (error_code);
-}
-
-template <typename ElementType>
-int ft_queue<ElementType>::set_operation_error(int error_code) const
-{
-    this->_operation_error = error_code;
-    return (ft_queue<ElementType>::set_last_operation_error(error_code));
 }
 
 template <typename ElementType>
@@ -185,11 +173,11 @@ ElementType *ft_queue<ElementType>::value_proxy::operator->()
     if (this->_is_valid == 0 || this->_element_pointer == ft_nullptr)
     {
         if (this->_parent_queue != ft_nullptr)
-            this->_parent_queue->set_operation_error(this->_last_error);
+            this->_parent_queue->set_last_operation_error(this->_last_error);
         return (ft_nullptr);
     }
     if (this->_parent_queue != ft_nullptr)
-        this->_parent_queue->set_operation_error(FT_ERR_SUCCESS);
+        this->_parent_queue->set_last_operation_error(FT_ERR_SUCCESS);
     return (this->_element_pointer);
 }
 
@@ -201,11 +189,11 @@ ElementType &ft_queue<ElementType>::value_proxy::operator*()
         static ElementType fallback_value = ElementType();
 
         if (this->_parent_queue != ft_nullptr)
-            this->_parent_queue->set_operation_error(this->_last_error);
+            this->_parent_queue->set_last_operation_error(this->_last_error);
         return (fallback_value);
     }
     if (this->_parent_queue != ft_nullptr)
-        this->_parent_queue->set_operation_error(FT_ERR_SUCCESS);
+        this->_parent_queue->set_last_operation_error(FT_ERR_SUCCESS);
     return (*this->_element_pointer);
 }
 
@@ -236,7 +224,6 @@ ft_queue<ElementType>::ft_queue()
     , _size(0)
     , _mutex(ft_nullptr)
     , _initialized_state(ft_queue<ElementType>::_state_uninitialized)
-    , _operation_error(FT_ERR_SUCCESS)
 {
     return ;
 }
@@ -256,113 +243,20 @@ ft_queue<ElementType>::~ft_queue()
 }
 
 template <typename ElementType>
-ft_queue<ElementType>::ft_queue(ft_queue&& other) noexcept
-    : _front(ft_nullptr)
-    , _rear(ft_nullptr)
-    , _size(0)
-    , _mutex(ft_nullptr)
-    , _initialized_state(ft_queue<ElementType>::_state_uninitialized)
-    , _operation_error(FT_ERR_SUCCESS)
-{
-    this->_operation_error = this->initialize(static_cast<ft_queue &&>(other));
-    ft_queue<ElementType>::set_last_operation_error(this->_operation_error);
-    return ;
-}
-
-template <typename ElementType>
-ft_queue<ElementType>& ft_queue<ElementType>::operator=(ft_queue&& other) noexcept
-{
-    int32_t move_error;
-
-    if (other._initialized_state == ft_queue<ElementType>::_state_uninitialized)
-    {
-        other.abort_lifecycle_error("ft_queue::operator=(ft_queue&&) source",
-            "called with uninitialized source object");
-        this->set_operation_error(FT_ERR_INVALID_STATE);
-        return (*this);
-    }
-    if (this == &other)
-    {
-        this->set_operation_error(FT_ERR_SUCCESS);
-        return (*this);
-    }
-    if (other._initialized_state != ft_queue<ElementType>::_state_initialized)
-    {
-        other.abort_lifecycle_error("ft_queue::operator=(ft_queue&&) source",
-            "called with source object that is not initialized");
-        this->set_operation_error(FT_ERR_INVALID_STATE);
-        return (*this);
-    }
-    if (this->_initialized_state == ft_queue<ElementType>::_state_initialized)
-    {
-        move_error = this->destroy();
-        if (move_error != FT_ERR_SUCCESS)
-        {
-            this->set_operation_error(move_error);
-            return (*this);
-        }
-    }
-    if (this->_initialized_state != ft_queue<ElementType>::_state_initialized)
-    {
-        move_error = this->initialize();
-        if (move_error != FT_ERR_SUCCESS)
-        {
-            this->set_operation_error(move_error);
-            return (*this);
-        }
-    }
-    move_error = this->move(other);
-    this->set_operation_error(move_error);
-    return (*this);
-}
-
-template <typename ElementType>
 int ft_queue<ElementType>::initialize()
 {
     if (this->_initialized_state == ft_queue<ElementType>::_state_initialized)
     {
         this->abort_lifecycle_error("ft_queue::initialize",
             "called while object is already initialized");
-        return (this->set_operation_error(FT_ERR_INVALID_STATE));
+        return (ft_queue<ElementType>::set_last_operation_error(FT_ERR_INVALID_STATE));
     }
     this->_front = ft_nullptr;
     this->_rear = ft_nullptr;
     this->_size = 0;
     this->_mutex = ft_nullptr;
     this->_initialized_state = ft_queue<ElementType>::_state_initialized;
-    return (this->set_operation_error(FT_ERR_SUCCESS));
-}
-
-template <typename ElementType>
-int ft_queue<ElementType>::initialize(ft_queue&& other)
-{
-    int initialize_error;
-    int move_error;
-
-    if (other._initialized_state == ft_queue<ElementType>::_state_uninitialized)
-    {
-        other.abort_lifecycle_error("ft_queue::initialize(ft_queue&&) source",
-            "called with uninitialized source object");
-        return (this->set_operation_error(FT_ERR_INVALID_STATE));
-    }
-    if (other._initialized_state != ft_queue<ElementType>::_state_initialized)
-    {
-        other.abort_lifecycle_error("ft_queue::initialize(ft_queue&&) source",
-            "called with source object that is not initialized");
-        return (this->set_operation_error(FT_ERR_INVALID_STATE));
-    }
-    if (this == &other)
-        return (this->set_operation_error(FT_ERR_SUCCESS));
-    initialize_error = this->initialize();
-    if (initialize_error != FT_ERR_SUCCESS)
-        return (this->set_operation_error(initialize_error));
-    move_error = this->move(other);
-    if (move_error != FT_ERR_SUCCESS)
-    {
-        (void)this->destroy();
-        return (this->set_operation_error(move_error));
-    }
-    return (this->set_operation_error(FT_ERR_SUCCESS));
+    return (ft_queue<ElementType>::set_last_operation_error(FT_ERR_SUCCESS));
 }
 
 template <typename ElementType>
@@ -377,91 +271,21 @@ int ft_queue<ElementType>::destroy()
     {
         this->abort_lifecycle_error("ft_queue::destroy",
             "called while object is not initialized");
-        return (this->set_operation_error(FT_ERR_INVALID_STATE));
+        return (ft_queue<ElementType>::set_last_operation_error(FT_ERR_INVALID_STATE));
     }
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
-        return (this->set_operation_error(lock_error));
+        return (ft_queue<ElementType>::set_last_operation_error(lock_error));
     this->destroy_all_unlocked();
     unlock_error = this->unlock_internal(lock_acquired);
     if (unlock_error != FT_ERR_SUCCESS)
-        return (this->set_operation_error(unlock_error));
+        return (ft_queue<ElementType>::set_last_operation_error(unlock_error));
     mutex_destroy_error = this->disable_thread_safety();
     this->_initialized_state = ft_queue<ElementType>::_state_destroyed;
     if (mutex_destroy_error != FT_ERR_SUCCESS)
-        return (this->set_operation_error(mutex_destroy_error));
-    return (this->set_operation_error(FT_ERR_SUCCESS));
-}
-
-template <typename ElementType>
-int ft_queue<ElementType>::move(ft_queue& other)
-{
-    bool other_lock_acquired;
-    int lock_error;
-    int unlock_error;
-    bool other_thread_safe;
-    int enable_error;
-
-    if (other._initialized_state == ft_queue<ElementType>::_state_uninitialized)
-    {
-        other.abort_lifecycle_error("ft_queue::move source",
-            "called with uninitialized source object");
-        return (this->set_operation_error(FT_ERR_INVALID_STATE));
-    }
-    if (other._initialized_state != ft_queue<ElementType>::_state_initialized)
-    {
-        other.abort_lifecycle_error("ft_queue::move source",
-            "called with source object that is not initialized");
-        return (this->set_operation_error(FT_ERR_INVALID_STATE));
-    }
-    if (this == &other)
-        return (this->set_operation_error(FT_ERR_SUCCESS));
-    if (this->_initialized_state == ft_queue<ElementType>::_state_initialized)
-    {
-        int destroy_error = this->destroy();
-        if (destroy_error != FT_ERR_SUCCESS)
-            return (this->set_operation_error(destroy_error));
-    }
-    if (this->_initialized_state != ft_queue<ElementType>::_state_initialized)
-    {
-        int initialize_error = this->initialize();
-        if (initialize_error != FT_ERR_SUCCESS)
-            return (this->set_operation_error(initialize_error));
-    }
-
-    other_lock_acquired = false;
-    lock_error = other.lock_internal(&other_lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-        return (this->set_operation_error(lock_error));
-
-    this->_front = other._front;
-    this->_rear = other._rear;
-    this->_size = other._size;
-
-    other._front = ft_nullptr;
-    other._rear = ft_nullptr;
-    other._size = 0;
-
-    other_thread_safe = false;
-    if (other._mutex != ft_nullptr)
-        other_thread_safe = true;
-
-    unlock_error = other.unlock_internal(other_lock_acquired);
-    if (unlock_error != FT_ERR_SUCCESS)
-        return (this->set_operation_error(unlock_error));
-
-    if (other_thread_safe)
-    {
-        int disable_error = other.disable_thread_safety();
-        if (disable_error != FT_ERR_SUCCESS)
-            return (this->set_operation_error(disable_error));
-        enable_error = this->enable_thread_safety();
-        if (enable_error != FT_ERR_SUCCESS)
-            return (this->set_operation_error(enable_error));
-    }
-    other.set_operation_error(FT_ERR_SUCCESS);
-    return (this->set_operation_error(FT_ERR_SUCCESS));
+        return (ft_queue<ElementType>::set_last_operation_error(mutex_destroy_error));
+    return (ft_queue<ElementType>::set_last_operation_error(FT_ERR_SUCCESS));
 }
 
 template <typename ElementType>
@@ -489,18 +313,18 @@ int ft_queue<ElementType>::enable_thread_safety()
 
     this->abort_if_not_initialized("ft_queue::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
-        return (this->set_operation_error(FT_ERR_SUCCESS));
+        return (ft_queue<ElementType>::set_last_operation_error(FT_ERR_SUCCESS));
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
-        return (this->set_operation_error(FT_ERR_NO_MEMORY));
+        return (ft_queue<ElementType>::set_last_operation_error(FT_ERR_NO_MEMORY));
     mutex_error = mutex_pointer->initialize();
     if (mutex_error != FT_ERR_SUCCESS)
     {
         delete mutex_pointer;
-        return (this->set_operation_error(mutex_error));
+        return (ft_queue<ElementType>::set_last_operation_error(mutex_error));
     }
     this->_mutex = mutex_pointer;
-    return (this->set_operation_error(FT_ERR_SUCCESS));
+    return (ft_queue<ElementType>::set_last_operation_error(FT_ERR_SUCCESS));
 }
 
 template <typename ElementType>
@@ -510,18 +334,18 @@ int ft_queue<ElementType>::disable_thread_safety()
 
     this->abort_if_not_initialized("ft_queue::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
-        return (this->set_operation_error(FT_ERR_SUCCESS));
+        return (ft_queue<ElementType>::set_last_operation_error(FT_ERR_SUCCESS));
     destroy_error = this->_mutex->destroy();
     delete this->_mutex;
     this->_mutex = ft_nullptr;
-    return (this->set_operation_error(destroy_error));
+    return (ft_queue<ElementType>::set_last_operation_error(destroy_error));
 }
 
 template <typename ElementType>
 bool ft_queue<ElementType>::is_thread_safe() const
 {
     this->abort_if_not_initialized("ft_queue::is_thread_safe");
-    this->set_operation_error(FT_ERR_SUCCESS);
+    ft_queue<ElementType>::set_last_operation_error(FT_ERR_SUCCESS);
     return (this->_mutex != ft_nullptr);
 }
 
@@ -533,8 +357,8 @@ int ft_queue<ElementType>::lock(bool *lock_acquired) const
     this->abort_if_not_initialized("ft_queue::lock");
     lock_error = this->lock_internal(lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
-        return (this->set_operation_error(lock_error));
-    return (this->set_operation_error(FT_ERR_SUCCESS));
+        return (ft_queue<ElementType>::set_last_operation_error(lock_error));
+    return (ft_queue<ElementType>::set_last_operation_error(FT_ERR_SUCCESS));
 }
 
 template <typename ElementType>
@@ -544,7 +368,7 @@ void ft_queue<ElementType>::unlock(bool lock_acquired) const
 
     this->abort_if_not_initialized("ft_queue::unlock");
     unlock_error = this->unlock_internal(lock_acquired);
-    this->set_operation_error(unlock_error);
+    ft_queue<ElementType>::set_last_operation_error(unlock_error);
     return ;
 }
 
@@ -586,7 +410,7 @@ void ft_queue<ElementType>::enqueue(const ElementType& value)
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        this->set_operation_error(lock_error);
+        ft_queue<ElementType>::set_last_operation_error(lock_error);
         return ;
     }
     node = static_cast<QueueNode *>(cma_malloc(sizeof(QueueNode)));
@@ -594,9 +418,9 @@ void ft_queue<ElementType>::enqueue(const ElementType& value)
     {
         unlock_error = this->unlock_internal(lock_acquired);
         if (unlock_error != FT_ERR_SUCCESS)
-            this->set_operation_error(unlock_error);
+            ft_queue<ElementType>::set_last_operation_error(unlock_error);
         else
-            this->set_operation_error(FT_ERR_NO_MEMORY);
+            ft_queue<ElementType>::set_last_operation_error(FT_ERR_NO_MEMORY);
         return ;
     }
     construct_at(&node->_data, value);
@@ -615,10 +439,10 @@ void ft_queue<ElementType>::enqueue(const ElementType& value)
     unlock_error = this->unlock_internal(lock_acquired);
     if (unlock_error != FT_ERR_SUCCESS)
     {
-        this->set_operation_error(unlock_error);
+        ft_queue<ElementType>::set_last_operation_error(unlock_error);
         return ;
     }
-    this->set_operation_error(FT_ERR_SUCCESS);
+    ft_queue<ElementType>::set_last_operation_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -635,7 +459,7 @@ void ft_queue<ElementType>::enqueue(ElementType&& value)
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        this->set_operation_error(lock_error);
+        ft_queue<ElementType>::set_last_operation_error(lock_error);
         return ;
     }
     node = static_cast<QueueNode *>(cma_malloc(sizeof(QueueNode)));
@@ -643,9 +467,9 @@ void ft_queue<ElementType>::enqueue(ElementType&& value)
     {
         unlock_error = this->unlock_internal(lock_acquired);
         if (unlock_error != FT_ERR_SUCCESS)
-            this->set_operation_error(unlock_error);
+            ft_queue<ElementType>::set_last_operation_error(unlock_error);
         else
-            this->set_operation_error(FT_ERR_NO_MEMORY);
+            ft_queue<ElementType>::set_last_operation_error(FT_ERR_NO_MEMORY);
         return ;
     }
     construct_at(&node->_data, ft_move(value));
@@ -664,10 +488,10 @@ void ft_queue<ElementType>::enqueue(ElementType&& value)
     unlock_error = this->unlock_internal(lock_acquired);
     if (unlock_error != FT_ERR_SUCCESS)
     {
-        this->set_operation_error(unlock_error);
+        ft_queue<ElementType>::set_last_operation_error(unlock_error);
         return ;
     }
-    this->set_operation_error(FT_ERR_SUCCESS);
+    ft_queue<ElementType>::set_last_operation_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -685,16 +509,16 @@ ElementType ft_queue<ElementType>::dequeue()
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        this->set_operation_error(lock_error);
+        ft_queue<ElementType>::set_last_operation_error(lock_error);
         return (ElementType());
     }
     if (this->_front == ft_nullptr)
     {
         unlock_error = this->unlock_internal(lock_acquired);
         if (unlock_error != FT_ERR_SUCCESS)
-            this->set_operation_error(unlock_error);
+            ft_queue<ElementType>::set_last_operation_error(unlock_error);
         else
-            this->set_operation_error(FT_ERR_EMPTY);
+            ft_queue<ElementType>::set_last_operation_error(FT_ERR_EMPTY);
         return (ElementType());
     }
     node = this->_front;
@@ -708,10 +532,10 @@ ElementType ft_queue<ElementType>::dequeue()
     unlock_error = this->unlock_internal(lock_acquired);
     if (unlock_error != FT_ERR_SUCCESS)
     {
-        this->set_operation_error(unlock_error);
+        ft_queue<ElementType>::set_last_operation_error(unlock_error);
         return (ElementType());
     }
-    this->set_operation_error(FT_ERR_SUCCESS);
+    ft_queue<ElementType>::set_last_operation_error(FT_ERR_SUCCESS);
     return (result);
 }
 
@@ -729,26 +553,26 @@ ElementType& ft_queue<ElementType>::front()
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        this->set_operation_error(lock_error);
+        ft_queue<ElementType>::set_last_operation_error(lock_error);
         return (error_element);
     }
     if (this->_front == ft_nullptr)
     {
         unlock_error = this->unlock_internal(lock_acquired);
         if (unlock_error != FT_ERR_SUCCESS)
-            this->set_operation_error(unlock_error);
+            ft_queue<ElementType>::set_last_operation_error(unlock_error);
         else
-            this->set_operation_error(FT_ERR_EMPTY);
+            ft_queue<ElementType>::set_last_operation_error(FT_ERR_EMPTY);
         return (error_element);
     }
     value = &this->_front->_data;
     unlock_error = this->unlock_internal(lock_acquired);
     if (unlock_error != FT_ERR_SUCCESS)
     {
-        this->set_operation_error(unlock_error);
+        ft_queue<ElementType>::set_last_operation_error(unlock_error);
         return (error_element);
     }
-    this->set_operation_error(FT_ERR_SUCCESS);
+    ft_queue<ElementType>::set_last_operation_error(FT_ERR_SUCCESS);
     return (*value);
 }
 
@@ -766,26 +590,26 @@ const ElementType& ft_queue<ElementType>::front() const
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        this->set_operation_error(lock_error);
+        ft_queue<ElementType>::set_last_operation_error(lock_error);
         return (error_element);
     }
     if (this->_front == ft_nullptr)
     {
         unlock_error = this->unlock_internal(lock_acquired);
         if (unlock_error != FT_ERR_SUCCESS)
-            this->set_operation_error(unlock_error);
+            ft_queue<ElementType>::set_last_operation_error(unlock_error);
         else
-            this->set_operation_error(FT_ERR_EMPTY);
+            ft_queue<ElementType>::set_last_operation_error(FT_ERR_EMPTY);
         return (error_element);
     }
     value = &this->_front->_data;
     unlock_error = this->unlock_internal(lock_acquired);
     if (unlock_error != FT_ERR_SUCCESS)
     {
-        this->set_operation_error(unlock_error);
+        ft_queue<ElementType>::set_last_operation_error(unlock_error);
         return (error_element);
     }
-    this->set_operation_error(FT_ERR_SUCCESS);
+    ft_queue<ElementType>::set_last_operation_error(FT_ERR_SUCCESS);
     return (*value);
 }
 
@@ -802,7 +626,7 @@ typename ft_queue<ElementType>::value_proxy ft_queue<ElementType>::front_proxy()
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        this->set_operation_error(lock_error);
+        ft_queue<ElementType>::set_last_operation_error(lock_error);
         return (typename ft_queue<ElementType>::value_proxy(this,
             ft_nullptr, lock_error, 0));
     }
@@ -811,11 +635,11 @@ typename ft_queue<ElementType>::value_proxy ft_queue<ElementType>::front_proxy()
         unlock_error = this->unlock_internal(lock_acquired);
         if (unlock_error != FT_ERR_SUCCESS)
         {
-            this->set_operation_error(unlock_error);
+            ft_queue<ElementType>::set_last_operation_error(unlock_error);
             return (typename ft_queue<ElementType>::value_proxy(this,
                 ft_nullptr, unlock_error, 0));
         }
-        this->set_operation_error(FT_ERR_EMPTY);
+        ft_queue<ElementType>::set_last_operation_error(FT_ERR_EMPTY);
         return (typename ft_queue<ElementType>::value_proxy(this,
             ft_nullptr, FT_ERR_EMPTY, 0));
     }
@@ -823,11 +647,11 @@ typename ft_queue<ElementType>::value_proxy ft_queue<ElementType>::front_proxy()
     unlock_error = this->unlock_internal(lock_acquired);
     if (unlock_error != FT_ERR_SUCCESS)
     {
-        this->set_operation_error(unlock_error);
+        ft_queue<ElementType>::set_last_operation_error(unlock_error);
         return (typename ft_queue<ElementType>::value_proxy(this,
             ft_nullptr, unlock_error, 0));
     }
-    this->set_operation_error(FT_ERR_SUCCESS);
+    ft_queue<ElementType>::set_last_operation_error(FT_ERR_SUCCESS);
     return (typename ft_queue<ElementType>::value_proxy(this,
         value, FT_ERR_SUCCESS, 1));
 }
@@ -845,17 +669,17 @@ size_t ft_queue<ElementType>::size() const
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        this->set_operation_error(lock_error);
+        ft_queue<ElementType>::set_last_operation_error(lock_error);
         return (0);
     }
     current_size = this->_size;
     unlock_error = this->unlock_internal(lock_acquired);
     if (unlock_error != FT_ERR_SUCCESS)
     {
-        this->set_operation_error(unlock_error);
+        ft_queue<ElementType>::set_last_operation_error(unlock_error);
         return (0);
     }
-    this->set_operation_error(FT_ERR_SUCCESS);
+    ft_queue<ElementType>::set_last_operation_error(FT_ERR_SUCCESS);
     return (current_size);
 }
 
@@ -872,17 +696,17 @@ bool ft_queue<ElementType>::empty() const
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        this->set_operation_error(lock_error);
+        ft_queue<ElementType>::set_last_operation_error(lock_error);
         return (true);
     }
     is_empty = (this->_size == 0);
     unlock_error = this->unlock_internal(lock_acquired);
     if (unlock_error != FT_ERR_SUCCESS)
     {
-        this->set_operation_error(unlock_error);
+        ft_queue<ElementType>::set_last_operation_error(unlock_error);
         return (true);
     }
-    this->set_operation_error(FT_ERR_SUCCESS);
+    ft_queue<ElementType>::set_last_operation_error(FT_ERR_SUCCESS);
     return (is_empty);
 }
 
@@ -898,17 +722,17 @@ void ft_queue<ElementType>::clear()
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        this->set_operation_error(lock_error);
+        ft_queue<ElementType>::set_last_operation_error(lock_error);
         return ;
     }
     this->destroy_all_unlocked();
     unlock_error = this->unlock_internal(lock_acquired);
     if (unlock_error != FT_ERR_SUCCESS)
     {
-        this->set_operation_error(unlock_error);
+        ft_queue<ElementType>::set_last_operation_error(unlock_error);
         return ;
     }
-    this->set_operation_error(FT_ERR_SUCCESS);
+    ft_queue<ElementType>::set_last_operation_error(FT_ERR_SUCCESS);
     return ;
 }
 

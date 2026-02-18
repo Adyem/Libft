@@ -50,18 +50,23 @@ static int api_request_capture_network_error()
 #endif
     if (system_error == 0)
         return (FT_ERR_SUCCESS);
-    return (ft_map_system_error(system_error));
+    return (cmp_map_system_error_to_ft(system_error));
 }
 
 static void api_request_assign_network_error(int mapped_error, int fallback)
 {
-    if (mapped_error != FT_ERR_SUCCESS)
-    {
-        ft_errno = mapped_error;
+    (void)mapped_error;
+    (void)fallback;
+    return ;
+}
+
+static void api_request_copy_ip(char destination[46], const char *source)
+{
+    destination[0] = '\0';
+    if (source == ft_nullptr)
         return ;
-    }
-    if (ft_errno == FT_ERR_SUCCESS)
-        ft_errno = fallback;
+    ft_strncpy(destination, source, 45);
+    destination[45] = '\0';
     return ;
 }
 
@@ -119,22 +124,7 @@ char *api_request_https(const char *ip, uint16_t port,
         metrics_request_bytes += ft_strlen(metrics_payload_string);
         cma_free(metrics_payload_string);
     }
-    ft_errno = FT_ERR_SUCCESS;
     int error_code = FT_ERR_SUCCESS;
-    struct api_request_errno_guard
-    {
-        int *code;
-        api_request_errno_guard(int *value)
-            : code(value)
-        {
-            return ;
-        }
-        ~api_request_errno_guard()
-        {
-            ft_errno = *code;
-            return ;
-        }
-    } guard(&error_code);
     char *metrics_result_body;
     int metrics_status_storage;
     int *metrics_status_pointer;
@@ -151,7 +141,7 @@ char *api_request_https(const char *ip, uint16_t port,
 
     SocketConfig config;
     config._type = SocketType::CLIENT;
-    config._ip = ip;
+    api_request_copy_ip(config._ip, ip);
     config._port = port;
     config._recv_timeout = timeout;
     config._send_timeout = timeout;
@@ -181,14 +171,14 @@ char *api_request_https(const char *ip, uint16_t port,
             api_connection_security_mode::TLS, security_identity_pointer);
     if (!pooled_connection)
     {
-        ft_socket new_socket(config);
+        int socket_setup_error;
 
-        if (networking_fetch_last_error())
+        socket_setup_error = connection_handle.socket.initialize(config);
+        if (socket_setup_error != FT_ERR_SUCCESS)
         {
-            error_code = networking_fetch_last_error();
+            error_code = socket_setup_error;
             return (ft_nullptr);
         }
-        connection_handle.socket = ft_move(new_socket);
         connection_handle.has_socket = true;
     }
     struct api_connection_return_guard
@@ -301,22 +291,7 @@ char *api_request_https_http2(const char *ip, uint16_t port,
         metrics_request_bytes += ft_strlen(metrics_payload_string);
         cma_free(metrics_payload_string);
     }
-    ft_errno = FT_ERR_SUCCESS;
     int error_code = FT_ERR_SUCCESS;
-    struct api_request_errno_guard
-    {
-        int *code;
-        api_request_errno_guard(int *value)
-            : code(value)
-        {
-            return ;
-        }
-        ~api_request_errno_guard()
-        {
-            ft_errno = *code;
-            return ;
-        }
-    } guard(&error_code);
     char *metrics_result_body;
     int metrics_status_storage;
     int *metrics_status_pointer;
@@ -333,7 +308,7 @@ char *api_request_https_http2(const char *ip, uint16_t port,
 
     SocketConfig config;
     config._type = SocketType::CLIENT;
-    config._ip = ip;
+    api_request_copy_ip(config._ip, ip);
     config._port = port;
     config._recv_timeout = timeout;
     config._send_timeout = timeout;
@@ -363,14 +338,14 @@ char *api_request_https_http2(const char *ip, uint16_t port,
             api_connection_security_mode::TLS, security_identity_pointer);
     if (!pooled_connection)
     {
-        ft_socket new_socket(config);
+        int socket_setup_error;
 
-        if (networking_fetch_last_error())
+        socket_setup_error = connection_handle.socket.initialize(config);
+        if (socket_setup_error != FT_ERR_SUCCESS)
         {
-            error_code = networking_fetch_last_error();
+            error_code = socket_setup_error;
             return (ft_nullptr);
         }
-        connection_handle.socket = ft_move(new_socket);
         connection_handle.has_socket = true;
     }
     struct api_connection_return_guard
@@ -453,10 +428,7 @@ bool api_request_stream_tls(const char *host, uint16_t port,
             log_method, log_path);
     }
     if (!streaming_handler || !host || !method || !path)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (false);
-    }
     const api_transport_hooks *hooks;
 
     hooks = api_get_transport_hooks();
@@ -467,24 +439,10 @@ bool api_request_stream_tls(const char *host, uint16_t port,
                 verify_peer, retry_policy, hooks->user_data));
     }
     int error_code = FT_ERR_SUCCESS;
-    struct api_request_errno_guard
-    {
-        int *code;
-        api_request_errno_guard(int *value)
-            : code(value)
-        {
-            return ;
-        }
-        ~api_request_errno_guard()
-        {
-            ft_errno = *code;
-            return ;
-        }
-    } guard(&error_code);
 
     SocketConfig config;
     config._type = SocketType::CLIENT;
-    config._ip = host;
+    api_request_copy_ip(config._ip, host);
     config._port = port;
     config._recv_timeout = timeout;
     config._send_timeout = timeout;
@@ -514,14 +472,14 @@ bool api_request_stream_tls(const char *host, uint16_t port,
             port, api_connection_security_mode::TLS, security_identity_pointer);
     if (!pooled_connection)
     {
-        ft_socket new_socket(config);
+        int socket_setup_error;
 
-        if (networking_fetch_last_error())
+        socket_setup_error = connection_handle.socket.initialize(config);
+        if (socket_setup_error != FT_ERR_SUCCESS)
         {
-            error_code = networking_fetch_last_error();
+            error_code = socket_setup_error;
             return (false);
         }
-        connection_handle.socket = ft_move(new_socket);
         connection_handle.has_socket = true;
     }
     struct api_connection_return_guard
@@ -603,10 +561,7 @@ bool api_request_stream_tls_http2(const char *host, uint16_t port,
             port, log_method, log_path);
     }
     if (!streaming_handler || !host || !method || !path)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (false);
-    }
     const api_transport_hooks *hooks;
 
     hooks = api_get_transport_hooks();
@@ -617,24 +572,10 @@ bool api_request_stream_tls_http2(const char *host, uint16_t port,
                 verify_peer, used_http2, retry_policy, hooks->user_data));
     }
     int error_code = FT_ERR_SUCCESS;
-    struct api_request_errno_guard
-    {
-        int *code;
-        api_request_errno_guard(int *value)
-            : code(value)
-        {
-            return ;
-        }
-        ~api_request_errno_guard()
-        {
-            ft_errno = *code;
-            return ;
-        }
-    } guard(&error_code);
 
     SocketConfig config;
     config._type = SocketType::CLIENT;
-    config._ip = host;
+    api_request_copy_ip(config._ip, host);
     config._port = port;
     config._recv_timeout = timeout;
     config._send_timeout = timeout;
@@ -664,14 +605,14 @@ bool api_request_stream_tls_http2(const char *host, uint16_t port,
             port, api_connection_security_mode::TLS, security_identity_pointer);
     if (!pooled_connection)
     {
-        ft_socket new_socket(config);
+        int socket_setup_error;
 
-        if (networking_fetch_last_error())
+        socket_setup_error = connection_handle.socket.initialize(config);
+        if (socket_setup_error != FT_ERR_SUCCESS)
         {
-            error_code = networking_fetch_last_error();
+            error_code = socket_setup_error;
             return (false);
         }
-        connection_handle.socket = ft_move(new_socket);
         connection_handle.has_socket = true;
     }
     struct api_connection_return_guard
@@ -752,20 +693,6 @@ char *api_request_string_tls(const char *host, uint16_t port,
             log_host, port, log_method, log_path);
     }
     int error_code = FT_ERR_SUCCESS;
-    struct api_request_errno_guard
-    {
-        int *code;
-        api_request_errno_guard(int *value)
-            : code(value)
-        {
-            return ;
-        }
-        ~api_request_errno_guard()
-        {
-            ft_errno = *code;
-            return ;
-        }
-    } guard(&error_code);
 
     if (!host || !method || !path)
     {
@@ -805,11 +732,9 @@ char *api_request_string_tls(const char *host, uint16_t port,
         metrics_request_bytes += ft_strlen(metrics_payload_string);
         cma_free(metrics_payload_string);
     }
-    ft_errno = FT_ERR_SUCCESS;
-
     SocketConfig config;
     config._type = SocketType::CLIENT;
-    config._ip = host;
+    api_request_copy_ip(config._ip, host);
     config._port = port;
     config._recv_timeout = timeout;
     config._send_timeout = timeout;
@@ -821,14 +746,14 @@ char *api_request_string_tls(const char *host, uint16_t port,
             port, api_connection_security_mode::TLS, ft_nullptr);
     if (!pooled_connection)
     {
-        ft_socket new_socket(config);
+        int socket_setup_error;
 
-        if (networking_fetch_last_error())
+        socket_setup_error = connection_handle.socket.initialize(config);
+        if (socket_setup_error != FT_ERR_SUCCESS)
         {
-            error_code = networking_fetch_last_error();
+            error_code = socket_setup_error;
             return (ft_nullptr);
         }
-        connection_handle.socket = ft_move(new_socket);
         connection_handle.has_socket = true;
     }
     struct api_connection_return_guard
@@ -910,20 +835,6 @@ char *api_request_string_tls_http2(const char *host, uint16_t port,
             log_host, port, log_method, log_path);
     }
     int error_code = FT_ERR_SUCCESS;
-    struct api_request_errno_guard
-    {
-        int *code;
-        api_request_errno_guard(int *value)
-            : code(value)
-        {
-            return ;
-        }
-        ~api_request_errno_guard()
-        {
-            ft_errno = *code;
-            return ;
-        }
-    } guard(&error_code);
 
     if (!host || !method || !path)
     {
@@ -964,11 +875,9 @@ char *api_request_string_tls_http2(const char *host, uint16_t port,
         metrics_request_bytes += ft_strlen(metrics_payload_string);
         cma_free(metrics_payload_string);
     }
-    ft_errno = FT_ERR_SUCCESS;
-
     SocketConfig config;
     config._type = SocketType::CLIENT;
-    config._ip = host;
+    api_request_copy_ip(config._ip, host);
     config._port = port;
     config._recv_timeout = timeout;
     config._send_timeout = timeout;
@@ -980,14 +889,14 @@ char *api_request_string_tls_http2(const char *host, uint16_t port,
             api_connection_security_mode::TLS, host);
     if (!pooled_connection)
     {
-        ft_socket new_socket(config);
+        int socket_setup_error;
 
-        if (networking_fetch_last_error())
+        socket_setup_error = connection_handle.socket.initialize(config);
+        if (socket_setup_error != FT_ERR_SUCCESS)
         {
-            error_code = networking_fetch_last_error();
+            error_code = socket_setup_error;
             return (ft_nullptr);
         }
-        connection_handle.socket = ft_move(new_socket);
         connection_handle.has_socket = true;
     }
     struct api_connection_return_guard
@@ -1066,15 +975,9 @@ json_group *api_request_json_tls(const char *host, uint16_t port,
     char *body = api_request_string_tls(host, port, method, path, payload,
                                        headers, status, timeout, retry_policy);
     if (!body)
-    {
-        if (ft_errno == FT_ERR_SUCCESS)
-            ft_errno = FT_ERR_IO;
         return (ft_nullptr);
-    }
     json_group *result = json_read_from_string(body);
     cma_free(body);
-    if (result)
-        ft_errno = FT_ERR_SUCCESS;
     return (result);
 }
 
@@ -1092,15 +995,9 @@ json_group *api_request_json_tls_http2(const char *host, uint16_t port,
     if (used_http2)
         *used_http2 = http2_used_local;
     if (!body)
-    {
-        if (ft_errno == FT_ERR_SUCCESS)
-            ft_errno = FT_ERR_IO;
         return (ft_nullptr);
-    }
     json_group *result = json_read_from_string(body);
     cma_free(body);
-    if (result)
-        ft_errno = FT_ERR_SUCCESS;
     return (result);
 }
 
@@ -1135,15 +1032,9 @@ json_group *api_request_json_tls_bearer(const char *host, uint16_t port,
                                                payload, headers, status, timeout,
                                                retry_policy);
     if (!body)
-    {
-        if (ft_errno == FT_ERR_SUCCESS)
-            ft_errno = FT_ERR_IO;
         return (ft_nullptr);
-    }
     json_group *result = json_read_from_string(body);
     cma_free(body);
-    if (result)
-        ft_errno = FT_ERR_SUCCESS;
     return (result);
 }
 
@@ -1178,15 +1069,9 @@ json_group *api_request_json_tls_basic(const char *host, uint16_t port,
                                               credentials, payload, headers,
                                               status, timeout, retry_policy);
     if (!body)
-    {
-        if (ft_errno == FT_ERR_SUCCESS)
-            ft_errno = FT_ERR_IO;
         return (ft_nullptr);
-    }
     json_group *result = json_read_from_string(body);
     cma_free(body);
-    if (result)
-        ft_errno = FT_ERR_SUCCESS;
     return (result);
 }
 
@@ -1226,10 +1111,7 @@ static void api_tls_async_worker(api_tls_async_request *data)
     int async_resolver_status;
 
     if (!data || !data->host || !data->method || !data->path)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
         goto cleanup;
-    }
     if (!OPENSSL_init_ssl(0, ft_nullptr))
     {
         api_request_set_ssl_error(ft_nullptr, 0);
@@ -1262,11 +1144,7 @@ static void api_tls_async_worker(api_tls_async_request *data)
             address_info = address_info->ai_next;
     }
     if (socket_fd < 0)
-    {
-        if (ft_errno == FT_ERR_SUCCESS)
-            ft_errno = FT_ERR_SOCKET_CONNECT_FAILED;
         goto cleanup;
-    }
 
 #ifdef _WIN32
     u_long mode = 1;
@@ -1282,10 +1160,10 @@ static void api_tls_async_worker(api_tls_async_request *data)
 
         connect_error = api_request_capture_network_error();
 #ifdef _WIN32
-        if (connect_error != ft_map_system_error(WSAEINPROGRESS)
-            && connect_error != ft_map_system_error(WSAEWOULDBLOCK))
+        if (connect_error != cmp_map_system_error_to_ft(WSAEINPROGRESS)
+            && connect_error != cmp_map_system_error_to_ft(WSAEWOULDBLOCK))
 #else
-        if (connect_error != ft_map_system_error(EINPROGRESS))
+        if (connect_error != cmp_map_system_error_to_ft(EINPROGRESS))
 #endif
         {
             api_request_assign_network_error(connect_error,
@@ -1382,17 +1260,12 @@ static void api_tls_async_worker(api_tls_async_request *data)
     {
         char *temporary_string = json_write_to_string(data->payload);
         if (!temporary_string)
-        {
-            if (ft_errno == FT_ERR_SUCCESS)
-                ft_errno = FT_ERR_NO_MEMORY;
             goto cleanup;
-        }
         body_string = temporary_string;
         cma_free(temporary_string);
         request += "\r\nContent-Type: application/json";
         if (!api_append_content_length_header(request, body_string.size()))
         {
-            ft_errno = FT_ERR_IO;
             goto cleanup;
         }
     }
@@ -1506,16 +1379,12 @@ static void api_tls_async_worker(api_tls_async_request *data)
     {
         const char *space = ft_strchr(response.c_str(), ' ');
         if (space)
-            status = ft_atoi(space + 1, ft_nullptr);
+            status = ft_atoi(space + 1);
         const char *body = ft_strstr(response.c_str(), "\r\n\r\n");
         if (body)
         {
             body += 4;
-            result_body = cma_strdup(body);
-            if (!result_body && ft_errno == FT_ERR_SUCCESS)
-                ft_errno = FT_ERR_NO_MEMORY;
-            if (result_body)
-                ft_errno = FT_ERR_SUCCESS;
+            result_body = adv_strdup(body);
         }
     }
 
@@ -1550,10 +1419,7 @@ bool    api_request_string_tls_async(const char *host, uint16_t port,
         void *user_data, json_group *payload, const char *headers, int timeout)
 {
     if (!host || !method || !path || !callback)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (false);
-    }
     const api_transport_hooks *hooks;
 
     hooks = api_get_transport_hooks();
@@ -1565,16 +1431,13 @@ bool    api_request_string_tls_async(const char *host, uint16_t port,
     }
     api_tls_async_request *data = static_cast<api_tls_async_request*>(cma_malloc(sizeof(api_tls_async_request)));
     if (!data)
-    {
-        ft_errno = FT_ERR_NO_MEMORY;
         return (false);
-    }
     ft_bzero(data, sizeof(api_tls_async_request));
-    data->host = cma_strdup(host);
-    data->method = cma_strdup(method);
-    data->path = cma_strdup(path);
+    data->host = adv_strdup(host);
+    data->method = adv_strdup(method);
+    data->path = adv_strdup(path);
     if (headers)
-        data->headers = cma_strdup(headers);
+        data->headers = adv_strdup(headers);
     data->port = port;
     data->payload = payload;
     data->timeout = timeout;
@@ -1591,12 +1454,10 @@ bool    api_request_string_tls_async(const char *host, uint16_t port,
         if (data->headers)
             cma_free(data->headers);
         cma_free(data);
-        ft_errno = FT_ERR_NO_MEMORY;
         return (false);
     }
     ft_thread thread_worker(api_tls_async_worker, data);
     thread_worker.detach();
-    ft_errno = FT_ERR_SUCCESS;
     return (true);
 }
 
@@ -1632,27 +1493,18 @@ bool    api_request_json_tls_async(const char *host, uint16_t port,
     api_json_async_data *data;
 
     if (!host || !method || !path || !callback)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (false);
-    }
     data = static_cast<api_json_async_data*>(cma_malloc(sizeof(api_json_async_data)));
     if (!data)
-    {
-        ft_errno = FT_ERR_NO_MEMORY;
         return (false);
-    }
     data->callback = callback;
     data->user_data = user_data;
     if (!api_request_string_tls_async(host, port, method, path, api_json_async_wrapper,
             data, payload, headers, timeout))
     {
         cma_free(data);
-        if (ft_errno == FT_ERR_SUCCESS)
-            ft_errno = FT_ERR_NO_MEMORY;
         return (false);
     }
-    ft_errno = FT_ERR_SUCCESS;
     return (true);
 }
 

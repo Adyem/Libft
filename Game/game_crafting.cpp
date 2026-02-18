@@ -1,799 +1,212 @@
 #include "game_crafting.hpp"
-#include <utility>
-#include "../Template/move.hpp"
-#include "../PThread/pthread.hpp"
-
-static void game_crafting_sleep_backoff()
-{
-    pt_thread_sleep(1);
-    return ;
-}
-
-int ft_crafting_ingredient::lock_pair(const ft_crafting_ingredient &first,
-        const ft_crafting_ingredient &second,
-        ft_unique_lock<pt_mutex> &first_guard,
-        ft_unique_lock<pt_mutex> &second_guard)
-{
-    const ft_crafting_ingredient *ordered_first;
-    const ft_crafting_ingredient *ordered_second;
-    bool swapped;
-
-    if (&first == &second)
-    {
-        ft_unique_lock<pt_mutex> single_guard(first._mutex);
-
-        if (single_guard.get_error() != FT_ERR_SUCCESS)
-        {
-            return (single_guard.get_error());
-        }
-        first_guard = ft_move(single_guard);
-        second_guard = ft_unique_lock<pt_mutex>();
-        return (FT_ERR_SUCCESS);
-    }
-    ordered_first = &first;
-    ordered_second = &second;
-    swapped = false;
-    if (ordered_first > ordered_second)
-    {
-        const ft_crafting_ingredient *temporary;
-
-        temporary = ordered_first;
-        ordered_first = ordered_second;
-        ordered_second = temporary;
-        swapped = true;
-    }
-    while (true)
-    {
-        ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
-
-        if (lower_guard.get_error() != FT_ERR_SUCCESS)
-        {
-            return (lower_guard.get_error());
-        }
-        ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ERR_SUCCESS)
-        {
-            if (!swapped)
-            {
-                first_guard = ft_move(lower_guard);
-                second_guard = ft_move(upper_guard);
-            }
-            else
-            {
-                first_guard = ft_move(upper_guard);
-                second_guard = ft_move(lower_guard);
-            }
-            return (FT_ERR_SUCCESS);
-        }
-        if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
-        {
-            return (upper_guard.get_error());
-        }
-        if (lower_guard.owns_lock())
-            lower_guard.unlock();
-        game_crafting_sleep_backoff();
-    }
-}
 
 ft_crafting_ingredient::ft_crafting_ingredient() noexcept
-    : _item_id(0), _count(0), _rarity(-1), _error_code(FT_ERR_SUCCESS), _mutex()
+    : _item_id(0), _count(0), _rarity(-1), _mutex()
 {
-    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 ft_crafting_ingredient::ft_crafting_ingredient(int item_id, int count, int rarity) noexcept
-    : _item_id(item_id), _count(count), _rarity(rarity), _error_code(FT_ERR_SUCCESS), _mutex()
+    : _item_id(item_id), _count(count), _rarity(rarity), _mutex()
 {
-    this->set_error(FT_ERR_SUCCESS);
+    return ;
+}
+
+ft_crafting_ingredient::~ft_crafting_ingredient() noexcept
+{
     return ;
 }
 
 ft_crafting_ingredient::ft_crafting_ingredient(const ft_crafting_ingredient &other) noexcept
-    : _item_id(0), _count(0), _rarity(-1), _error_code(FT_ERR_SUCCESS), _mutex()
+    : _item_id(other._item_id), _count(other._count), _rarity(other._rarity), _mutex()
 {
-    ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(other_guard.get_error());
-        return ;
-    }
-    this->_item_id = other._item_id;
-    this->_count = other._count;
-    this->_rarity = other._rarity;
-    this->_error_code = other._error_code;
-    this->set_error(other._error_code);
     return ;
 }
 
-ft_crafting_ingredient &ft_crafting_ingredient::operator=(const ft_crafting_ingredient &other) noexcept
+ft_crafting_ingredient &ft_crafting_ingredient::operator=(
+    const ft_crafting_ingredient &other) noexcept
 {
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
-    int lock_error;
-
     if (this == &other)
         return (*this);
-    lock_error = ft_crafting_ingredient::lock_pair(*this, other,
-            this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        this->set_error(lock_error);
-        return (*this);
-    }
     this->_item_id = other._item_id;
     this->_count = other._count;
     this->_rarity = other._rarity;
-    this->_error_code = other._error_code;
-    this->set_error(other._error_code);
     return (*this);
 }
 
 ft_crafting_ingredient::ft_crafting_ingredient(ft_crafting_ingredient &&other) noexcept
-    : _item_id(0), _count(0), _rarity(-1), _error_code(FT_ERR_SUCCESS), _mutex()
+    : _item_id(other._item_id), _count(other._count), _rarity(other._rarity), _mutex()
 {
-    ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(other_guard.get_error());
-        return ;
-    }
-    this->_item_id = other._item_id;
-    this->_count = other._count;
-    this->_rarity = other._rarity;
-    this->_error_code = other._error_code;
-    other._item_id = 0;
-    other._count = 0;
-    other._rarity = -1;
-    other._error_code = FT_ERR_SUCCESS;
-    this->set_error(this->_error_code);
-    other.set_error(FT_ERR_SUCCESS);
     return ;
 }
 
-ft_crafting_ingredient &ft_crafting_ingredient::operator=(ft_crafting_ingredient &&other) noexcept
+ft_crafting_ingredient &ft_crafting_ingredient::operator=(
+    ft_crafting_ingredient &&other) noexcept
 {
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
-    int lock_error;
-
     if (this == &other)
         return (*this);
-    lock_error = ft_crafting_ingredient::lock_pair(*this, other,
-            this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        this->set_error(lock_error);
-        return (*this);
-    }
     this->_item_id = other._item_id;
     this->_count = other._count;
     this->_rarity = other._rarity;
-    this->_error_code = other._error_code;
-    other._item_id = 0;
-    other._count = 0;
-    other._rarity = -1;
-    other._error_code = FT_ERR_SUCCESS;
-    this->set_error(this->_error_code);
-    other.set_error(FT_ERR_SUCCESS);
     return (*this);
 }
 
 int ft_crafting_ingredient::get_item_id() const noexcept
 {
-    int identifier;
-
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_crafting_ingredient *>(this)->set_error(guard.get_error());
-        return (0);
-    }
-    identifier = this->_item_id;
-    const_cast<ft_crafting_ingredient *>(this)->set_error(FT_ERR_SUCCESS);
-    return (identifier);
+    return (this->_item_id);
 }
 
 void ft_crafting_ingredient::set_item_id(int item_id) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return ;
-    }
     this->_item_id = item_id;
-    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 int ft_crafting_ingredient::get_count() const noexcept
 {
-    int count_value;
-
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_crafting_ingredient *>(this)->set_error(guard.get_error());
-        return (0);
-    }
-    count_value = this->_count;
-    const_cast<ft_crafting_ingredient *>(this)->set_error(FT_ERR_SUCCESS);
-    return (count_value);
+    return (this->_count);
 }
 
 void ft_crafting_ingredient::set_count(int count) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return ;
-    }
     if (count < 0)
-    {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
-    }
     this->_count = count;
-    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 int ft_crafting_ingredient::get_rarity() const noexcept
 {
-    int rarity_value;
-
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_crafting_ingredient *>(this)->set_error(guard.get_error());
-        return (-1);
-    }
-    rarity_value = this->_rarity;
-    const_cast<ft_crafting_ingredient *>(this)->set_error(FT_ERR_SUCCESS);
-    return (rarity_value);
+    return (this->_rarity);
 }
 
 void ft_crafting_ingredient::set_rarity(int rarity) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return ;
-    }
     if (rarity < -1)
-    {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
-    }
     this->_rarity = rarity;
-    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 int ft_crafting_ingredient::get_error() const noexcept
 {
-    int error_code;
-
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_crafting_ingredient *>(this)->set_error(guard.get_error());
-        return (guard.get_error());
-    }
-    error_code = this->_error_code;
-    const_cast<ft_crafting_ingredient *>(this)->set_error(error_code);
-    return (error_code);
+    return (FT_ERR_SUCCESS);
 }
 
 const char *ft_crafting_ingredient::get_error_str() const noexcept
 {
-    int error_code;
-
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_crafting_ingredient *>(this)->set_error(guard.get_error());
-        return (ft_strerror(guard.get_error()));
-    }
-    error_code = this->_error_code;
-    const_cast<ft_crafting_ingredient *>(this)->set_error(error_code);
-    return (ft_strerror(error_code));
-}
-
-void ft_crafting_ingredient::set_error(int error_code) const noexcept
-{
-    ft_errno = error_code;
-    this->_error_code = error_code;
-    return ;
-}
-
-int ft_crafting::lock_pair(const ft_crafting &first, const ft_crafting &second,
-        ft_unique_lock<pt_mutex> &first_guard,
-        ft_unique_lock<pt_mutex> &second_guard)
-{
-    const ft_crafting *ordered_first;
-    const ft_crafting *ordered_second;
-    bool swapped;
-
-    if (&first == &second)
-    {
-        ft_unique_lock<pt_mutex> single_guard(first._mutex);
-
-        if (single_guard.get_error() != FT_ERR_SUCCESS)
-        {
-            return (single_guard.get_error());
-        }
-        first_guard = ft_move(single_guard);
-        second_guard = ft_unique_lock<pt_mutex>();
-        return (FT_ERR_SUCCESS);
-    }
-    ordered_first = &first;
-    ordered_second = &second;
-    swapped = false;
-    if (ordered_first > ordered_second)
-    {
-        const ft_crafting *temporary;
-
-        temporary = ordered_first;
-        ordered_first = ordered_second;
-        ordered_second = temporary;
-        swapped = true;
-    }
-    while (true)
-    {
-        ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
-
-        if (lower_guard.get_error() != FT_ERR_SUCCESS)
-        {
-            return (lower_guard.get_error());
-        }
-        ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ERR_SUCCESS)
-        {
-            if (!swapped)
-            {
-                first_guard = ft_move(lower_guard);
-                second_guard = ft_move(upper_guard);
-            }
-            else
-            {
-                first_guard = ft_move(upper_guard);
-                second_guard = ft_move(lower_guard);
-            }
-            return (FT_ERR_SUCCESS);
-        }
-        if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
-        {
-            return (upper_guard.get_error());
-        }
-        if (lower_guard.owns_lock())
-            lower_guard.unlock();
-        game_crafting_sleep_backoff();
-    }
+    return (ft_strerror(FT_ERR_SUCCESS));
 }
 
 ft_crafting::ft_crafting() noexcept
-    : _recipes(), _error_code(FT_ERR_SUCCESS), _mutex()
+    : _recipes(), _mutex()
 {
-    this->set_error(FT_ERR_SUCCESS);
     return ;
-}
-
-ft_crafting::ft_crafting(const ft_crafting &other) noexcept
-    : _recipes(), _error_code(FT_ERR_SUCCESS), _mutex()
-{
-    const Pair<int, ft_vector<ft_crafting_ingredient>> *entry;
-    const Pair<int, ft_vector<ft_crafting_ingredient>> *end;
-
-    ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(other_guard.get_error());
-        return ;
-    }
-    entry = other._recipes.end() - other._recipes.size();
-    end = other._recipes.end();
-    while (entry != end)
-    {
-        ft_vector<ft_crafting_ingredient> ingredients;
-        size_t ingredient_index;
-
-        ingredient_index = 0;
-        while (ingredient_index < entry->value.size())
-        {
-            ingredients.push_back(entry->value[ingredient_index]);
-            if (ingredients.get_error() != FT_ERR_SUCCESS)
-            {
-                this->set_error(ingredients.get_error());
-                return ;
-            }
-            ++ingredient_index;
-        }
-        this->_recipes.insert(entry->key, ft_move(ingredients));
-        if (this->_recipes.get_error() != FT_ERR_SUCCESS)
-        {
-            this->set_error(this->_recipes.get_error());
-            return ;
-        }
-        ++entry;
-    }
-    this->_error_code = other._error_code;
-    this->set_error(other._error_code);
-    return ;
-}
-
-ft_crafting &ft_crafting::operator=(const ft_crafting &other) noexcept
-{
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
-    int lock_error;
-
-    if (this == &other)
-        return (*this);
-    lock_error = ft_crafting::lock_pair(*this, other,
-            this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        this->set_error(lock_error);
-        return (*this);
-    }
-    this->_recipes.clear();
-    const Pair<int, ft_vector<ft_crafting_ingredient>> *entry = other._recipes.end()
-        - other._recipes.size();
-    const Pair<int, ft_vector<ft_crafting_ingredient>> *end = other._recipes.end();
-    while (entry != end)
-    {
-        ft_vector<ft_crafting_ingredient> ingredients;
-        size_t ingredient_index;
-
-        ingredient_index = 0;
-        while (ingredient_index < entry->value.size())
-        {
-            ingredients.push_back(entry->value[ingredient_index]);
-            if (ingredients.get_error() != FT_ERR_SUCCESS)
-            {
-                this->set_error(ingredients.get_error());
-                return (*this);
-            }
-            ++ingredient_index;
-        }
-        this->_recipes.insert(entry->key, ft_move(ingredients));
-        if (this->_recipes.get_error() != FT_ERR_SUCCESS)
-        {
-            this->set_error(this->_recipes.get_error());
-            return (*this);
-        }
-        ++entry;
-    }
-    this->_error_code = other._error_code;
-    this->set_error(other._error_code);
-    return (*this);
-}
-
-ft_crafting::ft_crafting(ft_crafting &&other) noexcept
-    : _recipes(), _error_code(FT_ERR_SUCCESS), _mutex()
-{
-
-    ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(other_guard.get_error());
-        return ;
-    }
-    this->_recipes = ft_move(other._recipes);
-    this->_error_code = other._error_code;
-    if (this->_recipes.get_error() != FT_ERR_SUCCESS)
-        this->set_error(this->_recipes.get_error());
-    else
-        this->set_error(this->_error_code);
-    other._recipes.clear();
-    other._error_code = FT_ERR_SUCCESS;
-    other.set_error(FT_ERR_SUCCESS);
-    return ;
-}
-
-ft_crafting &ft_crafting::operator=(ft_crafting &&other) noexcept
-{
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
-    int lock_error;
-
-    if (this == &other)
-        return (*this);
-    lock_error = ft_crafting::lock_pair(*this, other,
-            this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        this->set_error(lock_error);
-        return (*this);
-    }
-    this->_recipes = ft_move(other._recipes);
-    this->_error_code = other._error_code;
-    if (this->_recipes.get_error() != FT_ERR_SUCCESS)
-        this->set_error(this->_recipes.get_error());
-    else
-        this->set_error(this->_error_code);
-    other._recipes.clear();
-    other._error_code = FT_ERR_SUCCESS;
-    other.set_error(FT_ERR_SUCCESS);
-    return (*this);
 }
 
 ft_map<int, ft_vector<ft_crafting_ingredient>> &ft_crafting::get_recipes() noexcept
 {
-
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return (this->_recipes);
-    }
-    this->set_error(FT_ERR_SUCCESS);
     return (this->_recipes);
 }
 
 const ft_map<int, ft_vector<ft_crafting_ingredient>> &ft_crafting::get_recipes() const noexcept
 {
-
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_crafting *>(this)->set_error(guard.get_error());
-        return (this->_recipes);
-    }
-    const_cast<ft_crafting *>(this)->set_error(FT_ERR_SUCCESS);
     return (this->_recipes);
 }
 
 int ft_crafting::get_error() const noexcept
 {
-    int error_code;
-
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_crafting *>(this)->set_error(guard.get_error());
-        return (guard.get_error());
-    }
-    error_code = this->_error_code;
-    const_cast<ft_crafting *>(this)->set_error(error_code);
-    return (error_code);
+    return (FT_ERR_SUCCESS);
 }
 
 const char *ft_crafting::get_error_str() const noexcept
 {
-    int error_code;
-
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_crafting *>(this)->set_error(guard.get_error());
-        return (ft_strerror(guard.get_error()));
-    }
-    error_code = this->_error_code;
-    const_cast<ft_crafting *>(this)->set_error(error_code);
-    return (ft_strerror(error_code));
-}
-
-void ft_crafting::set_error(int error_code) const noexcept
-{
-    ft_errno = error_code;
-    this->_error_code = error_code;
-    return ;
+    return (ft_strerror(FT_ERR_SUCCESS));
 }
 
 int ft_crafting::register_recipe(int recipe_id,
-        ft_vector<ft_crafting_ingredient> &&ingredients) noexcept
+    ft_vector<ft_crafting_ingredient> &&ingredients) noexcept
 {
+    ft_vector<ft_crafting_ingredient> copied_ingredients;
+    size_t ingredient_index;
+    size_t ingredient_count;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    ingredient_index = 0;
+    ingredient_count = ingredients.size();
+    while (ingredient_index < ingredient_count)
     {
-        this->set_error(guard.get_error());
-        return (guard.get_error());
+        copied_ingredients.push_back(ingredients[ingredient_index]);
+        if (ft_vector<ft_crafting_ingredient>::last_operation_error() != FT_ERR_SUCCESS)
+            return (ft_vector<ft_crafting_ingredient>::last_operation_error());
+        ingredient_index++;
     }
-    this->set_error(FT_ERR_SUCCESS);
-    this->_recipes.insert(recipe_id, ft_move(ingredients));
-    if (this->_recipes.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(this->_recipes.get_error());
-        return (this->_error_code);
-    }
+    this->_recipes.insert(recipe_id, copied_ingredients);
     return (FT_ERR_SUCCESS);
 }
 
 int ft_crafting::craft_item(ft_inventory &inventory, int recipe_id,
-        const ft_sharedptr<ft_item> &result) noexcept
+    const ft_sharedptr<ft_item> &result) noexcept
 {
     Pair<int, ft_vector<ft_crafting_ingredient>> *recipe_entry;
     ft_vector<ft_crafting_ingredient> *ingredients;
-    size_t index;
+    size_t ingredient_index;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return (guard.get_error());
-    }
-    this->set_error(FT_ERR_SUCCESS);
     if (!result)
-    {
-        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
-        return (FT_ERR_GAME_GENERAL_ERROR);
-    }
-    if (result.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(result.get_error());
-        return (this->_error_code);
-    }
-    if (result->get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(result->get_error());
-        return (this->_error_code);
-    }
+        return (FT_ERR_INVALID_ARGUMENT);
     recipe_entry = this->_recipes.find(recipe_id);
     if (recipe_entry == this->_recipes.end())
-    {
-        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
-        return (FT_ERR_GAME_GENERAL_ERROR);
-    }
+        return (FT_ERR_NOT_FOUND);
     ingredients = &recipe_entry->value;
-    index = 0;
-    while (index < ingredients->size())
+    ingredient_index = 0;
+    while (ingredient_index < ingredients->size())
     {
-        ft_crafting_ingredient &ingredient = (*ingredients)[index];
-        int ingredient_item_id;
-        int ingredient_count;
-        int ingredient_rarity;
+        ft_crafting_ingredient &ingredient = (*ingredients)[ingredient_index];
         int have_count;
-        const ft_map<int, ft_sharedptr<ft_item> > &items = inventory.get_items();
-        const Pair<int, ft_sharedptr<ft_item> > *item_ptr;
-        const Pair<int, ft_sharedptr<ft_item> > *item_end;
-        int inventory_error;
 
-        ingredient_item_id = ingredient.get_item_id();
-        if (ingredient.get_error() != FT_ERR_SUCCESS)
-        {
-            this->set_error(ingredient.get_error());
-            return (this->_error_code);
-        }
-        ingredient_count = ingredient.get_count();
-        if (ingredient.get_error() != FT_ERR_SUCCESS)
-        {
-            this->set_error(ingredient.get_error());
-            return (this->_error_code);
-        }
-        ingredient_rarity = ingredient.get_rarity();
-        if (ingredient.get_error() != FT_ERR_SUCCESS)
-        {
-            this->set_error(ingredient.get_error());
-            return (this->_error_code);
-        }
-        have_count = 0;
-        inventory_error = inventory.get_error();
-        if (inventory_error != FT_ERR_SUCCESS)
-        {
-            this->set_error(inventory_error);
-            return (this->_error_code);
-        }
-        item_ptr = items.end() - items.size();
-        item_end = items.end();
-        while (item_ptr != item_end)
-        {
-            if (item_ptr->value)
-            {
-                if (item_ptr->value.get_error() != FT_ERR_SUCCESS)
-                {
-                    this->set_error(item_ptr->value.get_error());
-                    return (this->_error_code);
-                }
-                if (item_ptr->value->get_error() != FT_ERR_SUCCESS)
-                {
-                    this->set_error(item_ptr->value->get_error());
-                    return (this->_error_code);
-                }
-                if (item_ptr->value->get_item_id() == ingredient_item_id)
-                {
-                    if (ingredient_rarity == -1
-                            || item_ptr->value->get_rarity() == ingredient_rarity)
-                        have_count += item_ptr->value->get_stack_size();
-                }
-            }
-            ++item_ptr;
-        }
-        if (have_count < ingredient_count)
-        {
-            this->set_error(FT_ERR_GAME_GENERAL_ERROR);
+        if (ingredient.get_rarity() == -1)
+            have_count = inventory.count_item(ingredient.get_item_id());
+        else
+            have_count = inventory.count_rarity(ingredient.get_rarity());
+        if (have_count < ingredient.get_count())
             return (FT_ERR_GAME_GENERAL_ERROR);
-        }
-        ++index;
+        ingredient_index++;
     }
-    index = 0;
-    while (index < ingredients->size())
+    ingredient_index = 0;
+    while (ingredient_index < ingredients->size())
     {
-        ft_crafting_ingredient &ingredient = (*ingredients)[index];
-        int ingredient_item_id;
-        int ingredient_count;
-        int ingredient_rarity;
-        int remaining;
+        ft_crafting_ingredient &ingredient = (*ingredients)[ingredient_index];
         ft_map<int, ft_sharedptr<ft_item> > &items = inventory.get_items();
         Pair<int, ft_sharedptr<ft_item> > *item_ptr;
         Pair<int, ft_sharedptr<ft_item> > *item_end;
-        int inventory_error;
+        int remaining;
 
-        ingredient_item_id = ingredient.get_item_id();
-        if (ingredient.get_error() != FT_ERR_SUCCESS)
-        {
-            this->set_error(ingredient.get_error());
-            return (this->_error_code);
-        }
-        ingredient_count = ingredient.get_count();
-        if (ingredient.get_error() != FT_ERR_SUCCESS)
-        {
-            this->set_error(ingredient.get_error());
-            return (this->_error_code);
-        }
-        ingredient_rarity = ingredient.get_rarity();
-        if (ingredient.get_error() != FT_ERR_SUCCESS)
-        {
-            this->set_error(ingredient.get_error());
-            return (this->_error_code);
-        }
-        remaining = ingredient_count;
-        inventory_error = inventory.get_error();
-        if (inventory_error != FT_ERR_SUCCESS)
-        {
-            this->set_error(inventory_error);
-            return (this->_error_code);
-        }
+        remaining = ingredient.get_count();
         item_ptr = items.end() - items.size();
         item_end = items.end();
         while (item_ptr != item_end && remaining > 0)
         {
             if (item_ptr->value)
             {
-                if (item_ptr->value.get_error() != FT_ERR_SUCCESS)
+                if (item_ptr->value->get_item_id() == ingredient.get_item_id())
                 {
-                    this->set_error(item_ptr->value.get_error());
-                    return (this->_error_code);
-                }
-                if (item_ptr->value->get_error() != FT_ERR_SUCCESS)
-                {
-                    this->set_error(item_ptr->value->get_error());
-                    return (this->_error_code);
-                }
-                if (item_ptr->value->get_item_id() == ingredient_item_id)
-                {
-                    if (ingredient_rarity == -1
-                            || item_ptr->value->get_rarity() == ingredient_rarity)
+                    if (ingredient.get_rarity() == -1
+                        || item_ptr->value->get_rarity() == ingredient.get_rarity())
                     {
-                        int remove;
+                        int remove_count;
 
-                        remove = item_ptr->value->get_stack_size();
-                        if (remove > remaining)
-                            remove = remaining;
-                        item_ptr->value->sub_from_stack(remove);
-                        remaining -= remove;
+                        remove_count = item_ptr->value->get_stack_size();
+                        if (remove_count > remaining)
+                            remove_count = remaining;
+                        item_ptr->value->sub_from_stack(remove_count);
+                        remaining -= remove_count;
                         if (item_ptr->value->get_stack_size() == 0)
                             items.remove(item_ptr->key);
                     }
                 }
             }
-            ++item_ptr;
+            item_ptr++;
         }
-        ++index;
+        ingredient_index++;
     }
-    int add_error;
-
-    add_error = inventory.add_item(result);
-    if (add_error != FT_ERR_SUCCESS)
-    {
-        this->set_error(add_error);
-        return (this->_error_code);
-    }
-    this->set_error(FT_ERR_SUCCESS);
-    return (FT_ERR_SUCCESS);
+    return (inventory.add_item(result));
 }

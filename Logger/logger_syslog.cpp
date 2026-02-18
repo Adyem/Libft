@@ -6,7 +6,6 @@ int ft_log_set_syslog(const char *identifier)
 {
     if (cmp_syslog_open(identifier) != 0)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (ft_log_add_sink(ft_syslog_sink, ft_nullptr) != 0)
@@ -14,13 +13,11 @@ int ft_log_set_syslog(const char *identifier)
         int error_code;
 
         cmp_syslog_close();
-        error_code = ft_global_error_stack_peek_last_error();
+        error_code = FT_ERR_SUCCESS;
         if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_INVALID_ARGUMENT;
-        ft_global_error_stack_push(error_code);
         return (-1);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 

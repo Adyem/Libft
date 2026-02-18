@@ -12,30 +12,25 @@
 FT_TEST(test_ft_optional_reports_empty_state, "ft_optional reports empty state when no value is stored")
 {
     ft_optional<int> optional_value;
-    ft_global_error_stack_pop_all();
 
     FT_ASSERT_EQ(false, optional_value.has_value());
     int &fallback_value = optional_value.value();
 
     FT_ASSERT_EQ(0, fallback_value);
-    FT_ASSERT_EQ(FT_ERR_EMPTY, ft_global_error_stack_peek_last_error());
-    ft_global_error_stack_pop_last();
+    FT_ASSERT_EQ(FT_ERR_EMPTY, ft_optional<int>::last_operation_error());
     return (1);
 }
 
 FT_TEST(test_ft_optional_holds_value_and_resets, "ft_optional stores values and clears them on reset")
 {
     ft_optional<int> optional_value(42);
-    ft_global_error_stack_pop_all();
 
     FT_ASSERT(optional_value.has_value());
     FT_ASSERT_EQ(42, optional_value.value());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_global_error_stack_peek_last_error());
-    ft_global_error_stack_pop_last();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_optional<int>::last_operation_error());
     optional_value.reset();
     FT_ASSERT_EQ(false, optional_value.has_value());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_global_error_stack_peek_last_error());
-    ft_global_error_stack_pop_last();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_optional<int>::last_operation_error());
     return (1);
 }
 
@@ -43,16 +38,13 @@ FT_TEST(test_ft_optional_move_transfers_state, "ft_optional move assignment tran
 {
     ft_optional<int> source_optional(99);
     ft_optional<int> destination_optional;
-    ft_global_error_stack_pop_all();
 
     destination_optional = std::move(source_optional);
     FT_ASSERT(destination_optional.has_value());
     FT_ASSERT_EQ(99, destination_optional.value());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_global_error_stack_peek_last_error());
-    ft_global_error_stack_pop_last();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_optional<int>::last_operation_error());
     FT_ASSERT_EQ(false, source_optional.has_value());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_global_error_stack_peek_last_error());
-    ft_global_error_stack_pop_last();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_optional<int>::last_operation_error());
     return (1);
 }
 

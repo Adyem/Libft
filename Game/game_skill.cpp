@@ -1,197 +1,77 @@
 #include "game_skill.hpp"
-#include "../Basic/basic.hpp"
-#include "../Template/move.hpp"
-#include "../PThread/pthread.hpp"
-
-static void game_skill_sleep_backoff()
-{
-    pt_thread_sleep(1);
-    return ;
-}
-
-static void game_skill_unlock(ft_unique_lock<pt_mutex> &guard)
-{
-    if (guard.owns_lock())
-        guard.unlock();
-    return ;
-}
-
-int ft_skill::lock_pair(const ft_skill &first, const ft_skill &second,
-        ft_unique_lock<pt_mutex> &first_guard,
-        ft_unique_lock<pt_mutex> &second_guard)
-{
-    const ft_skill *ordered_first;
-    const ft_skill *ordered_second;
-    bool swapped;
-
-    if (&first == &second)
-    {
-        ft_unique_lock<pt_mutex> single_guard(first._mutex);
-
-        if (single_guard.get_error() != FT_ERR_SUCCESS)
-        {
-            ft_errno = single_guard.get_error();
-            return (single_guard.get_error());
-        }
-        first_guard = ft_move(single_guard);
-        second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ERR_SUCCESS;
-        return (FT_ERR_SUCCESS);
-    }
-    ordered_first = &first;
-    ordered_second = &second;
-    swapped = false;
-    if (ordered_first > ordered_second)
-    {
-        const ft_skill *temporary;
-
-        temporary = ordered_first;
-        ordered_first = ordered_second;
-        ordered_second = temporary;
-        swapped = true;
-    }
-    while (true)
-    {
-        ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
-
-        if (lower_guard.get_error() != FT_ERR_SUCCESS)
-        {
-            ft_errno = lower_guard.get_error();
-            return (lower_guard.get_error());
-        }
-        ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ERR_SUCCESS)
-        {
-            if (!swapped)
-            {
-                first_guard = ft_move(lower_guard);
-                second_guard = ft_move(upper_guard);
-            }
-            else
-            {
-                first_guard = ft_move(upper_guard);
-                second_guard = ft_move(lower_guard);
-            }
-            ft_errno = FT_ERR_SUCCESS;
-            return (FT_ERR_SUCCESS);
-        }
-        if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
-        {
-            ft_errno = upper_guard.get_error();
-            return (upper_guard.get_error());
-        }
-        if (lower_guard.owns_lock())
-            lower_guard.unlock();
-        game_skill_sleep_backoff();
-    }
-}
+#include "../Printf/printf.hpp"
+#include "../System_utils/system_utils.hpp"
 
 ft_skill::ft_skill() noexcept
     : _id(0), _level(0), _cooldown(0), _modifier1(0), _modifier2(0),
-      _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()
+      _modifier3(0), _modifier4(0), _mutex(ft_nullptr),
+      _initialized_state(ft_skill::_state_uninitialized)
 {
-    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 ft_skill::~ft_skill() noexcept
 {
-    return ;
-}
-
-ft_skill::ft_skill(const ft_skill &other) noexcept
-    : _id(0), _level(0), _cooldown(0), _modifier1(0), _modifier2(0),
-      _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()
-{
-    ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESS)
+    if (this->_initialized_state == ft_skill::_state_uninitialized)
     {
-        this->set_error(other_guard.get_error());
+        this->abort_lifecycle_error("ft_skill::~ft_skill",
+            "destructor called while object is uninitialized");
         return ;
     }
-    this->_id = other._id;
-    this->_level = other._level;
-    this->_cooldown = other._cooldown;
-    this->_modifier1 = other._modifier1;
-    this->_modifier2 = other._modifier2;
-    this->_modifier3 = other._modifier3;
-    this->_modifier4 = other._modifier4;
-    this->_error = other._error;
-    this->set_error(other._error);
+    if (this->_initialized_state == ft_skill::_state_initialized)
+        (void)this->destroy();
     return ;
 }
 
-ft_skill &ft_skill::operator=(const ft_skill &other) noexcept
+void ft_skill::abort_lifecycle_error(const char *method_name,
+    const char *reason) const
 {
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
-    int lock_error;
-
-    if (this == &other)
-        return (*this);
-    lock_error = ft_skill::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        this->set_error(lock_error);
-        return (*this);
-    }
-    this->_id = other._id;
-    this->_level = other._level;
-    this->_cooldown = other._cooldown;
-    this->_modifier1 = other._modifier1;
-    this->_modifier2 = other._modifier2;
-    this->_modifier3 = other._modifier3;
-    this->_modifier4 = other._modifier4;
-    this->_error = other._error;
-    this->set_error(other._error);
-    return (*this);
+    if (method_name == ft_nullptr)
+        method_name = "unknown";
+    if (reason == ft_nullptr)
+        reason = "unknown";
+    pf_printf_fd(2, "ft_skill lifecycle error: %s: %s\n", method_name, reason);
+    su_abort();
+    return ;
 }
 
-ft_skill::ft_skill(ft_skill &&other) noexcept
-    : _id(0), _level(0), _cooldown(0), _modifier1(0), _modifier2(0),
-      _modifier3(0), _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()
+void ft_skill::abort_if_not_initialized(const char *method_name) const
 {
-    ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(other_guard.get_error());
+    if (this->_initialized_state == ft_skill::_state_initialized)
         return ;
-    }
-    this->_id = other._id;
-    this->_level = other._level;
-    this->_cooldown = other._cooldown;
-    this->_modifier1 = other._modifier1;
-    this->_modifier2 = other._modifier2;
-    this->_modifier3 = other._modifier3;
-    this->_modifier4 = other._modifier4;
-    this->_error = other._error;
-    other._id = 0;
-    other._level = 0;
-    other._cooldown = 0;
-    other._modifier1 = 0;
-    other._modifier2 = 0;
-    other._modifier3 = 0;
-    other._modifier4 = 0;
-    other._error = FT_ERR_SUCCESS;
-    this->set_error(this->_error);
-    other.set_error(FT_ERR_SUCCESS);
+    this->abort_lifecycle_error(method_name,
+        "called while object is not initialized");
     return ;
 }
 
-ft_skill &ft_skill::operator=(ft_skill &&other) noexcept
+int ft_skill::initialize() noexcept
 {
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
-    int lock_error;
-
-    if (this == &other)
-        return (*this);
-    lock_error = ft_skill::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESS)
+    if (this->_initialized_state == ft_skill::_state_initialized)
     {
-        this->set_error(lock_error);
-        return (*this);
+        this->abort_lifecycle_error("ft_skill::initialize",
+            "called while object is already initialized");
+        return (FT_ERR_INVALID_STATE);
     }
+    this->_id = 0;
+    this->_level = 0;
+    this->_cooldown = 0;
+    this->_modifier1 = 0;
+    this->_modifier2 = 0;
+    this->_modifier3 = 0;
+    this->_modifier4 = 0;
+    this->_initialized_state = ft_skill::_state_initialized;
+    return (FT_ERR_SUCCESS);
+}
+
+int ft_skill::initialize(const ft_skill &other) noexcept
+{
+    int initialize_error;
+
+    if (&other == this)
+        return (FT_ERR_SUCCESS);
+    initialize_error = this->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
     this->_id = other._id;
     this->_level = other._level;
     this->_cooldown = other._cooldown;
@@ -199,471 +79,278 @@ ft_skill &ft_skill::operator=(ft_skill &&other) noexcept
     this->_modifier2 = other._modifier2;
     this->_modifier3 = other._modifier3;
     this->_modifier4 = other._modifier4;
-    this->_error = other._error;
-    other._id = 0;
-    other._level = 0;
-    other._cooldown = 0;
-    other._modifier1 = 0;
-    other._modifier2 = 0;
-    other._modifier3 = 0;
-    other._modifier4 = 0;
-    other._error = FT_ERR_SUCCESS;
-    this->set_error(this->_error);
-    other.set_error(FT_ERR_SUCCESS);
-    return (*this);
+    return (FT_ERR_SUCCESS);
 }
 
-void ft_skill::set_error(int err) const noexcept
+int ft_skill::initialize(ft_skill &&other) noexcept
 {
-    ft_errno = err;
-    this->_error = err;
+    return (this->initialize(static_cast<const ft_skill &>(other)));
+}
+
+int ft_skill::destroy() noexcept
+{
+    int disable_error;
+
+    if (this->_initialized_state != ft_skill::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_skill::destroy",
+            "called while object is not initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    disable_error = this->disable_thread_safety();
+    this->_id = 0;
+    this->_level = 0;
+    this->_cooldown = 0;
+    this->_modifier1 = 0;
+    this->_modifier2 = 0;
+    this->_modifier3 = 0;
+    this->_modifier4 = 0;
+    this->_initialized_state = ft_skill::_state_destroyed;
+    return (disable_error);
+}
+
+int ft_skill::enable_thread_safety() noexcept
+{
+    pt_mutex *mutex_pointer;
+    int initialize_error;
+
+    this->abort_if_not_initialized("ft_skill::enable_thread_safety");
+    if (this->_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    mutex_pointer = new (std::nothrow) pt_mutex();
+    if (mutex_pointer == ft_nullptr)
+        return (FT_ERR_NO_MEMORY);
+    initialize_error = mutex_pointer->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        delete mutex_pointer;
+        return (initialize_error);
+    }
+    this->_mutex = mutex_pointer;
+    return (FT_ERR_SUCCESS);
+}
+
+int ft_skill::disable_thread_safety() noexcept
+{
+    int destroy_error;
+
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    destroy_error = this->_mutex->destroy();
+    delete this->_mutex;
+    this->_mutex = ft_nullptr;
+    return (destroy_error);
+}
+
+bool ft_skill::is_thread_safe() const noexcept
+{
+    this->abort_if_not_initialized("ft_skill::is_thread_safe");
+    return (this->_mutex != ft_nullptr);
+}
+
+int ft_skill::lock_internal(bool *lock_acquired) const noexcept
+{
+    int lock_error;
+
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = false;
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    lock_error = this->_mutex->lock();
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = true;
+    return (FT_ERR_SUCCESS);
+}
+
+int ft_skill::unlock_internal(bool lock_acquired) const noexcept
+{
+    if (lock_acquired == false)
+        return (FT_ERR_SUCCESS);
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    return (this->_mutex->unlock());
+}
+
+int ft_skill::lock(bool *lock_acquired) const noexcept
+{
+    this->abort_if_not_initialized("ft_skill::lock");
+    return (this->lock_internal(lock_acquired));
+}
+
+void ft_skill::unlock(bool lock_acquired) const noexcept
+{
+    this->abort_if_not_initialized("ft_skill::unlock");
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
 int ft_skill::get_id() const noexcept
 {
-    int identifier;
-
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_skill *>(this)->set_error(guard.get_error());
-        return (0);
-    }
-    identifier = this->_id;
-    const_cast<ft_skill *>(this)->set_error(FT_ERR_SUCCESS);
-    game_skill_unlock(guard);
-    return (identifier);
+    this->abort_if_not_initialized("ft_skill::get_id");
+    return (this->_id);
 }
 
 void ft_skill::set_id(int id) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return ;
-    }
-    if (id < 0)
-    {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
-        this->_id = 0;
-        return ;
-    }
+    this->abort_if_not_initialized("ft_skill::set_id");
     this->_id = id;
-    this->set_error(FT_ERR_SUCCESS);
-    game_skill_unlock(guard);
     return ;
 }
 
 int ft_skill::get_level() const noexcept
 {
-    int level_value;
-
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_skill *>(this)->set_error(guard.get_error());
-        return (0);
-    }
-    level_value = this->_level;
-    const_cast<ft_skill *>(this)->set_error(FT_ERR_SUCCESS);
-    game_skill_unlock(guard);
-    return (level_value);
+    this->abort_if_not_initialized("ft_skill::get_level");
+    return (this->_level);
 }
 
 void ft_skill::set_level(int level) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return ;
-    }
-    if (level < 0)
-    {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
-        return ;
-    }
+    this->abort_if_not_initialized("ft_skill::set_level");
     this->_level = level;
-    this->set_error(FT_ERR_SUCCESS);
-    game_skill_unlock(guard);
     return ;
 }
 
 int ft_skill::get_cooldown() const noexcept
 {
-    int cooldown_value;
-
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_skill *>(this)->set_error(guard.get_error());
-        return (0);
-    }
-    cooldown_value = this->_cooldown;
-    const_cast<ft_skill *>(this)->set_error(FT_ERR_SUCCESS);
-    game_skill_unlock(guard);
-    return (cooldown_value);
+    this->abort_if_not_initialized("ft_skill::get_cooldown");
+    return (this->_cooldown);
 }
 
 void ft_skill::set_cooldown(int cooldown) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return ;
-    }
-    if (cooldown < 0)
-    {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
-        return ;
-    }
+    this->abort_if_not_initialized("ft_skill::set_cooldown");
     this->_cooldown = cooldown;
-    this->set_error(FT_ERR_SUCCESS);
-    game_skill_unlock(guard);
     return ;
 }
 
 void ft_skill::add_cooldown(int cooldown) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return ;
-    }
-    if (cooldown < 0)
-    {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
-        return ;
-    }
+    this->abort_if_not_initialized("ft_skill::add_cooldown");
     this->_cooldown += cooldown;
-    this->set_error(FT_ERR_SUCCESS);
-    game_skill_unlock(guard);
     return ;
 }
 
 void ft_skill::sub_cooldown(int cooldown) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return ;
-    }
-    if (cooldown < 0 || this->_cooldown < cooldown)
-    {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
-        return ;
-    }
+    this->abort_if_not_initialized("ft_skill::sub_cooldown");
     this->_cooldown -= cooldown;
-    this->set_error(FT_ERR_SUCCESS);
-    game_skill_unlock(guard);
     return ;
 }
 
 int ft_skill::get_modifier1() const noexcept
 {
-    int modifier;
-
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_skill *>(this)->set_error(guard.get_error());
-        return (0);
-    }
-    modifier = this->_modifier1;
-    const_cast<ft_skill *>(this)->set_error(FT_ERR_SUCCESS);
-    game_skill_unlock(guard);
-    return (modifier);
+    this->abort_if_not_initialized("ft_skill::get_modifier1");
+    return (this->_modifier1);
 }
 
 void ft_skill::set_modifier1(int mod) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return ;
-    }
+    this->abort_if_not_initialized("ft_skill::set_modifier1");
     this->_modifier1 = mod;
-    this->set_error(FT_ERR_SUCCESS);
-    game_skill_unlock(guard);
     return ;
 }
 
 void ft_skill::add_modifier1(int mod) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return ;
-    }
-    if (mod < 0)
-    {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
-        return ;
-    }
+    this->abort_if_not_initialized("ft_skill::add_modifier1");
     this->_modifier1 += mod;
-    this->set_error(FT_ERR_SUCCESS);
-    game_skill_unlock(guard);
     return ;
 }
 
 void ft_skill::sub_modifier1(int mod) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return ;
-    }
-    if (mod < 0)
-    {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
-        return ;
-    }
+    this->abort_if_not_initialized("ft_skill::sub_modifier1");
     this->_modifier1 -= mod;
-    this->set_error(FT_ERR_SUCCESS);
-    game_skill_unlock(guard);
     return ;
 }
 
 int ft_skill::get_modifier2() const noexcept
 {
-    int modifier;
-
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_skill *>(this)->set_error(guard.get_error());
-        return (0);
-    }
-    modifier = this->_modifier2;
-    const_cast<ft_skill *>(this)->set_error(FT_ERR_SUCCESS);
-    game_skill_unlock(guard);
-    return (modifier);
+    this->abort_if_not_initialized("ft_skill::get_modifier2");
+    return (this->_modifier2);
 }
 
 void ft_skill::set_modifier2(int mod) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return ;
-    }
+    this->abort_if_not_initialized("ft_skill::set_modifier2");
     this->_modifier2 = mod;
-    this->set_error(FT_ERR_SUCCESS);
-    game_skill_unlock(guard);
     return ;
 }
 
 void ft_skill::add_modifier2(int mod) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return ;
-    }
-    if (mod < 0)
-    {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
-        return ;
-    }
+    this->abort_if_not_initialized("ft_skill::add_modifier2");
     this->_modifier2 += mod;
-    this->set_error(FT_ERR_SUCCESS);
-    game_skill_unlock(guard);
     return ;
 }
 
 void ft_skill::sub_modifier2(int mod) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return ;
-    }
-    if (mod < 0)
-    {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
-        return ;
-    }
+    this->abort_if_not_initialized("ft_skill::sub_modifier2");
     this->_modifier2 -= mod;
-    this->set_error(FT_ERR_SUCCESS);
-    game_skill_unlock(guard);
     return ;
 }
 
 int ft_skill::get_modifier3() const noexcept
 {
-    int modifier;
-
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_skill *>(this)->set_error(guard.get_error());
-        return (0);
-    }
-    modifier = this->_modifier3;
-    const_cast<ft_skill *>(this)->set_error(FT_ERR_SUCCESS);
-    game_skill_unlock(guard);
-    return (modifier);
+    this->abort_if_not_initialized("ft_skill::get_modifier3");
+    return (this->_modifier3);
 }
 
 void ft_skill::set_modifier3(int mod) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return ;
-    }
+    this->abort_if_not_initialized("ft_skill::set_modifier3");
     this->_modifier3 = mod;
-    this->set_error(FT_ERR_SUCCESS);
-    game_skill_unlock(guard);
     return ;
 }
 
 void ft_skill::add_modifier3(int mod) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return ;
-    }
-    if (mod < 0)
-    {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
-        return ;
-    }
+    this->abort_if_not_initialized("ft_skill::add_modifier3");
     this->_modifier3 += mod;
-    this->set_error(FT_ERR_SUCCESS);
-    game_skill_unlock(guard);
     return ;
 }
 
 void ft_skill::sub_modifier3(int mod) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return ;
-    }
-    if (mod < 0)
-    {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
-        return ;
-    }
+    this->abort_if_not_initialized("ft_skill::sub_modifier3");
     this->_modifier3 -= mod;
-    this->set_error(FT_ERR_SUCCESS);
-    game_skill_unlock(guard);
     return ;
 }
 
 int ft_skill::get_modifier4() const noexcept
 {
-    int modifier;
-
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_skill *>(this)->set_error(guard.get_error());
-        return (0);
-    }
-    modifier = this->_modifier4;
-    const_cast<ft_skill *>(this)->set_error(FT_ERR_SUCCESS);
-    game_skill_unlock(guard);
-    return (modifier);
+    this->abort_if_not_initialized("ft_skill::get_modifier4");
+    return (this->_modifier4);
 }
 
 void ft_skill::set_modifier4(int mod) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return ;
-    }
+    this->abort_if_not_initialized("ft_skill::set_modifier4");
     this->_modifier4 = mod;
-    this->set_error(FT_ERR_SUCCESS);
-    game_skill_unlock(guard);
     return ;
 }
 
 void ft_skill::add_modifier4(int mod) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return ;
-    }
-    if (mod < 0)
-    {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
-        return ;
-    }
+    this->abort_if_not_initialized("ft_skill::add_modifier4");
     this->_modifier4 += mod;
-    this->set_error(FT_ERR_SUCCESS);
-    game_skill_unlock(guard);
     return ;
 }
 
 void ft_skill::sub_modifier4(int mod) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return ;
-    }
-    if (mod < 0)
-    {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
-        return ;
-    }
+    this->abort_if_not_initialized("ft_skill::sub_modifier4");
     this->_modifier4 -= mod;
-    this->set_error(FT_ERR_SUCCESS);
-    game_skill_unlock(guard);
     return ;
 }
 
-int ft_skill::get_error() const noexcept
+#ifdef LIBFT_TEST_BUILD
+pt_mutex *ft_skill::get_mutex_for_validation() const noexcept
 {
-    int error_code;
-
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_skill *>(this)->set_error(guard.get_error());
-        return (guard.get_error());
-    }
-    error_code = this->_error;
-    const_cast<ft_skill *>(this)->set_error(error_code);
-    game_skill_unlock(guard);
-    return (error_code);
+    this->abort_if_not_initialized("ft_skill::get_mutex_for_validation");
+    return (this->_mutex);
 }
-
-const char *ft_skill::get_error_str() const noexcept
-{
-    int error_code;
-
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_skill *>(this)->set_error(guard.get_error());
-        return (ft_strerror(guard.get_error()));
-    }
-    error_code = this->_error;
-    const_cast<ft_skill *>(this)->set_error(error_code);
-    game_skill_unlock(guard);
-    return (ft_strerror(error_code));
-}
+#endif

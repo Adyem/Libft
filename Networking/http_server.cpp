@@ -1,9 +1,10 @@
 #include "http_server.hpp"
 #include "networking.hpp"
-#include "../Errno/errno.hpp"
 #include "../Basic/basic.hpp"
 #include "../Time/time.hpp"
 #include "../Observability/observability_networking_metrics.hpp"
+#include "../Printf/printf.hpp"
+#include "../System_utils/system_utils.hpp"
 #include <cstring>
 #include <cstdio>
 #include <cerrno>
@@ -13,62 +14,103 @@
 #endif
 
 ft_http_server::ft_http_server()
-    : _server_socket(), _error_code(FT_ERR_SUCCESS), _non_blocking(false), _mutex()
+    : _initialized_state(_state_uninitialized), _server_socket(),
+      _non_blocking(false), _mutex()
 {
     return ;
 }
 
 ft_http_server::~ft_http_server()
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (this->_initialized_state == _state_uninitialized)
     {
-        ft_errno = guard.get_error();
-        return ;
+        pf_printf_fd(2, "ft_http_server lifecycle error: %s\n",
+            "destructor called on uninitialized instance");
+        su_abort();
     }
-    this->_server_socket.close_socket();
-    this->_non_blocking = false;
-    this->set_error(FT_ERR_SUCCESS);
-    ft_errno = FT_ERR_SUCCESS;
+    if (this->_initialized_state == _state_initialized)
+        (void)this->destroy();
     return ;
 }
 
-void ft_http_server::set_error(int error_code) const
+void ft_http_server::abort_lifecycle_error(const char *method_name,
+    const char *reason) const
 {
-    ft_errno = error_code;
-    this->_error_code = error_code;
+    if (method_name == ft_nullptr)
+        method_name = "unknown";
+    if (reason == ft_nullptr)
+        reason = "unknown";
+    pf_printf_fd(2, "ft_http_server lifecycle error: %s: %s\n",
+        method_name, reason);
+    su_abort();
     return ;
+}
+
+void ft_http_server::abort_if_not_initialized(const char *method_name) const
+{
+    if (this->_initialized_state == _state_initialized)
+        return ;
+    this->abort_lifecycle_error(method_name, "called while object is not initialized");
+    return ;
+}
+
+int ft_http_server::initialize()
+{
+    if (this->_initialized_state == _state_initialized)
+        this->abort_lifecycle_error("ft_http_server::initialize",
+            "initialize called on initialized instance");
+    if (this->_mutex.initialize() != FT_ERR_SUCCESS)
+        return (1);
+    this->_non_blocking = false;
+    this->_initialized_state = _state_initialized;
+    return (0);
+}
+
+int ft_http_server::destroy()
+{
+    if (this->_initialized_state != _state_initialized)
+        this->abort_lifecycle_error("ft_http_server::destroy",
+            "destroy called on non-initialized instance");
+    if (this->_mutex.lock() != FT_ERR_SUCCESS)
+        return (1);
+    this->_server_socket.close_socket();
+    this->_non_blocking = false;
+    (void)this->_mutex.unlock();
+    (void)this->_mutex.destroy();
+    this->_initialized_state = _state_destroyed;
+    return (0);
 }
 
 int ft_http_server::start(const char *ip, uint16_t port, int address_family, bool non_blocking)
 {
     SocketConfig configuration;
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    int lock_error;
 
-    ft_errno = FT_ERR_SUCCESS;
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    this->abort_if_not_initialized("ft_http_server::start");
+    lock_error = this->_mutex.lock();
+    if (lock_error != FT_ERR_SUCCESS)
+        return (1);
+
+    if (configuration.initialize() != FT_ERR_SUCCESS)
     {
-        this->set_error(guard.get_error());
+        (void)this->_mutex.unlock();
         return (1);
     }
-
     configuration._type = SocketType::SERVER;
-    configuration._ip = ip;
+    std::strncpy(configuration._ip, ip, sizeof(configuration._ip) - 1);
+    configuration._ip[sizeof(configuration._ip) - 1] = '\0';
     configuration._port = port;
     configuration._address_family = address_family;
     configuration._non_blocking = non_blocking;
     configuration._recv_timeout = 5000;
     configuration._send_timeout = 5000;
-    this->_server_socket = ft_socket(configuration);
-    if (this->_networking_fetch_last_error() != FT_ERR_SUCCESS)
+    if (this->_server_socket.initialize(configuration) != FT_ERR_SUCCESS)
     {
-        this->set_error(this->_networking_fetch_last_error());
+        (void)this->_mutex.unlock();
         return (1);
     }
-    this->set_error(FT_ERR_SUCCESS);
     this->_non_blocking = non_blocking;
-    ft_errno = FT_ERR_SUCCESS;
+    (void)this->_mutex.unlock();
     return (0);
 }
 
@@ -96,21 +138,18 @@ static int parse_request(const ft_string &request, ft_string &body, bool &is_pos
 }
 
 static void http_server_record_metrics(const char *method, size_t request_bytes,
-    size_t response_bytes, int status_code, int result,
+    size_t response_bytes, int status_code, int result, int error_code,
     t_monotonic_time_point start_time)
 {
     ft_networking_observability_sample sample;
     t_monotonic_time_point finish_time;
     long long duration_ms;
-    int error_code;
-
     finish_time = time_monotonic_point_now();
     duration_ms = time_monotonic_point_diff_ms(start_time, finish_time);
     if (duration_ms < 0)
         duration_ms = 0;
-    error_code = FT_ERR_SUCCESS;
-    if (result != 0)
-        error_code = ft_errno;
+    if (result == 0)
+        error_code = FT_ERR_SUCCESS;
     sample.labels.component = "http_server";
     sample.labels.operation = method;
     sample.labels.target = "listener";
@@ -232,21 +271,18 @@ static bool http_server_request_wants_keep_alive(const ft_string &request, size_
 int ft_http_server::run_once()
 {
     int result;
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    int lock_error;
 
-    ft_errno = FT_ERR_SUCCESS;
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
+    this->abort_if_not_initialized("ft_http_server::run_once");
+    lock_error = this->_mutex.lock();
+    if (lock_error != FT_ERR_SUCCESS)
         return (1);
-    }
-    result = this->run_once_locked(guard);
-    if (result == 0)
-        ft_errno = FT_ERR_SUCCESS;
+    result = this->run_once_locked();
+    (void)this->_mutex.unlock();
     return (result);
 }
 
-int ft_http_server::run_once_locked(ft_unique_lock<pt_mutex> &guard)
+int ft_http_server::run_once_locked()
 {
     t_monotonic_time_point start_time;
     struct sockaddr_storage client_address;
@@ -259,18 +295,10 @@ int ft_http_server::run_once_locked(ft_unique_lock<pt_mutex> &guard)
     int last_error_code;
     const int max_keep_alive_requests = 100;
 
-    if (guard.owns_lock() == false)
-    {
-        this->set_error(FT_ERR_INVALID_STATE);
-        return (1);
-    }
     start_time = time_monotonic_point_now();
     server_fd = this->_server_socket.get_fd();
     if (server_fd < 0)
-    {
-        this->set_error(FT_ERR_INVALID_STATE);
         return (1);
-    }
     address_length = sizeof(client_address);
     client_socket = nw_accept(server_fd, reinterpret_cast<struct sockaddr*>(&client_address), &address_length);
     if (client_socket < 0)
@@ -280,23 +308,15 @@ int ft_http_server::run_once_locked(ft_unique_lock<pt_mutex> &guard)
 
         last_error = WSAGetLastError();
         if (this->_non_blocking != false && last_error == WSAEWOULDBLOCK)
-        {
-            ft_errno = FT_ERR_SUCCESS;
-            this->_error_code = FT_ERR_SUCCESS;
             return (0);
-        }
-        this->set_error(ft_map_system_error(last_error));
+        last_error_code = FT_ERR_SOCKET_ACCEPT_FAILED;
 #else
         int last_error;
 
         last_error = errno;
         if (this->_non_blocking != false && (last_error == EAGAIN || last_error == EWOULDBLOCK))
-        {
-            ft_errno = FT_ERR_SUCCESS;
-            this->_error_code = FT_ERR_SUCCESS;
             return (0);
-        }
-        this->set_error(ft_map_system_error(last_error));
+        last_error_code = FT_ERR_SOCKET_ACCEPT_FAILED;
 #endif
         return (1);
     }
@@ -382,9 +402,8 @@ int ft_http_server::run_once_locked(ft_unique_lock<pt_mutex> &guard)
                             || ft_isdigit(static_cast<unsigned char>(*length_value_pointer)) == 0)
                         {
                             nw_close(client_socket);
-                            this->set_error(FT_ERR_INVALID_ARGUMENT);
                             overall_result = 1;
-                            last_error_code = this->_error_code;
+                            last_error_code = FT_ERR_INVALID_ARGUMENT;
                             request_failed = true;
                             break;
                         }
@@ -400,9 +419,8 @@ int ft_http_server::run_once_locked(ft_unique_lock<pt_mutex> &guard)
                             if (expected_body_length > (max_request_size - digit_value) / 10)
                             {
                                 nw_close(client_socket);
-                                this->set_error(FT_ERR_INVALID_ARGUMENT);
                                 overall_result = 1;
-                                last_error_code = this->_error_code;
+                                last_error_code = FT_ERR_INVALID_ARGUMENT;
                                 request_failed = true;
                                 break;
                             }
@@ -414,18 +432,16 @@ int ft_http_server::run_once_locked(ft_unique_lock<pt_mutex> &guard)
                         if (has_length_digits == false)
                         {
                             nw_close(client_socket);
-                            this->set_error(FT_ERR_INVALID_ARGUMENT);
                             overall_result = 1;
-                            last_error_code = this->_error_code;
+                            last_error_code = FT_ERR_INVALID_ARGUMENT;
                             request_failed = true;
                             break;
                         }
                         if (expected_body_length > max_request_size)
                         {
                             nw_close(client_socket);
-                            this->set_error(FT_ERR_INVALID_ARGUMENT);
                             overall_result = 1;
-                            last_error_code = this->_error_code;
+                            last_error_code = FT_ERR_INVALID_ARGUMENT;
                             request_failed = true;
                             break;
                         }
@@ -458,20 +474,11 @@ int ft_http_server::run_once_locked(ft_unique_lock<pt_mutex> &guard)
             {
                 nw_close(client_socket);
 #ifdef _WIN32
-                int last_error;
-                int library_error_code;
-
-                last_error = WSAGetLastError();
-                library_error_code = ft_map_system_error(last_error);
-                this->set_error(library_error_code);
+                last_error_code = FT_ERR_SOCKET_RECEIVE_FAILED;
 #else
-                int last_error;
-
-                last_error = errno;
-                this->set_error(ft_map_system_error(last_error));
+                last_error_code = FT_ERR_SOCKET_RECEIVE_FAILED;
 #endif
                 overall_result = 1;
-                last_error_code = this->_error_code;
                 request_failed = true;
                 break;
             }
@@ -480,14 +487,11 @@ int ft_http_server::run_once_locked(ft_unique_lock<pt_mutex> &guard)
                 if (request.empty() != false && header_complete == false)
                 {
                     nw_close(client_socket);
-                    ft_errno = FT_ERR_SUCCESS;
-                    this->_error_code = FT_ERR_SUCCESS;
                     return (0);
                 }
                 nw_close(client_socket);
-                this->set_error(FT_ERR_SOCKET_RECEIVE_FAILED);
                 overall_result = 1;
-                last_error_code = this->_error_code;
+                last_error_code = FT_ERR_SOCKET_RECEIVE_FAILED;
                 request_failed = true;
                 break;
             }
@@ -496,9 +500,8 @@ int ft_http_server::run_once_locked(ft_unique_lock<pt_mutex> &guard)
             if (request.size() > max_request_size)
             {
                 nw_close(client_socket);
-                this->set_error(FT_ERR_INVALID_ARGUMENT);
                 overall_result = 1;
-                last_error_code = this->_error_code;
+                last_error_code = FT_ERR_INVALID_ARGUMENT;
                 request_failed = true;
                 break;
             }
@@ -506,7 +509,7 @@ int ft_http_server::run_once_locked(ft_unique_lock<pt_mutex> &guard)
         if (request_failed != false)
         {
             if (metrics_enabled != false)
-                http_server_record_metrics(method_label, request_bytes, response_bytes, status_code_value, request_result, request_start_time);
+                http_server_record_metrics(method_label, request_bytes, response_bytes, status_code_value, request_result, last_error_code, request_start_time);
             connection_active = false;
             break;
         }
@@ -526,11 +529,10 @@ int ft_http_server::run_once_locked(ft_unique_lock<pt_mutex> &guard)
         if (parse_error != FT_ERR_SUCCESS)
         {
             nw_close(client_socket);
-            this->set_error(parse_error);
             overall_result = 1;
-            last_error_code = this->_error_code;
+            last_error_code = parse_error;
             if (metrics_enabled != false)
-                http_server_record_metrics(method_label, request_bytes, response_bytes, status_code_value, 1, request_start_time);
+                http_server_record_metrics(method_label, request_bytes, response_bytes, status_code_value, 1, last_error_code, request_start_time);
             connection_active = false;
             break;
         }
@@ -593,29 +595,24 @@ int ft_http_server::run_once_locked(ft_unique_lock<pt_mutex> &guard)
                         && (last_error == WSAECONNRESET || last_error == WSAECONNABORTED
                             || last_error == WSAESHUTDOWN)))
                 {
-                    this->set_error(FT_ERR_SOCKET_SEND_FAILED);
                     overall_result = 1;
-                    last_error_code = this->_error_code;
+                    last_error_code = FT_ERR_SOCKET_SEND_FAILED;
                     request_result = 1;
                     if (metrics_enabled != false)
-                        http_server_record_metrics(method_label, request_bytes, response_bytes, status_code_value, request_result, request_start_time);
+                        http_server_record_metrics(method_label, request_bytes, response_bytes, status_code_value, request_result, last_error_code, request_start_time);
                     connection_active = false;
                     remote_closed_during_send = true;
                     break;
                 }
 #else
-                int last_error;
-
-                last_error = errno;
                 if (send_result == 0
-                    || (send_result < 0 && (last_error == EPIPE || last_error == ECONNRESET)))
+                    || (send_result < 0 && (errno == EPIPE || errno == ECONNRESET)))
                 {
-                    this->set_error(FT_ERR_SOCKET_SEND_FAILED);
                     overall_result = 1;
-                    last_error_code = this->_error_code;
+                    last_error_code = FT_ERR_SOCKET_SEND_FAILED;
                     request_result = 1;
                     if (metrics_enabled != false)
-                        http_server_record_metrics(method_label, request_bytes, response_bytes, status_code_value, request_result, request_start_time);
+                        http_server_record_metrics(method_label, request_bytes, response_bytes, status_code_value, request_result, last_error_code, request_start_time);
                     connection_active = false;
                     remote_closed_during_send = true;
                     break;
@@ -623,14 +620,13 @@ int ft_http_server::run_once_locked(ft_unique_lock<pt_mutex> &guard)
 #endif
                 nw_close(client_socket);
                 if (send_result < 0)
-                    this->set_error(ft_map_system_error(last_error));
+                    last_error_code = FT_ERR_SOCKET_SEND_FAILED;
                 else
-                    this->set_error(FT_ERR_SOCKET_SEND_FAILED);
+                    last_error_code = FT_ERR_SOCKET_SEND_FAILED;
                 overall_result = 1;
-                last_error_code = this->_error_code;
                 request_result = 1;
                 if (metrics_enabled != false)
-                    http_server_record_metrics(method_label, request_bytes, response_bytes, status_code_value, request_result, request_start_time);
+                    http_server_record_metrics(method_label, request_bytes, response_bytes, status_code_value, request_result, last_error_code, request_start_time);
                 connection_active = false;
                 break;
             }
@@ -642,88 +638,25 @@ int ft_http_server::run_once_locked(ft_unique_lock<pt_mutex> &guard)
             break;
         if (networking_check_socket_after_send(client_socket) != 0)
         {
-            int post_send_error;
-
-            post_send_error = ft_errno;
-            if (post_send_error == FT_ERR_SOCKET_SEND_FAILED)
-            {
-                this->set_error(post_send_error);
-                overall_result = 1;
-                last_error_code = this->_error_code;
-                request_result = 1;
-                if (metrics_enabled != false)
-                    http_server_record_metrics(method_label, request_bytes, response_bytes, status_code_value, request_result, request_start_time);
-                connection_active = false;
-                break;
-            }
-            else
-            {
-                nw_close(client_socket);
-                this->set_error(post_send_error);
-                overall_result = 1;
-                last_error_code = this->_error_code;
-                request_result = 1;
-                if (metrics_enabled != false)
-                    http_server_record_metrics(method_label, request_bytes, response_bytes, status_code_value, request_result, request_start_time);
-                connection_active = false;
-                break;
-            }
+            nw_close(client_socket);
+            overall_result = 1;
+            last_error_code = FT_ERR_SOCKET_SEND_FAILED;
+            request_result = 1;
+            if (metrics_enabled != false)
+                http_server_record_metrics(method_label, request_bytes, response_bytes, status_code_value, request_result, last_error_code, request_start_time);
+            connection_active = false;
+            break;
         }
-        ft_errno = FT_ERR_SUCCESS;
-        this->_error_code = FT_ERR_SUCCESS;
         status_code_value = 200;
         request_result = 0;
         if (metrics_enabled != false)
-            http_server_record_metrics(method_label, request_bytes, response_bytes, status_code_value, request_result, request_start_time);
+            http_server_record_metrics(method_label, request_bytes, response_bytes, status_code_value, request_result, FT_ERR_SUCCESS, request_start_time);
         processed_requests++;
         if (should_keep_alive == false)
             connection_active = false;
     }
     nw_close(client_socket);
     if (overall_result == 0)
-    {
-        ft_errno = FT_ERR_SUCCESS;
-        this->_error_code = FT_ERR_SUCCESS;
         return (0);
-    }
-    this->_error_code = last_error_code;
     return (1);
 }
-
-int ft_http_server::get_error() const
-{
-    int error_value;
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-
-    ft_errno = FT_ERR_SUCCESS;
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        ft_errno = guard.get_error();
-        return (this->_error_code);
-    }
-    error_value = this->_error_code;
-    ft_errno = FT_ERR_SUCCESS;
-    return (error_value);
-}
-
-const char *ft_http_server::get_error_str() const
-{
-    int error_value;
-    const char *error_string;
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-
-    ft_errno = FT_ERR_SUCCESS;
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const char *guard_error_string;
-
-        guard_error_string = ft_strerror(guard.get_error());
-        ft_errno = guard.get_error();
-        return (guard_error_string);
-    }
-    error_value = this->_error_code;
-    error_string = ft_strerror(error_value);
-    ft_errno = FT_ERR_SUCCESS;
-    return (error_string);
-}
-

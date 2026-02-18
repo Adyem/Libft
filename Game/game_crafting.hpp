@@ -8,7 +8,6 @@
 #include "../Template/shared_ptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
-#include "../PThread/unique_lock.hpp"
 
 struct ft_crafting_ingredient
 {
@@ -16,19 +15,12 @@ struct ft_crafting_ingredient
         int             _item_id;
         int             _count;
         int             _rarity;
-        mutable int     _error_code;
         mutable pt_mutex _mutex;
-
-        void set_error(int error_code) const noexcept;
-        static int lock_pair(const ft_crafting_ingredient &first,
-                const ft_crafting_ingredient &second,
-                ft_unique_lock<pt_mutex> &first_guard,
-                ft_unique_lock<pt_mutex> &second_guard);
 
     public:
         ft_crafting_ingredient() noexcept;
         ft_crafting_ingredient(int item_id, int count, int rarity) noexcept;
-        virtual ~ft_crafting_ingredient() = default;
+        virtual ~ft_crafting_ingredient() noexcept;
         ft_crafting_ingredient(const ft_crafting_ingredient &other) noexcept;
         ft_crafting_ingredient &operator=(const ft_crafting_ingredient &other) noexcept;
         ft_crafting_ingredient(ft_crafting_ingredient &&other) noexcept;
@@ -51,21 +43,15 @@ class ft_crafting
 {
     private:
         ft_map<int, ft_vector<ft_crafting_ingredient>> _recipes;
-        mutable int _error_code;
         mutable pt_mutex _mutex;
-
-        void set_error(int error_code) const noexcept;
-        static int lock_pair(const ft_crafting &first, const ft_crafting &second,
-                ft_unique_lock<pt_mutex> &first_guard,
-                ft_unique_lock<pt_mutex> &second_guard);
 
     public:
         ft_crafting() noexcept;
         virtual ~ft_crafting() = default;
-        ft_crafting(const ft_crafting &other) noexcept;
-        ft_crafting &operator=(const ft_crafting &other) noexcept;
-        ft_crafting(ft_crafting &&other) noexcept;
-        ft_crafting &operator=(ft_crafting &&other) noexcept;
+        ft_crafting(const ft_crafting &other) noexcept = delete;
+        ft_crafting &operator=(const ft_crafting &other) noexcept = delete;
+        ft_crafting(ft_crafting &&other) noexcept = delete;
+        ft_crafting &operator=(ft_crafting &&other) noexcept = delete;
 
         ft_map<int, ft_vector<ft_crafting_ingredient>>       &get_recipes() noexcept;
         const ft_map<int, ft_vector<ft_crafting_ingredient>> &get_recipes() const noexcept;

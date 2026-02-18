@@ -18,13 +18,10 @@ FT_TEST(test_future_thread_safety_resets_errno,
     FT_ASSERT_EQ(false, future.is_thread_safe_enabled());
     FT_ASSERT_EQ(0, future.enable_thread_safety());
     FT_ASSERT_EQ(true, future.is_thread_safe_enabled());
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
     lock_acquired = false;
     FT_ASSERT_EQ(0, future.lock(&lock_acquired));
     FT_ASSERT_EQ(true, lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     future.unlock(lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     future.disable_thread_safety();
     FT_ASSERT_EQ(false, future.is_thread_safe_enabled());
     return (1);
@@ -63,13 +60,10 @@ FT_TEST(test_future_void_thread_safety_controls,
     FT_ASSERT_EQ(false, future.is_thread_safe_enabled());
     FT_ASSERT_EQ(0, future.enable_thread_safety());
     FT_ASSERT_EQ(true, future.is_thread_safe_enabled());
-    ft_errno = FT_ERR_INVALID_STATE;
     lock_acquired = false;
     FT_ASSERT_EQ(0, future.lock(&lock_acquired));
     FT_ASSERT_EQ(true, lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     future.unlock(lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     future.disable_thread_safety();
     FT_ASSERT_EQ(false, future.is_thread_safe_enabled());
     return (1);

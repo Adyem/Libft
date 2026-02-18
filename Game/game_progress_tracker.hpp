@@ -5,30 +5,43 @@
 #include "game_quest.hpp"
 #include "../Template/map.hpp"
 #include "../PThread/mutex.hpp"
-#include "../PThread/unique_lock.hpp"
+#include <stdint.h>
 
 class ft_progress_tracker
 {
     private:
         ft_map<int, ft_achievement> _achievements;
         ft_map<int, ft_quest>       _quests;
-        mutable int                 _error_code;
-        mutable pt_mutex            _mutex;
-        static thread_local ft_operation_error_stack _operation_errors;
+        pt_mutex                   *_mutex;
+        uint8_t                     _initialized_state;
 
-        void set_error(int error) const noexcept;
-        static void record_operation_error_unlocked(int error_code);
-        static int lock_pair(const ft_progress_tracker &first, const ft_progress_tracker &second,
-                ft_unique_lock<pt_mutex> &first_guard,
-                ft_unique_lock<pt_mutex> &second_guard);
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
+
+        void abort_lifecycle_error(const char *method_name,
+            const char *reason) const;
+        void abort_if_not_initialized(const char *method_name) const;
+        int lock_internal(bool *lock_acquired) const noexcept;
+        int unlock_internal(bool lock_acquired) const noexcept;
 
     public:
         ft_progress_tracker() noexcept;
         ~ft_progress_tracker() noexcept;
-        ft_progress_tracker(const ft_progress_tracker &other) noexcept;
-        ft_progress_tracker &operator=(const ft_progress_tracker &other) noexcept;
-        ft_progress_tracker(ft_progress_tracker &&other) noexcept;
-        ft_progress_tracker &operator=(ft_progress_tracker &&other) noexcept;
+        ft_progress_tracker(const ft_progress_tracker &other) noexcept = delete;
+        ft_progress_tracker &operator=(const ft_progress_tracker &other) noexcept = delete;
+        ft_progress_tracker(ft_progress_tracker &&other) noexcept = delete;
+        ft_progress_tracker &operator=(ft_progress_tracker &&other) noexcept = delete;
+
+        int initialize() noexcept;
+        int initialize(const ft_progress_tracker &other) noexcept;
+        int initialize(ft_progress_tracker &&other) noexcept;
+        int destroy() noexcept;
+        int enable_thread_safety() noexcept;
+        int disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
+        int lock(bool *lock_acquired) const noexcept;
+        void unlock(bool lock_acquired) const noexcept;
 
         ft_map<int, ft_achievement> &get_achievements() noexcept;
         const ft_map<int, ft_achievement> &get_achievements() const noexcept;
@@ -50,8 +63,9 @@ class ft_progress_tracker
         int advance_quest_phase(int quest_id) noexcept;
         bool is_quest_complete(int quest_id) const noexcept;
 
-        int get_error() const noexcept;
-        const char *get_error_str() const noexcept;
+#ifdef LIBFT_TEST_BUILD
+        pt_mutex *get_mutex_for_validation() const noexcept;
+#endif
 };
 
 #endif

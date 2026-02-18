@@ -4,7 +4,6 @@
 #include "networking.hpp"
 #include "../Template/vector.hpp"
 #include "../PThread/recursive_mutex.hpp"
-#include "../PThread/unique_lock.hpp"
 
 #ifdef _WIN32
 # include <winsock2.h>
@@ -18,6 +17,12 @@
 class ft_socket
 {
     private:
+        uint8_t _initialized_state;
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
+        void abort_lifecycle_error(const char *method_name, const char *reason) const;
+        void abort_if_not_initialized(const char *method_name) const;
         int     setup_server(const SocketConfig &config);
         int     setup_client(const SocketConfig &config);
         int     create_socket(const SocketConfig &config);
@@ -30,19 +35,14 @@ class ft_socket
         int        accept_connection();
         void     reset_to_empty_state();
         void     reset_to_empty_state_locked();
-        static int lock_pair(const ft_socket &first, const ft_socket &second,
-                ft_unique_lock<pt_recursive_mutex> &first_guard,
-                ft_unique_lock<pt_recursive_mutex> &second_guard);
         static void sleep_backoff();
         ssize_t send_data_locked(const void *data, size_t size, int flags);
         ssize_t send_all_locked(const void *data, size_t size, int flags);
         ssize_t receive_data_locked(void *buffer, size_t size, int flags);
         bool close_socket_locked();
 
-        void finalize_mutex_guard(ft_unique_lock<pt_recursive_mutex> &guard) const noexcept;
-
         struct sockaddr_storage _address;
-        ft_vector<ft_socket>     _connected;
+        ft_vector<int>           _connected;
         int                         _socket_fd;
         mutable pt_recursive_mutex _mutex;
 
@@ -55,10 +55,11 @@ class ft_socket
         ft_socket();
         ~ft_socket();
 
-        ft_socket(ft_socket &&other) noexcept;
-        ft_socket &operator=(ft_socket &&other) noexcept;
+        ft_socket(ft_socket &&other) noexcept = delete;
+        ft_socket &operator=(ft_socket &&other) noexcept = delete;
 
         int            initialize(const SocketConfig &config);
+        int            destroy();
         ssize_t     send_data(const void *data, size_t size, int flags = 0);
         ssize_t         send_all(const void *data, size_t size, int flags = 0);
         ssize_t        receive_data(void *buffer, size_t size, int flags = 0);

@@ -307,13 +307,11 @@ FT_TEST(test_game_script_bridge_inspect_budget_resets_errno_on_success,
     int operations;
     int result;
 
-    ft_errno = FT_ERR_INTERNAL;
     result = bridge.inspect_bytecode_budget(script, operations);
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, result);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.get_error());
     FT_ASSERT_EQ(1, operations);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 

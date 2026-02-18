@@ -7,7 +7,7 @@
 int log_async_metrics_prepare_thread_safety(s_log_async_metrics *metrics)
 {
     pt_mutex *mutex_pointer;
-    void     *memory;
+    int initialize_result;
 
     if (!metrics)
     {
@@ -17,19 +17,13 @@ int log_async_metrics_prepare_thread_safety(s_log_async_metrics *metrics)
     {
         return (0);
     }
-    memory = std::malloc(sizeof(pt_mutex));
-    if (!memory)
-    {
+    mutex_pointer = new(std::nothrow) pt_mutex();
+    if (!mutex_pointer)
         return (-1);
-    }
-    mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ERR_SUCCESS)
+    initialize_result = mutex_pointer->initialize();
+    if (initialize_result != FT_ERR_SUCCESS)
     {
-        int mutex_error;
-
-        mutex_error = mutex_pointer->get_error();
-        mutex_pointer->~pt_mutex();
-        std::free(memory);
+        delete mutex_pointer;
         return (-1);
     }
     metrics->mutex = mutex_pointer;
@@ -43,8 +37,8 @@ void log_async_metrics_teardown_thread_safety(s_log_async_metrics *metrics)
         return ;
     if (metrics->mutex)
     {
-        metrics->mutex->~pt_mutex();
-        std::free(metrics->mutex);
+        (void)metrics->mutex->destroy();
+        delete metrics->mutex;
         metrics->mutex = ft_nullptr;
     }
     metrics->thread_safe_enabled = false;
@@ -63,11 +57,8 @@ int log_async_metrics_lock(s_log_async_metrics *metrics, bool *lock_acquired)
     {
         return (0);
     }
-    metrics->mutex->lock(THREAD_ID);
-    if (metrics->mutex->get_error() != FT_ERR_SUCCESS)
-    {
+    if (metrics->mutex->lock() != FT_ERR_SUCCESS)
         return (-1);
-    }
     if (lock_acquired)
         *lock_acquired = true;
     return (0);
@@ -83,10 +74,6 @@ void log_async_metrics_unlock(s_log_async_metrics *metrics, bool lock_acquired)
     {
         return ;
     }
-    metrics->mutex->unlock(THREAD_ID);
-    if (metrics->mutex->get_error() != FT_ERR_SUCCESS)
-    {
-        return ;
-    }
+    (void)metrics->mutex->unlock();
     return ;
 }

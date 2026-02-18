@@ -8,32 +8,23 @@
 int log_field_prepare_thread_safety(s_log_field *field)
 {
     pt_mutex *mutex_pointer;
-    void     *memory;
+    int initialize_result;
 
     if (!field)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (field->thread_safe_enabled && field->mutex)
     {
         return (0);
     }
-    memory = std::malloc(sizeof(pt_mutex));
-    if (!memory)
-    {
-        ft_global_error_stack_push(FT_ERR_NO_MEMORY);
+    mutex_pointer = new(std::nothrow) pt_mutex();
+    if (!mutex_pointer)
         return (-1);
-    }
-    mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ERR_SUCCESS)
+    initialize_result = mutex_pointer->initialize();
+    if (initialize_result != FT_ERR_SUCCESS)
     {
-        int mutex_error;
-
-        mutex_error = mutex_pointer->get_error();
-        mutex_pointer->~pt_mutex();
-        std::free(memory);
-        ft_global_error_stack_push(mutex_error);
+        delete mutex_pointer;
         return (-1);
     }
     field->mutex = mutex_pointer;
@@ -47,8 +38,8 @@ void log_field_teardown_thread_safety(s_log_field *field)
         return ;
     if (field->mutex)
     {
-        field->mutex->~pt_mutex();
-        std::free(field->mutex);
+        (void)field->mutex->destroy();
+        delete field->mutex;
         field->mutex = ft_nullptr;
     }
     field->thread_safe_enabled = false;
@@ -63,7 +54,6 @@ int log_field_lock(const s_log_field *field, bool *lock_acquired)
         *lock_acquired = false;
     if (!field)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     mutable_field = const_cast<s_log_field *>(field);
@@ -71,12 +61,8 @@ int log_field_lock(const s_log_field *field, bool *lock_acquired)
     {
         return (0);
     }
-    mutable_field->mutex->lock(THREAD_ID);
-    if (mutable_field->mutex->get_error() != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(mutable_field->mutex->get_error());
+    if (mutable_field->mutex->lock() != FT_ERR_SUCCESS)
         return (-1);
-    }
     if (lock_acquired)
         *lock_acquired = true;
     return (0);
@@ -88,7 +74,6 @@ void log_field_unlock(const s_log_field *field, bool lock_acquired)
 
     if (!field)
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     if (!lock_acquired)
@@ -96,11 +81,6 @@ void log_field_unlock(const s_log_field *field, bool lock_acquired)
     mutable_field = const_cast<s_log_field *>(field);
     if (!mutable_field->mutex)
         return ;
-    mutable_field->mutex->unlock(THREAD_ID);
-    if (mutable_field->mutex->get_error() != FT_ERR_SUCCESS)
-    {
-        ft_global_error_stack_push(mutable_field->mutex->get_error());
-        return ;
-    }
+    (void)mutable_field->mutex->unlock();
     return ;
 }

@@ -34,6 +34,8 @@ FT_TEST(test_websocket_server_negotiates_permessage_deflate, "websocket server n
     size_t payload_received;
     ft_string decompressed_reply;
 
+    if (server.initialize() != 0)
+        return (0);
     if (server.start("127.0.0.1", 0) != 0)
         return (0);
     if (server.get_port(server_port) != 0)
@@ -58,7 +60,7 @@ FT_TEST(test_websocket_server_negotiates_permessage_deflate, "websocket server n
     context.result = -1;
     context.client_fd = -1;
     server_thread = ft_thread(websocket_server_worker, &context);
-    if (server_thread.get_error() != FT_ERR_SUCCESS)
+    if (!server_thread.joinable())
     {
         nw_close(client_socket);
         return (0);
@@ -116,7 +118,7 @@ FT_TEST(test_websocket_server_negotiates_permessage_deflate, "websocket server n
     payload_length = compressed_payload.size();
     frame_buffer.clear();
     frame_buffer.push_back(0xC1);
-    if (frame_buffer.get_error() != FT_ERR_SUCCESS)
+    if (ft_vector<unsigned char>::last_operation_error() != FT_ERR_SUCCESS)
     {
         nw_close(client_socket);
         server_thread.join();
@@ -125,7 +127,7 @@ FT_TEST(test_websocket_server_negotiates_permessage_deflate, "websocket server n
     if (payload_length <= 125)
     {
         frame_buffer.push_back(static_cast<unsigned char>(0x80 | payload_length));
-        if (frame_buffer.get_error() != FT_ERR_SUCCESS)
+        if (ft_vector<unsigned char>::last_operation_error() != FT_ERR_SUCCESS)
         {
             nw_close(client_socket);
             server_thread.join();
@@ -135,7 +137,7 @@ FT_TEST(test_websocket_server_negotiates_permessage_deflate, "websocket server n
     else if (payload_length <= 65535)
     {
         frame_buffer.push_back(0xFE);
-        if (frame_buffer.get_error() != FT_ERR_SUCCESS)
+        if (ft_vector<unsigned char>::last_operation_error() != FT_ERR_SUCCESS)
         {
             nw_close(client_socket);
             server_thread.join();
@@ -143,7 +145,7 @@ FT_TEST(test_websocket_server_negotiates_permessage_deflate, "websocket server n
         }
         frame_buffer.push_back(static_cast<unsigned char>((payload_length >> 8) & 0xFF));
         frame_buffer.push_back(static_cast<unsigned char>(payload_length & 0xFF));
-        if (frame_buffer.get_error() != FT_ERR_SUCCESS)
+        if (ft_vector<unsigned char>::last_operation_error() != FT_ERR_SUCCESS)
         {
             nw_close(client_socket);
             server_thread.join();
@@ -155,7 +157,7 @@ FT_TEST(test_websocket_server_negotiates_permessage_deflate, "websocket server n
         size_t shift_index;
 
         frame_buffer.push_back(0xFF);
-        if (frame_buffer.get_error() != FT_ERR_SUCCESS)
+        if (ft_vector<unsigned char>::last_operation_error() != FT_ERR_SUCCESS)
         {
             nw_close(client_socket);
             server_thread.join();
@@ -165,7 +167,7 @@ FT_TEST(test_websocket_server_negotiates_permessage_deflate, "websocket server n
         while (shift_index < 8)
         {
             frame_buffer.push_back(static_cast<unsigned char>((payload_length >> ((7 - shift_index) * 8)) & 0xFF));
-            if (frame_buffer.get_error() != FT_ERR_SUCCESS)
+            if (ft_vector<unsigned char>::last_operation_error() != FT_ERR_SUCCESS)
             {
                 nw_close(client_socket);
                 server_thread.join();
@@ -182,7 +184,7 @@ FT_TEST(test_websocket_server_negotiates_permessage_deflate, "websocket server n
     while (index_value < 4)
     {
         frame_buffer.push_back(mask_key[index_value]);
-        if (frame_buffer.get_error() != FT_ERR_SUCCESS)
+        if (ft_vector<unsigned char>::last_operation_error() != FT_ERR_SUCCESS)
         {
             nw_close(client_socket);
             server_thread.join();
@@ -197,7 +199,7 @@ FT_TEST(test_websocket_server_negotiates_permessage_deflate, "websocket server n
 
         masked_byte = static_cast<unsigned char>(compressed_payload[index_value] ^ mask_key[index_value % 4]);
         frame_buffer.push_back(masked_byte);
-        if (frame_buffer.get_error() != FT_ERR_SUCCESS)
+        if (ft_vector<unsigned char>::last_operation_error() != FT_ERR_SUCCESS)
         {
             nw_close(client_socket);
             server_thread.join();

@@ -14,12 +14,12 @@ static int logger_apply_redaction_rule(ft_string &text,
     const char  *source;
     ft_string   result;
 
-    if (text.get_error() != FT_ERR_SUCCESS)
-        return (text.get_error());
-    if (rule.pattern.get_error() != FT_ERR_SUCCESS)
-        return (rule.pattern.get_error());
-    if (rule.replacement.get_error() != FT_ERR_SUCCESS)
-        return (rule.replacement.get_error());
+    if (text.last_operation_error() != FT_ERR_SUCCESS)
+        return (text.last_operation_error());
+    if (rule.pattern.last_operation_error() != FT_ERR_SUCCESS)
+        return (rule.pattern.last_operation_error());
+    if (rule.replacement.last_operation_error() != FT_ERR_SUCCESS)
+        return (rule.replacement.last_operation_error());
     pattern = rule.pattern.c_str();
     if (!pattern)
         return (FT_ERR_SUCCESS);
@@ -28,8 +28,8 @@ static int logger_apply_redaction_rule(ft_string &text,
         return (FT_ERR_SUCCESS);
     replacement = rule.replacement.c_str();
     text_length = text.size();
-    if (text.get_error() != FT_ERR_SUCCESS)
-        return (text.get_error());
+    if (text.last_operation_error() != FT_ERR_SUCCESS)
+        return (text.last_operation_error());
     source = text.c_str();
     if (!source)
         source = "";
@@ -46,19 +46,19 @@ static int logger_apply_redaction_rule(ft_string &text,
         if (match_index == pattern_length)
         {
             result.append(replacement);
-            if (result.get_error() != FT_ERR_SUCCESS)
-                return (result.get_error());
+            if (result.last_operation_error() != FT_ERR_SUCCESS)
+                return (result.last_operation_error());
             index += pattern_length;
             continue ;
         }
         result.push_back(source[index]);
-        if (result.get_error() != FT_ERR_SUCCESS)
-            return (result.get_error());
+        if (result.last_operation_error() != FT_ERR_SUCCESS)
+            return (result.last_operation_error());
         index++;
     }
     text = result;
-    if (text.get_error() != FT_ERR_SUCCESS)
-        return (text.get_error());
+    if (text.last_operation_error() != FT_ERR_SUCCESS)
+        return (text.last_operation_error());
     return (FT_ERR_SUCCESS);
 }
 
@@ -73,7 +73,6 @@ int ft_log_add_redaction_with_replacement(const char *pattern,
 
     if (!pattern || !pattern[0])
     {
-        ft_global_error_stack_push(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     replacement_value = replacement;
@@ -82,48 +81,41 @@ int ft_log_add_redaction_with_replacement(const char *pattern,
     lock_error = logger_lock_sinks();
     if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(lock_error);
         return (-1);
     }
     rule.pattern = pattern;
     rule.replacement = replacement_value;
-    if (rule.pattern.get_error() != FT_ERR_SUCCESS
-        || rule.replacement.get_error() != FT_ERR_SUCCESS)
+    if (rule.pattern.last_operation_error() != FT_ERR_SUCCESS
+        || rule.replacement.last_operation_error() != FT_ERR_SUCCESS)
     {
-        error_code = rule.pattern.get_error();
+        error_code = rule.pattern.last_operation_error();
         if (error_code == FT_ERR_SUCCESS)
-            error_code = rule.replacement.get_error();
+            error_code = rule.replacement.last_operation_error();
         if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_NO_MEMORY;
         lock_error = logger_unlock_sinks();
         if (lock_error != FT_ERR_SUCCESS)
         {
-            ft_global_error_stack_push(lock_error);
             return (-1);
         }
-        ft_global_error_stack_push(error_code);
         return (-1);
     }
     g_redaction_rules.push_back(rule);
-    if (g_redaction_rules.get_error() != FT_ERR_SUCCESS)
+    if (g_redaction_rules.last_operation_error() != FT_ERR_SUCCESS)
     {
-        error_code = g_redaction_rules.get_error();
+        error_code = g_redaction_rules.last_operation_error();
         lock_error = logger_unlock_sinks();
         if (lock_error != FT_ERR_SUCCESS)
         {
-            ft_global_error_stack_push(lock_error);
             return (-1);
         }
-        ft_global_error_stack_push(error_code);
         return (-1);
     }
     unlock_result = logger_unlock_sinks();
     if (unlock_result != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(unlock_result);
         return (-1);
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return (0);
 }
 
@@ -141,23 +133,19 @@ void ft_log_clear_redactions()
     lock_error = logger_lock_sinks();
     if (lock_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(lock_error);
         return ;
     }
     g_redaction_rules.clear();
-    clear_error = g_redaction_rules.get_error();
+    clear_error = g_redaction_rules.last_operation_error();
     unlock_result = logger_unlock_sinks();
     if (unlock_result != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(unlock_result);
         return ;
     }
     if (clear_error != FT_ERR_SUCCESS)
     {
-        ft_global_error_stack_push(clear_error);
         return ;
     }
-    ft_global_error_stack_push(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -168,19 +156,19 @@ int logger_copy_redaction_rules(ft_vector<s_redaction_rule> &destination)
     int error_code;
 
     rule_count = g_redaction_rules.size();
-    if (g_redaction_rules.get_error() != FT_ERR_SUCCESS)
-        return (g_redaction_rules.get_error());
+    if (g_redaction_rules.last_operation_error() != FT_ERR_SUCCESS)
+        return (g_redaction_rules.last_operation_error());
     index = 0;
     while (index < rule_count)
     {
         s_redaction_rule rule;
 
         rule = g_redaction_rules[index];
-        if (g_redaction_rules.get_error() != FT_ERR_SUCCESS)
-            return (g_redaction_rules.get_error());
+        if (g_redaction_rules.last_operation_error() != FT_ERR_SUCCESS)
+            return (g_redaction_rules.last_operation_error());
         destination.push_back(rule);
-        if (destination.get_error() != FT_ERR_SUCCESS)
-            return (destination.get_error());
+        if (destination.last_operation_error() != FT_ERR_SUCCESS)
+            return (destination.last_operation_error());
         index++;
     }
     error_code = FT_ERR_SUCCESS;
@@ -194,11 +182,11 @@ int logger_apply_redactions(ft_string &text,
     size_t index;
     int error_code;
 
-    if (text.get_error() != FT_ERR_SUCCESS)
-        return (text.get_error());
+    if (text.last_operation_error() != FT_ERR_SUCCESS)
+        return (text.last_operation_error());
     rule_count = rules.size();
-    if (rules.get_error() != FT_ERR_SUCCESS)
-        return (rules.get_error());
+    if (rules.last_operation_error() != FT_ERR_SUCCESS)
+        return (rules.last_operation_error());
     index = 0;
     while (index < rule_count)
     {
@@ -206,8 +194,8 @@ int logger_apply_redactions(ft_string &text,
         int             apply_error;
 
         rule = rules[index];
-        if (rules.get_error() != FT_ERR_SUCCESS)
-            return (rules.get_error());
+        if (rules.last_operation_error() != FT_ERR_SUCCESS)
+            return (rules.last_operation_error());
         apply_error = logger_apply_redaction_rule(text, rule);
         if (apply_error != FT_ERR_SUCCESS)
             return (apply_error);

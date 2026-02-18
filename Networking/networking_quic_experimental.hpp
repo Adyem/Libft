@@ -6,7 +6,6 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Template/vector.hpp"
 #include "../Basic/basic.hpp"
-#include "../Errno/errno.hpp"
 #include "../Encryption/encryption_aead.hpp"
 #include "openssl_support.hpp"
 
@@ -39,7 +38,13 @@ bool    networking_quic_is_experimental_enabled() noexcept;
 class quic_experimental_session
 {
     private:
-        void        set_error(int error_code) const noexcept;
+        uint8_t                     _initialized_state;
+        static const uint8_t        _state_uninitialized = 0;
+        static const uint8_t        _state_destroyed = 1;
+        static const uint8_t        _state_initialized = 2;
+        void                        abort_lifecycle_error(const char *method_name,
+                                        const char *reason) const noexcept;
+        void                        abort_if_not_initialized(const char *method_name) const noexcept;
         void        clear_key_material() noexcept;
         bool        ensure_feature_enabled() const noexcept;
         bool        ensure_configured() const noexcept;
@@ -58,12 +63,17 @@ class quic_experimental_session
         ft_vector<unsigned char>        _receive_iv;
         uint64_t                        _send_sequence;
         uint64_t                        _receive_sequence;
-        mutable int                     _error_code;
 
     public:
         quic_experimental_session() noexcept;
         ~quic_experimental_session() noexcept;
+        quic_experimental_session(const quic_experimental_session &other) = delete;
+        quic_experimental_session &operator=(const quic_experimental_session &other) = delete;
+        quic_experimental_session(quic_experimental_session &&other) noexcept = delete;
+        quic_experimental_session &operator=(quic_experimental_session &&other) noexcept = delete;
 
+        int     initialize() noexcept;
+        int     destroy() noexcept;
         bool    configure(SSL *ssl_session,
                     const quic_feature_configuration &configuration,
                     bool outbound) noexcept;
@@ -74,8 +84,6 @@ class quic_experimental_session
                     size_t associated_data_length,
                     ft_vector<unsigned char> &out_plaintext) noexcept;
         bool    get_feature_configuration(quic_feature_configuration &out_configuration) const noexcept;
-        int     get_error() const noexcept;
-        const char  *get_error_str() const noexcept;
 };
 
 #endif

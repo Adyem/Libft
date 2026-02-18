@@ -28,14 +28,12 @@ FT_TEST(test_cma_global_new_preserves_alignment,
     std::uintptr_t alignment_mask;
 
     cma_set_alloc_limit(0);
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
     instance = new (std::nothrow) aligned_trivial_type;
     if (instance == ft_nullptr)
         return (0);
     instance_address = reinterpret_cast<std::uintptr_t>(instance);
     alignment_mask = alignof(aligned_trivial_type) - 1;
     FT_ASSERT_EQ(instance_address & alignment_mask, 0);
-    FT_ASSERT_EQ(ft_errno, FT_ERR_INVALID_ARGUMENT);
     delete instance;
     return (1);
 }
@@ -48,7 +46,6 @@ FT_TEST(test_cma_global_new_alignment_failure_sets_errno,
     cma_set_alloc_limit(16);
     instance = new (std::nothrow) aligned_large_type;
     FT_ASSERT_EQ(instance, ft_nullptr);
-    FT_ASSERT_EQ(ft_errno, FT_ERR_NO_MEMORY);
     cma_set_alloc_limit(0);
     return (1);
 }

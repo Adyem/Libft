@@ -15,12 +15,10 @@ int ft_behavior_action::lock_pair(const ft_behavior_action &first, const ft_beha
 
         if (single_guard.get_error() != FT_ERR_SUCCESS)
         {
-            ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ERR_SUCCESS;
         return (FT_ERR_SUCCESS);
     }
     ordered_first = &first;
@@ -41,7 +39,6 @@ int ft_behavior_action::lock_pair(const ft_behavior_action &first, const ft_beha
 
         if (lower_guard.get_error() != FT_ERR_SUCCESS)
         {
-            ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
@@ -57,12 +54,10 @@ int ft_behavior_action::lock_pair(const ft_behavior_action &first, const ft_beha
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = FT_ERR_SUCCESS;
             return (FT_ERR_SUCCESS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            ft_errno = upper_guard.get_error();
             return (upper_guard.get_error());
         }
         if (lower_guard.owns_lock())
@@ -90,14 +85,12 @@ ft_behavior_action::ft_behavior_action(const ft_behavior_action &other) noexcept
     if (other_guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(other_guard.get_error());
-        ft_errno = other_guard.get_error();
         return ;
     }
     this->_action_id = other._action_id;
     this->_weight = other._weight;
     this->_cooldown_seconds = other._cooldown_seconds;
     this->_error_code = other._error_code;
-    ft_errno = FT_ERR_SUCCESS;
     return ;
 }
 
@@ -119,7 +112,6 @@ ft_behavior_action &ft_behavior_action::operator=(const ft_behavior_action &othe
     this->_weight = other._weight;
     this->_cooldown_seconds = other._cooldown_seconds;
     this->_error_code = other._error_code;
-    ft_errno = FT_ERR_SUCCESS;
     return (*this);
 }
 
@@ -130,7 +122,6 @@ ft_behavior_action::ft_behavior_action(ft_behavior_action &&other) noexcept
     if (other_guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(other_guard.get_error());
-        ft_errno = other_guard.get_error();
         return ;
     }
     this->_action_id = other._action_id;
@@ -141,7 +132,6 @@ ft_behavior_action::ft_behavior_action(ft_behavior_action &&other) noexcept
     other._weight = 0.0;
     other._cooldown_seconds = 0.0;
     other._error_code = FT_ERR_SUCCESS;
-    ft_errno = FT_ERR_SUCCESS;
     return ;
 }
 
@@ -169,7 +159,6 @@ ft_behavior_action &ft_behavior_action::operator=(ft_behavior_action &&other) no
     other._error_code = FT_ERR_SUCCESS;
     this->set_error(this->_error_code);
     other.set_error(FT_ERR_SUCCESS);
-    ft_errno = FT_ERR_SUCCESS;
     return (*this);
 }
 
@@ -181,12 +170,10 @@ int ft_behavior_action::get_action_id() const noexcept
     if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_behavior_action *>(this)->set_error(guard.get_error());
-        ft_errno = guard.get_error();
         return (0);
     }
     action_id = this->_action_id;
     const_cast<ft_behavior_action *>(this)->set_error(this->_error_code);
-    ft_errno = FT_ERR_SUCCESS;
     return (action_id);
 }
 
@@ -196,12 +183,10 @@ void ft_behavior_action::set_action_id(int action_id) noexcept
     if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
-        ft_errno = guard.get_error();
         return ;
     }
     this->_action_id = action_id;
     this->set_error(FT_ERR_SUCCESS);
-    ft_errno = FT_ERR_SUCCESS;
     return ;
 }
 
@@ -213,12 +198,10 @@ double ft_behavior_action::get_weight() const noexcept
     if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_behavior_action *>(this)->set_error(guard.get_error());
-        ft_errno = guard.get_error();
         return (0.0);
     }
     weight = this->_weight;
     const_cast<ft_behavior_action *>(this)->set_error(this->_error_code);
-    ft_errno = FT_ERR_SUCCESS;
     return (weight);
 }
 
@@ -228,12 +211,10 @@ void ft_behavior_action::set_weight(double weight) noexcept
     if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
-        ft_errno = guard.get_error();
         return ;
     }
     this->_weight = weight;
     this->set_error(FT_ERR_SUCCESS);
-    ft_errno = FT_ERR_SUCCESS;
     return ;
 }
 
@@ -245,12 +226,10 @@ double ft_behavior_action::get_cooldown_seconds() const noexcept
     if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_behavior_action *>(this)->set_error(guard.get_error());
-        ft_errno = guard.get_error();
         return (0.0);
     }
     cooldown_seconds = this->_cooldown_seconds;
     const_cast<ft_behavior_action *>(this)->set_error(this->_error_code);
-    ft_errno = FT_ERR_SUCCESS;
     return (cooldown_seconds);
 }
 
@@ -260,12 +239,10 @@ void ft_behavior_action::set_cooldown_seconds(double cooldown_seconds) noexcept
     if (guard.get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(guard.get_error());
-        ft_errno = guard.get_error();
         return ;
     }
     this->_cooldown_seconds = cooldown_seconds;
     this->set_error(FT_ERR_SUCCESS);
-    ft_errno = FT_ERR_SUCCESS;
     return ;
 }
 
@@ -277,11 +254,9 @@ int ft_behavior_action::get_error() const noexcept
     if (guard.get_error() != FT_ERR_SUCCESS)
     {
         const_cast<ft_behavior_action *>(this)->set_error(guard.get_error());
-        ft_errno = guard.get_error();
         return (guard.get_error());
     }
     error_code = this->_error_code;
-    ft_errno = FT_ERR_SUCCESS;
     return (error_code);
 }
 
@@ -296,6 +271,5 @@ const char *ft_behavior_action::get_error_str() const noexcept
 void ft_behavior_action::set_error(int error_code) const noexcept
 {
     this->_error_code = error_code;
-    ft_errno = error_code;
     return ;
 }

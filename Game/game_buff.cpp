@@ -1,639 +1,531 @@
 #include "game_buff.hpp"
-#include "../Errno/errno.hpp"
-#include "../Basic/basic.hpp"
-#include "../Template/move.hpp"
-#include "../PThread/pthread.hpp"
-
-static void game_buff_sleep_backoff()
-{
-    pt_thread_sleep(1);
-    return ;
-}
-
-static void game_buff_finalize_lock(ft_unique_lock<pt_mutex> &guard)
-{
-    if (guard.owns_lock())
-        guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESS)
-        ft_errno = guard.get_error();
-    return ;
-}
-
-int ft_buff::lock_pair(const ft_buff &first, const ft_buff &second,
-        ft_unique_lock<pt_mutex> &first_guard,
-        ft_unique_lock<pt_mutex> &second_guard)
-{
-    const ft_buff *ordered_first;
-    const ft_buff *ordered_second;
-    bool swapped;
-
-    if (&first == &second)
-    {
-        ft_unique_lock<pt_mutex> single_guard(first._mutex);
-
-        if (single_guard.get_error() != FT_ERR_SUCCESS)
-        {
-            ft_errno = single_guard.get_error();
-            return (single_guard.get_error());
-        }
-        first_guard = ft_move(single_guard);
-        second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ERR_SUCCESS;
-        return (FT_ERR_SUCCESS);
-    }
-    ordered_first = &first;
-    ordered_second = &second;
-    swapped = false;
-    if (ordered_first > ordered_second)
-    {
-        const ft_buff *temporary;
-
-        temporary = ordered_first;
-        ordered_first = ordered_second;
-        ordered_second = temporary;
-        swapped = true;
-    }
-    while (true)
-    {
-        ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
-
-        if (lower_guard.get_error() != FT_ERR_SUCCESS)
-        {
-            ft_errno = lower_guard.get_error();
-            return (lower_guard.get_error());
-        }
-        ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ERR_SUCCESS)
-        {
-            if (!swapped)
-            {
-                first_guard = ft_move(lower_guard);
-                second_guard = ft_move(upper_guard);
-            }
-            else
-            {
-                first_guard = ft_move(upper_guard);
-                second_guard = ft_move(lower_guard);
-            }
-            ft_errno = FT_ERR_SUCCESS;
-            return (FT_ERR_SUCCESS);
-        }
-        if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
-        {
-            ft_errno = upper_guard.get_error();
-            return (upper_guard.get_error());
-        }
-        if (lower_guard.owns_lock())
-            lower_guard.unlock();
-        game_buff_sleep_backoff();
-    }
-}
+#include "../Printf/printf.hpp"
+#include "../System_utils/system_utils.hpp"
 
 ft_buff::ft_buff() noexcept
     : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0),
-      _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()
+      _modifier4(0), _mutex(ft_nullptr),
+      _initialized_state(ft_buff::_state_uninitialized)
 {
-    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
-ft_buff::ft_buff(const ft_buff &other) noexcept
-    : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0),
-      _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()
+ft_buff::~ft_buff() noexcept
 {
-
-    ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESS)
+    if (this->_initialized_state == ft_buff::_state_uninitialized)
     {
-        this->set_error(other_guard.get_error());
-        game_buff_finalize_lock(other_guard);
+        this->abort_lifecycle_error("ft_buff::~ft_buff",
+            "destructor called while object is uninitialized");
         return ;
     }
-    this->_id = other._id;
-    this->_duration = other._duration;
-    this->_modifier1 = other._modifier1;
-    this->_modifier2 = other._modifier2;
-    this->_modifier3 = other._modifier3;
-    this->_modifier4 = other._modifier4;
-    this->_error = other._error;
-    this->set_error(other._error);
-    game_buff_finalize_lock(other_guard);
+    if (this->_initialized_state == ft_buff::_state_initialized)
+        (void)this->destroy();
     return ;
 }
 
-ft_buff &ft_buff::operator=(const ft_buff &other) noexcept
+void ft_buff::abort_lifecycle_error(const char *method_name,
+    const char *reason) const
 {
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
-    int lock_error;
-
-    if (this == &other)
-        return (*this);
-    lock_error = ft_buff::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        this->set_error(lock_error);
-        return (*this);
-    }
-    this->_id = other._id;
-    this->_duration = other._duration;
-    this->_modifier1 = other._modifier1;
-    this->_modifier2 = other._modifier2;
-    this->_modifier3 = other._modifier3;
-    this->_modifier4 = other._modifier4;
-    this->_error = other._error;
-    this->set_error(other._error);
-    game_buff_finalize_lock(this_guard);
-    game_buff_finalize_lock(other_guard);
-    return (*this);
+    if (method_name == ft_nullptr)
+        method_name = "unknown";
+    if (reason == ft_nullptr)
+        reason = "unknown";
+    pf_printf_fd(2, "ft_buff lifecycle error: %s: %s\n", method_name, reason);
+    su_abort();
+    return ;
 }
 
-ft_buff::ft_buff(ft_buff &&other) noexcept
-    : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0),
-      _modifier4(0), _error(FT_ERR_SUCCESS), _mutex()
+void ft_buff::abort_if_not_initialized(const char *method_name) const
 {
-
-    ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(other_guard.get_error());
-        game_buff_finalize_lock(other_guard);
+    if (this->_initialized_state == ft_buff::_state_initialized)
         return ;
-    }
-    this->_id = other._id;
-    this->_duration = other._duration;
-    this->_modifier1 = other._modifier1;
-    this->_modifier2 = other._modifier2;
-    this->_modifier3 = other._modifier3;
-    this->_modifier4 = other._modifier4;
-    this->_error = other._error;
-    other._id = 0;
-    other._duration = 0;
-    other._modifier1 = 0;
-    other._modifier2 = 0;
-    other._modifier3 = 0;
-    other._modifier4 = 0;
-    other._error = FT_ERR_SUCCESS;
-    this->set_error(this->_error);
-    other.set_error(FT_ERR_SUCCESS);
-    game_buff_finalize_lock(other_guard);
+    this->abort_lifecycle_error(method_name,
+        "called while object is not initialized");
     return ;
 }
 
-ft_buff &ft_buff::operator=(ft_buff &&other) noexcept
+int ft_buff::initialize() noexcept
 {
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
-    int lock_error;
-
-    if (this == &other)
-        return (*this);
-    lock_error = ft_buff::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESS)
+    if (this->_initialized_state == ft_buff::_state_initialized)
     {
-        this->set_error(lock_error);
-        return (*this);
+        this->abort_lifecycle_error("ft_buff::initialize",
+            "called while object is already initialized");
+        return (FT_ERR_INVALID_STATE);
     }
+    this->_id = 0;
+    this->_duration = 0;
+    this->_modifier1 = 0;
+    this->_modifier2 = 0;
+    this->_modifier3 = 0;
+    this->_modifier4 = 0;
+    this->_initialized_state = ft_buff::_state_initialized;
+    return (FT_ERR_SUCCESS);
+}
+
+int ft_buff::initialize(const ft_buff &other) noexcept
+{
+    int initialize_error;
+
+    if (&other == this)
+        return (FT_ERR_SUCCESS);
+    initialize_error = this->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
     this->_id = other._id;
     this->_duration = other._duration;
     this->_modifier1 = other._modifier1;
     this->_modifier2 = other._modifier2;
     this->_modifier3 = other._modifier3;
     this->_modifier4 = other._modifier4;
-    this->_error = other._error;
-    other._id = 0;
-    other._duration = 0;
-    other._modifier1 = 0;
-    other._modifier2 = 0;
-    other._modifier3 = 0;
-    other._modifier4 = 0;
-    other._error = FT_ERR_SUCCESS;
-    this->set_error(this->_error);
-    other.set_error(FT_ERR_SUCCESS);
-    game_buff_finalize_lock(this_guard);
-    game_buff_finalize_lock(other_guard);
-    return (*this);
+    return (FT_ERR_SUCCESS);
+}
+
+int ft_buff::initialize(ft_buff &&other) noexcept
+{
+    return (this->initialize(static_cast<const ft_buff &>(other)));
+}
+
+int ft_buff::destroy() noexcept
+{
+    int disable_error;
+
+    if (this->_initialized_state != ft_buff::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_buff::destroy",
+            "called while object is not initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    disable_error = this->disable_thread_safety();
+    this->_id = 0;
+    this->_duration = 0;
+    this->_modifier1 = 0;
+    this->_modifier2 = 0;
+    this->_modifier3 = 0;
+    this->_modifier4 = 0;
+    this->_initialized_state = ft_buff::_state_destroyed;
+    return (disable_error);
+}
+
+int ft_buff::enable_thread_safety() noexcept
+{
+    pt_mutex *mutex_pointer;
+    int initialize_error;
+
+    this->abort_if_not_initialized("ft_buff::enable_thread_safety");
+    if (this->_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    mutex_pointer = new (std::nothrow) pt_mutex();
+    if (mutex_pointer == ft_nullptr)
+        return (FT_ERR_NO_MEMORY);
+    initialize_error = mutex_pointer->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        delete mutex_pointer;
+        return (initialize_error);
+    }
+    this->_mutex = mutex_pointer;
+    return (FT_ERR_SUCCESS);
+}
+
+int ft_buff::disable_thread_safety() noexcept
+{
+    int destroy_error;
+
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    destroy_error = this->_mutex->destroy();
+    delete this->_mutex;
+    this->_mutex = ft_nullptr;
+    return (destroy_error);
+}
+
+bool ft_buff::is_thread_safe() const noexcept
+{
+    this->abort_if_not_initialized("ft_buff::is_thread_safe");
+    return (this->_mutex != ft_nullptr);
+}
+
+int ft_buff::lock_internal(bool *lock_acquired) const noexcept
+{
+    int lock_error;
+
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = false;
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    lock_error = this->_mutex->lock();
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = true;
+    return (FT_ERR_SUCCESS);
+}
+
+int ft_buff::unlock_internal(bool lock_acquired) const noexcept
+{
+    if (lock_acquired == false)
+        return (FT_ERR_SUCCESS);
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    return (this->_mutex->unlock());
+}
+
+int ft_buff::lock(bool *lock_acquired) const noexcept
+{
+    this->abort_if_not_initialized("ft_buff::lock");
+    return (this->lock_internal(lock_acquired));
+}
+
+void ft_buff::unlock(bool lock_acquired) const noexcept
+{
+    this->abort_if_not_initialized("ft_buff::unlock");
+    (void)this->unlock_internal(lock_acquired);
+    return ;
 }
 
 int ft_buff::get_id() const noexcept
 {
-    int identifier;
+    bool lock_acquired;
+    int lock_error;
+    int value;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_buff *>(this)->set_error(guard.get_error());
-        game_buff_finalize_lock(guard);
+    this->abort_if_not_initialized("ft_buff::get_id");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return (0);
-    }
-    identifier = this->_id;
-    const_cast<ft_buff *>(this)->set_error(FT_ERR_SUCCESS);
-    game_buff_finalize_lock(guard);
-    return (identifier);
+    value = this->_id;
+    (void)this->unlock_internal(lock_acquired);
+    return (value);
 }
 
 void ft_buff::set_id(int id) noexcept
 {
+    bool lock_acquired;
+    int lock_error;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        game_buff_finalize_lock(guard);
+    this->abort_if_not_initialized("ft_buff::set_id");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
-    if (id < 0)
-    {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
-        game_buff_finalize_lock(guard);
-        return ;
-    }
-    this->_id = id;
-    this->set_error(FT_ERR_SUCCESS);
-    game_buff_finalize_lock(guard);
+    if (id >= 0)
+        this->_id = id;
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
 int ft_buff::get_duration() const noexcept
 {
-    int duration_value;
+    bool lock_acquired;
+    int lock_error;
+    int value;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_buff *>(this)->set_error(guard.get_error());
-        game_buff_finalize_lock(guard);
+    this->abort_if_not_initialized("ft_buff::get_duration");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return (0);
-    }
-    duration_value = this->_duration;
-    const_cast<ft_buff *>(this)->set_error(FT_ERR_SUCCESS);
-    game_buff_finalize_lock(guard);
-    return (duration_value);
+    value = this->_duration;
+    (void)this->unlock_internal(lock_acquired);
+    return (value);
 }
 
 void ft_buff::set_duration(int duration) noexcept
 {
+    bool lock_acquired;
+    int lock_error;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        game_buff_finalize_lock(guard);
+    this->abort_if_not_initialized("ft_buff::set_duration");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
-    if (duration < 0)
-    {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
-        game_buff_finalize_lock(guard);
-        return ;
-    }
-    this->_duration = duration;
-    this->set_error(FT_ERR_SUCCESS);
-    game_buff_finalize_lock(guard);
+    if (duration >= 0)
+        this->_duration = duration;
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
 void ft_buff::add_duration(int duration) noexcept
 {
+    bool lock_acquired;
+    int lock_error;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        game_buff_finalize_lock(guard);
+    this->abort_if_not_initialized("ft_buff::add_duration");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
-    if (duration < 0)
-    {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
-        game_buff_finalize_lock(guard);
-        return ;
-    }
-    this->_duration += duration;
-    this->set_error(FT_ERR_SUCCESS);
-    game_buff_finalize_lock(guard);
+    if (duration >= 0)
+        this->_duration += duration;
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
 void ft_buff::sub_duration(int duration) noexcept
 {
+    bool lock_acquired;
+    int lock_error;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        game_buff_finalize_lock(guard);
+    this->abort_if_not_initialized("ft_buff::sub_duration");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
-    if (duration < 0)
-    {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
-        game_buff_finalize_lock(guard);
-        return ;
-    }
-    this->_duration -= duration;
-    this->set_error(FT_ERR_SUCCESS);
-    game_buff_finalize_lock(guard);
+    if (duration >= 0)
+        this->_duration -= duration;
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
 int ft_buff::get_modifier1() const noexcept
 {
-    int modifier_value;
+    bool lock_acquired;
+    int lock_error;
+    int value;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_buff *>(this)->set_error(guard.get_error());
-        game_buff_finalize_lock(guard);
+    this->abort_if_not_initialized("ft_buff::get_modifier1");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return (0);
-    }
-    modifier_value = this->_modifier1;
-    const_cast<ft_buff *>(this)->set_error(FT_ERR_SUCCESS);
-    game_buff_finalize_lock(guard);
-    return (modifier_value);
+    value = this->_modifier1;
+    (void)this->unlock_internal(lock_acquired);
+    return (value);
 }
 
 void ft_buff::set_modifier1(int mod) noexcept
 {
+    bool lock_acquired;
+    int lock_error;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        game_buff_finalize_lock(guard);
+    this->abort_if_not_initialized("ft_buff::set_modifier1");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
     this->_modifier1 = mod;
-    this->set_error(FT_ERR_SUCCESS);
-    game_buff_finalize_lock(guard);
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
 void ft_buff::add_modifier1(int mod) noexcept
 {
+    bool lock_acquired;
+    int lock_error;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        game_buff_finalize_lock(guard);
+    this->abort_if_not_initialized("ft_buff::add_modifier1");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
     this->_modifier1 += mod;
-    this->set_error(FT_ERR_SUCCESS);
-    game_buff_finalize_lock(guard);
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
 void ft_buff::sub_modifier1(int mod) noexcept
 {
+    bool lock_acquired;
+    int lock_error;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        game_buff_finalize_lock(guard);
+    this->abort_if_not_initialized("ft_buff::sub_modifier1");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
     this->_modifier1 -= mod;
-    this->set_error(FT_ERR_SUCCESS);
-    game_buff_finalize_lock(guard);
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
 int ft_buff::get_modifier2() const noexcept
 {
-    int modifier_value;
+    bool lock_acquired;
+    int lock_error;
+    int value;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_buff *>(this)->set_error(guard.get_error());
-        game_buff_finalize_lock(guard);
+    this->abort_if_not_initialized("ft_buff::get_modifier2");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return (0);
-    }
-    modifier_value = this->_modifier2;
-    const_cast<ft_buff *>(this)->set_error(FT_ERR_SUCCESS);
-    game_buff_finalize_lock(guard);
-    return (modifier_value);
+    value = this->_modifier2;
+    (void)this->unlock_internal(lock_acquired);
+    return (value);
 }
 
 void ft_buff::set_modifier2(int mod) noexcept
 {
+    bool lock_acquired;
+    int lock_error;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        game_buff_finalize_lock(guard);
+    this->abort_if_not_initialized("ft_buff::set_modifier2");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
     this->_modifier2 = mod;
-    this->set_error(FT_ERR_SUCCESS);
-    game_buff_finalize_lock(guard);
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
 void ft_buff::add_modifier2(int mod) noexcept
 {
+    bool lock_acquired;
+    int lock_error;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        game_buff_finalize_lock(guard);
+    this->abort_if_not_initialized("ft_buff::add_modifier2");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
     this->_modifier2 += mod;
-    this->set_error(FT_ERR_SUCCESS);
-    game_buff_finalize_lock(guard);
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
 void ft_buff::sub_modifier2(int mod) noexcept
 {
+    bool lock_acquired;
+    int lock_error;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        game_buff_finalize_lock(guard);
+    this->abort_if_not_initialized("ft_buff::sub_modifier2");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
     this->_modifier2 -= mod;
-    this->set_error(FT_ERR_SUCCESS);
-    game_buff_finalize_lock(guard);
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
 int ft_buff::get_modifier3() const noexcept
 {
-    int modifier_value;
+    bool lock_acquired;
+    int lock_error;
+    int value;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_buff *>(this)->set_error(guard.get_error());
-        game_buff_finalize_lock(guard);
+    this->abort_if_not_initialized("ft_buff::get_modifier3");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return (0);
-    }
-    modifier_value = this->_modifier3;
-    const_cast<ft_buff *>(this)->set_error(FT_ERR_SUCCESS);
-    game_buff_finalize_lock(guard);
-    return (modifier_value);
+    value = this->_modifier3;
+    (void)this->unlock_internal(lock_acquired);
+    return (value);
 }
 
 void ft_buff::set_modifier3(int mod) noexcept
 {
+    bool lock_acquired;
+    int lock_error;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        game_buff_finalize_lock(guard);
+    this->abort_if_not_initialized("ft_buff::set_modifier3");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
     this->_modifier3 = mod;
-    this->set_error(FT_ERR_SUCCESS);
-    game_buff_finalize_lock(guard);
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
 void ft_buff::add_modifier3(int mod) noexcept
 {
+    bool lock_acquired;
+    int lock_error;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        game_buff_finalize_lock(guard);
+    this->abort_if_not_initialized("ft_buff::add_modifier3");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
     this->_modifier3 += mod;
-    this->set_error(FT_ERR_SUCCESS);
-    game_buff_finalize_lock(guard);
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
 void ft_buff::sub_modifier3(int mod) noexcept
 {
+    bool lock_acquired;
+    int lock_error;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        game_buff_finalize_lock(guard);
+    this->abort_if_not_initialized("ft_buff::sub_modifier3");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
     this->_modifier3 -= mod;
-    this->set_error(FT_ERR_SUCCESS);
-    game_buff_finalize_lock(guard);
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
 int ft_buff::get_modifier4() const noexcept
 {
-    int modifier_value;
+    bool lock_acquired;
+    int lock_error;
+    int value;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_buff *>(this)->set_error(guard.get_error());
-        game_buff_finalize_lock(guard);
+    this->abort_if_not_initialized("ft_buff::get_modifier4");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return (0);
-    }
-    modifier_value = this->_modifier4;
-    const_cast<ft_buff *>(this)->set_error(FT_ERR_SUCCESS);
-    game_buff_finalize_lock(guard);
-    return (modifier_value);
+    value = this->_modifier4;
+    (void)this->unlock_internal(lock_acquired);
+    return (value);
 }
 
 void ft_buff::set_modifier4(int mod) noexcept
 {
+    bool lock_acquired;
+    int lock_error;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        game_buff_finalize_lock(guard);
+    this->abort_if_not_initialized("ft_buff::set_modifier4");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
     this->_modifier4 = mod;
-    this->set_error(FT_ERR_SUCCESS);
-    game_buff_finalize_lock(guard);
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
 void ft_buff::add_modifier4(int mod) noexcept
 {
+    bool lock_acquired;
+    int lock_error;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        game_buff_finalize_lock(guard);
+    this->abort_if_not_initialized("ft_buff::add_modifier4");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
     this->_modifier4 += mod;
-    this->set_error(FT_ERR_SUCCESS);
-    game_buff_finalize_lock(guard);
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
 void ft_buff::sub_modifier4(int mod) noexcept
 {
+    bool lock_acquired;
+    int lock_error;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        game_buff_finalize_lock(guard);
+    this->abort_if_not_initialized("ft_buff::sub_modifier4");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
     this->_modifier4 -= mod;
-    this->set_error(FT_ERR_SUCCESS);
-    game_buff_finalize_lock(guard);
+    (void)this->unlock_internal(lock_acquired);
     return ;
 }
 
-int ft_buff::get_error() const noexcept
+#ifdef LIBFT_TEST_BUILD
+pt_mutex *ft_buff::get_mutex_for_validation() const noexcept
 {
-    int error_code;
-
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_buff *>(this)->set_error(guard.get_error());
-        game_buff_finalize_lock(guard);
-        return (guard.get_error());
-    }
-    error_code = this->_error;
-    const_cast<ft_buff *>(this)->set_error(error_code);
-    game_buff_finalize_lock(guard);
-    return (error_code);
+    return (this->_mutex);
 }
-
-const char *ft_buff::get_error_str() const noexcept
-{
-    int error_code;
-
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_buff *>(this)->set_error(guard.get_error());
-        game_buff_finalize_lock(guard);
-        return (ft_strerror(guard.get_error()));
-    }
-    error_code = this->_error;
-    const_cast<ft_buff *>(this)->set_error(error_code);
-    game_buff_finalize_lock(guard);
-    return (ft_strerror(error_code));
-}
-
-void ft_buff::set_error(int err) const noexcept
-{
-    ft_errno = err;
-    this->_error = err;
-    return ;
-}
+#endif

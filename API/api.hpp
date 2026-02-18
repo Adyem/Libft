@@ -5,6 +5,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "../PThread/unique_lock.hpp"
 #include "api_request_signing.hpp"
 #include <cstdint>
@@ -21,27 +22,33 @@ typedef bool (*api_stream_body_callback)(const char *chunk_data,
 class api_streaming_handler
 {
     private:
+        uint8_t _initialized_state;
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
         api_stream_headers_callback _headers_callback;
         api_stream_body_callback _body_callback;
         void *_user_data;
-        mutable int _error_code;
-        mutable pt_mutex _mutex;
+        mutable pt_recursive_mutex *_mutex;
 
-        void set_error(int error) const noexcept;
-        static int lock_pair(const api_streaming_handler &first,
-            const api_streaming_handler &second,
-            ft_unique_lock<pt_mutex> &first_guard,
-            ft_unique_lock<pt_mutex> &second_guard) noexcept;
-        static thread_local ft_operation_error_stack _operation_errors;
-        static void record_operation_error_unlocked(int error_code) noexcept;
+        void abort_lifecycle_error(const char *method_name,
+            const char *reason) const noexcept;
+        void abort_if_not_initialized(const char *method_name) const noexcept;
+        int lock(bool *lock_acquired) const noexcept;
+        void unlock(bool lock_acquired) const noexcept;
 
     public:
         api_streaming_handler() noexcept;
-        api_streaming_handler(const api_streaming_handler &other) noexcept;
-        api_streaming_handler &operator=(const api_streaming_handler &other) noexcept;
-        api_streaming_handler(api_streaming_handler &&other) noexcept;
-        api_streaming_handler &operator=(api_streaming_handler &&other) noexcept;
+        api_streaming_handler(const api_streaming_handler &other) noexcept = delete;
+        api_streaming_handler &operator=(const api_streaming_handler &other) noexcept = delete;
+        api_streaming_handler(api_streaming_handler &&other) noexcept = delete;
+        api_streaming_handler &operator=(api_streaming_handler &&other) noexcept = delete;
         ~api_streaming_handler();
+        int initialize() noexcept;
+        int destroy() noexcept;
+        int enable_thread_safety() noexcept;
+        int disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
 
         void reset() noexcept;
 
@@ -53,14 +60,18 @@ class api_streaming_handler
             const char *headers) const noexcept;
         bool invoke_body_callback(const char *chunk_data, size_t chunk_size,
             bool is_final_chunk, bool &should_continue) const noexcept;
-
-        int get_error() const noexcept;
-        const char *get_error_str() const noexcept;
+#ifdef LIBFT_TEST_BUILD
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
+#endif
 };
 
 class api_retry_policy
 {
     private:
+        uint8_t _initialized_state;
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
         int _max_attempts;
         int _initial_delay_ms;
         int _max_delay_ms;
@@ -68,24 +79,26 @@ class api_retry_policy
         int _circuit_breaker_threshold;
         int _circuit_breaker_cooldown_ms;
         int _circuit_breaker_half_open_successes;
-        mutable int _error_code;
-        mutable pt_mutex _mutex;
+        mutable pt_recursive_mutex *_mutex;
 
-        void set_error(int error) const noexcept;
-        static int lock_pair(const api_retry_policy &first,
-            const api_retry_policy &second,
-            ft_unique_lock<pt_mutex> &first_guard,
-            ft_unique_lock<pt_mutex> &second_guard) noexcept;
-        static thread_local ft_operation_error_stack _operation_errors;
-        static void record_operation_error_unlocked(int error_code) noexcept;
+        void abort_lifecycle_error(const char *method_name,
+            const char *reason) const noexcept;
+        void abort_if_not_initialized(const char *method_name) const noexcept;
+        int lock(bool *lock_acquired) const noexcept;
+        void unlock(bool lock_acquired) const noexcept;
 
     public:
         api_retry_policy() noexcept;
-        api_retry_policy(const api_retry_policy &other) noexcept;
-        api_retry_policy &operator=(const api_retry_policy &other) noexcept;
-        api_retry_policy(api_retry_policy &&other) noexcept;
-        api_retry_policy &operator=(api_retry_policy &&other) noexcept;
+        api_retry_policy(const api_retry_policy &other) noexcept = delete;
+        api_retry_policy &operator=(const api_retry_policy &other) noexcept = delete;
+        api_retry_policy(api_retry_policy &&other) noexcept = delete;
+        api_retry_policy &operator=(api_retry_policy &&other) noexcept = delete;
         ~api_retry_policy();
+        int initialize() noexcept;
+        int destroy() noexcept;
+        int enable_thread_safety() noexcept;
+        int disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
 
         void reset() noexcept;
 
@@ -104,9 +117,9 @@ class api_retry_policy
         int get_circuit_breaker_threshold() const noexcept;
         int get_circuit_breaker_cooldown_ms() const noexcept;
         int get_circuit_breaker_half_open_successes() const noexcept;
-
-        int get_error() const noexcept;
-        const char *get_error_str() const noexcept;
+#ifdef LIBFT_TEST_BUILD
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
+#endif
 };
 
 struct api_transport_hooks

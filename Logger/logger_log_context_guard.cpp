@@ -22,14 +22,12 @@ ft_log_context_guard::ft_log_context_guard(const s_log_field *fields,
         this->_pushed_count = 0;
         int push_error;
 
-        push_error = ft_global_error_stack_drop_last_error();
+        push_error = FT_ERR_SUCCESS;
         if (push_error == FT_ERR_SUCCESS)
             push_error = FT_ERR_INTERNAL;
         this->set_error(push_error);
         return ;
     }
-    else
-        ft_global_error_stack_drop_last_error();
     this->_pushed_count = pushed_count;
     if (pushed_count != 0)
         this->_active = true;
@@ -46,7 +44,7 @@ ft_log_context_guard::~ft_log_context_guard() noexcept
         logger_context_pop(this->_pushed_count);
         int pop_error;
 
-        pop_error = ft_global_error_stack_drop_last_error();
+        pop_error = FT_ERR_SUCCESS;
         if (pop_error != FT_ERR_SUCCESS)
         {
             this->_active = false;
@@ -79,7 +77,7 @@ ft_log_context_guard &ft_log_context_guard::operator=(ft_log_context_guard &&oth
             logger_context_pop(this->_pushed_count);
             int pop_error;
 
-            pop_error = ft_global_error_stack_drop_last_error();
+            pop_error = FT_ERR_SUCCESS;
             if (pop_error != FT_ERR_SUCCESS)
             {
                 this->_active = false;
@@ -102,7 +100,6 @@ ft_log_context_guard &ft_log_context_guard::operator=(ft_log_context_guard &&oth
 void ft_log_context_guard::set_error(int error_code) const
 {
     this->_error_code = error_code;
-    ft_global_error_stack_push(error_code);
     return ;
 }
 
@@ -116,7 +113,7 @@ void ft_log_context_guard::release() noexcept
     logger_context_pop(this->_pushed_count);
     int pop_error;
 
-    pop_error = ft_global_error_stack_drop_last_error();
+    pop_error = FT_ERR_SUCCESS;
     if (pop_error != FT_ERR_SUCCESS)
     {
         this->_active = false;

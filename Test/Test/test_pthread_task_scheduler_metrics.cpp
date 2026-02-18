@@ -22,7 +22,6 @@ FT_TEST(test_task_scheduler_metrics_flow, "ft_task_scheduler tracks queue and wo
     queue_size = scheduler_instance.get_queue_size();
     FT_ASSERT_EQ(0, queue_size);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.operation_error_last_error());
-    FT_ASSERT_EQ(ft_errno, scheduler_instance.operation_error_last_error());
     scheduled_count = scheduler_instance.get_scheduled_task_count();
     FT_ASSERT_EQ(0, scheduled_count);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.operation_error_last_error());
@@ -94,17 +93,14 @@ FT_TEST(test_task_scheduler_metrics_flow, "ft_task_scheduler tracks queue and wo
     queue_size = scheduler_instance.get_queue_size();
     FT_ASSERT_EQ(0, queue_size);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.operation_error_last_error());
-    FT_ASSERT_EQ(ft_errno, scheduler_instance.operation_error_last_error());
     active_count = scheduler_instance.get_worker_active_count();
     FT_ASSERT_EQ(0, active_count);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.operation_error_last_error());
     idle_count = scheduler_instance.get_worker_idle_count();
     FT_ASSERT_EQ(1, idle_count);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.operation_error_last_error());
-    FT_ASSERT_EQ(ft_errno, scheduler_instance.operation_error_last_error());
     worker_total = scheduler_instance.get_worker_total_count();
     FT_ASSERT_EQ(1, worker_total);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.operation_error_last_error());
-    FT_ASSERT_EQ(ft_errno, scheduler_instance.operation_error_last_error());
     return (1);
 }

@@ -2,7 +2,6 @@
 #include "../../Networking/socket_class.hpp"
 #include "../../Networking/networking.hpp"
 #include "../../System_utils/test_runner.hpp"
-#include "../../Errno/errno.hpp"
 #include "../../PThread/pthread.hpp"
 #include <thread>
 #include <atomic>
@@ -59,7 +58,8 @@ static int networking_socket_create_server(uint16_t &port)
 static void networking_socket_configure_client(SocketConfig &config, uint16_t port)
 {
     config._type = SocketType::CLIENT;
-    config._ip = "127.0.0.1";
+    std::strncpy(config._ip, "127.0.0.1", sizeof(config._ip) - 1);
+    config._ip[sizeof(config._ip) - 1] = '\0';
     config._port = port;
     config._address_family = AF_INET;
     config._non_blocking = false;
@@ -89,6 +89,7 @@ FT_TEST(test_ft_socket_send_all_thread_safety,
 
     server_fd = networking_socket_create_server(server_port);
     FT_ASSERT(server_fd >= 0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, client_config.initialize());
     networking_socket_configure_client(client_config, server_port);
     accepted_fd = -1;
     accept_thread = std::thread([server_fd, &accepted_fd]() {
@@ -100,8 +101,7 @@ FT_TEST(test_ft_socket_send_all_thread_safety,
         accepted_fd = ::accept(server_fd, reinterpret_cast<struct sockaddr*>(&client_addr), &length);
         return ;
     });
-    client_socket = ft_socket(client_config);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, networking_fetch_last_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, client_socket.initialize(client_config));
     accept_thread.join();
     FT_ASSERT(accepted_fd >= 0);
     message_length = static_cast<int>(sizeof(message) - 1);
@@ -131,16 +131,9 @@ FT_TEST(test_ft_socket_send_all_thread_safety,
         while (inspector_running.load())
         {
             int descriptor;
-            const char *error_string;
 
             descriptor = client_socket.get_fd();
             if (descriptor < 0)
-            {
-                thread_failed.store(true);
-                return ;
-            }
-            error_string = client_socket.get_error_str();
-            if (error_string == ft_nullptr)
             {
                 thread_failed.store(true);
                 return ;
@@ -158,11 +151,6 @@ FT_TEST(test_ft_socket_send_all_thread_safety,
 
             bytes_sent = client_socket.send_all(message, message_length, 0);
             if (static_cast<int>(bytes_sent) != message_length)
-            {
-                thread_failed.store(true);
-                return ;
-            }
-            if (networking_fetch_last_error() != FT_ERR_SUCCESS)
             {
                 thread_failed.store(true);
                 return ;
@@ -202,6 +190,7 @@ FT_TEST(test_ft_socket_receive_close_thread_safety,
 
     server_fd = networking_socket_create_server(server_port);
     FT_ASSERT(server_fd >= 0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, client_config.initialize());
     networking_socket_configure_client(client_config, server_port);
     accepted_fd = -1;
     accept_thread = std::thread([server_fd, &accepted_fd]() {
@@ -213,8 +202,7 @@ FT_TEST(test_ft_socket_receive_close_thread_safety,
         accepted_fd = ::accept(server_fd, reinterpret_cast<struct sockaddr*>(&client_addr), &length);
         return ;
     });
-    client_socket = ft_socket(client_config);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, networking_fetch_last_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, client_socket.initialize(client_config));
     accept_thread.join();
     FT_ASSERT(accepted_fd >= 0);
     received_once.store(false);

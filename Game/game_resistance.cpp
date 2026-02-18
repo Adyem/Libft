@@ -14,7 +14,6 @@ static void game_resistance_restore_errno(ft_unique_lock<pt_mutex> &guard) noexc
 {
     if (guard.owns_lock())
         guard.unlock();
-    ft_errno = FT_ERR_SUCCESS;
     return ;
 }
 
@@ -43,14 +42,12 @@ int ft_resistance::lock_pair(const ft_resistance &first,
     {
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
 
-        if (single_guard.get_error() != FT_ERR_SUCCESS)
+        if (single_guard.last_operation_error() != FT_ERR_SUCCESS)
         {
-            ft_errno = single_guard.get_error();
-            return (single_guard.get_error());
+            return (single_guard.last_operation_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ERR_SUCCESS;
         return (FT_ERR_SUCCESS);
     }
     ordered_first = &first;
@@ -69,13 +66,12 @@ int ft_resistance::lock_pair(const ft_resistance &first,
     {
         ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
 
-        if (lower_guard.get_error() != FT_ERR_SUCCESS)
+        if (lower_guard.last_operation_error() != FT_ERR_SUCCESS)
         {
-            ft_errno = lower_guard.get_error();
-            return (lower_guard.get_error());
+            return (lower_guard.last_operation_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ERR_SUCCESS)
+        if (upper_guard.last_operation_error() == FT_ERR_SUCCESS)
         {
             if (!swapped)
             {
@@ -87,13 +83,11 @@ int ft_resistance::lock_pair(const ft_resistance &first,
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = FT_ERR_SUCCESS;
             return (FT_ERR_SUCCESS);
         }
-        if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
+        if (upper_guard.last_operation_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            ft_errno = upper_guard.get_error();
-            return (upper_guard.get_error());
+            return (upper_guard.last_operation_error());
         }
         if (lower_guard.owns_lock())
             lower_guard.unlock();
@@ -105,9 +99,9 @@ ft_resistance::ft_resistance(const ft_resistance &other) noexcept
     : _percent_value(0), _flat_value(0), _error_code(FT_ERR_SUCCESS), _mutex()
 {
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESS)
+    if (other_guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(other_guard.get_error());
+        this->set_error(other_guard.last_operation_error());
         game_resistance_restore_errno(other_guard);
         return ;
     }
@@ -146,9 +140,9 @@ ft_resistance::ft_resistance(ft_resistance &&other) noexcept
     : _percent_value(0), _flat_value(0), _error_code(FT_ERR_SUCCESS), _mutex()
 {
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESS)
+    if (other_guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(other_guard.get_error());
+        this->set_error(other_guard.last_operation_error());
         game_resistance_restore_errno(other_guard);
         return ;
     }
@@ -194,11 +188,11 @@ ft_resistance &ft_resistance::operator=(ft_resistance &&other) noexcept
 int ft_resistance::set_percent(int percent_value) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(guard.get_error());
+        this->set_error(guard.last_operation_error());
         game_resistance_restore_errno(guard);
-        return (guard.get_error());
+        return (guard.last_operation_error());
     }
     this->_percent_value = percent_value;
     this->set_error(FT_ERR_SUCCESS);
@@ -209,11 +203,11 @@ int ft_resistance::set_percent(int percent_value) noexcept
 int ft_resistance::set_flat(int flat_value) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(guard.get_error());
+        this->set_error(guard.last_operation_error());
         game_resistance_restore_errno(guard);
-        return (guard.get_error());
+        return (guard.last_operation_error());
     }
     this->_flat_value = flat_value;
     this->set_error(FT_ERR_SUCCESS);
@@ -224,11 +218,11 @@ int ft_resistance::set_flat(int flat_value) noexcept
 int ft_resistance::set_values(int percent_value, int flat_value) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->set_error(guard.get_error());
+        this->set_error(guard.last_operation_error());
         game_resistance_restore_errno(guard);
-        return (guard.get_error());
+        return (guard.last_operation_error());
     }
     this->_percent_value = percent_value;
     this->_flat_value = flat_value;
@@ -247,9 +241,9 @@ int ft_resistance::get_percent() const noexcept
     int percent_value;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        const_cast<ft_resistance *>(this)->set_error(guard.get_error());
+        const_cast<ft_resistance *>(this)->set_error(guard.last_operation_error());
         game_resistance_restore_errno(guard);
         return (0);
     }
@@ -264,9 +258,9 @@ int ft_resistance::get_flat() const noexcept
     int flat_value;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        const_cast<ft_resistance *>(this)->set_error(guard.get_error());
+        const_cast<ft_resistance *>(this)->set_error(guard.last_operation_error());
         game_resistance_restore_errno(guard);
         return (0);
     }
@@ -281,11 +275,11 @@ int ft_resistance::get_error() const noexcept
     int error_code;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        const_cast<ft_resistance *>(this)->set_error(guard.get_error());
+        const_cast<ft_resistance *>(this)->set_error(guard.last_operation_error());
         game_resistance_restore_errno(guard);
-        return (guard.get_error());
+        return (guard.last_operation_error());
     }
     error_code = this->_error_code;
     const_cast<ft_resistance *>(this)->set_error(error_code);
@@ -298,11 +292,11 @@ const char *ft_resistance::get_error_str() const noexcept
     int error_code;
 
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
+    if (guard.last_operation_error() != FT_ERR_SUCCESS)
     {
-        const_cast<ft_resistance *>(this)->set_error(guard.get_error());
+        const_cast<ft_resistance *>(this)->set_error(guard.last_operation_error());
         game_resistance_restore_errno(guard);
-        return (ft_strerror(guard.get_error()));
+        return (ft_strerror(guard.last_operation_error()));
     }
     error_code = this->_error_code;
     const_cast<ft_resistance *>(this)->set_error(error_code);
@@ -312,7 +306,6 @@ const char *ft_resistance::get_error_str() const noexcept
 
 void ft_resistance::set_error(int error) const noexcept
 {
-    ft_errno = error;
     this->_error_code = error;
     return ;
 }

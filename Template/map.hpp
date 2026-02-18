@@ -80,9 +80,9 @@ class ft_map
         ~ft_map();
 
         ft_map(const ft_map& other) = delete;
-        ft_map& operator=(const ft_map& other) = delete;
+        ft_map& operator=(const ft_map& other);
         ft_map(ft_map&& other) = delete;
-        ft_map& operator=(ft_map&& other) = delete;
+        ft_map& operator=(ft_map&& other);
 
         int     initialize();
         int     destroy();
@@ -127,6 +127,42 @@ ft_map<Key, MappedType>::ft_map(size_t initial_capacity)
     , _initial_capacity(initial_capacity)
 {
     return ;
+}
+
+template <typename Key, typename MappedType>
+ft_map<Key, MappedType>& ft_map<Key, MappedType>::operator=(
+    const ft_map<Key, MappedType>& other)
+{
+    if (this == &other)
+        return (*this);
+    if (other._state != ft_map<Key, MappedType>::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_map::operator=(const ft_map&)",
+            "source object is not initialized");
+        return (*this);
+    }
+    if (this->_state != ft_map<Key, MappedType>::_state_initialized)
+        (void)this->initialize();
+    (void)this->copy_from(other);
+    return (*this);
+}
+
+template <typename Key, typename MappedType>
+ft_map<Key, MappedType>& ft_map<Key, MappedType>::operator=(
+    ft_map<Key, MappedType>&& other)
+{
+    if (this == &other)
+        return (*this);
+    if (other._state != ft_map<Key, MappedType>::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_map::operator=(ft_map&&)",
+            "source object is not initialized");
+        return (*this);
+    }
+    if (this->_state != ft_map<Key, MappedType>::_state_initialized)
+        (void)this->initialize();
+    (void)this->move_from(other);
+    return (*this);
 }
 
 template <typename Key, typename MappedType>

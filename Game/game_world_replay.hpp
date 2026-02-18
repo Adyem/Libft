@@ -16,17 +16,14 @@ class ft_world_replay_session
     private:
         ft_string   _snapshot_payload;
         ft_vector<ft_function<void(ft_world&, ft_event&)> > _event_callbacks;
-        mutable int _error_code;
-
-        void set_error(int error_code) const noexcept;
 
     public:
         ft_world_replay_session() noexcept;
         ~ft_world_replay_session() noexcept;
-        ft_world_replay_session(const ft_world_replay_session &other) noexcept;
-        ft_world_replay_session &operator=(const ft_world_replay_session &other) noexcept;
-        ft_world_replay_session(ft_world_replay_session &&other) noexcept;
-        ft_world_replay_session &operator=(ft_world_replay_session &&other) noexcept;
+        ft_world_replay_session(const ft_world_replay_session &other) noexcept = delete;
+        ft_world_replay_session &operator=(const ft_world_replay_session &other) noexcept = delete;
+        ft_world_replay_session(ft_world_replay_session &&other) noexcept = delete;
+        ft_world_replay_session &operator=(ft_world_replay_session &&other) noexcept = delete;
 
         int capture_snapshot(ft_world &world, const ft_character &character, const ft_inventory &inventory) noexcept;
         int restore_snapshot(ft_sharedptr<ft_world> &world_ptr, ft_character &character, ft_inventory &inventory) noexcept;
@@ -39,9 +36,6 @@ class ft_world_replay_session
         int import_snapshot(const ft_string &snapshot_payload) noexcept;
         int export_snapshot(ft_string &out_snapshot) const noexcept;
         void clear_snapshot() noexcept;
-
-        int get_error() const noexcept;
-        const char *get_error_str() const noexcept;
 };
 
 #endif

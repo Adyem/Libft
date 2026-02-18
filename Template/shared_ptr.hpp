@@ -3,227 +3,647 @@
 
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
-#include "math.hpp"
-#include "swap.hpp"
-#include "template_concepts.hpp"
 #include "../PThread/recursive_mutex.hpp"
-#include "../PThread/pthread.hpp"
-#include "../PThread/pthread.hpp"
-#include <stdint.h>
 #include <cstddef>
-#include <utility>
-#include <type_traits>
-#include <cstdlib>
+#include <cstdint>
 #include <new>
-
-template <typename ManagedType>
-class ft_sharedptr_access_proxy
-{
-    private:
-        ManagedType *_pointer;
-        int _error_code;
-        static ManagedType &fallback_reference()
-        {
-            if constexpr (!std::is_abstract_v<ManagedType>)
-            {
-                static ManagedType default_instance;
-                return (default_instance);
-            }
-            else
-            {
-                static char dummy_buffer[sizeof(ManagedType)] = {0};
-                return (*reinterpret_cast<ManagedType*>(dummy_buffer));
-            }
-        }
-
-    public:
-        ft_sharedptr_access_proxy() : _pointer(ft_nullptr), _error_code(FT_ERR_SUCCESS) {}
-        ft_sharedptr_access_proxy(ManagedType *pointer, int error_code)
-            : _pointer(pointer), _error_code(error_code) {}
-        ~ft_sharedptr_access_proxy() { return ; }
-
-        ManagedType *operator->()
-        {
-            if (this->_pointer == ft_nullptr)
-                return (&ft_sharedptr_access_proxy<ManagedType>::fallback_reference());
-            return (this->_pointer);
-        }
-        const ManagedType *operator->() const
-        {
-            if (this->_pointer == ft_nullptr)
-                return (&ft_sharedptr_access_proxy<ManagedType>::fallback_reference());
-            return (this->_pointer);
-        }
-        ManagedType &operator*()
-        {
-            if (this->_pointer == ft_nullptr)
-                return (ft_sharedptr_access_proxy<ManagedType>::fallback_reference());
-            return (*this->_pointer);
-        }
-        const ManagedType &operator*() const
-        {
-            if (this->_pointer == ft_nullptr)
-                return (ft_sharedptr_access_proxy<ManagedType>::fallback_reference());
-            return (*this->_pointer);
-        }
-        operator ManagedType&()
-        {
-            if (this->_pointer == ft_nullptr)
-                return (ft_sharedptr_access_proxy<ManagedType>::fallback_reference());
-            return (*this->_pointer);
-        }
-        operator const ManagedType&() const
-        {
-            if (this->_pointer == ft_nullptr)
-                return (ft_sharedptr_access_proxy<ManagedType>::fallback_reference());
-            return (*this->_pointer);
-        }
-        int get_error() const { return (this->_error_code); }
-        bool has_error() const { return (this->_error_code != FT_ERR_SUCCESS); }
-};
-
-template <typename ManagedType>
-class ft_sharedptr_const_access_proxy
-{
-    private:
-        const ManagedType *_pointer;
-        int _error_code;
-        static const ManagedType &fallback_const_reference()
-        {
-            if constexpr (!std::is_abstract_v<ManagedType>)
-            {
-                static ManagedType default_instance;
-                return (default_instance);
-            }
-            else
-            {
-                static char dummy_buffer[sizeof(ManagedType)] = {0};
-                return (*reinterpret_cast<const ManagedType*>(dummy_buffer));
-            }
-        }
-
-    public:
-        ft_sharedptr_const_access_proxy() : _pointer(ft_nullptr), _error_code(FT_ERR_SUCCESS) {}
-        ft_sharedptr_const_access_proxy(const ManagedType *pointer, int error_code)
-            : _pointer(pointer), _error_code(error_code) {}
-        ~ft_sharedptr_const_access_proxy() { return ; }
-
-        const ManagedType *operator->() const
-        {
-            if (this->_pointer == ft_nullptr)
-                return (&ft_sharedptr_const_access_proxy<ManagedType>::fallback_const_reference());
-            return (this->_pointer);
-        }
-        const ManagedType &operator*() const
-        {
-            if (this->_pointer == ft_nullptr)
-                return (ft_sharedptr_const_access_proxy<ManagedType>::fallback_const_reference());
-            return (*this->_pointer);
-        }
-        operator const ManagedType&() const
-        {
-            if (this->_pointer == ft_nullptr)
-                return (ft_sharedptr_const_access_proxy<ManagedType>::fallback_const_reference());
-            return (*this->_pointer);
-        }
-        int get_error() const { return (this->_error_code); }
-        bool has_error() const { return (this->_error_code != FT_ERR_SUCCESS); }
-};
 
 template <typename ManagedType>
 class ft_sharedptr
 {
     private:
-        ManagedType* _managedPointer;
-        int* _referenceCount;
-        size_t _arraySize;
-        bool _isArrayType;
+        ManagedType                *_managed_pointer;
+        size_t                     *_reference_count;
+        size_t                      _array_size;
+        bool                        _is_array_type;
         mutable pt_recursive_mutex *_mutex;
-        mutable bool *_shared_thread_safe_flag;
-        static thread_local int _last_error;
+        uint8_t                     _initialized_state;
+        static const uint8_t        _state_uninitialized = 0;
+        static const uint8_t        _state_destroyed = 1;
+        static const uint8_t        _state_initialized = 2;
+        static thread_local int32_t _last_error;
 
-        void release_current_locked();
-        int lock_internal(bool *lock_acquired) const;
-        void unlock_internal(bool lock_acquired) const;
-        int prepare_thread_safety() const;
-        void teardown_thread_safety();
-        static ManagedType &fallback_reference();
-        static const ManagedType &fallback_const_reference();
-        static int set_last_operation_error(int error_code);
+        static int32_t set_last_operation_error(int32_t error_code) noexcept
+        {
+            _last_error = error_code;
+            return (error_code);
+        }
+
+        int32_t lock_internal(bool *lock_acquired) const noexcept
+        {
+            if (lock_acquired != ft_nullptr)
+                *lock_acquired = false;
+            if (this->_mutex == ft_nullptr)
+                return (FT_ERR_SUCCESS);
+            if (this->_mutex->lock() != FT_ERR_SUCCESS)
+                return (set_last_operation_error(FT_ERR_SYS_MUTEX_LOCK_FAILED));
+            if (lock_acquired != ft_nullptr)
+                *lock_acquired = true;
+            return (FT_ERR_SUCCESS);
+        }
+
+        void unlock_internal(bool lock_acquired) const noexcept
+        {
+            if (lock_acquired == false)
+                return ;
+            if (this->_mutex == ft_nullptr)
+                return ;
+            (void)this->_mutex->unlock();
+            return ;
+        }
+
+        void destroy_storage() noexcept
+        {
+            if (this->_managed_pointer == ft_nullptr)
+            {
+                this->_reference_count = ft_nullptr;
+                return ;
+            }
+            if (this->_reference_count == ft_nullptr)
+            {
+                if (this->_is_array_type)
+                    delete[] this->_managed_pointer;
+                else
+                    delete this->_managed_pointer;
+                this->_managed_pointer = ft_nullptr;
+                this->_array_size = 0;
+                this->_is_array_type = false;
+                return ;
+            }
+            if (*this->_reference_count > 1)
+            {
+                *this->_reference_count = *this->_reference_count - 1;
+                this->_managed_pointer = ft_nullptr;
+                this->_reference_count = ft_nullptr;
+                this->_array_size = 0;
+                this->_is_array_type = false;
+                return ;
+            }
+            if (this->_is_array_type)
+                delete[] this->_managed_pointer;
+            else
+                delete this->_managed_pointer;
+            delete this->_reference_count;
+            this->_managed_pointer = ft_nullptr;
+            this->_reference_count = ft_nullptr;
+            this->_array_size = 0;
+            this->_is_array_type = false;
+            return ;
+        }
 
     public:
-        template <typename U> friend class ft_sharedptr;
+        class reference_proxy
+        {
+            private:
+                ManagedType *_pointer;
+                int32_t      _error;
 
-#if FT_TEMPLATE_HAS_CONCEPTS
-        template <typename... Args>
-        ft_sharedptr(Args&&... args)
-            requires (!is_single_convertible_to_size_t<Args...>::value &&
-                ft_constructible_from<ManagedType, Args&&...>);
-#else
-        template <typename... Args, typename = std::enable_if_t<
-            !(is_single_convertible_to_size_t<Args...>::value) &&
-            std::is_constructible_v<ManagedType, Args&&...>
-            >>
-        ft_sharedptr(Args&&... args);
+            public:
+                reference_proxy(ManagedType *pointer, int32_t error) noexcept
+                    : _pointer(pointer), _error(error)
+                {
+                    return ;
+                }
+
+                operator ManagedType&() const noexcept
+                {
+                    static ManagedType fallback = ManagedType();
+
+                    if (this->_pointer == ft_nullptr)
+                        return (fallback);
+                    return (*this->_pointer);
+                }
+
+                ManagedType *operator->() const noexcept
+                {
+                    return (this->_pointer);
+                }
+
+                int32_t get_error() const noexcept
+                {
+                    return (this->_error);
+                }
+        };
+
+        class const_reference_proxy
+        {
+            private:
+                const ManagedType *_pointer;
+                int32_t            _error;
+
+            public:
+                const_reference_proxy(const ManagedType *pointer,
+                    int32_t error) noexcept
+                    : _pointer(pointer), _error(error)
+                {
+                    return ;
+                }
+
+                operator const ManagedType&() const noexcept
+                {
+                    static ManagedType fallback = ManagedType();
+
+                    if (this->_pointer == ft_nullptr)
+                        return (fallback);
+                    return (*this->_pointer);
+                }
+
+                const ManagedType *operator->() const noexcept
+                {
+                    return (this->_pointer);
+                }
+
+                int32_t get_error() const noexcept
+                {
+                    return (this->_error);
+                }
+        };
+
+        ft_sharedptr() noexcept
+            : _managed_pointer(ft_nullptr), _reference_count(ft_nullptr),
+              _array_size(0), _is_array_type(false),
+              _mutex(ft_nullptr), _initialized_state(_state_uninitialized)
+        {
+            set_last_operation_error(FT_ERR_SUCCESS);
+            return ;
+        }
+
+        ft_sharedptr(ManagedType *pointer, bool array_type = false,
+                size_t array_size = 1) noexcept
+            : _managed_pointer(ft_nullptr), _reference_count(ft_nullptr),
+              _array_size(0), _is_array_type(false),
+              _mutex(ft_nullptr), _initialized_state(_state_uninitialized)
+        {
+            (void)this->initialize(pointer, array_type, array_size);
+            return ;
+        }
+
+        explicit ft_sharedptr(size_t size) noexcept
+            : _managed_pointer(ft_nullptr), _reference_count(ft_nullptr),
+              _array_size(0), _is_array_type(false),
+              _mutex(ft_nullptr), _initialized_state(_state_uninitialized)
+        {
+            (void)this->initialize(size);
+            return ;
+        }
+
+        ft_sharedptr(const ft_sharedptr &other) noexcept
+            : _managed_pointer(ft_nullptr), _reference_count(ft_nullptr),
+              _array_size(0), _is_array_type(false),
+              _mutex(ft_nullptr), _initialized_state(_state_uninitialized)
+        {
+            if (other._initialized_state == _state_initialized)
+            {
+                this->_managed_pointer = other._managed_pointer;
+                this->_reference_count = other._reference_count;
+                this->_array_size = other._array_size;
+                this->_is_array_type = other._is_array_type;
+                this->_initialized_state = _state_initialized;
+                if (this->_reference_count != ft_nullptr)
+                    *this->_reference_count = *this->_reference_count + 1;
+            }
+            set_last_operation_error(FT_ERR_SUCCESS);
+            return ;
+        }
+
+        ft_sharedptr(ft_sharedptr &&other) noexcept
+            : _managed_pointer(ft_nullptr), _reference_count(ft_nullptr),
+              _array_size(0), _is_array_type(false),
+              _mutex(ft_nullptr), _initialized_state(_state_uninitialized)
+        {
+            if (other._initialized_state == _state_initialized)
+            {
+                this->_managed_pointer = other._managed_pointer;
+                this->_reference_count = other._reference_count;
+                this->_array_size = other._array_size;
+                this->_is_array_type = other._is_array_type;
+                this->_initialized_state = _state_initialized;
+                other._managed_pointer = ft_nullptr;
+                other._reference_count = ft_nullptr;
+                other._array_size = 0;
+                other._is_array_type = false;
+                other._initialized_state = _state_destroyed;
+            }
+            set_last_operation_error(FT_ERR_SUCCESS);
+            return ;
+        }
+
+        ft_sharedptr &operator=(const ft_sharedptr &other) noexcept
+        {
+            if (this == &other)
+                return (*this);
+            if (this->_initialized_state != _state_initialized)
+                (void)this->initialize();
+            this->destroy_storage();
+            if (other._initialized_state != _state_initialized)
+                return (*this);
+            this->_managed_pointer = other._managed_pointer;
+            this->_reference_count = other._reference_count;
+            this->_array_size = other._array_size;
+            this->_is_array_type = other._is_array_type;
+            if (this->_reference_count != ft_nullptr)
+                *this->_reference_count = *this->_reference_count + 1;
+            set_last_operation_error(FT_ERR_SUCCESS);
+            return (*this);
+        }
+
+        ft_sharedptr &operator=(ft_sharedptr &&other) noexcept
+        {
+            if (this == &other)
+                return (*this);
+            if (this->_initialized_state != _state_initialized)
+                (void)this->initialize();
+            this->destroy_storage();
+            this->_managed_pointer = other._managed_pointer;
+            this->_reference_count = other._reference_count;
+            this->_array_size = other._array_size;
+            this->_is_array_type = other._is_array_type;
+            other._managed_pointer = ft_nullptr;
+            other._reference_count = ft_nullptr;
+            other._array_size = 0;
+            other._is_array_type = false;
+            set_last_operation_error(FT_ERR_SUCCESS);
+            return (*this);
+        }
+
+        ~ft_sharedptr()
+        {
+            if (this->_initialized_state == _state_initialized)
+                (void)this->destroy();
+            if (this->_mutex != ft_nullptr)
+                (void)this->disable_thread_safety();
+            return ;
+        }
+
+        int32_t initialize() noexcept
+        {
+            if (this->_initialized_state == _state_initialized)
+                return (set_last_operation_error(FT_ERR_INVALID_STATE));
+            this->_managed_pointer = ft_nullptr;
+            this->_reference_count = ft_nullptr;
+            this->_array_size = 0;
+            this->_is_array_type = false;
+            this->_initialized_state = _state_initialized;
+            return (set_last_operation_error(FT_ERR_SUCCESS));
+        }
+
+        int32_t initialize(ManagedType *pointer, bool array_type = false,
+                size_t array_size = 1) noexcept
+        {
+            if (this->_initialized_state == _state_initialized)
+                return (set_last_operation_error(FT_ERR_INVALID_STATE));
+            this->_managed_pointer = pointer;
+            this->_reference_count = ft_nullptr;
+            if (pointer != ft_nullptr)
+            {
+                this->_reference_count = new (std::nothrow) size_t(1);
+                if (this->_reference_count == ft_nullptr)
+                {
+                    this->_initialized_state = _state_destroyed;
+                    return (set_last_operation_error(FT_ERR_NO_MEMORY));
+                }
+            }
+            this->_array_size = array_type ? array_size : (pointer == ft_nullptr ? 0 : 1);
+            this->_is_array_type = array_type;
+            this->_initialized_state = _state_initialized;
+            return (set_last_operation_error(FT_ERR_SUCCESS));
+        }
+
+        int32_t initialize(size_t size) noexcept
+        {
+            if (this->_initialized_state == _state_initialized)
+                return (set_last_operation_error(FT_ERR_INVALID_STATE));
+            this->_managed_pointer = ft_nullptr;
+            this->_reference_count = ft_nullptr;
+            this->_array_size = 0;
+            this->_is_array_type = true;
+            if (size > 0)
+            {
+                this->_managed_pointer = new (std::nothrow) ManagedType[size];
+                if (this->_managed_pointer == ft_nullptr)
+                {
+                    this->_initialized_state = _state_destroyed;
+                    return (set_last_operation_error(FT_ERR_NO_MEMORY));
+                }
+            }
+            this->_array_size = size;
+            if (this->_managed_pointer != ft_nullptr)
+            {
+                this->_reference_count = new (std::nothrow) size_t(1);
+                if (this->_reference_count == ft_nullptr)
+                {
+                    delete[] this->_managed_pointer;
+                    this->_managed_pointer = ft_nullptr;
+                    this->_array_size = 0;
+                    this->_initialized_state = _state_destroyed;
+                    return (set_last_operation_error(FT_ERR_NO_MEMORY));
+                }
+            }
+            this->_initialized_state = _state_initialized;
+            return (set_last_operation_error(FT_ERR_SUCCESS));
+        }
+
+        int32_t destroy() noexcept
+        {
+            bool lock_acquired;
+            int32_t lock_result;
+
+            if (this->_initialized_state != _state_initialized)
+                return (set_last_operation_error(FT_ERR_INVALID_STATE));
+            lock_acquired = false;
+            lock_result = this->lock_internal(&lock_acquired);
+            if (lock_result != FT_ERR_SUCCESS)
+                return (lock_result);
+            this->destroy_storage();
+            this->_initialized_state = _state_destroyed;
+            this->unlock_internal(lock_acquired);
+            return (set_last_operation_error(FT_ERR_SUCCESS));
+        }
+
+        reference_proxy operator*() noexcept
+        {
+            if (this->_initialized_state != _state_initialized)
+                return (reference_proxy(ft_nullptr,
+                        set_last_operation_error(FT_ERR_INVALID_STATE)));
+            if (this->_managed_pointer == ft_nullptr)
+                return (reference_proxy(ft_nullptr,
+                        set_last_operation_error(FT_ERR_INVALID_POINTER)));
+            return (reference_proxy(this->_managed_pointer,
+                    set_last_operation_error(FT_ERR_SUCCESS)));
+        }
+
+        const_reference_proxy operator*() const noexcept
+        {
+            if (this->_initialized_state != _state_initialized)
+                return (const_reference_proxy(ft_nullptr,
+                        set_last_operation_error(FT_ERR_INVALID_STATE)));
+            if (this->_managed_pointer == ft_nullptr)
+                return (const_reference_proxy(ft_nullptr,
+                        set_last_operation_error(FT_ERR_INVALID_POINTER)));
+            return (const_reference_proxy(this->_managed_pointer,
+                    set_last_operation_error(FT_ERR_SUCCESS)));
+        }
+
+        ManagedType *operator->() noexcept
+        {
+            if (this->_initialized_state != _state_initialized)
+            {
+                set_last_operation_error(FT_ERR_INVALID_STATE);
+                return (ft_nullptr);
+            }
+            if (this->_managed_pointer == ft_nullptr)
+            {
+                set_last_operation_error(FT_ERR_INVALID_POINTER);
+                return (ft_nullptr);
+            }
+            set_last_operation_error(FT_ERR_SUCCESS);
+            return (this->_managed_pointer);
+        }
+
+        const ManagedType *operator->() const noexcept
+        {
+            if (this->_initialized_state != _state_initialized)
+            {
+                set_last_operation_error(FT_ERR_INVALID_STATE);
+                return (ft_nullptr);
+            }
+            if (this->_managed_pointer == ft_nullptr)
+            {
+                set_last_operation_error(FT_ERR_INVALID_POINTER);
+                return (ft_nullptr);
+            }
+            set_last_operation_error(FT_ERR_SUCCESS);
+            return (this->_managed_pointer);
+        }
+
+        reference_proxy operator[](size_t index) noexcept
+        {
+            if (this->_initialized_state != _state_initialized)
+                return (reference_proxy(ft_nullptr,
+                        set_last_operation_error(FT_ERR_INVALID_STATE)));
+            if (this->_is_array_type == false || this->_managed_pointer == ft_nullptr)
+                return (reference_proxy(ft_nullptr,
+                        set_last_operation_error(FT_ERR_INVALID_OPERATION)));
+            if (index >= this->_array_size)
+                return (reference_proxy(ft_nullptr,
+                        set_last_operation_error(FT_ERR_OUT_OF_RANGE)));
+            return (reference_proxy(&this->_managed_pointer[index],
+                    set_last_operation_error(FT_ERR_SUCCESS)));
+        }
+
+        const_reference_proxy operator[](size_t index) const noexcept
+        {
+            if (this->_initialized_state != _state_initialized)
+                return (const_reference_proxy(ft_nullptr,
+                        set_last_operation_error(FT_ERR_INVALID_STATE)));
+            if (this->_is_array_type == false || this->_managed_pointer == ft_nullptr)
+                return (const_reference_proxy(ft_nullptr,
+                        set_last_operation_error(FT_ERR_INVALID_OPERATION)));
+            if (index >= this->_array_size)
+                return (const_reference_proxy(ft_nullptr,
+                        set_last_operation_error(FT_ERR_OUT_OF_RANGE)));
+            return (const_reference_proxy(&this->_managed_pointer[index],
+                    set_last_operation_error(FT_ERR_SUCCESS)));
+        }
+
+        ManagedType *get() noexcept
+        {
+            if (this->_initialized_state != _state_initialized)
+            {
+                set_last_operation_error(FT_ERR_INVALID_STATE);
+                return (ft_nullptr);
+            }
+            set_last_operation_error(FT_ERR_SUCCESS);
+            return (this->_managed_pointer);
+        }
+
+        const ManagedType *get() const noexcept
+        {
+            if (this->_initialized_state != _state_initialized)
+            {
+                set_last_operation_error(FT_ERR_INVALID_STATE);
+                return (ft_nullptr);
+            }
+            set_last_operation_error(FT_ERR_SUCCESS);
+            return (this->_managed_pointer);
+        }
+
+        int use_count() const noexcept
+        {
+            if (this->_initialized_state != _state_initialized)
+            {
+                set_last_operation_error(FT_ERR_INVALID_STATE);
+                return (0);
+            }
+            if (this->_managed_pointer == ft_nullptr)
+            {
+                set_last_operation_error(FT_ERR_SUCCESS);
+                return (0);
+            }
+            if (this->_reference_count == ft_nullptr)
+                return (1);
+            set_last_operation_error(FT_ERR_SUCCESS);
+            return (static_cast<int>(*this->_reference_count));
+        }
+
+        bool unique() const noexcept
+        {
+            if (this->_initialized_state != _state_initialized)
+            {
+                set_last_operation_error(FT_ERR_INVALID_STATE);
+                return (false);
+            }
+            set_last_operation_error(FT_ERR_SUCCESS);
+            return (this->_managed_pointer != ft_nullptr);
+        }
+
+        void reset(ManagedType *pointer = ft_nullptr, size_t size = 1,
+                bool array_type = false) noexcept
+        {
+            if (this->_initialized_state != _state_initialized)
+            {
+                set_last_operation_error(FT_ERR_INVALID_STATE);
+                return ;
+            }
+            this->destroy_storage();
+            this->_managed_pointer = pointer;
+            this->_reference_count = ft_nullptr;
+            if (pointer != ft_nullptr)
+            {
+                this->_reference_count = new (std::nothrow) size_t(1);
+                if (this->_reference_count == ft_nullptr)
+                {
+                    this->_managed_pointer = ft_nullptr;
+                    this->_array_size = 0;
+                    this->_is_array_type = false;
+                    set_last_operation_error(FT_ERR_NO_MEMORY);
+                    return ;
+                }
+            }
+            this->_array_size = array_type ? size : (pointer == ft_nullptr ? 0 : 1);
+            this->_is_array_type = array_type;
+            set_last_operation_error(FT_ERR_SUCCESS);
+            return ;
+        }
+
+        void swap(ft_sharedptr &other) noexcept
+        {
+            ManagedType *pointer_value;
+            size_t array_size_value;
+            bool is_array_type_value;
+
+            if (this->_initialized_state != _state_initialized
+                || other._initialized_state != _state_initialized)
+            {
+                set_last_operation_error(FT_ERR_INVALID_STATE);
+                return ;
+            }
+            pointer_value = this->_managed_pointer;
+            size_t *reference_count_value;
+            array_size_value = this->_array_size;
+            is_array_type_value = this->_is_array_type;
+            reference_count_value = this->_reference_count;
+            this->_managed_pointer = other._managed_pointer;
+            this->_reference_count = other._reference_count;
+            this->_array_size = other._array_size;
+            this->_is_array_type = other._is_array_type;
+            other._managed_pointer = pointer_value;
+            other._reference_count = reference_count_value;
+            other._array_size = array_size_value;
+            other._is_array_type = is_array_type_value;
+            set_last_operation_error(FT_ERR_SUCCESS);
+            return ;
+        }
+
+        explicit operator bool() const noexcept
+        {
+            if (this->_initialized_state != _state_initialized)
+            {
+                set_last_operation_error(FT_ERR_INVALID_STATE);
+                return (false);
+            }
+            set_last_operation_error(FT_ERR_SUCCESS);
+            return (this->_managed_pointer != ft_nullptr);
+        }
+
+        int32_t enable_thread_safety() noexcept
+        {
+            pt_recursive_mutex *new_mutex;
+            int initialize_result;
+
+            if (this->_mutex != ft_nullptr)
+                return (set_last_operation_error(FT_ERR_SUCCESS));
+            new_mutex = new (std::nothrow) pt_recursive_mutex();
+            if (new_mutex == ft_nullptr)
+                return (set_last_operation_error(FT_ERR_NO_MEMORY));
+            initialize_result = new_mutex->initialize();
+            if (initialize_result != FT_ERR_SUCCESS)
+            {
+                delete new_mutex;
+                return (set_last_operation_error(initialize_result));
+            }
+            this->_mutex = new_mutex;
+            return (set_last_operation_error(FT_ERR_SUCCESS));
+        }
+
+        int32_t disable_thread_safety() noexcept
+        {
+            pt_recursive_mutex *mutex_pointer;
+            int destroy_result;
+
+            mutex_pointer = this->_mutex;
+            if (mutex_pointer == ft_nullptr)
+                return (set_last_operation_error(FT_ERR_SUCCESS));
+            this->_mutex = ft_nullptr;
+            destroy_result = mutex_pointer->destroy();
+            delete mutex_pointer;
+            if (destroy_result != FT_ERR_SUCCESS)
+                return (set_last_operation_error(destroy_result));
+            return (set_last_operation_error(FT_ERR_SUCCESS));
+        }
+
+        bool is_thread_safe() const noexcept
+        {
+            set_last_operation_error(FT_ERR_SUCCESS);
+            return (this->_mutex != ft_nullptr);
+        }
+
+        int lock(bool *lock_acquired) const noexcept
+        {
+            int32_t lock_result;
+
+            lock_result = this->lock_internal(lock_acquired);
+            if (lock_result != FT_ERR_SUCCESS)
+                return (-1);
+            return (0);
+        }
+
+        void unlock(bool lock_acquired) const noexcept
+        {
+            this->unlock_internal(lock_acquired);
+            return ;
+        }
+
+        static int32_t last_operation_error() noexcept
+        {
+            return (_last_error);
+        }
+
+        static const char *last_operation_error_str() noexcept
+        {
+            return (ft_strerror(_last_error));
+        }
+
+#ifdef LIBFT_TEST_BUILD
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept
+        {
+            return (this->_mutex);
+        }
 #endif
-
-        ft_sharedptr(ManagedType* pointer, bool isArray = false, size_t arraySize = 1);
-        ft_sharedptr();
-        ft_sharedptr(size_t size);
-        ft_sharedptr(const ft_sharedptr<ManagedType>& other) = delete;
-        ft_sharedptr(ft_sharedptr<ManagedType>&& other) noexcept = delete;
-        ~ft_sharedptr();
-
-        ft_sharedptr<ManagedType>& operator=(ft_sharedptr<ManagedType>&& other) noexcept;
-        ft_sharedptr<ManagedType>& operator=(const ft_sharedptr<ManagedType>& other);
-
-#if FT_TEMPLATE_HAS_CONCEPTS
-        template <typename Other>
-        ft_sharedptr(const ft_sharedptr<Other>& other)
-            requires ft_convertible_to<Other*, ManagedType*>;
-
-        template <typename Other>
-        ft_sharedptr(ft_sharedptr<Other>&& other) noexcept
-            requires ft_convertible_to<Other*, ManagedType*>;
-#else
-        template <typename Other, typename = std::enable_if_t<std::is_convertible_v<Other*,
-                 ManagedType*>>>
-        ft_sharedptr(const ft_sharedptr<Other>& other);
-
-        template <typename Other, typename = std::enable_if_t<std::is_convertible_v<Other*,
-                 ManagedType*>>>
-        ft_sharedptr(ft_sharedptr<Other>&& other) noexcept;
-#endif
-
-        ManagedType& operator*();
-        const ManagedType& operator*() const;
-        ManagedType* operator->();
-        const ManagedType* operator->() const;
-
-        ft_sharedptr_access_proxy<ManagedType> operator[](size_t index);
-        ft_sharedptr_const_access_proxy<ManagedType> operator[](size_t index) const;
-
-        int use_count() const;
-        ManagedType* get();
-        const ManagedType* get() const;
-        bool unique() const;
-        explicit operator bool() const noexcept;
-
-        void reset(ManagedType* pointer = ft_nullptr, size_t size = 1,
-            bool arrayType = false);
-        void swap(ft_sharedptr<ManagedType>& other);
-        void remove(int index);
-        void add(const ManagedType& element);
-
-        int enable_thread_safety();
-        void disable_thread_safety();
-        bool is_thread_safe() const;
-        int lock(bool *lock_acquired) const;
-        void unlock(bool lock_acquired) const;
-        pt_recursive_mutex *mutex_handle() const;
-        static int last_operation_error();
-        static const char *last_operation_error_str();
 };
+
+template <typename ManagedType>
+thread_local int32_t ft_sharedptr<ManagedType>::_last_error = FT_ERR_SUCCESS;
 
 template <typename LeftType, typename RightType>
 bool operator==(const ft_sharedptr<LeftType> &left, const ft_sharedptr<RightType> &right)
@@ -234,1259 +654,7 @@ bool operator==(const ft_sharedptr<LeftType> &left, const ft_sharedptr<RightType
 template <typename LeftType, typename RightType>
 bool operator!=(const ft_sharedptr<LeftType> &left, const ft_sharedptr<RightType> &right)
 {
-    return (!(left == right));
-}
-
-template <typename ManagedType>
-thread_local int ft_sharedptr<ManagedType>::_last_error = FT_ERR_SUCCESS;
-
-template <typename ManagedType>
-int ft_sharedptr<ManagedType>::set_last_operation_error(int error_code)
-{
-    ft_sharedptr<ManagedType>::_last_error = error_code;
-    return (error_code);
-}
-
-template <typename ManagedType>
-int ft_sharedptr<ManagedType>::last_operation_error()
-{
-    return (ft_sharedptr<ManagedType>::_last_error);
-}
-
-template <typename ManagedType>
-const char *ft_sharedptr<ManagedType>::last_operation_error_str()
-{
-    return (ft_strerror(ft_sharedptr<ManagedType>::last_operation_error()));
-}
-
-#if FT_TEMPLATE_HAS_CONCEPTS
-template <typename ManagedType>
-template <typename... Args>
-ft_sharedptr<ManagedType>::ft_sharedptr(Args&&... args)
-    requires (!is_single_convertible_to_size_t<Args...>::value &&
-        ft_constructible_from<ManagedType, Args&&...>)
-    : _managedPointer(ft_nullptr),
-      _referenceCount(ft_nullptr),
-      _arraySize(0),
-      _isArrayType(false),
-      _mutex(ft_nullptr),
-      _shared_thread_safe_flag(ft_nullptr)
-{
-    int* reference_count;
-    bool* shared_thread_safe_flag;
-
-    reference_count = new (std::nothrow) int;
-    shared_thread_safe_flag = new (std::nothrow) bool;
-    if (!reference_count || !shared_thread_safe_flag)
-    {
-        if (shared_thread_safe_flag)
-            delete shared_thread_safe_flag;
-    ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_NO_MEMORY);
-        return ;
-    }
-    ManagedType* pointer = new (std::nothrow) ManagedType(std::forward<Args>(args)...);
-    if (!pointer)
-    {
-        delete reference_count;
-        delete shared_thread_safe_flag;
-        ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_NO_MEMORY);
-        return ;
-    }
-    *reference_count = 1;
-    *shared_thread_safe_flag = false;
-    this->_managedPointer = pointer;
-    this->_referenceCount = reference_count;
-    this->_shared_thread_safe_flag = shared_thread_safe_flag;
-    this->_arraySize = 1;
-    this->_isArrayType = false;
-    ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    return ;
-}
-#else
-template <typename ManagedType>
-template <typename... Args, typename>
-ft_sharedptr<ManagedType>::ft_sharedptr(Args&&... args)
-    : _managedPointer(ft_nullptr),
-      _referenceCount(ft_nullptr),
-      _arraySize(0),
-      _isArrayType(false),
-      _mutex(ft_nullptr),
-      _shared_thread_safe_flag(ft_nullptr)
-{
-    int* reference_count;
-    bool* shared_thread_safe_flag;
-
-    reference_count = new (std::nothrow) int;
-    shared_thread_safe_flag = new (std::nothrow) bool;
-    if (!reference_count || !shared_thread_safe_flag)
-    {
-        if (shared_thread_safe_flag)
-            delete shared_thread_safe_flag;
-        ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_NO_MEMORY);
-        return ;
-    }
-    ManagedType* pointer = new (std::nothrow) ManagedType(std::forward<Args>(args)...);
-    if (!pointer)
-    {
-        delete reference_count;
-        delete shared_thread_safe_flag;
-        ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_NO_MEMORY);
-        return ;
-    }
-    *reference_count = 1;
-    *shared_thread_safe_flag = false;
-    this->_managedPointer = pointer;
-    this->_referenceCount = reference_count;
-    this->_shared_thread_safe_flag = shared_thread_safe_flag;
-    this->_arraySize = 1;
-    this->_isArrayType = false;
-    ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    return ;
-}
-#endif
-
-template <typename ManagedType>
-ft_sharedptr<ManagedType>::ft_sharedptr(ManagedType* pointer, bool isArray, size_t arraySize)
-    : _managedPointer(pointer),
-      _referenceCount(ft_nullptr),
-      _arraySize(isArray ? arraySize : (pointer ? 1 : 0)),
-      _isArrayType(isArray),
-      _mutex(ft_nullptr),
-      _shared_thread_safe_flag(ft_nullptr)
-{
-    if (pointer)
-    {
-        this->_referenceCount = new (std::nothrow) int;
-        this->_shared_thread_safe_flag = new (std::nothrow) bool;
-        if (!this->_referenceCount || !this->_shared_thread_safe_flag)
-        {
-            if (isArray)
-                delete[] pointer;
-            else
-                delete pointer;
-            this->_managedPointer = ft_nullptr;
-            this->_arraySize = 0;
-            this->_isArrayType = false;
-            if (this->_shared_thread_safe_flag)
-            {
-                delete this->_shared_thread_safe_flag;
-                this->_shared_thread_safe_flag = ft_nullptr;
-            }
-            ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_NO_MEMORY);
-            return ;
-        }
-        *this->_referenceCount = 1;
-        *this->_shared_thread_safe_flag = false;
-    }
-    ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    return ;
-}
-
-template <typename ManagedType>
-ft_sharedptr<ManagedType>::ft_sharedptr()
-    : _managedPointer(ft_nullptr),
-      _referenceCount(ft_nullptr),
-      _arraySize(0),
-      _isArrayType(false),
-      _mutex(ft_nullptr),
-      _shared_thread_safe_flag(ft_nullptr)
-{
-    ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    return ;
-}
-
-template <typename ManagedType>
-ft_sharedptr<ManagedType>::ft_sharedptr(size_t size)
-    : _managedPointer(ft_nullptr),
-      _referenceCount(ft_nullptr),
-      _arraySize(size),
-      _isArrayType(true),
-      _mutex(ft_nullptr),
-      _shared_thread_safe_flag(ft_nullptr)
-{
-    if (size == 0)
-    {
-        ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-        return ;
-    }
-    this->_referenceCount = new (std::nothrow) int;
-    this->_shared_thread_safe_flag = new (std::nothrow) bool;
-    if (!this->_referenceCount || !this->_shared_thread_safe_flag)
-    {
-        this->_arraySize = 0;
-        this->_isArrayType = false;
-        if (this->_shared_thread_safe_flag)
-        {
-            delete this->_shared_thread_safe_flag;
-            this->_shared_thread_safe_flag = ft_nullptr;
-        }
-        ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_NO_MEMORY);
-        return ;
-    }
-    this->_managedPointer = new (std::nothrow) ManagedType[size];
-    if (!this->_managedPointer)
-    {
-        delete this->_referenceCount;
-        this->_referenceCount = ft_nullptr;
-        delete this->_shared_thread_safe_flag;
-        this->_shared_thread_safe_flag = ft_nullptr;
-        this->_arraySize = 0;
-        this->_isArrayType = false;
-        ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_NO_MEMORY);
-        return ;
-    }
-    *this->_referenceCount = 1;
-    *this->_shared_thread_safe_flag = false;
-    ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    return ;
-}
-
-template <typename ManagedType>
-ft_sharedptr<ManagedType>::~ft_sharedptr()
-{
-    bool lock_acquired;
-
-    lock_acquired = false;
-    int lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error == FT_ERR_SUCCESS)
-    {
-        this->release_current_locked();
-        this->unlock_internal(lock_acquired);
-    }
-    else
-        ft_sharedptr<ManagedType>::set_last_operation_error(lock_error);
-    this->teardown_thread_safety();
-    return ;
-}
-
-template <typename ManagedType>
-void ft_sharedptr<ManagedType>::release_current_locked()
-{
-    if (this->_referenceCount)
-    {
-        --(*this->_referenceCount);
-        if (*this->_referenceCount <= 0)
-        {
-            if (this->_managedPointer)
-            {
-                if (this->_isArrayType)
-                    delete[] this->_managedPointer;
-                else
-                    delete this->_managedPointer;
-            }
-            delete this->_referenceCount;
-            if (this->_shared_thread_safe_flag)
-                delete this->_shared_thread_safe_flag;
-        }
-    }
-    else if (this->_managedPointer)
-    {
-        if (this->_isArrayType)
-            delete[] this->_managedPointer;
-        else
-            delete this->_managedPointer;
-    }
-    else if (this->_shared_thread_safe_flag)
-    {
-        delete this->_shared_thread_safe_flag;
-    }
-    this->_managedPointer = ft_nullptr;
-    this->_referenceCount = ft_nullptr;
-    this->_shared_thread_safe_flag = ft_nullptr;
-    this->_arraySize = 0;
-    this->_isArrayType = false;
-    ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    return ;
-}
-
-template <typename ManagedType>
-ft_sharedptr<ManagedType>& ft_sharedptr<ManagedType>::operator=(ft_sharedptr<ManagedType>&& other) noexcept
-{
-    if (this == &other)
-    {
-        bool self_lock_acquired;
-
-        self_lock_acquired = false;
-        int self_lock_error = this->lock_internal(&self_lock_acquired);
-        if (self_lock_error == FT_ERR_SUCCESS)
-        {
-            ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-            this->unlock_internal(self_lock_acquired);
-        }
-        else
-            ft_sharedptr<ManagedType>::set_last_operation_error(self_lock_error);
-        return (*this);
-    }
-    ft_sharedptr<ManagedType> *first;
-    ft_sharedptr<ManagedType> *second;
-    bool first_lock_acquired;
-    bool second_lock_acquired;
-    bool other_thread_safe;
-
-    first = this;
-    second = &other;
-    if (first > second)
-    {
-        ft_sharedptr<ManagedType> *temp;
-
-        temp = first;
-        first = second;
-        second = temp;
-    }
-    first_lock_acquired = false;
-    int first_lock_error = first->lock_internal(&first_lock_acquired);
-    if (first_lock_error != FT_ERR_SUCCESS)
-    {
-        ft_sharedptr<ManagedType>::set_last_operation_error(first_lock_error);
-        return (*this);
-    }
-    second_lock_acquired = false;
-    int second_lock_error = second->lock_internal(&second_lock_acquired);
-    if (second_lock_error != FT_ERR_SUCCESS)
-    {
-        first->unlock_internal(first_lock_acquired);
-        ft_sharedptr<ManagedType>::set_last_operation_error(second_lock_error);
-        ft_sharedptr<ManagedType>::set_last_operation_error(second_lock_error);
-        return (*this);
-    }
-    other_thread_safe = (other._shared_thread_safe_flag && *other._shared_thread_safe_flag);
-    this->release_current_locked();
-    this->_managedPointer = other._managedPointer;
-    this->_referenceCount = other._referenceCount;
-    this->_arraySize = other._arraySize;
-    this->_isArrayType = other._isArrayType;
-    this->_shared_thread_safe_flag = other._shared_thread_safe_flag;
-    other._managedPointer = ft_nullptr;
-    other._referenceCount = ft_nullptr;
-    other._arraySize = 0;
-    other._isArrayType = false;
-    other._shared_thread_safe_flag = ft_nullptr;
-    other.unlock_internal(second_lock_acquired);
-    this->unlock_internal(first_lock_acquired);
-    this->teardown_thread_safety();
-    other.teardown_thread_safety();
-    if (other_thread_safe)
-    {
-        if (this->_mutex == ft_nullptr && this->prepare_thread_safety() != 0)
-        {
-            return (*this);
-        }
-    }
-    ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    if (this->_shared_thread_safe_flag)
-        *this->_shared_thread_safe_flag = other_thread_safe;
-    ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    return (*this);
-}
-
-template <typename ManagedType>
-ft_sharedptr<ManagedType>& ft_sharedptr<ManagedType>::operator=(const ft_sharedptr<ManagedType>& other)
-{
-    if (this == &other)
-    {
-        bool self_lock_acquired;
-
-        self_lock_acquired = false;
-        int self_lock_error = this->lock_internal(&self_lock_acquired);
-        if (self_lock_error == FT_ERR_SUCCESS)
-        {
-            ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-            this->unlock_internal(self_lock_acquired);
-        }
-        else
-            ft_sharedptr<ManagedType>::set_last_operation_error(self_lock_error);
-        return (*this);
-    }
-    bool this_lock_acquired;
-    bool other_lock_acquired;
-    bool other_thread_safe;
-
-    this_lock_acquired = false;
-    int this_lock_error = this->lock_internal(&this_lock_acquired);
-    if (this_lock_error != FT_ERR_SUCCESS)
-    {
-        ft_sharedptr<ManagedType>::set_last_operation_error(this_lock_error);
-        return (*this);
-    }
-    other_lock_acquired = false;
-    int other_lock_error = other.lock_internal(&other_lock_acquired);
-    if (other_lock_error != FT_ERR_SUCCESS)
-    {
-        this->unlock_internal(this_lock_acquired);
-        ft_sharedptr<ManagedType>::set_last_operation_error(other_lock_error);
-        return (*this);
-    }
-    other_thread_safe = (other._shared_thread_safe_flag && *other._shared_thread_safe_flag);
-    this->release_current_locked();
-    this->_managedPointer = other._managedPointer;
-    this->_referenceCount = other._referenceCount;
-    this->_arraySize = other._arraySize;
-    this->_isArrayType = other._isArrayType;
-    this->_shared_thread_safe_flag = other._shared_thread_safe_flag;
-    if (this->_referenceCount)
-    {
-        ++(*this->_referenceCount);
-        ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    }
-    else
-        ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    other.unlock_internal(other_lock_acquired);
-    this->unlock_internal(this_lock_acquired);
-    this->teardown_thread_safety();
-    if (other_thread_safe)
-    {
-        if (this->_mutex == ft_nullptr && this->prepare_thread_safety() != 0)
-        {
-            this->release_current_locked();
-            return (*this);
-        }
-    }
-    if (this->_shared_thread_safe_flag)
-        *this->_shared_thread_safe_flag = other_thread_safe;
-    ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    return (*this);
-}
-
-#if FT_TEMPLATE_HAS_CONCEPTS
-template <typename ManagedType>
-template <typename Other>
-ft_sharedptr<ManagedType>::ft_sharedptr(const ft_sharedptr<Other>& other)
-    requires ft_convertible_to<Other*, ManagedType*>
-    : _managedPointer(ft_nullptr),
-      _referenceCount(ft_nullptr),
-      _arraySize(0),
-      _isArrayType(false),
-      _mutex(ft_nullptr),
-      _shared_thread_safe_flag(ft_nullptr)
-{
-    bool other_lock_acquired;
-    int other_lock_error;
-
-    other_lock_acquired = false;
-    other_lock_error = other.lock_internal(&other_lock_acquired);
-    if (other_lock_error != FT_ERR_SUCCESS)
-    {
-        ft_sharedptr<ManagedType>::set_last_operation_error(other_lock_error);
-        return ;
-    }
-    this->_managedPointer = other._managedPointer;
-    this->_referenceCount = other._referenceCount;
-    this->_arraySize = other._arraySize;
-    this->_isArrayType = other._isArrayType;
-    this->_shared_thread_safe_flag = other._shared_thread_safe_flag;
-    if (this->_referenceCount)
-    {
-        ++(*this->_referenceCount);
-        ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    }
-    else
-        ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    other.unlock_internal(other_lock_acquired);
-    return ;
-}
-#else
-template <typename ManagedType>
-template <typename Other, typename>
-ft_sharedptr<ManagedType>::ft_sharedptr(const ft_sharedptr<Other>& other)
-    : _managedPointer(ft_nullptr),
-      _referenceCount(ft_nullptr),
-      _arraySize(0),
-      _isArrayType(false),
-      _mutex(ft_nullptr),
-      _shared_thread_safe_flag(ft_nullptr)
-{
-    bool other_lock_acquired;
-    int other_lock_error;
-
-    other_lock_acquired = false;
-    other_lock_error = other.lock_internal(&other_lock_acquired);
-    if (other_lock_error != FT_ERR_SUCCESS)
-    {
-        ft_sharedptr<ManagedType>::set_last_operation_error(other_lock_error);
-        return ;
-    }
-    this->_managedPointer = other._managedPointer;
-    this->_referenceCount = other._referenceCount;
-    this->_arraySize = other._arraySize;
-    this->_isArrayType = other._isArrayType;
-    this->_shared_thread_safe_flag = other._shared_thread_safe_flag;
-    if (this->_referenceCount)
-    {
-        ++(*this->_referenceCount);
-        ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    }
-    else
-        ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    other.unlock_internal(other_lock_acquired);
-    return ;
-}
-#endif
-
-#if FT_TEMPLATE_HAS_CONCEPTS
-template <typename ManagedType>
-template <typename Other>
-ft_sharedptr<ManagedType>::ft_sharedptr(ft_sharedptr<Other>&& other) noexcept
-    requires ft_convertible_to<Other*, ManagedType*>
-    : _managedPointer(ft_nullptr),
-      _referenceCount(ft_nullptr),
-      _arraySize(0),
-      _isArrayType(false),
-      _mutex(ft_nullptr),
-      _shared_thread_safe_flag(ft_nullptr)
-{
-    bool other_lock_acquired;
-    int other_lock_error;
-
-    other_lock_acquired = false;
-    other_lock_error = other.lock_internal(&other_lock_acquired);
-    if (other_lock_error != FT_ERR_SUCCESS)
-    {
-        ft_sharedptr<ManagedType>::set_last_operation_error(other_lock_error);
-        return ;
-    }
-    this->_managedPointer = other._managedPointer;
-    this->_referenceCount = other._referenceCount;
-    this->_arraySize = other._arraySize;
-    this->_isArrayType = other._isArrayType;
-    this->_shared_thread_safe_flag = other._shared_thread_safe_flag;
-    other._managedPointer = ft_nullptr;
-    other._referenceCount = ft_nullptr;
-    other._arraySize = 0;
-    other._isArrayType = false;
-    other._shared_thread_safe_flag = ft_nullptr;
-    ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    other.unlock_internal(other_lock_acquired);
-    return ;
-}
-#else
-template <typename ManagedType>
-template <typename Other, typename>
-ft_sharedptr<ManagedType>::ft_sharedptr(ft_sharedptr<Other>&& other) noexcept
-    : _managedPointer(ft_nullptr),
-      _referenceCount(ft_nullptr),
-      _arraySize(0),
-      _isArrayType(false),
-      _mutex(ft_nullptr),
-      _shared_thread_safe_flag(ft_nullptr)
-{
-    bool other_lock_acquired;
-    int other_lock_error;
-
-    other_lock_acquired = false;
-    other_lock_error = other.lock_internal(&other_lock_acquired);
-    if (other_lock_error != FT_ERR_SUCCESS)
-    {
-        ft_sharedptr<ManagedType>::set_last_operation_error(other_lock_error);
-        return ;
-    }
-    this->_managedPointer = other._managedPointer;
-    this->_referenceCount = other._referenceCount;
-    this->_arraySize = other._arraySize;
-    this->_isArrayType = other._isArrayType;
-    this->_shared_thread_safe_flag = other._shared_thread_safe_flag;
-    other._managedPointer = ft_nullptr;
-    other._referenceCount = ft_nullptr;
-    other._arraySize = 0;
-    other._isArrayType = false;
-    other._shared_thread_safe_flag = ft_nullptr;
-    ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    other.unlock_internal(other_lock_acquired);
-    return ;
-}
-#endif
-
-template <typename ManagedType>
-ManagedType &ft_sharedptr<ManagedType>::fallback_reference()
-{
-    if constexpr (!std::is_abstract_v<ManagedType>)
-    {
-        static ManagedType default_instance;
-        return (default_instance);
-    }
-    else
-    {
-        static char dummy_buffer[sizeof(ManagedType)] = {0};
-        return (*reinterpret_cast<ManagedType*>(dummy_buffer));
-    }
-}
-
-template <typename ManagedType>
-const ManagedType &ft_sharedptr<ManagedType>::fallback_const_reference()
-{
-    if constexpr (!std::is_abstract_v<ManagedType>)
-    {
-        static ManagedType default_instance;
-        return (default_instance);
-    }
-    else
-    {
-        static char dummy_buffer[sizeof(ManagedType)] = {0};
-        return (*reinterpret_cast<const ManagedType*>(dummy_buffer));
-    }
-}
-
-template <typename ManagedType>
-ManagedType& ft_sharedptr<ManagedType>::operator*()
-{
-    bool lock_acquired;
-    ManagedType* pointer;
-
-    lock_acquired = false;
-    pointer = ft_nullptr;
-    int lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_sharedptr<ManagedType>::set_last_operation_error(lock_error);
-        return (ft_sharedptr<ManagedType>::fallback_reference());
-    }
-    pointer = this->_managedPointer;
-    if (!pointer)
-    {
-        ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_INVALID_POINTER);
-        this->unlock_internal(lock_acquired);
-        return (ft_sharedptr<ManagedType>::fallback_reference());
-    }
-    ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    this->unlock_internal(lock_acquired);
-    return (*pointer);
-}
-
-template <typename ManagedType>
-const ManagedType& ft_sharedptr<ManagedType>::operator*() const
-{
-    bool lock_acquired;
-    const ManagedType* pointer;
-
-    lock_acquired = false;
-    pointer = ft_nullptr;
-    int lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_sharedptr<ManagedType>::set_last_operation_error(lock_error);
-        return (ft_sharedptr<ManagedType>::fallback_const_reference());
-    }
-    pointer = this->_managedPointer;
-    if (!pointer)
-    {
-        ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_INVALID_POINTER);
-        this->unlock_internal(lock_acquired);
-        return (ft_sharedptr<ManagedType>::fallback_const_reference());
-    }
-    ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    this->unlock_internal(lock_acquired);
-    return (*pointer);
-}
-
-template <typename ManagedType>
-ManagedType* ft_sharedptr<ManagedType>::operator->()
-{
-    ManagedType* pointer;
-
-    pointer = this->get();
-    return (pointer);
-}
-
-template <typename ManagedType>
-const ManagedType* ft_sharedptr<ManagedType>::operator->() const
-{
-    const ManagedType* pointer;
-
-    pointer = this->get();
-    return (pointer);
-}
-
-template <typename ManagedType>
-ft_sharedptr_access_proxy<ManagedType> ft_sharedptr<ManagedType>::operator[](size_t index)
-{
-    bool lock_acquired;
-    ManagedType* pointer;
-    ManagedType* element_pointer;
-    int error_code;
-
-    lock_acquired = false;
-    pointer = ft_nullptr;
-    element_pointer = ft_nullptr;
-    error_code = FT_ERR_SUCCESS;
-    int lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_sharedptr<ManagedType>::set_last_operation_error(lock_error);
-        return (ft_sharedptr_access_proxy<ManagedType>(ft_nullptr, lock_error));
-    }
-    if (!this->_isArrayType)
-    {
-        error_code = FT_ERR_INVALID_OPERATION;
-        ft_sharedptr<ManagedType>::set_last_operation_error(error_code);
-        this->unlock_internal(lock_acquired);
-        return (ft_sharedptr_access_proxy<ManagedType>(ft_nullptr, error_code));
-    }
-    pointer = this->_managedPointer;
-    if (!pointer)
-    {
-        error_code = FT_ERR_INVALID_POINTER;
-        ft_sharedptr<ManagedType>::set_last_operation_error(error_code);
-        this->unlock_internal(lock_acquired);
-        return (ft_sharedptr_access_proxy<ManagedType>(ft_nullptr, error_code));
-    }
-    if (index >= this->_arraySize)
-    {
-        error_code = FT_ERR_OUT_OF_RANGE;
-        ft_sharedptr<ManagedType>::set_last_operation_error(error_code);
-        this->unlock_internal(lock_acquired);
-        return (ft_sharedptr_access_proxy<ManagedType>(ft_nullptr, error_code));
-    }
-    element_pointer = &pointer[index];
-    ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    this->unlock_internal(lock_acquired);
-    return (ft_sharedptr_access_proxy<ManagedType>(element_pointer, FT_ERR_SUCCESS));
-}
-
-template <typename ManagedType>
-ft_sharedptr_const_access_proxy<ManagedType> ft_sharedptr<ManagedType>::operator[](size_t index) const
-{
-    bool lock_acquired;
-    const ManagedType* pointer;
-    const ManagedType* element_pointer;
-    int error_code;
-
-    lock_acquired = false;
-    pointer = ft_nullptr;
-    element_pointer = ft_nullptr;
-    error_code = FT_ERR_SUCCESS;
-    int lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_sharedptr<ManagedType>::set_last_operation_error(lock_error);
-        return (ft_sharedptr_const_access_proxy<ManagedType>(ft_nullptr, lock_error));
-    }
-    if (!this->_isArrayType)
-    {
-        error_code = FT_ERR_INVALID_OPERATION;
-        ft_sharedptr<ManagedType>::set_last_operation_error(error_code);
-        this->unlock_internal(lock_acquired);
-        return (ft_sharedptr_const_access_proxy<ManagedType>(ft_nullptr, error_code));
-    }
-    pointer = this->_managedPointer;
-    if (!pointer)
-    {
-        error_code = FT_ERR_INVALID_POINTER;
-        ft_sharedptr<ManagedType>::set_last_operation_error(error_code);
-        this->unlock_internal(lock_acquired);
-        return (ft_sharedptr_const_access_proxy<ManagedType>(ft_nullptr, error_code));
-    }
-    if (index >= this->_arraySize)
-    {
-        error_code = FT_ERR_OUT_OF_RANGE;
-        ft_sharedptr<ManagedType>::set_last_operation_error(error_code);
-        this->unlock_internal(lock_acquired);
-        return (ft_sharedptr_const_access_proxy<ManagedType>(ft_nullptr, error_code));
-    }
-    element_pointer = &pointer[index];
-    ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    this->unlock_internal(lock_acquired);
-    return (ft_sharedptr_const_access_proxy<ManagedType>(element_pointer, FT_ERR_SUCCESS));
-}
-
-template <typename ManagedType>
-int ft_sharedptr<ManagedType>::use_count() const
-{
-    bool lock_acquired;
-    int count;
-
-    lock_acquired = false;
-    count = 0;
-    int lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_sharedptr<ManagedType>::set_last_operation_error(lock_error);
-        return (0);
-    }
-    if (this->_referenceCount)
-        count = *this->_referenceCount;
-    else if (this->_managedPointer)
-        count = 1;
-    else
-        count = 0;
-    ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    this->unlock_internal(lock_acquired);
-    return (count);
-}
-
-
-template <typename ManagedType>
-ManagedType* ft_sharedptr<ManagedType>::get()
-{
-    bool lock_acquired;
-    ManagedType* pointer;
-
-    lock_acquired = false;
-    pointer = ft_nullptr;
-    int lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_sharedptr<ManagedType>::set_last_operation_error(lock_error);
-        return (ft_nullptr);
-    }
-    pointer = this->_managedPointer;
-    ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    this->unlock_internal(lock_acquired);
-    return (pointer);
-}
-
-template <typename ManagedType>
-const ManagedType* ft_sharedptr<ManagedType>::get() const
-{
-    bool lock_acquired;
-    const ManagedType* pointer;
-
-    lock_acquired = false;
-    pointer = ft_nullptr;
-    int lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_sharedptr<ManagedType>::set_last_operation_error(lock_error);
-        return (ft_nullptr);
-    }
-    pointer = this->_managedPointer;
-    ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    this->unlock_internal(lock_acquired);
-    return (pointer);
-}
-
-template <typename ManagedType>
-bool ft_sharedptr<ManagedType>::unique() const
-{
-    return (this->use_count() == 1);
-}
-
-template <typename ManagedType>
-ft_sharedptr<ManagedType>::operator bool() const noexcept
-{
-    bool lock_acquired;
-    bool result;
-
-    lock_acquired = false;
-    result = false;
-    int lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_sharedptr<ManagedType>::set_last_operation_error(lock_error);
-        return (false);
-    }
-    result = (this->_managedPointer != ft_nullptr);
-    this->unlock_internal(lock_acquired);
-    ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    return (result);
-}
-
-template <typename ManagedType>
-void ft_sharedptr<ManagedType>::reset(ManagedType* pointer, size_t size, bool arrayType)
-{
-    bool lock_acquired;
-
-    lock_acquired = false;
-    int lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_sharedptr<ManagedType>::set_last_operation_error(lock_error);
-        return ;
-    }
-    this->release_current_locked();
-    this->_managedPointer = pointer;
-    if (arrayType)
-        this->_arraySize = size;
-    else if (pointer)
-        this->_arraySize = 1;
-    else
-        this->_arraySize = 0;
-    this->_isArrayType = arrayType;
-    if (!pointer)
-    {
-        this->_referenceCount = ft_nullptr;
-        ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-        this->unlock_internal(lock_acquired);
-        return ;
-    }
-    this->_referenceCount = new (std::nothrow) int;
-    if (!this->_referenceCount)
-    {
-        if (arrayType)
-            delete[] pointer;
-        else
-            delete pointer;
-        this->_managedPointer = ft_nullptr;
-        this->_arraySize = 0;
-        this->_isArrayType = false;
-        ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_NO_MEMORY);
-        this->unlock_internal(lock_acquired);
-        return ;
-    }
-    *this->_referenceCount = 1;
-    ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    this->unlock_internal(lock_acquired);
-    return ;
-}
-
-template <typename ManagedType>
-void ft_sharedptr<ManagedType>::swap(ft_sharedptr<ManagedType>& other)
-{
-    ft_sharedptr<ManagedType>* first;
-    ft_sharedptr<ManagedType>* second;
-    bool first_lock_acquired;
-    bool second_lock_acquired;
-
-    first = this;
-    second = &other;
-    if (first > second)
-    {
-        ft_sharedptr<ManagedType>* temp_pointer;
-
-        temp_pointer = first;
-        first = second;
-        second = temp_pointer;
-    }
-    first_lock_acquired = false;
-    int first_lock_error = first->lock_internal(&first_lock_acquired);
-    if (first_lock_error != FT_ERR_SUCCESS)
-    {
-        ft_sharedptr<ManagedType>::set_last_operation_error(first_lock_error);
-        ft_sharedptr<ManagedType>::set_last_operation_error(first_lock_error);
-        return ;
-    }
-    second_lock_acquired = false;
-    int second_lock_error = second->lock_internal(&second_lock_acquired);
-    if (second_lock_error != FT_ERR_SUCCESS)
-    {
-        first->unlock_internal(first_lock_acquired);
-        ft_sharedptr<ManagedType>::set_last_operation_error(second_lock_error);
-        ft_sharedptr<ManagedType>::set_last_operation_error(second_lock_error);
-        return ;
-    }
-    ft_swap(this->_managedPointer, other._managedPointer);
-    ft_swap(this->_referenceCount, other._referenceCount);
-    ft_swap(this->_arraySize, other._arraySize);
-    ft_swap(this->_isArrayType, other._isArrayType);
-    ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    second->unlock_internal(second_lock_acquired);
-    first->unlock_internal(first_lock_acquired);
-    return ;
-}
-
-template <typename ManagedType>
-void ft_sharedptr<ManagedType>::add(const ManagedType& element)
-{
-    bool lock_acquired;
-    int lock_error;
-    ManagedType* previous_array;
-    int* previous_reference;
-    ManagedType* new_array;
-    int* new_count;
-    size_t index;
-    bool detach_required;
-
-    lock_acquired = false;
-    lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_sharedptr<ManagedType>::set_last_operation_error(lock_error);
-        return ;
-    }
-    if (!this->_isArrayType)
-    {
-        ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_INVALID_OPERATION);
-        this->unlock_internal(lock_acquired);
-        return ;
-    }
-    previous_array = this->_managedPointer;
-    previous_reference = this->_referenceCount;
-    new_array = new (std::nothrow) ManagedType[this->_arraySize + 1];
-    if (!new_array)
-    {
-        ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_NO_MEMORY);
-        this->unlock_internal(lock_acquired);
-        return ;
-    }
-    new_count = new (std::nothrow) int;
-    if (!new_count)
-    {
-        delete[] new_array;
-        ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_NO_MEMORY);
-        this->unlock_internal(lock_acquired);
-        return ;
-    }
-    *new_count = 1;
-    detach_required = false;
-    if (previous_reference && *previous_reference > 1)
-        detach_required = true;
-    index = 0;
-    while (index < this->_arraySize)
-    {
-        if (previous_array)
-            new_array[index] = previous_array[index];
-        else
-            new_array[index] = ManagedType();
-        ++index;
-    }
-    new_array[this->_arraySize] = element;
-    if (detach_required)
-        --(*previous_reference);
-    else
-    {
-        if (previous_array)
-            delete[] previous_array;
-        if (previous_reference)
-            delete previous_reference;
-    }
-    this->_managedPointer = new_array;
-    this->_referenceCount = new_count;
-    this->_arraySize = this->_arraySize + 1;
-    this->_isArrayType = true;
-    ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    this->unlock_internal(lock_acquired);
-    return ;
-}
-
-template <typename ManagedType>
-void ft_sharedptr<ManagedType>::remove(int index)
-{
-    bool lock_acquired;
-    int lock_error;
-    ManagedType* previous_array;
-    int* previous_reference;
-    ManagedType* new_array;
-    int* new_count;
-    size_t copy_index;
-    size_t new_size;
-    bool detach_required;
-
-    lock_acquired = false;
-    lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        ft_sharedptr<ManagedType>::set_last_operation_error(lock_error);
-        return ;
-    }
-    if (!this->_isArrayType)
-    {
-        ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_INVALID_OPERATION);
-        this->unlock_internal(lock_acquired);
-        return ;
-    }
-    if (index < 0 || static_cast<size_t>(index) >= this->_arraySize)
-    {
-        ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_OUT_OF_RANGE);
-        this->unlock_internal(lock_acquired);
-        return ;
-    }
-    new_size = this->_arraySize > 0 ? this->_arraySize - 1 : 0;
-    previous_array = this->_managedPointer;
-    previous_reference = this->_referenceCount;
-    new_array = ft_nullptr;
-    new_count = ft_nullptr;
-    if (new_size > 0)
-    {
-        new_array = new (std::nothrow) ManagedType[new_size];
-        if (!new_array)
-        {
-            ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_NO_MEMORY);
-            this->unlock_internal(lock_acquired);
-            return ;
-        }
-        new_count = new (std::nothrow) int;
-        if (!new_count)
-        {
-            delete[] new_array;
-            ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_NO_MEMORY);
-            this->unlock_internal(lock_acquired);
-            return ;
-        }
-        *new_count = 1;
-    }
-    detach_required = false;
-    if (previous_reference && *previous_reference > 1)
-        detach_required = true;
-    copy_index = 0;
-    while (copy_index < static_cast<size_t>(index))
-    {
-        if (new_array)
-            new_array[copy_index] = previous_array ? previous_array[copy_index] : ManagedType();
-        ++copy_index;
-    }
-    while (copy_index < new_size)
-    {
-        if (new_array)
-            new_array[copy_index] = previous_array[copy_index + 1];
-        ++copy_index;
-    }
-    if (detach_required)
-        --(*previous_reference);
-    else
-    {
-        if (previous_array)
-            delete[] previous_array;
-        if (previous_reference)
-            delete previous_reference;
-    }
-    this->_managedPointer = new_array;
-    this->_referenceCount = new_count;
-    this->_arraySize = new_size;
-    this->_isArrayType = true;
-    ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    this->unlock_internal(lock_acquired);
-    return ;
-}
-
-template <typename ManagedType>
-pt_recursive_mutex *ft_sharedptr<ManagedType>::mutex_handle() const
-{
-    return (this->_mutex);
-}
-
-template <typename ManagedType>
-int ft_sharedptr<ManagedType>::lock_internal(bool *lock_acquired) const
-{
-    int mutex_result;
-
-    if (lock_acquired)
-        *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    mutex_result = this->_mutex->lock();
-    if (mutex_result != FT_ERR_SUCCESS)
-    {
-        ft_sharedptr<ManagedType>::set_last_operation_error(mutex_result);
-        return (mutex_result);
-    }
-    if (lock_acquired)
-        *lock_acquired = true;
-    ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    return (FT_ERR_SUCCESS);
-}
-
-template <typename ManagedType>
-void ft_sharedptr<ManagedType>::unlock_internal(bool lock_acquired) const
-{
-    int mutex_result;
-
-    if (!lock_acquired || this->_mutex == ft_nullptr)
-        return ;
-    mutex_result = this->_mutex->unlock();
-    if (mutex_result != FT_ERR_SUCCESS)
-    {
-        ft_sharedptr<ManagedType>::set_last_operation_error(mutex_result);
-        return ;
-    }
-    ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    return ;
-}
-
-template <typename ManagedType>
-int ft_sharedptr<ManagedType>::prepare_thread_safety() const
-{
-    void *memory_pointer;
-    pt_recursive_mutex *mutex_pointer;
-
-    if (!this->_shared_thread_safe_flag)
-    {
-        this->_shared_thread_safe_flag = new (std::nothrow) bool;
-        if (!this->_shared_thread_safe_flag)
-        {
-            ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_NO_MEMORY);
-            return (-1);
-        }
-        *this->_shared_thread_safe_flag = false;
-    }
-    if (this->_mutex != ft_nullptr)
-    {
-        ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-        return (0);
-    }
-    memory_pointer = std::malloc(sizeof(pt_recursive_mutex));
-    if (memory_pointer == ft_nullptr)
-    {
-        ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_NO_MEMORY);
-        return (-1);
-    }
-    mutex_pointer = new(memory_pointer) pt_recursive_mutex();
-    int mutex_error = mutex_pointer->initialize();
-    if (mutex_error != FT_ERR_SUCCESS)
-    {
-        mutex_pointer->~pt_recursive_mutex();
-        std::free(memory_pointer);
-        ft_sharedptr<ManagedType>::set_last_operation_error(mutex_error);
-        return (-1);
-    }
-    this->_mutex = mutex_pointer;
-    *this->_shared_thread_safe_flag = true;
-    ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    return (0);
-}
-
-template <typename ManagedType>
-void ft_sharedptr<ManagedType>::teardown_thread_safety()
-{
-    if (this->_mutex != ft_nullptr)
-    {
-        this->_mutex->~pt_recursive_mutex();
-        std::free(this->_mutex);
-        this->_mutex = ft_nullptr;
-    }
-    return ;
-}
-
-template <typename ManagedType>
-int ft_sharedptr<ManagedType>::enable_thread_safety()
-{
-    return (this->prepare_thread_safety());
-}
-
-template <typename ManagedType>
-void ft_sharedptr<ManagedType>::disable_thread_safety()
-{
-    this->teardown_thread_safety();
-    if (this->_shared_thread_safe_flag)
-        *this->_shared_thread_safe_flag = false;
-    ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    return ;
-}
-
-template <typename ManagedType>
-bool ft_sharedptr<ManagedType>::is_thread_safe() const
-{
-    bool enabled;
-
-    if (this->_shared_thread_safe_flag && *this->_shared_thread_safe_flag
-        && this->_mutex == ft_nullptr)
-    {
-        prepare_thread_safety();
-    }
-    enabled = (this->_mutex != ft_nullptr);
-    ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    return (enabled);
-}
-
-template <typename ManagedType>
-int ft_sharedptr<ManagedType>::lock(bool *lock_acquired) const
-{
-    int result;
-
-    result = this->lock_internal(lock_acquired);
-    if (result == FT_ERR_SUCCESS)
-        ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    return (result);
-}
-
-template <typename ManagedType>
-void ft_sharedptr<ManagedType>::unlock(bool lock_acquired) const
-{
-    this->unlock_internal(lock_acquired);
-    if (this->_mutex == ft_nullptr
-        || ft_sharedptr<ManagedType>::last_operation_error() == FT_ERR_SUCCESS)
-        ft_sharedptr<ManagedType>::set_last_operation_error(FT_ERR_SUCCESS);
-    return ;
+    return (left.get() != right.get());
 }
 
 #endif

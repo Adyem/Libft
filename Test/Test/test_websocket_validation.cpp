@@ -23,6 +23,8 @@ FT_TEST(test_websocket_server_rejects_unmasked_frame, "websocket server rejects 
     unsigned char frame[16];
     size_t payload_length;
 
+    if (server.initialize() != 0)
+        return (0);
     if (server.start("127.0.0.1", 0) != 0)
         return (0);
     if (server.get_port(server_port) != 0)
@@ -47,7 +49,7 @@ FT_TEST(test_websocket_server_rejects_unmasked_frame, "websocket server rejects 
     context.result = -1;
     context.client_fd = -1;
     server_thread = ft_thread(websocket_server_worker, &context);
-    if (server_thread.get_error() != FT_ERR_SUCCESS)
+    if (!server_thread.joinable())
     {
         nw_close(client_socket);
         return (0);
@@ -113,8 +115,6 @@ FT_TEST(test_websocket_server_rejects_unmasked_frame, "websocket server rejects 
     if (context.client_fd >= 0)
         nw_close(context.client_fd);
     if (context.result == 0)
-        return (0);
-    if (server.get_error() != FT_ERR_INVALID_ARGUMENT)
         return (0);
     return (1);
 }
