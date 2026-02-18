@@ -122,6 +122,7 @@ int pf_try_format_custom_specifier(char specifier, va_list *args, ft_string &out
     int                   error_code;
     int                   lock_error;
     int                   unlock_error;
+    int32_t               initialization_error;
 
     if (handled == ft_nullptr)
     {
@@ -132,6 +133,9 @@ int pf_try_format_custom_specifier(char specifier, va_list *args, ft_string &out
     {
         return (FT_ERR_INVALID_POINTER);
     }
+    initialization_error = output.initialize();
+    if (initialization_error != FT_ERR_SUCCESS)
+        return (initialization_error);
     index = static_cast<unsigned char>(specifier);
     lock_error = pf_custom_specifiers_lock();
     if (lock_error != FT_ERR_SUCCESS)

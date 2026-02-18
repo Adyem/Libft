@@ -377,6 +377,9 @@ static int format_double_output(char specifier, int precision, double number, ft
         precision = 6;
     if ((specifier == 'g' || specifier == 'G') && precision == 0)
         precision = 1;
+    int32_t initialization_error = output.initialize();
+    if (initialization_error != FT_ERR_SUCCESS)
+        return (initialization_error);
 #define FORMAT_DOUBLE_CASE(character, literal) \
     if (specifier == character) \
     { \

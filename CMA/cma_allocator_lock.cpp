@@ -2,6 +2,8 @@
 #include "../Errno/errno.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "cma_internal.hpp"
+#include <cstdlib>
+#include <new>
 
 static pt_recursive_mutex *g_cma_allocator_mutex = ft_nullptr;
 
@@ -9,16 +11,19 @@ int32_t cma_enable_thread_safety(void)
 {
     if (g_cma_allocator_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
-    g_cma_allocator_mutex = new (std::nothrow) pt_recursive_mutex();
-    if (g_cma_allocator_mutex == ft_nullptr)
+    void *memory = std::malloc(sizeof(pt_recursive_mutex));
+    if (memory == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
-    int32_t result = g_cma_allocator_mutex->initialize();
+    pt_recursive_mutex *created_mutex = new (memory) pt_recursive_mutex();
+    int32_t result = created_mutex->initialize();
     if (result != FT_ERR_SUCCESS)
     {
-        delete g_cma_allocator_mutex;
+        created_mutex->~pt_recursive_mutex();
+        std::free(memory);
         g_cma_allocator_mutex = ft_nullptr;
         return (result);
     }
+    g_cma_allocator_mutex = created_mutex;
     return (FT_ERR_SUCCESS);
 }
 
@@ -27,7 +32,8 @@ int32_t cma_disable_thread_safety(void)
     if (g_cma_allocator_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
     int32_t result = g_cma_allocator_mutex->destroy();
-    delete g_cma_allocator_mutex;
+    g_cma_allocator_mutex->~pt_recursive_mutex();
+    std::free(static_cast<void *>(g_cma_allocator_mutex));
     g_cma_allocator_mutex = ft_nullptr;
     return (result);
 }

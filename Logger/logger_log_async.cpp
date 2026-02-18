@@ -13,6 +13,12 @@ static size_t g_async_pending_messages = 0;
 static size_t g_async_peak_pending = 0;
 static size_t g_async_dropped_messages = 0;
 static ft_queue<ft_string> g_log_queue;
+static int log_queue_initialize(void);
+static int g_log_queue_initializer_result = log_queue_initialize();
+static int log_queue_initialize(void)
+{
+    return (g_log_queue.initialize());
+}
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
 static pthread_mutex_t g_condition_mutex = PTHREAD_MUTEX_INITIALIZER;

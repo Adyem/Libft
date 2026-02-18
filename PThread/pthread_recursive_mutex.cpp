@@ -4,6 +4,7 @@
 #include "../Basic/basic.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "pthread_lock_tracking.hpp"
+#include <cstdlib>
 #include <new>
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
@@ -52,16 +53,26 @@ int pt_recursive_mutex::initialize()
     }
     if (this->_native_mutex != ft_nullptr)
     {
-        delete this->_native_mutex;
+        this->_native_mutex->~mutex();
+        std::free(this->_native_mutex);
         this->_native_mutex = ft_nullptr;
     }
-    this->_native_mutex = new (std::nothrow) std::mutex();
-    if (this->_native_mutex == ft_nullptr)
+    void *native_storage = std::malloc(sizeof(std::mutex));
+    if (native_storage == ft_nullptr)
     {
         this->_initialized_state = pt_recursive_mutex::_state_destroyed;
         this->_valid_state.store(false, std::memory_order_release);
         return (FT_ERR_NO_MEMORY);
     }
+    std::mutex *native_mutex = new (native_storage) std::mutex();
+    if (native_mutex == ft_nullptr)
+    {
+        std::free(native_storage);
+        this->_initialized_state = pt_recursive_mutex::_state_destroyed;
+        this->_valid_state.store(false, std::memory_order_release);
+        return (FT_ERR_NO_MEMORY);
+    }
+    this->_native_mutex = native_mutex;
     this->_initialized_state = pt_recursive_mutex::_state_initialized;
     this->_valid_state.store(true, std::memory_order_release);
     return (FT_ERR_SUCCESS);
@@ -85,7 +96,8 @@ int pt_recursive_mutex::destroy()
         return (FT_ERR_THREAD_BUSY);
     if (this->_lock_depth.load(std::memory_order_acquire) != 0)
         return (FT_ERR_THREAD_BUSY);
-    delete this->_native_mutex;
+    this->_native_mutex->~mutex();
+    std::free(this->_native_mutex);
     this->_native_mutex = ft_nullptr;
     this->_initialized_state = pt_recursive_mutex::_state_destroyed;
     this->_valid_state.store(false, std::memory_order_release);

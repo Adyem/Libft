@@ -53,7 +53,12 @@ struct pf_engine_token
 {
     bool is_literal;
     ft_string literal_value;
+    bool literal_initialized;
     pf_engine_format_spec spec;
+
+    pf_engine_token() noexcept;
+    ~pf_engine_token();
+    int ensure_literal_initialized() noexcept;
 };
 
 enum pf_engine_argument_kind
@@ -459,6 +464,9 @@ static int pf_engine_parse_format(const char *format, std::vector<pf_engine_toke
         {
             pf_engine_token literal_token;
             literal_token.is_literal = true;
+            int literal_error = literal_token.ensure_literal_initialized();
+            if (literal_error != FT_ERR_SUCCESS)
+                return (literal_error);
             literal_token.literal_value.assign(format + literal_start, index - literal_start);
             tokens.push_back(literal_token);
         }
@@ -469,6 +477,9 @@ static int pf_engine_parse_format(const char *format, std::vector<pf_engine_toke
         {
             pf_engine_token literal_token;
             literal_token.is_literal = true;
+            int literal_error = literal_token.ensure_literal_initialized();
+            if (literal_error != FT_ERR_SUCCESS)
+                return (literal_error);
             literal_token.literal_value.assign("%", 1);
             tokens.push_back(literal_token);
             index += 1;
@@ -483,6 +494,9 @@ static int pf_engine_parse_format(const char *format, std::vector<pf_engine_toke
         pf_engine_token spec_token;
         spec_token.is_literal = false;
         spec_token.spec = spec;
+        int literal_error = spec_token.ensure_literal_initialized();
+        if (literal_error != FT_ERR_SUCCESS)
+            return (literal_error);
         tokens.push_back(spec_token);
         index = spec_cursor;
         literal_start = index;
@@ -491,10 +505,40 @@ static int pf_engine_parse_format(const char *format, std::vector<pf_engine_toke
     {
         pf_engine_token literal_token;
         literal_token.is_literal = true;
+        int literal_error = literal_token.ensure_literal_initialized();
+        if (literal_error != FT_ERR_SUCCESS)
+            return (literal_error);
         literal_token.literal_value.assign(format + literal_start, length - literal_start);
         tokens.push_back(literal_token);
     }
     return (0);
+}
+
+pf_engine_token::pf_engine_token() noexcept
+    : is_literal(false)
+    , literal_value()
+    , literal_initialized(false)
+    , spec()
+{
+    return ;
+}
+
+pf_engine_token::~pf_engine_token()
+{
+    if (this->literal_initialized)
+        (void)this->literal_value.destroy();
+    return ;
+}
+
+int pf_engine_token::ensure_literal_initialized() noexcept
+{
+    if (this->literal_initialized)
+        return (FT_ERR_SUCCESS);
+    int initialization_error = this->literal_value.initialize();
+    if (initialization_error != FT_ERR_SUCCESS)
+        return (initialization_error);
+    this->literal_initialized = true;
+    return (FT_ERR_SUCCESS);
 }
 
 static int pf_engine_write_literal(const ft_string &literal, t_pf_engine_write_callback writer, void *context, size_t *written_count)
@@ -512,6 +556,9 @@ static int pf_engine_write_literal(const ft_string &literal, t_pf_engine_write_c
 static ft_string pf_engine_build_format_string(const pf_engine_format_spec &spec, int width_value, bool width_specified, int precision_value, bool precision_specified)
 {
     ft_string format_string;
+    int32_t initialization_error = format_string.initialize();
+    if (initialization_error != FT_ERR_SUCCESS)
+        return (format_string);
     format_string.append("%", 1);
     if (spec.argument_index >= 0)
     {
@@ -600,6 +647,9 @@ static int pf_engine_format_with_snprintf(const ft_string &format_string, t_pf_e
         return (FT_ERR_SUCCESS);
     }
     ft_string output;
+    int32_t initialization_error = output.initialize();
+    if (initialization_error != FT_ERR_SUCCESS)
+        return (initialization_error);
     output.resize_length(static_cast<size_t>(required_length));
     int string_error = pf_string_pop_last_error(output);
     if (string_error != FT_ERR_SUCCESS)
@@ -1466,9 +1516,12 @@ int pf_engine_format(const char *format, va_list args, t_pf_engine_write_callbac
     bool uses_sequential;
     uses_positional = false;
     uses_sequential = false;
-    if (pf_engine_parse_format(format, tokens, &uses_positional, &uses_sequential) != 0)
+    int parse_status = pf_engine_parse_format(format, tokens, &uses_positional, &uses_sequential);
+    if (parse_status != 0)
     {
-        return (FT_ERR_INVALID_ARGUMENT);
+        if (parse_status < 0)
+            return (FT_ERR_INVALID_ARGUMENT);
+        return (parse_status);
     }
     if (uses_positional && uses_sequential)
     {

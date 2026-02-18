@@ -55,7 +55,7 @@ void    ft_big_number::abort_lifecycle_error(const char *method_name,
         method_name = "unknown";
     if (reason == ft_nullptr)
         reason = "unknown";
-    pf_printf_fd(2, "ft_string lifecycle error: %s: %s\n",
+    pf_printf_fd(2, "ft_big_number lifecycle error: %s: %s\n",
         method_name, reason);
     su_abort();
     return ;
@@ -92,6 +92,7 @@ static char ft_big_number_digit_symbol(int value) noexcept
 
 int ft_big_number::lock_mutex(void) const noexcept
 {
+    this->abort_if_not_initialized("ft_big_number::lock_mutex");
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
     return (this->_mutex->lock());
@@ -333,6 +334,7 @@ ft_big_number::ft_big_number() noexcept
     , _capacity(0)
     , _is_negative(false)
     , _mutex(ft_nullptr)
+    , _initialized_state(ft_big_number::_state_initialized)
     , _operation_error(FT_ERR_SUCCESS)
 {
     return ;
@@ -344,6 +346,7 @@ ft_big_number::ft_big_number(const ft_big_number& other) noexcept
     , _capacity(0)
     , _is_negative(false)
     , _mutex(ft_nullptr)
+    , _initialized_state(ft_big_number::_state_initialized)
     , _operation_error(FT_ERR_SUCCESS)
 {
     int lock_error = other.lock_mutex();
@@ -376,6 +379,7 @@ ft_big_number::ft_big_number(ft_big_number&& other) noexcept
     , _capacity(0)
     , _is_negative(false)
     , _mutex(ft_nullptr)
+    , _initialized_state(ft_big_number::_state_initialized)
     , _operation_error(FT_ERR_SUCCESS)
 {
     int lock_error = other.lock_mutex();
@@ -395,8 +399,21 @@ ft_big_number::ft_big_number(ft_big_number&& other) noexcept
 
 ft_big_number::~ft_big_number() noexcept
 {
+    if (this->_initialized_state == ft_big_number::_state_uninitialized)
+    {
+        this->abort_lifecycle_error("ft_big_number::~ft_big_number",
+            "destructor called while object is uninitialized");
+        return ;
+    }
+    if (this->_initialized_state == ft_big_number::_state_destroyed)
+        return ;
     this->disable_thread_safety();
     cma_free(this->_digits);
+    this->_digits = ft_nullptr;
+    this->_size = 0;
+    this->_capacity = 0;
+    this->_is_negative = false;
+    this->_initialized_state = ft_big_number::_state_destroyed;
     return ;
 }
 
@@ -1798,6 +1815,12 @@ ft_string ft_big_number::to_string_base(int base) noexcept
     if (is_zero_value_result)
     {
         ft_string zero_result;
+        int initialization_error;
+
+        initialization_error = zero_result.initialize();
+        if (initialization_error != FT_ERR_SUCCESS)
+            return (finalize_to_string(ft_string(initialization_error),
+                        initialization_error));
 
         zero_result.append('0');
         if (ft_big_number::_last_error != 0)
@@ -1823,6 +1846,12 @@ ft_string ft_big_number::to_string_base(int base) noexcept
         return (finalize_to_string(ft_string(stored_error), stored_error));
     }
     ft_string digits;
+    int digits_initialization_error;
+
+    digits_initialization_error = digits.initialize();
+    if (digits_initialization_error != FT_ERR_SUCCESS)
+        return (finalize_to_string(ft_string(digits_initialization_error),
+                    digits_initialization_error));
 
     while (!magnitude.is_zero_value())
     {
@@ -1885,6 +1914,12 @@ ft_string ft_big_number::to_string_base(int base) noexcept
         magnitude._is_negative = false;
     }
     ft_string result;
+    int result_initialization_error;
+
+    result_initialization_error = result.initialize();
+    if (result_initialization_error != FT_ERR_SUCCESS)
+        return (finalize_to_string(ft_string(result_initialization_error),
+                    result_initialization_error));
 
     if (original_negative)
     {
@@ -2191,6 +2226,11 @@ ft_big_number_proxy::operator ft_big_number() const noexcept
 int ft_big_number_proxy::get_error() const noexcept
 {
     return (this->_last_error);
+}
+
+int ft_big_number::last_operation_error() noexcept
+{
+    return (ft_big_number::_last_error);
 }
 
 ft_big_number_proxy operator+(const ft_big_number_proxy &left, const ft_big_number &right) noexcept

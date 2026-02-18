@@ -27,8 +27,7 @@ class ft_big_number
 		void    abort_if_not_initialized(const char *method_name) const noexcept;
         void    reserve(ft_size_t new_capacity) noexcept;
         void    shrink_capacity() noexcept;
-        static int set_last_operation_error(int error_code) noexcept;
-        int     lock_mutex(void) const noexcept;
+                int     lock_mutex(void) const noexcept;
         int     unlock_mutex(void) const noexcept;
         static int  lock_pair(const ft_big_number &first, const ft_big_number &second,
                 const ft_big_number *&lower,
@@ -45,6 +44,7 @@ class ft_big_number
         int     compare_magnitude(const ft_big_number& other) const noexcept;
         ft_big_number    add_magnitude(const ft_big_number& other) const noexcept;
         ft_big_number    subtract_magnitude(const ft_big_number& other) const noexcept;
+        static int set_last_operation_error(int error_code) noexcept;
 
     public:
         ft_big_number() noexcept;
@@ -86,6 +86,7 @@ class ft_big_number
         int     enable_thread_safety(void) noexcept;
         int     disable_thread_safety(void) noexcept;
         bool    is_thread_safe(void) const noexcept;
+        static int last_operation_error() noexcept;
 
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex    *get_mutex_for_testing() noexcept;

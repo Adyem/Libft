@@ -3,7 +3,6 @@
 #include "../Basic/basic.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/pthread.hpp"
-#include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
 #include "class_nullptr.hpp"
 #include <climits>
@@ -23,8 +22,15 @@ void    ft_string::abort_lifecycle_error(const char *method_name,
         method_name = "unknown";
     if (reason == ft_nullptr)
         reason = "unknown";
-    pf_printf_fd(2, "ft_string lifecycle error: %s: %s\n",
-        method_name, reason);
+    static const char prefix[] = "ft_string lifecycle error: ";
+    static const char separator[] = ": ";
+    static const char newline[] = "\n";
+
+    (void)su_write(2, prefix, sizeof(prefix) - 1);
+    (void)su_write(2, method_name, ft_strlen_size_t(method_name));
+    (void)su_write(2, separator, sizeof(separator) - 1);
+    (void)su_write(2, reason, ft_strlen_size_t(reason));
+    (void)su_write(2, newline, 1);
     su_abort();
     return ;
 }
