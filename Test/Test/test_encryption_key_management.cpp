@@ -6,7 +6,7 @@
 #include "../../Errno/errno.hpp"
 #include "../../RNG/rng.hpp"
 #include "../../System_utils/test_runner.hpp"
-#include "../Compatebility/compatebility_system_test_hooks.hpp"
+#include "compatebility_system_test_hooks.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif

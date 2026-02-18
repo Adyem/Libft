@@ -18,12 +18,12 @@ float ft_random_beta(float alpha, float beta)
         return (0.0f);
     alpha_distribution = std::gamma_distribution<float>(alpha, 1.0f);
     beta_distribution = std::gamma_distribution<float>(beta, 1.0f);
-    lock_error = g_random_engine_mutex.lock();
+    lock_error = rng_lock_random_engine_mutex();
     if (lock_error != 0)
         return (0.0f);
     alpha_sample = alpha_distribution(g_random_engine);
     beta_sample = beta_distribution(g_random_engine);
-    unlock_error = g_random_engine_mutex.unlock();
+    unlock_error = rng_unlock_random_engine_mutex();
     if (unlock_error != 0)
         return (0.0f);
     sum = alpha_sample + beta_sample;

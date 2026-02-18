@@ -701,7 +701,7 @@ FT_TEST(test_dual_number_math_autodiff_gradient_success,
     status = math_autodiff_gradient(dual_number_multivariate_sample,
             point_value, gradient_value, &value, ft_nullptr);
     FT_ASSERT_EQ(0, status);
-    FT_ASSERT_EQ(static_cast<ft_size_t>(2), gradient_value.size());
+    FT_ASSERT_EQ(2, gradient_value.size());
     FT_ASSERT(dual_number_almost_equal(value, 13.0, 0.000001));
     FT_ASSERT(dual_number_almost_equal(gradient_value[0], 7.0, 0.000001));
     FT_ASSERT(dual_number_almost_equal(gradient_value[1], 3.0, 0.000001));
@@ -719,7 +719,7 @@ FT_TEST(test_dual_number_math_autodiff_gradient_null_function,
     status = math_autodiff_gradient(ft_nullptr,
             point_value, gradient_value, ft_nullptr, ft_nullptr);
     FT_ASSERT_EQ(-1, status);
-    FT_ASSERT_EQ(static_cast<ft_size_t>(0), gradient_value.size());
+    FT_ASSERT_EQ(0, gradient_value.size());
     return (1);
 }
 
@@ -779,7 +779,7 @@ FT_TEST(test_dual_number_math_autodiff_gradient_allocation_failure,
             point_value, gradient_value, &output_value, ft_nullptr);
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(-1, status);
-    FT_ASSERT_EQ(static_cast<ft_size_t>(0), gradient_value.size());
+    FT_ASSERT_EQ(0, gradient_value.size());
     return (1);
 }
 

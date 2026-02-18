@@ -50,6 +50,25 @@ BASIC_TEST_FILES := \
 	Test/test_validate_int.cpp \
 	Test/test_wide_char.cpp
 
+CMA_TEST_FILES := \
+	Test/test_cma.cpp \
+	Test/test_cma_alloc.cpp \
+	Test/test_cma_backend.cpp \
+	Test/test_cma_block_size.cpp \
+	Test/test_cma_global_new.cpp \
+	Test/test_cma_limits.cpp \
+	Test/test_cma_metadata.cpp \
+	Test/test_cma_stats.cpp \
+	Test/test_cma_strings.cpp \
+	Test/test_scma_accessor.cpp \
+	Test/test_scma_accessor_lifecycle.cpp \
+	Test/test_scma_accessor_proxy_chain_errors.cpp \
+	Test/test_scma_accessor_uninitialized_abort.cpp \
+	Test/test_scma_lifecycle.cpp \
+	Test/test_scma_memory.cpp \
+	Test/test_scma_recursive_mutex.cpp \
+	Test/test_scma_resize.cpp
+
 CXX       := g++
 
 HAS_OPENSSL_HEADERS := $(shell printf '#include <openssl/ssl.h>\n' | $(CXX) -x c++ -E - >/dev/null 2>&1 && echo 1 || echo 0)
@@ -126,7 +145,13 @@ Basic:
 	@echo "Building basic test executable ($(TARGET))"
 	@$(MAKE) FILES="$(BASIC_TEST_FILES)" all
 
+CMA:
+	@echo "Building CMA test executable ($(TARGET))"
+	@$(MAKE) FILES="$(CMA_TEST_FILES)" all
+
 re_Basic: fclean Basic
+
+re_CMA: fclean CMA
 
 build_tests: all
 	@echo "Test executable ready; run ./$(TARGET) manually if desired."

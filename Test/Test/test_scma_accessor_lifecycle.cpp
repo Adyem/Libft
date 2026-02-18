@@ -1,31 +1,42 @@
 #include "../test_internal.hpp"
 #include "test_scma_shared.hpp"
+#include <csetjmp>
 #include <csignal>
-#include <sys/wait.h>
-#include <unistd.h>
+#include <cstring>
+#include "../../CPP_class/class_nullptr.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif
 
+static sigjmp_buf g_scma_accessor_abort_jump;
+
+static void scma_accessor_abort_handler(int /*signal*/)
+{
+    siglongjmp(g_scma_accessor_abort_jump, 1);
+}
+
 static int scma_accessor_expect_sigabrt(void (*operation)())
 {
-    pid_t child_process_id;
-    int child_status;
+    struct sigaction action;
+    struct sigaction backup;
+    memset(&action, 0, sizeof(action));
+    action.sa_handler = scma_accessor_abort_handler;
+    sigemptyset(&action.sa_mask);
+    int result = 0;
 
-    child_process_id = fork();
-    if (child_process_id == 0)
+    if (sigaction(SIGABRT, &action, &backup) != 0)
+        return (0);
+    if (sigsetjmp(g_scma_accessor_abort_jump, 1) == 0)
     {
         operation();
-        _exit(0);
+        result = 0;
     }
-    if (child_process_id < 0)
-        return (0);
-    child_status = 0;
-    if (waitpid(child_process_id, &child_status, 0) < 0)
-        return (0);
-    if (WIFSIGNALED(child_status) == 0)
-        return (0);
-    return (WTERMSIG(child_status) == SIGABRT);
+    else
+    {
+        result = 1;
+    }
+    sigaction(SIGABRT, &backup, ft_nullptr);
+    return (result);
 }
 
 static void scma_accessor_initialize_twice_aborts_operation()
@@ -145,8 +156,8 @@ FT_TEST(test_scma_accessor_initialize_invalid_handle_sets_error_and_unbinds,
     scma_handle invalid_handle;
 
     FT_ASSERT_EQ(1, scma_test_initialize(64));
-    invalid_handle.index = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
-    invalid_handle.generation = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
+    invalid_handle.index = FT_SYSTEM_SIZE_MAX;
+    invalid_handle.generation = FT_SYSTEM_SIZE_MAX;
     FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, accessor.initialize(invalid_handle));
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, accessor.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.initialize());

@@ -285,8 +285,9 @@ inline int32_t    scma_handle_accessor<TValue>::initialize(void)
     {
         this->_initialized_state = scma_handle_accessor<TValue>::_state_destroyed;
         this->_last_error = FT_ERR_SYS_MUTEX_UNLOCK_FAILED;
+        return (FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
     }
-    return (this->_last_error);
+    return (FT_ERR_SUCCESS);
 }
 
 template <typename TValue>

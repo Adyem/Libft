@@ -14,7 +14,7 @@ FT_TEST(test_big_number_default_state, "ft_big_number default state is zero")
     ft_big_number number;
 
     FT_ASSERT(number.empty());
-    FT_ASSERT_EQ(static_cast<ft_size_t>(0), number.size());
+    FT_ASSERT_EQ(0, number.size());
     FT_ASSERT_EQ(0, std::strcmp(number.c_str(), "0"));
     FT_ASSERT(!number.is_negative());
     FT_ASSERT(!number.is_positive());
@@ -26,7 +26,7 @@ FT_TEST(test_big_number_assign_trim, "ft_big_number assign trims leading zeros")
     ft_big_number number;
 
     number.assign("0001234500");
-    FT_ASSERT_EQ(static_cast<ft_size_t>(7), number.size());
+    FT_ASSERT_EQ(7, number.size());
     FT_ASSERT_EQ(0, std::strcmp(number.c_str(), "1234500"));
     FT_ASSERT(!number.is_negative());
     FT_ASSERT(number.is_positive());
@@ -38,13 +38,13 @@ FT_TEST(test_big_number_assign_negative, "ft_big_number assign parses negative n
     ft_big_number number;
 
     number.assign("-001234");
-    FT_ASSERT_EQ(static_cast<ft_size_t>(4), number.size());
+    FT_ASSERT_EQ(4, number.size());
     FT_ASSERT_EQ(0, std::strcmp(number.c_str(), "1234"));
     FT_ASSERT(number.is_negative());
     FT_ASSERT(!number.is_positive());
 
     number.assign("-0");
-    FT_ASSERT_EQ(static_cast<ft_size_t>(1), number.size());
+    FT_ASSERT_EQ(1, number.size());
     FT_ASSERT_EQ(0, std::strcmp(number.c_str(), "0"));
     FT_ASSERT(!number.is_negative());
     FT_ASSERT(!number.is_positive());
@@ -94,7 +94,7 @@ FT_TEST(test_big_number_append_helpers, "ft_big_number append_digit and append_u
     number.append_digit('4');
     number.append_digit('2');
     number.append_unsigned(12345);
-    FT_ASSERT_EQ(static_cast<ft_size_t>(7), number.size());
+    FT_ASSERT_EQ(7, number.size());
     FT_ASSERT_EQ(0, std::strcmp(number.c_str(), "4212345"));
     FT_ASSERT(!number.is_negative());
     FT_ASSERT(number.is_positive());
@@ -106,7 +106,7 @@ FT_TEST(test_big_number_assign_invalid_digit, "ft_big_number assign rejects inva
     ft_big_number number;
 
     number.assign("12a3");
-    FT_ASSERT_EQ(static_cast<ft_size_t>(0), number.size());
+    FT_ASSERT_EQ(0, number.size());
     FT_ASSERT_EQ(0, std::strcmp(number.c_str(), "0"));
     return (1);
 }

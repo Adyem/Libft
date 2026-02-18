@@ -59,7 +59,7 @@ int ft_random_int_vector(int minimum_value, int maximum_value, int *output_value
         return (0);
     ft_init_random_engine();
     std::uniform_int_distribution<int> distribution(minimum_value, maximum_value);
-    lock_error = g_random_engine_mutex.lock();
+    lock_error = rng_lock_random_engine_mutex();
     if (lock_error != 0)
         return (-1);
     output_index = 0;
@@ -79,7 +79,7 @@ int ft_random_int_vector(int minimum_value, int maximum_value, int *output_value
         output_values[output_index] = distribution(g_random_engine);
         output_index += 1;
     }
-    unlock_error = g_random_engine_mutex.unlock();
+    unlock_error = rng_unlock_random_engine_mutex();
     if (unlock_error != 0)
         return (-1);
     return (0);
@@ -99,7 +99,7 @@ int ft_random_float_vector(float *output_values, size_t output_count)
         return (0);
     ft_init_random_engine();
     std::uniform_real_distribution<float> distribution(0.0f, 1.0f);
-    lock_error = g_random_engine_mutex.lock();
+    lock_error = rng_lock_random_engine_mutex();
     if (lock_error != 0)
         return (-1);
     output_index = 0;
@@ -119,7 +119,7 @@ int ft_random_float_vector(float *output_values, size_t output_count)
         output_values[output_index] = distribution(g_random_engine);
         output_index += 1;
     }
-    unlock_error = g_random_engine_mutex.unlock();
+    unlock_error = rng_unlock_random_engine_mutex();
     if (unlock_error != 0)
         return (-1);
     return (0);

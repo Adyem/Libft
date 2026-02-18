@@ -3,8 +3,11 @@
 
 int32_t ft_strncmp(const char *string_1, const char *string_2, ft_size_t maximum_length)
 {
-    if (maximum_length == 0 || string_1 == ft_nullptr || string_2 == ft_nullptr)
+    if (maximum_length == 0)
         return (0);
+
+    if (string_1 == ft_nullptr || string_2 == ft_nullptr)
+        return (-1);
 
     ft_size_t index = 0;
     while (index < maximum_length)

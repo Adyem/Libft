@@ -232,7 +232,7 @@ FT_TEST(test_cma_randomized_stress_allocations, "cma handles randomized allocati
         unsigned char pattern_value;
 
         random_value = static_cast<unsigned int>(ft_random_int());
-        requested_size = static_cast<ft_size_t>((random_value % 4096u) + 1u);
+        requested_size = (random_value % 4096u) + 1u;
         pattern_value = static_cast<unsigned char>((random_value % 251u) + 1u);
         allocation_sizes[allocation_index] = requested_size;
         allocation_patterns[allocation_index] = pattern_value;

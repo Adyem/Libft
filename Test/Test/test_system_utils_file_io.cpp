@@ -77,6 +77,41 @@ FT_TEST(test_cmp_close_invalid_fd_sets_ft_einval, "cmp_close invalid descriptor"
     return (1);
 }
 
+#if defined(_WIN32) || defined(_WIN64)
+FT_TEST(test_cmp_read_untracked_fd_sets_ft_invalid_handle,
+    "cmp_read rejects descriptor that was never opened")
+{
+    char buffer[4];
+    int64_t bytes_read;
+
+    bytes_read = 0;
+    FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE,
+        cmp_read(100, buffer, sizeof(buffer), &bytes_read));
+    FT_ASSERT_EQ(0, bytes_read);
+    return (1);
+}
+
+FT_TEST(test_cmp_write_untracked_fd_sets_ft_invalid_handle,
+    "cmp_write rejects descriptor that was never opened")
+{
+    const char buffer[4] = {'t', 'e', 's', 't'};
+    int64_t bytes_written;
+
+    bytes_written = 0;
+    FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE,
+        cmp_write(101, buffer, sizeof(buffer), &bytes_written));
+    FT_ASSERT_EQ(0, bytes_written);
+    return (1);
+}
+
+FT_TEST(test_cmp_close_untracked_fd_sets_ft_invalid_handle,
+    "cmp_close rejects descriptor that was never opened")
+{
+    FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, cmp_close(102));
+    return (1);
+}
+#endif
+
 FT_TEST(test_cmp_read_translates_errno, "cmp_read propagates errno failures")
 {
     int file_descriptor;

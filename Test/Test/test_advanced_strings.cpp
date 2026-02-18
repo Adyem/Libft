@@ -251,7 +251,7 @@ FT_TEST(test_adv_span_to_string_respects_length,
 
     result_string = adv_span_to_string(raw_buffer, 5);
     FT_ASSERT(result_string != ft_nullptr);
-    FT_ASSERT_EQ(static_cast<ft_size_t>(5), result_string->size());
+    FT_ASSERT_EQ(5, result_string->size());
     character_pointer = result_string->at(0);
     FT_ASSERT(character_pointer != ft_nullptr);
     FT_ASSERT_EQ('a', *character_pointer);
@@ -279,7 +279,7 @@ FT_TEST(test_adv_span_to_string_zero_length_null_buffer,
 
     result_string = adv_span_to_string(ft_nullptr, 0);
     FT_ASSERT(result_string != ft_nullptr);
-    FT_ASSERT_EQ(static_cast<ft_size_t>(0), result_string->size());
+    FT_ASSERT_EQ(0, result_string->size());
     delete result_string;
     return (1);
 }

@@ -5,7 +5,7 @@
 #include "../../System_utils/test_runner.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../Errno/errno.hpp"
-#include "../Compatebility/compatebility_system_test_hooks.hpp"
+#include "compatebility_system_test_hooks.hpp"
 #include <cerrno>
 #include <cstring>
 

@@ -4,7 +4,7 @@
 #include "../../System_utils/system_utils.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Compatebility/compatebility_internal.hpp"
-#include "../Compatebility/compatebility_system_test_hooks.hpp"
+#include "compatebility_system_test_hooks.hpp"
 #include <cerrno>
 
 #ifndef LIBFT_TEST_BUILD

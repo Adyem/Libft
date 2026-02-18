@@ -48,6 +48,12 @@ void* cma_malloc(ft_size_t size)
     if (cma_lock_allocator(&lock_acquired) != FT_ERR_SUCCESS)
         return (ft_nullptr);
     instrumented_size = cma_debug_allocation_size(size);
+    if (instrumented_size > FT_SYSTEM_SIZE_MAX - 15)
+    {
+        if (lock_acquired)
+            cma_unlock_allocator(lock_acquired);
+        return (ft_nullptr);
+    }
     aligned_size = align16(instrumented_size);
     block = find_free_block(aligned_size);
     if (!block)

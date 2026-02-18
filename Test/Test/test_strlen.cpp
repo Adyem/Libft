@@ -45,25 +45,25 @@ FT_TEST(test_strlen_size_t_large_buffer, "ft_strlen_size_t handles long strings"
         index++;
     }
     buffer[2048] = '\0';
-    FT_ASSERT_EQ(static_cast<ft_size_t>(2048), ft_strlen_size_t(buffer));
+    FT_ASSERT_EQ(2048, ft_strlen_size_t(buffer));
     return (1);
 }
 
 FT_TEST(test_strlen_size_t_nullptr, "ft_strlen_size_t returns zero for null input")
 {
-    FT_ASSERT_EQ(static_cast<ft_size_t>(0), ft_strlen_size_t(ft_nullptr));
+    FT_ASSERT_EQ(0, ft_strlen_size_t(ft_nullptr));
     return (1);
 }
 
 FT_TEST(test_strnlen_truncates_to_bound, "ft_strnlen caps measured length")
 {
-    FT_ASSERT_EQ(static_cast<ft_size_t>(6), ft_strnlen("bounded-string", 6));
+    FT_ASSERT_EQ(6, ft_strnlen("bounded-string", 6));
     return (1);
 }
 
 FT_TEST(test_strnlen_returns_full_length, "ft_strnlen returns full length when bound is larger")
 {
-    FT_ASSERT_EQ(static_cast<ft_size_t>(5), ft_strnlen("short", 32));
+    FT_ASSERT_EQ(5, ft_strnlen("short", 32));
     return (1);
 }
 

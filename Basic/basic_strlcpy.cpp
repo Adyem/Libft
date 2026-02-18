@@ -1,4 +1,5 @@
 #include "basic.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 
 ft_size_t ft_strlcpy(char *destination, const char *source, ft_size_t buffer_size)
 {
@@ -6,6 +7,9 @@ ft_size_t ft_strlcpy(char *destination, const char *source, ft_size_t buffer_siz
         return (0);
 
     ft_size_t source_length = ft_strlen_size_t(source);
+
+    if (buffer_size > 0 && destination == ft_nullptr)
+        return (0);
 
     if (destination && buffer_size > 0)
     {

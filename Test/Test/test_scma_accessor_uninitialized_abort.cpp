@@ -1,20 +1,33 @@
 #include "../test_internal.hpp"
 #include "test_scma_shared.hpp"
-#include <sys/wait.h>
-#include <unistd.h>
+#include <csetjmp>
 #include <csignal>
+#include <cstring>
 #include <new>
+#include "../../CPP_class/class_nullptr.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif
 
+static sigjmp_buf g_scma_accessor_uninitialized_jump;
+
+static void scma_accessor_uninitialized_handler(int /*signal*/)
+{
+    siglongjmp(g_scma_accessor_uninitialized_jump, 1);
+}
+
 static int scma_expect_sigabrt_uninitialized(void (*operation)(scma_handle_accessor<int>&))
 {
-    pid_t child_process_id;
-    int child_status;
+    struct sigaction action;
+    struct sigaction backup;
+    memset(&action, 0, sizeof(action));
+    action.sa_handler = scma_accessor_uninitialized_handler;
+    sigemptyset(&action.sa_mask);
+    int result = 0;
 
-    child_process_id = fork();
-    if (child_process_id == 0)
+    if (sigaction(SIGABRT, &action, &backup) != 0)
+        return (0);
+    if (sigsetjmp(g_scma_accessor_uninitialized_jump, 1) == 0)
     {
         alignas(scma_handle_accessor<int>) unsigned char storage[
             sizeof(scma_handle_accessor<int>)];
@@ -22,16 +35,15 @@ static int scma_expect_sigabrt_uninitialized(void (*operation)(scma_handle_acces
 
         accessor_pointer = new (storage) scma_handle_accessor<int>();
         operation(*accessor_pointer);
-        _exit(0);
+        accessor_pointer->~scma_handle_accessor<int>();
+        result = 0;
     }
-    if (child_process_id < 0)
-        return (0);
-    child_status = 0;
-    if (waitpid(child_process_id, &child_status, 0) < 0)
-        return (0);
-    if (!WIFSIGNALED(child_status))
-        return (0);
-    return (WTERMSIG(child_status) == SIGABRT);
+    else
+    {
+        result = 1;
+    }
+    sigaction(SIGABRT, &backup, ft_nullptr);
+    return (result);
 }
 
 static void scma_call_is_initialized(scma_handle_accessor<int> &accessor)

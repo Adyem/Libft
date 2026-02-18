@@ -10,7 +10,7 @@
 
 static ft_size_t align_16(ft_size_t size)
 {
-    return ((size + 15) & ~static_cast<ft_size_t>(15));
+    return ((size + 15) & ~15);
 }
 
 FT_TEST(test_cma_block_size_reports_allocation, "cma_block_size returns the aligned allocation size")
@@ -146,7 +146,7 @@ FT_TEST(test_cma_alloc_size_reports_block_size, "cma_alloc_size returns the stor
 
 FT_TEST(test_cma_alloc_size_null_pointer_sets_errno, "cma_alloc_size sets FT_ERR_INVALID_ARGUMENT for null pointers")
 {
-    FT_ASSERT_EQ(static_cast<ft_size_t>(0), cma_alloc_size(ft_nullptr));
+    FT_ASSERT_EQ(0, cma_alloc_size(ft_nullptr));
     return (1);
 }
 
@@ -160,7 +160,7 @@ FT_TEST(test_cma_alloc_size_rejects_non_cma_pointer, "cma_alloc_size detects poi
     if (!allocation_pointer)
         return (0);
     reported_size = cma_alloc_size(allocation_pointer + 1);
-    FT_ASSERT_EQ(static_cast<ft_size_t>(0), reported_size);
+    FT_ASSERT_EQ(0, reported_size);
     cma_free(allocation_pointer);
     return (1);
 }

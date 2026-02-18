@@ -231,6 +231,9 @@ int32_t    scma_ensure_capacity(ft_size_t required_size)
     unsigned char *&heap_data = scma_heap_data_ref();
     ft_size_t &heap_capacity = scma_heap_capacity_ref();
 
+    if (required_size >= static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX))
+        return (0);
+
     new_capacity = heap_capacity;
     if (new_capacity >= required_size)
         return (1);

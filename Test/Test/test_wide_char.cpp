@@ -32,13 +32,13 @@ FT_TEST(test_wstrlen_counts_length, "ft_wstrlen counts wide characters")
     const wchar_t *wide_text;
 
     wide_text = L"hello";
-    FT_ASSERT_EQ(static_cast<ft_size_t>(5), ft_wstrlen(wide_text));
+    FT_ASSERT_EQ(5, ft_wstrlen(wide_text));
     return (1);
 }
 
 FT_TEST(test_wstrlen_null_pointer_returns_zero, "ft_wstrlen returns zero for null input")
 {
-    FT_ASSERT_EQ(static_cast<ft_size_t>(0), ft_wstrlen(ft_nullptr));
+    FT_ASSERT_EQ(0, ft_wstrlen(ft_nullptr));
     return (1);
 }
 
@@ -236,7 +236,7 @@ FT_TEST(test_utf8_to_utf16_round_trip, "ft_utf8_to_utf16 converts and preserves 
     utf8_input[6] = '\0';
     utf16_output = ft_utf8_to_utf16(utf8_input, 0, &utf16_length);
     FT_ASSERT(utf16_output != ft_nullptr);
-    FT_ASSERT_EQ(static_cast<ft_size_t>(4), utf16_length);
+    FT_ASSERT_EQ(4, utf16_length);
     FT_ASSERT_EQ(static_cast<char16_t>('A'), utf16_output[0]);
     FT_ASSERT_EQ(static_cast<char16_t>(0xD83D), utf16_output[1]);
     FT_ASSERT_EQ(static_cast<char16_t>(0xDE00), utf16_output[2]);
@@ -277,7 +277,7 @@ FT_TEST(test_utf8_to_utf16_null_input_with_zero_length,
 
     utf16_output = ft_utf8_to_utf16(ft_nullptr, 0, &utf16_length);
     FT_ASSERT(utf16_output != ft_nullptr);
-    FT_ASSERT_EQ(static_cast<ft_size_t>(0), utf16_length);
+    FT_ASSERT_EQ(0, utf16_length);
     FT_ASSERT_EQ(static_cast<char16_t>(0), utf16_output[0]);
     cma_free(utf16_output);
     return (1);
@@ -299,7 +299,7 @@ FT_TEST(test_utf8_to_utf32_round_trip, "ft_utf8_to_utf32 decodes multi-byte sequ
     utf8_input[7] = '\0';
     utf32_output = ft_utf8_to_utf32(utf8_input, 0, &utf32_length);
     FT_ASSERT(utf32_output != ft_nullptr);
-    FT_ASSERT_EQ(static_cast<ft_size_t>(2), utf32_length);
+    FT_ASSERT_EQ(2, utf32_length);
     FT_ASSERT_EQ(static_cast<char32_t>(0x20AC), utf32_output[0]);
     FT_ASSERT_EQ(static_cast<char32_t>(0x1F600), utf32_output[1]);
     cma_free(utf32_output);
@@ -333,7 +333,7 @@ FT_TEST(test_utf8_to_utf32_null_input_with_zero_length,
 
     utf32_output = ft_utf8_to_utf32(ft_nullptr, 0, &utf32_length);
     FT_ASSERT(utf32_output != ft_nullptr);
-    FT_ASSERT_EQ(static_cast<ft_size_t>(0), utf32_length);
+    FT_ASSERT_EQ(0, utf32_length);
     FT_ASSERT_EQ(static_cast<char32_t>(0), utf32_output[0]);
     cma_free(utf32_output);
     return (1);

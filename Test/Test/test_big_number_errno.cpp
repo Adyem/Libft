@@ -74,7 +74,7 @@ FT_TEST(test_big_number_errno_resets_accessors, "ft_big_number accessors and com
 
     FT_ASSERT(right_number <= left_number);
 
-    FT_ASSERT_EQ(static_cast<ft_size_t>(2), right_number.size());
+    FT_ASSERT_EQ(2, right_number.size());
 
     FT_ASSERT(!right_number.empty());
 

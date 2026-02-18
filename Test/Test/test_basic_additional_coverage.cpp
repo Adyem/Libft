@@ -87,14 +87,14 @@ FT_TEST(test_strnstr_respects_maximum_boundary,
 FT_TEST(test_strnlen_null_pointer_with_non_zero_limit,
     "ft_strnlen returns zero for null pointer regardless of maximum length")
 {
-    FT_ASSERT_EQ(static_cast<ft_size_t>(0), ft_strnlen(ft_nullptr, 8));
+    FT_ASSERT_EQ(0, ft_strnlen(ft_nullptr, 8));
     return (1);
 }
 
 FT_TEST(test_strnlen_zero_limit_with_non_empty_string,
     "ft_strnlen returns zero when maximum length is zero")
 {
-    FT_ASSERT_EQ(static_cast<ft_size_t>(0), ft_strnlen("abcdef", 0));
+    FT_ASSERT_EQ(0, ft_strnlen("abcdef", 0));
     return (1);
 }
 

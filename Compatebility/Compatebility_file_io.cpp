@@ -35,7 +35,10 @@ static HANDLE cmp_retrieve_handle(int32_t file_descriptor)
 {
     if (file_descriptor < 0 || file_descriptor >= 1024)
         return (INVALID_HANDLE_VALUE);
-    return (g_file_handles[file_descriptor]);
+    HANDLE stored_handle = g_file_handles[file_descriptor];
+    if (stored_handle == ft_nullptr)
+        return (INVALID_HANDLE_VALUE);
+    return (stored_handle);
 }
 
 static void cmp_clear_handle(int32_t file_descriptor)
@@ -369,13 +372,9 @@ int32_t cmp_write(int32_t file_descriptor, const void *buffer, ft_size_t count,
 int32_t cmp_close(int32_t file_descriptor)
 {
     if (file_descriptor < 0)
-    {
         return (FT_ERR_INVALID_ARGUMENT);
-    }
     if (close(file_descriptor) == -1)
-    {
         return (cmp_map_system_error_to_ft(errno));
-    }
     return (FT_ERR_SUCCESS);
 }
 

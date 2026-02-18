@@ -180,7 +180,7 @@ FT_TEST(test_scma_resize_grow_and_shrink_preserves_data, "scma resize keeps live
     }
     FT_ASSERT_EQ(1, scma_write(handle, 0, initial_payload, 4));
     FT_ASSERT_EQ(1, scma_resize(handle, 8));
-    FT_ASSERT_EQ(static_cast<ft_size_t>(8), scma_get_size(handle));
+    FT_ASSERT_EQ(8, scma_get_size(handle));
     std::memset(buffer, 0, sizeof(buffer));
     FT_ASSERT_EQ(1, scma_read(handle, 0, buffer, 4));
     index = 0;
@@ -199,7 +199,7 @@ FT_TEST(test_scma_resize_grow_and_shrink_preserves_data, "scma resize keeps live
     buffer[7] = 2;
     FT_ASSERT_EQ(1, scma_write(handle, 0, buffer, 8));
     FT_ASSERT_EQ(1, scma_resize(handle, 2));
-    FT_ASSERT_EQ(static_cast<ft_size_t>(2), scma_get_size(handle));
+    FT_ASSERT_EQ(2, scma_get_size(handle));
     std::memset(initial_payload, 0, sizeof(initial_payload));
     FT_ASSERT_EQ(1, scma_read(handle, 0, initial_payload, 2));
     FT_ASSERT_EQ(static_cast<unsigned char>(9), initial_payload[0]);
@@ -284,7 +284,7 @@ FT_TEST(test_scma_late_allocate_failure_preserves_existing_data,
     FT_ASSERT_EQ(1, scma_handle_is_valid(stable_handle));
     stored_value = 31415;
     FT_ASSERT_EQ(1, scma_write(stable_handle, 0, &stored_value, sizeof(int)));
-    failed_handle = scma_allocate(static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX));
+    failed_handle = scma_allocate(FT_SYSTEM_SIZE_MAX);
     FT_ASSERT_EQ(0, scma_handle_is_valid(failed_handle));
     read_value = 0;
     FT_ASSERT_EQ(1, scma_read(stable_handle, 0, &read_value, sizeof(int)));
@@ -311,7 +311,7 @@ FT_TEST(test_scma_late_resize_failure_preserves_existing_data,
     second_value = 202;
     FT_ASSERT_EQ(1, scma_write(first_handle, 0, &first_value, sizeof(int)));
     FT_ASSERT_EQ(1, scma_write(second_handle, 0, &second_value, sizeof(int)));
-    FT_ASSERT_EQ(0, scma_resize(second_handle, static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX)));
+    FT_ASSERT_EQ(0, scma_resize(second_handle, FT_SYSTEM_SIZE_MAX));
     read_value = 0;
     FT_ASSERT_EQ(1, scma_read(first_handle, 0, &read_value, sizeof(int)));
     FT_ASSERT_EQ(first_value, read_value);
