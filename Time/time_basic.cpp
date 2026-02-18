@@ -20,7 +20,7 @@ char *ft_time_format(char *buffer, size_t buffer_size)
     if (!buffer || buffer_size == 0)
         return (ft_nullptr);
     t_time current_time = time_now();
-    if (current_time == static_cast<t_time>(-1))
+    if (current_time == -1)
         return (ft_nullptr);
     t_time_info time_info;
     ft_bzero(&time_info, sizeof(time_info));

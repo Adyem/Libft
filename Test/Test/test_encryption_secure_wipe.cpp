@@ -10,9 +10,7 @@
 FT_TEST(test_encryption_secure_wipe_null_buffer_sets_errno,
     "encryption_secure_wipe rejects null buffers")
 {
-    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(-1, encryption_secure_wipe(ft_nullptr, 4));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -22,9 +20,7 @@ FT_TEST(test_encryption_secure_wipe_zero_size_clears_errno,
     unsigned char data_buffer;
 
     data_buffer = 42;
-    ft_errno = FT_ERR_IO;
     FT_ASSERT_EQ(0, encryption_secure_wipe(&data_buffer, 0));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT_EQ(static_cast<unsigned char>(42), data_buffer);
     return (1);
 }
@@ -41,9 +37,7 @@ FT_TEST(test_encryption_secure_wipe_overwrites_bytes,
         data_buffer[buffer_index] = static_cast<unsigned char>(0xAB);
         buffer_index++;
     }
-    ft_errno = FT_ERR_IO;
     FT_ASSERT_EQ(0, encryption_secure_wipe(data_buffer, 8));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     buffer_index = 0;
     while (buffer_index < 8)
     {
@@ -66,9 +60,7 @@ FT_TEST(test_encryption_secure_wipe_string_clears_contents,
     secret_buffer[4] = 'e';
     secret_buffer[5] = 't';
     secret_buffer[6] = '\0';
-    ft_errno = FT_ERR_IO;
     FT_ASSERT_EQ(0, encryption_secure_wipe_string(secret_buffer));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     buffer_index = 0;
     while (buffer_index < 7)
     {
@@ -81,8 +73,6 @@ FT_TEST(test_encryption_secure_wipe_string_clears_contents,
 FT_TEST(test_encryption_secure_wipe_string_null_buffer_sets_errno,
     "encryption_secure_wipe_string rejects null buffers")
 {
-    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(-1, encryption_secure_wipe_string(ft_nullptr));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }

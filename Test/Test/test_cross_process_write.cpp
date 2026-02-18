@@ -34,7 +34,7 @@ namespace
             return (remaining);
         if (remaining > std::numeric_limits<size_t>::max())
             return (std::numeric_limits<size_t>::max());
-        return (static_cast<size_t>(remaining));
+        return (remaining);
     }
 
     static int create_shared_memory(const char *name_prefix, size_t payload_length, cross_process_message &message,
@@ -129,7 +129,7 @@ FT_TEST(test_cross_process_write_memory_basic, "cross process write memory basic
     FT_ASSERT_EQ(0, descriptor_result);
     FT_ASSERT(std::memcmp(&message, &received_message, sizeof(cross_process_message)) == 0);
     error_value = -42;
-    write_result = cp_write_memory(received_message, reinterpret_cast<const unsigned char *>(written_payload), static_cast<ft_size_t>(written_payload_length), error_value);
+    write_result = cp_write_memory(received_message, reinterpret_cast<const unsigned char *>(written_payload), written_payload_length, error_value);
     FT_ASSERT_EQ(0, write_result);
     index = 0;
     while (index < written_payload_length)
@@ -471,7 +471,7 @@ FT_TEST(test_cross_process_write_memory_without_error_slot, "cross process write
     message.error_memory_address = 0;
     errno = 0;
     write_result = cp_write_memory(message, reinterpret_cast<const unsigned char *>(payload),
-        static_cast<ft_size_t>(payload_length), 55);
+        payload_length, 55);
     FT_ASSERT_EQ(0, write_result);
     index = 0;
     while (index < payload_length)

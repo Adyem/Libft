@@ -33,15 +33,11 @@ ft_big_number big_number_from_hex_string(const char* hex_digits) noexcept
             digits += 2;
     }
     result.assign_base(digits, 16);
-    if (ft_big_number::last_operation_error() != 0)
-        return (result);
     if (!has_negative_sign)
         return (result);
     ft_big_number zero_reference;
 
     zero_reference.assign("0");
-    if (ft_big_number::last_operation_error() != 0)
-        return (zero_reference);
     ft_big_number signed_result = zero_reference - result;
     return (signed_result);
 }

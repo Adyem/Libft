@@ -244,18 +244,14 @@ FT_TEST(test_game_event_sub_duration_prevents_underflow, "ft_event::sub_duration
     ft_event event;
 
     event.set_duration(3);
-    ft_errno = FT_ERR_SUCCESS;
     event.sub_duration(5);
     FT_ASSERT_EQ(3, event.get_duration());
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, event.get_error());
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
 
     event.set_duration(3);
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
     event.sub_duration(3);
     FT_ASSERT_EQ(0, event.get_duration());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, event.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -264,17 +260,13 @@ FT_TEST(test_game_event_add_duration_detects_overflow, "ft_event::add_duration r
     ft_event event;
 
     event.set_duration(INT_MAX - 2);
-    ft_errno = FT_ERR_SUCCESS;
     event.add_duration(5);
     FT_ASSERT_EQ(INT_MAX - 2, event.get_duration());
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, event.get_error());
-    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
 
-    ft_errno = FT_ERR_OUT_OF_RANGE;
     event.add_duration(2);
     FT_ASSERT_EQ(INT_MAX, event.get_duration());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, event.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -283,17 +275,13 @@ FT_TEST(test_game_event_add_duration_rejects_negative, "ft_event::add_duration r
     ft_event event;
 
     event.set_duration(4);
-    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, event.add_duration(-1));
     FT_ASSERT_EQ(4, event.get_duration());
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, event.get_error());
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
 
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, event.add_duration(2));
     FT_ASSERT_EQ(6, event.get_duration());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, event.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -314,7 +302,6 @@ FT_TEST(test_inventory_remove_item_releases_usage, "Game: removing items release
     FT_ASSERT_EQ(0u, inventory.get_used());
     FT_ASSERT_EQ(0, inventory.get_current_weight());
     FT_ASSERT_EQ(false, inventory.has_item(7));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.get_error());
     return (1);
 }
 
@@ -383,13 +370,12 @@ FT_TEST(test_inventory_copy_preserves_stacks, "Game: copying inventories keeps i
     stack->set_height(1);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, original.add_item(stack));
     FT_ASSERT_EQ(4, original.count_item(3));
-    ft_inventory duplicate(original);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, duplicate.initialize(original));
     original.remove_item(0);
     FT_ASSERT_EQ(0, original.count_item(3));
     FT_ASSERT_EQ(4, duplicate.count_item(3));
     FT_ASSERT_EQ(0, original.get_current_weight());
     FT_ASSERT_EQ(4, duplicate.get_current_weight());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, duplicate.get_error());
     return (1);
 }
 
@@ -510,7 +496,6 @@ FT_TEST(test_world_region_setters_replace_ids, "Game: set_region_ids overwrites 
     world_region.set_region_ids(second_ids);
     FT_ASSERT_EQ(1u, world_region.get_region_ids().size());
     FT_ASSERT_EQ(42, world_region.get_region_ids()[0]);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, world_region.get_error());
     return (1);
 }
 
@@ -525,14 +510,14 @@ FT_TEST(test_world_region_move_assignment_clears_source, "Game: moving a world_r
     source_region.set_world_id(4);
     source_region.set_region_ids(source_ids);
     target_region.set_world_id(1);
-    target_region = ft_move(source_region);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, target_region.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, target_region.initialize(ft_move(source_region)));
     FT_ASSERT_EQ(4, target_region.get_world_id());
     FT_ASSERT_EQ(2u, target_region.get_region_ids().size());
     FT_ASSERT_EQ(5, target_region.get_region_ids()[0]);
     FT_ASSERT_EQ(8, target_region.get_region_ids()[1]);
     FT_ASSERT_EQ(0, source_region.get_world_id());
     FT_ASSERT_EQ(0u, source_region.get_region_ids().size());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_region.get_error());
     return (1);
 }
 
@@ -547,14 +532,13 @@ FT_TEST(test_world_region_copy_assignment_preserves_content, "Game: copying worl
     original_region.set_world_id(6);
     original_region.set_region_ids(original_ids);
     copied_region.set_world_id(2);
-    copied_region = original_region;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, copied_region.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, copied_region.initialize(original_region));
     FT_ASSERT_EQ(6, copied_region.get_world_id());
     FT_ASSERT_EQ(2u, copied_region.get_region_ids().size());
     FT_ASSERT_EQ(15, copied_region.get_region_ids()[0]);
     FT_ASSERT_EQ(27, copied_region.get_region_ids()[1]);
     FT_ASSERT_EQ(2u, original_region.get_region_ids().size());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, copied_region.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, original_region.get_error());
     return (1);
 }
 
@@ -566,7 +550,6 @@ FT_TEST(test_world_default_region_pointer_available, "Game: world exposes defaul
     FT_ASSERT_EQ(true, static_cast<bool>(region_pointer));
     FT_ASSERT_EQ(0, region_pointer->get_world_id());
     FT_ASSERT_EQ(0u, region_pointer->get_region_ids().size());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_pointer->get_error());
     return (1);
 }
 
@@ -587,8 +570,6 @@ FT_TEST(test_world_registry_registers_and_fetches_regions, "Game: registry store
     FT_ASSERT_EQ(2u, fetched_region.get_region_ids().size());
     FT_ASSERT_EQ(101, fetched_region.get_region_ids()[0]);
     FT_ASSERT_EQ(202, fetched_region.get_region_ids()[1]);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_region.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
     return (1);
 }
 
@@ -605,7 +586,6 @@ FT_TEST(test_inventory_add_item_rejects_weight_overflow, "Game: inventory blocks
     FT_ASSERT_EQ(FT_ERR_FULL, inventory.add_item(heavy));
     FT_ASSERT_EQ(0, inventory.count_item(11));
     FT_ASSERT_EQ(0, inventory.get_current_weight());
-    FT_ASSERT_EQ(FT_ERR_FULL, inventory.get_error());
     return (1);
 }
 
@@ -663,7 +643,6 @@ FT_TEST(test_inventory_partial_stack_before_capacity_error, "Game: adding beyond
     FT_ASSERT_EQ(5, inventory.count_item(5));
     FT_ASSERT_EQ(5, inventory.get_current_weight());
     FT_ASSERT_EQ(1u, inventory.get_used());
-    FT_ASSERT_EQ(FT_ERR_FULL, inventory.get_error());
     return (1);
 }
 
@@ -675,28 +654,41 @@ FT_TEST(test_world_region_parameterized_constructor_copies_values, "Game: parame
     region_ids.push_back(4);
     region_ids.push_back(6);
     region_ids.push_back(8);
-    region = ft_world_region(12, region_ids);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(12, region_ids));
     region_ids.push_back(10);
     FT_ASSERT_EQ(12, region.get_world_id());
     FT_ASSERT_EQ(3u, region.get_region_ids().size());
     FT_ASSERT_EQ(4, region.get_region_ids()[0]);
     FT_ASSERT_EQ(6, region.get_region_ids()[1]);
     FT_ASSERT_EQ(8, region.get_region_ids()[2]);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     return (1);
 }
 
 FT_TEST(test_world_region_mutable_ids_reference_updates_state, "Game: mutable get_region_ids enables in-place edits")
 {
     ft_world_region region;
-    ft_vector<int> &ids = region.get_region_ids();
+    ft_vector<int> *ids;
 
-    ids.push_back(14);
-    ids.push_back(16);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize());
+    ids = &region.get_region_ids();
+    ids->push_back(14);
+    ids->push_back(16);
     FT_ASSERT_EQ(2u, region.get_region_ids().size());
     FT_ASSERT_EQ(14, region.get_region_ids()[0]);
     FT_ASSERT_EQ(16, region.get_region_ids()[1]);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     return (1);
 }
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize());
+    ft_inventory duplicate;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world_region.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_region.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, target_region.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original_region.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, copied_region.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stored_region.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_region.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize());

@@ -5,12 +5,16 @@
 
 api_connection_pool_handle::api_connection_pool_handle()
     : _initialized_state(api_connection_pool_handle::_state_uninitialized),
-      _mutex(ft_nullptr), key(), socket(), tls_session(ft_nullptr),
-      tls_context(ft_nullptr), security_mode(api_connection_security_mode::PLAIN),
+      _mutex(ft_nullptr), key(), socket(),
+      security_mode(api_connection_security_mode::PLAIN),
       has_socket(false), from_pool(false), should_store(false),
       negotiated_http2(false), plain_socket_timed_out(false),
       plain_socket_validated(false)
 {
+#if NETWORKING_HAS_OPENSSL
+    this->tls_session = ft_nullptr;
+    this->tls_context = ft_nullptr;
+#endif
     return ;
 }
 
@@ -101,8 +105,10 @@ int api_connection_pool_handle::initialize() noexcept
         this->abort_lifecycle_error("api_connection_pool_handle::initialize",
             "initialize called on initialized instance");
     this->key.clear();
+#if NETWORKING_HAS_OPENSSL
     this->tls_session = ft_nullptr;
     this->tls_context = ft_nullptr;
+#endif
     this->security_mode = api_connection_security_mode::PLAIN;
     this->has_socket = false;
     this->from_pool = false;
@@ -126,8 +132,10 @@ int api_connection_pool_handle::destroy() noexcept
         this->abort_lifecycle_error("api_connection_pool_handle::destroy",
             "destroy called on non-initialized instance");
     this->key.clear();
+#if NETWORKING_HAS_OPENSSL
     this->tls_session = ft_nullptr;
     this->tls_context = ft_nullptr;
+#endif
     this->security_mode = api_connection_security_mode::PLAIN;
     this->has_socket = false;
     this->from_pool = false;

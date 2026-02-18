@@ -6,11 +6,9 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/thread.hpp"
 #include "../PThread/recursive_mutex.hpp"
-#include "../Networking/openssl_support.hpp"
-#if NETWORKING_HAS_OPENSSL
-#include <cstdint>
 #include "../Template/vector.hpp"
-#endif
+#include "../Networking/openssl_support.hpp"
+#include <cstdint>
 
 typedef void (*api_callback)(char *body, int status, void *user_data);
 

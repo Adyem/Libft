@@ -72,10 +72,10 @@ namespace
         *reinterpret_cast<int *>(mapping + error_offset) = 123;
         std::memset(&message, 0, sizeof(message));
         message.stack_base_address = reinterpret_cast<uint64_t>(mapping);
-        message.remote_memory_address = message.stack_base_address + static_cast<uint64_t>(data_offset);
-        message.remote_memory_size = static_cast<uint64_t>(total_size);
+        message.remote_memory_address = message.stack_base_address + data_offset;
+        message.remote_memory_size = total_size;
         message.shared_mutex_address = message.stack_base_address;
-        message.error_memory_address = message.stack_base_address + static_cast<uint64_t>(error_offset);
+        message.error_memory_address = message.stack_base_address + error_offset;
         std::snprintf(message.shared_memory_name, sizeof(message.shared_memory_name), "%s", shared_memory_name);
         return (0);
     }
@@ -131,7 +131,7 @@ FT_TEST(test_cross_process_receive_memory_basic, "cross process receive memory b
     std::memcpy(&post_error_value, mapping + error_offset, sizeof(int));
     FT_ASSERT_EQ(0, post_error_value);
     FT_ASSERT_EQ(0, pthread_mutex_destroy(reinterpret_cast<pthread_mutex_t *>(mapping)));
-    FT_ASSERT_EQ(0, munmap(mapping_ptr, static_cast<size_t>(message.remote_memory_size)));
+    FT_ASSERT_EQ(0, munmap(mapping_ptr, message.remote_memory_size));
     FT_ASSERT_EQ(0, shm_unlink(message.shared_memory_name));
     return (1);
 }
@@ -171,7 +171,7 @@ FT_TEST(test_cross_process_receive_memory_mutex_timeout, "cross process receive 
     FT_ASSERT_EQ(0, close_result);
     FT_ASSERT_EQ(0, pthread_mutex_unlock(shared_mutex));
     FT_ASSERT_EQ(0, pthread_mutex_destroy(shared_mutex));
-    FT_ASSERT_EQ(0, munmap(mapping_ptr, static_cast<size_t>(message.remote_memory_size)));
+    FT_ASSERT_EQ(0, munmap(mapping_ptr, message.remote_memory_size));
     FT_ASSERT_EQ(0, shm_unlink(message.shared_memory_name));
     return (1);
 }
@@ -223,7 +223,7 @@ FT_TEST(test_cross_process_receive_memory_invalid_payload_offset, "cross process
     std::memcpy(&stored_error_value, mapping + error_offset, sizeof(int));
     FT_ASSERT_EQ(123, stored_error_value);
     FT_ASSERT_EQ(0, pthread_mutex_destroy(reinterpret_cast<pthread_mutex_t *>(mapping)));
-    FT_ASSERT_EQ(0, munmap(mapping_ptr, static_cast<size_t>(message.remote_memory_size)));
+    FT_ASSERT_EQ(0, munmap(mapping_ptr, message.remote_memory_size));
     FT_ASSERT_EQ(0, shm_unlink(message.shared_memory_name));
     return (1);
 }
@@ -275,7 +275,7 @@ FT_TEST(test_cross_process_receive_memory_invalid_error_offset, "cross process r
     std::memcpy(&error_snapshot, mapping + error_offset, sizeof(int));
     FT_ASSERT_EQ(123, error_snapshot);
     FT_ASSERT_EQ(0, pthread_mutex_destroy(reinterpret_cast<pthread_mutex_t *>(mapping)));
-    FT_ASSERT_EQ(0, munmap(mapping_ptr, static_cast<size_t>(message.remote_memory_size)));
+    FT_ASSERT_EQ(0, munmap(mapping_ptr, message.remote_memory_size));
     FT_ASSERT_EQ(0, shm_unlink(message.shared_memory_name));
     return (1);
 }
@@ -379,7 +379,7 @@ FT_TEST(test_cross_process_receive_memory_invalid_mutex_offset, "cross process r
     std::memcpy(&stored_error_value, mapping + error_offset, sizeof(int));
     FT_ASSERT_EQ(123, stored_error_value);
     FT_ASSERT_EQ(0, pthread_mutex_destroy(shared_mutex));
-    FT_ASSERT_EQ(0, munmap(mapping_ptr, static_cast<size_t>(message.remote_memory_size)));
+    FT_ASSERT_EQ(0, munmap(mapping_ptr, message.remote_memory_size));
     FT_ASSERT_EQ(0, shm_unlink(message.shared_memory_name));
     return (1);
 }

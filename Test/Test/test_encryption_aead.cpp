@@ -4,6 +4,10 @@
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../Basic/basic.hpp"
+#include "../../Networking/openssl_support.hpp"
+
+#if NETWORKING_HAS_OPENSSL
+
 #include <openssl/ssl.h>
 #include <openssl/pem.h>
 
@@ -264,3 +268,5 @@ FT_TEST(test_encryption_aead_tls_integration, "AEAD wrappers derive keys from TL
     EVP_PKEY_free(server_key);
     return (1);
 }
+
+#endif

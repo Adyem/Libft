@@ -17,7 +17,7 @@ static ssize_t    su_default_write_syscall(int file_descriptor, const void *buff
     error_code = cmp_write(file_descriptor, buffer, count, &bytes_written);
     if (error_code != FT_ERR_SUCCESS)
         return (-1);
-    return (static_cast<ssize_t>(bytes_written));
+    return (bytes_written);
 }
 
 void    su_set_write_syscall_hook(t_su_write_syscall_hook hook)
@@ -50,7 +50,7 @@ ssize_t su_read(int file_descriptor, void *buffer, size_t count)
         bytes_read_value = 0;
         error_code = cmp_read(file_descriptor, buffer, count, &bytes_read_value);
         if (error_code == FT_ERR_SUCCESS)
-            return (static_cast<ssize_t>(bytes_read_value));
+            return (bytes_read_value);
 #if defined(__linux__) || defined(__APPLE__)
         const int32_t max_retries = 10;
         const int32_t retry_delay_ms = 500;
@@ -101,7 +101,7 @@ ssize_t su_write(int file_descriptor, const void *buffer, size_t count)
             error_code = cmp_write(file_descriptor, byte_buffer + total_written,
                 count - total_written, &bytes_written_value);
             if (error_code == FT_ERR_SUCCESS)
-                write_result = static_cast<ssize_t>(bytes_written_value);
+                write_result = bytes_written_value;
             else
                 write_result = -1;
         }

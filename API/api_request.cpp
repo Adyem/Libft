@@ -338,6 +338,7 @@ bool api_request_stream_http2(const char *ip, uint16_t port,
     bool result;
 
     http2_used_local = false;
+#if NETWORKING_HAS_OPENSSL
     result = api_http_execute_plain_http2_streaming(connection_handle, method,
             path, ip, payload, headers, timeout, ip, port, retry_policy,
             streaming_handler, http2_used_local, error_code);
@@ -351,6 +352,13 @@ bool api_request_stream_http2(const char *ip, uint16_t port,
             return (false);
         http2_used_local = false;
     }
+#else
+    result = api_http_execute_plain_streaming(connection_handle, method,
+            path, ip, payload, headers, timeout, ip, port, retry_policy,
+            streaming_handler, error_code);
+    if (!result)
+        return (false);
+#endif
     connection_guard.set_success();
     if (used_http2)
         *used_http2 = http2_used_local;
@@ -712,6 +720,7 @@ char *api_request_string_http2(const char *ip, uint16_t port,
     bool http2_used_local;
 
     http2_used_local = false;
+#if NETWORKING_HAS_OPENSSL
     metrics_result_body = api_http_execute_plain_http2(connection_handle,
             method, path, ip, payload, headers, status, timeout, ip, port,
             retry_policy, http2_used_local, error_code);
@@ -731,8 +740,10 @@ char *api_request_string_http2(const char *ip, uint16_t port,
         }
         connection_handle.should_store = pooled_connection;
         connection_handle.negotiated_http2 = false;
+#if NETWORKING_HAS_OPENSSL
         connection_handle.tls_session = ft_nullptr;
         connection_handle.tls_context = ft_nullptr;
+#endif
         previous_error_code = error_code;
         error_code = FT_ERR_SUCCESS;
         metrics_result_body = api_http_execute_plain(connection_handle, method,
@@ -750,6 +761,13 @@ char *api_request_string_http2(const char *ip, uint16_t port,
         }
         http2_used_local = false;
     }
+#else
+    metrics_result_body = api_http_execute_plain(connection_handle, method,
+            path, ip, payload, headers, status, timeout, ip, port,
+            retry_policy, error_code);
+    if (!metrics_result_body)
+        return (ft_nullptr);
+#endif
     connection_guard.set_success();
     if (used_http2)
         *used_http2 = http2_used_local;

@@ -205,7 +205,7 @@ int ft_file_watch::watch_directory(const char *path,
     this->_running = true;
     this->_stopped = false;
     new_thread = ft_thread(&ft_file_watch::event_loop, this);
-    this->_thread = ft_thread(ft_move(new_thread));
+    this->_thread = ft_move(new_thread);
     (void)this->unlock_watch(lock_acquired);
     return (0);
 }
@@ -228,7 +228,7 @@ void ft_file_watch::stop()
     this->_stopped = true;
     this->_running = false;
     this->close_handles_locked();
-    thread_to_join = ft_thread(ft_move(this->_thread));
+    thread_to_join = ft_move(this->_thread);
     this->_thread = ft_thread();
     this->_callback = ft_nullptr;
     this->_user_data = ft_nullptr;

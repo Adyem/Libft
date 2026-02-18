@@ -26,7 +26,7 @@ void    time_local(t_time time_value, t_time_info *out)
         (void)(error_code);
         return ;
     }
-    standard_time = static_cast<std::time_t>(time_value);
+    standard_time = time_value;
     if (cmp_localtime(&standard_time, &temporary) != 0)
     {
         time_info_unlock(out, lock_acquired);

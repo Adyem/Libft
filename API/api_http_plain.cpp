@@ -95,6 +95,7 @@ bool api_http_should_retry_plain(int error_code)
     return (false);
 }
 
+#if NETWORKING_HAS_OPENSSL
 static bool api_http_http2_failure_requires_eviction(int error_code)
 {
     if (error_code == FT_ERR_SOCKET_RECEIVE_FAILED)
@@ -107,6 +108,7 @@ static bool api_http_http2_failure_requires_eviction(int error_code)
         return (true);
     return (false);
 }
+#endif
 
 static void api_http_reset_plain_socket(api_connection_pool_handle &connection_handle)
 {
@@ -118,8 +120,10 @@ static void api_http_reset_plain_socket(api_connection_pool_handle &connection_h
     connection_handle.has_socket = false;
     connection_handle.from_pool = false;
     connection_handle.negotiated_http2 = false;
+#if NETWORKING_HAS_OPENSSL
     connection_handle.tls_session = ft_nullptr;
     connection_handle.tls_context = ft_nullptr;
+#endif
     connection_handle.should_store = should_store;
     connection_handle.plain_socket_timed_out = false;
     connection_handle.plain_socket_validated = false;
@@ -318,6 +322,7 @@ bool api_http_prepare_plain_socket(
     return (true);
 }
 
+#if NETWORKING_HAS_OPENSSL
 static char *api_http_execute_plain_http2_once(
     api_connection_pool_handle &connection_handle,
     const char *method, const char *path, const char *host_header,
@@ -2515,7 +2520,9 @@ static bool api_http_execute_plain_http2_streaming_once(
     error_code = FT_ERR_SUCCESS;
     return (true);
 }
+#endif
 
+#if NETWORKING_HAS_OPENSSL
 bool api_http_execute_plain_http2_streaming(
     api_connection_pool_handle &connection_handle, const char *method,
     const char *path, const char *host_header, json_group *payload,
@@ -2599,7 +2606,9 @@ bool api_http_execute_plain_http2_streaming(
         error_code = FT_ERR_IO;
     return (false);
 }
+#endif
 
+#if NETWORKING_HAS_OPENSSL
 char *api_http_execute_plain_http2(api_connection_pool_handle &connection_handle,
     const char *method, const char *path, const char *host_header,
     json_group *payload, const char *headers, int *status, int timeout,
@@ -2812,7 +2821,9 @@ char *api_http_execute_plain(api_connection_pool_handle &connection_handle,
         error_code = FT_ERR_IO;
     return (ft_nullptr);
 }
+#endif
 
+#if NETWORKING_HAS_OPENSSL
 static char *api_http_execute_plain_http2_once(
     api_connection_pool_handle &connection_handle,
     const char *method, const char *path, const char *host_header,
@@ -3330,3 +3341,4 @@ static char *api_http_execute_plain_http2_once(
     error_code = FT_ERR_UNSUPPORTED_TYPE;
     return (ft_nullptr);
 }
+#endif

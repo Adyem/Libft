@@ -209,7 +209,7 @@ bool    time_parse_iso8601(const char *string_input, std::tm *time_output, t_tim
             return (false);
         }
         adjusted_epoch = epoch_time - static_cast<std::time_t>(offset_seconds);
-        *timestamp_output = static_cast<t_time>(adjusted_epoch);
+        *timestamp_output = adjusted_epoch;
     }
     else
     {
@@ -277,7 +277,7 @@ bool    time_parse_custom(const char *string_input, const char *format, std::tm 
         }
     }
     if (timestamp_output)
-        *timestamp_output = static_cast<t_time>(epoch_time);
+        *timestamp_output = epoch_time;
     if (time_output)
     {
         if (interpret_as_utc)

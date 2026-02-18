@@ -368,7 +368,7 @@ bool networking_dns_resolve(const char *host, const char *service,
         if (current->ai_addrlen <= sizeof(resolved.address))
         {
             ft_memcpy(&resolved.address, current->ai_addr, current->ai_addrlen);
-            resolved.length = static_cast<socklen_t>(current->ai_addrlen);
+            resolved.length = current->ai_addrlen;
             out_addresses.push_back(resolved);
         }
         current = current->ai_next;

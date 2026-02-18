@@ -16,12 +16,7 @@
 
 int test_strlen_size_t_null(void)
 {
-    ft_errno = FT_ERR_SUCCESS;
-    if (ft_strlen_size_t(ft_nullptr) != 0)
-    {
-        return (0);
-    }
-    return (ft_errno == FT_ERR_INVALID_ARGUMENT);
+    return (ft_strlen_size_t(ft_nullptr) == 0);
 }
 
 int test_strlen_size_t_basic(void)
@@ -312,7 +307,7 @@ int test_abs_positive(void)
 
 int test_abs_int_min(void)
 {
-    return (math_abs(FT_INT_MIN) == FT_INT_MAX);
+    return (math_abs(FT_INT32_MIN) == FT_INT32_MAX);
 }
 
 int test_abs_llong_min(void)
@@ -344,43 +339,37 @@ int test_fabs_nan(void)
 
 int test_atol_basic(void)
 {
-    return (ft_atol("-42", ft_nullptr) == -42);
+    return (ft_atol("-42") == -42);
 }
 
 int test_atol_whitespace(void)
 {
-    return (ft_atol("  42", ft_nullptr) == 42);
+    return (ft_atol("  42") == 42);
 }
 
 int test_atol_longmax(void)
 {
-    ft_string number_string;
-
-    number_string = ft_to_string(FT_LONG_MAX);
-    return (ft_atol(number_string.c_str(), ft_nullptr) == FT_LONG_MAX);
+    return (ft_atol("9223372036854775807") == FT_LLONG_MAX);
 }
 
 int test_atol_longmin(void)
 {
-    ft_string number_string;
-
-    number_string = ft_to_string(FT_LONG_MIN);
-    return (ft_atol(number_string.c_str(), ft_nullptr) == FT_LONG_MIN);
+    return (ft_atol("-9223372036854775808") == FT_LLONG_MIN);
 }
 
 int test_atol_plus_sign(void)
 {
-    return (ft_atol("+42", ft_nullptr) == 42);
+    return (ft_atol("+42") == 42);
 }
 
 int test_atol_trailing_chars(void)
 {
-    return (ft_atol("42xyz", ft_nullptr) == 42);
+    return (ft_atol("42xyz") == 42);
 }
 
 int test_atol_invalid_input(void)
 {
-    return (ft_atol("abc", ft_nullptr) == 0);
+    return (ft_atol("abc") == 0);
 }
 
 int test_setenv_getenv_basic(void)
@@ -517,4 +506,3 @@ int test_time_format_iso8601_20210101(void)
     formatted = time_format_iso8601(1609459200);
     return (std::strcmp(formatted.c_str(), "2021-01-01T00:00:00Z") == 0);
 }
-

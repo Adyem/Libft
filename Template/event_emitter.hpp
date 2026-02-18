@@ -551,7 +551,7 @@ class ft_event_emitter
 
         int get_error() const
         {
-            return (static_cast<int>(ft_event_emitter<EventType, Args...>::_last_error));
+            return (ft_event_emitter<EventType, Args...>::_last_error);
         }
 
         const char *get_error_str() const

@@ -63,7 +63,6 @@ FT_TEST(test_encryption_hardware_hooks_override_aes,
     hooks.aes_encrypt = encryption_test_encrypt_hook;
     hooks.aes_decrypt = encryption_test_decrypt_hook;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, encryption_register_hardware_hooks(hooks));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
 
     aes_encrypt(cipher, key);
     FT_ASSERT_EQ(true, g_encrypt_hook_invoked);

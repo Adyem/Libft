@@ -103,7 +103,7 @@ bool    time_get_local_offset(t_time time_value, int *offset_minutes, bool *is_d
         (void)(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
-    standard_time = static_cast<std::time_t>(time_value);
+    standard_time = time_value;
     if (cmp_localtime(&standard_time, &local_time) != 0)
     {
         error_code = FT_ERR_SUCCESS;
@@ -185,7 +185,7 @@ bool    time_convert_timezone(t_time time_value, int source_offset_minutes, int 
         (void)(FT_ERR_OUT_OF_RANGE);
         return (false);
     }
-    *converted_time = static_cast<t_time>(converted_seconds);
+    *converted_time = converted_seconds;
     (void)(FT_ERR_SUCCESS);
     return (true);
 }

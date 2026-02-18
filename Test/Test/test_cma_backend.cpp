@@ -27,7 +27,7 @@ static void initialize_test_backend_state(test_backend_state *state)
 static void *test_backend_allocate(ft_size_t size, void *user_data)
 {
     test_backend_state *state = static_cast<test_backend_state*>(user_data);
-    void *memory_pointer = std::malloc(static_cast<size_t>(size));
+    void *memory_pointer = std::malloc(size);
     if (!memory_pointer)
     {
         return (ft_nullptr);
@@ -51,7 +51,7 @@ static void *test_backend_reallocate(void *memory_pointer, ft_size_t size,
         state->free_count++;
         return (ft_nullptr);
     }
-    void *new_pointer = std::realloc(memory_pointer, static_cast<size_t>(size));
+    void *new_pointer = std::realloc(memory_pointer, size);
     if (!new_pointer)
     {
         return (ft_nullptr);

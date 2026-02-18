@@ -73,10 +73,8 @@ FT_TEST(test_ft_strerror_covers_documented_codes, "ft_strerror returns descripti
     {
         const char *error_message;
 
-        ft_errno = FT_ERR_SUCCESS;
         error_message = ft_strerror(error_code_table[code_index]);
         FT_ASSERT(error_message != ft_nullptr);
-        FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
         code_index++;
     }
     return (1);

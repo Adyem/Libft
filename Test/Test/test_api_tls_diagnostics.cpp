@@ -1,21 +1,15 @@
 #include "../test_internal.hpp"
-#include "../../API/tls_client.hpp"
-#include "../../Networking/networking.hpp"
-#include "../../PThread/thread.hpp"
-#include "../../System_utils/test_runner.hpp"
-#include "../../Time/time.hpp"
-#include "../../Basic/basic.hpp"
-#include "../../Errno/errno.hpp"
-#include "../../Printf/printf.hpp"
-#include <openssl/ssl.h>
-#include <openssl/pem.h>
-#include <openssl/x509.h>
-#include <openssl/evp.h>
-#include <atomic>
+
 #include <cerrno>
 
 #ifndef LIBFT_TEST_BUILD
 #endif
+
+#if NETWORKING_HAS_OPENSSL
+#include <openssl/ssl.h>
+#include <openssl/pem.h>
+#include <openssl/x509.h>
+#include <openssl/evp.h>
 
 #ifdef _WIN32
 # include <winsock2.h>
@@ -635,3 +629,5 @@ FT_TEST(test_api_tls_client_populates_handshake_diagnostics,
     TLS_TEST_UNLINK(key_path.c_str());
     return (test_result);
 }
+
+#endif

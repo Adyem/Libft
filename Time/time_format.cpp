@@ -29,7 +29,7 @@ ft_string    time_format_iso8601(t_time time_value)
     int mutex_error;
     size_t strftime_result;
 
-    standard_time = static_cast<std::time_t>(time_value);
+    standard_time = time_value;
     mutex_result = g_gmtime_mutex.lock();
     if ((&g_gmtime_mutex) == ft_nullptr)
         mutex_error = FT_ERR_SUCCESS;
@@ -120,7 +120,7 @@ ft_string    time_format_iso8601_with_offset(t_time time_value, int offset_minut
         return (time_format_failure(FT_ERR_OUT_OF_RANGE));
     if (adjusted_epoch < static_cast<long long>(std::numeric_limits<std::time_t>::min()))
         return (time_format_failure(FT_ERR_OUT_OF_RANGE));
-    adjusted_time = static_cast<std::time_t>(adjusted_epoch);
+    adjusted_time = adjusted_epoch;
     mutex_result = g_gmtime_mutex.lock();
     if ((&g_gmtime_mutex) == ft_nullptr)
         mutex_error = FT_ERR_SUCCESS;

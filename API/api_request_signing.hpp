@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include "../CPP_class/class_string.hpp"
+#include "../Networking/openssl_support.hpp"
 
 struct api_hmac_signature_input
 {
@@ -13,6 +14,7 @@ struct api_hmac_signature_input
     const char *body;
 };
 
+#if NETWORKING_HAS_OPENSSL
 int api_sign_request_hmac_sha256(const api_hmac_signature_input &input,
     const unsigned char *key, std::size_t key_length,
     ft_string &signature_output) noexcept;
@@ -45,5 +47,6 @@ struct api_oauth1_parameters
 
 int api_build_oauth1_authorization_header(
     const api_oauth1_parameters &parameters, ft_string &header_output) noexcept;
+#endif
 
 #endif

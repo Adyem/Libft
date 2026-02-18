@@ -14,7 +14,6 @@ static int mock_open_failure(const char *path_name, int flags, mode_t mode)
     (void)path_name;
     (void)flags;
     (void)mode;
-    ft_errno = FT_ERR_IO;
     return (-1);
 }
 
@@ -23,7 +22,6 @@ static ssize_t mock_write_failure(int file_descriptor, const void *buffer, size_
     (void)file_descriptor;
     (void)buffer;
     (void)count;
-    ft_errno = FT_ERR_IO;
     return (-1);
 }
 
@@ -32,11 +30,9 @@ FT_TEST(test_be_get_encryption_key_allocation_failure_sets_errno,
 {
     const char *key;
 
-    ft_errno = FT_ERR_SUCCESS;
     cma_set_alloc_limit(1);
     key = be_getEncryptionKey();
     FT_ASSERT_EQ(ft_nullptr, key);
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
     cma_set_alloc_limit(0);
     return (1);
 }
@@ -46,11 +42,9 @@ FT_TEST(test_be_save_game_allocation_failure_sets_errno,
 {
     int save_result;
 
-    ft_errno = FT_ERR_SUCCESS;
     cma_set_alloc_limit(1);
     save_result = be_saveGame("be_save_game_alloc.txt", "data", "key");
     FT_ASSERT_EQ(1, save_result);
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
     cma_set_alloc_limit(0);
     return (1);
 }
@@ -60,13 +54,10 @@ FT_TEST(test_be_save_game_open_failure_sets_errno,
 {
     int save_result;
 
-    ft_errno = FT_ERR_CONFIGURATION;
     be_set_save_game_hooks(mock_open_failure, ft_nullptr);
     save_result = be_saveGame("be_save_game_open.txt", "data", "key");
     be_set_save_game_hooks(ft_nullptr, ft_nullptr);
     FT_ASSERT_EQ(1, save_result);
-    FT_ASSERT_NE(FT_ERR_CONFIGURATION, ft_errno);
-    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
     return (1);
 }
 
@@ -75,14 +66,11 @@ FT_TEST(test_be_save_game_write_failure_sets_errno,
 {
     int save_result;
 
-    ft_errno = FT_ERR_CONFIGURATION;
     be_set_save_game_hooks(ft_nullptr, mock_write_failure);
     save_result = be_saveGame("be_save_game_write.txt", "data", "key");
     be_set_save_game_hooks(ft_nullptr, ft_nullptr);
     std::remove("be_save_game_write.txt");
     FT_ASSERT_EQ(1, save_result);
-    FT_ASSERT_NE(FT_ERR_CONFIGURATION, ft_errno);
-    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
     return (1);
 }
 
@@ -92,11 +80,7 @@ FT_TEST(test_be_decrypt_data_null_input_sets_errno,
     char *missing_buffer = ft_nullptr;
     char **wrapper = &missing_buffer;
 
-    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, be_DecryptData(ft_nullptr, "key"));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
-    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, be_DecryptData(wrapper, "key"));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }

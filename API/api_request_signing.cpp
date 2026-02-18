@@ -8,6 +8,7 @@
 #include <vector>
 #include <cstring>
 
+#if NETWORKING_HAS_OPENSSL
 namespace
 {
     static thread_local int g_api_request_signing_error = FT_ERR_SUCCESS;
@@ -291,6 +292,7 @@ namespace
     }
 }
 
+#if NETWORKING_HAS_OPENSSL
 int api_sign_request_hmac_sha256(const api_hmac_signature_input &input,
     const unsigned char *key, std::size_t key_length,
     ft_string &signature_output) noexcept
@@ -588,3 +590,5 @@ int api_build_oauth1_authorization_header(
     api_request_signing_set_error(FT_ERR_SUCCESS);
     return (api_request_signing_finish(0));
 }
+#endif
+#endif

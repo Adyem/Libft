@@ -1167,6 +1167,7 @@ pt_mutex *ft_memory_document_sink::get_mutex_for_validation() const noexcept
 }
 #endif
 
+#if NETWORKING_HAS_OPENSSL
 ft_http_document_source::ft_http_document_source() noexcept
     : _host(), _path(), _port(), _use_ssl(false), _mutex(ft_nullptr),
       _initialized_state(ft_http_document_source::_state_uninitialized)
@@ -1664,4 +1665,5 @@ pt_mutex *ft_http_document_sink::get_mutex_for_validation() const noexcept
     this->abort_if_not_initialized("ft_http_document_sink::get_mutex_for_validation");
     return (this->_mutex);
 }
+#endif
 #endif

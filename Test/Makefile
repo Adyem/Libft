@@ -11,6 +11,15 @@ SRCS := main.cpp $(FILES)
 else
 SRCS := main.cpp $(wildcard Test/*.cpp) $(wildcard API/*.cpp)
 endif
+
+HAS_OPENSSL_HEADERS := $(shell printf '#include <openssl/ssl.h>\n' | $(CXX) -x c++ -E - >/dev/null 2>&1 && echo 1 || echo 0)
+ifneq ($(HAS_OPENSSL_HEADERS),1)
+SRCS := $(filter-out Test/test_api_tls_diagnostics.cpp \
+                    Test/test_encryption_aead.cpp \
+                    Test/test_encryption_aead_copy_move.cpp \
+                    Test/test_encryption_hash_algorithms.cpp,$(SRCS))
+endif
+
 TOTAL_SRCS := $(words $(SRCS))
 
 MAKEFLAGS += --no-print-directory

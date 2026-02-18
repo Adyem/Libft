@@ -3,6 +3,7 @@
 
 #include "../CPP_class/class_string.hpp"
 #include "../Networking/socket_class.hpp"
+#include "../Networking/openssl_support.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include <cstddef>
 #include <cstdint>
@@ -34,8 +35,10 @@ class api_connection_pool_handle
     public:
         ft_string key;
         ft_socket socket;
+#if NETWORKING_HAS_OPENSSL
         SSL *tls_session;
         SSL_CTX *tls_context;
+#endif
         api_connection_security_mode security_mode;
         bool has_socket;
         bool from_pool;
@@ -79,8 +82,10 @@ void api_connection_pool_set_max_idle(size_t max_idle);
 size_t api_connection_pool_get_max_idle(void);
 void api_connection_pool_set_idle_timeout(long long idle_timeout_ms);
 long long api_connection_pool_get_idle_timeout(void);
+#if NETWORKING_HAS_OPENSSL
 bool api_connection_pool_track_tls_session(SSL *tls_session);
 bool api_connection_pool_untrack_tls_session(SSL *tls_session);
+#endif
 void api_debug_reset_connection_pool_counters(void);
 size_t api_debug_get_connection_pool_acquires(void);
 size_t api_debug_get_connection_pool_reuses(void);

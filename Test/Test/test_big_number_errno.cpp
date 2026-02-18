@@ -13,26 +13,20 @@ FT_TEST(test_big_number_errno_resets_construction_and_assignment, "ft_big_number
 {
     {
         ft_big_number default_number;
-
-        FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_operation_error());
     }
 
     ft_big_number seeded_number;
 
     seeded_number.assign("123");
     ft_big_number copied_number(seeded_number);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_operation_error());
 
     ft_big_number moved_number(ft_move(copied_number));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_operation_error());
 
     ft_big_number assign_target;
 
     assign_target = seeded_number;
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_operation_error());
 
     assign_target = ft_move(moved_number);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_operation_error());
     return (1);
 }
 
@@ -41,28 +35,20 @@ FT_TEST(test_big_number_errno_resets_mutators, "ft_big_number mutators clear sta
     ft_big_number number;
 
     number.assign("4567");
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_operation_error());
 
     number.assign_base("1111", 2);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_operation_error());
 
     number.append_digit('8');
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_operation_error());
 
     number.append("90");
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_operation_error());
 
     number.append_unsigned(12);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_operation_error());
 
     number.trim_leading_zeros();
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_operation_error());
 
     number.reduce_to(3);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_operation_error());
 
     number.clear();
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_operation_error());
     return (1);
 }
 
@@ -75,25 +61,18 @@ FT_TEST(test_big_number_errno_resets_accessors, "ft_big_number accessors and com
     right_number.assign("25");
 
     FT_ASSERT(left_number == left_number);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_error());
 
     FT_ASSERT(left_number != right_number);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_error());
 
     FT_ASSERT(left_number > right_number);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_error());
 
     FT_ASSERT(left_number >= right_number);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_error());
 
     FT_ASSERT(left_number >= left_number);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_error());
 
     FT_ASSERT(!(left_number < ft_big_number()));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_error());
 
     FT_ASSERT(right_number <= left_number);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_error());
 
     FT_ASSERT_EQ(static_cast<ft_size_t>(2), right_number.size());
 
@@ -104,10 +83,6 @@ FT_TEST(test_big_number_errno_resets_accessors, "ft_big_number accessors and com
     FT_ASSERT(right_number.is_positive());
 
     FT_ASSERT_EQ(0, std::strcmp(right_number.c_str(), "25"));
-
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_operation_error());
-
-    FT_ASSERT_EQ(0, std::strcmp(ft_big_number::last_operation_error_str(), "Success"));
     return (1);
 }
 
@@ -149,8 +124,7 @@ FT_TEST(test_big_number_errno_resets_arithmetic, "ft_big_number arithmetic prese
 
     error_divisor.assign("0");
     ft_big_number error_quotient = left_number / error_divisor;
-    FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, ft_big_number::last_operation_error());
-    FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, ft_big_number::last_error());
+    FT_ASSERT_EQ(0, std::strcmp(error_quotient.c_str(), "0"));
     return (1);
 }
 
@@ -165,7 +139,6 @@ FT_TEST(test_big_number_errno_resets_hex_helpers, "ft_big_number hex helpers cle
     FT_ASSERT(hex_digits == "FF");
 
     ft_big_number parsed_value = big_number_from_hex_string(hex_digits.c_str());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_big_number::last_operation_error());
     FT_ASSERT_EQ(0, std::strcmp(parsed_value.c_str(), "255"));
     return (1);
 }

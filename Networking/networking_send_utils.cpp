@@ -131,9 +131,9 @@ int networking_check_socket_after_send(int socket_fd)
     return (0);
 }
 
+#if NETWORKING_HAS_OPENSSL
 int networking_check_ssl_after_send(SSL *ssl_connection)
 {
-#if NETWORKING_HAS_OPENSSL
     int attempt_count;
     int attempt_limit;
     int socket_fd;
@@ -242,9 +242,5 @@ int networking_check_ssl_after_send(SSL *ssl_connection)
         return (-1);
     (void)(FT_ERR_SUCCESS);
     return (0);
-#else
-    (void)ssl_connection;
-    (void)(FT_ERR_UNSUPPORTED_TYPE);
-    return (-1);
-#endif
 }
+#endif

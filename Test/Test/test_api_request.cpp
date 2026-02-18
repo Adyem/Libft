@@ -37,6 +37,7 @@ static void api_request_noop_callback(char *body, int status, void *user_data)
     return ;
 }
 
+#if NETWORKING_HAS_OPENSSL
 FT_TEST(test_api_request_hmac_signature_basic,
     "api_sign_request_hmac_sha256 produces expected digest")
 {
@@ -99,6 +100,7 @@ FT_TEST(test_api_request_oauth1_header_hmac_sha256,
         return (0);
     return (1);
 }
+#endif
 
 struct api_stream_test_context
 {
@@ -1554,6 +1556,7 @@ FT_TEST(test_api_request_formats_large_content_length, "api_request formats cont
     return (1);
 }
 
+#if NETWORKING_HAS_OPENSSL
 FT_TEST(test_http2_frame_roundtrip, "http2 frame encode decode roundtrip")
 {
     http2_frame input_frame;
@@ -1824,6 +1827,7 @@ FT_TEST(test_http2_settings_apply_remote_settings, "http2 settings adjusts remot
         return (0);
     return (1);
 }
+#endif
 
 FT_TEST(test_api_request_http2_plain_fallback, "api_request_string_http2 falls back to http1")
 {

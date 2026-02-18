@@ -2,9 +2,7 @@
 #define FT_BIG_NUMBER_HPP
 
 #include "../Basic/basic.hpp"
-#include "../Errno/errno.hpp"
 #include "../PThread/recursive_mutex.hpp"
-#include <cstdint>
 
 class ft_big_number_proxy;
 
@@ -18,13 +16,17 @@ class ft_big_number
         ft_size_t       _capacity;
         bool            _is_negative;
         mutable pt_recursive_mutex *_mutex;
+        mutable uint8_t            _initialized_state;
         int             _operation_error;
+        static const uint8_t       _state_uninitialized = 0;
+        static const uint8_t       _state_destroyed = 1;
+        static const uint8_t       _state_initialized = 2;
         static thread_local int _last_error;
 
+		void    abort_lifecycle_error(const char *method_name, const char *reason) const noexcept;
+		void    abort_if_not_initialized(const char *method_name) const noexcept;
         void    reserve(ft_size_t new_capacity) noexcept;
         void    shrink_capacity() noexcept;
-        void    push_error_unlocked(int error_code) const noexcept;
-        void    push_error(int error_code) const noexcept;
         static int set_last_operation_error(int error_code) noexcept;
         int     lock_mutex(void) const noexcept;
         int     unlock_mutex(void) const noexcept;
@@ -33,9 +35,6 @@ class ft_big_number
                 const ft_big_number *&upper) noexcept;
         static int  unlock_pair(const ft_big_number *lower, const ft_big_number *upper) noexcept;
         static void sleep_backoff() noexcept;
-        static int  initialize_errno_keeper() noexcept;
-        static void update_errno_keeper(int &stored_errno, int new_value) noexcept;
-        static void finalize_errno_keeper(int stored_errno) noexcept;
         void    clear_unlocked() noexcept;
         void    append_digit_unlocked(char digit) noexcept;
         void    append_unlocked(const char* digits) noexcept;
@@ -84,14 +83,6 @@ class ft_big_number
         ft_string   to_string_base(int base) noexcept;
         ft_big_number mod_pow(const ft_big_number& exponent, const ft_big_number& modulus) const noexcept;
         static const char *last_operation_error_str() noexcept;
-        static const char *operation_error_str_at(ft_size_t index) noexcept;
-        void        reset_system_error() const noexcept;
-        static int  last_error() noexcept;
-        static int  last_operation_error() noexcept;
-        static int  operation_error_at(ft_size_t index) noexcept;
-        static void pop_operation_errors() noexcept;
-        static int  pop_oldest_operation_error() noexcept;
-        static int  operation_error_index() noexcept;
         int     enable_thread_safety(void) noexcept;
         int     disable_thread_safety(void) noexcept;
         bool    is_thread_safe(void) const noexcept;

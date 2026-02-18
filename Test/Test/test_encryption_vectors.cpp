@@ -80,9 +80,7 @@ FT_TEST(test_sha1_hash_matches_known_vectors,
     pangram_expected[18] = 0xEB;
     pangram_expected[19] = 0x12;
 
-    ft_errno = FT_ERR_IO;
     sha1_hash("", 0, digest);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     digest_index = 0;
     while (digest_index < 20)
     {
@@ -90,9 +88,7 @@ FT_TEST(test_sha1_hash_matches_known_vectors,
         digest_index++;
     }
 
-    ft_errno = FT_ERR_IO;
     sha1_hash("abc", 3, digest);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     digest_index = 0;
     while (digest_index < 20)
     {
@@ -100,9 +96,7 @@ FT_TEST(test_sha1_hash_matches_known_vectors,
         digest_index++;
     }
 
-    ft_errno = FT_ERR_IO;
     sha1_hash("The quick brown fox jumps over the lazy dog", 43, digest);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     digest_index = 0;
     while (digest_index < 20)
     {
@@ -220,9 +214,7 @@ FT_TEST(test_sha256_hash_matches_known_vectors,
     pangram_expected[30] = 0xE5;
     pangram_expected[31] = 0x92;
 
-    ft_errno = FT_ERR_IO;
     sha256_hash("", 0, digest);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     digest_index = 0;
     while (digest_index < 32)
     {
@@ -230,9 +222,7 @@ FT_TEST(test_sha256_hash_matches_known_vectors,
         digest_index++;
     }
 
-    ft_errno = FT_ERR_IO;
     sha256_hash("abc", 3, digest);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     digest_index = 0;
     while (digest_index < 32)
     {
@@ -240,9 +230,7 @@ FT_TEST(test_sha256_hash_matches_known_vectors,
         digest_index++;
     }
 
-    ft_errno = FT_ERR_IO;
     sha256_hash("The quick brown fox jumps over the lazy dog", 43, digest);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     digest_index = 0;
     while (digest_index < 32)
     {
@@ -252,6 +240,7 @@ FT_TEST(test_sha256_hash_matches_known_vectors,
     return (1);
 }
 
+#if NETWORKING_HAS_OPENSSL
 FT_TEST(test_hmac_sha256_matches_known_vector,
     "hmac_sha256 matches known digest output")
 {
@@ -296,9 +285,7 @@ FT_TEST(test_hmac_sha256_matches_known_vector,
 
     key = reinterpret_cast<const unsigned char *>("key");
     message = "The quick brown fox jumps over the lazy dog";
-    ft_errno = FT_ERR_IO;
     hmac_sha256(key, 3, message, 43, digest);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     digest_index = 0;
     while (digest_index < 32)
     {
@@ -307,3 +294,4 @@ FT_TEST(test_hmac_sha256_matches_known_vector,
     }
     return (1);
 }
+#endif

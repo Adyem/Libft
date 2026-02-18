@@ -22,8 +22,10 @@
 struct api_pooled_connection
 {
     ft_socket socket;
+#if NETWORKING_HAS_OPENSSL
     SSL *tls_session;
     SSL_CTX *tls_context;
+#endif
     bool uses_tls;
     bool negotiated_http2;
     long long idle_timestamp_ms;
@@ -77,6 +79,7 @@ static api_connection_pool_storage &api_connection_pool_get_storage(void)
     return (storage);
 }
 
+#if NETWORKING_HAS_OPENSSL
 static std::set<SSL*> &api_connection_pool_get_tls_registry(void)
 {
     static std::set<SSL*> tls_registry;
@@ -119,6 +122,7 @@ static bool api_connection_pool_tls_unregister(SSL *tls_session)
     tls_registry.erase(iterator);
     return (true);
 }
+#endif
 
 static bool api_connection_pool_socket_is_alive(ft_socket &socket)
 {
@@ -157,6 +161,7 @@ static bool api_connection_pool_socket_is_alive(ft_socket &socket)
     return (false);
 }
 
+#if NETWORKING_HAS_OPENSSL
 bool api_connection_pool_track_tls_session(SSL *tls_session)
 {
     bool registered;
@@ -177,6 +182,7 @@ bool api_connection_pool_untrack_tls_session(SSL *tls_session)
     removed = api_connection_pool_tls_unregister(tls_session);
     return (removed);
 }
+#endif
 
 static void api_connection_pool_clear_storage(api_connection_pool_storage &storage)
 {
@@ -285,6 +291,7 @@ static ft_string api_connection_pool_build_key(const char *host, uint16_t port,
     return (key);
 }
 
+#if NETWORKING_HAS_OPENSSL
 static void api_connection_pool_free_tls(SSL *tls_session, SSL_CTX *tls_context)
 {
     if (tls_session)
@@ -293,6 +300,7 @@ static void api_connection_pool_free_tls(SSL *tls_session, SSL_CTX *tls_context)
         SSL_CTX_free(tls_context);
     return ;
 }
+#endif
 
 static void api_connection_pool_dispose_entry(api_pooled_connection &entry)
 {
@@ -308,6 +316,7 @@ static void api_connection_pool_dispose_entry(api_pooled_connection &entry)
     {
         entry.socket.disconnect_all_clients();
     }
+#if NETWORKING_HAS_OPENSSL
     if (entry.uses_tls && entry.tls_session)
     {
         if (api_connection_pool_tls_unregister(entry.tls_session))
@@ -315,6 +324,7 @@ static void api_connection_pool_dispose_entry(api_pooled_connection &entry)
     }
     entry.tls_session = ft_nullptr;
     entry.tls_context = ft_nullptr;
+#endif
     entry.uses_tls = false;
     entry.negotiated_http2 = false;
     entry.idle_timestamp_ms = 0;
@@ -346,8 +356,10 @@ bool api_connection_pool_acquire(api_connection_pool_handle &handle,
     key = api_connection_pool_build_key(host, port, security_mode, security_identity);
     handle.key = key;
     handle.security_mode = security_mode;
+#if NETWORKING_HAS_OPENSSL
     handle.tls_session = ft_nullptr;
     handle.tls_context = ft_nullptr;
+#endif
     handle.has_socket = false;
     handle.from_pool = false;
     handle.should_store = false;
@@ -420,8 +432,10 @@ void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
     handle_lock_acquired = false;
     if (handle.lock(&handle_lock_acquired) != 0)
         return ;
+#if NETWORKING_HAS_OPENSSL
     handle.tls_session = ft_nullptr;
     handle.tls_context = ft_nullptr;
+#endif
     handle.has_socket = false;
     handle.from_pool = false;
     handle.should_store = false;
@@ -446,6 +460,7 @@ void api_connection_pool_evict(api_connection_pool_handle &handle)
     }
     if (handle.security_mode == api_connection_security_mode::TLS)
     {
+#if NETWORKING_HAS_OPENSSL
         bool tls_removed;
 
         tls_removed = api_connection_pool_untrack_tls_session(handle.tls_session);
@@ -453,6 +468,7 @@ void api_connection_pool_evict(api_connection_pool_handle &handle)
             api_connection_pool_free_tls(handle.tls_session, handle.tls_context);
         handle.tls_session = ft_nullptr;
         handle.tls_context = ft_nullptr;
+#endif
     }
     handle.socket.disconnect_all_clients();
     handle.socket.close_socket();

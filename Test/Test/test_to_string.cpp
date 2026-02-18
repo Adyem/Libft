@@ -86,7 +86,7 @@ FT_TEST(test_adv_to_string_unsigned_long,
 
     input_value = std::numeric_limits<unsigned long>::max();
     expected_length = std::snprintf(expected_buffer, sizeof(expected_buffer),
-            "%lu", static_cast<unsigned long>(input_value));
+            "%lu", input_value);
     FT_ASSERT(expected_length > 0);
     converted_value = adv_to_string(input_value);
     FT_ASSERT(converted_value != ft_nullptr);

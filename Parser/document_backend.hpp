@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include "../CPP_class/class_string.hpp"
+#include "../Networking/openssl_support.hpp"
 #include <stdint.h>
 
 class pt_mutex;
@@ -255,6 +256,7 @@ class ft_memory_document_sink : public ft_document_sink
 #endif
 };
 
+#if NETWORKING_HAS_OPENSSL
 class ft_http_document_source : public ft_document_source
 {
     private:
@@ -352,5 +354,6 @@ class ft_http_document_sink : public ft_document_sink
         pt_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
+#endif
 
 #endif

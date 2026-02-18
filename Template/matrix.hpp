@@ -784,7 +784,7 @@ class ft_matrix
 
         int get_error() const
         {
-            return (static_cast<int>(ft_matrix<ElementType>::_last_error));
+            return (ft_matrix<ElementType>::_last_error);
         }
 
         const char *get_error_str() const

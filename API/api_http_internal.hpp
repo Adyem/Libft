@@ -19,11 +19,13 @@ char *api_https_execute(api_connection_pool_handle &connection_handle,
     const char *ca_certificate, bool verify_peer, const char *host,
     uint16_t port, const char *security_identity,
     const api_retry_policy *retry_policy, int &error_code);
+#if NETWORKING_HAS_OPENSSL
 char *api_http_execute_plain_http2(api_connection_pool_handle &connection_handle,
     const char *method, const char *path, const char *host_header,
     json_group *payload, const char *headers, int *status, int timeout,
     const char *host, uint16_t port,
     const api_retry_policy *retry_policy, bool &used_http2, int &error_code);
+#endif
 bool api_http_execute_plain_streaming(api_connection_pool_handle &connection_handle,
     const char *method, const char *path, const char *host_header,
     json_group *payload, const char *headers, int timeout,
@@ -41,6 +43,7 @@ bool api_http_prepare_plain_socket(api_connection_pool_handle &connection_handle
     const char *host, uint16_t port, int timeout, int &error_code);
 bool api_http_plain_socket_is_alive(api_connection_pool_handle &connection_handle);
 bool api_http_should_retry_plain(int error_code);
+#if NETWORKING_HAS_OPENSSL
 bool api_http_execute_plain_http2_streaming(
     api_connection_pool_handle &connection_handle, const char *method,
     const char *path, const char *host_header, json_group *payload,
@@ -48,6 +51,7 @@ bool api_http_execute_plain_http2_streaming(
     const api_retry_policy *retry_policy,
     const api_streaming_handler *streaming_handler, bool &used_http2,
     int &error_code);
+#endif
 char *api_https_execute_http2(api_connection_pool_handle &connection_handle,
     const char *method, const char *path, const char *host_header,
     json_group *payload, const char *headers, int *status, int timeout,
@@ -81,7 +85,9 @@ bool api_http_stream_process_chunked_buffer(ft_string &buffer,
     bool &final_chunk_sent,
     const api_streaming_handler *streaming_handler, int &error_code);
 int api_request_set_resolve_error(int resolver_status);
+#if NETWORKING_HAS_OPENSSL
 void api_request_set_ssl_error(SSL *ssl_session, int operation_result);
+#endif
 
 inline int api_retry_get_max_attempts(const api_retry_policy *retry_policy)
 {

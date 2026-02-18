@@ -45,13 +45,13 @@ FT_TEST(test_recipe_blueprint_copy_move, "copy and move recipe blueprints")
     ingredients.push_back(ingredient);
     blueprint = ft_recipe_blueprint(12, 30, ingredients);
 
-    copy = ft_recipe_blueprint(blueprint);
+    copy = blueprint;
     FT_ASSERT_EQ(12, copy.get_recipe_id());
     FT_ASSERT_EQ(30, copy.get_result_item_id());
     FT_ASSERT_EQ(1u, copy.get_ingredients().size());
     FT_ASSERT_EQ(9, copy.get_ingredients()[0].get_item_id());
 
-    moved = ft_recipe_blueprint(ft_move(blueprint));
+    moved = ft_move(blueprint);
     FT_ASSERT_EQ(12, moved.get_recipe_id());
     FT_ASSERT_EQ(30, moved.get_result_item_id());
     FT_ASSERT_EQ(0, blueprint.get_recipe_id());
@@ -97,13 +97,13 @@ FT_TEST(test_loadout_blueprint_copy_move, "copy and move loadout blueprints")
     entries.push_back(entry);
     blueprint = ft_loadout_blueprint(20, entries);
 
-    copy = ft_loadout_blueprint(blueprint);
+    copy = blueprint;
     FT_ASSERT_EQ(20, copy.get_loadout_id());
     FT_ASSERT_EQ(2u, copy.get_entries().size());
     FT_ASSERT_EQ(0, copy.get_entries()[0].get_slot());
     FT_ASSERT_EQ(7, copy.get_entries()[0].get_item_id());
 
-    moved = ft_loadout_blueprint(ft_move(blueprint));
+    moved = ft_move(blueprint);
     FT_ASSERT_EQ(20, moved.get_loadout_id());
     FT_ASSERT_EQ(0, blueprint.get_loadout_id());
     FT_ASSERT_EQ(true, blueprint.get_entries().empty());

@@ -16,7 +16,7 @@ t_time  time_now(void)
         if (error_code == 0)
             error_code = FT_ERR_TERMINATED;
         (void)(error_code);
-        return (static_cast<t_time>(-1));
+        return (-1);
     }
-    return (static_cast<t_time>(standard_time));
+    return (standard_time);
 }
