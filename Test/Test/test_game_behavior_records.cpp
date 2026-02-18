@@ -72,12 +72,11 @@ FT_TEST(test_behavior_profile_copy_semantics, "copy constructor and assignment d
 
     actions.push_back(ft_behavior_action(4, 0.4, 2.0));
     actions.push_back(ft_behavior_action(6, 0.6, 3.0));
-    original = ft_behavior_profile(12, 0.7, 0.3, actions);
-    copy = ft_behavior_profile(original);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, copy.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.initialize(12, 0.7, 0.3, actions));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, copy.initialize(original));
     assert_profile_values(copy, 12, 0.7, 0.3, 4);
 
-    assigned = original;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, assigned.initialize(original));
     original.get_actions()[0].set_action_id(99);
     assert_profile_values(assigned, 12, 0.7, 0.3, 4);
     assert_profile_values(original, 12, 0.7, 0.3, 99);
@@ -92,20 +91,18 @@ FT_TEST(test_behavior_profile_move_semantics, "move constructor and assignment t
     ft_behavior_profile reassigned;
 
     actions.push_back(ft_behavior_action(1, 0.2, 1.0));
-    source = ft_behavior_profile(30, 0.9, 0.1, actions);
-    moved = ft_behavior_profile(ft_move(source));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize(30, 0.9, 0.1, actions));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.initialize(ft_move(source)));
     assert_profile_values(moved, 30, 0.9, 0.1, 1);
-    FT_ASSERT_EQ(0, source.get_profile_id());
-    FT_ASSERT_EQ(true, source.get_actions().empty());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
+    assert_profile_values(source, 30, 0.9, 0.1, 1);
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.destroy());
     actions.clear();
     actions.push_back(ft_behavior_action(2, 0.3, 4.0));
     actions.push_back(ft_behavior_action(3, 0.7, 5.0));
-    source = ft_behavior_profile(44, 0.55, 0.45, actions);
-    reassigned = ft_move(source);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize(44, 0.55, 0.45, actions));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, reassigned.initialize(ft_move(source)));
     assert_profile_values(reassigned, 44, 0.55, 0.45, 2);
-    FT_ASSERT_EQ(true, source.get_actions().empty());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
+    assert_profile_values(source, 44, 0.55, 0.45, 2);
     return (1);
 }

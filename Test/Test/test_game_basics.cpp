@@ -15,7 +15,6 @@
 #include "../../Template/vector.hpp"
 #include "../../Template/shared_ptr.hpp"
 #include "../../Template/map.hpp"
-#include "../../Template/function.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../JSon/json.hpp"
@@ -361,6 +360,7 @@ FT_TEST(test_character_restore_armor_recovers_all, "Game: restore_armor brings b
 FT_TEST(test_inventory_copy_preserves_stacks, "Game: copying inventories keeps item stacks intact")
 {
     ft_inventory original(5, 15);
+    ft_inventory duplicate(5, 15);
     ft_sharedptr<ft_item> stack(new ft_item());
 
     stack->set_item_id(3);
@@ -678,17 +678,3 @@ FT_TEST(test_world_region_mutable_ids_reference_updates_state, "Game: mutable ge
     FT_ASSERT_EQ(16, region.get_region_ids()[1]);
     return (1);
 }
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize());
-    ft_inventory duplicate;
-
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.initialize());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, world_region.initialize());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_region.initialize());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, target_region.initialize());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, original_region.initialize());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, copied_region.initialize());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, stored_region.initialize());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_region.initialize());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize());

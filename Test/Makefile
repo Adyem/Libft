@@ -12,12 +12,65 @@ else
 SRCS := main.cpp $(wildcard Test/*.cpp) $(wildcard API/*.cpp)
 endif
 
+BASIC_TEST_FILES := \
+	Test/test_atoi.cpp \
+	Test/test_atol.cpp \
+	Test/test_basic_additional_coverage.cpp \
+	Test/test_bzero.cpp \
+	Test/test_isalnum.cpp \
+	Test/test_isalpha.cpp \
+	Test/test_isdigit.cpp \
+	Test/test_islower.cpp \
+	Test/test_isprint.cpp \
+	Test/test_isspace.cpp \
+	Test/test_isupper.cpp \
+	Test/test_libft_utf8.cpp \
+	Test/test_memchr.cpp \
+	Test/test_memcmp.cpp \
+	Test/test_memcpy.cpp \
+	Test/test_memmove.cpp \
+	Test/test_memset.cpp \
+	Test/test_strchr.cpp \
+	Test/test_strcmp.cpp \
+	Test/test_striteri.cpp \
+	Test/test_strlcat.cpp \
+	Test/test_strlcpy.cpp \
+	Test/test_strlen.cpp \
+	Test/test_strmapi.cpp \
+	Test/test_strncmp.cpp \
+	Test/test_strncpy.cpp \
+	Test/test_strnstr.cpp \
+	Test/test_strrchr.cpp \
+	Test/test_strstr.cpp \
+	Test/test_strtok.cpp \
+	Test/test_strtol.cpp \
+	Test/test_strtoul.cpp \
+	Test/test_tolower.cpp \
+	Test/test_toupper.cpp \
+	Test/test_validate_int.cpp \
+	Test/test_wide_char.cpp
+
+CXX       := g++
+
 HAS_OPENSSL_HEADERS := $(shell printf '#include <openssl/ssl.h>\n' | $(CXX) -x c++ -E - >/dev/null 2>&1 && echo 1 || echo 0)
 ifneq ($(HAS_OPENSSL_HEADERS),1)
 SRCS := $(filter-out Test/test_api_tls_diagnostics.cpp \
                     Test/test_encryption_aead.cpp \
                     Test/test_encryption_aead_copy_move.cpp \
                     Test/test_encryption_hash_algorithms.cpp,$(SRCS))
+endif
+
+ifeq ($(HAS_OPENSSL_HEADERS),1)
+OPENSSL_LIBS := -lssl -lcrypto
+else
+OPENSSL_LIBS :=
+endif
+
+HAS_SQLITE3_HEADERS := $(shell printf '#include <sqlite3.h>\n' | $(CXX) -x c++ -E - >/dev/null 2>&1 && echo 1 || echo 0)
+ifeq ($(HAS_SQLITE3_HEADERS),1)
+SQLITE_LIBS := -lsqlite3
+else
+SQLITE_LIBS :=
 endif
 
 TOTAL_SRCS := $(words $(SRCS))
@@ -52,11 +105,9 @@ else
 $(error Unsupported OPT_LEVEL=$(OPT_LEVEL))
 endif
 
-CXX       := g++
-
 COMPILE_FLAGS := -Wall -Wextra -Werror -std=c++17 -Wuseless-cast $(OPT_FLAGS) -pthread -Wno-missing-declarations
 CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Libft\"
-LDFLAGS := -lz -lssl -lcrypto -ldl -lsqlite3
+LDFLAGS := -lz -ldl $(OPENSSL_LIBS) $(SQLITE_LIBS)
 export COMPILE_FLAGS
 
 OBJDIR       := objs
@@ -70,6 +121,15 @@ all: $(TARGET)
 $(TARGET): $(OBJS) ../Full_Libft.a
 	@echo "Linking final executable ($(TARGET))"
 	@$(CXX) $(CFLAGS) -o $@ $(OBJS) ../Full_Libft.a $(LDFLAGS)
+
+Basic:
+	@echo "Building basic test executable ($(TARGET))"
+	@$(MAKE) FILES="$(BASIC_TEST_FILES)" all
+
+re_Basic: fclean Basic
+
+build_tests: all
+	@echo "Test executable ready; run ./$(TARGET) manually if desired."
 
 $(OBJDIR)/%.o: %.cpp
 	@$(MKDIR) $(dir $@)
@@ -267,4 +327,4 @@ re: fclean all
 
 both: all debug
 
-.PHONY: all clean fclean re debug both
+.PHONY: all clean fclean re debug both build_tests Basic re_Basic

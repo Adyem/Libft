@@ -27,7 +27,7 @@ FT_TEST(test_behavior_profile_setters, "setters replace profile fields and actio
     ft_behavior_profile profile;
 
     original_actions.push_back(ft_behavior_action(5, 0.5, 1.5));
-    profile = ft_behavior_profile(21, 0.1, 0.9, original_actions);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.initialize(21, 0.1, 0.9, original_actions));
     new_actions.push_back(ft_behavior_action(7, 0.7, 2.5));
     new_actions.push_back(ft_behavior_action(9, 0.9, 3.5));
     profile.set_profile_id(22);
@@ -40,6 +40,5 @@ FT_TEST(test_behavior_profile_setters, "setters replace profile fields and actio
     FT_ASSERT_EQ(2u, profile.get_actions().size());
     FT_ASSERT_EQ(7, profile.get_actions()[0].get_action_id());
     FT_ASSERT_EQ(9, profile.get_actions()[1].get_action_id());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
     return (1);
 }
