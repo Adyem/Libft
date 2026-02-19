@@ -58,6 +58,7 @@ FT_TEST(test_currency_rate_setters, "update currency rate fields")
 {
     ft_currency_rate rate;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.initialize());
     rate.set_currency_id(3);
     rate.set_rate_to_base(1.2);
     rate.set_display_precision(4);

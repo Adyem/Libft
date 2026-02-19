@@ -78,6 +78,8 @@ FT_TEST(test_encryption_aead_thread_safe_contexts_have_independent_mutexes,
 
     fill_sequence(key, 16);
     fill_sequence(iv, 12);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, first.initialize_encrypt(key, 16, iv, 12));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, second.initialize_encrypt(key, 16, iv, 12));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, first.enable_thread_safety());
@@ -117,6 +119,7 @@ FT_TEST(test_encryption_aead_thread_safety_toggle_round_trip,
 
     fill_sequence(key, 16);
     fill_sequence(iv, 12);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, context.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, context.initialize_encrypt(key, 16, iv, 12));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, context.enable_thread_safety());
     FT_ASSERT(context.is_thread_safe());
