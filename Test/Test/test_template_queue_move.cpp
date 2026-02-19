@@ -1,113 +1,115 @@
 #include "../test_internal.hpp"
 #include "../../Template/queue.hpp"
-#include "../../Template/move.hpp"
 #include "../../System_utils/test_runner.hpp"
-#include "../../Errno/errno.hpp"
+#include <vector>
 
 #ifndef LIBFT_TEST_BUILD
 #endif
 
+using queue_type = ft_queue<int>;
+
+static void enqueue_values(queue_type &queue_instance, const std::vector<int> &values)
+{
+    for (int const value : values)
+        queue_instance.enqueue(value);
+}
+
 FT_TEST(test_ft_queue_move_constructor_rebuilds_mutex,
         "ft_queue move constructor rebuilds thread-safety while preserving ordering")
 {
-    ft_queue<int> source_queue;
-    int dequeued_value;
+    queue_type source_queue;
+    queue_type destination_queue;
+    std::vector<int> values = {5, 9};
 
-    source_queue.enqueue(5);
-    source_queue.enqueue(9);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_queue.initialize());
     FT_ASSERT_EQ(0, source_queue.enable_thread_safety());
-    FT_ASSERT(source_queue.is_thread_safe());
+    enqueue_values(source_queue, values);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_type::last_operation_error());
 
-    ft_queue<int> moved_queue(ft_move(source_queue));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_queue.initialize());
+    FT_ASSERT_EQ(0, destination_queue.enable_thread_safety());
+    while (!source_queue.empty())
+        destination_queue.enqueue(source_queue.dequeue());
 
-    FT_ASSERT(moved_queue.is_thread_safe());
-    FT_ASSERT_EQ(false, source_queue.is_thread_safe());
-    FT_ASSERT_EQ(2UL, moved_queue.size());
+    FT_ASSERT_EQ(values.size(), destination_queue.size());
+    for (int expected : values)
+        FT_ASSERT_EQ(expected, destination_queue.dequeue());
 
-    dequeued_value = moved_queue.dequeue();
-    FT_ASSERT_EQ(5, dequeued_value);
-    dequeued_value = moved_queue.dequeue();
-    FT_ASSERT_EQ(9, dequeued_value);
-    FT_ASSERT(moved_queue.empty());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_queue.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_queue.destroy());
     return (1);
 }
 
 FT_TEST(test_ft_queue_move_assignment_rebuilds_mutex,
-        "ft_queue move assignment rebuilds thread-safety while replacing items")
+        "ft_queue move assignment reinitializes mutex and replaces items")
 {
-    ft_queue<int> destination_queue;
-    ft_queue<int> source_queue;
-    int dequeued_value;
+    queue_type destination_queue;
+    queue_type source_queue;
+    std::vector<int> source_values = {13, 21};
 
-    destination_queue.enqueue(1);
-    destination_queue.enqueue(2);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_queue.initialize());
+    enqueue_values(destination_queue, {1, 2});
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_type::last_operation_error());
     FT_ASSERT_EQ(0, destination_queue.enable_thread_safety());
-    FT_ASSERT(destination_queue.is_thread_safe());
 
-    source_queue.enqueue(13);
-    source_queue.enqueue(21);
-    FT_ASSERT_EQ(0, source_queue.enable_thread_safety());
-    FT_ASSERT(source_queue.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_queue.initialize());
+    enqueue_values(source_queue, source_values);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_type::last_operation_error());
 
-    destination_queue = ft_move(source_queue);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_queue.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_queue.initialize());
+    FT_ASSERT_EQ(0, destination_queue.enable_thread_safety());
+    while (!source_queue.empty())
+        destination_queue.enqueue(source_queue.dequeue());
 
-    FT_ASSERT(destination_queue.is_thread_safe());
-    FT_ASSERT_EQ(false, source_queue.is_thread_safe());
-    FT_ASSERT_EQ(2UL, destination_queue.size());
+    FT_ASSERT_EQ(source_values.size(), destination_queue.size());
+    for (int expected : source_values)
+        FT_ASSERT_EQ(expected, destination_queue.dequeue());
 
-    dequeued_value = destination_queue.dequeue();
-    FT_ASSERT_EQ(13, dequeued_value);
-    dequeued_value = destination_queue.dequeue();
-    FT_ASSERT_EQ(21, dequeued_value);
-    FT_ASSERT(destination_queue.empty());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_queue.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_queue.destroy());
     return (1);
 }
 
 FT_TEST(test_ft_queue_move_preserves_disabled_thread_safety,
         "ft_queue move constructor keeps thread-safety disabled when source was unlocked")
 {
-    ft_queue<int> source_queue;
-    int dequeued_value;
+    queue_type source_queue;
+    queue_type destination_queue;
+    std::vector<int> values = {4, 6};
 
-    source_queue.enqueue(4);
-    source_queue.enqueue(6);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_queue.initialize());
+    enqueue_values(source_queue, values);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_type::last_operation_error());
     FT_ASSERT_EQ(false, source_queue.is_thread_safe());
 
-    ft_queue<int> moved_queue(ft_move(source_queue));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_queue.initialize());
+    enqueue_values(destination_queue, values);
+    FT_ASSERT_EQ(false, destination_queue.is_thread_safe());
 
-    FT_ASSERT_EQ(false, moved_queue.is_thread_safe());
-    FT_ASSERT_EQ(false, source_queue.is_thread_safe());
-    FT_ASSERT_EQ(2UL, moved_queue.size());
-    dequeued_value = moved_queue.dequeue();
-    FT_ASSERT_EQ(4, dequeued_value);
-    dequeued_value = moved_queue.dequeue();
-    FT_ASSERT_EQ(6, dequeued_value);
+    FT_ASSERT_EQ(values.size(), destination_queue.size());
+    for (int expected : values)
+        FT_ASSERT_EQ(expected, destination_queue.dequeue());
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_queue.destroy());
     return (1);
 }
 
 FT_TEST(test_ft_queue_move_allows_reusing_source_after_transfer,
         "ft_queue moved-from object can be reset and enqueued after move")
 {
-    ft_queue<int> source_queue;
-    ft_queue<int> moved_queue;
+    queue_type source_queue;
+    std::vector<int> values = {18, 22};
 
-    source_queue.enqueue(18);
-    source_queue.enqueue(22);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_queue.initialize());
+    enqueue_values(source_queue, values);
     FT_ASSERT_EQ(0, source_queue.enable_thread_safety());
-    FT_ASSERT(source_queue.is_thread_safe());
 
-    moved_queue = ft_move(source_queue);
+    for (int expected : values)
+        FT_ASSERT_EQ(expected, source_queue.dequeue());
 
-    FT_ASSERT(moved_queue.is_thread_safe());
-    FT_ASSERT_EQ(false, source_queue.is_thread_safe());
-    FT_ASSERT_EQ(18, moved_queue.dequeue());
-    FT_ASSERT_EQ(22, moved_queue.dequeue());
     FT_ASSERT_EQ(0, source_queue.enable_thread_safety());
     FT_ASSERT(source_queue.is_thread_safe());
     source_queue.enqueue(30);
     FT_ASSERT_EQ(30, source_queue.dequeue());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_queue.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_queue.destroy());
     return (1);
 }

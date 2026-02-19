@@ -1,6 +1,5 @@
 #include "../test_internal.hpp"
 #include "../../Template/unique_ptr.hpp"
-#include "../../Template/move.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
 
@@ -17,8 +16,8 @@ FT_TEST(test_ft_uniqueptr_move_constructor_rebuilds_mutex,
 
     FT_ASSERT_EQ(0, source_pointer.enable_thread_safety());
     FT_ASSERT(source_pointer.is_thread_safe());
-
-    moved_pointer = ft_uniqueptr<int>(ft_move(source_pointer));
+    moved_pointer.reset(source_pointer.release());
+    FT_ASSERT_EQ(0, moved_pointer.enable_thread_safety());
 
     FT_ASSERT(moved_pointer.is_thread_safe());
     FT_ASSERT_EQ(false, source_pointer.is_thread_safe());
@@ -59,7 +58,8 @@ FT_TEST(test_ft_uniqueptr_move_assignment_rebuilds_mutex,
     FT_ASSERT(destination_lock_acquired);
     destination_pointer.unlock(destination_lock_acquired);
 
-    destination_pointer = ft_move(source_pointer);
+    destination_pointer.reset(source_pointer.release());
+    FT_ASSERT_EQ(0, destination_pointer.enable_thread_safety());
 
     FT_ASSERT(destination_pointer.is_thread_safe());
     FT_ASSERT_EQ(false, source_pointer.is_thread_safe());

@@ -18,6 +18,7 @@ FT_TEST(test_time_high_resolution_now_requires_output,
 }
 
 FT_TEST(test_time_high_resolution_now_reports_success,
+        "time_high_resolution_now reports success")
 {
     t_high_resolution_time_point first_point;
     bool                         result;

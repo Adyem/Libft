@@ -42,7 +42,6 @@ static void api_pool_test_sleep_small(void)
 static void api_pool_test_server(api_pool_test_server_context *context)
 {
     SocketConfig server_configuration;
-    ft_socket server_socket;
     struct sockaddr_storage address_storage;
     socklen_t address_length;
     int client_fd;
@@ -54,12 +53,13 @@ static void api_pool_test_server(api_pool_test_server_context *context)
     context->accept_count.store(0);
     context->handled_requests.store(0);
     server_configuration._type = SocketType::SERVER;
-    server_configuration._ip = "127.0.0.1";
+    ft_strlcpy(server_configuration._ip, "127.0.0.1",
+            sizeof(server_configuration._ip));
     server_configuration._port = g_api_pool_test_port;
-    server_socket = ft_socket(server_configuration);
-    if (networking_fetch_last_error() != FT_ERR_SUCCESS)
+    ft_socket server_socket(server_configuration);
+    if (server_socket.get_fd() < 0)
     {
-        context->result.store(networking_fetch_last_error());
+        context->result.store(FT_ERR_INVALID_OPERATION);
         context->ready.store(true);
         return ;
     }
@@ -104,9 +104,9 @@ static void api_pool_test_server(api_pool_test_server_context *context)
 
                 current_char = buffer[buffer_index];
                 request_storage.append(current_char);
-                if (request_storage.get_error() != FT_ERR_SUCCESS)
+                if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
                 {
-                    context->result.store(request_storage.get_error());
+                    context->result.store(ft_string::last_operation_error());
                     connection_active = false;
                     break;
                 }
@@ -177,7 +177,7 @@ FT_TEST(test_api_connection_pool_reuses_connections,
     context.result.store(0);
     ft_thread server_thread(api_pool_test_server, &context);
 
-    if (server_thread.get_error() != FT_ERR_SUCCESS)
+    if (!server_thread.joinable())
         return (0);
     int wait_attempts;
 

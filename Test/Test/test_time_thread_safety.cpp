@@ -40,6 +40,7 @@ FT_TEST(test_time_monotonic_point_prepare_thread_safety_enables_mutex,
 }
 
 FT_TEST(test_time_monotonic_point_lock_cycle_resets_errno,
+        "time_monotonic_point_lock cycle leaves error state clean")
 {
     t_monotonic_time_point time_point;
     bool                   lock_acquired;
@@ -69,6 +70,7 @@ FT_TEST(test_time_duration_prepare_thread_safety_enables_mutex,
 }
 
 FT_TEST(test_time_duration_lock_cycle_resets_errno,
+        "time_duration_ms_lock cycle leaves error state clean")
 {
     t_duration_milliseconds duration;
     bool                    lock_acquired;
@@ -98,6 +100,7 @@ FT_TEST(test_time_info_prepare_thread_safety_enables_mutex,
 }
 
 FT_TEST(test_time_info_lock_cycle_resets_errno,
+        "time_info_lock cycle leaves error state clean")
 {
     t_time_info info;
     bool        lock_acquired;
@@ -111,4 +114,3 @@ FT_TEST(test_time_info_lock_cycle_resets_errno,
     time_info_teardown_thread_safety(&info);
     return (1);
 }
-

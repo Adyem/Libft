@@ -9,37 +9,34 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
+using queue_type = ft_queue<int>;
+
 FT_TEST(test_ft_queue_enable_thread_safety_initializes_mutex,
         "ft_queue installs optional mutex guards when requested")
 {
-    ft_queue<int> queue_instance;
-
+    queue_type queue_instance;
     FT_ASSERT_EQ(0, queue_instance.enable_thread_safety());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_type::last_operation_error());
     FT_ASSERT(queue_instance.is_thread_safe());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.get_error());
 
     queue_instance.enqueue(7);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_type::last_operation_error());
     FT_ASSERT_EQ(false, queue_instance.empty());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.get_error());
 
     int value = queue_instance.dequeue();
     FT_ASSERT_EQ(7, value);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_type::last_operation_error());
     FT_ASSERT(queue_instance.empty());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.get_error());
 
     queue_instance.disable_thread_safety();
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_type::last_operation_error());
     FT_ASSERT(queue_instance.is_thread_safe() == false);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.get_error());
 
     bool lock_acquired = false;
     FT_ASSERT_EQ(0, queue_instance.lock(&lock_acquired));
     FT_ASSERT(lock_acquired == false);
     queue_instance.unlock(lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_type::last_operation_error());
     return (1);
 }
 
@@ -54,7 +51,7 @@ FT_TEST(test_ft_queue_lock_blocks_until_release,
     std::thread worker;
 
     FT_ASSERT_EQ(0, queue_instance.enable_thread_safety());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_type::last_operation_error());
 
     main_lock_acquired = false;
     FT_ASSERT_EQ(0, queue_instance.lock(&main_lock_acquired));
@@ -95,6 +92,6 @@ FT_TEST(test_ft_queue_lock_blocks_until_release,
     FT_ASSERT(wait_duration_ms.load() >= 40);
 
     queue_instance.disable_thread_safety();
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_type::last_operation_error());
     return (1);
 }

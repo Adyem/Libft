@@ -22,26 +22,22 @@ FT_TEST(test_thread_pool_resets_error_status,
         execution_count.store(-1);
         return ;
     });
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, pool_instance.get_error());
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_thread_pool::last_operation_error());
     cma_set_alloc_limit(0);
     pool_instance.submit([&execution_count]()
     {
         execution_count.store(1);
         return ;
     });
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, pool_instance.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_thread_pool::last_operation_error());
     pool_instance.wait();
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, pool_instance.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_thread_pool::last_operation_error());
     int final_count;
 
     final_count = execution_count.load();
     FT_ASSERT_EQ(1, final_count);
     pool_instance.destroy();
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, pool_instance.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_thread_pool::last_operation_error());
     cma_set_alloc_limit(0);
     return (1);
 }
@@ -51,15 +47,14 @@ FT_TEST(test_thread_pool_cancellation_skips_tasks,
 {
     ft_thread_pool pool_instance(1, 0);
     ft_cancellation_source cancellation_source;
-    ft_cancellation_token cancellation_token;
+    const ft_cancellation_token &cancellation_token = cancellation_source.get_token();
     std::atomic<int> execution_count;
 
     execution_count.store(0);
-    cancellation_token = cancellation_source.get_token();
     cancellation_source.request_cancel();
-    pool_instance.submit([&execution_count](const ft_cancellation_token &token)
+    pool_instance.submit([&execution_count, &cancellation_token]()
     {
-        if (!token.is_cancellation_requested())
+        if (!cancellation_token.is_cancellation_requested())
             execution_count.fetch_add(1);
         else
             execution_count.fetch_sub(1);
@@ -76,14 +71,13 @@ FT_TEST(test_thread_pool_cancellation_allows_execution,
 {
     ft_thread_pool pool_instance(1, 0);
     ft_cancellation_source cancellation_source;
-    ft_cancellation_token cancellation_token;
+    const ft_cancellation_token &cancellation_token = cancellation_source.get_token();
     std::atomic<int> execution_count;
 
     execution_count.store(0);
-    cancellation_token = cancellation_source.get_token();
-    pool_instance.submit([&execution_count](const ft_cancellation_token &token)
+    pool_instance.submit([&execution_count, &cancellation_token]()
     {
-        if (!token.is_cancellation_requested())
+        if (!cancellation_token.is_cancellation_requested())
             execution_count.fetch_add(1);
         return ;
     }, cancellation_token);
@@ -97,12 +91,11 @@ FT_TEST(test_cancellation_token_callbacks_trigger,
     "ft_cancellation_token invokes registered callbacks on cancellation")
 {
     ft_cancellation_source cancellation_source;
-    ft_cancellation_token cancellation_token;
+    const ft_cancellation_token &cancellation_token = cancellation_source.get_token();
     std::atomic<int> callback_count;
     int registration_status;
 
     callback_count.store(0);
-    cancellation_token = cancellation_source.get_token();
     registration_status = cancellation_token.register_callback([&callback_count]()
     {
         callback_count.fetch_add(1);

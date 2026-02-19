@@ -129,9 +129,21 @@ else
 $(error Unsupported OPT_LEVEL=$(OPT_LEVEL))
 endif
 
-COMPILE_FLAGS := -Wall -Wextra -Werror -std=c++17 -Wuseless-cast $(OPT_FLAGS) -pthread -Wno-missing-declarations
+COMPILE_FLAGS := -Wall -Wextra -Werror -std=c++17 -Wuseless-cast $(OPT_FLAGS) -pthread -Wno-missing-declarations -DLIBFT_TEST_BUILD
 CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Libft\"
-LDFLAGS := -lz -ldl $(OPENSSL_LIBS) $(SQLITE_LIBS)
+HAS_X11_LIB := $(shell ldconfig -p 2>/dev/null | grep -q "libX11.so" && echo 1 || echo 0)
+HAS_ASOUND_LIB := $(shell ldconfig -p 2>/dev/null | grep -q "libasound.so" && echo 1 || echo 0)
+ifeq ($(HAS_X11_LIB),1)
+X11_LIBS := -lX11
+else
+X11_LIBS :=
+endif
+ifeq ($(HAS_ASOUND_LIB),1)
+ASOUND_LIBS := -lasound
+else
+ASOUND_LIBS :=
+endif
+LDFLAGS := -Wl,--allow-multiple-definition -lz -ldl $(OPENSSL_LIBS) $(SQLITE_LIBS) $(X11_LIBS) $(ASOUND_LIBS)
 export COMPILE_FLAGS
 
 OBJDIR       := objs

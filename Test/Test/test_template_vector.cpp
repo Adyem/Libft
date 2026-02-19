@@ -38,7 +38,7 @@ FT_TEST(test_ft_vector_ft_string_growth, "ft_vector preserves ft_string contents
             FT_ASSERT(string_vector[verify_index] == sample_values[verify_index]);
             ++verify_index;
         }
-        FT_ASSERT_EQ(FT_ERR_SUCCESS, string_vector.get_error());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_vector<ft_string>::last_operation_error());
     }
     ft_size_t allocation_count_after = 0;
     ft_size_t free_count_after = 0;

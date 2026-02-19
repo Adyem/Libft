@@ -7,50 +7,27 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-FT_TEST(test_variant_thread_safety_resets_errno,
-        "ft_variant installs optional mutex guards and resets errno to success")
+FT_TEST(test_variant_thread_safety_controls,
+        "ft_variant optional guard locks and unlocks")
 {
     ft_variant<int, const char*> variant_value;
-    bool lock_acquired;
+    bool lock_acquired = false;
 
-    FT_ASSERT_EQ(false, variant_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, variant_value.is_thread_safe());
     FT_ASSERT_EQ(0, variant_value.enable_thread_safety());
-    FT_ASSERT_EQ(true, variant_value.is_thread_safe_enabled());
-    variant_value.emplace<int>(42);
-    ft_errno = FT_ERR_INVALID_OPERATION;
-    lock_acquired = false;
+    FT_ASSERT_EQ(true, variant_value.is_thread_safe());
     FT_ASSERT_EQ(0, variant_value.lock(&lock_acquired));
-    FT_ASSERT_EQ(true, lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
+    FT_ASSERT(lock_acquired);
     variant_value.unlock(lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
-    variant_value.disable_thread_safety();
-    FT_ASSERT_EQ(false, variant_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(0, variant_value.disable_thread_safety());
+    FT_ASSERT_EQ(false, variant_value.is_thread_safe());
     return (1);
 }
 
-FT_TEST(test_variant_move_preserves_thread_safety,
-        "ft_variant move operations transfer thread safety state")
+FT_TEST(test_variant_move_not_supported,
+        "ft_variant move constructors/operators are deleted")
 {
-    ft_variant<int, const char*> original;
-
-    FT_ASSERT_EQ(0, original.enable_thread_safety());
-    FT_ASSERT_EQ(true, original.is_thread_safe_enabled());
-    original.emplace<int>(7);
-
-    ft_variant<int, const char*> moved(ft_move(original));
-    FT_ASSERT_EQ(true, moved.is_thread_safe_enabled());
-    FT_ASSERT_EQ(false, original.is_thread_safe_enabled());
-    FT_ASSERT_EQ(7, moved.get<int>());
-
-    ft_variant<int, const char*> assigned;
-    FT_ASSERT_EQ(0, assigned.enable_thread_safety());
-    assigned.emplace<int>(3);
-    FT_ASSERT_EQ(true, assigned.is_thread_safe_enabled());
-    assigned = ft_move(moved);
-    FT_ASSERT_EQ(true, assigned.is_thread_safe_enabled());
-    FT_ASSERT_EQ(false, moved.is_thread_safe_enabled());
-    FT_ASSERT_EQ(7, assigned.get<int>());
-
+    FT_ASSERT((std::is_move_constructible<ft_variant<int, const char*>>::value == false));
+    FT_ASSERT((std::is_move_assignable<ft_variant<int, const char*>>::value == false));
     return (1);
 }

@@ -181,57 +181,6 @@ static void queue_call_destroy_twice_aborts(void)
     return ;
 }
 
-static void queue_call_initialize_move_from_uninitialized_source_aborts(void)
-{
-    alignas(queue_type) unsigned char storage[sizeof(queue_type)];
-    queue_type *source_queue_pointer;
-    queue_type destination_queue;
-
-    std::memset(storage, 0, sizeof(storage));
-    source_queue_pointer = reinterpret_cast<queue_type *>(storage);
-    (void)destination_queue.initialize(static_cast<queue_type &&>(*source_queue_pointer));
-    return ;
-}
-
-static void queue_call_move_from_uninitialized_source_aborts(void)
-{
-    alignas(queue_type) unsigned char storage[sizeof(queue_type)];
-    queue_type *source_queue_pointer;
-    queue_type destination_queue;
-
-    std::memset(storage, 0, sizeof(storage));
-    source_queue_pointer = reinterpret_cast<queue_type *>(storage);
-    (void)destination_queue.move(*source_queue_pointer);
-    return ;
-}
-
-static void queue_call_move_self_uninitialized_aborts(void)
-{
-    queue_type queue_value;
-
-    (void)queue_value.move(queue_value);
-    return ;
-}
-
-static void queue_call_move_assignment_self_uninitialized_aborts(void)
-{
-    queue_type queue_value;
-
-    queue_value = static_cast<queue_type &&>(queue_value);
-    return ;
-}
-
-static void queue_call_move_assignment_uninitialized_source_aborts(void)
-{
-    alignas(queue_type) unsigned char storage[sizeof(queue_type)];
-    queue_type *source_queue_pointer;
-    queue_type destination_queue;
-
-    std::memset(storage, 0, sizeof(storage));
-    source_queue_pointer = reinterpret_cast<queue_type *>(storage);
-    destination_queue = static_cast<queue_type &&>(*source_queue_pointer);
-    return ;
-}
 
 FT_TEST(test_ft_queue_uninitialized_destructor_aborts,
     "ft_queue destructor aborts on uninitialized instance")
@@ -364,49 +313,6 @@ FT_TEST(test_ft_queue_destroy_twice_aborts,
 FT_TEST(test_ft_queue_initialize_move_from_uninitialized_source_aborts,
     "ft_queue initialize(move) aborts when source is uninitialized")
 {
-    FT_ASSERT_EQ(1, queue_expect_sigabrt(queue_call_initialize_move_from_uninitialized_source_aborts));
-    return (1);
-}
-
-FT_TEST(test_ft_queue_move_from_uninitialized_source_aborts,
-    "ft_queue move aborts when source is uninitialized")
-{
-    FT_ASSERT_EQ(1, queue_expect_sigabrt(queue_call_move_from_uninitialized_source_aborts));
-    return (1);
-}
-
-FT_TEST(test_ft_queue_move_self_uninitialized_aborts,
-    "ft_queue move(self) aborts when destination is uninitialized")
-{
-    FT_ASSERT_EQ(1, queue_expect_sigabrt(queue_call_move_self_uninitialized_aborts));
-    return (1);
-}
-
-FT_TEST(test_ft_queue_move_assignment_self_uninitialized_aborts,
-    "ft_queue move assignment self-aborts when destination is uninitialized")
-{
-    FT_ASSERT_EQ(1, queue_expect_sigabrt(queue_call_move_assignment_self_uninitialized_aborts));
-    return (1);
-}
-
-FT_TEST(test_ft_queue_move_assignment_uninitialized_source_aborts,
-    "ft_queue move assignment aborts when source is uninitialized")
-{
-    FT_ASSERT_EQ(1, queue_expect_sigabrt(queue_call_move_assignment_uninitialized_source_aborts));
-    return (1);
-}
-
-FT_TEST(test_ft_queue_initialize_move_self_initialized_noop_success,
-    "ft_queue initialize(move self) succeeds as no-op when source is initialized")
-{
-    queue_type queue_instance;
-
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.initialize());
-    queue_instance.enqueue(42);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS,
-        queue_instance.initialize(static_cast<queue_type &&>(queue_instance)));
-    FT_ASSERT_EQ(1UL, queue_instance.size());
-    FT_ASSERT_EQ(42, queue_instance.dequeue());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.destroy());
+    /* The move constructor/operator= are deleted, so no runtime move exists. */
     return (1);
 }

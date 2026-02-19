@@ -15,31 +15,31 @@ FT_TEST(test_ft_stack_enable_thread_safety_initializes_mutex,
     ft_stack<int> stack_instance;
 
     FT_ASSERT_EQ(0, stack_instance.enable_thread_safety());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, stack_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_stack<int>::last_operation_error());
     FT_ASSERT(stack_instance.is_thread_safe());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, stack_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_stack<int>::last_operation_error());
 
     stack_instance.push(42);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, stack_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_stack<int>::last_operation_error());
     FT_ASSERT_EQ(false, stack_instance.empty());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, stack_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_stack<int>::last_operation_error());
 
     int value = stack_instance.pop();
     FT_ASSERT_EQ(42, value);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, stack_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_stack<int>::last_operation_error());
     FT_ASSERT(stack_instance.empty());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, stack_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_stack<int>::last_operation_error());
 
     stack_instance.disable_thread_safety();
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, stack_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_stack<int>::last_operation_error());
     FT_ASSERT(stack_instance.is_thread_safe() == false);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, stack_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_stack<int>::last_operation_error());
 
     bool lock_acquired = false;
     FT_ASSERT_EQ(0, stack_instance.lock(&lock_acquired));
     FT_ASSERT(lock_acquired == false);
     stack_instance.unlock(lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, stack_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_stack<int>::last_operation_error());
     return (1);
 }
 
@@ -54,7 +54,7 @@ FT_TEST(test_ft_stack_lock_blocks_until_release,
     std::thread worker;
 
     FT_ASSERT_EQ(0, stack_instance.enable_thread_safety());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, stack_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_stack<int>::last_operation_error());
 
     main_lock_acquired = false;
     FT_ASSERT_EQ(0, stack_instance.lock(&main_lock_acquired));
@@ -95,6 +95,6 @@ FT_TEST(test_ft_stack_lock_blocks_until_release,
     FT_ASSERT(wait_duration_ms.load() >= 40);
 
     stack_instance.disable_thread_safety();
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, stack_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_stack<int>::last_operation_error());
     return (1);
 }
