@@ -24,11 +24,7 @@ ft_vendor_profile::ft_vendor_profile(int vendor_id, double buy_markup,
 ft_vendor_profile::~ft_vendor_profile() noexcept
 {
     if (this->_initialized_state == ft_vendor_profile::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("ft_vendor_profile::~ft_vendor_profile",
-            "destructor called while object is uninitialized");
         return ;
-    }
     if (this->_initialized_state == ft_vendor_profile::_state_initialized)
         (void)this->destroy();
     return ;
@@ -115,11 +111,7 @@ int ft_vendor_profile::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != ft_vendor_profile::_state_initialized)
-    {
-        this->abort_lifecycle_error("ft_vendor_profile::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     disable_error = this->disable_thread_safety();
     this->_vendor_id = 0;
     this->_buy_markup = 1.0;

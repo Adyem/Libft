@@ -21,11 +21,7 @@ ft_rarity_band::ft_rarity_band(int rarity, double value_multiplier) noexcept
 ft_rarity_band::~ft_rarity_band() noexcept
 {
     if (this->_initialized_state == ft_rarity_band::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("ft_rarity_band::~ft_rarity_band",
-            "destructor called while object is uninitialized");
         return ;
-    }
     if (this->_initialized_state == ft_rarity_band::_state_initialized)
         (void)this->destroy();
     return ;
@@ -109,11 +105,7 @@ int ft_rarity_band::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != ft_rarity_band::_state_initialized)
-    {
-        this->abort_lifecycle_error("ft_rarity_band::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     disable_error = this->disable_thread_safety();
     this->_rarity = 0;
     this->_value_multiplier = 1.0;

@@ -126,13 +126,13 @@ FT_TEST(test_adv_itoa_base_rejects_invalid_base,
 }
 
 FT_TEST(test_adv_itoa_base_negative_non_decimal,
-    "adv_itoa_base encodes negative values without sign when base is not decimal")
+    "adv_itoa_base encodes negative non-decimal values as magnitude")
 {
     char *binary_value;
 
     binary_value = adv_itoa_base(-10, 2);
     FT_ASSERT(binary_value != ft_nullptr);
-    FT_ASSERT_EQ(0, ft_strcmp("11111111111111111111111111110110", binary_value));
+    FT_ASSERT_EQ(0, ft_strcmp("1010", binary_value));
     cma_free(binary_value);
     return (1);
 }

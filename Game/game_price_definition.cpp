@@ -25,11 +25,7 @@ ft_price_definition::ft_price_definition(int item_id, int rarity, int base_value
 ft_price_definition::~ft_price_definition() noexcept
 {
     if (this->_initialized_state == ft_price_definition::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("ft_price_definition::~ft_price_definition",
-            "destructor called while object is uninitialized");
         return ;
-    }
     if (this->_initialized_state == ft_price_definition::_state_initialized)
         (void)this->destroy();
     return ;
@@ -123,11 +119,7 @@ int ft_price_definition::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != ft_price_definition::_state_initialized)
-    {
-        this->abort_lifecycle_error("ft_price_definition::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     disable_error = this->disable_thread_safety();
     this->_item_id = 0;
     this->_rarity = 0;

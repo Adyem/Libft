@@ -12,12 +12,6 @@ ft_economy_table::ft_economy_table() noexcept
 
 ft_economy_table::~ft_economy_table() noexcept
 {
-    if (this->_initialized_state == ft_economy_table::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("ft_economy_table::~ft_economy_table",
-            "destructor called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == ft_economy_table::_state_initialized)
         (void)this->destroy();
     return ;
@@ -53,10 +47,19 @@ int ft_economy_table::initialize() noexcept
             "called while object is already initialized");
         return (FT_ERR_INVALID_STATE);
     }
-    this->_price_definitions.clear();
-    this->_rarity_bands.clear();
-    this->_vendor_profiles.clear();
-    this->_currency_rates.clear();
+    int32_t error;
+    error = this->_price_definitions.initialize();
+    if (error)
+        return (error);
+    error = this->_rarity_bands.initialize();
+    if (error)
+        return (error);
+    error =this->_vendor_profiles.initialize();
+    if (error)
+        return (error);
+    error = this->_currency_rates.initialize();
+    if (error)
+        return (error);
     this->_initialized_state = ft_economy_table::_state_initialized;
     return (FT_ERR_SUCCESS);
 }
@@ -136,18 +139,23 @@ int ft_economy_table::initialize(ft_economy_table &&other) noexcept
 
 int ft_economy_table::destroy() noexcept
 {
+    int map_error;
     int disable_error;
 
     if (this->_initialized_state != ft_economy_table::_state_initialized)
-    {
-        this->abort_lifecycle_error("ft_economy_table::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
-    this->_price_definitions.clear();
-    this->_rarity_bands.clear();
-    this->_vendor_profiles.clear();
-    this->_currency_rates.clear();
+    map_error = this->_price_definitions.destroy();
+    if (map_error != FT_ERR_SUCCESS)
+        return (map_error);
+    map_error = this->_rarity_bands.destroy();
+    if (map_error != FT_ERR_SUCCESS)
+        return (map_error);
+    map_error = this->_vendor_profiles.destroy();
+    if (map_error != FT_ERR_SUCCESS)
+        return (map_error);
+    map_error = this->_currency_rates.destroy();
+    if (map_error != FT_ERR_SUCCESS)
+        return (map_error);
     disable_error = this->disable_thread_safety();
     this->_initialized_state = ft_economy_table::_state_destroyed;
     return (disable_error);

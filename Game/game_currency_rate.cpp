@@ -24,11 +24,7 @@ ft_currency_rate::ft_currency_rate(int currency_id, double rate_to_base,
 ft_currency_rate::~ft_currency_rate() noexcept
 {
     if (this->_initialized_state == ft_currency_rate::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("ft_currency_rate::~ft_currency_rate",
-            "destructor called while object is uninitialized");
         return ;
-    }
     if (this->_initialized_state == ft_currency_rate::_state_initialized)
         (void)this->destroy();
     return ;
@@ -116,11 +112,7 @@ int ft_currency_rate::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != ft_currency_rate::_state_initialized)
-    {
-        this->abort_lifecycle_error("ft_currency_rate::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     disable_error = this->disable_thread_safety();
     this->_currency_id = 0;
     this->_rate_to_base = 1.0;
