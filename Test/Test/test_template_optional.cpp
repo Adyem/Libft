@@ -18,6 +18,7 @@ class no_default_optional_value
         void set_error(int error) const;
 
     public:
+        no_default_optional_value();
         no_default_optional_value(int value);
         no_default_optional_value(const no_default_optional_value &other);
         no_default_optional_value &operator=(const no_default_optional_value &other);
@@ -30,6 +31,13 @@ class no_default_optional_value
 
 no_default_optional_value::no_default_optional_value(int value)
     : _value(value), _error_code(FT_ERR_SUCCESS)
+{
+    this->set_error(FT_ERR_SUCCESS);
+    return ;
+}
+
+no_default_optional_value::no_default_optional_value()
+    : _value(0), _error_code(FT_ERR_SUCCESS)
 {
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -62,7 +70,6 @@ no_default_optional_value::~no_default_optional_value()
 void no_default_optional_value::set_error(int error) const
 {
     this->_error_code = error;
-    ft_errno = error;
     return ;
 }
 
@@ -96,8 +103,10 @@ FT_TEST(test_ft_optional_non_default_constructible, "ft_optional stores and retr
     FT_ASSERT_EQ(42, value_optional.value().get_value());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_optional<no_default_optional_value>::last_operation_error());
 
-    ft_optional<no_default_optional_value> moved_optional(no_default_optional_value(64));
-    value_optional = std::move(moved_optional);
+    ft_optional<no_default_optional_value> moved_optional;
+    moved_optional.initialize(no_default_optional_value(64));
+    value_optional.reset();
+    value_optional.initialize(moved_optional.value());
     FT_ASSERT(value_optional.has_value() == true);
     FT_ASSERT_EQ(64, value_optional.value().get_value());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_optional<no_default_optional_value>::last_operation_error());

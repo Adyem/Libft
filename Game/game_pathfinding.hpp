@@ -52,7 +52,59 @@ class ft_path_step
         int     get_error() const noexcept;
         const char *get_error_str() const noexcept;
         void    reset_system_error() const noexcept;
+
+#ifdef LIBFT_TEST_BUILD
+        friend class ft_path_step_test_helper;
+#endif
 };
+
+#ifdef LIBFT_TEST_BUILD
+
+class ft_path_step_test_helper
+{
+    private:
+        static int ensure_thread_safe(ft_path_step &step) noexcept
+        {
+            if (step._mutex != ft_nullptr)
+                return (FT_ERR_SUCCESS);
+            return (step.enable_thread_safety());
+        }
+
+    public:
+        static int lock(ft_path_step &step) noexcept
+        {
+            int ensure_error = ensure_thread_safe(step);
+            if (ensure_error != FT_ERR_SUCCESS)
+                return (ensure_error);
+            return (step._mutex->lock());
+        }
+
+        static int unlock(ft_path_step &step) noexcept
+        {
+            if (step._mutex == ft_nullptr)
+                return (FT_ERR_INVALID_STATE);
+            return (step._mutex->unlock());
+        }
+
+        static bool is_locked(const ft_path_step &step) noexcept
+        {
+            return (step._mutex != ft_nullptr && step._mutex->lockState());
+        }
+
+        static bool is_owned_by_thread(const ft_path_step &step, pthread_t thread_id) noexcept
+        {
+            return (step._mutex != ft_nullptr && step._mutex->is_owned_by_thread(thread_id));
+        }
+
+        static int get_mutex_error(const ft_path_step &step) noexcept
+        {
+            if (step._mutex == ft_nullptr)
+                return (FT_ERR_INVALID_STATE);
+            return (step._mutex->lock_state(ft_nullptr));
+        }
+};
+
+#endif
 
 class ft_pathfinding
 {

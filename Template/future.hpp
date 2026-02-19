@@ -158,7 +158,6 @@ ft_future<ValueType>::ft_future()
     return ;
 }
 
-
 template <typename ValueType>
 ft_future<ValueType>::ft_future(ft_promise<ValueType>& promise)
     : _promise(&promise), _shared_promise(), _mutex(ft_nullptr)

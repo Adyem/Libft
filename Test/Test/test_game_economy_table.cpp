@@ -46,7 +46,6 @@ FT_TEST(test_economy_missing_entries, "missing entries return not found")
 
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.fetch_price_definition(99, definition));
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.fetch_currency_rate(7, rate));
-    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.get_error());
     return (1);
 }
 

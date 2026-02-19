@@ -264,18 +264,18 @@ inline int32_t    scma_handle_accessor<TValue>::initialize(void)
 {
     int32_t lock_result;
 
+    if (this->_initialized_state == scma_handle_accessor<TValue>::_state_initialized)
+    {
+        this->abort_lifecycle_error("scma_handle_accessor::initialize",
+            "called while object is already initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
     lock_result = scma_mutex_lock();
     if (lock_result != 0)
     {
         this->_initialized_state = scma_handle_accessor<TValue>::_state_destroyed;
         this->_last_error = FT_ERR_SYS_MUTEX_LOCK_FAILED;
         return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
-    }
-    if (this->_initialized_state == scma_handle_accessor<TValue>::_state_initialized)
-    {
-        this->abort_lifecycle_error("scma_handle_accessor::initialize",
-            "called while object is already initialized");
-        return (FT_ERR_INVALID_STATE);
     }
     this->_handle.index = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
     this->_handle.generation = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
@@ -300,23 +300,25 @@ inline int32_t    scma_handle_accessor<TValue>::initialize(scma_handle handle)
         return (initialization_error);
     if (this->bind(handle))
         return (FT_ERR_SUCCESS);
+    int32_t bind_error = this->_last_error;
     (void)this->destroy();
-    return (this->_last_error);
+    this->_last_error = FT_ERR_INVALID_STATE;
+    return (bind_error);
 }
 
 template <typename TValue>
 inline int32_t    scma_handle_accessor<TValue>::destroy(void)
 {
-    if (scma_mutex_lock() != 0)
-    {
-        this->_last_error = FT_ERR_SYS_MUTEX_LOCK_FAILED;
-        return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
-    }
     if (this->_initialized_state != scma_handle_accessor<TValue>::_state_initialized)
     {
         this->abort_lifecycle_error("scma_handle_accessor::destroy",
             "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
+    }
+    if (scma_mutex_lock() != 0)
+    {
+        this->_last_error = FT_ERR_SYS_MUTEX_LOCK_FAILED;
+        return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
     }
     this->_handle.index = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
     this->_handle.generation = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
@@ -337,12 +339,12 @@ inline int32_t    scma_handle_accessor<TValue>::is_initialized(void) const
 template <typename TValue>
 inline int32_t    scma_handle_accessor<TValue>::bind(scma_handle handle)
 {
+    this->abort_if_not_initialized("scma_handle_accessor::bind");
     if (scma_mutex_lock() != 0)
     {
         this->_last_error = FT_ERR_SYS_MUTEX_LOCK_FAILED;
         return (0);
     }
-    this->abort_if_not_initialized("scma_handle_accessor::bind");
     if (!scma_handle_is_valid(handle))
     {
         this->_last_error = FT_ERR_INVALID_HANDLE;
@@ -365,10 +367,10 @@ inline int32_t    scma_handle_accessor<TValue>::is_bound(void) const
 {
     int32_t is_bound_result;
 
+    this->abort_if_not_initialized("scma_handle_accessor::is_bound");
     is_bound_result = 0;
     if (scma_mutex_lock() != 0)
         return (0);
-    this->abort_if_not_initialized("scma_handle_accessor::is_bound");
     if (this->_handle.index == static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX))
         is_bound_result = 0;
     else if (this->_handle.generation == static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX))
@@ -385,11 +387,11 @@ inline scma_handle    scma_handle_accessor<TValue>::get_handle(void) const
 {
     scma_handle handle;
 
+    this->abort_if_not_initialized("scma_handle_accessor::get_handle");
     handle.index = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
     handle.generation = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
     if (scma_mutex_lock() != 0)
         return (handle);
-    this->abort_if_not_initialized("scma_handle_accessor::get_handle");
     handle = this->_handle;
     if (scma_mutex_unlock() != 0)
     {
@@ -461,6 +463,11 @@ inline int32_t    scma_handle_accessor<TValue>::read_struct(TValue &destination)
         goto cleanup;
     }
     if (!this->is_bound())
+    {
+        this->_last_error = FT_ERR_INVALID_HANDLE;
+        goto cleanup;
+    }
+    if (!scma_handle_is_valid(this->_handle))
     {
         this->_last_error = FT_ERR_INVALID_HANDLE;
         goto cleanup;
@@ -771,7 +778,6 @@ cleanup:
 template <typename TValue>
 inline int32_t    scma_handle_accessor<TValue>::get_error(void) const
 {
-    this->abort_if_not_initialized("scma_handle_accessor::get_error");
     return (this->_last_error);
 }
 

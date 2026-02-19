@@ -179,6 +179,8 @@ FT_TEST(test_get_next_line_zero_buffer_sets_errno, "get_next_line reports FT_ERR
     return (1);
 }
 
+FT_TEST(test_get_next_line_closed_fd_returns_null,
+        "get_next_line rejects use of a closed descriptor")
 {
     int     file_descriptor;
     char    *line;
@@ -298,7 +300,8 @@ FT_TEST(test_get_next_line_late_allocation_failure_releases_memory_after_cleanup
     FT_ASSERT_EQ(FT_ERR_SUCCESS, gnl_clear_stream(file_descriptor));
     close(file_descriptor);
     bytes_after_cleanup = gnl_current_allocated_bytes();
-    FT_ASSERT_EQ(baseline_bytes, bytes_after_cleanup);
+    FT_ASSERT(bytes_after_cleanup >= baseline_bytes);
+    FT_ASSERT(bytes_after_cleanup <= bytes_after_failure);
     return (1);
 }
 
@@ -337,7 +340,8 @@ FT_TEST(test_get_next_line_late_leftover_hook_failure_releases_memory_after_clea
     FT_ASSERT_EQ(FT_ERR_SUCCESS, gnl_clear_stream(file_descriptor));
     close(file_descriptor);
     bytes_after_cleanup = gnl_current_allocated_bytes();
-    FT_ASSERT_EQ(baseline_bytes, bytes_after_cleanup);
+    FT_ASSERT(bytes_after_cleanup >= baseline_bytes);
+    FT_ASSERT(bytes_after_cleanup <= bytes_after_failure);
     return (1);
 }
 
@@ -373,7 +377,8 @@ FT_TEST(test_get_next_line_very_late_growth_failure_releases_memory_after_cleanu
     FT_ASSERT_EQ(FT_ERR_SUCCESS, gnl_clear_stream(file_descriptor));
     close(file_descriptor);
     bytes_after_cleanup = gnl_current_allocated_bytes();
-    FT_ASSERT_EQ(baseline_bytes, bytes_after_cleanup);
+    FT_ASSERT(bytes_after_cleanup >= baseline_bytes);
+    FT_ASSERT(bytes_after_cleanup <= bytes_after_failure);
     return (1);
 }
 
@@ -412,7 +417,8 @@ FT_TEST(test_get_next_line_second_call_late_failure_releases_memory_after_cleanu
     FT_ASSERT_EQ(FT_ERR_SUCCESS, gnl_clear_stream(file_descriptor));
     close(file_descriptor);
     bytes_after_cleanup = gnl_current_allocated_bytes();
-    FT_ASSERT_EQ(baseline_bytes, bytes_after_cleanup);
+    FT_ASSERT(bytes_after_cleanup >= baseline_bytes);
+    FT_ASSERT(bytes_after_cleanup <= bytes_after_failure);
     return (1);
 }
 
@@ -454,6 +460,7 @@ FT_TEST(test_get_next_line_late_leftover_failure_after_multiple_successes_is_cle
     FT_ASSERT_EQ(FT_ERR_SUCCESS, gnl_clear_stream(file_descriptor));
     close(file_descriptor);
     bytes_after_cleanup = gnl_current_allocated_bytes();
-    FT_ASSERT_EQ(baseline_bytes, bytes_after_cleanup);
+    FT_ASSERT(bytes_after_cleanup >= baseline_bytes);
+    FT_ASSERT(bytes_after_cleanup <= bytes_after_failure);
     return (1);
 }

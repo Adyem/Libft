@@ -126,3 +126,4 @@ Within the CMA module, only the documented public-facing entry points should sur
 #SCMA Error Handling Rules
 
 Within the SCMA module, only the listed public-facing helpers should expose errors directly; all other utilities rely on the module’s internal reporting to keep overall state coherent.
+- When a class maintains a `_last_error` field, the only sanctioned public accessor for other classes should be the `get_error()` (and optionally `get_error_str()`) helper; no other class should read `_last_error` directly or expose additional interfaces for that value.

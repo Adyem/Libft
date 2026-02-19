@@ -10,7 +10,7 @@ int test_ft_queue_class_basic(void)
     ft_queue<int> q;
     q.enqueue(1);
     q.enqueue(2);
-    if (q.get_error() != FT_ERR_SUCCESS || q.front() != 1 || q.size() != 2)
+    if (q.front() != 1 || q.size() != 2)
         return (0);
     int first = q.dequeue();
     if (first != 1)
@@ -19,8 +19,7 @@ int test_ft_queue_class_basic(void)
     if (second != 2)
         return (0);
     q.dequeue();
-    if (q.get_error() != FT_ERR_EMPTY)
+    if (!q.empty())
         return (0);
     return (1);
 }
-

@@ -2,7 +2,6 @@
 #include "../../Encryption/encryption_blake2.hpp"
 #include "../../Encryption/encryption_sha3.hpp"
 #include "../../Encryption/encryption_hmac_sha256.hpp"
-#include "../../Errno/errno.hpp"
 #include "../../Basic/basic.hpp"
 #include "../../System_utils/test_runner.hpp"
 
@@ -230,24 +229,16 @@ FT_TEST(test_blake2_hash_matches_known_vectors,
     expected_s_abc[30] = 0x59;
     expected_s_abc[31] = 0x82;
 
-    ft_errno = FT_ERR_INTERNAL;
     blake2b_hash("", 0, digest, 64);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     assert_digest_matches(digest, expected_empty, 64);
 
-    ft_errno = FT_ERR_INTERNAL;
     blake2b_hash("abc", 3, digest, 64);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     assert_digest_matches(digest, expected_abc, 64);
 
-    ft_errno = FT_ERR_INTERNAL;
     blake2s_hash("", 0, digest32, 32);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     assert_digest_matches(digest32, expected_s_empty, 32);
 
-    ft_errno = FT_ERR_INTERNAL;
     blake2s_hash("abc", 3, digest32, 32);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     assert_digest_matches(digest32, expected_s_abc, 32);
     return (1);
 }
@@ -458,24 +449,16 @@ FT_TEST(test_sha3_hash_matches_known_vectors,
     expected512_abc[62] = 0x53;
     expected512_abc[63] = 0xF0;
 
-    ft_errno = FT_ERR_INTERNAL;
     sha3_256_hash("", 0, digest256);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     assert_digest_matches(digest256, expected256_empty, 32);
 
-    ft_errno = FT_ERR_INTERNAL;
     sha3_256_hash("abc", 3, digest256);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     assert_digest_matches(digest256, expected256_abc, 32);
 
-    ft_errno = FT_ERR_INTERNAL;
     sha3_512_hash("", 0, digest512);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     assert_digest_matches(digest512, expected512_empty, 64);
 
-    ft_errno = FT_ERR_INTERNAL;
     sha3_512_hash("abc", 3, digest512);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     assert_digest_matches(digest512, expected512_abc, 64);
     return (1);
 }
@@ -493,28 +476,21 @@ FT_TEST(test_hmac_sha256_streaming_matches_single_shot,
     unsigned char streaming_digest[32];
     hmac_sha256_stream stream;
 
-    full_length = ft_strlen(full_message);
-    ft_errno = FT_ERR_INTERNAL;
+    full_length = ft_strlen_size_t(full_message);
     hmac_sha256(key, sizeof(key), full_message, full_length, expected_digest);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
 
     FT_ASSERT_EQ(0, hmac_sha256_stream_init(stream, key, sizeof(key)));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
 
     FT_ASSERT_EQ(0, hmac_sha256_stream_update(stream, part_one,
-            ft_strlen(part_one)));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
+            ft_strlen_size_t(part_one)));
 
     FT_ASSERT_EQ(0, hmac_sha256_stream_update(stream, part_two,
-            ft_strlen(part_two)));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
+            ft_strlen_size_t(part_two)));
 
     FT_ASSERT_EQ(0, hmac_sha256_stream_update(stream, part_three,
-            ft_strlen(part_three)));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
+            ft_strlen_size_t(part_three)));
 
     FT_ASSERT_EQ(0, hmac_sha256_stream_final(stream, streaming_digest, 32));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     hmac_sha256_stream_cleanup(stream);
 
     assert_digest_matches(streaming_digest, expected_digest, 32);

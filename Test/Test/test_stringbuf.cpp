@@ -15,7 +15,8 @@
 FT_TEST(test_ft_stringbuf_read_basic, "ft_stringbuf::read copies data sequentially")
 {
     ft_string source("hello");
-    ft_stringbuf buffer(source);
+    ft_stringbuf buffer;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.initialize(source));
     char storage[8];
     ssize_t bytes_read;
 
@@ -30,7 +31,8 @@ FT_TEST(test_ft_stringbuf_read_basic, "ft_stringbuf::read copies data sequential
 FT_TEST(test_ft_stringbuf_read_null_buffer_sets_error, "ft_stringbuf::read reports errors for null buffers")
 {
     ft_string source("data");
-    ft_stringbuf buffer(source);
+    ft_stringbuf buffer;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.initialize(source));
     ssize_t bytes_read;
 
     bytes_read = buffer.read(ft_nullptr, 3);
@@ -42,7 +44,8 @@ FT_TEST(test_ft_stringbuf_read_null_buffer_sets_error, "ft_stringbuf::read repor
 FT_TEST(test_ft_stringbuf_str_returns_remaining, "ft_stringbuf::str exposes unread portion and clears errors")
 {
     ft_string source("abcdef");
-    ft_stringbuf buffer(source);
+    ft_stringbuf buffer;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.initialize(source));
     char storage[4];
     std::size_t bytes_read;
     ft_string remaining;
@@ -52,8 +55,7 @@ FT_TEST(test_ft_stringbuf_str_returns_remaining, "ft_stringbuf::str exposes unre
     FT_ASSERT_EQ(static_cast<std::size_t>(3), bytes_read);
     FT_ASSERT_EQ(0, ft_strcmp(storage, "abc"));
 
-    int str_error = buffer.str(remaining);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, str_error);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.str(remaining));
     FT_ASSERT_EQ(0, ft_strcmp(remaining.c_str(), "def"));
     FT_ASSERT_EQ(true, buffer.is_valid());
     return (1);
@@ -62,7 +64,8 @@ FT_TEST(test_ft_stringbuf_str_returns_remaining, "ft_stringbuf::str exposes unre
 FT_TEST(test_ft_stringbuf_read_past_end_returns_zero, "ft_stringbuf::read returns zero after reaching the end")
 {
     ft_string source("xy");
-    ft_stringbuf buffer(source);
+    ft_stringbuf buffer;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.initialize(source));
     char storage[4];
     std::size_t bytes_read;
 
@@ -89,7 +92,8 @@ FT_TEST(test_ft_stringbuf_concurrent_reads_are_serialized,
 
     seed_data = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     ft_string source(seed_data);
-    ft_stringbuf buffer(source);
+    ft_stringbuf buffer;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.initialize(source));
     start_flag.store(false);
     worker_done.store(false);
     worker_thread = std::thread([&buffer, &start_flag, &worker_done, &worker_output]() {
@@ -132,7 +136,7 @@ FT_TEST(test_ft_stringbuf_concurrent_reads_are_serialized,
 
     ft_string remaining;
 
-    remaining = buffer.str();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.str(remaining));
     FT_ASSERT_EQ(0u, remaining.size());
 
     bool seen[128];

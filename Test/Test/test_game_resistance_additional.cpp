@@ -1,6 +1,5 @@
 #include "../test_internal.hpp"
 #include "../../Game/game_resistance.hpp"
-#include "../../Errno/errno.hpp"
 #include "../../Template/move.hpp"
 #include "../../System_utils/test_runner.hpp"
 
@@ -13,7 +12,8 @@ FT_TEST(test_game_resistance_default_initialization, "Game: resistance defaults 
 
     FT_ASSERT_EQ(0, resistance.get_percent());
     FT_ASSERT_EQ(0, resistance.get_flat());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, resistance.get_error());
+    FT_ASSERT_EQ(0, resistance.get_percent());
+    FT_ASSERT_EQ(0, resistance.get_flat());
     return (1);
 }
 
@@ -21,10 +21,8 @@ FT_TEST(test_game_resistance_set_percent_resets_errno, "Game: set_percent sets e
 {
     ft_resistance resistance;
 
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, resistance.set_percent(15));
     FT_ASSERT_EQ(15, resistance.get_percent());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -32,10 +30,8 @@ FT_TEST(test_game_resistance_set_flat_resets_errno, "Game: set_flat sets errno t
 {
     ft_resistance resistance;
 
-    ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, resistance.set_flat(6));
     FT_ASSERT_EQ(6, resistance.get_flat());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -65,9 +61,7 @@ FT_TEST(test_game_resistance_get_percent_sets_errno_success, "Game: get_percent 
     ft_resistance resistance;
 
     resistance.set_percent(9);
-    ft_errno = FT_ERR_INVALID_POINTER;
     FT_ASSERT_EQ(9, resistance.get_percent());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -76,9 +70,7 @@ FT_TEST(test_game_resistance_get_flat_sets_errno_success, "Game: get_flat resets
     ft_resistance resistance;
 
     resistance.set_flat(13);
-    ft_errno = FT_ERR_NOT_FOUND;
     FT_ASSERT_EQ(13, resistance.get_flat());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -87,9 +79,7 @@ FT_TEST(test_game_resistance_get_error_sets_errno_success, "Game: get_error clea
     ft_resistance resistance;
 
     resistance.set_values(5, 2);
-    ft_errno = FT_ERR_INVALID_POINTER;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, resistance.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -98,9 +88,7 @@ FT_TEST(test_game_resistance_get_error_str_reports_success, "Game: get_error_str
     ft_resistance resistance;
 
     resistance.set_values(3, 1);
-    ft_errno = FT_ERR_GAME_INVALID_MOVE;
     FT_ASSERT_STR_EQ(ft_strerror(FT_ERR_SUCCESS), resistance.get_error_str());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 

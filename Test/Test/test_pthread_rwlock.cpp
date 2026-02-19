@@ -83,6 +83,7 @@ int test_pt_rwlock_readers_writers(void)
     return (writer_acquired == 1 && writer_acquired_early == 0 && shared_value == 1);
 }
 
+FT_TEST(test_pt_rwlock_unlock_handles_null, "pt_rwlock_unlock handles null targets")
 {
     pthread_rwlock_t rwlock;
     int failure_result;

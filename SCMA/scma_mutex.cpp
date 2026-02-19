@@ -1,11 +1,9 @@
-#include <cstddef>
 #include <new>
 #include <mutex>
 #include "../Errno/errno.hpp"
 #include "../Basic/limits.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "SCMA.hpp"
-#include "scma_internal.hpp"
 
 static pt_recursive_mutex    *g_scma_mutex = ft_nullptr;
 static std::mutex g_scma_mutex_control;

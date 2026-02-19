@@ -13,16 +13,16 @@ FT_TEST(test_pool_thread_safety_controls,
     Pool<int> pool;
     bool lock_acquired;
 
-    FT_ASSERT_EQ(false, pool.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, pool.is_thread_safe());
     FT_ASSERT_EQ(0, pool.enable_thread_safety());
-    FT_ASSERT_EQ(true, pool.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, pool.is_thread_safe());
     pool.resize(2);
     lock_acquired = false;
     FT_ASSERT_EQ(0, pool.lock(&lock_acquired));
     FT_ASSERT_EQ(true, lock_acquired);
     pool.unlock(lock_acquired);
     pool.disable_thread_safety();
-    FT_ASSERT_EQ(false, pool.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, pool.is_thread_safe());
     return (1);
 }
 
@@ -35,7 +35,7 @@ FT_TEST(test_pool_object_thread_safety_management,
     FT_ASSERT_EQ(0, pool.enable_thread_safety());
     Pool<int>::Object object = pool.acquire(42);
     FT_ASSERT_EQ(true, static_cast<bool>(object));
-    FT_ASSERT_EQ(true, object.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, object.is_thread_safe());
 
     bool lock_acquired;
 
@@ -45,11 +45,11 @@ FT_TEST(test_pool_object_thread_safety_management,
     object.unlock(lock_acquired);
 
     Pool<int>::Object moved(ft_move(object));
-    FT_ASSERT_EQ(true, moved.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, moved.is_thread_safe());
     Pool<int>::Object assigned;
     FT_ASSERT_EQ(0, assigned.enable_thread_safety());
     assigned = ft_move(moved);
-    FT_ASSERT_EQ(true, assigned.is_thread_safe_enabled());
-    FT_ASSERT_EQ(false, moved.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, assigned.is_thread_safe());
+    FT_ASSERT_EQ(false, moved.is_thread_safe());
     return (1);
 }

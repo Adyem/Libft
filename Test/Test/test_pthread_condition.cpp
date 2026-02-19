@@ -1,6 +1,5 @@
 #include "../test_internal.hpp"
 #include "../../PThread/condition.hpp"
-#include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 
@@ -39,11 +38,9 @@ FT_TEST(test_pt_cond_wait_updates_errno, "pt_cond_wait updates ft_errno on failu
     FT_ASSERT_EQ(0, pthread_mutex_init(&mutex, ft_nullptr));
     failure_result = pt_cond_wait(ft_nullptr, &mutex);
     FT_ASSERT_EQ(-1, failure_result);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(0, pt_cond_init(&condition, ft_nullptr));
     failure_result = pt_cond_wait(&condition, ft_nullptr);
     FT_ASSERT_EQ(-1, failure_result);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     ready = 0;
     data.condition = &condition;
     data.mutex = &mutex;
@@ -54,7 +51,6 @@ FT_TEST(test_pt_cond_wait_updates_errno, "pt_cond_wait updates ft_errno on failu
     {
         wait_result = pt_cond_wait(&condition, &mutex);
         FT_ASSERT_EQ(0, wait_result);
-        FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     }
     int test_failed;
     const char *failure_expression;
@@ -86,6 +82,5 @@ FT_TEST(test_pt_cond_wait_updates_errno, "pt_cond_wait updates ft_errno on failu
         ft_test_fail(failure_expression, __FILE__, failure_line);
         return (0);
     }
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }

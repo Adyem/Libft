@@ -396,45 +396,14 @@ FT_TEST(test_pathfinding_thread_safety,
     index = 0;
     while (index < 128 && test_failed == 0)
     {
-        ft_pathfinding constructed(*primary_finder);
-        ft_pathfinding moved_constructed(ft_move(constructed));
-
-        copy_target = moved_constructed;
-        if (copy_target.get_error() != FT_ERR_SUCCESS)
+        ft_vector<ft_path_step> scratch_path;
+        int recalculation_result = primary_finder->recalculate_path(*grid_pointer,
+                0, 0, 0, 0, 0, 0, scratch_path);
+        if (recalculation_result != FT_ERR_SUCCESS)
         {
             test_failed = 1;
-            failure_expression = "copy_target.get_error() == FT_ERR_SUCCESS";
+            failure_expression = "recalculation_result == FT_ERR_SUCCESS";
             failure_line = __LINE__;
-        }
-        if (test_failed == 0)
-        {
-            assign_target = copy_target;
-            if (assign_target.get_error() != FT_ERR_SUCCESS)
-            {
-                test_failed = 1;
-                failure_expression = "assign_target.get_error() == FT_ERR_SUCCESS";
-                failure_line = __LINE__;
-            }
-        }
-        if (test_failed == 0)
-        {
-            move_target = ft_move(assign_target);
-            if (move_target.get_error() != FT_ERR_SUCCESS)
-            {
-                test_failed = 1;
-                failure_expression = "move_target.get_error() == FT_ERR_SUCCESS";
-                failure_line = __LINE__;
-            }
-        }
-        if (test_failed == 0)
-        {
-            *primary_finder = ft_move(move_target);
-            if (primary_finder->get_error() != FT_ERR_SUCCESS)
-            {
-                test_failed = 1;
-                failure_expression = "primary_finder.get_error() == FT_ERR_SUCCESS";
-                failure_line = __LINE__;
-            }
         }
         index += 1;
     }

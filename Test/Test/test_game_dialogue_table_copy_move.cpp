@@ -1,71 +1,61 @@
 #include "../test_internal.hpp"
 #include "../../Game/game_dialogue_table.hpp"
+#include "../../Game/ft_dialogue_line.hpp"
+#include "../../Game/ft_dialogue_script.hpp"
+#include "../../Template/shared_ptr.hpp"
+#include "../../Template/vector.hpp"
 #include "../../System_utils/test_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-static int register_entries(ft_dialogue_table &table)
+static ft_sharedptr<ft_dialogue_line> make_line(int id, const char *speaker,
+        const char *text)
 {
-    ft_vector<int> followups;
-    ft_vector<ft_dialogue_line> lines;
-    ft_dialogue_line line;
-    ft_dialogue_script script;
-
-    followups.push_back(2);
-    line = ft_dialogue_line(1, ft_string("npc"), ft_string("hello"), followups);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.register_line(line));
-
-    followups.clear();
-    lines.push_back(line);
-    lines.push_back(ft_dialogue_line(2, ft_string("npc"), ft_string("bye"), followups));
-    script = ft_dialogue_script(9, ft_string("intro"), ft_string("start"), 1, lines);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.register_script(script));
-    return (1);
+    ft_vector<int> next;
+    next.push_back(id + 1);
+    return (ft_sharedptr<ft_dialogue_line>(new (std::nothrow) ft_dialogue_line(
+            id, ft_string(speaker), ft_string(text), next)));
 }
 
-FT_TEST(test_dialogue_table_copy_semantics, "dialogue table copy constructor and assignment")
+FT_TEST(test_dialogue_table_register_line_retrieves_data,
+        "register_line stores line copies accessible by id")
 {
     ft_dialogue_table table;
-    ft_dialogue_table copied;
-    ft_dialogue_table assigned;
-    ft_dialogue_script script;
-    ft_dialogue_line line;
+    ft_dialogue_line loaded;
 
-    register_entries(table);
-    copied = ft_dialogue_table(table);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, copied.fetch_script(9, script));
-    FT_ASSERT_EQ(ft_string("intro"), script.get_title());
-    FT_ASSERT_EQ(2, script.get_lines().size());
-
-    assigned = ft_dialogue_table();
-    assigned = table;
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, assigned.fetch_line(1, line));
-    FT_ASSERT_EQ(ft_string("hello"), line.get_text());
-    FT_ASSERT(assigned.get_scripts().find(99) == assigned.get_scripts().end());
-    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.fetch_line(3, line));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.initialize());
+    ft_vector<int> next;
+    next.push_back(4);
+    ft_dialogue_line original(1, ft_string("npc"), ft_string("hello"), next);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.register_line(original));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.fetch_line(1, loaded));
+    FT_ASSERT_EQ(1, loaded.get_line_id());
+    FT_ASSERT_EQ(ft_string("hello"), loaded.get_text());
     return (1);
 }
 
-FT_TEST(test_dialogue_table_move_semantics, "dialogue table move constructor and assignment")
+FT_TEST(test_dialogue_table_scripts_store_lines_via_sharedptrs,
+        "register_script accepts metadata and keeps line pointers isolated")
 {
-    ft_dialogue_table source;
-    ft_dialogue_table moved;
-    ft_dialogue_table moved_assigned;
+    ft_dialogue_table table;
+    ft_vector<ft_sharedptr<ft_dialogue_line>> lines;
+    lines.push_back(make_line(2, "player", "reply"));
+
     ft_dialogue_script script;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, script.initialize());
+    script.set_script_id(5);
+    script.set_title(ft_string("intro"));
+    script.set_summary(ft_string("start"));
+    script.set_start_line_id(2);
+    script.set_lines(lines);
 
-    register_entries(source);
-    moved = ft_dialogue_table(ft_move(source));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.fetch_script(9, script));
-    FT_ASSERT(source.get_lines().empty());
-    FT_ASSERT(source.get_scripts().empty());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
-
-    moved_assigned = ft_dialogue_table();
-    moved_assigned = ft_move(moved);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_assigned.fetch_script(9, script));
-    FT_ASSERT(moved.get_lines().empty());
-    FT_ASSERT(moved.get_scripts().empty());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.register_script(script));
+    ft_dialogue_script fetched;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.fetch_script(5, fetched));
+    const ft_vector<ft_sharedptr<ft_dialogue_line>> &fetched_lines = fetched.get_lines();
+    FT_ASSERT_EQ(1u, fetched_lines.size());
+    FT_ASSERT_EQ(2, fetched_lines[0]->get_line_id());
     return (1);
 }

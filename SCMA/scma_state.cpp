@@ -103,18 +103,14 @@ void    scma_compact(void)
     ft_size_t new_offset;
     ft_size_t index;
 
-    if (scma_mutex_lock() != 0)
-        return ;
     if (!scma_initialized_ref())
     {
-        scma_unlock_and_return_void();
         return ;
     }
     span = scma_get_block_span();
     if (span.count == 0)
     {
         scma_used_size_ref() = 0;
-        scma_unlock_and_return_void();
         return ;
     }
     heap_data = scma_get_heap_data();
@@ -139,7 +135,6 @@ void    scma_compact(void)
         index++;
     }
     scma_used_size_ref() = new_offset;
-    scma_unlock_and_return_void();
     return ;
 }
 
@@ -150,34 +145,22 @@ int32_t    scma_validate_handle(scma_handle handle, scma_block **out_block)
     scma_block *block;
 
     validation_result = 0;
-    if (scma_mutex_lock() != 0)
-        return (0);
     if (!scma_initialized_ref())
-    {
-        return (scma_unlock_and_return_int(0));
-    }
+        return (0);
     if (scma_handle_is_invalid(handle))
-    {
-        return (scma_unlock_and_return_int(0));
-    }
+        return (0);
     span = scma_get_block_span();
     if (handle.index >= span.count)
-    {
-        return (scma_unlock_and_return_int(0));
-    }
+        return (0);
     block = &span.data[handle.index];
     if (!block->in_use)
-    {
-        return (scma_unlock_and_return_int(0));
-    }
+        return (0);
     if (block->generation != handle.generation)
-    {
-        return (scma_unlock_and_return_int(0));
-    }
+        return (0);
     if (out_block)
         *out_block = block;
     validation_result = 1;
-    return (scma_unlock_and_return_int(validation_result));
+    return (validation_result);
 }
 
 int32_t    scma_ensure_block_capacity(ft_size_t required_count)

@@ -605,23 +605,20 @@ auto ft_task_scheduler::submit(FunctionType function, Args... args)
     promise_raw = new (std::nothrow) promise_type();
     if (!promise_raw)
     {
-        ft_future<return_type> empty_future;
-        return (empty_future);
+        return (ft_future<return_type>());
     }
     promise_shared.reset(promise_raw, 1, false);
     int promise_error = ft_sharedptr<promise_type>::last_operation_error();
 
     if (promise_error != FT_ERR_SUCCESS)
     {
-        ft_future<return_type> empty_future;
-        return (empty_future);
+        return (ft_future<return_type>());
     }
-    ft_future<return_type> future_value(promise_shared);
     {
         int future_error = ft_sharedptr<promise_type>::last_operation_error();
         if (future_error != FT_ERR_SUCCESS)
         {
-            return (future_value);
+            return (ft_future<return_type>(promise_shared));
         }
     }
     auto task_body = [promise_shared, function, args...]() mutable
@@ -669,12 +666,12 @@ auto ft_task_scheduler::submit(FunctionType function, Args... args)
     {
         this->trace_emit_event(FT_TASK_TRACE_PHASE_CANCELLED, trace_id, parent_span,
                 g_ft_task_trace_label_async, false);
-        return (future_value);
+        return (ft_future<return_type>(promise_shared));
     }
     metrics_updated = this->update_queue_size(1);
     if (!metrics_updated)
-        return (future_value);
-    return (future_value);
+        return (ft_future<return_type>(promise_shared));
+    return (ft_future<return_type>(promise_shared));
 }
 
 template <typename Rep, typename Period, typename FunctionType, typename... Args>
@@ -707,7 +704,13 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
     {
         return (result_pair);
     }
-    future_value = ft_future<return_type>(promise_shared);
+    ft_future<return_type> promise_future(promise_shared);
+    int future_initialize_error = future_value.initialize(ft_move(promise_future));
+
+    if (future_initialize_error != FT_ERR_SUCCESS)
+    {
+        return (result_pair);
+    }
     {
         int future_error = ft_sharedptr<promise_type>::last_operation_error();
         if (future_error != FT_ERR_SUCCESS)

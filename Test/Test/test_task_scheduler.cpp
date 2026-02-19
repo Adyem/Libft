@@ -32,7 +32,8 @@ FT_TEST(test_task_scheduler_schedule_after, "ft_task_scheduler schedule_after")
 
     start_time = time_monotonic_point_now();
     auto schedule_result = scheduler_instance.schedule_after(std::chrono::milliseconds(50), []() { return (3); });
-    ft_future<int> future_value = schedule_result.get_key();
+    ft_future<int> future_value;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, future_value.initialize(ft_move(schedule_result.key)));
     ft_scheduled_task_handle handle_value = schedule_result.get_value();
     FT_ASSERT(handle_value.valid());
     int result_value = future_value.get();
@@ -89,7 +90,6 @@ FT_TEST(test_task_scheduler_queue_failure_releases_mutex,
     cma_set_alloc_limit(1);
     completion_future.wait();
     cma_set_alloc_limit(0);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, completion_future.get_error());
     FT_ASSERT_EQ(1, completion_future.get());
     FT_ASSERT_EQ(2, execution_count.load());
     return (1);

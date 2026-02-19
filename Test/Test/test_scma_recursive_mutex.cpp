@@ -80,6 +80,7 @@ FT_TEST(test_scma_failure_paths_leave_runtime_mutex_unlocked,
     handle = scma_allocate(sizeof(int));
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.initialize());
+    FT_ASSERT_EQ(1, accessor.bind(handle));
     FT_ASSERT_EQ(0, accessor.bind(invalid_handle));
     FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, accessor.get_error());
     FT_ASSERT_EQ(0, accessor.read_at(read_value, 99));

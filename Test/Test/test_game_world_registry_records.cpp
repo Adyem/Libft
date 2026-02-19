@@ -1,75 +1,69 @@
 #include "../test_internal.hpp"
-#include "../../Game/ft_region_definition.hpp"
-#include "../../Game/ft_world_region.hpp"
+#include "../../Game/game_world_registry.hpp"
+#include "../../Template/vector.hpp"
 #include "../../System_utils/test_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-FT_TEST(test_region_definition_copy_move, "copy and move region definitions")
+FT_TEST(test_world_registry_register_and_fetch_records, "registered records round-trip through fetch")
 {
-    ft_region_definition region;
-    ft_region_definition copied;
-    ft_region_definition assigned;
-    ft_region_definition moved;
-    ft_region_definition moved_assigned;
+    ft_world_registry registry;
+    ft_vector<int> region_ids;
+    region_ids.push_back(4);
 
-    region = ft_region_definition(4, ft_string("forest"), ft_string("dense trees"), 6);
+    ft_region_definition region(4, ft_string("forest"), ft_string("dense trees"), 6);
+    ft_world_region world(2, region_ids);
+    ft_region_definition fetched_region;
+    ft_world_region fetched_world;
 
-    copied = ft_region_definition(region);
-    FT_ASSERT_EQ(4, copied.get_region_id());
-    FT_ASSERT_EQ(ft_string("forest"), copied.get_name());
-    FT_ASSERT_EQ(ft_string("dense trees"), copied.get_description());
-
-    assigned = ft_region_definition();
-    assigned = region;
-    FT_ASSERT_EQ(6, assigned.get_recommended_level());
-
-    moved = ft_region_definition(ft_move(region));
-    FT_ASSERT_EQ(ft_string("forest"), moved.get_name());
-    FT_ASSERT(region.get_name().empty());
-    FT_ASSERT_EQ(0, region.get_region_id());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
-
-    moved_assigned = ft_region_definition();
-    moved_assigned = ft_move(moved);
-    FT_ASSERT_EQ(ft_string("dense trees"), moved_assigned.get_description());
-    FT_ASSERT(moved.get_name().empty());
-    FT_ASSERT_EQ(0, moved.get_region_id());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.register_region(region));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.register_world(world));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.fetch_region(4, fetched_region));
+    FT_ASSERT_EQ(ft_string("forest"), fetched_region.get_name());
+    FT_ASSERT_EQ(ft_string("dense trees"), fetched_region.get_description());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.fetch_world(2, fetched_world));
+    FT_ASSERT_EQ(2, fetched_world.get_world_id());
+    FT_ASSERT_EQ((size_t)1, fetched_world.get_region_ids().size());
+    FT_ASSERT_EQ(4, fetched_world.get_region_ids()[0]);
     return (1);
 }
 
-FT_TEST(test_world_region_copy_move, "copy and move world regions")
+FT_TEST(test_world_registry_records_isolate_fetched_values, "re-fetching records returns original state")
 {
+    ft_world_registry registry;
     ft_vector<int> region_ids;
+    region_ids.push_back(11);
+
+    ft_region_definition region(11, ft_string("volcano"), ft_string("lava dome"), 20);
+    ft_world_region world(3, region_ids);
+    ft_region_definition fetched_region;
+    ft_world_region fetched_world;
+    ft_region_definition re_fetched_region;
+    ft_world_region re_fetched_world;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.register_region(region));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.register_world(world));
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.fetch_region(11, fetched_region));
+    fetched_region.set_name(ft_string("changed"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.fetch_region(11, re_fetched_region));
+    FT_ASSERT_EQ(ft_string("volcano"), re_fetched_region.get_name());
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.fetch_world(3, fetched_world));
+    fetched_world.get_region_ids()[0] = 77;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.fetch_world(3, re_fetched_world));
+    FT_ASSERT_EQ(11, re_fetched_world.get_region_ids()[0]);
+    return (1);
+}
+
+FT_TEST(test_world_registry_records_handles_missing_entries, "fetch commands return not found")
+{
+    ft_world_registry registry;
+    ft_region_definition region;
     ft_world_region world;
-    ft_world_region copied;
-    ft_world_region assigned;
-    ft_world_region moved;
-    ft_world_region moved_assigned;
 
-    region_ids.push_back(3);
-    region_ids.push_back(4);
-    world = ft_world_region(9, region_ids);
-
-    copied = ft_world_region(world);
-    FT_ASSERT_EQ(9, copied.get_world_id());
-    FT_ASSERT_EQ(2, copied.get_region_ids().size());
-
-    assigned = ft_world_region();
-    assigned = world;
-    FT_ASSERT_EQ(4, assigned.get_region_ids()[1]);
-
-    moved = ft_world_region(ft_move(world));
-    FT_ASSERT_EQ(2, moved.get_region_ids().size());
-    FT_ASSERT(world.get_region_ids().empty());
-    FT_ASSERT_EQ(0, world.get_world_id());
-
-    moved_assigned = ft_world_region();
-    moved_assigned = ft_move(moved);
-    FT_ASSERT_EQ(3, moved_assigned.get_region_ids()[0]);
-    FT_ASSERT(moved.get_region_ids().empty());
-    FT_ASSERT_EQ(0, moved.get_world_id());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.get_error());
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, registry.fetch_region(99, region));
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, registry.fetch_world(101, world));
     return (1);
 }

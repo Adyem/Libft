@@ -1,200 +1,71 @@
 #include "../test_internal.hpp"
-#include "../../CPP_class/class_shared_ptr.hpp"
 #include "../../Game/game_dialogue_table.hpp"
 #include "../../Game/ft_dialogue_line.hpp"
 #include "../../Game/ft_dialogue_script.hpp"
+#include "../../Template/shared_ptr.hpp"
+#include "../../Template/vector.hpp"
 #include "../../System_utils/test_runner.hpp"
-#include "../../Errno/errno.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-static void build_dialogue_entries(ft_dialogue_line &line, ft_dialogue_script &script)
+static ft_sharedptr<ft_dialogue_line> build_line(int id, const char *speaker,
+        const char *text)
 {
-    ft_vector<int> followups;
-    ft_vector<ft_sharedptr<ft_dialogue_line>> script_lines;
-
-    followups.push_back(4);
-    line = ft_dialogue_line(3, ft_string("ally"), ft_string("welcome"), followups);
-    script_lines.push_back(ft_sharedptr<ft_dialogue_line>(new (std::nothrow)
-            ft_dialogue_line(3, ft_string("ally"), ft_string("welcome"), followups)));
-    followups.clear();
-    script_lines.push_back(ft_sharedptr<ft_dialogue_line>(new (std::nothrow)
-            ft_dialogue_line(4, ft_string("ally"), ft_string("farewell"), followups)));
-    script = ft_dialogue_script(6, ft_string("greeting"), ft_string("intro"), 3, script_lines);
-    return ;
-}
-
-static ft_sharedptr<ft_dialogue_line> make_shared_line(int id, const char *speaker,
-        const char *text, const ft_vector<int> &next_ids)
-{
+    ft_vector<int> next;
+    next.push_back(id + 1);
     return (ft_sharedptr<ft_dialogue_line>(new (std::nothrow) ft_dialogue_line(
-            id, ft_string(speaker), ft_string(text), next_ids)));
+            id, ft_string(speaker), ft_string(text), next)));
 }
 
-FT_TEST(test_dialogue_table_register_line_sets_success, "register line stores entry and sets success error")
+FT_TEST(test_dialogue_table_get_lines_accessor_returns_map,
+        "get_lines exposes the storage map for direct inspection")
 {
     ft_dialogue_table table;
-    ft_dialogue_line line;
-    ft_dialogue_script script;
-    ft_dialogue_line fetched;
-
-    build_dialogue_entries(line, script);
-    ft_errno = FT_ERR_INVALID_STATE;
-    int register_line_result;
-    FT_ASSERT_SINGLE_GLOBAL_ERROR(register_line_result = table.register_line(line));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, register_line_result);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.fetch_line(3, fetched));
-    FT_ASSERT_EQ(ft_string("welcome"), fetched.get_text());
-    return (1);
-}
-
-FT_TEST(test_dialogue_table_register_script_sets_success, "register script stores entry and sets success error")
-{
-    ft_dialogue_table table;
-    ft_dialogue_line line;
-    ft_dialogue_script script;
-    ft_dialogue_script fetched;
-
-    build_dialogue_entries(line, script);
-    ft_errno = FT_ERR_INVALID_STATE;
-    int register_script_result;
-    FT_ASSERT_SINGLE_GLOBAL_ERROR(register_script_result = table.register_script(script));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, register_script_result);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.fetch_script(6, fetched));
-    FT_ASSERT_EQ(ft_string("greeting"), fetched.get_title());
-    return (1);
-}
-
-FT_TEST(test_dialogue_table_fetch_line_missing_sets_not_found, "missing line updates error to not found and errno")
-{
-    ft_dialogue_table table;
-    ft_dialogue_line missing;
-
-    ft_errno = FT_ERR_SUCCESS;
-    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.fetch_line(90, missing));
-    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.get_error());
-    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, ft_errno);
-    return (1);
-}
-
-FT_TEST(test_dialogue_table_fetch_script_missing_sets_not_found, "missing script updates error to not found and errno")
-{
-    ft_dialogue_table table;
-    ft_dialogue_script missing;
-
-    ft_errno = FT_ERR_SUCCESS;
-    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.fetch_script(45, missing));
-    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.get_error());
-    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, ft_errno);
-    return (1);
-}
-
-FT_TEST(test_dialogue_table_set_lines_replaces_entries, "set_lines replaces stored map and clears previous error")
-{
-    ft_dialogue_table table;
-    ft_dialogue_line line;
-    ft_dialogue_script script;
-    ft_map<int, ft_sharedptr<ft_dialogue_line>> lines;
-    ft_dialogue_line fetched;
-
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, lines.initialize());
-    build_dialogue_entries(line, script);
-    table.register_line(line);
-    table.fetch_line(99, fetched);
-    lines.insert(10, make_shared_line(10, "npc", "hello", ft_vector<int>()));
-    ft_errno = FT_ERR_INVALID_STATE;
-    table.set_lines(lines);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.fetch_line(10, fetched));
-    FT_ASSERT_EQ(ft_string("hello"), fetched.get_text());
-    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.fetch_line(3, fetched));
-    return (1);
-}
-
-FT_TEST(test_dialogue_table_set_scripts_replaces_entries, "set_scripts swaps stored scripts and clears previous error")
-{
-    ft_dialogue_table table;
-    ft_dialogue_line line;
-    ft_dialogue_script script;
-    ft_map<int, ft_dialogue_script> scripts;
-    ft_dialogue_script fetched;
-
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, scripts.initialize());
-    build_dialogue_entries(line, script);
-    table.register_script(script);
-    table.fetch_script(11, fetched);
-    scripts.insert(11, ft_dialogue_script(11, ft_string("quest"), ft_string("desc"), 0, ft_vector<ft_dialogue_line>()));
-    ft_errno = FT_ERR_INVALID_STATE;
-    table.set_scripts(scripts);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.fetch_script(11, fetched));
-    FT_ASSERT_EQ(ft_string("quest"), fetched.get_title());
-    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.fetch_script(6, fetched));
-    return (1);
-}
-
-FT_TEST(test_dialogue_table_get_lines_sets_success_errno, "get_lines sets success error code")
-{
-    ft_dialogue_table table;
-    ft_dialogue_line line;
-    ft_dialogue_script script;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.initialize());
     ft_map<int, ft_sharedptr<ft_dialogue_line>> &lines = table.get_lines();
 
-    build_dialogue_entries(line, script);
-    lines.insert(7, make_shared_line(line.get_line_id(), line.get_speaker(),
-            line.get_text(), line.get_next_line_ids()));
-    ft_errno = FT_ERR_INVALID_STATE;
-    const ft_map<int, ft_sharedptr<ft_dialogue_line>> &const_lines = table.get_lines();
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
-    FT_ASSERT_EQ(1, const_lines.size());
+    lines.insert(3, build_line(3, "npc", "hello"));
+    FT_ASSERT_EQ(1, lines.size());
     return (1);
 }
 
-FT_TEST(test_dialogue_table_get_scripts_sets_success_errno, "get_scripts sets success error code")
+FT_TEST(test_dialogue_table_get_scripts_accessor_returns_map,
+        "get_scripts exposes stored scripts map")
 {
     ft_dialogue_table table;
-    ft_dialogue_script script;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.initialize());
     ft_map<int, ft_dialogue_script> &scripts = table.get_scripts();
 
-    script = ft_dialogue_script(1, ft_string("intro"), ft_string("desc"), 0, ft_vector<ft_dialogue_line>());
-    scripts.insert(1, script);
-    ft_errno = FT_ERR_INVALID_STATE;
-    const ft_map<int, ft_dialogue_script> &const_scripts = table.get_scripts();
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
-    FT_ASSERT_EQ(1, const_scripts.size());
+    ft_dialogue_script script;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, script.initialize());
+    script.set_script_id(5);
+    scripts.insert(5, script);
+    FT_ASSERT_EQ(1, scripts.size());
     return (1);
 }
 
-FT_TEST(test_dialogue_table_get_error_str_success, "get_error_str returns success message after valid operations")
+FT_TEST(test_dialogue_table_scripts_map_mutation_does_not_spoil_storage,
+        "scripts retrieved from map remain independent entries")
 {
     ft_dialogue_table table;
-    const char *message;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.initialize());
+    ft_map<int, ft_dialogue_script> &scripts = table.get_scripts();
+    ft_dialogue_script script;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, script.initialize());
+    script.set_script_id(7);
+    script.set_title(ft_string("intro"));
+    ft_vector<ft_sharedptr<ft_dialogue_line>> lines;
+    lines.push_back(build_line(7, "npc", "reply"));
+    script.set_lines(lines);
+    scripts.insert(7, script);
 
-    ft_errno = FT_ERR_INVALID_STATE;
-    message = table.get_error_str();
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
-    FT_ASSERT(ft_strcmp(ft_strerror(FT_ERR_SUCCESS), message) == 0);
-    return (1);
-}
-
-FT_TEST(test_dialogue_table_get_error_str_after_failure, "get_error_str reflects last error after failed fetch")
-{
-    ft_dialogue_table table;
-    ft_dialogue_line missing;
-    const char *message;
-
-    table.fetch_line(123, missing);
-    message = table.get_error_str();
-    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.get_error());
-    FT_ASSERT(ft_strcmp(ft_strerror(FT_ERR_NOT_FOUND), message) == 0);
+    ft_dialogue_script &stored = scripts.at(7);
+    stored.set_title(ft_string("modified"));
+    ft_dialogue_script fetched;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.fetch_script(7, fetched));
+    FT_ASSERT_NEQ(ft_string("modified"), script.get_title());
+    FT_ASSERT_EQ(ft_string("modified"), stored.get_title());
+    FT_ASSERT_EQ(ft_string("intro"), fetched.get_title());
     return (1);
 }

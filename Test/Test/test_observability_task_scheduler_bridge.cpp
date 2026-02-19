@@ -1,7 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../Observability/observability_task_scheduler_bridge.hpp"
-#include "../../PThread/task_scheduler.hpp"
-#include "../../Errno/errno.hpp"
+#include "../../PThread/task_scheduler_tracing.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <vector>
 #include <mutex>
@@ -64,29 +63,53 @@ static void observability_test_wait_for_count(size_t expected_count)
 FT_TEST(test_observability_bridge_invalid_exporter, "observability bridge rejects null exporters")
 {
     FT_ASSERT_EQ(-1, observability_task_scheduler_bridge_initialize(ft_nullptr));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, observability_task_scheduler_bridge_get_error());
-    FT_ASSERT(observability_task_scheduler_bridge_get_error_str() != ft_nullptr);
     return (1);
 }
 
 FT_TEST(test_observability_bridge_async_span, "observability bridge exports async spans")
 {
+    ft_task_trace_event submit_event;
+    ft_task_trace_event start_event;
+    ft_task_trace_event finish_event;
+    unsigned long long root_span;
+    unsigned long long trace_id;
+    t_monotonic_time_point now_point;
+
     observability_test_clear_spans();
     FT_ASSERT_EQ(0, observability_task_scheduler_bridge_initialize(&observability_test_exporter));
-    ft_task_scheduler scheduler_instance(1);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.initialize());
-    unsigned long long root_span;
-    unsigned long long previous_span;
-
     root_span = task_scheduler_trace_generate_span_id();
-    previous_span = task_scheduler_trace_push_span(root_span);
-    auto future_value = scheduler_instance.submit([]()
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(5));
-        return (13);
-    });
-    FT_ASSERT_EQ(13, future_value.get());
-    task_scheduler_trace_pop_span(previous_span);
+    trace_id = task_scheduler_trace_generate_span_id();
+    now_point = time_monotonic_point_now();
+
+    submit_event.phase = FT_TASK_TRACE_PHASE_SUBMITTED;
+    submit_event.trace_id = trace_id;
+    submit_event.parent_id = root_span;
+    submit_event.label = g_ft_task_trace_label_async;
+    submit_event.timestamp = now_point;
+    submit_event.thread_id = 0;
+    submit_event.queue_depth = 1;
+    submit_event.scheduled_depth = 0;
+    submit_event.worker_active_count = 0;
+    submit_event.worker_idle_count = 1;
+    submit_event.timer_thread = false;
+    task_scheduler_trace_emit(submit_event);
+    std::this_thread::sleep_for(std::chrono::milliseconds(2));
+
+    start_event = submit_event;
+    start_event.phase = FT_TASK_TRACE_PHASE_STARTED;
+    start_event.timestamp = time_monotonic_point_now();
+    start_event.thread_id = 42;
+    start_event.queue_depth = 0;
+    start_event.worker_active_count = 1;
+    start_event.worker_idle_count = 0;
+    task_scheduler_trace_emit(start_event);
+    std::this_thread::sleep_for(std::chrono::milliseconds(2));
+
+    finish_event = start_event;
+    finish_event.phase = FT_TASK_TRACE_PHASE_FINISHED;
+    finish_event.timestamp = time_monotonic_point_now();
+    task_scheduler_trace_emit(finish_event);
+
     observability_test_wait_for_count(1);
     std::vector<ft_otel_span_metrics> spans = observability_test_snapshot();
     FT_ASSERT_EQ(static_cast<size_t>(1), spans.size());
@@ -107,20 +130,35 @@ FT_TEST(test_observability_bridge_async_span, "observability bridge exports asyn
 
 FT_TEST(test_observability_bridge_cancelled_span, "observability bridge marks cancelled spans")
 {
+    ft_task_trace_event submit_event;
+    ft_task_trace_event cancel_event;
+    unsigned long long root_span;
+    unsigned long long trace_id;
+
     observability_test_clear_spans();
     FT_ASSERT_EQ(0, observability_task_scheduler_bridge_initialize(&observability_test_exporter));
-    ft_task_scheduler scheduler_instance(1);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.initialize());
-    unsigned long long root_span;
-    unsigned long long previous_span;
-
     root_span = task_scheduler_trace_generate_span_id();
-    previous_span = task_scheduler_trace_push_span(root_span);
-    auto schedule_result = scheduler_instance.schedule_after(std::chrono::milliseconds(200), []() { return (9); });
-    ft_future<int> future_value = schedule_result.get_key();
-    ft_scheduled_task_handle handle_instance = schedule_result.get_value();
-    task_scheduler_trace_pop_span(previous_span);
-    FT_ASSERT(handle_instance.cancel());
+    trace_id = task_scheduler_trace_generate_span_id();
+
+    submit_event.phase = FT_TASK_TRACE_PHASE_SUBMITTED;
+    submit_event.trace_id = trace_id;
+    submit_event.parent_id = root_span;
+    submit_event.label = g_ft_task_trace_label_schedule_once;
+    submit_event.timestamp = time_monotonic_point_now();
+    submit_event.thread_id = 0;
+    submit_event.queue_depth = 0;
+    submit_event.scheduled_depth = 1;
+    submit_event.worker_active_count = 0;
+    submit_event.worker_idle_count = 1;
+    submit_event.timer_thread = false;
+    task_scheduler_trace_emit(submit_event);
+    std::this_thread::sleep_for(std::chrono::milliseconds(2));
+
+    cancel_event = submit_event;
+    cancel_event.phase = FT_TASK_TRACE_PHASE_CANCELLED;
+    cancel_event.timestamp = time_monotonic_point_now();
+    task_scheduler_trace_emit(cancel_event);
+
     observability_test_wait_for_count(1);
     std::vector<ft_otel_span_metrics> spans = observability_test_snapshot();
     FT_ASSERT_EQ(static_cast<size_t>(1), spans.size());
@@ -133,7 +171,6 @@ FT_TEST(test_observability_bridge_cancelled_span, "observability bridge marks ca
     FT_ASSERT(span.total_duration_ms >= 0);
     FT_ASSERT(span.cancelled);
     FT_ASSERT(!span.timer_thread);
-    (void)future_value;
     FT_ASSERT_EQ(0, observability_task_scheduler_bridge_shutdown());
     return (1);
 }

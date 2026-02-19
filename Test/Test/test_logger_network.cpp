@@ -141,7 +141,6 @@ static ssize_t mock_send_remove_sink(int socket_fd, const void *buffer, size_t l
         ft_log_remove_sink(ft_network_sink, sink_to_delete);
         delete sink_to_delete;
     }
-    ft_errno = FT_ERR_SOCKET_SEND_FAILED;
     return (-1);
 }
 
@@ -151,7 +150,6 @@ static ssize_t mock_successful_send(int socket_fd, const void *buffer, size_t le
     (void)buffer;
     (void)flags;
 
-    ft_errno = FT_ERR_SUCCESS;
     return (static_cast<ssize_t>(length));
 }
 
@@ -160,18 +158,14 @@ FT_TEST(test_logger_network_sink_handles_partial_writes, "logger network sink ha
     s_network_sink sink;
     const char *log_message;
     size_t expected_length;
-    int observed_errno;
 
     reset_mock_network_send_state();
     g_mock_network_send_state.chunk_size = 5;
     sink.socket_fd = 123;
     sink.send_function = mock_partial_send;
     log_message = "partial write message ensures loop execution";
-    ft_errno = FT_ERR_SUCCESS;
     ft_network_sink(log_message, &sink);
-    observed_errno = ft_errno;
     expected_length = ft_strlen(log_message);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, observed_errno);
     FT_ASSERT_EQ(123, sink.socket_fd);
     FT_ASSERT(g_mock_network_send_state.call_count > 1);
     FT_ASSERT_EQ(expected_length, g_mock_network_send_state.transmitted_data.size());
@@ -192,12 +186,9 @@ FT_TEST(test_logger_network_sink_handles_send_failure, "logger network sink hand
     sink.socket_fd = 321;
     sink.send_function = mock_partial_send;
     log_message = "network sink failure path";
-    ft_errno = FT_ERR_SUCCESS;
     ft_network_sink(log_message, &sink);
-    int failure_errno = ft_errno;
     prefix_length = g_mock_network_send_state.chunk_size;
     expected_prefix.assign(log_message, prefix_length);
-    FT_ASSERT_EQ(FT_ERR_SOCKET_SEND_FAILED, failure_errno);
     FT_ASSERT_EQ(-1, sink.socket_fd);
     FT_ASSERT(sink.send_function == ft_nullptr);
     FT_ASSERT_EQ(prefix_length, g_mock_network_send_state.transmitted_data.size());
@@ -211,7 +202,6 @@ FT_TEST(test_logger_network_sink_handles_zero_byte_send, "logger network sink ha
     const char *log_message;
     size_t transmitted_length;
     size_t message_length;
-    int observed_errno;
 
     reset_mock_network_send_state();
     g_mock_network_send_state.chunk_size = 7;
@@ -220,12 +210,9 @@ FT_TEST(test_logger_network_sink_handles_zero_byte_send, "logger network sink ha
     sink.socket_fd = 555;
     sink.send_function = mock_partial_send;
     log_message = "network sink zero send failure";
-    ft_errno = FT_ERR_SUCCESS;
     ft_network_sink(log_message, &sink);
-    observed_errno = ft_errno;
     transmitted_length = g_mock_network_send_state.transmitted_data.size();
     message_length = ft_strlen(log_message);
-    FT_ASSERT(observed_errno != FT_ERR_SUCCESS);
     FT_ASSERT_EQ(-1, sink.socket_fd);
     FT_ASSERT(sink.send_function == ft_nullptr);
     FT_ASSERT(transmitted_length > 0);
@@ -246,7 +233,6 @@ FT_TEST(test_logger_remote_health_probe_records_success, "remote health probe re
     sink->socket_fd = 777;
     sink->send_function = mock_partial_send;
     sink->host = "127.0.0.1";
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, sink->host.get_error());
     sink->port = 5555;
     sink->use_tcp = true;
     FT_ASSERT_EQ(0, ft_log_add_sink(ft_network_sink, sink));
@@ -284,14 +270,12 @@ FT_TEST(test_logger_remote_health_probe_records_failure, "remote health probe su
     sink->socket_fd = 888;
     sink->send_function = mock_partial_send;
     sink->host = "10.0.0.5";
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, sink->host.get_error());
     sink->port = 6000;
     sink->use_tcp = false;
     FT_ASSERT_EQ(0, ft_log_add_sink(ft_network_sink, sink));
     int probe_result;
     probe_result = ft_log_probe_remote_health();
     FT_ASSERT_EQ(-1, probe_result);
-    FT_ASSERT_EQ(FT_ERR_SOCKET_SEND_FAILED, ft_errno);
     status_count = 0;
     FT_ASSERT_EQ(0, ft_log_get_remote_health(&status, 1, &status_count));
     FT_ASSERT_EQ(static_cast<size_t>(1), status_count);
@@ -319,18 +303,15 @@ FT_TEST(test_logger_remote_health_probe_handles_removed_sink, "remote health pro
     sink->socket_fd = 4321;
     sink->send_function = mock_send_remove_sink;
     sink->host = "removed.example.com";
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, sink->host.get_error());
     sink->port = 9001;
     sink->use_tcp = true;
     g_sink_to_remove = sink;
     FT_ASSERT_EQ(0, ft_log_add_sink(ft_network_sink, sink));
     FT_ASSERT_EQ(-1, ft_log_probe_remote_health());
-    FT_ASSERT_EQ(FT_ERR_SOCKET_SEND_FAILED, ft_errno);
     status_count = 0;
     FT_ASSERT_EQ(0, ft_log_get_remote_health(&status, 1, &status_count));
     FT_ASSERT_EQ(static_cast<size_t>(0), status_count);
     FT_ASSERT_EQ(0, ft_log_probe_remote_health());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -349,20 +330,17 @@ FT_TEST(test_logger_remote_health_probe_keeps_other_sinks_intact, "remote health
     removed_sink->socket_fd = 1111;
     removed_sink->send_function = mock_send_remove_sink;
     removed_sink->host = "failing.example.com";
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, removed_sink->host.get_error());
     removed_sink->port = 7777;
     removed_sink->use_tcp = true;
     healthy_sink->socket_fd = 2222;
     healthy_sink->send_function = mock_successful_send;
     healthy_sink->host = "healthy.example.com";
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, healthy_sink->host.get_error());
     healthy_sink->port = 8888;
     healthy_sink->use_tcp = false;
     g_sink_to_remove = removed_sink;
     FT_ASSERT_EQ(0, ft_log_add_sink(ft_network_sink, removed_sink));
     FT_ASSERT_EQ(0, ft_log_add_sink(ft_network_sink, healthy_sink));
     FT_ASSERT_EQ(-1, ft_log_probe_remote_health());
-    FT_ASSERT_EQ(FT_ERR_SOCKET_SEND_FAILED, ft_errno);
     status_count = 0;
     FT_ASSERT_EQ(0, ft_log_get_remote_health(&status, 1, &status_count));
     FT_ASSERT_EQ(static_cast<size_t>(1), status_count);
@@ -374,7 +352,6 @@ FT_TEST(test_logger_remote_health_probe_keeps_other_sinks_intact, "remote health
     FT_ASSERT(status.reachable);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, status.last_error);
     FT_ASSERT_EQ(0, ft_log_probe_remote_health());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     ft_log_remove_sink(ft_network_sink, healthy_sink);
     delete healthy_sink;
     return (1);
@@ -383,32 +360,21 @@ FT_TEST(test_logger_remote_health_probe_keeps_other_sinks_intact, "remote health
 FT_TEST(test_logger_remote_health_enable_toggle, "remote health enable toggles without sinks")
 {
     ft_log_enable_remote_health(false);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     ft_log_enable_remote_health(true);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     ft_log_enable_remote_health(true);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     ft_log_enable_remote_health(false);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     ft_log_enable_remote_health(false);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
 FT_TEST(test_logger_remote_health_interval_updates, "remote health interval updates while running")
 {
     ft_log_enable_remote_health(false);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     ft_log_set_remote_health_interval(0);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     ft_log_set_remote_health_interval(5);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     ft_log_enable_remote_health(true);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     ft_log_set_remote_health_interval(1);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     ft_log_enable_remote_health(false);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -426,7 +392,6 @@ FT_TEST(test_logger_remote_health_get_requires_capacity, "remote health get enfo
     first_sink->socket_fd = 3333;
     first_sink->send_function = mock_successful_send;
     first_sink->host = "capacity-one.example";
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, first_sink->host.get_error());
     first_sink->port = 1000;
     first_sink->use_tcp = true;
     second_sink = new s_network_sink();
@@ -434,7 +399,6 @@ FT_TEST(test_logger_remote_health_get_requires_capacity, "remote health get enfo
     second_sink->socket_fd = 4444;
     second_sink->send_function = mock_successful_send;
     second_sink->host = "capacity-two.example";
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, second_sink->host.get_error());
     second_sink->port = 2000;
     second_sink->use_tcp = false;
     FT_ASSERT_EQ(0, ft_log_add_sink(ft_network_sink, first_sink));
@@ -467,4 +431,3 @@ FT_TEST(test_logger_remote_health_get_requires_capacity, "remote health get enfo
     FT_ASSERT_EQ(0, ft_log_probe_remote_health());
     return (1);
 }
-

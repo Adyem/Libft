@@ -57,11 +57,8 @@ static void observability_test_exporter(const ft_networking_observability_sample
 FT_TEST(test_observability_networking_initialize_rejects_null_exporter,
         "observability networking metrics initialize rejects null exporter")
 {
-    ft_errno = FT_ERR_SUCCESS;
     observability_networking_metrics_shutdown();
     FT_ASSERT_EQ(-1, observability_networking_metrics_initialize(ft_nullptr));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, observability_networking_metrics_get_error());
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     observability_networking_metrics_shutdown();
     return (1);
 }
@@ -74,7 +71,7 @@ FT_TEST(test_observability_networking_record_without_initialize_does_not_emit,
     observability_networking_metrics_shutdown();
     observability_reset_last_sample();
     g_observability_export_count = 0;
-    ft_errno = FT_ERR_ALREADY_EXISTS;
+    (void)g_observability_export_count;
 
     sample.labels.component = "http_client";
     sample.labels.operation = "GET";
@@ -91,8 +88,6 @@ FT_TEST(test_observability_networking_record_without_initialize_does_not_emit,
     observability_networking_metrics_record(sample);
 
     FT_ASSERT_EQ(0, g_observability_export_count);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, observability_networking_metrics_get_error());
-    FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, ft_errno);
     return (1);
 }
 
@@ -107,7 +102,6 @@ FT_TEST(test_observability_networking_record_populates_defaults,
 
     FT_ASSERT_EQ(0, observability_networking_metrics_initialize(observability_test_exporter));
 
-    ft_errno = FT_ERR_NO_MEMORY;
     sample.labels.component = "http_client";
     sample.labels.operation = "POST";
     sample.labels.target = "example.org";
@@ -127,7 +121,6 @@ FT_TEST(test_observability_networking_record_populates_defaults,
     FT_ASSERT(g_observability_last_sample.success);
     FT_ASSERT(g_observability_last_sample.error_tag != ft_nullptr);
     FT_ASSERT(observability_strings_equal("ok", g_observability_last_sample.error_tag));
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
 
     FT_ASSERT_EQ(0, observability_networking_metrics_shutdown());
     return (1);

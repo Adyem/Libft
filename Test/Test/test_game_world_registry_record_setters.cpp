@@ -8,9 +8,7 @@
 
 FT_TEST(test_region_definition_setters, "region definition setters update fields")
 {
-    ft_region_definition region;
-
-    region = ft_region_definition(1, ft_string("old"), ft_string("desc"), 2);
+    ft_region_definition region(1, ft_string("old"), ft_string("desc"), 2);
     region.set_region_id(5);
     region.set_name(ft_string("new"));
     region.set_description(ft_string("details"));
@@ -25,12 +23,10 @@ FT_TEST(test_region_definition_setters, "region definition setters update fields
 
 FT_TEST(test_world_region_setters, "world region setters replace world and regions")
 {
-    ft_world_region world;
     ft_vector<int> region_ids;
-
     region_ids.push_back(6);
     region_ids.push_back(7);
-    world = ft_world_region(3, region_ids);
+    ft_world_region world(3, region_ids);
 
     world.set_world_id(10);
     region_ids.clear();

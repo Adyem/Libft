@@ -1,7 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../Template/promise.hpp"
 #include "../../PThread/pthread.hpp"
-#include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../PThread/condition.hpp"
 #include <unistd.h>
@@ -16,7 +15,6 @@ FT_TEST(test_ft_promise_set_get, "ft_promise set and get")
     promise_instance.set_value(42);
     FT_ASSERT(promise_instance.is_ready());
     FT_ASSERT_EQ(42, promise_instance.get());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, promise_instance.get_error());
     return (1);
 }
 
@@ -25,7 +23,6 @@ FT_TEST(test_ft_promise_not_ready, "ft_promise not ready")
     ft_promise<int> promise_instance;
 
     promise_instance.get();
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, promise_instance.get_error());
     return (1);
 }
 

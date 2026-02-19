@@ -9,38 +9,40 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
+using priority_queue_int = ft_priority_queue<int>;
+
 FT_TEST(test_ft_priority_queue_enable_thread_safety_initializes_mutex,
         "ft_priority_queue installs optional mutex guards when requested")
 {
     ft_priority_queue<int> queue_instance;
 
     FT_ASSERT_EQ(0, queue_instance.enable_thread_safety());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, priority_queue_int::last_operation_error());
     FT_ASSERT(queue_instance.is_thread_safe());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, priority_queue_int::last_operation_error());
 
     queue_instance.push(10);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, priority_queue_int::last_operation_error());
     queue_instance.push(2);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, priority_queue_int::last_operation_error());
 
     FT_ASSERT_EQ(10, queue_instance.top());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, priority_queue_int::last_operation_error());
 
     int first_value = queue_instance.pop();
     FT_ASSERT_EQ(10, first_value);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, priority_queue_int::last_operation_error());
 
     queue_instance.disable_thread_safety();
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, priority_queue_int::last_operation_error());
     FT_ASSERT(queue_instance.is_thread_safe() == false);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, priority_queue_int::last_operation_error());
 
     bool lock_acquired = false;
     FT_ASSERT_EQ(0, queue_instance.lock(&lock_acquired));
     FT_ASSERT(lock_acquired == false);
     queue_instance.unlock(lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, priority_queue_int::last_operation_error());
     return (1);
 }
 
@@ -55,7 +57,7 @@ FT_TEST(test_ft_priority_queue_lock_blocks_until_release,
     std::thread worker;
 
     FT_ASSERT_EQ(0, queue_instance.enable_thread_safety());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, priority_queue_int::last_operation_error());
 
     main_lock_acquired = false;
     FT_ASSERT_EQ(0, queue_instance.lock(&main_lock_acquired));
@@ -96,6 +98,6 @@ FT_TEST(test_ft_priority_queue_lock_blocks_until_release,
     FT_ASSERT(wait_duration_ms.load() >= 40);
 
     queue_instance.disable_thread_safety();
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, queue_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, priority_queue_int::last_operation_error());
     return (1);
 }

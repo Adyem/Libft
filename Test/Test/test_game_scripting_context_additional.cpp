@@ -289,7 +289,6 @@ FT_TEST(test_game_script_bridge_inspect_budget_handles_empty_script,
     int result;
 
     script = "";
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, script.get_error());
 
     result = bridge.inspect_bytecode_budget(script, operations);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, result);

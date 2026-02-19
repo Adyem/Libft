@@ -2,7 +2,6 @@
 #include "../../Game/ft_price_definition.hpp"
 #include "../../Game/ft_rarity_band.hpp"
 #include "../../Game/ft_currency_rate.hpp"
-#include "../../Template/move.hpp"
 #include "../../System_utils/test_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD
@@ -16,62 +15,72 @@ static int assert_price_values(const ft_price_definition &definition, int item_i
     FT_ASSERT_EQ(base_value, definition.get_base_value());
     FT_ASSERT_EQ(minimum_value, definition.get_minimum_value());
     FT_ASSERT_EQ(maximum_value, definition.get_maximum_value());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.get_error());
     return (1);
 }
 
-FT_TEST(test_price_definition_copy_and_move, "copy and move price definitions")
+static int assert_rarity_values(const ft_rarity_band &band, int rarity,
+        double multiplier)
+{
+    FT_ASSERT_EQ(rarity, band.get_rarity());
+    FT_ASSERT_DOUBLE_EQ(multiplier, band.get_value_multiplier());
+    return (1);
+}
+
+static int assert_rate_values(const ft_currency_rate &rate, int currency_id,
+        double base_rate, int precision)
+{
+    FT_ASSERT_EQ(currency_id, rate.get_currency_id());
+    FT_ASSERT_DOUBLE_EQ(base_rate, rate.get_rate_to_base());
+    FT_ASSERT_EQ(precision, rate.get_display_precision());
+    return (1);
+}
+
+FT_TEST(test_price_definition_initialize_copy_matches_source, "price definition initialize(copy) matches the source")
 {
     ft_price_definition original(7, 2, 120, 80, 200);
-    ft_price_definition copy(original);
-    ft_price_definition moved(ft_move(original));
+    ft_price_definition copy;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, copy.initialize(original));
 
     assert_price_values(copy, 7, 2, 120, 80, 200);
-    assert_price_values(moved, 7, 2, 120, 80, 200);
-    FT_ASSERT_EQ(0, original.get_item_id());
-    FT_ASSERT_EQ(0, original.get_rarity());
-    FT_ASSERT_EQ(0, original.get_base_value());
-    FT_ASSERT_EQ(0, original.get_minimum_value());
-    FT_ASSERT_EQ(0, original.get_maximum_value());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.get_error());
+    assert_price_values(original, 7, 2, 120, 80, 200);
     return (1);
 }
 
-FT_TEST(test_rarity_band_copy_and_move, "copy and move rarity bands")
+FT_TEST(test_price_definition_setters_overwrite_fields, "price definition setters overwrite previous values")
+{
+    ft_price_definition definition;
+
+    definition.set_item_id(5);
+    definition.set_rarity(4);
+    definition.set_base_value(600);
+    definition.set_minimum_value(250);
+    definition.set_maximum_value(750);
+
+    assert_price_values(definition, 5, 4, 600, 250, 750);
+    return (1);
+}
+
+FT_TEST(test_rarity_band_initialize_copy_matches_source, "rarity band initialize(copy) duplicates the original")
 {
     ft_rarity_band band(4, 1.5);
-    ft_rarity_band copy(band);
-    ft_rarity_band moved(ft_move(band));
+    ft_rarity_band copy;
 
-    FT_ASSERT_EQ(4, copy.get_rarity());
-    FT_ASSERT_DOUBLE_EQ(1.5, copy.get_value_multiplier());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, copy.get_error());
-    FT_ASSERT_EQ(4, moved.get_rarity());
-    FT_ASSERT_DOUBLE_EQ(1.5, moved.get_value_multiplier());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.get_error());
-    FT_ASSERT_EQ(0, band.get_rarity());
-    FT_ASSERT_DOUBLE_EQ(0.0, band.get_value_multiplier());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, band.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, copy.initialize(band));
+
+    assert_rarity_values(copy, 4, 1.5);
+    assert_rarity_values(band, 4, 1.5);
     return (1);
 }
 
-FT_TEST(test_currency_rate_copy_and_move, "copy and move currency rates")
+FT_TEST(test_currency_rate_initialize_copy_matches_source, "currency rate initialize(copy) duplicates the original")
 {
     ft_currency_rate rate(5, 0.5, 3);
-    ft_currency_rate copy(rate);
-    ft_currency_rate moved(ft_move(rate));
+    ft_currency_rate copy;
 
-    FT_ASSERT_EQ(5, copy.get_currency_id());
-    FT_ASSERT_DOUBLE_EQ(0.5, copy.get_rate_to_base());
-    FT_ASSERT_EQ(3, copy.get_display_precision());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, copy.get_error());
-    FT_ASSERT_EQ(5, moved.get_currency_id());
-    FT_ASSERT_DOUBLE_EQ(0.5, moved.get_rate_to_base());
-    FT_ASSERT_EQ(3, moved.get_display_precision());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.get_error());
-    FT_ASSERT_EQ(0, rate.get_currency_id());
-    FT_ASSERT_DOUBLE_EQ(0.0, rate.get_rate_to_base());
-    FT_ASSERT_EQ(0, rate.get_display_precision());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, copy.initialize(rate));
+
+    assert_rate_values(copy, 5, 0.5, 3);
+    assert_rate_values(rate, 5, 0.5, 3);
     return (1);
 }

@@ -19,15 +19,17 @@ FT_TEST(test_ft_graph_move_constructor_recreates_mutex,
     FT_ASSERT_EQ(0, source_graph.enable_thread_safety());
     FT_ASSERT(source_graph.is_thread_safe());
 
-    ft_graph<int> moved_graph(ft_move(source_graph));
-
-    FT_ASSERT(moved_graph.is_thread_safe());
-    FT_ASSERT_EQ(false, source_graph.is_thread_safe());
+    ft_graph<int> moved_graph;
+    moved_graph.add_vertex(10);
+    moved_graph.add_vertex(20);
+    moved_graph.add_edge(0, 1);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_graph<int>::last_operation_error());
     FT_ASSERT_EQ(2u, moved_graph.size());
     moved_graph.neighbors(0, neighbor_vector);
     FT_ASSERT_EQ(1u, neighbor_vector.size());
     FT_ASSERT_EQ(1u, neighbor_vector[0]);
-    FT_ASSERT_EQ(0, moved_graph.get_error());
+    FT_ASSERT_EQ(0, moved_graph.enable_thread_safety());
+    FT_ASSERT(moved_graph.is_thread_safe());
     FT_ASSERT_EQ(0, source_graph.enable_thread_safety());
     FT_ASSERT(source_graph.is_thread_safe());
     return (1);
@@ -52,15 +54,13 @@ FT_TEST(test_ft_graph_move_assignment_resets_source_mutex,
     FT_ASSERT_EQ(0, source_graph.enable_thread_safety());
     FT_ASSERT(source_graph.is_thread_safe());
 
-    destination_graph = ft_move(source_graph);
-
-    FT_ASSERT(destination_graph.is_thread_safe());
-    FT_ASSERT_EQ(false, source_graph.is_thread_safe());
+    FT_ASSERT(destination_graph.is_thread_safe() == false);
     FT_ASSERT_EQ(2u, destination_graph.size());
     destination_graph.neighbors(0, neighbor_vector);
     FT_ASSERT_EQ(1u, neighbor_vector.size());
     FT_ASSERT_EQ(1u, neighbor_vector[0]);
-    FT_ASSERT_EQ(0, destination_graph.get_error());
+    FT_ASSERT_EQ(0, destination_graph.enable_thread_safety());
+    FT_ASSERT(destination_graph.is_thread_safe());
     FT_ASSERT_EQ(0, source_graph.enable_thread_safety());
     FT_ASSERT(source_graph.is_thread_safe());
     return (1);
@@ -79,14 +79,12 @@ FT_TEST(test_ft_graph_move_allows_reuse_after_transfer,
     FT_ASSERT_EQ(0, source_graph.enable_thread_safety());
     FT_ASSERT(source_graph.is_thread_safe());
 
-    destination_graph = ft_move(source_graph);
-
-    FT_ASSERT(destination_graph.is_thread_safe());
-    FT_ASSERT_EQ(false, source_graph.is_thread_safe());
+    FT_ASSERT(destination_graph.is_thread_safe() == false);
     FT_ASSERT_EQ(2u, destination_graph.size());
     destination_graph.neighbors(1, neighbor_vector);
     FT_ASSERT(neighbor_vector.empty());
-    FT_ASSERT_EQ(0, destination_graph.get_error());
+    FT_ASSERT_EQ(0, destination_graph.enable_thread_safety());
+    FT_ASSERT(destination_graph.is_thread_safe());
 
     FT_ASSERT_EQ(0, source_graph.enable_thread_safety());
     FT_ASSERT(source_graph.is_thread_safe());
@@ -97,6 +95,6 @@ FT_TEST(test_ft_graph_move_allows_reuse_after_transfer,
     source_graph.neighbors(0, neighbor_vector);
     FT_ASSERT_EQ(1u, neighbor_vector.size());
     FT_ASSERT_EQ(0u, neighbor_vector[0]);
-    FT_ASSERT_EQ(0, source_graph.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_graph<int>::last_operation_error());
     return (1);
 }

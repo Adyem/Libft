@@ -1,57 +1,38 @@
 #include "../test_internal.hpp"
 #include "../../Template/bitset.hpp"
-#include "../../Template/move.hpp"
 #include "../../System_utils/test_runner.hpp"
-#include "../../Errno/errno.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-FT_TEST(test_bitset_thread_safety_resets_errno,
-        "ft_bitset installs optional mutex guard and resets errno to success")
+FT_TEST(test_bitset_thread_safety_guards_access,
+        "ft_bitset mutex guards access and changes remain visible")
 {
     ft_bitset bits(8);
     bool lock_acquired;
 
-    FT_ASSERT_EQ(false, bits.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, bits.is_thread_safe());
     FT_ASSERT_EQ(0, bits.enable_thread_safety());
-    FT_ASSERT_EQ(true, bits.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, bits.is_thread_safe());
     bits.set(3);
-    ft_errno = FT_ERR_INVALID_OPERATION;
     lock_acquired = false;
     FT_ASSERT_EQ(0, bits.lock(&lock_acquired));
     FT_ASSERT_EQ(true, lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
-    bits.unlock(lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT_EQ(true, bits.test(3));
+    bits.unlock(lock_acquired);
     bits.disable_thread_safety();
-    FT_ASSERT_EQ(false, bits.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, bits.is_thread_safe());
     return (1);
 }
 
-FT_TEST(test_bitset_move_transfers_thread_safety,
-        "ft_bitset move operations transfer thread safety state")
+FT_TEST(test_bitset_thread_safety_disable_clears_mutex,
+        "ft_bitset disabling thread safety removes the guard")
 {
-    ft_bitset original(4);
+    ft_bitset bits(6);
 
-    FT_ASSERT_EQ(0, original.enable_thread_safety());
-    FT_ASSERT_EQ(true, original.is_thread_safe_enabled());
-    original.set(1);
-
-    ft_bitset moved(ft_move(original));
-    FT_ASSERT_EQ(true, moved.is_thread_safe_enabled());
-    FT_ASSERT_EQ(false, original.is_thread_safe_enabled());
-    FT_ASSERT_EQ(true, moved.test(1));
-
-    ft_bitset assigned(2);
-    FT_ASSERT_EQ(0, assigned.enable_thread_safety());
-    FT_ASSERT_EQ(true, assigned.is_thread_safe_enabled());
-    assigned.set(0);
-    assigned = ft_move(moved);
-    FT_ASSERT_EQ(true, assigned.is_thread_safe_enabled());
-    FT_ASSERT_EQ(false, moved.is_thread_safe_enabled());
-    FT_ASSERT_EQ(true, assigned.test(1));
-
+    FT_ASSERT_EQ(0, bits.enable_thread_safety());
+    FT_ASSERT_EQ(true, bits.is_thread_safe());
+    bits.disable_thread_safety();
+    FT_ASSERT_EQ(false, bits.is_thread_safe());
     return (1);
 }

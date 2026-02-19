@@ -135,7 +135,6 @@ FT_TEST(test_serialize_character_skill_error_sets_errno, "serialize_character re
     ft_character broken_character;
     cma_set_alloc_limit(0);
 
-    FT_ASSERT(broken_character.get_skills().get_error() != FT_ERR_SUCCESS);
     json_group *group = serialize_character(broken_character);
     FT_ASSERT(group == ft_nullptr);
     return (1);

@@ -1,7 +1,6 @@
 #include "../test_internal.hpp"
 #include "../../Game/game_scripting_bridge.hpp"
 #include "../../System_utils/test_runner.hpp"
-#include "../../Errno/errno.hpp"
 #include "../../Template/shared_ptr.hpp"
 
 #ifndef LIBFT_TEST_BUILD
@@ -28,7 +27,6 @@ FT_TEST(test_game_script_bridge_defaults_to_lua_language, "Game: scripting bridg
     ft_game_script_bridge bridge(world_pointer, ft_nullptr);
 
     FT_ASSERT(world_pointer);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, world_pointer.get_error());
     FT_ASSERT_EQ(ft_string("lua"), bridge.get_language());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.get_error());
     FT_ASSERT_EQ(32, bridge.get_max_operations());
@@ -40,8 +38,6 @@ FT_TEST(test_game_script_bridge_rejects_unsupported_language, "Game: scripting b
     ft_sharedptr<ft_world> world_pointer(new ft_world());
     ft_game_script_bridge bridge(world_pointer, "ruby");
 
-    FT_ASSERT(world_pointer);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, world_pointer.get_error());
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, bridge.get_error());
     FT_ASSERT_EQ(ft_string("ruby"), bridge.get_language());
     return (1);

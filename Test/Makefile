@@ -67,7 +67,12 @@ CMA_TEST_FILES := \
 	Test/test_scma_lifecycle.cpp \
 	Test/test_scma_memory.cpp \
 	Test/test_scma_recursive_mutex.cpp \
+	Test/test_scma_thread_safety_controls.cpp \
 	Test/test_scma_resize.cpp
+
+GET_NEXT_LINE_TEST_FILES := \
+	Test/test_get_next_line.cpp \
+	Test/test_get_next_line_strjoin.cpp
 
 CXX       := g++
 
@@ -148,6 +153,12 @@ Basic:
 CMA:
 	@echo "Building CMA test executable ($(TARGET))"
 	@$(MAKE) FILES="$(CMA_TEST_FILES)" all
+
+get_next_line:
+	@echo "Building get_next_line test executable ($(TARGET))"
+	@$(MAKE) FILES="$(GET_NEXT_LINE_TEST_FILES)" all
+
+re_get_next_line: fclean get_next_line
 
 re_Basic: fclean Basic
 
@@ -352,4 +363,4 @@ re: fclean all
 
 both: all debug
 
-.PHONY: all clean fclean re debug both build_tests Basic re_Basic
+.PHONY: all clean fclean re debug both build_tests Basic re_Basic CMA re_CMA get_next_line re_get_next_line

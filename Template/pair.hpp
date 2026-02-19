@@ -2,6 +2,62 @@
 # define PAIR_HPP
 
 #include "move.hpp"
+#include <type_traits>
+#include <utility>
+
+template <typename Type, typename = void>
+struct pair_has_initialize_copy : std::false_type
+{
+};
+
+template <typename Type>
+struct pair_has_initialize_copy<Type,
+    std::void_t<decltype(std::declval<Type &>().initialize(std::declval<const Type &>()))> > : std::true_type
+{
+};
+
+template <typename Type, typename = void>
+struct pair_has_initialize_move : std::false_type
+{
+};
+
+template <typename Type>
+struct pair_has_initialize_move<Type,
+    std::void_t<decltype(std::declval<Type &>().initialize(std::declval<Type &&>()))> > : std::true_type
+{
+};
+
+template <typename Type>
+typename std::enable_if<pair_has_initialize_copy<Type>::value, void>::type
+pair_assign_copy(Type &destination, const Type &source)
+{
+    (void)destination.initialize(source);
+    return ;
+}
+
+template <typename Type>
+typename std::enable_if<!pair_has_initialize_copy<Type>::value, void>::type
+pair_assign_copy(Type &destination, const Type &source)
+{
+    destination = source;
+    return ;
+}
+
+template <typename Type>
+typename std::enable_if<pair_has_initialize_move<Type>::value, void>::type
+pair_assign_move(Type &destination, Type &source)
+{
+    (void)destination.initialize(ft_move(source));
+    return ;
+}
+
+template <typename Type>
+typename std::enable_if<!pair_has_initialize_move<Type>::value, void>::type
+pair_assign_move(Type &destination, Type &source)
+{
+    destination = ft_move(source);
+    return ;
+}
 
 template <typename KeyType, typename ValueType>
 class Pair
@@ -37,29 +93,37 @@ Pair<KeyType, ValueType>::Pair()
 
 template <typename KeyType, typename ValueType>
 Pair<KeyType, ValueType>::Pair(const KeyType &input_key, const ValueType &input_value)
-        : key(input_key), value(input_value)
+        : key(), value()
 {
+    pair_assign_copy(this->key, input_key);
+    pair_assign_copy(this->value, input_value);
     return ;
 }
 
 template <typename KeyType, typename ValueType>
 Pair<KeyType, ValueType>::Pair(const KeyType &input_key, ValueType &&input_value)
-        : key(input_key), value(ft_move(input_value))
+        : key(), value()
 {
+    pair_assign_copy(this->key, input_key);
+    pair_assign_move(this->value, input_value);
     return ;
 }
 
 template <typename KeyType, typename ValueType>
 Pair<KeyType, ValueType>::Pair(const Pair &other)
-        : key(other.key), value(other.value)
+        : key(), value()
 {
+    pair_assign_copy(this->key, other.key);
+    pair_assign_copy(this->value, other.value);
     return ;
 }
 
 template <typename KeyType, typename ValueType>
 Pair<KeyType, ValueType>::Pair(Pair &&other)
-        : key(ft_move(other.key)), value(ft_move(other.value))
+        : key(), value()
 {
+    pair_assign_move(this->key, other.key);
+    pair_assign_move(this->value, other.value);
     return ;
 }
 
@@ -74,8 +138,8 @@ Pair<KeyType, ValueType> &Pair<KeyType, ValueType>::operator=(const Pair &other)
 {
     if (this != &other)
     {
-        this->key = other.key;
-        this->value = other.value;
+        pair_assign_copy(this->key, other.key);
+        pair_assign_copy(this->value, other.value);
     }
     return (*this);
 }
@@ -85,8 +149,8 @@ Pair<KeyType, ValueType> &Pair<KeyType, ValueType>::operator=(Pair &&other)
 {
     if (this != &other)
     {
-        this->key = ft_move(other.key);
-        this->value = ft_move(other.value);
+        pair_assign_move(this->key, other.key);
+        pair_assign_move(this->value, other.value);
     }
     return (*this);
 }
@@ -94,7 +158,9 @@ Pair<KeyType, ValueType> &Pair<KeyType, ValueType>::operator=(Pair &&other)
 template <typename KeyType, typename ValueType>
 KeyType Pair<KeyType, ValueType>::get_key() const
 {
-    return (this->key);
+    KeyType copy;
+    pair_assign_copy(copy, this->key);
+    return (copy);
 }
 
 template <typename KeyType, typename ValueType>

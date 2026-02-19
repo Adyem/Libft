@@ -156,14 +156,6 @@ FT_TEST(test_pf_snprintf_ftell_failure, "pf_snprintf translates ftell errno")
     return (1);
 }
 
-{
-    char buffer[16];
-
-    int result = pf_snprintf(buffer, sizeof(buffer), "%s", "ok");
-    FT_ASSERT(result >= 0);
-    return (1);
-}
-
 FT_TEST(test_pf_snprintf_matches_standard_exact_fit, "pf_snprintf matches std::snprintf for exact fits")
 {
     char pf_buffer[32];

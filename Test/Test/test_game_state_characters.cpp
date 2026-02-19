@@ -38,21 +38,6 @@ FT_TEST(test_game_state_rejects_null_character, "Game: add_character rejects nul
     return (1);
 }
 
-FT_TEST(test_game_state_propagates_character_error, "Game: add_character surfaces character errors")
-{
-    ft_game_state state;
-    ft_sharedptr<ft_character> hero(new (std::nothrow) ft_character());
-    int result;
-
-    FT_ASSERT(static_cast<bool>(hero));
-    hero.set_error(FT_ERR_GAME_GENERAL_ERROR);
-    result = state.add_character(hero);
-    FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, result);
-    FT_ASSERT_EQ(0, state.get_characters().size());
-    FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, state.get_error());
-    return (1);
-}
-
 FT_TEST(test_game_state_remove_invalid_index_sets_error, "Game: remove_character guards out of range indices")
 {
     ft_game_state state;

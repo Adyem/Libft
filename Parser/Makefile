@@ -3,7 +3,11 @@ TARGET := parser.a
 DEBUG_TARGET := parser_debug.a
 
 SRCS :=         parser_document_backend.cpp \
-                dom.cpp
+                Parser_dom_node.cpp \
+                Parser_dom_document.cpp \
+                Parser_dom_validation_report.cpp \
+                Parser_dom_schema.cpp \
+                Parser_dom_find_path.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
@@ -96,4 +100,3 @@ re: fclean all
 both: all debug
 
 .PHONY: all clean fclean re debug both
-

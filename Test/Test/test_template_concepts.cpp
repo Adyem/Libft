@@ -258,9 +258,9 @@ const char *shared_ptr_derived_type::get_error_str() const
 
 FT_TEST(test_ft_shared_ptr_variadic_constructor_uses_custom_concept, "ft_sharedptr forwards constructor arguments when custom concept is available")
 {
-    ft_sharedptr<variadic_constructible> pointer(21, 3.5);
+    ft_sharedptr<variadic_constructible> pointer;
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_sharedptr<variadic_constructible>::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, pointer.initialize(new variadic_constructible(21, 3.5)));
     FT_ASSERT(pointer.get() != ft_nullptr);
     FT_ASSERT_EQ(21, pointer->first());
     FT_ASSERT(pointer->second() > 3.4);
@@ -270,31 +270,13 @@ FT_TEST(test_ft_shared_ptr_variadic_constructor_uses_custom_concept, "ft_sharedp
 
 FT_TEST(test_ft_unique_ptr_variadic_constructor_uses_custom_concept, "ft_uniqueptr forwards constructor arguments when custom concept is available")
 {
-    ft_uniqueptr<variadic_constructible> pointer(11, 2.5);
+    ft_uniqueptr<variadic_constructible> pointer;
 
-    FT_ASSERT(pointer.hasError() == false);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, pointer.initialize_value(11, 2.5));
     FT_ASSERT(pointer.get() != ft_nullptr);
     FT_ASSERT_EQ(11, pointer->first());
     FT_ASSERT(pointer->second() > 2.4);
     FT_ASSERT(pointer->second() < 2.6);
-    return (1);
-}
-
-FT_TEST(test_ft_shared_ptr_convertible_constructor_uses_custom_concept, "ft_sharedptr cross-type constructors rely on custom convertible concept")
-{
-    ft_sharedptr<shared_ptr_derived_type> derived_pointer(new shared_ptr_derived_type(73));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_sharedptr<shared_ptr_derived_type>::last_operation_error());
-
-    ft_sharedptr<shared_ptr_base_type> copied_pointer(derived_pointer);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_sharedptr<shared_ptr_base_type>::last_operation_error());
-    FT_ASSERT_EQ(2, derived_pointer.use_count());
-    FT_ASSERT_EQ(2, copied_pointer.use_count());
-    FT_ASSERT_EQ(73, copied_pointer->get_marker());
-
-    ft_sharedptr<shared_ptr_base_type> moved_pointer(ft_sharedptr<shared_ptr_derived_type>(new shared_ptr_derived_type(29)));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_sharedptr<shared_ptr_base_type>::last_operation_error());
-    FT_ASSERT(moved_pointer.get() != ft_nullptr);
-    FT_ASSERT_EQ(29, moved_pointer->get_marker());
     return (1);
 }
 

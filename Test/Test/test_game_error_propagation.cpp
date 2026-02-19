@@ -19,13 +19,8 @@ FT_TEST(test_game_buff_invalid_duration_sets_errno,
     int duration_value;
 
     buff.set_duration(10);
-    ft_errno = FT_ERR_ALREADY_EXISTS;
     buff.sub_duration(-3);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, buff.get_error());
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     duration_value = buff.get_duration();
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(10, duration_value);
     return (1);
 }
@@ -37,13 +32,8 @@ FT_TEST(test_game_debuff_invalid_duration_sets_errno,
     int duration_value;
 
     debuff.set_duration(6);
-    ft_errno = FT_ERR_ALREADY_EXISTS;
     debuff.add_duration(-4);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, debuff.get_error());
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     duration_value = debuff.get_duration();
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(6, duration_value);
     return (1);
 }
@@ -55,13 +45,8 @@ FT_TEST(test_game_skill_invalid_cooldown_sets_errno,
     int cooldown_value;
 
     skill.set_cooldown(5);
-    ft_errno = FT_ERR_ALREADY_EXISTS;
     skill.sub_cooldown(9);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, skill.get_error());
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     cooldown_value = skill.get_cooldown();
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(5, cooldown_value);
     return (1);
 }
@@ -76,15 +61,9 @@ FT_TEST(test_game_equipment_invalid_slot_sets_errno,
     item = ft_sharedptr<ft_item>(new ft_item());
     FT_ASSERT(item.get() != ft_nullptr);
     item->set_item_id(42);
-    ft_errno = FT_ERR_ALREADY_EXISTS;
     result = equipment.equip(99, item);
     FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, result);
-    FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, ft_errno);
-    FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, equipment.get_error());
-    FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, ft_errno);
-    ft_errno = FT_ERR_ALREADY_EXISTS;
     FT_ASSERT(equipment.get_item(EQUIP_HEAD).get() == ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, ft_errno);
     return (1);
 }
 
@@ -96,14 +75,8 @@ FT_TEST(test_game_equipment_invalid_item_sets_errno,
     int result;
 
     item = ft_sharedptr<ft_item>();
-    ft_errno = FT_ERR_ALREADY_EXISTS;
     result = equipment.equip(EQUIP_HEAD, item);
     FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, result);
-    FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, ft_errno);
-    FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, equipment.get_error());
-    FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, ft_errno);
-    ft_errno = FT_ERR_ALREADY_EXISTS;
     FT_ASSERT(equipment.get_item(EQUIP_HEAD).get() == ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, ft_errno);
     return (1);
 }

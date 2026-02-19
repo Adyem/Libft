@@ -60,15 +60,16 @@ static long encrypt_small_message(encryption_aead_context &context,
     return (std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count());
 }
 
-FT_TEST(test_encryption_aead_move_constructor_has_fresh_mutex,
-        "encryption_aead_context move constructor initializes an independent mutex")
+FT_TEST(test_encryption_aead_thread_safe_contexts_have_independent_mutexes,
+        "encryption_aead_context mutexes do not interfere between instances")
 {
-    encryption_aead_context source;
+    encryption_aead_context first;
+    encryption_aead_context second;
     unsigned char key[16];
     unsigned char iv[12];
-    std::atomic<bool> lock_acquired;
-    std::atomic<bool> release_lock;
-    std::atomic<int> lock_result;
+    std::atomic<bool> lock_acquired(false);
+    std::atomic<bool> release_lock(false);
+    std::atomic<int> lock_result(FT_ERR_SUCCESS);
     std::thread locker_thread;
     unsigned char ciphertext[8];
     unsigned char authentication_tag[16];
@@ -77,44 +78,38 @@ FT_TEST(test_encryption_aead_move_constructor_has_fresh_mutex,
 
     fill_sequence(key, 16);
     fill_sequence(iv, 12);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize_encrypt(key, 16, iv, 12));
-    encryption_aead_context moved(ft_move(source));
-    lock_acquired.store(false);
-    release_lock.store(false);
-    lock_result.store(FT_ERR_SUCCESS);
-    locker_thread = std::thread([&source, &lock_acquired, &release_lock, &lock_result]() {
-        lock_result.store(source._mutex.lock());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first.initialize_encrypt(key, 16, iv, 12));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second.initialize_encrypt(key, 16, iv, 12));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second.enable_thread_safety());
+    locker_thread = std::thread([&first, &lock_acquired, &release_lock, &lock_result]() -> void {
+        pt_recursive_mutex *mutex = first.get_mutex_for_validation();
+        if (mutex == ft_nullptr)
+            return ;
+        lock_result.store(mutex->lock());
         lock_acquired.store(true);
         if (lock_result.load() != FT_ERR_SUCCESS)
             return ;
         while (!release_lock.load())
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        source._mutex.unlock();
+        mutex->unlock();
     });
     wait_for_lock(lock_acquired);
-    duration_ms = encrypt_small_message(moved, ciphertext, authentication_tag, output_length);
+    duration_ms = encrypt_small_message(second, ciphertext, authentication_tag, output_length);
     release_lock.store(true);
     locker_thread.join();
     FT_ASSERT_EQ(FT_ERR_SUCCESS, lock_result.load());
     FT_ASSERT(duration_ms < 40);
     FT_ASSERT_EQ(static_cast<size_t>(6), output_length);
-    FT_ASSERT_EQ(NULL, source._context);
-    FT_ASSERT_EQ(false, source._initialized);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.get_error());
     return (1);
 }
 
-FT_TEST(test_encryption_aead_move_assignment_has_fresh_mutex,
-        "encryption_aead_context move assignment initializes an independent mutex")
+FT_TEST(test_encryption_aead_thread_safety_toggle_round_trip,
+        "encryption_aead_context can toggle thread safety without breaking operations")
 {
-    encryption_aead_context source;
-    encryption_aead_context target;
+    encryption_aead_context context;
     unsigned char key[16];
     unsigned char iv[12];
-    std::atomic<bool> lock_acquired;
-    std::atomic<bool> release_lock;
-    std::atomic<int> lock_result;
-    std::thread locker_thread;
     unsigned char ciphertext[8];
     unsigned char authentication_tag[16];
     size_t output_length;
@@ -122,29 +117,14 @@ FT_TEST(test_encryption_aead_move_assignment_has_fresh_mutex,
 
     fill_sequence(key, 16);
     fill_sequence(iv, 12);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize_encrypt(key, 16, iv, 12));
-    target = ft_move(source);
-    lock_acquired.store(false);
-    release_lock.store(false);
-    lock_result.store(FT_ERR_SUCCESS);
-    locker_thread = std::thread([&source, &lock_acquired, &release_lock, &lock_result]() {
-        lock_result.store(source._mutex.lock());
-        lock_acquired.store(true);
-        if (lock_result.load() != FT_ERR_SUCCESS)
-            return ;
-        while (!release_lock.load())
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        source._mutex.unlock();
-    });
-    wait_for_lock(lock_acquired);
-    duration_ms = encrypt_small_message(target, ciphertext, authentication_tag, output_length);
-    release_lock.store(true);
-    locker_thread.join();
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, lock_result.load());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, context.initialize_encrypt(key, 16, iv, 12));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, context.enable_thread_safety());
+    FT_ASSERT(context.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, context.disable_thread_safety());
+    FT_ASSERT(!context.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, context.enable_thread_safety());
+    duration_ms = encrypt_small_message(context, ciphertext, authentication_tag, output_length);
     FT_ASSERT(duration_ms < 40);
     FT_ASSERT_EQ(static_cast<size_t>(6), output_length);
-    FT_ASSERT_EQ(NULL, source._context);
-    FT_ASSERT_EQ(false, source._initialized);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, target.get_error());
     return (1);
 }

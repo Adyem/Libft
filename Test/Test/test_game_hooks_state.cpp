@@ -61,7 +61,6 @@ FT_TEST(test_game_state_dispatches_registered_hooks, "Game: game state dispatch 
     FT_ASSERT_EQ(1, crafted_invocations);
     FT_ASSERT_EQ(1, damaged_invocations);
     FT_ASSERT_EQ(1, event_invocations);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, hooks->get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, state.get_error());
     return (1);
 }
@@ -123,7 +122,6 @@ FT_TEST(test_game_state_reset_hooks_clears_callbacks, "Game: game state reset cl
     FT_ASSERT_EQ(0, crafted_invocations);
     FT_ASSERT_EQ(0, damaged_invocations);
     FT_ASSERT_EQ(0, event_invocations);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, hooks->get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, state.get_error());
     return (1);
 }

@@ -22,7 +22,8 @@ FT_TEST(test_task_scheduler_cancel_after_handle, "ft_task_scheduler cancels dela
         execution_count.fetch_add(1);
         return ;
     });
-    ft_future<void> delayed_future = schedule_result.get_key();
+    ft_future<void> delayed_future;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, delayed_future.move(schedule_result.key));
     ft_scheduled_task_handle handle_value = schedule_result.get_value();
     FT_ASSERT(handle_value.valid());
     (void)delayed_future;
@@ -30,19 +31,11 @@ FT_TEST(test_task_scheduler_cancel_after_handle, "ft_task_scheduler cancels dela
 
     cancel_result = handle_value.cancel();
     FT_ASSERT(cancel_result);
-    int handle_error;
-
-    handle_error = handle_value.operation_error_last_error();
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, handle_error);
     usleep(150000);
     int executed_times;
 
     executed_times = execution_count.load();
     FT_ASSERT_EQ(0, executed_times);
-    int scheduler_error;
-
-    scheduler_error = scheduler_instance.operation_error_last_error();
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_error);
     return (1);
 }
 
@@ -64,18 +57,10 @@ FT_TEST(test_task_scheduler_cancel_periodic_handle, "ft_task_scheduler cancels p
 
     cancel_result = periodic_handle.cancel();
     FT_ASSERT(cancel_result);
-    int handle_error;
-
-    handle_error = periodic_handle.operation_error_last_error();
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, handle_error);
     usleep(200000);
     int executed_times;
 
     executed_times = execution_count.load();
     FT_ASSERT_EQ(0, executed_times);
-    int scheduler_error;
-
-    scheduler_error = scheduler_instance.operation_error_last_error();
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_error);
     return (1);
 }

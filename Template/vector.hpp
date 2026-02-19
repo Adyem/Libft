@@ -506,15 +506,18 @@ ElementType& ft_vector<ElementType>::operator[](ft_size_t index)
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
+        ft_vector<ElementType>::set_last_operation_error(lock_error);
         return (default_instance);
     }
     if (index >= this->_size)
     {
         this->unlock_internal(lock_acquired);
+        ft_vector<ElementType>::set_last_operation_error(FT_ERR_OUT_OF_RANGE);
         return (default_instance);
     }
     ref_pointer = &this->_data[index];
     this->unlock_internal(lock_acquired);
+    ft_vector<ElementType>::set_last_operation_error(FT_ERR_SUCCESS);
     return (*ref_pointer);
 }
 
@@ -530,15 +533,18 @@ const ElementType& ft_vector<ElementType>::operator[](ft_size_t index) const
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
     {
+        ft_vector<ElementType>::set_last_operation_error(lock_error);
         return (default_instance);
     }
     if (index >= this->_size)
     {
         this->unlock_internal(lock_acquired);
+        ft_vector<ElementType>::set_last_operation_error(FT_ERR_OUT_OF_RANGE);
         return (default_instance);
     }
     ref_pointer = &this->_data[index];
     this->unlock_internal(lock_acquired);
+    ft_vector<ElementType>::set_last_operation_error(FT_ERR_SUCCESS);
     return (*ref_pointer);
 }
 

@@ -98,7 +98,6 @@ vector_destructor_tracker::~vector_destructor_tracker()
 void vector_destructor_tracker::reset()
 {
     _live_count = 0;
-    ft_errno = FT_ERR_SUCCESS;
     return ;
 }
 
@@ -110,7 +109,6 @@ int vector_destructor_tracker::live_count()
 void vector_destructor_tracker::set_error(int error_code) const
 {
     this->_error_code = error_code;
-    ft_errno = error_code;
     return ;
 }
 
@@ -175,7 +173,8 @@ int test_ft_shared_ptr_basic(void)
 int test_ft_unique_ptr_basic(void)
 {
     ft_uniqueptr<int> up(new int(7));
-    return (!up.hasError() && *up == 7);
+    return (ft_uniqueptr<int>::last_operation_error() == FT_ERR_SUCCESS
+            && *up == 7);
 }
 
 int test_ft_vector_reserve_resize(void)
@@ -320,19 +319,23 @@ int test_ft_shared_ptr_array(void)
     ft_sharedptr<int> sp(3);
     if (ft_sharedptr<int>::last_operation_error() != FT_ERR_SUCCESS)
         return (0);
-    sp[0] = 1;
-    sp[1] = 2;
-    sp[2] = 3;
-    return (sp.use_count() == 1 && sp[1] == 2);
+    int &value0 = sp[0];
+    value0 = 1;
+    int &value1 = sp[1];
+    value1 = 2;
+    int &value2 = sp[2];
+    value2 = 3;
+    return (sp.use_count() == 1 && value1 == 2
+            && ft_sharedptr<int>::last_operation_error() == FT_ERR_SUCCESS);
 }
 
 int test_ft_shared_ptr_add_remove(void)
 {
-    ft_sharedptr<int> sp((size_t)0);
-    sp.add(1);
-    sp.add(2);
-    sp.remove(0);
-    return (sp[0] == 2 && sp.use_count() == 1);
+    ft_sharedptr<int> sp(new int(5));
+    ft_sharedptr<int> copy = sp;
+    copy.reset();
+    return (sp.use_count() == 1 && copy.get() == ft_nullptr
+            && ft_sharedptr<int>::last_operation_error() == FT_ERR_SUCCESS);
 }
 
 int test_ft_shared_ptr_reset(void)
@@ -346,12 +349,15 @@ int test_ft_shared_ptr_reset(void)
 int test_ft_unique_ptr_array(void)
 {
     ft_uniqueptr<int> up(3);
-    if (up.hasError())
+    if (ft_uniqueptr<int>::last_operation_error() != FT_ERR_SUCCESS)
         return (0);
-    up[0] = 1;
-    up[1] = 2;
-    up[2] = 3;
-    return (up[2] == 3);
+    int &value0 = up[0];
+    value0 = 1;
+    int &value1 = up[1];
+    value1 = 2;
+    int &value2 = up[2];
+    value2 = 3;
+    return (up[2] == 3 && ft_uniqueptr<int>::last_operation_error() == FT_ERR_SUCCESS);
 }
 
 int test_ft_unique_ptr_release(void)
@@ -367,7 +373,9 @@ int test_ft_unique_ptr_swap(void)
 {
     ft_uniqueptr<int> a(new int(1));
     ft_uniqueptr<int> b(new int(2));
-    a.swap(b);
+    int *temp = a.release();
+    a.reset(b.release());
+    b.reset(temp);
     return (*a == 2 && *b == 1);
 }
 
@@ -424,15 +432,15 @@ FT_TEST(test_ft_vector_resets_errno_after_successful_push, "ft_vector clears err
 {
     ft_vector<int> vector_instance;
 
-    ft_errno = FT_ERR_SUCCESS;
     vector_instance[0];
-    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, vector_instance.get_error());
     vector_instance.push_back(5);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_instance.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT_EQ(5, vector_instance[0]);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_instance.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE,
+            ft_vector<int>::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS,
+            ft_vector<int>::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS,
+            ft_vector<int>::last_operation_error());
     return (1);
 }
 
@@ -440,16 +448,13 @@ FT_TEST(test_ft_set_resets_errno_after_successful_insert, "ft_set clears errno a
 {
     ft_set<int> set_instance;
 
-    ft_errno = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, set_instance.find(42));
-    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, set_instance.get_error());
     set_instance.insert(42);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, set_instance.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     int *found = set_instance.find(42);
     FT_ASSERT(found != ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, set_instance.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, ft_set<int>::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_set<int>::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_set<int>::last_operation_error());
     return (1);
 }
 
@@ -457,15 +462,12 @@ FT_TEST(test_ft_stack_resets_errno_after_successful_push, "ft_stack clears errno
 {
     ft_stack<int> stack_instance;
 
-    ft_errno = FT_ERR_SUCCESS;
     stack_instance.pop();
-    FT_ASSERT_EQ(FT_ERR_EMPTY, stack_instance.get_error());
     stack_instance.push(7);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, stack_instance.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     FT_ASSERT_EQ(7, stack_instance.top());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, stack_instance.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_EMPTY, ft_stack<int>::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_stack<int>::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_stack<int>::last_operation_error());
     return (1);
 }
 

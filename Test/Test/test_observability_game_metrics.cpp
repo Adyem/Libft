@@ -46,7 +46,6 @@ FT_TEST(test_observability_game_initialize_rejects_null_exporter,
 {
     observability_game_metrics_shutdown();
     FT_ASSERT_EQ(-1, observability_game_metrics_initialize(ft_nullptr));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, observability_game_metrics_get_error());
     return (1);
 }
 
@@ -69,7 +68,6 @@ FT_TEST(test_observability_game_record_without_initialize_does_not_emit,
     sample.success = true;
     observability_game_metrics_record(sample);
     FT_ASSERT_EQ(0, g_game_export_count);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, observability_game_metrics_get_error());
     return (1);
 }
 

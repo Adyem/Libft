@@ -96,14 +96,14 @@ FT_TEST(test_ft_future_thread_safety_member_lifecycle,
     bool lock_acquired;
 
     lock_acquired = false;
-    FT_ASSERT_EQ(false, future_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, future_value.is_thread_safe());
     FT_ASSERT_EQ(0, future_value.enable_thread_safety());
-    FT_ASSERT_EQ(true, future_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, future_value.is_thread_safe());
     FT_ASSERT_EQ(0, future_value.lock(&lock_acquired));
     FT_ASSERT_EQ(true, lock_acquired);
     future_value.unlock(lock_acquired);
     future_value.disable_thread_safety();
-    FT_ASSERT_EQ(false, future_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, future_value.is_thread_safe());
     return (1);
 }
 
@@ -117,7 +117,7 @@ FT_TEST(test_ft_future_validation_mutex_helper,
 
     mutex_pointer = future_value.get_mutex_for_validation();
     FT_ASSERT_NEQ(ft_nullptr, mutex_pointer);
-    FT_ASSERT_EQ(true, future_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, future_value.is_thread_safe());
     FT_ASSERT_EQ(0, mutex_pointer->lock());
     FT_ASSERT_EQ(0, mutex_pointer->unlock());
     return (1);
@@ -155,12 +155,11 @@ FT_TEST(test_ft_future_void_move_method_and_thread_safety,
     FT_ASSERT_EQ(true, destination_future.valid());
     FT_ASSERT_EQ(false, source_future.valid());
     FT_ASSERT_EQ(0, destination_future.enable_thread_safety());
-    FT_ASSERT_EQ(true, destination_future.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, destination_future.is_thread_safe());
     FT_ASSERT_EQ(0, destination_future.lock(&lock_acquired));
     FT_ASSERT_EQ(true, lock_acquired);
     destination_future.unlock(lock_acquired);
     destination_future.disable_thread_safety();
-    FT_ASSERT_EQ(false, destination_future.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, destination_future.is_thread_safe());
     return (1);
 }
-

@@ -20,12 +20,15 @@ static void *string_view_assignment_worker(void *argument)
 {
     string_view_thread_data *data;
     size_t index;
+    int initialize_result;
 
     data = static_cast<string_view_thread_data*>(argument);
     index = 0;
     while (index < 1000)
     {
-        *(data->shared) = *(data->source);
+        (void)data->shared->destroy();
+        initialize_result = data->shared->initialize(data->source->data(), data->source->size());
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, initialize_result);
         index += 1;
     }
     data->running->store(false, std::memory_order_relaxed);
@@ -66,8 +69,9 @@ FT_TEST(test_string_view_compare_substr, "ft_string_view compare and substr")
     ft_string_view<char> view("hello");
     ft_string_view<char> other_view("hello");
     FT_ASSERT_EQ(0, view.compare(other_view));
-    ft_string_view<char> substring = view.substr(1, 3);
+    ft_string_view<char> substring;
     ft_string_view<char> expected_view("ell");
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, view.substr(1, 3, substring));
     FT_ASSERT_EQ(0, substring.compare(expected_view));
     return (1);
 }
@@ -83,9 +87,9 @@ FT_TEST(test_string_view_substr_oob, "ft_string_view substr out of bounds")
     buffer[4] = 'd';
     buffer[5] = '\0';
     ft_string_view<char> view(buffer);
-    ft_string_view<char> substring = view.substr(10, 2);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, view.get_error());
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, substring.get_error());
+    ft_string_view<char> substring;
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, view.substr(10, 2, substring));
+    FT_ASSERT_EQ(0u, substring.size());
     FT_ASSERT_EQ(0u, substring.size());
     cma_free(buffer);
     return (1);
@@ -115,7 +119,5 @@ FT_TEST(test_string_view_thread_safety, "ft_string_view thread safe copy and com
     pt_thread_join(assign_thread, ft_nullptr);
     pt_thread_join(compare_thread, ft_nullptr);
     FT_ASSERT_EQ(0, shared.compare(source));
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, shared.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
     return (1);
 }

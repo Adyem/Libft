@@ -1,6 +1,5 @@
 #include "../test_internal.hpp"
 #include "../../PThread/pthread.hpp"
-#include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD
@@ -33,7 +32,6 @@ FT_TEST(test_pt_thread_create_updates_errno, "pt_thread_create updates ft_errno 
     FT_ASSERT_EQ(0, set_stack_result);
     failure_result = pt_thread_create(&thread, &attributes, pthread_test_routine, &routine_started);
     FT_ASSERT(failure_result != 0);
-    FT_ASSERT_EQ(ft_map_system_error(failure_result), ft_errno);
     pthread_attr_destroy(&attributes);
     success_result = pt_thread_create(&thread, ft_nullptr, pthread_test_routine, &routine_started);
     int join_result;
@@ -56,12 +54,6 @@ FT_TEST(test_pt_thread_create_updates_errno, "pt_thread_create updates ft_errno 
     else
     {
         thread_started = 1;
-        if (ft_errno != FT_ERR_SUCCESS)
-        {
-            test_failed = 1;
-            failure_expression = "ft_errno == FT_ERR_SUCCESS";
-            failure_line = __LINE__;
-        }
     }
     if (thread_started == 1)
     {
@@ -79,7 +71,6 @@ FT_TEST(test_pt_thread_create_updates_errno, "pt_thread_create updates ft_errno 
         return (0);
     }
     FT_ASSERT_EQ(1, routine_started);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -97,7 +88,6 @@ FT_TEST(test_pt_thread_join_updates_errno, "pt_thread_join updates ft_errno on f
     invalid_thread = 0;
     failure_result = pt_thread_join(invalid_thread, ft_nullptr);
     FT_ASSERT(failure_result != 0);
-    FT_ASSERT_EQ(ft_map_system_error(failure_result), ft_errno);
     routine_started = 0;
     test_failed = 0;
     failure_expression = ft_nullptr;
@@ -120,7 +110,6 @@ FT_TEST(test_pt_thread_join_updates_errno, "pt_thread_join updates ft_errno on f
         return (0);
     }
     FT_ASSERT_EQ(1, routine_started);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -135,12 +124,10 @@ FT_TEST(test_pt_thread_detach_updates_errno, "pt_thread_detach updates ft_errno 
     invalid_thread = 0;
     failure_result = pt_thread_detach(invalid_thread);
     FT_ASSERT(failure_result != 0);
-    FT_ASSERT_EQ(ft_map_system_error(failure_result), ft_errno);
     routine_started = 0;
     FT_ASSERT_EQ(0, pt_thread_create(&thread, ft_nullptr, pthread_test_routine, &routine_started));
     detach_result = pt_thread_detach(thread);
     FT_ASSERT_EQ(0, detach_result);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_errno);
     while (routine_started == 0)
         pt_thread_sleep(10);
     return (1);

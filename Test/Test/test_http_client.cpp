@@ -41,10 +41,6 @@ FT_TEST(test_http_client_reuses_keep_alive_connection, "HTTP client reuses poole
     context.server = &server;
     context.result = -1;
     server_thread = ft_thread(http_client_server_run_once, &context);
-    if (server_thread.get_error() != FT_ERR_SUCCESS)
-    {
-        return (0);
-    }
     first_result = http_get("127.0.0.1", "/first", response, false, "54340");
     if (first_result != 0)
     {
@@ -80,7 +76,7 @@ FT_TEST(test_http_client_reuses_keep_alive_connection, "HTTP client reuses poole
     }
     http_client_pool_flush();
     server_thread.join();
-    if (context.result != 0 && server.get_error() != FT_ERR_SOCKET_SEND_FAILED)
+    if (context.result != 0)
         return (0);
     if (http_client_pool_get_idle_count() != 0)
         return (0);

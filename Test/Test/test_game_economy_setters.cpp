@@ -23,7 +23,6 @@ FT_TEST(test_price_definition_setters_update_values, "Game: price definition set
     FT_ASSERT_EQ(150, definition.get_base_value());
     FT_ASSERT_EQ(100, definition.get_minimum_value());
     FT_ASSERT_EQ(250, definition.get_maximum_value());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.get_error());
     return (1);
 }
 
@@ -37,7 +36,6 @@ FT_TEST(test_rarity_band_setters_refresh_multiplier, "Game: rarity band setters 
     FT_ASSERT_DOUBLE_EQ(2.0, band.get_value_multiplier());
     band.set_value_multiplier(1.25);
     FT_ASSERT_DOUBLE_EQ(1.25, band.get_value_multiplier());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, band.get_error());
     return (1);
 }
 
@@ -51,7 +49,6 @@ FT_TEST(test_currency_rate_setters_apply_changes, "Game: currency rate setters r
     FT_ASSERT_EQ(8, rate.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(3.75, rate.get_rate_to_base());
     FT_ASSERT_EQ(5, rate.get_display_precision());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.get_error());
     return (1);
 }
 
@@ -66,7 +63,6 @@ FT_TEST(test_goal_progress_accumulates_through_setters, "Game: goal progress set
     FT_ASSERT_EQ(3, goal.get_progress());
     goal.add_progress(1);
     FT_ASSERT_EQ(4, goal.get_progress());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, goal.get_error());
     return (1);
 }
 
@@ -84,6 +80,5 @@ FT_TEST(test_reputation_current_and_total_tracking, "Game: reputation tracks cur
     reputation.sub_current_rep(2);
     FT_ASSERT_EQ(16, reputation.get_total_rep());
     FT_ASSERT_EQ(5, reputation.get_current_rep());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, reputation.get_error());
     return (1);
 }

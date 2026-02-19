@@ -120,7 +120,8 @@ FT_TEST(test_task_scheduler_tracing_schedule_after, "ft_task_scheduler traces sc
     root_span = task_scheduler_trace_generate_span_id();
     previous_span = task_scheduler_trace_push_span(root_span);
     auto schedule_result = scheduler_instance.schedule_after(std::chrono::milliseconds(20), []() { return (7); });
-    ft_future<int> future_value = schedule_result.get_key();
+    ft_future<int> future_value;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, future_value.initialize(ft_move(schedule_result.key)));
     FT_ASSERT_EQ(7, future_value.get());
     task_scheduler_trace_pop_span(previous_span);
     std::vector<ft_task_trace_event> events = task_scheduler_trace_snapshot();

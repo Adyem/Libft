@@ -15,8 +15,6 @@ FT_TEST(test_game_hooks_getters_clone_callbacks, "Game: hooks getters provide ca
     ft_item item;
     int crafted_invocations;
     ft_game_hook_metadata metadata;
-    ft_vector<ft_game_hook_metadata> catalog;
-    ft_vector<ft_game_hook_metadata> scoped_catalog;
 
     crafted_invocations = 0;
     hooks.set_on_item_crafted(ft_function<void(ft_character&, ft_item&)>([&crafted_invocations](ft_character &character_ref, ft_item &item_ref)
@@ -43,13 +41,12 @@ FT_TEST(test_game_hooks_getters_clone_callbacks, "Game: hooks getters provide ca
     callback_copy(character, item);
     hooks.invoke_on_item_crafted(character, item);
     FT_ASSERT_EQ(2, crafted_invocations);
-    catalog = hooks.get_catalog_metadata();
-    FT_ASSERT_EQ(2, catalog.size());
-    scoped_catalog = hooks.get_catalog_metadata_for(ft_string(ft_game_hook_item_crafted_identifier));
-    FT_ASSERT_EQ(2, scoped_catalog.size());
+    ft_vector<ft_game_hook_metadata> catalog_after = hooks.get_catalog_metadata();
+    ft_vector<ft_game_hook_metadata> scoped_catalog_after = hooks.get_catalog_metadata_for(ft_string(ft_game_hook_item_crafted_identifier));
+    FT_ASSERT_EQ(2, catalog_after.size());
+    FT_ASSERT_EQ(2, scoped_catalog_after.size());
     hooks.unregister_listener(ft_string(ft_game_hook_item_crafted_identifier), ft_string("getter.custom"));
-    scoped_catalog = hooks.get_catalog_metadata_for(ft_string(ft_game_hook_item_crafted_identifier));
-    FT_ASSERT_EQ(1, scoped_catalog.size());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, hooks.get_error());
+    ft_vector<ft_game_hook_metadata> scoped_after = hooks.get_catalog_metadata_for(ft_string(ft_game_hook_item_crafted_identifier));
+    FT_ASSERT_EQ(1, scoped_after.size());
     return (1);
 }
