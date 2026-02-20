@@ -404,18 +404,9 @@ FT_TEST(test_game_world_registers_economy_entries_through_shared_tables, "Game w
     ft_vendor_profile vendor_profile;
     ft_currency_rate gold_rate;
 
-    potion_price.set_item_id(42);
-    potion_price.set_rarity(3);
-    potion_price.set_base_value(150);
-    potion_price.set_minimum_value(75);
-    potion_price.set_maximum_value(300);
-    vendor_profile.set_vendor_id(12);
-    vendor_profile.set_buy_markup(1.2);
-    vendor_profile.set_sell_multiplier(0.6);
-    vendor_profile.set_tax_rate(0.08);
-    gold_rate.set_currency_id(1);
-    gold_rate.set_rate_to_base(1.0);
-    gold_rate.set_display_precision(2);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, potion_price.initialize(42, 3, 150, 75, 300));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, vendor_profile.initialize(12, 1.2, 0.6, 0.08));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, gold_rate.initialize(1, 1.0, 2));
 
     world.get_economy_table()->register_price_definition(potion_price);
     world.get_economy_table()->register_vendor_profile(vendor_profile);

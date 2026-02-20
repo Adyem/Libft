@@ -6,9 +6,8 @@
 #include "../../Game/ft_currency_rate.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <csignal>
+#include <csetjmp>
 #include <cstring>
-#include <sys/wait.h>
-#include <unistd.h>
 
 #ifndef LIBFT_TEST_BUILD
 #endif
@@ -32,13 +31,40 @@ static int register_all_records(ft_economy_table &table)
     return (1);
 }
 
+static volatile sig_atomic_t g_economy_table_signal_caught = 0;
+static sigjmp_buf g_economy_table_signal_jump_buffer;
+
+static void economy_table_signal_handler(int signal_value)
+{
+    g_economy_table_signal_caught = signal_value;
+    siglongjmp(g_economy_table_signal_jump_buffer, 1);
+}
+
 static int economy_table_expect_sigabrt_uninitialized(void (*operation)(ft_economy_table &))
 {
-    pid_t child_process_id;
-    int child_status;
+    struct sigaction old_action_abort;
+    struct sigaction new_action_abort;
+    struct sigaction old_action_iot;
+    struct sigaction new_action_iot;
+    int jump_result;
 
-    child_process_id = fork();
-    if (child_process_id == 0)
+    std::memset(&new_action_abort, 0, sizeof(new_action_abort));
+    std::memset(&new_action_iot, 0, sizeof(new_action_iot));
+    new_action_abort.sa_handler = &economy_table_signal_handler;
+    new_action_iot.sa_handler = &economy_table_signal_handler;
+    sigemptyset(&new_action_abort.sa_mask);
+    sigemptyset(&new_action_iot.sa_mask);
+    if (sigaction(SIGABRT, &new_action_abort, &old_action_abort) != 0)
+        return (0);
+    if (sigaction(SIGIOT, &new_action_iot, &old_action_iot) != 0)
+    {
+        (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
+        return (0);
+    }
+
+    g_economy_table_signal_caught = 0;
+    jump_result = sigsetjmp(g_economy_table_signal_jump_buffer, 1);
+    if (jump_result == 0)
     {
         alignas(ft_economy_table) unsigned char storage[sizeof(ft_economy_table)];
         ft_economy_table *table_pointer;
@@ -46,16 +72,12 @@ static int economy_table_expect_sigabrt_uninitialized(void (*operation)(ft_econo
         std::memset(storage, 0, sizeof(storage));
         table_pointer = reinterpret_cast<ft_economy_table *>(storage);
         operation(*table_pointer);
-        _exit(0);
     }
-    if (child_process_id < 0)
-        return (0);
-    child_status = 0;
-    if (waitpid(child_process_id, &child_status, 0) < 0)
-        return (0);
-    if (WIFSIGNALED(child_status) == 0)
-        return (0);
-    return (WTERMSIG(child_status) == SIGABRT);
+    (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
+    (void)sigaction(SIGIOT, &old_action_iot, ft_nullptr);
+    if (g_economy_table_signal_caught == SIGABRT)
+        return (1);
+    return (g_economy_table_signal_caught == SIGIOT);
 }
 
 static void economy_table_call_copy_from_uninitialized(ft_economy_table &source)
