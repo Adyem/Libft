@@ -89,7 +89,7 @@ Behavior rules:
 - If any `initialize(...)` overload fails after it begins initialization work, it must leave the object in state `1` (destroyed), never in state `0`. This guarantees later destruction does not abort because of a failed initialization attempt.
 - `destroy()` must move state `2 -> 1` on success. If the object is still in state `0` or `1` because its constructor already leaves dependent members prepared (e.g., `ft_economy_table`), it may return `FT_ERR_INVALID_STATE` without aborting; the rest of the lifecycle contract must still guard misuse.
 - All methods other than constructors and `initialize()` must abort when called in state `0` or `1` unless a class explicitly documents that it tolerates no-ops while uninitialized.
-- Destructors should avoid calling `su_abort();` when state is `0` for classes that only lazily initialize; they should simply return cleanly, destroy when state is `2`, and not abort when state is `1`.
++ Destructors must never call `su_abort();` when the object is in state `0` or `1`. Instead they should return cleanly, only tearing down live resources when state is `2`, and allow lightweight helpers such as `ft_goal` to be destroyed safely even if they were never initialized.
 
 Abort behavior is mandatory and uniform:
 - Print a clear lifecycle error through the Printf module (for example `pf_printf_fd(2, "...\\n")`) with a trailing newline.

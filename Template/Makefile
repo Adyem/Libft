@@ -36,6 +36,8 @@ TOTAL_SRCS := $(words $(SRCS))
 TARGET := template_basic_types.a
 OBJDIR := objs
 OBJS := $(patsubst %.cpp,$(OBJDIR)/%.o,$(SRCS))
+DEPS       := $(OBJS:.o=.d)
+DEBUG_DEPS := $(DEBUG_OBJS:.o=.d)
 CXX := g++
 AR := ar
 ARFLAGS := rcs
@@ -53,7 +55,7 @@ else
     RM = rm -f
 endif
 
-CLEAN_FILES := $(TARGET) $(OBJS)
+CLEAN_FILES := $(TARGET) $(OBJS) $(DEPS)
 ifeq ($(OS),Windows_NT)
     CLEAN_FILES := $(subst /,\\,$(CLEAN_FILES))
 endif
@@ -71,7 +73,7 @@ $(TARGET): $(OBJS)
 	@printf '        [%s] Module archive ready (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS)
 
 $(OBJDIR)/%.o: %.cpp | $(OBJDIR)
-	@$(CXX) $(CFLAGS) -c $< -o $@
+	@$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
 
 $(OBJDIR):
 	@$(MKDIR) $@
@@ -87,5 +89,7 @@ clean:
 fclean: clean
 
 re: fclean all
+
+-include $(DEPS) $(DEBUG_DEPS)
 
 .PHONY: all clean fclean re

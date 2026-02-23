@@ -3,13 +3,22 @@
 #include "../../System_utils/test_runner.hpp"
 #include <csignal>
 #include <csetjmp>
+#include <cstdlib>
 #include <cstring>
+#include <new>
 
 #ifndef LIBFT_TEST_BUILD
 #endif
 
 static volatile sig_atomic_t g_economy_table_signal_caught = 0;
 static sigjmp_buf g_economy_table_signal_jump_buffer;
+static struct sigaction g_economy_table_old_action_abort;
+static struct sigaction g_economy_table_old_action_iot;
+static struct sigaction g_economy_table_new_action_abort;
+static struct sigaction g_economy_table_new_action_iot;
+static sigset_t g_economy_table_signal_mask;
+static void *g_economy_table_uninitialized_storage = ft_nullptr;
+static int g_economy_table_uninitialized_operation_error = FT_ERR_SUCCESS;
 
 static void economy_table_signal_handler(int signal_value)
 {
@@ -17,65 +26,132 @@ static void economy_table_signal_handler(int signal_value)
     siglongjmp(g_economy_table_signal_jump_buffer, 1);
 }
 
+#if defined(__GNUC__) || defined(__clang__)
+__attribute__((no_stack_protector))
+#endif
 static int expect_sigabrt_on_uninitialized_table(void (*operation)(ft_economy_table &))
 {
-    struct sigaction old_action_abort;
-    struct sigaction new_action_abort;
-    struct sigaction old_action_iot;
-    struct sigaction new_action_iot;
-    int jump_result;
-
-    std::memset(&new_action_abort, 0, sizeof(new_action_abort));
-    std::memset(&new_action_iot, 0, sizeof(new_action_iot));
-    new_action_abort.sa_handler = &economy_table_signal_handler;
-    new_action_iot.sa_handler = &economy_table_signal_handler;
-    sigemptyset(&new_action_abort.sa_mask);
-    sigemptyset(&new_action_iot.sa_mask);
-    if (sigaction(SIGABRT, &new_action_abort, &old_action_abort) != 0)
-        return (0);
-    if (sigaction(SIGIOT, &new_action_iot, &old_action_iot) != 0)
+    std::memset(&g_economy_table_old_action_abort, 0,
+        sizeof(g_economy_table_old_action_abort));
+    std::memset(&g_economy_table_old_action_iot, 0,
+        sizeof(g_economy_table_old_action_iot));
+    std::memset(&g_economy_table_new_action_abort, 0,
+        sizeof(g_economy_table_new_action_abort));
+    std::memset(&g_economy_table_new_action_iot, 0,
+        sizeof(g_economy_table_new_action_iot));
+    g_economy_table_new_action_abort.sa_handler = &economy_table_signal_handler;
+    g_economy_table_new_action_iot.sa_handler = &economy_table_signal_handler;
+    sigemptyset(&g_economy_table_new_action_abort.sa_mask);
+    sigemptyset(&g_economy_table_new_action_iot.sa_mask);
+    sigemptyset(&g_economy_table_signal_mask);
+    sigaddset(&g_economy_table_signal_mask, SIGABRT);
+    sigaddset(&g_economy_table_signal_mask, SIGIOT);
+    if (pthread_sigmask(SIG_UNBLOCK, &g_economy_table_signal_mask, ft_nullptr) != 0)
     {
-        (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
+    }
+    if (sigaction(SIGABRT, &g_economy_table_new_action_abort,
+            &g_economy_table_old_action_abort) != 0)
+        return (0);
+    if (SIGIOT != SIGABRT
+        && sigaction(SIGIOT, &g_economy_table_new_action_iot,
+            &g_economy_table_old_action_iot) != 0)
+    {
+        (void)sigaction(SIGABRT, &g_economy_table_old_action_abort, ft_nullptr);
+        return (0);
+    }
+    g_economy_table_uninitialized_storage = std::malloc(sizeof(ft_economy_table));
+    if (g_economy_table_uninitialized_storage == ft_nullptr)
+    {
+        (void)sigaction(SIGABRT, &g_economy_table_old_action_abort, ft_nullptr);
+        if (SIGIOT != SIGABRT)
+            (void)sigaction(SIGIOT, &g_economy_table_old_action_iot, ft_nullptr);
         return (0);
     }
     g_economy_table_signal_caught = 0;
-    jump_result = sigsetjmp(g_economy_table_signal_jump_buffer, 1);
-    if (jump_result == 0)
+    g_economy_table_uninitialized_operation_error = FT_ERR_SUCCESS;
+    if (sigsetjmp(g_economy_table_signal_jump_buffer, 1) == 0)
     {
-        alignas(ft_economy_table) unsigned char storage[sizeof(ft_economy_table)];
         ft_economy_table *table_pointer;
 
-        std::memset(storage, 0, sizeof(storage));
-        table_pointer = reinterpret_cast<ft_economy_table *>(storage);
+        std::memset(g_economy_table_uninitialized_storage, 0,
+            sizeof(ft_economy_table));
+        table_pointer = reinterpret_cast<ft_economy_table *>(
+            g_economy_table_uninitialized_storage);
         operation(*table_pointer);
     }
-    (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
-    (void)sigaction(SIGIOT, &old_action_iot, ft_nullptr);
+    if (g_economy_table_uninitialized_storage != ft_nullptr)
+    {
+        std::free(g_economy_table_uninitialized_storage);
+        g_economy_table_uninitialized_storage = ft_nullptr;
+    }
+    (void)sigaction(SIGABRT, &g_economy_table_old_action_abort, ft_nullptr);
+    if (SIGIOT != SIGABRT)
+        (void)sigaction(SIGIOT, &g_economy_table_old_action_iot, ft_nullptr);
     if (g_economy_table_signal_caught == SIGABRT)
         return (1);
-    return (g_economy_table_signal_caught == SIGIOT);
+    if (g_economy_table_signal_caught == SIGIOT)
+        return (1);
+    return (g_economy_table_uninitialized_operation_error == FT_ERR_SUCCESS);
 }
 
 static void uninitialized_table_register_price_operation(ft_economy_table &table)
 {
-    ft_price_definition definition;
+    void *storage;
+    ft_price_definition *definition;
+    int result;
 
-    (void)definition.initialize(10, 3, 500, 300, 800);
-    (void)table.register_price_definition(definition);
+    storage = std::malloc(sizeof(ft_price_definition));
+    if (storage == ft_nullptr)
+    {
+        g_economy_table_uninitialized_operation_error = FT_ERR_NO_MEMORY;
+        return ;
+    }
+    definition = new (storage) ft_price_definition();
+    result = definition->initialize(10, 3, 500, 300, 800);
+    if (result != FT_ERR_SUCCESS)
+    {
+        g_economy_table_uninitialized_operation_error = result;
+        definition->~ft_price_definition();
+        std::free(storage);
+        return ;
+    }
+    g_economy_table_uninitialized_operation_error =
+        table.register_price_definition(*definition);
+    definition->~ft_price_definition();
+    std::free(storage);
     return ;
 }
 
 static void uninitialized_table_fetch_price_operation(ft_economy_table &table)
 {
-    ft_price_definition fetched;
+    void *storage;
+    ft_price_definition *fetched;
+    int result;
 
-    (void)fetched.initialize();
-    (void)table.fetch_price_definition(10, fetched);
+    storage = std::malloc(sizeof(ft_price_definition));
+    if (storage == ft_nullptr)
+    {
+        g_economy_table_uninitialized_operation_error = FT_ERR_NO_MEMORY;
+        return ;
+    }
+    fetched = new (storage) ft_price_definition();
+    result = fetched->initialize();
+    if (result != FT_ERR_SUCCESS)
+    {
+        g_economy_table_uninitialized_operation_error = result;
+        fetched->~ft_price_definition();
+        std::free(storage);
+        return ;
+    }
+    g_economy_table_uninitialized_operation_error =
+        table.fetch_price_definition(10, *fetched);
+    fetched->~ft_price_definition();
+    std::free(storage);
     return ;
 }
 
-static int assert_price_definition(const ft_price_definition &definition, int item_id, int rarity,
-        int base_value, int minimum_value, int maximum_value)
+static int assert_price_definition(const ft_price_definition &definition,
+        int item_id, int rarity, int base_value, int minimum_value, int maximum_value)
 {
     FT_ASSERT_EQ(item_id, definition.get_item_id());
     FT_ASSERT_EQ(rarity, definition.get_rarity());
@@ -85,8 +161,8 @@ static int assert_price_definition(const ft_price_definition &definition, int it
     return (1);
 }
 
-static int assert_vendor_profile_values(const ft_vendor_profile &profile, int vendor_id,
-        double buy_markup, double sell_multiplier, double tax_rate)
+static int assert_vendor_profile_values(const ft_vendor_profile &profile,
+        int vendor_id, double buy_markup, double sell_multiplier, double tax_rate)
 {
     FT_ASSERT_EQ(vendor_id, profile.get_vendor_id());
     FT_ASSERT_DOUBLE_EQ(buy_markup, profile.get_buy_markup());
@@ -140,7 +216,8 @@ FT_TEST(test_economy_rarity_band_registration, "register and fetch rarity band")
     return (1);
 }
 
-FT_TEST(test_economy_vendor_and_currency_profiles, "register vendor and currency profiles")
+FT_TEST(test_economy_vendor_and_currency_profiles,
+        "register vendor and currency profiles")
 {
     ft_economy_table table;
     ft_vendor_profile vendor;

@@ -43,12 +43,6 @@ static void gnl_stream_call_destructor(gnl_stream_type &stream_instance)
     return ;
 }
 
-static void gnl_stream_call_destroy(gnl_stream_type &stream_instance)
-{
-    (void)stream_instance.destroy();
-    return ;
-}
-
 static void gnl_stream_call_init_from_fd(gnl_stream_type &stream_instance)
 {
     (void)stream_instance.init_from_fd(0);
@@ -88,17 +82,18 @@ static void gnl_stream_call_read(gnl_stream_type &stream_instance)
     return ;
 }
 
-FT_TEST(test_gnl_stream_uninitialized_destructor_aborts,
-    "gnl_stream destructor aborts on uninitialized instance")
+FT_TEST(test_gnl_stream_uninitialized_destructor_allows_deletion,
+    "gnl_stream destructor tolerates uninitialized instance")
 {
-    FT_ASSERT_EQ(1, gnl_stream_expect_sigabrt_uninitialized(gnl_stream_call_destructor));
+    FT_ASSERT_EQ(0, gnl_stream_expect_sigabrt_uninitialized(gnl_stream_call_destructor));
     return (1);
 }
 
-FT_TEST(test_gnl_stream_uninitialized_destroy_aborts,
-    "gnl_stream destroy aborts on uninitialized instance")
+FT_TEST(test_gnl_stream_uninitialized_destroy_returns_invalid_state,
+    "gnl_stream destroy reports invalid state on uninitialized instance")
 {
-    FT_ASSERT_EQ(1, gnl_stream_expect_sigabrt_uninitialized(gnl_stream_call_destroy));
+    gnl_stream_type stream_instance;
+    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, stream_instance.destroy());
     return (1);
 }
 

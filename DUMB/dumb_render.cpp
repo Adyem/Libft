@@ -84,12 +84,6 @@ ft_render_window::ft_render_window(void)
 
 ft_render_window::~ft_render_window(void)
 {
-    if (this->_initialized_state == ft_render_window::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("ft_render_window::~ft_render_window",
-            "destructor called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == ft_render_window::_state_initialized)
         (void)this->destroy();
     return ;
@@ -197,11 +191,7 @@ int ft_render_window::initialize(ft_render_window &&other)
 int ft_render_window::destroy(void)
 {
     if (this->_initialized_state != ft_render_window::_state_initialized)
-    {
-        this->abort_lifecycle_error("ft_render_window::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     if (this->_is_initialized == true)
         this->shutdown();
     this->disable_thread_safety();

@@ -53,6 +53,17 @@ int ft_progress_tracker::initialize() noexcept
             "called while object is already initialized");
         return (FT_ERR_INVALID_STATE);
     }
+    int error;
+
+    error = this->_achievements.initialize();
+    if (error != FT_ERR_SUCCESS)
+        return (error);
+    error = this->_quests.initialize();
+    if (error != FT_ERR_SUCCESS)
+    {
+        (void)this->_achievements.destroy();
+        return (error);
+    }
     this->_achievements.clear();
     this->_quests.clear();
     this->_initialized_state = ft_progress_tracker::_state_initialized;

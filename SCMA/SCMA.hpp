@@ -17,6 +17,8 @@ struct scma_handle
     ft_size_t    generation;
 };
 
+scma_handle    scma_invalid_handle(void);
+
 int32_t     scma_initialize(ft_size_t initial_capacity);
 void    scma_shutdown(void);
 int32_t     scma_is_initialized(void);
@@ -223,14 +225,11 @@ inline scma_handle_accessor<TValue>::scma_handle_accessor(scma_handle_accessor &
 template <typename TValue>
 inline scma_handle_accessor<TValue>::~scma_handle_accessor(void)
 {
-    if (this->_initialized_state == scma_handle_accessor<TValue>::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("scma_handle_accessor::~scma_handle_accessor",
-            "destructor called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == scma_handle_accessor<TValue>::_state_initialized)
-        (void)this->destroy();
+    {
+        this->_initialized_state = scma_handle_accessor<TValue>::_state_destroyed;
+        this->_handle = scma_invalid_handle();
+    }
     return ;
 }
 
@@ -311,8 +310,7 @@ inline int32_t    scma_handle_accessor<TValue>::destroy(void)
 {
     if (this->_initialized_state != scma_handle_accessor<TValue>::_state_initialized)
     {
-        this->abort_lifecycle_error("scma_handle_accessor::destroy",
-            "called while object is not initialized");
+        this->_last_error = FT_ERR_INVALID_STATE;
         return (FT_ERR_INVALID_STATE);
     }
     if (scma_mutex_lock() != 0)

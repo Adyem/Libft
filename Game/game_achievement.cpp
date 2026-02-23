@@ -11,12 +11,6 @@ ft_goal::ft_goal() noexcept
 
 ft_goal::~ft_goal() noexcept
 {
-    if (this->_initialized_state == ft_goal::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("ft_goal::~ft_goal",
-            "destructor called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == ft_goal::_state_initialized)
         (void)this->destroy();
     return ;
@@ -103,8 +97,6 @@ int ft_goal::destroy() noexcept
 
     if (this->_initialized_state != ft_goal::_state_initialized)
     {
-        this->abort_lifecycle_error("ft_goal::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
     }
     this->_target = 0;
@@ -298,6 +290,8 @@ int ft_achievement::initialize() noexcept
         return (FT_ERR_INVALID_STATE);
     }
     this->_id = 0;
+    if (this->_goals.initialize() != FT_ERR_SUCCESS)
+        return (FT_ERR_NO_MEMORY);
     this->_goals.clear();
     this->_initialized_state = ft_achievement::_state_initialized;
     return (FT_ERR_SUCCESS);
@@ -399,6 +393,7 @@ int ft_achievement::destroy() noexcept
     }
     this->_id = 0;
     this->_goals.clear();
+    (void)this->_goals.destroy();
     disable_error = this->disable_thread_safety();
     this->_initialized_state = ft_achievement::_state_destroyed;
     return (disable_error);

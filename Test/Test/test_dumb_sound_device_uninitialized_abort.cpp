@@ -80,12 +80,6 @@ static void sound_device_call_destructor(test_sound_device_impl &sound_device_in
     return ;
 }
 
-static void sound_device_call_destroy(test_sound_device_impl &sound_device_instance)
-{
-    (void)sound_device_instance.destroy();
-    return ;
-}
-
 static void sound_device_call_move(test_sound_device_impl &sound_device_instance)
 {
     (void)sound_device_instance.move(sound_device_instance);
@@ -116,17 +110,19 @@ static void sound_device_call_runtime_mutex(test_sound_device_impl &sound_device
     return ;
 }
 
-FT_TEST(test_dumb_sound_device_uninitialized_destructor_aborts,
-    "dumb sound device destructor aborts on uninitialized instance")
+FT_TEST(test_dumb_sound_device_uninitialized_destructor_tolerates_object,
+    "dumb sound device destructor tolerates uninitialized instance")
 {
-    FT_ASSERT_EQ(1, sound_device_expect_sigabrt_uninitialized(sound_device_call_destructor));
+    FT_ASSERT_EQ(0, sound_device_expect_sigabrt_uninitialized(sound_device_call_destructor));
     return (1);
 }
 
-FT_TEST(test_dumb_sound_device_uninitialized_destroy_aborts,
-    "dumb sound device destroy aborts on uninitialized instance")
+FT_TEST(test_dumb_sound_device_uninitialized_destroy_returns_invalid_state,
+    "dumb sound device destroy returns invalid state on uninitialized instance")
 {
-    FT_ASSERT_EQ(1, sound_device_expect_sigabrt_uninitialized(sound_device_call_destroy));
+    test_sound_device_impl device;
+
+    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, device.destroy());
     return (1);
 }
 

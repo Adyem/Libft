@@ -59,4 +59,8 @@ class pt_recursive_mutex
 static_assert(!std::is_copy_constructible<pt_recursive_mutex>::value, "pt_recursive_mutex cannot be copied");
 static_assert(!std::is_copy_assignable<pt_recursive_mutex>::value, "pt_recursive_mutex cannot be copy assigned");
 
+#ifdef LIBFT_TEST_BUILD
+extern std::atomic<int> pt_recursive_mutex_lock_override_error_code;
+#endif
+
 #endif

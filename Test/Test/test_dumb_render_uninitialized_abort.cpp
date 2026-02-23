@@ -43,12 +43,6 @@ static void render_call_destructor(render_window_type &render_window_instance)
     return ;
 }
 
-static void render_call_destroy(render_window_type &render_window_instance)
-{
-    (void)render_window_instance.destroy();
-    return ;
-}
-
 static void render_call_initialize_desc(render_window_type &render_window_instance)
 {
     ft_render_window_desc description;
@@ -133,17 +127,19 @@ static void render_call_runtime_mutex(render_window_type &render_window_instance
     return ;
 }
 
-FT_TEST(test_dumb_render_uninitialized_destructor_aborts,
-    "dumb render destructor aborts on uninitialized instance")
+FT_TEST(test_dumb_render_uninitialized_destructor_tolerates_object,
+    "dumb render destructor tolerates uninitialized instance")
 {
-    FT_ASSERT_EQ(1, render_expect_sigabrt_uninitialized(render_call_destructor));
+    FT_ASSERT_EQ(0, render_expect_sigabrt_uninitialized(render_call_destructor));
     return (1);
 }
 
-FT_TEST(test_dumb_render_uninitialized_destroy_aborts,
-    "dumb render destroy aborts on uninitialized instance")
+FT_TEST(test_dumb_render_uninitialized_destroy_returns_invalid_state,
+    "dumb render destroy returns invalid state on uninitialized instance")
 {
-    FT_ASSERT_EQ(1, render_expect_sigabrt_uninitialized(render_call_destroy));
+    render_window_type window_instance;
+
+    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, window_instance.destroy());
     return (1);
 }
 

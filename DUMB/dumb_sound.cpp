@@ -47,12 +47,6 @@ ft_sound_device::ft_sound_device(void)
 
 ft_sound_device::~ft_sound_device(void)
 {
-    if (this->_initialized_state == ft_sound_device::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("ft_sound_device::~ft_sound_device",
-            "destructor called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == ft_sound_device::_state_initialized)
         (void)this->destroy();
     return ;
@@ -139,11 +133,7 @@ int ft_sound_device::initialize(ft_sound_device &&other)
 int ft_sound_device::destroy(void)
 {
     if (this->_initialized_state != ft_sound_device::_state_initialized)
-    {
-        this->abort_lifecycle_error("ft_sound_device::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     this->disable_thread_safety();
     this->_initialized_state = ft_sound_device::_state_destroyed;
     return (FT_ERR_SUCCESS);

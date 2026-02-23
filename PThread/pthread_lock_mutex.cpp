@@ -3,7 +3,12 @@
 #include "pthread_lock_tracking.hpp"
 #include "../Errno/errno.hpp"
 #include "../Basic/basic.hpp"
+#include <atomic>
 #include <system_error>
+
+#ifdef LIBFT_TEST_BUILD
+std::atomic<int> pt_mutex_lock_override_error_code(FT_ERR_SUCCESS);
+#endif
 
 int pt_mutex::lock() const
 {
@@ -12,6 +17,11 @@ int pt_mutex::lock() const
 
     if (ensure_error != FT_ERR_SUCCESS)
         return (ensure_error);
+#ifdef LIBFT_TEST_BUILD
+    int override_error = pt_mutex_lock_override_error_code.load(std::memory_order_acquire);
+    if (override_error != FT_ERR_SUCCESS)
+        return (override_error);
+#endif
 
     pthread_t owner = this->_owner.load(std::memory_order_relaxed);
     if (this->_lock.load(std::memory_order_acquire)

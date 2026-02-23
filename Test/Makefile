@@ -152,6 +152,8 @@ DEBUG_OBJDIR := objs_debug
 
 OBJS       := $(patsubst %.cpp,$(OBJDIR)/%.o,$(SRCS))
 DEBUG_OBJS := $(patsubst %.cpp,$(DEBUG_OBJDIR)/%.o,$(SRCS))
+DEPS       := $(OBJS:.o=.d)
+DEBUG_DEPS := $(DEBUG_OBJS:.o=.d)
 
 all: $(TARGET)
 
@@ -191,7 +193,7 @@ $(OBJDIR)/%.o: %.cpp
 	        current=$$((current + 1)); \
 	done; \
 	echo "Compiling test file $$current/$$total";
-	@$(CXX) $(CFLAGS) -c $< -o $@
+	@$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
 
 $(OBJDIR)/Test/test_promise.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Template\"
 $(OBJDIR)/Test/test_task_scheduler.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"PThread\"
@@ -295,9 +297,9 @@ $(DEBUG_OBJDIR)/%.o: %.cpp
 	        current=$$((current + 1)); \
 	done; \
 	echo "Compiling test file $$current/$$total";
-	@$(CXX) $(CFLAGS) -c $< -o $@
+	@$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
 
-../Full_Libft.a:
+../Full_Libft.a: FORCE
 	@need_build=0; \
 	if $(MAKE) -C .. -q $(LIBFT_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)"; then \
 		:; \
@@ -314,7 +316,7 @@ $(DEBUG_OBJDIR)/%.o: %.cpp
 	        $(MAKE) -C .. $(LIBFT_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)"; \
 	fi
 
-../Full_Libft_debug.a:
+../Full_Libft_debug.a: FORCE
 	@need_build=0; \
 	if $(MAKE) -C .. -q $(LIBFT_DEBUG_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)"; then \
 		:; \
@@ -331,7 +333,7 @@ $(DEBUG_OBJDIR)/%.o: %.cpp
 	        $(MAKE) -C .. $(LIBFT_DEBUG_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)"; \
 	fi
 
-CLEAN_OBJS := $(shell find $(OBJDIR) $(DEBUG_OBJDIR) -type f -name '*.o' 2>/dev/null)
+CLEAN_OBJS := $(shell find $(OBJDIR) $(DEBUG_OBJDIR) \( -name '*.o' -o -name '*.d' \) -type f 2>/dev/null)
 
 ifeq ($(OS),Windows_NT)
     CLEAN_FILES := $(subst /,\\,$(CLEAN_OBJS))
@@ -376,4 +378,8 @@ re: fclean all
 
 both: all debug
 
-.PHONY: all clean fclean re debug both build_tests Basic re_Basic CMA re_CMA get_next_line re_get_next_line
+-include $(DEPS) $(DEBUG_DEPS)
+
+.PHONY: all clean fclean re debug both build_tests Basic re_Basic CMA re_CMA get_next_line re_get_next_line FORCE
+
+FORCE:

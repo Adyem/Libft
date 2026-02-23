@@ -55,6 +55,18 @@ int ft_quest::initialize() noexcept
     this->_id = 0;
     this->_phases = 0;
     this->_current_phase = 0;
+    int description_error;
+    int objective_error;
+
+    description_error = this->_description.initialize();
+    if (description_error != FT_ERR_SUCCESS)
+        return (description_error);
+    objective_error = this->_objective.initialize();
+    if (objective_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_description.destroy();
+        return (objective_error);
+    }
     this->_description.clear();
     this->_objective.clear();
     this->_reward_experience = 0;
@@ -142,6 +154,8 @@ int ft_quest::destroy() noexcept
     this->_phases = 0;
     this->_current_phase = 0;
     this->_reward_experience = 0;
+    (void)this->_description.destroy();
+    (void)this->_objective.destroy();
     disable_error = this->disable_thread_safety();
     this->_initialized_state = ft_quest::_state_destroyed;
     return (disable_error);

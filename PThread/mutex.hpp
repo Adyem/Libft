@@ -58,5 +58,9 @@ static_assert(!std::is_copy_constructible<pt_mutex>::value,
 static_assert(!std::is_copy_assignable<pt_mutex>::value,
         "pt_mutex cannot be copy assigned");
 
+#ifdef LIBFT_TEST_BUILD
+extern std::atomic<int> pt_mutex_lock_override_error_code;
+#endif
+
 
 #endif

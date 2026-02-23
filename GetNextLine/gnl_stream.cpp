@@ -102,12 +102,6 @@ gnl_stream::gnl_stream() noexcept
 
 gnl_stream::~gnl_stream() noexcept
 {
-    if (this->_initialized_state == gnl_stream::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("gnl_stream::~gnl_stream",
-            "destructor called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == gnl_stream::_state_initialized)
         (void)this->destroy();
     this->teardown_thread_safety();
@@ -161,7 +155,10 @@ int gnl_stream::initialize() noexcept
 
 int gnl_stream::destroy() noexcept
 {
-    this->abort_if_not_initialized("gnl_stream::destroy");
+    if (this->_initialized_state != gnl_stream::_state_initialized)
+    {
+        return (FT_ERR_INVALID_STATE);
+    }
     this->reset();
     this->disable_thread_safety();
     this->_initialized_state = gnl_stream::_state_destroyed;

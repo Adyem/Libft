@@ -66,12 +66,6 @@ ft_sound_clip::ft_sound_clip(void)
 
 ft_sound_clip::~ft_sound_clip(void)
 {
-    if (this->_initialized_state == ft_sound_clip::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("ft_sound_clip::~ft_sound_clip",
-            "destructor called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == ft_sound_clip::_state_initialized)
         (void)this->destroy();
     return ;
@@ -197,11 +191,7 @@ int ft_sound_clip::initialize(ft_sound_clip &&other)
 int ft_sound_clip::destroy(void)
 {
     if (this->_initialized_state != ft_sound_clip::_state_initialized)
-    {
-        this->abort_lifecycle_error("ft_sound_clip::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     this->_data.clear();
     delete this->_spec;
     this->_spec = ft_nullptr;

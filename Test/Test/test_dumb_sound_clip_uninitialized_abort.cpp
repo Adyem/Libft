@@ -44,12 +44,6 @@ static void sound_clip_call_destructor(sound_clip_type &sound_clip_instance)
     return ;
 }
 
-static void sound_clip_call_destroy(sound_clip_type &sound_clip_instance)
-{
-    (void)sound_clip_instance.destroy();
-    return ;
-}
-
 static void sound_clip_call_move(sound_clip_type &sound_clip_instance)
 {
     (void)sound_clip_instance.move(sound_clip_instance);
@@ -104,17 +98,19 @@ static void sound_clip_call_runtime_mutex(sound_clip_type &sound_clip_instance)
     return ;
 }
 
-FT_TEST(test_dumb_sound_clip_uninitialized_destructor_aborts,
-    "dumb sound clip destructor aborts on uninitialized instance")
+FT_TEST(test_dumb_sound_clip_uninitialized_destructor_tolerates_object,
+    "dumb sound clip destructor tolerates uninitialized instance")
 {
-    FT_ASSERT_EQ(1, sound_clip_expect_sigabrt_uninitialized(sound_clip_call_destructor));
+    FT_ASSERT_EQ(0, sound_clip_expect_sigabrt_uninitialized(sound_clip_call_destructor));
     return (1);
 }
 
-FT_TEST(test_dumb_sound_clip_uninitialized_destroy_aborts,
-    "dumb sound clip destroy aborts on uninitialized instance")
+FT_TEST(test_dumb_sound_clip_uninitialized_destroy_returns_invalid_state,
+    "dumb sound clip destroy returns invalid state on uninitialized instance")
 {
-    FT_ASSERT_EQ(1, sound_clip_expect_sigabrt_uninitialized(sound_clip_call_destroy));
+    sound_clip_type clip;
+
+    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, clip.destroy());
     return (1);
 }
 

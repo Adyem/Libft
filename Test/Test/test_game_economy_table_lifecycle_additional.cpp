@@ -34,7 +34,7 @@ static int expect_sigabrt_on_uninitialized_table(void (*operation)(ft_economy_ta
     sigemptyset(&new_action_iot.sa_mask);
     if (sigaction(SIGABRT, &new_action_abort, &old_action_abort) != 0)
         return (0);
-    if (sigaction(SIGIOT, &new_action_iot, &old_action_iot) != 0)
+    if (SIGIOT != SIGABRT && sigaction(SIGIOT, &new_action_iot, &old_action_iot) != 0)
     {
         (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
         return (0);
@@ -51,7 +51,8 @@ static int expect_sigabrt_on_uninitialized_table(void (*operation)(ft_economy_ta
         operation(*table_pointer);
     }
     (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
-    (void)sigaction(SIGIOT, &old_action_iot, ft_nullptr);
+    if (SIGIOT != SIGABRT)
+        (void)sigaction(SIGIOT, &old_action_iot, ft_nullptr);
     if (g_lifecycle_signal_caught == SIGABRT)
         return (1);
     return (g_lifecycle_signal_caught == SIGIOT);

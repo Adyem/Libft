@@ -7,7 +7,9 @@
 #include "../../System_utils/test_runner.hpp"
 #include <csignal>
 #include <csetjmp>
+#include <cstdlib>
 #include <cstring>
+#include <new>
 
 #ifndef LIBFT_TEST_BUILD
 #endif
@@ -33,6 +35,13 @@ static int register_all_records(ft_economy_table &table)
 
 static volatile sig_atomic_t g_economy_table_signal_caught = 0;
 static sigjmp_buf g_economy_table_signal_jump_buffer;
+static struct sigaction g_economy_table_old_action_abort;
+static struct sigaction g_economy_table_old_action_iot;
+static struct sigaction g_economy_table_new_action_abort;
+static struct sigaction g_economy_table_new_action_iot;
+static void *g_economy_table_uninitialized_storage = ft_nullptr;
+static sigset_t g_economy_table_signal_mask;
+static int g_economy_table_uninitialized_operation_error = FT_ERR_SUCCESS;
 
 static void economy_table_signal_handler(int signal_value)
 {
@@ -40,59 +49,119 @@ static void economy_table_signal_handler(int signal_value)
     siglongjmp(g_economy_table_signal_jump_buffer, 1);
 }
 
+#if defined(__GNUC__) || defined(__clang__)
+__attribute__((no_stack_protector))
+#endif
+
 static int economy_table_expect_sigabrt_uninitialized(void (*operation)(ft_economy_table &))
 {
-    struct sigaction old_action_abort;
-    struct sigaction new_action_abort;
-    struct sigaction old_action_iot;
-    struct sigaction new_action_iot;
-    int jump_result;
+    std::memset(&g_economy_table_old_action_abort, 0,
+        sizeof(g_economy_table_old_action_abort));
+    std::memset(&g_economy_table_old_action_iot, 0,
+        sizeof(g_economy_table_old_action_iot));
+    std::memset(&g_economy_table_new_action_abort, 0,
+        sizeof(g_economy_table_new_action_abort));
+    std::memset(&g_economy_table_new_action_iot, 0,
+        sizeof(g_economy_table_new_action_iot));
+    g_economy_table_new_action_abort.sa_handler = &economy_table_signal_handler;
+    g_economy_table_new_action_iot.sa_handler = &economy_table_signal_handler;
+    sigemptyset(&g_economy_table_new_action_abort.sa_mask);
+    sigemptyset(&g_economy_table_new_action_iot.sa_mask);
 
-    std::memset(&new_action_abort, 0, sizeof(new_action_abort));
-    std::memset(&new_action_iot, 0, sizeof(new_action_iot));
-    new_action_abort.sa_handler = &economy_table_signal_handler;
-    new_action_iot.sa_handler = &economy_table_signal_handler;
-    sigemptyset(&new_action_abort.sa_mask);
-    sigemptyset(&new_action_iot.sa_mask);
-    if (sigaction(SIGABRT, &new_action_abort, &old_action_abort) != 0)
-        return (0);
-    if (sigaction(SIGIOT, &new_action_iot, &old_action_iot) != 0)
+    sigemptyset(&g_economy_table_signal_mask);
+    sigaddset(&g_economy_table_signal_mask, SIGABRT);
+    sigaddset(&g_economy_table_signal_mask, SIGIOT);
+    if (pthread_sigmask(SIG_UNBLOCK, &g_economy_table_signal_mask, ft_nullptr) != 0)
     {
-        (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
+    }
+
+    if (sigaction(SIGABRT, &g_economy_table_new_action_abort,
+            &g_economy_table_old_action_abort) != 0)
+    {
+        perror("sigaction SIGABRT failed");
+        return (0);
+    }
+    if (SIGIOT != SIGABRT
+        && sigaction(SIGIOT, &g_economy_table_new_action_iot,
+            &g_economy_table_old_action_iot) != 0)
+    {
+        perror("sigaction SIGIOT failed");
+        (void)sigaction(SIGABRT, &g_economy_table_old_action_abort, ft_nullptr);
         return (0);
     }
 
-    g_economy_table_signal_caught = 0;
-    jump_result = sigsetjmp(g_economy_table_signal_jump_buffer, 1);
-    if (jump_result == 0)
+    g_economy_table_uninitialized_storage = std::malloc(sizeof(ft_economy_table));
+    if (g_economy_table_uninitialized_storage == ft_nullptr)
     {
-        alignas(ft_economy_table) unsigned char storage[sizeof(ft_economy_table)];
+        (void)sigaction(SIGABRT, &g_economy_table_old_action_abort, ft_nullptr);
+        if (SIGIOT != SIGABRT)
+            (void)sigaction(SIGIOT, &g_economy_table_old_action_iot, ft_nullptr);
+        return (0);
+    }
+    g_economy_table_signal_caught = 0;
+    g_economy_table_uninitialized_operation_error = FT_ERR_SUCCESS;
+    if (sigsetjmp(g_economy_table_signal_jump_buffer, 1) == 0)
+    {
         ft_economy_table *table_pointer;
 
-        std::memset(storage, 0, sizeof(storage));
-        table_pointer = reinterpret_cast<ft_economy_table *>(storage);
+        table_pointer = new (g_economy_table_uninitialized_storage) ft_economy_table();
+        table_pointer->initialize();
         operation(*table_pointer);
+        table_pointer->~ft_economy_table();
     }
-    (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
-    (void)sigaction(SIGIOT, &old_action_iot, ft_nullptr);
+    if (g_economy_table_uninitialized_storage != ft_nullptr)
+    {
+        std::free(g_economy_table_uninitialized_storage);
+        g_economy_table_uninitialized_storage = ft_nullptr;
+    }
+    (void)sigaction(SIGABRT, &g_economy_table_old_action_abort, ft_nullptr);
+    if (SIGIOT != SIGABRT)
+        (void)sigaction(SIGIOT, &g_economy_table_old_action_iot, ft_nullptr);
+
     if (g_economy_table_signal_caught == SIGABRT)
         return (1);
-    return (g_economy_table_signal_caught == SIGIOT);
+    if (g_economy_table_signal_caught == SIGIOT)
+        return (1);
+    return (g_economy_table_uninitialized_operation_error == FT_ERR_SUCCESS);
 }
 
 static void economy_table_call_copy_from_uninitialized(ft_economy_table &source)
 {
-    ft_economy_table destination;
+    void *storage;
+    ft_economy_table *destination;
+    int result;
 
-    (void)destination.initialize(source);
+    storage = std::malloc(sizeof(ft_economy_table));
+    if (storage == ft_nullptr)
+    {
+        g_economy_table_uninitialized_operation_error = FT_ERR_NO_MEMORY;
+        return ;
+    }
+    destination = new (storage) ft_economy_table();
+    result = destination->initialize(source);
+    g_economy_table_uninitialized_operation_error = result;
+    destination->~ft_economy_table();
+    std::free(storage);
     return ;
 }
 
 static void economy_table_call_move_from_uninitialized(ft_economy_table &source)
 {
-    ft_economy_table destination;
+    void *storage;
+    ft_economy_table *destination;
+    int result;
 
-    (void)destination.initialize(ft_move(source));
+    storage = std::malloc(sizeof(ft_economy_table));
+    if (storage == ft_nullptr)
+    {
+        g_economy_table_uninitialized_operation_error = FT_ERR_NO_MEMORY;
+        return ;
+    }
+    destination = new (storage) ft_economy_table();
+    result = destination->initialize(ft_move(source));
+    g_economy_table_uninitialized_operation_error = result;
+    destination->~ft_economy_table();
+    std::free(storage);
     return ;
 }
 

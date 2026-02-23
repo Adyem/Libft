@@ -73,6 +73,8 @@ DEBUG_OBJDIR   := objs_debug
 
 OBJS       := $(patsubst %.cpp,$(OBJDIR)/%.o,$(SRCS))
 DEBUG_OBJS := $(patsubst %.cpp,$(DEBUG_OBJDIR)/%.o,$(SRCS))
+DEPS       := $(OBJS:.o=.d)
+DEBUG_DEPS := $(DEBUG_OBJS:.o=.d)
 
 CFLAGS   ?= -Wall -Wextra -Werror -g -O0 -std=c++17 -Wuseless-cast
 
@@ -83,7 +85,7 @@ $(TARGET): $(OBJS)
 	@printf '        [%s] Module archive ready (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS)
 
 $(OBJDIR)/%.o: %.cpp $(HEADERS) | $(OBJDIR)
-	@$(CXX) $(CFLAGS) -c $< -o $@
+	@$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
 	@count=$$(find $(OBJDIR) -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
 	    printf '        [%s] Building file %s (%d/%d)\n' "$(MODULE_NAME)" "$<" $$count $(TOTAL_SRCS)
 
@@ -95,14 +97,14 @@ $(DEBUG_TARGET): $(DEBUG_OBJS)
 	@printf '        [%s Debug] Module archive ready (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS)
 
 $(DEBUG_OBJDIR)/%.o: %.cpp $(HEADERS) | $(DEBUG_OBJDIR)
-	@$(CXX) $(CFLAGS) -c $< -o $@
+	@$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
 	@count=$$(find $(DEBUG_OBJDIR) -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
 	    printf '        [%s Debug] Building file %s (%d/%d)\n' "$(MODULE_NAME)" "$<" $$count $(TOTAL_SRCS)
 
 $(OBJDIR) $(DEBUG_OBJDIR):
 	@$(MKDIR) $@
 
-CLEAN_OBJS := $(wildcard $(OBJDIR)/*.o) $(wildcard $(DEBUG_OBJDIR)/*.o)
+CLEAN_OBJS := $(wildcard $(OBJDIR)/*.o) $(wildcard $(OBJDIR)/*.d) $(wildcard $(DEBUG_OBJDIR)/*.o) $(wildcard $(DEBUG_OBJDIR)/*.d)
 
 ifeq ($(OS),Windows_NT)
     CLEAN_FILES := $(subst /,\\,$(CLEAN_OBJS))
@@ -136,5 +138,7 @@ fclean:
 re: fclean all
 
 both: all debug
+
+-include $(DEPS) $(DEBUG_DEPS)
 
 .PHONY: all clean fclean re debug both
