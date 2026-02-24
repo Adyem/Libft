@@ -13,10 +13,7 @@ ft_upgrade::ft_upgrade() noexcept
 ft_upgrade::~ft_upgrade() noexcept
 {
     if (this->_initialized_state != ft_upgrade::_state_initialized)
-    {
-        this->_initialized_state = ft_upgrade::_state_destroyed;
         return ;
-    }
     (void)this->destroy();
     return ;
 }

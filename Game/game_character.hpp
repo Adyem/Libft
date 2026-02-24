@@ -13,6 +13,7 @@
 #include "game_equipment.hpp"
 #include "game_experience_table.hpp"
 #include "game_resistance.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "../PThread/mutex.hpp"
 #include <cstdint>
 

@@ -14,10 +14,7 @@ ft_region_definition::ft_region_definition() noexcept
 ft_region_definition::~ft_region_definition() noexcept
 {
     if (this->_initialized_state != ft_region_definition::_state_initialized)
-    {
-        this->_initialized_state = ft_region_definition::_state_destroyed;
         return ;
-    }
     (void)this->destroy();
     return ;
 }

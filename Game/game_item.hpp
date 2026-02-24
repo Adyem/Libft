@@ -2,6 +2,7 @@
 # define GAME_ITEM_HPP
 
 #include "../Errno/errno.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "../PThread/mutex.hpp"
 
 class ft_item_modifier

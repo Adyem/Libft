@@ -9,6 +9,7 @@
 #include "../Template/vector.hpp"
 #include "../Template/map.hpp"
 #include "../CPP_class/class_string.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "../PThread/mutex.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include <stdint.h>

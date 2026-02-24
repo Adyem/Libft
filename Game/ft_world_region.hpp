@@ -3,6 +3,7 @@
 
 #include "../Template/vector.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "../PThread/mutex.hpp"
 #include <stdint.h>
 

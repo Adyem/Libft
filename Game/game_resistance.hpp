@@ -1,6 +1,7 @@
 #ifndef GAME_RESISTANCE_HPP
 # define GAME_RESISTANCE_HPP
 
+#include "../PThread/recursive_mutex.hpp"
 #include "../PThread/mutex.hpp"
 
 class ft_resistance

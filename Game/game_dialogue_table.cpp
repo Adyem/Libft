@@ -42,10 +42,7 @@ ft_dialogue_table::ft_dialogue_table() noexcept
 ft_dialogue_table::~ft_dialogue_table() noexcept
 {
     if (this->_initialized_state != ft_dialogue_table::_state_initialized)
-    {
-        this->_initialized_state = ft_dialogue_table::_state_destroyed;
         return ;
-    }
     (void)this->destroy();
     return ;
 }

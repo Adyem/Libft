@@ -1,6 +1,7 @@
 #ifndef GAME_EXPERIENCE_TABLE_HPP
 # define GAME_EXPERIENCE_TABLE_HPP
 
+#include "../PThread/recursive_mutex.hpp"
 #include "../PThread/mutex.hpp"
 
 class ft_experience_table

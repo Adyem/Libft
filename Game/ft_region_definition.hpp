@@ -2,6 +2,7 @@
 # define FT_REGION_DEFINITION_HPP
 
 #include "../CPP_class/class_string.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "../PThread/mutex.hpp"
 #include <stdint.h>
 

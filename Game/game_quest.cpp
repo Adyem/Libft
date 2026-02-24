@@ -13,10 +13,7 @@ ft_quest::ft_quest() noexcept
 ft_quest::~ft_quest() noexcept
 {
     if (this->_initialized_state != ft_quest::_state_initialized)
-    {
-        this->_initialized_state = ft_quest::_state_destroyed;
         return ;
-    }
     (void)this->destroy();
     return ;
 }

@@ -30,10 +30,7 @@ ft_world_region::ft_world_region() noexcept
 ft_world_region::~ft_world_region() noexcept
 {
     if (this->_initialized_state != ft_world_region::_state_initialized)
-    {
-        this->_initialized_state = ft_world_region::_state_destroyed;
         return ;
-    }
     (void)this->destroy();
     return ;
 }

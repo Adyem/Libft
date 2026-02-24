@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "../PThread/mutex.hpp"
 
 class ft_pathfinding;

@@ -1,2 +1,0 @@
-objs_test/Compatebility_cross_process_windows.o: \
- Compatebility_cross_process_windows.cpp

@@ -11,6 +11,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Basic/basic.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "../PThread/mutex.hpp"
 
 class ft_game_server

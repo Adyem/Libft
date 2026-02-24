@@ -8,6 +8,7 @@
 #include "../CPP_class/class_string.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "../PThread/mutex.hpp"
 #include "../Time/time.hpp"
 #include <cstddef>

@@ -2,6 +2,7 @@
 # define FT_RARITY_BAND_HPP
 
 #include "../Errno/errno.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "../PThread/mutex.hpp"
 #include <stdint.h>
 

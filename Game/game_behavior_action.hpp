@@ -1,6 +1,7 @@
 #ifndef FT_BEHAVIOR_ACTION_HPP
 # define FT_BEHAVIOR_ACTION_HPP
 
+#include "../PThread/recursive_mutex.hpp"
 #include "../PThread/mutex.hpp"
 
 class ft_behavior_action

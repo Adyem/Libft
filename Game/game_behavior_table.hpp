@@ -3,6 +3,7 @@
 
 #include "../Template/map.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "../PThread/mutex.hpp"
 #include "game_behavior_profile.hpp"
 #include <stdint.h>

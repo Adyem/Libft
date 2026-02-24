@@ -4,6 +4,7 @@
 #include "ft_dialogue_line.hpp"
 #include "ft_dialogue_script.hpp"
 #include "../Template/map.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "../PThread/mutex.hpp"
 #include "../Template/shared_ptr.hpp"
 #include <stdint.h>

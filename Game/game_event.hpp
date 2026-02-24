@@ -3,6 +3,7 @@
 
 #include "../Template/function.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "../PThread/mutex.hpp"
 
 class ft_world;

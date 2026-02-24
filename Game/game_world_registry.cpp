@@ -13,10 +13,7 @@ ft_world_registry::ft_world_registry() noexcept
 ft_world_registry::~ft_world_registry() noexcept
 {
     if (this->_initialized_state != ft_world_registry::_state_initialized)
-    {
-        this->_initialized_state = ft_world_registry::_state_destroyed;
         return ;
-    }
     (void)this->destroy();
     return ;
 }

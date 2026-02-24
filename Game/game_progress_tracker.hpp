@@ -4,6 +4,7 @@
 #include "game_achievement.hpp"
 #include "game_quest.hpp"
 #include "../Template/map.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "../PThread/mutex.hpp"
 #include <stdint.h>
 

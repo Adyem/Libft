@@ -4,6 +4,7 @@
 #include "game_item.hpp"
 #include "../Template/shared_ptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "../PThread/mutex.hpp"
 
 enum ft_equipment_slot

@@ -66,10 +66,7 @@ ft_path_step::ft_path_step() noexcept
 ft_path_step::~ft_path_step() noexcept
 {
     if (this->_initialized_state != ft_path_step::_state_initialized)
-    {
-        this->_initialized_state = ft_path_step::_state_destroyed;
         return ;
-    }
     (void)this->destroy();
     return ;
 }
@@ -340,10 +337,7 @@ ft_pathfinding::ft_pathfinding() noexcept
 ft_pathfinding::~ft_pathfinding()
 {
     if (this->_initialized_state != ft_pathfinding::_state_initialized)
-    {
-        this->_initialized_state = ft_pathfinding::_state_destroyed;
         return ;
-    }
     (void)this->destroy();
     return ;
 }
