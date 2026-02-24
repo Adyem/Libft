@@ -59,7 +59,8 @@ FT_TEST(test_game_world_persistence_round_trip,
     hero.set_damage_rule(FT_DAMAGE_RULE_FLAT);
     FT_ASSERT_EQ(hero.get_error(), FT_ERR_SUCCESS);
 
-    ft_inventory backpack(6);
+    ft_inventory backpack;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, backpack.initialize(6, 0));
     ft_sharedptr<ft_item> potion(new (std::nothrow) ft_item());
     FT_ASSERT(potion.get() != ft_nullptr);
     FT_ASSERT_EQ(potion->get_error(), FT_ERR_SUCCESS);
@@ -75,7 +76,8 @@ FT_TEST(test_game_world_persistence_round_trip,
     FT_ASSERT_EQ(world_instance.get_error(), FT_ERR_SUCCESS);
 
     ft_character restored_hero;
-    ft_inventory restored_inventory(1);
+    ft_inventory restored_inventory;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, restored_inventory.initialize(1, 0));
 
     FT_ASSERT_EQ(world_instance.load_from_store(persistence_store, "slot-primary", restored_hero, restored_inventory), FT_ERR_SUCCESS);
     FT_ASSERT_EQ(world_instance.get_error(), FT_ERR_SUCCESS);

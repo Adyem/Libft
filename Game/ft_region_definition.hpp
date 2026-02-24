@@ -12,7 +12,7 @@ class ft_region_definition
         ft_string   _name;
         ft_string   _description;
         int         _recommended_level;
-        pt_mutex   *_mutex;
+        pt_recursive_mutex   *_mutex;
         uint8_t     _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -27,8 +27,6 @@ class ft_region_definition
 
     public:
         ft_region_definition() noexcept;
-        ft_region_definition(int region_id, const ft_string &name,
-                const ft_string &description, int recommended_level) noexcept;
         virtual ~ft_region_definition() noexcept;
         ft_region_definition(const ft_region_definition &other) noexcept = delete;
         ft_region_definition &operator=(const ft_region_definition &other) noexcept = delete;
@@ -38,6 +36,8 @@ class ft_region_definition
         int initialize() noexcept;
         int initialize(const ft_region_definition &other) noexcept;
         int initialize(ft_region_definition &&other) noexcept;
+        int initialize(int region_id, const ft_string &name,
+            const ft_string &description, int recommended_level) noexcept;
         int destroy() noexcept;
         int enable_thread_safety() noexcept;
         int disable_thread_safety() noexcept;
@@ -58,7 +58,7 @@ class ft_region_definition
         void set_recommended_level(int recommended_level) noexcept;
 
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex *get_mutex_for_validation() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 

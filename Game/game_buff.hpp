@@ -14,7 +14,7 @@ class ft_buff
         int              _modifier2;
         int              _modifier3;
         int              _modifier4;
-        mutable pt_mutex *_mutex;
+        mutable pt_recursive_mutex *_mutex;
         uint8_t          _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -74,7 +74,7 @@ class ft_buff
         void sub_modifier4(int mod) noexcept;
 
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex *get_mutex_for_validation() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 

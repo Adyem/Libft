@@ -3,8 +3,8 @@
 #include "../System_utils/system_utils.hpp"
 #include <new>
 
-ft_inventory::ft_inventory(size_t capacity, int weight_limit) noexcept
-    : _items(), _capacity(capacity), _used_slots(0), _weight_limit(weight_limit),
+ft_inventory::ft_inventory() noexcept
+    : _items(), _capacity(0), _used_slots(0), _weight_limit(0),
       _current_weight(0), _next_slot(0), _mutex(ft_nullptr),
       _initialized_state(ft_inventory::_state_uninitialized)
 {
@@ -14,11 +14,7 @@ ft_inventory::ft_inventory(size_t capacity, int weight_limit) noexcept
 ft_inventory::~ft_inventory() noexcept
 {
     if (this->_initialized_state == ft_inventory::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("ft_inventory::~ft_inventory",
-            "destructor called while object is uninitialized");
         return ;
-    }
     if (this->_initialized_state == ft_inventory::_state_initialized)
         (void)this->destroy();
     return ;
@@ -58,6 +54,18 @@ int ft_inventory::initialize() noexcept
     this->_current_weight = 0;
     this->_next_slot = 0;
     this->_initialized_state = ft_inventory::_state_initialized;
+    return (FT_ERR_SUCCESS);
+}
+
+int ft_inventory::initialize(size_t capacity, int weight_limit) noexcept
+{
+    int initialize_error;
+
+    initialize_error = this->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
+    this->_capacity = capacity;
+    this->_weight_limit = weight_limit;
     return (FT_ERR_SUCCESS);
 }
 
@@ -108,11 +116,7 @@ int ft_inventory::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != ft_inventory::_state_initialized)
-    {
-        this->abort_lifecycle_error("ft_inventory::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     this->_items.clear();
     disable_error = this->disable_thread_safety();
     this->_initialized_state = ft_inventory::_state_destroyed;
@@ -121,13 +125,13 @@ int ft_inventory::destroy() noexcept
 
 int ft_inventory::enable_thread_safety() noexcept
 {
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
     this->abort_if_not_initialized("ft_inventory::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
-    mutex_pointer = new (std::nothrow) pt_mutex();
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     initialize_error = mutex_pointer->initialize();
@@ -355,11 +359,13 @@ int ft_inventory::add_item(const ft_sharedptr<ft_item> &item) noexcept
         if (this->_capacity != 0 && this->_used_slots + slot_usage > this->_capacity)
             return (FT_ERR_FULL);
 #endif
-        ft_sharedptr<ft_item> new_item(new ft_item(*item));
+        ft_sharedptr<ft_item> new_item(new ft_item());
         int amount_to_add;
 
         if (!new_item)
             return (FT_ERR_NO_MEMORY);
+        if (new_item->initialize(*item) != FT_ERR_SUCCESS)
+            return (new_item->get_error());
         if (remaining < new_item->get_max_stack())
             amount_to_add = remaining;
         else
@@ -450,7 +456,7 @@ bool ft_inventory::has_rarity(int rarity) const noexcept
 }
 
 #ifdef LIBFT_TEST_BUILD
-pt_mutex *ft_inventory::get_mutex_for_validation() const noexcept
+pt_recursive_mutex *ft_inventory::get_mutex_for_validation() const noexcept
 {
     this->abort_if_not_initialized("ft_inventory::get_mutex_for_validation");
     return (this->_mutex);

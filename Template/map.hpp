@@ -168,14 +168,12 @@ ft_map<Key, MappedType>& ft_map<Key, MappedType>::operator=(
 template <typename Key, typename MappedType>
 ft_map<Key, MappedType>::~ft_map()
 {
-    if (this->_state == ft_map<Key, MappedType>::_state_uninitialized)
+    if (this->_state != ft_map<Key, MappedType>::_state_initialized)
     {
-        this->abort_lifecycle_error("ft_map::~ft_map",
-            "destructor called while object is uninitialized");
+        this->_state = ft_map<Key, MappedType>::_state_destroyed;
         return ;
     }
-    if (this->_state == ft_map<Key, MappedType>::_state_initialized)
-        (void)this->destroy();
+    (void)this->destroy();
     return ;
 }
 
@@ -246,9 +244,8 @@ int ft_map<Key, MappedType>::destroy()
 {
     if (this->_state != ft_map<Key, MappedType>::_state_initialized)
     {
-        this->abort_lifecycle_error("ft_map::destroy",
-            "called while object is not initialized");
-        return (FT_ERR_INVALID_STATE);
+        this->_state = ft_map<Key, MappedType>::_state_destroyed;
+        return (FT_ERR_SUCCESS);
     }
     this->clear();
     if (this->_data != ft_nullptr)

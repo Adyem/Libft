@@ -25,12 +25,15 @@ FT_TEST(test_world_registry_clears_entries_after_destroy,
 {
     ft_world_registry registry;
     ft_vector<int> region_ids;
-    ft_region_definition region(12, ft_string("Fjord"), ft_string("Icy"), 6);
+    ft_region_definition region;
     ft_region_definition fetched_region;
 
     region_ids.push_back(12);
-    ft_world_region world(5, region_ids);
+    ft_world_region world;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(12, ft_string("Fjord"),
+        ft_string("Icy"), 6));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize(5, region_ids));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.register_region(region));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.register_world(world));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.destroy());

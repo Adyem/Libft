@@ -19,7 +19,7 @@ class ft_quest
         ft_string                       _objective;
         int                             _reward_experience;
         ft_vector<ft_sharedptr<ft_item> > _reward_items;
-        mutable pt_mutex               *_mutex;
+        mutable pt_recursive_mutex               *_mutex;
         uint8_t                         _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -76,7 +76,7 @@ class ft_quest
         void advance_phase() noexcept;
 
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex *get_mutex_for_validation() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 

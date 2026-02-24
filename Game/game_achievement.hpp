@@ -11,7 +11,7 @@ class ft_goal
     private:
         int              _target;
         int              _progress;
-        mutable pt_mutex *_mutex;
+        mutable pt_recursive_mutex *_mutex;
         uint8_t          _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -49,7 +49,7 @@ class ft_goal
         void add_progress(int delta) noexcept;
 
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex *get_mutex_for_validation() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 
@@ -58,7 +58,7 @@ class ft_achievement
     private:
         int              _id;
         ft_map<int, ft_goal> _goals;
-        mutable pt_mutex *_mutex;
+        mutable pt_recursive_mutex *_mutex;
         uint8_t          _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -106,7 +106,7 @@ class ft_achievement
         bool is_complete() const noexcept;
 
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex *get_mutex_for_validation() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 

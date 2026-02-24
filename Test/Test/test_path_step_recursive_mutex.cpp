@@ -174,11 +174,11 @@ FT_TEST(test_path_step_recursive_mutex_accessors_while_locked,
     return (1);
 }
 
-FT_TEST(test_path_step_recursive_mutex_copy_constructor_unlocks,
-    "ft_path_step copy constructor leaves mutex unlocked")
+FT_TEST(test_path_step_recursive_mutex_initialize_copy_unlocks,
+    "ft_path_step initialize(copy) leaves mutex unlocked")
 {
     ft_path_step step;
-    ft_path_step copy(step);
+    ft_path_step copy;
     int test_failed;
     const char *failure_expression;
     int failure_line;
@@ -403,7 +403,7 @@ FT_TEST(test_path_step_recursive_mutex_assignment_unlocks,
     test_failed = 0;
     failure_expression = ft_nullptr;
     failure_line = 0;
-    target = step;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, target.initialize(step));
     if (target.get_error() != FT_ERR_SUCCESS)
     {
         test_failed = 1;
@@ -442,7 +442,7 @@ FT_TEST(test_path_step_recursive_mutex_move_assignment_unlocks,
     test_failed = 0;
     failure_expression = ft_nullptr;
     failure_line = 0;
-    target = ft_move(source);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, target.initialize(ft_move(source)));
     if (target.get_error() != FT_ERR_SUCCESS)
     {
         test_failed = 1;

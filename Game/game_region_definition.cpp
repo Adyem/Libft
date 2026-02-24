@@ -11,25 +11,14 @@ ft_region_definition::ft_region_definition() noexcept
     return ;
 }
 
-ft_region_definition::ft_region_definition(int region_id, const ft_string &name,
-    const ft_string &description, int recommended_level) noexcept
-    : _region_id(region_id), _name(name), _description(description),
-      _recommended_level(recommended_level), _mutex(ft_nullptr),
-      _initialized_state(ft_region_definition::_state_uninitialized)
-{
-    return ;
-}
-
 ft_region_definition::~ft_region_definition() noexcept
 {
-    if (this->_initialized_state == ft_region_definition::_state_uninitialized)
+    if (this->_initialized_state != ft_region_definition::_state_initialized)
     {
-        this->abort_lifecycle_error("ft_region_definition::~ft_region_definition",
-            "destructor called while object is uninitialized");
+        this->_initialized_state = ft_region_definition::_state_destroyed;
         return ;
     }
-    if (this->_initialized_state == ft_region_definition::_state_initialized)
-        (void)this->destroy();
+    (void)this->destroy();
     return ;
 }
 
@@ -94,15 +83,29 @@ int ft_region_definition::initialize(ft_region_definition &&other) noexcept
     return (this->initialize(static_cast<const ft_region_definition &>(other)));
 }
 
+int ft_region_definition::initialize(int region_id, const ft_string &name,
+    const ft_string &description, int recommended_level) noexcept
+{
+    int initialize_error;
+
+    initialize_error = this->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
+    this->_region_id = region_id;
+    this->_name = name;
+    this->_description = description;
+    this->_recommended_level = recommended_level;
+    return (FT_ERR_SUCCESS);
+}
+
 int ft_region_definition::destroy() noexcept
 {
     int disable_error;
 
     if (this->_initialized_state != ft_region_definition::_state_initialized)
     {
-        this->abort_lifecycle_error("ft_region_definition::destroy",
-            "called while object is not initialized");
-        return (FT_ERR_INVALID_STATE);
+        this->_initialized_state = ft_region_definition::_state_destroyed;
+        return (FT_ERR_SUCCESS);
     }
     disable_error = this->disable_thread_safety();
     this->_initialized_state = ft_region_definition::_state_destroyed;
@@ -111,13 +114,13 @@ int ft_region_definition::destroy() noexcept
 
 int ft_region_definition::enable_thread_safety() noexcept
 {
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
     this->abort_if_not_initialized("ft_region_definition::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
-    mutex_pointer = new (std::nothrow) pt_mutex();
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     initialize_error = mutex_pointer->initialize();
@@ -264,7 +267,7 @@ void ft_region_definition::set_recommended_level(int recommended_level) noexcept
 }
 
 #ifdef LIBFT_TEST_BUILD
-pt_mutex *ft_region_definition::get_mutex_for_validation() const noexcept
+pt_recursive_mutex *ft_region_definition::get_mutex_for_validation() const noexcept
 {
     this->abort_if_not_initialized("ft_region_definition::get_mutex_for_validation");
     return (this->_mutex);

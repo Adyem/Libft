@@ -1,7 +1,7 @@
 #include "../test_internal.hpp"
 #include "../../Game/ft_dialogue_line.hpp"
 #include "../../Game/ft_dialogue_script.hpp"
-#include "../../Game/ft_behavior_action.hpp"
+#include "../../Game/game_behavior_action.hpp"
 #include "../../Template/vector.hpp"
 #include "../../Template/shared_ptr.hpp"
 #include "../../System_utils/test_runner.hpp"
@@ -35,9 +35,10 @@ FT_TEST(test_game_dialogue_script_line_management, "Game: dialogue script accept
 {
     ft_vector<int> next_ids;
     ft_vector<ft_sharedptr<ft_dialogue_line>> lines;
-    ft_sharedptr<ft_dialogue_line> first_line(new (std::nothrow) ft_dialogue_line(10,
-                ft_string("npc"), ft_string("intro"), next_ids));
+    ft_sharedptr<ft_dialogue_line> first_line(new (std::nothrow) ft_dialogue_line());
     FT_ASSERT(first_line.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first_line->initialize(10, ft_string("npc"),
+        ft_string("intro"), next_ids));
 
     lines.push_back(first_line);
     ft_dialogue_script script;
@@ -56,12 +57,13 @@ FT_TEST(test_game_dialogue_script_line_management, "Game: dialogue script accept
 }
 
 FT_TEST(test_game_behavior_action_move_assignment_resets_source,
-        "Game: behavior action move assignment transfers values")
+        "Game: behavior action initialize(move) transfers values")
 {
-    ft_behavior_action source(6, 0.5, 1.25);
+    ft_behavior_action source;
     ft_behavior_action destination;
 
-    destination = ft_move(source);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize(6, 0.5, 1.25));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.initialize(ft_move(source)));
 
     FT_ASSERT_EQ(6, destination.get_action_id());
     FT_ASSERT_DOUBLE_EQ(0.5, destination.get_weight());

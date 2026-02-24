@@ -7,7 +7,10 @@
 
 FT_TEST(test_game_region_definition_basic_accessors, "Region definition accessors return stored values")
 {
-    ft_region_definition region(5, ft_string("spire"), ft_string("towering peak"), 22);
+    ft_region_definition region;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(5, ft_string("spire"),
+        ft_string("towering peak"), 22));
 
     FT_ASSERT_EQ(5, region.get_region_id());
     FT_ASSERT_EQ(ft_string("spire"), region.get_name());
@@ -33,9 +36,11 @@ FT_TEST(test_game_region_definition_resize_fields, "Region definition setters up
 
 FT_TEST(test_game_region_definition_initialize_copy, "Region definition initialize(copy) duplicates state")
 {
-    ft_region_definition source(3, ft_string("delta"), ft_string("river maze"), 8);
+    ft_region_definition source;
     ft_region_definition clone;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize(3, ft_string("delta"),
+        ft_string("river maze"), 8));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, clone.initialize(source));
     FT_ASSERT_EQ(3, clone.get_region_id());
     FT_ASSERT_EQ(ft_string("delta"), clone.get_name());

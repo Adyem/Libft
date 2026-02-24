@@ -37,9 +37,10 @@ static int assert_rate_values(const ft_currency_rate &rate, int currency_id,
 
 FT_TEST(test_price_definition_initialize_copy_matches_source, "price definition initialize(copy) matches the source")
 {
-    ft_price_definition original(7, 2, 120, 80, 200);
+    ft_price_definition original;
     ft_price_definition copy;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.initialize(7, 2, 120, 80, 200));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, copy.initialize(original));
 
     assert_price_values(copy, 7, 2, 120, 80, 200);
@@ -63,9 +64,10 @@ FT_TEST(test_price_definition_setters_overwrite_fields, "price definition setter
 
 FT_TEST(test_rarity_band_initialize_copy_matches_source, "rarity band initialize(copy) duplicates the original")
 {
-    ft_rarity_band band(4, 1.5);
+    ft_rarity_band band;
     ft_rarity_band copy;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, band.initialize(4, 1.5));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, copy.initialize(band));
 
     assert_rarity_values(copy, 4, 1.5);
@@ -75,9 +77,10 @@ FT_TEST(test_rarity_band_initialize_copy_matches_source, "rarity band initialize
 
 FT_TEST(test_currency_rate_initialize_copy_matches_source, "currency rate initialize(copy) duplicates the original")
 {
-    ft_currency_rate rate(5, 0.5, 3);
+    ft_currency_rate rate;
     ft_currency_rate copy;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.initialize(5, 0.5, 3));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, copy.initialize(rate));
 
     assert_rate_values(copy, 5, 0.5, 3);

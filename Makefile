@@ -96,6 +96,8 @@ TOTAL_DEBUG_LIBS := $(words $(DEBUG_LIBS))
 
 TARGET        := Full_Libft.a
 DEBUG_TARGET  := Full_Libft_debug.a
+TEST_TARGET   := Full_Libft_test.a
+TEST_DEBUG_TARGET := Full_Libft_test_debug.a
 
 CPP_CLASS_LIB := CPP_class/CPP_class.a
 
@@ -109,7 +111,9 @@ template: $(CPP_CLASS_LIB)
 	@printf '\033[1;35m[LIBFT BUILD] Running Template verification\033[0m\n'
 	@$(MAKE) -C Template all $(SUBMAKE_OVERRIDES)
 
-tests: $(TARGET)
+tests:
+	@printf '\033[1;35m[LIBFT BUILD] Ensuring test archive %s\033[0m\n' "$(TEST_TARGET)"
+	@$(MAKE) $(TEST_TARGET) $(SUBMAKE_OVERRIDES) COMPILE_FLAGS="$(COMPILE_FLAGS) -DLIBFT_TEST_BUILD"
 	@need_build=0; \
 	if $(MAKE) -C Test -q all $(SUBMAKE_OVERRIDES); then \
 		printf '\033[1;35m[LIBFT CHECK] Test suite is up to date\033[0m\n'; \
@@ -181,6 +185,22 @@ $(DEBUG_TARGET): $(DEBUG_LIBS)
 	@$(AR) $(ARFLAGS) $@ temp_objs/*.o
 	@$(RMDIR) temp_objs
 
+$(TEST_TARGET): $(LIBS)
+	@printf '\033[1;35m[LIBFT BUILD] Combining %d modules into %s\033[0m\n' $(TOTAL_LIBS) $@
+	@$(RM) $@
+	@$(MKDIR) temp_objs_test
+	@$(foreach lib,$(LIBS),cd temp_objs_test && $(AR) x ../$(lib) && cd ..;)
+	@$(AR) $(ARFLAGS) $@ temp_objs_test/*.o
+	@$(RMDIR) temp_objs_test
+
+$(TEST_DEBUG_TARGET): $(DEBUG_LIBS)
+	@printf '\033[1;35m[LIBFT BUILD] Combining %d modules into %s\033[0m\n' $(TOTAL_DEBUG_LIBS) $@
+	@$(RM) $@
+	@$(MKDIR) temp_objs_test
+	@$(foreach lib,$(DEBUG_LIBS),cd temp_objs_test && $(AR) x ../$(lib) && cd ..;)
+	@$(AR) $(ARFLAGS) $@ temp_objs_test/*.o
+	@$(RMDIR) temp_objs_test
+
 %.a: FORCE
 	@module_dir="$(patsubst %/,%,$(dir $@))"; \
 	module_target="$(notdir $@)"; \
@@ -230,7 +250,7 @@ clean:
 			status=1; \
 		fi; \
 	done; \
-	if ! $(RM) $(TARGET) $(DEBUG_TARGET); then \
+	if ! $(RM) $(TARGET) $(DEBUG_TARGET) $(TEST_TARGET) $(TEST_DEBUG_TARGET); then \
 		status=1; \
 	fi; \
 	if [ $$status -eq 0 ]; then \
@@ -247,7 +267,7 @@ fclean:
 			status=1; \
 		fi; \
 	done; \
-	if ! $(RM) $(TARGET) $(DEBUG_TARGET); then \
+	if ! $(RM) $(TARGET) $(DEBUG_TARGET) $(TEST_TARGET) $(TEST_DEBUG_TARGET); then \
 		status=1; \
 	fi; \
 	printf "DEBUG STATUS=%%d\n" $$status; \

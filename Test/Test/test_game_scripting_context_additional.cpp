@@ -19,23 +19,25 @@ FT_TEST(test_game_script_context_default_constructor_sets_success,
     return (1);
 }
 
-FT_TEST(test_game_script_context_parameterized_constructor_stores_inputs,
-    "Game: script context parameterized constructor stores state and world")
+FT_TEST(test_game_script_context_initialize_stores_inputs,
+    "Game: script context initialize stores state and world")
 {
     ft_game_state state;
     ft_sharedptr<ft_world> world_pointer(new ft_world());
-    ft_game_script_context context(&state, world_pointer);
+    ft_game_script_context context;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, context.initialize(&state, world_pointer));
     FT_ASSERT_EQ(&state, context.get_state());
     FT_ASSERT_EQ(world_pointer.get(), context.get_world().get());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, context.get_error());
     return (1);
 }
 
-FT_TEST(test_game_script_context_copy_constructor_preserves_error,
-    "Game: script context copy constructor copies data and error")
+FT_TEST(test_game_script_context_initialize_copy_preserves_error,
+    "Game: script context initialize(copy) copies data and error")
 {
     ft_game_script_context original;
+    ft_game_script_context copy;
     const ft_string *value_pointer;
 
     value_pointer = original.get_variable("missing");
@@ -45,7 +47,7 @@ FT_TEST(test_game_script_context_copy_constructor_preserves_error,
     original.set_variable("quest", "alpha");
     FT_ASSERT_EQ(FT_ERR_SUCCESS, original.get_error());
 
-    ft_game_script_context copy(original);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, copy.initialize(original));
 
     FT_ASSERT_EQ(original.get_state(), copy.get_state());
     FT_ASSERT_EQ(original.get_world().get(), copy.get_world().get());
@@ -56,22 +58,26 @@ FT_TEST(test_game_script_context_copy_constructor_preserves_error,
     return (1);
 }
 
-FT_TEST(test_game_script_context_copy_assignment_replaces_state,
-    "Game: script context copy assignment replaces stored state and variables")
+FT_TEST(test_game_script_context_initialize_copy_replaces_state,
+    "Game: script context initialize(copy) replaces stored state and variables")
 {
     ft_game_state first_state;
     ft_game_state second_state;
-    ft_game_script_context source(&second_state, ft_sharedptr<ft_world>(new ft_world()));
-    ft_game_script_context destination(&first_state, ft_sharedptr<ft_world>(new ft_world()));
+    ft_game_script_context source;
+    ft_game_script_context destination;
     const ft_string *value_pointer;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS,
+        source.initialize(&second_state, ft_sharedptr<ft_world>(new ft_world())));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS,
+        destination.initialize(&first_state, ft_sharedptr<ft_world>(new ft_world())));
     source.set_variable("score", "42");
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
 
     destination.set_variable("score", "7");
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.get_error());
 
-    destination = source;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.initialize(source));
     FT_ASSERT_EQ(&second_state, destination.get_state());
     FT_ASSERT_EQ(source.get_world().get(), destination.get_world().get());
 
@@ -196,7 +202,8 @@ FT_TEST(test_game_script_bridge_inspect_budget_counts_supported_commands,
     "Game: inspect_bytecode_budget counts supported commands")
 {
     ft_sharedptr<ft_world> world_pointer(new ft_world());
-    ft_game_script_bridge bridge(world_pointer);
+    ft_game_script_bridge bridge;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.initialize(world_pointer));
     ft_string script("set score 1\ncall adjust\nunset score\n");
     int operations;
     int result;
@@ -215,7 +222,8 @@ FT_TEST(test_game_script_bridge_inspect_budget_rejects_unknown_command,
     "Game: inspect_bytecode_budget rejects unsupported commands")
 {
     ft_sharedptr<ft_world> world_pointer(new ft_world());
-    ft_game_script_bridge bridge(world_pointer);
+    ft_game_script_bridge bridge;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.initialize(world_pointer));
     ft_string script("jump now\n");
     int operations;
     int result;
@@ -232,7 +240,8 @@ FT_TEST(test_game_script_bridge_inspect_budget_enforces_max_operations,
     "Game: inspect_bytecode_budget enforces max operation budget")
 {
     ft_sharedptr<ft_world> world_pointer(new ft_world());
-    ft_game_script_bridge bridge(world_pointer);
+    ft_game_script_bridge bridge;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.initialize(world_pointer));
     ft_string script("set score 1\ncall adjust 2\n");
     int operations;
     int result;
@@ -251,7 +260,8 @@ FT_TEST(test_game_script_bridge_inspect_budget_ignores_comments_and_blank_lines,
     "Game: inspect_bytecode_budget ignores comments and empty lines")
 {
     ft_sharedptr<ft_world> world_pointer(new ft_world());
-    ft_game_script_bridge bridge(world_pointer);
+    ft_game_script_bridge bridge;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.initialize(world_pointer));
     ft_string script("-- comment\n\n# ignored\nset gold 5\n");
     int operations;
     int result;
@@ -267,7 +277,8 @@ FT_TEST(test_game_script_bridge_inspect_budget_handles_crlf_lines,
     "Game: inspect_bytecode_budget counts commands with mixed line endings")
 {
     ft_sharedptr<ft_world> world_pointer(new ft_world());
-    ft_game_script_bridge bridge(world_pointer);
+    ft_game_script_bridge bridge;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.initialize(world_pointer));
     ft_string script("set a 1\r\n\r\nunset a\r\n");
     int operations;
     int result;
@@ -283,7 +294,8 @@ FT_TEST(test_game_script_bridge_inspect_budget_handles_empty_script,
     "Game: inspect_bytecode_budget returns zero for empty scripts")
 {
     ft_sharedptr<ft_world> world_pointer(new ft_world());
-    ft_game_script_bridge bridge(world_pointer);
+    ft_game_script_bridge bridge;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.initialize(world_pointer));
     ft_string script;
     int operations;
     int result;
@@ -301,7 +313,8 @@ FT_TEST(test_game_script_bridge_inspect_budget_resets_errno_on_success,
     "Game: inspect_bytecode_budget clears errno on success")
 {
     ft_sharedptr<ft_world> world_pointer(new ft_world());
-    ft_game_script_bridge bridge(world_pointer);
+    ft_game_script_bridge bridge;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.initialize(world_pointer));
     ft_string script("set timer 1\n");
     int operations;
     int result;
@@ -318,7 +331,8 @@ FT_TEST(test_game_script_bridge_inspect_budget_reuses_previous_limit_after_inval
     "Game: inspect_bytecode_budget uses existing limit when update fails")
 {
     ft_sharedptr<ft_world> world_pointer(new ft_world());
-    ft_game_script_bridge bridge(world_pointer);
+    ft_game_script_bridge bridge;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.initialize(world_pointer));
     ft_string script("set a 1\ncall go\n");
     int operations;
     int result;

@@ -12,14 +12,12 @@ ft_world_registry::ft_world_registry() noexcept
 
 ft_world_registry::~ft_world_registry() noexcept
 {
-    if (this->_initialized_state == ft_world_registry::_state_uninitialized)
+    if (this->_initialized_state != ft_world_registry::_state_initialized)
     {
-        this->abort_lifecycle_error("ft_world_registry::~ft_world_registry",
-            "destructor called while object is uninitialized");
+        this->_initialized_state = ft_world_registry::_state_destroyed;
         return ;
     }
-    if (this->_initialized_state == ft_world_registry::_state_initialized)
-        (void)this->destroy();
+    (void)this->destroy();
     return ;
 }
 
@@ -47,11 +45,23 @@ void ft_world_registry::abort_if_not_initialized(const char *method_name) const
 
 int ft_world_registry::initialize() noexcept
 {
+    int regions_error;
+    int worlds_error;
+
     if (this->_initialized_state == ft_world_registry::_state_initialized)
     {
         this->abort_lifecycle_error("ft_world_registry::initialize",
             "called while object is already initialized");
         return (FT_ERR_INVALID_STATE);
+    }
+    regions_error = this->_regions.initialize();
+    if (regions_error != FT_ERR_SUCCESS)
+        return (regions_error);
+    worlds_error = this->_world_regions.initialize();
+    if (worlds_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_regions.destroy();
+        return (worlds_error);
     }
     this->_regions.clear();
     this->_world_regions.clear();
@@ -114,12 +124,13 @@ int ft_world_registry::destroy() noexcept
 
     if (this->_initialized_state != ft_world_registry::_state_initialized)
     {
-        this->abort_lifecycle_error("ft_world_registry::destroy",
-            "called while object is not initialized");
-        return (FT_ERR_INVALID_STATE);
+        this->_initialized_state = ft_world_registry::_state_destroyed;
+        return (FT_ERR_SUCCESS);
     }
     this->_regions.clear();
     this->_world_regions.clear();
+    (void)this->_regions.destroy();
+    (void)this->_world_regions.destroy();
     disable_error = this->disable_thread_safety();
     this->_initialized_state = ft_world_registry::_state_destroyed;
     return (disable_error);
@@ -127,13 +138,13 @@ int ft_world_registry::destroy() noexcept
 
 int ft_world_registry::enable_thread_safety() noexcept
 {
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
     this->abort_if_not_initialized("ft_world_registry::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
-    mutex_pointer = new (std::nothrow) pt_mutex();
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     initialize_error = mutex_pointer->initialize();
@@ -321,7 +332,7 @@ void ft_world_registry::set_world_regions(
 }
 
 #ifdef LIBFT_TEST_BUILD
-pt_mutex *ft_world_registry::get_mutex_for_validation() const noexcept
+pt_recursive_mutex *ft_world_registry::get_mutex_for_validation() const noexcept
 {
     this->abort_if_not_initialized("ft_world_registry::get_mutex_for_validation");
     return (this->_mutex);

@@ -13,12 +13,15 @@ FT_TEST(test_world_registry_register_fetch_round_trip, "world registry stores re
 {
     ft_world_registry registry;
     ft_vector<int> region_ids;
-    ft_region_definition region(10, ft_string("Harbor"), ft_string("Seaside"), 5);
+    ft_region_definition region;
     ft_region_definition fetched_region;
     ft_world_region fetched_world;
 
     region_ids.push_back(10);
-    ft_world_region world(3, region_ids);
+    ft_world_region world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(10, ft_string("Harbor"),
+        ft_string("Seaside"), 5));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize(3, region_ids));
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.register_region(region));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.register_world(world));

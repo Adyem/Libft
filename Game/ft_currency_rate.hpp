@@ -11,7 +11,7 @@ class ft_currency_rate
         int      _currency_id;
         double   _rate_to_base;
         int      _display_precision;
-        pt_mutex *_mutex;
+        pt_recursive_mutex *_mutex;
         uint8_t  _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -26,8 +26,6 @@ class ft_currency_rate
 
     public:
         ft_currency_rate() noexcept;
-        ft_currency_rate(int currency_id, double rate_to_base,
-            int display_precision) noexcept;
         virtual ~ft_currency_rate() noexcept;
         ft_currency_rate(const ft_currency_rate &other) noexcept = delete;
         ft_currency_rate &operator=(const ft_currency_rate &other) noexcept = delete;
@@ -56,7 +54,7 @@ class ft_currency_rate
         void set_display_precision(int display_precision) noexcept;
 
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex *get_mutex_for_validation() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 

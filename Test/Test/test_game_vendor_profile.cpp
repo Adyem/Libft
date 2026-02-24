@@ -5,10 +5,11 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-FT_TEST(test_vendor_profile_constructor_values, "ft_vendor_profile constructor initializes fields")
+FT_TEST(test_vendor_profile_initialize_values, "ft_vendor_profile initialize sets fields")
 {
-    ft_vendor_profile profile(4, 1.20, 0.80, 0.05);
+    ft_vendor_profile profile;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.initialize(4, 1.20, 0.80, 0.05));
     FT_ASSERT_EQ(4, profile.get_vendor_id());
     FT_ASSERT_DOUBLE_EQ(1.20, profile.get_buy_markup());
     FT_ASSERT_DOUBLE_EQ(0.80, profile.get_sell_multiplier());
@@ -34,9 +35,10 @@ FT_TEST(test_vendor_profile_setters_update_fields, "ft_vendor_profile setters ov
 
 FT_TEST(test_vendor_profile_initialize_copy, "ft_vendor_profile initialize(copy) duplicates fields")
 {
-    ft_vendor_profile source(7, 1.45, 0.70, 0.10);
+    ft_vendor_profile source;
     ft_vendor_profile clone;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize(7, 1.45, 0.70, 0.10));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, clone.initialize(source));
     FT_ASSERT_EQ(7, clone.get_vendor_id());
     FT_ASSERT_DOUBLE_EQ(1.45, clone.get_buy_markup());

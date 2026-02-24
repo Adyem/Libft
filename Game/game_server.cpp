@@ -4,24 +4,37 @@
 #include "../Template/pair.hpp"
 #include <new>
 
-ft_game_server::ft_game_server(const ft_sharedptr<ft_world> &world,
+ft_game_server::ft_game_server() noexcept
+    : _server(ft_nullptr), _world(), _clients(), _auth_token(),
+      _on_join(ft_nullptr), _on_leave(ft_nullptr), _mutex(ft_nullptr)
+{
+    return ;
+}
+
+int ft_game_server::initialize(const ft_sharedptr<ft_world> &world,
     const char *auth_token) noexcept
-    : _server(ft_nullptr), _world(world), _clients(), _auth_token(),
-      _on_join(ft_nullptr), _on_leave(ft_nullptr), _mutex()
 {
     ft_websocket_server *server_instance;
 
+    this->_world = world;
+    this->_auth_token.clear();
+    if (this->_server != ft_nullptr)
+    {
+        delete this->_server;
+        this->_server = ft_nullptr;
+    }
     server_instance = new (std::nothrow) ft_websocket_server();
     if (server_instance == ft_nullptr)
-        return ;
+        return (FT_ERR_NO_MEMORY);
     this->_server = server_instance;
     if (auth_token != ft_nullptr)
         this->_auth_token = auth_token;
-    return ;
+    return (FT_ERR_SUCCESS);
 }
 
 ft_game_server::~ft_game_server()
 {
+    (void)this->disable_thread_safety();
     if (this->_server != ft_nullptr)
     {
         delete this->_server;
@@ -30,24 +43,49 @@ ft_game_server::~ft_game_server()
     return ;
 }
 
-int ft_game_server::start(const char *ip, uint16_t port) noexcept
+int ft_game_server::lock_internal(bool *lock_acquired) const noexcept
 {
     int lock_error;
-    int start_result;
-    int unlock_error;
 
-    lock_error = this->_mutex.lock();
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = false;
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    lock_error = this->_mutex->lock();
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = true;
+    return (FT_ERR_SUCCESS);
+}
+
+void ft_game_server::unlock_internal(bool lock_acquired) const noexcept
+{
+    if (lock_acquired == false)
+        return ;
+    if (this->_mutex == ft_nullptr)
+        return ;
+    (void)this->_mutex->unlock();
+    return ;
+}
+
+int ft_game_server::start(const char *ip, uint16_t port) noexcept
+{
+    bool lock_acquired;
+    int lock_error;
+    int start_result;
+
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return (1);
     if (this->_server == ft_nullptr)
     {
-        unlock_error = this->_mutex.unlock();
-        (void)unlock_error;
+        this->unlock_internal(lock_acquired);
         return (1);
     }
     start_result = this->_server->start(ip, port, AF_INET, false);
-    unlock_error = this->_mutex.unlock();
-    (void)unlock_error;
+    this->unlock_internal(lock_acquired);
     if (start_result != 0)
         return (1);
     return (0);
@@ -55,29 +93,29 @@ int ft_game_server::start(const char *ip, uint16_t port) noexcept
 
 void ft_game_server::set_join_callback(void (*callback)(int)) noexcept
 {
+    bool lock_acquired;
     int lock_error;
-    int unlock_error;
 
-    lock_error = this->_mutex.lock();
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     this->_on_join = callback;
-    unlock_error = this->_mutex.unlock();
-    (void)unlock_error;
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
 void ft_game_server::set_leave_callback(void (*callback)(int)) noexcept
 {
+    bool lock_acquired;
     int lock_error;
-    int unlock_error;
 
-    lock_error = this->_mutex.lock();
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     this->_on_leave = callback;
-    unlock_error = this->_mutex.unlock();
-    (void)unlock_error;
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
@@ -197,39 +235,36 @@ int ft_game_server::serialize_world_locked(ft_string &out) const noexcept
 
 void ft_game_server::run_once() noexcept
 {
+    bool lock_acquired;
     int lock_error;
-    int unlock_error;
     int client_handle;
     ft_string message;
     ft_string update;
     Pair<int, int> *client_ptr;
     Pair<int, int> *client_end;
 
-    lock_error = this->_mutex.lock();
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     if (this->_server == ft_nullptr)
     {
-        unlock_error = this->_mutex.unlock();
-        (void)unlock_error;
+        this->unlock_internal(lock_acquired);
         return ;
     }
     if (this->_server->run_once(client_handle, message) != 0)
     {
-        unlock_error = this->_mutex.unlock();
-        (void)unlock_error;
+        this->unlock_internal(lock_acquired);
         return ;
     }
     if (this->handle_message_locked(client_handle, message) != 0)
     {
-        unlock_error = this->_mutex.unlock();
-        (void)unlock_error;
+        this->unlock_internal(lock_acquired);
         return ;
     }
     if (this->serialize_world_locked(update) != 0)
     {
-        unlock_error = this->_mutex.unlock();
-        (void)unlock_error;
+        this->unlock_internal(lock_acquired);
         return ;
     }
     client_ptr = this->_clients.end() - this->_clients.size();
@@ -239,9 +274,45 @@ void ft_game_server::run_once() noexcept
         this->_server->send_text(client_ptr->value, update);
         client_ptr++;
     }
-    unlock_error = this->_mutex.unlock();
-    (void)unlock_error;
+    this->unlock_internal(lock_acquired);
     return ;
+}
+
+int ft_game_server::enable_thread_safety() noexcept
+{
+    pt_recursive_mutex *mutex_pointer;
+    int initialize_error;
+
+    if (this->_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
+    if (mutex_pointer == ft_nullptr)
+        return (FT_ERR_NO_MEMORY);
+    initialize_error = mutex_pointer->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        delete mutex_pointer;
+        return (initialize_error);
+    }
+    this->_mutex = mutex_pointer;
+    return (FT_ERR_SUCCESS);
+}
+
+int ft_game_server::disable_thread_safety() noexcept
+{
+    int destroy_error;
+
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    destroy_error = this->_mutex->destroy();
+    delete this->_mutex;
+    this->_mutex = ft_nullptr;
+    return (destroy_error);
+}
+
+bool ft_game_server::is_thread_safe() const noexcept
+{
+    return (this->_mutex != ft_nullptr);
 }
 
 void ft_game_server::join_client_locked(int client_id, int client_handle) noexcept

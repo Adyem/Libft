@@ -26,7 +26,8 @@ FT_TEST(test_game_deterministic_simulation_scenarios,
     hero_character.set_hit_points(52);
     enemy_character.set_hit_points(40);
     enemy_character.set_physical_armor(0);
-    ft_inventory hero_inventory(6);
+    ft_inventory hero_inventory;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hero_inventory.initialize(6, 0));
 
     ft_sharedptr<ft_item> oak_plank(new (std::nothrow) ft_item());
     FT_ASSERT(oak_plank.get() != ft_nullptr);
@@ -46,8 +47,10 @@ FT_TEST(test_game_deterministic_simulation_scenarios,
     FT_ASSERT_EQ(hero_inventory.add_item(iron_ingot), FT_ERR_SUCCESS);
     ft_crafting crafting_system;
 
-    ft_crafting_ingredient oak_requirement(101, 2, 1);
-    ft_crafting_ingredient iron_requirement(102, 1, 2);
+    ft_crafting_ingredient oak_requirement;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, oak_requirement.initialize(101, 2, 1));
+    ft_crafting_ingredient iron_requirement;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, iron_requirement.initialize(102, 1, 2));
     ft_vector<ft_crafting_ingredient> sword_recipe;
     sword_recipe.push_back(oak_requirement);
     sword_recipe.push_back(iron_requirement);

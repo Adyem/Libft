@@ -13,12 +13,21 @@ FT_TEST(test_world_registry_setters, "world registry setter copies replace maps"
     ft_vector<int> region_ids;
     ft_region_definition fetched_region;
     ft_world_region fetched_world;
+    ft_region_definition region;
+    ft_world_region world;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, regions.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, worlds.initialize());
-    regions.insert(2, ft_region_definition(2, ft_string("cave"), ft_string("dark"), 8));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize());
+    region.set_region_id(2);
+    region.set_name(ft_string("cave"));
+    region.set_description(ft_string("dark"));
+    region.set_recommended_level(8);
     region_ids.push_back(2);
-    worlds.insert(5, ft_world_region(5, region_ids));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize(5, region_ids));
+    regions.insert(2, region);
+    worlds.insert(5, world);
 
     registry.set_regions(regions);
     registry.set_world_regions(worlds);

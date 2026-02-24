@@ -19,10 +19,11 @@ FT_TEST(test_price_definition_default_state, "Price definition constructor zeroe
     return (1);
 }
 
-FT_TEST(test_price_definition_parameterized_initialization, "Price definition stores provided constructor inputs")
+FT_TEST(test_price_definition_initialize_with_fields, "Price definition initialize stores provided inputs")
 {
-    ft_price_definition definition(19, 3, 240, 120, 360);
+    ft_price_definition definition;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.initialize(19, 3, 240, 120, 360));
     FT_ASSERT_EQ(19, definition.get_item_id());
     FT_ASSERT_EQ(3, definition.get_rarity());
     FT_ASSERT_EQ(240, definition.get_base_value());
@@ -51,9 +52,10 @@ FT_TEST(test_price_definition_setters_update_all_fields, "Price definition sette
 
 FT_TEST(test_price_definition_initialize_copy_matches_source, "Price definition initialize(copy) matches the source fields")
 {
-    ft_price_definition original(22, 4, 150, 90, 400);
+    ft_price_definition original;
     ft_price_definition dest;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.initialize(22, 4, 150, 90, 400));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, dest.initialize(original));
 
     FT_ASSERT_EQ(22, dest.get_item_id());
@@ -79,10 +81,11 @@ FT_TEST(test_currency_rate_default_state, "Currency rate default constructor pre
     return (1);
 }
 
-FT_TEST(test_currency_rate_parameterized_constructor_values, "Currency rate parameterized constructor captures provided values")
+FT_TEST(test_currency_rate_initialize_with_fields_values, "Currency rate initialize captures provided values")
 {
-    ft_currency_rate rate(17, 2.75, 5);
+    ft_currency_rate rate;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.initialize(17, 2.75, 5));
     FT_ASSERT_EQ(17, rate.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(2.75, rate.get_rate_to_base());
     FT_ASSERT_EQ(5, rate.get_display_precision());
@@ -105,9 +108,11 @@ FT_TEST(test_currency_rate_setters_update_fields, "Currency rate setters mutate 
 
 FT_TEST(test_currency_rate_initialize_copy_overwrites_state, "Currency rate initialize(copy) overwrites previous values")
 {
-    ft_currency_rate source(3, 1.1, 4);
-    ft_currency_rate target(8, 0.5, 2);
+    ft_currency_rate source;
+    ft_currency_rate target;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize(3, 1.1, 4));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, target.initialize(8, 0.5, 2));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, target.initialize(source));
 
     FT_ASSERT_EQ(3, target.get_currency_id());

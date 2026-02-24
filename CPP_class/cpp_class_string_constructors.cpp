@@ -213,9 +213,8 @@ int ft_string::destroy() noexcept
 {
     if (this->_initialized_state != ft_string::_state_initialized)
     {
-        this->abort_lifecycle_error("ft_string::destroy",
-            "called while object is not initialized");
-        return (FT_ERR_INVALID_STATE);
+        this->_initialized_state = ft_string::_state_destroyed;
+        return (FT_ERR_SUCCESS);
     }
     cma_free(this->_data);
     this->_data = ft_nullptr;
@@ -228,14 +227,12 @@ int ft_string::destroy() noexcept
 
 ft_string::~ft_string()
 {
-    if (this->_initialized_state == ft_string::_state_uninitialized)
+    if (this->_initialized_state != ft_string::_state_initialized)
     {
-        this->abort_lifecycle_error("ft_string::~ft_string",
-            "destructor called while object is uninitialized");
+        this->_initialized_state = ft_string::_state_destroyed;
         return ;
     }
-    if (this->_initialized_state == ft_string::_state_initialized)
-        (void)this->destroy();
+    (void)this->destroy();
     return ;
 }
 

@@ -18,7 +18,7 @@ class ft_economy_table
         ft_map<int, ft_rarity_band>      _rarity_bands;
         ft_map<int, ft_vendor_profile>   _vendor_profiles;
         ft_map<int, ft_currency_rate>    _currency_rates;
-        pt_mutex                        *_mutex;
+        pt_recursive_mutex                        *_mutex;
         uint8_t                          _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -74,7 +74,7 @@ class ft_economy_table
         int fetch_currency_rate(int currency_id, ft_currency_rate &rate) const noexcept;
 
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex *get_mutex_for_validation() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 

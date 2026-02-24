@@ -39,3 +39,15 @@ FT_TEST(test_equipment_unequip, "unequip removes stats")
     FT_ASSERT(hero.get_equipped_item(EQUIP_HEAD).get() == ft_nullptr);
     return (1);
 }
+
+FT_TEST(test_equipment_thread_safety_toggle, "equipment thread safety toggles explicitly")
+{
+    ft_equipment equipment;
+
+    FT_ASSERT_EQ(false, equipment.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, equipment.enable_thread_safety());
+    FT_ASSERT_EQ(true, equipment.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, equipment.disable_thread_safety());
+    FT_ASSERT_EQ(false, equipment.is_thread_safe());
+    return (1);
+}

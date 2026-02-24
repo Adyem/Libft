@@ -4,8 +4,8 @@
 #include "../Errno/errno.hpp"
 #include "../Basic/basic.hpp"
 #include "../CPP_class/class_nullptr.hpp"
-#include "../PThread/unique_lock.hpp"
 #include <cstdio>
+#include <new>
 
 static void trim_whitespace(ft_string &target) noexcept
 {
@@ -44,14 +44,6 @@ void ft_game_script_context::set_error(int error) const noexcept
 ft_game_script_context::ft_game_script_context() noexcept
     : _state(ft_nullptr), _world(), _variables(), _error_code(FT_ERR_SUCCESS)
 {
-    this->set_error(FT_ERR_SUCCESS);
-    return ;
-}
-
-ft_game_script_context::ft_game_script_context(ft_game_state *state, const ft_sharedptr<ft_world> &world) noexcept
-    : _state(state), _world(world), _variables(), _error_code(FT_ERR_SUCCESS)
-{
-    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -60,22 +52,37 @@ ft_game_script_context::~ft_game_script_context() noexcept
     return ;
 }
 
-ft_game_script_context::ft_game_script_context(const ft_game_script_context &other) noexcept
-    : _state(other._state), _world(other._world), _variables(), _error_code(other._error_code)
+int ft_game_script_context::initialize() noexcept
 {
-    this->set_error(other._error_code);
-    return ;
+    this->_state = ft_nullptr;
+    this->_world = ft_sharedptr<ft_world>();
+    this->_variables.clear();
+    this->_error_code = FT_ERR_SUCCESS;
+    this->set_error(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
-ft_game_script_context &ft_game_script_context::operator=(const ft_game_script_context &other) noexcept
+int ft_game_script_context::initialize(ft_game_state *state,
+    const ft_sharedptr<ft_world> &world) noexcept
 {
-    if (this != &other)
-    {
-        this->_state = other._state;
-        this->_world = other._world;
-        this->set_error(other._error_code);
-    }
-    return (*this);
+    this->_state = state;
+    this->_world = world;
+    this->_variables.clear();
+    this->_error_code = FT_ERR_SUCCESS;
+    this->set_error(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
+}
+
+int ft_game_script_context::initialize(const ft_game_script_context &other) noexcept
+{
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    this->_state = other._state;
+    this->_world = other._world;
+    this->_variables = other._variables;
+    this->_error_code = other._error_code;
+    this->set_error(other._error_code);
+    return (FT_ERR_SUCCESS);
 }
 
 ft_game_state *ft_game_script_context::get_state() const noexcept
@@ -229,9 +236,19 @@ bool ft_game_script_bridge::is_supported_language(const ft_string &language) noe
     return (false);
 }
 
-ft_game_script_bridge::ft_game_script_bridge(const ft_sharedptr<ft_world> &world, const char *language) noexcept
-    : _world(world), _callbacks(), _language(), _max_operations(32), _error_code(FT_ERR_SUCCESS), _mutex()
+ft_game_script_bridge::ft_game_script_bridge() noexcept
+    : _world(), _callbacks(), _language(), _max_operations(32),
+      _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr)
 {
+    this->_language = "lua";
+    this->set_error(FT_ERR_SUCCESS);
+    return ;
+}
+
+int ft_game_script_bridge::initialize(const ft_sharedptr<ft_world> &world,
+    const char *language) noexcept
+{
+    this->_world = world;
     if (language)
         this->_language = language;
     else
@@ -239,76 +256,66 @@ ft_game_script_bridge::ft_game_script_bridge(const ft_sharedptr<ft_world> &world
     if (false)
     {
         this->set_error(FT_ERR_SUCCESS);
-        return ;
+        return (FT_ERR_SUCCESS);
     }
     if (ft_game_script_bridge::is_supported_language(this->_language) == false)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
-        return ;
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     this->set_error(FT_ERR_SUCCESS);
-    return ;
+    return (FT_ERR_SUCCESS);
 }
 
 ft_game_script_bridge::~ft_game_script_bridge() noexcept
 {
+    (void)this->disable_thread_safety();
     return ;
 }
 
-ft_game_script_bridge::ft_game_script_bridge(const ft_game_script_bridge &other) noexcept
-    : _world(other._world), _callbacks(), _language(other._language), _max_operations(other._max_operations), _error_code(other._error_code), _mutex()
+int ft_game_script_bridge::lock_internal(bool *lock_acquired) const noexcept
 {
-    this->set_error(other._error_code);
+    int lock_error;
+
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = false;
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    lock_error = this->_mutex->lock();
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = true;
+    return (FT_ERR_SUCCESS);
+}
+
+void ft_game_script_bridge::unlock_internal(bool lock_acquired) const noexcept
+{
+    if (lock_acquired == false)
+        return ;
+    if (this->_mutex == ft_nullptr)
+        return ;
+    (void)this->_mutex->unlock();
     return ;
-}
-
-ft_game_script_bridge &ft_game_script_bridge::operator=(const ft_game_script_bridge &other) noexcept
-{
-    if (this != &other)
-    {
-        ft_unique_lock<pt_mutex> guard_this(this->_mutex);
-
-        this->_world = other._world;
-        this->_language = other._language;
-        this->_max_operations = other._max_operations;
-        this->set_error(other._error_code);
-    }
-    return (*this);
-}
-
-ft_game_script_bridge::ft_game_script_bridge(ft_game_script_bridge &&other) noexcept
-    : _world(ft_move(other._world)), _callbacks(), _language(ft_move(other._language)), _max_operations(other._max_operations), _error_code(other._error_code), _mutex()
-{
-    other._max_operations = 0;
-    other.set_error(FT_ERR_SUCCESS);
-    this->set_error(this->_error_code);
-    return ;
-}
-
-ft_game_script_bridge &ft_game_script_bridge::operator=(ft_game_script_bridge &&other) noexcept
-{
-    if (this != &other)
-    {
-        ft_unique_lock<pt_mutex> guard_other(other._mutex);
-        ft_unique_lock<pt_mutex> guard_this(this->_mutex);
-
-        this->_world = ft_move(other._world);
-        this->_language = ft_move(other._language);
-        this->_max_operations = other._max_operations;
-        this->set_error(other._error_code);
-        other._max_operations = 0;
-        other.set_error(FT_ERR_SUCCESS);
-    }
-    return (*this);
 }
 
 void ft_game_script_bridge::set_language(const char *language) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    bool lock_acquired;
+    int lock_error;
+
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(lock_error);
+        return ;
+    }
 
     if (!language)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
+        this->unlock_internal(lock_acquired);
         return ;
     }
     ft_string candidate(language);
@@ -320,10 +327,12 @@ void ft_game_script_bridge::set_language(const char *language) noexcept
     if (ft_game_script_bridge::is_supported_language(candidate) == false)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
+        this->unlock_internal(lock_acquired);
         return ;
     }
     this->_language = candidate;
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
@@ -334,15 +343,26 @@ const ft_string &ft_game_script_bridge::get_language() const noexcept
 
 void ft_game_script_bridge::set_max_operations(int limit) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    bool lock_acquired;
+    int lock_error;
+
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(lock_error);
+        return ;
+    }
 
     if (limit < 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
+        this->unlock_internal(lock_acquired);
         return ;
     }
     this->_max_operations = limit;
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
@@ -358,18 +378,29 @@ size_t ft_game_script_bridge::get_callback_count() const noexcept
 
 int ft_game_script_bridge::register_function(const ft_string &name, const ft_function<int(ft_game_script_context &, const ft_vector<ft_string> &)> &callback) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    bool lock_acquired;
+    int lock_error;
     Pair<ft_string, ft_function<int(ft_game_script_context &, const ft_vector<ft_string> &)> > *entry;
+
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(lock_error);
+        return (lock_error);
+    }
 
     if (name.empty() || !callback)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
+        this->unlock_internal(lock_acquired);
         return (FT_ERR_INVALID_ARGUMENT);
     }
     entry = this->_callbacks.find(name);
     if (false)
     {
         this->set_error(FT_ERR_SUCCESS);
+        this->unlock_internal(lock_acquired);
         return (FT_ERR_SUCCESS);
     }
     if (entry != this->_callbacks.end())
@@ -382,23 +413,36 @@ int ft_game_script_bridge::register_function(const ft_string &name, const ft_fun
     if (false)
     {
         this->set_error(FT_ERR_SUCCESS);
+        this->unlock_internal(lock_acquired);
         return (FT_ERR_SUCCESS);
     }
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return (FT_ERR_SUCCESS);
 }
 
 int ft_game_script_bridge::remove_function(const ft_string &name) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    bool lock_acquired;
+    int lock_error;
+
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(lock_error);
+        return (lock_error);
+    }
 
     this->_callbacks.remove(name);
     if (false)
     {
         this->set_error(FT_ERR_SUCCESS);
+        this->unlock_internal(lock_acquired);
         return (FT_ERR_SUCCESS);
     }
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return (FT_ERR_SUCCESS);
 }
 
@@ -610,13 +654,29 @@ int ft_game_script_bridge::execute_line(ft_game_script_context &context, const f
 
 int ft_game_script_bridge::execute(const ft_string &script, ft_game_state &state) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    ft_game_script_context context(&state, this->_world);
+    bool lock_acquired;
+    int lock_error;
+    ft_game_script_context context;
+    int context_init_error;
     const char *data;
     size_t length;
     size_t start;
     int operations;
 
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(lock_error);
+        return (lock_error);
+    }
+    context_init_error = context.initialize(&state, this->_world);
+    if (context_init_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(context_init_error);
+        this->unlock_internal(lock_acquired);
+        return (context_init_error);
+    }
     if (false)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -625,6 +685,7 @@ int ft_game_script_bridge::execute(const ft_string &script, ft_game_state &state
     if (ft_game_script_bridge::is_supported_language(this->_language) == false)
     {
         this->set_error(FT_ERR_CONFIGURATION);
+        this->unlock_internal(lock_acquired);
         return (FT_ERR_CONFIGURATION);
     }
     data = script.c_str();
@@ -669,12 +730,14 @@ int ft_game_script_bridge::execute(const ft_string &script, ft_game_state &state
                 if (this->_max_operations > 0 && operations > this->_max_operations)
                 {
                     this->set_error(FT_ERR_INVALID_OPERATION);
+                    this->unlock_internal(lock_acquired);
                     return (FT_ERR_INVALID_OPERATION);
                 }
                 int result = this->execute_line(context, line);
                 if (result != FT_ERR_SUCCESS)
                 {
                     this->set_error(result);
+                    this->unlock_internal(lock_acquired);
                     return (result);
                 }
             }
@@ -687,17 +750,26 @@ int ft_game_script_bridge::execute(const ft_string &script, ft_game_state &state
         start = index;
     }
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return (FT_ERR_SUCCESS);
 }
 
 int ft_game_script_bridge::check_sandbox_capabilities(const ft_string &script, ft_vector<ft_string> &violations) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    bool lock_acquired;
+    int lock_error;
     const char *data;
     size_t length;
     size_t start;
     int operations;
 
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(lock_error);
+        return (lock_error);
+    }
     violations.clear();
     if (false)
     {
@@ -863,17 +935,26 @@ int ft_game_script_bridge::check_sandbox_capabilities(const ft_string &script, f
         }
     }
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return (FT_ERR_SUCCESS);
 }
 
 int ft_game_script_bridge::validate_dry_run(const ft_string &script, ft_vector<ft_string> &warnings) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    bool lock_acquired;
+    int lock_error;
     const char *data;
     size_t length;
     size_t start;
     int operations;
 
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(lock_error);
+        return (lock_error);
+    }
     warnings.clear();
     if (false)
     {
@@ -1186,17 +1267,26 @@ int ft_game_script_bridge::validate_dry_run(const ft_string &script, ft_vector<f
         }
     }
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return (FT_ERR_SUCCESS);
 }
 
 int ft_game_script_bridge::inspect_bytecode_budget(const ft_string &script, int &required_operations) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    bool lock_acquired;
+    int lock_error;
     const char *data;
     size_t length;
     size_t start;
     int operations;
 
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(lock_error);
+        return (lock_error);
+    }
     data = script.c_str();
     length = script.size();
     start = 0;
@@ -1273,6 +1363,7 @@ int ft_game_script_bridge::inspect_bytecode_budget(const ft_string &script, int 
                     {
                         required_operations = operations;
                         this->set_error(FT_ERR_INVALID_ARGUMENT);
+                        this->unlock_internal(lock_acquired);
                         return (FT_ERR_INVALID_ARGUMENT);
                     }
                 }
@@ -1289,10 +1380,55 @@ int ft_game_script_bridge::inspect_bytecode_budget(const ft_string &script, int 
     if (this->_max_operations > 0 && operations > this->_max_operations)
     {
         this->set_error(FT_ERR_INVALID_OPERATION);
+        this->unlock_internal(lock_acquired);
         return (FT_ERR_INVALID_OPERATION);
     }
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return (FT_ERR_SUCCESS);
+}
+
+int ft_game_script_bridge::enable_thread_safety() noexcept
+{
+    pt_recursive_mutex *mutex_pointer;
+    int initialize_error;
+
+    if (this->_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
+    if (mutex_pointer == ft_nullptr)
+    {
+        this->set_error(FT_ERR_NO_MEMORY);
+        return (FT_ERR_NO_MEMORY);
+    }
+    initialize_error = mutex_pointer->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        delete mutex_pointer;
+        this->set_error(initialize_error);
+        return (initialize_error);
+    }
+    this->_mutex = mutex_pointer;
+    this->set_error(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
+}
+
+int ft_game_script_bridge::disable_thread_safety() noexcept
+{
+    int destroy_error;
+
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    destroy_error = this->_mutex->destroy();
+    delete this->_mutex;
+    this->_mutex = ft_nullptr;
+    this->set_error(destroy_error);
+    return (destroy_error);
+}
+
+bool ft_game_script_bridge::is_thread_safe() const noexcept
+{
+    return (this->_mutex != ft_nullptr);
 }
 
 int ft_game_script_bridge::get_error() const noexcept

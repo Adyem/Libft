@@ -12,8 +12,10 @@
 
 int test_inventory_slots(void)
 {
-    ft_inventory inventory(4);
+    ft_inventory inventory;
     ft_sharedptr<ft_item> bulky(new ft_item());
+    if (inventory.initialize(4, 0) != FT_ERR_SUCCESS)
+        return (0);
     bulky->set_item_id(1);
     bulky->set_max_stack(1);
     bulky->set_stack_size(1);
@@ -34,8 +36,10 @@ int test_inventory_slots(void)
 
 int test_inventory_count(void)
 {
-    ft_inventory inv(5);
+    ft_inventory inv;
     ft_sharedptr<ft_item> potion(new ft_item());
+    if (inv.initialize(5, 0) != FT_ERR_SUCCESS)
+        return (0);
     potion->set_item_id(1);
     potion->set_max_stack(10);
     potion->set_stack_size(7);
@@ -56,8 +60,10 @@ int test_inventory_count(void)
 
 int test_inventory_full(void)
 {
-    ft_inventory inv(1);
+    ft_inventory inv;
     ft_sharedptr<ft_item> item(new ft_item());
+    if (inv.initialize(1, 0) != FT_ERR_SUCCESS)
+        return (0);
     item->set_item_id(1);
     item->set_max_stack(5);
     item->set_stack_size(5);
@@ -72,8 +78,9 @@ int test_inventory_full(void)
 
 FT_TEST(test_game_inventory_remove_clears_usage, "ft_inventory::remove_item frees slots and weight")
 {
-    ft_inventory inventory(4);
+    ft_inventory inventory;
     ft_sharedptr<ft_item> shield(new ft_item());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize(4, 0));
 
     shield->set_item_id(7);
     shield->set_max_stack(3);
@@ -93,9 +100,10 @@ FT_TEST(test_game_inventory_remove_clears_usage, "ft_inventory::remove_item free
 
 FT_TEST(test_game_inventory_merges_into_existing_stack, "ft_inventory merges items before opening a new slot")
 {
-    ft_inventory inventory(3);
+    ft_inventory inventory;
     ft_sharedptr<ft_item> arrows(new ft_item());
     ft_sharedptr<ft_item> refill(new ft_item());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize(3, 0));
 
     arrows->set_item_id(12);
     arrows->set_max_stack(5);
@@ -123,9 +131,10 @@ FT_TEST(test_game_inventory_merges_into_existing_stack, "ft_inventory merges ite
 
 FT_TEST(test_game_inventory_rarity_tracking, "ft_inventory counts rarity stacks")
 {
-    ft_inventory inventory(3);
+    ft_inventory inventory;
     ft_sharedptr<ft_item> gem(new ft_item());
     ft_sharedptr<ft_item> ore(new ft_item());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize(3, 0));
 
     gem->set_item_id(10);
     gem->set_rarity(2);
@@ -146,7 +155,8 @@ FT_TEST(test_game_inventory_rarity_tracking, "ft_inventory counts rarity stacks"
 
 FT_TEST(test_game_inventory_resize_updates_capacity, "ft_inventory::resize adjusts capacity")
 {
-    ft_inventory inventory(1);
+    ft_inventory inventory;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize(1, 0));
 
     FT_ASSERT_EQ((size_t)1, inventory.get_capacity());
     inventory.resize(3);
@@ -156,8 +166,9 @@ FT_TEST(test_game_inventory_resize_updates_capacity, "ft_inventory::resize adjus
 
 FT_TEST(test_game_inventory_add_item_respects_weight_limit, "ft_inventory::add_item enforces weight limits")
 {
-    ft_inventory inventory(5, 3);
+    ft_inventory inventory;
     ft_sharedptr<ft_item> heavy(new ft_item());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize(5, 3));
 
     heavy->set_item_id(4);
     heavy->set_max_stack(10);
@@ -171,8 +182,9 @@ FT_TEST(test_game_inventory_add_item_respects_weight_limit, "ft_inventory::add_i
 
 FT_TEST(test_game_inventory_rejects_null_item, "ft_inventory::add_item handles null items")
 {
-    ft_inventory inventory(2);
+    ft_inventory inventory;
     ft_sharedptr<ft_item> none;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize(2, 0));
 
     FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, inventory.add_item(none));
     FT_ASSERT_EQ((size_t)0, inventory.get_used());
@@ -182,8 +194,9 @@ FT_TEST(test_game_inventory_rejects_null_item, "ft_inventory::add_item handles n
 
 FT_TEST(test_game_inventory_splits_large_stack, "ft_inventory splits stacks that exceed max stack size")
 {
-    ft_inventory inventory(5);
+    ft_inventory inventory;
     ft_sharedptr<ft_item> arrows(new ft_item());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize(5, 0));
 
     arrows->set_item_id(9);
     arrows->set_max_stack(5);
@@ -200,9 +213,10 @@ FT_TEST(test_game_inventory_splits_large_stack, "ft_inventory splits stacks that
 
 FT_TEST(test_game_inventory_full_addition_preserves_items, "ft_inventory leaves items unchanged on capacity error")
 {
-    ft_inventory inventory(1);
+    ft_inventory inventory;
     ft_sharedptr<ft_item> potion(new ft_item());
     ft_sharedptr<ft_item> elixir(new ft_item());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize(1, 0));
 
     potion->set_item_id(3);
     potion->set_max_stack(2);
@@ -226,8 +240,9 @@ FT_TEST(test_game_inventory_full_addition_preserves_items, "ft_inventory leaves 
 
 FT_TEST(test_game_inventory_remove_missing_slot_noops, "ft_inventory ignores removal of nonexistent slots")
 {
-    ft_inventory inventory(2);
+    ft_inventory inventory;
     ft_sharedptr<ft_item> potion(new ft_item());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize(2, 0));
 
     potion->set_item_id(6);
     potion->set_max_stack(3);

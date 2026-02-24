@@ -31,12 +31,14 @@ class ft_path_step
     public:
         ft_path_step() noexcept;
         ~ft_path_step() noexcept;
-        ft_path_step(const ft_path_step &other) noexcept;
-        ft_path_step &operator=(const ft_path_step &other) noexcept;
-        ft_path_step(ft_path_step &&other) noexcept;
-        ft_path_step &operator=(ft_path_step &&other) noexcept;
+        ft_path_step(const ft_path_step &other) noexcept = delete;
+        ft_path_step &operator=(const ft_path_step &other) noexcept = delete;
+        ft_path_step(ft_path_step &&other) noexcept = delete;
+        ft_path_step &operator=(ft_path_step &&other) noexcept = delete;
 
         int     initialize() noexcept;
+        int     initialize(const ft_path_step &other) noexcept;
+        int     initialize(ft_path_step &&other) noexcept;
         int     destroy() noexcept;
         int     enable_thread_safety() noexcept;
         int     disable_thread_safety() noexcept;
@@ -111,7 +113,7 @@ class ft_pathfinding
     private:
         ft_vector<ft_path_step> _current_path;
         bool                    _needs_replan;
-        pt_mutex               *_mutex;
+        pt_recursive_mutex               *_mutex;
         uint8_t                 _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -159,7 +161,7 @@ class ft_pathfinding
         const char *get_error_str() const noexcept;
 
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex *get_mutex_for_validation() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 

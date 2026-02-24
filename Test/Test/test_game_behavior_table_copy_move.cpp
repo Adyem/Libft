@@ -10,8 +10,11 @@ static int register_profile(ft_behavior_table &table, int id, double aggression,
 {
     ft_vector<ft_behavior_action> actions;
     ft_behavior_profile profile;
+    ft_behavior_action action_entry;
 
-    actions.push_back(ft_behavior_action(id * 2, 0.5, 1.5));
+    if (action_entry.initialize(id * 2, 0.5, 1.5) != FT_ERR_SUCCESS)
+        return (action_entry.get_error());
+    actions.push_back(action_entry);
     int initialize_error;
 
     initialize_error = profile.initialize(id, aggression, caution, actions);
@@ -31,10 +34,12 @@ FT_TEST(test_behavior_table_move_semantics, "move constructor and assignment tra
     FT_ASSERT_EQ(FT_ERR_SUCCESS, register_profile(source, 20, 0.7, 0.3));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source.fetch_profile(20, fetched));
     FT_ASSERT_EQ(20, fetched.get_profile_id());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched.destroy());
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.initialize(ft_move(source)));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.fetch_profile(20, fetched));
     FT_ASSERT_EQ(20, fetched.get_profile_id());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched.destroy());
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, reassigned.initialize(ft_move(moved)));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, reassigned.fetch_profile(20, fetched));

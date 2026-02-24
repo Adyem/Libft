@@ -12,14 +12,12 @@ ft_upgrade::ft_upgrade() noexcept
 
 ft_upgrade::~ft_upgrade() noexcept
 {
-    if (this->_initialized_state == ft_upgrade::_state_uninitialized)
+    if (this->_initialized_state != ft_upgrade::_state_initialized)
     {
-        this->abort_lifecycle_error("ft_upgrade::~ft_upgrade",
-            "destructor called while object is uninitialized");
+        this->_initialized_state = ft_upgrade::_state_destroyed;
         return ;
     }
-    if (this->_initialized_state == ft_upgrade::_state_initialized)
-        (void)this->destroy();
+    (void)this->destroy();
     return ;
 }
 
@@ -93,9 +91,8 @@ int ft_upgrade::destroy() noexcept
 
     if (this->_initialized_state != ft_upgrade::_state_initialized)
     {
-        this->abort_lifecycle_error("ft_upgrade::destroy",
-            "called while object is not initialized");
-        return (FT_ERR_INVALID_STATE);
+        this->_initialized_state = ft_upgrade::_state_destroyed;
+        return (FT_ERR_SUCCESS);
     }
     disable_error = this->disable_thread_safety();
     this->_id = 0;
@@ -111,13 +108,13 @@ int ft_upgrade::destroy() noexcept
 
 int ft_upgrade::enable_thread_safety() noexcept
 {
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
     this->abort_if_not_initialized("ft_upgrade::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
-    mutex_pointer = new (std::nothrow) pt_mutex();
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     initialize_error = mutex_pointer->initialize();
@@ -348,7 +345,7 @@ void ft_upgrade::sub_modifier4(int mod) noexcept
 }
 
 #ifdef LIBFT_TEST_BUILD
-pt_mutex *ft_upgrade::get_mutex_for_validation() const noexcept
+pt_recursive_mutex *ft_upgrade::get_mutex_for_validation() const noexcept
 {
     this->abort_if_not_initialized("ft_upgrade::get_mutex_for_validation");
     return (this->_mutex);

@@ -18,10 +18,11 @@ FT_TEST(test_currency_rate_default_constructor_values, "Currency rate default co
 }
 
 
-FT_TEST(test_currency_rate_parameterized_constructor_values, "Currency rate parameterized constructor stores provided values")
+FT_TEST(test_currency_rate_initialize_with_fields_values, "Currency rate initialize stores provided values")
 {
-    ft_currency_rate rate(42, 3.75, 5);
+    ft_currency_rate rate;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.initialize(42, 3.75, 5));
     FT_ASSERT_EQ(42, rate.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(3.75, rate.get_rate_to_base());
     FT_ASSERT_EQ(5, rate.get_display_precision());
@@ -31,9 +32,10 @@ FT_TEST(test_currency_rate_parameterized_constructor_values, "Currency rate para
 
 FT_TEST(test_currency_rate_initialize_copy_clones_values, "Currency rate initialize(copy) matches source state")
 {
-    ft_currency_rate original(8, 0.25, 4);
+    ft_currency_rate original;
     ft_currency_rate copy;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.initialize(8, 0.25, 4));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, copy.initialize(original));
 
     FT_ASSERT_EQ(8, copy.get_currency_id());
@@ -48,9 +50,11 @@ FT_TEST(test_currency_rate_initialize_copy_clones_values, "Currency rate initial
 
 FT_TEST(test_currency_rate_initialize_overwrites_destination, "Currency rate initialize(copy) overwrites existing values")
 {
-    ft_currency_rate source(13, 1.2, 6);
-    ft_currency_rate destination(5, 0.5, 1);
+    ft_currency_rate source;
+    ft_currency_rate destination;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize(13, 1.2, 6));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.initialize(5, 0.5, 1));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.initialize(source));
 
     FT_ASSERT_EQ(13, destination.get_currency_id());

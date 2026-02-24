@@ -58,11 +58,7 @@ ft_game_hooks::ft_game_hooks() noexcept
 ft_game_hooks::~ft_game_hooks() noexcept
 {
     if (this->_initialized_state == ft_game_hooks::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("ft_game_hooks::~ft_game_hooks",
-            "destructor called while object is uninitialized");
         return ;
-    }
     if (this->_initialized_state == ft_game_hooks::_state_initialized)
         (void)this->destroy();
     return ;
@@ -161,11 +157,7 @@ int ft_game_hooks::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != ft_game_hooks::_state_initialized)
-    {
-        this->abort_lifecycle_error("ft_game_hooks::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     this->_legacy_item_crafted = ft_function<void(ft_character&, ft_item&)>();
     this->_legacy_character_damaged = ft_function<void(ft_character&, int, uint8_t)>();
     this->_legacy_event_triggered = ft_function<void(ft_world&, ft_event&)>();
@@ -178,13 +170,13 @@ int ft_game_hooks::destroy() noexcept
 
 int ft_game_hooks::enable_thread_safety() noexcept
 {
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
     this->abort_if_not_initialized("ft_game_hooks::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
-    mutex_pointer = new (std::nothrow) pt_mutex();
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     initialize_error = mutex_pointer->initialize();
@@ -540,7 +532,7 @@ void ft_game_hooks::reset() noexcept
 }
 
 #ifdef LIBFT_TEST_BUILD
-pt_mutex *ft_game_hooks::get_mutex_for_validation() const noexcept
+pt_recursive_mutex *ft_game_hooks::get_mutex_for_validation() const noexcept
 {
     this->abort_if_not_initialized("ft_game_hooks::get_mutex_for_validation");
     return (this->_mutex);

@@ -17,8 +17,11 @@ FT_TEST(test_dialogue_table_setters, "dialogue table setter swaps line maps")
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, lines.initialize());
     followups.push_back(3);
-    lines.insert(2, ft_sharedptr<ft_dialogue_line>(new (std::nothrow)
-            ft_dialogue_line(2, ft_string("npc"), ft_string("hi"), followups)));
+    ft_sharedptr<ft_dialogue_line> new_line(new (std::nothrow) ft_dialogue_line());
+    FT_ASSERT(new_line.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, new_line->initialize(2, ft_string("npc"),
+        ft_string("hi"), followups));
+    lines.insert(2, new_line);
 
     table.set_lines(lines);
     FT_ASSERT_EQ(1, table.get_lines().size());

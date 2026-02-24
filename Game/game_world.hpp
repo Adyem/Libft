@@ -62,11 +62,11 @@ class ft_world
 
     public:
         ft_world() noexcept;
-        virtual ~ft_world() = default;
-        ft_world(const ft_world &other) noexcept;
-        ft_world &operator=(const ft_world &other) noexcept;
-        ft_world(ft_world &&other) noexcept;
-        ft_world &operator=(ft_world &&other) noexcept;
+        virtual ~ft_world() noexcept;
+        ft_world(const ft_world &other) noexcept = delete;
+        ft_world &operator=(const ft_world &other) noexcept = delete;
+        ft_world(ft_world &&other) noexcept = delete;
+        ft_world &operator=(ft_world &&other) noexcept = delete;
 
         void schedule_event(const ft_sharedptr<ft_event> &event) noexcept;
         void update_events(ft_sharedptr<ft_world> &self, int ticks, const char *log_file_path = ft_nullptr, ft_string *log_buffer = ft_nullptr) noexcept;

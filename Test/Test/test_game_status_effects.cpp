@@ -56,18 +56,17 @@ FT_TEST(test_game_resistance_reset_clears_values, "Game: resistance reset restor
     return (1);
 }
 
-FT_TEST(test_game_resistance_move_assignment_transfers_values, "Game: resistance move assignment transfers and clears state")
+FT_TEST(test_game_resistance_set_values_copy_values, "Game: resistance set values mirrors source state")
 {
     ft_resistance source;
     ft_resistance destination;
 
     source.set_values(15, 3);
-
-    destination = ft_move(source);
+    destination.set_values(source.get_percent(), source.get_flat());
 
     FT_ASSERT_EQ(15, destination.get_percent());
     FT_ASSERT_EQ(3, destination.get_flat());
-    FT_ASSERT_EQ(0, source.get_percent());
-    FT_ASSERT_EQ(0, source.get_flat());
+    FT_ASSERT_EQ(15, source.get_percent());
+    FT_ASSERT_EQ(3, source.get_flat());
     return (1);
 }

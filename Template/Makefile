@@ -34,7 +34,12 @@ SRCS := template_basic_types.cpp \
         template_compile_vector.cpp
 TOTAL_SRCS := $(words $(SRCS))
 TARGET := template_basic_types.a
-OBJDIR := objs
+BUILD_OBJ_SUFFIX :=
+ifneq ($(findstring -DLIBFT_TEST_BUILD,$(COMPILE_FLAGS)),)
+    BUILD_OBJ_SUFFIX := _test
+endif
+
+OBJDIR := objs$(BUILD_OBJ_SUFFIX)
 OBJS := $(patsubst %.cpp,$(OBJDIR)/%.o,$(SRCS))
 DEPS       := $(OBJS:.o=.d)
 DEBUG_DEPS := $(DEBUG_OBJS:.o=.d)

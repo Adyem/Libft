@@ -33,7 +33,8 @@ FT_TEST(test_serialize_inventory_allocation_failure_sets_errno, "serialize_inven
 
 FT_TEST(test_serialize_inventory_null_item_sets_errno, "serialize_inventory reports null item state")
 {
-    ft_inventory inventory(1);
+    ft_inventory inventory;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize(1, 0));
 
     inventory.get_items().insert(0, ft_sharedptr<ft_item>());
     json_group *group = serialize_inventory(inventory);
@@ -43,7 +44,8 @@ FT_TEST(test_serialize_inventory_null_item_sets_errno, "serialize_inventory repo
 
 FT_TEST(test_serialize_inventory_success_clears_errno, "serialize_inventory clears errno on success")
 {
-    ft_inventory inventory(1);
+    ft_inventory inventory;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize(1, 0));
     ft_sharedptr<ft_item> item(new ft_item());
 
     item->set_item_id(42);

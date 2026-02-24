@@ -31,7 +31,8 @@ int test_game_simulation(void)
     hero.set_might(10);
     hero.set_physical_armor(5);
 
-    ft_map3d grid(3, 3, 1, 0);
+    ft_map3d grid;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, grid.initialize(3, 3, 1, 0));
     grid.set(1, 1, 0, 1);
     hero.set_x(1);
     hero.set_y(1);
@@ -92,11 +93,13 @@ int test_game_simulation(void)
     if (events.size() != 1 || events[0]->get_duration() != 4)
         return (0);
 
-    ft_inventory pack(2);
+    ft_inventory pack;
     ft_sharedptr<ft_item> potion(new ft_item());
     potion->set_item_id(1);
     potion->set_max_stack(10);
     potion->set_stack_size(5);
+    if (pack.initialize(2, 0) != FT_ERR_SUCCESS)
+        return (0);
     if (pack.add_item(potion) != FT_ERR_SUCCESS)
         return (0);
     ft_sharedptr<ft_item> more(new ft_item());
@@ -286,8 +289,9 @@ FT_TEST(test_game_event_add_duration_rejects_negative, "ft_event::add_duration r
 
 FT_TEST(test_inventory_remove_item_releases_usage, "Game: removing items releases slots and weight")
 {
-    ft_inventory inventory(3, 20);
+    ft_inventory inventory;
     ft_sharedptr<ft_item> stack(new ft_item());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize(3, 20));
 
     stack->set_item_id(7);
     stack->set_max_stack(10);
@@ -306,9 +310,10 @@ FT_TEST(test_inventory_remove_item_releases_usage, "Game: removing items release
 
 FT_TEST(test_inventory_count_rarity_sums_stacks, "Game: count_rarity returns total stacked quantity")
 {
-    ft_inventory inventory(4, 20);
+    ft_inventory inventory;
     ft_sharedptr<ft_item> first(new ft_item());
     ft_sharedptr<ft_item> second(new ft_item());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize(4, 20));
 
     first->set_item_id(1);
     first->set_rarity(2);
@@ -359,9 +364,11 @@ FT_TEST(test_character_restore_armor_recovers_all, "Game: restore_armor brings b
 
 FT_TEST(test_inventory_copy_preserves_stacks, "Game: copying inventories keeps item stacks intact")
 {
-    ft_inventory original(5, 15);
-    ft_inventory duplicate(5, 15);
+    ft_inventory original;
+    ft_inventory duplicate;
     ft_sharedptr<ft_item> stack(new ft_item());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.initialize(5, 15));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, duplicate.initialize(5, 15));
 
     stack->set_item_id(3);
     stack->set_max_stack(10);
@@ -575,8 +582,9 @@ FT_TEST(test_world_registry_registers_and_fetches_regions, "Game: registry store
 
 FT_TEST(test_inventory_add_item_rejects_weight_overflow, "Game: inventory blocks inserts that exceed weight limit")
 {
-    ft_inventory inventory(0, 5);
+    ft_inventory inventory;
     ft_sharedptr<ft_item> heavy(new ft_item());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize(0, 5));
 
     heavy->set_item_id(11);
     heavy->set_width(2);
@@ -591,10 +599,11 @@ FT_TEST(test_inventory_add_item_rejects_weight_overflow, "Game: inventory blocks
 
 FT_TEST(test_inventory_is_full_checks_capacity, "Game: is_full reflects slot usage when capacity is limited")
 {
-    ft_inventory inventory(2, 50);
+    ft_inventory inventory;
     ft_sharedptr<ft_item> first(new ft_item());
     ft_sharedptr<ft_item> second(new ft_item());
     ft_sharedptr<ft_item> third(new ft_item());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize(2, 50));
 
     first->set_item_id(1);
     first->set_width(1);
@@ -624,9 +633,10 @@ FT_TEST(test_inventory_is_full_checks_capacity, "Game: is_full reflects slot usa
 
 FT_TEST(test_inventory_partial_stack_before_capacity_error, "Game: adding beyond capacity still merges into existing stack")
 {
-    ft_inventory inventory(1, 50);
+    ft_inventory inventory;
     ft_sharedptr<ft_item> base(new ft_item());
     ft_sharedptr<ft_item> extra(new ft_item());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize(1, 50));
 
     base->set_item_id(5);
     base->set_width(1);

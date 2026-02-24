@@ -10,14 +10,6 @@ ft_rarity_band::ft_rarity_band() noexcept
     return ;
 }
 
-ft_rarity_band::ft_rarity_band(int rarity, double value_multiplier) noexcept
-    : _rarity(0), _value_multiplier(1.0), _mutex(ft_nullptr),
-      _initialized_state(ft_rarity_band::_state_uninitialized)
-{
-    (void)this->initialize(rarity, value_multiplier);
-    return ;
-}
-
 ft_rarity_band::~ft_rarity_band() noexcept
 {
     if (this->_initialized_state == ft_rarity_band::_state_uninitialized)
@@ -115,13 +107,13 @@ int ft_rarity_band::destroy() noexcept
 
 int ft_rarity_band::enable_thread_safety() noexcept
 {
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
     this->abort_if_not_initialized("ft_rarity_band::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
-    mutex_pointer = new (std::nothrow) pt_mutex();
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     initialize_error = mutex_pointer->initialize();
@@ -217,7 +209,7 @@ void ft_rarity_band::set_value_multiplier(double value_multiplier) noexcept
 }
 
 #ifdef LIBFT_TEST_BUILD
-pt_mutex *ft_rarity_band::get_mutex_for_validation() const noexcept
+pt_recursive_mutex *ft_rarity_band::get_mutex_for_validation() const noexcept
 {
     this->abort_if_not_initialized("ft_rarity_band::get_mutex_for_validation");
     return (this->_mutex);

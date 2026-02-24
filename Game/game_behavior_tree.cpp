@@ -13,22 +13,6 @@ ft_behavior_context::~ft_behavior_context() noexcept
     return ;
 }
 
-ft_behavior_context::ft_behavior_context(const ft_behavior_context &other) noexcept
-    : _character(other._character), _user_data(other._user_data)
-{
-    return ;
-}
-
-ft_behavior_context &ft_behavior_context::operator=(const ft_behavior_context &other) noexcept
-{
-    if (this != &other)
-    {
-        this->_character = other._character;
-        this->_user_data = other._user_data;
-    }
-    return (*this);
-}
-
 ft_character *ft_behavior_context::get_character() const noexcept
 {
     return (this->_character);
@@ -63,20 +47,6 @@ ft_behavior_node::~ft_behavior_node() noexcept
     return ;
 }
 
-ft_behavior_node::ft_behavior_node(const ft_behavior_node &other) noexcept
-    : _error_code(other._error_code)
-{
-    this->set_error(other._error_code);
-    return ;
-}
-
-ft_behavior_node &ft_behavior_node::operator=(const ft_behavior_node &other) noexcept
-{
-    if (this != &other)
-        this->set_error(other._error_code);
-    return (*this);
-}
-
 void ft_behavior_node::set_error(int error_code) const noexcept
 {
     this->_error_code = error_code;
@@ -108,22 +78,6 @@ ft_behavior_action::ft_behavior_action(const ft_function<int(ft_behavior_context
 ft_behavior_action::~ft_behavior_action() noexcept
 {
     return ;
-}
-
-ft_behavior_action::ft_behavior_action(const ft_behavior_action &other) noexcept
-    : ft_behavior_node(other), _callback(other._callback)
-{
-    return ;
-}
-
-ft_behavior_action &ft_behavior_action::operator=(const ft_behavior_action &other) noexcept
-{
-    if (this != &other)
-    {
-        ft_behavior_node::operator=(other);
-        this->_callback = other._callback;
-    }
-    return (*this);
 }
 
 void ft_behavior_action::set_callback(const ft_function<int(ft_behavior_context &)> &callback) noexcept
@@ -168,57 +122,6 @@ ft_behavior_composite::ft_behavior_composite() noexcept
 ft_behavior_composite::~ft_behavior_composite() noexcept
 {
     return ;
-}
-
-ft_behavior_composite::ft_behavior_composite(const ft_behavior_composite &other) noexcept
-    : ft_behavior_node(other), _children()
-{
-    size_t index;
-    size_t count;
-
-    index = 0;
-    count = other._children.size();
-    while (index < count)
-    {
-        this->_children.push_back(other._children[index]);
-        if (false)
-        {
-            this->set_error(FT_ERR_SUCCESS);
-            return ;
-        }
-        index++;
-    }
-    return ;
-}
-
-ft_behavior_composite &ft_behavior_composite::operator=(const ft_behavior_composite &other) noexcept
-{
-    if (this != &other)
-    {
-        ft_behavior_node::operator=(other);
-        this->_children.clear();
-        if (false)
-        {
-            this->set_error(FT_ERR_SUCCESS);
-            return (*this);
-        }
-        size_t index;
-        size_t count;
-
-        index = 0;
-        count = other._children.size();
-        while (index < count)
-        {
-            this->_children.push_back(other._children[index]);
-            if (false)
-            {
-                this->set_error(FT_ERR_SUCCESS);
-                return (*this);
-            }
-            index++;
-        }
-    }
-    return (*this);
 }
 
 bool ft_behavior_composite::validate_child(const ft_sharedptr<ft_behavior_node> &child) const noexcept
@@ -283,19 +186,6 @@ ft_behavior_selector::~ft_behavior_selector() noexcept
     return ;
 }
 
-ft_behavior_selector::ft_behavior_selector(const ft_behavior_selector &other) noexcept
-    : ft_behavior_composite(other)
-{
-    return ;
-}
-
-ft_behavior_selector &ft_behavior_selector::operator=(const ft_behavior_selector &other) noexcept
-{
-    if (this != &other)
-        ft_behavior_composite::operator=(other);
-    return (*this);
-}
-
 int ft_behavior_selector::tick(ft_behavior_context &context) noexcept
 {
     size_t index;
@@ -339,19 +229,6 @@ ft_behavior_sequence::ft_behavior_sequence() noexcept
 ft_behavior_sequence::~ft_behavior_sequence() noexcept
 {
     return ;
-}
-
-ft_behavior_sequence::ft_behavior_sequence(const ft_behavior_sequence &other) noexcept
-    : ft_behavior_composite(other)
-{
-    return ;
-}
-
-ft_behavior_sequence &ft_behavior_sequence::operator=(const ft_behavior_sequence &other) noexcept
-{
-    if (this != &other)
-        ft_behavior_composite::operator=(other);
-    return (*this);
 }
 
 int ft_behavior_sequence::tick(ft_behavior_context &context) noexcept
@@ -403,23 +280,6 @@ ft_behavior_tree::ft_behavior_tree() noexcept
 ft_behavior_tree::~ft_behavior_tree() noexcept
 {
     return ;
-}
-
-ft_behavior_tree::ft_behavior_tree(const ft_behavior_tree &other) noexcept
-    : _root(other._root), _error_code(other._error_code)
-{
-    this->set_error(other._error_code);
-    return ;
-}
-
-ft_behavior_tree &ft_behavior_tree::operator=(const ft_behavior_tree &other) noexcept
-{
-    if (this != &other)
-    {
-        this->_root = other._root;
-        this->set_error(other._error_code);
-    }
-    return (*this);
 }
 
 void ft_behavior_tree::set_error(int error_code) const noexcept

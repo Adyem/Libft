@@ -13,17 +13,18 @@ class ft_dialogue_line
         ft_string _speaker;
         ft_string _text;
         ft_vector<int> _next_line_ids;
-        mutable pt_mutex _mutex;
+        mutable pt_recursive_mutex *_mutex;
 
     public:
         ft_dialogue_line() noexcept;
-        ft_dialogue_line(int line_id, const ft_string &speaker, const ft_string &text,
-                const ft_vector<int> &next_line_ids) noexcept;
         virtual ~ft_dialogue_line() noexcept;
         ft_dialogue_line(const ft_dialogue_line &other) noexcept = delete;
         ft_dialogue_line &operator=(const ft_dialogue_line &other) noexcept = delete;
         ft_dialogue_line(ft_dialogue_line &&other) noexcept = delete;
         ft_dialogue_line &operator=(ft_dialogue_line &&other) noexcept = delete;
+
+        int initialize(int line_id, const ft_string &speaker,
+            const ft_string &text, const ft_vector<int> &next_line_ids) noexcept;
 
         int get_line_id() const noexcept;
         void set_line_id(int line_id) noexcept;
@@ -37,6 +38,9 @@ class ft_dialogue_line
         const ft_vector<int> &get_next_line_ids() const noexcept;
         ft_vector<int> &get_next_line_ids() noexcept;
         void set_next_line_ids(const ft_vector<int> &next_line_ids) noexcept;
+        int enable_thread_safety() noexcept;
+        int disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
 
         int get_error() const noexcept;
         const char *get_error_str() const noexcept;

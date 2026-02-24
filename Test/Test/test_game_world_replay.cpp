@@ -20,7 +20,8 @@ FT_TEST(test_game_world_replay_capture_restore_replay,
     ft_sharedptr<ft_world> world_pointer(new (std::nothrow) ft_world());
     ft_world_replay_session session;
     ft_character hero_character;
-    ft_inventory hero_inventory(4);
+    ft_inventory hero_inventory;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hero_inventory.initialize(4, 0));
     ft_sharedptr<ft_item> healing_potion(new (std::nothrow) ft_item());
     ft_sharedptr<ft_event> damage_event(new (std::nothrow) ft_event());
     int damage_invocations;
@@ -85,7 +86,8 @@ FT_TEST(test_game_world_replay_import_export_clear,
     ft_world_replay_session session;
     ft_world_replay_session imported_session;
     ft_character hero_character;
-    ft_inventory hero_inventory(2);
+    ft_inventory hero_inventory;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hero_inventory.initialize(2, 0));
     ft_string exported_snapshot;
     ft_string cleared_snapshot;
     int restore_result;

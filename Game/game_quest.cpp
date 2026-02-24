@@ -12,14 +12,12 @@ ft_quest::ft_quest() noexcept
 
 ft_quest::~ft_quest() noexcept
 {
-    if (this->_initialized_state == ft_quest::_state_uninitialized)
+    if (this->_initialized_state != ft_quest::_state_initialized)
     {
-        this->abort_lifecycle_error("ft_quest::~ft_quest",
-            "destructor called while object is uninitialized");
+        this->_initialized_state = ft_quest::_state_destroyed;
         return ;
     }
-    if (this->_initialized_state == ft_quest::_state_initialized)
-        (void)this->destroy();
+    (void)this->destroy();
     return ;
 }
 
@@ -46,6 +44,10 @@ void ft_quest::abort_if_not_initialized(const char *method_name) const
 
 int ft_quest::initialize() noexcept
 {
+    int description_error;
+    int objective_error;
+    int reward_items_error;
+
     if (this->_initialized_state == ft_quest::_state_initialized)
     {
         this->abort_lifecycle_error("ft_quest::initialize",
@@ -55,9 +57,6 @@ int ft_quest::initialize() noexcept
     this->_id = 0;
     this->_phases = 0;
     this->_current_phase = 0;
-    int description_error;
-    int objective_error;
-
     description_error = this->_description.initialize();
     if (description_error != FT_ERR_SUCCESS)
         return (description_error);
@@ -66,6 +65,13 @@ int ft_quest::initialize() noexcept
     {
         (void)this->_description.destroy();
         return (objective_error);
+    }
+    reward_items_error = this->_reward_items.initialize();
+    if (reward_items_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_description.destroy();
+        (void)this->_objective.destroy();
+        return (reward_items_error);
     }
     this->_description.clear();
     this->_objective.clear();
@@ -143,9 +149,8 @@ int ft_quest::destroy() noexcept
 
     if (this->_initialized_state != ft_quest::_state_initialized)
     {
-        this->abort_lifecycle_error("ft_quest::destroy",
-            "called while object is not initialized");
-        return (FT_ERR_INVALID_STATE);
+        this->_initialized_state = ft_quest::_state_destroyed;
+        return (FT_ERR_SUCCESS);
     }
     this->_reward_items.clear();
     this->_description.clear();
@@ -156,6 +161,7 @@ int ft_quest::destroy() noexcept
     this->_reward_experience = 0;
     (void)this->_description.destroy();
     (void)this->_objective.destroy();
+    (void)this->_reward_items.destroy();
     disable_error = this->disable_thread_safety();
     this->_initialized_state = ft_quest::_state_destroyed;
     return (disable_error);
@@ -163,13 +169,13 @@ int ft_quest::destroy() noexcept
 
 int ft_quest::enable_thread_safety() noexcept
 {
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
     this->abort_if_not_initialized("ft_quest::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
-    mutex_pointer = new (std::nothrow) pt_mutex();
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     initialize_error = mutex_pointer->initialize();
@@ -398,7 +404,7 @@ void ft_quest::advance_phase() noexcept
 }
 
 #ifdef LIBFT_TEST_BUILD
-pt_mutex *ft_quest::get_mutex_for_validation() const noexcept
+pt_recursive_mutex *ft_quest::get_mutex_for_validation() const noexcept
 {
     this->abort_if_not_initialized("ft_quest::get_mutex_for_validation");
     return (this->_mutex);

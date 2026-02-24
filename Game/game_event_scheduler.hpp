@@ -9,7 +9,6 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
-#include "../PThread/unique_lock.hpp"
 #include "../Time/time.hpp"
 #include <cstddef>
 
@@ -38,16 +37,14 @@ class ft_event_scheduler
     private:
         mutable ft_priority_queue<ft_sharedptr<ft_event>, ft_event_compare_ptr> _events;
         mutable int _error_code;
-        mutable pt_mutex _mutex;
+        mutable pt_recursive_mutex *_mutex;
         mutable bool _profiling_enabled;
         mutable t_event_scheduler_profile _profile;
         mutable ft_vector<ft_sharedptr<ft_event> > _ready_cache;
 
         void set_error(int error) const noexcept;
-        static int lock_pair(const ft_event_scheduler &first,
-                const ft_event_scheduler &second,
-                ft_unique_lock<pt_mutex> &first_guard,
-                ft_unique_lock<pt_mutex> &second_guard);
+        int lock_internal(bool *lock_acquired) const noexcept;
+        void unlock_internal(bool lock_acquired) const noexcept;
         void reset_profile_locked() const noexcept;
         void record_profile_locked(size_t ready_count,
                 size_t rescheduled_count,
@@ -64,10 +61,10 @@ class ft_event_scheduler
     public:
         ft_event_scheduler() noexcept;
         ~ft_event_scheduler();
-        ft_event_scheduler(const ft_event_scheduler &other) noexcept;
-        ft_event_scheduler &operator=(const ft_event_scheduler &other) noexcept;
-        ft_event_scheduler(ft_event_scheduler &&other) noexcept;
-        ft_event_scheduler &operator=(ft_event_scheduler &&other) noexcept;
+        ft_event_scheduler(const ft_event_scheduler &other) noexcept = delete;
+        ft_event_scheduler &operator=(const ft_event_scheduler &other) noexcept = delete;
+        ft_event_scheduler(ft_event_scheduler &&other) noexcept = delete;
+        ft_event_scheduler &operator=(ft_event_scheduler &&other) noexcept = delete;
 
         void schedule_event(const ft_sharedptr<ft_event> &event) noexcept;
         void cancel_event(int id) noexcept;
@@ -82,6 +79,9 @@ class ft_event_scheduler
         void dump_events(ft_vector<ft_sharedptr<ft_event> > &out) const noexcept;
         size_t size() const noexcept;
         void clear() noexcept;
+        int enable_thread_safety() noexcept;
+        int disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
 
         int get_error() const noexcept;
         const char *get_error_str() const noexcept;

@@ -13,11 +13,7 @@ ft_debuff::ft_debuff() noexcept
 ft_debuff::~ft_debuff() noexcept
 {
     if (this->_initialized_state == ft_debuff::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("ft_debuff::~ft_debuff",
-            "destructor called while object is uninitialized");
         return ;
-    }
     if (this->_initialized_state == ft_debuff::_state_initialized)
         (void)this->destroy();
     return ;
@@ -90,11 +86,7 @@ int ft_debuff::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != ft_debuff::_state_initialized)
-    {
-        this->abort_lifecycle_error("ft_debuff::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     disable_error = this->disable_thread_safety();
     this->_id = 0;
     this->_duration = 0;
@@ -108,13 +100,13 @@ int ft_debuff::destroy() noexcept
 
 int ft_debuff::enable_thread_safety() noexcept
 {
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
     this->abort_if_not_initialized("ft_debuff::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
-    mutex_pointer = new (std::nothrow) pt_mutex();
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     initialize_error = mutex_pointer->initialize();
@@ -372,7 +364,7 @@ void ft_debuff::sub_modifier4(int mod) noexcept
 }
 
 #ifdef LIBFT_TEST_BUILD
-pt_mutex *ft_debuff::get_mutex_for_validation() const noexcept
+pt_recursive_mutex *ft_debuff::get_mutex_for_validation() const noexcept
 {
     this->abort_if_not_initialized("ft_debuff::get_mutex_for_validation");
     return (this->_mutex);

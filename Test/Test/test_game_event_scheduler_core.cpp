@@ -279,6 +279,18 @@ FT_TEST(test_game_event_scheduler_snapshot_without_profiling_is_zeroed, "ft_even
     return (1);
 }
 
+FT_TEST(test_game_event_scheduler_thread_safety_toggle, "ft_event_scheduler thread safety toggles explicitly")
+{
+    ft_event_scheduler scheduler;
+
+    FT_ASSERT_EQ(false, scheduler.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler.enable_thread_safety());
+    FT_ASSERT_EQ(true, scheduler.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler.disable_thread_safety());
+    FT_ASSERT_EQ(false, scheduler.is_thread_safe());
+    return (1);
+}
+
 FT_TEST(test_game_event_scheduler_profile_counts_reschedules, "ft_event_scheduler profiling tracks rescheduled events")
 {
     ft_event_scheduler scheduler;
@@ -301,4 +313,3 @@ FT_TEST(test_game_event_scheduler_profile_counts_reschedules, "ft_event_schedule
     FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.last_error_code);
     return (1);
 }
-

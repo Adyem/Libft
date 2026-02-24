@@ -4,7 +4,6 @@
 #include "../Template/function.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
-#include "../PThread/unique_lock.hpp"
 
 class ft_world;
 
@@ -19,22 +18,21 @@ class ft_event
         int _modifier4;
         ft_function<void(ft_world&, ft_event&)> _callback;
         mutable int _error;
-        mutable pt_mutex _mutex;
+        mutable pt_recursive_mutex *_mutex;
 
         void set_error(int err) const noexcept;
-        static int lock_pair(const ft_event &first, const ft_event &second,
-                ft_unique_lock<pt_mutex> &first_guard,
-                ft_unique_lock<pt_mutex> &second_guard);
+        int lock_internal(bool *lock_acquired) const noexcept;
+        void unlock_internal(bool lock_acquired) const noexcept;
 
         friend struct ft_event_compare_ptr;
 
     public:
         ft_event() noexcept;
         virtual ~ft_event() noexcept;
-        ft_event(const ft_event &other) noexcept;
-        ft_event &operator=(const ft_event &other) noexcept;
-        ft_event(ft_event &&other) noexcept;
-        ft_event &operator=(ft_event &&other) noexcept;
+        ft_event(const ft_event &other) noexcept = delete;
+        ft_event &operator=(const ft_event &other) noexcept = delete;
+        ft_event(ft_event &&other) noexcept = delete;
+        ft_event &operator=(ft_event &&other) noexcept = delete;
 
         int get_id() const noexcept;
         void set_id(int id) noexcept;
@@ -66,10 +64,12 @@ class ft_event
 
         const ft_function<void(ft_world&, ft_event&)> &get_callback() const noexcept;
         void set_callback(ft_function<void(ft_world&, ft_event&)> &&callback) noexcept;
+        int enable_thread_safety() noexcept;
+        int disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
 
         int get_error() const noexcept;
         const char *get_error_str() const noexcept;
 };
 
 #endif
-

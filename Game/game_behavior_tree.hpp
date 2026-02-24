@@ -21,8 +21,8 @@ class ft_behavior_context
     public:
         ft_behavior_context() noexcept;
         ~ft_behavior_context() noexcept;
-        ft_behavior_context(const ft_behavior_context &other) noexcept;
-        ft_behavior_context &operator=(const ft_behavior_context &other) noexcept;
+        ft_behavior_context(const ft_behavior_context &other) noexcept = delete;
+        ft_behavior_context &operator=(const ft_behavior_context &other) noexcept = delete;
 
         ft_character *get_character() const noexcept;
         void set_character(ft_character *character) noexcept;
@@ -41,8 +41,8 @@ class ft_behavior_node
     public:
         ft_behavior_node() noexcept;
         virtual ~ft_behavior_node() noexcept;
-        ft_behavior_node(const ft_behavior_node &other) noexcept;
-        ft_behavior_node &operator=(const ft_behavior_node &other) noexcept;
+        ft_behavior_node(const ft_behavior_node &other) noexcept = delete;
+        ft_behavior_node &operator=(const ft_behavior_node &other) noexcept = delete;
 
         virtual int tick(ft_behavior_context &context) noexcept = 0;
 
@@ -59,8 +59,8 @@ class ft_behavior_action : public ft_behavior_node
         ft_behavior_action() noexcept;
         explicit ft_behavior_action(const ft_function<int(ft_behavior_context &)> &callback) noexcept;
         virtual ~ft_behavior_action() noexcept;
-        ft_behavior_action(const ft_behavior_action &other) noexcept;
-        ft_behavior_action &operator=(const ft_behavior_action &other) noexcept;
+        ft_behavior_action(const ft_behavior_action &other) noexcept = delete;
+        ft_behavior_action &operator=(const ft_behavior_action &other) noexcept = delete;
 
         void set_callback(const ft_function<int(ft_behavior_context &)> &callback) noexcept;
         const ft_function<int(ft_behavior_context &)> &get_callback() const noexcept;
@@ -78,8 +78,8 @@ class ft_behavior_composite : public ft_behavior_node
     public:
         ft_behavior_composite() noexcept;
         virtual ~ft_behavior_composite() noexcept;
-        ft_behavior_composite(const ft_behavior_composite &other) noexcept;
-        ft_behavior_composite &operator=(const ft_behavior_composite &other) noexcept;
+        ft_behavior_composite(const ft_behavior_composite &other) noexcept = delete;
+        ft_behavior_composite &operator=(const ft_behavior_composite &other) noexcept = delete;
 
         void add_child(const ft_sharedptr<ft_behavior_node> &child) noexcept;
         void clear_children() noexcept;
@@ -92,8 +92,8 @@ class ft_behavior_selector : public ft_behavior_composite
     public:
         ft_behavior_selector() noexcept;
         virtual ~ft_behavior_selector() noexcept;
-        ft_behavior_selector(const ft_behavior_selector &other) noexcept;
-        ft_behavior_selector &operator=(const ft_behavior_selector &other) noexcept;
+        ft_behavior_selector(const ft_behavior_selector &other) noexcept = delete;
+        ft_behavior_selector &operator=(const ft_behavior_selector &other) noexcept = delete;
 
         virtual int tick(ft_behavior_context &context) noexcept;
 };
@@ -103,8 +103,8 @@ class ft_behavior_sequence : public ft_behavior_composite
     public:
         ft_behavior_sequence() noexcept;
         virtual ~ft_behavior_sequence() noexcept;
-        ft_behavior_sequence(const ft_behavior_sequence &other) noexcept;
-        ft_behavior_sequence &operator=(const ft_behavior_sequence &other) noexcept;
+        ft_behavior_sequence(const ft_behavior_sequence &other) noexcept = delete;
+        ft_behavior_sequence &operator=(const ft_behavior_sequence &other) noexcept = delete;
 
         virtual int tick(ft_behavior_context &context) noexcept;
 };
@@ -120,8 +120,8 @@ class ft_behavior_tree
     public:
         ft_behavior_tree() noexcept;
         ~ft_behavior_tree() noexcept;
-        ft_behavior_tree(const ft_behavior_tree &other) noexcept;
-        ft_behavior_tree &operator=(const ft_behavior_tree &other) noexcept;
+        ft_behavior_tree(const ft_behavior_tree &other) noexcept = delete;
+        ft_behavior_tree &operator=(const ft_behavior_tree &other) noexcept = delete;
 
         void set_root(const ft_sharedptr<ft_behavior_node> &root) noexcept;
         ft_sharedptr<ft_behavior_node> &get_root() noexcept;

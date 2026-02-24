@@ -25,6 +25,19 @@ struct ft_is_complete<Type, std::void_t<decltype(sizeof(Type))> >
 {
 };
 
+template <typename Type, typename Arg, typename = void>
+struct ft_has_initialize_with_arg
+    : std::false_type
+{
+};
+
+template <typename Type, typename Arg>
+struct ft_has_initialize_with_arg<Type, Arg,
+    std::void_t<decltype(std::declval<Type &>().initialize(std::declval<Arg>()))> >
+    : std::true_type
+{
+};
+
 template <typename Type, size_t InlineCapacity, bool Enabled>
 struct ft_vector_inline_storage
 {
@@ -58,6 +71,8 @@ class ft_vector
         void    reset_to_small_buffer();
 	int32_t     lock_internal(bool *lock_acquired) const;
 	int32_t     unlock_internal(bool lock_acquired) const;
+        template <typename ArgType>
+        int32_t construct_element_unlocked(ElementType *destination, ArgType &&value);
         static int32_t set_last_operation_error(int32_t error_code) noexcept;
 
     protected:
@@ -136,6 +151,36 @@ template <typename ElementType>
 const char *ft_vector<ElementType>::last_operation_error_str() noexcept
 {
     return (ft_strerror(ft_vector<ElementType>::last_operation_error()));
+}
+
+template <typename ElementType>
+template <typename ArgType>
+int32_t ft_vector<ElementType>::construct_element_unlocked(
+    ElementType *destination, ArgType &&value)
+{
+    if constexpr (std::is_constructible<ElementType, ArgType&&>::value)
+    {
+        construct_at(destination, std::forward<ArgType>(value));
+        return (ft_vector<ElementType>::set_last_operation_error(FT_ERR_SUCCESS));
+    }
+    else if constexpr (std::is_default_constructible<ElementType>::value
+        && ft_has_initialize_with_arg<ElementType, ArgType&&>::value)
+    {
+        int32_t initialize_error;
+
+        construct_default_at(destination);
+        initialize_error = destination->initialize(std::forward<ArgType>(value));
+        if (initialize_error != FT_ERR_SUCCESS)
+        {
+            ::destroy_at(destination);
+            return (ft_vector<ElementType>::set_last_operation_error(initialize_error));
+        }
+        return (ft_vector<ElementType>::set_last_operation_error(FT_ERR_SUCCESS));
+    }
+    else
+    {
+        return (ft_vector<ElementType>::set_last_operation_error(FT_ERR_UNSUPPORTED_TYPE));
+    }
 }
 
 template <typename ElementType>
@@ -219,7 +264,18 @@ int32_t ft_vector<ElementType>::initialize(ft_vector<ElementType> &&other)
         ft_size_t index = 0;
         while (index < other._size)
         {
-            construct_at(&this->_data[index], other._data[index]);
+            if (this->construct_element_unlocked(&this->_data[index],
+                    other._data[index]) != FT_ERR_SUCCESS)
+            {
+                while (index > 0)
+                {
+                    index -= 1;
+                    ::destroy_at(&this->_data[index]);
+                }
+                this->_size = 0;
+                other.unlock_internal(other_lock_acquired);
+                return (ft_vector<ElementType>::last_operation_error());
+            }
             ++index;
         }
         this->_size = other._size;
@@ -273,7 +329,19 @@ int32_t ft_vector<ElementType>::copy_from(const ft_vector<ElementType> &other)
     size_t index = 0;
     while (index < other._size)
     {
-        construct_at(&this->_data[index], other._data[index]);
+        if (this->construct_element_unlocked(&this->_data[index],
+                other._data[index]) != FT_ERR_SUCCESS)
+        {
+            while (index > 0)
+            {
+                index -= 1;
+                ::destroy_at(&this->_data[index]);
+            }
+            this->_size = 0;
+            other.unlock_internal(other_lock_acquired);
+            this->unlock_internal(self_lock_acquired);
+            return (ft_vector<ElementType>::last_operation_error());
+        }
         ++index;
     }
     this->_size = other._size;
@@ -431,7 +499,12 @@ void ft_vector<ElementType>::push_back(const ElementType &value)
             return ;
         }
     }
-    construct_at(&this->_data[this->_size], value);
+    if (this->construct_element_unlocked(&this->_data[this->_size], value)
+        != FT_ERR_SUCCESS)
+    {
+        this->unlock_internal(lock_acquired);
+        return ;
+    }
     this->_size += 1;
     this->unlock_internal(lock_acquired);
     return ;
@@ -464,7 +537,12 @@ void ft_vector<ElementType>::push_back(ElementType &&value)
             return ;
         }
     }
-    construct_at(&this->_data[this->_size], ft_move(value));
+    if (this->construct_element_unlocked(&this->_data[this->_size], ft_move(value))
+        != FT_ERR_SUCCESS)
+    {
+        this->unlock_internal(lock_acquired);
+        return ;
+    }
     this->_size += 1;
     this->unlock_internal(lock_acquired);
     return ;
@@ -618,7 +696,17 @@ void ft_vector<ElementType>::resize(ft_size_t new_size, const ElementType& value
         index = this->_size;
         while (index < new_size)
         {
-            construct_at(&this->_data[index], value);
+            if (this->construct_element_unlocked(&this->_data[index], value)
+                != FT_ERR_SUCCESS)
+            {
+                while (index > this->_size)
+                {
+                    index -= 1;
+                    ::destroy_at(&this->_data[index]);
+                }
+                this->unlock_internal(lock_acquired);
+                return ;
+            }
             ++index;
         }
     }
@@ -670,11 +758,21 @@ typename ft_vector<ElementType>::iterator ft_vector<ElementType>::insert(iterato
     move_index = this->_size;
     while (move_index > index)
     {
-        construct_at(&this->_data[move_index], this->_data[move_index - 1]);
+        if (this->construct_element_unlocked(&this->_data[move_index],
+                this->_data[move_index - 1]) != FT_ERR_SUCCESS)
+        {
+            this->unlock_internal(lock_acquired);
+            return (this->_data + this->_size);
+        }
         ::destroy_at(&this->_data[move_index - 1]);
         move_index -= 1;
     }
-    construct_at(&this->_data[index], value);
+    if (this->construct_element_unlocked(&this->_data[index], value)
+        != FT_ERR_SUCCESS)
+    {
+        this->unlock_internal(lock_acquired);
+        return (this->_data + this->_size);
+    }
     this->_size += 1;
     result_iterator = &this->_data[index];
     this->unlock_internal(lock_acquired);
@@ -708,7 +806,12 @@ typename ft_vector<ElementType>::iterator ft_vector<ElementType>::erase(iterator
     shift_index = index;
     while (shift_index < this->_size - 1)
     {
-        construct_at(&this->_data[shift_index], ft_move(this->_data[shift_index + 1]));
+        if (this->construct_element_unlocked(&this->_data[shift_index],
+                ft_move(this->_data[shift_index + 1])) != FT_ERR_SUCCESS)
+        {
+            this->unlock_internal(lock_acquired);
+            return (this->_data + this->_size);
+        }
         ::destroy_at(&this->_data[shift_index + 1]);
         shift_index += 1;
     }
@@ -871,23 +974,20 @@ int32_t ft_vector<ElementType>::reserve_internal_unlocked(ft_size_t new_capacity
     ElementType* old_data = this->_data;
     ft_size_t current_size = this->_size;
     ft_size_t index = 0;
-    try
+    while (index < current_size)
     {
-        while (index < current_size)
+        if (this->construct_element_unlocked(&new_data[index],
+                ft_move(old_data[index])) != FT_ERR_SUCCESS)
         {
-            construct_at(&new_data[index], ft_move(old_data[index]));
-            ++index;
+            while (index > 0)
+            {
+                index -= 1;
+                ::destroy_at(&new_data[index]);
+            }
+            cma_free(new_data);
+            return (ft_vector<ElementType>::last_operation_error());
         }
-    }
-    catch (...)
-    {
-        while (index > 0)
-        {
-            --index;
-            ::destroy_at(&new_data[index]);
-        }
-        cma_free(new_data);
-        throw;
+        ++index;
     }
     ft_size_t destroy_index = 0;
     while (destroy_index < current_size)

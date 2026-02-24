@@ -17,7 +17,7 @@ class ft_map3d
         size_t      _height;
         size_t      _depth;
         int         _initial_value;
-        pt_mutex   *_mutex;
+        pt_recursive_mutex   *_mutex;
         uint8_t     _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -34,8 +34,7 @@ class ft_map3d
         void    deallocate();
 
     public:
-        ft_map3d(size_t width = 0, size_t height = 0, size_t depth = 0,
-            int value = 0);
+        ft_map3d();
         ~ft_map3d();
         ft_map3d(const ft_map3d &other) = delete;
         ft_map3d &operator=(const ft_map3d &other) = delete;
@@ -43,6 +42,7 @@ class ft_map3d
         ft_map3d &operator=(ft_map3d &&other) = delete;
 
         int     initialize();
+        int     initialize(size_t width, size_t height, size_t depth, int value);
         int     destroy();
         int     enable_thread_safety() noexcept;
         int     disable_thread_safety() noexcept;
@@ -61,7 +61,7 @@ class ft_map3d
         size_t  get_depth() const;
 
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex *get_mutex_for_validation() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 

@@ -5,13 +5,17 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-FT_TEST(test_dialogue_line_constructs_with_parameters, "parameterized constructor populates dialogue fields")
+FT_TEST(test_dialogue_line_setters_populate_fields, "setters populate dialogue fields")
 {
     ft_vector<int> next_lines;
+    ft_dialogue_line line;
+    
     next_lines.push_back(5);
     next_lines.push_back(8);
-
-    ft_dialogue_line line(3, ft_string("npc"), ft_string("hello"), next_lines);
+    line.set_line_id(3);
+    line.set_speaker(ft_string("npc"));
+    line.set_text(ft_string("hello"));
+    line.set_next_line_ids(next_lines);
     FT_ASSERT_EQ(3, line.get_line_id());
     FT_ASSERT_EQ(ft_string("npc"), line.get_speaker());
     FT_ASSERT_EQ(ft_string("hello"), line.get_text());
@@ -47,7 +51,12 @@ FT_TEST(test_dialogue_line_conditional_vector_access, "next line getter returns 
     ft_vector<int> ids;
     ids.push_back(9);
     ids.push_back(11);
-    ft_dialogue_line line(4, ft_string("ally"), ft_string("hint"), ids);
+    ft_dialogue_line line;
+
+    line.set_line_id(4);
+    line.set_speaker(ft_string("ally"));
+    line.set_text(ft_string("hint"));
+    line.set_next_line_ids(ids);
 
     const ft_vector<int> &snapshot = line.get_next_line_ids();
     FT_ASSERT_EQ(2u, snapshot.size());

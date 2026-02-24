@@ -5,10 +5,10 @@
 #include "../System_utils/system_utils.hpp"
 #include <new>
 
-ft_map3d::ft_map3d(size_t width, size_t height, size_t depth, int value)
-    : _data(ft_nullptr), _width(width), _height(height), _depth(depth),
-      _initial_value(value),
-      _mutex(ft_nullptr), _initialized_state(ft_map3d::_state_uninitialized)
+ft_map3d::ft_map3d()
+    : _data(ft_nullptr), _width(0), _height(0), _depth(0),
+      _initial_value(0), _mutex(ft_nullptr),
+      _initialized_state(ft_map3d::_state_uninitialized)
 {
     return ;
 }
@@ -16,11 +16,7 @@ ft_map3d::ft_map3d(size_t width, size_t height, size_t depth, int value)
 ft_map3d::~ft_map3d()
 {
     if (this->_initialized_state == ft_map3d::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("ft_map3d::~ft_map3d",
-            "destructor called while object is uninitialized");
         return ;
-    }
     if (this->_initialized_state == ft_map3d::_state_initialized)
         (void)this->destroy();
     return ;
@@ -55,8 +51,24 @@ int ft_map3d::initialize()
             "called while object is already initialized");
         return (FT_ERR_INVALID_STATE);
     }
+    return (this->initialize(this->_width, this->_height, this->_depth,
+        this->_initial_value));
+}
+
+int ft_map3d::initialize(size_t width, size_t height, size_t depth, int value)
+{
+    if (this->_initialized_state == ft_map3d::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_map3d::initialize",
+            "called while object is already initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    this->_width = width;
+    this->_height = height;
+    this->_depth = depth;
+    this->_initial_value = value;
     this->_data = ft_nullptr;
-    this->allocate(this->_width, this->_height, this->_depth, this->_initial_value);
+    this->allocate(width, height, depth, value);
     this->_initialized_state = ft_map3d::_state_initialized;
     return (FT_ERR_SUCCESS);
 }
@@ -66,11 +78,7 @@ int ft_map3d::destroy()
     int disable_error;
 
     if (this->_initialized_state != ft_map3d::_state_initialized)
-    {
-        this->abort_lifecycle_error("ft_map3d::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     this->deallocate();
     disable_error = this->disable_thread_safety();
     this->_initialized_state = ft_map3d::_state_destroyed;
@@ -79,13 +87,13 @@ int ft_map3d::destroy()
 
 int ft_map3d::enable_thread_safety() noexcept
 {
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
     this->abort_if_not_initialized("ft_map3d::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
-    mutex_pointer = new (std::nothrow) pt_mutex();
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     initialize_error = mutex_pointer->initialize();
@@ -393,7 +401,7 @@ void ft_map3d::deallocate()
 }
 
 #ifdef LIBFT_TEST_BUILD
-pt_mutex *ft_map3d::get_mutex_for_validation() const noexcept
+pt_recursive_mutex *ft_map3d::get_mutex_for_validation() const noexcept
 {
     return (this->_mutex);
 }

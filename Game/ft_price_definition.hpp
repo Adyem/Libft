@@ -13,7 +13,7 @@ class ft_price_definition
         int      _base_value;
         int      _minimum_value;
         int      _maximum_value;
-        pt_mutex *_mutex;
+        pt_recursive_mutex *_mutex;
         uint8_t  _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -28,8 +28,6 @@ class ft_price_definition
 
     public:
         ft_price_definition() noexcept;
-        ft_price_definition(int item_id, int rarity, int base_value,
-            int minimum_value, int maximum_value) noexcept;
         virtual ~ft_price_definition() noexcept;
         ft_price_definition(const ft_price_definition &other) noexcept = delete;
         ft_price_definition &operator=(const ft_price_definition &other) noexcept = delete;
@@ -64,7 +62,7 @@ class ft_price_definition
         void set_maximum_value(int maximum_value) noexcept;
 
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex *get_mutex_for_validation() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 

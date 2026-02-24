@@ -24,7 +24,7 @@ class ft_inventory
         int                                 _weight_limit;
         int                                 _current_weight;
         int                                 _next_slot;
-        pt_mutex                           *_mutex;
+        pt_recursive_mutex                           *_mutex;
         uint8_t                             _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -39,7 +39,7 @@ class ft_inventory
         int unlock_internal(bool lock_acquired) const noexcept;
 
     public:
-        ft_inventory(size_t capacity = 0, int weight_limit = 0) noexcept;
+        ft_inventory() noexcept;
         virtual ~ft_inventory() noexcept;
         ft_inventory(const ft_inventory &other) noexcept = delete;
         ft_inventory &operator=(const ft_inventory &other) noexcept = delete;
@@ -47,6 +47,7 @@ class ft_inventory
         ft_inventory &operator=(ft_inventory &&other) noexcept = delete;
 
         int initialize() noexcept;
+        int initialize(size_t capacity, int weight_limit) noexcept;
         int initialize(const ft_inventory &other) noexcept;
         int initialize(ft_inventory &&other) noexcept;
         int destroy() noexcept;
@@ -79,7 +80,7 @@ class ft_inventory
         bool has_rarity(int rarity) const noexcept;
 
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex *get_mutex_for_validation() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 

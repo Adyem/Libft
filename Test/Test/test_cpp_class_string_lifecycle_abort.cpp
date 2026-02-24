@@ -56,6 +56,32 @@ static int string_expect_sigabrt_uninitialized(void (*operation)(ft_string &))
     return (WTERMSIG(child_status) == SIGABRT);
 }
 
+static int string_expect_no_sigabrt_uninitialized(void (*operation)(ft_string &))
+{
+    pid_t child_process_id;
+    int child_status;
+
+    child_process_id = fork();
+    if (child_process_id == 0)
+    {
+        alignas(ft_string) unsigned char storage[sizeof(ft_string)];
+        ft_string *string_pointer;
+
+        std::memset(storage, 0, sizeof(storage));
+        string_pointer = reinterpret_cast<ft_string *>(storage);
+        operation(*string_pointer);
+        _exit(0);
+    }
+    if (child_process_id < 0)
+        return (0);
+    child_status = 0;
+    if (waitpid(child_process_id, &child_status, 0) < 0)
+        return (0);
+    if (WIFSIGNALED(child_status))
+        return (0);
+    return (1);
+}
+
 static void string_call_destructor_uninitialized(ft_string &string_value)
 {
     string_value.~ft_string();
@@ -143,17 +169,17 @@ static void string_call_move_assign_from_uninitialized(void)
     return ;
 }
 
-FT_TEST(test_ft_string_uninitialized_destructor_aborts,
-    "ft_string destructor aborts on uninitialized instance")
+FT_TEST(test_ft_string_uninitialized_destructor_noop,
+    "ft_string destructor tolerates uninitialized instance")
 {
-    FT_ASSERT_EQ(1, string_expect_sigabrt_uninitialized(string_call_destructor_uninitialized));
+    FT_ASSERT_EQ(1, string_expect_no_sigabrt_uninitialized(string_call_destructor_uninitialized));
     return (1);
 }
 
-FT_TEST(test_ft_string_uninitialized_destroy_aborts,
-    "ft_string destroy aborts on uninitialized instance")
+FT_TEST(test_ft_string_uninitialized_destroy_noop,
+    "ft_string destroy tolerates uninitialized instance")
 {
-    FT_ASSERT_EQ(1, string_expect_sigabrt_uninitialized(string_call_destroy_uninitialized));
+    FT_ASSERT_EQ(1, string_expect_no_sigabrt_uninitialized(string_call_destroy_uninitialized));
     return (1);
 }
 

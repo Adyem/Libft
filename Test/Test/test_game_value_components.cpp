@@ -1,7 +1,7 @@
 #include "../test_internal.hpp"
 #include "../../Game/ft_price_definition.hpp"
 #include "../../Game/ft_currency_rate.hpp"
-#include "../../Game/ft_behavior_action.hpp"
+#include "../../Game/game_behavior_action.hpp"
 #include "../../Game/ft_rarity_band.hpp"
 #include "../../System_utils/test_runner.hpp"
 

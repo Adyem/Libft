@@ -4,6 +4,7 @@
 #include "container_serialization.hpp"
 #include "invoke.hpp"
 #include "move.hpp"
+#include "math.hpp"
 #include "static_cast.hpp"
 #include "string_view.hpp"
 #include "swap.hpp"

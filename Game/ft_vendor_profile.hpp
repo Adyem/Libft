@@ -12,7 +12,7 @@ class ft_vendor_profile
         double    _buy_markup;
         double    _sell_multiplier;
         double    _tax_rate;
-        pt_mutex *_mutex;
+        pt_recursive_mutex *_mutex;
         uint8_t   _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -27,8 +27,6 @@ class ft_vendor_profile
 
     public:
         ft_vendor_profile() noexcept;
-        ft_vendor_profile(int vendor_id, double buy_markup,
-            double sell_multiplier, double tax_rate) noexcept;
         virtual ~ft_vendor_profile() noexcept;
         ft_vendor_profile(const ft_vendor_profile &other) = delete;
         ft_vendor_profile &operator=(const ft_vendor_profile &other) = delete;
@@ -60,7 +58,7 @@ class ft_vendor_profile
         void set_tax_rate(double tax_rate) noexcept;
 
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex *get_mutex_for_validation() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 

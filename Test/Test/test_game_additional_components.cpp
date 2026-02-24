@@ -2,7 +2,7 @@
 #include "../../Game/game_inventory.hpp"
 #include "../../Game/ft_price_definition.hpp"
 #include "../../Game/ft_currency_rate.hpp"
-#include "../../Game/ft_behavior_action.hpp"
+#include "../../Game/game_behavior_action.hpp"
 #include "../../Game/ft_region_definition.hpp"
 #include "../../CPP_class/class_string.hpp"
 #include "../../Template/move.hpp"
@@ -13,11 +13,13 @@
 
 FT_TEST(test_inventory_weight_limit_blocks_heavy_stack, "Game: inventory enforces weight limits when adding heavy stacks")
 {
-    ft_inventory inventory(5, 5);
+    ft_inventory inventory;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize(5, 5));
     ft_sharedptr<ft_item> heavy(new ft_item());
     int result;
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize(5, 5));
     heavy->set_item_id(1);
     heavy->set_max_stack(10);
     heavy->set_stack_size(6);
@@ -29,9 +31,10 @@ FT_TEST(test_inventory_weight_limit_blocks_heavy_stack, "Game: inventory enforce
 
 FT_TEST(test_price_definition_copy_independent_after_mutation, "Game: price definition copy remains stable after source changes")
 {
-    ft_price_definition original(11, 2, 120, 80, 200);
+    ft_price_definition original;
     ft_price_definition duplicate;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.initialize(11, 2, 120, 80, 200));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, duplicate.initialize(original));
 
     original.set_base_value(150);
@@ -47,9 +50,10 @@ FT_TEST(test_price_definition_copy_independent_after_mutation, "Game: price defi
 
 FT_TEST(test_currency_rate_move_assignment_clears_source, "Game: moving currency rates resets the origin values")
 {
-    ft_currency_rate source(7, 2.5, 4);
+    ft_currency_rate source;
     ft_currency_rate destination;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize(7, 2.5, 4));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.initialize(ft_move(source)));
     FT_ASSERT_EQ(7, destination.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(2.5, destination.get_rate_to_base());
@@ -76,10 +80,11 @@ FT_TEST(test_behavior_action_setters_update_values, "Game: behavior action sette
 
 FT_TEST(test_region_definition_assignment_isolated_from_source, "Game: region definition assignment keeps independent copies")
 {
-    ft_region_definition original(3, ft_string("Highlands"), ft_string("Jagged peaks"), 15);
+    ft_region_definition original;
     ft_region_definition assigned;
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.initialize(3, ft_string("Highlands"),
+        ft_string("Jagged peaks"), 15));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, assigned.initialize(original));
     original.set_name(ft_string("Lowlands"));
     original.set_description(ft_string("Rolling plains"));
@@ -93,9 +98,11 @@ FT_TEST(test_region_definition_assignment_isolated_from_source, "Game: region de
 
 FT_TEST(test_price_definition_move_assignment_resets_source, "Game: moving price definitions clears the origin values")
 {
-    ft_price_definition source(4, 3, 180, 90, 240);
-    ft_price_definition destination(9, 1, 50, 25, 100);
+    ft_price_definition source;
+    ft_price_definition destination;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize(4, 3, 180, 90, 240));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.initialize(9, 1, 50, 25, 100));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.initialize(ft_move(source)));
     FT_ASSERT_EQ(4, destination.get_item_id());
@@ -113,9 +120,10 @@ FT_TEST(test_price_definition_move_assignment_resets_source, "Game: moving price
 
 FT_TEST(test_currency_rate_copy_remains_unchanged_after_source_update, "Game: currency rate copies stay stable when source mutate")
 {
-    ft_currency_rate original(6, 1.75, 5);
+    ft_currency_rate original;
     ft_currency_rate duplicate;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.initialize(6, 1.75, 5));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, duplicate.initialize(original));
 
     original.set_currency_id(2);
@@ -129,10 +137,11 @@ FT_TEST(test_currency_rate_copy_remains_unchanged_after_source_update, "Game: cu
 
 FT_TEST(test_region_definition_move_assignment_clears_source, "Game: region definition move assignment resets origin fields")
 {
-    ft_region_definition source(8, ft_string("Harbor"), ft_string("Dockyards"), 7);
+    ft_region_definition source;
     ft_region_definition destination;
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize(8, ft_string("Harbor"),
+        ft_string("Dockyards"), 7));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.initialize(ft_move(source)));
     FT_ASSERT_EQ(8, destination.get_region_id());
     FT_ASSERT_EQ(ft_string("Harbor"), destination.get_name());

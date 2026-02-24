@@ -17,7 +17,7 @@ class ft_dialogue_script
         ft_string _summary;
         int _start_line_id;
         ft_vector<ft_sharedptr<ft_dialogue_line> > _lines;
-        pt_mutex *_mutex;
+        pt_recursive_mutex *_mutex;
         uint8_t _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -32,9 +32,6 @@ class ft_dialogue_script
 
     public:
         ft_dialogue_script() noexcept;
-        ft_dialogue_script(int script_id, const ft_string &title,
-            const ft_string &summary, int start_line_id,
-            const ft_vector<ft_dialogue_line> &lines) noexcept;
         virtual ~ft_dialogue_script() noexcept;
         ft_dialogue_script(const ft_dialogue_script &other) noexcept = delete;
         ft_dialogue_script &operator=(const ft_dialogue_script &other) noexcept = delete;
@@ -72,7 +69,7 @@ class ft_dialogue_script
         void set_lines(const ft_vector<ft_sharedptr<ft_dialogue_line> > &lines) noexcept;
 
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex *get_mutex_for_validation() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 

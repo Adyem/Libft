@@ -14,8 +14,11 @@ static ft_sharedptr<ft_dialogue_line> build_line(int id, const char *speaker,
 {
     ft_vector<int> next;
     next.push_back(id + 1);
-    return (ft_sharedptr<ft_dialogue_line>(new (std::nothrow) ft_dialogue_line(
-            id, ft_string(speaker), ft_string(text), next)));
+    ft_sharedptr<ft_dialogue_line> stored(new (std::nothrow) ft_dialogue_line());
+    FT_ASSERT(stored.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stored->initialize(id,
+        ft_string(speaker), ft_string(text), next));
+    return (stored);
 }
 
 FT_TEST(test_dialogue_table_get_lines_accessor_returns_map,

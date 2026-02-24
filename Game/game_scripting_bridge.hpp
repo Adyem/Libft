@@ -22,10 +22,14 @@ class ft_game_script_context
 
     public:
         ft_game_script_context() noexcept;
-        ft_game_script_context(ft_game_state *state, const ft_sharedptr<ft_world> &world) noexcept;
         ~ft_game_script_context() noexcept;
-        ft_game_script_context(const ft_game_script_context &other) noexcept;
-        ft_game_script_context &operator=(const ft_game_script_context &other) noexcept;
+        ft_game_script_context(const ft_game_script_context &other) noexcept = delete;
+        ft_game_script_context &operator=(const ft_game_script_context &other) noexcept = delete;
+
+        int initialize() noexcept;
+        int initialize(ft_game_state *state,
+            const ft_sharedptr<ft_world> &world) noexcept;
+        int initialize(const ft_game_script_context &other) noexcept;
 
         ft_game_state *get_state() const noexcept;
         const ft_sharedptr<ft_world> &get_world() const noexcept;
@@ -50,10 +54,12 @@ class ft_game_script_bridge
         ft_string _language;
         int _max_operations;
         mutable int _error_code;
-        mutable pt_mutex _mutex;
+        mutable pt_recursive_mutex *_mutex;
 
         void set_error(int error) const noexcept;
         static bool is_supported_language(const ft_string &language) noexcept;
+        int lock_internal(bool *lock_acquired) const noexcept;
+        void unlock_internal(bool lock_acquired) const noexcept;
         int execute_line(ft_game_script_context &context, const ft_string &line) noexcept;
         int handle_call(ft_game_script_context &context, const ft_vector<ft_string> &tokens) noexcept;
         int handle_set(ft_game_script_context &context, const ft_vector<ft_string> &tokens) noexcept;
@@ -61,12 +67,15 @@ class ft_game_script_bridge
         void tokenize_line(const ft_string &line, ft_vector<ft_string> &tokens) const noexcept;
 
     public:
-        ft_game_script_bridge(const ft_sharedptr<ft_world> &world, const char *language = "lua") noexcept;
+        ft_game_script_bridge() noexcept;
         ~ft_game_script_bridge() noexcept;
-        ft_game_script_bridge(const ft_game_script_bridge &other) noexcept;
-        ft_game_script_bridge &operator=(const ft_game_script_bridge &other) noexcept;
-        ft_game_script_bridge(ft_game_script_bridge &&other) noexcept;
-        ft_game_script_bridge &operator=(ft_game_script_bridge &&other) noexcept;
+        ft_game_script_bridge(const ft_game_script_bridge &other) noexcept = delete;
+        ft_game_script_bridge &operator=(const ft_game_script_bridge &other) noexcept = delete;
+        ft_game_script_bridge(ft_game_script_bridge &&other) noexcept = delete;
+        ft_game_script_bridge &operator=(ft_game_script_bridge &&other) noexcept = delete;
+
+        int initialize(const ft_sharedptr<ft_world> &world,
+            const char *language = "lua") noexcept;
 
         void set_language(const char *language) noexcept;
         const ft_string &get_language() const noexcept;
@@ -84,6 +93,9 @@ class ft_game_script_bridge
         int check_sandbox_capabilities(const ft_string &script, ft_vector<ft_string> &violations) noexcept;
         int validate_dry_run(const ft_string &script, ft_vector<ft_string> &warnings) noexcept;
         int inspect_bytecode_budget(const ft_string &script, int &required_operations) noexcept;
+        int enable_thread_safety() noexcept;
+        int disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
 
         int get_error() const noexcept;
         const char *get_error_str() const noexcept;

@@ -12,7 +12,9 @@ FT_TEST(test_dialogue_line_basic_fields, "ft_dialogue_line stores id, speaker, t
     ft_vector<int> followups;
     followups.push_back(2);
     followups.push_back(4);
-    ft_dialogue_line line(1, ft_string("npc"), ft_string("hello"), followups);
+    ft_dialogue_line line;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, line.initialize(1, ft_string("npc"),
+        ft_string("hello"), followups));
 
     FT_ASSERT_EQ(1, line.get_line_id());
     FT_ASSERT_EQ(ft_string("npc"), line.get_speaker());
@@ -28,8 +30,10 @@ FT_TEST(test_dialogue_script_sets_metadata_and_lines, "ft_dialogue_script stores
     ft_vector<int> followups;
     ft_vector<ft_sharedptr<ft_dialogue_line>> lines;
     followups.push_back(5);
-    ft_sharedptr<ft_dialogue_line> line(new (std::nothrow) ft_dialogue_line(
-                3, ft_string("npc"), ft_string("branch"), followups));
+    ft_sharedptr<ft_dialogue_line> line(new (std::nothrow) ft_dialogue_line());
+    FT_ASSERT(line.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, line->initialize(3, ft_string("npc"),
+        ft_string("branch"), followups));
     FT_ASSERT(line.get() != ft_nullptr);
 
     lines.push_back(line);

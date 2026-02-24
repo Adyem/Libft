@@ -81,8 +81,8 @@ HEADERS := game_map3d.hpp \
         ft_dialogue_line.hpp \
         ft_dialogue_script.hpp \
         game_dialogue_table.hpp \
-        ft_behavior_action.hpp \
-        ft_behavior_profile.hpp \
+        game_behavior_action.hpp \
+        game_behavior_profile.hpp \
         game_behavior_table.hpp \
         ft_region_definition.hpp \
         ft_world_region.hpp \
@@ -114,8 +114,13 @@ CXX       := g++
 AR        := ar
 ARFLAGS   := rcs
 
-OBJDIR         := objs
-DEBUG_OBJDIR   := objs_debug
+BUILD_OBJ_SUFFIX :=
+ifneq ($(findstring -DLIBFT_TEST_BUILD,$(COMPILE_FLAGS)),)
+    BUILD_OBJ_SUFFIX := _test
+endif
+
+OBJDIR         := objs$(BUILD_OBJ_SUFFIX)
+DEBUG_OBJDIR   := objs_debug$(BUILD_OBJ_SUFFIX)
 
 OBJS       := $(patsubst %.cpp,$(OBJDIR)/%.o,$(SRCS))
 DEBUG_OBJS := $(patsubst %.cpp,$(DEBUG_OBJDIR)/%.o,$(SRCS))
@@ -188,4 +193,3 @@ both: all debug
 -include $(DEPS) $(DEBUG_DEPS)
 
 .PHONY: all clean fclean re debug both
-

@@ -3,50 +3,69 @@
 
 void ft_character::restore_physical_armor() noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.owns_lock() == false)
+    bool lock_acquired;
+    int lock_error;
+
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        this->set_error(FT_ERR_INVALID_STATE);
+        this->set_error(lock_error);
         return ;
     }
     this->restore_physical_armor_internal();
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
 void ft_character::restore_magic_armor() noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.owns_lock() == false)
+    bool lock_acquired;
+    int lock_error;
+
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        this->set_error(FT_ERR_INVALID_STATE);
+        this->set_error(lock_error);
         return ;
     }
     this->restore_magic_armor_internal();
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
 void ft_character::restore_armor() noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.owns_lock() == false)
+    bool lock_acquired;
+    int lock_error;
+
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        this->set_error(FT_ERR_INVALID_STATE);
+        this->set_error(lock_error);
         return ;
     }
     this->restore_physical_armor_internal();
     this->restore_magic_armor_internal();
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
 void ft_character::take_damage(long long damage, uint8_t type) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.owns_lock() == false)
+    bool lock_acquired;
+    int lock_error;
+
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        this->set_error(FT_ERR_INVALID_STATE);
+        this->set_error(lock_error);
         return ;
     }
     if (this->_damage_rule == FT_DAMAGE_RULE_FLAT)
@@ -60,58 +79,79 @@ void ft_character::take_damage(long long damage, uint8_t type) noexcept
     else
         this->take_damage_flat_internal(damage, type);
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
 void ft_character::take_damage_flat(long long damage, uint8_t type) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.owns_lock() == false)
+    bool lock_acquired;
+    int lock_error;
+
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        this->set_error(FT_ERR_INVALID_STATE);
+        this->set_error(lock_error);
         return ;
     }
     this->take_damage_flat_internal(damage, type);
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
 void ft_character::take_damage_scaled(long long damage, uint8_t type) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.owns_lock() == false)
+    bool lock_acquired;
+    int lock_error;
+
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        this->set_error(FT_ERR_INVALID_STATE);
+        this->set_error(lock_error);
         return ;
     }
     this->take_damage_scaled_internal(damage, type);
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
 void ft_character::take_damage_buffer(long long damage, uint8_t type) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.owns_lock() == false)
+    bool lock_acquired;
+    int lock_error;
+
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        this->set_error(FT_ERR_INVALID_STATE);
+        this->set_error(lock_error);
         return ;
     }
     this->take_damage_buffer_internal(damage, type);
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
 void ft_character::take_damage_magic_shield(long long damage, uint8_t type) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.owns_lock() == false)
+    bool lock_acquired;
+    int lock_error;
+
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        this->set_error(FT_ERR_INVALID_STATE);
+        this->set_error(lock_error);
         return ;
     }
     this->take_damage_magic_shield_internal(damage, type);
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
@@ -286,31 +326,40 @@ void ft_character::take_damage_magic_shield_internal(long long damage, uint8_t t
 
 void ft_character::move(int dx, int dy, int dz) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.owns_lock() == false)
+    bool lock_acquired;
+    int lock_error;
+
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        this->set_error(FT_ERR_INVALID_STATE);
+        this->set_error(lock_error);
         return ;
     }
     this->_x += dx;
     this->_y += dy;
     this->_z += dz;
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
 long long ft_character::apply_skill_modifiers(long long damage) const noexcept
 {
+    bool lock_acquired;
+    int lock_error;
     long long result;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.owns_lock() == false)
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        const_cast<ft_character *>(this)->set_error(FT_ERR_INVALID_STATE);
+        const_cast<ft_character *>(this)->set_error(lock_error);
         return (0);
     }
     result = this->apply_skill_modifiers_internal(damage);
     const_cast<ft_character *>(this)->set_error(FT_ERR_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return (result);
 }
 
@@ -342,14 +391,19 @@ long long ft_character::apply_skill_modifiers_internal(long long damage) const n
 
 void ft_character::apply_modifier(const ft_item_modifier &mod, int sign) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.owns_lock() == false)
+    bool lock_acquired;
+    int lock_error;
+
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        this->set_error(FT_ERR_INVALID_STATE);
+        this->set_error(lock_error);
         return ;
     }
     this->apply_modifier_internal(mod, sign);
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
@@ -403,68 +457,93 @@ void ft_character::apply_modifier_internal(const ft_item_modifier &mod, int sign
 
 int ft_character::equip_item(int slot, const ft_sharedptr<ft_item> &item) noexcept
 {
+    bool lock_acquired;
+    int lock_error;
     ft_sharedptr<ft_item> current;
     int equip_error;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.owns_lock() == false)
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        this->set_error(FT_ERR_INVALID_STATE);
+        this->set_error(lock_error);
         return (this->_error);
     }
     current = this->_equipment.get_item(slot);
     if (this->handle_component_error(this->_equipment.get_error()) == true)
     {
+        this->unlock_internal(lock_acquired);
         return (this->_error);
     }
     equip_error = this->_equipment.equip(slot, item);
     if (equip_error != FT_ERR_SUCCESS)
     {
         this->handle_component_error(equip_error);
+        this->unlock_internal(lock_acquired);
         return (this->_error);
     }
     if (current)
     {
-        this->apply_modifier_internal(current->get_modifier1(), -1);
-        this->apply_modifier_internal(current->get_modifier2(), -1);
-        this->apply_modifier_internal(current->get_modifier3(), -1);
-        this->apply_modifier_internal(current->get_modifier4(), -1);
+        ft_item_modifier mod;
+        if (current->get_modifier1(mod) == FT_ERR_SUCCESS)
+            this->apply_modifier_internal(mod, -1);
+        if (current->get_modifier2(mod) == FT_ERR_SUCCESS)
+            this->apply_modifier_internal(mod, -1);
+        if (current->get_modifier3(mod) == FT_ERR_SUCCESS)
+            this->apply_modifier_internal(mod, -1);
+        if (current->get_modifier4(mod) == FT_ERR_SUCCESS)
+            this->apply_modifier_internal(mod, -1);
     }
     if (item)
     {
-        this->apply_modifier_internal(item->get_modifier1(), 1);
-        this->apply_modifier_internal(item->get_modifier2(), 1);
-        this->apply_modifier_internal(item->get_modifier3(), 1);
-        this->apply_modifier_internal(item->get_modifier4(), 1);
+        ft_item_modifier mod;
+        if (item->get_modifier1(mod) == FT_ERR_SUCCESS)
+            this->apply_modifier_internal(mod, 1);
+        if (item->get_modifier2(mod) == FT_ERR_SUCCESS)
+            this->apply_modifier_internal(mod, 1);
+        if (item->get_modifier3(mod) == FT_ERR_SUCCESS)
+            this->apply_modifier_internal(mod, 1);
+        if (item->get_modifier4(mod) == FT_ERR_SUCCESS)
+            this->apply_modifier_internal(mod, 1);
     }
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return (FT_ERR_SUCCESS);
 }
 
 void ft_character::unequip_item(int slot) noexcept
 {
+    bool lock_acquired;
+    int lock_error;
     ft_sharedptr<ft_item> item;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.owns_lock() == false)
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        this->set_error(FT_ERR_INVALID_STATE);
+        this->set_error(lock_error);
         return ;
     }
     item = this->_equipment.get_item(slot);
     if (item)
     {
-        this->apply_modifier_internal(item->get_modifier1(), -1);
-        this->apply_modifier_internal(item->get_modifier2(), -1);
-        this->apply_modifier_internal(item->get_modifier3(), -1);
-        this->apply_modifier_internal(item->get_modifier4(), -1);
+        ft_item_modifier mod;
+        if (item->get_modifier1(mod) == FT_ERR_SUCCESS)
+            this->apply_modifier_internal(mod, -1);
+        if (item->get_modifier2(mod) == FT_ERR_SUCCESS)
+            this->apply_modifier_internal(mod, -1);
+        if (item->get_modifier3(mod) == FT_ERR_SUCCESS)
+            this->apply_modifier_internal(mod, -1);
+        if (item->get_modifier4(mod) == FT_ERR_SUCCESS)
+            this->apply_modifier_internal(mod, -1);
     }
     this->_equipment.unequip(slot);
     if (this->handle_component_error(this->_equipment.get_error()) == true)
     {
+        this->unlock_internal(lock_acquired);
         return ;
     }
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return ;
 }
-

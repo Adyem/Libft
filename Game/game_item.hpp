@@ -3,23 +3,26 @@
 
 #include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
-#include "../PThread/unique_lock.hpp"
 
 class ft_item_modifier
 {
     private:
         int             _id;
         int             _value;
-        mutable pt_mutex _mutex;
+        mutable pt_recursive_mutex _mutex;
 
     public:
         ft_item_modifier() noexcept;
-        ft_item_modifier(int id, int value) noexcept;
         virtual ~ft_item_modifier() = default;
-        ft_item_modifier(const ft_item_modifier &other) noexcept;
-        ft_item_modifier &operator=(const ft_item_modifier &other) noexcept;
-        ft_item_modifier(ft_item_modifier &&other) noexcept;
-        ft_item_modifier &operator=(ft_item_modifier &&other) noexcept;
+        ft_item_modifier(const ft_item_modifier &other) noexcept = delete;
+        ft_item_modifier &operator=(const ft_item_modifier &other) noexcept = delete;
+        ft_item_modifier(ft_item_modifier &&other) noexcept = delete;
+        ft_item_modifier &operator=(ft_item_modifier &&other) noexcept = delete;
+
+        int initialize() noexcept;
+        int initialize(int id, int value) noexcept;
+        int initialize(const ft_item_modifier &other) noexcept;
+        int initialize(ft_item_modifier &&other) noexcept;
 
         int get_id() const noexcept;
         void set_id(int id) noexcept;
@@ -45,20 +48,26 @@ class ft_item
         ft_item_modifier _modifier3;
         ft_item_modifier _modifier4;
         mutable int     _error_code;
-        mutable pt_mutex _mutex;
+        mutable pt_recursive_mutex _mutex;
 
         void set_error(int err) const noexcept;
+        int lock_internal(bool *lock_acquired) const noexcept;
+        void unlock_internal(bool lock_acquired) const noexcept;
         static int lock_pair(const ft_item &first, const ft_item &second,
-                ft_unique_lock<pt_mutex> &first_guard,
-                ft_unique_lock<pt_mutex> &second_guard);
+                bool *first_locked,
+                bool *second_locked);
 
     public:
         ft_item() noexcept;
         virtual ~ft_item() = default;
-        ft_item(const ft_item &other) noexcept;
-        ft_item &operator=(const ft_item &other) noexcept;
-        ft_item(ft_item &&other) noexcept;
-        ft_item &operator=(ft_item &&other) noexcept;
+        ft_item(const ft_item &other) noexcept = delete;
+        ft_item &operator=(const ft_item &other) noexcept = delete;
+        ft_item(ft_item &&other) noexcept = delete;
+        ft_item &operator=(ft_item &&other) noexcept = delete;
+
+        int initialize() noexcept;
+        int initialize(const ft_item &other) noexcept;
+        int initialize(ft_item &&other) noexcept;
 
         int get_max_stack() const noexcept;
         void set_max_stack(int max) noexcept;
@@ -80,28 +89,28 @@ class ft_item
         int get_rarity() const noexcept;
         void set_rarity(int rarity) noexcept;
 
-        ft_item_modifier get_modifier1() const noexcept;
+        int get_modifier1(ft_item_modifier &modifier) const noexcept;
         void set_modifier1(const ft_item_modifier &mod) noexcept;
         int get_modifier1_id() const noexcept;
         void set_modifier1_id(int id) noexcept;
         int get_modifier1_value() const noexcept;
         void set_modifier1_value(int value) noexcept;
 
-        ft_item_modifier get_modifier2() const noexcept;
+        int get_modifier2(ft_item_modifier &modifier) const noexcept;
         void set_modifier2(const ft_item_modifier &mod) noexcept;
         int get_modifier2_id() const noexcept;
         void set_modifier2_id(int id) noexcept;
         int get_modifier2_value() const noexcept;
         void set_modifier2_value(int value) noexcept;
 
-        ft_item_modifier get_modifier3() const noexcept;
+        int get_modifier3(ft_item_modifier &modifier) const noexcept;
         void set_modifier3(const ft_item_modifier &mod) noexcept;
         int get_modifier3_id() const noexcept;
         void set_modifier3_id(int id) noexcept;
         int get_modifier3_value() const noexcept;
         void set_modifier3_value(int value) noexcept;
 
-        ft_item_modifier get_modifier4() const noexcept;
+        int get_modifier4(ft_item_modifier &modifier) const noexcept;
         void set_modifier4(const ft_item_modifier &mod) noexcept;
         int get_modifier4_id() const noexcept;
         void set_modifier4_id(int id) noexcept;

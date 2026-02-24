@@ -134,7 +134,24 @@ int ft_economy_table::initialize(const ft_economy_table &other) noexcept
 
 int ft_economy_table::initialize(ft_economy_table &&other) noexcept
 {
-    return (this->initialize(static_cast<const ft_economy_table &>(other)));
+    int initialize_error;
+
+    if (other._initialized_state != ft_economy_table::_state_initialized)
+    {
+        other.abort_lifecycle_error("ft_economy_table::initialize(move)",
+            "source object is not initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (&other == this)
+        return (FT_ERR_SUCCESS);
+    initialize_error = this->initialize(static_cast<const ft_economy_table &>(other));
+    if (initialize_error != FT_ERR_SUCCESS)
+        return (initialize_error);
+    other._price_definitions.clear();
+    other._rarity_bands.clear();
+    other._vendor_profiles.clear();
+    other._currency_rates.clear();
+    return (FT_ERR_SUCCESS);
 }
 
 int ft_economy_table::destroy() noexcept
@@ -163,13 +180,13 @@ int ft_economy_table::destroy() noexcept
 
 int ft_economy_table::enable_thread_safety() noexcept
 {
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
     this->abort_if_not_initialized("ft_economy_table::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
-    mutex_pointer = new (std::nothrow) pt_mutex();
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     initialize_error = mutex_pointer->initialize();
@@ -476,7 +493,7 @@ int ft_economy_table::fetch_currency_rate(int currency_id,
 }
 
 #ifdef LIBFT_TEST_BUILD
-pt_mutex *ft_economy_table::get_mutex_for_validation() const noexcept
+pt_recursive_mutex *ft_economy_table::get_mutex_for_validation() const noexcept
 {
     this->abort_if_not_initialized("ft_economy_table::get_mutex_for_validation");
     return (this->_mutex);

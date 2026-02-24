@@ -11,7 +11,7 @@ class ft_world_region
     private:
         int             _world_id;
         ft_vector<int>  _region_ids;
-        pt_mutex       *_mutex;
+        pt_recursive_mutex       *_mutex;
         uint8_t         _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -26,7 +26,6 @@ class ft_world_region
 
     public:
         ft_world_region() noexcept;
-        ft_world_region(int world_id, const ft_vector<int> &region_ids) noexcept;
         virtual ~ft_world_region() noexcept;
         ft_world_region(const ft_world_region &other) = delete;
         ft_world_region &operator=(const ft_world_region &other) = delete;
@@ -52,7 +51,7 @@ class ft_world_region
         void set_region_ids(const ft_vector<int> &region_ids) noexcept;
 
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex *get_mutex_for_validation() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 

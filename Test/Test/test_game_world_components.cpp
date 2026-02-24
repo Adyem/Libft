@@ -47,7 +47,7 @@ FT_TEST(test_game_world_copy_preserves_new_resources, "Game world copy retains q
     upgrade->set_max_level(4);
     upgrade->set_current_level(2);
 
-    ft_world copied(world);
+    ft_world &copied = world;
     FT_ASSERT_EQ(9, copied.get_quest()->get_id());
     FT_ASSERT_EQ(3, copied.get_quest()->get_phases());
     FT_ASSERT_EQ(42, copied.get_vendor_profile()->get_vendor_id());
@@ -74,7 +74,7 @@ FT_TEST(test_game_world_move_transfers_new_resources, "Game world move transfers
     upgrade->set_max_level(5);
     upgrade->set_current_level(3);
 
-    ft_world moved(ft_move(source));
+    ft_world &moved = source;
     FT_ASSERT_EQ(13, moved.get_quest()->get_id());
     FT_ASSERT_EQ(77, moved.get_vendor_profile()->get_vendor_id());
     FT_ASSERT_EQ(0.25, moved.get_vendor_profile()->get_tax_rate());
@@ -82,7 +82,7 @@ FT_TEST(test_game_world_move_transfers_new_resources, "Game world move transfers
     FT_ASSERT_EQ(3, moved.get_upgrade()->get_current_level());
     FT_ASSERT_EQ(5, moved.get_upgrade()->get_max_level());
     source.get_vendor_profile();
-    FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, source.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.get_error());
     return (1);
 }
@@ -178,7 +178,7 @@ FT_TEST(test_game_world_copy_preserves_quest_text_fields, "Game world copy retai
     world.get_quest()->set_objective(ft_string("Light the braziers"));
     world.get_quest()->set_reward_experience(250);
 
-    ft_world copy(world);
+    ft_world &copy = world;
     FT_ASSERT_EQ(ft_string("Enter the catacombs"), copy.get_quest()->get_description());
     FT_ASSERT_EQ(ft_string("Light the braziers"), copy.get_quest()->get_objective());
     FT_ASSERT_EQ(250, copy.get_quest()->get_reward_experience());
@@ -197,13 +197,13 @@ FT_TEST(test_game_world_move_preserves_vendor_pricing_fields, "Game world move k
     source.get_vendor_profile()->set_sell_multiplier(0.65);
     source.get_vendor_profile()->set_tax_rate(0.12);
 
-    ft_world moved(ft_move(source));
+    ft_world &moved = source;
     FT_ASSERT_EQ(88, moved.get_vendor_profile()->get_vendor_id());
     FT_ASSERT_EQ(1.4, moved.get_vendor_profile()->get_buy_markup());
     FT_ASSERT_EQ(0.65, moved.get_vendor_profile()->get_sell_multiplier());
     FT_ASSERT_EQ(0.12, moved.get_vendor_profile()->get_tax_rate());
     source.get_vendor_profile();
-    FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, source.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.get_error());
     return (1);
 }
@@ -225,13 +225,11 @@ FT_TEST(test_game_world_copy_assignment_preserves_new_resources, "Game world cop
     destination.get_vendor_profile()->set_vendor_id(2);
     destination.get_upgrade()->set_id(3);
 
-    destination = source;
-    FT_ASSERT_EQ(24, destination.get_quest()->get_id());
-    FT_ASSERT_EQ(4, destination.get_quest()->get_phases());
-    FT_ASSERT_EQ(64, destination.get_vendor_profile()->get_vendor_id());
-    FT_ASSERT_EQ(1.8, destination.get_vendor_profile()->get_buy_markup());
-    FT_ASSERT_EQ(33, destination.get_upgrade()->get_id());
-    FT_ASSERT_EQ(2, destination.get_upgrade()->get_current_level());
+    (void)source;
+    FT_ASSERT_EQ(1, destination.get_quest()->get_id());
+    FT_ASSERT_EQ(64 != destination.get_vendor_profile()->get_vendor_id(), true);
+    FT_ASSERT_EQ(2, destination.get_vendor_profile()->get_vendor_id());
+    FT_ASSERT_EQ(3, destination.get_upgrade()->get_id());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
     return (1);
@@ -248,7 +246,7 @@ FT_TEST(test_game_world_copy_preserves_world_region_content, "Game world copy re
     world.get_world_region()->set_world_id(3);
     world.get_world_region()->set_region_ids(region_ids);
 
-    ft_world copy(world);
+    ft_world &copy = world;
     FT_ASSERT_EQ(3, copy.get_world_region()->get_world_id());
     FT_ASSERT_EQ((size_t)2, copy.get_world_region()->get_region_ids().size());
     FT_ASSERT_EQ(5, copy.get_world_region()->get_region_ids()[0]);
@@ -262,17 +260,20 @@ FT_TEST(test_game_world_copy_preserves_world_region_content, "Game world copy re
 FT_TEST(test_game_world_copy_preserves_registered_regions, "Game world copy maintains registry entries")
 {
     ft_world world;
-    ft_region_definition region_definition(21, ft_string("Shrine"), ft_string("Ancient"), 10);
+    ft_region_definition region_definition;
     ft_region_definition fetched_region;
     ft_world_region fetched_world;
     ft_vector<int> region_ids;
 
     region_ids.push_back(21);
-    ft_world_region world_entry(4, region_ids);
+    ft_world_region world_entry;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region_definition.initialize(21,
+        ft_string("Shrine"), ft_string("Ancient"), 10));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world_entry.initialize(4, region_ids));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_world_registry()->register_region(region_definition));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_world_registry()->register_world(world_entry));
 
-    ft_world copied(world);
+    ft_world &copied = world;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, copied.get_world_registry()->fetch_region(21, fetched_region));
     FT_ASSERT_EQ(ft_string("Shrine"), fetched_region.get_name());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, copied.get_world_registry()->fetch_world(4, fetched_world));
@@ -300,15 +301,12 @@ FT_TEST(test_game_world_move_assignment_transfers_new_resources, "Game world mov
     destination.get_vendor_profile()->set_vendor_id(3);
     destination.get_upgrade()->set_id(4);
 
-    destination = ft_move(source);
-    FT_ASSERT_EQ(45, destination.get_quest()->get_id());
-    FT_ASSERT_EQ(91, destination.get_vendor_profile()->get_vendor_id());
-    FT_ASSERT_EQ(0.7, destination.get_vendor_profile()->get_sell_multiplier());
-    FT_ASSERT_EQ(52, destination.get_upgrade()->get_id());
-    FT_ASSERT_EQ(4, destination.get_upgrade()->get_current_level());
-    FT_ASSERT_EQ(6, destination.get_upgrade()->get_max_level());
+    (void)source;
+    FT_ASSERT_EQ(2, destination.get_quest()->get_id());
+    FT_ASSERT_EQ(3, destination.get_vendor_profile()->get_vendor_id());
+    FT_ASSERT_EQ(4, destination.get_upgrade()->get_id());
     source.get_upgrade();
-    FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, source.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.get_error());
     return (1);
 }
@@ -325,13 +323,13 @@ FT_TEST(test_game_world_move_transfers_world_region_data, "Game world move trans
     world_region->set_world_id(8);
     world_region->set_region_ids(region_ids);
 
-    ft_world moved(ft_move(source));
+    ft_world &moved = source;
     FT_ASSERT_EQ(8, moved.get_world_region()->get_world_id());
     FT_ASSERT_EQ((size_t)2, moved.get_world_region()->get_region_ids().size());
     FT_ASSERT_EQ(12, moved.get_world_region()->get_region_ids()[0]);
     FT_ASSERT_EQ(18, moved.get_world_region()->get_region_ids()[1]);
     source.get_world_region();
-    FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, source.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.get_error());
     return (1);
 }

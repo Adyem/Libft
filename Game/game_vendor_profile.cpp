@@ -11,16 +11,6 @@ ft_vendor_profile::ft_vendor_profile() noexcept
     return ;
 }
 
-ft_vendor_profile::ft_vendor_profile(int vendor_id, double buy_markup,
-    double sell_multiplier, double tax_rate) noexcept
-    : _vendor_id(vendor_id), _buy_markup(buy_markup),
-      _sell_multiplier(sell_multiplier), _tax_rate(tax_rate),
-      _mutex(ft_nullptr),
-      _initialized_state(ft_vendor_profile::_state_uninitialized)
-{
-    return ;
-}
-
 ft_vendor_profile::~ft_vendor_profile() noexcept
 {
     if (this->_initialized_state == ft_vendor_profile::_state_uninitialized)
@@ -123,13 +113,13 @@ int ft_vendor_profile::destroy() noexcept
 
 int ft_vendor_profile::enable_thread_safety() noexcept
 {
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
     this->abort_if_not_initialized("ft_vendor_profile::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
-    mutex_pointer = new (std::nothrow) pt_mutex();
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     initialize_error = mutex_pointer->initialize();
@@ -325,7 +315,7 @@ void ft_vendor_profile::set_tax_rate(double tax_rate) noexcept
 }
 
 #ifdef LIBFT_TEST_BUILD
-pt_mutex *ft_vendor_profile::get_mutex_for_validation() const noexcept
+pt_recursive_mutex *ft_vendor_profile::get_mutex_for_validation() const noexcept
 {
     this->abort_if_not_initialized("ft_vendor_profile::get_mutex_for_validation");
     return (this->_mutex);

@@ -11,16 +11,6 @@ ft_currency_rate::ft_currency_rate() noexcept
     return ;
 }
 
-ft_currency_rate::ft_currency_rate(int currency_id, double rate_to_base,
-    int display_precision) noexcept
-    : _currency_id(0), _rate_to_base(1.0), _display_precision(2),
-      _mutex(ft_nullptr),
-      _initialized_state(ft_currency_rate::_state_uninitialized)
-{
-    (void)this->initialize(currency_id, rate_to_base, display_precision);
-    return ;
-}
-
 ft_currency_rate::~ft_currency_rate() noexcept
 {
     if (this->_initialized_state == ft_currency_rate::_state_uninitialized)
@@ -123,13 +113,13 @@ int ft_currency_rate::destroy() noexcept
 
 int ft_currency_rate::enable_thread_safety() noexcept
 {
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
     this->abort_if_not_initialized("ft_currency_rate::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
-    mutex_pointer = new (std::nothrow) pt_mutex();
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     initialize_error = mutex_pointer->initialize();
@@ -238,7 +228,7 @@ void ft_currency_rate::set_display_precision(int display_precision) noexcept
 }
 
 #ifdef LIBFT_TEST_BUILD
-pt_mutex *ft_currency_rate::get_mutex_for_validation() const noexcept
+pt_recursive_mutex *ft_currency_rate::get_mutex_for_validation() const noexcept
 {
     this->abort_if_not_initialized("ft_currency_rate::get_mutex_for_validation");
     return (this->_mutex);

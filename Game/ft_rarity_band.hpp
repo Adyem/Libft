@@ -10,7 +10,7 @@ class ft_rarity_band
     private:
         int      _rarity;
         double   _value_multiplier;
-        pt_mutex *_mutex;
+        pt_recursive_mutex *_mutex;
         uint8_t  _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -25,7 +25,6 @@ class ft_rarity_band
 
     public:
         ft_rarity_band() noexcept;
-        ft_rarity_band(int rarity, double value_multiplier) noexcept;
         virtual ~ft_rarity_band() noexcept;
         ft_rarity_band(const ft_rarity_band &other) noexcept = delete;
         ft_rarity_band &operator=(const ft_rarity_band &other) noexcept = delete;
@@ -50,7 +49,7 @@ class ft_rarity_band
         void set_value_multiplier(double value_multiplier) noexcept;
 
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex *get_mutex_for_validation() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 

@@ -65,55 +65,13 @@ ft_path_step::ft_path_step() noexcept
 
 ft_path_step::~ft_path_step() noexcept
 {
-    if (this->_initialized_state == ft_path_step::_state_uninitialized)
+    if (this->_initialized_state != ft_path_step::_state_initialized)
     {
-        this->abort_lifecycle_error("ft_path_step::~ft_path_step",
-            "destructor called while object is uninitialized");
+        this->_initialized_state = ft_path_step::_state_destroyed;
         return ;
     }
-    if (this->_initialized_state == ft_path_step::_state_initialized)
-        (void)this->destroy();
+    (void)this->destroy();
     return ;
-}
-
-ft_path_step::ft_path_step(const ft_path_step &other) noexcept
-    : _x(other._x), _y(other._y), _z(other._z), _mutex(ft_nullptr),
-      _initialized_state(ft_path_step::_state_uninitialized)
-{
-    return ;
-}
-
-ft_path_step &ft_path_step::operator=(const ft_path_step &other) noexcept
-{
-    if (this == &other)
-        return (*this);
-    this->_x = other._x;
-    this->_y = other._y;
-    this->_z = other._z;
-    return (*this);
-}
-
-ft_path_step::ft_path_step(ft_path_step &&other) noexcept
-    : _x(other._x), _y(other._y), _z(other._z), _mutex(ft_nullptr),
-      _initialized_state(ft_path_step::_state_uninitialized)
-{
-    other._x = 0;
-    other._y = 0;
-    other._z = 0;
-    return ;
-}
-
-ft_path_step &ft_path_step::operator=(ft_path_step &&other) noexcept
-{
-    if (this == &other)
-        return (*this);
-    this->_x = other._x;
-    this->_y = other._y;
-    this->_z = other._z;
-    other._x = 0;
-    other._y = 0;
-    other._z = 0;
-    return (*this);
 }
 
 int ft_path_step::initialize() noexcept
@@ -128,15 +86,64 @@ int ft_path_step::initialize() noexcept
     return (FT_ERR_SUCCESS);
 }
 
+int ft_path_step::initialize(const ft_path_step &other) noexcept
+{
+    if (other._initialized_state != ft_path_step::_state_initialized)
+    {
+        other.abort_lifecycle_error("ft_path_step::initialize(copy)",
+            "source object is not initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (this->_initialized_state == ft_path_step::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_path_step::initialize(copy)",
+            "called while object is already initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    this->_x = other._x;
+    this->_y = other._y;
+    this->_z = other._z;
+    this->_initialized_state = ft_path_step::_state_initialized;
+    return (FT_ERR_SUCCESS);
+}
+
+int ft_path_step::initialize(ft_path_step &&other) noexcept
+{
+    if (other._initialized_state != ft_path_step::_state_initialized)
+    {
+        other.abort_lifecycle_error("ft_path_step::initialize(move)",
+            "source object is not initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (this->_initialized_state == ft_path_step::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_path_step::initialize(move)",
+            "called while object is already initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    this->_x = other._x;
+    this->_y = other._y;
+    this->_z = other._z;
+    this->_initialized_state = ft_path_step::_state_initialized;
+    other._x = 0;
+    other._y = 0;
+    other._z = 0;
+    other._initialized_state = ft_path_step::_state_destroyed;
+    return (FT_ERR_SUCCESS);
+}
+
 int ft_path_step::destroy() noexcept
 {
     int disable_error;
 
     if (this->_initialized_state != ft_path_step::_state_initialized)
     {
-        this->abort_lifecycle_error("ft_path_step::destroy",
-            "called while object is not initialized");
-        return (FT_ERR_INVALID_STATE);
+        this->_initialized_state = ft_path_step::_state_destroyed;
+        return (FT_ERR_SUCCESS);
     }
     disable_error = this->disable_thread_safety();
     this->_x = 0;
@@ -332,14 +339,12 @@ ft_pathfinding::ft_pathfinding() noexcept
 
 ft_pathfinding::~ft_pathfinding()
 {
-    if (this->_initialized_state == ft_pathfinding::_state_uninitialized)
+    if (this->_initialized_state != ft_pathfinding::_state_initialized)
     {
-        this->abort_lifecycle_error("ft_pathfinding::~ft_pathfinding",
-            "destructor called while object is uninitialized");
+        this->_initialized_state = ft_pathfinding::_state_destroyed;
         return ;
     }
-    if (this->_initialized_state == ft_pathfinding::_state_initialized)
-        (void)this->destroy();
+    (void)this->destroy();
     return ;
 }
 
@@ -363,9 +368,8 @@ int ft_pathfinding::destroy() noexcept
 
     if (this->_initialized_state != ft_pathfinding::_state_initialized)
     {
-        this->abort_lifecycle_error("ft_pathfinding::destroy",
-            "called while object is not initialized");
-        return (FT_ERR_INVALID_STATE);
+        this->_initialized_state = ft_pathfinding::_state_destroyed;
+        return (FT_ERR_SUCCESS);
     }
     disable_error = this->disable_thread_safety();
     this->_current_path.clear();
@@ -376,13 +380,13 @@ int ft_pathfinding::destroy() noexcept
 
 int ft_pathfinding::enable_thread_safety() noexcept
 {
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
     this->abort_if_not_initialized("ft_pathfinding::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
-    mutex_pointer = new (std::nothrow) pt_mutex();
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     initialize_error = mutex_pointer->initialize();
@@ -759,7 +763,7 @@ const char *ft_pathfinding::get_error_str() const noexcept
 }
 
 #ifdef LIBFT_TEST_BUILD
-pt_mutex *ft_pathfinding::get_mutex_for_validation() const noexcept
+pt_recursive_mutex *ft_pathfinding::get_mutex_for_validation() const noexcept
 {
     return (this->_mutex);
 }

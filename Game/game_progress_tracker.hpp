@@ -12,7 +12,7 @@ class ft_progress_tracker
     private:
         ft_map<int, ft_achievement> _achievements;
         ft_map<int, ft_quest>       _quests;
-        pt_mutex                   *_mutex;
+        pt_recursive_mutex                   *_mutex;
         uint8_t                     _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -64,7 +64,7 @@ class ft_progress_tracker
         bool is_quest_complete(int quest_id) const noexcept;
 
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex *get_mutex_for_validation() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 

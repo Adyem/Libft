@@ -4,14 +4,14 @@
 #include "../Template/map.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
-#include "ft_behavior_profile.hpp"
+#include "game_behavior_profile.hpp"
 #include <stdint.h>
 
 class ft_behavior_table
 {
     private:
         ft_map<int, ft_behavior_profile> _profiles;
-        pt_mutex                        *_mutex;
+        pt_recursive_mutex                        *_mutex;
         uint8_t                          _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -50,7 +50,7 @@ class ft_behavior_table
         int fetch_profile(int profile_id, ft_behavior_profile &profile) const noexcept;
 
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex *get_mutex_for_validation() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 

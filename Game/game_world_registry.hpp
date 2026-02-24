@@ -12,7 +12,7 @@ class ft_world_registry
     private:
         ft_map<int, ft_region_definition> _regions;
         ft_map<int, ft_world_region>      _world_regions;
-        pt_mutex                         *_mutex;
+        pt_recursive_mutex                         *_mutex;
         uint8_t                           _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -58,7 +58,7 @@ class ft_world_registry
         void set_world_regions(const ft_map<int, ft_world_region> &world_regions) noexcept;
 
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex *get_mutex_for_validation() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 

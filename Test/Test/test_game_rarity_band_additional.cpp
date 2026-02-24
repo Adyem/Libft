@@ -14,9 +14,11 @@ FT_TEST(test_rarity_band_default_values, "Game: rarity band defaults to base val
     return (1);
 }
 
-FT_TEST(test_rarity_band_parameterized_constructor_values, "Game: parameterized rarity band stores provided values")
+FT_TEST(test_rarity_band_initialize_values, "Game: initialize(id, multiplier) applies provided values")
 {
-    ft_rarity_band rarity_band(3, 2.5);
+    ft_rarity_band rarity_band;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rarity_band.initialize(3, 2.5));
 
     FT_ASSERT_EQ(3, rarity_band.get_rarity());
     FT_ASSERT_EQ(2.5, rarity_band.get_value_multiplier());
@@ -40,7 +42,8 @@ FT_TEST(test_rarity_band_setters_overwrite_values, "Game: setters overwrite stor
 
 FT_TEST(test_rarity_band_initialize_copy_matches_source, "Game: initialize(copy) duplicates configured values")
 {
-    ft_rarity_band source(7, 4.0);
+    ft_rarity_band source;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize(7, 4.0));
     ft_rarity_band destination;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.initialize(source));
@@ -54,8 +57,10 @@ FT_TEST(test_rarity_band_initialize_copy_matches_source, "Game: initialize(copy)
 
 FT_TEST(test_rarity_band_initialize_overwrites_previous_values, "Game: initialize(copy) resets existing values")
 {
-    ft_rarity_band source(4, 1.25);
-    ft_rarity_band destination(2, 0.5);
+    ft_rarity_band source;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize(4, 1.25));
+    ft_rarity_band destination;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.initialize(2, 0.5));
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.initialize(source));
 

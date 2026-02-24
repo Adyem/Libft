@@ -13,11 +13,7 @@ ft_progress_tracker::ft_progress_tracker() noexcept
 ft_progress_tracker::~ft_progress_tracker() noexcept
 {
     if (this->_initialized_state == ft_progress_tracker::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("ft_progress_tracker::~ft_progress_tracker",
-            "destructor called while object is uninitialized");
         return ;
-    }
     if (this->_initialized_state == ft_progress_tracker::_state_initialized)
         (void)this->destroy();
     return ;
@@ -47,14 +43,14 @@ void ft_progress_tracker::abort_if_not_initialized(const char *method_name) cons
 
 int ft_progress_tracker::initialize() noexcept
 {
+    int error;
+
     if (this->_initialized_state == ft_progress_tracker::_state_initialized)
     {
         this->abort_lifecycle_error("ft_progress_tracker::initialize",
             "called while object is already initialized");
         return (FT_ERR_INVALID_STATE);
     }
-    int error;
-
     error = this->_achievements.initialize();
     if (error != FT_ERR_SUCCESS)
         return (error);
@@ -124,13 +120,11 @@ int ft_progress_tracker::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != ft_progress_tracker::_state_initialized)
-    {
-        this->abort_lifecycle_error("ft_progress_tracker::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     this->_achievements.clear();
     this->_quests.clear();
+    (void)this->_achievements.destroy();
+    (void)this->_quests.destroy();
     disable_error = this->disable_thread_safety();
     this->_initialized_state = ft_progress_tracker::_state_destroyed;
     return (disable_error);
@@ -138,13 +132,13 @@ int ft_progress_tracker::destroy() noexcept
 
 int ft_progress_tracker::enable_thread_safety() noexcept
 {
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
     this->abort_if_not_initialized("ft_progress_tracker::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
-    mutex_pointer = new (std::nothrow) pt_mutex();
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     initialize_error = mutex_pointer->initialize();
@@ -385,6 +379,8 @@ int ft_progress_tracker::advance_quest_phase(int quest_id) noexcept
     quest_entry = this->_quests.find(quest_id);
     if (quest_entry == this->_quests.end())
         return (FT_ERR_NOT_FOUND);
+    if (quest_entry->value.is_complete())
+        return (FT_ERR_GAME_GENERAL_ERROR);
     quest_entry->value.advance_phase();
     return (FT_ERR_SUCCESS);
 }
@@ -401,7 +397,7 @@ bool ft_progress_tracker::is_quest_complete(int quest_id) const noexcept
 }
 
 #ifdef LIBFT_TEST_BUILD
-pt_mutex *ft_progress_tracker::get_mutex_for_validation() const noexcept
+pt_recursive_mutex *ft_progress_tracker::get_mutex_for_validation() const noexcept
 {
     this->abort_if_not_initialized("ft_progress_tracker::get_mutex_for_validation");
     return (this->_mutex);

@@ -75,9 +75,11 @@ class ft_character
         ft_inventory            _inventory;
         ft_equipment            _equipment;
         mutable int               _error;
-        mutable pt_mutex          _mutex;
+        mutable pt_recursive_mutex          _mutex;
 
         void    set_error(int err) const noexcept;
+        int     lock_internal(bool *lock_acquired) const noexcept;
+        void    unlock_internal(bool lock_acquired) const noexcept;
         void    apply_modifier(const ft_item_modifier &mod, int sign) noexcept;
         void    apply_modifier_internal(const ft_item_modifier &mod, int sign) noexcept;
         long long apply_skill_modifiers(long long damage) const noexcept;
@@ -171,25 +173,25 @@ class ft_character
 
         void move(int dx, int dy, int dz) noexcept;
 
-        ft_resistance get_fire_res() const noexcept;
+        const ft_resistance &get_fire_res() const noexcept;
         void set_fire_res(int percent, int flat) noexcept;
 
-        ft_resistance get_frost_res() const noexcept;
+        const ft_resistance &get_frost_res() const noexcept;
         void set_frost_res(int percent, int flat) noexcept;
 
-        ft_resistance get_lightning_res() const noexcept;
+        const ft_resistance &get_lightning_res() const noexcept;
         void set_lightning_res(int percent, int flat) noexcept;
 
-        ft_resistance get_air_res() const noexcept;
+        const ft_resistance &get_air_res() const noexcept;
         void set_air_res(int percent, int flat) noexcept;
 
-        ft_resistance get_earth_res() const noexcept;
+        const ft_resistance &get_earth_res() const noexcept;
         void set_earth_res(int percent, int flat) noexcept;
 
-        ft_resistance get_chaos_res() const noexcept;
+        const ft_resistance &get_chaos_res() const noexcept;
         void set_chaos_res(int percent, int flat) noexcept;
 
-        ft_resistance get_physical_res() const noexcept;
+        const ft_resistance &get_physical_res() const noexcept;
         void set_physical_res(int percent, int flat) noexcept;
         ft_map<int, ft_skill>       &get_skills() noexcept;
         const ft_map<int, ft_skill> &get_skills() const noexcept;

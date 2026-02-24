@@ -26,8 +26,13 @@ CXX       := g++
 AR        := ar
 ARFLAGS   := rcs
 
-OBJDIR         := objs
-DEBUG_OBJDIR   := objs_debug
+BUILD_OBJ_SUFFIX :=
+ifneq ($(findstring -DLIBFT_TEST_BUILD,$(COMPILE_FLAGS)),)
+    BUILD_OBJ_SUFFIX := _test
+endif
+
+OBJDIR         := objs$(BUILD_OBJ_SUFFIX)
+DEBUG_OBJDIR   := objs_debug$(BUILD_OBJ_SUFFIX)
 
 ifeq ($(OS),Windows_NT)
     SRCS += dumb_sound_win32.cpp

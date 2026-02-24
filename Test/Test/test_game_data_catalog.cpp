@@ -58,7 +58,8 @@ static int assert_loadout_entry_values(const ft_loadout_blueprint &loadout, size
 FT_TEST(test_catalog_register_and_fetch_item, "register and fetch item definition")
 {
     ft_data_catalog catalog;
-    ft_item_definition definition(1, 2, 5, 3, 4, 6, 7);
+    ft_item_definition definition;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.initialize(1, 2, 5, 3, 4, 6, 7));
     ft_item_definition fetched;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, catalog.register_item_definition(definition));
@@ -81,7 +82,8 @@ FT_TEST(test_catalog_recipe_copy_isolated, "recipe copy remains isolated")
     ft_data_catalog catalog;
     ft_vector<ft_crafting_ingredient> ingredients;
     ft_crafting_ingredient ingredient;
-    ft_recipe_blueprint recipe(5, 42, ingredients);
+    ft_recipe_blueprint recipe;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, recipe.initialize(5, 42, ingredients));
     ft_recipe_blueprint first_fetch;
     ft_recipe_blueprint second_fetch;
 
@@ -106,7 +108,8 @@ FT_TEST(test_catalog_loadout_copy_isolated, "loadout copy remains isolated")
     ft_data_catalog catalog;
     ft_vector<ft_loadout_entry> entries;
     ft_loadout_entry entry;
-    ft_loadout_blueprint loadout(7, entries);
+    ft_loadout_blueprint loadout;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, loadout.initialize(7, entries));
     ft_loadout_blueprint first_fetch;
     ft_loadout_blueprint second_fetch;
 

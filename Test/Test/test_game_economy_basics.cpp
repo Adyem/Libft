@@ -52,9 +52,10 @@ FT_TEST(test_game_reputation_invalid_milestone_rejected, "Game: reputation rejec
 
 FT_TEST(test_game_currency_rate_copy_matches_source, "Game: currency rate copy preserves values")
 {
-    ft_currency_rate original(5, 2.5, 4);
+    ft_currency_rate original;
     ft_currency_rate clone;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.initialize(5, 2.5, 4));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, clone.initialize(original));
 
     FT_ASSERT_EQ(5, clone.get_currency_id());

@@ -27,25 +27,14 @@ ft_world_region::ft_world_region() noexcept
     return ;
 }
 
-ft_world_region::ft_world_region(int world_id,
-    const ft_vector<int> &region_ids) noexcept
-    : _world_id(world_id), _region_ids(), _mutex(ft_nullptr),
-      _initialized_state(ft_world_region::_state_uninitialized)
-{
-    game_world_region_copy_ids(region_ids, this->_region_ids);
-    return ;
-}
-
 ft_world_region::~ft_world_region() noexcept
 {
-    if (this->_initialized_state == ft_world_region::_state_uninitialized)
+    if (this->_initialized_state != ft_world_region::_state_initialized)
     {
-        this->abort_lifecycle_error("ft_world_region::~ft_world_region",
-            "destructor called while object is uninitialized");
+        this->_initialized_state = ft_world_region::_state_destroyed;
         return ;
     }
-    if (this->_initialized_state == ft_world_region::_state_initialized)
-        (void)this->destroy();
+    (void)this->destroy();
     return ;
 }
 
@@ -127,9 +116,8 @@ int ft_world_region::destroy() noexcept
 
     if (this->_initialized_state != ft_world_region::_state_initialized)
     {
-        this->abort_lifecycle_error("ft_world_region::destroy",
-            "called while object is not initialized");
-        return (FT_ERR_INVALID_STATE);
+        this->_initialized_state = ft_world_region::_state_destroyed;
+        return (FT_ERR_SUCCESS);
     }
     disable_error = this->disable_thread_safety();
     this->_world_id = 0;
@@ -140,13 +128,13 @@ int ft_world_region::destroy() noexcept
 
 int ft_world_region::enable_thread_safety() noexcept
 {
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
     this->abort_if_not_initialized("ft_world_region::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
-    mutex_pointer = new (std::nothrow) pt_mutex();
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     initialize_error = mutex_pointer->initialize();
@@ -274,7 +262,7 @@ void ft_world_region::set_region_ids(const ft_vector<int> &region_ids) noexcept
 }
 
 #ifdef LIBFT_TEST_BUILD
-pt_mutex *ft_world_region::get_mutex_for_validation() const noexcept
+pt_recursive_mutex *ft_world_region::get_mutex_for_validation() const noexcept
 {
     this->abort_if_not_initialized("ft_world_region::get_mutex_for_validation");
     return (this->_mutex);

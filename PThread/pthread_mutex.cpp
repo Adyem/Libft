@@ -17,14 +17,13 @@ pt_mutex::pt_mutex()
 
 pt_mutex::~pt_mutex()
 {
-    if (this->_initialized_state == pt_mutex::_state_uninitialized)
+    if (this->_initialized_state != pt_mutex::_state_initialized)
     {
-        this->abort_lifecycle_error("pt_mutex::~pt_mutex",
-            "destructor called while object is uninitialized");
+        this->_initialized_state = pt_mutex::_state_destroyed;
+        this->teardown_thread_safety();
         return ;
     }
-    if (this->_initialized_state == pt_mutex::_state_initialized)
-        (void)this->destroy();
+    (void)this->destroy();
     this->teardown_thread_safety();
     return ;
 }
@@ -70,15 +69,14 @@ int pt_mutex::destroy()
 {
     if (this->_initialized_state != pt_mutex::_state_initialized)
     {
-        this->abort_lifecycle_error("pt_mutex::destroy",
-            "called while object is not initialized");
-        return (FT_ERR_INVALID_STATE);
+        this->_initialized_state = pt_mutex::_state_destroyed;
+        this->teardown_thread_safety();
+        return (FT_ERR_SUCCESS);
     }
     if (this->_native_mutex == ft_nullptr)
     {
-        this->abort_lifecycle_error("pt_mutex::destroy",
-            "native mutex pointer is null while object is initialized");
-        return (FT_ERR_INVALID_STATE);
+        this->_initialized_state = pt_mutex::_state_destroyed;
+        return (FT_ERR_SUCCESS);
     }
     if (this->_lock.load(std::memory_order_acquire))
         return (FT_ERR_THREAD_BUSY);
@@ -88,6 +86,7 @@ int pt_mutex::destroy()
     this->_valid_state.store(false, std::memory_order_release);
     this->_lock.store(false, std::memory_order_release);
     this->_owner.store(0, std::memory_order_release);
+    this->teardown_thread_safety();
     return (FT_ERR_SUCCESS);
 }
 

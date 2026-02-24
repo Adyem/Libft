@@ -1,4 +1,4 @@
-#include "ft_behavior_profile.hpp"
+#include "game_behavior_profile.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
 #include <new>
@@ -29,24 +29,10 @@ ft_behavior_profile::ft_behavior_profile() noexcept
     return ;
 }
 
-ft_behavior_profile::ft_behavior_profile(int profile_id, double aggression_weight,
-    double caution_weight, const ft_vector<ft_behavior_action> &actions) noexcept
-    : _profile_id(0), _aggression_weight(0.0), _caution_weight(0.0),
-      _actions(), _mutex(ft_nullptr),
-      _initialized_state(ft_behavior_profile::_state_uninitialized)
-{
-    (void)this->initialize(profile_id, aggression_weight, caution_weight, actions);
-    return ;
-}
-
 ft_behavior_profile::~ft_behavior_profile() noexcept
 {
     if (this->_initialized_state == ft_behavior_profile::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("ft_behavior_profile::~ft_behavior_profile",
-            "destructor called while object is uninitialized");
         return ;
-    }
     if (this->_initialized_state == ft_behavior_profile::_state_initialized)
         (void)this->destroy();
     return ;
@@ -102,6 +88,8 @@ int ft_behavior_profile::initialize(const ft_behavior_profile &other) noexcept
     }
     if (&other == this)
         return (FT_ERR_SUCCESS);
+    if (this->_initialized_state == ft_behavior_profile::_state_initialized)
+        (void)this->destroy();
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
         return (initialize_error);
@@ -123,6 +111,8 @@ int ft_behavior_profile::initialize(int profile_id, double aggression_weight,
 {
     int initialize_error;
 
+    if (this->_initialized_state == ft_behavior_profile::_state_initialized)
+        (void)this->destroy();
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
         return (initialize_error);
@@ -138,11 +128,7 @@ int ft_behavior_profile::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != ft_behavior_profile::_state_initialized)
-    {
-        this->abort_lifecycle_error("ft_behavior_profile::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     disable_error = this->disable_thread_safety();
     this->_profile_id = 0;
     this->_aggression_weight = 0.0;
@@ -154,13 +140,13 @@ int ft_behavior_profile::destroy() noexcept
 
 int ft_behavior_profile::enable_thread_safety() noexcept
 {
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
     this->abort_if_not_initialized("ft_behavior_profile::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
-    mutex_pointer = new (std::nothrow) pt_mutex();
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     initialize_error = mutex_pointer->initialize();
@@ -309,7 +295,7 @@ void ft_behavior_profile::set_actions(
 }
 
 #ifdef LIBFT_TEST_BUILD
-pt_mutex *ft_behavior_profile::get_mutex_for_validation() const noexcept
+pt_recursive_mutex *ft_behavior_profile::get_mutex_for_validation() const noexcept
 {
     this->abort_if_not_initialized("ft_behavior_profile::get_mutex_for_validation");
     return (this->_mutex);

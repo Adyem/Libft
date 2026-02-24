@@ -16,10 +16,11 @@ FT_TEST(test_currency_rate_default_initialization_values, "Currency rate default
     return (1);
 }
 
-FT_TEST(test_currency_rate_parameterized_constructor_values, "Currency rate parameterized constructor stores fields")
+FT_TEST(test_currency_rate_initialize_with_fields_values, "Currency rate initialize stores fields")
 {
-    ft_currency_rate rate(4, 0.5, 6);
+    ft_currency_rate rate;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.initialize(4, 0.5, 6));
     FT_ASSERT_EQ(4, rate.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(0.5, rate.get_rate_to_base());
     FT_ASSERT_EQ(6, rate.get_display_precision());
@@ -28,9 +29,11 @@ FT_TEST(test_currency_rate_parameterized_constructor_values, "Currency rate para
 
 FT_TEST(test_currency_rate_initialize_copy_resets_destination, "Currency rate initialize(copy) overwrites previous state but keeps source")
 {
-    ft_currency_rate original(8, 1.35, 5);
-    ft_currency_rate destination(2, 0.4, 3);
+    ft_currency_rate original;
+    ft_currency_rate destination;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.initialize(8, 1.35, 5));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.initialize(2, 0.4, 3));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.initialize(original));
 
     FT_ASSERT_EQ(8, destination.get_currency_id());
@@ -68,10 +71,11 @@ FT_TEST(test_price_definition_default_values, "Price definition default construc
     return (1);
 }
 
-FT_TEST(test_price_definition_parameterized_constructor_values, "Price definition parameterized constructor stores inputs")
+FT_TEST(test_price_definition_initialize_with_fields_values, "Price definition initialize stores inputs")
 {
-    ft_price_definition definition(10, 3, 700, 450, 900);
+    ft_price_definition definition;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.initialize(10, 3, 700, 450, 900));
     FT_ASSERT_EQ(10, definition.get_item_id());
     FT_ASSERT_EQ(3, definition.get_rarity());
     FT_ASSERT_EQ(700, definition.get_base_value());
@@ -82,9 +86,10 @@ FT_TEST(test_price_definition_parameterized_constructor_values, "Price definitio
 
 FT_TEST(test_price_definition_initialize_copy_matches_source, "Price definition initialize(copy) duplicates source state")
 {
-    ft_price_definition original(12, 5, 250, 100, 400);
+    ft_price_definition original;
     ft_price_definition clone;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.initialize(12, 5, 250, 100, 400));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, clone.initialize(original));
 
     FT_ASSERT_EQ(12, clone.get_item_id());

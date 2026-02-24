@@ -108,13 +108,13 @@ int ft_goal::destroy() noexcept
 
 int ft_goal::enable_thread_safety() noexcept
 {
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
     this->abort_if_not_initialized("ft_goal::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
-    mutex_pointer = new (std::nothrow) pt_mutex();
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     initialize_error = mutex_pointer->initialize();
@@ -232,7 +232,7 @@ void ft_goal::add_progress(int delta) noexcept
 }
 
 #ifdef LIBFT_TEST_BUILD
-pt_mutex *ft_goal::get_mutex_for_validation() const noexcept
+pt_recursive_mutex *ft_goal::get_mutex_for_validation() const noexcept
 {
     this->abort_if_not_initialized("ft_goal::get_mutex_for_validation");
     return (this->_mutex);
@@ -249,11 +249,7 @@ ft_achievement::ft_achievement() noexcept
 ft_achievement::~ft_achievement() noexcept
 {
     if (this->_initialized_state == ft_achievement::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("ft_achievement::~ft_achievement",
-            "destructor called while object is uninitialized");
         return ;
-    }
     if (this->_initialized_state == ft_achievement::_state_initialized)
         (void)this->destroy();
     return ;
@@ -283,6 +279,8 @@ void ft_achievement::abort_if_not_initialized(const char *method_name) const
 
 int ft_achievement::initialize() noexcept
 {
+    int goals_initialize_error;
+
     if (this->_initialized_state == ft_achievement::_state_initialized)
     {
         this->abort_lifecycle_error("ft_achievement::initialize",
@@ -290,8 +288,9 @@ int ft_achievement::initialize() noexcept
         return (FT_ERR_INVALID_STATE);
     }
     this->_id = 0;
-    if (this->_goals.initialize() != FT_ERR_SUCCESS)
-        return (FT_ERR_NO_MEMORY);
+    goals_initialize_error = this->_goals.initialize();
+    if (goals_initialize_error != FT_ERR_SUCCESS)
+        return (goals_initialize_error);
     this->_goals.clear();
     this->_initialized_state = ft_achievement::_state_initialized;
     return (FT_ERR_SUCCESS);
@@ -386,11 +385,7 @@ int ft_achievement::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != ft_achievement::_state_initialized)
-    {
-        this->abort_lifecycle_error("ft_achievement::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     this->_id = 0;
     this->_goals.clear();
     (void)this->_goals.destroy();
@@ -401,13 +396,13 @@ int ft_achievement::destroy() noexcept
 
 int ft_achievement::enable_thread_safety() noexcept
 {
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
     this->abort_if_not_initialized("ft_achievement::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
-    mutex_pointer = new (std::nothrow) pt_mutex();
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     initialize_error = mutex_pointer->initialize();
@@ -673,7 +668,7 @@ bool ft_achievement::is_complete() const noexcept
 }
 
 #ifdef LIBFT_TEST_BUILD
-pt_mutex *ft_achievement::get_mutex_for_validation() const noexcept
+pt_recursive_mutex *ft_achievement::get_mutex_for_validation() const noexcept
 {
     this->abort_if_not_initialized("ft_achievement::get_mutex_for_validation");
     return (this->_mutex);

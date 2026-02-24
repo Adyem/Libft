@@ -11,17 +11,6 @@ ft_price_definition::ft_price_definition() noexcept
     return ;
 }
 
-ft_price_definition::ft_price_definition(int item_id, int rarity, int base_value,
-    int minimum_value, int maximum_value) noexcept
-    : _item_id(0), _rarity(0), _base_value(0), _minimum_value(0),
-      _maximum_value(0), _mutex(ft_nullptr),
-      _initialized_state(ft_price_definition::_state_uninitialized)
-{
-    (void)this->initialize(item_id, rarity, base_value, minimum_value,
-        maximum_value);
-    return ;
-}
-
 ft_price_definition::~ft_price_definition() noexcept
 {
     if (this->_initialized_state == ft_price_definition::_state_uninitialized)
@@ -132,13 +121,13 @@ int ft_price_definition::destroy() noexcept
 
 int ft_price_definition::enable_thread_safety() noexcept
 {
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
     this->abort_if_not_initialized("ft_price_definition::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
-    mutex_pointer = new (std::nothrow) pt_mutex();
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     initialize_error = mutex_pointer->initialize();
@@ -273,7 +262,7 @@ void ft_price_definition::set_maximum_value(int maximum_value) noexcept
 }
 
 #ifdef LIBFT_TEST_BUILD
-pt_mutex *ft_price_definition::get_mutex_for_validation() const noexcept
+pt_recursive_mutex *ft_price_definition::get_mutex_for_validation() const noexcept
 {
     this->abort_if_not_initialized("ft_price_definition::get_mutex_for_validation");
     return (this->_mutex);

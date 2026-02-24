@@ -9,7 +9,9 @@
 
 FT_TEST(test_price_definition_setters_preserve_values, "Price definition setters persist the configured values")
 {
-    ft_price_definition definition(3, 4, 120, 60, 240);
+    ft_price_definition definition;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.initialize(3, 4, 120, 60, 240));
 
     definition.set_item_id(7);
     definition.set_rarity(6);
@@ -27,9 +29,10 @@ FT_TEST(test_price_definition_setters_preserve_values, "Price definition setters
 
 FT_TEST(test_price_definition_initialize_copy_preserves_values, "Price definition initialize(copy) duplicates the source state")
 {
-    ft_price_definition source(9, 2, 150, 90, 210);
+    ft_price_definition source;
     ft_price_definition copy;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize(9, 2, 150, 90, 210));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, copy.initialize(source));
 
     FT_ASSERT_EQ(9, copy.get_item_id());
@@ -47,7 +50,9 @@ FT_TEST(test_price_definition_initialize_copy_preserves_values, "Price definitio
 
 FT_TEST(test_currency_rate_setters_preserve_values, "Currency rate setters persist their values")
 {
-    ft_currency_rate rate(5, 2.25, 3);
+    ft_currency_rate rate;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.initialize(5, 2.25, 3));
 
     rate.set_currency_id(11);
     rate.set_rate_to_base(0.85);
@@ -61,9 +66,10 @@ FT_TEST(test_currency_rate_setters_preserve_values, "Currency rate setters persi
 
 FT_TEST(test_currency_rate_initialize_copy_preserves_values, "Currency rate initialize(copy) duplicates source state")
 {
-    ft_currency_rate source(18, 4.5, 1);
+    ft_currency_rate source;
     ft_currency_rate clone;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize(18, 4.5, 1));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, clone.initialize(source));
 
     FT_ASSERT_EQ(18, clone.get_currency_id());
@@ -77,7 +83,9 @@ FT_TEST(test_currency_rate_initialize_copy_preserves_values, "Currency rate init
 
 FT_TEST(test_rarity_band_setters_preserve_values, "Rarity band setters persist their values")
 {
-    ft_rarity_band band(6, 3.25);
+    ft_rarity_band band;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, band.initialize(6, 3.25));
 
     band.set_rarity(9);
     band.set_value_multiplier(1.1);
@@ -89,9 +97,10 @@ FT_TEST(test_rarity_band_setters_preserve_values, "Rarity band setters persist t
 
 FT_TEST(test_rarity_band_initialize_copy_preserves_values, "Rarity band initialize(copy) duplicates source state")
 {
-    ft_rarity_band source(14, 2.8);
+    ft_rarity_band source;
     ft_rarity_band clone;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize(14, 2.8));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, clone.initialize(source));
 
     FT_ASSERT_EQ(14, clone.get_rarity());

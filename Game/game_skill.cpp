@@ -13,11 +13,7 @@ ft_skill::ft_skill() noexcept
 ft_skill::~ft_skill() noexcept
 {
     if (this->_initialized_state == ft_skill::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("ft_skill::~ft_skill",
-            "destructor called while object is uninitialized");
         return ;
-    }
     if (this->_initialized_state == ft_skill::_state_initialized)
         (void)this->destroy();
     return ;
@@ -92,11 +88,7 @@ int ft_skill::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != ft_skill::_state_initialized)
-    {
-        this->abort_lifecycle_error("ft_skill::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     disable_error = this->disable_thread_safety();
     this->_id = 0;
     this->_level = 0;
@@ -111,13 +103,13 @@ int ft_skill::destroy() noexcept
 
 int ft_skill::enable_thread_safety() noexcept
 {
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
     this->abort_if_not_initialized("ft_skill::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
-    mutex_pointer = new (std::nothrow) pt_mutex();
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     initialize_error = mutex_pointer->initialize();
@@ -348,7 +340,7 @@ void ft_skill::sub_modifier4(int mod) noexcept
 }
 
 #ifdef LIBFT_TEST_BUILD
-pt_mutex *ft_skill::get_mutex_for_validation() const noexcept
+pt_recursive_mutex *ft_skill::get_mutex_for_validation() const noexcept
 {
     this->abort_if_not_initialized("ft_skill::get_mutex_for_validation");
     return (this->_mutex);

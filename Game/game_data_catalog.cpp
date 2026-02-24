@@ -1,17 +1,12 @@
 #include "game_data_catalog.hpp"
 #include "../Template/move.hpp"
 #include "../PThread/pthread.hpp"
+#include "../Printf/printf.hpp"
+#include "../System_utils/system_utils.hpp"
 
 static void game_data_catalog_sleep_backoff()
 {
     pt_thread_sleep(1);
-    return ;
-}
-
-static void game_data_catalog_unlock_guard(ft_unique_lock<pt_mutex> &guard)
-{
-    if (guard.owns_lock())
-        guard.unlock();
     return ;
 }
 
@@ -51,25 +46,20 @@ static void game_data_catalog_copy_loadout_vector(const ft_vector<ft_loadout_ent
 
 int ft_item_definition::lock_pair(const ft_item_definition &first,
         const ft_item_definition &second,
-        ft_unique_lock<pt_mutex> &first_guard,
-        ft_unique_lock<pt_mutex> &second_guard)
+        bool *first_locked,
+        bool *second_locked)
 {
     const ft_item_definition *ordered_first;
     const ft_item_definition *ordered_second;
+    int lock_error;
     bool swapped;
 
+    if (first_locked != ft_nullptr)
+        *first_locked = false;
+    if (second_locked != ft_nullptr)
+        *second_locked = false;
     if (&first == &second)
-    {
-        ft_unique_lock<pt_mutex> single_guard(first._mutex);
-
-        if (single_guard.get_error() != FT_ERR_SUCCESS)
-        {
-            return (single_guard.get_error());
-        }
-        first_guard = ft_move(single_guard);
-        second_guard = ft_unique_lock<pt_mutex>();
-        return (FT_ERR_SUCCESS);
-    }
+        return (first.lock_internal(first_locked));
     ordered_first = &first;
     ordered_second = &second;
     swapped = false;
@@ -84,80 +74,194 @@ int ft_item_definition::lock_pair(const ft_item_definition &first,
     }
     while (true)
     {
-        ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
+        bool lower_locked;
+        bool upper_locked;
 
-        if (lower_guard.get_error() != FT_ERR_SUCCESS)
-        {
-            return (lower_guard.get_error());
-        }
-        ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ERR_SUCCESS)
+        lower_locked = false;
+        upper_locked = false;
+        lock_error = ordered_first->lock_internal(&lower_locked);
+        if (lock_error != FT_ERR_SUCCESS)
+            return (lock_error);
+        lock_error = ordered_second->lock_internal(&upper_locked);
+        if (lock_error == FT_ERR_SUCCESS)
         {
             if (!swapped)
             {
-                first_guard = ft_move(lower_guard);
-                second_guard = ft_move(upper_guard);
+                if (first_locked != ft_nullptr)
+                    *first_locked = lower_locked;
+                if (second_locked != ft_nullptr)
+                    *second_locked = upper_locked;
             }
             else
             {
-                first_guard = ft_move(upper_guard);
-                second_guard = ft_move(lower_guard);
+                if (first_locked != ft_nullptr)
+                    *first_locked = upper_locked;
+                if (second_locked != ft_nullptr)
+                    *second_locked = lower_locked;
             }
             return (FT_ERR_SUCCESS);
         }
-        if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
+        if (lock_error != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            return (upper_guard.get_error());
+            ordered_first->unlock_internal(lower_locked);
+            return (lock_error);
         }
-        if (lower_guard.owns_lock())
-            lower_guard.unlock();
+        ordered_first->unlock_internal(lower_locked);
         game_data_catalog_sleep_backoff();
     }
 }
 
 ft_item_definition::ft_item_definition() noexcept
-    : _item_id(0), _rarity(0), _max_stack(0), _width(0), _height(0), _weight(0), _slot_requirement(0)
+    : _item_id(0), _rarity(0), _max_stack(0), _width(0), _height(0), _weight(0),
+      _slot_requirement(0), _initialized_state(ft_item_definition::_state_uninitialized)
 {
     return ;
 }
 
-ft_item_definition::ft_item_definition(int item_id, int rarity, int max_stack, int width, int height, int weight, int slot_requirement) noexcept
-    : _item_id(item_id), _rarity(rarity), _max_stack(max_stack), _width(width), _height(height), _weight(weight),
-      _slot_requirement(slot_requirement)
+ft_item_definition::~ft_item_definition() noexcept
 {
-    return ;
-}
-
-ft_item_definition::ft_item_definition(const ft_item_definition &other) noexcept
-{
-    ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESS)
-    {
+    if (this->_initialized_state == ft_item_definition::_state_uninitialized)
         return ;
-    }
-    this->_item_id = other._item_id;
-    this->_rarity = other._rarity;
-    this->_max_stack = other._max_stack;
-    this->_width = other._width;
-    this->_height = other._height;
-    this->_weight = other._weight;
-    this->_slot_requirement = other._slot_requirement;
-    game_data_catalog_unlock_guard(other_guard);
+    if (this->_initialized_state == ft_item_definition::_state_initialized)
+        (void)this->destroy();
     return ;
 }
 
-ft_item_definition &ft_item_definition::operator=(const ft_item_definition &other) noexcept
+void ft_item_definition::abort_lifecycle_error(const char *method_name,
+    const char *reason) const
 {
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
+    if (method_name == ft_nullptr)
+        method_name = "unknown";
+    if (reason == ft_nullptr)
+        reason = "unknown";
+    pf_printf_fd(2, "ft_item_definition lifecycle error: %s: %s\n",
+        method_name, reason);
+    su_abort();
+    return ;
+}
+
+void ft_item_definition::abort_if_not_initialized(const char *method_name) const
+{
+    if (this->_initialized_state == ft_item_definition::_state_initialized)
+        return ;
+    this->abort_lifecycle_error(method_name,
+        "called while object is not initialized");
+    return ;
+}
+
+int ft_item_definition::lock_internal(bool *lock_acquired) const noexcept
+{
     int lock_error;
 
+    this->abort_if_not_initialized("ft_item_definition::lock_internal");
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = false;
+    lock_error = this->_mutex.lock();
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = true;
+    return (FT_ERR_SUCCESS);
+}
+
+void ft_item_definition::unlock_internal(bool lock_acquired) const noexcept
+{
+    if (lock_acquired == false)
+        return ;
+    (void)this->_mutex.unlock();
+    return ;
+}
+
+int ft_item_definition::initialize() noexcept
+{
+    int mutex_initialize_error;
+
+    if (this->_initialized_state == ft_item_definition::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_item_definition::initialize",
+            "called while object is already initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    (void)this->_mutex.destroy();
+    mutex_initialize_error = this->_mutex.initialize();
+    if (mutex_initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialized_state = ft_item_definition::_state_destroyed;
+        return (mutex_initialize_error);
+    }
+    this->_item_id = 0;
+    this->_rarity = 0;
+    this->_max_stack = 0;
+    this->_width = 0;
+    this->_height = 0;
+    this->_weight = 0;
+    this->_slot_requirement = 0;
+    this->_initialized_state = ft_item_definition::_state_initialized;
+    return (FT_ERR_SUCCESS);
+}
+
+int ft_item_definition::initialize(int item_id, int rarity, int max_stack,
+    int width, int height, int weight, int slot_requirement) noexcept
+{
+    int mutex_initialize_error;
+
+    if (this->_initialized_state == ft_item_definition::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_item_definition::initialize",
+            "called while object is already initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    (void)this->_mutex.destroy();
+    mutex_initialize_error = this->_mutex.initialize();
+    if (mutex_initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialized_state = ft_item_definition::_state_destroyed;
+        return (mutex_initialize_error);
+    }
+    this->_item_id = item_id;
+    this->_rarity = rarity;
+    this->_max_stack = max_stack;
+    this->_width = width;
+    this->_height = height;
+    this->_weight = weight;
+    this->_slot_requirement = slot_requirement;
+    this->_initialized_state = ft_item_definition::_state_initialized;
+    return (FT_ERR_SUCCESS);
+}
+
+int ft_item_definition::initialize(const ft_item_definition &other) noexcept
+{
+    bool other_locked;
+    int lock_error;
+    int mutex_initialize_error;
+
+    if (other._initialized_state != ft_item_definition::_state_initialized)
+    {
+        other.abort_lifecycle_error("ft_item_definition::initialize(copy)",
+            "source object is not initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
     if (this == &other)
-        return (*this);
-    lock_error = ft_item_definition::lock_pair(*this, other, this_guard, other_guard);
+        return (FT_ERR_SUCCESS);
+    if (this->_initialized_state == ft_item_definition::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_item_definition::initialize(copy)",
+            "destination object is already initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    (void)this->_mutex.destroy();
+    mutex_initialize_error = this->_mutex.initialize();
+    if (mutex_initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialized_state = ft_item_definition::_state_destroyed;
+        return (mutex_initialize_error);
+    }
+    other_locked = false;
+    lock_error = other.lock_internal(&other_locked);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        return (*this);
+        this->_initialized_state = ft_item_definition::_state_destroyed;
+        return (lock_error);
     }
     this->_item_id = other._item_id;
     this->_rarity = other._rarity;
@@ -166,17 +270,44 @@ ft_item_definition &ft_item_definition::operator=(const ft_item_definition &othe
     this->_height = other._height;
     this->_weight = other._weight;
     this->_slot_requirement = other._slot_requirement;
-    game_data_catalog_unlock_guard(this_guard);
-    game_data_catalog_unlock_guard(other_guard);
-    return (*this);
+    other.unlock_internal(other_locked);
+    this->_initialized_state = ft_item_definition::_state_initialized;
+    return (FT_ERR_SUCCESS);
 }
 
-ft_item_definition::ft_item_definition(ft_item_definition &&other) noexcept
+int ft_item_definition::initialize(ft_item_definition &&other) noexcept
 {
-    ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESS)
+    bool other_locked;
+    int lock_error;
+    int mutex_initialize_error;
+
+    if (other._initialized_state != ft_item_definition::_state_initialized)
     {
-        return ;
+        other.abort_lifecycle_error("ft_item_definition::initialize(move)",
+            "source object is not initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (this->_initialized_state == ft_item_definition::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_item_definition::initialize(move)",
+            "destination object is already initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    (void)this->_mutex.destroy();
+    mutex_initialize_error = this->_mutex.initialize();
+    if (mutex_initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialized_state = ft_item_definition::_state_destroyed;
+        return (mutex_initialize_error);
+    }
+    other_locked = false;
+    lock_error = other.lock_internal(&other_locked);
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->_initialized_state = ft_item_definition::_state_destroyed;
+        return (lock_error);
     }
     this->_item_id = other._item_id;
     this->_rarity = other._rarity;
@@ -192,229 +323,242 @@ ft_item_definition::ft_item_definition(ft_item_definition &&other) noexcept
     other._height = 0;
     other._weight = 0;
     other._slot_requirement = 0;
-    game_data_catalog_unlock_guard(other_guard);
-    return ;
+    other.unlock_internal(other_locked);
+    this->_initialized_state = ft_item_definition::_state_initialized;
+    return (FT_ERR_SUCCESS);
 }
 
-ft_item_definition &ft_item_definition::operator=(ft_item_definition &&other) noexcept
+int ft_item_definition::destroy() noexcept
 {
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
-    int lock_error;
-
-    if (this == &other)
-        return (*this);
-    lock_error = ft_item_definition::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        return (*this);
-    }
-    this->_item_id = other._item_id;
-    this->_rarity = other._rarity;
-    this->_max_stack = other._max_stack;
-    this->_width = other._width;
-    this->_height = other._height;
-    this->_weight = other._weight;
-    this->_slot_requirement = other._slot_requirement;
-    other._item_id = 0;
-    other._rarity = 0;
-    other._max_stack = 0;
-    other._width = 0;
-    other._height = 0;
-    other._weight = 0;
-    other._slot_requirement = 0;
-    game_data_catalog_unlock_guard(this_guard);
-    game_data_catalog_unlock_guard(other_guard);
-    return (*this);
+    if (this->_initialized_state != ft_item_definition::_state_initialized)
+        return (FT_ERR_INVALID_STATE);
+    (void)this->_mutex.destroy();
+    this->_item_id = 0;
+    this->_rarity = 0;
+    this->_max_stack = 0;
+    this->_width = 0;
+    this->_height = 0;
+    this->_weight = 0;
+    this->_slot_requirement = 0;
+    this->_initialized_state = ft_item_definition::_state_destroyed;
+    return (FT_ERR_SUCCESS);
 }
 
 int ft_item_definition::get_item_id() const noexcept
 {
+    bool lock_acquired;
+    int lock_error;
     int identifier;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        game_data_catalog_unlock_guard(guard);
-        return (guard.get_error());
-    }
+    this->abort_if_not_initialized("ft_item_definition::get_item_id");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
     identifier = this->_item_id;
-    game_data_catalog_unlock_guard(guard);
+    this->unlock_internal(lock_acquired);
     return (identifier);
 }
 
 void ft_item_definition::set_item_id(int item_id) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
+    bool lock_acquired;
+    int lock_error;
+
+    this->abort_if_not_initialized("ft_item_definition::set_item_id");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
     this->_item_id = item_id;
-    game_data_catalog_unlock_guard(guard);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
 int ft_item_definition::get_rarity() const noexcept
 {
+    bool lock_acquired;
+    int lock_error;
     int rarity_value;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        game_data_catalog_unlock_guard(guard);
-        return (guard.get_error());
-    }
+    this->abort_if_not_initialized("ft_item_definition::get_rarity");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
     rarity_value = this->_rarity;
-    game_data_catalog_unlock_guard(guard);
+    this->unlock_internal(lock_acquired);
     return (rarity_value);
 }
 
 void ft_item_definition::set_rarity(int rarity) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
+    bool lock_acquired;
+    int lock_error;
+
+    this->abort_if_not_initialized("ft_item_definition::set_rarity");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
     this->_rarity = rarity;
-    game_data_catalog_unlock_guard(guard);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
 int ft_item_definition::get_max_stack() const noexcept
 {
+    bool lock_acquired;
+    int lock_error;
     int value;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        game_data_catalog_unlock_guard(guard);
-        return (guard.get_error());
-    }
+    this->abort_if_not_initialized("ft_item_definition::get_max_stack");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
     value = this->_max_stack;
-    game_data_catalog_unlock_guard(guard);
+    this->unlock_internal(lock_acquired);
     return (value);
 }
 
 void ft_item_definition::set_max_stack(int max_stack) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
+    bool lock_acquired;
+    int lock_error;
+
+    this->abort_if_not_initialized("ft_item_definition::set_max_stack");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
     this->_max_stack = max_stack;
-    game_data_catalog_unlock_guard(guard);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
 int ft_item_definition::get_width() const noexcept
 {
+    bool lock_acquired;
+    int lock_error;
     int width_value;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        game_data_catalog_unlock_guard(guard);
-        return (guard.get_error());
-    }
+    this->abort_if_not_initialized("ft_item_definition::get_width");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
     width_value = this->_width;
-    game_data_catalog_unlock_guard(guard);
+    this->unlock_internal(lock_acquired);
     return (width_value);
 }
 
 void ft_item_definition::set_width(int width) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
+    bool lock_acquired;
+    int lock_error;
+
+    this->abort_if_not_initialized("ft_item_definition::set_width");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
     this->_width = width;
-    game_data_catalog_unlock_guard(guard);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
 
 int ft_item_definition::get_height() const noexcept
 {
+    bool lock_acquired;
+    int lock_error;
     int height_value;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        game_data_catalog_unlock_guard(guard);
-        return (guard.get_error());
-    }
+    this->abort_if_not_initialized("ft_item_definition::get_height");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
     height_value = this->_height;
-    game_data_catalog_unlock_guard(guard);
+    this->unlock_internal(lock_acquired);
     return (height_value);
 }
 
 void ft_item_definition::set_height(int height) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
+    bool lock_acquired;
+    int lock_error;
+
+    this->abort_if_not_initialized("ft_item_definition::set_height");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
     this->_height = height;
-    game_data_catalog_unlock_guard(guard);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
 int ft_item_definition::get_weight() const noexcept
 {
+    bool lock_acquired;
+    int lock_error;
     int weight_value;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        game_data_catalog_unlock_guard(guard);
-        return (guard.get_error());
-    }
+    this->abort_if_not_initialized("ft_item_definition::get_weight");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
     weight_value = this->_weight;
-    game_data_catalog_unlock_guard(guard);
+    this->unlock_internal(lock_acquired);
     return (weight_value);
 }
 
 void ft_item_definition::set_weight(int weight) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
+    bool lock_acquired;
+    int lock_error;
+
+    this->abort_if_not_initialized("ft_item_definition::set_weight");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
     this->_weight = weight;
-    game_data_catalog_unlock_guard(guard);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
 int ft_item_definition::get_slot_requirement() const noexcept
 {
+    bool lock_acquired;
+    int lock_error;
     int slot_value;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        game_data_catalog_unlock_guard(guard);
-        return (guard.get_error());
-    }
+    this->abort_if_not_initialized("ft_item_definition::get_slot_requirement");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
     slot_value = this->_slot_requirement;
-    game_data_catalog_unlock_guard(guard);
+    this->unlock_internal(lock_acquired);
     return (slot_value);
 }
 
 void ft_item_definition::set_slot_requirement(int slot_requirement) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
+    bool lock_acquired;
+    int lock_error;
+
+    this->abort_if_not_initialized("ft_item_definition::set_slot_requirement");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
     this->_slot_requirement = slot_requirement;
-    game_data_catalog_unlock_guard(guard);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
@@ -422,25 +566,20 @@ void ft_item_definition::set_slot_requirement(int slot_requirement) noexcept
 
 int ft_recipe_blueprint::lock_pair(const ft_recipe_blueprint &first,
         const ft_recipe_blueprint &second,
-        ft_unique_lock<pt_mutex> &first_guard,
-        ft_unique_lock<pt_mutex> &second_guard)
+        bool *first_locked,
+        bool *second_locked)
 {
     const ft_recipe_blueprint *ordered_first;
     const ft_recipe_blueprint *ordered_second;
+    int lock_error;
     bool swapped;
 
+    if (first_locked != ft_nullptr)
+        *first_locked = false;
+    if (second_locked != ft_nullptr)
+        *second_locked = false;
     if (&first == &second)
-    {
-        ft_unique_lock<pt_mutex> single_guard(first._mutex);
-
-        if (single_guard.get_error() != FT_ERR_SUCCESS)
-        {
-            return (single_guard.get_error());
-        }
-        first_guard = ft_move(single_guard);
-        second_guard = ft_unique_lock<pt_mutex>();
-        return (FT_ERR_SUCCESS);
-    }
+        return (first.lock_internal(first_locked));
     ordered_first = &first;
     ordered_second = &second;
     swapped = false;
@@ -455,92 +594,264 @@ int ft_recipe_blueprint::lock_pair(const ft_recipe_blueprint &first,
     }
     while (true)
     {
-        ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
+        bool lower_locked;
+        bool upper_locked;
 
-        if (lower_guard.get_error() != FT_ERR_SUCCESS)
-        {
-            return (lower_guard.get_error());
-        }
-        ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ERR_SUCCESS)
+        lower_locked = false;
+        upper_locked = false;
+        lock_error = ordered_first->lock_internal(&lower_locked);
+        if (lock_error != FT_ERR_SUCCESS)
+            return (lock_error);
+        lock_error = ordered_second->lock_internal(&upper_locked);
+        if (lock_error == FT_ERR_SUCCESS)
         {
             if (!swapped)
             {
-                first_guard = ft_move(lower_guard);
-                second_guard = ft_move(upper_guard);
+                if (first_locked != ft_nullptr)
+                    *first_locked = lower_locked;
+                if (second_locked != ft_nullptr)
+                    *second_locked = upper_locked;
             }
             else
             {
-                first_guard = ft_move(upper_guard);
-                second_guard = ft_move(lower_guard);
+                if (first_locked != ft_nullptr)
+                    *first_locked = upper_locked;
+                if (second_locked != ft_nullptr)
+                    *second_locked = lower_locked;
             }
             return (FT_ERR_SUCCESS);
         }
-        if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
+        if (lock_error != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            return (upper_guard.get_error());
+            ordered_first->unlock_internal(lower_locked);
+            return (lock_error);
         }
-        if (lower_guard.owns_lock())
-            lower_guard.unlock();
+        ordered_first->unlock_internal(lower_locked);
         game_data_catalog_sleep_backoff();
     }
 }
 
 ft_recipe_blueprint::ft_recipe_blueprint() noexcept
-    : _recipe_id(0), _result_item_id(0)
+    : _recipe_id(0), _result_item_id(0),
+      _initialized_state(ft_recipe_blueprint::_state_uninitialized)
 {
     return ;
 }
 
-ft_recipe_blueprint::ft_recipe_blueprint(int recipe_id, int result_item_id,
+ft_recipe_blueprint::~ft_recipe_blueprint() noexcept
+{
+    if (this->_initialized_state == ft_recipe_blueprint::_state_uninitialized)
+        return ;
+    if (this->_initialized_state == ft_recipe_blueprint::_state_initialized)
+        (void)this->destroy();
+    return ;
+}
+
+void ft_recipe_blueprint::abort_lifecycle_error(const char *method_name,
+    const char *reason) const
+{
+    if (method_name == ft_nullptr)
+        method_name = "unknown";
+    if (reason == ft_nullptr)
+        reason = "unknown";
+    pf_printf_fd(2, "ft_recipe_blueprint lifecycle error: %s: %s\n",
+        method_name, reason);
+    su_abort();
+    return ;
+}
+
+void ft_recipe_blueprint::abort_if_not_initialized(const char *method_name) const
+{
+    if (this->_initialized_state == ft_recipe_blueprint::_state_initialized)
+        return ;
+    this->abort_lifecycle_error(method_name,
+        "called while object is not initialized");
+    return ;
+}
+
+int ft_recipe_blueprint::lock_internal(bool *lock_acquired) const noexcept
+{
+    int lock_error;
+
+    this->abort_if_not_initialized("ft_recipe_blueprint::lock_internal");
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = false;
+    lock_error = this->_mutex.lock();
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = true;
+    return (FT_ERR_SUCCESS);
+}
+
+void ft_recipe_blueprint::unlock_internal(bool lock_acquired) const noexcept
+{
+    if (lock_acquired == false)
+        return ;
+    (void)this->_mutex.unlock();
+    return ;
+}
+
+int ft_recipe_blueprint::initialize() noexcept
+{
+    int mutex_initialize_error;
+    int vector_initialize_error;
+
+    if (this->_initialized_state == ft_recipe_blueprint::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_recipe_blueprint::initialize",
+            "called while object is already initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    (void)this->_mutex.destroy();
+    mutex_initialize_error = this->_mutex.initialize();
+    if (mutex_initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialized_state = ft_recipe_blueprint::_state_destroyed;
+        return (mutex_initialize_error);
+    }
+    vector_initialize_error = this->_ingredients.initialize();
+    if (vector_initialize_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_mutex.destroy();
+        this->_initialized_state = ft_recipe_blueprint::_state_destroyed;
+        return (vector_initialize_error);
+    }
+    this->_recipe_id = 0;
+    this->_result_item_id = 0;
+    this->_ingredients.clear();
+    this->_initialized_state = ft_recipe_blueprint::_state_initialized;
+    return (FT_ERR_SUCCESS);
+}
+
+int ft_recipe_blueprint::initialize(int recipe_id, int result_item_id,
     const ft_vector<ft_crafting_ingredient> &ingredients) noexcept
-    : _recipe_id(recipe_id), _result_item_id(result_item_id)
 {
+    int mutex_initialize_error;
+    int vector_initialize_error;
+
+    if (this->_initialized_state == ft_recipe_blueprint::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_recipe_blueprint::initialize",
+            "called while object is already initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    (void)this->_mutex.destroy();
+    mutex_initialize_error = this->_mutex.initialize();
+    if (mutex_initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialized_state = ft_recipe_blueprint::_state_destroyed;
+        return (mutex_initialize_error);
+    }
+    vector_initialize_error = this->_ingredients.initialize();
+    if (vector_initialize_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_mutex.destroy();
+        this->_initialized_state = ft_recipe_blueprint::_state_destroyed;
+        return (vector_initialize_error);
+    }
+    this->_recipe_id = recipe_id;
+    this->_result_item_id = result_item_id;
     game_data_catalog_copy_crafting_vector(ingredients, this->_ingredients);
-    return ;
+    this->_initialized_state = ft_recipe_blueprint::_state_initialized;
+    return (FT_ERR_SUCCESS);
 }
 
-ft_recipe_blueprint::ft_recipe_blueprint(const ft_recipe_blueprint &other) noexcept
+int ft_recipe_blueprint::initialize(const ft_recipe_blueprint &other) noexcept
 {
-    ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESS)
-    {
-        return ;
-    }
-    this->_recipe_id = other._recipe_id;
-    this->_result_item_id = other._result_item_id;
-    game_data_catalog_copy_crafting_vector(other._ingredients, this->_ingredients);
-    game_data_catalog_unlock_guard(other_guard);
-    return ;
-}
-
-ft_recipe_blueprint &ft_recipe_blueprint::operator=(const ft_recipe_blueprint &other) noexcept
-{
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
+    bool other_locked;
     int lock_error;
+    int mutex_initialize_error;
+    int vector_initialize_error;
 
+    if (other._initialized_state != ft_recipe_blueprint::_state_initialized)
+    {
+        other.abort_lifecycle_error("ft_recipe_blueprint::initialize(copy)",
+            "source object is not initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
     if (this == &other)
-        return (*this);
-    lock_error = ft_recipe_blueprint::lock_pair(*this, other, this_guard, other_guard);
+        return (FT_ERR_SUCCESS);
+    if (this->_initialized_state == ft_recipe_blueprint::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_recipe_blueprint::initialize(copy)",
+            "destination object is already initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    (void)this->_mutex.destroy();
+    mutex_initialize_error = this->_mutex.initialize();
+    if (mutex_initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialized_state = ft_recipe_blueprint::_state_destroyed;
+        return (mutex_initialize_error);
+    }
+    vector_initialize_error = this->_ingredients.initialize();
+    if (vector_initialize_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_mutex.destroy();
+        this->_initialized_state = ft_recipe_blueprint::_state_destroyed;
+        return (vector_initialize_error);
+    }
+    other_locked = false;
+    lock_error = other.lock_internal(&other_locked);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        return (*this);
+        (void)this->_ingredients.destroy();
+        (void)this->_mutex.destroy();
+        this->_initialized_state = ft_recipe_blueprint::_state_destroyed;
+        return (lock_error);
     }
     this->_recipe_id = other._recipe_id;
     this->_result_item_id = other._result_item_id;
     game_data_catalog_copy_crafting_vector(other._ingredients, this->_ingredients);
-    game_data_catalog_unlock_guard(this_guard);
-    game_data_catalog_unlock_guard(other_guard);
-    return (*this);
+    other.unlock_internal(other_locked);
+    this->_initialized_state = ft_recipe_blueprint::_state_initialized;
+    return (FT_ERR_SUCCESS);
 }
 
-ft_recipe_blueprint::ft_recipe_blueprint(ft_recipe_blueprint &&other) noexcept
+int ft_recipe_blueprint::initialize(ft_recipe_blueprint &&other) noexcept
 {
-    ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESS)
+    bool other_locked;
+    int lock_error;
+    int mutex_initialize_error;
+    int vector_initialize_error;
+
+    if (other._initialized_state != ft_recipe_blueprint::_state_initialized)
     {
-        return ;
+        other.abort_lifecycle_error("ft_recipe_blueprint::initialize(move)",
+            "source object is not initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (this->_initialized_state == ft_recipe_blueprint::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_recipe_blueprint::initialize(move)",
+            "destination object is already initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    (void)this->_mutex.destroy();
+    mutex_initialize_error = this->_mutex.initialize();
+    if (mutex_initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialized_state = ft_recipe_blueprint::_state_destroyed;
+        return (mutex_initialize_error);
+    }
+    vector_initialize_error = this->_ingredients.initialize();
+    if (vector_initialize_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_mutex.destroy();
+        this->_initialized_state = ft_recipe_blueprint::_state_destroyed;
+        return (vector_initialize_error);
+    }
+    other_locked = false;
+    lock_error = other.lock_internal(&other_locked);
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_ingredients.destroy();
+        (void)this->_mutex.destroy();
+        this->_initialized_state = ft_recipe_blueprint::_state_destroyed;
+        return (lock_error);
     }
     this->_recipe_id = other._recipe_id;
     this->_result_item_id = other._result_item_id;
@@ -548,145 +859,146 @@ ft_recipe_blueprint::ft_recipe_blueprint(ft_recipe_blueprint &&other) noexcept
     other._recipe_id = 0;
     other._result_item_id = 0;
     other._ingredients.clear();
-    game_data_catalog_unlock_guard(other_guard);
-    return ;
+    other.unlock_internal(other_locked);
+    this->_initialized_state = ft_recipe_blueprint::_state_initialized;
+    return (FT_ERR_SUCCESS);
 }
 
-ft_recipe_blueprint &ft_recipe_blueprint::operator=(ft_recipe_blueprint &&other) noexcept
+int ft_recipe_blueprint::destroy() noexcept
 {
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
-    int lock_error;
-
-    if (this == &other)
-        return (*this);
-    lock_error = ft_recipe_blueprint::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        return (*this);
-    }
-    this->_recipe_id = other._recipe_id;
-    this->_result_item_id = other._result_item_id;
-    game_data_catalog_copy_crafting_vector(other._ingredients, this->_ingredients);
-    other._recipe_id = 0;
-    other._result_item_id = 0;
-    other._ingredients.clear();
-    game_data_catalog_unlock_guard(this_guard);
-    game_data_catalog_unlock_guard(other_guard);
-    return (*this);
+    if (this->_initialized_state != ft_recipe_blueprint::_state_initialized)
+        return (FT_ERR_INVALID_STATE);
+    (void)this->_ingredients.destroy();
+    (void)this->_mutex.destroy();
+    this->_recipe_id = 0;
+    this->_result_item_id = 0;
+    this->_initialized_state = ft_recipe_blueprint::_state_destroyed;
+    return (FT_ERR_SUCCESS);
 }
 
 
 int ft_recipe_blueprint::get_recipe_id() const noexcept
 {
+    bool lock_acquired;
+    int lock_error;
     int identifier;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        game_data_catalog_unlock_guard(guard);
-        return (guard.get_error());
-    }
+    this->abort_if_not_initialized("ft_recipe_blueprint::get_recipe_id");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
     identifier = this->_recipe_id;
-    game_data_catalog_unlock_guard(guard);
+    this->unlock_internal(lock_acquired);
     return (identifier);
 }
 
 void ft_recipe_blueprint::set_recipe_id(int recipe_id) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
+    bool lock_acquired;
+    int lock_error;
+
+    this->abort_if_not_initialized("ft_recipe_blueprint::set_recipe_id");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
     this->_recipe_id = recipe_id;
-    game_data_catalog_unlock_guard(guard);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
 int ft_recipe_blueprint::get_result_item_id() const noexcept
 {
+    bool lock_acquired;
+    int lock_error;
     int item_id;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        game_data_catalog_unlock_guard(guard);
-        return (guard.get_error());
-    }
+    this->abort_if_not_initialized("ft_recipe_blueprint::get_result_item_id");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
     item_id = this->_result_item_id;
-    game_data_catalog_unlock_guard(guard);
+    this->unlock_internal(lock_acquired);
     return (item_id);
 }
 
 void ft_recipe_blueprint::set_result_item_id(int result_item_id) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
+    bool lock_acquired;
+    int lock_error;
+
+    this->abort_if_not_initialized("ft_recipe_blueprint::set_result_item_id");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
     this->_result_item_id = result_item_id;
-    game_data_catalog_unlock_guard(guard);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
 ft_vector<ft_crafting_ingredient> &ft_recipe_blueprint::get_ingredients() noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
+    bool lock_acquired;
+    int lock_error;
+
+    this->abort_if_not_initialized("ft_recipe_blueprint::get_ingredients");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return (this->_ingredients);
-    }
-    game_data_catalog_unlock_guard(guard);
+    this->unlock_internal(lock_acquired);
     return (this->_ingredients);
 }
 
 const ft_vector<ft_crafting_ingredient> &ft_recipe_blueprint::get_ingredients() const noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
+    bool lock_acquired;
+    int lock_error;
+
+    this->abort_if_not_initialized("ft_recipe_blueprint::get_ingredients const");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return (this->_ingredients);
-    }
-    game_data_catalog_unlock_guard(guard);
+    this->unlock_internal(lock_acquired);
     return (this->_ingredients);
 }
 
 void ft_recipe_blueprint::set_ingredients(const ft_vector<ft_crafting_ingredient> &ingredients) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
+    bool lock_acquired;
+    int lock_error;
+
+    this->abort_if_not_initialized("ft_recipe_blueprint::set_ingredients");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
     game_data_catalog_copy_crafting_vector(ingredients, this->_ingredients);
-    game_data_catalog_unlock_guard(guard);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
 
 int ft_loadout_entry::lock_pair(const ft_loadout_entry &first,
         const ft_loadout_entry &second,
-        ft_unique_lock<pt_mutex> &first_guard,
-        ft_unique_lock<pt_mutex> &second_guard)
+        bool *first_locked,
+        bool *second_locked)
 {
     const ft_loadout_entry *ordered_first;
     const ft_loadout_entry *ordered_second;
+    int lock_error;
     bool swapped;
 
+    if (first_locked != ft_nullptr)
+        *first_locked = false;
+    if (second_locked != ft_nullptr)
+        *second_locked = false;
     if (&first == &second)
-    {
-        ft_unique_lock<pt_mutex> single_guard(first._mutex);
-
-        if (single_guard.get_error() != FT_ERR_SUCCESS)
-        {
-            return (single_guard.get_error());
-        }
-        first_guard = ft_move(single_guard);
-        second_guard = ft_unique_lock<pt_mutex>();
-        return (FT_ERR_SUCCESS);
-    }
+        return (first.lock_internal(first_locked));
     ordered_first = &first;
     ordered_second = &second;
     swapped = false;
@@ -701,90 +1013,227 @@ int ft_loadout_entry::lock_pair(const ft_loadout_entry &first,
     }
     while (true)
     {
-        ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
+        bool lower_locked;
+        bool upper_locked;
 
-        if (lower_guard.get_error() != FT_ERR_SUCCESS)
-        {
-            return (lower_guard.get_error());
-        }
-        ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ERR_SUCCESS)
+        lower_locked = false;
+        upper_locked = false;
+        lock_error = ordered_first->lock_internal(&lower_locked);
+        if (lock_error != FT_ERR_SUCCESS)
+            return (lock_error);
+        lock_error = ordered_second->lock_internal(&upper_locked);
+        if (lock_error == FT_ERR_SUCCESS)
         {
             if (!swapped)
             {
-                first_guard = ft_move(lower_guard);
-                second_guard = ft_move(upper_guard);
+                if (first_locked != ft_nullptr)
+                    *first_locked = lower_locked;
+                if (second_locked != ft_nullptr)
+                    *second_locked = upper_locked;
             }
             else
             {
-                first_guard = ft_move(upper_guard);
-                second_guard = ft_move(lower_guard);
+                if (first_locked != ft_nullptr)
+                    *first_locked = upper_locked;
+                if (second_locked != ft_nullptr)
+                    *second_locked = lower_locked;
             }
             return (FT_ERR_SUCCESS);
         }
-        if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
+        if (lock_error != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            return (upper_guard.get_error());
+            ordered_first->unlock_internal(lower_locked);
+            return (lock_error);
         }
-        if (lower_guard.owns_lock())
-            lower_guard.unlock();
+        ordered_first->unlock_internal(lower_locked);
         game_data_catalog_sleep_backoff();
     }
 }
 
 ft_loadout_entry::ft_loadout_entry() noexcept
-    : _slot(0), _item_id(0), _quantity(0)
+    : _slot(0), _item_id(0), _quantity(0),
+      _initialized_state(ft_loadout_entry::_state_uninitialized)
 {
     return ;
 }
 
-ft_loadout_entry::ft_loadout_entry(int slot, int item_id, int quantity) noexcept
-    : _slot(slot), _item_id(item_id), _quantity(quantity)
+ft_loadout_entry::~ft_loadout_entry() noexcept
 {
-    return ;
-}
-
-ft_loadout_entry::ft_loadout_entry(const ft_loadout_entry &other) noexcept
-{
-    ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESS)
-    {
+    if (this->_initialized_state == ft_loadout_entry::_state_uninitialized)
         return ;
-    }
-    this->_slot = other._slot;
-    this->_item_id = other._item_id;
-    this->_quantity = other._quantity;
-    game_data_catalog_unlock_guard(other_guard);
+    if (this->_initialized_state == ft_loadout_entry::_state_initialized)
+        (void)this->destroy();
     return ;
 }
 
-ft_loadout_entry &ft_loadout_entry::operator=(const ft_loadout_entry &other) noexcept
+void ft_loadout_entry::abort_lifecycle_error(const char *method_name,
+    const char *reason) const
 {
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
+    if (method_name == ft_nullptr)
+        method_name = "unknown";
+    if (reason == ft_nullptr)
+        reason = "unknown";
+    pf_printf_fd(2, "ft_loadout_entry lifecycle error: %s: %s\n",
+        method_name, reason);
+    su_abort();
+    return ;
+}
+
+void ft_loadout_entry::abort_if_not_initialized(const char *method_name) const
+{
+    if (this->_initialized_state == ft_loadout_entry::_state_initialized)
+        return ;
+    this->abort_lifecycle_error(method_name,
+        "called while object is not initialized");
+    return ;
+}
+
+int ft_loadout_entry::lock_internal(bool *lock_acquired) const noexcept
+{
     int lock_error;
 
+    this->abort_if_not_initialized("ft_loadout_entry::lock_internal");
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = false;
+    lock_error = this->_mutex.lock();
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = true;
+    return (FT_ERR_SUCCESS);
+}
+
+void ft_loadout_entry::unlock_internal(bool lock_acquired) const noexcept
+{
+    if (lock_acquired == false)
+        return ;
+    (void)this->_mutex.unlock();
+    return ;
+}
+
+int ft_loadout_entry::initialize() noexcept
+{
+    int mutex_initialize_error;
+
+    if (this->_initialized_state == ft_loadout_entry::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_loadout_entry::initialize",
+            "called while object is already initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    (void)this->_mutex.destroy();
+    mutex_initialize_error = this->_mutex.initialize();
+    if (mutex_initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialized_state = ft_loadout_entry::_state_destroyed;
+        return (mutex_initialize_error);
+    }
+    this->_slot = 0;
+    this->_item_id = 0;
+    this->_quantity = 0;
+    this->_initialized_state = ft_loadout_entry::_state_initialized;
+    return (FT_ERR_SUCCESS);
+}
+
+int ft_loadout_entry::initialize(int slot, int item_id, int quantity) noexcept
+{
+    int mutex_initialize_error;
+
+    if (this->_initialized_state == ft_loadout_entry::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_loadout_entry::initialize",
+            "called while object is already initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    (void)this->_mutex.destroy();
+    mutex_initialize_error = this->_mutex.initialize();
+    if (mutex_initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialized_state = ft_loadout_entry::_state_destroyed;
+        return (mutex_initialize_error);
+    }
+    this->_slot = slot;
+    this->_item_id = item_id;
+    this->_quantity = quantity;
+    this->_initialized_state = ft_loadout_entry::_state_initialized;
+    return (FT_ERR_SUCCESS);
+}
+
+int ft_loadout_entry::initialize(const ft_loadout_entry &other) noexcept
+{
+    bool other_locked;
+    int lock_error;
+    int mutex_initialize_error;
+
+    if (other._initialized_state != ft_loadout_entry::_state_initialized)
+    {
+        other.abort_lifecycle_error("ft_loadout_entry::initialize(copy)",
+            "source object is not initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
     if (this == &other)
-        return (*this);
-    lock_error = ft_loadout_entry::lock_pair(*this, other, this_guard, other_guard);
+        return (FT_ERR_SUCCESS);
+    if (this->_initialized_state == ft_loadout_entry::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_loadout_entry::initialize(copy)",
+            "destination object is already initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    (void)this->_mutex.destroy();
+    mutex_initialize_error = this->_mutex.initialize();
+    if (mutex_initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialized_state = ft_loadout_entry::_state_destroyed;
+        return (mutex_initialize_error);
+    }
+    other_locked = false;
+    lock_error = other.lock_internal(&other_locked);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        return (*this);
+        this->_initialized_state = ft_loadout_entry::_state_destroyed;
+        return (lock_error);
     }
     this->_slot = other._slot;
     this->_item_id = other._item_id;
     this->_quantity = other._quantity;
-    game_data_catalog_unlock_guard(this_guard);
-    game_data_catalog_unlock_guard(other_guard);
-    return (*this);
+    other.unlock_internal(other_locked);
+    this->_initialized_state = ft_loadout_entry::_state_initialized;
+    return (FT_ERR_SUCCESS);
 }
 
-ft_loadout_entry::ft_loadout_entry(ft_loadout_entry &&other) noexcept
+int ft_loadout_entry::initialize(ft_loadout_entry &&other) noexcept
 {
-    ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESS)
+    bool other_locked;
+    int lock_error;
+    int mutex_initialize_error;
+
+    if (other._initialized_state != ft_loadout_entry::_state_initialized)
     {
-        return ;
+        other.abort_lifecycle_error("ft_loadout_entry::initialize(move)",
+            "source object is not initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (this->_initialized_state == ft_loadout_entry::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_loadout_entry::initialize(move)",
+            "destination object is already initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    (void)this->_mutex.destroy();
+    mutex_initialize_error = this->_mutex.initialize();
+    if (mutex_initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialized_state = ft_loadout_entry::_state_destroyed;
+        return (mutex_initialize_error);
+    }
+    other_locked = false;
+    lock_error = other.lock_internal(&other_locked);
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->_initialized_state = ft_loadout_entry::_state_destroyed;
+        return (lock_error);
     }
     this->_slot = other._slot;
     this->_item_id = other._item_id;
@@ -792,135 +1241,134 @@ ft_loadout_entry::ft_loadout_entry(ft_loadout_entry &&other) noexcept
     other._slot = 0;
     other._item_id = 0;
     other._quantity = 0;
-    game_data_catalog_unlock_guard(other_guard);
-    return ;
+    other.unlock_internal(other_locked);
+    this->_initialized_state = ft_loadout_entry::_state_initialized;
+    return (FT_ERR_SUCCESS);
 }
 
-ft_loadout_entry &ft_loadout_entry::operator=(ft_loadout_entry &&other) noexcept
+int ft_loadout_entry::destroy() noexcept
 {
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
-    int lock_error;
-
-    if (this == &other)
-        return (*this);
-    lock_error = ft_loadout_entry::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        return (*this);
-    }
-    this->_slot = other._slot;
-    this->_item_id = other._item_id;
-    this->_quantity = other._quantity;
-    other._slot = 0;
-    other._item_id = 0;
-    other._quantity = 0;
-    game_data_catalog_unlock_guard(this_guard);
-    game_data_catalog_unlock_guard(other_guard);
-    return (*this);
+    if (this->_initialized_state != ft_loadout_entry::_state_initialized)
+        return (FT_ERR_INVALID_STATE);
+    (void)this->_mutex.destroy();
+    this->_slot = 0;
+    this->_item_id = 0;
+    this->_quantity = 0;
+    this->_initialized_state = ft_loadout_entry::_state_destroyed;
+    return (FT_ERR_SUCCESS);
 }
 
 
 int ft_loadout_entry::get_slot() const noexcept
 {
+    bool lock_acquired;
+    int lock_error;
     int slot_value;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        return (guard.get_error());
-    }
+    this->abort_if_not_initialized("ft_loadout_entry::get_slot");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
     slot_value = this->_slot;
-    game_data_catalog_unlock_guard(guard);
+    this->unlock_internal(lock_acquired);
     return (slot_value);
 }
 
 void ft_loadout_entry::set_slot(int slot) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
+    bool lock_acquired;
+    int lock_error;
+
+    this->abort_if_not_initialized("ft_loadout_entry::set_slot");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
     this->_slot = slot;
-    game_data_catalog_unlock_guard(guard);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
 int ft_loadout_entry::get_item_id() const noexcept
 {
+    bool lock_acquired;
+    int lock_error;
     int item_id;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        return (guard.get_error());
-    }
+    this->abort_if_not_initialized("ft_loadout_entry::get_item_id");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
     item_id = this->_item_id;
-    game_data_catalog_unlock_guard(guard);
+    this->unlock_internal(lock_acquired);
     return (item_id);
 }
 
 void ft_loadout_entry::set_item_id(int item_id) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
+    bool lock_acquired;
+    int lock_error;
+
+    this->abort_if_not_initialized("ft_loadout_entry::set_item_id");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
     this->_item_id = item_id;
-    game_data_catalog_unlock_guard(guard);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
 int ft_loadout_entry::get_quantity() const noexcept
 {
+    bool lock_acquired;
+    int lock_error;
     int quantity_value;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        return (guard.get_error());
-    }
+    this->abort_if_not_initialized("ft_loadout_entry::get_quantity");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
     quantity_value = this->_quantity;
-    game_data_catalog_unlock_guard(guard);
+    this->unlock_internal(lock_acquired);
     return (quantity_value);
 }
 
 void ft_loadout_entry::set_quantity(int quantity) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
+    bool lock_acquired;
+    int lock_error;
+
+    this->abort_if_not_initialized("ft_loadout_entry::set_quantity");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
     this->_quantity = quantity;
-    game_data_catalog_unlock_guard(guard);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
 
 int ft_loadout_blueprint::lock_pair(const ft_loadout_blueprint &first,
         const ft_loadout_blueprint &second,
-        ft_unique_lock<pt_mutex> &first_guard,
-        ft_unique_lock<pt_mutex> &second_guard)
+        bool *first_locked,
+        bool *second_locked)
 {
     const ft_loadout_blueprint *ordered_first;
     const ft_loadout_blueprint *ordered_second;
+    int lock_error;
     bool swapped;
 
+    if (first_locked != ft_nullptr)
+        *first_locked = false;
+    if (second_locked != ft_nullptr)
+        *second_locked = false;
     if (&first == &second)
-    {
-        ft_unique_lock<pt_mutex> single_guard(first._mutex);
-
-        if (single_guard.get_error() != FT_ERR_SUCCESS)
-        {
-            return (single_guard.get_error());
-        }
-        first_guard = ft_move(single_guard);
-        second_guard = ft_unique_lock<pt_mutex>();
-        return (FT_ERR_SUCCESS);
-    }
+        return (first.lock_internal(first_locked));
     ordered_first = &first;
     ordered_second = &second;
     swapped = false;
@@ -935,190 +1383,357 @@ int ft_loadout_blueprint::lock_pair(const ft_loadout_blueprint &first,
     }
     while (true)
     {
-        ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
+        bool lower_locked;
+        bool upper_locked;
 
-        if (lower_guard.get_error() != FT_ERR_SUCCESS)
-        {
-            return (lower_guard.get_error());
-        }
-        ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ERR_SUCCESS)
+        lower_locked = false;
+        upper_locked = false;
+        lock_error = ordered_first->lock_internal(&lower_locked);
+        if (lock_error != FT_ERR_SUCCESS)
+            return (lock_error);
+        lock_error = ordered_second->lock_internal(&upper_locked);
+        if (lock_error == FT_ERR_SUCCESS)
         {
             if (!swapped)
             {
-                first_guard = ft_move(lower_guard);
-                second_guard = ft_move(upper_guard);
+                if (first_locked != ft_nullptr)
+                    *first_locked = lower_locked;
+                if (second_locked != ft_nullptr)
+                    *second_locked = upper_locked;
             }
             else
             {
-                first_guard = ft_move(upper_guard);
-                second_guard = ft_move(lower_guard);
+                if (first_locked != ft_nullptr)
+                    *first_locked = upper_locked;
+                if (second_locked != ft_nullptr)
+                    *second_locked = lower_locked;
             }
             return (FT_ERR_SUCCESS);
         }
-        if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
+        if (lock_error != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            return (upper_guard.get_error());
+            ordered_first->unlock_internal(lower_locked);
+            return (lock_error);
         }
-        if (lower_guard.owns_lock())
-            lower_guard.unlock();
+        ordered_first->unlock_internal(lower_locked);
         game_data_catalog_sleep_backoff();
     }
 }
 
 ft_loadout_blueprint::ft_loadout_blueprint() noexcept
-    : _loadout_id(0)
+    : _loadout_id(0),
+      _initialized_state(ft_loadout_blueprint::_state_uninitialized)
 {
     return ;
 }
 
-ft_loadout_blueprint::ft_loadout_blueprint(int loadout_id, const ft_vector<ft_loadout_entry> &entries) noexcept
-    : _loadout_id(loadout_id)
+ft_loadout_blueprint::~ft_loadout_blueprint() noexcept
 {
+    if (this->_initialized_state == ft_loadout_blueprint::_state_uninitialized)
+        return ;
+    if (this->_initialized_state == ft_loadout_blueprint::_state_initialized)
+        (void)this->destroy();
+    return ;
+}
+
+void ft_loadout_blueprint::abort_lifecycle_error(const char *method_name,
+    const char *reason) const
+{
+    if (method_name == ft_nullptr)
+        method_name = "unknown";
+    if (reason == ft_nullptr)
+        reason = "unknown";
+    pf_printf_fd(2, "ft_loadout_blueprint lifecycle error: %s: %s\n",
+        method_name, reason);
+    su_abort();
+    return ;
+}
+
+void ft_loadout_blueprint::abort_if_not_initialized(const char *method_name) const
+{
+    if (this->_initialized_state == ft_loadout_blueprint::_state_initialized)
+        return ;
+    this->abort_lifecycle_error(method_name,
+        "called while object is not initialized");
+    return ;
+}
+
+int ft_loadout_blueprint::lock_internal(bool *lock_acquired) const noexcept
+{
+    int lock_error;
+
+    this->abort_if_not_initialized("ft_loadout_blueprint::lock_internal");
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = false;
+    lock_error = this->_mutex.lock();
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = true;
+    return (FT_ERR_SUCCESS);
+}
+
+void ft_loadout_blueprint::unlock_internal(bool lock_acquired) const noexcept
+{
+    if (lock_acquired == false)
+        return ;
+    (void)this->_mutex.unlock();
+    return ;
+}
+
+int ft_loadout_blueprint::initialize() noexcept
+{
+    int mutex_initialize_error;
+    int vector_initialize_error;
+
+    if (this->_initialized_state == ft_loadout_blueprint::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_loadout_blueprint::initialize",
+            "called while object is already initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    (void)this->_mutex.destroy();
+    mutex_initialize_error = this->_mutex.initialize();
+    if (mutex_initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialized_state = ft_loadout_blueprint::_state_destroyed;
+        return (mutex_initialize_error);
+    }
+    vector_initialize_error = this->_entries.initialize();
+    if (vector_initialize_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_mutex.destroy();
+        this->_initialized_state = ft_loadout_blueprint::_state_destroyed;
+        return (vector_initialize_error);
+    }
+    this->_loadout_id = 0;
+    this->_entries.clear();
+    this->_initialized_state = ft_loadout_blueprint::_state_initialized;
+    return (FT_ERR_SUCCESS);
+}
+
+int ft_loadout_blueprint::initialize(int loadout_id,
+    const ft_vector<ft_loadout_entry> &entries) noexcept
+{
+    int mutex_initialize_error;
+    int vector_initialize_error;
+
+    if (this->_initialized_state == ft_loadout_blueprint::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_loadout_blueprint::initialize",
+            "called while object is already initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    (void)this->_mutex.destroy();
+    mutex_initialize_error = this->_mutex.initialize();
+    if (mutex_initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialized_state = ft_loadout_blueprint::_state_destroyed;
+        return (mutex_initialize_error);
+    }
+    vector_initialize_error = this->_entries.initialize();
+    if (vector_initialize_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_mutex.destroy();
+        this->_initialized_state = ft_loadout_blueprint::_state_destroyed;
+        return (vector_initialize_error);
+    }
+    this->_loadout_id = loadout_id;
     game_data_catalog_copy_loadout_vector(entries, this->_entries);
-    return ;
+    this->_initialized_state = ft_loadout_blueprint::_state_initialized;
+    return (FT_ERR_SUCCESS);
 }
 
-ft_loadout_blueprint::ft_loadout_blueprint(const ft_loadout_blueprint &other) noexcept
+int ft_loadout_blueprint::initialize(const ft_loadout_blueprint &other) noexcept
 {
-    ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESS)
-    {
-        return ;
-    }
-    this->_loadout_id = other._loadout_id;
-    game_data_catalog_copy_loadout_vector(other._entries, this->_entries);
-    game_data_catalog_unlock_guard(other_guard);
-    return ;
-}
-
-ft_loadout_blueprint &ft_loadout_blueprint::operator=(const ft_loadout_blueprint &other) noexcept
-{
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
+    bool other_locked;
     int lock_error;
+    int mutex_initialize_error;
+    int vector_initialize_error;
 
+    if (other._initialized_state != ft_loadout_blueprint::_state_initialized)
+    {
+        other.abort_lifecycle_error("ft_loadout_blueprint::initialize(copy)",
+            "source object is not initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
     if (this == &other)
-        return (*this);
-    lock_error = ft_loadout_blueprint::lock_pair(*this, other, this_guard, other_guard);
+        return (FT_ERR_SUCCESS);
+    if (this->_initialized_state == ft_loadout_blueprint::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_loadout_blueprint::initialize(copy)",
+            "destination object is already initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    (void)this->_mutex.destroy();
+    mutex_initialize_error = this->_mutex.initialize();
+    if (mutex_initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialized_state = ft_loadout_blueprint::_state_destroyed;
+        return (mutex_initialize_error);
+    }
+    vector_initialize_error = this->_entries.initialize();
+    if (vector_initialize_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_mutex.destroy();
+        this->_initialized_state = ft_loadout_blueprint::_state_destroyed;
+        return (vector_initialize_error);
+    }
+    other_locked = false;
+    lock_error = other.lock_internal(&other_locked);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        return (*this);
+        (void)this->_entries.destroy();
+        (void)this->_mutex.destroy();
+        this->_initialized_state = ft_loadout_blueprint::_state_destroyed;
+        return (lock_error);
     }
     this->_loadout_id = other._loadout_id;
     game_data_catalog_copy_loadout_vector(other._entries, this->_entries);
-    game_data_catalog_unlock_guard(this_guard);
-    game_data_catalog_unlock_guard(other_guard);
-    return (*this);
+    other.unlock_internal(other_locked);
+    this->_initialized_state = ft_loadout_blueprint::_state_initialized;
+    return (FT_ERR_SUCCESS);
 }
 
-ft_loadout_blueprint::ft_loadout_blueprint(ft_loadout_blueprint &&other) noexcept
+int ft_loadout_blueprint::initialize(ft_loadout_blueprint &&other) noexcept
 {
-    ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESS)
+    bool other_locked;
+    int lock_error;
+    int mutex_initialize_error;
+    int vector_initialize_error;
+
+    if (other._initialized_state != ft_loadout_blueprint::_state_initialized)
     {
-        return ;
+        other.abort_lifecycle_error("ft_loadout_blueprint::initialize(move)",
+            "source object is not initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (this->_initialized_state == ft_loadout_blueprint::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_loadout_blueprint::initialize(move)",
+            "destination object is already initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    (void)this->_mutex.destroy();
+    mutex_initialize_error = this->_mutex.initialize();
+    if (mutex_initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialized_state = ft_loadout_blueprint::_state_destroyed;
+        return (mutex_initialize_error);
+    }
+    vector_initialize_error = this->_entries.initialize();
+    if (vector_initialize_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_mutex.destroy();
+        this->_initialized_state = ft_loadout_blueprint::_state_destroyed;
+        return (vector_initialize_error);
+    }
+    other_locked = false;
+    lock_error = other.lock_internal(&other_locked);
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_entries.destroy();
+        (void)this->_mutex.destroy();
+        this->_initialized_state = ft_loadout_blueprint::_state_destroyed;
+        return (lock_error);
     }
     this->_loadout_id = other._loadout_id;
     game_data_catalog_copy_loadout_vector(other._entries, this->_entries);
     other._loadout_id = 0;
     other._entries.clear();
-    game_data_catalog_unlock_guard(other_guard);
-    return ;
+    other.unlock_internal(other_locked);
+    this->_initialized_state = ft_loadout_blueprint::_state_initialized;
+    return (FT_ERR_SUCCESS);
 }
 
-ft_loadout_blueprint &ft_loadout_blueprint::operator=(ft_loadout_blueprint &&other) noexcept
+int ft_loadout_blueprint::destroy() noexcept
 {
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
-    int lock_error;
-
-    if (this == &other)
-        return (*this);
-    lock_error = ft_loadout_blueprint::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        return (*this);
-    }
-    this->_loadout_id = other._loadout_id;
-    game_data_catalog_copy_loadout_vector(other._entries, this->_entries);
-    other._loadout_id = 0;
-    other._entries.clear();
-    game_data_catalog_unlock_guard(this_guard);
-    game_data_catalog_unlock_guard(other_guard);
-    return (*this);
+    if (this->_initialized_state != ft_loadout_blueprint::_state_initialized)
+        return (FT_ERR_INVALID_STATE);
+    (void)this->_entries.destroy();
+    (void)this->_mutex.destroy();
+    this->_loadout_id = 0;
+    this->_initialized_state = ft_loadout_blueprint::_state_destroyed;
+    return (FT_ERR_SUCCESS);
 }
 
 
 int ft_loadout_blueprint::get_loadout_id() const noexcept
 {
+    bool lock_acquired;
+    int lock_error;
     int identifier;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        return (guard.get_error());
-    }
+    this->abort_if_not_initialized("ft_loadout_blueprint::get_loadout_id");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
     identifier = this->_loadout_id;
-    game_data_catalog_unlock_guard(guard);
+    this->unlock_internal(lock_acquired);
     return (identifier);
 }
 
 void ft_loadout_blueprint::set_loadout_id(int loadout_id) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
+    bool lock_acquired;
+    int lock_error;
+
+    this->abort_if_not_initialized("ft_loadout_blueprint::set_loadout_id");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
     this->_loadout_id = loadout_id;
-    game_data_catalog_unlock_guard(guard);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
 ft_vector<ft_loadout_entry> &ft_loadout_blueprint::get_entries() noexcept
 {
+    this->abort_if_not_initialized("ft_loadout_blueprint::get_entries");
     return (this->_entries);
 }
 
 const ft_vector<ft_loadout_entry> &ft_loadout_blueprint::get_entries() const noexcept
 {
+    this->abort_if_not_initialized("ft_loadout_blueprint::get_entries const");
     return (this->_entries);
 }
 
 void ft_loadout_blueprint::set_entries(const ft_vector<ft_loadout_entry> &entries) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
+    bool lock_acquired;
+    int lock_error;
+
+    this->abort_if_not_initialized("ft_loadout_blueprint::set_entries");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
         return ;
-    }
     game_data_catalog_copy_loadout_vector(entries, this->_entries);
-    game_data_catalog_unlock_guard(guard);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
 int ft_data_catalog::lock_pair(const ft_data_catalog &first,
         const ft_data_catalog &second,
-        ft_unique_lock<pt_mutex> &first_guard,
-        ft_unique_lock<pt_mutex> &second_guard)
+        bool *first_locked,
+        bool *second_locked)
 {
     const ft_data_catalog *ordered_first;
     const ft_data_catalog *ordered_second;
+    int lock_error;
     bool swapped;
 
+    if (first_locked != ft_nullptr)
+        *first_locked = false;
+    if (second_locked != ft_nullptr)
+        *second_locked = false;
     if (&first == &second)
-    {
-        ft_unique_lock<pt_mutex> single_guard(first._mutex);
-
-        if (single_guard.get_error() != FT_ERR_SUCCESS)
-        {
-            return (single_guard.get_error());
-        }
-        first_guard = ft_move(single_guard);
-        second_guard = ft_unique_lock<pt_mutex>();
-        return (FT_ERR_SUCCESS);
-    }
+        return (first.lock_internal(first_locked));
     ordered_first = &first;
     ordered_second = &second;
     swapped = false;
@@ -1133,89 +1748,252 @@ int ft_data_catalog::lock_pair(const ft_data_catalog &first,
     }
     while (true)
     {
-        ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
+        bool lower_locked;
+        bool upper_locked;
 
-        if (lower_guard.get_error() != FT_ERR_SUCCESS)
-        {
-            return (lower_guard.get_error());
-        }
-        ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ERR_SUCCESS)
+        lower_locked = false;
+        upper_locked = false;
+        lock_error = ordered_first->lock_internal(&lower_locked);
+        if (lock_error != FT_ERR_SUCCESS)
+            return (lock_error);
+        lock_error = ordered_second->lock_internal(&upper_locked);
+        if (lock_error == FT_ERR_SUCCESS)
         {
             if (!swapped)
             {
-                first_guard = ft_move(lower_guard);
-                second_guard = ft_move(upper_guard);
+                if (first_locked != ft_nullptr)
+                    *first_locked = lower_locked;
+                if (second_locked != ft_nullptr)
+                    *second_locked = upper_locked;
             }
             else
             {
-                first_guard = ft_move(upper_guard);
-                second_guard = ft_move(lower_guard);
+                if (first_locked != ft_nullptr)
+                    *first_locked = upper_locked;
+                if (second_locked != ft_nullptr)
+                    *second_locked = lower_locked;
             }
             return (FT_ERR_SUCCESS);
         }
-        if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
+        if (lock_error != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            return (upper_guard.get_error());
+            ordered_first->unlock_internal(lower_locked);
+            return (lock_error);
         }
-        if (lower_guard.owns_lock())
-            lower_guard.unlock();
+        ordered_first->unlock_internal(lower_locked);
         game_data_catalog_sleep_backoff();
     }
 }
 
 
 ft_data_catalog::ft_data_catalog() noexcept
+    : _item_definitions(), _recipes(), _loadouts(), _mutex(),
+      _initialized_state(ft_data_catalog::_state_uninitialized)
 {
     return ;
 }
 
 ft_data_catalog::~ft_data_catalog() noexcept
 {
-    return ;
-}
-
-ft_data_catalog::ft_data_catalog(const ft_data_catalog &other) noexcept
-{
-    ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESS)
-    {
+    if (this->_initialized_state == ft_data_catalog::_state_uninitialized)
         return ;
-    }
-    this->_item_definitions = other._item_definitions;
-    this->_recipes = other._recipes;
-    this->_loadouts = other._loadouts;
-    game_data_catalog_unlock_guard(other_guard);
+    if (this->_initialized_state == ft_data_catalog::_state_initialized)
+        (void)this->destroy();
     return ;
 }
 
-ft_data_catalog &ft_data_catalog::operator=(const ft_data_catalog &other) noexcept
+void ft_data_catalog::abort_lifecycle_error(const char *method_name,
+    const char *reason) const
 {
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
+    if (method_name == ft_nullptr)
+        method_name = "unknown";
+    if (reason == ft_nullptr)
+        reason = "unknown";
+    pf_printf_fd(2, "ft_data_catalog lifecycle error: %s: %s\n",
+        method_name, reason);
+    su_abort();
+    return ;
+}
+
+void ft_data_catalog::abort_if_not_initialized(const char *method_name) const
+{
+    if (this->_initialized_state == ft_data_catalog::_state_initialized)
+        return ;
+    this->abort_lifecycle_error(method_name,
+        "called while object is not initialized");
+    return ;
+}
+
+int ft_data_catalog::lock_internal(bool *lock_acquired) const noexcept
+{
     int lock_error;
 
+    this->abort_if_not_initialized("ft_data_catalog::lock_internal");
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = false;
+    lock_error = this->_mutex.lock();
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = true;
+    return (FT_ERR_SUCCESS);
+}
+
+void ft_data_catalog::unlock_internal(bool lock_acquired) const noexcept
+{
+    if (lock_acquired == false)
+        return ;
+    (void)this->_mutex.unlock();
+    return ;
+}
+
+int ft_data_catalog::initialize() noexcept
+{
+    int init_error;
+    int mutex_initialize_error;
+
+    if (this->_initialized_state == ft_data_catalog::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_data_catalog::initialize",
+            "called while object is already initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    (void)this->_mutex.destroy();
+    mutex_initialize_error = this->_mutex.initialize();
+    if (mutex_initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialized_state = ft_data_catalog::_state_destroyed;
+        return (mutex_initialize_error);
+    }
+    init_error = this->_item_definitions.initialize();
+    if (init_error != FT_ERR_SUCCESS)
+    {
+        this->_initialized_state = ft_data_catalog::_state_destroyed;
+        return (init_error);
+    }
+    init_error = this->_recipes.initialize();
+    if (init_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_item_definitions.destroy();
+        this->_initialized_state = ft_data_catalog::_state_destroyed;
+        return (init_error);
+    }
+    init_error = this->_loadouts.initialize();
+    if (init_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_item_definitions.destroy();
+        (void)this->_recipes.destroy();
+        this->_initialized_state = ft_data_catalog::_state_destroyed;
+        return (init_error);
+    }
+    this->_item_definitions.clear();
+    this->_recipes.clear();
+    this->_loadouts.clear();
+    this->_initialized_state = ft_data_catalog::_state_initialized;
+    return (FT_ERR_SUCCESS);
+}
+
+int ft_data_catalog::initialize(const ft_data_catalog &other) noexcept
+{
+    bool other_locked;
+    int lock_error;
+    int mutex_initialize_error;
+
+    if (other._initialized_state != ft_data_catalog::_state_initialized)
+    {
+        other.abort_lifecycle_error("ft_data_catalog::initialize(copy)",
+            "source object is not initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
     if (this == &other)
-        return (*this);
-    lock_error = ft_data_catalog::lock_pair(*this, other, this_guard, other_guard);
+        return (FT_ERR_SUCCESS);
+    if (this->_initialized_state == ft_data_catalog::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_data_catalog::initialize(copy)",
+            "destination object is already initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    (void)this->_mutex.destroy();
+    mutex_initialize_error = this->_mutex.initialize();
+    if (mutex_initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialized_state = ft_data_catalog::_state_destroyed;
+        return (mutex_initialize_error);
+    }
+    if (this->_item_definitions.initialize() != FT_ERR_SUCCESS
+        || this->_recipes.initialize() != FT_ERR_SUCCESS
+        || this->_loadouts.initialize() != FT_ERR_SUCCESS)
+    {
+        (void)this->_item_definitions.destroy();
+        (void)this->_recipes.destroy();
+        (void)this->_loadouts.destroy();
+        this->_initialized_state = ft_data_catalog::_state_destroyed;
+        return (FT_ERR_INVALID_STATE);
+    }
+    other_locked = false;
+    lock_error = other.lock_internal(&other_locked);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        return (*this);
+        (void)this->_item_definitions.destroy();
+        (void)this->_recipes.destroy();
+        (void)this->_loadouts.destroy();
+        this->_initialized_state = ft_data_catalog::_state_destroyed;
+        return (lock_error);
     }
     this->_item_definitions = other._item_definitions;
     this->_recipes = other._recipes;
     this->_loadouts = other._loadouts;
-    game_data_catalog_unlock_guard(this_guard);
-    game_data_catalog_unlock_guard(other_guard);
-    return (*this);
+    other.unlock_internal(other_locked);
+    this->_initialized_state = ft_data_catalog::_state_initialized;
+    return (FT_ERR_SUCCESS);
 }
 
-ft_data_catalog::ft_data_catalog(ft_data_catalog &&other) noexcept
+int ft_data_catalog::initialize(ft_data_catalog &&other) noexcept
 {
-    ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ERR_SUCCESS)
+    bool other_locked;
+    int lock_error;
+    int mutex_initialize_error;
+
+    if (other._initialized_state != ft_data_catalog::_state_initialized)
     {
-        return ;
+        other.abort_lifecycle_error("ft_data_catalog::initialize(move)",
+            "source object is not initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (this == &other)
+        return (FT_ERR_SUCCESS);
+    if (this->_initialized_state == ft_data_catalog::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_data_catalog::initialize(move)",
+            "destination object is already initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
+    (void)this->_mutex.destroy();
+    mutex_initialize_error = this->_mutex.initialize();
+    if (mutex_initialize_error != FT_ERR_SUCCESS)
+    {
+        this->_initialized_state = ft_data_catalog::_state_destroyed;
+        return (mutex_initialize_error);
+    }
+    if (this->_item_definitions.initialize() != FT_ERR_SUCCESS
+        || this->_recipes.initialize() != FT_ERR_SUCCESS
+        || this->_loadouts.initialize() != FT_ERR_SUCCESS)
+    {
+        (void)this->_item_definitions.destroy();
+        (void)this->_recipes.destroy();
+        (void)this->_loadouts.destroy();
+        this->_initialized_state = ft_data_catalog::_state_destroyed;
+        return (FT_ERR_INVALID_STATE);
+    }
+    other_locked = false;
+    lock_error = other.lock_internal(&other_locked);
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_item_definitions.destroy();
+        (void)this->_recipes.destroy();
+        (void)this->_loadouts.destroy();
+        this->_initialized_state = ft_data_catalog::_state_destroyed;
+        return (lock_error);
     }
     this->_item_definitions = other._item_definitions;
     this->_recipes = other._recipes;
@@ -1223,168 +2001,190 @@ ft_data_catalog::ft_data_catalog(ft_data_catalog &&other) noexcept
     other._item_definitions.clear();
     other._recipes.clear();
     other._loadouts.clear();
-    game_data_catalog_unlock_guard(other_guard);
-    return ;
+    other.unlock_internal(other_locked);
+    this->_initialized_state = ft_data_catalog::_state_initialized;
+    return (FT_ERR_SUCCESS);
 }
 
-ft_data_catalog &ft_data_catalog::operator=(ft_data_catalog &&other) noexcept
+int ft_data_catalog::destroy() noexcept
 {
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
-    int lock_error;
-
-    if (this == &other)
-        return (*this);
-    lock_error = ft_data_catalog::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        return (*this);
-    }
-    this->_item_definitions = other._item_definitions;
-    this->_recipes = other._recipes;
-    this->_loadouts = other._loadouts;
-    other._item_definitions.clear();
-    other._recipes.clear();
-    other._loadouts.clear();
-    game_data_catalog_unlock_guard(this_guard);
-    game_data_catalog_unlock_guard(other_guard);
-    return (*this);
+    if (this->_initialized_state != ft_data_catalog::_state_initialized)
+        return (FT_ERR_INVALID_STATE);
+    (void)this->_item_definitions.destroy();
+    (void)this->_recipes.destroy();
+    (void)this->_loadouts.destroy();
+    (void)this->_mutex.destroy();
+    this->_initialized_state = ft_data_catalog::_state_destroyed;
+    return (FT_ERR_SUCCESS);
 }
 
 ft_map<int, ft_item_definition> &ft_data_catalog::get_item_definitions() noexcept
 {
+    this->abort_if_not_initialized("ft_data_catalog::get_item_definitions");
     return (this->_item_definitions);
 }
 
 const ft_map<int, ft_item_definition> &ft_data_catalog::get_item_definitions() const noexcept
 {
+    this->abort_if_not_initialized("ft_data_catalog::get_item_definitions const");
     return (this->_item_definitions);
 }
 
 ft_map<int, ft_recipe_blueprint> &ft_data_catalog::get_recipes() noexcept
 {
+    this->abort_if_not_initialized("ft_data_catalog::get_recipes");
     return (this->_recipes);
 }
 
 const ft_map<int, ft_recipe_blueprint> &ft_data_catalog::get_recipes() const noexcept
 {
+    this->abort_if_not_initialized("ft_data_catalog::get_recipes const");
     return (this->_recipes);
 }
 
 ft_map<int, ft_loadout_blueprint> &ft_data_catalog::get_loadouts() noexcept
 {
+    this->abort_if_not_initialized("ft_data_catalog::get_loadouts");
     return (this->_loadouts);
 }
 
 const ft_map<int, ft_loadout_blueprint> &ft_data_catalog::get_loadouts() const noexcept
 {
+    this->abort_if_not_initialized("ft_data_catalog::get_loadouts const");
     return (this->_loadouts);
 }
 
 int ft_data_catalog::register_item_definition(const ft_item_definition &definition) noexcept
 {
+    bool lock_acquired;
+    int lock_error;
     int identifier;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        return (guard.get_error());
-    }
+    this->abort_if_not_initialized("ft_data_catalog::register_item_definition");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
     identifier = definition.get_item_id();
     this->_item_definitions.insert(identifier, definition);
-    game_data_catalog_unlock_guard(guard);
+    this->unlock_internal(lock_acquired);
     return (FT_ERR_SUCCESS);
 }
 
 int ft_data_catalog::register_recipe(const ft_recipe_blueprint &recipe) noexcept
 {
+    bool lock_acquired;
+    int lock_error;
     int identifier;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        return (guard.get_error());
-    }
+    this->abort_if_not_initialized("ft_data_catalog::register_recipe");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
     identifier = recipe.get_recipe_id();
     this->_recipes.insert(identifier, recipe);
-    game_data_catalog_unlock_guard(guard);
+    this->unlock_internal(lock_acquired);
     return (FT_ERR_SUCCESS);
 }
 
 int ft_data_catalog::register_loadout(const ft_loadout_blueprint &loadout) noexcept
 {
+    bool lock_acquired;
+    int lock_error;
     int identifier;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        return (guard.get_error());
-    }
+    this->abort_if_not_initialized("ft_data_catalog::register_loadout");
+    lock_acquired = false;
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
     identifier = loadout.get_loadout_id();
     this->_loadouts.insert(identifier, loadout);
-    game_data_catalog_unlock_guard(guard);
+    this->unlock_internal(lock_acquired);
     return (FT_ERR_SUCCESS);
 }
 
 int ft_data_catalog::fetch_item_definition(int item_id, ft_item_definition &definition) const noexcept
 {
+    bool lock_acquired;
+    int lock_error;
     const ft_data_catalog *self;
     const Pair<int, ft_item_definition> *entry;
 
+    this->abort_if_not_initialized("ft_data_catalog::fetch_item_definition");
     self = this;
-    ft_unique_lock<pt_mutex> guard(self->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        return (guard.get_error());
-    }
+    lock_acquired = false;
+    lock_error = self->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
     entry = self->_item_definitions.find(item_id);
     if (entry == self->_item_definitions.end())
     {
+        self->unlock_internal(lock_acquired);
         return (FT_ERR_NOT_FOUND);
     }
-    definition = entry->value;
-    game_data_catalog_unlock_guard(guard);
+    if (definition.initialize(entry->value) != FT_ERR_SUCCESS)
+    {
+        self->unlock_internal(lock_acquired);
+        return (FT_ERR_INVALID_STATE);
+    }
+    self->unlock_internal(lock_acquired);
     return (FT_ERR_SUCCESS);
 }
 
 int ft_data_catalog::fetch_recipe(int recipe_id, ft_recipe_blueprint &recipe) const noexcept
 {
+    bool lock_acquired;
+    int lock_error;
     const ft_data_catalog *self;
     const Pair<int, ft_recipe_blueprint> *entry;
 
+    this->abort_if_not_initialized("ft_data_catalog::fetch_recipe");
     self = this;
-    ft_unique_lock<pt_mutex> guard(self->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        return (guard.get_error());
-    }
+    lock_acquired = false;
+    lock_error = self->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
     entry = self->_recipes.find(recipe_id);
     if (entry == self->_recipes.end())
     {
+        self->unlock_internal(lock_acquired);
         return (FT_ERR_NOT_FOUND);
     }
-    recipe = entry->value;
-    game_data_catalog_unlock_guard(guard);
+    if (recipe.initialize(entry->value) != FT_ERR_SUCCESS)
+    {
+        self->unlock_internal(lock_acquired);
+        return (FT_ERR_INVALID_STATE);
+    }
+    self->unlock_internal(lock_acquired);
     return (FT_ERR_SUCCESS);
 }
 
 int ft_data_catalog::fetch_loadout(int loadout_id, ft_loadout_blueprint &loadout) const noexcept
 {
+    bool lock_acquired;
+    int lock_error;
     const ft_data_catalog *self;
     const Pair<int, ft_loadout_blueprint> *entry;
 
+    this->abort_if_not_initialized("ft_data_catalog::fetch_loadout");
     self = this;
-    ft_unique_lock<pt_mutex> guard(self->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESS)
-    {
-        return (guard.get_error());
-    }
+    lock_acquired = false;
+    lock_error = self->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
     entry = self->_loadouts.find(loadout_id);
     if (entry == self->_loadouts.end())
     {
+        self->unlock_internal(lock_acquired);
         return (FT_ERR_NOT_FOUND);
     }
-    loadout = entry->value;
-    game_data_catalog_unlock_guard(guard);
+    if (loadout.initialize(entry->value) != FT_ERR_SUCCESS)
+    {
+        self->unlock_internal(lock_acquired);
+        return (FT_ERR_INVALID_STATE);
+    }
+    self->unlock_internal(lock_acquired);
     return (FT_ERR_SUCCESS);
 }

@@ -15,16 +15,26 @@ struct ft_crafting_ingredient
         int             _item_id;
         int             _count;
         int             _rarity;
-        mutable pt_mutex _mutex;
+        mutable pt_recursive_mutex *_mutex;
+
+        int  lock_internal(bool *lock_acquired) const noexcept;
+        void unlock_internal(bool lock_acquired) const noexcept;
 
     public:
         ft_crafting_ingredient() noexcept;
-        ft_crafting_ingredient(int item_id, int count, int rarity) noexcept;
         virtual ~ft_crafting_ingredient() noexcept;
-        ft_crafting_ingredient(const ft_crafting_ingredient &other) noexcept;
-        ft_crafting_ingredient &operator=(const ft_crafting_ingredient &other) noexcept;
-        ft_crafting_ingredient(ft_crafting_ingredient &&other) noexcept;
-        ft_crafting_ingredient &operator=(ft_crafting_ingredient &&other) noexcept;
+        ft_crafting_ingredient(const ft_crafting_ingredient &other) noexcept = delete;
+        ft_crafting_ingredient &operator=(const ft_crafting_ingredient &other) noexcept = delete;
+        ft_crafting_ingredient(ft_crafting_ingredient &&other) noexcept = delete;
+        ft_crafting_ingredient &operator=(ft_crafting_ingredient &&other) noexcept = delete;
+
+        int initialize(const ft_crafting_ingredient &other) noexcept;
+        int initialize(ft_crafting_ingredient &&other) noexcept;
+        int initialize(int item_id, int count, int rarity) noexcept;
+
+        int  enable_thread_safety() noexcept;
+        int  disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
 
         int get_item_id() const noexcept;
         void set_item_id(int item_id) noexcept;
@@ -43,15 +53,22 @@ class ft_crafting
 {
     private:
         ft_map<int, ft_vector<ft_crafting_ingredient>> _recipes;
-        mutable pt_mutex _mutex;
+        mutable pt_recursive_mutex *_mutex;
+
+        int  lock_internal(bool *lock_acquired) const noexcept;
+        void unlock_internal(bool lock_acquired) const noexcept;
 
     public:
         ft_crafting() noexcept;
-        virtual ~ft_crafting() = default;
+        virtual ~ft_crafting() noexcept;
         ft_crafting(const ft_crafting &other) noexcept = delete;
         ft_crafting &operator=(const ft_crafting &other) noexcept = delete;
         ft_crafting(ft_crafting &&other) noexcept = delete;
         ft_crafting &operator=(ft_crafting &&other) noexcept = delete;
+
+        int  enable_thread_safety() noexcept;
+        int  disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
 
         ft_map<int, ft_vector<ft_crafting_ingredient>>       &get_recipes() noexcept;
         const ft_map<int, ft_vector<ft_crafting_ingredient>> &get_recipes() const noexcept;

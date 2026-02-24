@@ -10,7 +10,8 @@
 
 FT_TEST(test_world_plan_route, "world plan route")
 {
-    ft_map3d grid(3, 3, 1, 0);
+    ft_map3d grid;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, grid.initialize(3, 3, 1, 0));
     grid.set(1, 1, 0, 1);
     ft_world world;
     ft_vector<ft_path_step> path;
@@ -21,7 +22,8 @@ FT_TEST(test_world_plan_route, "world plan route")
 
 FT_TEST(test_astar_blocked, "astar blocked path")
 {
-    ft_map3d grid(2, 2, 1, 0);
+    ft_map3d grid;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, grid.initialize(2, 2, 1, 0));
     grid.set(1, 0, 0, 1);
     grid.set(0, 1, 0, 1);
     ft_pathfinding finder;
@@ -33,6 +35,7 @@ FT_TEST(test_astar_blocked, "astar blocked path")
 FT_TEST(test_dijkstra_simple, "dijkstra simple")
 {
     ft_graph<int> graph;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, graph.initialize());
     graph.add_vertex(0);
     graph.add_vertex(1);
     graph.add_vertex(2);

@@ -1,8 +1,8 @@
 include ../compiler_flags.mk
 TARGET := libft_tests
 DEBUG_TARGET := libft_tests_debug
-LIBFT_ARCHIVE := Full_Libft.a
-LIBFT_DEBUG_ARCHIVE := Full_Libft_debug.a
+LIBFT_ARCHIVE := Full_Libft_test.a
+LIBFT_DEBUG_ARCHIVE := Full_Libft_test_debug.a
 
 EFF_SRCS := $(wildcard Efficiency/*.cpp)
 
@@ -147,8 +147,13 @@ endif
 LDFLAGS := -Wl,--allow-multiple-definition -lz -ldl $(OPENSSL_LIBS) $(SQLITE_LIBS) $(X11_LIBS) $(ASOUND_LIBS)
 export COMPILE_FLAGS
 
-OBJDIR       := objs
-DEBUG_OBJDIR := objs_debug
+BUILD_OBJ_SUFFIX :=
+ifneq ($(findstring -DLIBFT_TEST_BUILD,$(COMPILE_FLAGS)),)
+    BUILD_OBJ_SUFFIX := _test
+endif
+
+OBJDIR       := objs$(BUILD_OBJ_SUFFIX)
+DEBUG_OBJDIR := objs_debug$(BUILD_OBJ_SUFFIX)
 
 OBJS       := $(patsubst %.cpp,$(OBJDIR)/%.o,$(SRCS))
 DEBUG_OBJS := $(patsubst %.cpp,$(DEBUG_OBJDIR)/%.o,$(SRCS))
@@ -157,9 +162,9 @@ DEBUG_DEPS := $(DEBUG_OBJS:.o=.d)
 
 all: $(TARGET)
 
-$(TARGET): $(OBJS) ../Full_Libft.a
+$(TARGET): $(OBJS) ../$(LIBFT_ARCHIVE)
 	@echo "Linking final executable ($(TARGET))"
-	@$(CXX) $(CFLAGS) -o $@ $(OBJS) ../Full_Libft.a $(LDFLAGS)
+	@$(CXX) $(CFLAGS) -o $@ $(OBJS) ../$(LIBFT_ARCHIVE) $(LDFLAGS)
 
 Basic:
 	@echo "Building basic test executable ($(TARGET))"
@@ -282,9 +287,9 @@ $(OBJDIR)/Test/test_xml_copy_move_deleted.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_M
 debug: CXXFLAGS += -DDEBUG=1
 debug: $(DEBUG_TARGET)
 
-$(DEBUG_TARGET): $(DEBUG_OBJS) ../Full_Libft_debug.a
+$(DEBUG_TARGET): $(DEBUG_OBJS) ../$(LIBFT_DEBUG_ARCHIVE)
 	@echo "Linking final executable ($(DEBUG_TARGET))"
-	@$(CXX) $(CFLAGS) -o $@ $(DEBUG_OBJS) ../Full_Libft_debug.a $(LDFLAGS)
+	@$(CXX) $(CFLAGS) -o $@ $(DEBUG_OBJS) ../$(LIBFT_DEBUG_ARCHIVE) $(LDFLAGS)
 
 $(DEBUG_OBJDIR)/%.o: %.cpp
 	@$(MKDIR) $(dir $@)
@@ -299,7 +304,7 @@ $(DEBUG_OBJDIR)/%.o: %.cpp
 	echo "Compiling test file $$current/$$total";
 	@$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
 
-../Full_Libft.a: FORCE
+../$(LIBFT_ARCHIVE): FORCE
 	@need_build=0; \
 	if $(MAKE) -C .. -q $(LIBFT_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)"; then \
 		:; \
@@ -316,7 +321,7 @@ $(DEBUG_OBJDIR)/%.o: %.cpp
 	        $(MAKE) -C .. $(LIBFT_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)"; \
 	fi
 
-../Full_Libft_debug.a: FORCE
+../$(LIBFT_DEBUG_ARCHIVE): FORCE
 	@need_build=0; \
 	if $(MAKE) -C .. -q $(LIBFT_DEBUG_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)"; then \
 		:; \

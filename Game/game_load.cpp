@@ -146,8 +146,8 @@ int deserialize_inventory(ft_inventory &inventory, json_group *group)
             loop_error = FT_ERR_GAME_GENERAL_ERROR;
             break ;
         }
-        ft_sharedptr<ft_item> item(new ft_item(item_temp));
-        if (!item)
+        ft_sharedptr<ft_item> item(new ft_item());
+        if (!item || item->initialize(item_temp) != FT_ERR_SUCCESS)
         {
             return (FT_ERR_NO_MEMORY);
         }
@@ -175,7 +175,9 @@ int deserialize_equipment(ft_character &character, json_group *group)
         ft_item item_temp;
         if (build_item_from_group(item_temp, group, "head") != FT_ERR_SUCCESS)
             return (FT_ERR_GAME_GENERAL_ERROR);
-        ft_sharedptr<ft_item> item(new ft_item(item_temp));
+        ft_sharedptr<ft_item> item(new ft_item());
+        if (!item || item->initialize(item_temp) != FT_ERR_SUCCESS)
+            return (FT_ERR_NO_MEMORY);
         if (character.equip_item(EQUIP_HEAD, item) != FT_ERR_SUCCESS)
             return (character.get_error());
     }
@@ -187,7 +189,9 @@ int deserialize_equipment(ft_character &character, json_group *group)
         ft_item item_temp;
         if (build_item_from_group(item_temp, group, "chest") != FT_ERR_SUCCESS)
             return (FT_ERR_GAME_GENERAL_ERROR);
-        ft_sharedptr<ft_item> item(new ft_item(item_temp));
+        ft_sharedptr<ft_item> item(new ft_item());
+        if (!item || item->initialize(item_temp) != FT_ERR_SUCCESS)
+            return (FT_ERR_NO_MEMORY);
         if (character.equip_item(EQUIP_CHEST, item) != FT_ERR_SUCCESS)
             return (character.get_error());
     }
@@ -199,7 +203,9 @@ int deserialize_equipment(ft_character &character, json_group *group)
         ft_item item_temp;
         if (build_item_from_group(item_temp, group, "weapon") != FT_ERR_SUCCESS)
             return (FT_ERR_GAME_GENERAL_ERROR);
-        ft_sharedptr<ft_item> item(new ft_item(item_temp));
+        ft_sharedptr<ft_item> item(new ft_item());
+        if (!item || item->initialize(item_temp) != FT_ERR_SUCCESS)
+            return (FT_ERR_NO_MEMORY);
         if (character.equip_item(EQUIP_WEAPON, item) != FT_ERR_SUCCESS)
             return (character.get_error());
     }
@@ -250,8 +256,8 @@ int deserialize_quest(ft_quest &quest, json_group *group)
             ft_item reward_temp;
             if (build_item_from_group(reward_temp, group, prefix) != FT_ERR_SUCCESS)
                 return (FT_ERR_GAME_GENERAL_ERROR);
-            ft_sharedptr<ft_item> reward(new ft_item(reward_temp));
-            if (!reward)
+            ft_sharedptr<ft_item> reward(new ft_item());
+            if (!reward || reward->initialize(reward_temp) != FT_ERR_SUCCESS)
             {
                 return (FT_ERR_NO_MEMORY);
             }

@@ -11,12 +11,14 @@ FT_TEST(test_vendor_profile_mutex_survives_moves,
 {
     ft_map<int, ft_vendor_profile> container(1);
     ft_map<int, ft_vendor_profile> moved;
-    ft_vendor_profile first_vendor(3, 1.10, 0.80, 0.05);
-    ft_vendor_profile second_vendor(7, 1.20, 0.70, 0.06);
+    ft_vendor_profile first_vendor;
+    ft_vendor_profile second_vendor;
     Pair<int, ft_vendor_profile> *first_entry;
     Pair<int, ft_vendor_profile> *second_entry;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, container.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first_vendor.initialize(3, 1.10, 0.80, 0.05));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second_vendor.initialize(7, 1.20, 0.70, 0.06));
     container.insert(3, ft_move(first_vendor));
     container.insert(7, ft_move(second_vendor));
 

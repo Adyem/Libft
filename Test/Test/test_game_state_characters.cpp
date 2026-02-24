@@ -67,3 +67,15 @@ FT_TEST(test_game_state_remove_character_shrinks_vector, "Game: remove_character
     FT_ASSERT_EQ(FT_ERR_SUCCESS, state.get_error());
     return (1);
 }
+
+FT_TEST(test_game_state_thread_safety_toggle, "Game: game state thread safety toggles explicitly")
+{
+    ft_game_state state;
+
+    FT_ASSERT_EQ(false, state.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, state.enable_thread_safety());
+    FT_ASSERT_EQ(true, state.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, state.disable_thread_safety());
+    FT_ASSERT_EQ(false, state.is_thread_safe());
+    return (1);
+}

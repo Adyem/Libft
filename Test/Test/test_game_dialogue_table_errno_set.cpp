@@ -14,15 +14,20 @@ static ft_sharedptr<ft_dialogue_line> make_line(int id, const char *speaker,
 {
     ft_vector<int> next;
     next.push_back(id + 1);
-    return (ft_sharedptr<ft_dialogue_line>(new (std::nothrow) ft_dialogue_line(
-            id, ft_string(speaker), ft_string(text), next)));
+    ft_sharedptr<ft_dialogue_line> stored(new (std::nothrow) ft_dialogue_line());
+    FT_ASSERT(stored.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stored->initialize(id, ft_string(speaker),
+        ft_string(text), next));
+    return (stored);
 }
 
 FT_TEST(test_dialogue_table_register_line_success, "register_line stores a new line and allows fetching")
 {
     ft_dialogue_table table;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.initialize());
-    ft_dialogue_line stored(1, ft_string("npc"), ft_string("hello"), ft_vector<int>());
+    ft_dialogue_line stored;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stored.initialize(1, ft_string("npc"),
+        ft_string("hello"), ft_vector<int>()));
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.register_line(stored));
     ft_dialogue_line fetched;

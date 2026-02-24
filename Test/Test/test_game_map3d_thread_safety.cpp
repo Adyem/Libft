@@ -51,7 +51,8 @@ static void *game_map3d_set_task(void *argument)
 FT_TEST(test_game_map3d_concurrent_set_operations,
     "ft_map3d::set synchronizes concurrent writes")
 {
-    ft_map3d map_instance(8, 8, 8, 0);
+    ft_map3d map_instance;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.initialize(8, 8, 8, 0));
     pthread_t threads[4];
     game_map3d_set_args arguments[4];
     size_t thread_index;
@@ -178,7 +179,8 @@ static void *game_map3d_toggle_task(void *argument)
 FT_TEST(test_game_map3d_toggle_thread_safe,
     "ft_map3d::toggle_obstacle serializes modifications")
 {
-    ft_map3d map_instance(6, 6, 6, 0);
+    ft_map3d map_instance;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, map_instance.initialize(6, 6, 6, 0));
     pthread_t threads[3];
     game_map3d_toggle_args arguments[3];
     size_t thread_index;

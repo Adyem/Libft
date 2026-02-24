@@ -10,7 +10,12 @@ FT_TEST(test_dialogue_line_next_ids_reset, "set_next_line_ids replaces all store
     ft_vector<int> initial_next_lines;
     initial_next_lines.push_back(2);
     initial_next_lines.push_back(4);
-    ft_dialogue_line line(1, ft_string("speaker"), ft_string("text"), initial_next_lines);
+    ft_dialogue_line line;
+
+    line.set_line_id(1);
+    line.set_speaker(ft_string("speaker"));
+    line.set_text(ft_string("text"));
+    line.set_next_line_ids(initial_next_lines);
 
     ft_vector<int> replacement_next_lines;
     replacement_next_lines.push_back(9);
@@ -26,7 +31,12 @@ FT_TEST(test_dialogue_line_getters_expose_vector_views, "const and non-const get
     ft_vector<int> ids;
     ids.push_back(7);
     ids.push_back(11);
-    ft_dialogue_line line(3, ft_string("npc"), ft_string("hint"), ids);
+    ft_dialogue_line line;
+
+    line.set_line_id(3);
+    line.set_speaker(ft_string("npc"));
+    line.set_text(ft_string("hint"));
+    line.set_next_line_ids(ids);
 
     ft_vector<int> &editable = line.get_next_line_ids();
     editable.push_back(15);
@@ -39,7 +49,11 @@ FT_TEST(test_dialogue_line_getters_expose_vector_views, "const and non-const get
 
 FT_TEST(test_dialogue_line_setters_apply_latest_values, "setters override previous values each call")
 {
-    ft_dialogue_line line(5, ft_string("old"), ft_string("start"), ft_vector<int>());
+    ft_dialogue_line line;
+
+    line.set_line_id(5);
+    line.set_speaker(ft_string("old"));
+    line.set_text(ft_string("start"));
 
     line.set_speaker(ft_string("middle"));
     line.set_speaker(ft_string("new"));

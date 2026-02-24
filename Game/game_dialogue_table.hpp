@@ -13,7 +13,7 @@ class ft_dialogue_table
     private:
         ft_map<int, ft_sharedptr<ft_dialogue_line> > _lines;
         ft_map<int, ft_dialogue_script> _scripts;
-        pt_mutex *_mutex;
+        pt_recursive_mutex *_mutex;
         uint8_t _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -60,7 +60,7 @@ class ft_dialogue_table
         void set_scripts(const ft_map<int, ft_dialogue_script> &scripts) noexcept;
 
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex *get_mutex_for_validation() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 

@@ -13,7 +13,7 @@ class ft_reputation
         ft_map<int, int>  _reps;
         int               _total_rep;
         int               _current_rep;
-        mutable pt_mutex *_mutex;
+        mutable pt_recursive_mutex *_mutex;
         uint8_t           _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -28,7 +28,6 @@ class ft_reputation
 
     public:
         ft_reputation() noexcept;
-        ft_reputation(const ft_map<int, int> &milestones, int total = 0) noexcept;
         virtual ~ft_reputation() noexcept;
         ft_reputation(const ft_reputation &other) = delete;
         ft_reputation &operator=(const ft_reputation &other) = delete;
@@ -69,7 +68,7 @@ class ft_reputation
         void set_rep(int id, int value) noexcept;
 
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex *get_mutex_for_validation() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 

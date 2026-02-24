@@ -1,6 +1,6 @@
 #include "../test_internal.hpp"
-#include "../../Game/ft_behavior_action.hpp"
-#include "../../Game/ft_behavior_profile.hpp"
+#include "../../Game/game_behavior_action.hpp"
+#include "../../Game/game_behavior_profile.hpp"
 #include "../../System_utils/test_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD
@@ -25,11 +25,15 @@ FT_TEST(test_behavior_profile_setters, "setters replace profile fields and actio
     ft_vector<ft_behavior_action> original_actions;
     ft_vector<ft_behavior_action> new_actions;
     ft_behavior_profile profile;
+    ft_behavior_action action_entry;
 
-    original_actions.push_back(ft_behavior_action(5, 0.5, 1.5));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, action_entry.initialize(5, 0.5, 1.5));
+    original_actions.push_back(action_entry);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.initialize(21, 0.1, 0.9, original_actions));
-    new_actions.push_back(ft_behavior_action(7, 0.7, 2.5));
-    new_actions.push_back(ft_behavior_action(9, 0.9, 3.5));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, action_entry.initialize(7, 0.7, 2.5));
+    new_actions.push_back(action_entry);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, action_entry.initialize(9, 0.9, 3.5));
+    new_actions.push_back(action_entry);
     profile.set_profile_id(22);
     profile.set_aggression_weight(0.8);
     profile.set_caution_weight(0.2);

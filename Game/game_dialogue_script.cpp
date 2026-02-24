@@ -96,25 +96,10 @@ ft_dialogue_script::ft_dialogue_script() noexcept
     return ;
 }
 
-ft_dialogue_script::ft_dialogue_script(int script_id, const ft_string &title,
-    const ft_string &summary, int start_line_id,
-    const ft_vector<ft_dialogue_line> &lines) noexcept
-    : _script_id(0), _title(), _summary(), _start_line_id(0), _lines(),
-      _mutex(ft_nullptr),
-      _initialized_state(ft_dialogue_script::_state_uninitialized)
-{
-    (void)this->initialize(script_id, title, summary, start_line_id, lines);
-    return ;
-}
-
 ft_dialogue_script::~ft_dialogue_script() noexcept
 {
     if (this->_initialized_state == ft_dialogue_script::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("ft_dialogue_script::~ft_dialogue_script",
-            "destructor called while object is uninitialized");
         return ;
-    }
     if (this->_initialized_state == ft_dialogue_script::_state_initialized)
         (void)this->destroy();
     return ;
@@ -227,11 +212,7 @@ int ft_dialogue_script::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != ft_dialogue_script::_state_initialized)
-    {
-        this->abort_lifecycle_error("ft_dialogue_script::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     this->_script_id = 0;
     this->_title.clear();
     this->_summary.clear();
@@ -244,13 +225,13 @@ int ft_dialogue_script::destroy() noexcept
 
 int ft_dialogue_script::enable_thread_safety() noexcept
 {
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
     this->abort_if_not_initialized("ft_dialogue_script::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
-    mutex_pointer = new (std::nothrow) pt_mutex();
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     initialize_error = mutex_pointer->initialize();
@@ -417,7 +398,7 @@ void ft_dialogue_script::set_lines(
 }
 
 #ifdef LIBFT_TEST_BUILD
-pt_mutex *ft_dialogue_script::get_mutex_for_validation() const noexcept
+pt_recursive_mutex *ft_dialogue_script::get_mutex_for_validation() const noexcept
 {
     this->abort_if_not_initialized("ft_dialogue_script::get_mutex_for_validation");
     return (this->_mutex);

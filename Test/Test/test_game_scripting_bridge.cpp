@@ -89,7 +89,8 @@ FT_TEST(test_game_script_bridge_executes_callbacks,
 {
     ft_sharedptr<ft_world> world_pointer(new ft_world());
     ft_game_state state;
-    ft_game_script_bridge bridge(world_pointer);
+    ft_game_script_bridge bridge;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.initialize(world_pointer));
     ft_function<int(ft_game_script_context &, const ft_vector<ft_string> &)> adjust_function(game_script_adjust_score);
     ft_string script;
     int register_result;
@@ -121,7 +122,8 @@ FT_TEST(test_game_script_bridge_operation_limit,
 {
     ft_sharedptr<ft_world> world_pointer(new ft_world());
     ft_game_state state;
-    ft_game_script_bridge bridge(world_pointer);
+    ft_game_script_bridge bridge;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.initialize(world_pointer));
     ft_function<int(ft_game_script_context &, const ft_vector<ft_string> &)> adjust_function(game_script_adjust_score);
     ft_string script;
     int register_result;
@@ -155,7 +157,8 @@ FT_TEST(test_game_script_bridge_sandbox_helper,
     "ft_game_script_bridge reports unsupported commands during sandbox checks")
 {
     ft_sharedptr<ft_world> world_pointer(new ft_world());
-    ft_game_script_bridge bridge(world_pointer);
+    ft_game_script_bridge bridge;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.initialize(world_pointer));
     ft_vector<ft_string> violations;
     ft_string script;
     int inspection_result;
@@ -178,7 +181,8 @@ FT_TEST(test_game_script_bridge_dry_run_helper,
     "ft_game_script_bridge dry-run validation collects callback and argument warnings")
 {
     ft_sharedptr<ft_world> world_pointer(new ft_world());
-    ft_game_script_bridge bridge(world_pointer);
+    ft_game_script_bridge bridge;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.initialize(world_pointer));
     ft_vector<ft_string> warnings;
     ft_string script;
     int validation_result;
@@ -203,7 +207,8 @@ FT_TEST(test_game_script_bridge_bytecode_budget_helper,
     "ft_game_script_bridge inspector reports operation counts before execution")
 {
     ft_sharedptr<ft_world> world_pointer(new ft_world());
-    ft_game_script_bridge bridge(world_pointer);
+    ft_game_script_bridge bridge;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.initialize(world_pointer));
     ft_string script;
     int required_operations;
     int inspection_result;

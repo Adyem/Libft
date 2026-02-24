@@ -54,7 +54,7 @@ class ft_game_hooks
         ft_function<void(ft_world&, ft_event&)> _legacy_event_triggered;
         ft_map<ft_string, ft_vector<ft_game_hook_listener_entry> > _listener_catalog;
         ft_vector<ft_game_hook_metadata> _catalog_metadata;
-        pt_mutex *_mutex;
+        pt_recursive_mutex *_mutex;
         uint8_t _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -114,7 +114,7 @@ class ft_game_hooks
         void reset() noexcept;
 
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex *get_mutex_for_validation() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 

@@ -31,8 +31,10 @@ FT_TEST(test_dialogue_script_setters_store_shared_lines, "script setters accept 
 {
     ft_vector<int> followups;
     followups.push_back(4);
-    ft_sharedptr<ft_dialogue_line> line(new (std::nothrow) ft_dialogue_line(2,
-                ft_string("player"), ft_string("reply"), followups));
+    ft_sharedptr<ft_dialogue_line> line(new (std::nothrow) ft_dialogue_line());
+    FT_ASSERT(line.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, line->initialize(2, ft_string("player"),
+        ft_string("reply"), followups));
     ft_vector<ft_sharedptr<ft_dialogue_line>> lines;
     FT_ASSERT(line.get() != ft_nullptr);
     lines.push_back(line);

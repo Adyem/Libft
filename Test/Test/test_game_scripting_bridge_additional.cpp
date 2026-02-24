@@ -24,7 +24,8 @@ static int script_set_score(ft_game_script_context &context, const ft_vector<ft_
 FT_TEST(test_game_script_bridge_defaults_to_lua_language, "Game: scripting bridge defaults to lua when language is null")
 {
     ft_sharedptr<ft_world> world_pointer(new ft_world());
-    ft_game_script_bridge bridge(world_pointer, ft_nullptr);
+    ft_game_script_bridge bridge;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.initialize(world_pointer, ft_nullptr));
 
     FT_ASSERT(world_pointer);
     FT_ASSERT_EQ(ft_string("lua"), bridge.get_language());
@@ -36,7 +37,8 @@ FT_TEST(test_game_script_bridge_defaults_to_lua_language, "Game: scripting bridg
 FT_TEST(test_game_script_bridge_rejects_unsupported_language, "Game: scripting bridge constructor rejects unsupported languages")
 {
     ft_sharedptr<ft_world> world_pointer(new ft_world());
-    ft_game_script_bridge bridge(world_pointer, "ruby");
+    ft_game_script_bridge bridge;
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, bridge.initialize(world_pointer, "ruby"));
 
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, bridge.get_error());
     FT_ASSERT_EQ(ft_string("ruby"), bridge.get_language());
@@ -46,7 +48,8 @@ FT_TEST(test_game_script_bridge_rejects_unsupported_language, "Game: scripting b
 FT_TEST(test_game_script_bridge_language_update_accepts_supported_value, "Game: set_language updates to supported languages")
 {
     ft_sharedptr<ft_world> world_pointer(new ft_world());
-    ft_game_script_bridge bridge(world_pointer);
+    ft_game_script_bridge bridge;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.initialize(world_pointer));
 
     bridge.set_language("python");
     FT_ASSERT_EQ(ft_string("python"), bridge.get_language());
@@ -57,7 +60,8 @@ FT_TEST(test_game_script_bridge_language_update_accepts_supported_value, "Game: 
 FT_TEST(test_game_script_bridge_language_update_rejects_null, "Game: set_language rejects null and preserves previous language")
 {
     ft_sharedptr<ft_world> world_pointer(new ft_world());
-    ft_game_script_bridge bridge(world_pointer);
+    ft_game_script_bridge bridge;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.initialize(world_pointer));
 
     bridge.set_language("python");
     FT_ASSERT_EQ(ft_string("python"), bridge.get_language());
@@ -72,7 +76,8 @@ FT_TEST(test_game_script_bridge_language_update_rejects_null, "Game: set_languag
 FT_TEST(test_game_script_bridge_callback_count_tracks_overwrite, "Game: register_function overwrites existing callbacks without growing")
 {
     ft_sharedptr<ft_world> world_pointer(new ft_world());
-    ft_game_script_bridge bridge(world_pointer);
+    ft_game_script_bridge bridge;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.initialize(world_pointer));
     ft_function<int(ft_game_script_context &, const ft_vector<ft_string> &)> first_callback(script_noop);
     ft_function<int(ft_game_script_context &, const ft_vector<ft_string> &)> second_callback(script_set_score);
 
@@ -88,7 +93,8 @@ FT_TEST(test_game_script_bridge_callback_count_tracks_overwrite, "Game: register
 FT_TEST(test_game_script_bridge_register_function_rejects_empty_name, "Game: register_function rejects empty callback names")
 {
     ft_sharedptr<ft_world> world_pointer(new ft_world());
-    ft_game_script_bridge bridge(world_pointer);
+    ft_game_script_bridge bridge;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.initialize(world_pointer));
     ft_function<int(ft_game_script_context &, const ft_vector<ft_string> &)> callback(script_noop);
     int result;
 
@@ -102,7 +108,8 @@ FT_TEST(test_game_script_bridge_register_function_rejects_empty_name, "Game: reg
 FT_TEST(test_game_script_bridge_register_function_rejects_null_callback, "Game: register_function rejects missing callback target")
 {
     ft_sharedptr<ft_world> world_pointer(new ft_world());
-    ft_game_script_bridge bridge(world_pointer);
+    ft_game_script_bridge bridge;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.initialize(world_pointer));
     ft_function<int(ft_game_script_context &, const ft_vector<ft_string> &)> callback;
     int result;
 
@@ -116,7 +123,8 @@ FT_TEST(test_game_script_bridge_register_function_rejects_null_callback, "Game: 
 FT_TEST(test_game_script_bridge_remove_function_clears_existing_entry, "Game: remove_function deletes registered callbacks")
 {
     ft_sharedptr<ft_world> world_pointer(new ft_world());
-    ft_game_script_bridge bridge(world_pointer);
+    ft_game_script_bridge bridge;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.initialize(world_pointer));
     ft_function<int(ft_game_script_context &, const ft_vector<ft_string> &)> callback(script_noop);
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.register_function("noop", callback));
@@ -131,7 +139,8 @@ FT_TEST(test_game_script_bridge_remove_function_clears_existing_entry, "Game: re
 FT_TEST(test_game_script_bridge_set_max_operations_updates_limit, "Game: set_max_operations updates execution budget")
 {
     ft_sharedptr<ft_world> world_pointer(new ft_world());
-    ft_game_script_bridge bridge(world_pointer);
+    ft_game_script_bridge bridge;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.initialize(world_pointer));
 
     bridge.set_max_operations(5);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.get_error());
@@ -142,7 +151,8 @@ FT_TEST(test_game_script_bridge_set_max_operations_updates_limit, "Game: set_max
 FT_TEST(test_game_script_bridge_set_max_operations_rejects_negative, "Game: set_max_operations rejects negative limits")
 {
     ft_sharedptr<ft_world> world_pointer(new ft_world());
-    ft_game_script_bridge bridge(world_pointer);
+    ft_game_script_bridge bridge;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.initialize(world_pointer));
 
     bridge.set_max_operations(7);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.get_error());
@@ -154,94 +164,17 @@ FT_TEST(test_game_script_bridge_set_max_operations_rejects_negative, "Game: set_
     return (1);
 }
 
-FT_TEST(test_game_script_bridge_copy_constructor_copies_state, "Game: copy constructor duplicates callbacks language and errors")
+FT_TEST(test_game_script_bridge_thread_safety_toggle, "Game: scripting bridge thread safety toggles explicitly")
 {
     ft_sharedptr<ft_world> world_pointer(new ft_world());
-    ft_game_script_bridge original(world_pointer);
-    ft_function<int(ft_game_script_context &, const ft_vector<ft_string> &)> callback(script_noop);
+    ft_game_script_bridge bridge;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.initialize(world_pointer));
 
-    original.set_language("python");
-    original.set_max_operations(12);
-    original.register_function("noop", callback);
-    original.set_language(ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, original.get_error());
-
-    ft_game_script_bridge copy(original);
-    FT_ASSERT_EQ(ft_string("python"), copy.get_language());
-    FT_ASSERT_EQ(12, copy.get_max_operations());
-    FT_ASSERT_EQ(1u, copy.get_callback_count());
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, copy.get_error());
-    FT_ASSERT_EQ(1u, original.get_callback_count());
-    return (1);
-}
-
-FT_TEST(test_game_script_bridge_copy_assignment_replaces_state, "Game: copy assignment overwrites callbacks language and errors")
-{
-    ft_sharedptr<ft_world> world_pointer(new ft_world());
-    ft_game_script_bridge source(world_pointer);
-    ft_game_script_bridge destination(world_pointer);
-    ft_function<int(ft_game_script_context &, const ft_vector<ft_string> &)> callback(script_noop);
-
-    source.set_language("python");
-    source.set_max_operations(6);
-    source.register_function("noop", callback);
-    source.set_language(ft_nullptr);
-
-    destination.set_language("lua");
-    destination.set_max_operations(2);
-    FT_ASSERT_EQ(0u, destination.get_callback_count());
-
-    destination = source;
-    FT_ASSERT_EQ(ft_string("python"), destination.get_language());
-    FT_ASSERT_EQ(6, destination.get_max_operations());
-    FT_ASSERT_EQ(1u, destination.get_callback_count());
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, destination.get_error());
-    return (1);
-}
-
-FT_TEST(test_game_script_bridge_move_constructor_transfers_state, "Game: move constructor transfers callbacks and clears origin")
-{
-    ft_sharedptr<ft_world> world_pointer(new ft_world());
-    ft_game_script_bridge original(world_pointer);
-    ft_function<int(ft_game_script_context &, const ft_vector<ft_string> &)> callback(script_set_score);
-
-    original.set_language("python");
-    original.set_max_operations(4);
-    original.register_function("score", callback);
-
-    ft_game_script_bridge moved(ft_move(original));
-    FT_ASSERT_EQ(ft_string("python"), moved.get_language());
-    FT_ASSERT_EQ(4, moved.get_max_operations());
-    FT_ASSERT_EQ(1u, moved.get_callback_count());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.get_error());
-    FT_ASSERT_EQ(0, original.get_max_operations());
-    FT_ASSERT_EQ(0u, original.get_callback_count());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.get_error());
-    return (1);
-}
-
-FT_TEST(test_game_script_bridge_move_assignment_transfers_state, "Game: move assignment transfers callbacks and resets source")
-{
-    ft_sharedptr<ft_world> world_pointer(new ft_world());
-    ft_game_script_bridge source(world_pointer);
-    ft_game_script_bridge destination(world_pointer);
-    ft_function<int(ft_game_script_context &, const ft_vector<ft_string> &)> callback(script_set_score);
-
-    source.set_language("python");
-    source.set_max_operations(9);
-    source.register_function("score", callback);
-
-    destination.set_language("lua");
-    destination.set_max_operations(1);
-
-    destination = ft_move(source);
-    FT_ASSERT_EQ(ft_string("python"), destination.get_language());
-    FT_ASSERT_EQ(9, destination.get_max_operations());
-    FT_ASSERT_EQ(1u, destination.get_callback_count());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.get_error());
-    FT_ASSERT_EQ(0, source.get_max_operations());
-    FT_ASSERT_EQ(0u, source.get_callback_count());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
+    FT_ASSERT_EQ(false, bridge.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.enable_thread_safety());
+    FT_ASSERT_EQ(true, bridge.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.disable_thread_safety());
+    FT_ASSERT_EQ(false, bridge.is_thread_safe());
     return (1);
 }
 
@@ -249,7 +182,8 @@ FT_TEST(test_game_script_bridge_execute_reports_unknown_commands, "Game: execute
 {
     ft_sharedptr<ft_world> world_pointer(new ft_world());
     ft_game_state state;
-    ft_game_script_bridge bridge(world_pointer);
+    ft_game_script_bridge bridge;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.initialize(world_pointer));
     ft_string script("unknown jump\n");
     int result;
 
@@ -263,7 +197,8 @@ FT_TEST(test_game_script_bridge_execute_with_registered_callback_runs_successful
 {
     ft_sharedptr<ft_world> world_pointer(new ft_world());
     ft_game_state state;
-    ft_game_script_bridge bridge(world_pointer);
+    ft_game_script_bridge bridge;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.initialize(world_pointer));
     ft_function<int(ft_game_script_context &, const ft_vector<ft_string> &)> callback(script_set_score);
     const ft_string *score_value;
     ft_string script;
@@ -282,7 +217,8 @@ FT_TEST(test_game_script_bridge_execute_with_registered_callback_runs_successful
 FT_TEST(test_game_script_bridge_validate_dry_run_counts_operations, "Game: validate_dry_run counts non-comment lines without errors")
 {
     ft_sharedptr<ft_world> world_pointer(new ft_world());
-    ft_game_script_bridge bridge(world_pointer);
+    ft_game_script_bridge bridge;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.initialize(world_pointer));
     ft_vector<ft_string> warnings;
     ft_string script;
     int result;

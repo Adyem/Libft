@@ -216,6 +216,30 @@ FT_TEST(test_path_step_thread_safety, "ft_path_step guards coordinate updates")
     primary_step = new ft_path_step();
     update_arguments = new path_step_update_args();
     read_arguments = new path_step_read_args();
+    if (primary_step->initialize() != FT_ERR_SUCCESS)
+    {
+        test_failed = 1;
+        failure_expression = "primary_step->initialize() == FT_ERR_SUCCESS";
+        failure_line = __LINE__;
+    }
+    if (copy_target.initialize() != FT_ERR_SUCCESS && test_failed == 0)
+    {
+        test_failed = 1;
+        failure_expression = "copy_target.initialize() == FT_ERR_SUCCESS";
+        failure_line = __LINE__;
+    }
+    if (assign_target.initialize() != FT_ERR_SUCCESS && test_failed == 0)
+    {
+        test_failed = 1;
+        failure_expression = "assign_target.initialize() == FT_ERR_SUCCESS";
+        failure_line = __LINE__;
+    }
+    if (move_target.initialize() != FT_ERR_SUCCESS && test_failed == 0)
+    {
+        test_failed = 1;
+        failure_expression = "move_target.initialize() == FT_ERR_SUCCESS";
+        failure_line = __LINE__;
+    }
     update_arguments->step_pointer = primary_step;
     update_arguments->iterations = 2048;
     update_arguments->result_code = FT_ERR_SUCCESS;
@@ -241,10 +265,31 @@ FT_TEST(test_path_step_thread_safety, "ft_path_step guards coordinate updates")
     index = 0;
     while (index < 256 && test_failed == 0)
     {
-        ft_path_step constructed(*primary_step);
-        ft_path_step moved_constructed(ft_move(constructed));
+        ft_path_step constructed;
+        ft_path_step moved_constructed;
 
-        copy_target = moved_constructed;
+        if (constructed.initialize(*primary_step) != FT_ERR_SUCCESS)
+        {
+            test_failed = 1;
+            failure_expression = "constructed.initialize(*primary_step) == FT_ERR_SUCCESS";
+            failure_line = __LINE__;
+        }
+        if (test_failed == 0
+            && moved_constructed.initialize(ft_move(constructed)) != FT_ERR_SUCCESS)
+        {
+            test_failed = 1;
+            failure_expression = "moved_constructed.initialize(ft_move(constructed)) == FT_ERR_SUCCESS";
+            failure_line = __LINE__;
+        }
+        if (test_failed == 0)
+            (void)copy_target.destroy();
+        if (test_failed == 0
+            && copy_target.initialize(moved_constructed) != FT_ERR_SUCCESS)
+        {
+            test_failed = 1;
+            failure_expression = "copy_target.initialize(moved_constructed) == FT_ERR_SUCCESS";
+            failure_line = __LINE__;
+        }
         if (copy_target.get_error() != FT_ERR_SUCCESS)
         {
             test_failed = 1;
@@ -253,8 +298,14 @@ FT_TEST(test_path_step_thread_safety, "ft_path_step guards coordinate updates")
         }
         if (test_failed == 0)
         {
-            assign_target = copy_target;
-            if (assign_target.get_error() != FT_ERR_SUCCESS)
+            (void)assign_target.destroy();
+            if (assign_target.initialize(copy_target) != FT_ERR_SUCCESS)
+            {
+                test_failed = 1;
+                failure_expression = "assign_target.initialize(copy_target) == FT_ERR_SUCCESS";
+                failure_line = __LINE__;
+            }
+            if (test_failed == 0 && assign_target.get_error() != FT_ERR_SUCCESS)
             {
                 test_failed = 1;
                 failure_expression = "assign_target.get_error() == FT_ERR_SUCCESS";
@@ -263,8 +314,14 @@ FT_TEST(test_path_step_thread_safety, "ft_path_step guards coordinate updates")
         }
         if (test_failed == 0)
         {
-            move_target = ft_move(assign_target);
-            if (move_target.get_error() != FT_ERR_SUCCESS)
+            (void)move_target.destroy();
+            if (move_target.initialize(ft_move(assign_target)) != FT_ERR_SUCCESS)
+            {
+                test_failed = 1;
+                failure_expression = "move_target.initialize(ft_move(assign_target)) == FT_ERR_SUCCESS";
+                failure_line = __LINE__;
+            }
+            if (test_failed == 0 && move_target.get_error() != FT_ERR_SUCCESS)
             {
                 test_failed = 1;
                 failure_expression = "move_target.get_error() == FT_ERR_SUCCESS";
@@ -273,8 +330,14 @@ FT_TEST(test_path_step_thread_safety, "ft_path_step guards coordinate updates")
         }
         if (test_failed == 0)
         {
-            *primary_step = ft_move(move_target);
-            if (primary_step->get_error() != FT_ERR_SUCCESS)
+            (void)primary_step->destroy();
+            if (primary_step->initialize(ft_move(move_target)) != FT_ERR_SUCCESS)
+            {
+                test_failed = 1;
+                failure_expression = "primary_step->initialize(ft_move(move_target)) == FT_ERR_SUCCESS";
+                failure_line = __LINE__;
+            }
+            if (test_failed == 0 && primary_step->get_error() != FT_ERR_SUCCESS)
             {
                 test_failed = 1;
                 failure_expression = "primary_step->get_error() == FT_ERR_SUCCESS";
@@ -348,7 +411,8 @@ FT_TEST(test_pathfinding_thread_safety,
     test_failed = 0;
     failure_expression = ft_nullptr;
     failure_line = 0;
-    grid_pointer = new ft_map3d(5, 5, 1, 0);
+    grid_pointer = new ft_map3d();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, grid_pointer->initialize(5, 5, 1, 0));
     primary_finder = new ft_pathfinding();
     recalc_arguments = new pathfinding_recalc_args();
     read_arguments = new pathfinding_read_args();

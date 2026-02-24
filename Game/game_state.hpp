@@ -9,7 +9,6 @@
 #include "../Template/map.hpp"
 #include "../Template/shared_ptr.hpp"
 #include "../PThread/mutex.hpp"
-#include "../PThread/unique_lock.hpp"
 
 class ft_game_hooks;
 
@@ -21,20 +20,19 @@ class ft_game_state
         ft_map<ft_string, ft_string>           _variables;
         ft_sharedptr<ft_game_hooks>            _hooks;
         mutable int                            _error_code;
-        mutable pt_mutex                       _mutex;
+        mutable pt_recursive_mutex                       *_mutex;
 
         void set_error(int error) const noexcept;
-        static int lock_pair(const ft_game_state &first, const ft_game_state &second,
-                ft_unique_lock<pt_mutex> &first_guard,
-                ft_unique_lock<pt_mutex> &second_guard);
+        int lock_internal(bool *lock_acquired) const noexcept;
+        void unlock_internal(bool lock_acquired) const noexcept;
 
     public:
         ft_game_state() noexcept;
         ~ft_game_state() noexcept;
-        ft_game_state(const ft_game_state &other) noexcept;
-        ft_game_state &operator=(const ft_game_state &other) noexcept;
-        ft_game_state(ft_game_state &&other) noexcept;
-        ft_game_state &operator=(ft_game_state &&other) noexcept;
+        ft_game_state(const ft_game_state &other) noexcept = delete;
+        ft_game_state &operator=(const ft_game_state &other) noexcept = delete;
+        ft_game_state(ft_game_state &&other) noexcept = delete;
+        ft_game_state &operator=(ft_game_state &&other) noexcept = delete;
 
         ft_vector<ft_sharedptr<ft_world> > &get_worlds() noexcept;
 
@@ -55,6 +53,9 @@ class ft_game_state
         void dispatch_item_crafted(ft_character &character, ft_item &item) const noexcept;
         void dispatch_character_damaged(ft_character &character, int damage, uint8_t type) const noexcept;
         void dispatch_event_triggered(ft_world &world, ft_event &event) const noexcept;
+        int enable_thread_safety() noexcept;
+        int disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
 
         int get_error() const noexcept;
         const char *get_error_str() const noexcept;
