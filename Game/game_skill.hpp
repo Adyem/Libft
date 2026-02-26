@@ -18,6 +18,7 @@ class ft_skill
         int              _modifier4;
         mutable pt_recursive_mutex *_mutex;
         uint8_t          _initialized_state;
+        static thread_local int    _last_error;
 
         static const uint8_t _state_uninitialized = 0;
         static const uint8_t _state_destroyed = 1;
@@ -28,8 +29,10 @@ class ft_skill
         void abort_if_not_initialized(const char *method_name) const;
         int lock_internal(bool *lock_acquired) const noexcept;
         int unlock_internal(bool lock_acquired) const noexcept;
-
+        void set_error(int error_code) const noexcept;
     public:
+        int get_error() const noexcept;
+        const char *get_error_str() const noexcept;
         ft_skill() noexcept;
         virtual ~ft_skill() noexcept;
         ft_skill(const ft_skill &other) = delete;

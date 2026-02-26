@@ -11,6 +11,8 @@ FT_TEST(test_game_achievement_progress_completion, "Game: achievements track goa
 {
     ft_achievement achievement;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, achievement.initialize());
+
     achievement.set_goal(1, 5);
     achievement.set_goal(2, 2);
     FT_ASSERT_EQ(false, achievement.is_complete());
@@ -21,6 +23,7 @@ FT_TEST(test_game_achievement_progress_completion, "Game: achievements track goa
     FT_ASSERT_EQ(true, achievement.is_goal_complete(1));
     FT_ASSERT_EQ(true, achievement.is_goal_complete(2));
     FT_ASSERT_EQ(true, achievement.is_complete());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, achievement.get_error());
     return (1);
 }
 
@@ -28,8 +31,11 @@ FT_TEST(test_game_achievement_invalid_goal_id_sets_error, "Game: achievements re
 {
     ft_achievement achievement;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, achievement.initialize());
+
     achievement.set_goal(-4, 3);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, achievement.get_goal(-4));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, achievement.get_error());
     return (1);
 }
 
@@ -37,8 +43,11 @@ FT_TEST(test_game_reputation_milestone_roundtrip, "Game: reputation milestone in
 {
     ft_reputation reputation;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, reputation.initialize());
+
     reputation.set_milestone(3, 50);
     FT_ASSERT_EQ(50, reputation.get_milestone(3));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, reputation.get_error());
     return (1);
 }
 
@@ -46,7 +55,10 @@ FT_TEST(test_game_reputation_invalid_milestone_rejected, "Game: reputation rejec
 {
     ft_reputation reputation;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, reputation.initialize());
+
     FT_ASSERT_EQ(0, reputation.get_milestone(-2));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, reputation.get_error());
     return (1);
 }
 
@@ -64,5 +76,7 @@ FT_TEST(test_game_currency_rate_copy_matches_source, "Game: currency rate copy p
     FT_ASSERT_EQ(5, original.get_currency_id());
     FT_ASSERT_EQ(2.5, original.get_rate_to_base());
     FT_ASSERT_EQ(4, original.get_display_precision());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, clone.get_error());
     return (1);
 }

@@ -2,9 +2,10 @@
 #include "../Errno/errno.hpp"
 #include <new>
 
+thread_local int ft_resistance::_last_error = FT_ERR_SUCCESS;
+
 ft_resistance::ft_resistance() noexcept
-    : _percent_value(0), _flat_value(0), _error_code(FT_ERR_SUCCESS),
-      _mutex(ft_nullptr)
+    : _percent_value(0), _flat_value(0), _mutex(ft_nullptr)
 {
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -185,16 +186,16 @@ bool ft_resistance::is_thread_safe() const noexcept
 
 int ft_resistance::get_error() const noexcept
 {
-    return (this->_error_code);
+    return (ft_resistance::_last_error);
 }
 
 const char *ft_resistance::get_error_str() const noexcept
 {
-    return (ft_strerror(this->_error_code));
+    return (ft_strerror(ft_resistance::_last_error));
 }
 
 void ft_resistance::set_error(int error) const noexcept
 {
-    this->_error_code = error;
+    ft_resistance::_last_error = error;
     return ;
 }

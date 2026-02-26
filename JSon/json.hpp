@@ -74,6 +74,8 @@ int         json_group_list_lock_manual();
 int         json_group_list_unlock_manual();
 int         json_group_list_lock();
 void        json_group_list_finalize_lock();
+int         json_group_list_enable_thread_safety();
+int         json_group_list_disable_thread_safety();
 int         json_item_enable_thread_safety(json_item *item);
 int         json_item_disable_thread_safety(json_item *item);
 bool        json_item_is_thread_safe(const json_item *item);

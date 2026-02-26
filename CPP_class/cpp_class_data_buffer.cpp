@@ -138,18 +138,14 @@ DataBuffer::DataBuffer() noexcept
 
 DataBuffer::~DataBuffer() noexcept
 {
-    if (this->_initialized_state == DataBuffer::_state_uninitialized)
+    if (this->_initialized_state != DataBuffer::_state_initialized)
     {
-        DataBuffer::abort_lifecycle_error("DataBuffer::~DataBuffer",
-            "destructor called while object is uninitialized");
+        this->_initialized_state = DataBuffer::_state_destroyed;
         return ;
     }
-    if (this->_initialized_state == DataBuffer::_state_initialized)
-    {
-        int destroy_error = this->destroy();
-        if (destroy_error != FT_ERR_SUCCESS)
-            DataBuffer::set_last_operation_error(destroy_error);
-    }
+    int destroy_error = this->destroy();
+    if (destroy_error != FT_ERR_SUCCESS)
+        DataBuffer::set_last_operation_error(destroy_error);
     return ;
 }
 
@@ -292,8 +288,7 @@ int DataBuffer::destroy() noexcept
 {
     if (this->_initialized_state != DataBuffer::_state_initialized)
     {
-        DataBuffer::abort_lifecycle_error("DataBuffer::destroy",
-            "called while object is not initialized");
+        this->_initialized_state = DataBuffer::_state_destroyed;
         return (FT_ERR_INVALID_STATE);
     }
     this->_buffer.clear();

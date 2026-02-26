@@ -12,11 +12,15 @@ FT_TEST(test_world_registry_fetch_missing_entries_returns_not_found,
         "fetching unknown ids returns FT_ERR_NOT_FOUND")
 {
     ft_world_registry registry;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
     ft_region_definition region;
     ft_world_region world;
 
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, registry.fetch_region(100, region));
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, registry.get_error());
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, registry.fetch_world(200, world));
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, registry.get_error());
     return (1);
 }
 
@@ -28,16 +32,24 @@ FT_TEST(test_world_registry_clears_entries_after_destroy,
     ft_region_definition region;
     ft_region_definition fetched_region;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
     region_ids.push_back(12);
     ft_world_region world;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(12, ft_string("Fjord"),
         ft_string("Icy"), 6));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize(5, region_ids));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.register_region(region));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.register_world(world));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
 
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, registry.fetch_region(12, fetched_region));
+    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, registry.get_error());
     return (1);
 }

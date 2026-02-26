@@ -15,6 +15,9 @@ class ft_region_definition
         int         _recommended_level;
         pt_recursive_mutex   *_mutex;
         uint8_t     _initialized_state;
+        static thread_local int _last_error;
+
+        void set_error(int error_code) const noexcept;
 
         static const uint8_t _state_uninitialized = 0;
         static const uint8_t _state_destroyed = 1;
@@ -61,6 +64,8 @@ class ft_region_definition
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
+        int get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 };
 
 #endif

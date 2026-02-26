@@ -17,6 +17,7 @@ class ft_upgrade
         int              _modifier3;
         int              _modifier4;
         mutable pt_recursive_mutex *_mutex;
+        static thread_local int    _last_error;
         uint8_t          _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -26,6 +27,7 @@ class ft_upgrade
         void abort_lifecycle_error(const char *method_name,
                 const char *reason) const;
         void abort_if_not_initialized(const char *method_name) const;
+        void set_error(int error_code) const noexcept;
         int lock_internal(bool *lock_acquired) const noexcept;
         int unlock_internal(bool lock_acquired) const noexcept;
 
@@ -77,6 +79,9 @@ class ft_upgrade
         void set_modifier4(int mod) noexcept;
         void add_modifier4(int mod) noexcept;
         void sub_modifier4(int mod) noexcept;
+
+        int get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex *get_mutex_for_validation() const noexcept;

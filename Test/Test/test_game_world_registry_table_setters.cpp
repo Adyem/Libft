@@ -17,37 +17,58 @@ FT_TEST(test_world_registry_setters, "world registry setter copies replace maps"
     ft_world_region world;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, regions.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, worlds.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     region.set_region_id(2);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     region.set_name(ft_string("cave"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     region.set_description(ft_string("dark"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     region.set_recommended_level(8);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     region_ids.push_back(2);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize(5, region_ids));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_error());
     regions.insert(2, region);
     worlds.insert(5, world);
 
     registry.set_regions(regions);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
     registry.set_world_regions(worlds);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
     regions.clear();
     worlds.clear();
 
     FT_ASSERT_EQ(1, registry.get_regions().size());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
     FT_ASSERT_EQ(1, registry.get_world_regions().size());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.fetch_region(2, fetched_region));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
     FT_ASSERT_EQ(ft_string("cave"), fetched_region.get_name());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_region.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.fetch_world(5, fetched_world));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
     FT_ASSERT_EQ(2, fetched_world.get_region_ids()[0]);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_world.get_error());
 
     registry.get_regions().clear();
     registry.get_world_regions().clear();
     FT_ASSERT_EQ(0, registry.get_regions().size());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
     FT_ASSERT_EQ(0, registry.get_world_regions().size());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
     registry.set_regions(regions);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
     registry.set_world_regions(worlds);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
     FT_ASSERT_EQ(0, registry.get_regions().size());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
     FT_ASSERT_EQ(0, registry.get_world_regions().size());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
     return (1);
 }

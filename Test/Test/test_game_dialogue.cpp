@@ -16,6 +16,8 @@ FT_TEST(test_game_dialogue_line_property_updates, "Game: dialogue line getters/s
     next_ids.push_back(3);
     next_ids.push_back(5);
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, line.initialize(0, ft_string(""), ft_string(""), next_ids));
+
     line.set_line_id(8);
     line.set_speaker(ft_string("guide"));
     line.set_text(ft_string("step"));
@@ -28,6 +30,7 @@ FT_TEST(test_game_dialogue_line_property_updates, "Game: dialogue line getters/s
     next_ids.push_back(11);
     line.set_next_line_ids(next_ids);
     FT_ASSERT_EQ(3U, line.get_next_line_ids().size());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, line.get_error());
     return (1);
 }
 

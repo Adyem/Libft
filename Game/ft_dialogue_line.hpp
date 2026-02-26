@@ -15,6 +15,11 @@ class ft_dialogue_line
         ft_string _text;
         ft_vector<int> _next_line_ids;
         mutable pt_recursive_mutex *_mutex;
+        static thread_local int _last_error;
+
+        void set_error(int error_code) const noexcept;
+        int lock_internal(bool *lock_acquired) const noexcept;
+        void unlock_internal(bool lock_acquired) const noexcept;
 
     public:
         ft_dialogue_line() noexcept;
@@ -45,6 +50,10 @@ class ft_dialogue_line
 
         int get_error() const noexcept;
         const char *get_error_str() const noexcept;
+
+#ifdef LIBFT_TEST_BUILD
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
+#endif
 };
 
 #endif

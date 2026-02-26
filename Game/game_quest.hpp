@@ -21,6 +21,7 @@ class ft_quest
         int                             _reward_experience;
         ft_vector<ft_sharedptr<ft_item> > _reward_items;
         mutable pt_recursive_mutex               *_mutex;
+        static thread_local int                    _last_error;
         uint8_t                         _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -30,6 +31,7 @@ class ft_quest
         void abort_lifecycle_error(const char *method_name,
                 const char *reason) const;
         void abort_if_not_initialized(const char *method_name) const;
+        void set_error(int error_code) const noexcept;
         int lock_internal(bool *lock_acquired) const noexcept;
         int unlock_internal(bool lock_acquired) const noexcept;
 
@@ -75,6 +77,9 @@ class ft_quest
 
         bool is_complete() const noexcept;
         void advance_phase() noexcept;
+
+        int get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex *get_mutex_for_validation() const noexcept;

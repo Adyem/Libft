@@ -11,11 +11,14 @@ FT_TEST(test_price_definition_default_state, "Price definition constructor zeroe
 {
     ft_price_definition definition;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.initialize());
+
     FT_ASSERT_EQ(0, definition.get_item_id());
     FT_ASSERT_EQ(0, definition.get_rarity());
     FT_ASSERT_EQ(0, definition.get_base_value());
     FT_ASSERT_EQ(0, definition.get_minimum_value());
     FT_ASSERT_EQ(0, definition.get_maximum_value());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.get_error());
     return (1);
 }
 
@@ -29,12 +32,15 @@ FT_TEST(test_price_definition_initialize_with_fields, "Price definition initiali
     FT_ASSERT_EQ(240, definition.get_base_value());
     FT_ASSERT_EQ(120, definition.get_minimum_value());
     FT_ASSERT_EQ(360, definition.get_maximum_value());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.get_error());
     return (1);
 }
 
 FT_TEST(test_price_definition_setters_update_all_fields, "Price definition setters alter every field")
 {
     ft_price_definition definition;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.initialize());
 
     definition.set_item_id(7);
     definition.set_rarity(5);
@@ -47,6 +53,7 @@ FT_TEST(test_price_definition_setters_update_all_fields, "Price definition sette
     FT_ASSERT_EQ(810, definition.get_base_value());
     FT_ASSERT_EQ(200, definition.get_minimum_value());
     FT_ASSERT_EQ(950, definition.get_maximum_value());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.get_error());
     return (1);
 }
 
@@ -68,6 +75,8 @@ FT_TEST(test_price_definition_initialize_copy_matches_source, "Price definition 
     FT_ASSERT_EQ(150, original.get_base_value());
     FT_ASSERT_EQ(90, original.get_minimum_value());
     FT_ASSERT_EQ(400, original.get_maximum_value());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, dest.get_error());
     return (1);
 }
 
@@ -75,9 +84,12 @@ FT_TEST(test_currency_rate_default_state, "Currency rate default constructor pre
 {
     ft_currency_rate rate;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.initialize());
+
     FT_ASSERT_EQ(0, rate.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(1.0, rate.get_rate_to_base());
     FT_ASSERT_EQ(2, rate.get_display_precision());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.get_error());
     return (1);
 }
 
@@ -89,12 +101,15 @@ FT_TEST(test_currency_rate_initialize_with_fields_values, "Currency rate initial
     FT_ASSERT_EQ(17, rate.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(2.75, rate.get_rate_to_base());
     FT_ASSERT_EQ(5, rate.get_display_precision());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.get_error());
     return (1);
 }
 
 FT_TEST(test_currency_rate_setters_update_fields, "Currency rate setters mutate identifiers and precision")
 {
     ft_currency_rate rate;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.initialize());
 
     rate.set_currency_id(9);
     rate.set_rate_to_base(0.65);
@@ -103,6 +118,7 @@ FT_TEST(test_currency_rate_setters_update_fields, "Currency rate setters mutate 
     FT_ASSERT_EQ(9, rate.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(0.65, rate.get_rate_to_base());
     FT_ASSERT_EQ(6, rate.get_display_precision());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.get_error());
     return (1);
 }
 
@@ -121,5 +137,7 @@ FT_TEST(test_currency_rate_initialize_copy_overwrites_state, "Currency rate init
     FT_ASSERT_EQ(3, source.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(1.1, source.get_rate_to_base());
     FT_ASSERT_EQ(4, source.get_display_precision());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, target.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
     return (1);
 }

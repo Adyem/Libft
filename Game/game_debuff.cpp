@@ -1,12 +1,31 @@
 #include "game_debuff.hpp"
 #include "../Printf/printf.hpp"
-#include "../System_utils/system_utils.hpp"
+ #include "../System_utils/system_utils.hpp"
+
+thread_local int ft_debuff::_last_error = FT_ERR_SUCCESS;
+
+void ft_debuff::set_error(int error_code) const noexcept
+{
+    ft_debuff::_last_error = error_code;
+    return ;
+}
+
+int ft_debuff::get_error() const noexcept
+{
+    return (ft_debuff::_last_error);
+}
+
+const char *ft_debuff::get_error_str() const noexcept
+{
+    return (ft_strerror(this->get_error()));
+}
 
 ft_debuff::ft_debuff() noexcept
     : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0),
       _modifier4(0), _mutex(ft_nullptr),
       _initialized_state(ft_debuff::_state_uninitialized)
 {
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -46,6 +65,7 @@ int ft_debuff::initialize() noexcept
     {
         this->abort_lifecycle_error("ft_debuff::initialize",
             "called while object is already initialized");
+        this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
     this->_id = 0;
@@ -55,6 +75,7 @@ int ft_debuff::initialize() noexcept
     this->_modifier3 = 0;
     this->_modifier4 = 0;
     this->_initialized_state = ft_debuff::_state_initialized;
+    this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
@@ -63,22 +84,31 @@ int ft_debuff::initialize(const ft_debuff &other) noexcept
     int initialize_error;
 
     if (&other == this)
+    {
+        this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
+    }
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(initialize_error);
         return (initialize_error);
+    }
     this->_id = other._id;
     this->_duration = other._duration;
     this->_modifier1 = other._modifier1;
     this->_modifier2 = other._modifier2;
     this->_modifier3 = other._modifier3;
     this->_modifier4 = other._modifier4;
+    this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
 int ft_debuff::initialize(ft_debuff &&other) noexcept
 {
-    return (this->initialize(static_cast<const ft_debuff &>(other)));
+    int result = this->initialize(static_cast<const ft_debuff &>(other));
+    this->set_error(result);
+    return (result);
 }
 
 int ft_debuff::destroy() noexcept
@@ -86,7 +116,10 @@ int ft_debuff::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != ft_debuff::_state_initialized)
+    {
+        this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
+    }
     disable_error = this->disable_thread_safety();
     this->_id = 0;
     this->_duration = 0;
@@ -95,6 +128,7 @@ int ft_debuff::destroy() noexcept
     this->_modifier3 = 0;
     this->_modifier4 = 0;
     this->_initialized_state = ft_debuff::_state_destroyed;
+    this->set_error(disable_error);
     return (disable_error);
 }
 
@@ -105,17 +139,25 @@ int ft_debuff::enable_thread_safety() noexcept
 
     this->abort_if_not_initialized("ft_debuff::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
+    {
+        this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
+    }
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
+    {
+        this->set_error(FT_ERR_NO_MEMORY);
         return (FT_ERR_NO_MEMORY);
+    }
     initialize_error = mutex_pointer->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
     {
         delete mutex_pointer;
+        this->set_error(initialize_error);
         return (initialize_error);
     }
     this->_mutex = mutex_pointer;
+    this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
@@ -124,17 +166,23 @@ int ft_debuff::disable_thread_safety() noexcept
     int destroy_error;
 
     if (this->_mutex == ft_nullptr)
+    {
+        this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
+    }
     destroy_error = this->_mutex->destroy();
     delete this->_mutex;
     this->_mutex = ft_nullptr;
+    this->set_error(destroy_error);
     return (destroy_error);
 }
 
 bool ft_debuff::is_thread_safe() const noexcept
 {
     this->abort_if_not_initialized("ft_debuff::is_thread_safe");
-    return (this->_mutex != ft_nullptr);
+    bool result = (this->_mutex != ft_nullptr);
+    this->set_error(FT_ERR_SUCCESS);
+    return (result);
 }
 
 int ft_debuff::lock_internal(bool *lock_acquired) const noexcept
@@ -165,13 +213,17 @@ int ft_debuff::unlock_internal(bool lock_acquired) const noexcept
 int ft_debuff::lock(bool *lock_acquired) const noexcept
 {
     this->abort_if_not_initialized("ft_debuff::lock");
-    return (this->lock_internal(lock_acquired));
+    int lock_result = this->lock_internal(lock_acquired);
+    this->set_error(lock_result);
+    return (lock_result);
 }
 
 void ft_debuff::unlock(bool lock_acquired) const noexcept
 {
     this->abort_if_not_initialized("ft_debuff::unlock");
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_result = this->unlock_internal(lock_acquired);
+    this->set_error(unlock_result);
+    (void)unlock_result;
     return ;
 }
 

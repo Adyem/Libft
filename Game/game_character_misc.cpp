@@ -467,20 +467,20 @@ int ft_character::equip_item(int slot, const ft_sharedptr<ft_item> &item) noexce
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
-        return (this->_error);
+        return (this->get_error());
     }
     current = this->_equipment.get_item(slot);
     if (this->handle_component_error(this->_equipment.get_error()) == true)
     {
         this->unlock_internal(lock_acquired);
-        return (this->_error);
+        return (this->get_error());
     }
     equip_error = this->_equipment.equip(slot, item);
     if (equip_error != FT_ERR_SUCCESS)
     {
         this->handle_component_error(equip_error);
         this->unlock_internal(lock_acquired);
-        return (this->_error);
+        return (this->get_error());
     }
     if (current)
     {

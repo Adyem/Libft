@@ -27,9 +27,13 @@
 int test_game_simulation(void)
 {
     ft_character hero;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hero.get_error());
     hero.set_hit_points(50);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hero.get_error());
     hero.set_might(10);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hero.get_error());
     hero.set_physical_armor(5);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hero.get_error());
 
     ft_map3d grid;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, grid.initialize(3, 3, 1, 0));
@@ -98,15 +102,16 @@ int test_game_simulation(void)
     potion->set_item_id(1);
     potion->set_max_stack(10);
     potion->set_stack_size(5);
-    if (pack.initialize(2, 0) != FT_ERR_SUCCESS)
-        return (0);
-    if (pack.add_item(potion) != FT_ERR_SUCCESS)
-        return (0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, pack.initialize(2, 0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, pack.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, pack.add_item(potion));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, pack.get_error());
     ft_sharedptr<ft_item> more(new ft_item());
     more->set_item_id(1);
     more->set_max_stack(10);
     more->set_stack_size(3);
-    pack.add_item(more);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, pack.add_item(more));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, pack.get_error());
     Pair<int, ft_sharedptr<ft_item> > *ientry = pack.get_items().find(0);
     if (ientry == pack.get_items().end() || ientry->value->get_stack_size() != 8)
         return (0);
@@ -120,6 +125,8 @@ int test_game_simulation(void)
 int test_item_basic(void)
 {
     ft_item item;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, item.initialize());
+
     item.set_item_id(1);
     item.set_max_stack(10);
     item.set_stack_size(3);
@@ -132,6 +139,7 @@ int test_item_basic(void)
         item.get_modifier1_value() != 2 || item.get_width() != 2 ||
         item.get_height() != 3)
         return (0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, item.get_error());
     return (1);
 }
 
@@ -190,6 +198,7 @@ int test_game_save_load(void)
 int test_buff_subtracters(void)
 {
     ft_buff buff;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buff.initialize());
     buff.set_duration(10);
     buff.sub_duration(3);
     buff.set_modifier1(5);
@@ -200,6 +209,7 @@ int test_buff_subtracters(void)
     buff.sub_modifier3(6);
     buff.set_modifier4(8);
     buff.sub_modifier4(3);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buff.get_error());
     return (buff.get_duration() == 7 && buff.get_modifier1() == 3 &&
             buff.get_modifier2() == 3 && buff.get_modifier3() == 0 &&
             buff.get_modifier4() == 5);
@@ -208,6 +218,7 @@ int test_buff_subtracters(void)
 int test_debuff_subtracters(void)
 {
     ft_debuff debuff;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, debuff.initialize());
     debuff.set_duration(8);
     debuff.sub_duration(2);
     debuff.set_modifier1(-1);
@@ -218,6 +229,7 @@ int test_debuff_subtracters(void)
     debuff.sub_modifier3(2);
     debuff.set_modifier4(0);
     debuff.sub_modifier4(0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, debuff.get_error());
     return (debuff.get_duration() == 6 && debuff.get_modifier1() == 0 &&
             debuff.get_modifier2() == 2 && debuff.get_modifier3() == 0 &&
             debuff.get_modifier4() == 0);
@@ -389,6 +401,7 @@ FT_TEST(test_inventory_copy_preserves_stacks, "Game: copying inventories keeps i
 int test_upgrade_subtracters(void)
 {
     ft_upgrade up;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, up.initialize());
     up.set_current_level(5);
     up.sub_level(2);
     up.set_modifier1(3);
@@ -399,6 +412,7 @@ int test_upgrade_subtracters(void)
     up.sub_modifier3(-2);
     up.set_modifier4(7);
     up.sub_modifier4(3);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, up.get_error());
     return (up.get_current_level() == 3 && up.get_modifier1() == 2 &&
             up.get_modifier2() == 0 && up.get_modifier3() == 0 &&
             up.get_modifier4() == 4);
@@ -407,9 +421,11 @@ int test_upgrade_subtracters(void)
 int test_item_stack_subtract(void)
 {
     ft_item item;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, item.initialize());
     item.set_max_stack(10);
     item.set_stack_size(7);
     item.sub_from_stack(3);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, item.get_error());
     return (item.get_stack_size() == 4);
 }
 
@@ -425,6 +441,7 @@ int test_character_level(void)
 int test_quest_progress(void)
 {
     ft_quest q;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, q.initialize());
     q.set_phases(3);
     if (q.is_complete())
         return (0);
@@ -436,6 +453,7 @@ int test_quest_progress(void)
     if (!q.is_complete() || q.get_current_phase() != 3)
         return (0);
     q.advance_phase();
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, q.get_error());
     return (q.get_current_phase() == 3);
 }
 
@@ -485,6 +503,7 @@ int test_character_serialization_damage(void)
 FT_TEST(test_world_region_setters_replace_ids, "Game: set_region_ids overwrites stored identifiers")
 {
     ft_world_region world_region;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world_region.initialize());
     ft_vector<int> first_ids;
     ft_vector<int> second_ids;
 
@@ -503,6 +522,7 @@ FT_TEST(test_world_region_setters_replace_ids, "Game: set_region_ids overwrites 
     world_region.set_region_ids(second_ids);
     FT_ASSERT_EQ(1u, world_region.get_region_ids().size());
     FT_ASSERT_EQ(42, world_region.get_region_ids()[0]);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world_region.get_error());
     return (1);
 }
 
@@ -511,6 +531,9 @@ FT_TEST(test_world_region_move_assignment_clears_source, "Game: moving a world_r
     ft_vector<int> source_ids;
     ft_world_region source_region;
     ft_world_region target_region;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_region.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, target_region.initialize());
 
     source_ids.push_back(5);
     source_ids.push_back(8);
@@ -525,6 +548,7 @@ FT_TEST(test_world_region_move_assignment_clears_source, "Game: moving a world_r
     FT_ASSERT_EQ(8, target_region.get_region_ids()[1]);
     FT_ASSERT_EQ(0, source_region.get_world_id());
     FT_ASSERT_EQ(0u, source_region.get_region_ids().size());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, target_region.get_error());
     return (1);
 }
 
@@ -534,6 +558,8 @@ FT_TEST(test_world_region_copy_assignment_preserves_content, "Game: copying worl
     ft_world_region original_region;
     ft_world_region copied_region;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original_region.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, copied_region.initialize());
     original_ids.push_back(15);
     original_ids.push_back(27);
     original_region.set_world_id(6);
@@ -546,6 +572,7 @@ FT_TEST(test_world_region_copy_assignment_preserves_content, "Game: copying worl
     FT_ASSERT_EQ(15, copied_region.get_region_ids()[0]);
     FT_ASSERT_EQ(27, copied_region.get_region_ids()[1]);
     FT_ASSERT_EQ(2u, original_region.get_region_ids().size());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, copied_region.get_error());
     return (1);
 }
 
@@ -563,9 +590,13 @@ FT_TEST(test_world_default_region_pointer_available, "Game: world exposes defaul
 FT_TEST(test_world_registry_registers_and_fetches_regions, "Game: registry stores and retrieves world regions")
 {
     ft_world_registry registry;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.initialize());
     ft_world_region stored_region;
     ft_world_region fetched_region;
     ft_vector<int> region_ids;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stored_region.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_region.initialize());
 
     region_ids.push_back(101);
     region_ids.push_back(202);
@@ -577,6 +608,7 @@ FT_TEST(test_world_registry_registers_and_fetches_regions, "Game: registry store
     FT_ASSERT_EQ(2u, fetched_region.get_region_ids().size());
     FT_ASSERT_EQ(101, fetched_region.get_region_ids()[0]);
     FT_ASSERT_EQ(202, fetched_region.get_region_ids()[1]);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
     return (1);
 }
 
@@ -665,6 +697,7 @@ FT_TEST(test_world_region_parameterized_constructor_copies_values, "Game: parame
     region_ids.push_back(6);
     region_ids.push_back(8);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(12, region_ids));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     region_ids.push_back(10);
     FT_ASSERT_EQ(12, region.get_world_id());
     FT_ASSERT_EQ(3u, region.get_region_ids().size());

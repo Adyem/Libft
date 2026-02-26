@@ -20,6 +20,7 @@ class ft_map3d
         int         _initial_value;
         pt_recursive_mutex   *_mutex;
         uint8_t     _initialized_state;
+        static thread_local int _last_error;
 
         static const uint8_t _state_uninitialized = 0;
         static const uint8_t _state_destroyed = 1;
@@ -28,6 +29,7 @@ class ft_map3d
         void    abort_lifecycle_error(const char *method_name,
                     const char *reason) const;
         void    abort_if_not_initialized(const char *method_name) const;
+        void    set_error(int error_code) const noexcept;
         int     lock_internal(bool *lock_acquired) const noexcept;
         int     unlock_internal(bool lock_acquired) const noexcept;
 
@@ -50,6 +52,9 @@ class ft_map3d
         bool    is_thread_safe() const noexcept;
         int     lock(bool *lock_acquired) const noexcept;
         void    unlock(bool lock_acquired) const noexcept;
+
+        int     get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 
         void    resize(size_t width, size_t height, size_t depth, int value = 0);
         int     get(size_t x, size_t y, size_t z) const;

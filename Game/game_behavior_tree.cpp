@@ -2,6 +2,8 @@
 #include "../Template/move.hpp"
 #include "../Basic/basic.hpp"
 
+thread_local int ft_behavior_node::_last_error = FT_ERR_SUCCESS;
+
 ft_behavior_context::ft_behavior_context() noexcept
     : _character(ft_nullptr), _user_data(ft_nullptr)
 {
@@ -36,7 +38,6 @@ void ft_behavior_context::set_user_data(void *user_data) noexcept
 }
 
 ft_behavior_node::ft_behavior_node() noexcept
-    : _error_code(FT_ERR_SUCCESS)
 {
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -49,18 +50,18 @@ ft_behavior_node::~ft_behavior_node() noexcept
 
 void ft_behavior_node::set_error(int error_code) const noexcept
 {
-    this->_error_code = error_code;
+    ft_behavior_node::_last_error = error_code;
     return ;
 }
 
 int ft_behavior_node::get_error() const noexcept
 {
-    return (this->_error_code);
+    return (ft_behavior_node::_last_error);
 }
 
 const char *ft_behavior_node::get_error_str() const noexcept
 {
-    return (ft_strerror(this->_error_code));
+    return (ft_strerror(ft_behavior_node::_last_error));
 }
 
 ft_behavior_action::ft_behavior_action() noexcept
@@ -271,7 +272,7 @@ int ft_behavior_sequence::tick(ft_behavior_context &context) noexcept
 }
 
 ft_behavior_tree::ft_behavior_tree() noexcept
-    : _root(), _error_code(FT_ERR_SUCCESS)
+    : _root()
 {
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -284,7 +285,7 @@ ft_behavior_tree::~ft_behavior_tree() noexcept
 
 void ft_behavior_tree::set_error(int error_code) const noexcept
 {
-    this->_error_code = error_code;
+    ft_behavior_tree::_last_error = error_code;
     return ;
 }
 
@@ -322,10 +323,10 @@ int ft_behavior_tree::tick(ft_behavior_context &context) noexcept
 
 int ft_behavior_tree::get_error() const noexcept
 {
-    return (this->_error_code);
+    return (ft_behavior_tree::_last_error);
 }
 
 const char *ft_behavior_tree::get_error_str() const noexcept
 {
-    return (ft_strerror(this->_error_code));
+    return (ft_strerror(ft_behavior_tree::_last_error));
 }

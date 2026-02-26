@@ -37,12 +37,17 @@ FT_TEST(test_progress_tracker_achievement_completion, "achievement completes aft
     ft_achievement achievement;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, tracker.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, tracker.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS,
         setup_achievement_with_goal(achievement, 10, 1, 3));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, tracker.register_achievement(achievement));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, tracker.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, tracker.add_goal_progress(10, 1, 1));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, tracker.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, tracker.update_goal_progress(10, 1, 3));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, tracker.get_error());
     FT_ASSERT(tracker.is_achievement_complete(10));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, tracker.get_error());
     return (1);
 }
 
@@ -51,7 +56,9 @@ FT_TEST(test_progress_tracker_missing_achievement, "missing achievement returns 
     ft_progress_tracker tracker;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, tracker.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, tracker.get_error());
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, tracker.update_goal_target(99, 1, 5));
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, tracker.get_error());
     return (1);
 }
 
@@ -60,13 +67,19 @@ FT_TEST(test_progress_tracker_quest_progression, "quest advances until completio
     ft_progress_tracker tracker;
     ft_quest quest;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, tracker.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, tracker.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, setup_basic_quest(quest, 3, 2));
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, tracker.register_quest(quest));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, tracker.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, tracker.advance_quest_phase(3));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, tracker.get_error());
     FT_ASSERT(tracker.is_quest_complete(3) == false);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, tracker.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, tracker.advance_quest_phase(3));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, tracker.get_error());
     FT_ASSERT(tracker.is_quest_complete(3));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, tracker.get_error());
     return (1);
 }
 
@@ -75,11 +88,15 @@ FT_TEST(test_progress_tracker_over_advance_error, "advancing beyond quest phases
     ft_progress_tracker tracker;
     ft_quest quest;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, tracker.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, tracker.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, setup_basic_quest(quest, 8, 1));
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, tracker.register_quest(quest));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, tracker.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, tracker.advance_quest_phase(8));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, tracker.get_error());
     FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, tracker.advance_quest_phase(8));
+    FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, tracker.get_error());
     return (1);
 }
 
@@ -92,7 +109,9 @@ FT_TEST(test_progress_tracker_register_achievement_single_global_error,
     ft_achievement achievement;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, setup_achievement_with_goal(achievement, 2, 1, 3));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, tracker.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, tracker.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, register_result = tracker.register_achievement(achievement));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, register_result);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, tracker.get_error());
     return (1);
 }

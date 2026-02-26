@@ -9,7 +9,7 @@ class ft_experience_table
     private:
         int             *_levels;
         int             _count;
-        mutable int     _error;
+        static thread_local int _last_error;
         mutable pt_recursive_mutex *_mutex;
 
         void set_error(int err) const noexcept;

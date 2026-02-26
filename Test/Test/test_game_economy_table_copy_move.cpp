@@ -30,6 +30,40 @@ static int register_all_records(ft_economy_table &table)
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.register_rarity_band(band));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.register_vendor_profile(vendor));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.register_currency_rate(rate));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
+    return (1);
+}
+
+static int assert_price_definition(const ft_price_definition &definition,
+        int item_id, int rarity, int base_value, int minimum_value, int maximum_value)
+{
+    FT_ASSERT_EQ(item_id, definition.get_item_id());
+    FT_ASSERT_EQ(rarity, definition.get_rarity());
+    FT_ASSERT_EQ(base_value, definition.get_base_value());
+    FT_ASSERT_EQ(minimum_value, definition.get_minimum_value());
+    FT_ASSERT_EQ(maximum_value, definition.get_maximum_value());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.get_error());
+    return (1);
+}
+
+static int assert_vendor_profile_values(const ft_vendor_profile &profile,
+        int vendor_id, double buy_markup, double sell_multiplier, double tax_rate)
+{
+    FT_ASSERT_EQ(vendor_id, profile.get_vendor_id());
+    FT_ASSERT_DOUBLE_EQ(buy_markup, profile.get_buy_markup());
+    FT_ASSERT_DOUBLE_EQ(sell_multiplier, profile.get_sell_multiplier());
+    FT_ASSERT_DOUBLE_EQ(tax_rate, profile.get_tax_rate());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
+    return (1);
+}
+
+static int assert_currency_rate_values(const ft_currency_rate &rate,
+        int currency_id, double buy_rate, int precision)
+{
+    FT_ASSERT_EQ(currency_id, rate.get_currency_id());
+    FT_ASSERT_DOUBLE_EQ(buy_rate, rate.get_rate_to_base());
+    FT_ASSERT_EQ(precision, rate.get_display_precision());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.get_error());
     return (1);
 }
 
@@ -189,6 +223,11 @@ FT_TEST(test_economy_table_initialize_copy, "economy table initialize(copy) dupl
     FT_ASSERT_EQ(FT_ERR_SUCCESS, duplicate.fetch_rarity_band(7, rarity));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, duplicate.fetch_vendor_profile(11, vendor));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, duplicate.fetch_currency_rate(5, currency));
+    assert_price_definition(price, 4, 2, 900, 400, 1200);
+    assert_vendor_profile_values(vendor, 11, 1.30, 0.55, 0.08);
+    assert_currency_rate_values(currency, 5, 2.50, 4);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, duplicate.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_price.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_rarity.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_currency.initialize());
@@ -196,6 +235,9 @@ FT_TEST(test_economy_table_initialize_copy, "economy table initialize(copy) dupl
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source.fetch_rarity_band(7, source_rarity));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source.fetch_vendor_profile(11, source_vendor));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source.fetch_currency_rate(5, source_currency));
+    assert_price_definition(source_price, 4, 2, 900, 400, 1200);
+    assert_vendor_profile_values(source_vendor, 11, 1.30, 0.55, 0.08);
+    assert_currency_rate_values(source_currency, 5, 2.50, 4);
     return (1);
 }
 
@@ -246,6 +288,11 @@ FT_TEST(test_economy_table_initialize_overwrites_existing_entries, "economy tabl
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.fetch_rarity_band(7, rarity));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.fetch_vendor_profile(11, vendor));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.fetch_currency_rate(5, currency));
+    assert_price_definition(price, 4, 2, 900, 400, 1200);
+    assert_vendor_profile_values(vendor, 11, 1.30, 0.55, 0.08);
+    assert_currency_rate_values(currency, 5, 2.50, 4);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
     return (1);
 }
 
@@ -269,10 +316,15 @@ FT_TEST(test_economy_table_initialize_move_transfers_entries, "economy table ini
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.fetch_rarity_band(7, rarity));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.fetch_vendor_profile(11, vendor));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.fetch_currency_rate(5, currency));
+    assert_price_definition(price, 4, 2, 900, 400, 1200);
+    assert_vendor_profile_values(vendor, 11, 1.30, 0.55, 0.08);
+    assert_currency_rate_values(currency, 5, 2.50, 4);
     FT_ASSERT(source.get_price_definitions().empty());
     FT_ASSERT(source.get_rarity_bands().empty());
     FT_ASSERT(source.get_vendor_profiles().empty());
     FT_ASSERT(source.get_currency_rates().empty());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
     return (1);
 }
 

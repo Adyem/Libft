@@ -24,6 +24,7 @@ FT_TEST(test_price_definition_setters_preserve_values, "Price definition setters
     FT_ASSERT_EQ(300, definition.get_base_value());
     FT_ASSERT_EQ(80, definition.get_minimum_value());
     FT_ASSERT_EQ(500, definition.get_maximum_value());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.get_error());
     return (1);
 }
 
@@ -45,6 +46,8 @@ FT_TEST(test_price_definition_initialize_copy_preserves_values, "Price definitio
     FT_ASSERT_EQ(150, source.get_base_value());
     FT_ASSERT_EQ(90, source.get_minimum_value());
     FT_ASSERT_EQ(210, source.get_maximum_value());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, copy.get_error());
     return (1);
 }
 
@@ -61,6 +64,7 @@ FT_TEST(test_currency_rate_setters_preserve_values, "Currency rate setters persi
     FT_ASSERT_EQ(11, rate.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(0.85, rate.get_rate_to_base());
     FT_ASSERT_EQ(6, rate.get_display_precision());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.get_error());
     return (1);
 }
 
@@ -78,6 +82,8 @@ FT_TEST(test_currency_rate_initialize_copy_preserves_values, "Currency rate init
     FT_ASSERT_EQ(18, source.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(4.5, source.get_rate_to_base());
     FT_ASSERT_EQ(1, source.get_display_precision());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, clone.get_error());
     return (1);
 }
 
@@ -92,6 +98,7 @@ FT_TEST(test_rarity_band_setters_preserve_values, "Rarity band setters persist t
 
     FT_ASSERT_EQ(9, band.get_rarity());
     FT_ASSERT_DOUBLE_EQ(1.1, band.get_value_multiplier());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, band.get_error());
     return (1);
 }
 
@@ -107,5 +114,7 @@ FT_TEST(test_rarity_band_initialize_copy_preserves_values, "Rarity band initiali
     FT_ASSERT_DOUBLE_EQ(2.8, clone.get_value_multiplier());
     FT_ASSERT_EQ(14, source.get_rarity());
     FT_ASSERT_DOUBLE_EQ(2.8, source.get_value_multiplier());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, clone.get_error());
     return (1);
 }

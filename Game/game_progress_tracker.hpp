@@ -14,6 +14,7 @@ class ft_progress_tracker
         ft_map<int, ft_achievement> _achievements;
         ft_map<int, ft_quest>       _quests;
         pt_recursive_mutex                   *_mutex;
+        static thread_local int                    _last_error;
         uint8_t                     _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -23,6 +24,7 @@ class ft_progress_tracker
         void abort_lifecycle_error(const char *method_name,
             const char *reason) const;
         void abort_if_not_initialized(const char *method_name) const;
+        void set_error(int error_code) const noexcept;
         int lock_internal(bool *lock_acquired) const noexcept;
         int unlock_internal(bool lock_acquired) const noexcept;
 
@@ -63,6 +65,9 @@ class ft_progress_tracker
         int set_quest_phase(int quest_id, int phase) noexcept;
         int advance_quest_phase(int quest_id) noexcept;
         bool is_quest_complete(int quest_id) const noexcept;
+
+        int get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex *get_mutex_for_validation() const noexcept;

@@ -17,6 +17,9 @@ struct ft_crafting_ingredient
         int             _count;
         int             _rarity;
         mutable pt_recursive_mutex *_mutex;
+        static thread_local int _last_error;
+
+        void set_error(int error_code) const noexcept;
 
         int  lock_internal(bool *lock_acquired) const noexcept;
         void unlock_internal(bool lock_acquired) const noexcept;
@@ -55,6 +58,9 @@ class ft_crafting
     private:
         ft_map<int, ft_vector<ft_crafting_ingredient>> _recipes;
         mutable pt_recursive_mutex *_mutex;
+        static thread_local int _last_error;
+
+        void set_error(int error_code) const noexcept;
 
         int  lock_internal(bool *lock_acquired) const noexcept;
         void unlock_internal(bool lock_acquired) const noexcept;

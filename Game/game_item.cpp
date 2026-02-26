@@ -1,6 +1,10 @@
 #include "game_item.hpp"
 #include "../Basic/basic.hpp"
 #include "../PThread/pthread.hpp"
+#include <new>
+
+thread_local int ft_item_modifier::_last_error = FT_ERR_SUCCESS;
+thread_local int ft_item::_last_error = FT_ERR_SUCCESS;
 static int game_item_reset_modifier(ft_item_modifier &modifier)
 {
     modifier.set_id(0);
@@ -9,8 +13,20 @@ static int game_item_reset_modifier(ft_item_modifier &modifier)
 }
 
 ft_item_modifier::ft_item_modifier() noexcept
-    : _id(0), _value(0), _mutex()
+    : _id(0), _value(0), _mutex(ft_nullptr)
 {
+    return ;
+}
+
+ft_item_modifier::~ft_item_modifier() noexcept
+{
+    (void)this->disable_thread_safety();
+    return ;
+}
+
+void ft_item_modifier::set_error(int error_code) const noexcept
+{
+    ft_item_modifier::_last_error = error_code;
     return ;
 }
 
@@ -18,6 +34,7 @@ int ft_item_modifier::initialize() noexcept
 {
     this->_id = 0;
     this->_value = 0;
+    this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
@@ -25,6 +42,7 @@ int ft_item_modifier::initialize(int id, int value) noexcept
 {
     this->_id = id;
     this->_value = value;
+    this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
@@ -34,14 +52,27 @@ int ft_item_modifier::initialize(const ft_item_modifier &other) noexcept
     int unlock_error;
 
     if (this == &other)
+    {
+        this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
-    lock_error = other._mutex.lock();
+    }
+    if (other._mutex == ft_nullptr)
+        lock_error = FT_ERR_SUCCESS;
+    else
+        lock_error = other._mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(lock_error);
         return (lock_error);
+    }
     this->_id = other._id;
     this->_value = other._value;
-    unlock_error = other._mutex.unlock();
+    if (other._mutex == ft_nullptr)
+        unlock_error = FT_ERR_SUCCESS;
+    else
+        unlock_error = other._mutex->unlock();
     (void)unlock_error;
+    this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
@@ -51,17 +82,85 @@ int ft_item_modifier::initialize(ft_item_modifier &&other) noexcept
     int unlock_error;
 
     if (this == &other)
+    {
+        this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
-    lock_error = other._mutex.lock();
+    }
+    if (other._mutex == ft_nullptr)
+        lock_error = FT_ERR_SUCCESS;
+    else
+        lock_error = other._mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(lock_error);
         return (lock_error);
+    }
     this->_id = other._id;
     this->_value = other._value;
     other._id = 0;
     other._value = 0;
-    unlock_error = other._mutex.unlock();
+    if (other._mutex == ft_nullptr)
+        unlock_error = FT_ERR_SUCCESS;
+    else
+        unlock_error = other._mutex->unlock();
     (void)unlock_error;
+    this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
+}
+
+int ft_item_modifier::enable_thread_safety() noexcept
+{
+    int initialize_error;
+    pt_recursive_mutex *new_mutex;
+
+    if (this->_mutex != ft_nullptr)
+    {
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
+    }
+    new_mutex = new (std::nothrow) pt_recursive_mutex();
+    if (new_mutex == ft_nullptr)
+    {
+        this->set_error(FT_ERR_NO_MEMORY);
+        return (FT_ERR_NO_MEMORY);
+    }
+    initialize_error = new_mutex->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        delete new_mutex;
+        this->set_error(initialize_error);
+        return (initialize_error);
+    }
+    this->_mutex = new_mutex;
+    this->set_error(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
+}
+
+int ft_item_modifier::disable_thread_safety() noexcept
+{
+    int destroy_error;
+    pt_recursive_mutex *old_mutex;
+
+    if (this->_mutex == ft_nullptr)
+    {
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
+    }
+    old_mutex = this->_mutex;
+    this->_mutex = ft_nullptr;
+    destroy_error = old_mutex->destroy();
+    delete old_mutex;
+    this->set_error(destroy_error);
+    return (destroy_error);
+}
+
+bool ft_item_modifier::is_thread_safe() const noexcept
+{
+    bool result;
+
+    result = (this->_mutex != ft_nullptr);
+    this->set_error(FT_ERR_SUCCESS);
+    return (result);
 }
 
 int ft_item_modifier::get_id() const noexcept
@@ -70,12 +169,22 @@ int ft_item_modifier::get_id() const noexcept
     int lock_error;
     int unlock_error;
 
-    lock_error = this->_mutex.lock();
+    if (this->_mutex == ft_nullptr)
+        lock_error = FT_ERR_SUCCESS;
+    else
+        lock_error = this->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(lock_error);
         return (0);
+    }
     modifier_id = this->_id;
-    unlock_error = this->_mutex.unlock();
+    if (this->_mutex == ft_nullptr)
+        unlock_error = FT_ERR_SUCCESS;
+    else
+        unlock_error = this->_mutex->unlock();
     (void)unlock_error;
+    this->set_error(FT_ERR_SUCCESS);
     return (modifier_id);
 }
 
@@ -84,12 +193,22 @@ void ft_item_modifier::set_id(int id) noexcept
     int lock_error;
     int unlock_error;
 
-    lock_error = this->_mutex.lock();
+    if (this->_mutex == ft_nullptr)
+        lock_error = FT_ERR_SUCCESS;
+    else
+        lock_error = this->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(lock_error);
         return ;
+    }
     this->_id = id;
-    unlock_error = this->_mutex.unlock();
+    if (this->_mutex == ft_nullptr)
+        unlock_error = FT_ERR_SUCCESS;
+    else
+        unlock_error = this->_mutex->unlock();
     (void)unlock_error;
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -99,12 +218,22 @@ int ft_item_modifier::get_value() const noexcept
     int lock_error;
     int unlock_error;
 
-    lock_error = this->_mutex.lock();
+    if (this->_mutex == ft_nullptr)
+        lock_error = FT_ERR_SUCCESS;
+    else
+        lock_error = this->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(lock_error);
         return (0);
+    }
     modifier_value = this->_value;
-    unlock_error = this->_mutex.unlock();
+    if (this->_mutex == ft_nullptr)
+        unlock_error = FT_ERR_SUCCESS;
+    else
+        unlock_error = this->_mutex->unlock();
     (void)unlock_error;
+    this->set_error(FT_ERR_SUCCESS);
     return (modifier_value);
 }
 
@@ -113,23 +242,33 @@ void ft_item_modifier::set_value(int value) noexcept
     int lock_error;
     int unlock_error;
 
-    lock_error = this->_mutex.lock();
+    if (this->_mutex == ft_nullptr)
+        lock_error = FT_ERR_SUCCESS;
+    else
+        lock_error = this->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(lock_error);
         return ;
+    }
     this->_value = value;
-    unlock_error = this->_mutex.unlock();
+    if (this->_mutex == ft_nullptr)
+        unlock_error = FT_ERR_SUCCESS;
+    else
+        unlock_error = this->_mutex->unlock();
     (void)unlock_error;
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 int ft_item_modifier::get_error() const noexcept
 {
-    return (FT_ERR_SUCCESS);
+    return (ft_item_modifier::_last_error);
 }
 
 const char *ft_item_modifier::get_error_str() const noexcept
 {
-    return (ft_strerror(FT_ERR_SUCCESS));
+    return (ft_strerror(this->get_error()));
 }
 
 static void game_item_sleep_backoff()
@@ -144,7 +283,9 @@ int ft_item::lock_internal(bool *lock_acquired) const noexcept
 
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    lock_error = this->_mutex.lock();
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    lock_error = this->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (lock_acquired != ft_nullptr)
@@ -156,7 +297,9 @@ void ft_item::unlock_internal(bool lock_acquired) const noexcept
 {
     if (lock_acquired == false)
         return ;
-    (void)this->_mutex.unlock();
+    if (this->_mutex == ft_nullptr)
+        return ;
+    (void)this->_mutex->unlock();
     return ;
 }
 
@@ -228,9 +371,15 @@ int ft_item::lock_pair(const ft_item &first, const ft_item &second,
 ft_item::ft_item() noexcept
     : _max_stack(0), _stack_size(0), _item_id(0), _rarity(0),
       _width(1), _height(1), _modifier1(), _modifier2(),
-      _modifier3(), _modifier4(), _error_code(FT_ERR_SUCCESS), _mutex()
+      _modifier3(), _modifier4(), _mutex(ft_nullptr)
 {
     this->set_error(FT_ERR_SUCCESS);
+    return ;
+}
+
+ft_item::~ft_item() noexcept
+{
+    (void)this->disable_thread_safety();
     return ;
 }
 
@@ -246,7 +395,6 @@ int ft_item::initialize() noexcept
     (void)this->_modifier2.initialize();
     (void)this->_modifier3.initialize();
     (void)this->_modifier4.initialize();
-    this->_error_code = FT_ERR_SUCCESS;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
@@ -284,8 +432,7 @@ int ft_item::initialize(const ft_item &other) noexcept
     modifier_error = this->_modifier4.initialize(other._modifier4);
     if (modifier_error != FT_ERR_SUCCESS)
         return (modifier_error);
-    this->_error_code = other._error_code;
-    this->set_error(other._error_code);
+    this->set_error(other.get_error());
     other.unlock_internal(other_locked);
     return (FT_ERR_SUCCESS);
 }
@@ -345,7 +492,7 @@ int ft_item::initialize(ft_item &&other) noexcept
         other.unlock_internal(other_locked);
         return (modifier_error);
     }
-    this->_error_code = other._error_code;
+    this->set_error(other.get_error());
     other._max_stack = 0;
     other._stack_size = 0;
     other._item_id = 0;
@@ -384,12 +531,49 @@ int ft_item::initialize(ft_item &&other) noexcept
         other.unlock_internal(other_locked);
         return (modifier_error);
     }
-    other._error_code = FT_ERR_SUCCESS;
-    this->set_error(this->_error_code);
     other.set_error(FT_ERR_SUCCESS);
     this->unlock_internal(this_locked);
     other.unlock_internal(other_locked);
     return (FT_ERR_SUCCESS);
+}
+
+int ft_item::enable_thread_safety() noexcept
+{
+    int initialize_error;
+    pt_recursive_mutex *new_mutex;
+
+    if (this->_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    new_mutex = new (std::nothrow) pt_recursive_mutex();
+    if (new_mutex == ft_nullptr)
+        return (FT_ERR_NO_MEMORY);
+    initialize_error = new_mutex->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        delete new_mutex;
+        return (initialize_error);
+    }
+    this->_mutex = new_mutex;
+    return (FT_ERR_SUCCESS);
+}
+
+int ft_item::disable_thread_safety() noexcept
+{
+    int destroy_error;
+    pt_recursive_mutex *old_mutex;
+
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    old_mutex = this->_mutex;
+    this->_mutex = ft_nullptr;
+    destroy_error = old_mutex->destroy();
+    delete old_mutex;
+    return (destroy_error);
+}
+
+bool ft_item::is_thread_safe() const noexcept
+{
+    return (this->_mutex != ft_nullptr);
 }
 
 int ft_item::get_max_stack() const noexcept
@@ -1308,44 +1492,16 @@ void ft_item::set_modifier4_value(int value) noexcept
 
 void ft_item::set_error(int err) const noexcept
 {
-    this->_error_code = err;
+    ft_item::_last_error = err;
     return ;
 }
 
 int ft_item::get_error() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int error_code;
-
-    lock_acquired = false;
-    lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_item *>(this)->set_error(lock_error);
-        return (lock_error);
-    }
-    error_code = this->_error_code;
-    const_cast<ft_item *>(this)->set_error(error_code);
-    this->unlock_internal(lock_acquired);
-    return (error_code);
+    return (ft_item::_last_error);
 }
 
 const char *ft_item::get_error_str() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int error_code;
-
-    lock_acquired = false;
-    lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_item *>(this)->set_error(lock_error);
-        return (ft_strerror(lock_error));
-    }
-    error_code = this->_error_code;
-    const_cast<ft_item *>(this)->set_error(error_code);
-    this->unlock_internal(lock_acquired);
-    return (ft_strerror(error_code));
+    return (ft_strerror(this->get_error()));
 }

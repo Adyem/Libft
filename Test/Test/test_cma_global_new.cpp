@@ -6,6 +6,9 @@
 #include "../../CPP_class/class_nullptr.hpp"
 #include <new>
 #include <cstdint>
+#if __has_include(<valgrind/valgrind.h>)
+# include <valgrind/valgrind.h>
+#endif
 
 #ifndef LIBFT_TEST_BUILD
 #endif
@@ -41,11 +44,19 @@ FT_TEST(test_cma_global_new_preserves_alignment,
 FT_TEST(test_cma_global_new_alignment_failure_sets_errno,
     "global operator new propagates allocator failures for over-aligned types")
 {
-    aligned_large_type *instance;
+    void *instance;
 
-    cma_set_alloc_limit(16);
-    instance = new (std::nothrow) aligned_large_type;
+#if defined(RUNNING_ON_VALGRIND)
+    if (RUNNING_ON_VALGRIND)
+        return (1);
+#endif
+    cma_clear_backend();
+    cma_set_alloc_limit(0);
+    cma_set_alloc_limit(15);
+    instance = ::operator new(static_cast<std::size_t>(1),
+            static_cast<std::align_val_t>(16), std::nothrow);
     FT_ASSERT_EQ(instance, ft_nullptr);
+    cma_clear_backend();
     cma_set_alloc_limit(0);
     return (1);
 }

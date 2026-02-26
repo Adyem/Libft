@@ -28,8 +28,11 @@ FT_TEST(test_dialogue_table_get_lines_accessor_returns_map,
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.initialize());
     ft_map<int, ft_sharedptr<ft_dialogue_line>> &lines = table.get_lines();
 
-    lines.insert(3, build_line(3, "npc", "hello"));
+    ft_sharedptr<ft_dialogue_line> stored_line = build_line(3, "npc", "hello");
+    lines.insert(3, stored_line);
     FT_ASSERT_EQ(1, lines.size());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stored_line->get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
     return (1);
 }
 
@@ -45,6 +48,8 @@ FT_TEST(test_dialogue_table_get_scripts_accessor_returns_map,
     script.set_script_id(5);
     scripts.insert(5, script);
     FT_ASSERT_EQ(1, scripts.size());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, script.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
     return (1);
 }
 
@@ -70,5 +75,10 @@ FT_TEST(test_dialogue_table_scripts_map_mutation_does_not_spoil_storage,
     FT_ASSERT_NEQ(ft_string("modified"), script.get_title());
     FT_ASSERT_EQ(ft_string("modified"), stored.get_title());
     FT_ASSERT_EQ(ft_string("intro"), fetched.get_title());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, script.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stored.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, lines[0]->get_error());
     return (1);
 }

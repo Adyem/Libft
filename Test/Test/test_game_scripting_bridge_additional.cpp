@@ -171,10 +171,15 @@ FT_TEST(test_game_script_bridge_thread_safety_toggle, "Game: scripting bridge th
     FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.initialize(world_pointer));
 
     FT_ASSERT_EQ(false, bridge.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.get_error());
     FT_ASSERT_EQ(true, bridge.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.disable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.get_error());
     FT_ASSERT_EQ(false, bridge.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.get_error());
     return (1);
 }
 

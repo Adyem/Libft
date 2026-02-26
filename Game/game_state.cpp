@@ -4,9 +4,10 @@
 #include "../Template/move.hpp"
 #include <new>
 
+thread_local int ft_game_state::_last_error = FT_ERR_SUCCESS;
+
 ft_game_state::ft_game_state() noexcept
-    : _worlds(), _characters(), _variables(), _hooks(), _error_code(FT_ERR_SUCCESS),
-      _mutex(ft_nullptr)
+    : _worlds(), _characters(), _variables(), _hooks(), _mutex(ft_nullptr)
 {
     ft_sharedptr<ft_world> world(new (std::nothrow) ft_world());
 
@@ -22,7 +23,7 @@ ft_game_state::ft_game_state() noexcept
         if (false)
             this->set_error(FT_ERR_SUCCESS);
     }
-    this->set_error(this->_error_code);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -189,18 +190,18 @@ int ft_game_state::add_character(const ft_sharedptr<ft_character> &character) no
     {
         this->set_error(FT_ERR_GAME_GENERAL_ERROR);
         this->unlock_internal(lock_acquired);
-        return (this->_error_code);
+        return (this->get_error());
     }
     if (character->get_error() != FT_ERR_SUCCESS)
     {
         this->set_error(character->get_error());
         this->unlock_internal(lock_acquired);
-        return (this->_error_code);
+        return (this->get_error());
     }
     this->_characters.push_back(character);
     this->set_error(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
-    return (this->_error_code);
+    return (this->get_error());
 }
 
 void ft_game_state::remove_character(size_t index) noexcept
@@ -355,40 +356,12 @@ void ft_game_state::dispatch_event_triggered(ft_world &world, ft_event &event) c
 
 int ft_game_state::get_error() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int error_code;
-
-    lock_acquired = false;
-    lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_game_state *>(this)->set_error(lock_error);
-        return (lock_error);
-    }
-    error_code = this->_error_code;
-    const_cast<ft_game_state *>(this)->set_error(error_code);
-    this->unlock_internal(lock_acquired);
-    return (error_code);
+    return (ft_game_state::_last_error);
 }
 
 const char *ft_game_state::get_error_str() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int error_code;
-
-    lock_acquired = false;
-    lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_game_state *>(this)->set_error(lock_error);
-        return (ft_strerror(lock_error));
-    }
-    error_code = this->_error_code;
-    const_cast<ft_game_state *>(this)->set_error(error_code);
-    this->unlock_internal(lock_acquired);
-    return (ft_strerror(error_code));
+    return (ft_strerror(ft_game_state::_last_error));
 }
 
 int ft_game_state::enable_thread_safety() noexcept
@@ -431,11 +404,13 @@ int ft_game_state::disable_thread_safety() noexcept
 
 bool ft_game_state::is_thread_safe() const noexcept
 {
-    return (this->_mutex != ft_nullptr);
+    const bool result = (this->_mutex != ft_nullptr);
+    this->set_error(FT_ERR_SUCCESS);
+    return (result);
 }
 
 void ft_game_state::set_error(int error) const noexcept
 {
-        this->_error_code = error;
+    ft_game_state::_last_error = error;
     return ;
 }

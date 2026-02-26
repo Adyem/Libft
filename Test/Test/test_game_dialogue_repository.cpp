@@ -37,6 +37,8 @@ FT_TEST(test_dialogue_table_register_fetch_lines, "register_line stores lines re
     FT_ASSERT_EQ(ft_string("hello"), fetched.get_text());
     FT_ASSERT_EQ(2, fetched.get_next_line_ids()[0]);
     FT_ASSERT_EQ(3, fetched.get_next_line_ids()[1]);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched.get_error());
     return (1);
 }
 
@@ -65,5 +67,8 @@ FT_TEST(test_dialogue_table_scripts_copy_lines, "scripts store metadata and inde
     FT_ASSERT_EQ(1u, fetched_lines.size());
     FT_ASSERT_EQ(4, fetched_lines[0]->get_line_id());
     FT_ASSERT_EQ(ft_string("reply"), fetched_lines[0]->get_text());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, script.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
     return (1);
 }

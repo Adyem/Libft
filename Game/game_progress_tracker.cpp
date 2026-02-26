@@ -3,10 +3,29 @@
 #include "../System_utils/system_utils.hpp"
 #include <new>
 
+thread_local int ft_progress_tracker::_last_error = FT_ERR_SUCCESS;
+
+void ft_progress_tracker::set_error(int error_code) const noexcept
+{
+    ft_progress_tracker::_last_error = error_code;
+    return ;
+}
+
+int ft_progress_tracker::get_error() const noexcept
+{
+    return (ft_progress_tracker::_last_error);
+}
+
+const char *ft_progress_tracker::get_error_str() const noexcept
+{
+    return (ft_strerror(this->get_error()));
+}
+
 ft_progress_tracker::ft_progress_tracker() noexcept
     : _achievements(), _quests(), _mutex(ft_nullptr),
       _initialized_state(ft_progress_tracker::_state_uninitialized)
 {
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -49,20 +68,26 @@ int ft_progress_tracker::initialize() noexcept
     {
         this->abort_lifecycle_error("ft_progress_tracker::initialize",
             "called while object is already initialized");
+        this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
     error = this->_achievements.initialize();
     if (error != FT_ERR_SUCCESS)
+    {
+        this->set_error(error);
         return (error);
+    }
     error = this->_quests.initialize();
     if (error != FT_ERR_SUCCESS)
     {
         (void)this->_achievements.destroy();
+        this->set_error(error);
         return (error);
     }
     this->_achievements.clear();
     this->_quests.clear();
     this->_initialized_state = ft_progress_tracker::_state_initialized;
+    this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
@@ -83,7 +108,10 @@ int ft_progress_tracker::initialize(const ft_progress_tracker &other) noexcept
         return (FT_ERR_INVALID_STATE);
     }
     if (&other == this)
-        return (FT_ERR_SUCCESS);
+    {
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
+    }
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
         return (initialize_error);
@@ -120,13 +148,17 @@ int ft_progress_tracker::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != ft_progress_tracker::_state_initialized)
+    {
+        this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
+    }
     this->_achievements.clear();
     this->_quests.clear();
     (void)this->_achievements.destroy();
     (void)this->_quests.destroy();
     disable_error = this->disable_thread_safety();
     this->_initialized_state = ft_progress_tracker::_state_destroyed;
+    this->set_error(disable_error);
     return (disable_error);
 }
 
@@ -137,36 +169,52 @@ int ft_progress_tracker::enable_thread_safety() noexcept
 
     this->abort_if_not_initialized("ft_progress_tracker::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
+    {
+        this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
+    }
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
+    {
+        this->set_error(FT_ERR_NO_MEMORY);
         return (FT_ERR_NO_MEMORY);
+    }
     initialize_error = mutex_pointer->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
     {
         delete mutex_pointer;
+        this->set_error(initialize_error);
         return (initialize_error);
     }
     this->_mutex = mutex_pointer;
+    this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
 int ft_progress_tracker::disable_thread_safety() noexcept
 {
+    pt_recursive_mutex *old_mutex;
     int destroy_error;
 
     if (this->_mutex == ft_nullptr)
+    {
+        this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
-    destroy_error = this->_mutex->destroy();
-    delete this->_mutex;
+    }
+    old_mutex = this->_mutex;
     this->_mutex = ft_nullptr;
+    destroy_error = old_mutex->destroy();
+    delete old_mutex;
+    this->set_error(destroy_error);
     return (destroy_error);
 }
 
 bool ft_progress_tracker::is_thread_safe() const noexcept
 {
     this->abort_if_not_initialized("ft_progress_tracker::is_thread_safe");
-    return (this->_mutex != ft_nullptr);
+    const bool result = (this->_mutex != ft_nullptr);
+    this->set_error(FT_ERR_SUCCESS);
+    return (result);
 }
 
 int ft_progress_tracker::lock_internal(bool *lock_acquired) const noexcept
@@ -176,22 +224,42 @@ int ft_progress_tracker::lock_internal(bool *lock_acquired) const noexcept
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (this->_mutex == ft_nullptr)
+    {
+        this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
+    }
     lock_error = this->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(lock_error);
         return (lock_error);
+    }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
+    this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
 int ft_progress_tracker::unlock_internal(bool lock_acquired) const noexcept
 {
     if (lock_acquired == false)
+    {
+        this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
+    }
     if (this->_mutex == ft_nullptr)
+    {
+        this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
-    return (this->_mutex->unlock());
+    }
+    int unlock_error;
+
+    unlock_error = this->_mutex->unlock();
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
+    else
+        this->set_error(FT_ERR_SUCCESS);
+    return (unlock_error);
 }
 
 int ft_progress_tracker::lock(bool *lock_acquired) const noexcept
@@ -241,8 +309,14 @@ void ft_progress_tracker::set_achievements(
     const Pair<int, ft_achievement> *entry_end;
 
     this->abort_if_not_initialized("ft_progress_tracker::set_achievements");
-    if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
+    int lock_error;
+
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(lock_error);
         return ;
+    }
     this->_achievements.clear();
     count = achievements.size();
     entry_end = achievements.end();
@@ -255,6 +329,7 @@ void ft_progress_tracker::set_achievements(
         index += 1;
     }
     (void)this->unlock_internal(lock_acquired);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -267,8 +342,14 @@ void ft_progress_tracker::set_quests(const ft_map<int, ft_quest> &quests) noexce
     const Pair<int, ft_quest> *entry_end;
 
     this->abort_if_not_initialized("ft_progress_tracker::set_quests");
-    if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
+    int lock_error;
+
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(lock_error);
         return ;
+    }
     this->_quests.clear();
     count = quests.size();
     entry_end = quests.end();
@@ -281,6 +362,7 @@ void ft_progress_tracker::set_quests(const ft_map<int, ft_quest> &quests) noexce
         index += 1;
     }
     (void)this->unlock_internal(lock_acquired);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -290,10 +372,17 @@ int ft_progress_tracker::register_achievement(
     bool lock_acquired;
 
     this->abort_if_not_initialized("ft_progress_tracker::register_achievement");
-    if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
-        return (FT_ERR_INVALID_STATE);
+    int lock_error;
+
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(lock_error);
+        return (lock_error);
+    }
     this->_achievements.insert(achievement.get_id(), achievement);
     (void)this->unlock_internal(lock_acquired);
+    this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
@@ -302,10 +391,17 @@ int ft_progress_tracker::register_quest(const ft_quest &quest) noexcept
     bool lock_acquired;
 
     this->abort_if_not_initialized("ft_progress_tracker::register_quest");
-    if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
-        return (FT_ERR_INVALID_STATE);
+    int lock_error;
+
+    lock_error = this->lock_internal(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(lock_error);
+        return (lock_error);
+    }
     this->_quests.insert(quest.get_id(), quest);
     (void)this->unlock_internal(lock_acquired);
+    this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
@@ -317,8 +413,12 @@ int ft_progress_tracker::update_goal_target(int achievement_id, int goal_id,
     this->abort_if_not_initialized("ft_progress_tracker::update_goal_target");
     achievement_entry = this->_achievements.find(achievement_id);
     if (achievement_entry == this->_achievements.end())
+    {
+        this->set_error(FT_ERR_NOT_FOUND);
         return (FT_ERR_NOT_FOUND);
+    }
     achievement_entry->value.set_goal(goal_id, target);
+    this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
@@ -330,8 +430,12 @@ int ft_progress_tracker::update_goal_progress(int achievement_id, int goal_id,
     this->abort_if_not_initialized("ft_progress_tracker::update_goal_progress");
     achievement_entry = this->_achievements.find(achievement_id);
     if (achievement_entry == this->_achievements.end())
+    {
+        this->set_error(FT_ERR_NOT_FOUND);
         return (FT_ERR_NOT_FOUND);
+    }
     achievement_entry->value.set_progress(goal_id, progress);
+    this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
@@ -343,8 +447,12 @@ int ft_progress_tracker::add_goal_progress(int achievement_id, int goal_id,
     this->abort_if_not_initialized("ft_progress_tracker::add_goal_progress");
     achievement_entry = this->_achievements.find(achievement_id);
     if (achievement_entry == this->_achievements.end())
+    {
+        this->set_error(FT_ERR_NOT_FOUND);
         return (FT_ERR_NOT_FOUND);
+    }
     achievement_entry->value.add_progress(goal_id, value);
+    this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
@@ -378,10 +486,17 @@ int ft_progress_tracker::advance_quest_phase(int quest_id) noexcept
     this->abort_if_not_initialized("ft_progress_tracker::advance_quest_phase");
     quest_entry = this->_quests.find(quest_id);
     if (quest_entry == this->_quests.end())
+    {
+        this->set_error(FT_ERR_NOT_FOUND);
         return (FT_ERR_NOT_FOUND);
+    }
     if (quest_entry->value.is_complete())
+    {
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
         return (FT_ERR_GAME_GENERAL_ERROR);
+    }
     quest_entry->value.advance_phase();
+    this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 

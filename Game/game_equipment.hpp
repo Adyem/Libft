@@ -21,6 +21,9 @@ class ft_equipment
         ft_sharedptr<ft_item> _chest;
         ft_sharedptr<ft_item> _weapon;
         mutable pt_recursive_mutex      *_mutex;
+        static thread_local int _last_error;
+
+        void set_error(int error_code) const noexcept;
 
         bool validate_item(const ft_sharedptr<ft_item> &item) const noexcept;
         int lock_internal(bool *lock_acquired) const noexcept;

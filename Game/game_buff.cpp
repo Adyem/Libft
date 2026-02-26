@@ -2,11 +2,14 @@
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
 
+thread_local int ft_buff::_last_error = FT_ERR_SUCCESS;
+
 ft_buff::ft_buff() noexcept
     : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0),
       _modifier4(0), _mutex(ft_nullptr),
       _initialized_state(ft_buff::_state_uninitialized)
 {
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -55,6 +58,7 @@ int ft_buff::initialize() noexcept
     this->_modifier3 = 0;
     this->_modifier4 = 0;
     this->_initialized_state = ft_buff::_state_initialized;
+    this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
@@ -73,6 +77,7 @@ int ft_buff::initialize(const ft_buff &other) noexcept
     this->_modifier2 = other._modifier2;
     this->_modifier3 = other._modifier3;
     this->_modifier4 = other._modifier4;
+    this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
@@ -86,7 +91,10 @@ int ft_buff::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != ft_buff::_state_initialized)
+    {
+        this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
+    }
     disable_error = this->disable_thread_safety();
     this->_id = 0;
     this->_duration = 0;
@@ -95,6 +103,7 @@ int ft_buff::destroy() noexcept
     this->_modifier3 = 0;
     this->_modifier4 = 0;
     this->_initialized_state = ft_buff::_state_destroyed;
+    this->set_error(disable_error);
     return (disable_error);
 }
 
@@ -105,17 +114,25 @@ int ft_buff::enable_thread_safety() noexcept
 
     this->abort_if_not_initialized("ft_buff::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
+    {
+        this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
+    }
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
+    {
+        this->set_error(FT_ERR_NO_MEMORY);
         return (FT_ERR_NO_MEMORY);
+    }
     initialize_error = mutex_pointer->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
     {
         delete mutex_pointer;
+        this->set_error(initialize_error);
         return (initialize_error);
     }
     this->_mutex = mutex_pointer;
+    this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
@@ -124,17 +141,23 @@ int ft_buff::disable_thread_safety() noexcept
     int destroy_error;
 
     if (this->_mutex == ft_nullptr)
+    {
+        this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
+    }
     destroy_error = this->_mutex->destroy();
     delete this->_mutex;
     this->_mutex = ft_nullptr;
+    this->set_error(destroy_error);
     return (destroy_error);
 }
 
 bool ft_buff::is_thread_safe() const noexcept
 {
     this->abort_if_not_initialized("ft_buff::is_thread_safe");
-    return (this->_mutex != ft_nullptr);
+    bool result = (this->_mutex != ft_nullptr);
+    this->set_error(FT_ERR_SUCCESS);
+    return (result);
 }
 
 int ft_buff::lock_internal(bool *lock_acquired) const noexcept
@@ -173,6 +196,22 @@ void ft_buff::unlock(bool lock_acquired) const noexcept
     this->abort_if_not_initialized("ft_buff::unlock");
     (void)this->unlock_internal(lock_acquired);
     return ;
+}
+
+void ft_buff::set_error(int error_code) const noexcept
+{
+    ft_buff::_last_error = error_code;
+    return ;
+}
+
+int ft_buff::get_error() const noexcept
+{
+    return (ft_buff::_last_error);
+}
+
+const char *ft_buff::get_error_str() const noexcept
+{
+    return (ft_strerror(this->get_error()));
 }
 
 int ft_buff::get_id() const noexcept
@@ -217,8 +256,12 @@ int ft_buff::get_duration() const noexcept
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(lock_error);
         return (0);
+    }
     value = this->_duration;
+    this->set_error(FT_ERR_SUCCESS);
     (void)this->unlock_internal(lock_acquired);
     return (value);
 }
@@ -232,9 +275,13 @@ void ft_buff::set_duration(int duration) noexcept
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(lock_error);
         return ;
+    }
     if (duration >= 0)
         this->_duration = duration;
+    this->set_error(FT_ERR_SUCCESS);
     (void)this->unlock_internal(lock_acquired);
     return ;
 }
@@ -248,9 +295,13 @@ void ft_buff::add_duration(int duration) noexcept
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(lock_error);
         return ;
+    }
     if (duration >= 0)
         this->_duration += duration;
+    this->set_error(FT_ERR_SUCCESS);
     (void)this->unlock_internal(lock_acquired);
     return ;
 }
@@ -264,9 +315,13 @@ void ft_buff::sub_duration(int duration) noexcept
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(lock_error);
         return ;
+    }
     if (duration >= 0)
         this->_duration -= duration;
+    this->set_error(FT_ERR_SUCCESS);
     (void)this->unlock_internal(lock_acquired);
     return ;
 }

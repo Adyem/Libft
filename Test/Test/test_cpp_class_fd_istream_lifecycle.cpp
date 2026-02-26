@@ -5,30 +5,10 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <csignal>
+#include <cstring>
 
 #ifndef LIBFT_TEST_BUILD
 #endif
-
-static int fd_istream_expect_sigabrt(void (*operation)(void))
-{
-    pid_t child_process_id;
-    int child_status;
-
-    child_process_id = fork();
-    if (child_process_id == 0)
-    {
-        operation();
-        _exit(0);
-    }
-    if (child_process_id < 0)
-        return (0);
-    child_status = 0;
-    if (waitpid(child_process_id, &child_status, 0) < 0)
-        return (0);
-    if (!WIFSIGNALED(child_status))
-        return (0);
-    return (WTERMSIG(child_status) == SIGABRT);
-}
 
 static int create_pipe_descriptors(int &read_descriptor, int &write_descriptor)
 {
@@ -39,28 +19,6 @@ static int create_pipe_descriptors(int &read_descriptor, int &write_descriptor)
     read_descriptor = descriptors[0];
     write_descriptor = descriptors[1];
     return (FT_ERR_SUCCESS);
-}
-
-static void fd_istream_destroy_twice_aborts(void)
-{
-    int read_descriptor;
-    int write_descriptor;
-
-    read_descriptor = -1;
-    write_descriptor = -1;
-    if (create_pipe_descriptors(read_descriptor, write_descriptor) != FT_ERR_SUCCESS)
-        _exit(2);
-    ft_fd_istream stream_value(read_descriptor);
-    if (stream_value.destroy() != FT_ERR_SUCCESS)
-    {
-        close(read_descriptor);
-        close(write_descriptor);
-        _exit(2);
-    }
-    close(read_descriptor);
-    close(write_descriptor);
-    (void)stream_value.destroy();
-    _exit(0);
 }
 
 FT_TEST(test_ft_fd_istream_lifecycle_read_destroy_reinitialize,
@@ -117,9 +75,12 @@ FT_TEST(test_ft_fd_istream_thread_safety_toggle_is_explicit,
     return (1);
 }
 
-FT_TEST(test_ft_fd_istream_destroy_twice_aborts,
-    "ft_fd_istream destroy aborts when called in destroyed state")
+FT_TEST(test_ft_fd_istream_destroy_tolerates_destroyed_instance,
+    "ft_fd_istream destroy tolerates destroyed instance")
 {
-    FT_ASSERT_EQ(1, fd_istream_expect_sigabrt(fd_istream_destroy_twice_aborts));
+    ft_fd_istream stream_value(-1);
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.destroy());
+    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, stream_value.destroy());
     return (1);
 }

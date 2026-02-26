@@ -22,6 +22,7 @@ FT_TEST(test_dialogue_line_basic_fields, "ft_dialogue_line stores id, speaker, t
     FT_ASSERT_EQ(2u, line.get_next_line_ids().size());
     FT_ASSERT_EQ(2, line.get_next_line_ids()[0]);
     FT_ASSERT_EQ(4, line.get_next_line_ids()[1]);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, line.get_error());
     return (1);
 }
 
@@ -49,5 +50,7 @@ FT_TEST(test_dialogue_script_sets_metadata_and_lines, "ft_dialogue_script stores
     FT_ASSERT_EQ(ft_string("quest"), script.get_title());
     FT_ASSERT_EQ(1u, script.get_lines().size());
     FT_ASSERT_EQ(3, script.get_lines()[0]->get_line_id());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, script.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, script.get_lines()[0]->get_error());
     return (1);
 }

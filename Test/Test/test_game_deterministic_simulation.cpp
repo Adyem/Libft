@@ -31,6 +31,7 @@ FT_TEST(test_game_deterministic_simulation_scenarios,
 
     ft_sharedptr<ft_item> oak_plank(new (std::nothrow) ft_item());
     FT_ASSERT(oak_plank.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, oak_plank->initialize());
     oak_plank->set_item_id(101);
     oak_plank->set_max_stack(10);
     oak_plank->set_stack_size(3);
@@ -38,13 +39,16 @@ FT_TEST(test_game_deterministic_simulation_scenarios,
 
     ft_sharedptr<ft_item> iron_ingot(new (std::nothrow) ft_item());
     FT_ASSERT(iron_ingot.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, iron_ingot->initialize());
     iron_ingot->set_item_id(102);
     iron_ingot->set_max_stack(10);
     iron_ingot->set_stack_size(1);
     iron_ingot->set_rarity(2);
 
     FT_ASSERT_EQ(hero_inventory.add_item(oak_plank), FT_ERR_SUCCESS);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, oak_plank->get_error());
     FT_ASSERT_EQ(hero_inventory.add_item(iron_ingot), FT_ERR_SUCCESS);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, iron_ingot->get_error());
     ft_crafting crafting_system;
 
     ft_crafting_ingredient oak_requirement;
@@ -60,12 +64,14 @@ FT_TEST(test_game_deterministic_simulation_scenarios,
 
     ft_sharedptr<ft_item> crafted_sword(new (std::nothrow) ft_item());
     FT_ASSERT(crafted_sword.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, crafted_sword->initialize());
     crafted_sword->set_item_id(501);
     crafted_sword->set_max_stack(1);
     crafted_sword->set_stack_size(1);
     crafted_sword->set_rarity(3);
     crafted_sword->set_modifier1_id(1);
     crafted_sword->set_modifier1_value(5);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, crafted_sword->get_error());
 
     ft_quest crafting_quest;
     crafting_quest.set_id(77);

@@ -17,7 +17,7 @@ class ft_game_script_context
         ft_game_state                         *_state;
         ft_sharedptr<ft_world>                _world;
         ft_map<ft_string, ft_string>          _variables;
-        mutable int                            _error_code;
+        static thread_local int                _last_error;
 
         void set_error(int error) const noexcept;
 
@@ -54,7 +54,7 @@ class ft_game_script_bridge
         ft_map<ft_string, ft_function<int(ft_game_script_context &, const ft_vector<ft_string> &)> > _callbacks;
         ft_string _language;
         int _max_operations;
-        mutable int _error_code;
+        static thread_local int _last_error;
         mutable pt_recursive_mutex *_mutex;
 
         void set_error(int error) const noexcept;

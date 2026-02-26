@@ -15,6 +15,7 @@ class ft_reputation
         int               _total_rep;
         int               _current_rep;
         mutable pt_recursive_mutex *_mutex;
+        static thread_local int    _last_error;
         uint8_t           _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -24,6 +25,7 @@ class ft_reputation
         void abort_lifecycle_error(const char *method_name,
                 const char *reason) const;
         void abort_if_not_initialized(const char *method_name) const;
+        void set_error(int error_code) const noexcept;
         int lock_internal(bool *lock_acquired) const noexcept;
         int unlock_internal(bool lock_acquired) const noexcept;
 
@@ -67,6 +69,9 @@ class ft_reputation
         void set_reps(const ft_map<int, int> &reps) noexcept;
         int get_rep(int id) const noexcept;
         void set_rep(int id, int value) noexcept;
+
+        int get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex *get_mutex_for_validation() const noexcept;

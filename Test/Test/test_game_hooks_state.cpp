@@ -28,6 +28,8 @@ FT_TEST(test_game_state_dispatches_registered_hooks, "Game: game state dispatch 
 
     hooks = ft_sharedptr<ft_game_hooks>(new (std::nothrow) ft_game_hooks());
     FT_ASSERT(static_cast<bool>(hooks));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hooks->initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, item.initialize());
     crafted_invocations = 0;
     damaged_invocations = 0;
     event_invocations = 0;
@@ -62,6 +64,8 @@ FT_TEST(test_game_state_dispatches_registered_hooks, "Game: game state dispatch 
     FT_ASSERT_EQ(1, damaged_invocations);
     FT_ASSERT_EQ(1, event_invocations);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, state.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hooks->get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, item.get_error());
     return (1);
 }
 
@@ -79,6 +83,8 @@ FT_TEST(test_game_state_reset_hooks_clears_callbacks, "Game: game state reset cl
 
     hooks = ft_sharedptr<ft_game_hooks>(new (std::nothrow) ft_game_hooks());
     FT_ASSERT(static_cast<bool>(hooks));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hooks->initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, item.initialize());
     crafted_invocations = 0;
     damaged_invocations = 0;
     event_invocations = 0;
@@ -123,5 +129,7 @@ FT_TEST(test_game_state_reset_hooks_clears_callbacks, "Game: game state reset cl
     FT_ASSERT_EQ(0, damaged_invocations);
     FT_ASSERT_EQ(0, event_invocations);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, state.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hooks->get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, item.get_error());
     return (1);
 }

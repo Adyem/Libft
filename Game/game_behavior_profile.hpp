@@ -16,6 +16,7 @@ class ft_behavior_profile
         double                        _caution_weight;
         ft_vector<ft_behavior_action> _actions;
         pt_recursive_mutex                     *_mutex;
+        static thread_local int _last_error;
         uint8_t                       _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -27,6 +28,7 @@ class ft_behavior_profile
         void abort_if_not_initialized(const char *method_name) const;
         int lock_internal(bool *lock_acquired) const noexcept;
         int unlock_internal(bool lock_acquired) const noexcept;
+        void set_error(int error_code) const noexcept;
 
         friend class ft_behavior_table;
 
@@ -63,6 +65,9 @@ class ft_behavior_profile
         ft_vector<ft_behavior_action> &get_actions() noexcept;
         const ft_vector<ft_behavior_action> &get_actions() const noexcept;
         void set_actions(const ft_vector<ft_behavior_action> &actions) noexcept;
+
+        int get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex *get_mutex_for_validation() const noexcept;

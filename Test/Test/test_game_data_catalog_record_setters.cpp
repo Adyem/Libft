@@ -17,6 +17,8 @@ FT_TEST(test_item_definition_setters, "update item definition fields")
 {
     ft_item_definition definition;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.initialize());
+
     definition.set_item_id(4);
     definition.set_rarity(2);
     definition.set_max_stack(15);
@@ -46,6 +48,7 @@ FT_TEST(test_recipe_blueprint_setters, "update recipe fields and ingredients")
     populate_ingredient(ingredient, 11, 4, 2);
     ingredients.push_back(ingredient);
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, recipe.initialize());
     recipe.set_recipe_id(6);
     recipe.set_result_item_id(30);
     recipe.set_ingredients(ingredients);
@@ -62,6 +65,8 @@ FT_TEST(test_loadout_entry_setters, "update loadout entry fields")
 {
     ft_loadout_entry entry;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, entry.initialize());
+
     entry.set_slot(3);
     entry.set_item_id(14);
     entry.set_quantity(5);
@@ -75,17 +80,24 @@ FT_TEST(test_loadout_entry_setters, "update loadout entry fields")
 FT_TEST(test_loadout_blueprint_setters, "update loadout blueprint fields and entries")
 {
     ft_vector<ft_loadout_entry> entries;
-    ft_loadout_entry entry;
+    ft_loadout_entry first_entry;
+    ft_loadout_entry second_entry;
     ft_loadout_blueprint blueprint;
 
-    entry.set_slot(0);
-    entry.set_item_id(1);
-    entry.set_quantity(2);
-    entries.push_back(entry);
-    entry.set_slot(2);
-    entry.set_item_id(3);
-    entry.set_quantity(4);
-    entries.push_back(entry);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, blueprint.initialize());
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first_entry.initialize(0, 1, 2));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first_entry.get_error());
+    first_entry.set_slot(0);
+    first_entry.set_item_id(1);
+    first_entry.set_quantity(2);
+    entries.push_back(first_entry);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second_entry.initialize(2, 3, 4));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second_entry.get_error());
+    second_entry.set_slot(2);
+    second_entry.set_item_id(3);
+    second_entry.set_quantity(4);
+    entries.push_back(second_entry);
 
     blueprint.set_loadout_id(18);
     blueprint.set_entries(entries);

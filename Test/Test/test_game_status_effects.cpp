@@ -13,9 +13,12 @@ FT_TEST(test_game_buff_rejects_negative_id, "Game: buff setter rejects negative 
     ft_buff buff;
 
     buff.set_id(-4);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, buff.get_error());
 
     FT_ASSERT_EQ(0, buff.get_id());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buff.get_error());
     FT_ASSERT_EQ(0, buff.get_id());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buff.get_error());
     return (1);
 }
 
@@ -24,9 +27,12 @@ FT_TEST(test_game_buff_duration_addition_rejects_negative, "Game: buff duration 
     ft_buff buff;
 
     buff.add_duration(-3);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, buff.get_error());
 
     FT_ASSERT_EQ(0, buff.get_duration());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buff.get_error());
     FT_ASSERT_EQ(0, buff.get_duration());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buff.get_error());
     return (1);
 }
 
@@ -35,10 +41,14 @@ FT_TEST(test_game_debuff_modifier_updates_apply_deltas, "Game: debuff modifier u
     ft_debuff debuff;
 
     debuff.set_modifier2(5);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, debuff.get_error());
     debuff.sub_modifier2(2);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, debuff.get_error());
     debuff.add_modifier2(4);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, debuff.get_error());
 
     FT_ASSERT_EQ(7, debuff.get_modifier2());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, debuff.get_error());
     return (1);
 }
 
@@ -47,12 +57,18 @@ FT_TEST(test_game_resistance_reset_clears_values, "Game: resistance reset restor
     ft_resistance resistance;
 
     resistance.set_values(25, 10);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, resistance.get_error());
 
     FT_ASSERT_EQ(25, resistance.get_percent());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, resistance.get_error());
     FT_ASSERT_EQ(10, resistance.get_flat());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, resistance.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, resistance.reset());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, resistance.get_error());
     FT_ASSERT_EQ(0, resistance.get_percent());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, resistance.get_error());
     FT_ASSERT_EQ(0, resistance.get_flat());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, resistance.get_error());
     return (1);
 }
 
@@ -62,11 +78,17 @@ FT_TEST(test_game_resistance_set_values_copy_values, "Game: resistance set value
     ft_resistance destination;
 
     source.set_values(15, 3);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
     destination.set_values(source.get_percent(), source.get_flat());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.get_error());
 
     FT_ASSERT_EQ(15, destination.get_percent());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.get_error());
     FT_ASSERT_EQ(3, destination.get_flat());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.get_error());
     FT_ASSERT_EQ(15, source.get_percent());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
     FT_ASSERT_EQ(3, source.get_flat());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
     return (1);
 }

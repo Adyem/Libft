@@ -10,15 +10,20 @@ FT_TEST(test_vendor_profile_initialize_and_setters, "ft_vendor_profile initializ
     ft_vendor_profile profile;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.initialize(3, 1.20, 0.88, 0.05));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
     FT_ASSERT_EQ(3, profile.get_vendor_id());
     FT_ASSERT_DOUBLE_EQ(1.20, profile.get_buy_markup());
     FT_ASSERT_DOUBLE_EQ(0.88, profile.get_sell_multiplier());
     FT_ASSERT_DOUBLE_EQ(0.05, profile.get_tax_rate());
 
     profile.set_vendor_id(5);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
     profile.set_buy_markup(1.35);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
     profile.set_sell_multiplier(0.72);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
     profile.set_tax_rate(0.10);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
 
     FT_ASSERT_EQ(5, profile.get_vendor_id());
     FT_ASSERT_DOUBLE_EQ(1.35, profile.get_buy_markup());

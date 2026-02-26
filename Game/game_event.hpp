@@ -18,8 +18,8 @@ class ft_event
         int _modifier3;
         int _modifier4;
         ft_function<void(ft_world&, ft_event&)> _callback;
-        mutable int _error;
         mutable pt_recursive_mutex *_mutex;
+        static thread_local int _last_error;
 
         void set_error(int err) const noexcept;
         int lock_internal(bool *lock_acquired) const noexcept;

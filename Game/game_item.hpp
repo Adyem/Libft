@@ -10,11 +10,14 @@ class ft_item_modifier
     private:
         int             _id;
         int             _value;
-        mutable pt_recursive_mutex _mutex;
+        mutable pt_recursive_mutex *_mutex;
+        static thread_local int    _last_error;
+
+        void set_error(int error_code) const noexcept;
 
     public:
         ft_item_modifier() noexcept;
-        virtual ~ft_item_modifier() = default;
+        virtual ~ft_item_modifier() noexcept;
         ft_item_modifier(const ft_item_modifier &other) noexcept = delete;
         ft_item_modifier &operator=(const ft_item_modifier &other) noexcept = delete;
         ft_item_modifier(ft_item_modifier &&other) noexcept = delete;
@@ -24,6 +27,9 @@ class ft_item_modifier
         int initialize(int id, int value) noexcept;
         int initialize(const ft_item_modifier &other) noexcept;
         int initialize(ft_item_modifier &&other) noexcept;
+        int enable_thread_safety() noexcept;
+        int disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
 
         int get_id() const noexcept;
         void set_id(int id) noexcept;
@@ -48,8 +54,8 @@ class ft_item
         ft_item_modifier _modifier2;
         ft_item_modifier _modifier3;
         ft_item_modifier _modifier4;
-        mutable int     _error_code;
-        mutable pt_recursive_mutex _mutex;
+        static thread_local int _last_error;
+        mutable pt_recursive_mutex *_mutex;
 
         void set_error(int err) const noexcept;
         int lock_internal(bool *lock_acquired) const noexcept;
@@ -60,7 +66,7 @@ class ft_item
 
     public:
         ft_item() noexcept;
-        virtual ~ft_item() = default;
+        virtual ~ft_item() noexcept;
         ft_item(const ft_item &other) noexcept = delete;
         ft_item &operator=(const ft_item &other) noexcept = delete;
         ft_item(ft_item &&other) noexcept = delete;
@@ -69,6 +75,9 @@ class ft_item
         int initialize() noexcept;
         int initialize(const ft_item &other) noexcept;
         int initialize(ft_item &&other) noexcept;
+        int enable_thread_safety() noexcept;
+        int disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
 
         int get_max_stack() const noexcept;
         void set_max_stack(int max) noexcept;

@@ -10,6 +10,7 @@ FT_TEST(test_vendor_profile_initialize_values, "ft_vendor_profile initialize set
     ft_vendor_profile profile;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.initialize(4, 1.20, 0.80, 0.05));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
     FT_ASSERT_EQ(4, profile.get_vendor_id());
     FT_ASSERT_DOUBLE_EQ(1.20, profile.get_buy_markup());
     FT_ASSERT_DOUBLE_EQ(0.80, profile.get_sell_multiplier());
@@ -21,15 +22,31 @@ FT_TEST(test_vendor_profile_setters_update_fields, "ft_vendor_profile setters ov
 {
     ft_vendor_profile profile;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.initialize());
     profile.set_vendor_id(9);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
     profile.set_buy_markup(1.35);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
     profile.set_sell_multiplier(0.65);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
     profile.set_tax_rate(0.12);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
 
     FT_ASSERT_EQ(9, profile.get_vendor_id());
     FT_ASSERT_DOUBLE_EQ(1.35, profile.get_buy_markup());
     FT_ASSERT_DOUBLE_EQ(0.65, profile.get_sell_multiplier());
     FT_ASSERT_DOUBLE_EQ(0.12, profile.get_tax_rate());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
+    return (1);
+}
+
+FT_TEST(test_vendor_profile_set_negative_id_reports_error, "ft_vendor_profile rejects negative vendor IDs")
+{
+    ft_vendor_profile profile;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.initialize());
+    profile.set_vendor_id(-2);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, profile.get_error());
     return (1);
 }
 

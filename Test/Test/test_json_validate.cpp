@@ -10,6 +10,7 @@
 FT_TEST(test_json_validate_schema_success, "json schema validation success")
 {
     json_document document;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, json_group_list_enable_thread_safety());
     if (document.initialize() != FT_ERR_SUCCESS)
         return (0);
     json_group *group = document.create_group("user");
@@ -39,12 +40,14 @@ FT_TEST(test_json_validate_schema_success, "json schema validation success")
     schema._error_code = FT_ERR_SUCCESS;
     bool result = json_validate_schema(group, schema);
     FT_ASSERT_EQ(true, result);
+    (void)json_group_list_disable_thread_safety();
     return (1);
 }
 
 FT_TEST(test_json_validate_schema_missing_field, "json schema validation missing field")
 {
     json_document document;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, json_group_list_enable_thread_safety());
     if (document.initialize() != FT_ERR_SUCCESS)
         return (0);
     json_group *group = document.create_group("user");
@@ -72,5 +75,6 @@ FT_TEST(test_json_validate_schema_missing_field, "json schema validation missing
     schema._error_code = FT_ERR_SUCCESS;
     bool result = json_validate_schema(group, schema);
     FT_ASSERT_EQ(false, result);
+    (void)json_group_list_disable_thread_safety();
     return (1);
 }

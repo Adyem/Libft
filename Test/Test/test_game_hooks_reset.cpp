@@ -25,6 +25,8 @@ FT_TEST(test_game_hooks_reset_clears_callbacks, "Game: hooks reset clears regist
     crafted_invocations = 0;
     damaged_invocations = 0;
     event_invocations = 0;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hooks.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, item.initialize());
     hooks.set_on_item_crafted(ft_function<void(ft_character&, ft_item&)>([&crafted_invocations](ft_character &character_ref, ft_item &item_ref)
     {
         (void)character_ref;
@@ -54,5 +56,7 @@ FT_TEST(test_game_hooks_reset_clears_callbacks, "Game: hooks reset clears regist
     FT_ASSERT_EQ(0, crafted_invocations);
     FT_ASSERT_EQ(0, damaged_invocations);
     FT_ASSERT_EQ(0, event_invocations);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hooks.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, item.get_error());
     return (1);
 }

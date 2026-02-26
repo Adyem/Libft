@@ -20,8 +20,8 @@ class ft_game_state
         ft_vector<ft_sharedptr<ft_character> > _characters;
         ft_map<ft_string, ft_string>           _variables;
         ft_sharedptr<ft_game_hooks>            _hooks;
-        mutable int                            _error_code;
         mutable pt_recursive_mutex                       *_mutex;
+        static thread_local int                _last_error;
 
         void set_error(int error) const noexcept;
         int lock_internal(bool *lock_acquired) const noexcept;

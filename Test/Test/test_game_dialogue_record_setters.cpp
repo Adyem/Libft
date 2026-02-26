@@ -14,6 +14,8 @@ FT_TEST(test_dialogue_line_setters_affect_getters, "setters update dialogue line
     ids.push_back(2);
     ft_dialogue_line line;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, line.initialize(0, ft_string(""), ft_string(""), ids));
+
     line.set_line_id(1);
     line.set_speaker(ft_string("npc"));
     line.set_text(ft_string("hi"));
@@ -24,6 +26,7 @@ FT_TEST(test_dialogue_line_setters_affect_getters, "setters update dialogue line
     FT_ASSERT_EQ(ft_string("hi"), line.get_text());
     FT_ASSERT_EQ(1u, line.get_next_line_ids().size());
     FT_ASSERT_EQ(2, line.get_next_line_ids()[0]);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, line.get_error());
     return (1);
 }
 
@@ -52,5 +55,7 @@ FT_TEST(test_dialogue_script_setters_store_shared_lines, "script setters accept 
     FT_ASSERT_EQ(2, current_lines[0]->get_line_id());
     FT_ASSERT_EQ(ft_string("reply"), current_lines[0]->get_text());
     FT_ASSERT_EQ(1u, current_lines[0]->get_next_line_ids().size());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, script.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, current_lines[0]->get_error());
     return (1);
 }

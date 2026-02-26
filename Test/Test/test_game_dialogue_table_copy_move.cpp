@@ -37,6 +37,8 @@ FT_TEST(test_dialogue_table_register_line_retrieves_data,
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.fetch_line(1, loaded));
     FT_ASSERT_EQ(1, loaded.get_line_id());
     FT_ASSERT_EQ(ft_string("hello"), loaded.get_text());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, loaded.get_error());
     return (1);
 }
 
@@ -62,5 +64,9 @@ FT_TEST(test_dialogue_table_scripts_store_lines_via_sharedptrs,
     const ft_vector<ft_sharedptr<ft_dialogue_line>> &fetched_lines = fetched.get_lines();
     FT_ASSERT_EQ(1u, fetched_lines.size());
     FT_ASSERT_EQ(2, fetched_lines[0]->get_line_id());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, script.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_lines[0]->get_error());
     return (1);
 }

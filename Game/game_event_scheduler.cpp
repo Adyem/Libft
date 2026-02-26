@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <new>
 
+thread_local int ft_event_scheduler::_last_error = FT_ERR_SUCCESS;
 static void event_scheduler_profile_reset_struct(t_event_scheduler_profile &profile)
 {
     profile.update_count = 0;
@@ -21,7 +22,7 @@ static void event_scheduler_profile_reset_struct(t_event_scheduler_profile &prof
 void ft_event_scheduler::reset_profile_locked() const noexcept
 {
     event_scheduler_profile_reset_struct(this->_profile);
-    this->_profile.last_error_code = this->_error_code;
+    this->_profile.last_error_code = this->get_error();
     return ;
 }
 
@@ -39,7 +40,7 @@ void ft_event_scheduler::record_profile_locked(size_t ready_count,
         this->_profile.max_ready_batch = ready_count;
     this->_profile.total_processing_ns += duration_ns;
     this->_profile.last_update_processing_ns = duration_ns;
-    this->_profile.last_error_code = this->_error_code;
+    this->_profile.last_error_code = this->get_error();
     return ;
 }
 
@@ -90,10 +91,11 @@ bool ft_event_compare_ptr::operator()(const ft_sharedptr<ft_event> &left,
 }
 
 ft_event_scheduler::ft_event_scheduler() noexcept
-    : _events(), _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr),
+    : _events(), _mutex(ft_nullptr),
       _profiling_enabled(false), _profile(), _ready_cache()
 {
     event_scheduler_profile_reset_struct(this->_profile);
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -105,7 +107,7 @@ ft_event_scheduler::~ft_event_scheduler()
 
 void ft_event_scheduler::set_error(int error) const noexcept
 {
-    this->_error_code = error;
+    ft_event_scheduler::_last_error = error;
     return ;
 }
 
@@ -116,22 +118,37 @@ int ft_event_scheduler::lock_internal(bool *lock_acquired) const noexcept
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (this->_mutex == ft_nullptr)
+    {
+        this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
+    }
     lock_error = this->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(lock_error);
         return (lock_error);
+    }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
+
+    this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
 void ft_event_scheduler::unlock_internal(bool lock_acquired) const noexcept
 {
     if (lock_acquired == false)
+    {
+        this->set_error(FT_ERR_SUCCESS);
         return ;
+    }
     if (this->_mutex == ft_nullptr)
+    {
+        this->set_error(FT_ERR_SUCCESS);
         return ;
+    }
     (void)this->_mutex->unlock();
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -397,12 +414,12 @@ void ft_event_scheduler::clear() noexcept
 
 int ft_event_scheduler::get_error() const noexcept
 {
-    return (this->_error_code);
+    return (ft_event_scheduler::_last_error);
 }
 
 const char *ft_event_scheduler::get_error_str() const noexcept
 {
-    return (ft_strerror(this->_error_code));
+    return (ft_strerror(ft_event_scheduler::_last_error));
 }
 
 int ft_event_scheduler::enable_thread_safety() noexcept
@@ -411,7 +428,10 @@ int ft_event_scheduler::enable_thread_safety() noexcept
     int initialize_error;
 
     if (this->_mutex != ft_nullptr)
+    {
+        this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
+    }
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
     {
@@ -435,7 +455,10 @@ int ft_event_scheduler::disable_thread_safety() noexcept
     int destroy_error;
 
     if (this->_mutex == ft_nullptr)
+    {
+        this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
+    }
     destroy_error = this->_mutex->destroy();
     delete this->_mutex;
     this->_mutex = ft_nullptr;
@@ -445,7 +468,9 @@ int ft_event_scheduler::disable_thread_safety() noexcept
 
 bool ft_event_scheduler::is_thread_safe() const noexcept
 {
-    return (this->_mutex != ft_nullptr);
+    const bool result = (this->_mutex != ft_nullptr);
+    this->set_error(FT_ERR_SUCCESS);
+    return (result);
 }
 
 int log_event_to_file(const ft_event &event, const char *file_path) noexcept

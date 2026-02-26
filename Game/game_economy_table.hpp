@@ -21,6 +21,7 @@ class ft_economy_table
         ft_map<int, ft_currency_rate>    _currency_rates;
         pt_recursive_mutex                        *_mutex;
         uint8_t                          _initialized_state;
+        static thread_local int           _last_error;
 
         static const uint8_t _state_uninitialized = 0;
         static const uint8_t _state_destroyed = 1;
@@ -31,6 +32,7 @@ class ft_economy_table
         void abort_if_not_initialized(const char *method_name) const;
         int lock_internal(bool *lock_acquired) const noexcept;
         int unlock_internal(bool lock_acquired) const noexcept;
+        void set_error(int error_code) const noexcept;
 
     public:
         ft_economy_table() noexcept;
@@ -73,6 +75,9 @@ class ft_economy_table
         int fetch_rarity_band(int rarity, ft_rarity_band &band) const noexcept;
         int fetch_vendor_profile(int vendor_id, ft_vendor_profile &profile) const noexcept;
         int fetch_currency_rate(int currency_id, ft_currency_rate &rate) const noexcept;
+
+        int get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex *get_mutex_for_validation() const noexcept;

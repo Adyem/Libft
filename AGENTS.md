@@ -127,3 +127,13 @@ Within the CMA module, only the documented public-facing entry points should sur
 
 Within the SCMA module, only the listed public-facing helpers should expose errors directly; all other utilities rely on the module’s internal reporting to keep overall state coherent.
 - When a class maintains a `_last_error` field, the only sanctioned public accessor for other classes should be the `get_error()` (and optionally `get_error_str()`) helper; no other class should read `_last_error` directly or expose additional interfaces for that value.
+
+#`_last_error` Contract
+
+When a class maintains a `_last_error` field, treat it as thread-local diagnostic state rather than a shared global-style error channel.
+- `_last_error` must be thread-local per thread of execution. Code must not rely on a single shared `_last_error` value across threads.
+- Declare `_last_error` as `static thread_local int _last_error` (typically initialized to `FT_ERR_SUCCESS`) so each thread has its own copy while the class exposes a single helper suite.
+- Classes that expose `_last_error` behavior must provide `set_error(int error_code)`, `get_error()`, and `get_error_str()` helpers. `set_error(...)` is the only writer for `_last_error`.
+- `get_error()` / `get_error_str()` are the only sanctioned public interfaces for reading the class error state. Other classes must not read `_last_error` directly.
+- New code should still return error codes directly from methods that can fail. `_last_error` is a secondary diagnostic/compatibility channel, not the primary error transport.
+- Public methods should set `_last_error` on every exit path (`FT_ERR_SUCCESS` on success, exact error code on failure). Private helpers should generally return errors upward and let the public entry point set `_last_error`.

@@ -9,8 +9,8 @@ class ft_resistance
     private:
         int              _percent_value;
         int              _flat_value;
-        mutable int      _error_code;
         mutable pt_recursive_mutex *_mutex;
+        static thread_local int _last_error;
 
         void set_error(int error) const noexcept;
         int lock_internal(bool *lock_acquired) const noexcept;

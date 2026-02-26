@@ -3,10 +3,13 @@
 #include <climits>
 #include <new>
 
+thread_local int ft_event::_last_error = FT_ERR_SUCCESS;
+
 ft_event::ft_event() noexcept
     : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0),
-      _modifier4(0), _callback(), _error(FT_ERR_SUCCESS), _mutex(ft_nullptr)
+      _modifier4(0), _callback(), _mutex(ft_nullptr)
 {
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -23,22 +26,36 @@ int ft_event::lock_internal(bool *lock_acquired) const noexcept
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (this->_mutex == ft_nullptr)
+    {
+        this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
+    }
     lock_error = this->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(lock_error);
         return (lock_error);
+    }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
+    this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
 void ft_event::unlock_internal(bool lock_acquired) const noexcept
 {
     if (lock_acquired == false)
+    {
+        this->set_error(FT_ERR_SUCCESS);
         return ;
+    }
     if (this->_mutex == ft_nullptr)
+    {
+        this->set_error(FT_ERR_SUCCESS);
         return ;
+    }
     (void)this->_mutex->unlock();
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -54,6 +71,7 @@ int ft_event::get_id() const noexcept
         return (0);
     value = this->_id;
     this->unlock_internal(lock_acquired);
+    this->set_error(FT_ERR_SUCCESS);
     return (value);
 }
 
@@ -92,6 +110,7 @@ int ft_event::get_duration() const noexcept
         return (0);
     value = this->_duration;
     this->unlock_internal(lock_acquired);
+    this->set_error(FT_ERR_SUCCESS);
     return (value);
 }
 
@@ -171,25 +190,117 @@ void ft_event::sub_duration(int duration) noexcept
     return ;
 }
 
-int ft_event::get_modifier1() const noexcept { return (this->_modifier1); }
-void ft_event::set_modifier1(int mod) noexcept { this->_modifier1 = mod; this->set_error(FT_ERR_SUCCESS); return ; }
-void ft_event::add_modifier1(int mod) noexcept { this->_modifier1 += mod; this->set_error(FT_ERR_SUCCESS); return ; }
-void ft_event::sub_modifier1(int mod) noexcept { this->_modifier1 -= mod; this->set_error(FT_ERR_SUCCESS); return ; }
-int ft_event::get_modifier2() const noexcept { return (this->_modifier2); }
-void ft_event::set_modifier2(int mod) noexcept { this->_modifier2 = mod; this->set_error(FT_ERR_SUCCESS); return ; }
-void ft_event::add_modifier2(int mod) noexcept { this->_modifier2 += mod; this->set_error(FT_ERR_SUCCESS); return ; }
-void ft_event::sub_modifier2(int mod) noexcept { this->_modifier2 -= mod; this->set_error(FT_ERR_SUCCESS); return ; }
-int ft_event::get_modifier3() const noexcept { return (this->_modifier3); }
-void ft_event::set_modifier3(int mod) noexcept { this->_modifier3 = mod; this->set_error(FT_ERR_SUCCESS); return ; }
-void ft_event::add_modifier3(int mod) noexcept { this->_modifier3 += mod; this->set_error(FT_ERR_SUCCESS); return ; }
-void ft_event::sub_modifier3(int mod) noexcept { this->_modifier3 -= mod; this->set_error(FT_ERR_SUCCESS); return ; }
-int ft_event::get_modifier4() const noexcept { return (this->_modifier4); }
-void ft_event::set_modifier4(int mod) noexcept { this->_modifier4 = mod; this->set_error(FT_ERR_SUCCESS); return ; }
-void ft_event::add_modifier4(int mod) noexcept { this->_modifier4 += mod; this->set_error(FT_ERR_SUCCESS); return ; }
-void ft_event::sub_modifier4(int mod) noexcept { this->_modifier4 -= mod; this->set_error(FT_ERR_SUCCESS); return ; }
+int ft_event::get_modifier1() const noexcept
+{
+    this->set_error(FT_ERR_SUCCESS);
+    return (this->_modifier1);
+}
+
+void ft_event::set_modifier1(int mod) noexcept
+{
+    this->_modifier1 = mod;
+    this->set_error(FT_ERR_SUCCESS);
+    return ;
+}
+
+void ft_event::add_modifier1(int mod) noexcept
+{
+    this->_modifier1 += mod;
+    this->set_error(FT_ERR_SUCCESS);
+    return ;
+}
+
+void ft_event::sub_modifier1(int mod) noexcept
+{
+    this->_modifier1 -= mod;
+    this->set_error(FT_ERR_SUCCESS);
+    return ;
+}
+
+int ft_event::get_modifier2() const noexcept
+{
+    this->set_error(FT_ERR_SUCCESS);
+    return (this->_modifier2);
+}
+
+void ft_event::set_modifier2(int mod) noexcept
+{
+    this->_modifier2 = mod;
+    this->set_error(FT_ERR_SUCCESS);
+    return ;
+}
+
+void ft_event::add_modifier2(int mod) noexcept
+{
+    this->_modifier2 += mod;
+    this->set_error(FT_ERR_SUCCESS);
+    return ;
+}
+
+void ft_event::sub_modifier2(int mod) noexcept
+{
+    this->_modifier2 -= mod;
+    this->set_error(FT_ERR_SUCCESS);
+    return ;
+}
+
+int ft_event::get_modifier3() const noexcept
+{
+    this->set_error(FT_ERR_SUCCESS);
+    return (this->_modifier3);
+}
+
+void ft_event::set_modifier3(int mod) noexcept
+{
+    this->_modifier3 = mod;
+    this->set_error(FT_ERR_SUCCESS);
+    return ;
+}
+
+void ft_event::add_modifier3(int mod) noexcept
+{
+    this->_modifier3 += mod;
+    this->set_error(FT_ERR_SUCCESS);
+    return ;
+}
+
+void ft_event::sub_modifier3(int mod) noexcept
+{
+    this->_modifier3 -= mod;
+    this->set_error(FT_ERR_SUCCESS);
+    return ;
+}
+
+int ft_event::get_modifier4() const noexcept
+{
+    this->set_error(FT_ERR_SUCCESS);
+    return (this->_modifier4);
+}
+
+void ft_event::set_modifier4(int mod) noexcept
+{
+    this->_modifier4 = mod;
+    this->set_error(FT_ERR_SUCCESS);
+    return ;
+}
+
+void ft_event::add_modifier4(int mod) noexcept
+{
+    this->_modifier4 += mod;
+    this->set_error(FT_ERR_SUCCESS);
+    return ;
+}
+
+void ft_event::sub_modifier4(int mod) noexcept
+{
+    this->_modifier4 -= mod;
+    this->set_error(FT_ERR_SUCCESS);
+    return ;
+}
 
 const ft_function<void(ft_world&, ft_event&)> &ft_event::get_callback() const noexcept
 {
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_callback);
 }
 
@@ -230,7 +341,10 @@ int ft_event::disable_thread_safety() noexcept
     int destroy_error;
 
     if (this->_mutex == ft_nullptr)
+    {
+        this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
+    }
     destroy_error = this->_mutex->destroy();
     delete this->_mutex;
     this->_mutex = ft_nullptr;
@@ -240,9 +354,23 @@ int ft_event::disable_thread_safety() noexcept
 
 bool ft_event::is_thread_safe() const noexcept
 {
-    return (this->_mutex != ft_nullptr);
+    const bool result = (this->_mutex != ft_nullptr);
+    this->set_error(FT_ERR_SUCCESS);
+    return (result);
 }
 
-int ft_event::get_error() const noexcept { return (this->_error); }
-const char *ft_event::get_error_str() const noexcept { return (ft_strerror(this->_error)); }
-void ft_event::set_error(int err) const noexcept { this->_error = err; return ; }
+int ft_event::get_error() const noexcept
+{
+    return (ft_event::_last_error);
+}
+
+const char *ft_event::get_error_str() const noexcept
+{
+    return (ft_strerror(ft_event::_last_error));
+}
+
+void ft_event::set_error(int err) const noexcept
+{
+    ft_event::_last_error = err;
+    return ;
+}

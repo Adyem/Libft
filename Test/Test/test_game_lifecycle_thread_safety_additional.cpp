@@ -14,8 +14,11 @@ FT_TEST(test_price_thread_safety_enable_sets_state, "price definition enable_thr
     ft_price_definition definition;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.get_error());
     FT_ASSERT_EQ(true, definition.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.get_error());
     return (1);
 }
 
@@ -24,9 +27,13 @@ FT_TEST(test_price_thread_safety_disable_clears_state, "price definition disable
     ft_price_definition definition;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.disable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.get_error());
     FT_ASSERT_EQ(false, definition.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.get_error());
     return (1);
 }
 
@@ -35,9 +42,13 @@ FT_TEST(test_price_thread_safety_enable_twice_succeeds, "price definition enable
     ft_price_definition definition;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.get_error());
     FT_ASSERT_EQ(true, definition.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.get_error());
     return (1);
 }
 
@@ -46,8 +57,11 @@ FT_TEST(test_price_thread_safety_disable_without_enable_succeeds, "price definit
     ft_price_definition definition;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.disable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.get_error());
     FT_ASSERT_EQ(false, definition.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.get_error());
     return (1);
 }
 
@@ -56,8 +70,11 @@ FT_TEST(test_rarity_thread_safety_enable_sets_state, "rarity band enable_thread_
     ft_rarity_band band;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, band.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, band.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, band.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, band.get_error());
     FT_ASSERT_EQ(true, band.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, band.get_error());
     return (1);
 }
 
@@ -66,9 +83,13 @@ FT_TEST(test_rarity_thread_safety_disable_clears_state, "rarity band disable_thr
     ft_rarity_band band;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, band.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, band.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, band.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, band.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, band.disable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, band.get_error());
     FT_ASSERT_EQ(false, band.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, band.get_error());
     return (1);
 }
 
@@ -77,9 +98,13 @@ FT_TEST(test_rarity_thread_safety_enable_twice_succeeds, "rarity band enable_thr
     ft_rarity_band band;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, band.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, band.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, band.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, band.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, band.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, band.get_error());
     FT_ASSERT_EQ(true, band.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, band.get_error());
     return (1);
 }
 
@@ -88,8 +113,11 @@ FT_TEST(test_rarity_thread_safety_disable_without_enable_succeeds, "rarity band 
     ft_rarity_band band;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, band.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, band.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, band.disable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, band.get_error());
     FT_ASSERT_EQ(false, band.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, band.get_error());
     return (1);
 }
 
@@ -98,8 +126,11 @@ FT_TEST(test_vendor_thread_safety_enable_sets_state, "vendor profile enable_thre
     ft_vendor_profile profile;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
     FT_ASSERT_EQ(true, profile.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
     return (1);
 }
 
@@ -108,9 +139,13 @@ FT_TEST(test_vendor_thread_safety_disable_clears_state, "vendor profile disable_
     ft_vendor_profile profile;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.disable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
     FT_ASSERT_EQ(false, profile.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
     return (1);
 }
 
@@ -119,9 +154,13 @@ FT_TEST(test_vendor_thread_safety_enable_twice_succeeds, "vendor profile enable_
     ft_vendor_profile profile;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
     FT_ASSERT_EQ(true, profile.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
     return (1);
 }
 
@@ -130,8 +169,11 @@ FT_TEST(test_vendor_thread_safety_disable_without_enable_succeeds, "vendor profi
     ft_vendor_profile profile;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.disable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
     FT_ASSERT_EQ(false, profile.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
     return (1);
 }
 
@@ -140,8 +182,11 @@ FT_TEST(test_currency_thread_safety_enable_sets_state, "currency rate enable_thr
     ft_currency_rate rate;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.get_error());
     FT_ASSERT_EQ(true, rate.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.get_error());
     return (1);
 }
 
@@ -150,9 +195,13 @@ FT_TEST(test_currency_thread_safety_disable_clears_state, "currency rate disable
     ft_currency_rate rate;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.disable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.get_error());
     FT_ASSERT_EQ(false, rate.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.get_error());
     return (1);
 }
 
@@ -161,9 +210,13 @@ FT_TEST(test_currency_thread_safety_enable_twice_succeeds, "currency rate enable
     ft_currency_rate rate;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.get_error());
     FT_ASSERT_EQ(true, rate.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.get_error());
     return (1);
 }
 
@@ -172,8 +225,11 @@ FT_TEST(test_currency_thread_safety_disable_without_enable_succeeds, "currency r
     ft_currency_rate rate;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.disable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.get_error());
     FT_ASSERT_EQ(false, rate.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.get_error());
     return (1);
 }
 
@@ -182,8 +238,11 @@ FT_TEST(test_economy_table_thread_safety_enable_sets_state, "economy table enabl
     ft_economy_table table;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
     FT_ASSERT_EQ(true, table.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
     return (1);
 }
 
@@ -192,9 +251,13 @@ FT_TEST(test_economy_table_thread_safety_disable_clears_state, "economy table di
     ft_economy_table table;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.disable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
     FT_ASSERT_EQ(false, table.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
     return (1);
 }
 
@@ -203,9 +266,13 @@ FT_TEST(test_economy_table_thread_safety_enable_twice_succeeds, "economy table e
     ft_economy_table table;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
     FT_ASSERT_EQ(true, table.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
     return (1);
 }
 
@@ -214,7 +281,10 @@ FT_TEST(test_economy_table_thread_safety_disable_without_enable_succeeds, "econo
     ft_economy_table table;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.disable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
     FT_ASSERT_EQ(false, table.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
     return (1);
 }

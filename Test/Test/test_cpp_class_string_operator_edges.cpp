@@ -3,6 +3,7 @@
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../CMA/CMA.hpp"
+#include "test_cpp_class_string_lifecycle_helpers.hpp"
 
 #ifndef LIBFT_TEST_BUILD
 #endif
@@ -50,8 +51,9 @@ FT_TEST(test_ft_string_operator_assign_copy_from_destroyed_source_sets_invalid_s
 
     (void)source.destroy();
     destination = source;
+    int32_t assignment_error = ft_string::last_operation_error();
+    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, assignment_error);
     FT_ASSERT(destination == "keep");
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, ft_string::last_operation_error());
     return (1);
 }
 
@@ -63,8 +65,9 @@ FT_TEST(test_ft_string_operator_assign_move_from_destroyed_source_sets_invalid_s
 
     (void)source.destroy();
     destination = static_cast<ft_string &&>(source);
+    int32_t assignment_error = ft_string::last_operation_error();
+    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, assignment_error);
     FT_ASSERT(destination == "keep");
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, ft_string::last_operation_error());
     return (1);
 }
 
@@ -73,22 +76,29 @@ FT_TEST(test_ft_string_operator_plus_equal_nullptr_sets_invalid_argument,
 {
     ft_string value("abc");
 
+    ft_string value_copy(value);
     value += static_cast<const char *>(ft_nullptr);
-    FT_ASSERT(value == "abc");
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_string::last_operation_error());
+    int32_t append_error = ft_string::last_operation_error();
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, append_error);
+    FT_ASSERT_EQ(value_copy, value);
     return (1);
 }
 
-FT_TEST(test_ft_string_operator_plus_equal_destroyed_source_sets_invalid_state,
-    "ft_string operator+= destroyed source sets invalid state")
+static void string_call_plus_equal_destroyed_source(void)
 {
     ft_string value("abc");
     ft_string source("xyz");
 
     (void)source.destroy();
     value += source;
-    FT_ASSERT(value == "abc");
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, ft_string::last_operation_error());
+    return ;
+}
+
+FT_TEST(test_ft_string_operator_plus_equal_destroyed_source_sets_invalid_state,
+    "ft_string operator+= destroyed source sets invalid state")
+{
+    FT_ASSERT_EQ(1, string_expect_sigabrt_signal_handler(
+            string_call_plus_equal_destroyed_source));
     return (1);
 }
 

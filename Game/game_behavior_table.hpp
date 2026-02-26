@@ -14,6 +14,7 @@ class ft_behavior_table
         ft_map<int, ft_behavior_profile> _profiles;
         pt_recursive_mutex                        *_mutex;
         uint8_t                          _initialized_state;
+        static thread_local int           _last_error;
 
         static const uint8_t _state_uninitialized = 0;
         static const uint8_t _state_destroyed = 1;
@@ -24,6 +25,7 @@ class ft_behavior_table
         void abort_if_not_initialized(const char *method_name) const;
         int lock_internal(bool *lock_acquired) const noexcept;
         int unlock_internal(bool lock_acquired) const noexcept;
+        void set_error(int error_code) const noexcept;
 
     public:
         ft_behavior_table() noexcept;
@@ -46,6 +48,9 @@ class ft_behavior_table
         ft_map<int, ft_behavior_profile> &get_profiles() noexcept;
         const ft_map<int, ft_behavior_profile> &get_profiles() const noexcept;
         void set_profiles(const ft_map<int, ft_behavior_profile> &profiles) noexcept;
+
+        int get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 
         int register_profile(const ft_behavior_profile &profile) noexcept;
         int fetch_profile(int profile_id, ft_behavior_profile &profile) const noexcept;

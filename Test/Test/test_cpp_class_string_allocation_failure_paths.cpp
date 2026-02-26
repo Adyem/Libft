@@ -165,11 +165,14 @@ FT_TEST(test_ft_string_operator_plus_allocation_failure,
     ft_string left("left_payload");
     ft_string right("right_payload");
     ft_string result;
+    ft_string_proxy proxy_result;
 
     cma_set_alloc_limit(1);
-    result = left + right;
+    proxy_result = left + right;
     cma_set_alloc_limit(0);
 
+    FT_ASSERT_EQ(FT_ERR_SYSTEM, proxy_result.get_error());
+    result = proxy_result;
     (void)result;
     FT_ASSERT_EQ(FT_ERR_SYSTEM, ft_string::last_operation_error());
     return (1);
@@ -229,10 +232,13 @@ FT_TEST(test_ft_string_operator_plus_late_allocation_failure_releases_memory,
         ft_string right(
             "opqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");
         ft_string result;
+        ft_string_proxy proxy_result;
 
         cma_set_alloc_limit(64);
-        result = left + right;
+        proxy_result = left + right;
         cma_set_alloc_limit(0);
+        FT_ASSERT_EQ(FT_ERR_SYSTEM, proxy_result.get_error());
+        result = proxy_result;
         FT_ASSERT_EQ(FT_ERR_SYSTEM, ft_string::last_operation_error());
         (void)result;
     }

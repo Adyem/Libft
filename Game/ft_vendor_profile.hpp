@@ -13,12 +13,15 @@ class ft_vendor_profile
         double    _buy_markup;
         double    _sell_multiplier;
         double    _tax_rate;
-        pt_recursive_mutex *_mutex;
+        mutable pt_recursive_mutex *_mutex;
         uint8_t   _initialized_state;
+        static thread_local int _last_error;
 
         static const uint8_t _state_uninitialized = 0;
         static const uint8_t _state_destroyed = 1;
         static const uint8_t _state_initialized = 2;
+
+        void set_error(int error_code) const noexcept;
 
         void abort_lifecycle_error(const char *method_name,
                 const char *reason) const;
@@ -61,6 +64,8 @@ class ft_vendor_profile
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
+        int get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 };
 
 #endif

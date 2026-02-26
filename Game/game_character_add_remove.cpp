@@ -155,7 +155,7 @@ int ft_character::add_skill(const ft_skill &skill) noexcept
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
-        return (this->_error);
+        return (this->get_error());
     }
     this->_skills.insert(skill.get_id(), skill);
     this->set_error(FT_ERR_SUCCESS);

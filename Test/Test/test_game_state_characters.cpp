@@ -17,6 +17,7 @@ FT_TEST(test_game_state_adds_valid_character, "Game: add_character stores valid 
 
     FT_ASSERT(static_cast<bool>(hero));
     result = state.add_character(hero);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, state.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, result);
     characters = &state.get_characters();
     FT_ASSERT_EQ(1, characters->size());
@@ -45,6 +46,7 @@ FT_TEST(test_game_state_remove_invalid_index_sets_error, "Game: remove_character
 
     FT_ASSERT(static_cast<bool>(hero));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, state.add_character(hero));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, state.get_error());
     state.remove_character(5);
     FT_ASSERT_EQ(1, state.get_characters().size());
     FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, state.get_error());
@@ -60,7 +62,9 @@ FT_TEST(test_game_state_remove_character_shrinks_vector, "Game: remove_character
     FT_ASSERT(static_cast<bool>(first));
     FT_ASSERT(static_cast<bool>(second));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, state.add_character(first));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, state.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, state.add_character(second));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, state.get_error());
     state.remove_character(0);
     FT_ASSERT_EQ(1, state.get_characters().size());
     FT_ASSERT(state.get_characters()[0] == second);
@@ -73,9 +77,14 @@ FT_TEST(test_game_state_thread_safety_toggle, "Game: game state thread safety to
     ft_game_state state;
 
     FT_ASSERT_EQ(false, state.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, state.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, state.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, state.get_error());
     FT_ASSERT_EQ(true, state.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, state.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, state.disable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, state.get_error());
     FT_ASSERT_EQ(false, state.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, state.get_error());
     return (1);
 }

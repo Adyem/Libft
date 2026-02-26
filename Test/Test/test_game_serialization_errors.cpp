@@ -24,10 +24,13 @@ FT_TEST(test_serialize_inventory_allocation_failure_sets_errno, "serialize_inven
 {
     ft_inventory inventory;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize(1, 0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.get_error());
     cma_set_alloc_limit(1);
     json_group *group = serialize_inventory(inventory);
     cma_set_alloc_limit(0);
     FT_ASSERT(group == ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.get_error());
     return (1);
 }
 
@@ -35,10 +38,12 @@ FT_TEST(test_serialize_inventory_null_item_sets_errno, "serialize_inventory repo
 {
     ft_inventory inventory;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize(1, 0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.get_error());
 
     inventory.get_items().insert(0, ft_sharedptr<ft_item>());
     json_group *group = serialize_inventory(inventory);
     FT_ASSERT(group == ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.get_error());
     return (1);
 }
 
@@ -46,15 +51,18 @@ FT_TEST(test_serialize_inventory_success_clears_errno, "serialize_inventory clea
 {
     ft_inventory inventory;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.initialize(1, 0));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.get_error());
     ft_sharedptr<ft_item> item(new ft_item());
 
     item->set_item_id(42);
     item->set_max_stack(5);
     item->set_stack_size(3);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.add_item(item));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.get_error());
     json_group *group = serialize_inventory(inventory);
     FT_ASSERT(group != ft_nullptr);
     json_free_groups(group);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.get_error());
     return (1);
 }
 
@@ -66,6 +74,7 @@ FT_TEST(test_serialize_equipment_allocation_failure_sets_errno, "serialize_equip
     json_group *group = serialize_equipment(character);
     cma_set_alloc_limit(0);
     FT_ASSERT(group == ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, character.get_error());
     return (1);
 }
 
@@ -78,45 +87,57 @@ FT_TEST(test_serialize_equipment_success_clears_errno, "serialize_equipment clea
     weapon->set_max_stack(1);
     weapon->set_stack_size(1);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, character.equip_item(EQUIP_WEAPON, weapon));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, character.get_error());
     json_group *group = serialize_equipment(character);
     FT_ASSERT(group != ft_nullptr);
     json_free_groups(group);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, character.get_error());
     return (1);
 }
 
 FT_TEST(test_serialize_quest_allocation_failure_sets_errno, "serialize_quest reports allocation failure")
 {
     ft_quest quest;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, quest.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, quest.get_error());
 
     cma_set_alloc_limit(1);
     json_group *group = serialize_quest(quest);
     cma_set_alloc_limit(0);
     FT_ASSERT(group == ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, quest.get_error());
     return (1);
 }
 
 FT_TEST(test_serialize_quest_null_reward_sets_errno, "serialize_quest reports null reward state")
 {
     ft_quest quest;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, quest.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, quest.get_error());
 
     quest.get_reward_items().push_back(ft_sharedptr<ft_item>());
     json_group *group = serialize_quest(quest);
     FT_ASSERT(group == ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, quest.get_error());
     return (1);
 }
 
 FT_TEST(test_serialize_quest_success_clears_errno, "serialize_quest clears errno on success")
 {
     ft_quest quest;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, quest.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, quest.get_error());
     ft_sharedptr<ft_item> reward(new ft_item());
 
     reward->set_item_id(9);
     reward->set_max_stack(3);
     reward->set_stack_size(1);
     quest.get_reward_items().push_back(reward);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, quest.get_error());
     json_group *group = serialize_quest(quest);
     FT_ASSERT(group != ft_nullptr);
     json_free_groups(group);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, quest.get_error());
     return (1);
 }
 
@@ -128,6 +149,7 @@ FT_TEST(test_serialize_character_allocation_failure_sets_errno, "serialize_chara
     json_group *group = serialize_character(character);
     cma_set_alloc_limit(0);
     FT_ASSERT(group == ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, character.get_error());
     return (1);
 }
 
@@ -139,6 +161,7 @@ FT_TEST(test_serialize_character_skill_error_sets_errno, "serialize_character re
 
     json_group *group = serialize_character(broken_character);
     FT_ASSERT(group == ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, broken_character.get_error());
     return (1);
 }
 
@@ -155,9 +178,11 @@ FT_TEST(test_serialize_character_success_clears_errno, "serialize_character clea
     skill.set_modifier3(3);
     skill.set_modifier4(4);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, character.add_skill(skill));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, character.get_error());
     json_group *group = serialize_character(character);
     FT_ASSERT(group != ft_nullptr);
     json_free_groups(group);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, character.get_error());
     return (1);
 }
 
@@ -220,10 +245,12 @@ FT_TEST(test_deserialize_inventory_failure_then_success_updates_errno, "deserial
     FT_ASSERT(item != ft_nullptr);
     json_add_item_to_group(group, item);
     FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, deserialize_inventory(inventory, group));
+    FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, inventory.get_error());
     item = json_create_item("item_0_max_stack", 5);
     FT_ASSERT(item != ft_nullptr);
     json_add_item_to_group(group, item);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, deserialize_inventory(inventory, group));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, inventory.get_error());
     json_free_groups(group);
     return (1);
 }

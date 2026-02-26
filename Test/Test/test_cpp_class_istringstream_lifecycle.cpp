@@ -9,40 +9,6 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-static int istringstream_expect_sigabrt(void (*operation)(void))
-{
-    pid_t child_process_id;
-    int child_status;
-
-    child_process_id = fork();
-    if (child_process_id == 0)
-    {
-        operation();
-        _exit(0);
-    }
-    if (child_process_id < 0)
-        return (0);
-    child_status = 0;
-    if (waitpid(child_process_id, &child_status, 0) < 0)
-        return (0);
-    if (!WIFSIGNALED(child_status))
-        return (0);
-    return (WTERMSIG(child_status) == SIGABRT);
-}
-
-static void istringstream_destroy_twice_aborts(void)
-{
-    ft_string source_value;
-
-    if (source_value.initialize("42") != FT_ERR_SUCCESS)
-        _exit(2);
-    ft_istringstream stream_value(source_value);
-    if (stream_value.destroy() != FT_ERR_SUCCESS)
-        _exit(2);
-    (void)stream_value.destroy();
-    _exit(0);
-}
-
 FT_TEST(test_ft_istringstream_lifecycle_read_then_destroy,
     "ft_istringstream supports read and explicit destroy")
 {
@@ -86,9 +52,15 @@ FT_TEST(test_ft_istringstream_destroy_then_initialize_reuses_stream,
     return (1);
 }
 
-FT_TEST(test_ft_istringstream_destroy_twice_aborts,
-    "ft_istringstream destroy aborts when called in destroyed state")
+FT_TEST(test_ft_istringstream_destroy_tolerates_destroyed_instance,
+    "ft_istringstream destroy tolerates destroyed instance")
 {
-    FT_ASSERT_EQ(1, istringstream_expect_sigabrt(istringstream_destroy_twice_aborts));
+    ft_string source_value;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.initialize("42"));
+    ft_istringstream stream_value(source_value);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.destroy());
+    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, stream_value.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_value.destroy());
     return (1);
 }

@@ -78,7 +78,10 @@ ft_string::ft_string(int32_t error_code) noexcept
         ft_string::set_last_operation_error(initialization_error);
     }
     else
+    {
+        this->_operation_error = error_code;
         ft_string::set_last_operation_error(error_code);
+    }
     return ;
 }
 

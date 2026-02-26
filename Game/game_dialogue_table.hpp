@@ -15,7 +15,10 @@ class ft_dialogue_table
         ft_map<int, ft_sharedptr<ft_dialogue_line> > _lines;
         ft_map<int, ft_dialogue_script> _scripts;
         pt_recursive_mutex *_mutex;
+        static thread_local int _last_error;
         uint8_t _initialized_state;
+
+        void set_error(int error_code) const noexcept;
 
         static const uint8_t _state_uninitialized = 0;
         static const uint8_t _state_destroyed = 1;
@@ -59,6 +62,9 @@ class ft_dialogue_table
         ft_map<int, ft_dialogue_script> &get_scripts() noexcept;
         const ft_map<int, ft_dialogue_script> &get_scripts() const noexcept;
         void set_scripts(const ft_map<int, ft_dialogue_script> &scripts) noexcept;
+
+        int get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex *get_mutex_for_validation() const noexcept;

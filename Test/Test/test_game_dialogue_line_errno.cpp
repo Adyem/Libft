@@ -9,7 +9,9 @@ FT_TEST(test_dialogue_line_setters_populate_fields, "setters populate dialogue f
 {
     ft_vector<int> next_lines;
     ft_dialogue_line line;
-    
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, line.initialize(0, ft_string(""), ft_string(""), next_lines));
+
     next_lines.push_back(5);
     next_lines.push_back(8);
     line.set_line_id(3);
@@ -30,6 +32,8 @@ FT_TEST(test_dialogue_line_setters_propagate_success, "setters maintain success 
 {
     ft_vector<int> next_lines;
     ft_dialogue_line line;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, line.initialize(0, ft_string(""), ft_string(""), next_lines));
 
     next_lines.push_back(2);
     next_lines.push_back(4);
@@ -52,6 +56,8 @@ FT_TEST(test_dialogue_line_conditional_vector_access, "next line getter returns 
     ids.push_back(9);
     ids.push_back(11);
     ft_dialogue_line line;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, line.initialize(0, ft_string(""), ft_string(""), ids));
 
     line.set_line_id(4);
     line.set_speaker(ft_string("ally"));

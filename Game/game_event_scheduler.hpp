@@ -37,7 +37,7 @@ class ft_event_scheduler
 {
     private:
         mutable ft_priority_queue<ft_sharedptr<ft_event>, ft_event_compare_ptr> _events;
-        mutable int _error_code;
+        static thread_local int _last_error;
         mutable pt_recursive_mutex *_mutex;
         mutable bool _profiling_enabled;
         mutable t_event_scheduler_profile _profile;

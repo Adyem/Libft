@@ -75,8 +75,8 @@ class ft_character
         ft_reputation             _reputation;
         ft_inventory            _inventory;
         ft_equipment            _equipment;
-        mutable int               _error;
-        mutable pt_recursive_mutex          _mutex;
+        static thread_local int            _last_error;
+        mutable pt_recursive_mutex          *_mutex;
 
         void    set_error(int err) const noexcept;
         int     lock_internal(bool *lock_acquired) const noexcept;
@@ -105,6 +105,9 @@ class ft_character
         ft_character &operator=(const ft_character &other) noexcept = delete;
         ft_character(ft_character &&other) noexcept = delete;
         ft_character &operator=(ft_character &&other) noexcept = delete;
+        int enable_thread_safety() noexcept;
+        int disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
 
         int get_hit_points() const noexcept;
         void set_hit_points(int hp) noexcept;

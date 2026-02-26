@@ -176,10 +176,10 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
     ft_size_t backend_aligned_size = align16(request_size);
     if (backend_aligned_size < request_size)
         return (ft_nullptr);
-    ft_size_t limit_check_size = backend_aligned_size;
-    if (alignment > limit_check_size)
-        limit_check_size = alignment;
-    if (g_cma_alloc_limit != 0 && limit_check_size > g_cma_alloc_limit)
+    ft_size_t backend_limit_check_size = backend_aligned_size;
+    if (alignment > backend_limit_check_size)
+        backend_limit_check_size = alignment;
+    if (g_cma_alloc_limit != 0 && backend_limit_check_size > g_cma_alloc_limit)
         return (ft_nullptr);
     if (cma_backend_is_enabled())
         return (cma_backend_aligned_allocate(alignment,

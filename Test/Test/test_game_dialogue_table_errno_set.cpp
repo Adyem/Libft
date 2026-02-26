@@ -33,6 +33,8 @@ FT_TEST(test_dialogue_table_register_line_success, "register_line stores a new l
     ft_dialogue_line fetched;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.fetch_line(1, fetched));
     FT_ASSERT_EQ(1, fetched.get_line_id());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched.get_error());
     return (1);
 }
 
@@ -55,5 +57,9 @@ FT_TEST(test_dialogue_table_register_script_success, "register_script stores met
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.fetch_script(5, fetched));
     FT_ASSERT_EQ(5, fetched.get_script_id());
     FT_ASSERT_EQ(ft_string("quest"), fetched.get_title());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, script.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched.get_lines()[0]->get_error());
     return (1);
 }

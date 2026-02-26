@@ -48,18 +48,12 @@ ft_istream::ft_istream() noexcept
 
 ft_istream::~ft_istream() noexcept
 {
-    if (this->_initialized_state == ft_istream::_state_uninitialized)
-    {
-        ft_istream::abort_lifecycle_error("ft_istream::~ft_istream",
-            "destructor called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == ft_istream::_state_initialized)
     {
-        int destroy_error = this->destroy();
-        if (destroy_error != FT_ERR_SUCCESS)
-            return ;
+        (void)this->destroy();
+        return ;
     }
+    this->_initialized_state = ft_istream::_state_destroyed;
     return ;
 }
 
@@ -83,8 +77,7 @@ int ft_istream::destroy() noexcept
 
     if (this->_initialized_state != ft_istream::_state_initialized)
     {
-        ft_istream::abort_lifecycle_error("ft_istream::destroy",
-            "called while object is not initialized");
+        this->_initialized_state = ft_istream::_state_destroyed;
         return (FT_ERR_INVALID_STATE);
     }
     this->_gcount = 0;

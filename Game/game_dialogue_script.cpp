@@ -3,6 +3,8 @@
 #include "../System_utils/system_utils.hpp"
 #include <new>
 
+thread_local int ft_dialogue_script::_last_error = FT_ERR_SUCCESS;
+
 static void game_dialogue_copy_next_ids(const ft_vector<int> &source,
     ft_vector<int> &destination)
 {
@@ -88,6 +90,12 @@ static void game_dialogue_copy_plain_line_vector(const ft_vector<ft_dialogue_lin
     return ;
 }
 
+void ft_dialogue_script::set_error(int error_code) const noexcept
+{
+    ft_dialogue_script::_last_error = error_code;
+    return ;
+}
+
 ft_dialogue_script::ft_dialogue_script() noexcept
     : _script_id(0), _title(), _summary(), _start_line_id(0), _lines(),
       _mutex(ft_nullptr),
@@ -136,6 +144,15 @@ int ft_dialogue_script::initialize() noexcept
         return (FT_ERR_INVALID_STATE);
     }
     this->_script_id = 0;
+    int title_error = this->_title.initialize();
+    if (title_error != FT_ERR_SUCCESS)
+        return (title_error);
+    int summary_error = this->_summary.initialize();
+    if (summary_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_title.destroy();
+        return (summary_error);
+    }
     this->_title.clear();
     this->_summary.clear();
     this->_start_line_id = 0;
@@ -404,3 +421,13 @@ pt_recursive_mutex *ft_dialogue_script::get_mutex_for_validation() const noexcep
     return (this->_mutex);
 }
 #endif
+
+int ft_dialogue_script::get_error() const noexcept
+{
+    return (ft_dialogue_script::_last_error);
+}
+
+const char *ft_dialogue_script::get_error_str() const noexcept
+{
+    return (ft_strerror(this->get_error()));
+}

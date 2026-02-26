@@ -12,6 +12,9 @@ FT_TEST(test_dialogue_line_next_ids_reset, "set_next_line_ids replaces all store
     initial_next_lines.push_back(4);
     ft_dialogue_line line;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, line.initialize(1, ft_string("speaker"),
+        ft_string("text"), initial_next_lines));
+
     line.set_line_id(1);
     line.set_speaker(ft_string("speaker"));
     line.set_text(ft_string("text"));
@@ -23,6 +26,7 @@ FT_TEST(test_dialogue_line_next_ids_reset, "set_next_line_ids replaces all store
 
     FT_ASSERT_EQ(1u, line.get_next_line_ids().size());
     FT_ASSERT_EQ(9, line.get_next_line_ids()[0]);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, line.get_error());
     return (1);
 }
 
@@ -32,6 +36,9 @@ FT_TEST(test_dialogue_line_getters_expose_vector_views, "const and non-const get
     ids.push_back(7);
     ids.push_back(11);
     ft_dialogue_line line;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, line.initialize(3, ft_string("npc"),
+        ft_string("hint"), ids));
 
     line.set_line_id(3);
     line.set_speaker(ft_string("npc"));
@@ -44,12 +51,16 @@ FT_TEST(test_dialogue_line_getters_expose_vector_views, "const and non-const get
     const ft_vector<int> &readonly = line.get_next_line_ids();
     FT_ASSERT_EQ(3u, readonly.size());
     FT_ASSERT_EQ(15, readonly[2]);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, line.get_error());
     return (1);
 }
 
 FT_TEST(test_dialogue_line_setters_apply_latest_values, "setters override previous values each call")
 {
     ft_dialogue_line line;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, line.initialize(0, ft_string(""), ft_string(""),
+        ft_vector<int>()));
 
     line.set_line_id(5);
     line.set_speaker(ft_string("old"));
@@ -65,5 +76,6 @@ FT_TEST(test_dialogue_line_setters_apply_latest_values, "setters override previo
     FT_ASSERT_EQ(ft_string("new"), line.get_speaker());
     FT_ASSERT_EQ(ft_string("last"), line.get_text());
     FT_ASSERT_EQ(9, line.get_line_id());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, line.get_error());
     return (1);
 }

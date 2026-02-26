@@ -107,6 +107,7 @@ FT_TEST(test_game_resistance_thread_safety,
     read_arguments.iterations = 1024;
     read_arguments.result_code = FT_ERR_SUCCESS;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, primary_resistance.enable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, primary_resistance.get_error());
     create_update_result = pt_thread_create(&update_thread, ft_nullptr,
             game_resistance_update_task, &update_arguments);
     if (create_update_result != 0)
@@ -177,5 +178,7 @@ FT_TEST(test_game_resistance_thread_safety,
         ft_test_fail(failure_expression, __FILE__, failure_line);
         return (0);
     }
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, primary_resistance.disable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, primary_resistance.get_error());
     return (1);
 }

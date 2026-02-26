@@ -10,7 +10,7 @@ class ft_behavior_action
         int              _action_id;
         double           _weight;
         double           _cooldown_seconds;
-        mutable int      _error_code;
+        static thread_local int _last_error;
         mutable pt_recursive_mutex *_mutex;
 
         void set_error(int error_code) const noexcept;

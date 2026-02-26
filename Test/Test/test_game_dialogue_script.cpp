@@ -29,6 +29,7 @@ FT_TEST(test_dialogue_script_initial_state, "default dialogue script starts empt
     FT_ASSERT_EQ(ft_string(), script.get_summary());
     FT_ASSERT_EQ(0, script.get_start_line_id());
     FT_ASSERT_EQ(0u, script.get_lines().size());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, script.get_error());
     return (1);
 }
 
@@ -48,5 +49,7 @@ FT_TEST(test_dialogue_script_setters_modify_metadata_and_lines, "setters mutate 
     FT_ASSERT_EQ(1u, stored.size());
     FT_ASSERT_EQ(2, stored[0]->get_line_id());
     FT_ASSERT_EQ(ft_string("reply"), stored[0]->get_text());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, script.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stored[0]->get_error());
     return (1);
 }

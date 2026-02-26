@@ -2,10 +2,11 @@
 
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include <new>
 
 static thread_local int g_json_thread_error = FT_ERR_SUCCESS;
-static pt_mutex g_json_group_list_mutex;
+static pt_recursive_mutex *g_json_group_list_mutex = ft_nullptr;
 
 static void json_thread_error_push(int error_code)
 {
@@ -57,7 +58,12 @@ int json_group_list_lock()
 {
     int lock_error;
 
-    lock_error = g_json_group_list_mutex.lock();
+    if (g_json_group_list_mutex == ft_nullptr)
+    {
+        json_thread_error_push(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
+    }
+    lock_error = g_json_group_list_mutex->lock();
     json_thread_error_push(lock_error);
     return (lock_error);
 }
@@ -66,7 +72,12 @@ int json_group_list_lock_manual()
 {
     int lock_error;
 
-    lock_error = g_json_group_list_mutex.lock();
+    if (g_json_group_list_mutex == ft_nullptr)
+    {
+        json_thread_error_push(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
+    }
+    lock_error = g_json_group_list_mutex->lock();
     json_thread_error_push(lock_error);
     return (lock_error);
 }
@@ -75,7 +86,12 @@ int json_group_list_unlock_manual()
 {
     int unlock_error;
 
-    unlock_error = g_json_group_list_mutex.unlock();
+    if (g_json_group_list_mutex == ft_nullptr)
+    {
+        json_thread_error_push(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
+    }
+    unlock_error = g_json_group_list_mutex->unlock();
     json_thread_error_push(unlock_error);
     return (unlock_error);
 }
@@ -84,7 +100,9 @@ void json_group_list_finalize_lock()
 {
     int unlock_error;
 
-    unlock_error = g_json_group_list_mutex.unlock();
+    if (g_json_group_list_mutex == ft_nullptr)
+        return ;
+    unlock_error = g_json_group_list_mutex->unlock();
     json_thread_error_push(unlock_error);
     return ;
 }
@@ -716,4 +734,30 @@ int json_stream_reader_get_error(const json_stream_reader *reader)
 const char *json_stream_reader_get_error_str(const json_stream_reader *reader)
 {
     return (ft_strerror(json_stream_reader_get_error(reader)));
+}
+int json_group_list_enable_thread_safety()
+{
+    if (g_json_group_list_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    pt_recursive_mutex *mutex = new (std::nothrow) pt_recursive_mutex();
+    if (mutex == ft_nullptr)
+        return (FT_ERR_NO_MEMORY);
+    int initialize_error = mutex->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        delete mutex;
+        return (initialize_error);
+    }
+    g_json_group_list_mutex = mutex;
+    return (FT_ERR_SUCCESS);
+}
+
+int json_group_list_disable_thread_safety()
+{
+    if (g_json_group_list_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    int destroy_error = g_json_group_list_mutex->destroy();
+    delete g_json_group_list_mutex;
+    g_json_group_list_mutex = ft_nullptr;
+    return (destroy_error);
 }

@@ -35,14 +35,17 @@ static void trim_whitespace(ft_string &target) noexcept
     return ;
 }
 
+thread_local int ft_game_script_context::_last_error = FT_ERR_SUCCESS;
+thread_local int ft_game_script_bridge::_last_error = FT_ERR_SUCCESS;
+
 void ft_game_script_context::set_error(int error) const noexcept
 {
-    this->_error_code = error;
+    ft_game_script_context::_last_error = error;
     return ;
 }
 
 ft_game_script_context::ft_game_script_context() noexcept
-    : _state(ft_nullptr), _world(), _variables(), _error_code(FT_ERR_SUCCESS)
+    : _state(ft_nullptr), _world(), _variables()
 {
     return ;
 }
@@ -57,7 +60,7 @@ int ft_game_script_context::initialize() noexcept
     this->_state = ft_nullptr;
     this->_world = ft_sharedptr<ft_world>();
     this->_variables.clear();
-    this->_error_code = FT_ERR_SUCCESS;
+    this->set_error(FT_ERR_SUCCESS);
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
@@ -68,7 +71,7 @@ int ft_game_script_context::initialize(ft_game_state *state,
     this->_state = state;
     this->_world = world;
     this->_variables.clear();
-    this->_error_code = FT_ERR_SUCCESS;
+    this->set_error(FT_ERR_SUCCESS);
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
@@ -80,8 +83,7 @@ int ft_game_script_context::initialize(const ft_game_script_context &other) noex
     this->_state = other._state;
     this->_world = other._world;
     this->_variables = other._variables;
-    this->_error_code = other._error_code;
-    this->set_error(other._error_code);
+    this->set_error(other.get_error());
     return (FT_ERR_SUCCESS);
 }
 
@@ -206,17 +208,17 @@ void ft_game_script_context::clear_variables() noexcept
 
 int ft_game_script_context::get_error() const noexcept
 {
-    return (this->_error_code);
+    return (ft_game_script_context::_last_error);
 }
 
 const char *ft_game_script_context::get_error_str() const noexcept
 {
-    return (ft_strerror(this->_error_code));
+    return (ft_strerror(ft_game_script_context::_last_error));
 }
 
 void ft_game_script_bridge::set_error(int error) const noexcept
 {
-    this->_error_code = error;
+    ft_game_script_bridge::_last_error = error;
     return ;
 }
 
@@ -238,7 +240,7 @@ bool ft_game_script_bridge::is_supported_language(const ft_string &language) noe
 
 ft_game_script_bridge::ft_game_script_bridge() noexcept
     : _world(), _callbacks(), _language(), _max_operations(32),
-      _error_code(FT_ERR_SUCCESS), _mutex(ft_nullptr)
+      _mutex(ft_nullptr)
 {
     this->_language = "lua";
     this->set_error(FT_ERR_SUCCESS);
@@ -1428,15 +1430,17 @@ int ft_game_script_bridge::disable_thread_safety() noexcept
 
 bool ft_game_script_bridge::is_thread_safe() const noexcept
 {
-    return (this->_mutex != ft_nullptr);
+    const bool result = (this->_mutex != ft_nullptr);
+    this->set_error(FT_ERR_SUCCESS);
+    return (result);
 }
 
 int ft_game_script_bridge::get_error() const noexcept
 {
-    return (this->_error_code);
+    return (ft_game_script_bridge::_last_error);
 }
 
 const char *ft_game_script_bridge::get_error_str() const noexcept
 {
-    return (ft_strerror(this->_error_code));
+    return (ft_strerror(ft_game_script_bridge::_last_error));
 }

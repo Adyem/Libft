@@ -13,10 +13,15 @@ FT_TEST(test_region_definition_field_accessors, "Region definition getters refle
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(12, ft_string("Verdant Vale"),
         ft_string("Lush forests with hidden ruins."), 18));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     FT_ASSERT_EQ(12, region.get_region_id());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     FT_ASSERT_EQ(ft_string("Verdant Vale"), region.get_name());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     FT_ASSERT_EQ(ft_string("Lush forests with hidden ruins."), region.get_description());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     FT_ASSERT_EQ(18, region.get_recommended_level());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     return (1);
 }
 
@@ -26,11 +31,18 @@ FT_TEST(test_vendor_profile_initialize_copy, "Vendor profile initialize(copy) du
     ft_vendor_profile clone;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize(3, 1.2, 0.8, 0.05));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, clone.initialize(source));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, clone.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
     FT_ASSERT_EQ(3, clone.get_vendor_id());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, clone.get_error());
     FT_ASSERT_DOUBLE_EQ(1.2, clone.get_buy_markup());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, clone.get_error());
     FT_ASSERT_DOUBLE_EQ(0.8, clone.get_sell_multiplier());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, clone.get_error());
     FT_ASSERT_DOUBLE_EQ(0.05, clone.get_tax_rate());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, clone.get_error());
     return (1);
 }
 
@@ -38,9 +50,15 @@ FT_TEST(test_rarity_band_setters_store_values, "Rarity band setters override sto
 {
     ft_rarity_band band;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, band.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, band.get_error());
     band.set_rarity(2);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, band.get_error());
     FT_ASSERT_EQ(2, band.get_rarity());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, band.get_error());
     band.set_value_multiplier(2.25);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, band.get_error());
     FT_ASSERT_EQ(2.25, band.get_value_multiplier());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, band.get_error());
     return (1);
 }

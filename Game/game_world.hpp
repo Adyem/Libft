@@ -42,7 +42,7 @@ class ft_world
         ft_sharedptr<ft_quest> _quest;
         ft_sharedptr<ft_vendor_profile> _vendor_profile;
         ft_sharedptr<ft_upgrade> _upgrade;
-        mutable int        _error;
+        static thread_local int        _last_error;
 
         void set_error(int err) const noexcept;
         bool propagate_scheduler_state_error() const noexcept;

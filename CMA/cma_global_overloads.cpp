@@ -2,14 +2,6 @@
 #include <new>
 #include "../CMA/CMA.hpp"
 
-static void *allocate_aligned_memory(std::size_t size, std::align_val_t alignment)
-{
-    void *pointer;
-
-    pointer = cma_aligned_alloc(static_cast<ft_size_t>(alignment), size);
-    return (pointer);
-}
-
 void* operator new(std::size_t size)
 {
     void *pointer;
@@ -86,7 +78,8 @@ void* operator new(std::size_t size, std::align_val_t alignment)
 {
     void *pointer;
 
-    pointer = allocate_aligned_memory(size, alignment);
+    pointer = cma_aligned_alloc(static_cast<ft_size_t>(alignment),
+            static_cast<ft_size_t>(size));
     if (pointer == NULL)
         throw std::bad_alloc();
     return (pointer);
@@ -95,7 +88,8 @@ void* operator new(std::size_t size, std::align_val_t alignment)
 void* operator new(std::size_t size, std::align_val_t alignment,
     const std::nothrow_t&) noexcept
 {
-    return (allocate_aligned_memory(size, alignment));
+    return (cma_aligned_alloc(static_cast<ft_size_t>(alignment),
+            static_cast<ft_size_t>(size)));
 }
 
 void operator delete(void* ptr, std::align_val_t) noexcept
@@ -118,9 +112,10 @@ void operator delete(void* ptr, std::align_val_t, const std::nothrow_t&) noexcep
 
 void* operator new[](std::size_t size, std::align_val_t alignment)
 {
-    void *pointer;
+   void *pointer;
 
-    pointer = allocate_aligned_memory(size, alignment);
+    pointer = cma_aligned_alloc(static_cast<ft_size_t>(alignment),
+            static_cast<ft_size_t>(size));
     if (pointer == NULL)
         throw std::bad_alloc();
     return (pointer);
@@ -129,7 +124,8 @@ void* operator new[](std::size_t size, std::align_val_t alignment)
 void* operator new[](std::size_t size, std::align_val_t alignment,
     const std::nothrow_t&) noexcept
 {
-    return (allocate_aligned_memory(size, alignment));
+    return (cma_aligned_alloc(static_cast<ft_size_t>(alignment),
+            static_cast<ft_size_t>(size)));
 }
 
 void operator delete[](void* ptr, std::align_val_t) noexcept

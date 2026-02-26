@@ -24,17 +24,28 @@ class ft_game_server
         void              (*_on_join)(int);
         void              (*_on_leave)(int);
         mutable pt_recursive_mutex    *_mutex;
+        static thread_local int        _last_error;
+        uint8_t                       _initialized_state;
+        static const uint8_t          _state_uninitialized = 0;
+        static const uint8_t          _state_destroyed = 1;
+        static const uint8_t          _state_initialized = 2;
+        void abort_lifecycle_error(const char *method_name,
+                const char *reason) const;
+        void abort_if_not_initialized(const char *method_name) const;
         int handle_message_locked(int client_handle,
                 const ft_string &message) noexcept;
         int serialize_world_locked(ft_string &out) const noexcept;
         void join_client_locked(int client_id, int client_handle) noexcept;
         void leave_client_locked(int client_id) noexcept;
         int lock_internal(bool *lock_acquired) const noexcept;
-        void unlock_internal(bool lock_acquired) const noexcept;
+        int unlock_internal(bool lock_acquired) const noexcept;
+        void set_error(int error_code) const noexcept;
+        int get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 
     public:
         ft_game_server() noexcept;
-        ~ft_game_server();
+        virtual ~ft_game_server();
         ft_game_server(const ft_game_server &other) noexcept = delete;
         ft_game_server &operator=(const ft_game_server &other) noexcept = delete;
         ft_game_server(ft_game_server &&other) noexcept = delete;
@@ -42,6 +53,7 @@ class ft_game_server
 
         int initialize(const ft_sharedptr<ft_world> &world,
             const char *auth_token = ft_nullptr) noexcept;
+        int destroy() noexcept;
 
         void set_join_callback(void (*callback)(int)) noexcept;
         void set_leave_callback(void (*callback)(int)) noexcept;

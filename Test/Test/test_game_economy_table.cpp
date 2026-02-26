@@ -158,6 +158,7 @@ static int assert_price_definition(const ft_price_definition &definition,
     FT_ASSERT_EQ(base_value, definition.get_base_value());
     FT_ASSERT_EQ(minimum_value, definition.get_minimum_value());
     FT_ASSERT_EQ(maximum_value, definition.get_maximum_value());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.get_error());
     return (1);
 }
 
@@ -168,6 +169,7 @@ static int assert_vendor_profile_values(const ft_vendor_profile &profile,
     FT_ASSERT_DOUBLE_EQ(buy_markup, profile.get_buy_markup());
     FT_ASSERT_DOUBLE_EQ(sell_multiplier, profile.get_sell_multiplier());
     FT_ASSERT_DOUBLE_EQ(tax_rate, profile.get_tax_rate());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
     return (1);
 }
 
@@ -183,6 +185,8 @@ FT_TEST(test_economy_register_and_fetch_price, "register and fetch price definit
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.register_price_definition(definition));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.fetch_price_definition(10, fetched));
     assert_price_definition(fetched, 10, 3, 500, 300, 800);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched.get_error());
     return (1);
 }
 
@@ -213,6 +217,8 @@ FT_TEST(test_economy_rarity_band_registration, "register and fetch rarity band")
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.fetch_rarity_band(4, fetched));
     FT_ASSERT_EQ(4, fetched.get_rarity());
     FT_ASSERT_DOUBLE_EQ(1.75, fetched.get_value_multiplier());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched.get_error());
     return (1);
 }
 
@@ -237,6 +243,9 @@ FT_TEST(test_economy_vendor_and_currency_profiles,
     FT_ASSERT_EQ(1, fetched_currency.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(0.5, fetched_currency.get_rate_to_base());
     FT_ASSERT_EQ(3, fetched_currency.get_display_precision());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_vendor.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_currency.get_error());
     return (1);
 }
 

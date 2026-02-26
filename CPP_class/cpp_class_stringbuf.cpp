@@ -48,18 +48,12 @@ ft_stringbuf::ft_stringbuf() noexcept
 
 ft_stringbuf::~ft_stringbuf() noexcept
 {
-    if (this->_initialized_state == ft_stringbuf::_state_uninitialized)
+    if (this->_initialized_state != ft_stringbuf::_state_initialized)
     {
-        ft_stringbuf::abort_lifecycle_error("ft_stringbuf::~ft_stringbuf",
-            "destructor called while object is uninitialized");
+        this->_initialized_state = ft_stringbuf::_state_destroyed;
         return ;
     }
-    if (this->_initialized_state == ft_stringbuf::_state_initialized)
-    {
-        int destroy_error = this->destroy();
-        if (destroy_error != FT_ERR_SUCCESS)
-            return ;
-    }
+    (void)this->destroy();
     return ;
 }
 
@@ -100,8 +94,7 @@ int ft_stringbuf::destroy() noexcept
 
     if (this->_initialized_state != ft_stringbuf::_state_initialized)
     {
-        ft_stringbuf::abort_lifecycle_error("ft_stringbuf::destroy",
-            "called while object is not initialized");
+        this->_initialized_state = ft_stringbuf::_state_destroyed;
         return (FT_ERR_INVALID_STATE);
     }
     clear_error = this->_storage.clear();

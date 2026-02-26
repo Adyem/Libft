@@ -82,6 +82,7 @@ FT_TEST(test_game_goal_thread_safety,
     test_failed = 0;
     failure_expression = ft_nullptr;
     failure_line = 0;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, primary_goal.initialize());
     primary_goal.set_target(128);
     primary_goal.set_progress(0);
     increment_arguments.goal_pointer = &primary_goal;
@@ -144,5 +145,6 @@ FT_TEST(test_game_goal_thread_safety,
         ft_test_fail(failure_expression, __FILE__, failure_line);
         return (0);
     }
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, primary_goal.get_error());
     return (1);
 }

@@ -3,6 +3,7 @@
 #include "../PThread/pthread.hpp"
 #include <new>
 
+thread_local int ft_behavior_action::_last_error = FT_ERR_SUCCESS;
 int ft_behavior_action::lock_pair(const ft_behavior_action &first, const ft_behavior_action &second,
         bool *first_locked,
         bool *second_locked)
@@ -72,8 +73,7 @@ int ft_behavior_action::lock_pair(const ft_behavior_action &first, const ft_beha
 }
 
 ft_behavior_action::ft_behavior_action() noexcept
-    : _action_id(0), _weight(0.0), _cooldown_seconds(0.0), _error_code(FT_ERR_SUCCESS),
-      _mutex(ft_nullptr)
+    : _action_id(0), _weight(0.0), _cooldown_seconds(0.0), _mutex(ft_nullptr)
 {
     return ;
 }
@@ -83,7 +83,7 @@ int ft_behavior_action::initialize() noexcept
     this->_action_id = 0;
     this->_weight = 0.0;
     this->_cooldown_seconds = 0.0;
-    this->_error_code = FT_ERR_SUCCESS;
+    this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
@@ -93,7 +93,7 @@ int ft_behavior_action::initialize(int action_id, double weight,
     this->_action_id = action_id;
     this->_weight = weight;
     this->_cooldown_seconds = cooldown_seconds;
-    this->_error_code = FT_ERR_SUCCESS;
+    this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
@@ -146,8 +146,8 @@ int ft_behavior_action::initialize(const ft_behavior_action &other) noexcept
     this->_action_id = other._action_id;
     this->_weight = other._weight;
     this->_cooldown_seconds = other._cooldown_seconds;
-    this->_error_code = other._error_code;
     other.unlock_internal(other_locked);
+    this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
@@ -168,12 +168,12 @@ int ft_behavior_action::initialize(ft_behavior_action &&other) noexcept
     this->_action_id = other._action_id;
     this->_weight = other._weight;
     this->_cooldown_seconds = other._cooldown_seconds;
-    this->_error_code = other._error_code;
     other._action_id = 0;
     other._weight = 0.0;
     other._cooldown_seconds = 0.0;
-    other._error_code = FT_ERR_SUCCESS;
+    other.set_error(FT_ERR_SUCCESS);
     other.unlock_internal(other_locked);
+    this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
@@ -228,7 +228,7 @@ int ft_behavior_action::get_action_id() const noexcept
         return (0);
     }
     action_id = this->_action_id;
-    const_cast<ft_behavior_action *>(this)->set_error(this->_error_code);
+    const_cast<ft_behavior_action *>(this)->set_error(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (action_id);
 }
@@ -265,7 +265,7 @@ double ft_behavior_action::get_weight() const noexcept
         return (0.0);
     }
     weight = this->_weight;
-    const_cast<ft_behavior_action *>(this)->set_error(this->_error_code);
+    const_cast<ft_behavior_action *>(this)->set_error(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (weight);
 }
@@ -302,7 +302,7 @@ double ft_behavior_action::get_cooldown_seconds() const noexcept
         return (0.0);
     }
     cooldown_seconds = this->_cooldown_seconds;
-    const_cast<ft_behavior_action *>(this)->set_error(this->_error_code);
+    const_cast<ft_behavior_action *>(this)->set_error(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (cooldown_seconds);
 }
@@ -327,20 +327,7 @@ void ft_behavior_action::set_cooldown_seconds(double cooldown_seconds) noexcept
 
 int ft_behavior_action::get_error() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int error_code;
-
-    lock_acquired = false;
-    lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_behavior_action *>(this)->set_error(lock_error);
-        return (lock_error);
-    }
-    error_code = this->_error_code;
-    this->unlock_internal(lock_acquired);
-    return (error_code);
+    return (ft_behavior_action::_last_error);
 }
 
 const char *ft_behavior_action::get_error_str() const noexcept
@@ -353,6 +340,6 @@ const char *ft_behavior_action::get_error_str() const noexcept
 
 void ft_behavior_action::set_error(int error_code) const noexcept
 {
-    this->_error_code = error_code;
+    ft_behavior_action::_last_error = error_code;
     return ;
 }

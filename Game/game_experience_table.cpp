@@ -4,8 +4,10 @@
 #include "../Errno/errno.hpp"
 #include <new>
 
+thread_local int ft_experience_table::_last_error = FT_ERR_SUCCESS;
+
 ft_experience_table::ft_experience_table() noexcept
-    : _levels(ft_nullptr), _count(0), _error(FT_ERR_SUCCESS), _mutex(ft_nullptr)
+    : _levels(ft_nullptr), _count(0), _mutex(ft_nullptr)
 {
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -65,7 +67,7 @@ void ft_experience_table::unlock_internal(bool lock_acquired) const noexcept
 
 void ft_experience_table::set_error(int err) const noexcept
 {
-    this->_error = err;
+    ft_experience_table::_last_error = err;
     return ;
 }
 
@@ -106,7 +108,7 @@ int ft_experience_table::resize_locked(int new_count,
     if (!new_levels)
     {
         this->set_error(FT_ERR_NO_MEMORY);
-        return (this->_error);
+        return (this->get_error());
     }
     if (new_count > old_count)
     {
@@ -131,7 +133,7 @@ int ft_experience_table::resize_locked(int new_count,
         if (!this->is_valid(check_count, this->_levels))
         {
             this->set_error(FT_ERR_CONFIGURATION);
-            return (this->_error);
+            return (this->get_error());
         }
     }
     this->set_error(FT_ERR_SUCCESS);
@@ -152,7 +154,7 @@ int ft_experience_table::get_count() const noexcept
         return (0);
     }
     count_value = this->_count;
-    const_cast<ft_experience_table *>(this)->set_error(this->_error);
+    const_cast<ft_experience_table *>(this)->set_error(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (count_value);
 }
@@ -282,7 +284,7 @@ int ft_experience_table::set_levels(const int *levels, int count) noexcept
     if (resize_result != FT_ERR_SUCCESS)
     {
         this->unlock_internal(lock_acquired);
-        return (this->_error);
+        return (this->get_error());
     }
     level_index = 0;
     while (level_index < count)
@@ -294,7 +296,7 @@ int ft_experience_table::set_levels(const int *levels, int count) noexcept
     {
         this->set_error(FT_ERR_CONFIGURATION);
         this->unlock_internal(lock_acquired);
-        return (this->_error);
+        return (this->get_error());
     }
     this->set_error(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
@@ -330,7 +332,7 @@ int ft_experience_table::generate_levels_total(int count, int base,
     if (resize_result != FT_ERR_SUCCESS)
     {
         this->unlock_internal(lock_acquired);
-        return (this->_error);
+        return (this->get_error());
     }
     value = static_cast<double>(base);
     level_index = 0;
@@ -344,7 +346,7 @@ int ft_experience_table::generate_levels_total(int count, int base,
     {
         this->set_error(FT_ERR_CONFIGURATION);
         this->unlock_internal(lock_acquired);
-        return (this->_error);
+        return (this->get_error());
     }
     this->set_error(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
@@ -379,7 +381,7 @@ int ft_experience_table::generate_levels_scaled(int count, int base,
     if (resize_result != FT_ERR_SUCCESS)
     {
         this->unlock_internal(lock_acquired);
-        return (this->_error);
+        return (this->get_error());
     }
     increment = static_cast<double>(base);
     total = static_cast<double>(base);
@@ -396,7 +398,7 @@ int ft_experience_table::generate_levels_scaled(int count, int base,
     {
         this->set_error(FT_ERR_CONFIGURATION);
         this->unlock_internal(lock_acquired);
-        return (this->_error);
+        return (this->get_error());
     }
     this->set_error(FT_ERR_SUCCESS);
     this->unlock_internal(lock_acquired);
@@ -440,40 +442,12 @@ int ft_experience_table::check_for_error() const noexcept
 
 int ft_experience_table::get_error() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int error_code;
-
-    lock_acquired = false;
-    lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_experience_table *>(this)->set_error(lock_error);
-        return (lock_error);
-    }
-    error_code = this->_error;
-    const_cast<ft_experience_table *>(this)->set_error(error_code);
-    this->unlock_internal(lock_acquired);
-    return (error_code);
+    return (ft_experience_table::_last_error);
 }
 
 const char *ft_experience_table::get_error_str() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int error_code;
-
-    lock_acquired = false;
-    lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_experience_table *>(this)->set_error(lock_error);
-        return (ft_strerror(lock_error));
-    }
-    error_code = this->_error;
-    const_cast<ft_experience_table *>(this)->set_error(error_code);
-    this->unlock_internal(lock_acquired);
-    return (ft_strerror(error_code));
+    return (ft_strerror(this->get_error()));
 }
 
 int ft_experience_table::enable_thread_safety() noexcept

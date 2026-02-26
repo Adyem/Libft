@@ -112,7 +112,7 @@ FT_TEST(test_cmp_file_delete_null_pointer_sets_errno, "cmp_file_delete reports F
 {
     int error_code = FT_ERR_SUCCESS;
 
-    FT_ASSERT_EQ(-1, cmp_file_delete(ft_nullptr, &error_code));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, cmp_file_delete(ft_nullptr, &error_code));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_code);
     return (1);
 }
@@ -133,7 +133,7 @@ FT_TEST(test_cmp_file_delete_permission_error_sets_errno, "cmp_file_delete repor
 #endif
     );
     write_test_file(file_path);
-    FT_ASSERT_EQ(-1, cmp_file_delete(directory_path, &error_code));
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, cmp_file_delete(directory_path, &error_code));
     FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, error_code);
     cmp_file_delete(file_path, &error_code);
     remove_directory_if_present(directory_path);
@@ -156,7 +156,7 @@ FT_TEST(test_cmp_file_move_null_pointer_sets_errno, "cmp_file_move reports FT_ER
 {
     int error_code = FT_ERR_SUCCESS;
 
-    FT_ASSERT_EQ(-1,
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT,
         cmp_file_move(ft_nullptr, "cmp_file_move_null_pointer_destination.txt", &error_code));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_code);
     return (1);
@@ -170,7 +170,7 @@ FT_TEST(test_cmp_file_move_missing_source_sets_errno, "cmp_file_move reports FT_
 
     remove_file_if_present(source_path);
     remove_file_if_present(destination_path);
-    FT_ASSERT_EQ(-1, cmp_file_move(source_path, destination_path, &error_code));
+    FT_ASSERT_EQ(FT_ERR_IO, cmp_file_move(source_path, destination_path, &error_code));
     FT_ASSERT_EQ(FT_ERR_IO, error_code);
     return (1);
 }
@@ -207,7 +207,8 @@ FT_TEST(test_cmp_file_copy_null_pointer_sets_errno, "cmp_file_copy reports FT_ER
 {
     int error_code = FT_ERR_SUCCESS;
 
-    FT_ASSERT_EQ(-1, cmp_file_copy(ft_nullptr, "cmp_file_copy_null_pointer_destination.txt", &error_code));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, cmp_file_copy(ft_nullptr,
+        "cmp_file_copy_null_pointer_destination.txt", &error_code));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_code);
     return (1);
 }
@@ -228,7 +229,8 @@ FT_TEST(test_cmp_file_copy_permission_error_sets_errno, "cmp_file_copy reports p
 #else
     FT_ASSERT_EQ(0, ::mkdir(destination_directory, 0700));
 #endif
-    FT_ASSERT_EQ(-1, cmp_file_copy(source_path, destination_directory, &error_code));
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, cmp_file_copy(source_path,
+        destination_directory, &error_code));
     FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, error_code);
     cleanup_compatebility_file_artifacts();
     remove_directory_if_present(destination_directory);
@@ -244,7 +246,8 @@ FT_TEST(test_cmp_file_copy_missing_source_sets_errno, "cmp_file_copy reports FT_
 
     remove_file_if_present(source_path);
     remove_file_if_present(destination_path);
-    FT_ASSERT_EQ(-1, cmp_file_copy(source_path, destination_path, &error_code));
+    FT_ASSERT_EQ(FT_ERR_IO, cmp_file_copy(source_path, destination_path,
+        &error_code));
     FT_ASSERT_EQ(FT_ERR_IO, error_code);
     return (1);
 }
@@ -270,7 +273,8 @@ FT_TEST(test_cmp_file_create_directory_null_pointer_sets_errno, "cmp_file_create
 {
     int error_code = FT_ERR_SUCCESS;
 
-    FT_ASSERT_EQ(-1, cmp_file_create_directory(ft_nullptr, 0700, &error_code));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, cmp_file_create_directory(
+        ft_nullptr, 0700, &error_code));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_code);
     return (1);
 }
@@ -284,7 +288,8 @@ FT_TEST(test_cmp_file_create_directory_permission_error_sets_errno, "cmp_file_cr
     remove_directory_if_present(child_directory);
     remove_file_if_present(parent_file);
     write_test_file(parent_file);
-    FT_ASSERT_EQ(-1, cmp_file_create_directory(child_directory, 0700, &error_code));
+    FT_ASSERT_EQ(FT_ERR_IO, cmp_file_create_directory(child_directory, 0700,
+        &error_code));
     FT_ASSERT_EQ(FT_ERR_IO, error_code);
     remove_directory_if_present(child_directory);
     remove_file_if_present(parent_file);
@@ -302,7 +307,8 @@ FT_TEST(test_cmp_file_create_directory_existing_path_sets_errno, "cmp_file_creat
 #else
     FT_ASSERT_EQ(0, ::mkdir(directory_path, 0700));
 #endif
-    FT_ASSERT_EQ(-1, cmp_file_create_directory(directory_path, 0700, &error_code));
+    FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, cmp_file_create_directory(
+        directory_path, 0700, &error_code));
     FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, error_code);
     remove_directory_if_present(directory_path);
     return (1);

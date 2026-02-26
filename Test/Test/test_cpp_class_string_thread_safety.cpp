@@ -14,6 +14,7 @@ FT_TEST(test_ft_string_append_resets_errno,
         "ft_string append sets error state to success after completing")
 {
     ft_string string_value;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, string_value.initialize());
     string_value.append('x');
     FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::last_operation_error());
     FT_ASSERT_EQ(1u, string_value.size());

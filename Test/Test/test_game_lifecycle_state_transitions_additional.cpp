@@ -14,7 +14,9 @@ FT_TEST(test_price_lifecycle_initialize_destroy_success, "price definition initi
     ft_price_definition definition;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.get_error());
     return (1);
 }
 
@@ -23,6 +25,7 @@ FT_TEST(test_price_lifecycle_destroy_uninitialized_invalid_state, "price definit
     ft_price_definition definition;
 
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, definition.destroy());
+    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, definition.get_error());
     return (1);
 }
 
@@ -31,8 +34,11 @@ FT_TEST(test_price_lifecycle_reinitialize_after_destroy_success, "price definiti
     ft_price_definition definition;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.get_error());
     return (1);
 }
 
@@ -41,6 +47,7 @@ FT_TEST(test_price_lifecycle_disable_thread_safety_uninitialized_success, "price
     ft_price_definition definition;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.disable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, definition.get_error());
     return (1);
 }
 
@@ -49,7 +56,9 @@ FT_TEST(test_rarity_lifecycle_initialize_destroy_success, "rarity band initializ
     ft_rarity_band band;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, band.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, band.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, band.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, band.get_error());
     return (1);
 }
 
@@ -58,6 +67,7 @@ FT_TEST(test_rarity_lifecycle_destroy_uninitialized_invalid_state, "rarity band 
     ft_rarity_band band;
 
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, band.destroy());
+    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, band.get_error());
     return (1);
 }
 
@@ -66,8 +76,11 @@ FT_TEST(test_rarity_lifecycle_reinitialize_after_destroy_success, "rarity band c
     ft_rarity_band band;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, band.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, band.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, band.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, band.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, band.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, band.get_error());
     return (1);
 }
 
@@ -76,6 +89,7 @@ FT_TEST(test_rarity_lifecycle_disable_thread_safety_uninitialized_success, "rari
     ft_rarity_band band;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, band.disable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, band.get_error());
     return (1);
 }
 
@@ -84,7 +98,9 @@ FT_TEST(test_vendor_lifecycle_initialize_destroy_success, "vendor profile initia
     ft_vendor_profile profile;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
     return (1);
 }
 
@@ -93,6 +109,7 @@ FT_TEST(test_vendor_lifecycle_destroy_uninitialized_invalid_state, "vendor profi
     ft_vendor_profile profile;
 
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, profile.destroy());
+    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, profile.get_error());
     return (1);
 }
 
@@ -101,8 +118,11 @@ FT_TEST(test_vendor_lifecycle_reinitialize_after_destroy_success, "vendor profil
     ft_vendor_profile profile;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
     return (1);
 }
 
@@ -111,6 +131,7 @@ FT_TEST(test_vendor_lifecycle_disable_thread_safety_uninitialized_success, "vend
     ft_vendor_profile profile;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.disable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, profile.get_error());
     return (1);
 }
 
@@ -119,7 +140,9 @@ FT_TEST(test_currency_lifecycle_initialize_destroy_success, "currency rate initi
     ft_currency_rate rate;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.get_error());
     return (1);
 }
 
@@ -128,6 +151,7 @@ FT_TEST(test_currency_lifecycle_destroy_uninitialized_invalid_state, "currency r
     ft_currency_rate rate;
 
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, rate.destroy());
+    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, rate.get_error());
     return (1);
 }
 
@@ -136,8 +160,11 @@ FT_TEST(test_currency_lifecycle_reinitialize_after_destroy_success, "currency ra
     ft_currency_rate rate;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.get_error());
     return (1);
 }
 
@@ -146,6 +173,7 @@ FT_TEST(test_currency_lifecycle_disable_thread_safety_uninitialized_success, "cu
     ft_currency_rate rate;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.disable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rate.get_error());
     return (1);
 }
 
@@ -154,7 +182,9 @@ FT_TEST(test_economy_table_lifecycle_initialize_destroy_success, "economy table 
     ft_economy_table table;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
     return (1);
 }
 
@@ -163,6 +193,7 @@ FT_TEST(test_economy_table_lifecycle_destroy_uninitialized_invalid_state, "econo
     ft_economy_table table;
 
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, table.destroy());
+    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, table.get_error());
     return (1);
 }
 
@@ -171,8 +202,11 @@ FT_TEST(test_economy_table_lifecycle_reinitialize_after_destroy_success, "econom
     ft_economy_table table;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.destroy());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
     return (1);
 }
 
@@ -181,5 +215,6 @@ FT_TEST(test_economy_table_lifecycle_disable_thread_safety_uninitialized_success
     ft_economy_table table;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.disable_thread_safety());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
     return (1);
 }

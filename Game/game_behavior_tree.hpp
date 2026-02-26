@@ -34,7 +34,7 @@ class ft_behavior_context
 class ft_behavior_node
 {
     protected:
-        mutable int _error_code;
+        static thread_local int _last_error;
 
         void set_error(int error_code) const noexcept;
 
@@ -113,7 +113,7 @@ class ft_behavior_tree
 {
     private:
         ft_sharedptr<ft_behavior_node> _root;
-        mutable int                     _error_code;
+        static thread_local int         _last_error;
 
         void set_error(int error_code) const noexcept;
 

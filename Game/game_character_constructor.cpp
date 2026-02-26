@@ -1,6 +1,9 @@
 #include "game_character.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/pthread.hpp"
+#include <new>
+
+thread_local int ft_character::_last_error = FT_ERR_SUCCESS;
 
 bool ft_character::handle_component_error(int error) noexcept
 {
@@ -41,7 +44,7 @@ ft_character::ft_character() noexcept
       _fire_res(), _frost_res(), _lightning_res(),
       _air_res(), _earth_res(), _chaos_res(),
       _physical_res(), _skills(), _buffs(), _debuffs(), _upgrades(), _quests(), _achievements(), _reputation(), _inventory(), _equipment(),
-      _error(FT_ERR_SUCCESS), _mutex()
+      _mutex(ft_nullptr)
 {
     if (this->check_internal_errors() == true)
         return ;
@@ -51,5 +54,45 @@ ft_character::ft_character() noexcept
 
 ft_character::~ft_character() noexcept
 {
+    (void)this->disable_thread_safety();
     return ;
+}
+
+int ft_character::enable_thread_safety() noexcept
+{
+    int initialize_error;
+    pt_recursive_mutex *new_mutex;
+
+    if (this->_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    new_mutex = new (std::nothrow) pt_recursive_mutex();
+    if (new_mutex == ft_nullptr)
+        return (FT_ERR_NO_MEMORY);
+    initialize_error = new_mutex->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        delete new_mutex;
+        return (initialize_error);
+    }
+    this->_mutex = new_mutex;
+    return (FT_ERR_SUCCESS);
+}
+
+int ft_character::disable_thread_safety() noexcept
+{
+    int destroy_error;
+    pt_recursive_mutex *old_mutex;
+
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    old_mutex = this->_mutex;
+    this->_mutex = ft_nullptr;
+    destroy_error = old_mutex->destroy();
+    delete old_mutex;
+    return (destroy_error);
+}
+
+bool ft_character::is_thread_safe() const noexcept
+{
+    return (this->_mutex != ft_nullptr);
 }

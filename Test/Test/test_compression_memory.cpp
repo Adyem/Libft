@@ -21,6 +21,7 @@ FT_TEST(test_ft_compress_string_to_vector_round_trip, "ft_compress_string_to_vec
     result = ft_compress_string_to_vector(input, compressed);
     if (result != 0)
         return (0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, output.initialize());
     result = ft_decompress_vector_to_string(compressed, output);
     if (result != 0)
         return (0);
@@ -98,6 +99,7 @@ FT_TEST(test_ft_decompress_vector_to_string_reports_allocator_failure, "ft_decom
     if (ft_compress_string_to_vector(input, compressed) != 0)
         return (0);
     cma_set_alloc_limit(1);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, output.initialize());
     result = ft_decompress_vector_to_string(compressed, output);
     cma_set_alloc_limit(0);
     if (result == 0)

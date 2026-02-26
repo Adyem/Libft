@@ -1406,38 +1406,12 @@ ft_sharedptr<ft_item> ft_character::get_equipped_item(int slot) const noexcept
 
 int ft_character::get_error() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int error_code;
-    lock_acquired = false;
-    lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_character *>(this)->set_error(lock_error);
-        return (lock_error);
-    }
-    error_code = this->_error;
-    const_cast<ft_character *>(this)->set_error(error_code);
-    this->unlock_internal(lock_acquired);
-    return (error_code);
+    return (ft_character::_last_error);
 }
 
 const char *ft_character::get_error_str() const noexcept
 {
-    bool lock_acquired;
-    int lock_error;
-    int error_code;
-    lock_acquired = false;
-    lock_error = this->lock_internal(&lock_acquired);
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        const_cast<ft_character *>(this)->set_error(lock_error);
-        return (ft_strerror(lock_error));
-    }
-    error_code = this->_error;
-    const_cast<ft_character *>(this)->set_error(error_code);
-    this->unlock_internal(lock_acquired);
-    return (ft_strerror(error_code));
+    return (ft_strerror(this->get_error()));
 }
 
 void ft_character::set_physical_armor_internal(int armor) noexcept
@@ -1486,7 +1460,7 @@ void ft_character::restore_magic_armor_internal() noexcept
 
 void ft_character::set_error(int err) const noexcept
 {
-    this->_error = err;
+    ft_character::_last_error = err;
     return ;
 }
 
@@ -1496,7 +1470,9 @@ int ft_character::lock_internal(bool *lock_acquired) const noexcept
 
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    lock_error = this->_mutex.lock();
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    lock_error = this->_mutex->lock();
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (lock_acquired != ft_nullptr)
@@ -1508,6 +1484,8 @@ void ft_character::unlock_internal(bool lock_acquired) const noexcept
 {
     if (lock_acquired == false)
         return ;
-    (void)this->_mutex.unlock();
+    if (this->_mutex == ft_nullptr)
+        return ;
+    (void)this->_mutex->unlock();
     return ;
 }

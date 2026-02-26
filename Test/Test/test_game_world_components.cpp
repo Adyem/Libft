@@ -28,6 +28,7 @@ FT_TEST(test_game_world_initializes_new_subsystems, "Game world creates quest ve
     FT_ASSERT_EQ(false, world.get_quest().get() == ft_nullptr);
     FT_ASSERT_EQ(false, world.get_vendor_profile().get() == ft_nullptr);
     FT_ASSERT_EQ(false, world.get_upgrade().get() == ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_error());
     return (1);
 }
 

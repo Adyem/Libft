@@ -23,28 +23,49 @@ FT_TEST(test_world_registry_tracks_regions_and_worlds, "registry stores multiple
     ft_world_region fetched_world;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region1.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region1.get_error());
     region1.set_region_id(1);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region1.get_error());
     region1.set_name(ft_string("Camp"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region1.get_error());
     region1.set_description(ft_string("Camp grounds"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region1.get_error());
     region1.set_recommended_level(1);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region1.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region2.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region2.get_error());
     region2.set_region_id(2);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region2.get_error());
     region2.set_name(ft_string("Ruins"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region2.get_error());
     region2.set_description(ft_string("Old ruins"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region2.get_error());
     region2.set_recommended_level(4);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region2.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world1.initialize(10, region_ids1));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world1.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world2.initialize(11, region_ids2));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world2.get_error());
 
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.register_region(region1));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.register_region(region2));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.register_world(world1));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.register_world(world2));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.fetch_region(1, fetched_region));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
     FT_ASSERT_EQ(ft_string("Camp"), fetched_region.get_name());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_region.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.fetch_world(10, fetched_world));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
     FT_ASSERT_EQ(10, fetched_world.get_world_id());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_world.get_error());
     return (1);
 }

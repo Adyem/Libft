@@ -93,18 +93,12 @@ ft_fd_istream::ft_fd_istream(int fd) noexcept
 
 ft_fd_istream::~ft_fd_istream() noexcept
 {
-    if (this->_initialized_state == ft_fd_istream::_state_uninitialized)
+    if (this->_initialized_state != ft_fd_istream::_state_initialized)
     {
-        ft_fd_istream::abort_lifecycle_error("ft_fd_istream::~ft_fd_istream",
-            "destructor called while object is uninitialized");
+        this->_initialized_state = ft_fd_istream::_state_destroyed;
         return ;
     }
-    if (this->_initialized_state == ft_fd_istream::_state_initialized)
-    {
-        if (this->_mutex != ft_nullptr)
-            this->disable_thread_safety();
-        this->_initialized_state = ft_fd_istream::_state_destroyed;
-    }
+    (void)this->destroy();
     return ;
 }
 

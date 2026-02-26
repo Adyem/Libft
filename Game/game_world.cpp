@@ -30,6 +30,8 @@ int deserialize_inventory(ft_inventory &inventory, json_group *group);
 json_group *serialize_equipment(const ft_character &character);
 int deserialize_equipment(ft_character &character, json_group *group);
 
+thread_local int ft_world::_last_error = FT_ERR_SUCCESS;
+
 static void default_event_callback(ft_world &world, ft_event &event) noexcept;
 static ft_function<void(ft_world&, ft_event&)> get_callback_by_id(int type_id) noexcept;
 
@@ -73,8 +75,7 @@ ft_world::ft_world() noexcept
     _world_region(new (std::nothrow) ft_world_region()),
     _quest(new (std::nothrow) ft_quest()),
     _vendor_profile(new (std::nothrow) ft_vendor_profile()),
-    _upgrade(new (std::nothrow) ft_upgrade()),
-    _error(FT_ERR_SUCCESS)
+    _upgrade(new (std::nothrow) ft_upgrade())
 {
     if (!this->_event_scheduler)
     {
@@ -191,7 +192,7 @@ ft_sharedptr<ft_event_scheduler> &ft_world::get_event_scheduler() noexcept
 {
     int previous_error;
 
-    previous_error = this->_error;
+    previous_error = this->get_error();
     if (previous_error != FT_ERR_SUCCESS)
         return (this->_event_scheduler);
     this->set_error(FT_ERR_SUCCESS);
@@ -202,7 +203,7 @@ const ft_sharedptr<ft_event_scheduler> &ft_world::get_event_scheduler() const no
 {
     int previous_error;
 
-    previous_error = this->_error;
+    previous_error = this->get_error();
     if (previous_error != FT_ERR_SUCCESS)
         return (this->_event_scheduler);
     this->set_error(FT_ERR_SUCCESS);
@@ -309,7 +310,7 @@ ft_sharedptr<ft_quest> &ft_world::get_quest() noexcept
 {
     int previous_error;
 
-    previous_error = this->_error;
+    previous_error = this->get_error();
     if (this->propagate_quest_state_error() == true)
         return (this->_quest);
     if (previous_error != FT_ERR_SUCCESS)
@@ -322,7 +323,7 @@ const ft_sharedptr<ft_quest> &ft_world::get_quest() const noexcept
 {
     int previous_error;
 
-    previous_error = this->_error;
+    previous_error = this->get_error();
     if (this->propagate_quest_state_error() == true)
         return (this->_quest);
     if (previous_error != FT_ERR_SUCCESS)
@@ -335,7 +336,7 @@ ft_sharedptr<ft_vendor_profile> &ft_world::get_vendor_profile() noexcept
 {
     int previous_error;
 
-    previous_error = this->_error;
+    previous_error = this->get_error();
     if (this->propagate_vendor_profile_state_error() == true)
         return (this->_vendor_profile);
     if (previous_error != FT_ERR_SUCCESS)
@@ -348,7 +349,7 @@ const ft_sharedptr<ft_vendor_profile> &ft_world::get_vendor_profile() const noex
 {
     int previous_error;
 
-    previous_error = this->_error;
+    previous_error = this->get_error();
     if (this->propagate_vendor_profile_state_error() == true)
         return (this->_vendor_profile);
     if (previous_error != FT_ERR_SUCCESS)
@@ -379,16 +380,16 @@ int ft_world::save_to_file(const char *file_path, const ft_character &character,
     int error_code;
 
     if (this->propagate_scheduler_state_error() == true)
-        return (this->_error);
+        return (this->get_error());
     error_code = FT_ERR_SUCCESS;
     groups = this->build_snapshot_groups(character, inventory, error_code);
     if (!groups)
-        return (this->_error);
+        return (this->get_error());
     if (json_write_to_file(file_path, groups) != 0)
     {
         json_free_groups(groups);
         this->set_error(FT_ERR_GAME_GENERAL_ERROR);
-        return (this->_error);
+        return (this->get_error());
     }
     json_free_groups(groups);
     this->set_error(FT_ERR_SUCCESS);
@@ -404,7 +405,7 @@ int ft_world::load_from_file(const char *file_path, ft_character &character, ft_
     if (!groups)
     {
         this->set_error(FT_ERR_GAME_GENERAL_ERROR);
-        return (this->_error);
+        return (this->get_error());
     }
     restore_result = this->restore_from_groups(groups, character, inventory);
     json_free_groups(groups);
@@ -419,14 +420,14 @@ int ft_world::save_to_store(kv_store &store, const char *slot_key, const ft_char
     if (slot_key == ft_nullptr)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
-        return (this->_error);
+        return (this->get_error());
     }
     if (this->propagate_scheduler_state_error() == true)
-        return (this->_error);
+        return (this->get_error());
     error_code = FT_ERR_SUCCESS;
     groups = this->build_snapshot_groups(character, inventory, error_code);
     if (!groups)
-        return (this->_error);
+        return (this->get_error());
     serialized_state = json_write_to_string(groups);
     json_free_groups(groups);
     if (!serialized_state)
@@ -435,16 +436,16 @@ int ft_world::save_to_store(kv_store &store, const char *slot_key, const ft_char
         if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_NO_MEMORY;
         this->set_error(error_code);
-        return (this->_error);
+        return (this->get_error());
     }
     if (store.kv_set(slot_key, serialized_state) != 0)
     {        cma_free(serialized_state);        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
-        return (this->_error);
+        return (this->get_error());
     }    cma_free(serialized_state);
     if (store.kv_flush() != 0)
     {
         this->set_error(FT_ERR_GAME_GENERAL_ERROR);
-        return (this->_error);
+        return (this->get_error());
     }
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
@@ -459,13 +460,13 @@ int ft_world::load_from_store(kv_store &store, const char *slot_key, ft_characte
     if (slot_key == ft_nullptr)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
-        return (this->_error);
+        return (this->get_error());
     }
     serialized_state = store.kv_get(slot_key);
     if (serialized_state == ft_nullptr)
     {
         this->set_error(FT_ERR_GAME_GENERAL_ERROR);
-        return (this->_error);
+        return (this->get_error());
     }
     groups = json_read_from_string(serialized_state);
     if (!groups)
@@ -476,7 +477,7 @@ int ft_world::load_from_store(kv_store &store, const char *slot_key, ft_characte
         if (parse_error == FT_ERR_SUCCESS)
             parse_error = FT_ERR_GAME_GENERAL_ERROR;
         this->set_error(parse_error);
-        return (this->_error);
+        return (this->get_error());
     }
     restore_result = this->restore_from_groups(groups, character, inventory);
     json_free_groups(groups);
@@ -490,11 +491,11 @@ int ft_world::save_to_buffer(ft_string &out_buffer, const ft_character &characte
     int error_code;
 
     if (this->propagate_scheduler_state_error() == true)
-        return (this->_error);
+        return (this->get_error());
     error_code = FT_ERR_SUCCESS;
     groups = this->build_snapshot_groups(character, inventory, error_code);
     if (!groups)
-        return (this->_error);
+        return (this->get_error());
     serialized_state = json_write_to_string(groups);
     json_free_groups(groups);
     if (!serialized_state)
@@ -503,7 +504,7 @@ int ft_world::save_to_buffer(ft_string &out_buffer, const ft_character &characte
         if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_GAME_GENERAL_ERROR;
         this->set_error(error_code);
-        return (this->_error);
+        return (this->get_error());
     }
     out_buffer = serialized_state;
     if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
@@ -513,7 +514,7 @@ int ft_world::save_to_buffer(ft_string &out_buffer, const ft_character &characte
         assign_error = ft_string::last_operation_error();
         cma_free(serialized_state);
         this->set_error(assign_error);
-        return (this->_error);
+        return (this->get_error());
     }
     cma_free(serialized_state);
     this->set_error(FT_ERR_SUCCESS);
@@ -529,7 +530,7 @@ int ft_world::load_from_buffer(const char *buffer, ft_character &character, ft_i
     if (buffer == ft_nullptr)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
-        return (this->_error);
+        return (this->get_error());
     }
     groups = json_read_from_string(buffer);
     if (!groups)
@@ -538,7 +539,7 @@ int ft_world::load_from_buffer(const char *buffer, ft_character &character, ft_i
         if (parse_error == FT_ERR_SUCCESS)
             parse_error = FT_ERR_GAME_GENERAL_ERROR;
         this->set_error(parse_error);
-        return (this->_error);
+        return (this->get_error());
     }
     restore_result = this->restore_from_groups(groups, character, inventory);
     json_free_groups(groups);
@@ -555,7 +556,7 @@ int ft_world::plan_route(const ft_map3d &grid,
             goal_x, goal_y, goal_z, path) != FT_ERR_SUCCESS)
     {
         this->set_error(finder.get_error());
-        return (this->_error);
+        return (this->get_error());
     }
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
@@ -563,17 +564,17 @@ int ft_world::plan_route(const ft_map3d &grid,
 
 int ft_world::get_error() const noexcept
 {
-    return (this->_error);
+    return (ft_world::_last_error);
 }
 
 const char *ft_world::get_error_str() const noexcept
 {
-    return (ft_strerror(this->_error));
+    return (ft_strerror(this->get_error()));
 }
 
 void ft_world::set_error(int err) const noexcept
 {
-        this->_error = err;
+    ft_world::_last_error = err;
     return ;
 }
 
@@ -744,7 +745,7 @@ int ft_world::restore_from_groups(json_group *groups, ft_character &character,
     if (!groups)
     {
         this->set_error(FT_ERR_GAME_GENERAL_ERROR);
-        return (this->_error);
+        return (this->get_error());
     }
     event_group = json_find_group(groups, "world");
     character_group = json_find_group(groups, "character");
@@ -753,13 +754,13 @@ int ft_world::restore_from_groups(json_group *groups, ft_character &character,
     if (!event_group || !character_group || !inventory_group || !equipment_group)
     {
         this->set_error(FT_ERR_GAME_GENERAL_ERROR);
-        return (this->_error);
+        return (this->get_error());
     }
     if (this->propagate_scheduler_state_error() == true)
-        return (this->_error);
+        return (this->get_error());
     this->_event_scheduler->clear();
     if (this->propagate_scheduler_state_error() == true)
-        return (this->_error);
+        return (this->get_error());
     inventory.get_items().clear();
     if (deserialize_event_scheduler(this->_event_scheduler, event_group) != FT_ERR_SUCCESS ||
         deserialize_character(character, character_group) != FT_ERR_SUCCESS ||
@@ -767,15 +768,15 @@ int ft_world::restore_from_groups(json_group *groups, ft_character &character,
         deserialize_equipment(character, equipment_group) != FT_ERR_SUCCESS)
     {
         this->set_error(FT_ERR_GAME_GENERAL_ERROR);
-        return (this->_error);
+        return (this->get_error());
     }
     ft_vector<ft_sharedptr<ft_event> > scheduled_events;
     this->_event_scheduler->dump_events(scheduled_events);
     if (this->propagate_scheduler_state_error() == true)
-        return (this->_error);
+        return (this->get_error());
     this->_event_scheduler->clear();
     if (this->propagate_scheduler_state_error() == true)
-        return (this->_error);
+        return (this->get_error());
     size_t event_index;
     size_t event_count;
 
@@ -788,7 +789,7 @@ int ft_world::restore_from_groups(json_group *groups, ft_character &character,
         scheduled_event->set_callback(get_callback_by_id(scheduled_event->get_id()));
         this->_event_scheduler->schedule_event(scheduled_event);
         if (this->propagate_scheduler_state_error() == true)
-            return (this->_error);
+            return (this->get_error());
         event_index++;
     }
     this->set_error(FT_ERR_SUCCESS);
