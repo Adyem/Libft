@@ -1096,6 +1096,9 @@ char *api_request_string_bearer(const char *ip, uint16_t port,
                                    headers, status, timeout, retry_policy));
     ft_string header_string;
 
+    if (header_string.initialize() != FT_ERR_SUCCESS)
+        return (ft_nullptr);
+
     if (headers && headers[0])
     {
         header_string = headers;
@@ -1143,6 +1146,9 @@ char *api_request_string_basic(const char *ip, uint16_t port,
         return (api_request_string(ip, port, method, path, payload,
                                    headers, status, timeout, retry_policy));
     ft_string header_string;
+
+    if (header_string.initialize() != FT_ERR_SUCCESS)
+        return (ft_nullptr);
 
     if (headers && headers[0])
     {
@@ -1193,6 +1199,9 @@ char *api_request_string_host_bearer(const char *host, uint16_t port,
                                         retry_policy));
     ft_string header_string;
 
+    if (header_string.initialize() != FT_ERR_SUCCESS)
+        return (ft_nullptr);
+
     if (headers && headers[0])
     {
         header_string = headers;
@@ -1241,6 +1250,9 @@ char *api_request_string_host_basic(const char *host, uint16_t port,
                                         headers, status, timeout,
                                         retry_policy));
     ft_string header_string;
+
+    if (header_string.initialize() != FT_ERR_SUCCESS)
+        return (ft_nullptr);
 
     if (headers && headers[0])
     {

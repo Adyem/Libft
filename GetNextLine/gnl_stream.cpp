@@ -1,5 +1,6 @@
 #include "gnl_stream.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
 #include <errno.h>
@@ -104,7 +105,12 @@ gnl_stream::~gnl_stream() noexcept
 {
     if (this->_initialized_state == gnl_stream::_state_initialized)
         (void)this->destroy();
-    this->teardown_thread_safety();
+    if (this->_mutex != ft_nullptr)
+    {
+        (void)this->_mutex->destroy();
+        delete this->_mutex;
+        this->_mutex = ft_nullptr;
+    }
     return ;
 }
 
@@ -130,8 +136,6 @@ void gnl_stream::abort_if_not_initialized(const char *method_name) const noexcep
 
 int gnl_stream::initialize() noexcept
 {
-    int mutex_error;
-
     if (this->_initialized_state == gnl_stream::_state_initialized)
     {
         this->abort_lifecycle_error("gnl_stream::initialize",
@@ -144,12 +148,6 @@ int gnl_stream::initialize() noexcept
     this->_file_handle = ft_nullptr;
     this->_close_on_reset = false;
     this->_initialized_state = gnl_stream::_state_initialized;
-    mutex_error = this->enable_thread_safety();
-    if (mutex_error != FT_ERR_SUCCESS)
-    {
-        this->_initialized_state = gnl_stream::_state_destroyed;
-        return (mutex_error);
-    }
     return (FT_ERR_SUCCESS);
 }
 
@@ -165,47 +163,13 @@ int gnl_stream::destroy() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int gnl_stream::lock_mutex() noexcept
-{
-    this->abort_if_not_initialized("gnl_stream::lock_mutex");
-    if (!this->_thread_safe_enabled || this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->lock());
-}
-
-int gnl_stream::unlock_mutex() noexcept
-{
-    this->abort_if_not_initialized("gnl_stream::unlock_mutex");
-    if (!this->_thread_safe_enabled || this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->unlock());
-}
-
 int gnl_stream::enable_thread_safety(void) noexcept
-{
-    this->abort_if_not_initialized("gnl_stream::enable_thread_safety");
-    return (this->prepare_thread_safety());
-}
-
-void gnl_stream::disable_thread_safety(void) noexcept
-{
-    this->abort_if_not_initialized("gnl_stream::disable_thread_safety");
-    this->teardown_thread_safety();
-    return ;
-}
-
-bool gnl_stream::is_thread_safe_enabled(void) const noexcept
-{
-    this->abort_if_not_initialized("gnl_stream::is_thread_safe_enabled");
-    return (this->_thread_safe_enabled);
-}
-
-int gnl_stream::prepare_thread_safety(void) noexcept
 {
     pt_recursive_mutex *mutex_pointer;
     int mutex_error;
 
-    if (this->_thread_safe_enabled && this->_mutex)
+    this->abort_if_not_initialized("gnl_stream::enable_thread_safety");
+    if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
@@ -217,20 +181,28 @@ int gnl_stream::prepare_thread_safety(void) noexcept
         return (mutex_error);
     }
     this->_mutex = mutex_pointer;
-    this->_thread_safe_enabled = true;
     return (FT_ERR_SUCCESS);
 }
 
-void gnl_stream::teardown_thread_safety(void) noexcept
+int gnl_stream::disable_thread_safety(void) noexcept
 {
-    if (this->_mutex)
+    int destroy_error;
+
+    this->abort_if_not_initialized("gnl_stream::disable_thread_safety");
+    if (this->_mutex == ft_nullptr)
     {
-        (void)this->_mutex->destroy();
-        delete this->_mutex;
-        this->_mutex = ft_nullptr;
+        return (FT_ERR_SUCCESS);
     }
-    this->_thread_safe_enabled = false;
-    return ;
+    destroy_error = this->_mutex->destroy();
+    delete this->_mutex;
+    this->_mutex = ft_nullptr;
+    return (destroy_error);
+}
+
+bool gnl_stream::is_thread_safe(void) const noexcept
+{
+    this->abort_if_not_initialized("gnl_stream::is_thread_safe");
+    return (this->_mutex != ft_nullptr);
 }
 
 ssize_t gnl_stream::read_from_descriptor(int file_descriptor, char *buffer, size_t max_size, int *error_code) const noexcept
@@ -254,13 +226,15 @@ int gnl_stream::init_from_fd(int file_descriptor) noexcept
 
     operation_error = FT_ERR_SUCCESS;
     this->abort_if_not_initialized("gnl_stream::init_from_fd");
-    lock_error = this->lock_mutex();
+    lock_error = FT_ERR_SUCCESS;
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (file_descriptor < 0)
     {
         operation_error = FT_ERR_INVALID_ARGUMENT;
-        unlock_error = this->unlock_mutex();
+        unlock_error = FT_ERR_SUCCESS;
+        unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         if (unlock_error != FT_ERR_SUCCESS)
             operation_error = unlock_error;
         return (operation_error);
@@ -270,7 +244,8 @@ int gnl_stream::init_from_fd(int file_descriptor) noexcept
     this->_user_data = ft_nullptr;
     this->_read_callback = ft_nullptr;
     this->_close_on_reset = false;
-    unlock_error = this->unlock_mutex();
+    unlock_error = FT_ERR_SUCCESS;
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
         operation_error = unlock_error;
     return (operation_error);
@@ -284,13 +259,15 @@ int gnl_stream::init_from_file(FILE *file_handle, bool close_on_reset) noexcept
 
     operation_error = FT_ERR_SUCCESS;
     this->abort_if_not_initialized("gnl_stream::init_from_file");
-    lock_error = this->lock_mutex();
+    lock_error = FT_ERR_SUCCESS;
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (!file_handle)
     {
         operation_error = FT_ERR_INVALID_ARGUMENT;
-        unlock_error = this->unlock_mutex();
+        unlock_error = FT_ERR_SUCCESS;
+        unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         if (unlock_error != FT_ERR_SUCCESS)
             operation_error = unlock_error;
         return (operation_error);
@@ -300,7 +277,8 @@ int gnl_stream::init_from_file(FILE *file_handle, bool close_on_reset) noexcept
     this->_user_data = ft_nullptr;
     this->_read_callback = ft_nullptr;
     this->_close_on_reset = close_on_reset;
-    unlock_error = this->unlock_mutex();
+    unlock_error = FT_ERR_SUCCESS;
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
         operation_error = unlock_error;
     return (operation_error);
@@ -315,13 +293,15 @@ int gnl_stream::init_from_callback(ssize_t (*callback)(void *user_data, char *bu
 
     operation_error = FT_ERR_SUCCESS;
     this->abort_if_not_initialized("gnl_stream::init_from_callback");
-    lock_error = this->lock_mutex();
+    lock_error = FT_ERR_SUCCESS;
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (!callback)
     {
         operation_error = FT_ERR_INVALID_ARGUMENT;
-        unlock_error = this->unlock_mutex();
+        unlock_error = FT_ERR_SUCCESS;
+        unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         if (unlock_error != FT_ERR_SUCCESS)
             operation_error = unlock_error;
         return (operation_error);
@@ -331,7 +311,8 @@ int gnl_stream::init_from_callback(ssize_t (*callback)(void *user_data, char *bu
     this->_file_descriptor = -1;
     this->_file_handle = ft_nullptr;
     this->_close_on_reset = false;
-    unlock_error = this->unlock_mutex();
+    unlock_error = FT_ERR_SUCCESS;
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
         operation_error = unlock_error;
     return (operation_error);
@@ -342,7 +323,8 @@ void gnl_stream::reset() noexcept
     int lock_error;
 
     this->abort_if_not_initialized("gnl_stream::reset");
-    lock_error = this->lock_mutex();
+    lock_error = FT_ERR_SUCCESS;
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     if (this->_close_on_reset && this->_file_handle)
@@ -352,7 +334,7 @@ void gnl_stream::reset() noexcept
     this->_user_data = ft_nullptr;
     this->_read_callback = ft_nullptr;
     this->_close_on_reset = false;
-    (void)this->unlock_mutex();
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return ;
 }
 
@@ -365,13 +347,15 @@ ssize_t gnl_stream::read(char *buffer, size_t max_size) noexcept
 
     operation_error = FT_ERR_SUCCESS;
     this->abort_if_not_initialized("gnl_stream::read");
-    lock_error = this->lock_mutex();
+    lock_error = FT_ERR_SUCCESS;
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
     if (!buffer || max_size == 0)
     {
         operation_error = FT_ERR_INVALID_ARGUMENT;
-        unlock_error = this->unlock_mutex();
+        unlock_error = FT_ERR_SUCCESS;
+        unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         if (unlock_error != FT_ERR_SUCCESS)
             operation_error = unlock_error;
         return (-1);
@@ -390,7 +374,8 @@ ssize_t gnl_stream::read(char *buffer, size_t max_size) noexcept
     else
     {
         operation_error = FT_ERR_INVALID_STATE;
-        unlock_error = this->unlock_mutex();
+        unlock_error = FT_ERR_SUCCESS;
+        unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         if (unlock_error != FT_ERR_SUCCESS)
             operation_error = unlock_error;
         return (-1);
@@ -399,13 +384,15 @@ ssize_t gnl_stream::read(char *buffer, size_t max_size) noexcept
     {
         if (operation_error == FT_ERR_SUCCESS || operation_error == FT_ERR_INVALID_HANDLE)
             operation_error = FT_ERR_IO;
-        unlock_error = this->unlock_mutex();
+        unlock_error = FT_ERR_SUCCESS;
+        unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         if (unlock_error != FT_ERR_SUCCESS)
             operation_error = unlock_error;
         return (-1);
     }
     operation_error = FT_ERR_SUCCESS;
-    unlock_error = this->unlock_mutex();
+    unlock_error = FT_ERR_SUCCESS;
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
         operation_error = unlock_error;
     return (read_result);

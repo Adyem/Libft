@@ -26,7 +26,9 @@ Every class that offers optional thread safety must provide the trio of explicit
 - Keep `_mutex` in the private section and start it as `ft_nullptr`; when `enable_thread_safety()` succeeds, the mutex pointer becomes valid, and `disable_thread_safety()` resets it to `ft_nullptr` before returning.
 
 Locking rules:
-- All locking and unlocking must call `this->_mutex->lock()`/`this->_mutex->unlock()` directly; do not hide the call behind RAII guards or additional wrappers. The moment thread safety is enabled, every method that mutates internal state should take the mutex directly and return any locking error immediately.
+- Add and use a PThread module safe lock helper (and matching unlock helper) that accepts a mutex pointer (including recursive mutex pointers) and only locks/unlocks when the pointer is not `ft_nullptr`.
+- Classes and modules should use this PThread safe helper for mutex locking and unlocking instead of open-coding pointer checks around lock/unlock calls.
+- Do not use RAII guards or hidden lock wrappers beyond this shared PThread helper. The moment thread safety is enabled, every method that mutates internal state should take the mutex and return any locking error immediately.
 - Methods that operate on multiple objects (e.g., copying, moving, comparing two instances) must order the mutex pointers deterministically, lock them manually, and unlock them without relying on helper guards.
 
 This contract keeps mutex management consistent across the codebase while ensuring that enabling/disabling thread safety is explicit and self-contained.
@@ -35,7 +37,7 @@ This contract keeps mutex management consistent across the codebase while ensuri
 
 Each class must own a recursive mutex that can be locked multiple times and must be unlocked the same number of times.
 
-All class definitions must be thread-safe by default; their internal state must be guarded by the class mutex so callers do not need to wrap instances in additional synchronization to get correct behavior.
+All class definitions must become thread-safe only when the user explicitly enables thread safety (for example by calling `enable_thread_safety()`); until then, callers are responsible for any synchronization they require.
 
 Every class must expose a helper function that provides direct access to its recursive mutex.
 Document and implement this helper as a dedicated low-level interface intended for cases like
@@ -68,6 +70,7 @@ reporting mechanisms instead.
 ## Lazy Initialization Contract
 
 Every class (particularly those that own mutexes) must only prepare its synchronization members in the constructor—real backing resources are created on-demand when `initialize()` is called. `destroy()` must be invoked explicitly before reusing or destructing the object again so the instance can return to an uninitialized state. This keeps object lifecycles predictable and matches the new `pt_mutex` contract.
+Proxy classes are exempt from the lifecycle contract requirements in this section and the `Initialization State Contract` below unless they explicitly document otherwise.
 
 ## Initialization State Contract
 
@@ -117,7 +120,7 @@ When using `cma_set_alloc_limit` in tests to force allocation failures:
 
 #Locking guidelines
 
-No function in the library should rely on RAII helpers such as lock guards or unique locks for locking mutexes; every call should explicitly lock and unlock the underlying mutex so there are no hidden dependencies on guard behavior. Use manual lock/unlock calls surrounding the protected section and handle errors directly—never cache guard objects to perform locking implicitly.
+No function in the library should rely on RAII helpers such as lock guards or unique locks for locking mutexes; use the shared PThread safe lock/unlock helper (for nullable mutex pointers) or explicit direct lock/unlock calls when null checks are not needed. Handle errors directly and never cache guard objects to perform locking implicitly.
 
 #CMA Error Handling Rules
 
@@ -126,6 +129,7 @@ Within the CMA module, only the documented public-facing entry points should sur
 #SCMA Error Handling Rules
 
 Within the SCMA module, only the listed public-facing helpers should expose errors directly; all other utilities rely on the module’s internal reporting to keep overall state coherent.
+SCMA classes do not need a per-class local mutex when the module-level global mutex already provides the required synchronization; prefer the SCMA global mutex in that case.
 - When a class maintains a `_last_error` field, the only sanctioned public accessor for other classes should be the `get_error()` (and optionally `get_error_str()`) helper; no other class should read `_last_error` directly or expose additional interfaces for that value.
 
 #`_last_error` Contract

@@ -171,18 +171,16 @@ FT_TEST(test_api_request_prefers_http2_streaming,
     api_set_transport_hooks(&hooks);
     g_api_request_test_http1_called = false;
     g_api_request_test_http2_called = false;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, handler.initialize());
     handler.reset();
     request_result = api_request("127.0.0.1", 8080, "GET", "/", &handler,
             ft_nullptr, ft_nullptr, 0, true, &used_http2, ft_nullptr);
     api_clear_transport_hooks();
-    if (!request_result)
-        return (0);
-    if (!g_api_request_test_http2_called)
-        return (0);
-    if (g_api_request_test_http1_called)
-        return (0);
-    if (!used_http2)
-        return (0);
+    FT_ASSERT(request_result);
+    FT_ASSERT(g_api_request_test_http2_called);
+    FT_ASSERT(!g_api_request_test_http1_called);
+    FT_ASSERT(used_http2);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, handler.destroy());
     return (1);
 }
 
@@ -201,18 +199,16 @@ FT_TEST(test_api_request_disables_http2_streaming,
     api_set_transport_hooks(&hooks);
     g_api_request_test_http1_called = false;
     g_api_request_test_http2_called = false;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, handler.initialize());
     handler.reset();
     request_result = api_request("127.0.0.1", 8080, "GET", "/", &handler,
             ft_nullptr, ft_nullptr, 0, false, &used_http2, ft_nullptr);
     api_clear_transport_hooks();
-    if (!request_result)
-        return (0);
-    if (!g_api_request_test_http1_called)
-        return (0);
-    if (g_api_request_test_http2_called)
-        return (0);
-    if (used_http2)
-        return (0);
+    FT_ASSERT(request_result);
+    FT_ASSERT(g_api_request_test_http1_called);
+    FT_ASSERT(!g_api_request_test_http2_called);
+    FT_ASSERT(!used_http2);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, handler.destroy());
     return (1);
 }
 
@@ -333,10 +329,17 @@ static bool api_request_send_failure_server_wait_until_ready(void);
 static void api_request_send_failure_server(void)
 {
     SocketConfig server_configuration;
-        struct sockaddr_storage address_storage;
+    struct sockaddr_storage address_storage;
     socklen_t address_length;
     int client_fd;
+    int config_error;
 
+    config_error = server_configuration.initialize();
+    if (config_error != FT_ERR_SUCCESS)
+    {
+        api_request_send_failure_server_signal_ready(config_error);
+        return ;
+    }
     server_configuration._type = SocketType::SERVER;
     ft_strlcpy(server_configuration._ip, "127.0.0.1", sizeof(server_configuration._ip));
     server_configuration._port = 54337;
@@ -479,6 +482,13 @@ static void api_request_bearer_server(api_request_bearer_server_context *context
 
     if (!context)
         return ;
+    int config_error = server_configuration.initialize();
+    if (config_error != FT_ERR_SUCCESS)
+    {
+        context->result.store(config_error, std::memory_order_relaxed);
+        context->ready.store(true, std::memory_order_release);
+        return ;
+    }
     server_configuration._type = SocketType::SERVER;
     ft_strlcpy(server_configuration._ip, "127.0.0.1", sizeof(server_configuration._ip));
     server_configuration._port = 54365;
@@ -531,7 +541,7 @@ static void api_request_bearer_server(api_request_bearer_server_context *context
 static void api_request_basic_server(api_request_basic_server_context *context)
 {
     SocketConfig server_configuration;
-        struct sockaddr_storage address_storage;
+    struct sockaddr_storage address_storage;
     socklen_t address_length;
     int client_fd;
     char buffer[512];
@@ -541,9 +551,17 @@ static void api_request_basic_server(api_request_basic_server_context *context)
     const char *basic_header_location;
     const char *response;
     ssize_t send_result;
+    int config_error;
 
     if (!context)
         return ;
+    config_error = server_configuration.initialize();
+    if (config_error != FT_ERR_SUCCESS)
+    {
+        context->result.store(config_error, std::memory_order_relaxed);
+        context->ready.store(true, std::memory_order_release);
+        return ;
+    }
     server_configuration._type = SocketType::SERVER;
     ft_strlcpy(server_configuration._ip, "127.0.0.1", sizeof(server_configuration._ip));
     server_configuration._port = 54366;
@@ -609,13 +627,20 @@ static bool api_request_success_server_wait_until_ready(void)
 static void api_request_success_server(void)
 {
     SocketConfig server_configuration;
-        struct sockaddr_storage address_storage;
+    struct sockaddr_storage address_storage;
     socklen_t address_length;
     int client_fd;
     const char *response;
     size_t response_length;
     size_t total_sent;
+    int config_error;
 
+    config_error = server_configuration.initialize();
+    if (config_error != FT_ERR_SUCCESS)
+    {
+        api_request_success_server_signal_ready(config_error);
+        return ;
+    }
     server_configuration._type = SocketType::SERVER;
     ft_strlcpy(server_configuration._ip, "127.0.0.1", sizeof(server_configuration._ip));
     server_configuration._port = 54338;
@@ -664,13 +689,20 @@ static void api_request_success_server(void)
 static void api_request_stream_large_response_server(void)
 {
     SocketConfig server_configuration;
-        struct sockaddr_storage address_storage;
+    struct sockaddr_storage address_storage;
     socklen_t address_length;
     int client_fd;
     size_t body_size;
     char header_buffer[128];
     char *body_buffer;
+    int config_error;
 
+    config_error = server_configuration.initialize();
+    if (config_error != FT_ERR_SUCCESS)
+    {
+        api_request_stream_large_server_signal_ready(config_error);
+        return ;
+    }
     server_configuration._type = SocketType::SERVER;
     ft_strlcpy(server_configuration._ip, "127.0.0.1", sizeof(server_configuration._ip));
     server_configuration._port = 54358;
@@ -1083,13 +1115,20 @@ static void api_request_async_retry_callback(char *body, int status, void *user_
 static void api_request_stream_chunked_response_server(void)
 {
     SocketConfig server_configuration;
-        struct sockaddr_storage address_storage;
+    struct sockaddr_storage address_storage;
     socklen_t address_length;
     int client_fd;
     const char *response;
     size_t response_length;
     size_t total_sent;
+    int config_error;
 
+    config_error = server_configuration.initialize();
+    if (config_error != FT_ERR_SUCCESS)
+    {
+        api_request_stream_chunked_server_signal_ready(config_error);
+        return ;
+    }
     server_configuration._type = SocketType::SERVER;
     ft_strlcpy(server_configuration._ip, "127.0.0.1", sizeof(server_configuration._ip));
     server_configuration._port = 54359;
@@ -1261,20 +1300,16 @@ FT_TEST(test_api_request_send_failure_sets_errno, "api_request_string send failu
 #endif
     api_request_send_failure_server_reset_state();
     server_thread = ft_thread(api_request_send_failure_server);
-    if (server_thread.joinable() == false)
-        return (0);
+    FT_ASSERT(server_thread.joinable());
     api_request_small_delay();
-    if (!api_request_send_failure_server_wait_until_ready())
+    FT_ASSERT(api_request_send_failure_server_wait_until_ready());
     {
         server_thread.join();
         return (0);
     }
     result = api_request_string("127.0.0.1", 54337, "GET", "/", ft_nullptr, ft_nullptr, ft_nullptr, 1000);
-    int request_errno = FT_ERR_SUCCESS;
     server_thread.join();
-    if (result != ft_nullptr)
-        return (0);
-    (void)request_errno;
+    FT_ASSERT(result == ft_nullptr);
     return (1);
 }
 
@@ -1311,17 +1346,15 @@ FT_TEST(test_api_request_success_resets_errno, "api_request_string success reset
 #endif
     api_request_success_server_reset_state();
     server_thread = ft_thread(api_request_success_server);
-    if (server_thread.joinable() == false)
-        return (0);
-    if (!api_request_success_server_wait_until_ready())
+    FT_ASSERT(server_thread.joinable());
+    FT_ASSERT(api_request_success_server_wait_until_ready());
     {
         server_thread.join();
         return (0);
     }
     body = api_request_string("127.0.0.1", 54338, "GET", "/", ft_nullptr, ft_nullptr, ft_nullptr, 1000);
     server_thread.join();
-    if (body == ft_nullptr)
-        return (0);
+    FT_ASSERT(body != ft_nullptr);
     cma_free(body);
     return (1);
 }
@@ -1341,10 +1374,11 @@ FT_TEST(test_api_request_host_bearer_adds_header,
     context.header_received.store(false, std::memory_order_relaxed);
     context.result.store(-99, std::memory_order_relaxed);
     context.client_fd = -1;
-    context.request_data.clear();
-    server_thread = ft_thread(api_request_bearer_server, &context);
-    if (server_thread.joinable() == false)
+    if (context.request_data.initialize() != FT_ERR_SUCCESS)
         return (0);
+    server_thread = ft_thread(api_request_bearer_server, &context);
+    FT_ASSERT(server_thread.joinable());
+    FT_ASSERT(server_thread.joinable());
     while (!context.ready.load(std::memory_order_acquire))
         api_request_small_delay();
     status_code = 0;
@@ -1352,14 +1386,11 @@ FT_TEST(test_api_request_host_bearer_adds_header,
                                           "test-token", ft_nullptr, ft_nullptr,
                                           &status_code, 1000, ft_nullptr);
     server_thread.join();
-    if (body)
-        cma_free(body);
-    if (context.result.load(std::memory_order_relaxed) != 0)
-        return (0);
-    if (!context.header_received.load(std::memory_order_relaxed))
-        return (0);
-    if (status_code != 200)
-        return (0);
+    FT_ASSERT(body != ft_nullptr);
+    cma_free(body);
+    FT_ASSERT(context.result.load(std::memory_order_relaxed) == 0);
+    FT_ASSERT(context.header_received.load(std::memory_order_relaxed));
+    FT_ASSERT(status_code == 200);
     return (1);
 }
 
@@ -1379,8 +1410,10 @@ FT_TEST(test_api_request_host_basic_appends_after_existing_header,
     context.basic_header_after_custom.store(false, std::memory_order_relaxed);
     context.result.store(-99, std::memory_order_relaxed);
     context.client_fd = -1;
-    context.request_data.clear();
+    if (context.request_data.initialize() != FT_ERR_SUCCESS)
+        return (0);
     server_thread = ft_thread(api_request_basic_server, &context);
+    FT_ASSERT(server_thread.joinable());
     if (server_thread.joinable() == false)
         return (0);
     while (!context.ready.load(std::memory_order_acquire))
@@ -1391,14 +1424,12 @@ FT_TEST(test_api_request_host_basic_appends_after_existing_header,
                                          "X-Test-Header: Value",
                                          &status_code, 1000, ft_nullptr);
     server_thread.join();
-    if (body)
-        cma_free(body);
-    if (context.result.load(std::memory_order_relaxed) != 0)
-        return (0);
-    if (!context.basic_header_received.load(std::memory_order_relaxed))
-        return (0);
-    if (!context.basic_header_after_custom.load(std::memory_order_relaxed))
-        return (0);
+    FT_ASSERT(body != ft_nullptr);
+    cma_free(body);
+    FT_ASSERT(context.result.load(std::memory_order_relaxed) == 0);
+    FT_ASSERT(context.basic_header_received.load(std::memory_order_relaxed));
+    FT_ASSERT(context.basic_header_after_custom.load(
+        std::memory_order_relaxed));
     if (status_code != 200)
         return (0);
     return (1);
@@ -1421,6 +1452,7 @@ FT_TEST(test_api_request_stream_large_response,
     context.headers_received = false;
     context.final_received = false;
     context.status_code = 0;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, handler.initialize());
     handler.set_headers_callback(api_request_stream_headers_callback);
     handler.set_body_callback(api_request_stream_body_callback);
     handler.set_user_data(&context);
@@ -1428,27 +1460,23 @@ FT_TEST(test_api_request_stream_large_response,
     server_thread = ft_thread(api_request_stream_large_response_server);
     if (server_thread.joinable() == false)
         return (0);
-    if (!api_request_stream_large_server_wait_until_ready())
+    bool stream_large_ready = api_request_stream_large_server_wait_until_ready();
+    if (!stream_large_ready)
     {
         server_thread.join();
-        return (0);
+        FT_ASSERT(stream_large_ready);
     }
     expected_size = 2 * 1024 * 1024;
     result = api_request_stream("127.0.0.1", 54358, "GET", "/", &handler,
             ft_nullptr, ft_nullptr, 5000, ft_nullptr);
     server_thread.join();
-    if (!result)
-        return (0);
-    if (!context.headers_received)
-        return (0);
-    if (context.status_code != 200)
-        return (0);
-    if (!context.final_received)
-        return (0);
-    if (context.total_bytes != expected_size)
-        return (0);
-    if (context.chunk_count == 0)
-        return (0);
+    FT_ASSERT(result);
+    FT_ASSERT(context.headers_received);
+    FT_ASSERT_EQ(200, context.status_code);
+    FT_ASSERT(context.final_received);
+    FT_ASSERT_EQ(expected_size, context.total_bytes);
+    FT_ASSERT(context.chunk_count != 0);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, handler.destroy());
     return (1);
 }
 
@@ -1469,34 +1497,30 @@ FT_TEST(test_api_request_stream_chunked_response,
     context.headers_received = false;
     context.final_received = false;
     context.status_code = 0;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, handler.initialize());
     handler.set_headers_callback(api_request_stream_headers_callback);
     handler.set_body_callback(api_request_stream_body_callback);
     handler.set_user_data(&context);
     api_request_stream_chunked_server_reset_state();
     server_thread = ft_thread(api_request_stream_chunked_response_server);
-    if (server_thread.joinable() == false)
-        return (0);
-    if (!api_request_stream_chunked_server_wait_until_ready())
+    FT_ASSERT(server_thread.joinable());
+    bool stream_chunked_ready =
+        api_request_stream_chunked_server_wait_until_ready();
+    if (!stream_chunked_ready)
     {
         server_thread.join();
-        return (0);
+        FT_ASSERT(stream_chunked_ready);
     }
     expected_size = 24;
     result = api_request_stream("127.0.0.1", 54359, "GET", "/", &handler,
             ft_nullptr, ft_nullptr, 2000, ft_nullptr);
     server_thread.join();
-    if (!result)
-        return (0);
-    if (!context.headers_received)
-        return (0);
-    if (context.status_code != 200)
-        return (0);
-    if (!context.final_received)
-        return (0);
-    if (context.total_bytes != expected_size)
-        return (0);
-    if (context.chunk_count < 2)
-        return (0);
+    FT_ASSERT(result);
+    FT_ASSERT(context.headers_received);
+    FT_ASSERT_EQ(200, context.status_code);
+    FT_ASSERT(context.final_received);
+    FT_ASSERT_EQ(expected_size, context.total_bytes);
+    FT_ASSERT(context.chunk_count >= 2);
     return (1);
 }
 

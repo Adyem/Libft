@@ -658,6 +658,7 @@ FT_TEST(test_api_http_plain_http2_streaming_success,
         FT_ASSERT_EQ(FT_ERR_SUCCESS, start_error);
     }
     http2_test_capture_reset(capture);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, streaming_handler.initialize());
     streaming_handler.reset();
     streaming_handler.set_headers_callback(http2_test_headers_callback);
     streaming_handler.set_body_callback(http2_test_body_callback);

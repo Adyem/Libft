@@ -3,6 +3,7 @@
 #include "../Errno/errno.hpp"
 #include "../Basic/basic.hpp"
 #include "../PThread/mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../PThread/pthread.hpp"
 #include <cerrno>
 #include <ctime>
@@ -17,52 +18,24 @@
 #endif
 
 #if !defined(_WIN32) && !defined(_WIN64) && !defined(_POSIX_VERSION)
-static int32_t cmp_lock_pt_mutex(pt_mutex *mutex)
-{
-    if (mutex == ft_nullptr)
-    {
-        return (FT_ERR_INVALID_ARGUMENT);
-    }
-    int32_t lock_error = mutex->lock();
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        return (lock_error);
-    }
-    return (FT_ERR_SUCCESS);
-}
-
-static int32_t cmp_unlock_pt_mutex(pt_mutex *mutex)
-{
-    if (mutex == ft_nullptr)
-    {
-        return (FT_ERR_INVALID_ARGUMENT);
-    }
-    int32_t unlock_error = mutex->unlock();
-    if (unlock_error != FT_ERR_SUCCESS)
-    {
-        return (unlock_error);
-    }
-    return (FT_ERR_SUCCESS);
-}
-
 static int32_t cmp_localtime_from_shared_state(const std::time_t *time_value, std::tm *output)
 {
     static pt_mutex localtime_mutex;
     std::tm *shared_result;
 
-    if (cmp_lock_pt_mutex(&localtime_mutex) != FT_ERR_SUCCESS)
+    if (pt_mutex_lock_if_not_null(&localtime_mutex) != FT_ERR_SUCCESS)
         return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
     shared_result = std::localtime(time_value);
     if (shared_result == ft_nullptr)
     {
-        if (cmp_unlock_pt_mutex(&localtime_mutex) != FT_ERR_SUCCESS)
+        if (pt_mutex_unlock_if_not_null(&localtime_mutex) != FT_ERR_SUCCESS)
             return (FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
         if (errno != 0)
             return (cmp_map_system_error_to_ft(errno));
         return (FT_ERR_INVALID_ARGUMENT);
     }
     *output = *shared_result;
-    if (cmp_unlock_pt_mutex(&localtime_mutex) != FT_ERR_SUCCESS)
+    if (pt_mutex_unlock_if_not_null(&localtime_mutex) != FT_ERR_SUCCESS)
         return (FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
     return (FT_ERR_SUCCESS);
 }

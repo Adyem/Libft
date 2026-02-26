@@ -21,7 +21,6 @@ class gnl_stream
         bool _close_on_reset;
         uint8_t _initialized_state;
         mutable pt_recursive_mutex *_mutex = ft_nullptr;
-        mutable bool _thread_safe_enabled = false;
         static const uint8_t _state_uninitialized = 0;
         static const uint8_t _state_destroyed = 1;
         static const uint8_t _state_initialized = 2;
@@ -33,14 +32,6 @@ class gnl_stream
                     size_t max_size, int *error_code) const noexcept;
         ssize_t read_from_file(FILE *file_handle, char *buffer, size_t max_size, 
                     int *error_code) const noexcept;
-        int     lock_mutex(void) noexcept;
-        int     unlock_mutex(void) noexcept;
-        int     enable_thread_safety(void) noexcept;
-        void    disable_thread_safety(void) noexcept;
-        bool    is_thread_safe_enabled(void) const noexcept;
-        int     prepare_thread_safety(void) noexcept;
-        void    teardown_thread_safety(void) noexcept;
-
     public:
         gnl_stream() noexcept;
         ~gnl_stream() noexcept;
@@ -52,6 +43,9 @@ class gnl_stream
 
         int initialize() noexcept;
         int destroy() noexcept;
+        int     enable_thread_safety(void) noexcept;
+        int     disable_thread_safety(void) noexcept;
+        bool    is_thread_safe(void) const noexcept;
         int init_from_fd(int file_descriptor) noexcept;
         int init_from_file(FILE *file_handle, bool close_on_reset) noexcept;
         int init_from_callback(ssize_t (*callback)(void *user_data,
