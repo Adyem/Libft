@@ -5,33 +5,45 @@
 #include "../../CPP_class/class_fd_istream.hpp"
 #include "../../CPP_class/class_string.hpp"
 #include "../../System_utils/test_runner.hpp"
-#include <sys/wait.h>
-#include <unistd.h>
 #include <csignal>
+#include <csetjmp>
 #include <cstring>
 
 #ifndef LIBFT_TEST_BUILD
 #endif
 
+static sigjmp_buf g_expect_sigabrt_jump_buffer;
+static volatile sig_atomic_t g_expect_sigabrt_signal;
+
+static void expect_sigabrt_signal_handler(int signal_number)
+{
+    g_expect_sigabrt_signal = signal_number;
+    siglongjmp(g_expect_sigabrt_jump_buffer, 1);
+}
+
 static int expect_sigabrt(void (*operation)(void))
 {
-    pid_t child_process_id;
-    int child_status;
+    struct sigaction new_action;
+    struct sigaction old_action;
 
-    child_process_id = fork();
-    if (child_process_id == 0)
+    std::memset(&new_action, 0, sizeof(new_action));
+    std::memset(&old_action, 0, sizeof(old_action));
+    new_action.sa_handler = expect_sigabrt_signal_handler;
+    sigemptyset(&new_action.sa_mask);
+    new_action.sa_flags = 0;
+    if (sigaction(SIGABRT, &new_action, &old_action) != 0)
+    {
+        return (0);
+    }
+    g_expect_sigabrt_signal = 0;
+    if (sigsetjmp(g_expect_sigabrt_jump_buffer, 1) == 0)
     {
         operation();
-        _exit(0);
+        (void)sigaction(SIGABRT, &old_action, ft_nullptr);
+        return (0);
     }
-    if (child_process_id < 0)
-        return (0);
-    child_status = 0;
-    if (waitpid(child_process_id, &child_status, 0) < 0)
-        return (0);
-    if (!WIFSIGNALED(child_status))
-        return (0);
-    return (WTERMSIG(child_status) == SIGABRT);
+    (void)sigaction(SIGABRT, &old_action, ft_nullptr);
+    return (g_expect_sigabrt_signal == SIGABRT);
 }
 
 static DataBuffer *make_uninitialized_data_buffer(void)
@@ -70,77 +82,77 @@ static void data_buffer_clear_uninitialized_aborts(void)
 {
     DataBuffer *buffer_pointer = make_uninitialized_data_buffer();
     buffer_pointer->clear();
-    _exit(0);
+    return ;
 }
 
 static void data_buffer_size_uninitialized_aborts(void)
 {
     DataBuffer *buffer_pointer = make_uninitialized_data_buffer();
     (void)buffer_pointer->size();
-    _exit(0);
+    return ;
 }
 
 static void data_buffer_seek_uninitialized_aborts(void)
 {
     DataBuffer *buffer_pointer = make_uninitialized_data_buffer();
     (void)buffer_pointer->seek(0);
-    _exit(0);
+    return ;
 }
 
 static void data_buffer_good_uninitialized_aborts(void)
 {
     DataBuffer *buffer_pointer = make_uninitialized_data_buffer();
     (void)buffer_pointer->good();
-    _exit(0);
+    return ;
 }
 
 static void data_buffer_data_uninitialized_aborts(void)
 {
     DataBuffer *buffer_pointer = make_uninitialized_data_buffer();
     (void)buffer_pointer->data();
-    _exit(0);
+    return ;
 }
 
 static void data_buffer_tell_uninitialized_aborts(void)
 {
     DataBuffer *buffer_pointer = make_uninitialized_data_buffer();
     (void)buffer_pointer->tell();
-    _exit(0);
+    return ;
 }
 
 static void data_buffer_bad_uninitialized_aborts(void)
 {
     DataBuffer *buffer_pointer = make_uninitialized_data_buffer();
     (void)buffer_pointer->bad();
-    _exit(0);
+    return ;
 }
 
 static void data_buffer_bool_uninitialized_aborts(void)
 {
     DataBuffer *buffer_pointer = make_uninitialized_data_buffer();
     (void)static_cast<bool>(*buffer_pointer);
-    _exit(0);
+    return ;
 }
 
 static void data_buffer_disable_thread_safety_uninitialized_aborts(void)
 {
     DataBuffer *buffer_pointer = make_uninitialized_data_buffer();
     (void)buffer_pointer->disable_thread_safety();
-    _exit(0);
+    return ;
 }
 
 static void data_buffer_enable_thread_safety_uninitialized_aborts(void)
 {
     DataBuffer *buffer_pointer = make_uninitialized_data_buffer();
     (void)buffer_pointer->enable_thread_safety();
-    _exit(0);
+    return ;
 }
 
 static void data_buffer_is_thread_safe_uninitialized_aborts(void)
 {
     DataBuffer *buffer_pointer = make_uninitialized_data_buffer();
     (void)buffer_pointer->is_thread_safe();
-    _exit(0);
+    return ;
 }
 
 static void stringbuf_read_uninitialized_aborts(void)
@@ -151,101 +163,108 @@ static void stringbuf_read_uninitialized_aborts(void)
     output_buffer[0] = '\0';
     output_buffer[1] = '\0';
     (void)buffer_pointer->read(output_buffer, 1);
-    _exit(0);
+    return ;
 }
 
 static void stringbuf_is_valid_uninitialized_aborts(void)
 {
     ft_stringbuf *buffer_pointer = make_uninitialized_stringbuf();
     (void)buffer_pointer->is_valid();
-    _exit(0);
+    return ;
 }
 
 static void stringbuf_str_uninitialized_aborts(void)
 {
     ft_stringbuf *buffer_pointer = make_uninitialized_stringbuf();
-    ft_string value;
+    static ft_string value;
+    static bool is_value_initialized = false;
 
-    (void)value.initialize();
+    if (!is_value_initialized)
+    {
+        if (value.initialize() == FT_ERR_SUCCESS)
+        {
+            is_value_initialized = true;
+        }
+    }
     (void)buffer_pointer->str(value);
-    _exit(0);
+    return ;
 }
 
 static void stringbuf_enable_thread_safety_uninitialized_aborts(void)
 {
     ft_stringbuf *buffer_pointer = make_uninitialized_stringbuf();
     (void)buffer_pointer->enable_thread_safety();
-    _exit(0);
+    return ;
 }
 
 static void stringbuf_disable_thread_safety_uninitialized_aborts(void)
 {
     ft_stringbuf *buffer_pointer = make_uninitialized_stringbuf();
     (void)buffer_pointer->disable_thread_safety();
-    _exit(0);
+    return ;
 }
 
 static void stringbuf_is_thread_safe_uninitialized_aborts(void)
 {
     ft_stringbuf *buffer_pointer = make_uninitialized_stringbuf();
     (void)buffer_pointer->is_thread_safe();
-    _exit(0);
+    return ;
 }
 
 static void ofstream_open_uninitialized_aborts(void)
 {
     ft_ofstream *stream_pointer = make_uninitialized_ofstream();
     (void)stream_pointer->open("tmp_ofstream_uninitialized.txt");
-    _exit(0);
+    return ;
 }
 
 static void ofstream_write_uninitialized_aborts(void)
 {
     ft_ofstream *stream_pointer = make_uninitialized_ofstream();
     (void)stream_pointer->write("payload");
-    _exit(0);
+    return ;
 }
 
 static void ofstream_close_uninitialized_aborts(void)
 {
     ft_ofstream *stream_pointer = make_uninitialized_ofstream();
     (void)stream_pointer->close();
-    _exit(0);
+    return ;
 }
 
 static void ofstream_is_thread_safe_uninitialized_aborts(void)
 {
     ft_ofstream *stream_pointer = make_uninitialized_ofstream();
     (void)stream_pointer->is_thread_safe();
-    _exit(0);
+    return ;
 }
 
 static void ofstream_enable_thread_safety_uninitialized_aborts(void)
 {
     ft_ofstream *stream_pointer = make_uninitialized_ofstream();
     (void)stream_pointer->enable_thread_safety();
-    _exit(0);
+    return ;
 }
 
 static void ofstream_disable_thread_safety_uninitialized_aborts(void)
 {
     ft_ofstream *stream_pointer = make_uninitialized_ofstream();
     (void)stream_pointer->disable_thread_safety();
-    _exit(0);
+    return ;
 }
 
 static void fd_istream_set_fd_uninitialized_aborts(void)
 {
     ft_fd_istream *stream_pointer = make_uninitialized_fd_istream();
     stream_pointer->set_fd(0);
-    _exit(0);
+    return ;
 }
 
 static void fd_istream_get_fd_uninitialized_aborts(void)
 {
     ft_fd_istream *stream_pointer = make_uninitialized_fd_istream();
     (void)stream_pointer->get_fd();
-    _exit(0);
+    return ;
 }
 
 static void fd_istream_read_uninitialized_aborts(void)
@@ -256,42 +275,42 @@ static void fd_istream_read_uninitialized_aborts(void)
     output_buffer[0] = '\0';
     output_buffer[1] = '\0';
     (void)stream_pointer->read(output_buffer, 1);
-    _exit(0);
+    return ;
 }
 
 static void fd_istream_gcount_uninitialized_aborts(void)
 {
     ft_fd_istream *stream_pointer = make_uninitialized_fd_istream();
     (void)stream_pointer->gcount();
-    _exit(0);
+    return ;
 }
 
 static void fd_istream_is_valid_uninitialized_aborts(void)
 {
     ft_fd_istream *stream_pointer = make_uninitialized_fd_istream();
     (void)stream_pointer->is_valid();
-    _exit(0);
+    return ;
 }
 
 static void fd_istream_enable_thread_safety_uninitialized_aborts(void)
 {
     ft_fd_istream *stream_pointer = make_uninitialized_fd_istream();
     (void)stream_pointer->enable_thread_safety();
-    _exit(0);
+    return ;
 }
 
 static void fd_istream_disable_thread_safety_uninitialized_aborts(void)
 {
     ft_fd_istream *stream_pointer = make_uninitialized_fd_istream();
     (void)stream_pointer->disable_thread_safety();
-    _exit(0);
+    return ;
 }
 
 static void fd_istream_is_thread_safe_uninitialized_aborts(void)
 {
     ft_fd_istream *stream_pointer = make_uninitialized_fd_istream();
     (void)stream_pointer->is_thread_safe();
-    _exit(0);
+    return ;
 }
 
 FT_TEST(test_data_buffer_clear_uninitialized_aborts,

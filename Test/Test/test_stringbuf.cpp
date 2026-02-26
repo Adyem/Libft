@@ -14,7 +14,8 @@
 
 FT_TEST(test_ft_stringbuf_read_basic, "ft_stringbuf::read copies data sequentially")
 {
-    ft_string source("hello");
+    ft_string source;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize("hello"));
     ft_stringbuf buffer;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.initialize(source));
     char storage[8];
@@ -30,7 +31,8 @@ FT_TEST(test_ft_stringbuf_read_basic, "ft_stringbuf::read copies data sequential
 
 FT_TEST(test_ft_stringbuf_read_null_buffer_sets_error, "ft_stringbuf::read reports errors for null buffers")
 {
-    ft_string source("data");
+    ft_string source;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize("data"));
     ft_stringbuf buffer;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.initialize(source));
     ssize_t bytes_read;
@@ -43,7 +45,8 @@ FT_TEST(test_ft_stringbuf_read_null_buffer_sets_error, "ft_stringbuf::read repor
 
 FT_TEST(test_ft_stringbuf_str_returns_remaining, "ft_stringbuf::str exposes unread portion and clears errors")
 {
-    ft_string source("abcdef");
+    ft_string source;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize("abcdef"));
     ft_stringbuf buffer;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.initialize(source));
     char storage[4];
@@ -63,7 +66,8 @@ FT_TEST(test_ft_stringbuf_str_returns_remaining, "ft_stringbuf::str exposes unre
 
 FT_TEST(test_ft_stringbuf_read_past_end_returns_zero, "ft_stringbuf::read returns zero after reaching the end")
 {
-    ft_string source("xy");
+    ft_string source;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize("xy"));
     ft_stringbuf buffer;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.initialize(source));
     char storage[4];
@@ -91,7 +95,8 @@ FT_TEST(test_ft_stringbuf_concurrent_reads_are_serialized,
     std::thread worker_thread;
 
     seed_data = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    ft_string source(seed_data);
+    ft_string source;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize(seed_data));
     ft_stringbuf buffer;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.initialize(source));
     start_flag.store(false);

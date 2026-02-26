@@ -122,7 +122,7 @@ int32_t ft_string::resize_buffer(ft_size_t new_capacity) noexcept
         return (FT_ERR_SUCCESS);
     char* new_data = static_cast<char*>(cma_realloc(this->_data, new_capacity + 1));
     if (!new_data)
-        return (FT_ERR_SYSTEM);
+        return (FT_ERR_NO_MEMORY);
     this->_data = new_data;
     this->_capacity = new_capacity;
     return (FT_ERR_SUCCESS);
@@ -217,9 +217,7 @@ int32_t ft_string::ensure_empty_buffer() noexcept
     }
     new_data = static_cast<char*>(cma_malloc(1));
     if (!new_data)
-    {
-        return (FT_ERR_SYSTEM);
-    }
+        return (FT_ERR_NO_MEMORY);
     new_data[0] = '\0';
     this->_data = new_data;
     this->_capacity = 1;
@@ -308,14 +306,15 @@ int32_t ft_string::resize_length_buffer(ft_size_t new_length) noexcept
             }
             new_capacity *= 2;
         }
-        if (this->resize_buffer(new_capacity) != FT_ERR_SUCCESS)
-            return (FT_ERR_SYSTEM);
+        int32_t resize_error = this->resize_buffer(new_capacity);
+        if (resize_error != FT_ERR_SUCCESS)
+            return (resize_error);
     }
     if (!this->_data && new_length > 0)
     {
         this->_data = static_cast<char*>(cma_malloc(new_length + 1));
         if (!this->_data)
-            return (FT_ERR_SYSTEM);
+            return (FT_ERR_NO_MEMORY);
         ft_memset(this->_data, 0, new_length + 1);
         this->_capacity = new_length;
     }
@@ -1057,9 +1056,14 @@ char ft_string::operator[](ft_size_t index) const noexcept
 }
 
 ft_string_proxy::ft_string_proxy() noexcept
-    : _value("")
+    : _value()
     , _last_error(FT_ERR_SUCCESS)
 {
+    int32_t initialization_error;
+
+    initialization_error = this->_value.initialize("");
+    if (initialization_error != FT_ERR_SUCCESS)
+        this->_last_error = initialization_error;
     if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         this->_last_error = ft_string::last_operation_error();
     ft_string::set_last_operation_error(this->_last_error);
@@ -1067,9 +1071,14 @@ ft_string_proxy::ft_string_proxy() noexcept
 }
 
 ft_string_proxy::ft_string_proxy(int32_t error_code) noexcept
-    : _value("")
+    : _value()
     , _last_error(error_code)
 {
+    int32_t initialization_error;
+
+    initialization_error = this->_value.initialize("");
+    if (initialization_error != FT_ERR_SUCCESS)
+        this->_last_error = initialization_error;
     if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         this->_last_error = ft_string::last_operation_error();
     ft_string::set_last_operation_error(this->_last_error);

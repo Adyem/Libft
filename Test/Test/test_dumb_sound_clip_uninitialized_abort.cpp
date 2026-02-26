@@ -3,22 +3,40 @@
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <csignal>
+#include <csetjmp>
 #include <cstring>
-#include <sys/wait.h>
-#include <unistd.h>
 
 #ifndef LIBFT_TEST_BUILD
 #endif
 
 typedef ft_sound_clip sound_clip_type;
 
+static sigjmp_buf g_sound_clip_jump_buffer;
+static volatile sig_atomic_t g_sound_clip_signal;
+
+static void sound_clip_sigabrt_handler(int signal_number)
+{
+    g_sound_clip_signal = signal_number;
+    siglongjmp(g_sound_clip_jump_buffer, 1);
+}
+
 static int sound_clip_expect_sigabrt_uninitialized(void (*operation)(sound_clip_type &))
 {
-    pid_t child_process_id;
-    int child_status;
+    struct sigaction new_action;
+    struct sigaction old_action;
+    int result;
 
-    child_process_id = fork();
-    if (child_process_id == 0)
+    std::memset(&new_action, 0, sizeof(new_action));
+    std::memset(&old_action, 0, sizeof(old_action));
+    new_action.sa_handler = sound_clip_sigabrt_handler;
+    sigemptyset(&new_action.sa_mask);
+    new_action.sa_flags = 0;
+
+    if (sigaction(SIGABRT, &new_action, &old_action) != 0)
+        return (0);
+
+    g_sound_clip_signal = 0;
+    if (sigsetjmp(g_sound_clip_jump_buffer, 1) == 0)
     {
         alignas(sound_clip_type) unsigned char storage[sizeof(sound_clip_type)];
         sound_clip_type *sound_clip_pointer;
@@ -26,16 +44,15 @@ static int sound_clip_expect_sigabrt_uninitialized(void (*operation)(sound_clip_
         std::memset(storage, 0, sizeof(storage));
         sound_clip_pointer = reinterpret_cast<sound_clip_type *>(storage);
         operation(*sound_clip_pointer);
-        _exit(0);
+        result = 0;
     }
-    if (child_process_id < 0)
-        return (0);
-    child_status = 0;
-    if (waitpid(child_process_id, &child_status, 0) < 0)
-        return (0);
-    if (WIFSIGNALED(child_status) == 0)
-        return (0);
-    return (WTERMSIG(child_status) == SIGABRT);
+    else
+    {
+        result = (g_sound_clip_signal == SIGABRT);
+    }
+
+    (void)sigaction(SIGABRT, &old_action, ft_nullptr);
+    return (result);
 }
 
 static void sound_clip_call_destructor(sound_clip_type &sound_clip_instance)

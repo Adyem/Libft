@@ -20,9 +20,13 @@ FT_TEST(test_game_quest_basic_fields_reflect_updates, "quest setters update the 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, quest.get_error());
     quest.set_current_phase(1);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, quest.get_error());
-    quest.set_description("Rescue the guild");
+    ft_string description;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, description.initialize("Rescue the guild"));
+    quest.set_description(description);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, quest.get_error());
-    quest.set_objective("Find the hidden key");
+    ft_string objective;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, objective.initialize("Find the hidden key"));
+    quest.set_objective(objective);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, quest.get_error());
     quest.set_reward_experience(250);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, quest.get_error());
@@ -33,9 +37,9 @@ FT_TEST(test_game_quest_basic_fields_reflect_updates, "quest setters update the 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, quest.get_error());
     FT_ASSERT_EQ(1, quest.get_current_phase());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, quest.get_error());
-    FT_ASSERT_EQ(ft_string("Rescue the guild"), quest.get_description());
+    FT_ASSERT_STR_EQ("Rescue the guild", quest.get_description().c_str());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, quest.get_error());
-    FT_ASSERT_EQ(ft_string("Find the hidden key"), quest.get_objective());
+    FT_ASSERT_STR_EQ("Find the hidden key", quest.get_objective().c_str());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, quest.get_error());
     FT_ASSERT_EQ(250, quest.get_reward_experience());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, quest.get_error());

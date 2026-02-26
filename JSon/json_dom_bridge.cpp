@@ -186,7 +186,14 @@ static int json_dom_apply_item(ft_dom_node *item_node, json_group *group, json_d
         document.set_manual_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
-    ft_string type_attribute = item_node->get_attribute("json:type");
+    ft_string type_key;
+    int32_t type_initialize_error = type_key.initialize("json:type");
+    if (type_initialize_error != FT_ERR_SUCCESS)
+    {
+        document.set_manual_error(type_initialize_error);
+        return (-1);
+    }
+    ft_string type_attribute = item_node->get_attribute(type_key);
     bool has_type_attribute;
 
     has_type_attribute = (type_attribute.size() > 0);

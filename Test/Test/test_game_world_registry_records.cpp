@@ -23,9 +23,13 @@ FT_TEST(test_world_registry_register_and_fetch_records, "registered records roun
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     region.set_region_id(4);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
-    region.set_name(ft_string("forest"));
+    ft_string forest_name;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, forest_name.initialize("forest"));
+    region.set_name(forest_name);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
-    region.set_description(ft_string("dense trees"));
+    ft_string forest_description;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, forest_description.initialize("dense trees"));
+    region.set_description(forest_description);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     region.set_recommended_level(6);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
@@ -38,9 +42,9 @@ FT_TEST(test_world_registry_register_and_fetch_records, "registered records roun
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.fetch_region(4, fetched_region));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
-    FT_ASSERT_EQ(ft_string("forest"), fetched_region.get_name());
+    FT_ASSERT_STR_EQ("forest", fetched_region.get_name().c_str());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_region.get_error());
-    FT_ASSERT_EQ(ft_string("dense trees"), fetched_region.get_description());
+    FT_ASSERT_STR_EQ("dense trees", fetched_region.get_description().c_str());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_region.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.fetch_world(2, fetched_world));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
@@ -72,9 +76,13 @@ FT_TEST(test_world_registry_records_isolate_fetched_values, "re-fetching records
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     region.set_region_id(11);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
-    region.set_name(ft_string("volcano"));
+    ft_string volcano_name;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, volcano_name.initialize("volcano"));
+    region.set_name(volcano_name);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
-    region.set_description(ft_string("lava dome"));
+    ft_string volcano_description;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, volcano_description.initialize("lava dome"));
+    region.set_description(volcano_description);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     region.set_recommended_level(20);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
@@ -88,11 +96,13 @@ FT_TEST(test_world_registry_records_isolate_fetched_values, "re-fetching records
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.fetch_region(11, fetched_region));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
-    fetched_region.set_name(ft_string("changed"));
+    ft_string changed_name;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, changed_name.initialize("changed"));
+    fetched_region.set_name(changed_name);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_region.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.fetch_region(11, re_fetched_region));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
-    FT_ASSERT_EQ(ft_string("volcano"), re_fetched_region.get_name());
+    FT_ASSERT_STR_EQ("volcano", re_fetched_region.get_name().c_str());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, re_fetched_region.get_error());
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.fetch_world(3, fetched_world));

@@ -320,7 +320,13 @@ void ft_game_script_bridge::set_language(const char *language) noexcept
         this->unlock_internal(lock_acquired);
         return ;
     }
-    ft_string candidate(language);
+    ft_string candidate;
+    if (candidate.initialize(language) != FT_ERR_SUCCESS)
+    {
+        this->set_error(FT_ERR_NO_MEMORY);
+        this->unlock_internal(lock_acquired);
+        return ;
+    }
     if (false)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -849,7 +855,12 @@ int ft_game_script_bridge::check_sandbox_capabilities(const ft_string &script, f
                         || command_normalized == "set"
                         || command_normalized == "unset"))
                     {
-                        ft_string violation("unsupported command: ");
+                        ft_string violation;
+                        if (violation.initialize("unsupported command: ") != FT_ERR_SUCCESS)
+                        {
+                            this->set_error(FT_ERR_NO_MEMORY);
+                            return (FT_ERR_NO_MEMORY);
+                        }
                         if (false)
                         {
                             this->set_error(FT_ERR_SUCCESS);
@@ -880,7 +891,13 @@ int ft_game_script_bridge::check_sandbox_capabilities(const ft_string &script, f
     }
     if (this->_max_operations > 0 && operations > this->_max_operations)
     {
-        ft_string violation("operation budget exceeded: ");
+        ft_string violation;
+        if (violation.initialize("operation budget exceeded: ") != FT_ERR_SUCCESS)
+        {
+            this->set_error(FT_ERR_NO_MEMORY);
+            this->unlock_internal(lock_acquired);
+            return (FT_ERR_NO_MEMORY);
+        }
         ft_string operation_text;
         ft_string limit_text;
 
@@ -1034,7 +1051,9 @@ int ft_game_script_bridge::validate_dry_run(const ft_string &script, ft_vector<f
                     {
                         if (tokens.size() < 2)
                         {
-                            ft_string warning("call missing target");
+                            ft_string warning;
+                            if (warning.initialize("call missing target") != FT_ERR_SUCCESS)
+                                return (FT_ERR_NO_MEMORY);
 
                             if (false)
                             {
@@ -1067,7 +1086,9 @@ int ft_game_script_bridge::validate_dry_run(const ft_string &script, ft_vector<f
                             }
                             if (entry == this->_callbacks.end())
                             {
-                                ft_string warning("unregistered callback: ");
+                                ft_string warning;
+                                if (warning.initialize("unregistered callback: ") != FT_ERR_SUCCESS)
+                                    return (FT_ERR_NO_MEMORY);
 
                                 if (false)
                                 {
@@ -1089,7 +1110,9 @@ int ft_game_script_bridge::validate_dry_run(const ft_string &script, ft_vector<f
                             }
                             else if (!entry->value)
                             {
-                                ft_string warning("callback missing target: ");
+                                ft_string warning;
+                                if (warning.initialize("callback missing target: ") != FT_ERR_SUCCESS)
+                                    return (FT_ERR_NO_MEMORY);
 
                                 if (false)
                                 {
@@ -1111,8 +1134,10 @@ int ft_game_script_bridge::validate_dry_run(const ft_string &script, ft_vector<f
                             }
                             else if (tokens.size() < 3)
                             {
-                                ft_string warning("call missing arguments: ");
-
+                                ft_string warning;
+                                if (warning.initialize("call missing arguments: ")
+                                        != FT_ERR_SUCCESS)
+                                    return (FT_ERR_NO_MEMORY);
                                 if (false)
                                 {
                                     this->set_error(FT_ERR_SUCCESS);
@@ -1137,7 +1162,9 @@ int ft_game_script_bridge::validate_dry_run(const ft_string &script, ft_vector<f
                     {
                         if (tokens.size() < 2)
                         {
-                            ft_string warning("set missing key");
+                            ft_string warning;
+                            if (warning.initialize("set missing key") != FT_ERR_SUCCESS)
+                                return (FT_ERR_NO_MEMORY);
 
                             if (false)
                             {
@@ -1153,7 +1180,9 @@ int ft_game_script_bridge::validate_dry_run(const ft_string &script, ft_vector<f
                         }
                         else if (tokens.size() < 3)
                         {
-                            ft_string warning("set missing value for key: ");
+                            ft_string warning;
+                            if (warning.initialize("set missing value for key: ") != FT_ERR_SUCCESS)
+                                return (FT_ERR_NO_MEMORY);
                             ft_string missing_key;
 
                             if (false)
@@ -1185,7 +1214,9 @@ int ft_game_script_bridge::validate_dry_run(const ft_string &script, ft_vector<f
                     {
                         if (tokens.size() < 2)
                         {
-                            ft_string warning("unset missing key");
+                            ft_string warning;
+                            if (warning.initialize("unset missing key") != FT_ERR_SUCCESS)
+                                return (FT_ERR_NO_MEMORY);
 
                             if (false)
                             {
@@ -1212,7 +1243,13 @@ int ft_game_script_bridge::validate_dry_run(const ft_string &script, ft_vector<f
     }
     if (this->_max_operations > 0 && operations > this->_max_operations)
     {
-        ft_string warning("operation budget exceeded: ");
+        ft_string warning;
+        if (warning.initialize("operation budget exceeded: ") != FT_ERR_SUCCESS)
+        {
+            this->set_error(FT_ERR_NO_MEMORY);
+            this->unlock_internal(lock_acquired);
+            return (FT_ERR_NO_MEMORY);
+        }
         ft_string operation_text;
         ft_string limit_text;
 

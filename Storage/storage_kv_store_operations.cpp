@@ -370,7 +370,11 @@ int kv_store::parse_json_groups(json_group *group_head, ft_vector<kv_store_snaps
         if (ttl_prefix_length > 0
             && ft_strncmp(item_pointer->key, g_kv_store_ttl_prefix, ttl_prefix_length) == 0)
         {
-            ft_string ttl_key(item_pointer->key + ttl_prefix_length);
+            ft_string ttl_key;
+            ft_string ttl_suffix;
+            if (ttl_suffix.initialize(item_pointer->key + ttl_prefix_length) != FT_ERR_SUCCESS)
+                return (-1);
+            ttl_key = ttl_suffix;
             long long expiration_timestamp;
 
             int ttl_key_error = storage_kv_move_string_error(ttl_key);
@@ -401,7 +405,9 @@ int kv_store::parse_json_groups(json_group *group_head, ft_vector<kv_store_snaps
         }
         if (this->_encryption_enabled)
         {
-            ft_string encoded_value(item_pointer->value);
+            ft_string encoded_value;
+            if (encoded_value.initialize(item_pointer->value) != FT_ERR_SUCCESS)
+                return (-1);
             ft_string decrypted_value;
 
             int encoded_value_error = storage_kv_move_string_error(encoded_value);
@@ -956,7 +962,12 @@ int kv_store::load_json_lines_entries(const char *location, ft_vector<kv_store_s
             {
                 if (this->_encryption_enabled)
                 {
-                    ft_string encoded_value(item_cursor->value);
+                    ft_string encoded_value;
+                    if (encoded_value.initialize(item_cursor->value) != FT_ERR_SUCCESS)
+                    {
+                        json_free_groups(line_groups);
+                        return (-1);
+                    }
                     ft_string decrypted_value;
 
                     int encoded_value_error = storage_kv_move_string_error(encoded_value);
@@ -1319,7 +1330,13 @@ int kv_store::load_sqlite_entries(const char *location, ft_vector<kv_store_snaps
         }
         if (this->_encryption_enabled)
         {
-            ft_string encoded_value(reinterpret_cast<const char *>(value_text));
+            ft_string encoded_value;
+            if (encoded_value.initialize(reinterpret_cast<const char *>(value_text)) != FT_ERR_SUCCESS)
+            {
+                sqlite3_finalize(select_statement);
+                sqlite3_close(database_handle);
+                return (-1);
+            }
             ft_string decrypted_value;
 
             int encoded_value_error = storage_kv_move_string_error(encoded_value);

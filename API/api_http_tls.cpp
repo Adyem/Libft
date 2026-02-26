@@ -168,21 +168,19 @@ static bool api_https_prepare_socket(api_connection_pool_handle &connection_hand
     config._port = port;
     config._recv_timeout = timeout;
     config._send_timeout = timeout;
-    ft_socket new_socket(config);
-    if (FT_ERR_SUCCESS)
-    {
-        int socket_error_code;
+    int initialize_error;
 
-        socket_error_code = FT_ERR_SUCCESS;
-        if (api_is_configuration_socket_error(socket_error_code))
-            error_code = socket_error_code;
+    initialize_error = connection_handle.socket.initialize(config);
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        if (api_is_configuration_socket_error(initialize_error))
+            error_code = initialize_error;
         else
             error_code = FT_ERR_SOCKET_CONNECT_FAILED;
         return (false);
     }
-    if (new_socket.get_fd() >= 0)
+    if (connection_handle.socket.get_fd() >= 0)
         connection_handle.has_socket = true;
-    connection_handle.has_socket = true;
     connection_handle.from_pool = false;
     connection_handle.should_store = true;
     connection_handle.security_mode = api_connection_security_mode::TLS;

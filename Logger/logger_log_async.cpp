@@ -248,8 +248,7 @@ void ft_log_enqueue(t_log_level level, const char *fmt, va_list args)
         if (format_error != FT_ERR_SUCCESS)
         return ;
     }
-    message_text = ft_string(message_buffer);
-    if (message_text.last_operation_error() != FT_ERR_SUCCESS)
+    if (message_text.initialize(message_buffer) != FT_ERR_SUCCESS)
     {
         return ;
     }

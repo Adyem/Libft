@@ -37,8 +37,12 @@ FT_TEST(test_yaml_round_trip, "yaml round trip")
         return (0);
     if (name_value_guard->initialize() != FT_ERR_SUCCESS)
         return (0);
-    name_value_guard->set_scalar("Alice");
-    root.add_map_item("name", name_value_guard.get());
+    ft_string name_key;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, name_key.initialize("name"));
+    ft_string alice_value;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, alice_value.initialize("Alice"));
+    name_value_guard->set_scalar(alice_value);
+    root.add_map_item(name_key, name_value_guard.get());
     name_value_guard.release();
 
     numbers_value_guard.reset(new (std::nothrow) yaml_value());
@@ -53,7 +57,9 @@ FT_TEST(test_yaml_round_trip, "yaml round trip")
         return (0);
     if (number_one_guard->initialize() != FT_ERR_SUCCESS)
         return (0);
-    number_one_guard->set_scalar("one");
+    ft_string one_value;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, one_value.initialize("one"));
+    number_one_guard->set_scalar(one_value);
     numbers_value_guard->add_list_item(number_one_guard.get());
     number_one_guard.release();
 
@@ -62,11 +68,15 @@ FT_TEST(test_yaml_round_trip, "yaml round trip")
         return (0);
     if (number_two_guard->initialize() != FT_ERR_SUCCESS)
         return (0);
-    number_two_guard->set_scalar("two");
+    ft_string two_value;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, two_value.initialize("two"));
+    number_two_guard->set_scalar(two_value);
     numbers_value_guard->add_list_item(number_two_guard.get());
     number_two_guard.release();
 
-    root.add_map_item("numbers", numbers_value_guard.get());
+    ft_string numbers_key;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, numbers_key.initialize("numbers"));
+    root.add_map_item(numbers_key, numbers_value_guard.get());
     numbers_value_guard.release();
 
     yaml_string = yaml_write_to_string(&root);
@@ -90,7 +100,9 @@ FT_TEST(test_yaml_write_to_file_reports_write_failure, "yaml_write_to_file repor
 
     if (scalar.initialize() != FT_ERR_SUCCESS)
         return (0);
-    scalar.set_scalar("content");
+    ft_string content_value;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, content_value.initialize("content"));
+    scalar.set_scalar(content_value);
     FT_ASSERT_EQ(-1, yaml_write_to_file("/dev/full", &scalar));
     return (1);
 }

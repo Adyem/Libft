@@ -27,7 +27,9 @@ FT_TEST(test_ft_vector_ft_string_growth, "ft_vector preserves ft_string contents
         size_t push_index = 0;
         while (push_index < 7)
         {
-            string_vector.push_back(ft_string(sample_values[push_index]));
+            ft_string stored_value;
+            FT_ASSERT_EQ(FT_ERR_SUCCESS, stored_value.initialize(sample_values[push_index]));
+            string_vector.push_back(stored_value);
             ++push_index;
         }
         FT_ASSERT_EQ(7, string_vector.size());

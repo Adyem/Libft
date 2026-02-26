@@ -20,12 +20,6 @@ api_connection_pool_handle::api_connection_pool_handle()
 
 api_connection_pool_handle::~api_connection_pool_handle()
 {
-    if (this->_initialized_state == api_connection_pool_handle::_state_uninitialized)
-    {
-        pf_printf_fd(2, "api_connection_pool_handle lifecycle error: %s\n",
-            "destructor called on uninitialized instance");
-        su_abort();
-    }
     if (this->_initialized_state == api_connection_pool_handle::_state_initialized)
         (void)this->destroy();
     return ;
@@ -104,6 +98,12 @@ int api_connection_pool_handle::initialize() noexcept
     if (this->_initialized_state == api_connection_pool_handle::_state_initialized)
         this->abort_lifecycle_error("api_connection_pool_handle::initialize",
             "initialize called on initialized instance");
+    int key_init_result = this->key.initialize();
+    if (key_init_result != FT_ERR_SUCCESS)
+    {
+        this->_initialized_state = api_connection_pool_handle::_state_destroyed;
+        return (key_init_result);
+    }
     this->key.clear();
 #if NETWORKING_HAS_OPENSSL
     this->tls_session = ft_nullptr;
@@ -129,8 +129,7 @@ int api_connection_pool_handle::initialize() noexcept
 int api_connection_pool_handle::destroy() noexcept
 {
     if (this->_initialized_state != api_connection_pool_handle::_state_initialized)
-        this->abort_lifecycle_error("api_connection_pool_handle::destroy",
-            "destroy called on non-initialized instance");
+        return (FT_ERR_INVALID_STATE);
     this->key.clear();
 #if NETWORKING_HAS_OPENSSL
     this->tls_session = ft_nullptr;

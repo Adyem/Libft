@@ -13,14 +13,16 @@ using duo_tuple = ft_tuple<int, ft_string>;
 
 FT_TEST(test_ft_tuple_construction_and_get, "ft_tuple stores provided values and exposes them by index and type")
 {
-    triple_tuple tuple_instance(7, ft_string("value"), 3.5);
+    ft_string second_string;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second_string.initialize("value"));
+    triple_tuple tuple_instance(7, second_string, 3.5);
 
     int first_value = tuple_instance.get<0>();
     FT_ASSERT_EQ(7, first_value);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, triple_tuple::last_operation_error());
 
     ft_string &second_value = tuple_instance.get<1>();
-    FT_ASSERT(second_value == "value");
+    FT_ASSERT_STR_EQ("value", second_value.c_str());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, triple_tuple::last_operation_error());
 
     double third_value = tuple_instance.get<2>();
@@ -35,7 +37,9 @@ FT_TEST(test_ft_tuple_construction_and_get, "ft_tuple stores provided values and
 
 FT_TEST(test_ft_tuple_reset_and_error_reporting, "ft_tuple signals bad access after reset and recovers on new construction")
 {
-    duo_tuple tuple_instance(42, ft_string("answer"));
+    ft_string answer_string;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, answer_string.initialize("answer"));
+    duo_tuple tuple_instance(42, answer_string);
 
     tuple_instance.reset();
     FT_ASSERT_EQ(FT_ERR_SUCCESS, duo_tuple::last_operation_error());
@@ -45,27 +49,32 @@ FT_TEST(test_ft_tuple_reset_and_error_reporting, "ft_tuple signals bad access af
     FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, duo_tuple::last_operation_error());
 
     ft_string &missing_string = tuple_instance.get<1>();
-    FT_ASSERT(missing_string == "");
+    FT_ASSERT_STR_EQ("", missing_string.c_str());
     FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, duo_tuple::last_operation_error());
 
-    duo_tuple refreshed_tuple(11, ft_string("eleven"));
+    ft_string eleven_string;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, eleven_string.initialize("eleven"));
+    duo_tuple refreshed_tuple(11, eleven_string);
     tuple_instance.reset();
     FT_ASSERT_EQ(FT_ERR_SUCCESS, duo_tuple::last_operation_error());
     FT_ASSERT_EQ(11, refreshed_tuple.get<0>());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, duo_tuple::last_operation_error());
+    FT_ASSERT_STR_EQ("eleven", refreshed_tuple.get<1>().c_str());
     return (1);
 }
 
 FT_TEST(test_ft_tuple_move_semantics, "ft_tuple move constructor releases original storage and retains values")
 {
-    duo_tuple copy_tuple(5, ft_string("five"));
+    ft_string five_string;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, five_string.initialize("five"));
+    duo_tuple copy_tuple(5, five_string);
 
     int copied_value = copy_tuple.get<0>();
     FT_ASSERT_EQ(5, copied_value);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, duo_tuple::last_operation_error());
 
     ft_string &copied_string = copy_tuple.get<1>();
-    FT_ASSERT(copied_string == "five");
+    FT_ASSERT_STR_EQ("five", copied_string.c_str());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, duo_tuple::last_operation_error());
 
     ft_tuple<int, ft_string> empty_tuple;

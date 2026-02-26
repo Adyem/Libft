@@ -235,7 +235,7 @@ static bool http2_test_drain_client_headers(int socket_fd)
     return (true);
 }
 
-static void http2_test_server(http2_test_server_state *state)
+static int http2_test_server(http2_test_server_state *state)
 {
     SocketConfig server_configuration;
     struct sockaddr_storage address_storage;
@@ -248,22 +248,24 @@ static void http2_test_server(http2_test_server_state *state)
     int encode_error;
 
     if (!state)
-        return ;
+        return (FT_ERR_INVALID_ARGUMENT);
     server_configuration._type = SocketType::SERVER;
     ft_strlcpy(server_configuration._ip, "127.0.0.1",
             sizeof(server_configuration._ip));
     server_configuration._port = g_http2_test_server_port;
     server_configuration._reuse_address = true;
-    ft_socket server_socket(server_configuration);
+    ft_socket server_socket;
+    int initialize_error = server_socket.initialize(server_configuration);
+    state->start_error.store(initialize_error, std::memory_order_relaxed);
+    state->ready.store(true, std::memory_order_release);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, initialize_error);
     if (server_socket.get_fd() < 0)
     {
-        state->start_error.store(FT_ERR_INVALID_OPERATION,
+        state->start_error.store(FT_ERR_INVALID_ARGUMENT,
             std::memory_order_relaxed);
-        state->ready.store(true, std::memory_order_release);
-        return ;
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     state->start_error.store(FT_ERR_SUCCESS, std::memory_order_relaxed);
-    state->ready.store(true, std::memory_order_release);
     address_length = sizeof(address_storage);
     client_fd = nw_accept(server_socket.get_fd(),
         reinterpret_cast<struct sockaddr*>(&address_storage),
@@ -272,47 +274,47 @@ static void http2_test_server(http2_test_server_state *state)
     {
         state->result.store(FT_ERR_SOCKET_ACCEPT_FAILED,
             std::memory_order_relaxed);
-        return ;
+        return (FT_ERR_SOCKET_ACCEPT_FAILED);
     }
     if (!http2_test_read_exact(client_fd, preface_buffer, sizeof(preface_buffer)))
     {
         state->result.store(FT_ERR_IO, std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (FT_ERR_IO);
     }
     if (ft_strncmp(preface_buffer, "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n",
             sizeof(preface_buffer)) != 0)
     {
         state->result.store(FT_ERR_IO, std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (FT_ERR_IO);
     }
     if (!http2_test_receive_single_frame(client_fd, client_frame))
     {
         state->result.store(FT_ERR_IO, std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (FT_ERR_IO);
     }
     if (!server_frame.set_type(0x4))
     {
         state->result.store(FT_ERR_INVALID_OPERATION,
             std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (FT_ERR_INVALID_OPERATION);
     }
     if (!server_frame.set_flags(0x0))
     {
         state->result.store(FT_ERR_INVALID_OPERATION,
             std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (FT_ERR_INVALID_OPERATION);
     }
     if (!server_frame.set_stream_identifier(0))
     {
         state->result.store(FT_ERR_INVALID_OPERATION,
             std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (FT_ERR_INVALID_OPERATION);
     }
     server_frame.clear_payload();
     if (!http2_encode_frame(server_frame, encoded_frame, encode_error))
@@ -321,41 +323,41 @@ static void http2_test_server(http2_test_server_state *state)
             encode_error = FT_ERR_IO;
         state->result.store(encode_error, std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (encode_error);
     }
     if (!http2_test_send_all(client_fd, encoded_frame.c_str(),
             encoded_frame.size()))
     {
         state->result.store(FT_ERR_IO, std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (FT_ERR_IO);
     }
     if (!http2_test_receive_single_frame(client_fd, client_frame))
     {
         state->result.store(FT_ERR_IO, std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (FT_ERR_IO);
     }
     if (!server_frame.set_type(0x4))
     {
         state->result.store(FT_ERR_INVALID_OPERATION,
             std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (FT_ERR_INVALID_OPERATION);
     }
     if (!server_frame.set_flags(0x1))
     {
         state->result.store(FT_ERR_INVALID_OPERATION,
             std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (FT_ERR_INVALID_OPERATION);
     }
     if (!server_frame.set_stream_identifier(0))
     {
         state->result.store(FT_ERR_INVALID_OPERATION,
             std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (FT_ERR_INVALID_OPERATION);
     }
     server_frame.clear_payload();
     if (!http2_encode_frame(server_frame, encoded_frame, encode_error))
@@ -364,20 +366,20 @@ static void http2_test_server(http2_test_server_state *state)
             encode_error = FT_ERR_IO;
         state->result.store(encode_error, std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (encode_error);
     }
     if (!http2_test_send_all(client_fd, encoded_frame.c_str(),
             encoded_frame.size()))
     {
         state->result.store(FT_ERR_IO, std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (FT_ERR_IO);
     }
     if (!http2_test_drain_client_headers(client_fd))
     {
         state->result.store(FT_ERR_IO, std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (FT_ERR_IO);
     }
     ft_vector<http2_header_field> response_headers;
     http2_header_field header_entry;
@@ -389,14 +391,14 @@ static void http2_test_server(http2_test_server_state *state)
         state->result.store(ft_vector<http2_header_field>::last_operation_error(),
             std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (ft_vector<http2_header_field>::last_operation_error());
     }
     if (!header_entry.assign_from_cstr(":status", "200"))
     {
         state->result.store(FT_ERR_INVALID_OPERATION,
             std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (FT_ERR_INVALID_OPERATION);
     }
     response_headers.push_back(header_entry);
     if (ft_vector<http2_header_field>::last_operation_error() != FT_ERR_SUCCESS)
@@ -404,14 +406,14 @@ static void http2_test_server(http2_test_server_state *state)
         state->result.store(ft_vector<http2_header_field>::last_operation_error(),
             std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (ft_vector<http2_header_field>::last_operation_error());
     }
     if (!header_entry.assign_from_cstr("content-type", "text/plain"))
     {
         state->result.store(FT_ERR_INVALID_OPERATION,
             std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (FT_ERR_INVALID_OPERATION);
     }
     response_headers.push_back(header_entry);
     if (ft_vector<http2_header_field>::last_operation_error() != FT_ERR_SUCCESS)
@@ -419,7 +421,7 @@ static void http2_test_server(http2_test_server_state *state)
         state->result.store(ft_vector<http2_header_field>::last_operation_error(),
             std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (ft_vector<http2_header_field>::last_operation_error());
     }
     compressed_headers.clear();
     if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
@@ -427,7 +429,7 @@ static void http2_test_server(http2_test_server_state *state)
         state->result.store(ft_string::last_operation_error(),
             std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (ft_string::last_operation_error());
     }
     if (!http2_compress_headers(response_headers, compressed_headers,
             encode_error))
@@ -436,35 +438,35 @@ static void http2_test_server(http2_test_server_state *state)
             encode_error = FT_ERR_IO;
         state->result.store(encode_error, std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (encode_error);
     }
     if (!server_frame.set_type(0x1))
     {
         state->result.store(FT_ERR_INVALID_OPERATION,
             std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (FT_ERR_INVALID_OPERATION);
     }
     if (!server_frame.set_flags(0x4))
     {
         state->result.store(FT_ERR_INVALID_OPERATION,
             std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (FT_ERR_INVALID_OPERATION);
     }
     if (!server_frame.set_stream_identifier(1))
     {
         state->result.store(FT_ERR_INVALID_OPERATION,
             std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (FT_ERR_INVALID_OPERATION);
     }
     if (!server_frame.set_payload(compressed_headers))
     {
         state->result.store(FT_ERR_INVALID_OPERATION,
             std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (FT_ERR_INVALID_OPERATION);
     }
     if (!http2_encode_frame(server_frame, encoded_frame, encode_error))
     {
@@ -472,42 +474,42 @@ static void http2_test_server(http2_test_server_state *state)
             encode_error = FT_ERR_IO;
         state->result.store(encode_error, std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (encode_error);
     }
     if (!http2_test_send_all(client_fd, encoded_frame.c_str(),
             encoded_frame.size()))
     {
         state->result.store(FT_ERR_IO, std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (FT_ERR_IO);
     }
     if (!server_frame.set_type(0x0))
     {
         state->result.store(FT_ERR_INVALID_OPERATION,
             std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (FT_ERR_INVALID_OPERATION);
     }
     if (!server_frame.set_flags(0x0))
     {
         state->result.store(FT_ERR_INVALID_OPERATION,
             std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (FT_ERR_INVALID_OPERATION);
     }
     if (!server_frame.set_stream_identifier(1))
     {
         state->result.store(FT_ERR_INVALID_OPERATION,
             std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (FT_ERR_INVALID_OPERATION);
     }
     if (!server_frame.set_payload_from_buffer("hello ", 6))
     {
         state->result.store(FT_ERR_INVALID_OPERATION,
             std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (FT_ERR_INVALID_OPERATION);
     }
     if (!http2_encode_frame(server_frame, encoded_frame, encode_error))
     {
@@ -515,42 +517,42 @@ static void http2_test_server(http2_test_server_state *state)
             encode_error = FT_ERR_IO;
         state->result.store(encode_error, std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (encode_error);
     }
     if (!http2_test_send_all(client_fd, encoded_frame.c_str(),
             encoded_frame.size()))
     {
         state->result.store(FT_ERR_IO, std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (FT_ERR_IO);
     }
     if (!server_frame.set_type(0x0))
     {
         state->result.store(FT_ERR_INVALID_OPERATION,
             std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (FT_ERR_INVALID_OPERATION);
     }
     if (!server_frame.set_flags(0x1))
     {
         state->result.store(FT_ERR_INVALID_OPERATION,
             std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (FT_ERR_INVALID_OPERATION);
     }
     if (!server_frame.set_stream_identifier(1))
     {
         state->result.store(FT_ERR_INVALID_OPERATION,
             std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (FT_ERR_INVALID_OPERATION);
     }
     if (!server_frame.set_payload_from_buffer("world", 5))
     {
         state->result.store(FT_ERR_INVALID_OPERATION,
             std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (FT_ERR_INVALID_OPERATION);
     }
     if (!http2_encode_frame(server_frame, encoded_frame, encode_error))
     {
@@ -558,18 +560,18 @@ static void http2_test_server(http2_test_server_state *state)
             encode_error = FT_ERR_IO;
         state->result.store(encode_error, std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (encode_error);
     }
     if (!http2_test_send_all(client_fd, encoded_frame.c_str(),
             encoded_frame.size()))
     {
         state->result.store(FT_ERR_IO, std::memory_order_relaxed);
         nw_close(client_fd);
-        return ;
+        return (FT_ERR_IO);
     }
     state->result.store(FT_ERR_SUCCESS, std::memory_order_relaxed);
     nw_close(client_fd);
-    return ;
+    return (FT_ERR_SUCCESS);
 }
 
 static void http2_test_capture_reset(http2_stream_capture &capture)

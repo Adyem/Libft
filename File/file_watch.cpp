@@ -183,8 +183,8 @@ int ft_file_watch::watch_directory(const char *path,
         if (lock_error != FT_ERR_SUCCESS)
             return (-1);
     }
-    this->_path = ft_string(path);
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+    int32_t initialization_error = this->_path.initialize(path);
+    if (initialization_error != FT_ERR_SUCCESS || ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
         this->_callback = ft_nullptr;
         this->_user_data = ft_nullptr;

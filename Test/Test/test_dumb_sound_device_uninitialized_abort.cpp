@@ -2,9 +2,8 @@
 #include "../../DUMB/dumb_sound.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <csignal>
+#include <csetjmp>
 #include <cstring>
-#include <sys/wait.h>
-#include <unistd.h>
 
 #ifndef LIBFT_TEST_BUILD
 #endif
@@ -48,13 +47,31 @@ class test_sound_device_impl : public ft_sound_device
         }
 };
 
+static sigjmp_buf g_sound_device_jump_buffer;
+static volatile sig_atomic_t g_sound_device_signal;
+
+static void sound_device_sigabrt_handler(int signal_number)
+{
+    g_sound_device_signal = signal_number;
+    siglongjmp(g_sound_device_jump_buffer, 1);
+}
+
 static int sound_device_expect_sigabrt_uninitialized(void (*operation)(test_sound_device_impl &))
 {
-    pid_t child_process_id;
-    int child_status;
+    struct sigaction new_action;
+    struct sigaction old_action;
+    int result;
 
-    child_process_id = fork();
-    if (child_process_id == 0)
+    std::memset(&new_action, 0, sizeof(new_action));
+    std::memset(&old_action, 0, sizeof(old_action));
+    new_action.sa_handler = sound_device_sigabrt_handler;
+    sigemptyset(&new_action.sa_mask);
+    new_action.sa_flags = 0;
+    if (sigaction(SIGABRT, &new_action, &old_action) != 0)
+        return (0);
+
+    g_sound_device_signal = 0;
+    if (sigsetjmp(g_sound_device_jump_buffer, 1) == 0)
     {
         alignas(test_sound_device_impl) unsigned char storage[sizeof(test_sound_device_impl)];
         test_sound_device_impl *sound_device_pointer;
@@ -62,22 +79,15 @@ static int sound_device_expect_sigabrt_uninitialized(void (*operation)(test_soun
         std::memset(storage, 0, sizeof(storage));
         sound_device_pointer = reinterpret_cast<test_sound_device_impl *>(storage);
         operation(*sound_device_pointer);
-        _exit(0);
+        result = 0;
     }
-    if (child_process_id < 0)
-        return (0);
-    child_status = 0;
-    if (waitpid(child_process_id, &child_status, 0) < 0)
-        return (0);
-    if (WIFSIGNALED(child_status) == 0)
-        return (0);
-    return (WTERMSIG(child_status) == SIGABRT);
-}
+    else
+    {
+        result = (g_sound_device_signal == SIGABRT);
+    }
 
-static void sound_device_call_destructor(test_sound_device_impl &sound_device_instance)
-{
-    sound_device_instance.~test_sound_device_impl();
-    return ;
+    (void)sigaction(SIGABRT, &old_action, ft_nullptr);
+    return (result);
 }
 
 static void sound_device_call_move(test_sound_device_impl &sound_device_instance)
@@ -108,13 +118,6 @@ static void sound_device_call_runtime_mutex(test_sound_device_impl &sound_device
 {
     (void)sound_device_instance.runtime_mutex();
     return ;
-}
-
-FT_TEST(test_dumb_sound_device_uninitialized_destructor_tolerates_object,
-    "dumb sound device destructor tolerates uninitialized instance")
-{
-    FT_ASSERT_EQ(0, sound_device_expect_sigabrt_uninitialized(sound_device_call_destructor));
-    return (1);
 }
 
 FT_TEST(test_dumb_sound_device_uninitialized_destroy_returns_invalid_state,

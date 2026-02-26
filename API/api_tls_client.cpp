@@ -482,12 +482,15 @@ static void tls_log_handshake_diagnostics(
 
 api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms)
 : _initialized_state(api_tls_client::_state_uninitialized), _ctx(ft_nullptr),
-  _ssl(ft_nullptr), _sock(-1), _host(""), _port(port), _timeout(timeout_ms),
+  _ssl(ft_nullptr), _sock(-1), _host(), _port(port), _timeout(timeout_ms),
   _mutex(ft_nullptr), _is_shutting_down(false), _async_workers(),
   _handshake_diagnostics()
 {
     if (host_c != ft_nullptr)
-        this->_host = host_c;
+    {
+        if (this->_host.initialize(host_c) != FT_ERR_SUCCESS)
+            this->_host.clear();
+    }
     return ;
 }
 
@@ -739,7 +742,9 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
             log_method, log_path);
     }
 
-    ft_string request(method);
+    ft_string request;
+    if (request.initialize(method) != FT_ERR_SUCCESS)
+        return (ft_nullptr);
     request += " ";
     request += path;
     request += " HTTP/1.1\r\nHost: ";

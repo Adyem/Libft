@@ -56,7 +56,13 @@ static void api_pool_test_server(api_pool_test_server_context *context)
     ft_strlcpy(server_configuration._ip, "127.0.0.1",
             sizeof(server_configuration._ip));
     server_configuration._port = g_api_pool_test_port;
-    ft_socket server_socket(server_configuration);
+    ft_socket server_socket;
+    if (server_socket.initialize(server_configuration) != FT_ERR_SUCCESS)
+    {
+        context->result.store(FT_ERR_INVALID_OPERATION);
+        context->ready.store(true);
+        return ;
+    }
     if (server_socket.get_fd() < 0)
     {
         context->result.store(FT_ERR_INVALID_OPERATION);

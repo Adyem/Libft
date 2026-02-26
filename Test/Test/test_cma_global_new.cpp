@@ -46,10 +46,6 @@ FT_TEST(test_cma_global_new_alignment_failure_sets_errno,
 {
     void *instance;
 
-#if defined(RUNNING_ON_VALGRIND)
-    if (RUNNING_ON_VALGRIND)
-        return (1);
-#endif
     cma_clear_backend();
     cma_set_alloc_limit(0);
     cma_set_alloc_limit(15);

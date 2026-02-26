@@ -101,14 +101,22 @@ FT_TEST(test_region_definition_assignment_isolated_from_source, "Game: region de
     ft_region_definition original;
     ft_region_definition assigned;
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.initialize(3, ft_string("Highlands"),
-        ft_string("Jagged peaks"), 15));
+    ft_string highlands;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, highlands.initialize("Highlands"));
+    ft_string jagged_peaks;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, jagged_peaks.initialize("Jagged peaks"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.initialize(3, highlands,
+        jagged_peaks, 15));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, original.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, assigned.initialize(original));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, assigned.get_error());
-    original.set_name(ft_string("Lowlands"));
+    ft_string lowlands;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, lowlands.initialize("Lowlands"));
+    original.set_name(lowlands);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, original.get_error());
-    original.set_description(ft_string("Rolling plains"));
+    ft_string rolling_plains;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rolling_plains.initialize("Rolling plains"));
+    original.set_description(rolling_plains);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, original.get_error());
     original.set_recommended_level(6);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, original.get_error());
@@ -175,18 +183,22 @@ FT_TEST(test_region_definition_move_assignment_clears_source, "Game: region defi
     ft_region_definition source;
     ft_region_definition destination;
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize(8, ft_string("Harbor"),
-        ft_string("Dockyards"), 7));
+    ft_string harbor;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, harbor.initialize("Harbor"));
+    ft_string dockyards;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, dockyards.initialize("Dockyards"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize(8, harbor,
+        dockyards, 7));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.initialize(ft_move(source)));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.get_error());
     FT_ASSERT_EQ(8, destination.get_region_id());
-    FT_ASSERT_EQ(ft_string("Harbor"), destination.get_name());
-    FT_ASSERT_EQ(ft_string("Dockyards"), destination.get_description());
+    FT_ASSERT_STR_EQ("Harbor", destination.get_name().c_str());
+    FT_ASSERT_STR_EQ("Dockyards", destination.get_description().c_str());
     FT_ASSERT_EQ(7, destination.get_recommended_level());
     FT_ASSERT_EQ(0, source.get_region_id());
-    FT_ASSERT_EQ(ft_string(""), source.get_name());
-    FT_ASSERT_EQ(ft_string(""), source.get_description());
+    FT_ASSERT_STR_EQ("", source.get_name().c_str());
+    FT_ASSERT_STR_EQ("", source.get_description().c_str());
     FT_ASSERT_EQ(0, source.get_recommended_level());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());

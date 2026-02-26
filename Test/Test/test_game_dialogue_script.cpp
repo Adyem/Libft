@@ -15,8 +15,12 @@ static ft_sharedptr<ft_dialogue_line> make_line(int id, const char *speaker,
     next.push_back(id + 1);
     ft_sharedptr<ft_dialogue_line> stored(new (std::nothrow) ft_dialogue_line());
     FT_ASSERT(stored.get() != ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, stored->initialize(id, ft_string(speaker),
-        ft_string(text), next));
+    ft_string speaker_string;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, speaker_string.initialize(speaker));
+    ft_string text_string;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, text_string.initialize(text));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stored->initialize(id, speaker_string,
+        text_string, next));
     return (stored);
 }
 
@@ -38,8 +42,12 @@ FT_TEST(test_dialogue_script_setters_modify_metadata_and_lines, "setters mutate 
     ft_dialogue_script script;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, script.initialize());
     script.set_script_id(4);
-    script.set_title(ft_string("intro"));
-    script.set_summary(ft_string("desc"));
+    ft_string intro;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, intro.initialize("intro"));
+    ft_string desc;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, desc.initialize("desc"));
+    script.set_title(intro);
+    script.set_summary(desc);
     script.set_start_line_id(2);
     ft_vector<ft_sharedptr<ft_dialogue_line>> lines;
     lines.push_back(make_line(2, "npc", "reply"));
@@ -48,7 +56,7 @@ FT_TEST(test_dialogue_script_setters_modify_metadata_and_lines, "setters mutate 
     const ft_vector<ft_sharedptr<ft_dialogue_line>> &stored = script.get_lines();
     FT_ASSERT_EQ(1u, stored.size());
     FT_ASSERT_EQ(2, stored[0]->get_line_id());
-    FT_ASSERT_EQ(ft_string("reply"), stored[0]->get_text());
+    FT_ASSERT_STR_EQ("reply", stored[0]->get_text().c_str());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, script.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stored[0]->get_error());
     return (1);

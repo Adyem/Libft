@@ -11,14 +11,18 @@ FT_TEST(test_region_definition_field_accessors, "Region definition getters refle
 {
     ft_region_definition region;
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(12, ft_string("Verdant Vale"),
-        ft_string("Lush forests with hidden ruins."), 18));
+    ft_string verdant_vale;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, verdant_vale.initialize("Verdant Vale"));
+    ft_string lush_forests;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, lush_forests.initialize("Lush forests with hidden ruins."));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(12, verdant_vale,
+        lush_forests, 18));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     FT_ASSERT_EQ(12, region.get_region_id());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
-    FT_ASSERT_EQ(ft_string("Verdant Vale"), region.get_name());
+    FT_ASSERT_STR_EQ("Verdant Vale", region.get_name().c_str());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
-    FT_ASSERT_EQ(ft_string("Lush forests with hidden ruins."), region.get_description());
+    FT_ASSERT_STR_EQ("Lush forests with hidden ruins.", region.get_description().c_str());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     FT_ASSERT_EQ(18, region.get_recommended_level());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());

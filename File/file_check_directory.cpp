@@ -14,7 +14,13 @@ static ft_string normalize_path(ft_string path)
 
 int file_dir_exists(const char *rel_path)
 {
-    ft_string path = normalize_path(rel_path);
+    ft_string path;
+    int32_t initialization_error;
+
+    initialization_error = path.initialize(rel_path);
+    if (initialization_error != FT_ERR_SUCCESS)
+        return (-1);
+    path = normalize_path(path);
     int error_code;
     int exists_value;
     int status;

@@ -15,19 +15,6 @@ ft_string::ft_string() noexcept
     return ;
 }
 
-ft_string::ft_string(const char *initial_string) noexcept
-    : _data(ft_nullptr)
-    , _length(0)
-    , _capacity(0)
-    , _mutex(ft_nullptr)
-    , _initialized_state(ft_string::_state_uninitialized)
-    , _operation_error(FT_ERR_SUCCESS)
-{
-    this->_operation_error = this->initialize(initial_string);
-    ft_string::set_last_operation_error(this->_operation_error);
-    return ;
-}
-
 ft_string::ft_string(const ft_string &other) noexcept
     : _data(ft_nullptr)
     , _length(0)
@@ -173,7 +160,7 @@ int ft_string::initialize(const ft_string &other) noexcept
             this->_length = 0;
             this->_capacity = 0;
             (void)this->destroy();
-            return (FT_ERR_SYSTEM);
+            return (FT_ERR_NO_MEMORY);
         }
         ft_memset(this->_data, 0, this->_capacity + 1);
         ft_memcpy(this->_data, other._data, this->_length + 1);

@@ -6,6 +6,7 @@
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../Template/shared_ptr.hpp"
 #include <string>
+#include <cstring>
 
 #ifndef LIBFT_TEST_BUILD
 #endif
@@ -20,7 +21,9 @@ static int game_script_adjust_score(ft_game_script_context &context, const ft_ve
     int delta;
     ft_string updated_score;
 
-    score_value = context.get_variable("score");
+    ft_string score_key;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, score_key.initialize("score"));
+    score_value = context.get_variable(score_key);
     if (score_value == ft_nullptr)
         return (context.get_error());
     base_score = ft_atoi(score_value->c_str());
@@ -34,7 +37,7 @@ static int game_script_adjust_score(ft_game_script_context &context, const ft_ve
         std::string numeric_string = std::to_string(static_cast<long>(base_score + delta));
         FT_ASSERT_EQ(FT_ERR_SUCCESS, updated_score.initialize(numeric_string.c_str()));
     }
-    context.set_variable("score", updated_score);
+    context.set_variable(score_key, updated_score);
     if (context.get_error() != FT_ERR_SUCCESS)
         return (context.get_error());
     g_script_last_score = base_score + delta;
@@ -48,36 +51,42 @@ FT_TEST(test_game_script_context_variable_controls,
     ft_game_script_context context;
     const ft_string *value_pointer;
 
-    context.set_variable("quest_stage", "3");
+    ft_string quest_stage_key;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, quest_stage_key.initialize("quest_stage"));
+    ft_string quest_stage_value;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, quest_stage_value.initialize("3"));
+    context.set_variable(quest_stage_key, quest_stage_value);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, context.get_error());
 
-    value_pointer = context.get_variable("quest_stage");
+    value_pointer = context.get_variable(quest_stage_key);
     FT_ASSERT(value_pointer != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, context.get_error());
-    FT_ASSERT(*value_pointer == "3");
+    FT_ASSERT_STR_EQ("3", value_pointer->c_str());
 
-    context.set_variable("quest_stage", "4");
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, quest_stage_value.initialize("4"));
+    context.set_variable(quest_stage_key, quest_stage_value);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, context.get_error());
 
-    value_pointer = context.get_variable("quest_stage");
+    value_pointer = context.get_variable(quest_stage_key);
     FT_ASSERT(value_pointer != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, context.get_error());
-    FT_ASSERT(*value_pointer == "4");
+    FT_ASSERT_STR_EQ("4", value_pointer->c_str());
 
-    context.remove_variable("quest_stage");
+    context.remove_variable(quest_stage_key);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, context.get_error());
 
-    value_pointer = context.get_variable("quest_stage");
+    value_pointer = context.get_variable(quest_stage_key);
     FT_ASSERT(value_pointer == ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, context.get_error());
 
-    context.set_variable("quest_stage", "7");
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, quest_stage_value.initialize("7"));
+    context.set_variable(quest_stage_key, quest_stage_value);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, context.get_error());
 
     context.clear_variables();
     FT_ASSERT_EQ(FT_ERR_SUCCESS, context.get_error());
 
-    value_pointer = context.get_variable("quest_stage");
+    value_pointer = context.get_variable(quest_stage_key);
     FT_ASSERT(value_pointer == ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, context.get_error());
 
@@ -99,14 +108,16 @@ FT_TEST(test_game_script_bridge_executes_callbacks,
     FT_ASSERT(world_pointer);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.get_error());
 
-    register_result = bridge.register_function("adjust_score", adjust_function);
+    ft_string adjust_key;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, adjust_key.initialize("adjust_score"));
+    register_result = bridge.register_function(adjust_key, adjust_function);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, register_result);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.get_error());
 
     g_script_callback_invocations = 0;
     g_script_last_score = 0;
 
-    script = "set score 10\ncall adjust_score 5\ncall adjust_score 3\n";
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, script.initialize("set score 10\ncall adjust_score 5\ncall adjust_score 3\n"));
 
     execute_result = bridge.execute(script, state);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, execute_result);
@@ -132,7 +143,9 @@ FT_TEST(test_game_script_bridge_operation_limit,
     FT_ASSERT(world_pointer);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.get_error());
 
-    register_result = bridge.register_function("adjust_score", adjust_function);
+    ft_string adjust_key;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, adjust_key.initialize("adjust_score"));
+    register_result = bridge.register_function(adjust_key, adjust_function);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, register_result);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.get_error());
 
@@ -142,7 +155,7 @@ FT_TEST(test_game_script_bridge_operation_limit,
     g_script_callback_invocations = 0;
     g_script_last_score = 0;
 
-    script = "set score 1\ncall adjust_score 1\n";
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, script.initialize("set score 1\ncall adjust_score 1\n"));
 
     execute_result = bridge.execute(script, state);
     FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, execute_result);
@@ -166,7 +179,7 @@ FT_TEST(test_game_script_bridge_sandbox_helper,
     FT_ASSERT(world_pointer);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.get_error());
 
-    script = "set score 4\nteleport player base\ncall adjust_score 1\n";
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, script.initialize("set score 4\nteleport player base\ncall adjust_score 1\n"));
 
     inspection_result = bridge.check_sandbox_capabilities(script, violations);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, inspection_result);
@@ -190,7 +203,7 @@ FT_TEST(test_game_script_bridge_dry_run_helper,
     FT_ASSERT(world_pointer);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.get_error());
 
-    script = "call missing\nset score\nunset\n";
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, script.initialize("call missing\nset score\nunset\n"));
 
     validation_result = bridge.validate_dry_run(script, warnings);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, validation_result);
@@ -216,7 +229,7 @@ FT_TEST(test_game_script_bridge_bytecode_budget_helper,
     FT_ASSERT(world_pointer);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.get_error());
 
-    script = "set score 10\ncall adjust_score 2\nunset score\n";
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, script.initialize("set score 10\ncall adjust_score 2\nunset score\n"));
 
     required_operations = 0;
     inspection_result = bridge.inspect_bytecode_budget(script, required_operations);

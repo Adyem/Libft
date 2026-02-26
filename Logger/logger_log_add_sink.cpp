@@ -334,12 +334,12 @@ void ft_json_sink(const char *message, void *user_data)
         if (message[index] == '\0' || message[index] == '\n')
             break ;
     }
-    ft_string payload("{");
-    error_code = payload.last_operation_error();
-    if (error_code != FT_ERR_SUCCESS)
+    ft_string payload;
+    if (payload.initialize("{") != FT_ERR_SUCCESS)
     {
         return ;
     }
+    error_code = payload.last_operation_error();
     logger_json_sink_append_literal(payload, "\"time\":", error_code);
     logger_json_sink_append_json_string(payload, time_buffer, error_code);
     logger_json_sink_append_literal(payload, ",\"level\":", error_code);

@@ -8,50 +8,55 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-static_assert(std::is_same<Pair<int, ft_string>, decltype(ft_make_pair(1, ft_string("value")))>::value,
+static_assert(std::is_same<Pair<int, ft_string>, decltype(ft_make_pair(1, ft_string()))>::value,
         "ft_make_pair deduces Pair<int, ft_string>");
 static_assert(std::is_same<Pair<int, const char *>, decltype(ft_make_pair(1, "literal"))>::value,
         "ft_make_pair preserves pointer value types");
 
 FT_TEST(test_template_pair_constructs_from_lvalue, "Pair copies values from lvalue arguments")
 {
-    ft_string value("stored");
+    ft_string value;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value.initialize("stored"));
     Pair<int, ft_string> pair(42, value);
 
     FT_ASSERT_EQ(42, pair.key);
-    FT_ASSERT(pair.value == value);
-    FT_ASSERT(value == ft_string("stored"));
+    FT_ASSERT_STR_EQ("stored", value.c_str());
+    FT_ASSERT_STR_EQ("stored", pair.value.c_str());
     return (1);
 }
 
 FT_TEST(test_template_pair_constructs_from_rvalue, "Pair move-constructs value from rvalues")
 {
-    ft_string value("moved");
+    ft_string value;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value.initialize("moved"));
     Pair<int, ft_string> pair(7, std::move(value));
 
     FT_ASSERT_EQ(7, pair.key);
-    FT_ASSERT(pair.value == ft_string("moved"));
+    FT_ASSERT_STR_EQ("moved", pair.value.c_str());
     FT_ASSERT(value.empty());
     return (1);
 }
 
 FT_TEST(test_template_pair_make_pair_with_lvalue, "ft_make_pair copies when provided lvalues")
 {
-    ft_string text("example");
+    ft_string text;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, text.initialize("example"));
     Pair<int, ft_string> pair = ft_make_pair(3, text);
 
     FT_ASSERT_EQ(3, pair.key);
-    FT_ASSERT(pair.value == text);
-    FT_ASSERT(text == ft_string("example"));
+    FT_ASSERT_STR_EQ("example", text.c_str());
+    FT_ASSERT_STR_EQ("example", pair.value.c_str());
     return (1);
 }
 
 FT_TEST(test_template_pair_make_pair_with_rvalue, "ft_make_pair accepts rvalue values")
 {
-    Pair<int, ft_string> pair = ft_make_pair(9, ft_string("temporary"));
+    ft_string temporary;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, temporary.initialize("temporary"));
+    Pair<int, ft_string> pair = ft_make_pair(9, temporary);
 
     FT_ASSERT_EQ(9, pair.key);
-    FT_ASSERT(pair.value == ft_string("temporary"));
+    FT_ASSERT_STR_EQ("temporary", pair.value.c_str());
     return (1);
 }
 

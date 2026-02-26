@@ -39,6 +39,15 @@ static int api_request_capture_network_error()
     return (cmp_map_system_error_to_ft(system_error));
 }
 
+static int api_request_prepare_connection_handle(api_connection_pool_handle &handle,
+    int &error_code) noexcept
+{
+    int initialize_result = handle.initialize();
+    if (initialize_result != FT_ERR_SUCCESS)
+        error_code = initialize_result;
+    return initialize_result;
+}
+
 static int api_request_assign_resolve_error(int mapped_error)
 {
     if (mapped_error != FT_ERR_SUCCESS)
@@ -162,6 +171,8 @@ bool api_request_stream(const char *ip, uint16_t port,
 
     api_connection_pool_handle connection_handle;
     bool pooled_connection;
+    if (api_request_prepare_connection_handle(connection_handle, error_code) != FT_ERR_SUCCESS)
+        return (false);
 
     pooled_connection = api_connection_pool_acquire(connection_handle, ip, port,
             api_connection_security_mode::PLAIN, ft_nullptr);
@@ -279,6 +290,8 @@ bool api_request_stream_http2(const char *ip, uint16_t port,
 
     api_connection_pool_handle connection_handle;
     bool pooled_connection;
+    if (api_request_prepare_connection_handle(connection_handle, error_code) != FT_ERR_SUCCESS)
+        return (false);
 
     pooled_connection = api_connection_pool_acquire(connection_handle, ip, port,
             api_connection_security_mode::PLAIN, ft_nullptr);
@@ -426,7 +439,8 @@ char *api_request_string(const char *ip, uint16_t port,
         metrics_status_pointer = status;
     else
         metrics_status_pointer = &metrics_status_storage;
-    api_request_metrics_guard metrics_guard(ip, port, method, path,
+    api_request_metrics_guard metrics_guard;
+    (void)metrics_guard.initialize(ip, port, method, path,
         metrics_request_bytes, &metrics_result_body, metrics_status_pointer,
         &error_code);
 
@@ -439,6 +453,8 @@ char *api_request_string(const char *ip, uint16_t port,
 
     api_connection_pool_handle connection_handle;
     bool pooled_connection;
+    if (api_request_prepare_connection_handle(connection_handle, error_code) != FT_ERR_SUCCESS)
+        return (ft_nullptr);
 
     pooled_connection = api_connection_pool_acquire(connection_handle, ip, port,
             api_connection_security_mode::PLAIN, ft_nullptr);
@@ -567,7 +583,8 @@ char *api_request_string_http2(const char *ip, uint16_t port,
         metrics_status_pointer = status;
     else
         metrics_status_pointer = &metrics_status_storage;
-    api_request_metrics_guard metrics_guard(ip, port, method, path,
+    api_request_metrics_guard metrics_guard;
+    (void)metrics_guard.initialize(ip, port, method, path,
         metrics_request_bytes, &metrics_result_body, metrics_status_pointer,
         &error_code);
 
@@ -581,6 +598,8 @@ char *api_request_string_http2(const char *ip, uint16_t port,
     api_connection_pool_handle connection_handle;
     bool pooled_connection;
     bool downgrade_due_to_connect_failure;
+    if (api_request_prepare_connection_handle(connection_handle, error_code) != FT_ERR_SUCCESS)
+        return (ft_nullptr);
 
     downgrade_due_to_connect_failure = false;
     pooled_connection = api_connection_pool_acquire(connection_handle, ip, port,

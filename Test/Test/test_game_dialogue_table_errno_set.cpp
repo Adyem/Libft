@@ -16,8 +16,12 @@ static ft_sharedptr<ft_dialogue_line> make_line(int id, const char *speaker,
     next.push_back(id + 1);
     ft_sharedptr<ft_dialogue_line> stored(new (std::nothrow) ft_dialogue_line());
     FT_ASSERT(stored.get() != ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, stored->initialize(id, ft_string(speaker),
-        ft_string(text), next));
+    ft_string speaker_string;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, speaker_string.initialize(speaker));
+    ft_string text_string;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, text_string.initialize(text));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stored->initialize(id, speaker_string,
+        text_string, next));
     return (stored);
 }
 
@@ -26,8 +30,12 @@ FT_TEST(test_dialogue_table_register_line_success, "register_line stores a new l
     ft_dialogue_table table;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.initialize());
     ft_dialogue_line stored;
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, stored.initialize(1, ft_string("npc"),
-        ft_string("hello"), ft_vector<int>()));
+    ft_string npc;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, npc.initialize("npc"));
+    ft_string hello;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hello.initialize("hello"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stored.initialize(1, npc,
+        hello, ft_vector<int>()));
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.register_line(stored));
     ft_dialogue_line fetched;
@@ -45,8 +53,12 @@ FT_TEST(test_dialogue_table_register_script_success, "register_script stores met
     ft_dialogue_script script;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, script.initialize());
     script.set_script_id(5);
-    script.set_title(ft_string("quest"));
-    script.set_summary(ft_string("start"));
+    ft_string quest;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, quest.initialize("quest"));
+    ft_string start;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, start.initialize("start"));
+    script.set_title(quest);
+    script.set_summary(start);
     script.set_start_line_id(2);
     ft_vector<ft_sharedptr<ft_dialogue_line>> lines;
     lines.push_back(make_line(2, "npc", "reply"));
@@ -56,7 +68,7 @@ FT_TEST(test_dialogue_table_register_script_success, "register_script stores met
     ft_dialogue_script fetched;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.fetch_script(5, fetched));
     FT_ASSERT_EQ(5, fetched.get_script_id());
-    FT_ASSERT_EQ(ft_string("quest"), fetched.get_title());
+    FT_ASSERT_STR_EQ("quest", fetched.get_title().c_str());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, script.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched.get_error());

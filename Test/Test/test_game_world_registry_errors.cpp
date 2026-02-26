@@ -37,8 +37,12 @@ FT_TEST(test_world_registry_clears_entries_after_destroy,
     region_ids.push_back(12);
     ft_world_region world;
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(12, ft_string("Fjord"),
-        ft_string("Icy"), 6));
+    ft_string fjord_name;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, fjord_name.initialize("Fjord"));
+    ft_string icy_description;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, icy_description.initialize("Icy"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize(12, fjord_name,
+        icy_description, 6));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize(5, region_ids));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_error());

@@ -14,7 +14,9 @@ ft_string file_path_normalize(const char *path)
 
     if (path == ft_nullptr)
         return (empty_result);
-    ft_string original(path);
+    ft_string original;
+    if (original.initialize(path) != FT_ERR_SUCCESS)
+        return (empty_result);
     if (file_string_error() != FT_ERR_SUCCESS)
         return (original);
     char *data = original.print();

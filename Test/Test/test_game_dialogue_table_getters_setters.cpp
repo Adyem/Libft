@@ -4,6 +4,7 @@
 #include "../../Game/ft_dialogue_script.hpp"
 #include "../../Template/shared_ptr.hpp"
 #include "../../Template/vector.hpp"
+#include <cstring>
 #include "../../System_utils/test_runner.hpp"
 
 #ifndef LIBFT_TEST_BUILD
@@ -16,8 +17,12 @@ static ft_sharedptr<ft_dialogue_line> build_line(int id, const char *speaker,
     next.push_back(id + 1);
     ft_sharedptr<ft_dialogue_line> stored(new (std::nothrow) ft_dialogue_line());
     FT_ASSERT(stored.get() != ft_nullptr);
+    ft_string speaker_string;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, speaker_string.initialize(speaker));
+    ft_string text_string;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, text_string.initialize(text));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stored->initialize(id,
-        ft_string(speaker), ft_string(text), next));
+        speaker_string, text_string, next));
     return (stored);
 }
 
@@ -62,19 +67,23 @@ FT_TEST(test_dialogue_table_scripts_map_mutation_does_not_spoil_storage,
     ft_dialogue_script script;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, script.initialize());
     script.set_script_id(7);
-    script.set_title(ft_string("intro"));
+    ft_string intro;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, intro.initialize("intro"));
+    script.set_title(intro);
     ft_vector<ft_sharedptr<ft_dialogue_line>> lines;
     lines.push_back(build_line(7, "npc", "reply"));
     script.set_lines(lines);
     scripts.insert(7, script);
 
     ft_dialogue_script &stored = scripts.at(7);
-    stored.set_title(ft_string("modified"));
+    ft_string modified;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, modified.initialize("modified"));
+    stored.set_title(modified);
     ft_dialogue_script fetched;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.fetch_script(7, fetched));
-    FT_ASSERT_NEQ(ft_string("modified"), script.get_title());
-    FT_ASSERT_EQ(ft_string("modified"), stored.get_title());
-    FT_ASSERT_EQ(ft_string("intro"), fetched.get_title());
+    FT_ASSERT_NEQ(0, std::strcmp("modified", script.get_title().c_str()));
+    FT_ASSERT_STR_EQ("modified", stored.get_title().c_str());
+    FT_ASSERT_STR_EQ("intro", fetched.get_title().c_str());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, script.get_error());

@@ -22,6 +22,16 @@ int cp_receive_memory(int socket_fd, cross_process_read_result &result)
     cmp_cross_process_mutex_state mutex_state;
     ft_size_t data_offset;
     ft_size_t payload_length;
+    auto cleanup_and_fail = [&](int error_code) -> int {
+        (void)cmp_cross_process_unlock_mutex(message, &mapping, &mutex_state);
+        (void)cmp_cross_process_close_mapping(&mapping);
+        errno = error_code;
+        return (-1);
+    };
+    auto reset_string = [](ft_string &value) -> int {
+        (void)value.destroy();
+        return (value.initialize());
+    };
 
     mapping.mapping_address = ft_nullptr;
     mapping.mapping_length = 0;
@@ -30,7 +40,6 @@ int cp_receive_memory(int socket_fd, cross_process_read_result &result)
     mutex_state.platform_mutex = ft_nullptr;
     if (cmp_cross_process_receive_descriptor(socket_fd, message) != 0)
         return (-1);
-    result.shared_memory_name = message.shared_memory_name;
     if (cmp_cross_process_open_mapping(message, &mapping) != 0)
         return (-1);
     if (cmp_cross_process_lock_mutex(message, &mapping, &mutex_state) != 0)
@@ -38,6 +47,9 @@ int cp_receive_memory(int socket_fd, cross_process_read_result &result)
         cmp_cross_process_close_mapping(&mapping);
         return (-1);
     }
+    if (reset_string(result.shared_memory_name) != FT_ERR_SUCCESS)
+        return (cleanup_and_fail(ENOMEM));
+    result.shared_memory_name = message.shared_memory_name;
     data_offset = compute_offset(message.remote_memory_address, message.stack_base_address);
     if (data_offset >= message.remote_memory_size)
     {
@@ -56,7 +68,11 @@ int cp_receive_memory(int socket_fd, cross_process_read_result &result)
         return (-1);
     }
     payload_length = message.remote_memory_size - data_offset;
-    result.payload.assign(reinterpret_cast<char *>(mapping.mapping_address + data_offset), payload_length);
+    if (reset_string(result.payload) != FT_ERR_SUCCESS)
+        return (cleanup_and_fail(ENOMEM));
+    int assign_error = result.payload.assign(reinterpret_cast<char *>(mapping.mapping_address + data_offset), payload_length);
+    if (assign_error != FT_ERR_SUCCESS)
+        return (cleanup_and_fail(ENOMEM));
     if (message.error_memory_address != 0)
     {
         ft_size_t error_offset;

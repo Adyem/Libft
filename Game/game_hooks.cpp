@@ -491,7 +491,10 @@ void ft_game_hooks::invoke_on_item_crafted(ft_character &character,
     context.event = ft_nullptr;
     context.integer_payload = 0;
     context.small_payload = 0;
-    this->invoke_hook(ft_string(ft_game_hook_item_crafted_identifier), context);
+    ft_string hook_identifier;
+    if (hook_identifier.initialize(ft_game_hook_item_crafted_identifier) != FT_ERR_SUCCESS)
+        return ;
+    this->invoke_hook(hook_identifier, context);
     return ;
 }
 
@@ -506,7 +509,10 @@ void ft_game_hooks::invoke_on_character_damaged(ft_character &character,
     context.event = ft_nullptr;
     context.integer_payload = damage;
     context.small_payload = type;
-    this->invoke_hook(ft_string(ft_game_hook_character_damaged_identifier), context);
+    ft_string hook_identifier;
+    if (hook_identifier.initialize(ft_game_hook_character_damaged_identifier) != FT_ERR_SUCCESS)
+        return ;
+    this->invoke_hook(hook_identifier, context);
     return ;
 }
 
@@ -521,7 +527,10 @@ void ft_game_hooks::invoke_on_event_triggered(ft_world &world,
     context.event = &event;
     context.integer_payload = 0;
     context.small_payload = 0;
-    this->invoke_hook(ft_string(ft_game_hook_event_triggered_identifier), context);
+    ft_string hook_identifier;
+    if (hook_identifier.initialize(ft_game_hook_event_triggered_identifier) != FT_ERR_SUCCESS)
+        return ;
+    this->invoke_hook(hook_identifier, context);
     return ;
 }
 

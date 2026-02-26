@@ -74,7 +74,8 @@ int logger_build_standard_message(t_log_level level, const ft_string &message_te
     if (severity_length <= 0
         || severity_length >= static_cast<int>(sizeof(severity_buffer)))
         return (-1);
-    assembled = ft_string("time=");
+    if (assembled.initialize("time=") != FT_ERR_SUCCESS)
+        return (-1);
     if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         return (-1);
     assembled.append(timestamp);
@@ -138,7 +139,8 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
     va_end(args_copy);
     if (formatted_length < 0)
         return ;
-    message_text = ft_string(message_buffer);
+    if (message_text.initialize(message_buffer) != FT_ERR_SUCCESS)
+        return ;
     if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         return ;
     if (logger_lock_sinks() != 0)

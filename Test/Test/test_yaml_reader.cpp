@@ -12,7 +12,8 @@
 
 FT_TEST(test_yaml_reader_malformed_structure_sets_errno, "yaml_reader reports malformed map indentation")
 {
-    ft_string malformed = "root:\nvalue";
+    ft_string malformed;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, malformed.initialize("root:\nvalue"));
 
     yaml_value *result = yaml_read_from_string(malformed);
     FT_ASSERT(result == ft_nullptr);
@@ -21,7 +22,8 @@ FT_TEST(test_yaml_reader_malformed_structure_sets_errno, "yaml_reader reports ma
 
 FT_TEST(test_yaml_reader_list_with_premature_eof_sets_errno, "yaml_reader detects premature eof in list item")
 {
-    ft_string premature = "-\n";
+    ft_string premature;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, premature.initialize("-\n"));
 
     yaml_value *result = yaml_read_from_string(premature);
     FT_ASSERT(result == ft_nullptr);
@@ -30,7 +32,8 @@ FT_TEST(test_yaml_reader_list_with_premature_eof_sets_errno, "yaml_reader detect
 
 FT_TEST(test_yaml_reader_allocation_failure_sets_errno, "yaml_reader propagates allocation failures")
 {
-    ft_string simple = "root: value";
+    ft_string simple;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, simple.initialize("root: value"));
     yaml_value *result;
 
     cma_set_alloc_limit(64);
@@ -42,7 +45,8 @@ FT_TEST(test_yaml_reader_allocation_failure_sets_errno, "yaml_reader propagates 
 
 FT_TEST(test_yaml_reader_scalar_set_scalar_failure, "yaml_reader handles scalar assignment failures")
 {
-    ft_string content = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+    ft_string content;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, content.initialize("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"));
     yaml_value *result;
 
     cma_set_alloc_limit(32);
@@ -58,7 +62,8 @@ FT_TEST(test_yaml_reader_scalar_set_scalar_failure, "yaml_reader handles scalar 
 
 FT_TEST(test_yaml_reader_list_inline_map_entries, "yaml_reader parses inline maps inside lists")
 {
-    ft_string content = "- name: foo\n  value: 42\n- name: bar\n  value: 84\n";
+    ft_string content;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, content.initialize("- name: foo\n  value: 42\n- name: bar\n  value: 84\n"));
     yaml_value *root;
     root = yaml_read_from_string(content);
     FT_ASSERT(root != ft_nullptr);
@@ -77,10 +82,14 @@ FT_TEST(test_yaml_reader_list_inline_map_entries, "yaml_reader parses inline map
     const ft_map<ft_string, yaml_value*> &first_map = first->get_map();
     const ft_map<ft_string, yaml_value*> &second_map = second->get_map();
 
-    yaml_value *first_name = first_map.at("name");
-    yaml_value *first_value = first_map.at("value");
-    yaml_value *second_name = second_map.at("name");
-    yaml_value *second_value = second_map.at("value");
+    ft_string name_key;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, name_key.initialize("name"));
+    yaml_value *first_name = first_map.at(name_key);
+    ft_string value_key;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, value_key.initialize("value"));
+    yaml_value *first_value = first_map.at(value_key);
+    yaml_value *second_name = second_map.at(name_key);
+    yaml_value *second_value = second_map.at(value_key);
 
     FT_ASSERT(first_name != ft_nullptr);
     FT_ASSERT(first_value != ft_nullptr);
@@ -90,10 +99,16 @@ FT_TEST(test_yaml_reader_list_inline_map_entries, "yaml_reader parses inline map
     FT_ASSERT_EQ(YAML_SCALAR, first_value->get_type());
     FT_ASSERT_EQ(YAML_SCALAR, second_name->get_type());
     FT_ASSERT_EQ(YAML_SCALAR, second_value->get_type());
-    FT_ASSERT_EQ(ft_string("foo"), first_name->get_scalar());
-    FT_ASSERT_EQ(ft_string("42"), first_value->get_scalar());
-    FT_ASSERT_EQ(ft_string("bar"), second_name->get_scalar());
-    FT_ASSERT_EQ(ft_string("84"), second_value->get_scalar());
+    ft_string foo_string;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, foo_string.initialize("foo"));
+    FT_ASSERT_EQ(foo_string, first_name->get_scalar());
+    ft_string forty_two;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, forty_two.initialize("42"));
+    FT_ASSERT_EQ(forty_two, first_value->get_scalar());
+    FT_ASSERT_EQ(foo_string, second_name->get_scalar());
+    ft_string eighty_four;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, eighty_four.initialize("84"));
+    FT_ASSERT_EQ(eighty_four, second_value->get_scalar());
 
     yaml_free(root);
     return (1);

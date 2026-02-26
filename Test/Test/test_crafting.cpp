@@ -14,6 +14,7 @@ FT_TEST(test_crafting_thread_safety_toggle, "crafting thread safety toggle")
 {
     ft_crafting crafting_instance;
     ft_crafting_ingredient ingredient_instance;
+    cma_set_alloc_limit(0);
 
     FT_ASSERT_EQ(false, crafting_instance.is_thread_safe());
     FT_ASSERT_EQ(false, ingredient_instance.is_thread_safe());

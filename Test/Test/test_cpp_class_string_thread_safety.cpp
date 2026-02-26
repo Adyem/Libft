@@ -25,6 +25,7 @@ FT_TEST(test_ft_string_concurrent_appends_are_serialized,
         "ft_string serializes concurrent append operations")
 {
     ft_string            shared_string;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, shared_string.initialize());
     std::atomic<bool>    start_flag;
     std::atomic<bool>    worker_done;
     std::thread          worker;
@@ -89,10 +90,12 @@ FT_TEST(test_ft_string_concurrent_appends_are_serialized,
 FT_TEST(test_ft_string_append_of_error_string_propagates_code,
         "ft_string append propagates source error state")
 {
-    ft_string healthy_string("ok");
+    ft_string healthy_string;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, healthy_string.initialize("ok"));
     FT_ASSERT_EQ(ft_string::last_operation_error(), FT_ERR_SUCCESS);
+    ft_string failing_string;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, failing_string.initialize("hello world"));
     cma_set_alloc_limit(1);
-    ft_string failing_string("hello world");
     healthy_string.append(failing_string);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::last_operation_error());
     cma_set_alloc_limit(0);

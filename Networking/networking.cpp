@@ -95,12 +95,6 @@ int SocketConfig::destroy() noexcept
 
 SocketConfig::~SocketConfig()
 {
-    if (this->_initialized_state == SocketConfig::_state_uninitialized)
-    {
-        pf_printf_fd(2, "SocketConfig lifecycle error: %s\n",
-            "destructor called on uninitialized instance");
-        su_abort();
-    }
     if (this->_initialized_state == SocketConfig::_state_initialized)
         (void)this->destroy();
     return ;

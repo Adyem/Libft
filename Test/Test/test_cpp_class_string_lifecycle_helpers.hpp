@@ -39,6 +39,29 @@ inline int string_expect_sigabrt_signal_handler(void (*operation)(void))
     return (result);
 }
 
+inline int string_expect_sigabrt_signal_handler(int (*operation)(void))
+{
+    struct sigaction action;
+    struct sigaction backup;
+    int result;
+
+    std::memset(&action, 0, sizeof(action));
+    action.sa_handler = string_uninitialized_abort_handler;
+    sigemptyset(&action.sa_mask);
+    result = 0;
+    if (sigaction(SIGABRT, &action, &backup) != 0)
+        return (0);
+    if (sigsetjmp(g_string_uninitialized_abort_jump, 1) == 0)
+    {
+        (void)operation();
+        result = 0;
+    }
+    else
+        result = 1;
+    (void)sigaction(SIGABRT, &backup, ft_nullptr);
+    return (result);
+}
+
 inline int string_expect_sigabrt_uninitialized(void (*operation)(ft_string &))
 {
     struct sigaction action;

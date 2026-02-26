@@ -67,7 +67,9 @@ FT_TEST(test_kv_store_entry_set_value_validates_input,
     FT_ASSERT(copied_value == "initial");
     FT_ASSERT_EQ(FT_ERR_SUCCESS, FT_ERR_SUCCESS);
 
-    FT_ASSERT_EQ(0, entry.set_value(ft_string("updated")));
+    ft_string updated_value;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, updated_value.initialize("updated"));
+    FT_ASSERT_EQ(0, entry.set_value(updated_value));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, FT_ERR_SUCCESS);
 
     FT_ASSERT_EQ(0, entry.get_value_pointer(&value_pointer));

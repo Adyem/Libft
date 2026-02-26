@@ -44,14 +44,16 @@ class ft_socket
         struct sockaddr_storage _address;
         ft_vector<int>           _connected;
         int                         _socket_fd;
-        mutable pt_recursive_mutex _mutex;
+        mutable pt_recursive_mutex *_mutex;
+
+        int lock_mutex() const noexcept;
+        void unlock_mutex() const noexcept;
 
         ft_socket(int fd, const sockaddr_storage &addr);
         ft_socket(const ft_socket &other) = delete;
         ft_socket &operator=(const ft_socket &other) = delete;
 
     public:
-        ft_socket(const SocketConfig &config);
         ft_socket();
         ~ft_socket();
 
@@ -74,6 +76,9 @@ class ft_socket
         int            get_fd() const;
         const struct sockaddr_storage &get_address() const;
         int            join_multicast_group(const SocketConfig &config);
+        int            enable_thread_safety() noexcept;
+        int            disable_thread_safety() noexcept;
+        bool        is_thread_safe() const noexcept;
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif

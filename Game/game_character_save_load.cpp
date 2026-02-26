@@ -167,7 +167,12 @@ json_group *serialize_character(const ft_character &character)
             json_free_groups(group);
             return (ft_nullptr);
         }
-        ft_string prefix = "skill_";
+        ft_string prefix;
+        if (prefix.initialize("skill_") != FT_ERR_SUCCESS)
+        {
+            json_free_groups(group);
+            return (ft_nullptr);
+        }
         prefix += skill_index_buffer;
         ft_string key = prefix;
         key += "_id";
@@ -305,7 +310,9 @@ int deserialize_character(ft_character &character, json_group *group)
             if (pf_snprintf(skill_index_buffer, sizeof(skill_index_buffer), "%d",
                     skill_index) < 0)
                 return (FT_ERR_NO_MEMORY);
-            ft_string prefix = "skill_";
+            ft_string prefix;
+            if (prefix.initialize("skill_") != FT_ERR_SUCCESS)
+                return (FT_ERR_NO_MEMORY);
             prefix += skill_index_buffer;
             ft_string key = prefix;
             key += "_id";

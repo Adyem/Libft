@@ -50,7 +50,6 @@ class ft_string
         int32_t     move_buffer(ft_string &other) noexcept;
     public:
         ft_string() noexcept;
-        ft_string(const char *initial_string) noexcept;
         ft_string(const ft_string &other) noexcept;
         ft_string(ft_string &&other) noexcept;
         explicit ft_string(int32_t error_code) noexcept;

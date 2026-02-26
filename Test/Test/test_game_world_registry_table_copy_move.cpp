@@ -28,9 +28,13 @@ FT_TEST(test_world_registry_tracks_regions_and_worlds, "registry stores multiple
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region1.get_error());
     region1.set_region_id(1);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region1.get_error());
-    region1.set_name(ft_string("Camp"));
+    ft_string camp_name;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, camp_name.initialize("Camp"));
+    region1.set_name(camp_name);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region1.get_error());
-    region1.set_description(ft_string("Camp grounds"));
+    ft_string camp_description;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, camp_description.initialize("Camp grounds"));
+    region1.set_description(camp_description);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region1.get_error());
     region1.set_recommended_level(1);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region1.get_error());
@@ -38,9 +42,13 @@ FT_TEST(test_world_registry_tracks_regions_and_worlds, "registry stores multiple
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region2.get_error());
     region2.set_region_id(2);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region2.get_error());
-    region2.set_name(ft_string("Ruins"));
+    ft_string ruins_name;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ruins_name.initialize("Ruins"));
+    region2.set_name(ruins_name);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region2.get_error());
-    region2.set_description(ft_string("Old ruins"));
+    ft_string ruins_description;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ruins_description.initialize("Old ruins"));
+    region2.set_description(ruins_description);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region2.get_error());
     region2.set_recommended_level(4);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region2.get_error());
@@ -61,7 +69,7 @@ FT_TEST(test_world_registry_tracks_regions_and_worlds, "registry stores multiple
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.fetch_region(1, fetched_region));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
-    FT_ASSERT_EQ(ft_string("Camp"), fetched_region.get_name());
+    FT_ASSERT_STR_EQ("Camp", fetched_region.get_name().c_str());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_region.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.fetch_world(10, fetched_world));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());

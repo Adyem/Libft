@@ -212,7 +212,9 @@ int ft_dom_schema::validate_rule(const ft_dom_schema_rule &rule, const ft_dom_no
     {
         if (rule.required)
         {
-            ft_string message("Required node missing");
+            ft_string message;
+            if (message.initialize("Required node missing") != FT_ERR_SUCCESS)
+                return (ft_string::last_operation_error());
 
             if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
                 return (ft_string::last_operation_error());
@@ -225,7 +227,9 @@ int ft_dom_schema::validate_rule(const ft_dom_schema_rule &rule, const ft_dom_no
     {
         if (rule.required)
         {
-            ft_string message("Required node missing");
+            ft_string message;
+            if (message.initialize("Required node missing") != FT_ERR_SUCCESS)
+                return (ft_string::last_operation_error());
 
             if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
                 return (ft_string::last_operation_error());
@@ -239,7 +243,9 @@ int ft_dom_schema::validate_rule(const ft_dom_schema_rule &rule, const ft_dom_no
     node_type = target_node->get_type();
     if (node_type != rule.type)
     {
-        ft_string message("Node type mismatch");
+        ft_string message;
+        if (message.initialize("Node type mismatch") != FT_ERR_SUCCESS)
+            return (ft_string::last_operation_error());
 
         if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
             return (ft_string::last_operation_error());
@@ -264,11 +270,12 @@ int ft_dom_schema::validate(const ft_dom_document &document, ft_dom_validation_r
     if (!root)
     {
         report.mark_invalid();
-        ft_string path("<root>");
-        ft_string message("Document has no root node");
-
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESS || ft_string::last_operation_error() != FT_ERR_SUCCESS)
-            return (FT_ERR_NO_MEMORY);
+        ft_string path;
+        if (path.initialize("<root>") != FT_ERR_SUCCESS)
+            return (ft_string::last_operation_error());
+        ft_string message;
+        if (message.initialize("Document has no root node") != FT_ERR_SUCCESS)
+            return (ft_string::last_operation_error());
         report.add_error(path, message);
         return (FT_ERR_SUCCESS);
     }
@@ -287,7 +294,13 @@ int ft_dom_schema::validate(const ft_dom_document &document, ft_dom_validation_r
             (void)this->unlock_internal(lock_acquired);
             return (ft_vector<ft_dom_schema_rule>::last_operation_error());
         }
-        rule_error = this->validate_rule(rule, root, ft_string(""), report);
+        ft_string rule_path;
+        if (rule_path.initialize("") != FT_ERR_SUCCESS)
+        {
+            (void)this->unlock_internal(lock_acquired);
+            return (ft_string::last_operation_error());
+        }
+        rule_error = this->validate_rule(rule, root, rule_path, report);
         if (rule_error != FT_ERR_SUCCESS && rule_error != FT_ERR_NOT_FOUND)
         {
             (void)this->unlock_internal(lock_acquired);

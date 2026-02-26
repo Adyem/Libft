@@ -12,7 +12,8 @@
 
 FT_TEST(test_ft_compress_string_to_vector_round_trip, "ft_compress_string_to_vector round trips string payloads")
 {
-    ft_string                  input("In-memory compression helper");
+    ft_string                  input;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, input.initialize("In-memory compression helper"));
     ft_vector<unsigned char>   compressed;
     ft_string                  output;
     int                        result;
@@ -91,7 +92,8 @@ FT_TEST(test_ft_compress_vector_to_vector_round_trip, "ft_compress_vector_to_vec
 
 FT_TEST(test_ft_decompress_vector_to_string_reports_allocator_failure, "ft_decompress_vector_to_string reports allocation failures")
 {
-    ft_string                  input("allocator failure exercise");
+    ft_string                  input;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, input.initialize("allocator failure exercise"));
     ft_vector<unsigned char>   compressed;
     ft_string                  output;
     int                        result;

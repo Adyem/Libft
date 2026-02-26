@@ -189,7 +189,18 @@ int kv_store::initialize(const char *file_path, const char *encryption_key, bool
         }
         if (ttl_prefix_length > 0 && std::strncmp(item_pointer->key, g_kv_store_ttl_prefix, ttl_prefix_length) == 0)
         {
-            ft_string ttl_key(item_pointer->key + ttl_prefix_length);
+            ft_string ttl_key;
+            ft_string ttl_suffix;
+            if (ttl_suffix.initialize(item_pointer->key + ttl_prefix_length) != FT_ERR_SUCCESS)
+            {
+                json_free_groups(group_head);
+                this->_initialized_state = kv_store::_state_destroyed;
+                (void)this->_replication_mutex.destroy();
+                (void)this->_background_mutex.destroy();
+                (void)this->_mutex.destroy();
+                return (FT_ERR_INVALID_OPERATION);
+            }
+            ttl_key = ttl_suffix;
             long long expiration_timestamp;
             if (this->parse_expiration_timestamp(item_pointer->value, expiration_timestamp) != 0)
             {
@@ -204,7 +215,16 @@ int kv_store::initialize(const char *file_path, const char *encryption_key, bool
             item_pointer = item_pointer->next;
             continue;
         }
-        ft_string key_storage(item_pointer->key);
+        ft_string key_storage;
+        if (key_storage.initialize(item_pointer->key) != FT_ERR_SUCCESS)
+        {
+            json_free_groups(group_head);
+            this->_initialized_state = kv_store::_state_destroyed;
+            (void)this->_replication_mutex.destroy();
+            (void)this->_background_mutex.destroy();
+            (void)this->_mutex.destroy();
+            return (FT_ERR_INVALID_OPERATION);
+        }
         kv_store_entry entry;
         if (entry.initialize() != FT_ERR_SUCCESS)
         {
@@ -226,7 +246,16 @@ int kv_store::initialize(const char *file_path, const char *encryption_key, bool
         }
         if (this->_encryption_enabled)
         {
-            ft_string encoded_value(item_pointer->value);
+            ft_string encoded_value;
+            if (encoded_value.initialize(item_pointer->value) != FT_ERR_SUCCESS)
+            {
+                json_free_groups(group_head);
+                this->_initialized_state = kv_store::_state_destroyed;
+                (void)this->_replication_mutex.destroy();
+                (void)this->_background_mutex.destroy();
+                (void)this->_mutex.destroy();
+                return (FT_ERR_INVALID_OPERATION);
+            }
             ft_string decrypted_value;
             if (this->decrypt_value(encoded_value, decrypted_value) != 0)
             {
@@ -249,7 +278,16 @@ int kv_store::initialize(const char *file_path, const char *encryption_key, bool
         }
         else
         {
-            ft_string plain_value(item_pointer->value);
+            ft_string plain_value;
+            if (plain_value.initialize(item_pointer->value) != FT_ERR_SUCCESS)
+            {
+                json_free_groups(group_head);
+                this->_initialized_state = kv_store::_state_destroyed;
+                (void)this->_replication_mutex.destroy();
+                (void)this->_background_mutex.destroy();
+                (void)this->_mutex.destroy();
+                return (FT_ERR_INVALID_OPERATION);
+            }
             if (entry.set_value(plain_value) != 0)
             {
                 json_free_groups(group_head);

@@ -10,7 +10,8 @@
 
 FT_TEST(test_time_format_iso8601_with_offset_zero, "time_format_iso8601_with_offset formats UTC time with zero offset")
 {
-    ft_string expected_string("1970-01-01T00:00:00+00:00");
+    ft_string expected_string;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, expected_string.initialize("1970-01-01T00:00:00+00:00"));
     ft_string result_string;
 
     result_string = time_format_iso8601_with_offset(0, 0);
@@ -20,7 +21,8 @@ FT_TEST(test_time_format_iso8601_with_offset_zero, "time_format_iso8601_with_off
 
 FT_TEST(test_time_format_iso8601_with_offset_positive, "time_format_iso8601_with_offset formats positive offset")
 {
-    ft_string expected_string("1970-01-01T05:30:00+05:30");
+    ft_string expected_string;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, expected_string.initialize("1970-01-01T05:30:00+05:30"));
     ft_string result_string;
 
     result_string = time_format_iso8601_with_offset(0, 330);
@@ -30,7 +32,8 @@ FT_TEST(test_time_format_iso8601_with_offset_positive, "time_format_iso8601_with
 
 FT_TEST(test_time_format_iso8601_with_offset_negative, "time_format_iso8601_with_offset formats negative offset")
 {
-    ft_string expected_string("1969-12-31T16:00:00-08:00");
+    ft_string expected_string;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, expected_string.initialize("1969-12-31T16:00:00-08:00"));
     ft_string result_string;
 
     result_string = time_format_iso8601_with_offset(0, -480);

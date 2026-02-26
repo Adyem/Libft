@@ -13,8 +13,12 @@ static ft_sharedptr<ft_dialogue_line> create_line(int id,
 {
     ft_sharedptr<ft_dialogue_line> stored(new (std::nothrow) ft_dialogue_line());
     FT_ASSERT(stored.get() != ft_nullptr);
+    ft_string speaker_string;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, speaker_string.initialize(speaker));
+    ft_string text_string;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, text_string.initialize(text));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stored->initialize(id,
-        ft_string(speaker), ft_string(text), next_ids));
+        speaker_string, text_string, next_ids));
     return (stored);
 }
 
@@ -28,13 +32,17 @@ FT_TEST(test_dialogue_table_register_fetch_lines, "register_line stores lines re
     next_ids.push_back(2);
     next_ids.push_back(3);
     ft_dialogue_line original;
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.initialize(1, ft_string("npc"),
-        ft_string("hello"), next_ids));
+    ft_string npc;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, npc.initialize("npc"));
+    ft_string hello;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, hello.initialize("hello"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.initialize(1, npc,
+        hello, next_ids));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.register_line(original));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.fetch_line(1, fetched));
     FT_ASSERT_EQ(1, fetched.get_line_id());
-    FT_ASSERT_EQ(ft_string("npc"), fetched.get_speaker());
-    FT_ASSERT_EQ(ft_string("hello"), fetched.get_text());
+    FT_ASSERT_STR_EQ("npc", fetched.get_speaker().c_str());
+    FT_ASSERT_STR_EQ("hello", fetched.get_text().c_str());
     FT_ASSERT_EQ(2, fetched.get_next_line_ids()[0]);
     FT_ASSERT_EQ(3, fetched.get_next_line_ids()[1]);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());
@@ -55,8 +63,12 @@ FT_TEST(test_dialogue_table_scripts_copy_lines, "scripts store metadata and inde
     ft_dialogue_script script;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, script.initialize());
     script.set_script_id(5);
-    script.set_title(ft_string("intro"));
-    script.set_summary(ft_string("start"));
+    ft_string intro;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, intro.initialize("intro"));
+    ft_string start;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, start.initialize("start"));
+    script.set_title(intro);
+    script.set_summary(start);
     script.set_start_line_id(4);
     script.set_lines(lines);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.register_script(script));
@@ -66,7 +78,7 @@ FT_TEST(test_dialogue_table_scripts_copy_lines, "scripts store metadata and inde
     const ft_vector<ft_sharedptr<ft_dialogue_line>> &fetched_lines = fetched.get_lines();
     FT_ASSERT_EQ(1u, fetched_lines.size());
     FT_ASSERT_EQ(4, fetched_lines[0]->get_line_id());
-    FT_ASSERT_EQ(ft_string("reply"), fetched_lines[0]->get_text());
+    FT_ASSERT_STR_EQ("reply", fetched_lines[0]->get_text().c_str());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, script.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, table.get_error());

@@ -55,7 +55,8 @@ FT_TEST(test_dom_find_path_locates_nested_nodes, "ft_dom_find_path locates neste
     ft_dom_document document;
     ft_dom_node *root_node;
     const ft_dom_node *found_node;
-    ft_string child_path("child");
+    ft_string child_path;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, child_path.initialize("child"));
 
     initialize_simple_dom_document(document);
     root_node = document.get_root();
@@ -72,7 +73,8 @@ FT_TEST(test_dom_find_path_reports_missing_segments, "ft_dom_find_path reports m
     ft_dom_document document;
     ft_dom_node *root_node;
     const ft_dom_node *found_node;
-    ft_string missing_path("missing");
+    ft_string missing_path;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, missing_path.initialize("missing"));
 
     initialize_simple_dom_document(document);
     root_node = document.get_root();
@@ -90,8 +92,12 @@ FT_TEST(test_dom_schema_reports_missing_required_nodes, "ft_dom_schema marks rep
     ft_dom_validation_report report;
 
     initialize_simple_dom_document(document);
-    FT_ASSERT_EQ(0, schema.add_rule("child", FT_DOM_NODE_ELEMENT, true));
-    FT_ASSERT_EQ(0, schema.add_rule("missing", FT_DOM_NODE_ELEMENT, true));
+    ft_string child_rule;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, child_rule.initialize("child"));
+    ft_string missing_rule;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, missing_rule.initialize("missing"));
+    FT_ASSERT_EQ(0, schema.add_rule(child_rule, FT_DOM_NODE_ELEMENT, true));
+    FT_ASSERT_EQ(0, schema.add_rule(missing_rule, FT_DOM_NODE_ELEMENT, true));
     FT_ASSERT_EQ(0, schema.validate(document, report));
     FT_ASSERT_EQ(false, report.valid());
     const ft_vector<ft_dom_validation_error> &errors = report.errors();
@@ -119,7 +125,9 @@ FT_TEST(test_dom_schema_reports_type_mismatches, "ft_dom_schema reports node typ
     child_node = (*children_pointer)[0];
     FT_ASSERT(child_node != ft_nullptr);
     child_node->set_type(FT_DOM_NODE_VALUE);
-    FT_ASSERT_EQ(0, schema.add_rule("child", FT_DOM_NODE_OBJECT, true));
+    ft_string child_object_rule;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, child_object_rule.initialize("child"));
+    FT_ASSERT_EQ(0, schema.add_rule(child_object_rule, FT_DOM_NODE_OBJECT, true));
     FT_ASSERT_EQ(0, schema.validate(document, report));
     FT_ASSERT_EQ(false, report.valid());
     const ft_vector<ft_dom_validation_error> &errors = report.errors();
@@ -180,7 +188,8 @@ FT_TEST(test_json_dom_bridge_round_trip, "json dom bridge round trips document d
         FT_ASSERT(item_node != ft_nullptr);
         if (std::string(item_node->get_name().c_str()) == "count")
         {
-            ft_string attribute_key("json:type");
+            ft_string attribute_key;
+            FT_ASSERT_EQ(FT_ERR_SUCCESS, attribute_key.initialize("json:type"));
             ft_string attribute_value = item_node->get_attribute(attribute_key);
             FT_ASSERT(std::string(attribute_value.c_str()) == "big_number");
             FT_ASSERT(std::string(attribute_value.c_str()) == "big_number");
@@ -240,7 +249,8 @@ FT_TEST(test_xml_dom_bridge_round_trip, "xml dom bridge round trips document dat
     ft_dom_node *dom_root = dom_document.get_root();
     FT_ASSERT(dom_root != ft_nullptr);
     FT_ASSERT(std::string(dom_root->get_name().c_str()) == "root");
-    ft_string attribute_key("attr");
+    ft_string attribute_key;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, attribute_key.initialize("attr"));
     ft_string attribute_value = dom_root->get_attribute(attribute_key);
     FT_ASSERT(std::string(attribute_value.c_str()) == "value");
     const ft_vector<ft_dom_node*> &child_nodes = dom_root->get_children();
@@ -279,7 +289,8 @@ FT_TEST(test_yaml_dom_bridge_round_trip, "yaml dom bridge round trips maps and a
     yaml_value *round_trip_items;
     yaml_value *round_trip_first_value;
     yaml_value *round_trip_second_value;
-    ft_string items_key("items");
+    ft_string items_key;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, items_key.initialize("items"));
 
     root_guard.reset(new (std::nothrow) yaml_value());
     if (!root_guard.get())
@@ -300,7 +311,9 @@ FT_TEST(test_yaml_dom_bridge_round_trip, "yaml dom bridge round trips maps and a
         return (0);
     if (first_value_guard->initialize() != FT_ERR_SUCCESS)
         return (0);
-    first_value_guard->set_scalar("one");
+    ft_string scalar_one;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scalar_one.initialize("one"));
+    first_value_guard->set_scalar(scalar_one);
     items_pointer->add_list_item(first_value_guard.get());
     first_value_guard.release();
     second_value_guard.reset(new (std::nothrow) yaml_value());
@@ -308,10 +321,12 @@ FT_TEST(test_yaml_dom_bridge_round_trip, "yaml dom bridge round trips maps and a
         return (0);
     if (second_value_guard->initialize() != FT_ERR_SUCCESS)
         return (0);
-    second_value_guard->set_scalar("two");
+    ft_string scalar_two;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scalar_two.initialize("two"));
+    second_value_guard->set_scalar(scalar_two);
     items_pointer->add_list_item(second_value_guard.get());
     second_value_guard.release();
-    root_pointer->add_map_item("items", items_pointer);
+    root_pointer->add_map_item(items_key, items_pointer);
     items_guard.release();
     FT_ASSERT_EQ(0, yaml_value_to_dom(root_pointer, dom_document));
     dom_root = dom_document.get_root();

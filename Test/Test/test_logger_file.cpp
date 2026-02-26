@@ -49,7 +49,9 @@ FT_TEST(test_logger_file_sink_prepare_thread_safety_initializes_mutex,
     temp_fd = mkstemp(template_path);
     FT_ASSERT(temp_fd >= 0);
     sink.fd = temp_fd;
-    sink.path = ft_string(template_path);
+    ft_string sink_path;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, sink_path.initialize(template_path));
+    sink.path = sink_path;
     sink.max_size = 0;
     sink.retention_count = 1;
     sink.max_age_seconds = 0;
@@ -174,7 +176,9 @@ FT_TEST(test_logger_rotate_fstat_failure_sets_errno, "ft_log_rotate reports fsta
     s_file_sink sink;
 
     sink.fd = -1;
-    sink.path = ft_string("/tmp/libft_logger_invalid_fd");
+    ft_string invalid_path;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, invalid_path.initialize("/tmp/libft_logger_invalid_fd"));
+    sink.path = invalid_path;
     sink.max_size = 1;
     errno = 0;
     ft_log_rotate(&sink);
@@ -194,7 +198,9 @@ FT_TEST(test_logger_rotate_success_clears_errno, "ft_log_rotate clears errno aft
     write_result = write(temp_fd, "rotation-test", 13);
     FT_ASSERT_EQ(13, write_result);
     sink.fd = temp_fd;
-    sink.path = ft_string(template_path);
+    ft_string sink_path;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, sink_path.initialize(template_path));
+    sink.path = sink_path;
     sink.max_size = 4;
     errno = 0;
     ft_log_rotate(&sink);
@@ -228,7 +234,7 @@ FT_TEST(test_logger_rotate_rename_failure_reopens_file, "ft_log_rotate reopens o
     write_result = write(file_descriptor, "trigger", 7);
     FT_ASSERT_EQ(7, write_result);
     sink.fd = file_descriptor;
-    sink.path = ft_string(file_path);
+    sink.path = file_path;
     sink.max_size = 4;
     errno = 0;
     ft_log_rotate(&sink);
@@ -274,7 +280,7 @@ FT_TEST(test_logger_rotation_by_age, "age-based rotation creates an archive")
     FT_ASSERT_EQ(0, utime(template_path, &timestamps));
     ft_log_info("age-rotation-test");
     ft_log_close();
-    rotated_path = ft_string(template_path);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rotated_path.initialize(template_path));
     rotated_path += ".1";
     log_fd = open(rotated_path.c_str(), O_RDONLY);
     FT_ASSERT(log_fd >= 0);
@@ -342,11 +348,11 @@ FT_TEST(test_logger_rotation_retention_limit,
     ft_log_info("retention-second");
     ft_log_info("retention-third");
     ft_log_close();
-    rotated_one_path = ft_string(template_path);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rotated_one_path.initialize(template_path));
     rotated_one_path += ".1";
-    rotated_two_path = ft_string(template_path);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rotated_two_path.initialize(template_path));
     rotated_two_path += ".2";
-    rotated_three_path = ft_string(template_path);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, rotated_three_path.initialize(template_path));
     rotated_three_path += ".3";
     fd = open(rotated_one_path.c_str(), O_RDONLY);
     FT_ASSERT(fd >= 0);

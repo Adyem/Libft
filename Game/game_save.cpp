@@ -149,7 +149,12 @@ json_group *serialize_inventory(const ft_inventory &inventory)
 
             std::snprintf(item_index_string, sizeof(item_index_string), "%d",
                 static_cast<int>(item_index));
-            ft_string item_prefix = "item_";
+            ft_string item_prefix;
+            if (item_prefix.initialize("item_") != FT_ERR_SUCCESS)
+            {
+                has_error = true;
+                break;
+            }
             item_prefix += item_index_string;
             if (!item_start[item_index].value)
             {
@@ -195,7 +200,13 @@ json_group *serialize_equipment(const ft_character &character)
         return (ft_nullptr);
     }
     json_add_item_to_group(group, present);
-    if (head && serialize_item_fields(group, *head, "head") != FT_ERR_SUCCESS)
+    ft_string head_prefix;
+    if (head_prefix.initialize("head") != FT_ERR_SUCCESS)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    if (head && serialize_item_fields(group, *head, head_prefix) != FT_ERR_SUCCESS)
     {
         json_free_groups(group);
         return (ft_nullptr);
@@ -214,7 +225,13 @@ json_group *serialize_equipment(const ft_character &character)
         return (ft_nullptr);
     }
     json_add_item_to_group(group, present);
-    if (chest && serialize_item_fields(group, *chest, "chest") != FT_ERR_SUCCESS)
+    ft_string chest_prefix;
+    if (chest_prefix.initialize("chest") != FT_ERR_SUCCESS)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    if (chest && serialize_item_fields(group, *chest, chest_prefix) != FT_ERR_SUCCESS)
     {
         json_free_groups(group);
         return (ft_nullptr);
@@ -233,7 +250,13 @@ json_group *serialize_equipment(const ft_character &character)
         return (ft_nullptr);
     }
     json_add_item_to_group(group, present);
-    if (weapon && serialize_item_fields(group, *weapon, "weapon") != FT_ERR_SUCCESS)
+    ft_string weapon_prefix;
+    if (weapon_prefix.initialize("weapon") != FT_ERR_SUCCESS)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    if (weapon && serialize_item_fields(group, *weapon, weapon_prefix) != FT_ERR_SUCCESS)
     {
         json_free_groups(group);
         return (ft_nullptr);
@@ -315,7 +338,12 @@ json_group *serialize_quest(const ft_quest &quest)
 
             std::snprintf(item_index_string, sizeof(item_index_string), "%d",
                 static_cast<int>(item_index));
-            ft_string item_prefix = "reward_item_";
+            ft_string item_prefix;
+            if (item_prefix.initialize("reward_item_") != FT_ERR_SUCCESS)
+            {
+                has_error = true;
+                break;
+            }
             item_prefix += item_index_string;
             if (!item_start[item_index])
             {

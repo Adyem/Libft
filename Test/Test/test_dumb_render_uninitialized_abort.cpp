@@ -2,22 +2,39 @@
 #include "../../DUMB/dumb_render.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <csignal>
+#include <csetjmp>
 #include <cstring>
-#include <sys/wait.h>
-#include <unistd.h>
 
 #ifndef LIBFT_TEST_BUILD
 #endif
 
 typedef ft_render_window render_window_type;
 
+static sigjmp_buf g_render_jump_buffer;
+static volatile sig_atomic_t g_render_signal;
+
+static void render_sigabrt_handler(int signal_number)
+{
+    g_render_signal = signal_number;
+    siglongjmp(g_render_jump_buffer, 1);
+}
+
 static int render_expect_sigabrt_uninitialized(void (*operation)(render_window_type &))
 {
-    pid_t child_process_id;
-    int child_status;
+    struct sigaction new_action;
+    struct sigaction old_action;
+    int result;
 
-    child_process_id = fork();
-    if (child_process_id == 0)
+    std::memset(&new_action, 0, sizeof(new_action));
+    std::memset(&old_action, 0, sizeof(old_action));
+    new_action.sa_handler = render_sigabrt_handler;
+    sigemptyset(&new_action.sa_mask);
+    new_action.sa_flags = 0;
+    if (sigaction(SIGABRT, &new_action, &old_action) != 0)
+        return (0);
+
+    g_render_signal = 0;
+    if (sigsetjmp(g_render_jump_buffer, 1) == 0)
     {
         alignas(render_window_type) unsigned char storage[sizeof(render_window_type)];
         render_window_type *render_window_pointer;
@@ -25,16 +42,15 @@ static int render_expect_sigabrt_uninitialized(void (*operation)(render_window_t
         std::memset(storage, 0, sizeof(storage));
         render_window_pointer = reinterpret_cast<render_window_type *>(storage);
         operation(*render_window_pointer);
-        _exit(0);
+        result = 0;
     }
-    if (child_process_id < 0)
-        return (0);
-    child_status = 0;
-    if (waitpid(child_process_id, &child_status, 0) < 0)
-        return (0);
-    if (WIFSIGNALED(child_status) == 0)
-        return (0);
-    return (WTERMSIG(child_status) == SIGABRT);
+    else
+    {
+        result = (g_render_signal == SIGABRT);
+    }
+
+    (void)sigaction(SIGABRT, &old_action, ft_nullptr);
+    return (result);
 }
 
 static void render_call_destructor(render_window_type &render_window_instance)

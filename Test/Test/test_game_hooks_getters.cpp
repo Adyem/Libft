@@ -44,11 +44,15 @@ FT_TEST(test_game_hooks_getters_clone_callbacks, "Game: hooks getters provide ca
     hooks.invoke_on_item_crafted(character, item);
     FT_ASSERT_EQ(2, crafted_invocations);
     ft_vector<ft_game_hook_metadata> catalog_after = hooks.get_catalog_metadata();
-    ft_vector<ft_game_hook_metadata> scoped_catalog_after = hooks.get_catalog_metadata_for(ft_string(ft_game_hook_item_crafted_identifier));
+    ft_string identifier_string;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, identifier_string.initialize(ft_game_hook_item_crafted_identifier));
+    ft_vector<ft_game_hook_metadata> scoped_catalog_after = hooks.get_catalog_metadata_for(identifier_string);
     FT_ASSERT_EQ(2, catalog_after.size());
     FT_ASSERT_EQ(2, scoped_catalog_after.size());
-    hooks.unregister_listener(ft_string(ft_game_hook_item_crafted_identifier), ft_string("getter.custom"));
-    ft_vector<ft_game_hook_metadata> scoped_after = hooks.get_catalog_metadata_for(ft_string(ft_game_hook_item_crafted_identifier));
+    ft_string listener_name;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, listener_name.initialize("getter.custom"));
+    hooks.unregister_listener(identifier_string, listener_name);
+    ft_vector<ft_game_hook_metadata> scoped_after = hooks.get_catalog_metadata_for(identifier_string);
     FT_ASSERT_EQ(1, scoped_after.size());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, hooks.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, item.get_error());

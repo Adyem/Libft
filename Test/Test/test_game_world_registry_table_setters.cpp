@@ -24,9 +24,13 @@ FT_TEST(test_world_registry_setters, "world registry setter copies replace maps"
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     region.set_region_id(2);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
-    region.set_name(ft_string("cave"));
+    ft_string cave_name;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, cave_name.initialize("cave"));
+    region.set_name(cave_name);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
-    region.set_description(ft_string("dark"));
+    ft_string dark_description;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, dark_description.initialize("dark"));
+    region.set_description(dark_description);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     region.set_recommended_level(8);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
@@ -49,7 +53,7 @@ FT_TEST(test_world_registry_setters, "world registry setter copies replace maps"
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.fetch_region(2, fetched_region));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());
-    FT_ASSERT_EQ(ft_string("cave"), fetched_region.get_name());
+    FT_ASSERT_STR_EQ("cave", fetched_region.get_name().c_str());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, fetched_region.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.fetch_world(5, fetched_world));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, registry.get_error());

@@ -37,7 +37,9 @@ FT_TEST(test_ft_istringstream_destroy_then_initialize_reuses_stream,
     "ft_istringstream can be reinitialized after destroy")
 {
     ft_string source_value;
-    ft_istringstream stream_value(ft_string("7"));
+    ft_string initial_value;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, initial_value.initialize("7"));
+    ft_istringstream stream_value(initial_value);
     char buffer[2];
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.destroy());

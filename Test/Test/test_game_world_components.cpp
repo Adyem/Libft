@@ -175,13 +175,17 @@ FT_TEST(test_game_world_copy_preserves_quest_text_fields, "Game world copy retai
 {
     ft_world world;
 
-    world.get_quest()->set_description(ft_string("Enter the catacombs"));
-    world.get_quest()->set_objective(ft_string("Light the braziers"));
+    ft_string description;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, description.initialize("Enter the catacombs"));
+    ft_string objective;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, objective.initialize("Light the braziers"));
+    world.get_quest()->set_description(description);
+    world.get_quest()->set_objective(objective);
     world.get_quest()->set_reward_experience(250);
 
     ft_world &copy = world;
-    FT_ASSERT_EQ(ft_string("Enter the catacombs"), copy.get_quest()->get_description());
-    FT_ASSERT_EQ(ft_string("Light the braziers"), copy.get_quest()->get_objective());
+    FT_ASSERT_STR_EQ("Enter the catacombs", copy.get_quest()->get_description().c_str());
+    FT_ASSERT_STR_EQ("Light the braziers", copy.get_quest()->get_objective().c_str());
     FT_ASSERT_EQ(250, copy.get_quest()->get_reward_experience());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, copy.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_error());
@@ -268,15 +272,19 @@ FT_TEST(test_game_world_copy_preserves_registered_regions, "Game world copy main
 
     region_ids.push_back(21);
     ft_world_region world_entry;
+    ft_string shrine;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, shrine.initialize("Shrine"));
+    ft_string ancient;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ancient.initialize("Ancient"));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region_definition.initialize(21,
-        ft_string("Shrine"), ft_string("Ancient"), 10));
+        shrine, ancient, 10));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world_entry.initialize(4, region_ids));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_world_registry()->register_region(region_definition));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_world_registry()->register_world(world_entry));
 
     ft_world &copied = world;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, copied.get_world_registry()->fetch_region(21, fetched_region));
-    FT_ASSERT_EQ(ft_string("Shrine"), fetched_region.get_name());
+    FT_ASSERT_STR_EQ("Shrine", fetched_region.get_name().c_str());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, copied.get_world_registry()->fetch_world(4, fetched_world));
     FT_ASSERT_EQ((size_t)1, fetched_world.get_region_ids().size());
     FT_ASSERT_EQ(21, fetched_world.get_region_ids()[0]);

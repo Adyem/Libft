@@ -89,7 +89,8 @@ ft_string    time_format_iso8601(t_time time_value)
     {
         return (time_format_failure(FT_ERR_INVALID_ARGUMENT));
     }
-    formatted = ft_string(buffer);
+    if (formatted.initialize(buffer) != FT_ERR_SUCCESS)
+        return (time_format_failure(ft_string::last_operation_error()));
     (void)(FT_ERR_SUCCESS);
     return (formatted);
 }
@@ -193,7 +194,8 @@ ft_string    time_format_iso8601_with_offset(t_time time_value, int offset_minut
             sign_character, offset_hours, offset_minutes_part);
     if (snprintf_result < 0 || snprintf_result >= static_cast<int>(sizeof(offset_buffer)))
         return (time_format_failure(FT_ERR_INTERNAL));
-    formatted = ft_string(buffer);
+    if (formatted.initialize(buffer) != FT_ERR_SUCCESS)
+        return (time_format_failure(ft_string::last_operation_error()));
     formatted += offset_buffer;
     (void)(FT_ERR_SUCCESS);
     return (formatted);

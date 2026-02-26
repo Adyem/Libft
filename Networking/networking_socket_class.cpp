@@ -7,10 +7,7 @@
 #include <cstring>
 #include <cerrno>
 #include <fcntl.h>
-#include <thread>
-#include <chrono>
-#include <utility>
-#include "../Template/move.hpp"
+#include <new>
 #include "../PThread/pthread.hpp"
 
 #ifdef _WIN32
@@ -28,6 +25,54 @@ void ft_socket::sleep_backoff()
 {
     pt_thread_sleep(1);
     return ;
+}
+
+int ft_socket::lock_mutex() const noexcept
+{
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    return (this->_mutex->lock());
+}
+
+void ft_socket::unlock_mutex() const noexcept
+{
+    if (this->_mutex != ft_nullptr)
+        this->_mutex->unlock();
+}
+
+int ft_socket::enable_thread_safety() noexcept
+{
+    if (this->_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    pt_recursive_mutex *mutex_pointer = new (std::nothrow) pt_recursive_mutex();
+    if (mutex_pointer == ft_nullptr)
+        return (FT_ERR_NO_MEMORY);
+    int mutex_error = mutex_pointer->initialize();
+    if (mutex_error != FT_ERR_SUCCESS)
+    {
+        delete mutex_pointer;
+        return (mutex_error);
+    }
+    this->_mutex = mutex_pointer;
+    return (FT_ERR_SUCCESS);
+}
+
+int ft_socket::disable_thread_safety() noexcept
+{
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    pt_recursive_mutex *mutex_pointer = this->_mutex;
+    this->_mutex = ft_nullptr;
+    int destroy_error = mutex_pointer->destroy();
+    delete mutex_pointer;
+    if (destroy_error != FT_ERR_SUCCESS && destroy_error != FT_ERR_INVALID_STATE)
+        return (destroy_error);
+    return (FT_ERR_SUCCESS);
+}
+
+bool ft_socket::is_thread_safe() const noexcept
+{
+    return (this->_mutex != ft_nullptr);
 }
 
 struct networking_error_entry
@@ -186,7 +231,7 @@ void ft_socket::reset_to_empty_state_locked()
 }
 
 ft_socket::ft_socket()
-    : _initialized_state(ft_socket::_state_uninitialized), _address(), _connected(), _socket_fd(-1), _mutex()
+    : _initialized_state(ft_socket::_state_uninitialized), _address(), _connected(), _socket_fd(-1), _mutex(ft_nullptr)
 {
     ft_bzero(&this->_address, sizeof(this->_address));
     this->_connected.clear();
@@ -195,20 +240,11 @@ ft_socket::ft_socket()
 }
 
 ft_socket::ft_socket(int fd, const sockaddr_storage &addr)
-    : _initialized_state(ft_socket::_state_uninitialized), _address(), _connected(), _socket_fd(-1), _mutex()
+    : _initialized_state(ft_socket::_state_uninitialized), _address(), _connected(), _socket_fd(-1), _mutex(ft_nullptr)
 {
     this->_address = addr;
     this->_connected.clear();
     this->_socket_fd = fd;
-    return ;
-}
-
-ft_socket::ft_socket(const SocketConfig &)
-    : _initialized_state(ft_socket::_state_uninitialized), _address(), _connected(), _socket_fd(-1), _mutex()
-{
-    ft_bzero(&this->_address, sizeof(this->_address));
-    this->_connected.clear();
-    this->_socket_fd = -1;
     return ;
 }
 
@@ -250,11 +286,11 @@ ssize_t ft_socket::send_data(const void *data, size_t size, int flags)
     int lock_error;
 
     this->abort_if_not_initialized("ft_socket::send_data");
-    lock_error = this->_mutex.lock();
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
     bytes_sent = this->send_data_locked(data, size, flags);
-    (void)this->_mutex.unlock();
+    this->unlock_mutex();
     return (bytes_sent);
 }
 
@@ -264,11 +300,11 @@ ssize_t ft_socket::send_all(const void *data, size_t size, int flags)
     int lock_error;
 
     this->abort_if_not_initialized("ft_socket::send_all");
-    lock_error = this->_mutex.lock();
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
     result = this->send_all_locked(data, size, flags);
-    (void)this->_mutex.unlock();
+    this->unlock_mutex();
     return (result);
 }
 
@@ -279,21 +315,21 @@ ssize_t ft_socket::receive_data(void *buffer, size_t size, int flags)
     int lock_error;
 
     this->abort_if_not_initialized("ft_socket::receive_data");
-    lock_error = this->_mutex.lock();
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
     if (this->_socket_fd < 0)
     {
         (void)(FT_ERR_INVALID_ARGUMENT);
-        (void)this->_mutex.unlock();
+        this->unlock_mutex();
         return (-1);
     }
     socket_fd = this->_socket_fd;
-    (void)this->_mutex.unlock();
+    this->unlock_mutex();
     result = nw_recv(socket_fd, buffer, size, flags);
-    lock_error = this->_mutex.lock();
+    lock_error = this->lock_mutex();
     if (lock_error == FT_ERR_SUCCESS)
-        (void)this->_mutex.unlock();
+        this->unlock_mutex();
     return (result);
 }
 
@@ -305,18 +341,18 @@ bool ft_socket::close_socket()
     int lock_error;
 
     this->abort_if_not_initialized("ft_socket::close_socket");
-    lock_error = this->_mutex.lock();
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (false);
     if (this->_socket_fd < 0)
     {
         (void)(FT_ERR_SUCCESS);
-        (void)this->_mutex.unlock();
+        this->unlock_mutex();
         return (true);
     }
     socket_fd = this->_socket_fd;
     shutdown_success = true;
-    (void)this->_mutex.unlock();
+    this->unlock_mutex();
 #ifdef _WIN32
     if (nw_shutdown(socket_fd, SD_BOTH) != 0)
 #else
@@ -335,7 +371,7 @@ bool ft_socket::close_socket()
         closed = false;
         networking_consume_last_error();
     }
-    lock_error = this->_mutex.lock();
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (closed);
     if (closed)
@@ -343,7 +379,7 @@ bool ft_socket::close_socket()
         if (this->_socket_fd == socket_fd)
             this->_socket_fd = -1;
     }
-    (void)this->_mutex.unlock();
+    this->unlock_mutex();
     if (closed && shutdown_success)
         return (true);
     return (false);
@@ -357,7 +393,7 @@ ssize_t ft_socket::send_data(const void *data, size_t size, int flags, int fd)
     int lock_error;
 
     this->abort_if_not_initialized("ft_socket::send_data(fd)");
-    lock_error = this->_mutex.lock();
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
     index = 0;
@@ -378,7 +414,7 @@ ssize_t ft_socket::send_data(const void *data, size_t size, int flags, int fd)
         (void)(FT_ERR_INVALID_ARGUMENT);
         result = -1;
     }
-    (void)this->_mutex.unlock();
+    this->unlock_mutex();
     return (result);
 }
 
@@ -390,7 +426,7 @@ ssize_t ft_socket::broadcast_data(const void *data, size_t size, int flags, int 
     int lock_error;
 
     this->abort_if_not_initialized("ft_socket::broadcast_data");
-    lock_error = this->_mutex.lock();
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
     total_bytes_sent = 0;
@@ -418,7 +454,7 @@ ssize_t ft_socket::broadcast_data(const void *data, size_t size, int flags, int 
     }
     if (!send_failed)
         (void)(FT_ERR_SUCCESS);
-    (void)this->_mutex.unlock();
+    this->unlock_mutex();
     return (total_bytes_sent);
 }
 
@@ -432,13 +468,13 @@ int ft_socket::accept_connection()
     int lock_error;
 
     this->abort_if_not_initialized("ft_socket::accept_connection");
-    lock_error = this->_mutex.lock();
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
     if (this->_socket_fd < 0)
     {
         (void)(FT_ERR_INVALID_ARGUMENT);
-        (void)this->_mutex.unlock();
+        this->unlock_mutex();
         return (-1);
     }
     int new_fd;
@@ -446,7 +482,7 @@ int ft_socket::accept_connection()
     new_fd = nw_accept(this->_socket_fd, ft_nullptr, ft_nullptr);
     if (new_fd < 0)
     {
-        (void)this->_mutex.unlock();
+        this->unlock_mutex();
         return (-1);
     }
     size_t previous_size;
@@ -458,11 +494,11 @@ int ft_socket::accept_connection()
     if (current_size != previous_size + 1)
     {
         (void)nw_close(new_fd);
-        (void)this->_mutex.unlock();
+        this->unlock_mutex();
         return (-1);
     }
     (void)(FT_ERR_SUCCESS);
-    (void)this->_mutex.unlock();
+    this->unlock_mutex();
     return (new_fd);
 }
 
@@ -472,7 +508,7 @@ bool ft_socket::disconnect_client(int fd)
     int lock_error;
 
     this->abort_if_not_initialized("ft_socket::disconnect_client");
-    lock_error = this->_mutex.lock();
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (false);
     index = 0;
@@ -489,13 +525,13 @@ bool ft_socket::disconnect_client(int fd)
                 (void)nw_close(fd);
             this->_connected.pop_back();
             (void)(FT_ERR_SUCCESS);
-            (void)this->_mutex.unlock();
+            this->unlock_mutex();
             return (true);
         }
         index++;
     }
     (void)(FT_ERR_INVALID_ARGUMENT);
-    (void)this->_mutex.unlock();
+    this->unlock_mutex();
     return (false);
 }
 
@@ -505,7 +541,7 @@ void ft_socket::disconnect_all_clients()
     int lock_error;
 
     this->abort_if_not_initialized("ft_socket::disconnect_all_clients");
-    lock_error = this->_mutex.lock();
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     index = 0;
@@ -517,7 +553,7 @@ void ft_socket::disconnect_all_clients()
     }
     this->_connected.clear();
     (void)(FT_ERR_SUCCESS);
-    (void)this->_mutex.unlock();
+    this->unlock_mutex();
     return ;
 }
 
@@ -527,12 +563,12 @@ size_t ft_socket::get_client_count() const
     int lock_error;
 
     this->abort_if_not_initialized("ft_socket::get_client_count");
-    lock_error = this->_mutex.lock();
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (0);
     count = this->_connected.size();
     (void)(FT_ERR_SUCCESS);
-    (void)this->_mutex.unlock();
+    this->unlock_mutex();
     return (count);
 }
 
@@ -543,7 +579,7 @@ bool ft_socket::is_client_connected(int fd) const
     int lock_error;
 
     this->abort_if_not_initialized("ft_socket::is_client_connected");
-    lock_error = this->_mutex.lock();
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (false);
     index = 0;
@@ -558,7 +594,7 @@ bool ft_socket::is_client_connected(int fd) const
         index++;
     }
     (void)(FT_ERR_SUCCESS);
-    (void)this->_mutex.unlock();
+    this->unlock_mutex();
     return (connected);
 }
 
@@ -568,12 +604,12 @@ int ft_socket::get_fd() const
     int lock_error;
 
     this->abort_if_not_initialized("ft_socket::get_fd");
-    lock_error = this->_mutex.lock();
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
     descriptor = this->_socket_fd;
     (void)(FT_ERR_SUCCESS);
-    (void)this->_mutex.unlock();
+    this->unlock_mutex();
     return (descriptor);
 }
 
@@ -582,11 +618,11 @@ const struct sockaddr_storage &ft_socket::get_address() const
     int lock_error;
 
     this->abort_if_not_initialized("ft_socket::get_address");
-    lock_error = this->_mutex.lock();
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (this->_address);
     (void)(FT_ERR_SUCCESS);
-    (void)this->_mutex.unlock();
+    this->unlock_mutex();
     return (this->_address);
 }
 
@@ -595,11 +631,11 @@ void ft_socket::reset_to_empty_state()
     int lock_error;
 
     this->abort_if_not_initialized("ft_socket::reset_to_empty_state");
-    lock_error = this->_mutex.lock();
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     this->reset_to_empty_state_locked();
-    (void)this->_mutex.unlock();
+    this->unlock_mutex();
     return ;
 }
 
@@ -608,14 +644,14 @@ int ft_socket::initialize(const SocketConfig &config)
     int lock_error;
     int initialize_result;
 
-    lock_error = this->_mutex.lock();
+    lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (this->_initialized_state == ft_socket::_state_initialized)
         this->abort_lifecycle_error("ft_socket::initialize",
             "initialize called on initialized instance");
     this->_initialized_state = ft_socket::_state_initialized;
-    (void)this->_mutex.unlock();
+    this->unlock_mutex();
     initialize_result = FT_ERR_UNSUPPORTED_TYPE;
     if (config._type == SocketType::SERVER)
         initialize_result = this->setup_server(config);
@@ -640,7 +676,20 @@ int ft_socket::destroy()
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *ft_socket::get_mutex_for_validation() const noexcept
 {
-    return (&this->_mutex);
+    if (this->_mutex == ft_nullptr)
+    {
+        pt_recursive_mutex *mutex_pointer = new (std::nothrow) pt_recursive_mutex();
+        if (mutex_pointer == ft_nullptr)
+            return (ft_nullptr);
+        int mutex_error = mutex_pointer->initialize();
+        if (mutex_error != FT_ERR_SUCCESS)
+        {
+            delete mutex_pointer;
+            return (ft_nullptr);
+        }
+        this->_mutex = mutex_pointer;
+    }
+    return (this->_mutex);
 }
 
 #endif

@@ -175,6 +175,10 @@ bool    networking_tls_initialize_aead_contexts(SSL *ssl_session, bool outbound,
         (void)(FT_ERR_INVALID_STATE);
         return (false);
     }
+    if (send_context.initialize() != FT_ERR_SUCCESS)
+        return (false);
+    if (receive_context.initialize() != FT_ERR_SUCCESS)
+        return (false);
     if (send_context.initialize_encrypt(send_key.begin(), send_key.size(),
             send_iv.begin(), send_iv.size()) != FT_ERR_SUCCESS)
         return (false);
