@@ -1,10 +1,29 @@
 # TODO
 
-Remaining unchecked items: 17
+Remaining unchecked items: 169
 
 ## Mutex reinitialization audit
 
 All mutex reinitialization audit items have been completed.
+
+## Lifecycle contract violators (repo-wide class list)
+
+- [ ] `API`: `api_retry_policy`, `api_streaming_handler`, `api_tls_client`.
+- [ ] `CPP_class`: `ft_big_number`, `ft_ofstream`.
+- [ ] `File`: `ft_file_watch`.
+- [ ] `Geometry`: `aabb`, `circle`, `sphere`.
+- [ ] `HTML`: `html_document`.
+- [ ] `JSon`: `json_document`.
+- [ ] `Math`: `ft_cubic_spline`, `ft_dual_number`, `vector2`, `vector3`, `vector4`, `matrix2`, `matrix3`, `matrix4`, `quaternion`.
+- [ ] `Networking`: `SocketConfig`, `ft_socket`, `ft_socket_handle`, `ft_http_server`, `ft_websocket_client`, `ft_websocket_server`, `http2_header_field`, `http2_frame`, `http2_stream_manager`, `http2_settings_state`, `quic_experimental_session`.
+- [ ] `PThread`: `scheduled_task`, `ft_task_scheduler`, `pt_recursive_mutex`.
+- [ ] `Parser`: `ft_dom_node`, `ft_dom_document`, `ft_dom_schema`, `ft_dom_validation_report`, `ft_document_source`, `ft_document_sink`, `ft_file_document_source`, `ft_file_document_sink`, `ft_memory_document_source`, `ft_memory_document_sink`, `ft_http_document_source`, `ft_http_document_sink`.
+- [ ] `RNG`: `rng_stream`.
+- [ ] `Storage`: `kv_store`, `kv_store_entry`.
+- [ ] `Template`: `Iterator`, `Pool`, `ft_cancellation_state`, `ft_cancellation_source`, `ft_circular_buffer`, `ft_deque`, `ft_event_emitter`, `ft_graph`, `ft_matrix`, `ft_optional`, `ft_queue`, `ft_string_view`, `ft_thread_pool`, `ft_trie`, `ft_unordered_map`, `ft_unordered_map::iterator`, `ft_unordered_map::const_iterator`, `ft_variant`.
+- [ ] `Time`: `time_timer`, `time_fps`.
+- [ ] `XML`: `xml_document`.
+- [ ] `YAML`: `yaml_value`.
 
 ## Basic module AGENTS.md compliance
 
@@ -28,3 +47,787 @@ All mutex reinitialization audit items have been completed.
 - [ ] Remove all ternary operators from `Advanced/advanced_itoa.cpp` and `Advanced/advanced_itoa_base.cpp`.
 - [ ] Add final `return ;` to void helper `free_strings` in `Advanced/advanced_split.cpp`.
 - [ ] Rename short variable names in `Advanced` module to full descriptive snake_case names (for example `len1`, `len2`, `i`, `j`, `src`, `dest`).
+
+## Compatebility module AGENTS.md compliance
+
+- [ ] Remove `for` loop from `Compatebility/Compatebility_cross_process_posix.cpp` (`cmp_cross_process_lock_mutex`, line 133) and replace with compliant control flow (`while`).
+- [ ] Change `break;` to `break ;` in `Compatebility/Compatebility_cross_process_posix.cpp` (line 147).
+- [ ] Change `break;` to `break ;` in `Compatebility/Compatebility_time.cpp` (line 182).
+- [ ] Change `break;` to `break ;` in `Compatebility/Compatebility_system.cpp` (line 860).
+- [ ] Change `break;` to `break ;` in `Compatebility/Compatebility_cross_process_windows.cpp` (line 151).
+- [ ] Change `break;` to `break ;` in `Compatebility/Compatebility_cross_process_windows.cpp` (line 157).
+
+## CMA module AGENTS.md compliance
+
+- [ ] Remove ternary operator from `CMA/cma_backend.cpp` (`cma_backend_is_enabled`, line 94).
+- [ ] Remove ternary operator from `CMA/cma_aligned_alloc.cpp` (line 175).
+- [ ] Update non-Allman `if` brace style in `CMA/cma_utils.cpp` (line 263) so opening brace is on the next line.
+
+## SCMA module AGENTS.md compliance
+
+- [ ] Update proxy `_last_error` fields in `SCMA/SCMA.hpp` to follow the `_last_error` contract (`static thread_local int32_t _last_error`) instead of instance fields (lines 730 and 760).
+- [ ] Ensure SCMA proxy public methods in `SCMA/SCMA.hpp` set `_last_error` on every exit path (for example `operator->`, `operator*`, conversion operator, `get_error`, `get_error_str`, `is_valid`; lines 1020, 1030, 1040, 1046, 1059, and 1065).
+- [ ] Replace tab indentation with 4-space indentation in `SCMA/scma_io.cpp` (lines 7, 33, and 52).
+
+## GetNextLine module AGENTS.md compliance
+
+- [ ] Rename short `fd` parameters/variables to descriptive `file_descriptor` naming in `GetNextLine` public headers and implementation (`get_next_line.hpp`, `get_next_line.cpp`, `get_next_line_stream_helpers.cpp`).
+- [ ] Rename abbreviated iterator variables in `GetNextLine/get_next_line.cpp` (`map_it`, `stream_it`) to full descriptive names.
+
+## DUMB module AGENTS.md compliance
+
+- [ ] Refactor platform sound device classes so non-template class member function definitions are moved out of class declarations into proper `.hpp` declarations and `.cpp` definitions (`DUMB/dumb_sound_macos_coreaudio.cpp`, `DUMB/dumb_sound_win32.cpp`, `DUMB/dumb_sound_linux_alsa.cpp`).
+- [ ] Remove all `for` loops from DUMB platform sound backends and replace with compliant control flow (`while`) in `DUMB/dumb_sound_macos_coreaudio.cpp` and `DUMB/dumb_sound_win32.cpp`.
+- [ ] Change `return;` to `return ;` in DUMB platform sound sources (`DUMB/dumb_sound_macos_coreaudio.cpp` lines 24 and 143; `DUMB/dumb_sound_win32.cpp` lines 31 and 158).
+- [ ] Add final `return ;` to void methods missing it in DUMB platform sound sources (`play`/`stop` in `DUMB/dumb_sound_macos_coreaudio.cpp`, `DUMB/dumb_sound_win32.cpp`, and `DUMB/dumb_sound_linux_alsa.cpp`).
+- [ ] Rename short loop/index variable names (for example `i`) to full descriptive snake_case names in DUMB platform sound sources.
+
+## Math module AGENTS.md compliance
+
+- [ ] Fix non-void return formatting in `Math/math_roll_parse_md.cpp` (`return 1;` -> `return (1);`).
+- [ ] Rename short variable and parameter names to full descriptive snake_case names across Math roll parser utilities (`i`, `j`, `x`, `y`) in `Math/math_roll_parse_utils.cpp`, `Math/math_roll_parse_dice.cpp`, `Math/math_roll_parse_pm.cpp`, `Math/math_roll_parse_md.cpp`, and `Math/math_roll_utilities.cpp`.
+- [ ] Rename abbreviated parameter `str` to a descriptive name in `Math/math_roll_utilities.cpp` (`math_check_value_roll`).
+- [ ] Update destructors to avoid lifecycle abort on uninitialized state and return cleanly when state is uninitialized/destroyed (`Math/math_autodiff.cpp`, `Math/math_polynomial.cpp`, `Math/linear_algebra_constructors.cpp`, `Math/linear_algebra_quaternion.cpp`).
+- [ ] Align Math class thread-safety APIs with the required trio contract by changing `disable_thread_safety()` to return `int` and propagate underlying mutex destroy errors (`Math/math_autodiff.*`, `Math/math_polynomial.*`, `Math/linear_algebra*.hpp/.cpp`, `Math/linear_algebra_quaternion.*`).
+- [ ] Align Math class thread-safety naming to the required `is_thread_safe()` helper (currently `is_thread_safe_enabled()` across linear algebra, quaternion, polynomial, and autodiff classes).
+- [ ] Guard `ft_cubic_spline::get_mutex_for_validation()` behind `LIBFT_TEST_BUILD` in declaration and definition (`Math/math_polynomial.hpp`, `Math/math_polynomial.cpp`).
+
+## Geometry module AGENTS.md compliance
+
+- [ ] Update Geometry destructors to avoid lifecycle abort in uninitialized state and return cleanly instead (`Geometry/geometry_circle.cpp`, `Geometry/geometry_sphere.cpp`, `Geometry/geometry_aabb.cpp`).
+- [ ] Align Geometry thread-safety helper trio with required names/signatures: add/rename `is_thread_safe()`, and make `disable_thread_safety()` return underlying error codes (`Geometry/geometry_circle.hpp/.cpp`, `Geometry/geometry_sphere.hpp/.cpp`, `Geometry/geometry_aabb.hpp/.cpp`).
+- [ ] Replace open-coded nullable mutex lock/unlock checks with shared PThread safe lock/unlock helper usage in Geometry classes (`Geometry/geometry_circle.cpp`, `Geometry/geometry_sphere.cpp`, `Geometry/geometry_aabb.cpp`).
+- [ ] Change `break;` to `break ;` in `Geometry/geometry_lock_tracker.cpp` (line 136).
+
+## System_utils module AGENTS.md compliance
+
+- [ ] Change `break;` to `break ;` in `System_utils/System_utils_file_utils.cpp` (lines 123, 130, 132, 136, 140, 142, and 147) and `System_utils/System_utils_file_stream.cpp` (line 207).
+- [ ] Remove RAII lock-guard usage (`std::lock_guard<std::mutex>`) and replace with explicit/shared lock-unlock handling in `System_utils/System_utils_resource_tracer.cpp` and `System_utils/System_utils_health.cpp`.
+
+## Printf module AGENTS.md compliance
+
+- [ ] Rename short `fd` parameter names to descriptive `file_descriptor` naming across Printf public/internal APIs and implementations (`Printf/printf.hpp`, `Printf/printf_internal.hpp`, `Printf/printf_printf.cpp`, `Printf/printf_format.cpp`, `Printf/printf_print_args.cpp`).
+- [ ] Rename short `args` parameter/local names to descriptive naming (for example `argument_list`) across Printf APIs and implementations (`Printf/printf.hpp`, `Printf/printf_internal.hpp`, `Printf/printf_engine.hpp`, `Printf/printf_printf.cpp`, `Printf/printf_vsnprintf.cpp`, `Printf/printf_custom_specifier.cpp`, `Printf/printf_engine.cpp`).
+- [ ] Align Printf thread-safety API with meaningful error-code returns for thread-safety operations (especially teardown path in `pf_disable_thread_safety`) and propagate underlying mutex errors (`Printf/printf.hpp`, `Printf/printf_custom_specifier.cpp`).
+- [ ] Replace open-coded nullable mutex lock/unlock checks with the shared PThread safe lock/unlock helper in Printf custom-specifier synchronization (`Printf/printf_custom_specifier.cpp`).
+
+## PThread module AGENTS.md compliance
+
+- [ ] Align PThread optional thread-safety APIs with the required lifecycle trio contract: make `disable_thread_safety()` return underlying error codes and standardize `is_thread_safe()` naming (currently mixed `disable_thread_safety()` void and `is_thread_safe_enabled()` names) across `PThread/thread.hpp`, `PThread/condition.hpp`, `PThread/task_scheduler.hpp`, and corresponding `.cpp` files.
+- [ ] Update destructors to avoid lifecycle abort on uninitialized state and return cleanly when state is uninitialized/destroyed (`PThread/pthread_recursive_mutex.cpp`, `PThread/pthread_task_scheduler.cpp`).
+- [ ] Remove RAII lock-guard usage from library code and use explicit/shared PThread lock helpers instead (`PThread/pthread_task_scheduler_tracing.cpp`).
+- [ ] Remove ternary operator from `PThread/pt_buffer.hpp` (`pt_buffer_reserve`, line 40).
+- [ ] Change all `break;` to `break ;` in `PThread/pthread_task_scheduler.cpp` and `PThread/task_scheduler.hpp`.
+
+## ReadLine module AGENTS.md compliance
+
+- [ ] Replace open-coded nullable mutex lock/unlock checks with shared PThread nullable lock helpers in `ReadLine/readline_thread_safety.cpp` (`rl_state_lock`, `rl_state_unlock`).
+- [ ] Replace open-coded nullable mutex lock/unlock checks with shared PThread nullable lock helpers in `ReadLine/readline_terminal_dimensions.cpp` (`rl_terminal_dimensions_lock`, `rl_terminal_dimensions_unlock`).
+- [ ] Rename single-letter parameter `c` to a descriptive snake_case name (for example `character`) in `ReadLine/readline_internal.hpp` and `ReadLine/readline_printeble_char.cpp`.
+
+## CPP_class module AGENTS.md compliance
+
+- [ ] Change all `break;` to `break ;` in `CPP_class/cpp_class_big_number.cpp` (lines 832, 1297, and 1656).
+- [ ] Remove ternary operator usage in `CPP_class/cpp_class_string_methods.cpp` (`ft_string::c_str`, line 528).
+- [ ] Replace tab indentation with 4-space indentation in `CPP_class/class_big_number.hpp` (lines 26 and 27) and `CPP_class/cpp_class_big_number.cpp` (lines 173, 196, and 207).
+- [ ] Update destructors to avoid lifecycle abort on uninitialized state and return cleanly instead (`CPP_class/cpp_class_ofstream.cpp`, `CPP_class/cpp_class_big_number.cpp`).
+- [ ] Replace open-coded nullable mutex lock/unlock checks with shared PThread nullable lock helpers in class mutex helpers (`CPP_class/cpp_class_file.cpp`, `CPP_class/cpp_class_istream.cpp`, `CPP_class/cpp_class_fd_istream.cpp`, `CPP_class/cpp_class_ofstream.cpp`, `CPP_class/cpp_class_stringbuf.cpp`, `CPP_class/cpp_class_data_buffer.cpp`, `CPP_class/cpp_class_big_number.cpp`).
+- [ ] Rename abbreviated `fd` identifiers to descriptive `file_descriptor` naming in `CPP_class` APIs and internals (`CPP_class/class_fd_istream.hpp`, `CPP_class/class_file.hpp`, `CPP_class/cpp_class_fd_istream.cpp`, `CPP_class/cpp_class_file.cpp`).
+- [ ] Rename class member `_fd` to a descriptive name (for example `_file_descriptor`) in `CPP_class/ft_file` and `CPP_class/ft_fd_istream`.
+
+## Template module AGENTS.md compliance
+
+- [ ] Remove ternary operators in `Template/template_compile_bitset.cpp`, `Template/shared_ptr.hpp`, and `Template/graph.hpp`.
+- [ ] Change `break;` to `break ;` in `Template/priority_queue.hpp` (lines 77 and 102).
+- [ ] Replace tab indentation with 4-space indentation in `Template/vector.hpp` (for example lines 72, 73, 91, 92, 94-97, 99-104, and 188-191).
+- [ ] Align thread-safety lifecycle API signatures so `disable_thread_safety()` returns meaningful error codes in `Template/promise.hpp` and `Template/future.hpp` (including `void` specializations).
+- [ ] Refactor `enable_thread_safety()` / `disable_thread_safety()` in `Template/promise.hpp` and `Template/future.hpp` to manage mutex lifecycle directly rather than delegating to separate prepare/teardown helpers.
+- [ ] Replace open-coded nullable mutex lock/unlock checks with shared PThread nullable lock/unlock helpers in `Template/promise.hpp` and `Template/future.hpp`.
+
+## Config module AGENTS.md compliance
+
+- [ ] Replace open-coded nullable mutex lock/unlock checks with shared PThread nullable lock/unlock helpers across `Config/config_entry_thread_safety.cpp`, `Config/config_parse.cpp`, `Config/config_merge.cpp`, and `Config/config_write.cpp` (and mirrored `config/` files).
+- [ ] Return underlying mutex/thread-safety error codes directly instead of collapsing to generic `-1` in Config thread-safety functions (`Config/config_entry_thread_safety.cpp`, `Config/config_parse.cpp`, and mirrored `config/` files).
+- [ ] Rename abbreviated `cnfg_*` identifiers in Config public API and internals to full descriptive snake_case names (`Config/config.hpp`, `Config/config_parse.cpp`, `Config/config_merge.cpp`, `Config/config_write.cpp`, and mirrored `config/` files).
+
+## CrossProcess module AGENTS.md compliance
+
+- [ ] Rename abbreviated `fd`/`socket_fd` identifiers to descriptive `file_descriptor` naming in CrossProcess public APIs and implementations (`CrossProcess/cross_process.hpp`, `CrossProcess/CrossProcess_send_descriptor.cpp`, `CrossProcess/CrossProcess_receive_descriptor.cpp`, `CrossProcess/CrossProcess_receive_memory.cpp`), and align related Compatebility cross-process declarations.
+
+## Encryption module AGENTS.md compliance
+
+- [ ] Update `encryption_aead_context` destructor to return cleanly when lifecycle state is uninitialized/destroyed and avoid aborting in destructor (`Encryption/Encryption_aead.cpp`).
+- [ ] Remove automatic thread-safety enabling from `encryption_aead_context::initialize()` so thread safety is enabled only via explicit `enable_thread_safety()` (`Encryption/Encryption_aead.cpp`).
+- [ ] Replace open-coded nullable mutex lock/unlock checks with shared PThread nullable lock/unlock helper usage in AEAD context methods (`Encryption/Encryption_aead.cpp`).
+- [ ] Remove deprecated `ft_errno` references from Encryption module documentation (`Encryption/README` and mirrored `encryption/README` if kept).
+
+## Compression module AGENTS.md compliance
+
+- [ ] Update `t_compress_stream_options` destructor to return cleanly when lifecycle state is uninitialized/destroyed and avoid aborting in destructor (`Compression/Compression_stream.cpp`).
+- [ ] Remove automatic thread-safety enabling from `t_compress_stream_options::initialize()` so thread safety is enabled only via explicit `enable_thread_safety()` (`Compression/Compression_stream.cpp`).
+- [ ] Replace open-coded nullable mutex lock/unlock checks with shared PThread nullable lock/unlock helper usage across `t_compress_stream_options` methods (`Compression/Compression_stream.cpp`).
+- [ ] Rename abbreviated `input_fd`/`output_fd` identifiers to descriptive `input_file_descriptor`/`output_file_descriptor` naming in Compression stream APIs and implementation (`Compression/compression.hpp`, `Compression/Compression_stream.cpp`).
+
+## RNG module AGENTS.md compliance
+
+- [ ] Update `rng_stream` destructor and destroy-path lifecycle handling to avoid aborting when uninitialized/destroyed and return cleanly/error-code-only instead (`RNG/RNG_stream.cpp`).
+- [ ] Update `rng_stream::is_thread_safe()` to follow the contract and only return mutex-pointer presence without lifecycle abort checks (`RNG/RNG_stream.cpp`).
+- [ ] Replace open-coded nullable mutex lock/unlock checks with shared PThread nullable lock/unlock helper usage in `RNG_stream`, global RNG engine mutex helpers, `ft_deck`, and `ft_loot_entry`/`ft_loot_table` locking helpers (`RNG/RNG_stream.cpp`, `RNG/RNG_engine.cpp`, `RNG/deck.hpp`, `RNG/loot_table.hpp`).
+- [ ] Change `break;` to `break ;` in `RNG/deck.hpp` shuffle loop (lines 325, 331, 337, 341, 346, and 350).
+- [ ] Rename non-snake_case RNG template methods to snake_case naming in deck/loot APIs (`RNG/deck.hpp`: `popRandomElement`, `getRandomElement`, `drawTopElement`, `peekTopElement`; `RNG/loot_table.hpp`: `addElement`, `getRandomLoot`, `popRandomLoot`).
+
+## JSON module AGENTS.md compliance
+
+- [ ] Change `break;` to `break ;` in JSON sources (`JSon/json_schema.cpp` lines 64, 79, and 133; `JSon/json_document.cpp` lines 846 and 874; `JSon/json_reader.cpp` lines 469, 677, 776, and 898; `JSon/json_stream_reader.cpp` lines 434, 682, and 1236).
+- [ ] Update `json_document` destructor and `destroy()` lifecycle handling to avoid aborting when state is uninitialized/destroyed (`JSon/json_document.cpp` lines 195-199 and 225-229).
+- [ ] Update `json_document::is_thread_safe()` to follow the thread-safety contract and only return mutex-pointer presence without lifecycle abort checks (`JSon/json_document.cpp` lines 282-285).
+- [ ] Replace open-coded nullable mutex lock/unlock checks with the shared PThread safe lock/unlock helper across JSON module synchronization paths (`JSon/json_thread_safety.cpp`, `JSon/json_document.cpp`, `JSon/json_schema.cpp`, `JSon/json_parsing.cpp`, `JSon/json_utils.cpp`, `JSon/json_stream_reader.cpp`).
+- [ ] Remove implicit thread-safety enabling from JSON lock helpers so `enable_thread_safety()`/`disable_thread_safety()` remain the explicit lifecycle toggles (`JSon/json_thread_safety.cpp`: `json_item_lock`, `json_schema_field_lock`, `json_schema_lock`, `json_stream_reader_lock`; plus `*_set_error` helpers that auto-enable).
+- [ ] Return meaningful `FT_ERR_*` codes directly in JSON thread-safety APIs instead of raw `-1` (`JSon/json_thread_safety.cpp`: `json_group_enable_thread_safety`, `json_stream_reader_enable_thread_safety`).
+- [ ] Deduplicate and keep a single canonical JSON module path (`JSon/` vs `json/`) to avoid mirrored fixes drifting out of sync.
+
+## YAML module AGENTS.md compliance
+
+- [ ] Change `break;` to `break ;` in `YAML/yaml_reader.cpp` (lines 124, 159, 259, 269, 443, 531, and 556).
+- [ ] Update `yaml_value` destructor and `destroy()` lifecycle handling to avoid aborting when state is uninitialized/destroyed (`YAML/yaml_value.cpp` lines 42-43 and 79-80).
+- [ ] Update `yaml_value::is_thread_safe()` to follow the thread-safety contract and only return mutex-pointer presence without lifecycle abort checks (`YAML/yaml_value.cpp` lines 311-314).
+- [ ] Replace open-coded nullable recursive mutex lock/unlock logic with shared PThread nullable lock/unlock helpers in `yaml_value` locking paths (`YAML/yaml_value.cpp` lines 323-325 and 337-339; use `pt_recursive_mutex_lock_if_not_null` / `pt_recursive_mutex_unlock_if_not_null` from `PThread/pthread_internal.hpp`).
+- [ ] Stop routing nullable mutex locking through `is_thread_safe()` inside `yaml_value::lock()` / `yaml_value::unlock()` and use direct helper-based locking so internal lock helpers do not trigger lifecycle abort checks indirectly (`YAML/yaml_value.cpp` lines 317-340).
+
+## File module AGENTS.md compliance
+
+- [ ] Change `break;` to `break ;` in `File/file_watch.cpp` (line 289).
+- [ ] Update `ft_file_watch` destructor and `destroy()` lifecycle handling to avoid aborting when state is uninitialized/destroyed (`File/file_watch.cpp` lines 68-70 and 102-106).
+- [ ] Update `ft_file_watch::is_thread_safe()` to follow the thread-safety contract and only return mutex-pointer presence without lifecycle abort checks (`File/file_watch.cpp` lines 156-159).
+- [ ] Replace open-coded nullable recursive mutex lock/unlock logic with shared PThread nullable lock/unlock helpers in file-watch locking paths (`File/file_watch.cpp` lines 36-38 and 52-54; use `pt_recursive_mutex_lock_if_not_null` / `pt_recursive_mutex_unlock_if_not_null` from `PThread/pthread_internal.hpp`).
+- [ ] Avoid funneling internal lock/unlock through lifecycle-checking helpers in `ft_file_watch::lock_watch()` / `unlock_watch()`; keep nullable lock operations direct so mutex helpers do not depend on `is_thread_safe()` lifecycle preconditions (`File/file_watch.cpp`).
+
+## HTML module AGENTS.md compliance
+
+- [ ] Change `break;` to `break ;` in `HTML/html_cleanup.cpp` (line 187).
+- [ ] Update `html_document` destructor and `destroy()` lifecycle handling to avoid aborting when state is uninitialized/destroyed (`HTML/html_document.cpp` lines 64-66 and 84-88).
+- [ ] Update `html_document::is_thread_safe()` to follow the thread-safety contract and only return mutex-pointer presence without lifecycle abort checks (`HTML/html_document.cpp` lines 138-141).
+- [ ] Replace open-coded nullable mutex lock/unlock checks with shared PThread nullable lock/unlock helper usage in document locking paths (`HTML/html_document.cpp` lines 37-39 and 53-55).
+- [ ] Remove non-contract `is_thread_safe_enabled()` alias and standardize on `is_thread_safe()` for HTML document/thread-safety APIs (`HTML/document.hpp` and `HTML/html_document.cpp`).
+- [ ] Return meaningful `FT_ERR_*` codes directly in HTML node/attr thread-safety helpers instead of raw `-1` (`HTML/html_node_thread_safety.cpp`, `HTML/html_attr_thread_safety.cpp`).
+- [ ] Remove implicit auto-enabling of node/attr thread safety during object creation and keep synchronization toggles explicit (`HTML/html_node.cpp`: `html_create_node`, `html_create_attr` currently call `html_node_prepare_thread_safety` / `html_attr_prepare_thread_safety`).
+- [ ] Rename abbreviated `fd` parameter names to descriptive `file_descriptor` naming in HTML writer helpers (`HTML/html_writer.cpp`: `html_write_attrs`, `html_write_node`).
+
+## Time module AGENTS.md compliance
+
+- [ ] Change `break;` to `break ;` in `Time/time_strftime.cpp` (lines 160 and 169).
+- [ ] Update `time_timer` and `time_fps` destructors/destroy paths to avoid lifecycle abort when objects are uninitialized/destroyed (`Time/time_timer.cpp` lines 24-28 and 96-100; `Time/time_fps.cpp` lines 59-63 and 100-104).
+- [ ] Align Time class thread-safety APIs with the required trio by changing `disable_thread_safety()` to return `int` and propagate underlying mutex destroy errors (`Time/timer.hpp`, `Time/time_timer.cpp`, `Time/fps.hpp`, `Time/time_fps.cpp`).
+- [ ] Update `time_timer::is_thread_safe()` and `time_fps::is_thread_safe()` to follow the contract and only return mutex-pointer presence without lifecycle abort checks (`Time/time_timer.cpp` lines 297-300; `Time/time_fps.cpp` lines 222-225).
+- [ ] Replace open-coded nullable recursive mutex lock/unlock checks with shared PThread nullable lock/unlock helper usage in Time classes (`Time/time_timer.cpp` and `Time/time_fps.cpp` lock/unlock helpers).
+- [ ] Remove automatic thread-safety enabling from `initialize()` in Time classes so synchronization is only enabled via explicit `enable_thread_safety()` (`Time/time_timer.cpp` line 85 and `Time/time_fps.cpp` line 89).
+- [ ] Standardize Time C-style thread-safety helper naming to contract-aligned `is_thread_safe()` rather than `is_thread_safe_enabled()` (`Time/time.hpp`, `Time/time_info_thread_safety.cpp`, `Time/time_duration_thread_safety.cpp`, `Time/time_monotonic_point_thread_safety.cpp`).
+- [ ] Return meaningful `FT_ERR_*` codes directly instead of raw `-1` in Time C-style thread-safety helpers (`Time/time_info_thread_safety.cpp`, `Time/time_duration_thread_safety.cpp`, `Time/time_monotonic_point_thread_safety.cpp`).
+
+## XML module AGENTS.md compliance
+
+- [ ] Update `xml_document` destructor and `destroy()` lifecycle handling to avoid aborting when state is uninitialized/destroyed (`XML/xml_document.cpp` lines 684-688 and 746-750).
+- [ ] Align XML document thread-safety API signatures with the required contract by changing `disable_thread_safety()` to return `int` and propagate underlying mutex destroy errors (`XML/xml.hpp`, `XML/xml_document.cpp`).
+- [ ] Update `xml_document::is_thread_safe()` to follow the contract and only return mutex-pointer presence without lifecycle abort checks (`XML/xml_document.cpp` lines 1259-1262).
+- [ ] Replace open-coded nullable mutex lock/unlock checks with shared PThread nullable lock/unlock helper usage in XML document and XML node locking paths (`XML/xml_document.cpp`, `XML/xml_node_thread_safety.cpp`).
+- [ ] Remove RAII lock-guard wrapper usage in XML document synchronization (`xml_document::thread_guard`) and use explicit lock/unlock handling per locking guidelines (`XML/xml.hpp`, `XML/xml_document.cpp`).
+- [ ] Return meaningful `FT_ERR_*` codes directly instead of raw `-1`/`0` status values in XML thread-safety helpers (`XML/xml_document.cpp`, `XML/xml_node_thread_safety.cpp`).
+- [ ] Remove implicit thread-safety enabling from `xml_document::initialize()` and keep synchronization toggles explicit via `enable_thread_safety()` / `disable_thread_safety()` (`XML/xml_document.cpp` line 731).
+- [ ] Remove non-contract `is_thread_safe_enabled()` aliases and standardize on `is_thread_safe()` for XML document/node thread-safety checks (`XML/xml.hpp`, `XML/xml_document.cpp`, `XML/xml_node_thread_safety.cpp`).
+- [ ] Guard mutex validation helper declaration/definition behind `LIBFT_TEST_BUILD` so production builds do not expose it (`XML/xml.hpp`, `XML/xml_document.cpp`).
+
+## Storage module AGENTS.md compliance
+
+- [ ] Change `break;` to `break ;` in `Storage/storage_kv_store_operations.cpp` (line 2270).
+- [ ] Update `kv_store` destructor and `destroy()` lifecycle handling to avoid aborting when state is uninitialized/destroyed (`Storage/storage_kv_store_constructor.cpp` lines 352-353 and 380-383).
+- [ ] Update `kv_store_entry` destructor and `destroy()` lifecycle handling to avoid aborting when state is uninitialized/destroyed (`Storage/storage_kv_store_entry.cpp` lines 53-57 and 139-143).
+- [ ] Refactor Storage classes to satisfy optional thread-safety lifecycle trio requirements by adding explicit `enable_thread_safety()`, `disable_thread_safety()`, and `is_thread_safe()` helpers where missing (`kv_store`, `kv_store_entry`).
+- [ ] Replace non-recursive class mutex members with recursive mutex ownership per class mutex requirements and keep them optional/toggle-driven (`Storage/kv_store.hpp`: `_mutex`, `_background_mutex`, `_replication_mutex`; `kv_store_entry::_mutex`).
+- [ ] Remove automatic mutex bootstrap from `kv_store::initialize()` and keep synchronization enabling explicit via thread-safety helpers (`Storage/storage_kv_store_constructor.cpp` lines 63-80).
+- [ ] Return meaningful `FT_ERR_*` codes in Storage public APIs instead of raw `-1`/`0` error signaling where operations fail (`Storage/storage_kv_store_operations.cpp`, `Storage/storage_kv_store_entry.cpp`, `Storage/storage_kv_store_encryption.cpp`).
+
+## Networking module AGENTS.md compliance
+
+- [ ] Change all `break;` to `break ;` in Networking sources (`Networking/networking_event_loop.cpp`, `Networking/networking_epoll.cpp`, `Networking/networking_kqueue.cpp`, `Networking/networking_send_utils.cpp`, `Networking/http_client.cpp`, `Networking/http_server.cpp`, `Networking/networking_socket_class.cpp`, `Networking/websocket_server.cpp`).
+- [ ] Update destructors and destroy-path lifecycle handling to avoid aborting when state is uninitialized/destroyed (`Networking/networking_socket_class.cpp`: `ft_socket::~ft_socket`; `Networking/http2_client.cpp`: `http2_stream_manager::~http2_stream_manager`; plus other lifecycle abort paths in networking classes currently calling `su_abort()`/`abort_lifecycle_error` for uninitialized destroy/destructor paths).
+- [ ] Align HTTP/2 class thread-safety APIs with the required trio contract by changing `disable_thread_safety()` to return `int` and propagate underlying mutex destroy errors (`Networking/http2_client.hpp`, `Networking/http2_client.cpp` for `http2_frame` and `http2_stream_manager`).
+- [ ] Update HTTP/2 `is_thread_safe()` helpers to follow the contract and only return mutex-pointer presence without lifecycle abort checks (`Networking/http2_client.cpp`).
+- [ ] Replace open-coded nullable mutex lock/unlock checks with shared PThread nullable lock/unlock helper usage across Networking classes and helpers (`Networking/networking_socket_class.cpp`, `Networking/http2_client.cpp`, `Networking/http_server.cpp`, `Networking/websocket_client.cpp`, `Networking/websocket_server.cpp`, `Networking/networking_socket_config_thread_safety.cpp`).
+- [ ] Replace non-recursive class mutex usage with recursive mutex ownership where required by class mutex rules (`Networking/http_server.hpp`, `Networking/websocket_client.hpp`, `Networking/websocket_server.hpp`, `Networking/http2_client.hpp` currently use `pt_mutex` state in class members).
+- [ ] Return meaningful `FT_ERR_*` codes instead of raw `-1`/`0` in Networking thread-safety and public-facing operations (`Networking/networking_socket_config_thread_safety.cpp`, `Networking/http2_client.cpp`, and related public networking methods that collapse errors to `-1`).
+- [ ] Rename abbreviated `fd` identifiers to descriptive `file_descriptor` naming in Networking APIs and internals (`Networking/socket_class.hpp`, `Networking/networking_socket_class.cpp`, `Networking/networking_epoll.cpp`, and related helpers).
+
+## API module AGENTS.md compliance
+
+- [ ] Change all `break;` to `break ;` in API sources (`API/api_request_async.cpp`, `API/api_http_common.cpp`, `API/api_request.cpp`, `API/api_http_tls.cpp`, `API/api_request_tls.cpp`, `API/api_tls_client.cpp`, `API/api_http_plain.cpp`).
+- [ ] Remove RAII lock wrapper usage (`ft_unique_lock`) and use explicit/shared lock-unlock handling in API retry/connection-pool synchronization (`API/api_retry.cpp`, `API/api_connection_pool.cpp`).
+- [ ] Update API class destructors and destroy-path lifecycle handling to avoid aborting when state is uninitialized/destroyed (`API/api_retry_policy.cpp`, `API/api_streaming_handler.cpp`, `API/api_tls_client.cpp`).
+- [ ] Update `is_thread_safe()` helpers to follow the contract and only return mutex-pointer presence without lifecycle abort checks (`API/api_retry_policy.cpp`, `API/api_streaming_handler.cpp`, `API/api_tls_client.cpp`, `API/api_connection_pool_handle.cpp`).
+- [ ] Replace open-coded nullable mutex lock/unlock checks with shared PThread nullable lock/unlock helper usage in API class locking paths (`API/api_retry_policy.cpp`, `API/api_streaming_handler.cpp`, `API/api_tls_client.cpp`, `API/api_connection_pool_handle.cpp`).
+- [ ] Remove automatic thread-safety enabling from class `initialize()` methods so synchronization is enabled only via explicit `enable_thread_safety()` (`API/api_retry_policy.cpp`, `API/api_streaming_handler.cpp`, `API/api_tls_client.cpp`, `API/api_connection_pool_handle.cpp`).
+- [ ] Return meaningful `FT_ERR_*` codes instead of raw `-1`/`0` in API thread-safety and public-facing operations where failures are collapsed (`API/api_connection_pool.cpp`, `API/api_connection_pool_handle.cpp`, `API/api_tls_client.cpp`).
+
+## Observability module AGENTS.md compliance
+
+- [ ] Replace open-coded nullable mutex lock/unlock checks with shared PThread nullable lock/unlock helper usage in networking observability synchronization paths (`Observability/observability_networking_metrics.cpp`).
+- [ ] Return meaningful `FT_ERR_*` codes instead of raw `-1`/`0` in observability networking metrics APIs (`Observability/observability_networking_metrics.cpp`).
+- [ ] Return meaningful `FT_ERR_*` codes instead of raw `-1`/`0` in observability game metrics and task-scheduler bridge APIs (`Observability/observability_game_metrics.cpp`, `Observability/observability_task_scheduler_bridge.cpp`).
+- [ ] Align observability networking metrics thread-safety lifecycle behavior so callers get explicit invalid-state errors when thread safety is not enabled before initialize/record/shutdown (`Observability/observability_networking_metrics.cpp`).
+
+## Logger module AGENTS.md compliance
+
+- [ ] Change all `break;` to `break ;` in Logger sources (`Logger/logger_log_health.cpp`, `Logger/logger_log_async.cpp`, `Logger/logger_log_remove_sink.cpp`).
+- [ ] Align `ft_logger` thread-safety lifecycle API with the required trio contract by renaming/refactoring `prepare_thread_safety()` / `teardown_thread_safety()` / `is_thread_safe_enabled()` to explicit `enable_thread_safety()` / `disable_thread_safety()` / `is_thread_safe()` semantics and signatures (`Logger/logger.hpp`, `Logger/logger.cpp`).
+- [ ] Replace `ft_logger` class mutex type with recursive mutex ownership per class mutex requirements (`Logger/logger.hpp`, `Logger/logger.cpp` currently use `pt_mutex`).
+- [ ] Remove RAII lock wrapper usage (`ft_logger::thread_guard`) and use explicit/shared lock-unlock handling per locking guidelines (`Logger/logger.hpp`, `Logger/logger.cpp`).
+- [ ] Replace open-coded nullable mutex lock/unlock checks with shared PThread nullable lock/unlock helper usage in logger class locking paths (`Logger/logger.cpp`: `ft_logger::lock`, `ft_logger::unlock`).
+- [ ] Rename abbreviated `fd` identifiers to descriptive `file_descriptor` naming in Logger internals (`Logger/logger_internal.hpp`, `Logger/logger_log_add_sink.cpp`, `Logger/logger_log_set_file.cpp`, `Logger/logger_log_rotate.cpp`, `Logger/logger_log_close.cpp`).
+
+## Parser module AGENTS.md compliance
+
+- [ ] Update Parser class destructors and destroy-path lifecycle handling to avoid aborting when state is uninitialized/destroyed (`Parser/Parser_dom_node.cpp`, `Parser/Parser_dom_document.cpp`, `Parser/Parser_dom_schema.cpp`, `Parser/Parser_dom_validation_report.cpp`, `Parser/parser_document_backend.cpp`, and mirrored definitions in `Parser/dom.cpp`).
+- [ ] Align Parser destructor/`destroy()` lifecycle semantics with the initialization-state contract: destructors must return cleanly for `state == 0/1`, and non-initialized `destroy()` should return explicit invalid-state codes without lifecycle aborts (`Parser/Parser_dom_document.cpp`, `Parser/Parser_dom_schema.cpp`, `Parser/Parser_dom_validation_report.cpp`, `Parser/parser_document_backend.cpp`, and mirrored `Parser/dom.cpp` definitions).
+- [ ] Update Parser `is_thread_safe()` helpers to follow the contract and only return mutex-pointer presence without lifecycle abort checks (`Parser/Parser_dom_node.cpp`, `Parser/Parser_dom_document.cpp`, `Parser/Parser_dom_schema.cpp`, `Parser/Parser_dom_validation_report.cpp`, `Parser/parser_document_backend.cpp`, and mirrored definitions in `Parser/dom.cpp`).
+- [ ] Replace open-coded nullable mutex lock/unlock checks with shared PThread nullable lock/unlock helper usage in Parser locking paths (`lock_internal` / `unlock_internal` across `Parser/Parser_dom_*.cpp`, `Parser/parser_document_backend.cpp`, and `Parser/dom.cpp`).
+- [ ] Replace non-recursive class mutex usage with recursive mutex ownership for Parser classes (`Parser/dom.hpp`, `Parser/document_backend.hpp` currently use `pt_mutex *` members).
+- [ ] Deduplicate Parser DOM implementation files (`Parser/dom.cpp` vs split `Parser/Parser_dom_node.cpp`, `Parser/Parser_dom_document.cpp`, `Parser/Parser_dom_schema.cpp`, `Parser/Parser_dom_validation_report.cpp`) to avoid mirrored fixes drifting out of sync.
+
+## Game module AGENTS.md compliance
+
+- [ ] Change all `break;` to `break ;` in Game sources (`Game/game_save.cpp` and `Game/game_scripting_bridge.cpp`).
+- [ ] Update Game `is_thread_safe()` helpers to follow the thread-safety contract and only return mutex-pointer presence without lifecycle abort checks (`Game/game_behavior_table.cpp`, `Game/game_reputation.cpp`, `Game/game_economy_table.cpp`, `Game/game_world_registry.cpp`, `Game/game_world_region.cpp`, `Game/game_inventory.cpp`, `Game/game_achievement.cpp`, `Game/game_pathfinding.cpp`, `Game/game_server.cpp`, `Game/game_hooks.cpp`, `Game/game_quest.cpp`, and related Game classes).
+- [ ] Replace open-coded nullable recursive mutex lock/unlock checks with shared PThread nullable lock/unlock helpers across Game locking paths (`lock_internal` / `unlock_internal` patterns in `Game/game_*.cpp` and `Game/game_pathfinding.hpp`).
+- [ ] Guard Game class mutex-validation helper declarations/definitions behind `LIBFT_TEST_BUILD` so production builds do not expose recursive mutex internals (`get_mutex_for_validation()` across Game headers and sources).
+- [ ] Align Game lifecycle destructor/`destroy()` behavior with the initialization-state contract: destructors must only tear down live (`state == 2`) resources and return cleanly for `state == 0/1`, while `destroy()` non-initialized paths should follow the documented invalid-state/error semantics instead of silently returning success or mutating lifecycle state inconsistently (`Game/game_world_registry.cpp`, `Game/game_world_region.cpp`, `Game/game_dialogue_table.cpp`, and other `Game/game_*.cpp` classes with `_initialized_state`).
+
+## Testing module test files review
+
+- [ ] Review and update these tests for changed function behavior as needed:
+- [ ] Test/API/test_api_connection_pool.cpp
+- [ ] Test/API/test_api_http2_streaming.cpp
+- [ ] Test/API/test_api_request_errors.cpp
+- [ ] Test/Test/test_advanced_memory.cpp
+- [ ] Test/Test/test_advanced_numeric.cpp
+- [ ] Test/Test/test_advanced_strings.cpp
+- [ ] Test/Test/test_api_content_length.cpp
+- [ ] Test/Test/test_api_request.cpp
+- [ ] Test/Test/test_api_tls_diagnostics.cpp
+- [ ] Test/Test/test_atoi.cpp
+- [ ] Test/Test/test_atol.cpp
+- [ ] Test/Test/test_basic_additional_coverage.cpp
+- [ ] Test/Test/test_big_number_arithmetic.cpp
+- [ ] Test/Test/test_big_number_basics.cpp
+- [ ] Test/Test/test_big_number_errno.cpp
+- [ ] Test/Test/test_big_number_hex.cpp
+- [ ] Test/Test/test_big_number_mutex.cpp
+- [ ] Test/Test/test_bzero.cpp
+- [ ] Test/Test/test_cma.cpp
+- [ ] Test/Test/test_cma_alloc.cpp
+- [ ] Test/Test/test_cma_backend.cpp
+- [ ] Test/Test/test_cma_block_size.cpp
+- [ ] Test/Test/test_cma_global_new.cpp
+- [ ] Test/Test/test_cma_limits.cpp
+- [ ] Test/Test/test_cma_metadata.cpp
+- [ ] Test/Test/test_cma_mutex_failure.cpp
+- [ ] Test/Test/test_cma_stats.cpp
+- [ ] Test/Test/test_cma_strings.cpp
+- [ ] Test/Test/test_compatebility_errno.cpp
+- [ ] Test/Test/test_compatebility_file_ops.cpp
+- [ ] Test/Test/test_compatebility_file_path.cpp
+- [ ] Test/Test/test_compatebility_mutex_failure.cpp
+- [ ] Test/Test/test_compression.cpp
+- [ ] Test/Test/test_compression_base64.cpp
+- [ ] Test/Test/test_compression_memory.cpp
+- [ ] Test/Test/test_compression_stream.cpp
+- [ ] Test/Test/test_config.cpp
+- [ ] Test/Test/test_container_serialization.cpp
+- [ ] Test/Test/test_cpp_class.cpp
+- [ ] Test/Test/test_cpp_class_big_number_operation_errors.cpp
+- [ ] Test/Test/test_cpp_class_errors.cpp
+- [ ] Test/Test/test_cpp_class_fd_istream_lifecycle.cpp
+- [ ] Test/Test/test_cpp_class_file_copy_move.cpp
+- [ ] Test/Test/test_cpp_class_file_lifecycle.cpp
+- [ ] Test/Test/test_cpp_class_istream_copy_move.cpp
+- [ ] Test/Test/test_cpp_class_istream_thread_safety.cpp
+- [ ] Test/Test/test_cpp_class_istringstream_lifecycle.cpp
+- [ ] Test/Test/test_cpp_class_lifecycle_methods.cpp
+- [ ] Test/Test/test_cpp_class_ofstream_thread_safety.cpp
+- [ ] Test/Test/test_cpp_class_stream_mutex.cpp
+- [ ] Test/Test/test_cpp_class_string_allocation_failure_paths.cpp
+- [ ] Test/Test/test_cpp_class_string_constructors_and_operators.cpp
+- [ ] Test/Test/test_cpp_class_string_lifecycle_abort.cpp
+- [ ] Test/Test/test_cpp_class_string_mutex.cpp
+- [ ] Test/Test/test_cpp_class_string_mutex_failure_paths.cpp
+- [ ] Test/Test/test_cpp_class_string_operation_errors.cpp
+- [ ] Test/Test/test_cpp_class_string_operator_edges.cpp
+- [ ] Test/Test/test_cpp_class_string_recursive_mutex.cpp
+- [ ] Test/Test/test_cpp_class_string_thread_safety.cpp
+- [ ] Test/Test/test_cpp_class_stringbuf_copy_move.cpp
+- [ ] Test/Test/test_cpp_class_uninitialized_abort_methods.cpp
+- [ ] Test/Test/test_crafting.cpp
+- [ ] Test/Test/test_cross_process_receive.cpp
+- [ ] Test/Test/test_cross_process_write.cpp
+- [ ] Test/Test/test_dumb_lifecycle.cpp
+- [ ] Test/Test/test_dumb_mutex.cpp
+- [ ] Test/Test/test_dumb_render_uninitialized_abort.cpp
+- [ ] Test/Test/test_dumb_sound_clip_allocation_failure.cpp
+- [ ] Test/Test/test_dumb_sound_clip_uninitialized_abort.cpp
+- [ ] Test/Test/test_dumb_sound_device_uninitialized_abort.cpp
+- [ ] Test/Test/test_encryption_aead.cpp
+- [ ] Test/Test/test_encryption_aead_copy_move.cpp
+- [ ] Test/Test/test_encryption_basic.cpp
+- [ ] Test/Test/test_encryption_hardware_acceleration.cpp
+- [ ] Test/Test/test_encryption_hash_algorithms.cpp
+- [ ] Test/Test/test_encryption_key.cpp
+- [ ] Test/Test/test_encryption_key_management.cpp
+- [ ] Test/Test/test_encryption_rsa.cpp
+- [ ] Test/Test/test_encryption_secure_wipe.cpp
+- [ ] Test/Test/test_encryption_vectors.cpp
+- [ ] Test/Test/test_environment.cpp
+- [ ] Test/Test/test_equipment.cpp
+- [ ] Test/Test/test_errno.cpp
+- [ ] Test/Test/test_errno_registry.cpp
+- [ ] Test/Test/test_extra_libft.cpp
+- [ ] Test/Test/test_file_directory.cpp
+- [ ] Test/Test/test_file_io.cpp
+- [ ] Test/Test/test_file_utils.cpp
+- [ ] Test/Test/test_file_watch.cpp
+- [ ] Test/Test/test_ft_string.cpp
+- [ ] Test/Test/test_full_libft_header.cpp
+- [ ] Test/Test/test_game_achievement_additional.cpp
+- [ ] Test/Test/test_game_additional_components.cpp
+- [ ] Test/Test/test_game_basics.cpp
+- [ ] Test/Test/test_game_behavior_profiles.cpp
+- [ ] Test/Test/test_game_behavior_record_setters.cpp
+- [ ] Test/Test/test_game_behavior_records.cpp
+- [ ] Test/Test/test_game_behavior_table_copy_move.cpp
+- [ ] Test/Test/test_game_behavior_table_operations.cpp
+- [ ] Test/Test/test_game_data_catalog.cpp
+- [ ] Test/Test/test_game_data_catalog_record_setters.cpp
+- [ ] Test/Test/test_game_data_catalog_records.cpp
+- [ ] Test/Test/test_game_deterministic_simulation.cpp
+- [ ] Test/Test/test_game_dialogue.cpp
+- [ ] Test/Test/test_game_dialogue_line_additional.cpp
+- [ ] Test/Test/test_game_dialogue_line_errno.cpp
+- [ ] Test/Test/test_game_dialogue_record_setters.cpp
+- [ ] Test/Test/test_game_dialogue_records.cpp
+- [ ] Test/Test/test_game_dialogue_repository.cpp
+- [ ] Test/Test/test_game_dialogue_script.cpp
+- [ ] Test/Test/test_game_dialogue_table_copy_move.cpp
+- [ ] Test/Test/test_game_dialogue_table_errno_set.cpp
+- [ ] Test/Test/test_game_dialogue_table_getters_setters.cpp
+- [ ] Test/Test/test_game_dialogue_table_setters.cpp
+- [ ] Test/Test/test_game_economy_basics.cpp
+- [ ] Test/Test/test_game_economy_errno_behaviors.cpp
+- [ ] Test/Test/test_game_economy_rate_additional.cpp
+- [ ] Test/Test/test_game_economy_rate_price_additional.cpp
+- [ ] Test/Test/test_game_economy_record_behavior.cpp
+- [ ] Test/Test/test_game_economy_record_lifecycle_additional.cpp
+- [ ] Test/Test/test_game_economy_record_setters.cpp
+- [ ] Test/Test/test_game_economy_records.cpp
+- [ ] Test/Test/test_game_economy_setters.cpp
+- [ ] Test/Test/test_game_economy_table.cpp
+- [ ] Test/Test/test_game_economy_table_copy_move.cpp
+- [ ] Test/Test/test_game_economy_table_lifecycle_additional.cpp
+- [ ] Test/Test/test_game_error_propagation.cpp
+- [ ] Test/Test/test_game_event_scheduler_core.cpp
+- [ ] Test/Test/test_game_event_scheduler_telemetry.cpp
+- [ ] Test/Test/test_game_event_scheduler_thread_safety.cpp
+- [ ] Test/Test/test_game_event_thread_safety.cpp
+- [ ] Test/Test/test_game_experience_table.cpp
+- [ ] Test/Test/test_game_goal_thread_safety.cpp
+- [ ] Test/Test/test_game_hooks_callbacks.cpp
+- [ ] Test/Test/test_game_hooks_getters.cpp
+- [ ] Test/Test/test_game_hooks_reset.cpp
+- [ ] Test/Test/test_game_hooks_state.cpp
+- [ ] Test/Test/test_game_inventory_core.cpp
+- [ ] Test/Test/test_game_lifecycle_additional_roundtrip_20.cpp
+- [ ] Test/Test/test_game_lifecycle_copy_move_additional.cpp
+- [ ] Test/Test/test_game_lifecycle_destination_state_additional.cpp
+- [ ] Test/Test/test_game_lifecycle_destroyed_state_aborts_additional.cpp
+- [ ] Test/Test/test_game_lifecycle_initialized_destination_aborts_additional.cpp
+- [ ] Test/Test/test_game_lifecycle_locking_additional.cpp
+- [ ] Test/Test/test_game_lifecycle_source_state_aborts_additional.cpp
+- [ ] Test/Test/test_game_lifecycle_state_transitions_additional.cpp
+- [ ] Test/Test/test_game_lifecycle_thread_safety_additional.cpp
+- [ ] Test/Test/test_game_map3d_thread_safety.cpp
+- [ ] Test/Test/test_game_persistence.cpp
+- [ ] Test/Test/test_game_progress_tracker.cpp
+- [ ] Test/Test/test_game_rarity_band_additional.cpp
+- [ ] Test/Test/test_game_region_definition.cpp
+- [ ] Test/Test/test_game_region_definition_behavior.cpp
+- [ ] Test/Test/test_game_region_vendor.cpp
+- [ ] Test/Test/test_game_reputation_copy_move_errno.cpp
+- [ ] Test/Test/test_game_reputation_core.cpp
+- [ ] Test/Test/test_game_resistance_additional.cpp
+- [ ] Test/Test/test_game_resistance_thread_safety.cpp
+- [ ] Test/Test/test_game_scripting_bridge.cpp
+- [ ] Test/Test/test_game_scripting_bridge_additional.cpp
+- [ ] Test/Test/test_game_scripting_context_additional.cpp
+- [ ] Test/Test/test_game_serialization_errors.cpp
+- [ ] Test/Test/test_game_server_thread_safety.cpp
+- [ ] Test/Test/test_game_skill_upgrade.cpp
+- [ ] Test/Test/test_game_state_characters.cpp
+- [ ] Test/Test/test_game_status_effects.cpp
+- [ ] Test/Test/test_game_thread_safety.cpp
+- [ ] Test/Test/test_game_uninitialized_destroy_behavior.cpp
+- [ ] Test/Test/test_game_value_components.cpp
+- [ ] Test/Test/test_game_vendor_profile.cpp
+- [ ] Test/Test/test_game_vendor_profile_copy.cpp
+- [ ] Test/Test/test_game_vendor_profile_mutex_move.cpp
+- [ ] Test/Test/test_game_world_achievements.cpp
+- [ ] Test/Test/test_game_world_components.cpp
+- [ ] Test/Test/test_game_world_events.cpp
+- [ ] Test/Test/test_game_world_quests.cpp
+- [ ] Test/Test/test_game_world_registry.cpp
+- [ ] Test/Test/test_game_world_registry_copy_move.cpp
+- [ ] Test/Test/test_game_world_registry_errors.cpp
+- [ ] Test/Test/test_game_world_registry_record_setters.cpp
+- [ ] Test/Test/test_game_world_registry_records.cpp
+- [ ] Test/Test/test_game_world_registry_table_copy_move.cpp
+- [ ] Test/Test/test_game_world_registry_table_setters.cpp
+- [ ] Test/Test/test_game_world_replay.cpp
+- [ ] Test/Test/test_game_world_upgrades.cpp
+- [ ] Test/Test/test_geometry_aabb.cpp
+- [ ] Test/Test/test_geometry_circle.cpp
+- [ ] Test/Test/test_geometry_sphere.cpp
+- [ ] Test/Test/test_get_next_line.cpp
+- [ ] Test/Test/test_get_next_line_strjoin.cpp
+- [ ] Test/Test/test_gnl_stream_lifecycle.cpp
+- [ ] Test/Test/test_gnl_stream_lock_failure.cpp
+- [ ] Test/Test/test_gnl_stream_mutex.cpp
+- [ ] Test/Test/test_gnl_stream_uninitialized_abort.cpp
+- [ ] Test/Test/test_html.cpp
+- [ ] Test/Test/test_html_attr_thread_safety.cpp
+- [ ] Test/Test/test_html_document_thread_safety.cpp
+- [ ] Test/Test/test_html_node_thread_safety.cpp
+- [ ] Test/Test/test_http_client.cpp
+- [ ] Test/Test/test_http_server.cpp
+- [ ] Test/Test/test_is_constant_evaluated.cpp
+- [ ] Test/Test/test_isalnum.cpp
+- [ ] Test/Test/test_isalpha.cpp
+- [ ] Test/Test/test_isdigit.cpp
+- [ ] Test/Test/test_islower.cpp
+- [ ] Test/Test/test_isprint.cpp
+- [ ] Test/Test/test_isspace.cpp
+- [ ] Test/Test/test_isupper.cpp
+- [ ] Test/Test/test_json_big_number.cpp
+- [ ] Test/Test/test_json_document.cpp
+- [ ] Test/Test/test_json_reader.cpp
+- [ ] Test/Test/test_json_stream_reader.cpp
+- [ ] Test/Test/test_json_streaming.cpp
+- [ ] Test/Test/test_json_validate.cpp
+- [ ] Test/Test/test_json_writer.cpp
+- [ ] Test/Test/test_libft_config_defaults.cpp
+- [ ] Test/Test/test_libft_config_disabled.cpp
+- [ ] Test/Test/test_libft_helpers.cpp
+- [ ] Test/Test/test_libft_locale.cpp
+- [ ] Test/Test/test_libft_string_bounds.cpp
+- [ ] Test/Test/test_libft_utf8.cpp
+- [ ] Test/Test/test_limits.cpp
+- [ ] Test/Test/test_linear_algebra.cpp
+- [ ] Test/Test/test_link_shims.cpp
+- [ ] Test/Test/test_logger.cpp
+- [ ] Test/Test/test_logger_async_logging.cpp
+- [ ] Test/Test/test_logger_control.cpp
+- [ ] Test/Test/test_logger_file.cpp
+- [ ] Test/Test/test_logger_network.cpp
+- [ ] Test/Test/test_loot_table.cpp
+- [ ] Test/Test/test_math_abs.cpp
+- [ ] Test/Test/test_math_absdiff.cpp
+- [ ] Test/Test/test_math_acos.cpp
+- [ ] Test/Test/test_math_angle_conversion.cpp
+- [ ] Test/Test/test_math_average.cpp
+- [ ] Test/Test/test_math_big_number.cpp
+- [ ] Test/Test/test_math_clamp.cpp
+- [ ] Test/Test/test_math_cubic_spline_lifecycle.cpp
+- [ ] Test/Test/test_math_dual_number_lifecycle.cpp
+- [ ] Test/Test/test_math_eval.cpp
+- [ ] Test/Test/test_math_exp.cpp
+- [ ] Test/Test/test_math_fabs.cpp
+- [ ] Test/Test/test_math_factorial.cpp
+- [ ] Test/Test/test_math_fmod.cpp
+- [ ] Test/Test/test_math_gcd.cpp
+- [ ] Test/Test/test_math_infinity.cpp
+- [ ] Test/Test/test_math_interval.cpp
+- [ ] Test/Test/test_math_isnan.cpp
+- [ ] Test/Test/test_math_lcm.cpp
+- [ ] Test/Test/test_math_linear_algebra_allocation_failure.cpp
+- [ ] Test/Test/test_math_linear_algebra_allocation_failure_additional.cpp
+- [ ] Test/Test/test_math_linear_algebra_lifecycle_abort.cpp
+- [ ] Test/Test/test_math_linear_algebra_lifecycle_additional.cpp
+- [ ] Test/Test/test_math_linear_algebra_lifecycle_copy_success.cpp
+- [ ] Test/Test/test_math_linear_algebra_lifecycle_destroyed_destination.cpp
+- [ ] Test/Test/test_math_linear_algebra_lifecycle_methods_complete.cpp
+- [ ] Test/Test/test_math_linear_algebra_lifecycle_per_class.cpp
+- [ ] Test/Test/test_math_linear_algebra_lifecycle_self_move.cpp
+- [ ] Test/Test/test_math_linear_algebra_lifecycle_state_matrix.cpp
+- [ ] Test/Test/test_math_linear_algebra_lock_order_stress.cpp
+- [ ] Test/Test/test_math_linear_algebra_recursive_mutex.cpp
+- [ ] Test/Test/test_math_linear_algebra_thread_safety_idempotency.cpp
+- [ ] Test/Test/test_math_linear_algebra_thread_safety_parity.cpp
+- [ ] Test/Test/test_math_log.cpp
+- [ ] Test/Test/test_math_min_max.cpp
+- [ ] Test/Test/test_math_nan.cpp
+- [ ] Test/Test/test_math_polynomial.cpp
+- [ ] Test/Test/test_math_pow.cpp
+- [ ] Test/Test/test_math_roll.cpp
+- [ ] Test/Test/test_math_roll_utilities.cpp
+- [ ] Test/Test/test_math_roll_validate.cpp
+- [ ] Test/Test/test_math_roll_validate_utils.cpp
+- [ ] Test/Test/test_math_signbit.cpp
+- [ ] Test/Test/test_math_sqrt.cpp
+- [ ] Test/Test/test_math_statistics.cpp
+- [ ] Test/Test/test_math_swap.cpp
+- [ ] Test/Test/test_math_trig.cpp
+- [ ] Test/Test/test_memchr.cpp
+- [ ] Test/Test/test_memcmp.cpp
+- [ ] Test/Test/test_memcpy.cpp
+- [ ] Test/Test/test_memcpy_safe.cpp
+- [ ] Test/Test/test_memdup.cpp
+- [ ] Test/Test/test_memmove.cpp
+- [ ] Test/Test/test_memset.cpp
+- [ ] Test/Test/test_move_self_uninitialized_abort.cpp
+- [ ] Test/Test/test_networking.cpp
+- [ ] Test/Test/test_networking_dns_resolver.cpp
+- [ ] Test/Test/test_networking_event_loop.cpp
+- [ ] Test/Test/test_networking_quic.cpp
+- [ ] Test/Test/test_networking_socket_config.cpp
+- [ ] Test/Test/test_networking_socket_config_thread_safety.cpp
+- [ ] Test/Test/test_networking_socket_thread_safety.cpp
+- [ ] Test/Test/test_networking_websocket_client_thread_safety.cpp
+- [ ] Test/Test/test_networking_websocket_server_thread_safety.cpp
+- [ ] Test/Test/test_observability_game_metrics.cpp
+- [ ] Test/Test/test_observability_networking_metrics.cpp
+- [ ] Test/Test/test_observability_task_scheduler_bridge.cpp
+- [ ] Test/Test/test_parser_dom.cpp
+- [ ] Test/Test/test_path_step_recursive_mutex.cpp
+- [ ] Test/Test/test_pathfinding.cpp
+- [ ] Test/Test/test_pathfinding_thread_safety.cpp
+- [ ] Test/Test/test_printf.cpp
+- [ ] Test/Test/test_printf_additional_coverage.cpp
+- [ ] Test/Test/test_printf_fprintf.cpp
+- [ ] Test/Test/test_printf_print_args.cpp
+- [ ] Test/Test/test_printf_snprintf.cpp
+- [ ] Test/Test/test_printf_stress_allocation.cpp
+- [ ] Test/Test/test_promise.cpp
+- [ ] Test/Test/test_pthread_blocking_queue_thread_safety.cpp
+- [ ] Test/Test/test_pthread_condition.cpp
+- [ ] Test/Test/test_pthread_condition_variable_thread_safety.cpp
+- [ ] Test/Test/test_pthread_lock_tracking.cpp
+- [ ] Test/Test/test_pthread_mutex_lifecycle.cpp
+- [ ] Test/Test/test_pthread_recursive_mutex_lifecycle.cpp
+- [ ] Test/Test/test_pthread_rwlock.cpp
+- [ ] Test/Test/test_pthread_task_scheduler_cancel.cpp
+- [ ] Test/Test/test_pthread_task_scheduler_metrics.cpp
+- [ ] Test/Test/test_pthread_task_scheduler_thread_safety.cpp
+- [ ] Test/Test/test_pthread_task_scheduler_tracing.cpp
+- [ ] Test/Test/test_pthread_thread.cpp
+- [ ] Test/Test/test_pthread_thread_thread_safety.cpp
+- [ ] Test/Test/test_quaternion.cpp
+- [ ] Test/Test/test_queue.cpp
+- [ ] Test/Test/test_queue_class.cpp
+- [ ] Test/Test/test_readline.cpp
+- [ ] Test/Test/test_rng.cpp
+- [ ] Test/Test/test_rng_dice_roll.cpp
+- [ ] Test/Test/test_rng_distribution_coverage.cpp
+- [ ] Test/Test/test_rng_random_seed.cpp
+- [ ] Test/Test/test_rng_secure_bytes.cpp
+- [ ] Test/Test/test_rng_secure_wrappers.cpp
+- [ ] Test/Test/test_rng_statistical_quality.cpp
+- [ ] Test/Test/test_rng_stream.cpp
+- [ ] Test/Test/test_rng_stream_split.cpp
+- [ ] Test/Test/test_rng_uuid.cpp
+- [ ] Test/Test/test_rng_vectorized_sampling.cpp
+- [ ] Test/Test/test_scma_accessor.cpp
+- [ ] Test/Test/test_scma_accessor_lifecycle.cpp
+- [ ] Test/Test/test_scma_accessor_proxy_chain_errors.cpp
+- [ ] Test/Test/test_scma_accessor_uninitialized_abort.cpp
+- [ ] Test/Test/test_scma_integrity_stress.cpp
+- [ ] Test/Test/test_scma_lifecycle.cpp
+- [ ] Test/Test/test_scma_memory.cpp
+- [ ] Test/Test/test_scma_mutex_failure.cpp
+- [ ] Test/Test/test_scma_recursive_mutex.cpp
+- [ ] Test/Test/test_scma_resize.cpp
+- [ ] Test/Test/test_scma_thread_safety_controls.cpp
+- [ ] Test/Test/test_storage_kv_store.cpp
+- [ ] Test/Test/test_storage_kv_store_entry.cpp
+- [ ] Test/Test/test_strchr.cpp
+- [ ] Test/Test/test_strcmp.cpp
+- [ ] Test/Test/test_strcpy_safe.cpp
+- [ ] Test/Test/test_string_view.cpp
+- [ ] Test/Test/test_stringbuf.cpp
+- [ ] Test/Test/test_striteri.cpp
+- [ ] Test/Test/test_strjoin_multiple.cpp
+- [ ] Test/Test/test_strlcat.cpp
+- [ ] Test/Test/test_strlcpy.cpp
+- [ ] Test/Test/test_strlen.cpp
+- [ ] Test/Test/test_strmapi.cpp
+- [ ] Test/Test/test_strncmp.cpp
+- [ ] Test/Test/test_strncpy.cpp
+- [ ] Test/Test/test_strnstr.cpp
+- [ ] Test/Test/test_strrchr.cpp
+- [ ] Test/Test/test_strstr.cpp
+- [ ] Test/Test/test_strtok.cpp
+- [ ] Test/Test/test_strtol.cpp
+- [ ] Test/Test/test_strtoul.cpp
+- [ ] Test/Test/test_system_utils_abort.cpp
+- [ ] Test/Test/test_system_utils_additional_coverage.cpp
+- [ ] Test/Test/test_system_utils_additional_coverage_2.cpp
+- [ ] Test/Test/test_system_utils_env.cpp
+- [ ] Test/Test/test_system_utils_env_sandbox.cpp
+- [ ] Test/Test/test_system_utils_file_copy_errors.cpp
+- [ ] Test/Test/test_system_utils_file_io.cpp
+- [ ] Test/Test/test_system_utils_file_stream.cpp
+- [ ] Test/Test/test_system_utils_file_utils.cpp
+- [ ] Test/Test/test_system_utils_health.cpp
+- [ ] Test/Test/test_system_utils_home.cpp
+- [ ] Test/Test/test_system_utils_locale.cpp
+- [ ] Test/Test/test_system_utils_resource_tracer.cpp
+- [ ] Test/Test/test_system_utils_service.cpp
+- [ ] Test/Test/test_system_utils_sysinfo.cpp
+- [ ] Test/Test/test_task_scheduler.cpp
+- [ ] Test/Test/test_template.cpp
+- [ ] Test/Test/test_template_algorithm.cpp
+- [ ] Test/Test/test_template_allocator_failures.cpp
+- [ ] Test/Test/test_template_bitset.cpp
+- [ ] Test/Test/test_template_bitset_move.cpp
+- [ ] Test/Test/test_template_bitset_thread_safety.cpp
+- [ ] Test/Test/test_template_cancellation_callbacks.cpp
+- [ ] Test/Test/test_template_circular_buffer.cpp
+- [ ] Test/Test/test_template_circular_buffer_move.cpp
+- [ ] Test/Test/test_template_circular_buffer_thread_safety.cpp
+- [ ] Test/Test/test_template_concepts.cpp
+- [ ] Test/Test/test_template_deque.cpp
+- [ ] Test/Test/test_template_deque_move.cpp
+- [ ] Test/Test/test_template_deque_move_errors.cpp
+- [ ] Test/Test/test_template_deque_thread_safety.cpp
+- [ ] Test/Test/test_template_event_emitter.cpp
+- [ ] Test/Test/test_template_function_basic.cpp
+- [ ] Test/Test/test_template_function_copy_move.cpp
+- [ ] Test/Test/test_template_function_thread_safety.cpp
+- [ ] Test/Test/test_template_future_copy_move.cpp
+- [ ] Test/Test/test_template_future_lifecycle.cpp
+- [ ] Test/Test/test_template_future_thread_safety.cpp
+- [ ] Test/Test/test_template_graph_move.cpp
+- [ ] Test/Test/test_template_graph_move_errors.cpp
+- [ ] Test/Test/test_template_graph_thread_safety.cpp
+- [ ] Test/Test/test_template_iterator_copy_move.cpp
+- [ ] Test/Test/test_template_iterator_thread_safety.cpp
+- [ ] Test/Test/test_template_map_thread_safety.cpp
+- [ ] Test/Test/test_template_math.cpp
+- [ ] Test/Test/test_template_matrix_move.cpp
+- [ ] Test/Test/test_template_matrix_thread_safety.cpp
+- [ ] Test/Test/test_template_move.cpp
+- [ ] Test/Test/test_template_optional.cpp
+- [ ] Test/Test/test_template_optional_variant.cpp
+- [ ] Test/Test/test_template_pair.cpp
+- [ ] Test/Test/test_template_pair_move.cpp
+- [ ] Test/Test/test_template_pair_thread_safety.cpp
+- [ ] Test/Test/test_template_pool_move.cpp
+- [ ] Test/Test/test_template_pool_thread_safety.cpp
+- [ ] Test/Test/test_template_priority_queue.cpp
+- [ ] Test/Test/test_template_priority_queue_move.cpp
+- [ ] Test/Test/test_template_priority_queue_thread_safety.cpp
+- [ ] Test/Test/test_template_promise_thread_safety.cpp
+- [ ] Test/Test/test_template_queue_lifecycle_abort.cpp
+- [ ] Test/Test/test_template_queue_move.cpp
+- [ ] Test/Test/test_template_queue_thread_safety.cpp
+- [ ] Test/Test/test_template_set_move.cpp
+- [ ] Test/Test/test_template_set_thread_safety.cpp
+- [ ] Test/Test/test_template_shared_ptr_copy_move.cpp
+- [ ] Test/Test/test_template_stack_move.cpp
+- [ ] Test/Test/test_template_stack_thread_safety.cpp
+- [ ] Test/Test/test_template_thread_pool_thread_safety.cpp
+- [ ] Test/Test/test_template_trie_copy_move_deleted.cpp
+- [ ] Test/Test/test_template_tuple.cpp
+- [ ] Test/Test/test_template_tuple_move_mutex.cpp
+- [ ] Test/Test/test_template_tuple_thread_safety.cpp
+- [ ] Test/Test/test_template_unique_ptr_move.cpp
+- [ ] Test/Test/test_template_unique_ptr_thread_safety.cpp
+- [ ] Test/Test/test_template_unordered_map_allocation_failure_paths.cpp
+- [ ] Test/Test/test_template_unordered_map_copy_move.cpp
+- [ ] Test/Test/test_template_unordered_map_iterator_thread_safety.cpp
+- [ ] Test/Test/test_template_unordered_map_mapped_proxy.cpp
+- [ ] Test/Test/test_template_unordered_map_recursive_mutex.cpp
+- [ ] Test/Test/test_template_unordered_map_uninitialized_abort.cpp
+- [ ] Test/Test/test_template_variant_move.cpp
+- [ ] Test/Test/test_template_variant_thread_safety.cpp
+- [ ] Test/Test/test_template_vector.cpp
+- [ ] Test/Test/test_template_vector_move.cpp
+- [ ] Test/Test/test_template_vector_thread_safety.cpp
+- [ ] Test/Test/test_thread_pool.cpp
+- [ ] Test/Test/test_time.cpp
+- [ ] Test/Test/test_time_async_sleep.cpp
+- [ ] Test/Test/test_time_benchmark.cpp
+- [ ] Test/Test/test_time_fps.cpp
+- [ ] Test/Test/test_time_fps_timer.cpp
+- [ ] Test/Test/test_time_high_resolution.cpp
+- [ ] Test/Test/test_time_monotonic_point.cpp
+- [ ] Test/Test/test_time_parse.cpp
+- [ ] Test/Test/test_time_parse_offsets.cpp
+- [ ] Test/Test/test_time_strftime.cpp
+- [ ] Test/Test/test_time_thread_safety.cpp
+- [ ] Test/Test/test_time_timer.cpp
+- [ ] Test/Test/test_time_timezone.cpp
+- [ ] Test/Test/test_time_trace.cpp
+- [ ] Test/Test/test_to_string.cpp
+- [ ] Test/Test/test_tolower.cpp
+- [ ] Test/Test/test_toupper.cpp
+- [ ] Test/Test/test_trie.cpp
+- [ ] Test/Test/test_validate_int.cpp
+- [ ] Test/Test/test_websocket_compression.cpp
+- [ ] Test/Test/test_websocket_handshake.cpp
+- [ ] Test/Test/test_websocket_validation.cpp
+- [ ] Test/Test/test_wide_char.cpp
+- [ ] Test/Test/test_world_events.cpp
+- [ ] Test/Test/test_xml.cpp
+- [ ] Test/Test/test_xml_copy_move_deleted.cpp
+- [ ] Test/Test/test_xml_document.cpp
+- [ ] Test/Test/test_yaml.cpp
+- [ ] Test/Test/test_yaml_reader.cpp
+
+## Testing module performance tests (optimization build adaptation)
+
+- [ ] Adapt and review performance tests so they run correctly with optimization-enabled builds and still validate updated function behavior:
+- [ ] Test/Efficiency/efficiency_abs.cpp
+- [ ] Test/Efficiency/efficiency_atoi.cpp
+- [ ] Test/Efficiency/efficiency_atol.cpp
+- [ ] Test/Efficiency/efficiency_bzero.cpp
+- [ ] Test/Efficiency/efficiency_clamp.cpp
+- [ ] Test/Efficiency/efficiency_cma_calloc.cpp
+- [ ] Test/Efficiency/efficiency_cma_malloc.cpp
+- [ ] Test/Efficiency/efficiency_cma_memdup.cpp
+- [ ] Test/Efficiency/efficiency_cma_realloc.cpp
+- [ ] Test/Efficiency/efficiency_cma_strdup.cpp
+- [ ] Test/Efficiency/efficiency_exp.cpp
+- [ ] Test/Efficiency/efficiency_isalnum.cpp
+- [ ] Test/Efficiency/efficiency_isalpha.cpp
+- [ ] Test/Efficiency/efficiency_isdigit.cpp
+- [ ] Test/Efficiency/efficiency_isspace.cpp
+- [ ] Test/Efficiency/efficiency_map.cpp
+- [ ] Test/Efficiency/efficiency_memchr.cpp
+- [ ] Test/Efficiency/efficiency_memcmp.cpp
+- [ ] Test/Efficiency/efficiency_memcpy.cpp
+- [ ] Test/Efficiency/efficiency_memmove.cpp
+- [ ] Test/Efficiency/efficiency_memset.cpp
+- [ ] Test/Efficiency/efficiency_pair.cpp
+- [ ] Test/Efficiency/efficiency_pool.cpp
+- [ ] Test/Efficiency/efficiency_pow.cpp
+- [ ] Test/Efficiency/efficiency_printf.cpp
+- [ ] Test/Efficiency/efficiency_promise.cpp
+- [ ] Test/Efficiency/efficiency_queue.cpp
+- [ ] Test/Efficiency/efficiency_rwlock.cpp
+- [ ] Test/Efficiency/efficiency_shared_ptr.cpp
+- [ ] Test/Efficiency/efficiency_sqrt.cpp
+- [ ] Test/Efficiency/efficiency_stack.cpp
+- [ ] Test/Efficiency/efficiency_strchr.cpp
+- [ ] Test/Efficiency/efficiency_strcmp.cpp
+- [ ] Test/Efficiency/efficiency_string.cpp
+- [ ] Test/Efficiency/efficiency_strlen.cpp
+- [ ] Test/Efficiency/efficiency_strncmp.cpp
+- [ ] Test/Efficiency/efficiency_strrchr.cpp
+- [ ] Test/Efficiency/efficiency_swap.cpp
+- [ ] Test/Efficiency/efficiency_unique_ptr.cpp
+- [ ] Test/Efficiency/efficiency_unordered_map.cpp
+- [ ] Test/Efficiency/efficiency_vector.cpp
