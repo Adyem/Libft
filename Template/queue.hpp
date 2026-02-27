@@ -5,6 +5,7 @@
 #include "../Errno/errno.hpp"
 #include "../CMA/CMA.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
 #include "constructor.hpp"
@@ -231,13 +232,7 @@ ft_queue<ElementType>::ft_queue()
 template <typename ElementType>
 ft_queue<ElementType>::~ft_queue()
 {
-    if (this->_initialized_state == ft_queue<ElementType>::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("ft_queue::~ft_queue",
-            "destructor called while object is uninitialized");
-        return ;
-    }
-    if (this->_initialized_state == ft_queue<ElementType>::_state_initialized)
+        if (this->_initialized_state == ft_queue<ElementType>::_state_initialized)
         (void)this->destroy();
     return ;
 }
@@ -268,11 +263,7 @@ int ft_queue<ElementType>::destroy()
     int mutex_destroy_error;
 
     if (this->_initialized_state != ft_queue<ElementType>::_state_initialized)
-    {
-        this->abort_lifecycle_error("ft_queue::destroy",
-            "called while object is not initialized");
         return (ft_queue<ElementType>::set_last_operation_error(FT_ERR_INVALID_STATE));
-    }
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)
@@ -381,7 +372,7 @@ int ft_queue<ElementType>::lock_internal(bool *lock_acquired) const
         *lock_acquired = false;
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
-    result = this->_mutex->lock();
+    result = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (result != FT_ERR_SUCCESS)
         return (result);
     if (lock_acquired != ft_nullptr)
@@ -394,7 +385,7 @@ int ft_queue<ElementType>::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
-    return (this->_mutex->unlock());
+    return (pt_recursive_mutex_unlock_if_not_null(this->_mutex));
 }
 
 template <typename ElementType>

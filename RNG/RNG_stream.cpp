@@ -1,4 +1,5 @@
 #include "rng_stream.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "rng.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
@@ -58,12 +59,6 @@ rng_stream::rng_stream(uint32_t seed_value)
 
 rng_stream::~rng_stream()
 {
-    if (this->_initialized_state == rng_stream::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("rng_stream::~rng_stream",
-            "destructor called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == rng_stream::_state_initialized)
         (void)this->destroy();
     return ;
@@ -105,7 +100,6 @@ int rng_stream::disable_thread_safety()
 
 bool rng_stream::is_thread_safe() const
 {
-    this->abort_if_not_initialized("rng_stream::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
@@ -152,23 +146,23 @@ int rng_stream::initialize(const rng_stream &other)
     if (this < &other)
     {
         if (this->_mutex != ft_nullptr)
-            this_lock_error = this->_mutex->lock();
+            this_lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
         if (this_lock_error == FT_ERR_SUCCESS && other._mutex != ft_nullptr)
-            other_lock_error = other._mutex->lock();
+            other_lock_error = pt_recursive_mutex_lock_if_not_null(other._mutex);
     }
     else
     {
         if (other._mutex != ft_nullptr)
-            other_lock_error = other._mutex->lock();
+            other_lock_error = pt_recursive_mutex_lock_if_not_null(other._mutex);
         if (other_lock_error == FT_ERR_SUCCESS && this->_mutex != ft_nullptr)
-            this_lock_error = this->_mutex->lock();
+            this_lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     }
     if (this_lock_error != FT_ERR_SUCCESS || other_lock_error != FT_ERR_SUCCESS)
     {
         if (other._mutex != ft_nullptr && other_lock_error == FT_ERR_SUCCESS)
-            (void)other._mutex->unlock();
+            (void)pt_recursive_mutex_unlock_if_not_null(other._mutex);
         if (this->_mutex != ft_nullptr && this_lock_error == FT_ERR_SUCCESS)
-            (void)this->_mutex->unlock();
+            (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         (void)this->destroy();
         if (this_lock_error != FT_ERR_SUCCESS)
             return (this_lock_error);
@@ -178,9 +172,9 @@ int rng_stream::initialize(const rng_stream &other)
     this_unlock_error = FT_ERR_SUCCESS;
     other_unlock_error = FT_ERR_SUCCESS;
     if (this->_mutex != ft_nullptr)
-        this_unlock_error = this->_mutex->unlock();
+        this_unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (other._mutex != ft_nullptr)
-        other_unlock_error = other._mutex->unlock();
+        other_unlock_error = pt_recursive_mutex_unlock_if_not_null(other._mutex);
     final_error = this_unlock_error;
     if (final_error == FT_ERR_SUCCESS)
         final_error = other_unlock_error;
@@ -224,23 +218,23 @@ int rng_stream::initialize(rng_stream &&other)
     if (this < &other)
     {
         if (this->_mutex != ft_nullptr)
-            this_lock_error = this->_mutex->lock();
+            this_lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
         if (this_lock_error == FT_ERR_SUCCESS && other._mutex != ft_nullptr)
-            other_lock_error = other._mutex->lock();
+            other_lock_error = pt_recursive_mutex_lock_if_not_null(other._mutex);
     }
     else
     {
         if (other._mutex != ft_nullptr)
-            other_lock_error = other._mutex->lock();
+            other_lock_error = pt_recursive_mutex_lock_if_not_null(other._mutex);
         if (other_lock_error == FT_ERR_SUCCESS && this->_mutex != ft_nullptr)
-            this_lock_error = this->_mutex->lock();
+            this_lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     }
     if (this_lock_error != FT_ERR_SUCCESS || other_lock_error != FT_ERR_SUCCESS)
     {
         if (other._mutex != ft_nullptr && other_lock_error == FT_ERR_SUCCESS)
-            (void)other._mutex->unlock();
+            (void)pt_recursive_mutex_unlock_if_not_null(other._mutex);
         if (this->_mutex != ft_nullptr && this_lock_error == FT_ERR_SUCCESS)
-            (void)this->_mutex->unlock();
+            (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         (void)this->destroy();
         if (this_lock_error != FT_ERR_SUCCESS)
             return (this_lock_error);
@@ -251,9 +245,9 @@ int rng_stream::initialize(rng_stream &&other)
     this_unlock_error = FT_ERR_SUCCESS;
     other_unlock_error = FT_ERR_SUCCESS;
     if (this->_mutex != ft_nullptr)
-        this_unlock_error = this->_mutex->unlock();
+        this_unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (other._mutex != ft_nullptr)
-        other_unlock_error = other._mutex->unlock();
+        other_unlock_error = pt_recursive_mutex_unlock_if_not_null(other._mutex);
     final_error = this_unlock_error;
     if (final_error == FT_ERR_SUCCESS)
         final_error = other_unlock_error;
@@ -270,11 +264,7 @@ int rng_stream::destroy()
     int disable_error;
 
     if (this->_initialized_state != rng_stream::_state_initialized)
-    {
-        this->abort_lifecycle_error("rng_stream::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     disable_error = this->disable_thread_safety();
     this->_initialized_state = rng_stream::_state_destroyed;
     return (disable_error);
@@ -286,16 +276,10 @@ int rng_stream::reseed(uint32_t seed_value)
     int unlock_error;
 
     this->abort_if_not_initialized("rng_stream::reseed");
-    if (this->_mutex == ft_nullptr)
-        operation_error = FT_ERR_SUCCESS;
-    else
-        operation_error = this->_mutex->lock();
+    operation_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
         this->_engine.seed(static_cast<std::mt19937::result_type>(seed_value));
-    if (this->_mutex == ft_nullptr)
-        unlock_error = FT_ERR_SUCCESS;
-    else
-        unlock_error = this->_mutex->unlock();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
         operation_error = unlock_error;
     return (operation_error);
@@ -338,16 +322,10 @@ Pair<int, int> rng_stream::random_int()
 
     this->abort_if_not_initialized("rng_stream::random_int");
     value = 0;
-    if (this->_mutex == ft_nullptr)
-        operation_error = FT_ERR_SUCCESS;
-    else
-        operation_error = this->_mutex->lock();
+    operation_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
         value = this->random_int_unlocked();
-    if (this->_mutex == ft_nullptr)
-        unlock_error = FT_ERR_SUCCESS;
-    else
-        unlock_error = this->_mutex->unlock();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
         operation_error = unlock_error;
     return (Pair<int, int>(operation_error, value));
@@ -371,10 +349,7 @@ Pair<int, int> rng_stream::dice_roll(int number, int faces)
     result = 0;
     index = 0;
     overflowed = false;
-    if (this->_mutex == ft_nullptr)
-        operation_error = FT_ERR_SUCCESS;
-    else
-        operation_error = this->_mutex->lock();
+    operation_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
     {
         while (index < number)
@@ -392,10 +367,7 @@ Pair<int, int> rng_stream::dice_roll(int number, int faces)
             index = index + 1;
         }
     }
-    if (this->_mutex == ft_nullptr)
-        unlock_error = FT_ERR_SUCCESS;
-    else
-        unlock_error = this->_mutex->unlock();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
         operation_error = unlock_error;
     if (overflowed)
@@ -411,16 +383,10 @@ Pair<int, float> rng_stream::random_float()
 
     this->abort_if_not_initialized("rng_stream::random_float");
     value = 0.0f;
-    if (this->_mutex == ft_nullptr)
-        operation_error = FT_ERR_SUCCESS;
-    else
-        operation_error = this->_mutex->lock();
+    operation_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
         value = this->random_float_unlocked();
-    if (this->_mutex == ft_nullptr)
-        unlock_error = FT_ERR_SUCCESS;
-    else
-        unlock_error = this->_mutex->unlock();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
         operation_error = unlock_error;
     return (Pair<int, float>(operation_error, value));
@@ -443,10 +409,7 @@ Pair<int, float> rng_stream::random_normal()
     radius = 0.0f;
     angle = 0.0f;
     result = 0.0f;
-    if (this->_mutex == ft_nullptr)
-        operation_error = FT_ERR_SUCCESS;
-    else
-        operation_error = this->_mutex->lock();
+    operation_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
     {
         uniform_one = this->random_float_unlocked();
@@ -467,10 +430,7 @@ Pair<int, float> rng_stream::random_normal()
         if (rng_stream_capture_math_error(0) != FT_ERR_SUCCESS)
             operation_error = FT_ERR_INTERNAL;
     }
-    if (this->_mutex == ft_nullptr)
-        unlock_error = FT_ERR_SUCCESS;
-    else
-        unlock_error = this->_mutex->unlock();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
         operation_error = unlock_error;
     return (Pair<int, float>(operation_error, result));
@@ -488,10 +448,7 @@ Pair<int, float> rng_stream::random_exponential(float lambda_value)
         return (Pair<int, float>(FT_ERR_INVALID_ARGUMENT, 0.0f));
     uniform_value = 0.0f;
     result = 0.0f;
-    if (this->_mutex == ft_nullptr)
-        operation_error = FT_ERR_SUCCESS;
-    else
-        operation_error = this->_mutex->lock();
+    operation_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
         uniform_value = this->random_float_unlocked();
     if (operation_error == FT_ERR_SUCCESS)
@@ -502,10 +459,7 @@ Pair<int, float> rng_stream::random_exponential(float lambda_value)
         if (rng_stream_capture_math_error(0) != FT_ERR_SUCCESS)
             operation_error = FT_ERR_INTERNAL;
     }
-    if (this->_mutex == ft_nullptr)
-        unlock_error = FT_ERR_SUCCESS;
-    else
-        unlock_error = this->_mutex->unlock();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
         operation_error = unlock_error;
     return (Pair<int, float>(operation_error, result));
@@ -527,10 +481,7 @@ Pair<int, int> rng_stream::random_poisson(double lambda_value)
         return (Pair<int, int>(FT_ERR_INTERNAL, 0));
     product_value = 1.0;
     count_value = 0;
-    if (this->_mutex == ft_nullptr)
-        operation_error = FT_ERR_SUCCESS;
-    else
-        operation_error = this->_mutex->lock();
+    operation_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
     {
         while (product_value > limit_value)
@@ -542,10 +493,7 @@ Pair<int, int> rng_stream::random_poisson(double lambda_value)
             count_value = count_value + 1;
         }
     }
-    if (this->_mutex == ft_nullptr)
-        unlock_error = FT_ERR_SUCCESS;
-    else
-        unlock_error = this->_mutex->unlock();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
         operation_error = unlock_error;
     return (Pair<int, int>(operation_error, count_value - 1));
@@ -574,10 +522,7 @@ Pair<int, int> rng_stream::random_binomial(int trial_count, double success_proba
         return (Pair<int, int>(FT_ERR_SUCCESS, trial_count));
     trial_index = 0;
     success_count = 0;
-    if (this->_mutex == ft_nullptr)
-        operation_error = FT_ERR_SUCCESS;
-    else
-        operation_error = this->_mutex->lock();
+    operation_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
     {
         while (trial_index < trial_count)
@@ -590,10 +535,7 @@ Pair<int, int> rng_stream::random_binomial(int trial_count, double success_proba
             trial_index = trial_index + 1;
         }
     }
-    if (this->_mutex == ft_nullptr)
-        unlock_error = FT_ERR_SUCCESS;
-    else
-        unlock_error = this->_mutex->unlock();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
         operation_error = unlock_error;
     return (Pair<int, int>(operation_error, success_count));
@@ -618,10 +560,7 @@ Pair<int, int> rng_stream::random_geometric(double success_probability)
     trial_count = 1;
     found_success = 0;
     result = 0;
-    if (this->_mutex == ft_nullptr)
-        operation_error = FT_ERR_SUCCESS;
-    else
-        operation_error = this->_mutex->lock();
+    operation_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
     {
         while (1)
@@ -638,10 +577,7 @@ Pair<int, int> rng_stream::random_geometric(double success_probability)
             trial_count = trial_count + 1;
         }
     }
-    if (this->_mutex == ft_nullptr)
-        unlock_error = FT_ERR_SUCCESS;
-    else
-        unlock_error = this->_mutex->unlock();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
         operation_error = unlock_error;
     if (found_success == 0 && operation_error == FT_ERR_SUCCESS)
@@ -660,16 +596,10 @@ Pair<int, float> rng_stream::random_gamma(float shape, float scale)
     if (shape <= 0.0f || scale <= 0.0f)
         return (Pair<int, float>(FT_ERR_INVALID_ARGUMENT, 0.0f));
     sample_value = 0.0f;
-    if (this->_mutex == ft_nullptr)
-        operation_error = FT_ERR_SUCCESS;
-    else
-        operation_error = this->_mutex->lock();
+    operation_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
         sample_value = distribution(this->_engine);
-    if (this->_mutex == ft_nullptr)
-        unlock_error = FT_ERR_SUCCESS;
-    else
-        unlock_error = this->_mutex->unlock();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
         operation_error = unlock_error;
     return (Pair<int, float>(operation_error, sample_value));
@@ -692,19 +622,13 @@ Pair<int, float> rng_stream::random_beta(float alpha, float beta)
     alpha_sample = 0.0f;
     beta_sample = 0.0f;
     result = 0.0f;
-    if (this->_mutex == ft_nullptr)
-        operation_error = FT_ERR_SUCCESS;
-    else
-        operation_error = this->_mutex->lock();
+    operation_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
     {
         alpha_sample = alpha_distribution(this->_engine);
         beta_sample = beta_distribution(this->_engine);
     }
-    if (this->_mutex == ft_nullptr)
-        unlock_error = FT_ERR_SUCCESS;
-    else
-        unlock_error = this->_mutex->unlock();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
         operation_error = unlock_error;
     sum = alpha_sample + beta_sample;
@@ -732,16 +656,10 @@ Pair<int, float> rng_stream::random_chi_squared(float degrees_of_freedom)
     if (degrees_of_freedom <= 0.0f)
         return (Pair<int, float>(FT_ERR_INVALID_ARGUMENT, 0.0f));
     sample_value = 0.0f;
-    if (this->_mutex == ft_nullptr)
-        operation_error = FT_ERR_SUCCESS;
-    else
-        operation_error = this->_mutex->lock();
+    operation_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
         sample_value = distribution(this->_engine);
-    if (this->_mutex == ft_nullptr)
-        unlock_error = FT_ERR_SUCCESS;
-    else
-        unlock_error = this->_mutex->unlock();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (operation_error == FT_ERR_SUCCESS)
         operation_error = unlock_error;
     if (operation_error == FT_ERR_SUCCESS && sample_value < 0.0f)

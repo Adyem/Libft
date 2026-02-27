@@ -71,12 +71,6 @@ quic_experimental_session::quic_experimental_session() noexcept
 
 quic_experimental_session::~quic_experimental_session() noexcept
 {
-    if (this->_initialized_state == quic_experimental_session::_state_uninitialized)
-    {
-        pf_printf_fd(2, "quic_experimental_session lifecycle error: %s\n",
-            "destructor called on uninitialized instance");
-        su_abort();
-    }
     if (this->_initialized_state == quic_experimental_session::_state_initialized)
         (void)this->destroy();
     return ;
@@ -122,8 +116,7 @@ int quic_experimental_session::initialize() noexcept
 int quic_experimental_session::destroy() noexcept
 {
     if (this->_initialized_state != quic_experimental_session::_state_initialized)
-        this->abort_lifecycle_error("quic_experimental_session::destroy",
-            "destroy called on non-initialized instance");
+        return (FT_ERR_INVALID_STATE);
     this->clear_key_material();
     this->_ssl_session = ft_nullptr;
     this->_outbound = false;

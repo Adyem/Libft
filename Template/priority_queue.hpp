@@ -6,6 +6,7 @@
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "swap.hpp"
 #include <cstddef>
 #include <functional>
@@ -112,7 +113,7 @@ class ft_priority_queue
                 *lock_acquired = false;
             if (this->_mutex == ft_nullptr)
                 return (FT_ERR_SUCCESS);
-            if (this->_mutex->lock() != FT_ERR_SUCCESS)
+            if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
                 return (set_last_operation_error(FT_ERR_SYS_MUTEX_LOCK_FAILED));
             if (lock_acquired != ft_nullptr)
                 *lock_acquired = true;
@@ -123,7 +124,7 @@ class ft_priority_queue
         {
             if (lock_acquired == false || this->_mutex == ft_nullptr)
                 return (FT_ERR_SUCCESS);
-            if (this->_mutex->unlock() != FT_ERR_SUCCESS)
+            if (pt_recursive_mutex_unlock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
                 return (set_last_operation_error(FT_ERR_SYS_MUTEX_UNLOCK_FAILED));
             return (FT_ERR_SUCCESS);
         }

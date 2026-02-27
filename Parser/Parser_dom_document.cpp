@@ -1,6 +1,7 @@
 #include "dom.hpp"
 #include "../CMA/CMA.hpp"
 #include "../PThread/mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../PThread/pthread.hpp"
 #include "../Basic/basic.hpp"
 #include "../Printf/printf.hpp"
@@ -16,12 +17,6 @@ ft_dom_document::ft_dom_document() noexcept
 
 ft_dom_document::~ft_dom_document() noexcept
 {
-    if (this->_initialized_state == ft_dom_document::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("ft_dom_document::~ft_dom_document",
-            "destructor called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == ft_dom_document::_state_initialized)
         (void)this->destroy();
     return ;
@@ -66,11 +61,7 @@ int ft_dom_document::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != ft_dom_document::_state_initialized)
-    {
-        this->abort_lifecycle_error("ft_dom_document::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     this->clear();
     disable_error = this->disable_thread_safety();
     this->_initialized_state = ft_dom_document::_state_destroyed;
@@ -79,13 +70,13 @@ int ft_dom_document::destroy() noexcept
 
 int ft_dom_document::enable_thread_safety() noexcept
 {
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
     this->abort_if_not_initialized("ft_dom_document::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
-    mutex_pointer = new (std::nothrow) pt_mutex();
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     initialize_error = mutex_pointer->initialize();
@@ -112,7 +103,6 @@ int ft_dom_document::disable_thread_safety() noexcept
 
 bool ft_dom_document::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("ft_dom_document::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
@@ -122,9 +112,7 @@ int ft_dom_document::lock_internal(bool *lock_acquired) const noexcept
 
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    lock_error = this->_mutex->lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (lock_acquired != ft_nullptr)
@@ -136,9 +124,7 @@ int ft_dom_document::unlock_internal(bool lock_acquired) const noexcept
 {
     if (lock_acquired == false)
         return (FT_ERR_SUCCESS);
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->unlock());
+    return (pt_recursive_mutex_unlock_if_not_null(this->_mutex));
 }
 
 int ft_dom_document::lock(bool *lock_acquired) const noexcept
@@ -207,7 +193,7 @@ void ft_dom_document::clear() noexcept
 }
 
 #ifdef LIBFT_TEST_BUILD
-pt_mutex *ft_dom_document::get_mutex_for_validation() const noexcept
+pt_recursive_mutex *ft_dom_document::get_mutex_for_validation() const noexcept
 {
     this->abort_if_not_initialized("ft_dom_document::get_mutex_for_validation");
     return (this->_mutex);

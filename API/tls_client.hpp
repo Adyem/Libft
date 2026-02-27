@@ -51,8 +51,6 @@ class api_tls_client
         void abort_lifecycle_error(const char *method_name,
             const char *reason) const noexcept;
         void abort_if_not_initialized(const char *method_name) const noexcept;
-        int lock(bool *lock_acquired) const noexcept;
-        void unlock(bool lock_acquired) const noexcept;
         bool populate_handshake_diagnostics();
 
     public:

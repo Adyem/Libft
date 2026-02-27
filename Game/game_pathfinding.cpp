@@ -1,3 +1,4 @@
+#include "../PThread/pthread_internal.hpp"
 #include "game_pathfinding.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
@@ -50,7 +51,7 @@ int ft_path_step::lock_internal(bool *lock_acquired) const noexcept
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    lock_error = this->_mutex->lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -74,7 +75,7 @@ int ft_path_step::unlock_internal(bool lock_acquired) const noexcept
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    (void)this->_mutex->unlock();
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
@@ -358,7 +359,7 @@ int ft_pathfinding::lock_internal(bool *lock_acquired) const noexcept
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    lock_error = this->_mutex->lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -382,7 +383,7 @@ int ft_pathfinding::unlock_internal(bool lock_acquired) const noexcept
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    (void)this->_mutex->unlock();
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }

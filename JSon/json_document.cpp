@@ -1,6 +1,7 @@
 #include "document.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
 
@@ -99,7 +100,7 @@ static void json_document_finalize_guard() noexcept
 
         if (g_json_document_locked_mutex != ft_nullptr)
     {
-        guard_error = g_json_document_locked_mutex->unlock();
+        guard_error = pt_mutex_unlock_if_not_null(g_json_document_locked_mutex);
         g_json_document_locked_mutex = ft_nullptr;
     }
     else
@@ -130,27 +131,6 @@ void json_document::set_error(int error_code) const noexcept
 {
     this->set_error_unlocked(error_code);
     return ;
-}
-
-int json_document::lock_self() const noexcept
-{
-    int lock_error;
-
-        this->abort_if_not_initialized("json_document::lock_self");
-    if (this->_mutex == ft_nullptr)
-    {
-        json_document_push_error(FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
-    }
-    lock_error = this->_mutex->lock();
-    if (lock_error != FT_ERR_SUCCESS)
-    {
-        json_document_push_error(lock_error);
-        return (lock_error);
-    }
-    g_json_document_locked_mutex = this->_mutex;
-    json_document_push_error(FT_ERR_SUCCESS);
-    return (FT_ERR_SUCCESS);
 }
 
 void json_document::clear_unlocked() noexcept
@@ -192,12 +172,6 @@ json_document::json_document() noexcept
 
 json_document::~json_document() noexcept
 {
-    if (this->_initialized_state == json_document::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("json_document::~json_document",
-            "destructor called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == json_document::_state_initialized)
         (void)this->destroy();
     return ;
@@ -223,19 +197,14 @@ int json_document::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != json_document::_state_initialized)
-    {
-        this->abort_lifecycle_error("json_document::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     lock_error = FT_ERR_SUCCESS;
     unlock_error = FT_ERR_SUCCESS;
-    if (this->_mutex != ft_nullptr)
-        lock_error = this->_mutex->lock();
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
     if (lock_error == FT_ERR_SUCCESS)
         this->clear_unlocked();
-    if (this->_mutex != ft_nullptr && lock_error == FT_ERR_SUCCESS)
-        unlock_error = this->_mutex->unlock();
+    if (lock_error == FT_ERR_SUCCESS)
+        unlock_error = pt_mutex_unlock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (unlock_error != FT_ERR_SUCCESS)
@@ -281,7 +250,6 @@ int json_document::disable_thread_safety() noexcept
 
 bool json_document::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("json_document::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
@@ -299,7 +267,9 @@ json_group *json_document::create_group(const char *name) noexcept
     json_group *group;
     int current_error;
 
-    lock_error = this->lock_self();
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    if (lock_error == FT_ERR_SUCCESS)
+        g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -333,7 +303,9 @@ json_item *json_document::create_item(const char *key, const char *value) noexce
     json_item *item;
     int current_error;
 
-    lock_error = this->lock_self();
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    if (lock_error == FT_ERR_SUCCESS)
+        g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -367,7 +339,9 @@ json_item *json_document::create_item(const char *key, const ft_big_number &valu
     json_item *item;
     int current_error;
 
-    lock_error = this->lock_self();
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    if (lock_error == FT_ERR_SUCCESS)
+        g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -401,7 +375,9 @@ json_item *json_document::create_item(const char *key, const int value) noexcept
     json_item *item;
     int current_error;
 
-    lock_error = this->lock_self();
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    if (lock_error == FT_ERR_SUCCESS)
+        g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -435,7 +411,9 @@ json_item *json_document::create_item(const char *key, const bool value) noexcep
     json_item *item;
     int current_error;
 
-    lock_error = this->lock_self();
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    if (lock_error == FT_ERR_SUCCESS)
+        g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -467,7 +445,9 @@ void json_document::add_item(json_group *group, json_item *item) noexcept
 {
     int lock_error;
 
-    lock_error = this->lock_self();
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    if (lock_error == FT_ERR_SUCCESS)
+        g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -490,7 +470,9 @@ void json_document::append_group(json_group *group) noexcept
 {
     int lock_error;
 
-    lock_error = this->lock_self();
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    if (lock_error == FT_ERR_SUCCESS)
+        g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -515,7 +497,9 @@ int json_document::write_to_file(const char *file_path) const noexcept
     int result;
     int current_error;
 
-    lock_error = this->lock_self();
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    if (lock_error == FT_ERR_SUCCESS)
+        g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -550,7 +534,9 @@ int json_document::write_to_backend(ft_document_sink &sink) const noexcept
     size_t serialized_length;
     int write_result;
 
-    lock_error = this->lock_self();
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    if (lock_error == FT_ERR_SUCCESS)
+        g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -582,7 +568,9 @@ char *json_document::write_to_string() const noexcept
     int lock_error;
     char *result;
 
-    lock_error = this->lock_self();
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    if (lock_error == FT_ERR_SUCCESS)
+        g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -600,7 +588,9 @@ int json_document::read_from_file(const char *file_path) noexcept
     json_group *groups;
     int current_error;
 
-    lock_error = this->lock_self();
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    if (lock_error == FT_ERR_SUCCESS)
+        g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -637,7 +627,9 @@ int json_document::read_from_backend(ft_document_source &source) noexcept
     json_group *groups;
     int error_code;
 
-    lock_error = this->lock_self();
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    if (lock_error == FT_ERR_SUCCESS)
+        g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -668,7 +660,9 @@ int json_document::read_from_file_streaming(const char *file_path, size_t buffer
     json_group *groups;
     int current_error;
 
-    lock_error = this->lock_self();
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    if (lock_error == FT_ERR_SUCCESS)
+        g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -714,7 +708,9 @@ int json_document::read_from_string(const char *content) noexcept
     json_group *groups;
     int current_error;
 
-    lock_error = this->lock_self();
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    if (lock_error == FT_ERR_SUCCESS)
+        g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -750,7 +746,9 @@ json_group *json_document::find_group(const char *name) const noexcept
     int lock_error;
     json_group *group;
 
-    lock_error = this->lock_self();
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    if (lock_error == FT_ERR_SUCCESS)
+        g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -774,7 +772,9 @@ json_item *json_document::find_item(json_group *group, const char *key) const no
     int lock_error;
     json_item *item;
 
-    lock_error = this->lock_self();
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    if (lock_error == FT_ERR_SUCCESS)
+        g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -843,7 +843,7 @@ json_item *json_document::find_item_by_pointer_unlocked(const char *pointer) con
                 if (ft_strcmp(group_name, token) == 0)
                 {
                     found_group = true;
-                    break;
+                    break ;
                 }
                 group_iterator = group_iterator->next;
             }
@@ -871,7 +871,7 @@ json_item *json_document::find_item_by_pointer_unlocked(const char *pointer) con
             if (!item_key)
                 item_key = "";
             if (ft_strcmp(item_key, token) == 0)
-                break;
+                break ;
             item_iterator = item_iterator->next;
         }
         cma_free(token);
@@ -897,7 +897,9 @@ json_item *json_document::find_item_by_pointer(const char *pointer) const noexce
     int lock_error;
     json_item *item;
 
-    lock_error = this->lock_self();
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    if (lock_error == FT_ERR_SUCCESS)
+        g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -914,7 +916,9 @@ const char *json_document::get_value_by_pointer(const char *pointer) const noexc
     int lock_error;
     json_item *item;
 
-    lock_error = this->lock_self();
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    if (lock_error == FT_ERR_SUCCESS)
+        g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -942,7 +946,9 @@ void json_document::remove_group(const char *name) noexcept
 {
     int lock_error;
 
-    lock_error = this->lock_self();
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    if (lock_error == FT_ERR_SUCCESS)
+        g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -965,7 +971,9 @@ void json_document::remove_item(json_group *group, const char *key) noexcept
 {
     int lock_error;
 
-    lock_error = this->lock_self();
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    if (lock_error == FT_ERR_SUCCESS)
+        g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -990,7 +998,9 @@ void json_document::update_item(json_group *group, const char *key, const char *
     json_item *item;
     int current_error;
 
-    lock_error = this->lock_self();
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    if (lock_error == FT_ERR_SUCCESS)
+        g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -1031,7 +1041,9 @@ void json_document::update_item(json_group *group, const char *key, const int va
     json_item *item;
     int current_error;
 
-    lock_error = this->lock_self();
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    if (lock_error == FT_ERR_SUCCESS)
+        g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -1072,7 +1084,9 @@ void json_document::update_item(json_group *group, const char *key, const bool v
     json_item *item;
     int current_error;
 
-    lock_error = this->lock_self();
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    if (lock_error == FT_ERR_SUCCESS)
+        g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -1113,7 +1127,9 @@ void json_document::update_item(json_group *group, const char *key, const ft_big
     json_item *item;
     int current_error;
 
-    lock_error = this->lock_self();
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    if (lock_error == FT_ERR_SUCCESS)
+        g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -1152,7 +1168,9 @@ void json_document::clear() noexcept
 {
     int lock_error;
 
-    lock_error = this->lock_self();
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    if (lock_error == FT_ERR_SUCCESS)
+        g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -1169,7 +1187,9 @@ json_group *json_document::get_groups() const noexcept
     int lock_error;
     json_group *groups;
 
-    lock_error = this->lock_self();
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    if (lock_error == FT_ERR_SUCCESS)
+        g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -1194,7 +1214,9 @@ int json_document::get_error() const noexcept
     int lock_error;
     int error_value;
 
-    lock_error = this->lock_self();
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    if (lock_error == FT_ERR_SUCCESS)
+        g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -1211,7 +1233,9 @@ const char *json_document::get_error_str() const noexcept
     int lock_error;
     const char *error_string;
 
-    lock_error = this->lock_self();
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
+    if (lock_error == FT_ERR_SUCCESS)
+        g_json_document_locked_mutex = this->_mutex;
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);

@@ -15,7 +15,6 @@ struct xml_namespace_entry;
 struct xml_node
 {
     pt_mutex *mutex;
-    bool thread_safe_enabled;
     char *name;
     char *namespace_prefix;
     char *local_name;
@@ -39,7 +38,6 @@ class xml_document
     private:
         xml_node *_root;
         mutable pt_mutex *_mutex;
-        mutable bool _thread_safe_enabled;
         uint8_t _initialized_state;
         static const uint8_t _state_uninitialized = 0;
         static const uint8_t _state_destroyed = 1;
@@ -49,32 +47,16 @@ class xml_document
             const char *reason) const noexcept;
         void abort_if_not_initialized(const char *method_name) const noexcept;
         void record_operation_error(int error_code) const noexcept;
-        int enable_thread_safety() noexcept;
-        void disable_thread_safety() noexcept;
-        bool is_thread_safe() const noexcept;
         int lock(bool *lock_acquired) const noexcept;
         void unlock(bool lock_acquired) const noexcept;
-        pt_mutex *get_mutex_for_validation() const noexcept;
 
     public:
-        class thread_guard
-        {
-            private:
-                const xml_document *_document;
-                bool _lock_acquired;
-                int _status;
-
-            public:
-                thread_guard(const xml_document *document) noexcept;
-                ~thread_guard() noexcept;
-
-                int get_status() const noexcept;
-                bool lock_acquired() const noexcept;
-        };
-
         xml_document() noexcept;
         ~xml_document() noexcept;
 
+        int enable_thread_safety() noexcept;
+        int disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
         int initialize() noexcept;
         int destroy() noexcept;
         int load_from_string(const char *xml) noexcept;
@@ -87,7 +69,10 @@ class xml_document
         void set_manual_error(int error_code) noexcept;
         int get_error() const noexcept;
         const char *get_error_str() const noexcept;
-        bool is_thread_safe_enabled() const noexcept;
+
+#ifdef LIBFT_TEST_BUILD
+        pt_mutex *get_mutex_for_validation() const noexcept;
+#endif
 
         xml_document(const xml_document &other) noexcept = delete;
         xml_document &operator=(const xml_document &other) noexcept = delete;
@@ -99,6 +84,5 @@ int  xml_node_prepare_thread_safety(xml_node *node) noexcept;
 void xml_node_teardown_thread_safety(xml_node *node) noexcept;
 int  xml_node_lock(const xml_node *node, bool *lock_acquired) noexcept;
 void xml_node_unlock(const xml_node *node, bool lock_acquired) noexcept;
-bool xml_node_is_thread_safe_enabled(const xml_node *node) noexcept;
 
 #endif

@@ -1,3 +1,4 @@
+#include "../PThread/pthread_internal.hpp"
 #include "game_data_catalog.hpp"
 #include "../Template/move.hpp"
 #include "../PThread/pthread.hpp"
@@ -287,7 +288,7 @@ int ft_item_definition::lock_internal(bool *lock_acquired) const noexcept
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    lock_error = this->_mutex->lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -311,7 +312,7 @@ void ft_item_definition::unlock_internal(bool lock_acquired) const noexcept
         this->set_error(FT_ERR_SUCCESS);
         return ;
     }
-    (void)this->_mutex->unlock();
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
@@ -903,7 +904,7 @@ int ft_recipe_blueprint::lock_internal(bool *lock_acquired) const noexcept
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    lock_error = this->_mutex->lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -927,7 +928,7 @@ void ft_recipe_blueprint::unlock_internal(bool lock_acquired) const noexcept
         this->set_error(FT_ERR_SUCCESS);
         return ;
     }
-    (void)this->_mutex->unlock();
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
@@ -1387,7 +1388,7 @@ int ft_loadout_entry::lock_internal(bool *lock_acquired) const noexcept
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    lock_error = this->_mutex->lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -1411,7 +1412,7 @@ void ft_loadout_entry::unlock_internal(bool lock_acquired) const noexcept
         this->set_error(FT_ERR_SUCCESS);
         return ;
     }
-    (void)this->_mutex->unlock();
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
@@ -1821,7 +1822,7 @@ int ft_loadout_blueprint::lock_internal(bool *lock_acquired) const noexcept
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    lock_error = this->_mutex->lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -1845,7 +1846,7 @@ void ft_loadout_blueprint::unlock_internal(bool lock_acquired) const noexcept
         this->set_error(FT_ERR_SUCCESS);
         return ;
     }
-    (void)this->_mutex->unlock();
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
@@ -2259,7 +2260,7 @@ int ft_data_catalog::lock_internal(bool *lock_acquired) const noexcept
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    lock_error = this->_mutex->lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -2283,7 +2284,7 @@ void ft_data_catalog::unlock_internal(bool lock_acquired) const noexcept
         this->set_error(FT_ERR_SUCCESS);
         return ;
     }
-    (void)this->_mutex->unlock();
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }

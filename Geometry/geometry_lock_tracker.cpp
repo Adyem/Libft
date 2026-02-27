@@ -1,5 +1,6 @@
 #include "geometry_lock_tracker.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../PThread/pthread.hpp"
 #include <chrono>
 #include <functional>
@@ -209,7 +210,7 @@ int geometry_lock_tracker_lock_pair(const void *first_object, const void *second
     {
         int lower_error;
 
-        lower_error = ordered_first_mutex->lock();
+        lower_error = pt_recursive_mutex_lock_if_not_null(ordered_first_mutex);
         if (lower_error != FT_ERR_SUCCESS)
             return (lower_error);
         bool cycle_detected;
@@ -222,14 +223,14 @@ int geometry_lock_tracker_lock_pair(const void *first_object, const void *second
         {
             int unlock_error;
 
-            unlock_error = ordered_first_mutex->unlock();
+            unlock_error = pt_recursive_mutex_unlock_if_not_null(ordered_first_mutex);
             if (unlock_error != FT_ERR_SUCCESS)
                 return (unlock_error);
             return (wait_error);
         }
         int upper_error;
 
-        upper_error = ordered_second_mutex->lock();
+        upper_error = pt_recursive_mutex_lock_if_not_null(ordered_second_mutex);
         (void)cycle_detected;
         geometry_lock_tracker_clear_wait(THREAD_ID);
         if (upper_error == FT_ERR_SUCCESS)
@@ -238,14 +239,14 @@ int geometry_lock_tracker_lock_pair(const void *first_object, const void *second
         {
             int unlock_error;
 
-            unlock_error = ordered_first_mutex->unlock();
+            unlock_error = pt_recursive_mutex_unlock_if_not_null(ordered_first_mutex);
             if (unlock_error != FT_ERR_SUCCESS)
                 return (unlock_error);
             return (upper_error);
         }
         int unlock_error;
 
-        unlock_error = ordered_first_mutex->unlock();
+        unlock_error = pt_recursive_mutex_unlock_if_not_null(ordered_first_mutex);
         if (unlock_error != FT_ERR_SUCCESS)
             return (unlock_error);
         geometry_lock_tracker_sleep_backoff();

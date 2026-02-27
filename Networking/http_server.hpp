@@ -3,7 +3,7 @@
 
 #include "socket_class.hpp"
 #include "../CPP_class/class_string.hpp"
-#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include <cstdint>
 
 class ft_http_server
@@ -17,7 +17,7 @@ class ft_http_server
         void abort_if_not_initialized(const char *method_name) const;
         ft_socket _server_socket;
         bool _non_blocking;
-        mutable pt_mutex _mutex;
+        mutable pt_recursive_mutex *_mutex;
 
         int run_once_locked();
 

@@ -466,7 +466,7 @@ static char *parse_string(const char *json_string, size_t &index)
         if (current_char == '"')
         {
             closed = true;
-            break;
+            break ;
         }
         if (current_char == '\\')
         {
@@ -674,7 +674,7 @@ static json_item *parse_items(const char *json_string, size_t &index)
         {
             index++;
             object_closed = true;
-            break;
+            break ;
         }
         char *key = parse_string(json_string, index);
         int key_error = json_reader_pop_error();
@@ -773,7 +773,7 @@ json_group *json_read_from_file(const char *filename)
         {
             index++;
             object_closed = true;
-            break;
+            break ;
         }
         char *group_name = parse_string(content, index);
         int name_error = json_reader_pop_error();
@@ -895,7 +895,7 @@ json_group *json_read_from_string(const char *content)
         {
             index++;
             object_closed = true;
-            break;
+            break ;
         }
         char *group_name = parse_string(content, index);
         int name_error = json_reader_pop_error();

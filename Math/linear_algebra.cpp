@@ -1,6 +1,7 @@
 #include "linear_algebra.hpp"
 #include "math.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../PThread/pthread.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include <new>
@@ -15,21 +16,6 @@ static void matrix2_sleep_backoff()
     return ;
 }
 
-int matrix2::lock_mutex() const noexcept
-{
-    this->abort_if_not_initialized("matrix2::lock_mutex");
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->lock());
-}
-
-int matrix2::unlock_mutex() const noexcept
-{
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->unlock());
-}
-
 int matrix2::lock_pair(const matrix2 &first, const matrix2 &second,
     const matrix2 *&lower, const matrix2 *&upper)
 {
@@ -40,7 +26,7 @@ int matrix2::lock_pair(const matrix2 &first, const matrix2 &second,
     {
         lower = &first;
         upper = &first;
-        return (first.lock_mutex());
+        return (pt_recursive_mutex_lock_if_not_null(first._mutex));
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -56,22 +42,22 @@ int matrix2::lock_pair(const matrix2 &first, const matrix2 &second,
     upper = ordered_second;
     while (true)
     {
-        int lower_error = lower->lock_mutex();
+        int lower_error = pt_recursive_mutex_lock_if_not_null(lower->_mutex);
         if (lower_error != FT_ERR_SUCCESS)
         {
             return (lower_error);
         }
-        int upper_error = upper->lock_mutex();
+        int upper_error = pt_recursive_mutex_lock_if_not_null(upper->_mutex);
         if (upper_error == FT_ERR_SUCCESS)
         {
             return (FT_ERR_SUCCESS);
         }
         if (upper_error != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            lower->unlock_mutex();
+            pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
             return (upper_error);
         }
-        lower->unlock_mutex();
+        pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
         matrix2_sleep_backoff();
     }
 }
@@ -79,9 +65,9 @@ int matrix2::lock_pair(const matrix2 &first, const matrix2 &second,
 void matrix2::unlock_pair(const matrix2 *lower, const matrix2 *upper)
 {
     if (upper != ft_nullptr)
-        upper->unlock_mutex();
+        pt_recursive_mutex_unlock_if_not_null(upper->_mutex);
     if (lower != ft_nullptr && lower != upper)
-        lower->unlock_mutex();
+        pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
     return ;
 }
 
@@ -94,7 +80,7 @@ vector2 matrix2::transform(const vector2 &vector) const
     double result_y;
     int unlock_error;
 
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         return (vector2());
@@ -103,7 +89,7 @@ vector2 matrix2::transform(const vector2 &vector) const
     vector_y = vector.get_y();
     result_x = this->_m[0][0] * vector_x + this->_m[0][1] * vector_y;
     result_y = this->_m[1][0] * vector_x + this->_m[1][1] * vector_y;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         return (vector2());
@@ -145,7 +131,7 @@ matrix2 matrix2::invert() const
     double result_11;
     int unlock_error;
 
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         return (matrix2());
@@ -154,7 +140,7 @@ matrix2 matrix2::invert() const
     epsilon = 0.000001;
     if (math_fabs(determinant) < epsilon)
     {
-        unlock_error = this->unlock_mutex();
+        unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         if (unlock_error != FT_ERR_SUCCESS)
         {
             return (matrix2());
@@ -165,7 +151,7 @@ matrix2 matrix2::invert() const
     result_01 = -this->_m[0][1] / determinant;
     result_10 = -this->_m[1][0] / determinant;
     result_11 = this->_m[0][0] / determinant;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         return (matrix2());
@@ -245,21 +231,6 @@ static void matrix3_sleep_backoff()
     return ;
 }
 
-int matrix3::lock_mutex() const noexcept
-{
-    this->abort_if_not_initialized("matrix3::lock_mutex");
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->lock());
-}
-
-int matrix3::unlock_mutex() const noexcept
-{
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->unlock());
-}
-
 int matrix3::lock_pair(const matrix3 &first, const matrix3 &second,
     const matrix3 *&lower, const matrix3 *&upper)
 {
@@ -270,7 +241,7 @@ int matrix3::lock_pair(const matrix3 &first, const matrix3 &second,
     {
         lower = &first;
         upper = &first;
-        return (first.lock_mutex());
+        return (pt_recursive_mutex_lock_if_not_null(first._mutex));
     }
     if (ordered_first > ordered_second)
     {
@@ -283,18 +254,18 @@ int matrix3::lock_pair(const matrix3 &first, const matrix3 &second,
     upper = ordered_second;
     while (true)
     {
-        int lower_error = ordered_first->lock_mutex();
+        int lower_error = pt_recursive_mutex_lock_if_not_null(ordered_first->_mutex);
         if (lower_error != FT_ERR_SUCCESS)
             return (lower_error);
-        int upper_error = ordered_second->lock_mutex();
+        int upper_error = pt_recursive_mutex_lock_if_not_null(ordered_second->_mutex);
         if (upper_error == FT_ERR_SUCCESS)
             return (FT_ERR_SUCCESS);
         if (upper_error != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            ordered_first->unlock_mutex();
+            pt_recursive_mutex_unlock_if_not_null(ordered_first->_mutex);
             return (upper_error);
         }
-        ordered_first->unlock_mutex();
+        pt_recursive_mutex_unlock_if_not_null(ordered_first->_mutex);
         matrix3_sleep_backoff();
     }
 }
@@ -302,9 +273,9 @@ int matrix3::lock_pair(const matrix3 &first, const matrix3 &second,
 void matrix3::unlock_pair(const matrix3 *lower, const matrix3 *upper)
 {
     if (upper != ft_nullptr)
-        upper->unlock_mutex();
+        pt_recursive_mutex_unlock_if_not_null(upper->_mutex);
     if (lower != ft_nullptr && lower != upper)
-        lower->unlock_mutex();
+        pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
     return ;
 }
 
@@ -319,7 +290,7 @@ vector3 matrix3::transform(const vector3 &vector) const
     double result_z;
     int unlock_error;
 
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         return (vector3());
@@ -330,7 +301,7 @@ vector3 matrix3::transform(const vector3 &vector) const
     result_x = this->_m[0][0] * vector_x + this->_m[0][1] * vector_y + this->_m[0][2] * vector_z;
     result_y = this->_m[1][0] * vector_x + this->_m[1][1] * vector_y + this->_m[1][2] * vector_z;
     result_z = this->_m[2][0] * vector_x + this->_m[2][1] * vector_y + this->_m[2][2] * vector_z;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         return (vector3());
@@ -389,7 +360,7 @@ matrix3 matrix3::invert() const
     double result_22;
     int unlock_error;
 
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         return (matrix3());
@@ -399,7 +370,7 @@ matrix3 matrix3::invert() const
         + this->_m[0][2] * (this->_m[1][0] * this->_m[2][1] - this->_m[1][1] * this->_m[2][0]);
     if (math_absdiff(determinant, 0.0) <= 0.000001)
     {
-        unlock_error = this->unlock_mutex();
+        unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         if (unlock_error != FT_ERR_SUCCESS)
         {
             return (matrix3());
@@ -416,7 +387,7 @@ matrix3 matrix3::invert() const
     result_20 = (this->_m[1][0] * this->_m[2][1] - this->_m[1][1] * this->_m[2][0]) * inv_det;
     result_21 = (this->_m[0][1] * this->_m[2][0] - this->_m[0][0] * this->_m[2][1]) * inv_det;
     result_22 = (this->_m[0][0] * this->_m[1][1] - this->_m[0][1] * this->_m[1][0]) * inv_det;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         return (matrix3());
@@ -498,21 +469,6 @@ static void matrix4_sleep_backoff()
     return ;
 }
 
-int matrix4::lock_mutex() const noexcept
-{
-    this->abort_if_not_initialized("matrix4::lock_mutex");
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->lock());
-}
-
-int matrix4::unlock_mutex() const noexcept
-{
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->unlock());
-}
-
 #if defined(__SSE2__)
 static double matrix4_compute_row_column_simd(const double *row,
     const double *column)
@@ -563,7 +519,7 @@ int matrix4::lock_pair(const matrix4 &first, const matrix4 &second,
     {
         lower = &first;
         upper = &first;
-        return (first.lock_mutex());
+        return (pt_recursive_mutex_lock_if_not_null(first._mutex));
     }
     if (ordered_first > ordered_second)
     {
@@ -576,18 +532,18 @@ int matrix4::lock_pair(const matrix4 &first, const matrix4 &second,
     upper = ordered_second;
     while (true)
     {
-        int lower_error = ordered_first->lock_mutex();
+        int lower_error = pt_recursive_mutex_lock_if_not_null(ordered_first->_mutex);
         if (lower_error != FT_ERR_SUCCESS)
             return (lower_error);
-        int upper_error = ordered_second->lock_mutex();
+        int upper_error = pt_recursive_mutex_lock_if_not_null(ordered_second->_mutex);
         if (upper_error == FT_ERR_SUCCESS)
             return (FT_ERR_SUCCESS);
         if (upper_error != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            ordered_first->unlock_mutex();
+            pt_recursive_mutex_unlock_if_not_null(ordered_first->_mutex);
             return (upper_error);
         }
-        ordered_first->unlock_mutex();
+        pt_recursive_mutex_unlock_if_not_null(ordered_first->_mutex);
         matrix4_sleep_backoff();
     }
 }
@@ -595,9 +551,9 @@ int matrix4::lock_pair(const matrix4 &first, const matrix4 &second,
 void matrix4::unlock_pair(const matrix4 *lower, const matrix4 *upper)
 {
     if (upper != ft_nullptr)
-        upper->unlock_mutex();
+        pt_recursive_mutex_unlock_if_not_null(upper->_mutex);
     if (lower != ft_nullptr && lower != upper)
-        lower->unlock_mutex();
+        pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
     return ;
 }
 
@@ -614,7 +570,7 @@ vector4 matrix4::transform(const vector4 &vector) const
     double result_w;
     int unlock_error;
 
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         return (vector4());
@@ -627,7 +583,7 @@ vector4 matrix4::transform(const vector4 &vector) const
     result_y = this->_m[1][0] * vector_x + this->_m[1][1] * vector_y + this->_m[1][2] * vector_z + this->_m[1][3] * vector_w;
     result_z = this->_m[2][0] * vector_x + this->_m[2][1] * vector_y + this->_m[2][2] * vector_z + this->_m[2][3] * vector_w;
     result_w = this->_m[3][0] * vector_x + this->_m[3][1] * vector_y + this->_m[3][2] * vector_z + this->_m[3][3] * vector_w;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         return (vector4());
@@ -688,7 +644,7 @@ matrix4 matrix4::invert() const
     double factor;
     int unlock_error;
 
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         return (matrix4());
@@ -719,7 +675,7 @@ matrix4 matrix4::invert() const
         pivot = temp[row][row];
         if (math_fabs(pivot) < 0.000001)
         {
-            unlock_error = this->unlock_mutex();
+            unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
             if (unlock_error != FT_ERR_SUCCESS)
             {
                 return (matrix4());
@@ -760,7 +716,7 @@ matrix4 matrix4::invert() const
         }
         row++;
     }
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         return (matrix4());

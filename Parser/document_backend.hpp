@@ -6,12 +6,12 @@
 #include "../Networking/openssl_support.hpp"
 #include <stdint.h>
 
-class pt_mutex;
+class pt_recursive_mutex;
 
 class ft_document_source
 {
     private:
-        pt_mutex *_mutex;
+        pt_recursive_mutex *_mutex;
         uint8_t _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -42,14 +42,14 @@ class ft_document_source
         virtual int read_all(ft_string &output) = 0;
 
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex *get_mutex_for_validation() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 
 class ft_document_sink
 {
     private:
-        pt_mutex *_mutex;
+        pt_recursive_mutex *_mutex;
         uint8_t _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -80,7 +80,7 @@ class ft_document_sink
         virtual int write_all(const char *data_pointer, size_t data_length) = 0;
 
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex *get_mutex_for_validation() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 
@@ -88,7 +88,7 @@ class ft_file_document_source : public ft_document_source
 {
     private:
         ft_string _path;
-        pt_mutex *_mutex;
+        pt_recursive_mutex *_mutex;
         uint8_t _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -122,7 +122,7 @@ class ft_file_document_source : public ft_document_source
         virtual int read_all(ft_string &output) override;
 
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex *get_mutex_for_validation() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 
@@ -130,7 +130,7 @@ class ft_file_document_sink : public ft_document_sink
 {
     private:
         ft_string _path;
-        pt_mutex *_mutex;
+        pt_recursive_mutex *_mutex;
         uint8_t _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -164,7 +164,7 @@ class ft_file_document_sink : public ft_document_sink
         virtual int write_all(const char *data_pointer, size_t data_length) override;
 
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex *get_mutex_for_validation() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 
@@ -173,7 +173,7 @@ class ft_memory_document_source : public ft_document_source
     private:
         const char *_data_pointer;
         size_t _data_length;
-        pt_mutex *_mutex;
+        pt_recursive_mutex *_mutex;
         uint8_t _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -209,7 +209,7 @@ class ft_memory_document_source : public ft_document_source
         virtual int read_all(ft_string &output) override;
 
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex *get_mutex_for_validation() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 
@@ -217,7 +217,7 @@ class ft_memory_document_sink : public ft_document_sink
 {
     private:
         ft_string *_storage_pointer;
-        pt_mutex *_mutex;
+        pt_recursive_mutex *_mutex;
         uint8_t _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -252,7 +252,7 @@ class ft_memory_document_sink : public ft_document_sink
         virtual int write_all(const char *data_pointer, size_t data_length) override;
 
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex *get_mutex_for_validation() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 
@@ -264,7 +264,7 @@ class ft_http_document_source : public ft_document_source
         ft_string _path;
         ft_string _port;
         bool _use_ssl;
-        pt_mutex *_mutex;
+        pt_recursive_mutex *_mutex;
         uint8_t _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -302,7 +302,7 @@ class ft_http_document_source : public ft_document_source
         virtual int read_all(ft_string &output) override;
 
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex *get_mutex_for_validation() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 
@@ -313,7 +313,7 @@ class ft_http_document_sink : public ft_document_sink
         ft_string _path;
         ft_string _port;
         bool _use_ssl;
-        pt_mutex *_mutex;
+        pt_recursive_mutex *_mutex;
         uint8_t _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -351,7 +351,7 @@ class ft_http_document_sink : public ft_document_sink
         virtual int write_all(const char *data_pointer, size_t data_length) override;
 
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex *get_mutex_for_validation() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 #endif

@@ -194,7 +194,7 @@ static int http_client_pool_acquire_connection(const char *host, const char *por
 
     lock_error = g_http_client_pool_mutex.lock();
     if (lock_error != FT_ERR_SUCCESS)
-        return (1);
+        return (FT_ERR_INVALID_OPERATION);
     now = time_monotonic_point_now();
     http_client_pool_prune_locked(now);
     g_http_client_pool_acquire_calls++;
@@ -212,7 +212,7 @@ static int http_client_pool_acquire_connection(const char *host, const char *por
             g_http_client_pool_reuse_hits++;
             reused = true;
             (void)g_http_client_pool_mutex.unlock();
-            return (0);
+            return (FT_ERR_SUCCESS);
         }
         index++;
     }
@@ -228,7 +228,7 @@ static int http_client_pool_acquire_connection(const char *host, const char *por
     connection.from_pool = false;
     connection.store_allowed = true;
     reused = false;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 static void http_client_trim_string(ft_string &value)
@@ -312,11 +312,11 @@ static void http_client_parse_header_metadata(http_stream_state &state)
         {
             if (line_start[line_length] == '\r'
                 && line_start[line_length + 1] == '\n')
-                break;
+                break ;
             line_length++;
         }
         if (offset + line_length + 1 >= header_limit)
-            break;
+            break ;
         offset += line_length + 2;
         if (line_length == 0)
             continue ;
@@ -505,7 +505,7 @@ static int http_client_initialize_ssl(int socket_fd, const char *host, SSL_CTX *
 
     if (ssl_context == NULL || ssl_connection == NULL)
     {
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     *ssl_context = NULL;
     *ssl_connection = NULL;
@@ -513,19 +513,19 @@ static int http_client_initialize_ssl(int socket_fd, const char *host, SSL_CTX *
     local_context = SSL_CTX_new(TLS_client_method());
     if (local_context == NULL)
     {
-        return (-1);
+        return (FT_ERR_INVALID_OPERATION);
     }
     SSL_CTX_set_verify(local_context, SSL_VERIFY_PEER, NULL);
     if (SSL_CTX_set_default_verify_paths(local_context) != 1)
     {
         SSL_CTX_free(local_context);
-        return (-1);
+        return (FT_ERR_INVALID_OPERATION);
     }
     local_connection = SSL_new(local_context);
     if (local_connection == NULL)
     {
         SSL_CTX_free(local_context);
-        return (-1);
+        return (FT_ERR_INVALID_OPERATION);
     }
     bool selected_http2;
     int alpn_error;
@@ -543,7 +543,7 @@ static int http_client_initialize_ssl(int socket_fd, const char *host, SSL_CTX *
         {
             SSL_free(local_connection);
             SSL_CTX_free(local_context);
-            return (-1);
+            return (FT_ERR_INVALID_OPERATION);
         }
 #if OPENSSL_VERSION_NUMBER >= 0x10002000L
         X509_VERIFY_PARAM *verify_params;
@@ -553,14 +553,14 @@ static int http_client_initialize_ssl(int socket_fd, const char *host, SSL_CTX *
         {
             SSL_free(local_connection);
             SSL_CTX_free(local_context);
-            return (-1);
+            return (FT_ERR_INVALID_OPERATION);
         }
         X509_VERIFY_PARAM_set_hostflags(verify_params, 0);
         if (X509_VERIFY_PARAM_set1_host(verify_params, host, 0) != 1)
         {
             SSL_free(local_connection);
             SSL_CTX_free(local_context);
-            return (-1);
+            return (FT_ERR_INVALID_OPERATION);
         }
 #endif
     }
@@ -568,11 +568,11 @@ static int http_client_initialize_ssl(int socket_fd, const char *host, SSL_CTX *
     {
         SSL_free(local_connection);
         SSL_CTX_free(local_context);
-        return (-1);
+        return (FT_ERR_INVALID_OPERATION);
     }
     *ssl_context = local_context;
     *ssl_connection = local_connection;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 static int http_client_establish_connection(const char *host, const char *port_string,
@@ -586,7 +586,7 @@ static int http_client_establish_connection(const char *host, const char *port_s
     int resolver_status;
 
     if (connection.entry.socket_fd >= 0)
-        return (0);
+        return (FT_ERR_SUCCESS);
     ft_memset(&address_hints, 0, sizeof(address_hints));
     address_hints.ai_family = AF_UNSPEC;
     address_hints.ai_socktype = SOCK_STREAM;
@@ -595,7 +595,7 @@ static int http_client_establish_connection(const char *host, const char *port_s
     {
         networking_dns_set_error(resolver_status);
         http_client_pool_disable_store(connection);
-        return (-1);
+        return (FT_ERR_INVALID_OPERATION);
     }
     socket_fd = -1;
     result = -1;
@@ -607,7 +607,7 @@ static int http_client_establish_connection(const char *host, const char *port_s
         {
             result = nw_connect(socket_fd, current_info->ai_addr, current_info->ai_addrlen);
             if (result >= 0)
-                break;
+                break ;
             nw_close(socket_fd);
             socket_fd = -1;
         }
@@ -620,19 +620,19 @@ static int http_client_establish_connection(const char *host, const char *port_s
     if (socket_fd < 0 || result < 0)
     {
         http_client_pool_disable_store(connection);
-        return (-1);
+        return (FT_ERR_INVALID_OPERATION);
     }
     connection.entry.socket_fd = socket_fd;
     connection.entry.use_ssl = use_ssl;
     if (use_ssl != false)
     {
         if (http_client_initialize_ssl(socket_fd, host, &connection.entry.ssl_context,
-            &connection.entry.ssl_connection) != 0)
+            &connection.entry.ssl_connection) != FT_ERR_SUCCESS)
         {
             nw_close(socket_fd);
             connection.entry.socket_fd = -1;
             http_client_pool_disable_store(connection);
-            return (-1);
+            return (FT_ERR_INVALID_OPERATION);
         }
         result = SSL_connect(connection.entry.ssl_connection);
         if (result != 1)
@@ -644,7 +644,7 @@ static int http_client_establish_connection(const char *host, const char *port_s
             nw_close(socket_fd);
             connection.entry.socket_fd = -1;
             http_client_pool_disable_store(connection);
-            return (-1);
+            return (FT_ERR_INVALID_OPERATION);
         }
 #if OPENSSL_VERSION_NUMBER >= 0x10002000L
         if (SSL_get_verify_result(connection.entry.ssl_connection) != X509_V_OK)
@@ -657,11 +657,11 @@ static int http_client_establish_connection(const char *host, const char *port_s
             nw_close(socket_fd);
             connection.entry.socket_fd = -1;
             http_client_pool_disable_store(connection);
-            return (-1);
+            return (FT_ERR_INVALID_OPERATION);
         }
 #endif
     }
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 int http_client_send_plain_request(int socket_fd, const char *buffer, size_t length)
@@ -687,7 +687,7 @@ int http_client_send_plain_request(int socket_fd, const char *buffer, size_t len
             {
                 wait_result = http_client_wait_for_socket_ready(socket_fd, true);
                 if (wait_result < 0)
-                    return (-1);
+                    return (FT_ERR_INVALID_OPERATION);
                 continue ;
             }
 #else
@@ -697,21 +697,21 @@ int http_client_send_plain_request(int socket_fd, const char *buffer, size_t len
             {
                 wait_result = http_client_wait_for_socket_ready(socket_fd, true);
                 if (wait_result < 0)
-                    return (-1);
+                    return (FT_ERR_INVALID_OPERATION);
                 continue ;
             }
 #endif
-            return (-1);
+            return (FT_ERR_INVALID_OPERATION);
         }
         if (send_result == 0)
         {
-            return (-1);
+            return (FT_ERR_INVALID_OPERATION);
         }
         total_sent += static_cast<size_t>(send_result);
     }
     if (networking_check_socket_after_send(socket_fd) != 0)
-        return (-1);
-    return (0);
+        return (FT_ERR_INVALID_OPERATION);
+    return (FT_ERR_SUCCESS);
 }
 
 int http_client_send_ssl_request(SSL *ssl_connection, const char *buffer, size_t length)
@@ -740,7 +740,7 @@ int http_client_send_ssl_request(SSL *ssl_connection, const char *buffer, size_t
                 wait_for_write = (ssl_error == SSL_ERROR_WANT_WRITE);
                 wait_result = http_client_wait_for_socket_ready(socket_fd, wait_for_write);
                 if (wait_result < 0)
-                    return (-1);
+                    return (FT_ERR_INVALID_OPERATION);
                 continue ;
             }
             if (ssl_error == SSL_ERROR_SYSCALL)
@@ -755,12 +755,12 @@ int http_client_send_ssl_request(SSL *ssl_connection, const char *buffer, size_t
                 {
                     wait_result = http_client_wait_for_socket_ready(socket_fd, true);
                     if (wait_result < 0)
-                        return (-1);
+                        return (FT_ERR_INVALID_OPERATION);
                     continue ;
                 }
                 if (last_error != 0)
                 {
-                    return (-1);
+                    return (FT_ERR_INVALID_OPERATION);
                 }
 #else
                 if (errno == EINTR)
@@ -769,22 +769,22 @@ int http_client_send_ssl_request(SSL *ssl_connection, const char *buffer, size_t
                 {
                     wait_result = http_client_wait_for_socket_ready(socket_fd, true);
                     if (wait_result < 0)
-                        return (-1);
+                        return (FT_ERR_INVALID_OPERATION);
                     continue ;
                 }
                 if (errno != 0)
                 {
-                    return (-1);
+                    return (FT_ERR_INVALID_OPERATION);
                 }
 #endif
             }
-            return (-1);
+            return (FT_ERR_INVALID_OPERATION);
         }
         total_sent += static_cast<size_t>(send_result);
     }
     if (networking_check_ssl_after_send(ssl_connection) != 0)
-        return (-1);
-    return (0);
+        return (FT_ERR_INVALID_OPERATION);
+    return (FT_ERR_SUCCESS);
 }
 
 static void http_client_stream_state_init(http_stream_state &state, http_response_handler handler)
@@ -880,7 +880,7 @@ static int http_client_receive_stream(http_client_active_connection &connection,
     allow_keep_alive = false;
     if (handler == NULL)
     {
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     http_client_stream_state_init(state, handler);
     socket_fd = connection.entry.socket_fd;
@@ -902,7 +902,7 @@ static int http_client_receive_stream(http_client_active_connection &connection,
                 {
                     if (state.has_content_length != false
                         && state.received_body_length >= state.expected_body_length)
-                        break;
+                        break ;
                     continue ;
                 }
             }
@@ -931,7 +931,7 @@ static int http_client_receive_stream(http_client_active_connection &connection,
             }
             if (state.has_content_length != false
                 && state.received_body_length >= state.expected_body_length)
-                break;
+                break ;
         }
         else
         {
@@ -948,13 +948,13 @@ static int http_client_receive_stream(http_client_active_connection &connection,
                     wait_for_write = (ssl_error == SSL_ERROR_WANT_WRITE);
                     wait_result = http_client_wait_for_socket_ready(socket_fd, wait_for_write);
                     if (wait_result < 0)
-                        return (-1);
+                        return (FT_ERR_INVALID_OPERATION);
                     continue ;
                 }
                 if (ssl_error == SSL_ERROR_ZERO_RETURN)
                 {
                     state.keep_alive_allowed = false;
-                    break;
+                    break ;
                 }
                 if (ssl_error == SSL_ERROR_SYSCALL)
                 {
@@ -970,7 +970,7 @@ static int http_client_receive_stream(http_client_active_connection &connection,
 
                         wait_result = http_client_wait_for_socket_ready(socket_fd, false);
                         if (wait_result < 0)
-                            return (-1);
+                            return (FT_ERR_INVALID_OPERATION);
                         continue ;
                     }
 #else
@@ -985,15 +985,15 @@ static int http_client_receive_stream(http_client_active_connection &connection,
 
                         wait_result = http_client_wait_for_socket_ready(socket_fd, false);
                         if (wait_result < 0)
-                            return (-1);
+                            return (FT_ERR_INVALID_OPERATION);
                         continue ;
                     }
 #endif
                     state.keep_alive_allowed = false;
-                    return (-1);
+                    return (FT_ERR_INVALID_OPERATION);
                 }
                 state.keep_alive_allowed = false;
-                return (-1);
+                return (FT_ERR_INVALID_OPERATION);
             }
             if (bytes_received < 0)
             {
@@ -1009,11 +1009,11 @@ static int http_client_receive_stream(http_client_active_connection &connection,
 
                     wait_result = http_client_wait_for_socket_ready(socket_fd, false);
                     if (wait_result < 0)
-                        return (-1);
+                        return (FT_ERR_INVALID_OPERATION);
                     continue ;
                 }
                 if (last_error == WSAECONNRESET)
-                    break;
+                    break ;
 #else
                 int last_error;
 
@@ -1026,17 +1026,17 @@ static int http_client_receive_stream(http_client_active_connection &connection,
 
                     wait_result = http_client_wait_for_socket_ready(socket_fd, false);
                     if (wait_result < 0)
-                        return (-1);
+                        return (FT_ERR_INVALID_OPERATION);
                     continue ;
                 }
                 if (last_error == ECONNRESET)
-                    break;
+                    break ;
 #endif
                 state.keep_alive_allowed = false;
-                return (-1);
+                return (FT_ERR_INVALID_OPERATION);
             }
             state.keep_alive_allowed = false;
-            break;
+            break ;
         }
     }
     if (state.headers_ready == false && state.header_buffer.empty() == false)
@@ -1054,7 +1054,7 @@ static int http_client_receive_stream(http_client_active_connection &connection,
         allow_keep_alive = true;
     else
         allow_keep_alive = false;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 static void http_client_buffering_adapter(int status_code, const ft_string &headers,
@@ -1102,7 +1102,7 @@ static int http_client_finish_with_metrics(const char *method, const char *host,
     if (duration_ms < 0)
         duration_ms = 0;
     error_code = FT_ERR_SUCCESS;
-    if (result != 0)
+    if (result != FT_ERR_SUCCESS)
         error_code = FT_ERR_IO;
     sample.labels.component = "http_client";
     sample.labels.operation = method;
@@ -1139,7 +1139,7 @@ int http_get_stream(const char *host, const char *path, http_response_handler ha
 
     if (handler == NULL)
     {
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     if (custom_port != NULL && custom_port[0] != '\0')
         port_string = custom_port;
@@ -1156,9 +1156,9 @@ int http_get_stream(const char *host, const char *path, http_response_handler ha
         int receive_result;
 
         if (http_client_pool_acquire_connection(host, port_string, use_ssl,
-            connection, reused_connection) != 0)
-            return (-1);
-        if (http_client_establish_connection(host, port_string, use_ssl, connection) != 0)
+            connection, reused_connection) != FT_ERR_SUCCESS)
+            return (FT_ERR_INVALID_OPERATION);
+        if (http_client_establish_connection(host, port_string, use_ssl, connection) != FT_ERR_SUCCESS)
         {
             http_client_pool_release_connection(connection, false);
             if (reused_connection != false)
@@ -1166,7 +1166,7 @@ int http_get_stream(const char *host, const char *path, http_response_handler ha
                 attempt++;
                 continue ;
             }
-            return (-1);
+            return (FT_ERR_INVALID_OPERATION);
         }
         request.clear();
         request.append("GET ");
@@ -1180,7 +1180,7 @@ int http_get_stream(const char *host, const char *path, http_response_handler ha
         else
             send_result = http_client_send_plain_request(connection.entry.socket_fd,
                 request.c_str(), request.size());
-        if (send_result != 0)
+        if (send_result != FT_ERR_SUCCESS)
         {
             http_client_pool_disable_store(connection);
             http_client_pool_release_connection(connection, false);
@@ -1189,10 +1189,10 @@ int http_get_stream(const char *host, const char *path, http_response_handler ha
                 attempt++;
                 continue ;
             }
-            return (-1);
+            return (FT_ERR_INVALID_OPERATION);
         }
         receive_result = http_client_receive_stream(connection, handler, allow_keep_alive);
-        if (receive_result != 0)
+        if (receive_result != FT_ERR_SUCCESS)
         {
             http_client_pool_disable_store(connection);
             http_client_pool_release_connection(connection, false);
@@ -1201,12 +1201,12 @@ int http_get_stream(const char *host, const char *path, http_response_handler ha
                 attempt++;
                 continue ;
             }
-            return (-1);
+            return (FT_ERR_INVALID_OPERATION);
         }
         http_client_pool_release_connection(connection, allow_keep_alive);
-        return (0);
+        return (FT_ERR_SUCCESS);
     }
-    return (-1);
+    return (FT_ERR_INVALID_OPERATION);
 }
 
 int http_get(const char *host, const char *path, ft_string &response, bool use_ssl, const char *custom_port)
@@ -1258,9 +1258,9 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
         int receive_result;
 
         if (http_client_pool_acquire_connection(host, port_string, use_ssl,
-            connection, reused_connection) != 0)
-            return (http_client_finish_with_metrics("POST", host, path, body_length, -1, start_time));
-        if (http_client_establish_connection(host, port_string, use_ssl, connection) != 0)
+            connection, reused_connection) != FT_ERR_SUCCESS)
+            return (http_client_finish_with_metrics("POST", host, path, body_length, FT_ERR_INVALID_OPERATION, start_time));
+        if (http_client_establish_connection(host, port_string, use_ssl, connection) != FT_ERR_SUCCESS)
         {
             http_client_pool_release_connection(connection, false);
             if (reused_connection != false)
@@ -1268,7 +1268,7 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
                 attempt++;
                 continue ;
             }
-            return (http_client_finish_with_metrics("POST", host, path, body_length, -1, start_time));
+            return (http_client_finish_with_metrics("POST", host, path, body_length, FT_ERR_INVALID_OPERATION, start_time));
         }
         request.clear();
         request.append("POST ");
@@ -1285,7 +1285,7 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
         else
             send_result = http_client_send_plain_request(connection.entry.socket_fd,
                 request.c_str(), request.size());
-        if (send_result != 0)
+        if (send_result != FT_ERR_SUCCESS)
         {
             http_client_pool_disable_store(connection);
             http_client_pool_release_connection(connection, false);
@@ -1294,11 +1294,11 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
                 attempt++;
                 continue ;
             }
-            return (http_client_finish_with_metrics("POST", host, path, body_length, -1, start_time));
+            return (http_client_finish_with_metrics("POST", host, path, body_length, FT_ERR_INVALID_OPERATION, start_time));
         }
         receive_result = http_client_receive_stream(connection, http_client_buffering_adapter,
             allow_keep_alive);
-        if (receive_result != 0)
+        if (receive_result != FT_ERR_SUCCESS)
         {
             http_client_pool_disable_store(connection);
             http_client_pool_release_connection(connection, false);
@@ -1307,12 +1307,12 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
                 attempt++;
                 continue ;
             }
-            return (http_client_finish_with_metrics("POST", host, path, body_length, -1, start_time));
+            return (http_client_finish_with_metrics("POST", host, path, body_length, FT_ERR_INVALID_OPERATION, start_time));
         }
         http_client_pool_release_connection(connection, allow_keep_alive);
-        return (http_client_finish_with_metrics("POST", host, path, body_length, 0, start_time));
+        return (http_client_finish_with_metrics("POST", host, path, body_length, FT_ERR_SUCCESS, start_time));
     }
-    return (http_client_finish_with_metrics("POST", host, path, body_length, -1, start_time));
+    return (http_client_finish_with_metrics("POST", host, path, body_length, FT_ERR_INVALID_OPERATION, start_time));
 }
 
 

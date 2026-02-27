@@ -3,6 +3,7 @@
 #include <cmath>
 #include <new>
 #include "../CPP_class/class_nullptr.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../PThread/pthread.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../Printf/printf.hpp"
@@ -44,22 +45,6 @@ int ft_dual_number::set_last_operation_error(int error_code) noexcept
     return (error_code);
 }
 
-int ft_dual_number::lock_mutex(void) const noexcept
-{
-    this->abort_if_not_initialized("ft_dual_number::lock_mutex");
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->lock());
-}
-
-int ft_dual_number::unlock_mutex(void) const noexcept
-{
-    this->abort_if_not_initialized("ft_dual_number::unlock_mutex");
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->unlock());
-}
-
 int ft_dual_number::lock_pair(const ft_dual_number &first,
     const ft_dual_number &second,
     const ft_dual_number *&lower,
@@ -72,7 +57,7 @@ int ft_dual_number::lock_pair(const ft_dual_number &first,
     {
         lower = &first;
         upper = &first;
-        return (first.lock_mutex());
+        return (pt_recursive_mutex_lock_if_not_null(first._mutex));
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -91,18 +76,18 @@ int ft_dual_number::lock_pair(const ft_dual_number &first,
         int lower_error;
         int upper_error;
 
-        lower_error = lower->lock_mutex();
+        lower_error = pt_recursive_mutex_lock_if_not_null(lower->_mutex);
         if (lower_error != FT_ERR_SUCCESS)
             return (lower_error);
-        upper_error = upper->lock_mutex();
+        upper_error = pt_recursive_mutex_lock_if_not_null(upper->_mutex);
         if (upper_error == FT_ERR_SUCCESS)
             return (FT_ERR_SUCCESS);
         if (upper_error != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            lower->unlock_mutex();
+            pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
             return (upper_error);
         }
-        lower->unlock_mutex();
+        pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
         math_autodiff_sleep_backoff();
     }
 }
@@ -111,9 +96,9 @@ void ft_dual_number::unlock_pair(const ft_dual_number *lower,
     const ft_dual_number *upper)
 {
     if (upper != ft_nullptr)
-        upper->unlock_mutex();
+        pt_recursive_mutex_unlock_if_not_null(upper->_mutex);
     if (lower != ft_nullptr && lower != upper)
-        lower->unlock_mutex();
+        pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
     return ;
 }
 
@@ -228,7 +213,7 @@ int ft_dual_number::initialize(const ft_dual_number &other) noexcept
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
         return (initialize_error);
-    lock_error = other.lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(other._mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->destroy();
@@ -237,7 +222,7 @@ int ft_dual_number::initialize(const ft_dual_number &other) noexcept
     this->_value = other._value;
     this->_derivative = other._derivative;
     this->_operation_error = other._operation_error;
-    unlock_error = other.unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(other._mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         this->destroy();
@@ -318,11 +303,7 @@ int ft_dual_number::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != ft_dual_number::_state_initialized)
-    {
-        this->abort_lifecycle_error("ft_dual_number::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     disable_error = this->disable_thread_safety();
     if (disable_error != FT_ERR_SUCCESS)
     {
@@ -508,14 +489,14 @@ double ft_dual_number::value() const noexcept
     int unlock_error;
     double result;
 
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         ft_dual_number::set_last_operation_error(lock_error);
         return (0.0);
     }
     result = this->_value;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_dual_number::set_last_operation_error(unlock_error);
@@ -531,14 +512,14 @@ double ft_dual_number::derivative() const noexcept
     int unlock_error;
     double result;
 
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         ft_dual_number::set_last_operation_error(lock_error);
         return (0.0);
     }
     result = this->_derivative;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         ft_dual_number::set_last_operation_error(unlock_error);
@@ -842,7 +823,7 @@ ft_dual_number ft_dual_number::apply_sin() const noexcept
         ft_dual_number::set_last_operation_error(result._operation_error);
         return (result);
     }
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         result._operation_error = lock_error;
@@ -851,7 +832,7 @@ ft_dual_number ft_dual_number::apply_sin() const noexcept
     }
     value = this->_value;
     derivative_value = this->_derivative;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         result._operation_error = unlock_error;
@@ -881,7 +862,7 @@ ft_dual_number ft_dual_number::apply_cos() const noexcept
         ft_dual_number::set_last_operation_error(result._operation_error);
         return (result);
     }
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         result._operation_error = lock_error;
@@ -890,7 +871,7 @@ ft_dual_number ft_dual_number::apply_cos() const noexcept
     }
     value = this->_value;
     derivative_value = this->_derivative;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         result._operation_error = unlock_error;
@@ -921,7 +902,7 @@ ft_dual_number ft_dual_number::apply_exp() const noexcept
         ft_dual_number::set_last_operation_error(result._operation_error);
         return (result);
     }
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         result._operation_error = lock_error;
@@ -930,7 +911,7 @@ ft_dual_number ft_dual_number::apply_exp() const noexcept
     }
     value = this->_value;
     derivative_value = this->_derivative;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         result._operation_error = unlock_error;
@@ -961,7 +942,7 @@ ft_dual_number ft_dual_number::apply_log() const noexcept
         ft_dual_number::set_last_operation_error(result._operation_error);
         return (result);
     }
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         result._operation_error = lock_error;
@@ -970,7 +951,7 @@ ft_dual_number ft_dual_number::apply_log() const noexcept
     }
     value = this->_value;
     derivative_value = this->_derivative;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         result._operation_error = unlock_error;

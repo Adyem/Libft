@@ -22,8 +22,6 @@ class vector2
                 const char *reason) const noexcept;
         void abort_if_not_initialized(const char *method_name) const noexcept;
 
-        int lock_mutex() const noexcept;
-        int unlock_mutex() const noexcept;
 
         static int lock_pair(const vector2 &first, const vector2 &second,
                 const vector2 *&lower, const vector2 *&upper);
@@ -75,8 +73,6 @@ class vector3
                 const char *reason) const noexcept;
         void abort_if_not_initialized(const char *method_name) const noexcept;
 
-        int lock_mutex() const noexcept;
-        int unlock_mutex() const noexcept;
 
         static int lock_pair(const vector3 &first, const vector3 &second,
                 const vector3 *&lower, const vector3 *&upper);
@@ -131,8 +127,6 @@ class vector4
                 const char *reason) const noexcept;
         void abort_if_not_initialized(const char *method_name) const noexcept;
 
-        int lock_mutex() const noexcept;
-        int unlock_mutex() const noexcept;
 
         static int lock_pair(const vector4 &first, const vector4 &second,
                 const vector4 *&lower, const vector4 *&upper);
@@ -183,8 +177,6 @@ class matrix2
                 const char *reason) const noexcept;
         void abort_if_not_initialized(const char *method_name) const noexcept;
 
-        int lock_mutex() const noexcept;
-        int unlock_mutex() const noexcept;
 
         static int lock_pair(const matrix2 &first, const matrix2 &second,
                 const matrix2 *&lower, const matrix2 *&upper);
@@ -230,8 +222,6 @@ class matrix3
                 const char *reason) const noexcept;
         void abort_if_not_initialized(const char *method_name) const noexcept;
 
-        int lock_mutex() const noexcept;
-        int unlock_mutex() const noexcept;
 
         static int lock_pair(const matrix3 &first, const matrix3 &second,
                 const matrix3 *&lower, const matrix3 *&upper);
@@ -280,8 +270,6 @@ class matrix4
                 const char *reason) const noexcept;
         void abort_if_not_initialized(const char *method_name) const noexcept;
 
-        int lock_mutex() const noexcept;
-        int unlock_mutex() const noexcept;
 
         static int lock_pair(const matrix4 &first, const matrix4 &second,
                 const matrix4 *&lower, const matrix4 *&upper);

@@ -28,10 +28,10 @@ int kv_store::encrypt_value(const ft_string &plain_string, ft_string &encoded_st
     if (this->_encryption_enabled == false)
     {
         encoded_string = plain_string;
-        return (0);
+        return (FT_ERR_SUCCESS);
     }
     if (this->_encryption_key.size() != 16)
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     plain_c_string = plain_string.c_str();
     plain_size = plain_string.size();
     header_index = 0;
@@ -81,7 +81,7 @@ int kv_store::encrypt_value(const ft_string &plain_string, ft_string &encoded_st
     encoded_size = 0;
     encoded_buffer = ft_base64_encode(reinterpret_cast<const unsigned char *>(output_buffer.data()), output_buffer.size(), &encoded_size);
     if (encoded_buffer == ft_nullptr)
-        return (-1);
+        return (FT_ERR_NO_MEMORY);
     encoded_string.clear();
     output_index = 0;
     while (output_index < encoded_size)
@@ -90,7 +90,7 @@ int kv_store::encrypt_value(const ft_string &plain_string, ft_string &encoded_st
         output_index++;
     }
     cma_free(encoded_buffer);
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 int kv_store::decrypt_value(const ft_string &encoded_string, ft_string &plain_string) const
@@ -112,24 +112,24 @@ int kv_store::decrypt_value(const ft_string &encoded_string, ft_string &plain_st
     if (this->_encryption_enabled == false)
     {
         plain_string = encoded_string;
-        return (0);
+        return (FT_ERR_SUCCESS);
     }
     if (this->_encryption_key.size() != 16)
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     decoded_size = 0;
     decoded_buffer = ft_base64_decode(reinterpret_cast<const unsigned char *>(encoded_string.c_str()), encoded_string.size(), &decoded_size);
     if (decoded_buffer == ft_nullptr)
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     if (decoded_size == 0)
     {
         plain_string.clear();
         cma_free(decoded_buffer);
-        return (0);
+        return (FT_ERR_SUCCESS);
     }
     if (decoded_size < 16)
     {
         cma_free(decoded_buffer);
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     header_index = 0;
     while (header_index < 16)
@@ -145,7 +145,7 @@ int kv_store::decrypt_value(const ft_string &encoded_string, ft_string &plain_st
         if (decoded_buffer[header_index] != expected_header[header_index])
         {
             cma_free(decoded_buffer);
-            return (-1);
+            return (FT_ERR_INVALID_ARGUMENT);
         }
         header_index++;
     }
@@ -182,7 +182,7 @@ int kv_store::decrypt_value(const ft_string &encoded_string, ft_string &plain_st
         block_counter++;
     }
     cma_free(decoded_buffer);
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 int kv_store::configure_encryption(const char *encryption_key, bool enable_encryption)
@@ -191,17 +191,17 @@ int kv_store::configure_encryption(const char *encryption_key, bool enable_encry
     if (enable_encryption)
     {
         if (encryption_key == ft_nullptr)
-            return (-1);
+            return (FT_ERR_INVALID_ARGUMENT);
         this->_encryption_key = encryption_key;
         if (this->_encryption_key.size() != 16)
-            return (-1);
+            return (FT_ERR_INVALID_ARGUMENT);
         this->_encryption_enabled = true;
-        return (0);
+        return (FT_ERR_SUCCESS);
     }
     this->_encryption_enabled = false;
     if (encryption_key == ft_nullptr)
         this->_encryption_key.clear();
     else
         this->_encryption_key = encryption_key;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }

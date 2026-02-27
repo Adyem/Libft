@@ -46,12 +46,6 @@ ft_socket_handle::ft_socket_handle(int) : _initialized_state(ft_socket_handle::_
 
 ft_socket_handle::~ft_socket_handle()
 {
-    if (this->_initialized_state == ft_socket_handle::_state_uninitialized)
-    {
-        pf_printf_fd(2, "ft_socket_handle lifecycle error: %s\n",
-            "destructor called on uninitialized instance");
-        su_abort();
-    }
     if (this->_initialized_state == ft_socket_handle::_state_initialized)
         (void)this->destroy();
     return ;
@@ -90,8 +84,7 @@ int ft_socket_handle::initialize()
 int ft_socket_handle::destroy()
 {
     if (this->_initialized_state != ft_socket_handle::_state_initialized)
-        this->abort_lifecycle_error("ft_socket_handle::destroy",
-            "destroy called on non-initialized instance");
+        return (FT_ERR_INVALID_STATE);
     (void)this->close();
     this->_initialized_state = ft_socket_handle::_state_destroyed;
     return (FT_ERR_SUCCESS);

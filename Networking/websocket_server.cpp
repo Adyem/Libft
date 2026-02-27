@@ -7,6 +7,7 @@
 #include "../Encryption/basic_encryption.hpp"
 #include "../Encryption/encryption_sha1.hpp"
 #include "../Basic/basic.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
 #include <cstring>
@@ -38,7 +39,7 @@ static int websocket_case_insensitive_compare(const char *left, const char *righ
             return (static_cast<int>(left_value) - static_cast<int>(right_value));
         index_value++;
     }
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 static const char *websocket_find_header_value(const ft_string &request,
@@ -306,19 +307,13 @@ static void compute_accept_key(const ft_string &key, ft_string &accept)
 }
 
 ft_websocket_server::ft_websocket_server()
-    : _initialized_state(_state_uninitialized), _server_socket(ft_nullptr), _mutex()
+    : _initialized_state(_state_uninitialized), _server_socket(ft_nullptr), _mutex(ft_nullptr)
 {
     return ;
 }
 
 ft_websocket_server::~ft_websocket_server()
 {
-    if (this->_initialized_state == _state_uninitialized)
-    {
-        pf_printf_fd(2, "ft_websocket_server lifecycle error: %s\n",
-            "destructor called on uninitialized instance");
-        su_abort();
-    }
     if (this->_initialized_state == _state_initialized)
         (void)this->destroy();
     return ;
@@ -347,24 +342,32 @@ void ft_websocket_server::abort_if_not_initialized(const char *method_name) cons
 
 int ft_websocket_server::initialize()
 {
+    pt_recursive_mutex *mutex_pointer;
+
     if (this->_initialized_state == _state_initialized)
         this->abort_lifecycle_error("ft_websocket_server::initialize",
             "initialize called on initialized instance");
-    if (this->_mutex.initialize() != FT_ERR_SUCCESS)
-        return (1);
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
+    if (mutex_pointer == ft_nullptr)
+        return (FT_ERR_INVALID_OPERATION);
+    if (mutex_pointer->initialize() != FT_ERR_SUCCESS)
+    {
+        delete mutex_pointer;
+        return (FT_ERR_INVALID_OPERATION);
+    }
+    this->_mutex = mutex_pointer;
     this->_server_socket = ft_nullptr;
     this->_connection_states.clear();
     this->_initialized_state = _state_initialized;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 int ft_websocket_server::destroy()
 {
     if (this->_initialized_state != _state_initialized)
-        this->abort_lifecycle_error("ft_websocket_server::destroy",
-            "destroy called on non-initialized instance");
-    if (this->_mutex.lock() != FT_ERR_SUCCESS)
-        return (1);
+        return (FT_ERR_INVALID_STATE);
+    if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
+        return (FT_ERR_INVALID_OPERATION);
     if (this->_server_socket)
     {
         this->_server_socket->close_socket();
@@ -372,10 +375,15 @@ int ft_websocket_server::destroy()
         this->_server_socket = ft_nullptr;
     }
     this->_connection_states.clear();
-    (void)this->_mutex.unlock();
-    (void)this->_mutex.destroy();
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    if (this->_mutex != ft_nullptr)
+    {
+        (void)this->_mutex->destroy();
+        delete this->_mutex;
+        this->_mutex = ft_nullptr;
+    }
     this->_initialized_state = _state_destroyed;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 void ft_websocket_server::store_connection_state_locked(int client_fd,
@@ -384,28 +392,24 @@ void ft_websocket_server::store_connection_state_locked(int client_fd,
     s_connection_state state;
 
     state._permessage_deflate_enabled = permessage_deflate_enabled;
-    this->_connection_states[client_fd] = state;
+    this->_connection_states.insert(client_fd, state);
     return ;
 }
 
 void ft_websocket_server::remove_connection_state_locked(int client_fd)
 {
-    std::map<int, s_connection_state>::iterator iterator_value;
-
-    iterator_value = this->_connection_states.find(client_fd);
-    if (iterator_value != this->_connection_states.end())
-        this->_connection_states.erase(iterator_value);
+    this->_connection_states.remove(client_fd);
     return ;
 }
 
 bool ft_websocket_server::connection_supports_permessage_deflate_locked(int client_fd) const
 {
-    std::map<int, s_connection_state>::const_iterator iterator_value;
+    const Pair<int, s_connection_state> *entry_pointer;
 
-    iterator_value = this->_connection_states.find(client_fd);
-    if (iterator_value == this->_connection_states.end())
+    entry_pointer = this->_connection_states.find(client_fd);
+    if (entry_pointer == this->_connection_states.end())
         return (false);
-    return (iterator_value->second._permessage_deflate_enabled);
+    return (entry_pointer->value._permessage_deflate_enabled);
 }
 
 int ft_websocket_server::start(const char *ip, uint16_t port, int address_family, bool non_blocking)
@@ -415,14 +419,14 @@ int ft_websocket_server::start(const char *ip, uint16_t port, int address_family
     int initialize_error;
 
     this->abort_if_not_initialized("ft_websocket_server::start");
-    lock_error = this->_mutex.lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
-        return (1);
+        return (FT_ERR_INVALID_OPERATION);
     initialize_error = configuration.initialize();
     if (initialize_error != FT_ERR_SUCCESS)
     {
-        (void)this->_mutex.unlock();
-        return (1);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        return (FT_ERR_INVALID_OPERATION);
     }
     configuration._type = SocketType::SERVER;
     std::strncpy(configuration._ip, ip, sizeof(configuration._ip) - 1);
@@ -441,19 +445,19 @@ int ft_websocket_server::start(const char *ip, uint16_t port, int address_family
     this->_server_socket = new (std::nothrow) ft_socket();
     if (!this->_server_socket)
     {
-        (void)this->_mutex.unlock();
-        return (1);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        return (FT_ERR_INVALID_OPERATION);
     }
     if (this->_server_socket->initialize(configuration) != FT_ERR_SUCCESS)
     {
         delete this->_server_socket;
         this->_server_socket = ft_nullptr;
-        (void)this->_mutex.unlock();
-        return (1);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        return (FT_ERR_INVALID_OPERATION);
     }
     this->_connection_states.clear();
-    (void)this->_mutex.unlock();
-    return (0);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    return (FT_ERR_SUCCESS);
 }
 
 int ft_websocket_server::perform_handshake_locked(int client_fd)
@@ -476,26 +480,26 @@ int ft_websocket_server::perform_handshake_locked(int client_fd)
     {
         if (request.size() >= MAX_HANDSHAKE_SIZE)
         {
-            return (1);
+            return (FT_ERR_INVALID_OPERATION);
         }
         bytes_received = nw_recv(client_fd, buffer, sizeof(buffer) - 1, 0);
         if (bytes_received < 0)
-            return (1);
+            return (FT_ERR_INVALID_OPERATION);
         if (bytes_received == 0)
-            return (1);
+            return (FT_ERR_INVALID_OPERATION);
         buffer[bytes_received] = '\0';
         request_size = request.size();
         if (request_size + static_cast<std::size_t>(bytes_received) > MAX_HANDSHAKE_SIZE)
         {
-            return (1);
+            return (FT_ERR_INVALID_OPERATION);
         }
         request.append(buffer);
         if (ft_strstr(request.c_str(), "\r\n\r\n"))
-            break;
+            break ;
     }
     key_line = ft_strstr(request.c_str(), "Sec-WebSocket-Key: ");
     if (!key_line)
-        return (1);
+        return (FT_ERR_INVALID_OPERATION);
     key_line += ft_strlen("Sec-WebSocket-Key: ");
     line_end = ft_strstr(key_line, "\r\n");
     key.clear();
@@ -539,10 +543,10 @@ int ft_websocket_server::perform_handshake_locked(int client_fd)
     if (nw_send(client_fd, response.c_str(), response.size(), 0) < 0)
     {
         this->remove_connection_state_locked(client_fd);
-        return (1);
+        return (FT_ERR_INVALID_OPERATION);
     }
     this->store_connection_state_locked(client_fd, permessage_deflate_enabled);
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 int ft_websocket_server::send_pong_locked(int client_fd, const unsigned char *payload, std::size_t length)
@@ -576,8 +580,8 @@ int ft_websocket_server::send_pong_locked(int client_fd, const unsigned char *pa
         index_value++;
     }
     if (nw_send(client_fd, frame.c_str(), frame.size(), 0) < 0)
-        return (1);
-    return (0);
+        return (FT_ERR_INVALID_OPERATION);
+    return (FT_ERR_SUCCESS);
 }
 
 int ft_websocket_server::receive_frame_locked(int client_fd, ft_string &message)
@@ -604,7 +608,7 @@ int ft_websocket_server::receive_frame_locked(int client_fd, ft_string &message)
         if (bytes_received <= 0)
         {
             this->remove_connection_state_locked(client_fd);
-            return (1);
+            return (FT_ERR_INVALID_OPERATION);
         }
         opcode = header[0] & 0x0F;
         rsv_bits = header[0] & 0x70;
@@ -615,22 +619,22 @@ int ft_websocket_server::receive_frame_locked(int client_fd, ft_string &message)
         if (is_final == false)
         {
             this->remove_connection_state_locked(client_fd);
-            return (1);
+            return (FT_ERR_INVALID_OPERATION);
         }
         if ((rsv_bits & 0x20) != 0 || (rsv_bits & 0x10) != 0)
         {
             this->remove_connection_state_locked(client_fd);
-            return (1);
+            return (FT_ERR_INVALID_OPERATION);
         }
         if ((rsv_bits & 0x40) != 0 && permessage_deflate_enabled == false)
         {
             this->remove_connection_state_locked(client_fd);
-            return (1);
+            return (FT_ERR_INVALID_OPERATION);
         }
         if (is_control_frame != false && rsv_bits != 0)
         {
             this->remove_connection_state_locked(client_fd);
-            return (1);
+            return (FT_ERR_INVALID_OPERATION);
         }
         if (payload_length == 126)
         {
@@ -640,7 +644,7 @@ int ft_websocket_server::receive_frame_locked(int client_fd, ft_string &message)
             if (bytes_received <= 0)
             {
                 this->remove_connection_state_locked(client_fd);
-                return (1);
+                return (FT_ERR_INVALID_OPERATION);
             }
             payload_length = static_cast<std::size_t>((extended[0] << 8) | extended[1]);
         }
@@ -653,7 +657,7 @@ int ft_websocket_server::receive_frame_locked(int client_fd, ft_string &message)
             if (bytes_received <= 0)
             {
                 this->remove_connection_state_locked(client_fd);
-                return (1);
+                return (FT_ERR_INVALID_OPERATION);
             }
             payload_length = 0;
             shift_index = 0;
@@ -666,23 +670,23 @@ int ft_websocket_server::receive_frame_locked(int client_fd, ft_string &message)
         if (is_control_frame != false && payload_length > 125)
         {
             this->remove_connection_state_locked(client_fd);
-            return (1);
+            return (FT_ERR_INVALID_OPERATION);
         }
         if (payload_length > compression_max_size)
         {
             this->remove_connection_state_locked(client_fd);
-            return (1);
+            return (FT_ERR_INVALID_OPERATION);
         }
         if (masked == false)
         {
             this->remove_connection_state_locked(client_fd);
-            return (1);
+            return (FT_ERR_INVALID_OPERATION);
         }
         bytes_received = nw_recv(client_fd, mask_key, 4, 0);
         if (bytes_received <= 0)
         {
             this->remove_connection_state_locked(client_fd);
-            return (1);
+            return (FT_ERR_INVALID_OPERATION);
         }
         if (payload_length > 0)
             payload = static_cast<unsigned char *>(cma_malloc(payload_length));
@@ -691,7 +695,7 @@ int ft_websocket_server::receive_frame_locked(int client_fd, ft_string &message)
         if (payload_length > 0 && payload == ft_nullptr)
         {
             this->remove_connection_state_locked(client_fd);
-            return (1);
+            return (FT_ERR_INVALID_OPERATION);
         }
         index_value = 0;
         while (index_value < payload_length)
@@ -702,7 +706,7 @@ int ft_websocket_server::receive_frame_locked(int client_fd, ft_string &message)
                 if (payload != ft_nullptr)
                     cma_free(payload);
                 this->remove_connection_state_locked(client_fd);
-                return (1);
+                return (FT_ERR_INVALID_OPERATION);
             }
             index_value += static_cast<std::size_t>(bytes_received);
         }
@@ -719,7 +723,7 @@ int ft_websocket_server::receive_frame_locked(int client_fd, ft_string &message)
                 if (payload != ft_nullptr)
                     cma_free(payload);
                 this->remove_connection_state_locked(client_fd);
-                return (1);
+                return (FT_ERR_INVALID_OPERATION);
             }
             if (payload != ft_nullptr)
                 cma_free(payload);
@@ -741,7 +745,7 @@ int ft_websocket_server::receive_frame_locked(int client_fd, ft_string &message)
                     if (payload != ft_nullptr)
                         cma_free(payload);
                     this->remove_connection_state_locked(client_fd);
-                    return (1);
+                    return (FT_ERR_INVALID_OPERATION);
                 }
             }
             else
@@ -755,19 +759,19 @@ int ft_websocket_server::receive_frame_locked(int client_fd, ft_string &message)
                         if (payload != ft_nullptr)
                             cma_free(payload);
                         this->remove_connection_state_locked(client_fd);
-                        return (1);
+                        return (FT_ERR_INVALID_OPERATION);
                     }
                     index_value++;
                 }
             }
             if (payload != ft_nullptr)
                 cma_free(payload);
-            return (0);
+            return (FT_ERR_SUCCESS);
         }
         if (payload != ft_nullptr)
             cma_free(payload);
         this->remove_connection_state_locked(client_fd);
-        return (1);
+        return (FT_ERR_INVALID_OPERATION);
     }
 }
 
@@ -779,36 +783,36 @@ int ft_websocket_server::run_once(int &client_fd, ft_string &message)
     int lock_error;
 
     this->abort_if_not_initialized("ft_websocket_server::run_once");
-    lock_error = this->_mutex.lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
-        return (1);
+        return (FT_ERR_INVALID_OPERATION);
     if (this->_server_socket == ft_nullptr)
     {
-        (void)this->_mutex.unlock();
-        return (1);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        return (FT_ERR_INVALID_OPERATION);
     }
     address_length = sizeof(client_address);
-    client_fd = nw_accept(this->_server_socket->get_fd(), reinterpret_cast<struct sockaddr*>(&client_address), &address_length);
+    client_fd = nw_accept(this->_server_socket->get_file_descriptor(), reinterpret_cast<struct sockaddr*>(&client_address), &address_length);
     if (client_fd < 0)
     {
-        (void)this->_mutex.unlock();
-        return (1);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        return (FT_ERR_INVALID_OPERATION);
     }
     if (this->perform_handshake_locked(client_fd) != 0)
     {
         nw_close(client_fd);
-        (void)this->_mutex.unlock();
-        return (1);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        return (FT_ERR_INVALID_OPERATION);
     }
     result = this->receive_frame_locked(client_fd, message);
     if (result != 0)
     {
         nw_close(client_fd);
-        (void)this->_mutex.unlock();
-        return (1);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        return (FT_ERR_INVALID_OPERATION);
     }
-    (void)this->_mutex.unlock();
-    return (0);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    return (FT_ERR_SUCCESS);
 }
 
 int ft_websocket_server::send_text(int client_fd, const ft_string &message)
@@ -822,13 +826,13 @@ int ft_websocket_server::send_text(int client_fd, const ft_string &message)
     int deflate_error;
 
     this->abort_if_not_initialized("ft_websocket_server::send_text");
-    lock_error = this->_mutex.lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
-        return (1);
+        return (FT_ERR_INVALID_OPERATION);
     if (client_fd < 0)
     {
-        (void)this->_mutex.unlock();
-        return (1);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        return (FT_ERR_INVALID_OPERATION);
     }
     permessage_deflate_enabled = this->connection_supports_permessage_deflate_locked(client_fd);
     if (permessage_deflate_enabled != false)
@@ -836,8 +840,8 @@ int ft_websocket_server::send_text(int client_fd, const ft_string &message)
         deflate_error = websocket_permessage_deflate_deflate(message, compressed_payload);
         if (deflate_error != FT_ERR_SUCCESS)
         {
-            (void)this->_mutex.unlock();
-            return (1);
+            (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+            return (FT_ERR_INVALID_OPERATION);
         }
         frame.append(static_cast<char>(0xC1));
         length = compressed_payload.size();
@@ -886,11 +890,11 @@ int ft_websocket_server::send_text(int client_fd, const ft_string &message)
     }
     if (nw_send(client_fd, frame.c_str(), frame.size(), 0) < 0)
     {
-        (void)this->_mutex.unlock();
-        return (1);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        return (FT_ERR_INVALID_OPERATION);
     }
-    (void)this->_mutex.unlock();
-    return (0);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    return (FT_ERR_SUCCESS);
 }
 
 int ft_websocket_server::get_port(unsigned short &port_value) const
@@ -902,25 +906,25 @@ int ft_websocket_server::get_port(unsigned short &port_value) const
 
     this->abort_if_not_initialized("ft_websocket_server::get_port");
     port_value = 0;
-    lock_error = this->_mutex.lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
-        return (1);
+        return (FT_ERR_INVALID_OPERATION);
     if (this->_server_socket == ft_nullptr)
     {
-        (void)this->_mutex.unlock();
-        return (1);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        return (FT_ERR_INVALID_OPERATION);
     }
-    server_fd = this->_server_socket->get_fd();
+    server_fd = this->_server_socket->get_file_descriptor();
     if (server_fd < 0)
     {
-        (void)this->_mutex.unlock();
-        return (1);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        return (FT_ERR_INVALID_OPERATION);
     }
     address_length = sizeof(local_address);
     if (getsockname(server_fd, reinterpret_cast<struct sockaddr*>(&local_address), &address_length) != 0)
     {
-        (void)this->_mutex.unlock();
-        return (1);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        return (FT_ERR_INVALID_OPERATION);
     }
     if (local_address.ss_family == AF_INET)
     {
@@ -938,9 +942,9 @@ int ft_websocket_server::get_port(unsigned short &port_value) const
     }
     else
     {
-        (void)this->_mutex.unlock();
-        return (1);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+        return (FT_ERR_INVALID_OPERATION);
     }
-    (void)this->_mutex.unlock();
-    return (0);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    return (FT_ERR_SUCCESS);
 }

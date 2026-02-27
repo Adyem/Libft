@@ -32,8 +32,6 @@ class ft_dual_number
                             const char *reason) const noexcept;
         void            abort_if_not_initialized(const char *method_name) const noexcept;
         static int      set_last_operation_error(int error_code) noexcept;
-        int             lock_mutex(void) const noexcept;
-        int             unlock_mutex(void) const noexcept;
         friend class ft_dual_number_proxy;
 
     public:

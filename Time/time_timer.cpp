@@ -4,6 +4,7 @@
 #include <climits>
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
@@ -21,12 +22,6 @@ time_timer::time_timer() noexcept
 
 time_timer::~time_timer() noexcept
 {
-    if (this->_initialized_state == time_timer::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("time_timer::~time_timer",
-            "called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == time_timer::_state_initialized)
         (void)this->destroy();
     return ;
@@ -56,22 +51,16 @@ void    time_timer::abort_if_not_initialized(const char *method_name) const noex
 int     time_timer::lock_mutex(void) const noexcept
 {
     this->abort_if_not_initialized("time_timer::lock_mutex");
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->lock());
+    return (pt_recursive_mutex_lock_if_not_null(this->_mutex));
 }
 
 int     time_timer::unlock_mutex(void) const noexcept
 {
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->unlock());
+    return (pt_recursive_mutex_unlock_if_not_null(this->_mutex));
 }
 
 int     time_timer::initialize(void) noexcept
 {
-    int enable_error;
-
     if (this->_initialized_state == time_timer::_state_initialized)
     {
         this->abort_lifecycle_error("time_timer::initialize",
@@ -82,24 +71,18 @@ int     time_timer::initialize(void) noexcept
     this->_start_time = std::chrono::steady_clock::time_point();
     this->_running = false;
     this->_initialized_state = time_timer::_state_initialized;
-    enable_error = this->enable_thread_safety();
-    if (enable_error != FT_ERR_SUCCESS)
-    {
-        this->_initialized_state = time_timer::_state_destroyed;
-        return (enable_error);
-    }
     return (FT_ERR_SUCCESS);
 }
 
 int     time_timer::destroy(void) noexcept
 {
+    int disable_error;
+
     if (this->_initialized_state != time_timer::_state_initialized)
-    {
-        this->abort_lifecycle_error("time_timer::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
-    this->disable_thread_safety();
+    disable_error = this->disable_thread_safety();
+    if (disable_error != FT_ERR_SUCCESS)
+        return (disable_error);
     this->_duration_ms = 0;
     this->_start_time = std::chrono::steady_clock::time_point();
     this->_running = false;
@@ -282,21 +265,23 @@ int     time_timer::enable_thread_safety(void) noexcept
     return (FT_ERR_SUCCESS);
 }
 
-void    time_timer::disable_thread_safety(void) noexcept
+int     time_timer::disable_thread_safety(void) noexcept
 {
+    int destroy_error;
+
     this->abort_if_not_initialized("time_timer::disable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
-        this->_mutex->destroy();
+        destroy_error = this->_mutex->destroy();
         delete this->_mutex;
         this->_mutex = ft_nullptr;
+        return (destroy_error);
     }
-    return ;
+    return (FT_ERR_SUCCESS);
 }
 
 bool    time_timer::is_thread_safe(void) const noexcept
 {
-    this->abort_if_not_initialized("time_timer::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 

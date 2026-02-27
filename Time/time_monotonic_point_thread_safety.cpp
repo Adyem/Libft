@@ -5,6 +5,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../PThread/pthread.hpp"
 
 static void time_monotonic_point_disable_thread_safety(t_monotonic_time_point *time_point)
@@ -21,10 +22,9 @@ static void time_monotonic_point_disable_thread_safety(t_monotonic_time_point *t
     return ;
 }
 
-static int  time_monotonic_point_report_result(int error_code, int return_value)
+static int  time_monotonic_point_report_result(int error_code)
 {
-    (void)(error_code);
-    return (return_value);
+    return (error_code);
 }
 
 int time_monotonic_point_prepare_thread_safety(t_monotonic_time_point *time_point)
@@ -33,12 +33,12 @@ int time_monotonic_point_prepare_thread_safety(t_monotonic_time_point *time_poin
     void        *memory;
 
     if (!time_point)
-        return (time_monotonic_point_report_result(FT_ERR_INVALID_ARGUMENT, -1));
+        return (time_monotonic_point_report_result(FT_ERR_INVALID_ARGUMENT));
     if (time_point->thread_safe_enabled && time_point->mutex)
-        return (time_monotonic_point_report_result(FT_ERR_SUCCESS, 0));
+        return (time_monotonic_point_report_result(FT_ERR_SUCCESS));
     memory = std::malloc(sizeof(pt_mutex));
     if (!memory)
-        return (time_monotonic_point_report_result(FT_ERR_NO_MEMORY, -1));
+        return (time_monotonic_point_report_result(FT_ERR_NO_MEMORY));
     mutex_pointer = new(memory) pt_mutex();
     {
         int mutex_error;
@@ -52,12 +52,12 @@ int time_monotonic_point_prepare_thread_safety(t_monotonic_time_point *time_poin
         {
             mutex_pointer->~pt_mutex();
             std::free(memory);
-            return (time_monotonic_point_report_result(mutex_error, -1));
+            return (time_monotonic_point_report_result(mutex_error));
         }
     }
     time_point->mutex = mutex_pointer;
     time_point->thread_safe_enabled = true;
-    return (time_monotonic_point_report_result(FT_ERR_SUCCESS, 0));
+    return (time_monotonic_point_report_result(FT_ERR_SUCCESS));
 }
 
 void    time_monotonic_point_teardown_thread_safety(t_monotonic_time_point *time_point)
@@ -75,20 +75,20 @@ int time_monotonic_point_lock(const t_monotonic_time_point *time_point, bool *lo
     if (lock_acquired)
         *lock_acquired = false;
     if (!time_point)
-        return (time_monotonic_point_report_result(FT_ERR_INVALID_ARGUMENT, -1));
+        return (time_monotonic_point_report_result(FT_ERR_INVALID_ARGUMENT));
     mutable_point = const_cast<t_monotonic_time_point *>(time_point);
     if (!mutable_point->thread_safe_enabled || !mutable_point->mutex)
-        return (time_monotonic_point_report_result(FT_ERR_SUCCESS, 0));
+        return (time_monotonic_point_report_result(FT_ERR_SUCCESS));
     {
         int lock_error;
 
-        lock_error = mutable_point->mutex->lock();
+        lock_error = pt_mutex_lock_if_not_null(mutable_point->mutex);
         if (lock_error != FT_ERR_SUCCESS)
-            return (time_monotonic_point_report_result(lock_error, -1));
+            return (time_monotonic_point_report_result(lock_error));
     }
     if (lock_acquired)
         *lock_acquired = true;
-    return (time_monotonic_point_report_result(FT_ERR_SUCCESS, 0));
+    return (time_monotonic_point_report_result(FT_ERR_SUCCESS));
 }
 
 void    time_monotonic_point_unlock(const t_monotonic_time_point *time_point, bool lock_acquired)
@@ -114,7 +114,7 @@ void    time_monotonic_point_unlock(const t_monotonic_time_point *time_point, bo
     {
         int unlock_error;
 
-        unlock_error = mutable_point->mutex->unlock();
+        unlock_error = pt_mutex_unlock_if_not_null(mutable_point->mutex);
         if (unlock_error != FT_ERR_SUCCESS)
         {
             (void)(unlock_error);
@@ -125,7 +125,7 @@ void    time_monotonic_point_unlock(const t_monotonic_time_point *time_point, bo
     return ;
 }
 
-bool    time_monotonic_point_is_thread_safe_enabled(const t_monotonic_time_point *time_point)
+bool    time_monotonic_point_is_thread_safe(const t_monotonic_time_point *time_point)
 {
     if (!time_point)
     {

@@ -1,4 +1,5 @@
 #include "api.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
 #include <new>
@@ -13,12 +14,6 @@ api_streaming_handler::api_streaming_handler() noexcept
 
 api_streaming_handler::~api_streaming_handler()
 {
-    if (this->_initialized_state == api_streaming_handler::_state_uninitialized)
-    {
-        pf_printf_fd(2, "api_streaming_handler lifecycle error: %s\n",
-            "destructor called on uninitialized instance");
-        su_abort();
-    }
     if (this->_initialized_state == api_streaming_handler::_state_initialized)
         (void)this->destroy();
     return ;
@@ -86,14 +81,11 @@ int api_streaming_handler::disable_thread_safety() noexcept
 
 bool api_streaming_handler::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("api_streaming_handler::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
 int api_streaming_handler::initialize() noexcept
 {
-    int thread_safety_result;
-
     if (this->_initialized_state == api_streaming_handler::_state_initialized)
         this->abort_lifecycle_error("api_streaming_handler::initialize",
             "initialize called on initialized instance");
@@ -101,20 +93,13 @@ int api_streaming_handler::initialize() noexcept
     this->_body_callback = ft_nullptr;
     this->_user_data = ft_nullptr;
     this->_initialized_state = api_streaming_handler::_state_initialized;
-    thread_safety_result = this->enable_thread_safety();
-    if (thread_safety_result != FT_ERR_SUCCESS)
-    {
-        this->_initialized_state = api_streaming_handler::_state_destroyed;
-        return (thread_safety_result);
-    }
     return (FT_ERR_SUCCESS);
 }
 
 int api_streaming_handler::destroy() noexcept
 {
     if (this->_initialized_state != api_streaming_handler::_state_initialized)
-        this->abort_lifecycle_error("api_streaming_handler::destroy",
-            "destroy called on non-initialized instance");
+        return (FT_ERR_INVALID_STATE);
     this->_headers_callback = ft_nullptr;
     this->_body_callback = ft_nullptr;
     this->_user_data = ft_nullptr;
@@ -123,85 +108,43 @@ int api_streaming_handler::destroy() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-int api_streaming_handler::lock(bool *lock_acquired) const noexcept
-{
-    api_streaming_handler *mutable_instance;
-
-    if (lock_acquired != ft_nullptr)
-        *lock_acquired = false;
-    mutable_instance = const_cast<api_streaming_handler *>(this);
-    mutable_instance->abort_if_not_initialized("api_streaming_handler::lock");
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    if (mutable_instance->_mutex->lock() != FT_ERR_SUCCESS)
-        return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
-    if (lock_acquired != ft_nullptr)
-        *lock_acquired = true;
-    return (FT_ERR_SUCCESS);
-}
-
-void api_streaming_handler::unlock(bool lock_acquired) const noexcept
-{
-    api_streaming_handler *mutable_instance;
-
-    if (lock_acquired == false)
-        return ;
-    mutable_instance = const_cast<api_streaming_handler *>(this);
-    if (mutable_instance->_mutex == ft_nullptr)
-        return ;
-    (void)mutable_instance->_mutex->unlock();
-    return ;
-}
-
 void api_streaming_handler::reset() noexcept
 {
-    bool lock_acquired;
-
-    lock_acquired = false;
-    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
+    if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
         return ;
     this->_headers_callback = ft_nullptr;
     this->_body_callback = ft_nullptr;
     this->_user_data = ft_nullptr;
-    this->unlock(lock_acquired);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return ;
 }
 
 void api_streaming_handler::set_headers_callback(
     api_stream_headers_callback callback) noexcept
 {
-    bool lock_acquired;
-
-    lock_acquired = false;
-    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
+    if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
         return ;
     this->_headers_callback = callback;
-    this->unlock(lock_acquired);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return ;
 }
 
 void api_streaming_handler::set_body_callback(
     api_stream_body_callback callback) noexcept
 {
-    bool lock_acquired;
-
-    lock_acquired = false;
-    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
+    if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
         return ;
     this->_body_callback = callback;
-    this->unlock(lock_acquired);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return ;
 }
 
 void api_streaming_handler::set_user_data(void *user_data) noexcept
 {
-    bool lock_acquired;
-
-    lock_acquired = false;
-    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
+    if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
         return ;
     this->_user_data = user_data;
-    this->unlock(lock_acquired);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return ;
 }
 
@@ -210,16 +153,14 @@ bool api_streaming_handler::invoke_headers_callback(int status_code,
 {
     api_stream_headers_callback callback;
     void *user_data;
-    bool lock_acquired;
 
     callback = ft_nullptr;
     user_data = ft_nullptr;
-    lock_acquired = false;
-    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
+    if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
         return (false);
     callback = this->_headers_callback;
     user_data = this->_user_data;
-    this->unlock(lock_acquired);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (callback == ft_nullptr)
         return (true);
     callback(status_code, headers, user_data);
@@ -231,17 +172,15 @@ bool api_streaming_handler::invoke_body_callback(const char *chunk_data,
 {
     api_stream_body_callback callback;
     void *user_data;
-    bool lock_acquired;
 
     callback = ft_nullptr;
     user_data = ft_nullptr;
     should_continue = true;
-    lock_acquired = false;
-    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
+    if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
         return (false);
     callback = this->_body_callback;
     user_data = this->_user_data;
-    this->unlock(lock_acquired);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (callback == ft_nullptr)
         return (true);
     should_continue = callback(chunk_data, chunk_size, is_final_chunk, user_data);

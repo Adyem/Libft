@@ -50,7 +50,7 @@ int ft_socket::setup_client(const SocketConfig &config)
         (void)this->close_socket();
         return (FT_ERR_CONFIGURATION);
     }
-    if (nw_connect(this->_socket_fd,
+    if (nw_connect(this->_socket_file_descriptor,
             reinterpret_cast<const struct sockaddr *>(&this->_address), address_length) < 0)
     {
 #ifdef _WIN32

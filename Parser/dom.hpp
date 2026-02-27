@@ -7,7 +7,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include <stdint.h>
 
-class pt_mutex;
+class pt_recursive_mutex;
 
 typedef struct s_ft_operation_error_stack
 {
@@ -32,7 +32,7 @@ class ft_dom_node
         ft_vector<ft_dom_node*> _children;
         ft_vector<ft_string> _attribute_keys;
         ft_vector<ft_string> _attribute_values;
-        pt_mutex *_mutex;
+        pt_recursive_mutex *_mutex;
         uint8_t _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -81,7 +81,7 @@ class ft_dom_node
         ft_dom_node *find_child(const ft_string &name) const noexcept;
 
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex *get_mutex_for_validation() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 
@@ -89,7 +89,7 @@ class ft_dom_document
 {
     private:
         ft_dom_node *_root;
-        pt_mutex *_mutex;
+        pt_recursive_mutex *_mutex;
         uint8_t _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -125,7 +125,7 @@ class ft_dom_document
         void clear() noexcept;
 
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex *get_mutex_for_validation() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 
@@ -153,7 +153,7 @@ class ft_dom_validation_report
     private:
         bool _valid;
         ft_vector<ft_dom_validation_error> _errors;
-        pt_mutex *_mutex;
+        pt_recursive_mutex *_mutex;
         uint8_t _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -189,7 +189,7 @@ class ft_dom_validation_report
         const ft_vector<ft_dom_validation_error> &errors() const noexcept;
 
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex *get_mutex_for_validation() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 
@@ -197,7 +197,7 @@ class ft_dom_schema
 {
     private:
         ft_vector<ft_dom_schema_rule> _rules;
-        pt_mutex *_mutex;
+        pt_recursive_mutex *_mutex;
         uint8_t _initialized_state;
 
         static const uint8_t _state_uninitialized = 0;
@@ -232,7 +232,7 @@ class ft_dom_schema
         int validate(const ft_dom_document &document, ft_dom_validation_report &report) const noexcept;
 
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex *get_mutex_for_validation() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
 };
 

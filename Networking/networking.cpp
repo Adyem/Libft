@@ -76,8 +76,7 @@ int SocketConfig::initialize() noexcept
 int SocketConfig::destroy() noexcept
 {
     if (this->_initialized_state != SocketConfig::_state_initialized)
-        this->abort_lifecycle_error("SocketConfig::destroy",
-            "destroy called on non-initialized instance");
+        return (FT_ERR_INVALID_STATE);
     this->_ip[0] = '\0';
     this->_port = 0;
     this->_backlog = 0;

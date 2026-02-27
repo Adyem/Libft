@@ -1374,7 +1374,7 @@ static void api_tls_async_worker(api_tls_async_request *data)
                 select_error = api_request_capture_network_error();
                 api_request_assign_network_error(select_error,
                     FT_ERR_SOCKET_RECEIVE_FAILED);
-                break;
+                break ;
             }
             continue;
         }
@@ -1393,11 +1393,11 @@ static void api_tls_async_worker(api_tls_async_request *data)
                 select_error = api_request_capture_network_error();
                 api_request_assign_network_error(select_error,
                     FT_ERR_SOCKET_RECEIVE_FAILED);
-                break;
+                break ;
             }
             continue;
         }
-        break;
+        break ;
     }
 
     if (response.size() > 0)

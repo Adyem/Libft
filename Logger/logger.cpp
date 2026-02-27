@@ -3,46 +3,22 @@
 #include "logger_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../PThread/pthread.hpp"
 
 ft_logger *g_logger = ft_nullptr;
-
-ft_logger::thread_guard::thread_guard(const ft_logger *logger) noexcept
-    : _logger(logger), _lock_acquired(false), _status(0)
-{
-    if (!this->_logger)
-        return ;
-    this->_status = this->_logger->lock(&this->_lock_acquired);
-    return ;
-}
-
-ft_logger::thread_guard::~thread_guard() noexcept
-{
-    if (!this->_logger)
-        return ;
-    this->_logger->unlock(this->_lock_acquired);
-    return ;
-}
-
-int ft_logger::thread_guard::get_status() const noexcept
-{
-    return (this->_status);
-}
-
-bool ft_logger::thread_guard::lock_acquired() const noexcept
-{
-    return (this->_lock_acquired);
-}
 
 ft_logger::ft_logger(const char *path, size_t max_size, t_log_level level) noexcept
     : _mutex(ft_nullptr), _thread_safe_enabled(false), _alloc_logging(false),
       _api_logging(false), _error_code(FT_ERR_SUCCESS)
 {
+    bool lock_acquired;
+
     this->set_error(FT_ERR_SUCCESS);
-    if (this->prepare_thread_safety() != 0)
+    if (this->enable_thread_safety() != FT_ERR_SUCCESS)
         return ;
-    thread_guard guard(this);
-    if (guard.get_status() != 0)
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     ft_log_set_level(level);
     if (path)
@@ -55,62 +31,72 @@ ft_logger::ft_logger(const char *path, size_t max_size, t_log_level level) noexc
             if (error_code == FT_ERR_SUCCESS)
                 error_code = FT_ERR_INVALID_ARGUMENT;
             this->set_error(error_code);
+            this->unlock(lock_acquired);
             return ;
         }
     }
+    this->unlock(lock_acquired);
     return ;
 }
 
 ft_logger::~ft_logger() noexcept
 {
-    {
-        thread_guard guard(this);
+    bool lock_acquired;
 
-        if (guard.get_status() == 0)
-        {
-            ft_log_close();
-            if (g_logger == this)
-                g_logger = ft_nullptr;
-            this->set_error(FT_ERR_SUCCESS);
-        }
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) == FT_ERR_SUCCESS)
+    {
+        ft_log_close();
+        if (g_logger == this)
+            g_logger = ft_nullptr;
+        this->set_error(FT_ERR_SUCCESS);
+        this->unlock(lock_acquired);
     }
-    this->teardown_thread_safety();
+    (void)this->disable_thread_safety();
     return ;
 }
 
 void ft_logger::set_global() noexcept
 {
-    thread_guard guard(this);
+    bool lock_acquired;
 
-    if (guard.get_status() != 0)
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     if (!this->_thread_safe_enabled)
     {
-        if (this->prepare_thread_safety() != 0)
+        if (this->enable_thread_safety() != FT_ERR_SUCCESS)
+        {
+            this->unlock(lock_acquired);
             return ;
+        }
     }
     g_logger = this;
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock(lock_acquired);
     return ;
 }
 
 void ft_logger::set_level(t_log_level level) noexcept
 {
-    thread_guard guard(this);
+    bool lock_acquired;
 
-    if (guard.get_status() != 0)
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     ft_log_set_level(level);
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock(lock_acquired);
     return ;
 }
 
 int ft_logger::set_file(const char *path, size_t max_size) noexcept
 {
     int result;
-    thread_guard guard(this);
+    bool lock_acquired;
 
-    if (guard.get_status() != 0)
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return (-1);
 
     result = ft_log_set_file(path, max_size);
@@ -122,9 +108,11 @@ int ft_logger::set_file(const char *path, size_t max_size) noexcept
         if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_INVALID_ARGUMENT;
         this->set_error(error_code);
+        this->unlock(lock_acquired);
         return (-1);
     }
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock(lock_acquired);
     return (0);
 }
 
@@ -132,9 +120,10 @@ int ft_logger::set_rotation(size_t max_size, size_t retention_count,
                             unsigned int max_age_seconds) noexcept
 {
     int result;
-    thread_guard guard(this);
+    bool lock_acquired;
 
-    if (guard.get_status() != 0)
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return (-1);
 
     result = ft_log_set_rotation(max_size, retention_count, max_age_seconds);
@@ -146,9 +135,11 @@ int ft_logger::set_rotation(size_t max_size, size_t retention_count,
         if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_INVALID_ARGUMENT;
         this->set_error(error_code);
+        this->unlock(lock_acquired);
         return (-1);
     }
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock(lock_acquired);
     return (0);
 }
 
@@ -156,9 +147,10 @@ int ft_logger::get_rotation(size_t *max_size, size_t *retention_count,
                             unsigned int *max_age_seconds) noexcept
 {
     int result;
-    thread_guard guard(this);
+    bool lock_acquired;
 
-    if (guard.get_status() != 0)
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return (-1);
 
     result = ft_log_get_rotation(max_size, retention_count, max_age_seconds);
@@ -170,18 +162,21 @@ int ft_logger::get_rotation(size_t *max_size, size_t *retention_count,
         if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_INVALID_ARGUMENT;
         this->set_error(error_code);
+        this->unlock(lock_acquired);
         return (-1);
     }
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock(lock_acquired);
     return (0);
 }
 
 int ft_logger::add_sink(t_log_sink sink, void *user_data) noexcept
 {
     int result;
-    thread_guard guard(this);
+    bool lock_acquired;
 
-    if (guard.get_status() != 0)
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return (-1);
 
     result = ft_log_add_sink(sink, user_data);
@@ -193,106 +188,129 @@ int ft_logger::add_sink(t_log_sink sink, void *user_data) noexcept
         if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_INVALID_ARGUMENT;
         this->set_error(error_code);
+        this->unlock(lock_acquired);
         return (-1);
     }
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock(lock_acquired);
     return (0);
 }
 
 void ft_logger::remove_sink(t_log_sink sink, void *user_data) noexcept
 {
-    thread_guard guard(this);
+    bool lock_acquired;
 
-    if (guard.get_status() != 0)
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     ft_log_remove_sink(sink, user_data);
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock(lock_acquired);
     return ;
 }
 
 void ft_logger::set_alloc_logging(bool enable) noexcept
 {
-    thread_guard guard(this);
+    bool lock_acquired;
 
-    if (guard.get_status() != 0)
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     this->_alloc_logging = enable;
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock(lock_acquired);
     return ;
 }
 
 bool ft_logger::get_alloc_logging() const noexcept
 {
-    thread_guard guard(this);
+    bool lock_acquired;
+    bool alloc_logging;
 
-    if (guard.get_status() != 0)
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return (false);
+    alloc_logging = this->_alloc_logging;
     const_cast<ft_logger *>(this)->set_error(FT_ERR_SUCCESS);
-    return (this->_alloc_logging);
+    this->unlock(lock_acquired);
+    return (alloc_logging);
 }
 
 void ft_logger::set_api_logging(bool enable) noexcept
 {
-    thread_guard guard(this);
+    bool lock_acquired;
 
-    if (guard.get_status() != 0)
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     this->_api_logging = enable;
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock(lock_acquired);
     return ;
 }
 
 bool ft_logger::get_api_logging() const noexcept
 {
-    thread_guard guard(this);
+    bool lock_acquired;
+    bool api_logging;
 
-    if (guard.get_status() != 0)
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return (false);
+    api_logging = this->_api_logging;
     const_cast<ft_logger *>(this)->set_error(FT_ERR_SUCCESS);
-    return (this->_api_logging);
+    this->unlock(lock_acquired);
+    return (api_logging);
 }
 
 void ft_logger::set_color(bool enable) noexcept
 {
-    thread_guard guard(this);
+    bool lock_acquired;
 
-    if (guard.get_status() != 0)
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     ft_log_set_color(enable);
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock(lock_acquired);
     return ;
 }
 
 bool ft_logger::get_color() const noexcept
 {
     bool color_enabled;
-    thread_guard guard(this);
+    bool lock_acquired;
 
-    if (guard.get_status() != 0)
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return (false);
 
     color_enabled = ft_log_get_color();
     const_cast<ft_logger *>(this)->set_error(FT_ERR_SUCCESS);
+    this->unlock(lock_acquired);
     return (color_enabled);
 }
 
 void ft_logger::close() noexcept
 {
-    thread_guard guard(this);
+    bool lock_acquired;
 
-    if (guard.get_status() != 0)
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     ft_log_close();
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock(lock_acquired);
     return ;
 }
 
 int ft_logger::set_syslog(const char *identifier) noexcept
 {
     int result;
-    thread_guard guard(this);
+    bool lock_acquired;
 
-    if (guard.get_status() != 0)
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return (-1);
 
     result = ft_log_set_syslog(identifier);
@@ -304,9 +322,11 @@ int ft_logger::set_syslog(const char *identifier) noexcept
         if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_INVALID_ARGUMENT;
         this->set_error(error_code);
+        this->unlock(lock_acquired);
         return (-1);
     }
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock(lock_acquired);
     return (0);
 }
 
@@ -314,9 +334,10 @@ int ft_logger::set_remote_sink(const char *host, unsigned short port,
                                bool use_tcp) noexcept
 {
     int result;
-    thread_guard guard(this);
+    bool lock_acquired;
 
-    if (guard.get_status() != 0)
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return (-1);
 
     result = ft_log_set_remote_sink(host, port, use_tcp);
@@ -328,207 +349,233 @@ int ft_logger::set_remote_sink(const char *host, unsigned short port,
         if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_INVALID_ARGUMENT;
         this->set_error(error_code);
+        this->unlock(lock_acquired);
         return (-1);
     }
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock(lock_acquired);
     return (0);
 }
 
-int ft_logger::prepare_thread_safety() noexcept
+int ft_logger::enable_thread_safety() noexcept
 {
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
     int initialize_result;
 
     if (this->_thread_safe_enabled && this->_mutex)
     {
         this->set_error(FT_ERR_SUCCESS);
-        return (0);
+        return (FT_ERR_SUCCESS);
     }
-    mutex_pointer = new(std::nothrow) pt_mutex();
+    mutex_pointer = new(std::nothrow) pt_recursive_mutex();
     if (!mutex_pointer)
     {
         this->set_error(FT_ERR_NO_MEMORY);
-        return (-1);
+        return (FT_ERR_NO_MEMORY);
     }
     initialize_result = mutex_pointer->initialize();
     if (initialize_result != FT_ERR_SUCCESS)
     {
         delete mutex_pointer;
         this->set_error(initialize_result);
-        return (-1);
+        return (initialize_result);
     }
     this->_mutex = mutex_pointer;
     this->_thread_safe_enabled = true;
     this->set_error(FT_ERR_SUCCESS);
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
-void ft_logger::teardown_thread_safety() noexcept
+int ft_logger::disable_thread_safety() noexcept
 {
     if (!this->_mutex)
     {
         this->_thread_safe_enabled = false;
-        return ;
+        this->set_error(FT_ERR_SUCCESS);
+        return (FT_ERR_SUCCESS);
     }
-    (void)this->_mutex->destroy();
+    int destroy_result = this->_mutex->destroy();
     delete this->_mutex;
     this->_mutex = ft_nullptr;
     this->_thread_safe_enabled = false;
-    return ;
+    if (destroy_result != FT_ERR_SUCCESS && destroy_result != FT_ERR_INVALID_STATE)
+    {
+        this->set_error(destroy_result);
+        return (destroy_result);
+    }
+    this->set_error(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
-bool ft_logger::is_thread_safe_enabled() const noexcept
+bool ft_logger::is_thread_safe() const noexcept
 {
-    thread_guard guard(this);
-
-    if (guard.get_status() != 0)
+    if (this->_mutex == ft_nullptr)
         return (false);
-    if (!this->_thread_safe_enabled || !this->_mutex)
-    {
-        const_cast<ft_logger *>(this)->set_error(FT_ERR_SUCCESS);
-        return (false);
-    }
     const_cast<ft_logger *>(this)->set_error(FT_ERR_SUCCESS);
     return (true);
 }
 
 void ft_logger::set_async_queue_limit(size_t limit) noexcept
 {
-    thread_guard guard(this);
+    bool lock_acquired;
 
-    if (guard.get_status() != 0)
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     ft_log_set_async_queue_limit(limit);
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock(lock_acquired);
     return ;
 }
 
 size_t ft_logger::get_async_queue_limit() const noexcept
 {
     size_t limit;
-    thread_guard guard(this);
+    bool lock_acquired;
 
-    if (guard.get_status() != 0)
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return (0);
 
     limit = ft_log_get_async_queue_limit();
     const_cast<ft_logger *>(this)->set_error(FT_ERR_SUCCESS);
+    this->unlock(lock_acquired);
     return (limit);
 }
 
 int ft_logger::get_async_metrics(s_log_async_metrics *metrics) noexcept
 {
     int result;
-    thread_guard guard(this);
+    bool lock_acquired;
 
-    if (guard.get_status() != 0)
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return (-1);
 
     result = ft_log_get_async_metrics(metrics);
     if (result != 0)
     {
         this->set_error(FT_ERR_SUCCESS);
+        this->unlock(lock_acquired);
         return (-1);
     }
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock(lock_acquired);
     return (0);
 }
 
 void ft_logger::reset_async_metrics() noexcept
 {
-    thread_guard guard(this);
+    bool lock_acquired;
 
-    if (guard.get_status() != 0)
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     ft_log_reset_async_metrics();
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock(lock_acquired);
     return ;
 }
 
 void ft_logger::enable_remote_health(bool enable) noexcept
 {
-    thread_guard guard(this);
+    bool lock_acquired;
 
-    if (guard.get_status() != 0)
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     ft_log_enable_remote_health(enable);
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock(lock_acquired);
     return ;
 }
 
 void ft_logger::set_remote_health_interval(unsigned int interval_seconds) noexcept
 {
-    thread_guard guard(this);
+    bool lock_acquired;
 
-    if (guard.get_status() != 0)
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     ft_log_set_remote_health_interval(interval_seconds);
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock(lock_acquired);
     return ;
 }
 
 int ft_logger::probe_remote_health() noexcept
 {
     int result;
-    thread_guard guard(this);
+    bool lock_acquired;
 
-    if (guard.get_status() != 0)
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return (-1);
 
     result = ft_log_probe_remote_health();
     if (result != 0)
     {
         this->set_error(FT_ERR_SUCCESS);
+        this->unlock(lock_acquired);
         return (-1);
     }
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock(lock_acquired);
     return (0);
 }
 
 int ft_logger::get_remote_health(s_log_remote_health *statuses, size_t capacity, size_t *count) noexcept
 {
     int result;
-    thread_guard guard(this);
+    bool lock_acquired;
 
-    if (guard.get_status() != 0)
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return (-1);
 
     result = ft_log_get_remote_health(statuses, capacity, count);
     if (result != 0)
     {
         this->set_error(FT_ERR_SUCCESS);
+        this->unlock(lock_acquired);
         return (-1);
     }
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock(lock_acquired);
     return (0);
 }
 
 int ft_logger::push_context(const s_log_field *fields, size_t field_count) noexcept
 {
     int result;
-    thread_guard guard(this);
+    bool lock_acquired;
 
-    if (guard.get_status() != 0)
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return (-1);
 
     result = ft_log_context_push(fields, field_count);
     if (result != 0)
     {
         this->set_error(FT_ERR_SUCCESS);
+        this->unlock(lock_acquired);
         return (-1);
     }
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock(lock_acquired);
     return (0);
 }
 
 void ft_logger::pop_context(size_t field_count) noexcept
 {
-    thread_guard guard(this);
+    bool lock_acquired;
 
-    if (guard.get_status() != 0)
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     ft_log_context_pop(field_count);
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock(lock_acquired);
     return ;
 }
 
@@ -536,10 +583,14 @@ ft_log_context_guard ft_logger::make_context_guard(const s_log_field *fields,
         size_t field_count) noexcept
 {
     ft_log_context_guard context_guard(fields, field_count);
-    thread_guard logger_guard(this);
+    bool lock_acquired;
 
-    if (logger_guard.get_status() == 0)
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) == FT_ERR_SUCCESS)
+    {
         this->set_error(FT_ERR_SUCCESS);
+        this->unlock(lock_acquired);
+    }
     return (context_guard);
 }
 
@@ -556,14 +607,16 @@ const char *ft_logger::get_error_str() const noexcept
 void ft_logger::debug(const char *fmt, ...) noexcept
 {
     va_list args;
-    thread_guard guard(this);
+    bool lock_acquired;
 
-    if (guard.get_status() != 0)
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
 
     if (!fmt)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
+        this->unlock(lock_acquired);
         return ;
     }
     va_start(args, fmt);
@@ -576,20 +629,23 @@ void ft_logger::debug(const char *fmt, ...) noexcept
         this->set_error(FT_ERR_SUCCESS);
     else
         this->set_error(FT_ERR_SUCCESS);
+    this->unlock(lock_acquired);
     return ;
 }
 
 void ft_logger::info(const char *fmt, ...) noexcept
 {
     va_list args;
-    thread_guard guard(this);
+    bool lock_acquired;
 
-    if (guard.get_status() != 0)
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
 
     if (!fmt)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
+        this->unlock(lock_acquired);
         return ;
     }
     va_start(args, fmt);
@@ -602,20 +658,23 @@ void ft_logger::info(const char *fmt, ...) noexcept
         this->set_error(FT_ERR_SUCCESS);
     else
         this->set_error(FT_ERR_SUCCESS);
+    this->unlock(lock_acquired);
     return ;
 }
 
 void ft_logger::warn(const char *fmt, ...) noexcept
 {
     va_list args;
-    thread_guard guard(this);
+    bool lock_acquired;
 
-    if (guard.get_status() != 0)
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
 
     if (!fmt)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
+        this->unlock(lock_acquired);
         return ;
     }
     va_start(args, fmt);
@@ -628,20 +687,23 @@ void ft_logger::warn(const char *fmt, ...) noexcept
         this->set_error(FT_ERR_SUCCESS);
     else
         this->set_error(FT_ERR_SUCCESS);
+    this->unlock(lock_acquired);
     return ;
 }
 
 void ft_logger::error(const char *fmt, ...) noexcept
 {
     va_list args;
-    thread_guard guard(this);
+    bool lock_acquired;
 
-    if (guard.get_status() != 0)
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
 
     if (!fmt)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
+        this->unlock(lock_acquired);
         return ;
     }
     va_start(args, fmt);
@@ -654,6 +716,7 @@ void ft_logger::error(const char *fmt, ...) noexcept
         this->set_error(FT_ERR_SUCCESS);
     else
         this->set_error(FT_ERR_SUCCESS);
+    this->unlock(lock_acquired);
     return ;
 }
 
@@ -661,12 +724,14 @@ void ft_logger::structured(t_log_level level, const char *message,
                            const s_log_field *fields,
                            size_t field_count) noexcept
 {
-    thread_guard guard(this);
+    bool lock_acquired;
 
-    if (guard.get_status() != 0)
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     ft_log_structured(level, message, fields, field_count);
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock(lock_acquired);
     return ;
 }
 
@@ -710,13 +775,12 @@ void ft_logger::set_error(int error_code) const noexcept
 
 int ft_logger::lock(bool *lock_acquired) const noexcept
 {
+    int lock_result;
+
     if (lock_acquired)
         *lock_acquired = false;
-    if (!this->_thread_safe_enabled || !this->_mutex)
-    {
-        return (0);
-    }
-    if (this->_mutex->lock() != FT_ERR_SUCCESS)
+    lock_result = pt_recursive_mutex_lock_if_not_null(this->_mutex);
+    if (lock_result != FT_ERR_SUCCESS)
     {
         this->set_error(FT_ERR_SYS_MUTEX_LOCK_FAILED);
         return (-1);
@@ -728,11 +792,11 @@ int ft_logger::lock(bool *lock_acquired) const noexcept
 
 void ft_logger::unlock(bool lock_acquired) const noexcept
 {
-    if (!lock_acquired || !this->_thread_safe_enabled || !this->_mutex)
+    if (!lock_acquired)
     {
         return ;
     }
-    if (this->_mutex->unlock() != FT_ERR_SUCCESS)
+    if (pt_recursive_mutex_unlock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
         const_cast<ft_logger *>(this)->set_error(FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
     return ;
 }

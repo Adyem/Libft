@@ -8,6 +8,7 @@
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
 #include <cstddef>
@@ -73,7 +74,7 @@ class ft_graph
                 *lock_acquired = false;
             if (this->_mutex == ft_nullptr)
                 return (FT_ERR_SUCCESS);
-            lock_result = this->_mutex->lock();
+            lock_result = pt_recursive_mutex_lock_if_not_null(this->_mutex);
             if (lock_result != FT_ERR_SUCCESS)
                 return (set_last_operation_error(lock_result));
             if (lock_acquired != ft_nullptr)
@@ -89,7 +90,7 @@ class ft_graph
                 return (FT_ERR_SUCCESS);
             if (this->_mutex == ft_nullptr)
                 return (FT_ERR_SUCCESS);
-            unlock_result = this->_mutex->unlock();
+            unlock_result = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
             if (unlock_result != FT_ERR_SUCCESS)
                 return (set_last_operation_error(unlock_result));
             return (FT_ERR_SUCCESS);
@@ -224,9 +225,6 @@ class ft_graph
 
         ~ft_graph()
         {
-            if (this->_initialized_state == _state_uninitialized)
-                this->abort_lifecycle_error("ft_graph::~ft_graph",
-                    "destructor called while object is uninitialized");
             if (this->_initialized_state == _state_initialized)
                 (void)this->destroy();
             if (this->_mutex != ft_nullptr)
@@ -283,11 +281,7 @@ class ft_graph
             int unlock_error;
 
             if (this->_initialized_state != _state_initialized)
-            {
-                this->abort_lifecycle_error("ft_graph::destroy",
-                    "called while object is not initialized");
                 return (set_last_operation_error(FT_ERR_INVALID_STATE));
-            }
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)

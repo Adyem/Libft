@@ -83,8 +83,8 @@ static inline int set_timeout_send(int file_descriptor, int timeout_milliseconds
 
 int ft_socket::create_socket(const SocketConfig &config)
 {
-    this->_socket_fd = nw_socket(config._address_family, SOCK_STREAM, config._protocol);
-    if (this->_socket_fd < 0)
+    this->_socket_file_descriptor = nw_socket(config._address_family, SOCK_STREAM, config._protocol);
+    if (this->_socket_file_descriptor < 0)
         return (FT_ERR_SOCKET_CREATION_FAILED);
     return (FT_ERR_SUCCESS);
 }
@@ -96,10 +96,10 @@ int ft_socket::set_reuse_address(const SocketConfig &config)
     if (config._reuse_address == false)
         return (FT_ERR_SUCCESS);
     option_value = 1;
-    if (setsockopt_reuse(this->_socket_fd, option_value) < 0)
+    if (setsockopt_reuse(this->_socket_file_descriptor, option_value) < 0)
     {
-        (void)nw_close(this->_socket_fd);
-        this->_socket_fd = -1;
+        (void)nw_close(this->_socket_file_descriptor);
+        this->_socket_file_descriptor = -1;
         return (FT_ERR_CONFIGURATION);
     }
     return (FT_ERR_SUCCESS);
@@ -109,19 +109,19 @@ int ft_socket::set_timeouts(const SocketConfig &config)
 {
     if (config._recv_timeout > 0)
     {
-        if (set_timeout_recv(this->_socket_fd, config._recv_timeout) < 0)
+        if (set_timeout_recv(this->_socket_file_descriptor, config._recv_timeout) < 0)
         {
-            (void)nw_close(this->_socket_fd);
-            this->_socket_fd = -1;
+            (void)nw_close(this->_socket_file_descriptor);
+            this->_socket_file_descriptor = -1;
             return (FT_ERR_CONFIGURATION);
         }
     }
     if (config._send_timeout > 0)
     {
-        if (set_timeout_send(this->_socket_fd, config._send_timeout) < 0)
+        if (set_timeout_send(this->_socket_file_descriptor, config._send_timeout) < 0)
         {
-            (void)nw_close(this->_socket_fd);
-            this->_socket_fd = -1;
+            (void)nw_close(this->_socket_file_descriptor);
+            this->_socket_file_descriptor = -1;
             return (FT_ERR_CONFIGURATION);
         }
     }
@@ -132,10 +132,10 @@ int ft_socket::set_non_blocking(const SocketConfig &config)
 {
     if (config._non_blocking == false)
         return (FT_ERR_SUCCESS);
-    if (set_nonblocking_platform(this->_socket_fd) < 0)
+    if (set_nonblocking_platform(this->_socket_file_descriptor) < 0)
     {
-        (void)nw_close(this->_socket_fd);
-        this->_socket_fd = -1;
+        (void)nw_close(this->_socket_file_descriptor);
+        this->_socket_file_descriptor = -1;
         return (FT_ERR_CONFIGURATION);
     }
     return (FT_ERR_SUCCESS);
@@ -154,8 +154,8 @@ int ft_socket::configure_address(const SocketConfig &config)
     host_copy = config._ip;
     if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
-        (void)nw_close(this->_socket_fd);
-        this->_socket_fd = -1;
+        (void)nw_close(this->_socket_file_descriptor);
+        this->_socket_file_descriptor = -1;
         return (FT_ERR_NO_MEMORY);
     }
     if (config._address_family == AF_INET)
@@ -190,8 +190,8 @@ int ft_socket::configure_address(const SocketConfig &config)
     }
     else
     {
-        (void)nw_close(this->_socket_fd);
-        this->_socket_fd = -1;
+        (void)nw_close(this->_socket_file_descriptor);
+        this->_socket_file_descriptor = -1;
         return (FT_ERR_CONFIGURATION);
     }
 
@@ -204,8 +204,8 @@ int ft_socket::configure_address(const SocketConfig &config)
     resolver_status = getaddrinfo(host_copy.c_str(), port_string, &hints, &results);
     if (resolver_status != 0)
     {
-        (void)nw_close(this->_socket_fd);
-        this->_socket_fd = -1;
+        (void)nw_close(this->_socket_file_descriptor);
+        this->_socket_file_descriptor = -1;
         return (FT_ERR_SOCKET_RESOLVE_FAILED);
     }
     current = results;
@@ -220,8 +220,8 @@ int ft_socket::configure_address(const SocketConfig &config)
         current = current->ai_next;
     }
     freeaddrinfo(results);
-    (void)nw_close(this->_socket_fd);
-    this->_socket_fd = -1;
+    (void)nw_close(this->_socket_file_descriptor);
+    this->_socket_file_descriptor = -1;
     return (FT_ERR_SOCKET_RESOLVE_FAILED);
 }
 
@@ -235,15 +235,15 @@ int ft_socket::bind_socket(const SocketConfig &config)
         address_length = sizeof(struct sockaddr_in6);
     else
     {
-        (void)nw_close(this->_socket_fd);
-        this->_socket_fd = -1;
+        (void)nw_close(this->_socket_file_descriptor);
+        this->_socket_file_descriptor = -1;
         return (FT_ERR_CONFIGURATION);
     }
-    if (nw_bind(this->_socket_fd,
+    if (nw_bind(this->_socket_file_descriptor,
             reinterpret_cast<const struct sockaddr *>(&this->_address), address_length) < 0)
     {
-        (void)nw_close(this->_socket_fd);
-        this->_socket_fd = -1;
+        (void)nw_close(this->_socket_file_descriptor);
+        this->_socket_file_descriptor = -1;
         return (FT_ERR_SOCKET_BIND_FAILED);
     }
     return (FT_ERR_SUCCESS);
@@ -251,10 +251,10 @@ int ft_socket::bind_socket(const SocketConfig &config)
 
 int ft_socket::listen_socket(const SocketConfig &config)
 {
-    if (nw_listen(this->_socket_fd, config._backlog) < 0)
+    if (nw_listen(this->_socket_file_descriptor, config._backlog) < 0)
     {
-        (void)nw_close(this->_socket_fd);
-        this->_socket_fd = -1;
+        (void)nw_close(this->_socket_file_descriptor);
+        this->_socket_file_descriptor = -1;
         return (FT_ERR_SOCKET_LISTEN_FAILED);
     }
     return (FT_ERR_SUCCESS);
@@ -272,23 +272,23 @@ int ft_socket::join_multicast_group(const SocketConfig &config)
         ft_bzero(&request_ipv4, sizeof(request_ipv4));
         if (nw_inet_pton(AF_INET, config._multicast_group, &request_ipv4.imr_multiaddr) <= 0)
         {
-            (void)nw_close(this->_socket_fd);
-            this->_socket_fd = -1;
+            (void)nw_close(this->_socket_file_descriptor);
+            this->_socket_file_descriptor = -1;
             return (FT_ERR_CONFIGURATION);
         }
         if (config._multicast_interface[0] == '\0')
             request_ipv4.imr_interface.s_addr = htonl(INADDR_ANY);
         else if (nw_inet_pton(AF_INET, config._multicast_interface, &request_ipv4.imr_interface) <= 0)
         {
-            (void)nw_close(this->_socket_fd);
-            this->_socket_fd = -1;
+            (void)nw_close(this->_socket_file_descriptor);
+            this->_socket_file_descriptor = -1;
             return (FT_ERR_CONFIGURATION);
         }
-        if (setsockopt(this->_socket_fd, IPPROTO_IP, IP_ADD_MEMBERSHIP,
+        if (setsockopt(this->_socket_file_descriptor, IPPROTO_IP, IP_ADD_MEMBERSHIP,
                 reinterpret_cast<const char *>(&request_ipv4), sizeof(request_ipv4)) < 0)
         {
-            (void)nw_close(this->_socket_fd);
-            this->_socket_fd = -1;
+            (void)nw_close(this->_socket_file_descriptor);
+            this->_socket_file_descriptor = -1;
             return (FT_ERR_CONFIGURATION);
         }
         return (FT_ERR_SUCCESS);
@@ -300,22 +300,22 @@ int ft_socket::join_multicast_group(const SocketConfig &config)
         ft_bzero(&request_ipv6, sizeof(request_ipv6));
         if (nw_inet_pton(AF_INET6, config._multicast_group, &request_ipv6.ipv6mr_multiaddr) <= 0)
         {
-            (void)nw_close(this->_socket_fd);
-            this->_socket_fd = -1;
+            (void)nw_close(this->_socket_file_descriptor);
+            this->_socket_file_descriptor = -1;
             return (FT_ERR_CONFIGURATION);
         }
         request_ipv6.ipv6mr_interface = 0;
-        if (setsockopt(this->_socket_fd, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP,
+        if (setsockopt(this->_socket_file_descriptor, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP,
                 reinterpret_cast<const char *>(&request_ipv6), sizeof(request_ipv6)) < 0)
         {
-            (void)nw_close(this->_socket_fd);
-            this->_socket_fd = -1;
+            (void)nw_close(this->_socket_file_descriptor);
+            this->_socket_file_descriptor = -1;
             return (FT_ERR_CONFIGURATION);
         }
         return (FT_ERR_SUCCESS);
     }
-    (void)nw_close(this->_socket_fd);
-    this->_socket_fd = -1;
+    (void)nw_close(this->_socket_file_descriptor);
+    this->_socket_file_descriptor = -1;
     return (FT_ERR_CONFIGURATION);
 }
 

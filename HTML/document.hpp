@@ -19,8 +19,6 @@ class html_document
         void abort_lifecycle_error(const char *method_name,
                     const char *reason) const noexcept;
         void abort_if_not_initialized(const char *method_name) const noexcept;
-        int lock_document(bool *lock_acquired) const noexcept;
-        int unlock_document(bool lock_acquired) const noexcept;
 
     public:
         html_document() noexcept;
@@ -56,7 +54,6 @@ class html_document
         int         get_error() const noexcept;
         const char  *get_error_str() const noexcept;
         void        clear() noexcept;
-        bool        is_thread_safe_enabled() const noexcept;
 #ifdef LIBFT_TEST_BUILD
         pt_mutex    *get_mutex_for_validation() const noexcept;
 #endif

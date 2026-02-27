@@ -8,6 +8,7 @@
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
 #include <cstddef>
@@ -445,7 +446,7 @@ int ft_map<Key, MappedType>::lock_internal(bool *lock_acquired) const
         *lock_acquired = false;
     if (this->_mutex == ft_nullptr)
         return (this->set_error(FT_ERR_SUCCESS));
-    int lock_error = this->_mutex->lock();
+    int lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
 
     if (lock_error != FT_ERR_SUCCESS)
         return (this->set_error(lock_error));
@@ -462,7 +463,7 @@ int ft_map<Key, MappedType>::unlock_internal(bool lock_acquired) const
     {
         return (this->set_error(FT_ERR_SUCCESS));
     }
-    const int unlock_error = this->_mutex->unlock();
+    const int unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (this->set_error(unlock_error));
 }
 

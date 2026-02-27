@@ -155,7 +155,7 @@ int vector2::initialize(const vector2 &other) noexcept
     initialization_error = this->initialize();
     if (initialization_error != FT_ERR_SUCCESS)
         return (initialization_error);
-    lock_error = other.lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(other._mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         (void)this->destroy();
@@ -163,7 +163,7 @@ int vector2::initialize(const vector2 &other) noexcept
     }
     this->_x = other._x;
     this->_y = other._y;
-    unlock_error = other.unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(other._mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         (void)this->destroy();
@@ -242,11 +242,7 @@ int vector2::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != vector2::_state_initialized)
-    {
-        this->abort_lifecycle_error("vector2::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     this->_x = 0.0;
     this->_y = 0.0;
     disable_error = this->disable_thread_safety();
@@ -350,7 +346,7 @@ int vector3::initialize(const vector3 &other) noexcept
     initialization_error = this->initialize();
     if (initialization_error != FT_ERR_SUCCESS)
         return (initialization_error);
-    lock_error = other.lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(other._mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         (void)this->destroy();
@@ -359,7 +355,7 @@ int vector3::initialize(const vector3 &other) noexcept
     this->_x = other._x;
     this->_y = other._y;
     this->_z = other._z;
-    unlock_error = other.unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(other._mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         (void)this->destroy();
@@ -440,11 +436,7 @@ int vector3::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != vector3::_state_initialized)
-    {
-        this->abort_lifecycle_error("vector3::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     this->_x = 0.0;
     this->_y = 0.0;
     this->_z = 0.0;
@@ -553,7 +545,7 @@ int vector4::initialize(const vector4 &other) noexcept
     initialization_error = this->initialize();
     if (initialization_error != FT_ERR_SUCCESS)
         return (initialization_error);
-    lock_error = other.lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(other._mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         (void)this->destroy();
@@ -563,7 +555,7 @@ int vector4::initialize(const vector4 &other) noexcept
     this->_y = other._y;
     this->_z = other._z;
     this->_w = other._w;
-    unlock_error = other.unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(other._mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         (void)this->destroy();
@@ -646,11 +638,7 @@ int vector4::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != vector4::_state_initialized)
-    {
-        this->abort_lifecycle_error("vector4::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     this->_x = 0.0;
     this->_y = 0.0;
     this->_z = 0.0;
@@ -761,7 +749,7 @@ int matrix2::initialize(const matrix2 &other) noexcept
     initialization_error = this->initialize();
     if (initialization_error != FT_ERR_SUCCESS)
         return (initialization_error);
-    lock_error = other.lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(other._mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         (void)this->destroy();
@@ -778,7 +766,7 @@ int matrix2::initialize(const matrix2 &other) noexcept
         }
         row++;
     }
-    unlock_error = other.unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(other._mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         (void)this->destroy();
@@ -870,11 +858,7 @@ int matrix2::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != matrix2::_state_initialized)
-    {
-        this->abort_lifecycle_error("matrix2::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     matrix2_set_identity(this->_m);
     disable_error = this->disable_thread_safety();
     if (disable_error != FT_ERR_SUCCESS)
@@ -983,7 +967,7 @@ int matrix3::initialize(const matrix3 &other) noexcept
     initialization_error = this->initialize();
     if (initialization_error != FT_ERR_SUCCESS)
         return (initialization_error);
-    lock_error = other.lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(other._mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         (void)this->destroy();
@@ -1000,7 +984,7 @@ int matrix3::initialize(const matrix3 &other) noexcept
         }
         row++;
     }
-    unlock_error = other.unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(other._mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         (void)this->destroy();
@@ -1092,11 +1076,7 @@ int matrix3::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != matrix3::_state_initialized)
-    {
-        this->abort_lifecycle_error("matrix3::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     matrix3_set_identity(this->_m);
     disable_error = this->disable_thread_safety();
     if (disable_error != FT_ERR_SUCCESS)
@@ -1215,7 +1195,7 @@ int matrix4::initialize(const matrix4 &other) noexcept
     initialization_error = this->initialize();
     if (initialization_error != FT_ERR_SUCCESS)
         return (initialization_error);
-    lock_error = other.lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(other._mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         (void)this->destroy();
@@ -1232,7 +1212,7 @@ int matrix4::initialize(const matrix4 &other) noexcept
         }
         row++;
     }
-    unlock_error = other.unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(other._mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         (void)this->destroy();
@@ -1324,11 +1304,7 @@ int matrix4::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != matrix4::_state_initialized)
-    {
-        this->abort_lifecycle_error("matrix4::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     matrix4_set_identity(this->_m);
     disable_error = this->disable_thread_safety();
     if (disable_error != FT_ERR_SUCCESS)

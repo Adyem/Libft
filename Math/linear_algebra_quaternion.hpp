@@ -27,8 +27,6 @@ class quaternion
         void abort_if_not_initialized(const char *method_name) const noexcept;
 
     protected:
-        int lock_mutex() const noexcept;
-        int unlock_mutex() const noexcept;
 
     public:
         quaternion();

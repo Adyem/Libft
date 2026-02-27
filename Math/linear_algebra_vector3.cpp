@@ -1,6 +1,7 @@
 #include "linear_algebra.hpp"
 #include "math.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../PThread/pthread.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include <new>
@@ -13,21 +14,6 @@ static void vector3_sleep_backoff()
 {
     pt_thread_sleep(1);
     return ;
-}
-
-int vector3::lock_mutex() const noexcept
-{
-    this->abort_if_not_initialized("vector3::lock_mutex");
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->lock());
-}
-
-int vector3::unlock_mutex() const noexcept
-{
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->unlock());
 }
 
 #if defined(__SSE2__)
@@ -73,7 +59,7 @@ int vector3::lock_pair(const vector3 &first, const vector3 &second,
     {
         lower = &first;
         upper = &first;
-        return (first.lock_mutex());
+        return (pt_recursive_mutex_lock_if_not_null(first._mutex));
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -89,22 +75,22 @@ int vector3::lock_pair(const vector3 &first, const vector3 &second,
     upper = ordered_second;
     while (true)
     {
-        int lower_error = lower->lock_mutex();
+        int lower_error = pt_recursive_mutex_lock_if_not_null(lower->_mutex);
         if (lower_error != FT_ERR_SUCCESS)
         {
             return (lower_error);
         }
-        int upper_error = upper->lock_mutex();
+        int upper_error = pt_recursive_mutex_lock_if_not_null(upper->_mutex);
         if (upper_error == FT_ERR_SUCCESS)
         {
             return (FT_ERR_SUCCESS);
         }
         if (upper_error != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            lower->unlock_mutex();
+            pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
             return (upper_error);
         }
-        lower->unlock_mutex();
+        pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
         vector3_sleep_backoff();
     }
 }
@@ -112,9 +98,9 @@ int vector3::lock_pair(const vector3 &first, const vector3 &second,
 void vector3::unlock_pair(const vector3 *lower, const vector3 *upper)
 {
     if (upper != ft_nullptr)
-        upper->unlock_mutex();
+        pt_recursive_mutex_unlock_if_not_null(upper->_mutex);
     if (lower != ft_nullptr && lower != upper)
-        lower->unlock_mutex();
+        pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
     return ;
 }
 
@@ -124,13 +110,13 @@ double vector3::get_x() const
     double value;
     int unlock_error;
 
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         return (0.0);
     }
     value = this->_x;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         return (value);
@@ -144,13 +130,13 @@ double vector3::get_y() const
     double value;
     int unlock_error;
 
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         return (0.0);
     }
     value = this->_y;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         return (value);
@@ -164,13 +150,13 @@ double vector3::get_z() const
     double value;
     int unlock_error;
 
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         return (0.0);
     }
     value = this->_z;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         return (value);
@@ -266,7 +252,7 @@ double vector3::length() const
     double result;
     int unlock_error;
 
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         return (0.0);
@@ -274,7 +260,7 @@ double vector3::length() const
     squared = vector3_compute_dot(this->_x, this->_y, this->_z,
             this->_x, this->_y, this->_z);
     result = math_sqrt(squared);
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         return (result);
@@ -293,7 +279,7 @@ vector3 vector3::normalize() const
     double normalized_y;
     double normalized_z;
 
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         return (vector3());
@@ -303,7 +289,7 @@ vector3 vector3::normalize() const
     epsilon = 0.0000001;
     if (math_absdiff(length_value, 0.0) <= epsilon)
     {
-        unlock_error = this->unlock_mutex();
+        unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         if (unlock_error != FT_ERR_SUCCESS)
         {
             return (vector3());
@@ -313,7 +299,7 @@ vector3 vector3::normalize() const
     normalized_x = this->_x / length_value;
     normalized_y = this->_y / length_value;
     normalized_z = this->_z / length_value;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         return (vector3());

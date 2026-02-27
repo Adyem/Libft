@@ -1,3 +1,4 @@
+#include "../PThread/pthread_internal.hpp"
 #include "game_scripting_bridge.hpp"
 #include "../Template/pair.hpp"
 #include "../Template/move.hpp"
@@ -283,7 +284,7 @@ int ft_game_script_bridge::lock_internal(bool *lock_acquired) const noexcept
         *lock_acquired = false;
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
-    lock_error = this->_mutex->lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (lock_acquired != ft_nullptr)
@@ -297,7 +298,7 @@ void ft_game_script_bridge::unlock_internal(bool lock_acquired) const noexcept
         return ;
     if (this->_mutex == ft_nullptr)
         return ;
-    (void)this->_mutex->unlock();
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return ;
 }
 
@@ -472,7 +473,7 @@ void ft_game_script_bridge::tokenize_line(const ft_string &line, ft_vector<ft_st
             && (data[index] == ' ' || data[index] == '\t'))
             index++;
         if (index >= length)
-            break;
+            break ;
         size_t start;
         size_t end;
 
@@ -708,7 +709,7 @@ int ft_game_script_bridge::execute(const ft_string &script, ft_game_state &state
         const char *line_data;
 
         if (start >= length)
-            break;
+            break ;
         index = start;
         while (index < length
             && data[index] != '\n'
@@ -751,7 +752,7 @@ int ft_game_script_bridge::execute(const ft_string &script, ft_game_state &state
             }
         }
         if (index >= length)
-            break;
+            break ;
         while (index < length
             && (data[index] == '\n' || data[index] == '\r'))
             index++;
@@ -796,7 +797,7 @@ int ft_game_script_bridge::check_sandbox_capabilities(const ft_string &script, f
         const char *line_data;
 
         if (start >= length)
-            break;
+            break ;
         index = start;
         while (index < length
             && data[index] != '\n'
@@ -883,7 +884,7 @@ int ft_game_script_bridge::check_sandbox_capabilities(const ft_string &script, f
             }
         }
         if (index >= length)
-            break;
+            break ;
         while (index < length
             && (data[index] == '\n' || data[index] == '\r'))
             index++;
@@ -992,7 +993,7 @@ int ft_game_script_bridge::validate_dry_run(const ft_string &script, ft_vector<f
         const char *line_data;
 
         if (start >= length)
-            break;
+            break ;
         index = start;
         while (index < length
             && data[index] != '\n'
@@ -1235,7 +1236,7 @@ int ft_game_script_bridge::validate_dry_run(const ft_string &script, ft_vector<f
             }
         }
         if (index >= length)
-            break;
+            break ;
         while (index < length
             && (data[index] == '\n' || data[index] == '\r'))
             index++;
@@ -1338,7 +1339,7 @@ int ft_game_script_bridge::inspect_bytecode_budget(const ft_string &script, int 
         const char *line_data;
 
         if (start >= length)
-            break;
+            break ;
         index = start;
         while (index < length
             && data[index] != '\n'
@@ -1409,7 +1410,7 @@ int ft_game_script_bridge::inspect_bytecode_budget(const ft_string &script, int 
             }
         }
         if (index >= length)
-            break;
+            break ;
         while (index < length
             && (data[index] == '\n' || data[index] == '\r'))
             index++;

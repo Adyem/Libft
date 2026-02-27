@@ -47,13 +47,6 @@ html_node *html_create_node(const char *tagName, const char *textContent)
     newNode->attributes = ft_nullptr;
     newNode->children = ft_nullptr;
     newNode->next = ft_nullptr;
-    if (html_node_prepare_thread_safety(newNode) != 0)
-    {
-        html_release_string(newNode->tag);
-        html_release_string(newNode->text);
-        delete newNode;
-        return (ft_nullptr);
-    }
     return (newNode);
 }
 
@@ -78,13 +71,6 @@ html_attr *html_create_attr(const char *key, const char *value)
         return (ft_nullptr);
     }
     newAttr->next = ft_nullptr;
-    if (html_attr_prepare_thread_safety(newAttr) != 0)
-    {
-        html_release_string(newAttr->key);
-        html_release_string(newAttr->value);
-        delete newAttr;
-        return (ft_nullptr);
-    }
     return (newAttr);
 }
 

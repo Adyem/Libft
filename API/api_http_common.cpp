@@ -141,7 +141,7 @@ bool api_http_parse_hex(const char *start, const char *end,
         char lower_character;
 
         if (*walker == ';')
-            break;
+            break ;
         lower_character = api_http_to_lower(*walker);
         if (lower_character >= '0' && lower_character <= '9')
             lower_character = static_cast<char>(lower_character - '0');
@@ -255,7 +255,7 @@ void api_http_parse_headers(const char *headers_start,
                             api_http_to_lower(check_pointer[4]) == 'e')
                         {
                             saw_close = true;
-                            break;
+                            break ;
                         }
                     }
                     iterator++;
@@ -284,7 +284,7 @@ void api_http_parse_headers(const char *headers_start,
                                 api_http_to_lower(keep_pointer[9]) == 'e')
                             {
                                 connection_close = false;
-                                break;
+                                break ;
                             }
                         }
                         keep_pointer++;
@@ -317,7 +317,7 @@ void api_http_parse_headers(const char *headers_start,
                             api_http_to_lower(iterator[6]) == 'd')
                         {
                             chunked_encoding = true;
-                            break;
+                            break ;
                         }
                     }
                     iterator++;
@@ -325,7 +325,7 @@ void api_http_parse_headers(const char *headers_start,
             }
         }
         if (line_end == headers_end)
-            break;
+            break ;
         walker = line_end + 2;
     }
     return ;

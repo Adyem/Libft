@@ -8,6 +8,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Basic/basic.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
 #include <cstddef>
@@ -72,7 +73,7 @@ class ft_event_emitter
                 *lock_acquired = false;
             if (this->_mutex == ft_nullptr)
                 return (FT_ERR_SUCCESS);
-            lock_error = this->_mutex->lock();
+            lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
             if (lock_error != FT_ERR_SUCCESS)
                 return (set_last_operation_error(lock_error));
             if (lock_acquired != ft_nullptr)
@@ -88,7 +89,7 @@ class ft_event_emitter
                 return (FT_ERR_SUCCESS);
             if (this->_mutex == ft_nullptr)
                 return (FT_ERR_SUCCESS);
-            unlock_error = this->_mutex->unlock();
+            unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
             if (unlock_error != FT_ERR_SUCCESS)
                 return (set_last_operation_error(unlock_error));
             return (FT_ERR_SUCCESS);
@@ -206,9 +207,6 @@ class ft_event_emitter
 
         ~ft_event_emitter()
         {
-            if (this->_initialized_state == ft_event_emitter<EventType, Args...>::_state_uninitialized)
-                this->abort_lifecycle_error("ft_event_emitter::~ft_event_emitter",
-                    "destructor called while object is uninitialized");
             if (this->_initialized_state == ft_event_emitter<EventType, Args...>::_state_initialized)
                 (void)this->destroy();
             if (this->_mutex != ft_nullptr)
@@ -255,11 +253,7 @@ class ft_event_emitter
             int disable_error;
 
             if (this->_initialized_state != ft_event_emitter<EventType, Args...>::_state_initialized)
-            {
-                this->abort_lifecycle_error("ft_event_emitter::destroy",
-                    "called while object is not initialized");
                 return (set_last_operation_error(FT_ERR_INVALID_STATE));
-            }
             lock_acquired = false;
             lock_error = this->lock_internal(&lock_acquired);
             if (lock_error != FT_ERR_SUCCESS)

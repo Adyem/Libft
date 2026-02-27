@@ -14,16 +14,16 @@ int observability_game_metrics_initialize(ft_game_observability_exporter exporte
     int unlock_result;
 
     if (exporter == ft_nullptr)
-        return (-1);
-    result = 0;
+        return (FT_ERR_INVALID_ARGUMENT);
+    result = FT_ERR_SUCCESS;
     lock_result = g_observability_game_mutex.lock();
     if (lock_result != FT_ERR_SUCCESS)
-        return (-1);
+        return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
     g_observability_game_exporter = exporter;
     g_observability_game_initialized = true;
     unlock_result = g_observability_game_mutex.unlock();
     if (unlock_result != FT_ERR_SUCCESS)
-        result = -1;
+        result = FT_ERR_SYS_MUTEX_UNLOCK_FAILED;
     return (result);
 }
 
@@ -33,15 +33,15 @@ int observability_game_metrics_shutdown(void)
     int lock_result;
     int unlock_result;
 
-    result = 0;
+    result = FT_ERR_SUCCESS;
     lock_result = g_observability_game_mutex.lock();
     if (lock_result != FT_ERR_SUCCESS)
-        return (-1);
+        return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
     g_observability_game_initialized = false;
     g_observability_game_exporter = ft_nullptr;
     unlock_result = g_observability_game_mutex.unlock();
     if (unlock_result != FT_ERR_SUCCESS)
-        result = -1;
+        result = FT_ERR_SYS_MUTEX_UNLOCK_FAILED;
     return (result);
 }
 

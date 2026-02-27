@@ -81,7 +81,7 @@ void ft_log_remove_sink(t_log_sink sink, void *user_data)
             if (sink_lock_acquired)
                 log_sink_unlock(&locked_entry, sink_lock_acquired);
             log_sink_teardown_thread_safety(&locked_entry);
-            break;
+            break ;
         }
         index++;
     }

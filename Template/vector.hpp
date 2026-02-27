@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <new>
 #include "../PThread/recursive_mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../Basic/basic.hpp"
 
 template <typename Type, typename = void>
@@ -1011,7 +1012,7 @@ int32_t ft_vector<ElementType>::lock_internal(bool *lock_acquired) const
     {
         return (ft_vector<ElementType>::set_last_operation_error(FT_ERR_SUCCESS));
     }
-    int32_t result = this->_mutex->lock();
+    int32_t result = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (result != FT_ERR_SUCCESS)
         return (ft_vector<ElementType>::set_last_operation_error(result));
     if (lock_acquired)
@@ -1024,7 +1025,7 @@ int32_t ft_vector<ElementType>::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || this->_mutex == ft_nullptr)
         return (ft_vector<ElementType>::set_last_operation_error(FT_ERR_SUCCESS));
-    return (ft_vector<ElementType>::set_last_operation_error(this->_mutex->unlock()));
+    return (ft_vector<ElementType>::set_last_operation_error(pt_recursive_mutex_unlock_if_not_null(this->_mutex)));
 }
 
 

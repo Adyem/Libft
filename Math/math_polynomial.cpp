@@ -3,6 +3,7 @@
 #include <cmath>
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include <new>
 #include "../Template/move.hpp"
@@ -30,21 +31,6 @@ static void math_polynomial_copy_vector(const ft_vector<double> &source,
     }
     error_code = FT_ERR_SUCCESS;
     return ;
-}
-
-int ft_cubic_spline::lock_mutex() const noexcept
-{
-    this->abort_if_not_initialized("ft_cubic_spline::lock_mutex");
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->lock());
-}
-
-int ft_cubic_spline::unlock_mutex() const noexcept
-{
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->unlock());
 }
 
 void ft_cubic_spline::abort_lifecycle_error(const char *method_name,
@@ -207,7 +193,7 @@ int ft_cubic_spline::initialize(const ft_cubic_spline &other) noexcept
     copy_error = this->initialize();
     if (copy_error != FT_ERR_SUCCESS)
         return (copy_error);
-    lock_error = other.lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(other._mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         (void)this->destroy();
@@ -222,7 +208,7 @@ int ft_cubic_spline::initialize(const ft_cubic_spline &other) noexcept
         copy_error = this->c_coefficients.copy_from(other.c_coefficients);
     if (copy_error == FT_ERR_SUCCESS)
         copy_error = this->d_coefficients.copy_from(other.d_coefficients);
-    unlock_error = other.unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(other._mutex);
     if (copy_error != FT_ERR_SUCCESS || unlock_error != FT_ERR_SUCCESS)
     {
         (void)this->destroy();
@@ -271,18 +257,18 @@ int ft_cubic_spline::move(ft_cubic_spline &other) noexcept
     }
     while (true)
     {
-        lower_error = lower->lock_mutex();
+        lower_error = pt_recursive_mutex_lock_if_not_null(lower->_mutex);
         if (lower_error != FT_ERR_SUCCESS)
             return (lower_error);
-        upper_error = upper->lock_mutex();
+        upper_error = pt_recursive_mutex_lock_if_not_null(upper->_mutex);
         if (upper_error == FT_ERR_SUCCESS)
             break ;
         if (upper_error != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            lower->unlock_mutex();
+            pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
             return (upper_error);
         }
-        lower->unlock_mutex();
+        pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
     }
     move_error = this->x_values.copy_from(other.x_values);
     if (move_error == FT_ERR_SUCCESS)
@@ -303,9 +289,9 @@ int ft_cubic_spline::move(ft_cubic_spline &other) noexcept
         other.c_coefficients.clear();
     if (move_error == FT_ERR_SUCCESS)
         other.d_coefficients.clear();
-    upper->unlock_mutex();
+    pt_recursive_mutex_unlock_if_not_null(upper->_mutex);
     if (lower != upper)
-        lower->unlock_mutex();
+        pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
     return (move_error);
 }
 
@@ -344,11 +330,7 @@ int ft_cubic_spline::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != ft_cubic_spline::_state_initialized)
-    {
-        this->abort_lifecycle_error("ft_cubic_spline::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     disable_error = this->disable_thread_safety();
     if (disable_error != FT_ERR_SUCCESS)
         return (disable_error);

@@ -1,7 +1,6 @@
 #include "api_internal.hpp"
 #include "../Basic/basic.hpp"
 #include "../PThread/mutex.hpp"
-#include "../PThread/unique_lock.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Logger/logger.hpp"
 #include "../Networking/networking.hpp"
@@ -98,11 +97,12 @@ static bool api_connection_pool_tls_register(SSL *tls_session)
 {
     std::set<SSL*> &tls_registry = api_connection_pool_get_tls_registry();
     std::pair<std::set<SSL*>::iterator, bool> insert_result;
-    ft_unique_lock<pt_mutex> guard(api_connection_pool_get_tls_mutex());
-
     if (!tls_session)
         return (true);
+    if (api_connection_pool_get_tls_mutex().lock() != FT_ERR_SUCCESS)
+        return (false);
     insert_result = tls_registry.insert(tls_session);
+    (void)api_connection_pool_get_tls_mutex().unlock();
     if (!insert_result.second)
         return (false);
     return (true);
@@ -112,14 +112,18 @@ static bool api_connection_pool_tls_unregister(SSL *tls_session)
 {
     std::set<SSL*> &tls_registry = api_connection_pool_get_tls_registry();
     std::set<SSL*>::iterator iterator;
-    ft_unique_lock<pt_mutex> guard(api_connection_pool_get_tls_mutex());
-
     if (!tls_session)
+        return (false);
+    if (api_connection_pool_get_tls_mutex().lock() != FT_ERR_SUCCESS)
         return (false);
     iterator = tls_registry.find(tls_session);
     if (iterator == tls_registry.end())
+    {
+        (void)api_connection_pool_get_tls_mutex().unlock();
         return (false);
+    }
     tls_registry.erase(iterator);
+    (void)api_connection_pool_get_tls_mutex().unlock();
     return (true);
 }
 #endif
@@ -131,7 +135,7 @@ static bool api_connection_pool_socket_is_alive(ft_socket &socket)
     char peek_byte;
     ssize_t peek_result;
 
-    poll_descriptor = socket.get_fd();
+    poll_descriptor = socket.get_file_descriptor();
     if (poll_descriptor < 0)
         return (false);
     poll_result = nw_poll(&poll_descriptor, 1, ft_nullptr, 0, 50);
@@ -308,7 +312,7 @@ static void api_connection_pool_dispose_entry(api_pooled_connection &entry)
     size_t client_count;
     int socket_error;
 
-    socket_is_open = (entry.socket.get_fd() >= 0);
+    socket_is_open = (entry.socket.get_file_descriptor() >= 0);
     client_count = 0;
     socket_error = FT_ERR_SUCCESS;
     if (socket_is_open)
@@ -347,7 +351,7 @@ bool api_connection_pool_acquire(api_connection_pool_handle &handle,
     bool handle_lock_acquired;
 
     handle_lock_acquired = false;
-    if (handle.lock(&handle_lock_acquired) != 0)
+    if (handle.lock(&handle_lock_acquired) != FT_ERR_SUCCESS)
     {
         g_api_connection_pool_acquire_misses++;
         return (false);
@@ -384,7 +388,7 @@ void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
     bool handle_lock_acquired;
 
     handle_lock_acquired = false;
-    if (handle.lock(&handle_lock_acquired) != 0)
+    if (handle.lock(&handle_lock_acquired) != FT_ERR_SUCCESS)
         return ;
     if (!handle.has_socket)
     {
@@ -430,7 +434,7 @@ void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
     handle.unlock(handle_lock_acquired);
     api_connection_pool_evict(handle);
     handle_lock_acquired = false;
-    if (handle.lock(&handle_lock_acquired) != 0)
+    if (handle.lock(&handle_lock_acquired) != FT_ERR_SUCCESS)
         return ;
 #if NETWORKING_HAS_OPENSSL
     handle.tls_session = ft_nullptr;
@@ -451,7 +455,7 @@ void api_connection_pool_evict(api_connection_pool_handle &handle)
     bool handle_lock_acquired;
 
     handle_lock_acquired = false;
-    if (handle.lock(&handle_lock_acquired) != 0)
+    if (handle.lock(&handle_lock_acquired) != FT_ERR_SUCCESS)
         return ;
     if (!handle.has_socket)
     {
@@ -487,7 +491,7 @@ void api_connection_pool_disable_store(api_connection_pool_handle &handle)
     bool handle_lock_acquired;
 
     handle_lock_acquired = false;
-    if (handle.lock(&handle_lock_acquired) != 0)
+    if (handle.lock(&handle_lock_acquired) != FT_ERR_SUCCESS)
         return ;
     handle.should_store = false;
     handle.negotiated_http2 = false;
@@ -498,20 +502,28 @@ void api_connection_pool_disable_store(api_connection_pool_handle &handle)
 void api_connection_pool_flush(void)
 {
     api_connection_pool_storage &storage = api_connection_pool_get_storage();
-    ft_unique_lock<pt_mutex> guard(api_connection_pool_get_mutex());
+    int lock_error;
 
+    lock_error = api_connection_pool_get_mutex().lock();
+    if (lock_error != FT_ERR_SUCCESS)
+        return ;
     api_connection_pool_clear_storage(storage);
+    (void)api_connection_pool_get_mutex().unlock();
     return ;
 }
 
 void api_connection_pool_set_enabled(bool enabled)
 {
     api_connection_pool_storage &storage = api_connection_pool_get_storage();
-    ft_unique_lock<pt_mutex> guard(api_connection_pool_get_mutex());
+    int lock_error;
 
+    lock_error = api_connection_pool_get_mutex().lock();
+    if (lock_error != FT_ERR_SUCCESS)
+        return ;
     g_api_connection_pool_enabled = enabled;
     if (!enabled)
         api_connection_pool_clear_storage(storage);
+    (void)api_connection_pool_get_mutex().unlock();
     return ;
 }
 

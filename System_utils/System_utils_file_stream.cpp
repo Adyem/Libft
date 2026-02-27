@@ -3,6 +3,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include <cstdlib>
 #include <new>
 #include <limits>
@@ -56,9 +57,7 @@ int su_file_lock(su_file *stream, bool *lock_acquired)
     if (stream == ft_nullptr || lock_acquired == ft_nullptr)
         return (-1);
     *lock_acquired = false;
-    if (stream->mutex == ft_nullptr)
-        return (0);
-    lock_error = stream->mutex->lock();
+    lock_error = pt_mutex_lock_if_not_null(stream->mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
     *lock_acquired = true;
@@ -71,9 +70,7 @@ void su_file_unlock(su_file *stream, bool lock_acquired)
         return ;
     if (lock_acquired == false)
         return ;
-    if (stream->mutex == ft_nullptr)
-        return ;
-    (void)stream->mutex->unlock();
+    (void)pt_mutex_unlock_if_not_null(stream->mutex);
     return ;
 }
 

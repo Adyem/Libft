@@ -1,6 +1,7 @@
 #include "linear_algebra_quaternion.hpp"
 #include "math.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../PThread/pthread.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../Printf/printf.hpp"
@@ -40,21 +41,6 @@ void quaternion::abort_if_not_initialized(const char *method_name) const noexcep
         "called while object is not initialized");
     return ;
 }
-int quaternion::lock_mutex() const noexcept
-{
-    this->abort_if_not_initialized("quaternion::lock_mutex");
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->lock());
-}
-
-int quaternion::unlock_mutex() const noexcept
-{
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->unlock());
-}
-
 static void quaternion_sleep_backoff()
 {
     pt_thread_sleep(1);
@@ -64,9 +50,9 @@ static void quaternion_sleep_backoff()
 void quaternion::unlock_pair(const quaternion *lower, const quaternion *upper)
 {
     if (upper != ft_nullptr)
-        upper->unlock_mutex();
+        pt_recursive_mutex_unlock_if_not_null(upper->_mutex);
     if (lower != ft_nullptr && lower != upper)
-        lower->unlock_mutex();
+        pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
     return ;
 }
 
@@ -80,7 +66,7 @@ int quaternion::lock_pair(const quaternion &first, const quaternion &second,
     {
         lower = &first;
         upper = &first;
-        return (ordered_first->lock_mutex());
+        return (pt_recursive_mutex_lock_if_not_null(ordered_first->_mutex));
     }
     if (ordered_first > ordered_second)
     {
@@ -92,18 +78,18 @@ int quaternion::lock_pair(const quaternion &first, const quaternion &second,
     upper = ordered_second;
     while (true)
     {
-        int lower_error = ordered_first->lock_mutex();
+        int lower_error = pt_recursive_mutex_lock_if_not_null(ordered_first->_mutex);
         if (lower_error != FT_ERR_SUCCESS)
             return (lower_error);
-        int upper_error = ordered_second->lock_mutex();
+        int upper_error = pt_recursive_mutex_lock_if_not_null(ordered_second->_mutex);
         if (upper_error == FT_ERR_SUCCESS)
             return (FT_ERR_SUCCESS);
         if (upper_error != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            ordered_first->unlock_mutex();
+            pt_recursive_mutex_unlock_if_not_null(ordered_first->_mutex);
             return (upper_error);
         }
-        ordered_first->unlock_mutex();
+        pt_recursive_mutex_unlock_if_not_null(ordered_first->_mutex);
         quaternion_sleep_backoff();
     }
 }
@@ -209,7 +195,7 @@ int quaternion::initialize(const quaternion &other) noexcept
     initialization_error = this->initialize();
     if (initialization_error != FT_ERR_SUCCESS)
         return (initialization_error);
-    lock_error = other.lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(other._mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         (void)this->destroy();
@@ -219,7 +205,7 @@ int quaternion::initialize(const quaternion &other) noexcept
     this->_x = other._x;
     this->_y = other._y;
     this->_z = other._z;
-    unlock_error = other.unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(other._mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         (void)this->destroy();
@@ -302,11 +288,7 @@ int quaternion::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != quaternion::_state_initialized)
-    {
-        this->abort_lifecycle_error("quaternion::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     this->_w = 1.0;
     this->_x = 0.0;
     this->_y = 0.0;
@@ -330,13 +312,13 @@ double  quaternion::get_w() const
     double value;
     int lock_error;
     int unlock_error;
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         return (0.0);
     }
     value = this->_w;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         return (value);
@@ -349,13 +331,13 @@ double  quaternion::get_x() const
     double value;
     int lock_error;
     int unlock_error;
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         return (0.0);
     }
     value = this->_x;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         return (value);
@@ -368,13 +350,13 @@ double  quaternion::get_y() const
     double value;
     int lock_error;
     int unlock_error;
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         return (0.0);
     }
     value = this->_y;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         return (value);
@@ -387,13 +369,13 @@ double  quaternion::get_z() const
     double value;
     int lock_error;
     int unlock_error;
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         return (0.0);
     }
     value = this->_z;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         return (value);
@@ -455,7 +437,7 @@ quaternion  quaternion::conjugate() const
     double result_y;
     double result_z;
 
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         return (quaternion());
@@ -464,7 +446,7 @@ quaternion  quaternion::conjugate() const
     result_x = -this->_x;
     result_y = -this->_y;
     result_z = -this->_z;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         return (quaternion());
@@ -478,7 +460,7 @@ double  quaternion::length() const
     int lock_error;
     int unlock_error;
 
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         return (0.0);
@@ -486,7 +468,7 @@ double  quaternion::length() const
     length_value = quaternion_compute_dot(this->_w, this->_x,
         this->_y, this->_z,
         this->_w, this->_x, this->_y, this->_z);
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         return (math_sqrt(length_value));
@@ -505,7 +487,7 @@ quaternion  quaternion::normalize() const
     int lock_error;
     int unlock_error;
 
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         return (quaternion());
@@ -514,7 +496,7 @@ quaternion  quaternion::normalize() const
     local_x = this->_x;
     local_y = this->_y;
     local_z = this->_z;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         return (quaternion());

@@ -374,7 +374,7 @@ static int logger_health_sync_states(const ft_vector<s_network_sink_snapshot> &s
                 state.port = snapshot_entry.port;
                 state.use_tcp = snapshot_entry.use_tcp;
                 found = true;
-                break;
+                break ;
             }
             snapshot_index += 1;
         }
@@ -438,7 +438,7 @@ static int logger_health_sync_states(const ft_vector<s_network_sink_snapshot> &s
             if (state.sink == snapshot_entry.sink)
             {
                 exists = true;
-                break;
+                break ;
             }
             state_index += 1;
         }
@@ -548,12 +548,12 @@ static void *logger_health_thread(void *argument)
         unsigned int interval_seconds;
 
         if (logger_health_fetch_config(&running, &interval_seconds) != 0)
-            break;
+            break ;
         if (!running)
-            break;
+            break ;
         ft_log_probe_remote_health();
         if (logger_health_wait_loop(interval_seconds) != 0)
-            break;
+            break ;
     }
     return (ft_nullptr);
 }

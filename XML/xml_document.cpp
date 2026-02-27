@@ -4,6 +4,7 @@
 #include "../Errno/errno.hpp"
 #include "../Basic/basic.hpp"
 #include "../PThread/mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../PThread/pthread.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
@@ -18,33 +19,6 @@ struct xml_namespace_entry
     const xml_namespace_entry *parent;
     xml_namespace_entry *next_local;
 };
-
-xml_document::thread_guard::thread_guard(const xml_document *document) noexcept
-    : _document(document), _lock_acquired(false), _status(0)
-{
-    if (!this->_document)
-        return ;
-    this->_status = this->_document->lock(&this->_lock_acquired);
-    return ;
-}
-
-xml_document::thread_guard::~thread_guard() noexcept
-{
-    if (!this->_document)
-        return ;
-    this->_document->unlock(this->_lock_acquired);
-    return ;
-}
-
-int xml_document::thread_guard::get_status() const noexcept
-{
-    return (this->_status);
-}
-
-bool xml_document::thread_guard::lock_acquired() const noexcept
-{
-    return (this->_lock_acquired);
-}
 
 static const char *skip_whitespace(const char *string)
 {
@@ -337,7 +311,7 @@ static int xml_parse_attributes(xml_node *node, const char *start,
 }
 
 xml_node::xml_node() noexcept
-    : mutex(ft_nullptr), thread_safe_enabled(false), name(ft_nullptr), namespace_prefix(ft_nullptr),
+    : mutex(ft_nullptr), name(ft_nullptr), namespace_prefix(ft_nullptr),
     local_name(ft_nullptr), namespace_uri(ft_nullptr), namespace_bindings(ft_nullptr), text(ft_nullptr),
     children(), attributes()
 {
@@ -673,7 +647,7 @@ static const char *parse_node(const char *string, xml_node **out_node,
 
 
 xml_document::xml_document() noexcept
-    : _root(ft_nullptr), _mutex(ft_nullptr), _thread_safe_enabled(false),
+    : _root(ft_nullptr), _mutex(ft_nullptr),
     _initialized_state(xml_document::_state_uninitialized)
 {
     return ;
@@ -681,12 +655,6 @@ xml_document::xml_document() noexcept
 
 xml_document::~xml_document() noexcept
 {
-    if (this->_initialized_state == xml_document::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("xml_document::~xml_document",
-            "called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == xml_document::_state_initialized)
         (void)this->destroy();
     return ;
@@ -716,8 +684,6 @@ void xml_document::abort_if_not_initialized(const char *method_name) const noexc
 
 int xml_document::initialize() noexcept
 {
-    int thread_safety_error;
-
     if (this->_initialized_state == xml_document::_state_initialized)
     {
         this->abort_lifecycle_error("xml_document::initialize",
@@ -726,39 +692,31 @@ int xml_document::initialize() noexcept
     }
     this->_root = ft_nullptr;
     this->_mutex = ft_nullptr;
-    this->_thread_safe_enabled = false;
     this->_initialized_state = xml_document::_state_initialized;
-    thread_safety_error = this->enable_thread_safety();
-    if (thread_safety_error != FT_ERR_SUCCESS)
-    {
-        this->_initialized_state = xml_document::_state_destroyed;
-        return (thread_safety_error);
-    }
     this->record_operation_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
 int xml_document::destroy() noexcept
 {
+    int disable_error;
     int lock_error;
     bool lock_acquired;
 
     if (this->_initialized_state != xml_document::_state_initialized)
-    {
-        this->abort_lifecycle_error("xml_document::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     lock_acquired = false;
     lock_error = this->lock(&lock_acquired);
-    if (lock_error == 0 && this->_root != ft_nullptr)
+    if (lock_error == FT_ERR_SUCCESS && this->_root != ft_nullptr)
     {
         delete this->_root;
         this->_root = ft_nullptr;
     }
     if (lock_acquired)
         this->unlock(true);
-    this->disable_thread_safety();
+    disable_error = this->disable_thread_safety();
+    if (disable_error != FT_ERR_SUCCESS)
+        return (disable_error);
     this->_initialized_state = xml_document::_state_destroyed;
     return (FT_ERR_SUCCESS);
 }
@@ -769,26 +727,30 @@ void xml_document::record_operation_error(int error_code) const noexcept
     return ;
 }
 
+#ifdef LIBFT_TEST_BUILD
 pt_mutex *xml_document::get_mutex_for_validation() const noexcept
 {
     return (this->_mutex);
 }
+#endif
 
 int xml_document::load_from_string(const char *xml) noexcept
 {
-    thread_guard guard(this);
-    int          lock_error;
-    int          parse_error;
+    int lock_error;
+    int parse_error;
+    bool lock_acquired;
 
     this->abort_if_not_initialized("xml_document::load_from_string");
-    if (guard.get_status() != 0)
+    lock_acquired = false;
+    lock_error = this->lock(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        lock_error = guard.get_status();
         this->record_operation_error(lock_error);
         return (lock_error);
     }
     if (!xml)
     {
+        this->unlock(lock_acquired);
         this->record_operation_error(FT_ERR_INVALID_ARGUMENT);
         return (FT_ERR_INVALID_ARGUMENT);
     }
@@ -807,6 +769,7 @@ int xml_document::load_from_string(const char *xml) noexcept
         error_code = parse_error;
         if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_INVALID_ARGUMENT;
+        this->unlock(lock_acquired);
         this->record_operation_error(error_code);
         return (error_code);
     }
@@ -814,10 +777,12 @@ int xml_document::load_from_string(const char *xml) noexcept
     if (remaining && *remaining != '\0')
     {
         delete node;
+        this->unlock(lock_acquired);
         this->record_operation_error(FT_ERR_INVALID_ARGUMENT);
         return (FT_ERR_INVALID_ARGUMENT);
     }
     this->_root = node;
+    this->unlock(lock_acquired);
     this->record_operation_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
@@ -901,15 +866,7 @@ int xml_document::load_from_file(const char *file_path) noexcept
     result = read_file_content(file_path, &content);
     if (result != FT_ERR_SUCCESS)
     {
-        thread_guard guard(this);
-
-        if (guard.get_status() != 0)
-        {
-            int guard_error = guard.get_status();
-            this->record_operation_error(guard_error);
-        }
-        else
-            this->record_operation_error(result);
+        this->record_operation_error(result);
         return (result);
     }
     result = this->load_from_string(content);
@@ -928,15 +885,7 @@ int xml_document::load_from_backend(ft_document_source &source) noexcept
     read_result = source.read_all(content);
     if (read_result != FT_ERR_SUCCESS)
     {
-        thread_guard guard(this);
-
-        if (guard.get_status() != 0)
-        {
-            int guard_error = guard.get_status();
-            this->record_operation_error(guard_error);
-        }
-        else
-            this->record_operation_error(read_result);
+        this->record_operation_error(read_result);
         return (read_result);
     }
     return (this->load_from_string(content.c_str()));
@@ -983,7 +932,7 @@ static int write_node(const xml_node *node, ft_vector<char> &buffer)
     bool lock_acquired = false;
     int lock_status = xml_node_lock(node, &lock_acquired);
 
-    if (lock_status != 0)
+    if (lock_status != FT_ERR_SUCCESS)
         return (FT_ERR_INVALID_STATE);
     buffer.push_back('<');
     append_node_qualified_name(node, buffer);
@@ -1013,16 +962,20 @@ static int write_node(const xml_node *node, ft_vector<char> &buffer)
 
 char *xml_document::write_to_string() const noexcept
 {
-    thread_guard guard(this);
+    bool lock_acquired;
+    int lock_error;
 
     this->abort_if_not_initialized("xml_document::write_to_string");
-    if (guard.get_status() != 0)
+    lock_acquired = false;
+    lock_error = this->lock(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        this->record_operation_error(guard.get_status());
+        this->record_operation_error(lock_error);
         return (ft_nullptr);
     }
     if (!this->_root)
     {
+        this->unlock(lock_acquired);
         this->record_operation_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
@@ -1077,9 +1030,11 @@ char *xml_document::write_to_string() const noexcept
     {
         if (result)
             cma_free(result);
+        this->unlock(lock_acquired);
         this->record_operation_error(error_code);
         return (ft_nullptr);
     }
+    this->unlock(lock_acquired);
     this->record_operation_error(FT_ERR_SUCCESS);
     return (result);
 }
@@ -1164,15 +1119,18 @@ int xml_document::write_to_backend(ft_document_sink &sink) const noexcept
 
 xml_node *xml_document::get_root() const noexcept
 {
-    thread_guard guard(this);
+    bool lock_acquired;
+    int lock_error;
 
     this->abort_if_not_initialized("xml_document::get_root");
-    int guard_status = guard.get_status();
-    if (guard_status != 0)
+    lock_acquired = false;
+    lock_error = this->lock(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
     {
-        this->record_operation_error(guard_status);
+        this->record_operation_error(lock_error);
         return (ft_nullptr);
     }
+    this->unlock(lock_acquired);
     this->record_operation_error(FT_ERR_SUCCESS);
     return (this->_root);
 }
@@ -1186,12 +1144,15 @@ void xml_document::set_manual_error(int error_code) noexcept
 
 int xml_document::get_error() const noexcept
 {
-    thread_guard guard(this);
+    bool lock_acquired;
+    int lock_error;
 
     this->abort_if_not_initialized("xml_document::get_error");
-    int guard_status = guard.get_status();
-    if (guard_status != 0)
-        return (guard_status);
+    lock_acquired = false;
+    lock_error = this->lock(&lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
+    this->unlock(lock_acquired);
     return (FT_ERR_SUCCESS);
 }
 
@@ -1206,93 +1167,83 @@ const char *xml_document::get_error_str() const noexcept
     return (message);
 }
 
-bool xml_document::is_thread_safe_enabled() const noexcept
-{
-    return (this->is_thread_safe());
-}
-
 int xml_document::enable_thread_safety() noexcept
 {
     pt_mutex *mutex_pointer;
     int mutex_error;
 
     this->abort_if_not_initialized("xml_document::enable_thread_safety");
-    if (this->_thread_safe_enabled && this->_mutex)
+    if (this->_mutex)
     {
         this->record_operation_error(FT_ERR_SUCCESS);
-        return (0);
+        return (FT_ERR_SUCCESS);
     }
     mutex_pointer = new (std::nothrow) pt_mutex();
     if (!mutex_pointer)
     {
         this->record_operation_error(FT_ERR_NO_MEMORY);
-        return (-1);
+        return (FT_ERR_NO_MEMORY);
     }
     mutex_error = mutex_pointer->initialize();
     if (mutex_error != FT_ERR_SUCCESS)
     {
         delete mutex_pointer;
         this->record_operation_error(mutex_error);
-        return (-1);
+        return (mutex_error);
     }
     this->_mutex = mutex_pointer;
-    this->_thread_safe_enabled = true;
     this->record_operation_error(FT_ERR_SUCCESS);
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
-void xml_document::disable_thread_safety() noexcept
+int xml_document::disable_thread_safety() noexcept
 {
+    int destroy_error;
+
     this->abort_if_not_initialized("xml_document::disable_thread_safety");
     if (!this->_mutex)
-    {
-        this->_thread_safe_enabled = false;
-        return ;
-    }
-    this->_mutex->destroy();
+        return (FT_ERR_SUCCESS);
+    destroy_error = this->_mutex->destroy();
     delete this->_mutex;
     this->_mutex = ft_nullptr;
-    this->_thread_safe_enabled = false;
-    return ;
+    this->record_operation_error(destroy_error);
+    return (destroy_error);
 }
 
 bool xml_document::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("xml_document::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
 int xml_document::lock(bool *lock_acquired) const noexcept
 {
+    bool has_mutex;
+    int mutex_result;
     this->abort_if_not_initialized("xml_document::lock");
     if (lock_acquired)
         *lock_acquired = false;
-    if (!this->_thread_safe_enabled || !this->_mutex)
-    {
-        this->record_operation_error(FT_ERR_SUCCESS);
-        return (0);
-    }
-    int mutex_result = this->_mutex->lock();
+    has_mutex = (this->_mutex != ft_nullptr);
+    mutex_result = pt_mutex_lock_if_not_null(this->_mutex);
     int reported_error;
 
     reported_error = mutex_result;
     if (reported_error != FT_ERR_SUCCESS)
     {
         this->record_operation_error(reported_error);
-        return (-1);
+        return (reported_error);
     }
-    if (lock_acquired)
+    if (lock_acquired && has_mutex)
         *lock_acquired = true;
     this->record_operation_error(FT_ERR_SUCCESS);
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 void xml_document::unlock(bool lock_acquired) const noexcept
 {
     this->abort_if_not_initialized("xml_document::unlock");
-    if (!lock_acquired || !this->_thread_safe_enabled || !this->_mutex)
+    if (!lock_acquired)
         return ;
-    int mutex_result = this->_mutex->unlock();
+    int mutex_result = pt_mutex_unlock_if_not_null(this->_mutex);
     int reported_error;
 
     reported_error = mutex_result;

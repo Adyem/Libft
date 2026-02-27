@@ -1,3 +1,4 @@
+#include "../PThread/pthread_internal.hpp"
 #include "game_quest.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
@@ -274,7 +275,7 @@ int ft_quest::lock_internal(bool *lock_acquired) const noexcept
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    lock_error = this->_mutex->lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -300,7 +301,7 @@ int ft_quest::unlock_internal(bool lock_acquired) const noexcept
     }
     int unlock_error;
 
-    unlock_error = this->_mutex->unlock();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
         this->set_error(unlock_error);
     else

@@ -101,7 +101,7 @@ static bool api_http_apply_timeouts(ft_socket &socket_wrapper, int timeout)
 
     if (timeout <= 0)
         return (true);
-    file_descriptor = socket_wrapper.get_fd();
+    file_descriptor = socket_wrapper.get_file_descriptor();
     if (file_descriptor < 0)
         return (false);
 #ifdef _WIN32
@@ -179,7 +179,7 @@ static bool api_https_prepare_socket(api_connection_pool_handle &connection_hand
             error_code = FT_ERR_SOCKET_CONNECT_FAILED;
         return (false);
     }
-    if (connection_handle.socket.get_fd() >= 0)
+    if (connection_handle.socket.get_file_descriptor() >= 0)
         connection_handle.has_socket = true;
     connection_handle.from_pool = false;
     connection_handle.should_store = true;
@@ -360,7 +360,7 @@ static bool api_https_ensure_session(
             return (false);
         }
     }
-    if (SSL_set_fd(ssl_session, socket_wrapper.get_fd()) != 1)
+    if (SSL_set_fd(ssl_session, socket_wrapper.get_file_descriptor()) != 1)
     {
         api_request_set_ssl_error(ssl_session, 0);
         error_code = FT_ERR_SUCCESS;
@@ -1021,7 +1021,7 @@ char *api_https_execute_http2(api_connection_pool_handle &connection_handle,
         api_connection_pool_evict(connection_handle);
         attempt_index++;
         if (attempt_index >= max_attempts)
-            break;
+            break ;
         if (current_delay > 0)
         {
             int sleep_delay;
@@ -1093,7 +1093,7 @@ char *api_https_execute(api_connection_pool_handle &connection_handle,
         api_connection_pool_evict(connection_handle);
         attempt_index++;
         if (attempt_index >= max_attempts)
-            break;
+            break ;
         if (current_delay > 0)
         {
             int sleep_delay;

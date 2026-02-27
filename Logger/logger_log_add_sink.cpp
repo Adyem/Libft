@@ -240,7 +240,7 @@ void ft_json_sink(const char *message, void *user_data)
     char message_buffer[2048];
     ft_vector<s_json_sink_field> context_fields;
     size_t index;
-    int fd;
+    int file_descriptor;
     bool message_is_json;
     int error_code;
 
@@ -251,9 +251,9 @@ void ft_json_sink(const char *message, void *user_data)
     severity_buffer[0] = '\0';
     message_buffer[0] = '\0';
     message_is_json = false;
-    fd = 1;
+    file_descriptor = 1;
     if (user_data)
-        fd = *static_cast<int *>(user_data);
+        file_descriptor = *static_cast<int *>(user_data);
     index = 0;
     while (message[index] == ' ')
         index += 1;
@@ -392,7 +392,7 @@ void ft_json_sink(const char *message, void *user_data)
     }
     ssize_t write_result;
 
-    write_result = write(fd, payload.c_str(), payload.size());
+    write_result = write(file_descriptor, payload.c_str(), payload.size());
     (void)write_result;
     return ;
 }

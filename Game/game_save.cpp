@@ -99,28 +99,28 @@ json_group *serialize_inventory(const ft_inventory &inventory)
         if (!capacity_item)
         {
             has_error = true;
-            break;
+            break ;
         }
         json_add_item_to_group(group, capacity_item);
         json_item *weight_limit_item = json_create_item("weight_limit", inventory.get_weight_limit());
         if (!weight_limit_item)
         {
             has_error = true;
-            break;
+            break ;
         }
         json_add_item_to_group(group, weight_limit_item);
         json_item *current_weight_item = json_create_item("current_weight", inventory.get_current_weight());
         if (!current_weight_item)
         {
             has_error = true;
-            break;
+            break ;
         }
         json_add_item_to_group(group, current_weight_item);
         json_item *used_slots_item = json_create_item("used_slots", static_cast<int>(inventory.get_used()));
         if (!used_slots_item)
         {
             has_error = true;
-            break;
+            break ;
         }
         json_add_item_to_group(group, used_slots_item);
         size_t item_count = inventory.get_items().size();
@@ -128,7 +128,7 @@ json_group *serialize_inventory(const ft_inventory &inventory)
         if (!count_item)
         {
             has_error = true;
-            break;
+            break ;
         }
         json_add_item_to_group(group, count_item);
         const Pair<int, ft_sharedptr<ft_item> > *items_end = inventory.get_items().end();
@@ -138,7 +138,7 @@ json_group *serialize_inventory(const ft_inventory &inventory)
             if (!items_end)
             {
                 has_error = true;
-                break;
+                break ;
             }
             item_start = items_end - item_count;
         }
@@ -153,23 +153,23 @@ json_group *serialize_inventory(const ft_inventory &inventory)
             if (item_prefix.initialize("item_") != FT_ERR_SUCCESS)
             {
                 has_error = true;
-                break;
+                break ;
             }
             item_prefix += item_index_string;
             if (!item_start[item_index].value)
             {
                 has_error = true;
-                break;
+                break ;
             }
             if (serialize_item_fields(group, *item_start[item_index].value, item_prefix) != FT_ERR_SUCCESS)
             {
                 has_error = true;
-                break;
+                break ;
             }
             item_index++;
         }
         if (has_error)
-            break;
+            break ;
     } while (0);
     if (has_error)
     {
@@ -278,42 +278,42 @@ json_group *serialize_quest(const ft_quest &quest)
         if (!item)
         {
             has_error = true;
-            break;
+            break ;
         }
         json_add_item_to_group(group, item);
         item = json_create_item("phases", quest.get_phases());
         if (!item)
         {
             has_error = true;
-            break;
+            break ;
         }
         json_add_item_to_group(group, item);
         item = json_create_item("current_phase", quest.get_current_phase());
         if (!item)
         {
             has_error = true;
-            break;
+            break ;
         }
         json_add_item_to_group(group, item);
         item = json_create_item("description", quest.get_description().c_str());
         if (!item)
         {
             has_error = true;
-            break;
+            break ;
         }
         json_add_item_to_group(group, item);
         item = json_create_item("objective", quest.get_objective().c_str());
         if (!item)
         {
             has_error = true;
-            break;
+            break ;
         }
         json_add_item_to_group(group, item);
         item = json_create_item("reward_experience", quest.get_reward_experience());
         if (!item)
         {
             has_error = true;
-            break;
+            break ;
         }
         json_add_item_to_group(group, item);
         size_t item_count = quest.get_reward_items().size();
@@ -321,7 +321,7 @@ json_group *serialize_quest(const ft_quest &quest)
         if (!item)
         {
             has_error = true;
-            break;
+            break ;
         }
         json_add_item_to_group(group, item);
         const ft_vector<ft_sharedptr<ft_item> > &reward_items = quest.get_reward_items();
@@ -329,7 +329,7 @@ json_group *serialize_quest(const ft_quest &quest)
         if (item_count > 0 && !item_start)
         {
             has_error = true;
-            break;
+            break ;
         }
         size_t item_index = 0;
         while (item_index < item_count)
@@ -342,23 +342,23 @@ json_group *serialize_quest(const ft_quest &quest)
             if (item_prefix.initialize("reward_item_") != FT_ERR_SUCCESS)
             {
                 has_error = true;
-                break;
+                break ;
             }
             item_prefix += item_index_string;
             if (!item_start[item_index])
             {
                 has_error = true;
-                break;
+                break ;
             }
             if (serialize_item_fields(group, *item_start[item_index], item_prefix) != FT_ERR_SUCCESS)
             {
                 has_error = true;
-                break;
+                break ;
             }
             item_index++;
         }
         if (has_error)
-            break;
+            break ;
     } while (0);
     if (has_error)
     {

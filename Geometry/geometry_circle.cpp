@@ -33,18 +33,6 @@ void circle::abort_if_not_initialized(const char *method_name) const noexcept
     return ;
 }
 
-int circle::lock_mutex() const noexcept
-{
-    this->abort_if_not_initialized("circle::lock_mutex");
-    return (pt_recursive_mutex_lock_if_not_null(this->_mutex));
-}
-
-int circle::unlock_mutex() const noexcept
-{
-    this->abort_if_not_initialized("circle::unlock_mutex");
-    return (pt_recursive_mutex_unlock_if_not_null(this->_mutex));
-}
-
 int circle::lock_pair(const circle &other, const circle *&lower,
     const circle *&upper) const
 {
@@ -57,7 +45,7 @@ int circle::lock_pair(const circle &other, const circle *&lower,
     {
         lower = this;
         upper = this;
-        return (this->lock_mutex());
+        return (pt_recursive_mutex_lock_if_not_null(this->_mutex));
     }
     if (ordered_first > ordered_second)
     {
@@ -71,18 +59,18 @@ int circle::lock_pair(const circle &other, const circle *&lower,
         int lower_error;
         int upper_error;
 
-        lower_error = lower->lock_mutex();
+        lower_error = pt_recursive_mutex_lock_if_not_null(lower->_mutex);
         if (lower_error != FT_ERR_SUCCESS)
             return (lower_error);
-        upper_error = upper->lock_mutex();
+        upper_error = pt_recursive_mutex_lock_if_not_null(upper->_mutex);
         if (upper_error == FT_ERR_SUCCESS)
             return (FT_ERR_SUCCESS);
         if (upper_error != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            lower->unlock_mutex();
+            pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
             return (upper_error);
         }
-        lower->unlock_mutex();
+        pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
         circle_sleep_backoff();
     }
 }
@@ -90,9 +78,9 @@ int circle::lock_pair(const circle &other, const circle *&lower,
 void circle::unlock_pair(const circle *lower, const circle *upper)
 {
     if (upper != ft_nullptr)
-        upper->unlock_mutex();
+        pt_recursive_mutex_unlock_if_not_null(upper->_mutex);
     if (lower != ft_nullptr && lower != upper)
-        lower->unlock_mutex();
+        pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
     return ;
 }
 
@@ -171,7 +159,7 @@ int circle::initialize(const circle &other) noexcept
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
         return (initialize_error);
-    lock_error = other.lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(other._mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         (void)this->destroy();
@@ -180,7 +168,7 @@ int circle::initialize(const circle &other) noexcept
     this->_center_x = other._center_x;
     this->_center_y = other._center_y;
     this->_radius = other._radius;
-    unlock_error = other.unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(other._mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         (void)this->destroy();
@@ -261,11 +249,7 @@ int circle::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != circle::_state_initialized)
-    {
-        this->abort_lifecycle_error("circle::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     disable_error = this->disable_thread_safety();
     if (disable_error != FT_ERR_SUCCESS)
         return (disable_error);
@@ -289,12 +273,12 @@ int circle::set_center(double center_x, double center_y)
     int unlock_error;
 
     this->abort_if_not_initialized("circle::set_center");
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     this->_center_x = center_x;
     this->_center_y = center_y;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
         return (unlock_error);
     return (FT_ERR_SUCCESS);
@@ -306,11 +290,11 @@ int circle::set_center_x(double center_x)
     int unlock_error;
 
     this->abort_if_not_initialized("circle::set_center_x");
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     this->_center_x = center_x;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
         return (unlock_error);
     return (FT_ERR_SUCCESS);
@@ -322,11 +306,11 @@ int circle::set_center_y(double center_y)
     int unlock_error;
 
     this->abort_if_not_initialized("circle::set_center_y");
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     this->_center_y = center_y;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
         return (unlock_error);
     return (FT_ERR_SUCCESS);
@@ -338,11 +322,11 @@ int circle::set_radius(double radius)
     int unlock_error;
 
     this->abort_if_not_initialized("circle::set_radius");
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     this->_radius = radius;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
         return (unlock_error);
     return (FT_ERR_SUCCESS);
@@ -355,11 +339,11 @@ double circle::get_center_x() const
     double value;
 
     this->abort_if_not_initialized("circle::get_center_x");
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (0.0);
     value = this->_center_x;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
         return (value);
     return (value);
@@ -372,11 +356,11 @@ double circle::get_center_y() const
     double value;
 
     this->abort_if_not_initialized("circle::get_center_y");
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (0.0);
     value = this->_center_y;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
         return (value);
     return (value);
@@ -389,11 +373,11 @@ double circle::get_radius() const
     double value;
 
     this->abort_if_not_initialized("circle::get_radius");
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (0.0);
     value = this->_radius;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
         return (value);
     return (value);

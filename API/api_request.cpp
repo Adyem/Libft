@@ -710,7 +710,7 @@ char *api_request_string_http2(const char *ip, uint16_t port,
             api_connection_pool_evict(connection_handle);
             attempt_index = attempt_index + 1;
             if (attempt_index >= max_attempts)
-                break;
+                break ;
             if (current_delay > 0)
             {
                 int sleep_delay;

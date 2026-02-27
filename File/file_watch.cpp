@@ -2,6 +2,7 @@
 #include "../Compatebility/compatebility_file_watch.hpp"
 #include "../Template/move.hpp"
 #include "../CMA/CMA.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
 
@@ -27,34 +28,6 @@ void ft_file_watch::abort_if_not_initialized(const char *method_name) const
     return ;
 }
 
-int ft_file_watch::lock_watch(bool *lock_acquired) const
-{
-    int lock_error;
-
-    if (lock_acquired != ft_nullptr)
-        *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    lock_error = this->_mutex->lock();
-    if (lock_error != FT_ERR_SUCCESS)
-        return (lock_error);
-    if (lock_acquired != ft_nullptr)
-        *lock_acquired = true;
-    return (FT_ERR_SUCCESS);
-}
-
-int ft_file_watch::unlock_watch(bool lock_acquired) const
-{
-    int unlock_error;
-
-    if (lock_acquired == false)
-        return (FT_ERR_SUCCESS);
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    unlock_error = this->_mutex->unlock();
-    return (unlock_error);
-}
-
 ft_file_watch::ft_file_watch()
     : _path(), _callback(ft_nullptr), _user_data(ft_nullptr), _thread(),
       _running(false), _stopped(true), _mutex(ft_nullptr), _state(ft_nullptr),
@@ -65,9 +38,6 @@ ft_file_watch::ft_file_watch()
 
 ft_file_watch::~ft_file_watch()
 {
-    if (this->_initialized_state == ft_file_watch::_state_uninitialized)
-        this->abort_lifecycle_error("ft_file_watch::~ft_file_watch",
-            "destructor called while object is uninitialized");
     if (this->_initialized_state == ft_file_watch::_state_initialized)
         (void)this->destroy();
     return ;
@@ -100,10 +70,7 @@ int ft_file_watch::destroy()
     int disable_error;
 
     if (this->_initialized_state != ft_file_watch::_state_initialized)
-    {
-        this->abort_lifecycle_error("ft_file_watch::destroy",
-            "destroy called while object is not initialized");
-    }
+        return (FT_ERR_INVALID_STATE);
     this->stop();
     if (this->_state != ft_nullptr)
     {
@@ -155,7 +122,6 @@ int ft_file_watch::disable_thread_safety()
 
 bool ft_file_watch::is_thread_safe() const
 {
-    this->abort_if_not_initialized("ft_file_watch::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
@@ -164,22 +130,21 @@ int ft_file_watch::watch_directory(const char *path,
 {
     ft_thread new_thread;
     int lock_error;
-    bool lock_acquired;
 
     this->abort_if_not_initialized("ft_file_watch::watch_directory");
-    lock_error = this->lock_watch(&lock_acquired);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
     if (path == ft_nullptr || callback == ft_nullptr)
     {
-        (void)this->unlock_watch(lock_acquired);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (-1);
     }
     if (!this->_stopped)
     {
-        (void)this->unlock_watch(lock_acquired);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         this->stop();
-        lock_error = this->lock_watch(&lock_acquired);
+        lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
         if (lock_error != FT_ERR_SUCCESS)
             return (-1);
     }
@@ -189,7 +154,7 @@ int ft_file_watch::watch_directory(const char *path,
         this->_callback = ft_nullptr;
         this->_user_data = ft_nullptr;
         this->_path.clear();
-        (void)this->unlock_watch(lock_acquired);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (-1);
     }
     this->_callback = callback;
@@ -199,14 +164,14 @@ int ft_file_watch::watch_directory(const char *path,
         this->_callback = ft_nullptr;
         this->_user_data = ft_nullptr;
         this->_path.clear();
-        (void)this->unlock_watch(lock_acquired);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (-1);
     }
     this->_running = true;
     this->_stopped = false;
     new_thread = ft_thread(&ft_file_watch::event_loop, this);
     this->_thread = ft_move(new_thread);
-    (void)this->unlock_watch(lock_acquired);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (0);
 }
 
@@ -214,15 +179,14 @@ void ft_file_watch::stop()
 {
     ft_thread thread_to_join;
     int lock_error;
-    bool lock_acquired;
 
     this->abort_if_not_initialized("ft_file_watch::stop");
-    lock_error = this->lock_watch(&lock_acquired);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     if (this->_stopped)
     {
-        (void)this->unlock_watch(lock_acquired);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return ;
     }
     this->_stopped = true;
@@ -233,7 +197,7 @@ void ft_file_watch::stop()
     this->_callback = ft_nullptr;
     this->_user_data = ft_nullptr;
     this->_path.clear();
-    (void)this->unlock_watch(lock_acquired);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (thread_to_join.joinable())
         thread_to_join.join();
     return ;
@@ -249,10 +213,9 @@ bool ft_file_watch::snapshot_callback(void (**callback)(const char *, int, void 
     void *&user_data, ft_string &path_snapshot) const
 {
     int lock_error;
-    bool lock_acquired;
 
     this->abort_if_not_initialized("ft_file_watch::snapshot_callback");
-    lock_error = this->lock_watch(&lock_acquired);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (false);
     *callback = ft_nullptr;
@@ -260,7 +223,7 @@ bool ft_file_watch::snapshot_callback(void (**callback)(const char *, int, void 
     path_snapshot.clear();
     if (!this->_running)
     {
-        (void)this->unlock_watch(lock_acquired);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (false);
     }
     *callback = this->_callback;
@@ -268,7 +231,7 @@ bool ft_file_watch::snapshot_callback(void (**callback)(const char *, int, void 
     path_snapshot = this->_path;
     if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         path_snapshot.clear();
-    (void)this->unlock_watch(lock_acquired);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (true);
 }
 
@@ -286,7 +249,7 @@ void ft_file_watch::event_loop()
     {
         cmp_file_watch_event event;
         if (!cmp_file_watch_wait_event(this->_state, &event))
-            break;
+            break ;
         void (*local_callback)(const char *, int, void *);
         void *local_user_data;
         ft_string path_snapshot;

@@ -90,10 +90,10 @@ class t_compress_stream_options
 #endif
 };
 
-int              ft_compress_stream_with_options(int input_fd, int output_fd, const t_compress_stream_options *options);
-int              ft_decompress_stream_with_options(int input_fd, int output_fd, const t_compress_stream_options *options);
-int              ft_compress_stream(int input_fd, int output_fd);
-int              ft_decompress_stream(int input_fd, int output_fd);
+int              ft_compress_stream_with_options(int input_file_descriptor, int output_file_descriptor, const t_compress_stream_options *options);
+int              ft_decompress_stream_with_options(int input_file_descriptor, int output_file_descriptor, const t_compress_stream_options *options);
+int              ft_compress_stream(int input_file_descriptor, int output_file_descriptor);
+int              ft_decompress_stream(int input_file_descriptor, int output_file_descriptor);
 void             ft_compress_stream_apply_speed_preset(t_compress_stream_options *options);
 void             ft_compress_stream_apply_ratio_preset(t_compress_stream_options *options);
 unsigned char    *ft_base64_encode(const unsigned char *input_buffer, std::size_t input_size, std::size_t *encoded_size);

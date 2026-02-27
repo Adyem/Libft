@@ -95,7 +95,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
         while (read_file_descriptors && search_index < read_count)
         {
             if (read_file_descriptors[search_index] == descriptor)
-                break;
+                break ;
             search_index++;
         }
         if (read_file_descriptors && search_index < read_count)
@@ -104,7 +104,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
         while (write_file_descriptors && search_index < write_count)
         {
             if (write_file_descriptors[search_index] == descriptor)
-                break;
+                break ;
             search_index++;
         }
         if (write_file_descriptors && search_index < write_count)

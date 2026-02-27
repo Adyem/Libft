@@ -20,8 +20,6 @@ class aabb
         void    abort_lifecycle_error(const char *method_name,
                     const char *reason) const noexcept;
         void    abort_if_not_initialized(const char *method_name) const noexcept;
-        int     lock_mutex() const noexcept;
-        int     unlock_mutex() const noexcept;
         int     lock_pair(const aabb &other, const aabb *&lower,
                     const aabb *&upper) const;
         static void unlock_pair(const aabb *lower, const aabb *upper);

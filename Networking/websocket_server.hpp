@@ -2,9 +2,9 @@
 #define WEBSOCKET_SERVER_HPP
 
 #include "../CPP_class/class_string.hpp"
-#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#include "../Template/map.hpp"
 #include <cstdint>
-#include <map>
 
 #ifdef _WIN32
 # include <winsock2.h>
@@ -29,8 +29,8 @@ class ft_websocket_server
         };
 
         ft_socket *_server_socket;
-        mutable pt_mutex _mutex;
-        std::map<int, s_connection_state> _connection_states;
+        mutable pt_recursive_mutex *_mutex;
+        ft_map<int, s_connection_state> _connection_states;
 
         void store_connection_state_locked(int client_fd, bool permessage_deflate_enabled);
         void remove_connection_state_locked(int client_fd);

@@ -1,4 +1,5 @@
 #include "api_internal.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
 #include <new>
@@ -87,14 +88,11 @@ int api_connection_pool_handle::disable_thread_safety() noexcept
 
 bool api_connection_pool_handle::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("api_connection_pool_handle::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
 int api_connection_pool_handle::initialize() noexcept
 {
-    int thread_safety_result;
-
     if (this->_initialized_state == api_connection_pool_handle::_state_initialized)
         this->abort_lifecycle_error("api_connection_pool_handle::initialize",
             "initialize called on initialized instance");
@@ -117,12 +115,6 @@ int api_connection_pool_handle::initialize() noexcept
     this->plain_socket_timed_out = false;
     this->plain_socket_validated = false;
     this->_initialized_state = api_connection_pool_handle::_state_initialized;
-    thread_safety_result = this->enable_thread_safety();
-    if (thread_safety_result != FT_ERR_SUCCESS)
-    {
-        this->_initialized_state = api_connection_pool_handle::_state_destroyed;
-        return (thread_safety_result);
-    }
     return (FT_ERR_SUCCESS);
 }
 
@@ -150,18 +142,18 @@ int api_connection_pool_handle::destroy() noexcept
 int api_connection_pool_handle::lock(bool *lock_acquired) const
 {
     api_connection_pool_handle *mutable_handle;
+    int lock_result;
 
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     mutable_handle = const_cast<api_connection_pool_handle *>(this);
     mutable_handle->abort_if_not_initialized("api_connection_pool_handle::lock");
-    if (mutable_handle->_mutex == ft_nullptr)
-        return (0);
-    if (mutable_handle->_mutex->lock() != FT_ERR_SUCCESS)
-        return (-1);
+    lock_result = pt_recursive_mutex_lock_if_not_null(mutable_handle->_mutex);
+    if (lock_result != FT_ERR_SUCCESS)
+        return (FT_ERR_INVALID_OPERATION);
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 void api_connection_pool_handle::unlock(bool lock_acquired) const
@@ -171,9 +163,7 @@ void api_connection_pool_handle::unlock(bool lock_acquired) const
     if (lock_acquired == false)
         return ;
     mutable_handle = const_cast<api_connection_pool_handle *>(this);
-    if (mutable_handle->_mutex == ft_nullptr)
-        return ;
-    (void)mutable_handle->_mutex->unlock();
+    (void)pt_recursive_mutex_unlock_if_not_null(mutable_handle->_mutex);
     return ;
 }
 

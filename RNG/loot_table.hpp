@@ -4,6 +4,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Template/pair.hpp"
 #include "rng.hpp"
@@ -80,9 +81,9 @@ class ft_loot_table
         int disable_thread_safety();
         bool is_thread_safe() const;
 
-        int addElement(ElementType *elem, int weight, int rarity);
-        Pair<int, ElementType *> getRandomLoot() const;
-        Pair<int, ElementType *> popRandomLoot();
+        int add_element(ElementType *elem, int weight, int rarity);
+        Pair<int, ElementType *> get_random_loot() const;
+        Pair<int, ElementType *> pop_random_loot();
         size_t size() const noexcept;
 
 #ifdef LIBFT_TEST_BUILD
@@ -168,9 +169,7 @@ int ft_loot_entry<ElementType>::lock_entry(bool *lock_acquired) const noexcept
 
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    lock_error = this->_mutex->lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (lock_acquired != ft_nullptr)
@@ -183,9 +182,7 @@ int ft_loot_entry<ElementType>::unlock_entry(bool lock_acquired) const noexcept
 {
     if (lock_acquired == false)
         return (FT_ERR_SUCCESS);
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->unlock());
+    return (pt_recursive_mutex_unlock_if_not_null(this->_mutex));
 }
 
 template<typename ElementType>
@@ -407,9 +404,7 @@ int ft_loot_table<ElementType>::lock_table(bool *lock_acquired) const noexcept
 
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    lock_error = this->_mutex->lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (lock_acquired != ft_nullptr)
@@ -422,9 +417,7 @@ int ft_loot_table<ElementType>::unlock_table(bool lock_acquired) const noexcept
 {
     if (lock_acquired == false)
         return (FT_ERR_SUCCESS);
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->unlock());
+    return (pt_recursive_mutex_unlock_if_not_null(this->_mutex));
 }
 
 template<typename ElementType>
@@ -507,7 +500,7 @@ int ft_loot_table<ElementType>::locate_entry_by_roll_locked(int roll, size_t *re
 }
 
 template<typename ElementType>
-int ft_loot_table<ElementType>::addElement(ElementType *elem, int weight, int rarity)
+int ft_loot_table<ElementType>::add_element(ElementType *elem, int weight, int rarity)
 {
     bool lock_acquired;
     int lock_error;
@@ -550,7 +543,7 @@ int ft_loot_table<ElementType>::addElement(ElementType *elem, int weight, int ra
 }
 
 template<typename ElementType>
-Pair<int, ElementType *> ft_loot_table<ElementType>::getRandomLoot() const
+Pair<int, ElementType *> ft_loot_table<ElementType>::get_random_loot() const
 {
     bool lock_acquired;
     int lock_error;
@@ -598,7 +591,7 @@ Pair<int, ElementType *> ft_loot_table<ElementType>::getRandomLoot() const
 }
 
 template<typename ElementType>
-Pair<int, ElementType *> ft_loot_table<ElementType>::popRandomLoot()
+Pair<int, ElementType *> ft_loot_table<ElementType>::pop_random_loot()
 {
     bool lock_acquired;
     int lock_error;

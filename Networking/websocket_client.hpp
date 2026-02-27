@@ -2,7 +2,7 @@
 #define WEBSOCKET_CLIENT_HPP
 
 #include "../CPP_class/class_string.hpp"
-#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "socket_handle.hpp"
 #include <cstdint>
 
@@ -16,7 +16,7 @@ class ft_websocket_client
         void abort_lifecycle_error(const char *method_name, const char *reason) const;
         void abort_if_not_initialized(const char *method_name) const;
         ft_socket_handle _socket;
-        mutable pt_mutex _mutex;
+        mutable pt_recursive_mutex *_mutex;
 
         int close_locked();
         int perform_handshake_locked(const char *host, const char *path);

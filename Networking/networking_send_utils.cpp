@@ -66,7 +66,7 @@ int networking_check_socket_after_send(int socket_fd)
         if (recv_result == 0)
         {
             disconnect_detected = true;
-            break;
+            break ;
         }
         if (recv_result < 0)
         {
@@ -88,7 +88,7 @@ int networking_check_socket_after_send(int socket_fd)
 #endif
             return (-1);
         }
-        break;
+        break ;
     }
     int socket_error;
 #ifdef _WIN32
@@ -190,7 +190,7 @@ int networking_check_ssl_after_send(SSL *ssl_connection)
         peek_buffer = 0;
         peek_result = SSL_peek(ssl_connection, &peek_buffer, 1);
         if (peek_result > 0)
-            break;
+            break ;
         if (peek_result == 0)
         {
             (void)(FT_ERR_SOCKET_SEND_FAILED);

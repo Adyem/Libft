@@ -5,7 +5,7 @@
 #include "../System_utils/system_utils.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 
-static void html_write_attrs(int fd, html_attr *attribute)
+static void html_write_attrs(int file_descriptor, html_attr *attribute)
 {
     while (attribute)
     {
@@ -19,13 +19,13 @@ static void html_write_attrs(int fd, html_attr *attribute)
             return ;
         next_attribute = attribute->next;
         if (attribute->key && attribute->value)
-            pf_printf_fd(fd, " %s=\"%s\"", attribute->key, attribute->value);
+            pf_printf_fd(file_descriptor, " %s=\"%s\"", attribute->key, attribute->value);
         html_attr_unlock(attribute, lock_acquired);
         attribute = next_attribute;
     }
 }
 
-static void html_write_node(int fd, html_node *htmlNode, int indent)
+static void html_write_node(int file_descriptor, html_node *htmlNode, int indent)
 {
     bool node_lock_acquired;
     int  lock_status;
@@ -38,39 +38,39 @@ static void html_write_node(int fd, html_node *htmlNode, int indent)
     indent_index = 0;
     while (indent_index < indent)
     {
-        pf_printf_fd(fd, "  ");
+        pf_printf_fd(file_descriptor, "  ");
         ++indent_index;
     }
-    pf_printf_fd(fd, "<%s", htmlNode->tag);
-    html_write_attrs(fd, htmlNode->attributes);
+    pf_printf_fd(file_descriptor, "<%s", htmlNode->tag);
+    html_write_attrs(file_descriptor, htmlNode->attributes);
     if (!htmlNode->text && !htmlNode->children)
     {
-        pf_printf_fd(fd, "/>\n");
+        pf_printf_fd(file_descriptor, "/>\n");
         html_node_unlock(htmlNode, node_lock_acquired);
         return ;
     }
-    pf_printf_fd(fd, ">");
+    pf_printf_fd(file_descriptor, ">");
     if (htmlNode->text)
-        pf_printf_fd(fd, "%s", htmlNode->text);
+        pf_printf_fd(file_descriptor, "%s", htmlNode->text);
     if (htmlNode->children)
     {
         html_node *childNode;
 
-        pf_printf_fd(fd, "\n");
+        pf_printf_fd(file_descriptor, "\n");
         childNode = htmlNode->children;
         while (childNode)
         {
-            html_write_node(fd, childNode, indent + 1);
+            html_write_node(file_descriptor, childNode, indent + 1);
             childNode = childNode->next;
         }
         indent_index = 0;
         while (indent_index < indent)
         {
-            pf_printf_fd(fd, "  ");
+            pf_printf_fd(file_descriptor, "  ");
             ++indent_index;
         }
     }
-    pf_printf_fd(fd, "</%s>\n", htmlNode->tag);
+    pf_printf_fd(file_descriptor, "</%s>\n", htmlNode->tag);
     html_node_unlock(htmlNode, node_lock_acquired);
 }
 

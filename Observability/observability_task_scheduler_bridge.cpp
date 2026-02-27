@@ -179,24 +179,24 @@ int observability_task_scheduler_bridge_initialize(ft_otel_span_exporter exporte
     int unlock_result;
 
     if (exporter == ft_nullptr)
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     lock_result = g_observability_bridge_mutex.lock();
     if (lock_result != FT_ERR_SUCCESS)
-        return (-1);
+        return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
     if (g_observability_bridge_initialized)
     {
         g_observability_bridge_exporter = exporter;
         (void)g_observability_bridge_mutex.unlock();
-        return (0);
+        return (FT_ERR_SUCCESS);
     }
     g_observability_bridge_exporter = exporter;
     unlock_result = g_observability_bridge_mutex.unlock();
     if (unlock_result != FT_ERR_SUCCESS)
-        return (-1);
+        return (FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
     int register_result;
 
     register_result = task_scheduler_register_trace_sink(&observability_task_scheduler_bridge_trace_sink);
-    if (register_result != 0)
+    if (register_result != FT_ERR_SUCCESS)
     {
         lock_result = g_observability_bridge_mutex.lock();
         if (lock_result == FT_ERR_SUCCESS)
@@ -205,24 +205,24 @@ int observability_task_scheduler_bridge_initialize(ft_otel_span_exporter exporte
             g_observability_bridge_initialized = false;
             (void)g_observability_bridge_mutex.unlock();
         }
-        return (-1);
+        return (FT_ERR_INVALID_OPERATION);
     }
     lock_result = g_observability_bridge_mutex.lock();
     if (lock_result != FT_ERR_SUCCESS)
-        return (-1);
+        return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
     g_observability_span_states.clear();
     if (g_observability_span_states.last_operation_error() != FT_ERR_SUCCESS)
     {
         g_observability_bridge_exporter = ft_nullptr;
         g_observability_bridge_initialized = false;
         (void)g_observability_bridge_mutex.unlock();
-        return (-1);
+        return (FT_ERR_NO_MEMORY);
     }
     g_observability_bridge_initialized = true;
     unlock_result = g_observability_bridge_mutex.unlock();
     if (unlock_result != FT_ERR_SUCCESS)
-        return (-1);
-    return (0);
+        return (FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
+    return (FT_ERR_SUCCESS);
 }
 
 int observability_task_scheduler_bridge_shutdown(void)
@@ -232,37 +232,37 @@ int observability_task_scheduler_bridge_shutdown(void)
 
     lock_result = g_observability_bridge_mutex.lock();
     if (lock_result != FT_ERR_SUCCESS)
-        return (-1);
+        return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
     if (!g_observability_bridge_initialized)
     {
         g_observability_bridge_exporter = ft_nullptr;
         g_observability_span_states.clear();
         unlock_result = g_observability_bridge_mutex.unlock();
         if (unlock_result != FT_ERR_SUCCESS)
-            return (-1);
+            return (FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
         if (g_observability_span_states.last_operation_error() != FT_ERR_SUCCESS)
-            return (-1);
-        return (0);
+            return (FT_ERR_INTERNAL);
+        return (FT_ERR_SUCCESS);
     }
     unlock_result = g_observability_bridge_mutex.unlock();
     if (unlock_result != FT_ERR_SUCCESS)
-        return (-1);
+        return (FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
     int unregister_result;
     unregister_result = task_scheduler_unregister_trace_sink(&observability_task_scheduler_bridge_trace_sink);
-    if (unregister_result != 0)
+    if (unregister_result != FT_ERR_SUCCESS)
     {
-        return (-1);
+        return (FT_ERR_INVALID_OPERATION);
     }
     lock_result = g_observability_bridge_mutex.lock();
     if (lock_result != FT_ERR_SUCCESS)
-        return (-1);
+        return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
     g_observability_bridge_initialized = false;
     g_observability_bridge_exporter = ft_nullptr;
     g_observability_span_states.clear();
     unlock_result = g_observability_bridge_mutex.unlock();
     if (unlock_result != FT_ERR_SUCCESS)
-        return (-1);
+        return (FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
     if (g_observability_span_states.last_operation_error() != FT_ERR_SUCCESS)
-        return (-1);
-    return (0);
+        return (FT_ERR_INTERNAL);
+    return (FT_ERR_SUCCESS);
 }

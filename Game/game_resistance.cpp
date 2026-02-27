@@ -1,3 +1,4 @@
+#include "../PThread/pthread_internal.hpp"
 #include "game_resistance.hpp"
 #include "../Errno/errno.hpp"
 #include <new>
@@ -25,7 +26,7 @@ int ft_resistance::lock_internal(bool *lock_acquired) const noexcept
         *lock_acquired = false;
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
-    lock_error = this->_mutex->lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (lock_acquired != ft_nullptr)
@@ -39,7 +40,7 @@ void ft_resistance::unlock_internal(bool lock_acquired) const noexcept
         return ;
     if (this->_mutex == ft_nullptr)
         return ;
-    (void)this->_mutex->unlock();
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return ;
 }
 

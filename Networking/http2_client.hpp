@@ -4,7 +4,7 @@
 #include "../CPP_class/class_string.hpp"
 #include "../Template/vector.hpp"
 #include "../Template/map.hpp"
-#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include <cstdint>
 #include <cstddef>
 #include "openssl_support.hpp"
@@ -23,7 +23,7 @@ class http2_header_field
         void    abort_if_not_initialized(const char *method_name) const noexcept;
         ft_string           _name;
         ft_string           _value;
-        mutable pt_mutex   *_mutex;
+        mutable pt_recursive_mutex   *_mutex;
 
         int     lock(bool *lock_acquired) const noexcept;
         void    unlock(bool lock_acquired) const noexcept;
@@ -74,7 +74,7 @@ class http2_frame
         uint8_t             _flags;
         uint32_t            _stream_identifier;
         ft_string           _payload;
-        mutable pt_mutex   *_mutex;
+        mutable pt_recursive_mutex   *_mutex;
 
         int     lock(bool *lock_acquired) const noexcept;
         void    unlock(bool lock_acquired) const noexcept;
@@ -92,7 +92,7 @@ class http2_frame
         int     destroy() noexcept;
 
         int     enable_thread_safety() noexcept;
-        void    disable_thread_safety() noexcept;
+        int     disable_thread_safety() noexcept;
         bool    is_thread_safe() const noexcept;
 
         bool    set_type(uint8_t type_value) noexcept;
@@ -147,7 +147,7 @@ class http2_stream_manager
         uint32_t                                _initial_local_window;
         uint32_t                                _connection_remote_window;
         uint32_t                                _connection_local_window;
-        mutable pt_mutex                        *_mutex;
+        mutable pt_recursive_mutex   *_mutex;
 
         int         prepare_thread_safety() noexcept;
         void        teardown_thread_safety() noexcept;
@@ -166,7 +166,7 @@ class http2_stream_manager
         int         destroy() noexcept;
 
         int         enable_thread_safety() noexcept;
-        void        disable_thread_safety() noexcept;
+        int         disable_thread_safety() noexcept;
         bool        is_thread_safe() const noexcept;
 
         bool        open_stream(uint32_t stream_identifier) noexcept;

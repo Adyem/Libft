@@ -32,8 +32,6 @@ class ft_file_watch
         void abort_lifecycle_error(const char *method_name,
             const char *reason) const;
         void abort_if_not_initialized(const char *method_name) const;
-        int lock_watch(bool *lock_acquired) const;
-        int unlock_watch(bool lock_acquired) const;
 
     public:
         ft_file_watch();

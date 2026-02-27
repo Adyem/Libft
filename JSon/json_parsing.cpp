@@ -5,6 +5,7 @@
 #include "../CMA/CMA.hpp"
 #include "../Basic/basic.hpp"
 #include "../CPP_class/class_big_number.hpp"
+#include "../PThread/pthread_internal.hpp"
 
 static bool json_string_is_integral(const char *value)
 {
@@ -72,7 +73,7 @@ void json_item_refresh_numeric_state(json_item *item)
         return ;
     if (item->_mutex == ft_nullptr)
         return ;
-    lock_error = item->_mutex->lock();
+    lock_error = pt_mutex_lock_if_not_null(item->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     result_code = FT_ERR_SUCCESS;
@@ -108,7 +109,7 @@ void json_item_refresh_numeric_state(json_item *item)
         }
     }
     json_item_set_error_unlocked(item, result_code);
-    unlock_error = item->_mutex->unlock();
+    unlock_error = pt_mutex_unlock_if_not_null(item->_mutex);
     (void)unlock_error;
     return ;
 }
@@ -125,7 +126,7 @@ void json_add_item_to_group(json_group *group, json_item *item)
     }
     if (group->_mutex == ft_nullptr)
         return ;
-    lock_error = group->_mutex->lock();
+    lock_error = pt_mutex_lock_if_not_null(group->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     if (!group->items)
@@ -139,7 +140,7 @@ void json_add_item_to_group(json_group *group, json_item *item)
         current_item->next = item;
     }
     json_group_set_error_unlocked(group, FT_ERR_SUCCESS);
-    unlock_error = group->_mutex->unlock();
+    unlock_error = pt_mutex_unlock_if_not_null(group->_mutex);
     (void)unlock_error;
     return ;
 }

@@ -1,6 +1,7 @@
 #include "rng_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include <atomic>
 #include <new>
 #include <random>
@@ -48,18 +49,14 @@ int rng_lock_random_engine_mutex(void)
 {
     pt_mutex *mutex = g_random_engine_mutex;
 
-    if (mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (mutex->lock());
+    return (pt_mutex_lock_if_not_null(mutex));
 }
 
 int rng_unlock_random_engine_mutex(void)
 {
     pt_mutex *mutex = g_random_engine_mutex;
 
-    if (mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (mutex->unlock());
+    return (pt_mutex_unlock_if_not_null(mutex));
 }
 
 void ft_seed_random_engine(uint32_t seed_value)

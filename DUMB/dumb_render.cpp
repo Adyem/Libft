@@ -1,6 +1,7 @@
 #include "dumb_render_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
 #include <new>
@@ -42,16 +43,12 @@ static void destroy_recursive_mutex(pt_recursive_mutex **mutex_pointer)
 
 static int lock_recursive_mutex_if_valid(pt_recursive_mutex *mutex_pointer)
 {
-    if (mutex_pointer == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (mutex_pointer->lock());
+    return (pt_recursive_mutex_lock_if_not_null(mutex_pointer));
 }
 
 static int unlock_recursive_mutex_if_valid(pt_recursive_mutex *mutex_pointer)
 {
-    if (mutex_pointer == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (mutex_pointer->unlock());
+    return (pt_recursive_mutex_unlock_if_not_null(mutex_pointer));
 }
 
 ft_render_screen_size ft_render_get_primary_screen_size(void)

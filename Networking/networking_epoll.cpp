@@ -17,7 +17,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
     int valid_write_count;
     int ready_descriptors;
     int ready_index;
-    int descriptor;
+    int file_descriptor;
     int search_index;
     int *read_ready_flags;
     int *write_ready_flags;
@@ -135,30 +135,30 @@ int nw_poll(int *read_file_descriptors, int read_count,
     ready_index = 0;
     while (ready_index < ready_descriptors)
     {
-        descriptor = events[ready_index].data.fd;
+        file_descriptor = events[ready_index].data.fd;
         search_index = 0;
         while (read_file_descriptors && search_index < read_count)
         {
-            if (read_file_descriptors[search_index] == descriptor)
-                break;
+            if (read_file_descriptors[search_index] == file_descriptor)
+                break ;
             search_index++;
         }
         if (read_file_descriptors && search_index < read_count)
         {
-            read_file_descriptors[search_index] = descriptor;
+            read_file_descriptors[search_index] = file_descriptor;
             if (read_ready_flags)
                 read_ready_flags[search_index] = 1;
         }
         search_index = 0;
         while (write_file_descriptors && search_index < write_count)
         {
-            if (write_file_descriptors[search_index] == descriptor)
-                break;
+            if (write_file_descriptors[search_index] == file_descriptor)
+                break ;
             search_index++;
         }
         if (write_file_descriptors && search_index < write_count)
         {
-            write_file_descriptors[search_index] = descriptor;
+            write_file_descriptors[search_index] = file_descriptor;
             if (write_ready_flags)
                 write_ready_flags[search_index] = 1;
         }

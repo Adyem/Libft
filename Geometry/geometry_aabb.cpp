@@ -33,18 +33,6 @@ void aabb::abort_if_not_initialized(const char *method_name) const noexcept
     return ;
 }
 
-int aabb::lock_mutex() const noexcept
-{
-    this->abort_if_not_initialized("aabb::lock_mutex");
-    return (pt_recursive_mutex_lock_if_not_null(this->_mutex));
-}
-
-int aabb::unlock_mutex() const noexcept
-{
-    this->abort_if_not_initialized("aabb::unlock_mutex");
-    return (pt_recursive_mutex_unlock_if_not_null(this->_mutex));
-}
-
 int aabb::lock_pair(const aabb &other, const aabb *&lower,
     const aabb *&upper) const
 {
@@ -57,7 +45,7 @@ int aabb::lock_pair(const aabb &other, const aabb *&lower,
     {
         lower = this;
         upper = this;
-        return (this->lock_mutex());
+        return (pt_recursive_mutex_lock_if_not_null(this->_mutex));
     }
     if (ordered_first > ordered_second)
     {
@@ -71,18 +59,18 @@ int aabb::lock_pair(const aabb &other, const aabb *&lower,
         int lower_error;
         int upper_error;
 
-        lower_error = lower->lock_mutex();
+        lower_error = pt_recursive_mutex_lock_if_not_null(lower->_mutex);
         if (lower_error != FT_ERR_SUCCESS)
             return (lower_error);
-        upper_error = upper->lock_mutex();
+        upper_error = pt_recursive_mutex_lock_if_not_null(upper->_mutex);
         if (upper_error == FT_ERR_SUCCESS)
             return (FT_ERR_SUCCESS);
         if (upper_error != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
-            lower->unlock_mutex();
+            pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
             return (upper_error);
         }
-        lower->unlock_mutex();
+        pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
         aabb_sleep_backoff();
     }
 }
@@ -90,9 +78,9 @@ int aabb::lock_pair(const aabb &other, const aabb *&lower,
 void aabb::unlock_pair(const aabb *lower, const aabb *upper)
 {
     if (upper != ft_nullptr)
-        upper->unlock_mutex();
+        pt_recursive_mutex_unlock_if_not_null(upper->_mutex);
     if (lower != ft_nullptr && lower != upper)
-        lower->unlock_mutex();
+        pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
     return ;
 }
 
@@ -183,7 +171,7 @@ int aabb::initialize(const aabb &other) noexcept
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
         return (initialize_error);
-    lock_error = other.lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(other._mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         (void)this->destroy();
@@ -193,7 +181,7 @@ int aabb::initialize(const aabb &other) noexcept
     this->_minimum_y = other._minimum_y;
     this->_maximum_x = other._maximum_x;
     this->_maximum_y = other._maximum_y;
-    unlock_error = other.unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(other._mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         (void)this->destroy();
@@ -276,11 +264,7 @@ int aabb::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != aabb::_state_initialized)
-    {
-        this->abort_lifecycle_error("aabb::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     disable_error = this->disable_thread_safety();
     if (disable_error != FT_ERR_SUCCESS)
         return (disable_error);
@@ -306,12 +290,12 @@ int aabb::set_bounds(double minimum_x, double minimum_y,
     int unlock_error;
 
     this->abort_if_not_initialized("aabb::set_bounds");
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (minimum_x > maximum_x || minimum_y > maximum_y)
     {
-        unlock_error = this->unlock_mutex();
+        unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         if (unlock_error != FT_ERR_SUCCESS)
             return (unlock_error);
         return (FT_ERR_INVALID_ARGUMENT);
@@ -320,7 +304,7 @@ int aabb::set_bounds(double minimum_x, double minimum_y,
     this->_minimum_y = minimum_y;
     this->_maximum_x = maximum_x;
     this->_maximum_y = maximum_y;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
         return (unlock_error);
     return (FT_ERR_SUCCESS);
@@ -332,19 +316,19 @@ int aabb::set_minimum(double minimum_x, double minimum_y)
     int unlock_error;
 
     this->abort_if_not_initialized("aabb::set_minimum");
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (minimum_x > this->_maximum_x || minimum_y > this->_maximum_y)
     {
-        unlock_error = this->unlock_mutex();
+        unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         if (unlock_error != FT_ERR_SUCCESS)
             return (unlock_error);
         return (FT_ERR_INVALID_ARGUMENT);
     }
     this->_minimum_x = minimum_x;
     this->_minimum_y = minimum_y;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
         return (unlock_error);
     return (FT_ERR_SUCCESS);
@@ -356,18 +340,18 @@ int aabb::set_minimum_x(double minimum_x)
     int unlock_error;
 
     this->abort_if_not_initialized("aabb::set_minimum_x");
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (minimum_x > this->_maximum_x)
     {
-        unlock_error = this->unlock_mutex();
+        unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         if (unlock_error != FT_ERR_SUCCESS)
             return (unlock_error);
         return (FT_ERR_INVALID_ARGUMENT);
     }
     this->_minimum_x = minimum_x;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
         return (unlock_error);
     return (FT_ERR_SUCCESS);
@@ -379,18 +363,18 @@ int aabb::set_minimum_y(double minimum_y)
     int unlock_error;
 
     this->abort_if_not_initialized("aabb::set_minimum_y");
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (minimum_y > this->_maximum_y)
     {
-        unlock_error = this->unlock_mutex();
+        unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         if (unlock_error != FT_ERR_SUCCESS)
             return (unlock_error);
         return (FT_ERR_INVALID_ARGUMENT);
     }
     this->_minimum_y = minimum_y;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
         return (unlock_error);
     return (FT_ERR_SUCCESS);
@@ -402,19 +386,19 @@ int aabb::set_maximum(double maximum_x, double maximum_y)
     int unlock_error;
 
     this->abort_if_not_initialized("aabb::set_maximum");
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (maximum_x < this->_minimum_x || maximum_y < this->_minimum_y)
     {
-        unlock_error = this->unlock_mutex();
+        unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         if (unlock_error != FT_ERR_SUCCESS)
             return (unlock_error);
         return (FT_ERR_INVALID_ARGUMENT);
     }
     this->_maximum_x = maximum_x;
     this->_maximum_y = maximum_y;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
         return (unlock_error);
     return (FT_ERR_SUCCESS);
@@ -426,18 +410,18 @@ int aabb::set_maximum_x(double maximum_x)
     int unlock_error;
 
     this->abort_if_not_initialized("aabb::set_maximum_x");
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (maximum_x < this->_minimum_x)
     {
-        unlock_error = this->unlock_mutex();
+        unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         if (unlock_error != FT_ERR_SUCCESS)
             return (unlock_error);
         return (FT_ERR_INVALID_ARGUMENT);
     }
     this->_maximum_x = maximum_x;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
         return (unlock_error);
     return (FT_ERR_SUCCESS);
@@ -449,18 +433,18 @@ int aabb::set_maximum_y(double maximum_y)
     int unlock_error;
 
     this->abort_if_not_initialized("aabb::set_maximum_y");
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (maximum_y < this->_minimum_y)
     {
-        unlock_error = this->unlock_mutex();
+        unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         if (unlock_error != FT_ERR_SUCCESS)
             return (unlock_error);
         return (FT_ERR_INVALID_ARGUMENT);
     }
     this->_maximum_y = maximum_y;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
         return (unlock_error);
     return (FT_ERR_SUCCESS);
@@ -473,11 +457,11 @@ double aabb::get_minimum_x() const
     double value;
 
     this->abort_if_not_initialized("aabb::get_minimum_x");
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (0.0);
     value = this->_minimum_x;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
         return (value);
     return (value);
@@ -490,11 +474,11 @@ double aabb::get_minimum_y() const
     double value;
 
     this->abort_if_not_initialized("aabb::get_minimum_y");
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (0.0);
     value = this->_minimum_y;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
         return (value);
     return (value);
@@ -507,11 +491,11 @@ double aabb::get_maximum_x() const
     double value;
 
     this->abort_if_not_initialized("aabb::get_maximum_x");
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (0.0);
     value = this->_maximum_x;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
         return (value);
     return (value);
@@ -524,11 +508,11 @@ double aabb::get_maximum_y() const
     double value;
 
     this->abort_if_not_initialized("aabb::get_maximum_y");
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (0.0);
     value = this->_maximum_y;
-    unlock_error = this->unlock_mutex();
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
         return (value);
     return (value);

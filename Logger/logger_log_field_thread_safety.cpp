@@ -3,6 +3,7 @@
 #include "logger_internal.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../PThread/pthread.hpp"
 
 int log_field_prepare_thread_safety(s_log_field *field)
@@ -61,7 +62,7 @@ int log_field_lock(const s_log_field *field, bool *lock_acquired)
     {
         return (0);
     }
-    if (mutable_field->mutex->lock() != FT_ERR_SUCCESS)
+    if (pt_mutex_lock_if_not_null(mutable_field->mutex) != FT_ERR_SUCCESS)
         return (-1);
     if (lock_acquired)
         *lock_acquired = true;
@@ -81,6 +82,6 @@ void log_field_unlock(const s_log_field *field, bool lock_acquired)
     mutable_field = const_cast<s_log_field *>(field);
     if (!mutable_field->mutex)
         return ;
-    (void)mutable_field->mutex->unlock();
+    (void)pt_mutex_unlock_if_not_null(mutable_field->mutex);
     return ;
 }

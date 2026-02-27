@@ -4,6 +4,7 @@
 #include "../Networking/http_client.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../Printf/printf.hpp"
 #include "../Basic/basic.hpp"
 #include <fcntl.h>
@@ -17,12 +18,6 @@ ft_document_source::ft_document_source() noexcept
 
 ft_document_source::~ft_document_source()
 {
-    if (this->_initialized_state == ft_document_source::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("ft_document_source::~ft_document_source",
-            "destructor called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == ft_document_source::_state_initialized)
         (void)this->destroy();
     return ;
@@ -67,11 +62,7 @@ int ft_document_source::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != ft_document_source::_state_initialized)
-    {
-        this->abort_lifecycle_error("ft_document_source::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     disable_error = this->disable_thread_safety();
     this->_initialized_state = ft_document_source::_state_destroyed;
     return (disable_error);
@@ -79,13 +70,13 @@ int ft_document_source::destroy() noexcept
 
 int ft_document_source::enable_thread_safety() noexcept
 {
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
     this->abort_if_not_initialized("ft_document_source::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
-    mutex_pointer = new (std::nothrow) pt_mutex();
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     initialize_error = mutex_pointer->initialize();
@@ -112,7 +103,6 @@ int ft_document_source::disable_thread_safety() noexcept
 
 bool ft_document_source::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("ft_document_source::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
@@ -122,9 +112,7 @@ int ft_document_source::lock_internal(bool *lock_acquired) const noexcept
 
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    lock_error = this->_mutex->lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (lock_acquired != ft_nullptr)
@@ -136,9 +124,7 @@ int ft_document_source::unlock_internal(bool lock_acquired) const noexcept
 {
     if (lock_acquired == false)
         return (FT_ERR_SUCCESS);
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->unlock());
+    return (pt_recursive_mutex_unlock_if_not_null(this->_mutex));
 }
 
 int ft_document_source::lock(bool *lock_acquired) const noexcept
@@ -155,7 +141,7 @@ void ft_document_source::unlock(bool lock_acquired) const noexcept
 }
 
 #ifdef LIBFT_TEST_BUILD
-pt_mutex *ft_document_source::get_mutex_for_validation() const noexcept
+pt_recursive_mutex *ft_document_source::get_mutex_for_validation() const noexcept
 {
     this->abort_if_not_initialized("ft_document_source::get_mutex_for_validation");
     return (this->_mutex);
@@ -170,12 +156,6 @@ ft_document_sink::ft_document_sink() noexcept
 
 ft_document_sink::~ft_document_sink()
 {
-    if (this->_initialized_state == ft_document_sink::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("ft_document_sink::~ft_document_sink",
-            "destructor called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == ft_document_sink::_state_initialized)
         (void)this->destroy();
     return ;
@@ -220,11 +200,7 @@ int ft_document_sink::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != ft_document_sink::_state_initialized)
-    {
-        this->abort_lifecycle_error("ft_document_sink::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     disable_error = this->disable_thread_safety();
     this->_initialized_state = ft_document_sink::_state_destroyed;
     return (disable_error);
@@ -232,13 +208,13 @@ int ft_document_sink::destroy() noexcept
 
 int ft_document_sink::enable_thread_safety() noexcept
 {
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
     this->abort_if_not_initialized("ft_document_sink::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
-    mutex_pointer = new (std::nothrow) pt_mutex();
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     initialize_error = mutex_pointer->initialize();
@@ -265,7 +241,6 @@ int ft_document_sink::disable_thread_safety() noexcept
 
 bool ft_document_sink::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("ft_document_sink::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
@@ -275,9 +250,7 @@ int ft_document_sink::lock_internal(bool *lock_acquired) const noexcept
 
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    lock_error = this->_mutex->lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (lock_acquired != ft_nullptr)
@@ -289,9 +262,7 @@ int ft_document_sink::unlock_internal(bool lock_acquired) const noexcept
 {
     if (lock_acquired == false)
         return (FT_ERR_SUCCESS);
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->unlock());
+    return (pt_recursive_mutex_unlock_if_not_null(this->_mutex));
 }
 
 int ft_document_sink::lock(bool *lock_acquired) const noexcept
@@ -308,7 +279,7 @@ void ft_document_sink::unlock(bool lock_acquired) const noexcept
 }
 
 #ifdef LIBFT_TEST_BUILD
-pt_mutex *ft_document_sink::get_mutex_for_validation() const noexcept
+pt_recursive_mutex *ft_document_sink::get_mutex_for_validation() const noexcept
 {
     this->abort_if_not_initialized("ft_document_sink::get_mutex_for_validation");
     return (this->_mutex);
@@ -326,12 +297,6 @@ ft_file_document_source::ft_file_document_source(const char *file_path) noexcept
 
 ft_file_document_source::~ft_file_document_source()
 {
-    if (this->_initialized_state == ft_file_document_source::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("ft_file_document_source::~ft_file_document_source",
-            "destructor called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == ft_file_document_source::_state_initialized)
         (void)this->destroy();
     return ;
@@ -376,11 +341,7 @@ int ft_file_document_source::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != ft_file_document_source::_state_initialized)
-    {
-        this->abort_lifecycle_error("ft_file_document_source::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     this->_path.clear();
     disable_error = this->disable_thread_safety();
     this->_initialized_state = ft_file_document_source::_state_destroyed;
@@ -389,13 +350,13 @@ int ft_file_document_source::destroy() noexcept
 
 int ft_file_document_source::enable_thread_safety() noexcept
 {
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
     this->abort_if_not_initialized("ft_file_document_source::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
-    mutex_pointer = new (std::nothrow) pt_mutex();
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     initialize_error = mutex_pointer->initialize();
@@ -422,7 +383,6 @@ int ft_file_document_source::disable_thread_safety() noexcept
 
 bool ft_file_document_source::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("ft_file_document_source::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
@@ -432,9 +392,7 @@ int ft_file_document_source::lock_internal(bool *lock_acquired) const noexcept
 
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    lock_error = this->_mutex->lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (lock_acquired != ft_nullptr)
@@ -446,9 +404,7 @@ int ft_file_document_source::unlock_internal(bool lock_acquired) const noexcept
 {
     if (lock_acquired == false)
         return (FT_ERR_SUCCESS);
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->unlock());
+    return (pt_recursive_mutex_unlock_if_not_null(this->_mutex));
 }
 
 int ft_file_document_source::lock(bool *lock_acquired) const noexcept
@@ -553,7 +509,7 @@ int ft_file_document_source::read_all(ft_string &output)
 }
 
 #ifdef LIBFT_TEST_BUILD
-pt_mutex *ft_file_document_source::get_mutex_for_validation() const noexcept
+pt_recursive_mutex *ft_file_document_source::get_mutex_for_validation() const noexcept
 {
     this->abort_if_not_initialized("ft_file_document_source::get_mutex_for_validation");
     return (this->_mutex);
@@ -571,12 +527,6 @@ ft_file_document_sink::ft_file_document_sink(const char *file_path) noexcept
 
 ft_file_document_sink::~ft_file_document_sink()
 {
-    if (this->_initialized_state == ft_file_document_sink::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("ft_file_document_sink::~ft_file_document_sink",
-            "destructor called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == ft_file_document_sink::_state_initialized)
         (void)this->destroy();
     return ;
@@ -621,11 +571,7 @@ int ft_file_document_sink::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != ft_file_document_sink::_state_initialized)
-    {
-        this->abort_lifecycle_error("ft_file_document_sink::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     this->_path.clear();
     disable_error = this->disable_thread_safety();
     this->_initialized_state = ft_file_document_sink::_state_destroyed;
@@ -634,13 +580,13 @@ int ft_file_document_sink::destroy() noexcept
 
 int ft_file_document_sink::enable_thread_safety() noexcept
 {
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
     this->abort_if_not_initialized("ft_file_document_sink::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
-    mutex_pointer = new (std::nothrow) pt_mutex();
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     initialize_error = mutex_pointer->initialize();
@@ -667,7 +613,6 @@ int ft_file_document_sink::disable_thread_safety() noexcept
 
 bool ft_file_document_sink::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("ft_file_document_sink::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
@@ -677,9 +622,7 @@ int ft_file_document_sink::lock_internal(bool *lock_acquired) const noexcept
 
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    lock_error = this->_mutex->lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (lock_acquired != ft_nullptr)
@@ -691,9 +634,7 @@ int ft_file_document_sink::unlock_internal(bool lock_acquired) const noexcept
 {
     if (lock_acquired == false)
         return (FT_ERR_SUCCESS);
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->unlock());
+    return (pt_recursive_mutex_unlock_if_not_null(this->_mutex));
 }
 
 int ft_file_document_sink::lock(bool *lock_acquired) const noexcept
@@ -761,7 +702,7 @@ int ft_file_document_sink::write_all(const char *data_pointer, size_t data_lengt
 }
 
 #ifdef LIBFT_TEST_BUILD
-pt_mutex *ft_file_document_sink::get_mutex_for_validation() const noexcept
+pt_recursive_mutex *ft_file_document_sink::get_mutex_for_validation() const noexcept
 {
     this->abort_if_not_initialized("ft_file_document_sink::get_mutex_for_validation");
     return (this->_mutex);
@@ -784,12 +725,6 @@ ft_memory_document_source::ft_memory_document_source(const char *data_pointer,
 
 ft_memory_document_source::~ft_memory_document_source()
 {
-    if (this->_initialized_state == ft_memory_document_source::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("ft_memory_document_source::~ft_memory_document_source",
-            "destructor called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == ft_memory_document_source::_state_initialized)
         (void)this->destroy();
     return ;
@@ -834,11 +769,7 @@ int ft_memory_document_source::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != ft_memory_document_source::_state_initialized)
-    {
-        this->abort_lifecycle_error("ft_memory_document_source::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     this->_data_pointer = ft_nullptr;
     this->_data_length = 0;
     disable_error = this->disable_thread_safety();
@@ -848,13 +779,13 @@ int ft_memory_document_source::destroy() noexcept
 
 int ft_memory_document_source::enable_thread_safety() noexcept
 {
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
     this->abort_if_not_initialized("ft_memory_document_source::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
-    mutex_pointer = new (std::nothrow) pt_mutex();
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     initialize_error = mutex_pointer->initialize();
@@ -881,7 +812,6 @@ int ft_memory_document_source::disable_thread_safety() noexcept
 
 bool ft_memory_document_source::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("ft_memory_document_source::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
@@ -891,9 +821,7 @@ int ft_memory_document_source::lock_internal(bool *lock_acquired) const noexcept
 
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    lock_error = this->_mutex->lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (lock_acquired != ft_nullptr)
@@ -905,9 +833,7 @@ int ft_memory_document_source::unlock_internal(bool lock_acquired) const noexcep
 {
     if (lock_acquired == false)
         return (FT_ERR_SUCCESS);
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->unlock());
+    return (pt_recursive_mutex_unlock_if_not_null(this->_mutex));
 }
 
 int ft_memory_document_source::lock(bool *lock_acquired) const noexcept
@@ -964,7 +890,7 @@ int ft_memory_document_source::read_all(ft_string &output)
 }
 
 #ifdef LIBFT_TEST_BUILD
-pt_mutex *ft_memory_document_source::get_mutex_for_validation() const noexcept
+pt_recursive_mutex *ft_memory_document_source::get_mutex_for_validation() const noexcept
 {
     this->abort_if_not_initialized("ft_memory_document_source::get_mutex_for_validation");
     return (this->_mutex);
@@ -987,12 +913,6 @@ ft_memory_document_sink::ft_memory_document_sink(ft_string *storage_pointer) noe
 
 ft_memory_document_sink::~ft_memory_document_sink()
 {
-    if (this->_initialized_state == ft_memory_document_sink::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("ft_memory_document_sink::~ft_memory_document_sink",
-            "destructor called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == ft_memory_document_sink::_state_initialized)
         (void)this->destroy();
     return ;
@@ -1037,11 +957,7 @@ int ft_memory_document_sink::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != ft_memory_document_sink::_state_initialized)
-    {
-        this->abort_lifecycle_error("ft_memory_document_sink::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     this->_storage_pointer = ft_nullptr;
     disable_error = this->disable_thread_safety();
     this->_initialized_state = ft_memory_document_sink::_state_destroyed;
@@ -1050,13 +966,13 @@ int ft_memory_document_sink::destroy() noexcept
 
 int ft_memory_document_sink::enable_thread_safety() noexcept
 {
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
     this->abort_if_not_initialized("ft_memory_document_sink::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
-    mutex_pointer = new (std::nothrow) pt_mutex();
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     initialize_error = mutex_pointer->initialize();
@@ -1083,7 +999,6 @@ int ft_memory_document_sink::disable_thread_safety() noexcept
 
 bool ft_memory_document_sink::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("ft_memory_document_sink::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
@@ -1093,9 +1008,7 @@ int ft_memory_document_sink::lock_internal(bool *lock_acquired) const noexcept
 
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    lock_error = this->_mutex->lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (lock_acquired != ft_nullptr)
@@ -1107,9 +1020,7 @@ int ft_memory_document_sink::unlock_internal(bool lock_acquired) const noexcept
 {
     if (lock_acquired == false)
         return (FT_ERR_SUCCESS);
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->unlock());
+    return (pt_recursive_mutex_unlock_if_not_null(this->_mutex));
 }
 
 int ft_memory_document_sink::lock(bool *lock_acquired) const noexcept
@@ -1160,7 +1071,7 @@ int ft_memory_document_sink::write_all(const char *data_pointer, size_t data_len
 }
 
 #ifdef LIBFT_TEST_BUILD
-pt_mutex *ft_memory_document_sink::get_mutex_for_validation() const noexcept
+pt_recursive_mutex *ft_memory_document_sink::get_mutex_for_validation() const noexcept
 {
     this->abort_if_not_initialized("ft_memory_document_sink::get_mutex_for_validation");
     return (this->_mutex);
@@ -1191,12 +1102,6 @@ ft_http_document_source::ft_http_document_source(const char *host,
 
 ft_http_document_source::~ft_http_document_source()
 {
-    if (this->_initialized_state == ft_http_document_source::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("ft_http_document_source::~ft_http_document_source",
-            "destructor called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == ft_http_document_source::_state_initialized)
         (void)this->destroy();
     return ;
@@ -1241,11 +1146,7 @@ int ft_http_document_source::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != ft_http_document_source::_state_initialized)
-    {
-        this->abort_lifecycle_error("ft_http_document_source::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     this->_host.clear();
     this->_path.clear();
     this->_port.clear();
@@ -1257,13 +1158,13 @@ int ft_http_document_source::destroy() noexcept
 
 int ft_http_document_source::enable_thread_safety() noexcept
 {
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
     this->abort_if_not_initialized("ft_http_document_source::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
-    mutex_pointer = new (std::nothrow) pt_mutex();
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     initialize_error = mutex_pointer->initialize();
@@ -1290,7 +1191,6 @@ int ft_http_document_source::disable_thread_safety() noexcept
 
 bool ft_http_document_source::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("ft_http_document_source::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
@@ -1300,9 +1200,7 @@ int ft_http_document_source::lock_internal(bool *lock_acquired) const noexcept
 
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    lock_error = this->_mutex->lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (lock_acquired != ft_nullptr)
@@ -1314,9 +1212,7 @@ int ft_http_document_source::unlock_internal(bool lock_acquired) const noexcept
 {
     if (lock_acquired == false)
         return (FT_ERR_SUCCESS);
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->unlock());
+    return (pt_recursive_mutex_unlock_if_not_null(this->_mutex));
 }
 
 int ft_http_document_source::lock(bool *lock_acquired) const noexcept
@@ -1409,7 +1305,7 @@ int ft_http_document_source::read_all(ft_string &output)
 }
 
 #ifdef LIBFT_TEST_BUILD
-pt_mutex *ft_http_document_source::get_mutex_for_validation() const noexcept
+pt_recursive_mutex *ft_http_document_source::get_mutex_for_validation() const noexcept
 {
     this->abort_if_not_initialized("ft_http_document_source::get_mutex_for_validation");
     return (this->_mutex);
@@ -1439,12 +1335,6 @@ ft_http_document_sink::ft_http_document_sink(const char *host, const char *path,
 
 ft_http_document_sink::~ft_http_document_sink()
 {
-    if (this->_initialized_state == ft_http_document_sink::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("ft_http_document_sink::~ft_http_document_sink",
-            "destructor called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == ft_http_document_sink::_state_initialized)
         (void)this->destroy();
     return ;
@@ -1489,11 +1379,7 @@ int ft_http_document_sink::destroy() noexcept
     int disable_error;
 
     if (this->_initialized_state != ft_http_document_sink::_state_initialized)
-    {
-        this->abort_lifecycle_error("ft_http_document_sink::destroy",
-            "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
-    }
     this->_host.clear();
     this->_path.clear();
     this->_port.clear();
@@ -1505,13 +1391,13 @@ int ft_http_document_sink::destroy() noexcept
 
 int ft_http_document_sink::enable_thread_safety() noexcept
 {
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
     this->abort_if_not_initialized("ft_http_document_sink::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
-    mutex_pointer = new (std::nothrow) pt_mutex();
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     initialize_error = mutex_pointer->initialize();
@@ -1538,7 +1424,6 @@ int ft_http_document_sink::disable_thread_safety() noexcept
 
 bool ft_http_document_sink::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("ft_http_document_sink::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
@@ -1548,9 +1433,7 @@ int ft_http_document_sink::lock_internal(bool *lock_acquired) const noexcept
 
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    lock_error = this->_mutex->lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (lock_acquired != ft_nullptr)
@@ -1562,9 +1445,7 @@ int ft_http_document_sink::unlock_internal(bool lock_acquired) const noexcept
 {
     if (lock_acquired == false)
         return (FT_ERR_SUCCESS);
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->unlock());
+    return (pt_recursive_mutex_unlock_if_not_null(this->_mutex));
 }
 
 int ft_http_document_sink::lock(bool *lock_acquired) const noexcept
@@ -1660,7 +1541,7 @@ int ft_http_document_sink::write_all(const char *data_pointer, size_t data_lengt
 }
 
 #ifdef LIBFT_TEST_BUILD
-pt_mutex *ft_http_document_sink::get_mutex_for_validation() const noexcept
+pt_recursive_mutex *ft_http_document_sink::get_mutex_for_validation() const noexcept
 {
     this->abort_if_not_initialized("ft_http_document_sink::get_mutex_for_validation");
     return (this->_mutex);

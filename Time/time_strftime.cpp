@@ -157,7 +157,7 @@ size_t  time_strftime(char *buffer, size_t size, const char *format, const t_tim
                     else if (size > 0)
                         buffer[size - 1] = '\0';
                     format_failed = true;
-                    break;
+                    break ;
                 }
                 if (error_code != FT_ERR_SUCCESS)
                 {
@@ -166,7 +166,7 @@ size_t  time_strftime(char *buffer, size_t size, const char *format, const t_tim
                     else if (size > 0)
                         buffer[size - 1] = '\0';
                     format_failed = true;
-                    break;
+                    break ;
                 }
                 number_index = 0;
                 while (number_index < length && output_index + 1 < size)

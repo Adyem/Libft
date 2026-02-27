@@ -20,7 +20,7 @@ void ft_file_sink(const char *message, void *user_data)
     if (file_sink_lock(sink, &lock_acquired) != 0)
         return ;
     length = ft_strlen(message);
-    su_write(sink->fd, message, length);
+    su_write(sink->file_descriptor, message, length);
     if (lock_acquired)
         file_sink_unlock(sink, lock_acquired);
     return ;
@@ -48,7 +48,7 @@ int ft_log_set_file(const char *path, size_t max_size)
         close(file_descriptor);
         return (log_set_file_report(-1));
     }
-    sink->fd = file_descriptor;
+    sink->file_descriptor = file_descriptor;
     sink->path = path;
     sink->max_size = max_size;
     sink->retention_count = 1;

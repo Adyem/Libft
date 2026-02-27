@@ -2,6 +2,7 @@
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
 
@@ -38,9 +39,6 @@ yaml_value::yaml_value() noexcept
 
 yaml_value::~yaml_value() noexcept
 {
-    if (this->_state == yaml_value::_state_uninitialized)
-        this->abort_lifecycle_error("yaml_value::~yaml_value",
-            "destructor called while object is uninitialized");
     if (this->_state == yaml_value::_state_initialized)
         (void)this->destroy();
     return ;
@@ -75,10 +73,7 @@ int yaml_value::destroy() noexcept
     int lock_error;
 
     if (this->_state != yaml_value::_state_initialized)
-    {
-        this->abort_lifecycle_error("yaml_value::destroy",
-            "destroy called while object is not initialized");
-    }
+        return (FT_ERR_INVALID_STATE);
     lock_acquired = false;
     lock_error = this->lock(&lock_acquired);
     if (lock_error == FT_ERR_SUCCESS)
@@ -310,7 +305,6 @@ int yaml_value::disable_thread_safety() noexcept
 
 bool yaml_value::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("yaml_value::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
@@ -320,9 +314,7 @@ int yaml_value::lock(bool *lock_acquired) const noexcept
 
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->is_thread_safe() == false)
-        return (FT_ERR_SUCCESS);
-    lock_error = this->_mutex->lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (lock_acquired != ft_nullptr)
@@ -334,9 +326,7 @@ int yaml_value::unlock(bool lock_acquired) const noexcept
 {
     if (lock_acquired == false)
         return (FT_ERR_SUCCESS);
-    if (this->is_thread_safe() == false)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->unlock());
+    return (pt_recursive_mutex_unlock_if_not_null(this->_mutex));
 }
 
 #ifdef LIBFT_TEST_BUILD

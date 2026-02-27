@@ -3,6 +3,7 @@
 #include "../Basic/basic.hpp"
 #include "../Errno/errno.hpp"
 #include "../Printf/printf.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../System_utils/system_utils.hpp"
 #include <cstring>
 #include <cerrno>
@@ -25,19 +26,6 @@ void ft_socket::sleep_backoff()
 {
     pt_thread_sleep(1);
     return ;
-}
-
-int ft_socket::lock_mutex() const noexcept
-{
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->lock());
-}
-
-void ft_socket::unlock_mutex() const noexcept
-{
-    if (this->_mutex != ft_nullptr)
-        this->_mutex->unlock();
 }
 
 int ft_socket::enable_thread_safety() noexcept
@@ -91,20 +79,20 @@ static networking_error_entry networking_consume_last_error(void) noexcept
 
 ssize_t ft_socket::send_data_locked(const void *data, size_t size, int flags)
 {
-    if (this->_socket_fd < 0)
+    if (this->_socket_file_descriptor < 0)
     {
         (void)(FT_ERR_CONFIGURATION);
         return (-1);
     }
     ssize_t bytes_sent;
 
-    bytes_sent = nw_send(this->_socket_fd, data, size, flags);
+    bytes_sent = nw_send(this->_socket_file_descriptor, data, size, flags);
     return (bytes_sent);
 }
 
 ssize_t ft_socket::send_all_locked(const void *data, size_t size, int flags)
 {
-    if (this->_socket_fd < 0)
+    if (this->_socket_file_descriptor < 0)
     {
         (void)(FT_ERR_CONFIGURATION);
         return (-1);
@@ -118,7 +106,7 @@ ssize_t ft_socket::send_all_locked(const void *data, size_t size, int flags)
     {
         ssize_t bytes_sent;
 
-        bytes_sent = nw_send(this->_socket_fd, buffer + total_sent,
+        bytes_sent = nw_send(this->_socket_file_descriptor, buffer + total_sent,
                 size - total_sent, flags);
         if (bytes_sent < 0)
         {
@@ -129,7 +117,7 @@ ssize_t ft_socket::send_all_locked(const void *data, size_t size, int flags)
             if (last_error == WSAEWOULDBLOCK || last_error == WSAEINTR)
             {
                 ft_socket::sleep_backoff();
-                int check_result = networking_check_socket_after_send(this->_socket_fd);
+                int check_result = networking_check_socket_after_send(this->_socket_file_descriptor);
                 if (check_result != 0)
                 {
                     networking_error_entry entry = networking_consume_last_error();
@@ -143,7 +131,7 @@ ssize_t ft_socket::send_all_locked(const void *data, size_t size, int flags)
             if (errno == EWOULDBLOCK || errno == EAGAIN || errno == EINTR)
             {
                 ft_socket::sleep_backoff();
-                int check_result = networking_check_socket_after_send(this->_socket_fd);
+                int check_result = networking_check_socket_after_send(this->_socket_file_descriptor);
                 if (check_result != 0)
                 {
                     networking_error_entry entry = networking_consume_last_error();
@@ -158,7 +146,7 @@ ssize_t ft_socket::send_all_locked(const void *data, size_t size, int flags)
         }
         if (bytes_sent == 0)
         {
-            if (networking_check_socket_after_send(this->_socket_fd) != 0)
+            if (networking_check_socket_after_send(this->_socket_file_descriptor) != 0)
             {
                 networking_error_entry entry = networking_consume_last_error();
                 (void)(entry.error_code);
@@ -169,7 +157,7 @@ ssize_t ft_socket::send_all_locked(const void *data, size_t size, int flags)
         }
         total_sent += bytes_sent;
     }
-    if (networking_check_socket_after_send(this->_socket_fd) != 0)
+    if (networking_check_socket_after_send(this->_socket_file_descriptor) != 0)
     {
         networking_error_entry entry = networking_consume_last_error();
         (void)(entry.error_code);
@@ -182,24 +170,24 @@ ssize_t ft_socket::send_all_locked(const void *data, size_t size, int flags)
 
 ssize_t ft_socket::receive_data_locked(void *buffer, size_t size, int flags)
 {
-    if (this->_socket_fd < 0)
+    if (this->_socket_file_descriptor < 0)
     {
         (void)(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     ssize_t bytes_received;
 
-    bytes_received = nw_recv(this->_socket_fd, buffer, size, flags);
+    bytes_received = nw_recv(this->_socket_file_descriptor, buffer, size, flags);
     return (bytes_received);
 }
 
 bool ft_socket::close_socket_locked()
 {
-    if (this->_socket_fd >= 0)
+    if (this->_socket_file_descriptor >= 0)
     {
-        if (nw_close(this->_socket_fd) == 0)
+        if (nw_close(this->_socket_file_descriptor) == 0)
         {
-            this->_socket_fd = -1;
+            this->_socket_file_descriptor = -1;
             (void)(FT_ERR_SUCCESS);
             return (true);
         }
@@ -225,37 +213,31 @@ void ft_socket::reset_to_empty_state_locked()
     }
     this->_connected.clear();
     ft_bzero(&this->_address, sizeof(this->_address));
-    this->_socket_fd = -1;
+    this->_socket_file_descriptor = -1;
     (void)(FT_ERR_SUCCESS);
     return ;
 }
 
 ft_socket::ft_socket()
-    : _initialized_state(ft_socket::_state_uninitialized), _address(), _connected(), _socket_fd(-1), _mutex(ft_nullptr)
+    : _initialized_state(ft_socket::_state_uninitialized), _address(), _connected(), _socket_file_descriptor(-1), _mutex(ft_nullptr)
 {
     ft_bzero(&this->_address, sizeof(this->_address));
     this->_connected.clear();
-    this->_socket_fd = -1;
+    this->_socket_file_descriptor = -1;
     return ;
 }
 
-ft_socket::ft_socket(int fd, const sockaddr_storage &addr)
-    : _initialized_state(ft_socket::_state_uninitialized), _address(), _connected(), _socket_fd(-1), _mutex(ft_nullptr)
+ft_socket::ft_socket(int file_descriptor, const sockaddr_storage &addr)
+    : _initialized_state(ft_socket::_state_uninitialized), _address(), _connected(), _socket_file_descriptor(-1), _mutex(ft_nullptr)
 {
     this->_address = addr;
     this->_connected.clear();
-    this->_socket_fd = fd;
+    this->_socket_file_descriptor = file_descriptor;
     return ;
 }
 
 ft_socket::~ft_socket()
 {
-    if (this->_initialized_state == ft_socket::_state_uninitialized)
-    {
-        pf_printf_fd(2, "ft_socket lifecycle error: %s\n",
-            "destructor called on uninitialized instance");
-        su_abort();
-    }
     if (this->_initialized_state == ft_socket::_state_initialized)
         (void)this->destroy();
     return ;
@@ -286,11 +268,11 @@ ssize_t ft_socket::send_data(const void *data, size_t size, int flags)
     int lock_error;
 
     this->abort_if_not_initialized("ft_socket::send_data");
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
     bytes_sent = this->send_data_locked(data, size, flags);
-    this->unlock_mutex();
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (bytes_sent);
 }
 
@@ -300,11 +282,11 @@ ssize_t ft_socket::send_all(const void *data, size_t size, int flags)
     int lock_error;
 
     this->abort_if_not_initialized("ft_socket::send_all");
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
     result = this->send_all_locked(data, size, flags);
-    this->unlock_mutex();
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (result);
 }
 
@@ -315,21 +297,21 @@ ssize_t ft_socket::receive_data(void *buffer, size_t size, int flags)
     int lock_error;
 
     this->abort_if_not_initialized("ft_socket::receive_data");
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
-    if (this->_socket_fd < 0)
+    if (this->_socket_file_descriptor < 0)
     {
         (void)(FT_ERR_INVALID_ARGUMENT);
-        this->unlock_mutex();
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (-1);
     }
-    socket_fd = this->_socket_fd;
-    this->unlock_mutex();
+    socket_fd = this->_socket_file_descriptor;
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     result = nw_recv(socket_fd, buffer, size, flags);
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error == FT_ERR_SUCCESS)
-        this->unlock_mutex();
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (result);
 }
 
@@ -341,18 +323,18 @@ bool ft_socket::close_socket()
     int lock_error;
 
     this->abort_if_not_initialized("ft_socket::close_socket");
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (false);
-    if (this->_socket_fd < 0)
+    if (this->_socket_file_descriptor < 0)
     {
         (void)(FT_ERR_SUCCESS);
-        this->unlock_mutex();
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (true);
     }
-    socket_fd = this->_socket_fd;
+    socket_fd = this->_socket_file_descriptor;
     shutdown_success = true;
-    this->unlock_mutex();
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
 #ifdef _WIN32
     if (nw_shutdown(socket_fd, SD_BOTH) != 0)
 #else
@@ -371,29 +353,29 @@ bool ft_socket::close_socket()
         closed = false;
         networking_consume_last_error();
     }
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (closed);
     if (closed)
     {
-        if (this->_socket_fd == socket_fd)
-            this->_socket_fd = -1;
+        if (this->_socket_file_descriptor == socket_fd)
+            this->_socket_file_descriptor = -1;
     }
-    this->unlock_mutex();
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (closed && shutdown_success)
         return (true);
     return (false);
 }
 
-ssize_t ft_socket::send_data(const void *data, size_t size, int flags, int fd)
+ssize_t ft_socket::send_data(const void *data, size_t size, int flags, int file_descriptor)
 {
     size_t index;
     bool found;
     ssize_t result;
     int lock_error;
 
-    this->abort_if_not_initialized("ft_socket::send_data(fd)");
-    lock_error = this->lock_mutex();
+    this->abort_if_not_initialized("ft_socket::send_data(file_descriptor)");
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
     index = 0;
@@ -401,11 +383,11 @@ ssize_t ft_socket::send_data(const void *data, size_t size, int flags, int fd)
     result = -1;
     while (index < this->_connected.size())
     {
-        if (this->_connected[index] == fd)
+        if (this->_connected[index] == file_descriptor)
         {
-            result = nw_send(fd, data, size, flags);
+            result = nw_send(file_descriptor, data, size, flags);
             found = true;
-            break;
+            break ;
         }
         index++;
     }
@@ -414,7 +396,7 @@ ssize_t ft_socket::send_data(const void *data, size_t size, int flags, int fd)
         (void)(FT_ERR_INVALID_ARGUMENT);
         result = -1;
     }
-    this->unlock_mutex();
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (result);
 }
 
@@ -426,7 +408,7 @@ ssize_t ft_socket::broadcast_data(const void *data, size_t size, int flags, int 
     int lock_error;
 
     this->abort_if_not_initialized("ft_socket::broadcast_data");
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
     total_bytes_sent = 0;
@@ -454,7 +436,7 @@ ssize_t ft_socket::broadcast_data(const void *data, size_t size, int flags, int 
     }
     if (!send_failed)
         (void)(FT_ERR_SUCCESS);
-    this->unlock_mutex();
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (total_bytes_sent);
 }
 
@@ -468,70 +450,70 @@ int ft_socket::accept_connection()
     int lock_error;
 
     this->abort_if_not_initialized("ft_socket::accept_connection");
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
-    if (this->_socket_fd < 0)
+    if (this->_socket_file_descriptor < 0)
     {
         (void)(FT_ERR_INVALID_ARGUMENT);
-        this->unlock_mutex();
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (-1);
     }
-    int new_fd;
+    int new_file_descriptor;
 
-    new_fd = nw_accept(this->_socket_fd, ft_nullptr, ft_nullptr);
-    if (new_fd < 0)
+    new_file_descriptor = nw_accept(this->_socket_file_descriptor, ft_nullptr, ft_nullptr);
+    if (new_file_descriptor < 0)
     {
-        this->unlock_mutex();
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (-1);
     }
     size_t previous_size;
     size_t current_size;
 
     previous_size = this->_connected.size();
-    this->_connected.push_back(new_fd);
+    this->_connected.push_back(new_file_descriptor);
     current_size = this->_connected.size();
     if (current_size != previous_size + 1)
     {
-        (void)nw_close(new_fd);
-        this->unlock_mutex();
+        (void)nw_close(new_file_descriptor);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (-1);
     }
     (void)(FT_ERR_SUCCESS);
-    this->unlock_mutex();
-    return (new_fd);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    return (new_file_descriptor);
 }
 
-bool ft_socket::disconnect_client(int fd)
+bool ft_socket::disconnect_client(int file_descriptor)
 {
     size_t index;
     int lock_error;
 
     this->abort_if_not_initialized("ft_socket::disconnect_client");
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (false);
     index = 0;
     while (index < this->_connected.size())
     {
-        if (this->_connected[index] == fd)
+        if (this->_connected[index] == file_descriptor)
         {
             size_t last;
 
             last = this->_connected.size() - 1;
             if (index != last)
                 this->_connected[index] = this->_connected[last];
-            if (fd >= 0)
-                (void)nw_close(fd);
+            if (file_descriptor >= 0)
+                (void)nw_close(file_descriptor);
             this->_connected.pop_back();
             (void)(FT_ERR_SUCCESS);
-            this->unlock_mutex();
+            (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
             return (true);
         }
         index++;
     }
     (void)(FT_ERR_INVALID_ARGUMENT);
-    this->unlock_mutex();
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (false);
 }
 
@@ -541,7 +523,7 @@ void ft_socket::disconnect_all_clients()
     int lock_error;
 
     this->abort_if_not_initialized("ft_socket::disconnect_all_clients");
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     index = 0;
@@ -553,7 +535,7 @@ void ft_socket::disconnect_all_clients()
     }
     this->_connected.clear();
     (void)(FT_ERR_SUCCESS);
-    this->unlock_mutex();
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return ;
 }
 
@@ -563,53 +545,53 @@ size_t ft_socket::get_client_count() const
     int lock_error;
 
     this->abort_if_not_initialized("ft_socket::get_client_count");
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (0);
     count = this->_connected.size();
     (void)(FT_ERR_SUCCESS);
-    this->unlock_mutex();
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (count);
 }
 
-bool ft_socket::is_client_connected(int fd) const
+bool ft_socket::is_client_connected(int file_descriptor) const
 {
     size_t index;
     bool connected;
     int lock_error;
 
     this->abort_if_not_initialized("ft_socket::is_client_connected");
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (false);
     index = 0;
     connected = false;
     while (index < this->_connected.size())
     {
-        if (this->_connected[index] == fd)
+        if (this->_connected[index] == file_descriptor)
         {
             connected = true;
-            break;
+            break ;
         }
         index++;
     }
     (void)(FT_ERR_SUCCESS);
-    this->unlock_mutex();
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (connected);
 }
 
-int ft_socket::get_fd() const
+int ft_socket::get_file_descriptor() const
 {
     int descriptor;
     int lock_error;
 
     this->abort_if_not_initialized("ft_socket::get_fd");
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
-    descriptor = this->_socket_fd;
+    descriptor = this->_socket_file_descriptor;
     (void)(FT_ERR_SUCCESS);
-    this->unlock_mutex();
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (descriptor);
 }
 
@@ -618,11 +600,11 @@ const struct sockaddr_storage &ft_socket::get_address() const
     int lock_error;
 
     this->abort_if_not_initialized("ft_socket::get_address");
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (this->_address);
     (void)(FT_ERR_SUCCESS);
-    this->unlock_mutex();
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (this->_address);
 }
 
@@ -631,11 +613,11 @@ void ft_socket::reset_to_empty_state()
     int lock_error;
 
     this->abort_if_not_initialized("ft_socket::reset_to_empty_state");
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     this->reset_to_empty_state_locked();
-    this->unlock_mutex();
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return ;
 }
 
@@ -644,14 +626,14 @@ int ft_socket::initialize(const SocketConfig &config)
     int lock_error;
     int initialize_result;
 
-    lock_error = this->lock_mutex();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (this->_initialized_state == ft_socket::_state_initialized)
         this->abort_lifecycle_error("ft_socket::initialize",
             "initialize called on initialized instance");
     this->_initialized_state = ft_socket::_state_initialized;
-    this->unlock_mutex();
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     initialize_result = FT_ERR_UNSUPPORTED_TYPE;
     if (config._type == SocketType::SERVER)
         initialize_result = this->setup_server(config);
@@ -665,8 +647,7 @@ int ft_socket::initialize(const SocketConfig &config)
 int ft_socket::destroy()
 {
     if (this->_initialized_state != ft_socket::_state_initialized)
-        this->abort_lifecycle_error("ft_socket::destroy",
-            "destroy called on non-initialized instance");
+        return (FT_ERR_INVALID_STATE);
     this->disconnect_all_clients();
     (void)this->close_socket();
     this->_initialized_state = ft_socket::_state_destroyed;

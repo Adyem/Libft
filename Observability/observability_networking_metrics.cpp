@@ -2,6 +2,7 @@
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include <new>
 
 static pt_mutex *g_observability_networking_mutex = ft_nullptr;
@@ -15,18 +16,18 @@ int observability_networking_metrics_initialize(ft_networking_observability_expo
     int unlock_result;
 
     if (exporter == ft_nullptr)
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     if (g_observability_networking_mutex == ft_nullptr)
-        return (-1);
-    result = 0;
-    lock_result = g_observability_networking_mutex->lock();
+        return (FT_ERR_INVALID_STATE);
+    result = FT_ERR_SUCCESS;
+    lock_result = pt_mutex_lock_if_not_null(g_observability_networking_mutex);
     if (lock_result != FT_ERR_SUCCESS)
-        return (-1);
+        return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
     g_observability_networking_exporter = exporter;
     g_observability_networking_initialized = true;
-    unlock_result = g_observability_networking_mutex->unlock();
+    unlock_result = pt_mutex_unlock_if_not_null(g_observability_networking_mutex);
     if (unlock_result != FT_ERR_SUCCESS)
-        result = -1;
+        result = FT_ERR_SYS_MUTEX_UNLOCK_FAILED;
     return (result);
 }
 
@@ -36,21 +37,21 @@ int observability_networking_metrics_shutdown(void)
     int lock_result;
     int unlock_result;
 
-    result = 0;
+    result = FT_ERR_SUCCESS;
     if (g_observability_networking_mutex == ft_nullptr)
-        return (result);
-    lock_result = g_observability_networking_mutex->lock();
+        return (FT_ERR_INVALID_STATE);
+    lock_result = pt_mutex_lock_if_not_null(g_observability_networking_mutex);
     if (lock_result != FT_ERR_SUCCESS)
-        return (-1);
+        return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
     g_observability_networking_initialized = false;
     g_observability_networking_exporter = ft_nullptr;
-    unlock_result = g_observability_networking_mutex->unlock();
+    unlock_result = pt_mutex_unlock_if_not_null(g_observability_networking_mutex);
     if (unlock_result != FT_ERR_SUCCESS)
-        result = -1;
+        result = FT_ERR_SYS_MUTEX_UNLOCK_FAILED;
     return (result);
 }
 
-void observability_networking_metrics_record(const ft_networking_observability_sample &sample)
+int observability_networking_metrics_record(const ft_networking_observability_sample &sample)
 {
     ft_networking_observability_sample exported_sample;
     ft_networking_observability_exporter exporter_copy;
@@ -62,21 +63,21 @@ void observability_networking_metrics_record(const ft_networking_observability_s
     exporter_copy = ft_nullptr;
     should_emit = false;
     if (g_observability_networking_mutex == ft_nullptr)
-        return ;
-    lock_result = g_observability_networking_mutex->lock();
+        return (FT_ERR_INVALID_STATE);
+    lock_result = pt_mutex_lock_if_not_null(g_observability_networking_mutex);
     if (lock_result != FT_ERR_SUCCESS)
-        return ;
+        return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
     if (g_observability_networking_initialized && g_observability_networking_exporter != ft_nullptr)
     {
         exporter_copy = g_observability_networking_exporter;
         should_emit = true;
     }
-    unlock_result = g_observability_networking_mutex->unlock();
+    unlock_result = pt_mutex_unlock_if_not_null(g_observability_networking_mutex);
     if (unlock_result != FT_ERR_SUCCESS)
-        return ;
+        return (FT_ERR_SYS_MUTEX_UNLOCK_FAILED);
     if (should_emit == false || exporter_copy == ft_nullptr)
     {
-        return ;
+        return (FT_ERR_SUCCESS);
     }
     if (exported_sample.error_tag == ft_nullptr)
     {
@@ -88,7 +89,7 @@ void observability_networking_metrics_record(const ft_networking_observability_s
     if (exported_sample.success == false && exported_sample.error_code == FT_ERR_SUCCESS)
         exported_sample.error_code = FT_ERR_INTERNAL;
     exporter_copy(exported_sample);
-    return ;
+    return (FT_ERR_SUCCESS);
 }
 
 int observability_networking_metrics_enable_thread_safety(void)

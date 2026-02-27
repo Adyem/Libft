@@ -35,7 +35,7 @@ class time_fps
         int     set_frames_per_second(long frames_per_second) noexcept;
         void    sleep_to_next_frame(void) noexcept;
         int     enable_thread_safety(void) noexcept;
-        void    disable_thread_safety(void) noexcept;
+        int     disable_thread_safety(void) noexcept;
         bool    is_thread_safe(void) const noexcept;
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex *get_mutex_for_validation(void) const noexcept;

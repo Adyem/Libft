@@ -2,6 +2,7 @@
 #include "../CMA/CMA.hpp"
 #include "../Basic/basic.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "class_nullptr.hpp"
 
 ft_string::ft_string() noexcept
@@ -141,7 +142,7 @@ int ft_string::initialize(const ft_string &other) noexcept
     int other_lock_error = FT_ERR_SUCCESS;
     if (other._mutex != ft_nullptr)
     {
-        other_lock_error = other._mutex->lock();
+        other_lock_error = pt_recursive_mutex_lock_if_not_null(other._mutex);
         if (other_lock_error != FT_ERR_SUCCESS)
         {
             (void)this->destroy();
@@ -156,7 +157,7 @@ int ft_string::initialize(const ft_string &other) noexcept
         if (!this->_data)
         {
             if (other._mutex != ft_nullptr)
-                other._mutex->unlock();
+                pt_recursive_mutex_unlock_if_not_null(other._mutex);
             this->_length = 0;
             this->_capacity = 0;
             (void)this->destroy();
@@ -171,7 +172,7 @@ int ft_string::initialize(const ft_string &other) noexcept
         this->_capacity = 0;
     }
     if (other._mutex != ft_nullptr)
-        other._mutex->unlock();
+        pt_recursive_mutex_unlock_if_not_null(other._mutex);
     return (FT_ERR_SUCCESS);
 }
 

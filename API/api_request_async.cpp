@@ -64,28 +64,28 @@ static void api_request_trim_header_block(ft_string &headers)
     {
         character_pointer = headers.at(length - 1);
         if (character_pointer == ft_nullptr)
-            break;
+            break ;
         if (*character_pointer == '\r' || *character_pointer == '\n')
         {
             headers.erase(length - 1, 1);
             length -= 1;
             continue;
         }
-        break;
+        break ;
     }
     length = headers.size();
     while (length > 0)
     {
         character_pointer = headers.at(0);
         if (character_pointer == ft_nullptr)
-            break;
+            break ;
         if (*character_pointer == '\r' || *character_pointer == '\n')
         {
             headers.erase(0, 1);
             length -= 1;
             continue;
         }
-        break;
+        break ;
     }
     return ;
 }

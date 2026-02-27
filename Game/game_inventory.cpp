@@ -1,3 +1,4 @@
+#include "../PThread/pthread_internal.hpp"
 #include "game_inventory.hpp"
 #include "../Errno/errno.hpp"
 #include "../Printf/printf.hpp"
@@ -198,7 +199,7 @@ int ft_inventory::lock_internal(bool *lock_acquired) const noexcept
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    lock_error = this->_mutex->lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -222,7 +223,7 @@ int ft_inventory::unlock_internal(bool lock_acquired) const noexcept
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    const int unlock_error = this->_mutex->unlock();
+    const int unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     this->set_error(unlock_error);
     return (unlock_error);
 }

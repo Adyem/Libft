@@ -23,8 +23,6 @@ class ft_cubic_spline
         void                        abort_lifecycle_error(const char *method_name,
                                         const char *reason) const noexcept;
         void                        abort_if_not_initialized(const char *method_name) const noexcept;
-        int                         lock_mutex(void) const noexcept;
-        int                         unlock_mutex(void) const noexcept;
 
     public:
         ft_vector<double> x_values;

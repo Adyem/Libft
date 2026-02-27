@@ -6,6 +6,7 @@
 #include "../Template/graph.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../PThread/mutex.hpp"
 #include <stdint.h>
 
@@ -79,14 +80,14 @@ class ft_path_step_test_helper
             int ensure_error = ensure_thread_safe(step);
             if (ensure_error != FT_ERR_SUCCESS)
                 return (ensure_error);
-            return (step._mutex->lock());
+            return (pt_recursive_mutex_lock_if_not_null(step._mutex));
         }
 
         static int unlock(ft_path_step &step) noexcept
         {
             if (step._mutex == ft_nullptr)
                 return (FT_ERR_INVALID_STATE);
-            return (step._mutex->unlock());
+            return (pt_recursive_mutex_unlock_if_not_null(step._mutex));
         }
 
         static bool is_locked(const ft_path_step &step) noexcept

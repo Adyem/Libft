@@ -2,6 +2,7 @@
 
 #include "logger_internal.hpp"
 #include "../PThread/mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../PThread/pthread.hpp"
 
 int log_async_metrics_prepare_thread_safety(s_log_async_metrics *metrics)
@@ -57,7 +58,7 @@ int log_async_metrics_lock(s_log_async_metrics *metrics, bool *lock_acquired)
     {
         return (0);
     }
-    if (metrics->mutex->lock() != FT_ERR_SUCCESS)
+    if (pt_mutex_lock_if_not_null(metrics->mutex) != FT_ERR_SUCCESS)
         return (-1);
     if (lock_acquired)
         *lock_acquired = true;
@@ -74,6 +75,6 @@ void log_async_metrics_unlock(s_log_async_metrics *metrics, bool lock_acquired)
     {
         return ;
     }
-    (void)metrics->mutex->unlock();
+    (void)pt_mutex_unlock_if_not_null(metrics->mutex);
     return ;
 }

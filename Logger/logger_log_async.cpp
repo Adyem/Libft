@@ -138,13 +138,13 @@ static void *ft_log_worker(void *argument)
     {
         queue_is_empty = g_log_queue.empty();
         if (g_log_queue.last_operation_error() != FT_ERR_SUCCESS)
-            break;
+            break ;
         if (!g_async_running && queue_is_empty)
-            break;
+            break ;
         if (queue_is_empty)
         {
             if (pt_cond_wait(&g_queue_condition, &g_condition_mutex) != 0)
-                break;
+                break ;
         }
         else
         {

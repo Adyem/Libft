@@ -37,14 +37,14 @@ struct s_file_sink
 {
     pt_mutex   *mutex;
     bool        thread_safe_enabled;
-    int       fd;
+    int       file_descriptor;
     ft_string path;
     size_t    max_size;
     size_t    retention_count;
     unsigned int max_age_seconds;
 
     s_file_sink()
-        : mutex(ft_nullptr), thread_safe_enabled(false), fd(-1), path(),
+        : mutex(ft_nullptr), thread_safe_enabled(false), file_descriptor(-1), path(),
           max_size(0), retention_count(1), max_age_seconds(0)
     {
         return ;

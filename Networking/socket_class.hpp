@@ -43,13 +43,10 @@ class ft_socket
 
         struct sockaddr_storage _address;
         ft_vector<int>           _connected;
-        int                         _socket_fd;
+        int                         _socket_file_descriptor;
         mutable pt_recursive_mutex *_mutex;
 
-        int lock_mutex() const noexcept;
-        void unlock_mutex() const noexcept;
-
-        ft_socket(int fd, const sockaddr_storage &addr);
+        ft_socket(int file_descriptor, const sockaddr_storage &addr);
         ft_socket(const ft_socket &other) = delete;
         ft_socket &operator=(const ft_socket &other) = delete;
 
@@ -68,12 +65,12 @@ class ft_socket
         bool        close_socket();
         ssize_t     broadcast_data(const void *data, size_t size, int flags);
         ssize_t     broadcast_data(const void *data, size_t size, int flags, int exception);
-        ssize_t     send_data(const void *data, size_t size, int flags, int fd);
-        bool        disconnect_client(int fd);
+        ssize_t     send_data(const void *data, size_t size, int flags, int file_descriptor);
+        bool        disconnect_client(int file_descriptor);
         void        disconnect_all_clients();
         size_t      get_client_count() const;
-        bool        is_client_connected(int fd) const;
-        int            get_fd() const;
+        bool        is_client_connected(int file_descriptor) const;
+        int            get_file_descriptor() const;
         const struct sockaddr_storage &get_address() const;
         int            join_multicast_group(const SocketConfig &config);
         int            enable_thread_safety() noexcept;

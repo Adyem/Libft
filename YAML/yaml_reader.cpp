@@ -121,7 +121,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                     goto list_cleanup;
                 }
                 if (current_indent != static_cast<size_t>(indent))
-                    break;
+                    break ;
                 ft_string item_line = yaml_substr_from(lines[index], current_indent);
                 last_error = yaml_reader_take_error();
                 if (last_error != FT_ERR_SUCCESS)
@@ -156,7 +156,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                 }
                 const char *item_data = item_line.c_str();
                 if (item_line.size() == 0 || item_data[0] != '-')
-                    break;
+                    break ;
                 item_line = yaml_substr_from(item_line, 1);
                 last_error = yaml_reader_take_error();
                 if (last_error != FT_ERR_SUCCESS)
@@ -256,7 +256,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                                 size_t child_indent;
 
                                 if (index >= lines_count)
-                                    break;
+                                    break ;
                                 child_indent = yaml_count_indent(lines[index]);
                                 last_error = yaml_reader_take_error();
                                 if (last_error != FT_ERR_SUCCESS)
@@ -266,7 +266,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                                     goto list_cleanup;
                                 }
                                 if (child_indent != static_cast<size_t>(map_indent))
-                                    break;
+                                    break ;
                                 map_line = yaml_substr_from(lines[index], child_indent);
                                 last_error = yaml_reader_take_error();
                                 if (last_error != FT_ERR_SUCCESS)
@@ -440,7 +440,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                             if (processing_current_line == true)
                                 processing_current_line = false;
                             else if (index >= lines_count)
-                                break;
+                                break ;
                         }
                         list_value->add_list_item(map_child);
                         {
@@ -528,7 +528,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                     goto map_cleanup;
                 }
                 if (current_indent != static_cast<size_t>(indent))
-                    break;
+                    break ;
                 ft_string pair_line = yaml_substr_from(lines[index], current_indent);
                 last_error = yaml_reader_take_error();
                 if (last_error != FT_ERR_SUCCESS)
@@ -553,7 +553,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                     goto map_cleanup;
                 }
                 if (pair_colon == static_cast<size_t>(-1))
-                    break;
+                    break ;
                 ft_string key = yaml_substr(pair_line, 0, pair_colon);
                 last_error = yaml_reader_take_error();
                 if (last_error != FT_ERR_SUCCESS)

@@ -1,3 +1,4 @@
+#include "../PThread/pthread_internal.hpp"
 #include "game_debuff.hpp"
 #include "../Printf/printf.hpp"
  #include "../System_utils/system_utils.hpp"
@@ -193,7 +194,7 @@ int ft_debuff::lock_internal(bool *lock_acquired) const noexcept
         *lock_acquired = false;
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
-    lock_error = this->_mutex->lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (lock_acquired != ft_nullptr)
@@ -207,7 +208,7 @@ int ft_debuff::unlock_internal(bool lock_acquired) const noexcept
         return (FT_ERR_SUCCESS);
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
-    return (this->_mutex->unlock());
+    return (pt_recursive_mutex_unlock_if_not_null(this->_mutex));
 }
 
 int ft_debuff::lock(bool *lock_acquired) const noexcept

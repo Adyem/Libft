@@ -7,6 +7,7 @@
 #include "../Template/pair.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "rng.hpp"
 #include <climits>
 #include <new>
@@ -33,11 +34,11 @@ class ft_deck : public ft_vector<ElementType*>
         ft_deck(ft_deck&&) = delete;
         ft_deck &operator=(ft_deck&&) = delete;
 
-        Pair<int, ElementType *> popRandomElement() noexcept;
-        Pair<int, ElementType *> getRandomElement() const noexcept;
+        Pair<int, ElementType *> pop_random_element() noexcept;
+        Pair<int, ElementType *> get_random_element() const noexcept;
         int shuffle() noexcept;
-        Pair<int, ElementType *> drawTopElement() noexcept;
-        Pair<int, ElementType *> peekTopElement() const noexcept;
+        Pair<int, ElementType *> draw_top_element() noexcept;
+        Pair<int, ElementType *> peek_top_element() const noexcept;
 };
 
 template<typename ElementType>
@@ -112,9 +113,7 @@ int ft_deck<ElementType>::lock_deck(bool *lock_acquired) const
 
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    lock_error = this->_mutex->lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     if (lock_acquired != ft_nullptr)
@@ -127,13 +126,11 @@ int ft_deck<ElementType>::unlock_deck(bool lock_acquired) const
 {
     if (lock_acquired == false)
         return (FT_ERR_SUCCESS);
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->unlock());
+    return (pt_recursive_mutex_unlock_if_not_null(this->_mutex));
 }
 
 template<typename ElementType>
-Pair<int, ElementType *> ft_deck<ElementType>::popRandomElement() noexcept
+Pair<int, ElementType *> ft_deck<ElementType>::pop_random_element() noexcept
 {
     bool lock_acquired;
     int operation_error;
@@ -176,7 +173,7 @@ Pair<int, ElementType *> ft_deck<ElementType>::popRandomElement() noexcept
 }
 
 template<typename ElementType>
-Pair<int, ElementType *> ft_deck<ElementType>::getRandomElement() const noexcept
+Pair<int, ElementType *> ft_deck<ElementType>::get_random_element() const noexcept
 {
     bool lock_acquired;
     int operation_error;
@@ -219,7 +216,7 @@ Pair<int, ElementType *> ft_deck<ElementType>::getRandomElement() const noexcept
 }
 
 template<typename ElementType>
-Pair<int, ElementType *> ft_deck<ElementType>::drawTopElement() noexcept
+Pair<int, ElementType *> ft_deck<ElementType>::draw_top_element() noexcept
 {
     bool lock_acquired;
     int operation_error;
@@ -255,7 +252,7 @@ Pair<int, ElementType *> ft_deck<ElementType>::drawTopElement() noexcept
 }
 
 template<typename ElementType>
-Pair<int, ElementType *> ft_deck<ElementType>::peekTopElement() const noexcept
+Pair<int, ElementType *> ft_deck<ElementType>::peek_top_element() const noexcept
 {
     bool lock_acquired;
     int operation_error;
@@ -322,32 +319,32 @@ int ft_deck<ElementType>::shuffle() noexcept
             if (index + 1 > static_cast<size_t>(INT_MAX))
             {
                 operation_error = FT_ERR_OUT_OF_RANGE;
-                break;
+                break ;
             }
             roll_result = ft_dice_roll(1, static_cast<int>(index + 1));
             if (roll_result < 1)
             {
                 operation_error = FT_ERR_OUT_OF_RANGE;
-                break;
+                break ;
             }
             random_index = static_cast<size_t>(roll_result - 1);
             first_element = (*this)[index];
             operation_error = ft_vector<ElementType*>::last_operation_error();
             if (operation_error != FT_ERR_SUCCESS)
-                break;
+                break ;
             second_element = (*this)[random_index];
             operation_error = ft_vector<ElementType*>::last_operation_error();
             if (operation_error != FT_ERR_SUCCESS)
-                break;
+                break ;
             ft_swap(first_element, second_element);
             (*this)[index] = first_element;
             operation_error = ft_vector<ElementType*>::last_operation_error();
             if (operation_error != FT_ERR_SUCCESS)
-                break;
+                break ;
             (*this)[random_index] = second_element;
             operation_error = ft_vector<ElementType*>::last_operation_error();
             if (operation_error != FT_ERR_SUCCESS)
-                break;
+                break ;
             index -= 1;
         }
     }

@@ -7,7 +7,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/pthread.hpp"
 
-class pt_mutex;
+class pt_recursive_mutex;
 
 enum t_log_level {
     LOG_LEVEL_DEBUG = 0,
@@ -190,7 +190,7 @@ void ft_log_lock_contention_reset_statistics();
 class ft_logger
 {
     private:
-        pt_mutex *_mutex;
+        pt_recursive_mutex *_mutex;
         bool _thread_safe_enabled;
         bool _alloc_logging;
         bool _api_logging;
@@ -200,21 +200,6 @@ class ft_logger
 
         int lock(bool *lock_acquired) const noexcept;
         void unlock(bool lock_acquired) const noexcept;
-
-        class thread_guard
-        {
-            private:
-                const ft_logger *_logger;
-                bool _lock_acquired;
-                int _status;
-
-            public:
-                thread_guard(const ft_logger *logger) noexcept;
-                ~thread_guard() noexcept;
-
-                int get_status() const noexcept;
-                bool lock_acquired() const noexcept;
-        };
 
     public:
         ft_logger(const char *path = nullptr, size_t max_size = 0,
@@ -243,9 +228,9 @@ class ft_logger
         int  set_syslog(const char *identifier) noexcept;
         int  set_remote_sink(const char *host, unsigned short port,
                              bool use_tcp) noexcept;
-        int  prepare_thread_safety() noexcept;
-        void teardown_thread_safety() noexcept;
-        bool is_thread_safe_enabled() const noexcept;
+        int  enable_thread_safety() noexcept;
+        int  disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
         void set_async_queue_limit(size_t limit) noexcept;
         size_t get_async_queue_limit() const noexcept;
         int  get_async_metrics(s_log_async_metrics *metrics) noexcept;

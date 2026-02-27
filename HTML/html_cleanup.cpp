@@ -184,7 +184,7 @@ void html_remove_nodes_by_attr(html_node **nodeList, const char *key, const char
             {
                 match_found = 1;
                 html_attr_unlock(attributeNode, attribute_lock_acquired);
-                break;
+                break ;
             }
             html_attr_unlock(attributeNode, attribute_lock_acquired);
             attributeNode = next_attribute;

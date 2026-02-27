@@ -1,6 +1,7 @@
 #include "http2_client.hpp"
 #include "../Errno/errno.hpp"
 #include "../Basic/basic.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
 #include "openssl_support.hpp"
@@ -23,12 +24,6 @@ http2_header_field::http2_header_field() noexcept
 
 http2_header_field::~http2_header_field() noexcept
 {
-    if (this->_initialized_state == _state_uninitialized)
-    {
-        pf_printf_fd(2, "http2_header_field lifecycle error: %s\n",
-            "destructor called on uninitialized instance");
-        su_abort();
-    }
     if (this->_initialized_state == _state_initialized)
         (void)this->destroy();
     return ;
@@ -63,40 +58,39 @@ int http2_header_field::initialize() noexcept
     this->_name.clear();
     this->_value.clear();
     this->_initialized_state = _state_initialized;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 int http2_header_field::destroy() noexcept
 {
     if (this->_initialized_state != _state_initialized)
-        this->abort_lifecycle_error("http2_header_field::destroy",
-            "destroy called on non-initialized instance");
+        return (FT_ERR_INVALID_STATE);
     this->clear();
     this->teardown_thread_safety();
     this->_initialized_state = _state_destroyed;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 int http2_header_field::prepare_thread_safety() noexcept
 {
     void *memory_pointer;
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
 
     if (this->_mutex != ft_nullptr)
-        return (0);
-    memory_pointer = std::malloc(sizeof(pt_mutex));
+        return (FT_ERR_SUCCESS);
+    memory_pointer = std::malloc(sizeof(pt_recursive_mutex));
     if (memory_pointer == ft_nullptr)
-        return (-1);
-    mutex_pointer = new(memory_pointer) pt_mutex();
+        return (FT_ERR_NO_MEMORY);
+    mutex_pointer = new(memory_pointer) pt_recursive_mutex();
     if (mutex_pointer->initialize() != FT_ERR_SUCCESS)
     {
         (void)mutex_pointer->destroy();
-        mutex_pointer->~pt_mutex();
+        mutex_pointer->~pt_recursive_mutex();
         std::free(memory_pointer);
-        return (-1);
+        return (FT_ERR_INVALID_OPERATION);
     }
     this->_mutex = mutex_pointer;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 void http2_header_field::teardown_thread_safety() noexcept
@@ -104,7 +98,7 @@ void http2_header_field::teardown_thread_safety() noexcept
     if (this->_mutex != ft_nullptr)
     {
         (void)this->_mutex->destroy();
-        this->_mutex->~pt_mutex();
+        this->_mutex->~pt_recursive_mutex();
         std::free(this->_mutex);
         this->_mutex = ft_nullptr;
     }
@@ -114,18 +108,18 @@ void http2_header_field::teardown_thread_safety() noexcept
 int http2_header_field::lock(bool *lock_acquired) const noexcept
 {
     http2_header_field *mutable_field;
+    bool has_mutex;
 
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     mutable_field = const_cast<http2_header_field *>(this);
     mutable_field->abort_if_not_initialized("http2_header_field::lock");
-    if (this->_mutex == ft_nullptr)
-        return (0);
-    if (mutable_field->_mutex->lock() != FT_ERR_SUCCESS)
-        return (-1);
-    if (lock_acquired != ft_nullptr)
+    has_mutex = (mutable_field->_mutex != ft_nullptr);
+    if (pt_recursive_mutex_lock_if_not_null(mutable_field->_mutex) != FT_ERR_SUCCESS)
+        return (FT_ERR_INVALID_OPERATION);
+    if (lock_acquired != ft_nullptr && has_mutex)
         *lock_acquired = true;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 void http2_header_field::unlock(bool lock_acquired) const noexcept
@@ -135,9 +129,7 @@ void http2_header_field::unlock(bool lock_acquired) const noexcept
     if (lock_acquired == false)
         return ;
     mutable_field = const_cast<http2_header_field *>(this);
-    if (mutable_field->_mutex == ft_nullptr)
-        return ;
-    (void)mutable_field->_mutex->unlock();
+    (void)pt_recursive_mutex_unlock_if_not_null(mutable_field->_mutex);
     return ;
 }
 
@@ -326,12 +318,6 @@ http2_frame::http2_frame() noexcept
 
 http2_frame::~http2_frame() noexcept
 {
-    if (this->_initialized_state == _state_uninitialized)
-    {
-        pf_printf_fd(2, "http2_frame lifecycle error: %s\n",
-            "destructor called on uninitialized instance");
-        su_abort();
-    }
     if (this->_initialized_state == _state_initialized)
         (void)this->destroy();
     return ;
@@ -368,21 +354,20 @@ int http2_frame::initialize() noexcept
     this->_payload.clear();
     this->_mutex = ft_nullptr;
     this->_initialized_state = _state_initialized;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 int http2_frame::destroy() noexcept
 {
     if (this->_initialized_state != _state_initialized)
-        this->abort_lifecycle_error("http2_frame::destroy",
-            "destroy called on non-initialized instance");
+        return (FT_ERR_INVALID_STATE);
     this->clear_payload();
     this->teardown_thread_safety();
     this->_type = 0;
     this->_flags = 0;
     this->_stream_identifier = 0;
     this->_initialized_state = _state_destroyed;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 http2_frame::http2_frame(const http2_frame &other) noexcept
@@ -456,24 +441,24 @@ http2_frame &http2_frame::operator=(http2_frame &&other) noexcept
 int http2_frame::enable_thread_safety() noexcept
 {
     void *memory_pointer;
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
 
     this->abort_if_not_initialized("http2_frame::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
-        return (0);
-    memory_pointer = std::malloc(sizeof(pt_mutex));
+        return (FT_ERR_SUCCESS);
+    memory_pointer = std::malloc(sizeof(pt_recursive_mutex));
     if (memory_pointer == ft_nullptr)
-        return (-1);
-    mutex_pointer = new(memory_pointer) pt_mutex();
+        return (FT_ERR_NO_MEMORY);
+    mutex_pointer = new(memory_pointer) pt_recursive_mutex();
     if (mutex_pointer->initialize() != FT_ERR_SUCCESS)
     {
         (void)mutex_pointer->destroy();
-        mutex_pointer->~pt_mutex();
+        mutex_pointer->~pt_recursive_mutex();
         std::free(memory_pointer);
-        return (-1);
+        return (FT_ERR_INVALID_OPERATION);
     }
     this->_mutex = mutex_pointer;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 void http2_frame::teardown_thread_safety() noexcept
@@ -481,43 +466,47 @@ void http2_frame::teardown_thread_safety() noexcept
     if (this->_mutex != ft_nullptr)
     {
         (void)this->_mutex->destroy();
-        this->_mutex->~pt_mutex();
+        this->_mutex->~pt_recursive_mutex();
         std::free(this->_mutex);
         this->_mutex = ft_nullptr;
     }
     return ;
 }
 
-void http2_frame::disable_thread_safety() noexcept
+int http2_frame::disable_thread_safety() noexcept
 {
+    int destroy_error;
+
     this->abort_if_not_initialized("http2_frame::disable_thread_safety");
-    this->teardown_thread_safety();
-    return ;
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    destroy_error = this->_mutex->destroy();
+    this->_mutex->~pt_recursive_mutex();
+    std::free(this->_mutex);
+    this->_mutex = ft_nullptr;
+    return (destroy_error);
 }
 
 bool http2_frame::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("http2_frame::is_thread_safe");
-    if (this->_mutex != ft_nullptr)
-        return (true);
-    return (false);
+    return (this->_mutex != ft_nullptr);
 }
 
 int http2_frame::lock(bool *lock_acquired) const noexcept
 {
     http2_frame *mutable_frame;
+    bool has_mutex;
 
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     mutable_frame = const_cast<http2_frame *>(this);
     mutable_frame->abort_if_not_initialized("http2_frame::lock");
-    if (this->_mutex == ft_nullptr)
-        return (0);
-    if (mutable_frame->_mutex->lock() != FT_ERR_SUCCESS)
-        return (-1);
-    if (lock_acquired != ft_nullptr)
+    has_mutex = (mutable_frame->_mutex != ft_nullptr);
+    if (pt_recursive_mutex_lock_if_not_null(mutable_frame->_mutex) != FT_ERR_SUCCESS)
+        return (FT_ERR_INVALID_OPERATION);
+    if (lock_acquired != ft_nullptr && has_mutex)
         *lock_acquired = true;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 void http2_frame::unlock(bool lock_acquired) const noexcept
@@ -527,9 +516,7 @@ void http2_frame::unlock(bool lock_acquired) const noexcept
     if (lock_acquired == false)
         return ;
     mutable_frame = const_cast<http2_frame *>(this);
-    if (mutable_frame->_mutex == ft_nullptr)
-        return ;
-    (void)mutable_frame->_mutex->unlock();
+    (void)pt_recursive_mutex_unlock_if_not_null(mutable_frame->_mutex);
     return ;
 }
 
@@ -679,12 +666,6 @@ http2_stream_manager::http2_stream_manager() noexcept
 
 http2_stream_manager::~http2_stream_manager() noexcept
 {
-    if (this->_initialized_state == _state_uninitialized)
-    {
-        pf_printf_fd(2, "http2_stream_manager lifecycle error: %s\n",
-            "destructor called on uninitialized instance");
-        su_abort();
-    }
     if (this->_initialized_state == _state_initialized)
         (void)this->destroy();
     return ;
@@ -723,14 +704,13 @@ int http2_stream_manager::initialize() noexcept
     this->_connection_remote_window = 65535;
     this->_connection_local_window = 65535;
     this->_initialized_state = _state_initialized;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 int http2_stream_manager::destroy() noexcept
 {
     if (this->_initialized_state != _state_initialized)
-        this->abort_lifecycle_error("http2_stream_manager::destroy",
-            "destroy called on non-initialized instance");
+        return (FT_ERR_INVALID_STATE);
     this->_streams.clear();
     this->_stream_identifiers.clear();
     this->_initial_remote_window = 65535;
@@ -739,41 +719,41 @@ int http2_stream_manager::destroy() noexcept
     this->_connection_local_window = 65535;
     this->teardown_thread_safety();
     this->_initialized_state = _state_destroyed;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 int http2_stream_manager::prepare_thread_safety() noexcept
 {
     void *memory_pointer;
-    pt_mutex *mutex_pointer;
+    pt_recursive_mutex *mutex_pointer;
     int mutex_error;
 
     if (this->_mutex != ft_nullptr)
     {
-        return (0);
+        return (FT_ERR_SUCCESS);
     }
-    memory_pointer = std::malloc(sizeof(pt_mutex));
+    memory_pointer = std::malloc(sizeof(pt_recursive_mutex));
     if (!memory_pointer)
     {
-        return (-1);
+        return (FT_ERR_NO_MEMORY);
     }
-    mutex_pointer = new(memory_pointer) pt_mutex();
+    mutex_pointer = new(memory_pointer) pt_recursive_mutex();
     mutex_error = mutex_pointer->initialize();
     if (mutex_error != FT_ERR_SUCCESS)
     {
-        mutex_pointer->~pt_mutex();
+        mutex_pointer->~pt_recursive_mutex();
         std::free(memory_pointer);
-        return (-1);
+        return (FT_ERR_INVALID_OPERATION);
     }
     this->_mutex = mutex_pointer;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 void http2_stream_manager::teardown_thread_safety() noexcept
 {
     if (this->_mutex != ft_nullptr)
     {
-        this->_mutex->~pt_mutex();
+        this->_mutex->~pt_recursive_mutex();
         std::free(this->_mutex);
         this->_mutex = ft_nullptr;
     }
@@ -783,22 +763,20 @@ void http2_stream_manager::teardown_thread_safety() noexcept
 int http2_stream_manager::lock(bool *lock_acquired) const noexcept
 {
     http2_stream_manager *mutable_manager;
+    bool has_mutex;
     int lock_error;
 
     if (lock_acquired)
         *lock_acquired = false;
     mutable_manager = const_cast<http2_stream_manager *>(this);
     mutable_manager->abort_if_not_initialized("http2_stream_manager::lock");
-    if (this->_mutex == ft_nullptr)
-    {
-        return (0);
-    }
-    lock_error = mutable_manager->_mutex->lock();
+    has_mutex = (this->_mutex != ft_nullptr);
+    lock_error = pt_recursive_mutex_lock_if_not_null(mutable_manager->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
-        return (-1);
-    if (lock_acquired)
+        return (lock_error);
+    if (lock_acquired && has_mutex)
         *lock_acquired = true;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 void http2_stream_manager::unlock(bool lock_acquired) const noexcept
@@ -808,9 +786,7 @@ void http2_stream_manager::unlock(bool lock_acquired) const noexcept
     if (!lock_acquired)
         return ;
     mutable_manager = const_cast<http2_stream_manager *>(this);
-    if (mutable_manager->_mutex == ft_nullptr)
-        return ;
-    mutable_manager->_mutex->unlock();
+    (void)pt_recursive_mutex_unlock_if_not_null(mutable_manager->_mutex);
     return ;
 }
 
@@ -820,19 +796,23 @@ int http2_stream_manager::enable_thread_safety() noexcept
     return (this->prepare_thread_safety());
 }
 
-void http2_stream_manager::disable_thread_safety() noexcept
+int http2_stream_manager::disable_thread_safety() noexcept
 {
+    int destroy_error;
+
     this->abort_if_not_initialized("http2_stream_manager::disable_thread_safety");
-    this->teardown_thread_safety();
-    return ;
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    destroy_error = this->_mutex->destroy();
+    this->_mutex->~pt_recursive_mutex();
+    std::free(this->_mutex);
+    this->_mutex = ft_nullptr;
+    return (destroy_error);
 }
 
 bool http2_stream_manager::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("http2_stream_manager::is_thread_safe");
-    if (this->_mutex != ft_nullptr)
-        return (true);
-    return (false);
+    return (this->_mutex != ft_nullptr);
 }
 
 bool http2_stream_manager::validate_receive_window(uint32_t stream_identifier,
@@ -1616,12 +1596,6 @@ http2_settings_state::http2_settings_state() noexcept
 
 http2_settings_state::~http2_settings_state() noexcept
 {
-    if (this->_initialized_state == _state_uninitialized)
-    {
-        pf_printf_fd(2, "http2_settings_state lifecycle error: %s\n",
-            "destructor called on uninitialized instance");
-        su_abort();
-    }
     if (this->_initialized_state == _state_initialized)
         (void)this->destroy();
     return ;
@@ -1661,16 +1635,15 @@ int http2_settings_state::initialize() noexcept
     this->_max_frame_size = 16384;
     this->_max_header_list_size = 0;
     this->_initialized_state = _state_initialized;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 int http2_settings_state::destroy() noexcept
 {
     if (this->_initialized_state != _state_initialized)
-        this->abort_lifecycle_error("http2_settings_state::destroy",
-            "destroy called on non-initialized instance");
+        return (FT_ERR_INVALID_STATE);
     this->_initialized_state = _state_destroyed;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
 bool http2_settings_state::apply_remote_settings(const http2_frame &frame,

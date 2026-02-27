@@ -20,7 +20,6 @@ class json_document
         void abort_if_not_initialized(const char *method_name) const;
         void set_error_unlocked(int error_code) const noexcept;
         void set_error(int error_code) const noexcept;
-        int lock_self() const noexcept;
         void clear_unlocked() noexcept;
         char *write_to_string_unlocked() const noexcept;
         json_item *find_item_by_pointer_unlocked(const char *pointer) const noexcept;

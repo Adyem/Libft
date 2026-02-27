@@ -2,6 +2,7 @@
 #include "json_schema.hpp"
 #include "../Basic/basic.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../PThread/pthread_internal.hpp"
 
 static bool json_is_number(const char *string)
 {
@@ -44,7 +45,7 @@ bool json_validate_schema(json_group *group, const json_schema &schema)
         return (false);
     if (schema_mutable->_mutex == ft_nullptr)
         return (false);
-    lock_error = schema_mutable->_mutex->lock();
+    lock_error = pt_mutex_lock_if_not_null(schema_mutable->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (false);
     field = schema_mutable->fields;
@@ -61,7 +62,7 @@ bool json_validate_schema(json_group *group, const json_schema &schema)
             json_schema_set_error_unlocked(schema_mutable, field_error);
             validation_error = field_error;
             validation_result = false;
-            break;
+            break ;
         }
         if (field->_mutex == ft_nullptr)
         {
@@ -70,13 +71,13 @@ bool json_validate_schema(json_group *group, const json_schema &schema)
             validation_result = false;
             break ;
         }
-        field_lock_error = field->_mutex->lock();
+        field_lock_error = pt_mutex_lock_if_not_null(field->_mutex);
         if (field_lock_error != FT_ERR_SUCCESS)
         {
             json_schema_set_error_unlocked(schema_mutable, field_lock_error);
             validation_error = field_lock_error;
             validation_result = false;
-            break;
+            break ;
         }
         next_field = field->next;
         if (field->key == ft_nullptr)
@@ -128,11 +129,11 @@ bool json_validate_schema(json_group *group, const json_schema &schema)
         }
         if (validation_result == false)
         {
-            field_unlock_error = field->_mutex->unlock();
+            field_unlock_error = pt_mutex_unlock_if_not_null(field->_mutex);
             (void)field_unlock_error;
-            break;
+            break ;
         }
-        field_unlock_error = field->_mutex->unlock();
+        field_unlock_error = pt_mutex_unlock_if_not_null(field->_mutex);
         if (field_unlock_error != FT_ERR_SUCCESS)
         {
             json_schema_set_error_unlocked(schema_mutable, field_unlock_error);
@@ -142,7 +143,7 @@ bool json_validate_schema(json_group *group, const json_schema &schema)
         }
         field = next_field;
     }
-    unlock_error = schema_mutable->_mutex->unlock();
+    unlock_error = pt_mutex_unlock_if_not_null(schema_mutable->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
         return (false);
     if (validation_result == true)

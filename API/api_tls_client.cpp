@@ -1,4 +1,5 @@
 #include "tls_client.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "api_internal.hpp"
 #include "../Printf/printf.hpp"
 #include "../Errno/errno.hpp"
@@ -123,7 +124,7 @@ static void tls_trim_whitespace(ft_string &value)
 
         current_char = tls_string_char_at(value, start_index);
         if (current_char != ' ' && current_char != '\t')
-            break;
+            break ;
         value.erase(start_index, 1);
     }
     size_t end_index;
@@ -135,7 +136,7 @@ static void tls_trim_whitespace(ft_string &value)
 
         current_char = tls_string_char_at(value, end_index - 1);
         if (current_char != ' ' && current_char != '\t')
-            break;
+            break ;
         value.erase(end_index - 1, 1);
         end_index--;
     }
@@ -219,7 +220,7 @@ static ssize_t ssl_send_all(SSL *ssl, const void *data, size_t size)
         {
             if (ssl_pointer_supports_network_checks(ssl))
             {
-                if (networking_check_ssl_after_send(ssl) != 0)
+                if (networking_check_ssl_after_send(ssl) != FT_ERR_SUCCESS)
                     return (-1);
             }
             continue ;
@@ -496,12 +497,6 @@ api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms
 
 api_tls_client::~api_tls_client()
 {
-    if (this->_initialized_state == api_tls_client::_state_uninitialized)
-    {
-        pf_printf_fd(2, "api_tls_client lifecycle error: %s\n",
-            "destructor called on uninitialized instance");
-        su_abort();
-    }
     if (this->_initialized_state == api_tls_client::_state_initialized)
         (void)this->destroy();
     return ;
@@ -569,44 +564,11 @@ int api_tls_client::disable_thread_safety() noexcept
 
 bool api_tls_client::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("api_tls_client::is_thread_safe");
     return (this->_mutex != ft_nullptr);
-}
-
-int api_tls_client::lock(bool *lock_acquired) const noexcept
-{
-    api_tls_client *mutable_client;
-
-    if (lock_acquired != ft_nullptr)
-        *lock_acquired = false;
-    mutable_client = const_cast<api_tls_client *>(this);
-    mutable_client->abort_if_not_initialized("api_tls_client::lock");
-    if (mutable_client->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    if (mutable_client->_mutex->lock() != FT_ERR_SUCCESS)
-        return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
-    if (lock_acquired != ft_nullptr)
-        *lock_acquired = true;
-    return (FT_ERR_SUCCESS);
-}
-
-void api_tls_client::unlock(bool lock_acquired) const noexcept
-{
-    api_tls_client *mutable_client;
-
-    if (lock_acquired == false)
-        return ;
-    mutable_client = const_cast<api_tls_client *>(this);
-    if (mutable_client->_mutex == ft_nullptr)
-        return ;
-    (void)mutable_client->_mutex->unlock();
-    return ;
 }
 
 int api_tls_client::initialize() noexcept
 {
-    int thread_safety_result;
-
     if (this->_initialized_state == api_tls_client::_state_initialized)
         this->abort_lifecycle_error("api_tls_client::initialize",
             "initialize called on initialized instance");
@@ -616,12 +578,6 @@ int api_tls_client::initialize() noexcept
     this->_is_shutting_down = false;
     this->_async_workers.clear();
     this->_initialized_state = api_tls_client::_state_initialized;
-    thread_safety_result = this->enable_thread_safety();
-    if (thread_safety_result != FT_ERR_SUCCESS)
-    {
-        this->_initialized_state = api_tls_client::_state_destroyed;
-        return (thread_safety_result);
-    }
     if (this->_host.empty())
     {
         this->_initialized_state = api_tls_client::_state_destroyed;
@@ -654,13 +610,10 @@ int api_tls_client::destroy() noexcept
     SSL *ssl_pointer;
     SSL_CTX *ctx_pointer;
     int socket_fd;
-    bool lock_acquired;
 
     if (this->_initialized_state != api_tls_client::_state_initialized)
-        this->abort_lifecycle_error("api_tls_client::destroy",
-            "destroy called on non-initialized instance");
-    lock_acquired = false;
-    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
+        return (FT_ERR_INVALID_STATE);
+    if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
         return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
     this->_is_shutting_down = true;
     ssl_pointer = this->_ssl;
@@ -669,7 +622,7 @@ int api_tls_client::destroy() noexcept
     this->_ssl = ft_nullptr;
     this->_ctx = ft_nullptr;
     this->_sock = -1;
-    this->unlock(lock_acquired);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     size_t worker_index;
 
     worker_index = 0;
@@ -696,40 +649,36 @@ int api_tls_client::destroy() noexcept
 
 bool api_tls_client::is_valid() const
 {
-    bool lock_acquired;
     bool is_valid_value;
 
     this->abort_if_not_initialized("api_tls_client::is_valid");
-    lock_acquired = false;
-    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
+    if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
         return (false);
     is_valid_value = (this->_ssl != ft_nullptr);
-    this->unlock(lock_acquired);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (is_valid_value);
 }
 
 char *api_tls_client::request(const char *method, const char *path, json_group *payload,
                               const char *headers, int *status)
 {
-    bool lock_acquired;
 
     this->abort_if_not_initialized("api_tls_client::request");
     if (method == ft_nullptr || path == ft_nullptr)
         return (ft_nullptr);
-    lock_acquired = false;
-    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
+    if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
         return (ft_nullptr);
     if (this->_is_shutting_down)
     {
-        this->unlock(lock_acquired);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (ft_nullptr);
     }
     if (this->_ssl == ft_nullptr)
     {
-        this->unlock(lock_acquired);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (ft_nullptr);
     }
-    this->unlock(lock_acquired);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (ft_log_get_api_logging())
     {
         const char *log_method = "(null)";
@@ -808,7 +757,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
     {
         size_t line_end = tls_string_find_substring(headers_section, "\r\n", line_offset);
         if (line_end == TLS_STRING_NPOS)
-            break;
+            break ;
         ft_string header_line;
         header_line = tls_string_substr(headers_section, line_offset, line_end - line_offset);
         line_offset = line_end + 2;
@@ -867,7 +816,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
                 if (token_value == "chunked")
                     is_chunked = true;
                 if (token_end == lowered_value.size())
-                    break;
+                    break ;
                 token_start = token_end + 1;
             }
         }
@@ -913,7 +862,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
             {
                 const char *size_cstr = size_string.c_str();
                 if (size_cstr[size_trim - 1] != ' ' && size_cstr[size_trim - 1] != '\t')
-                    break;
+                    break ;
                 size_string.erase(size_trim - 1, 1);
                 size_trim--;
             }
@@ -969,7 +918,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
                     if (trailer_length == 0)
                         trailers_complete = true;
                 }
-                break;
+                break ;
             }
             parse_offset += 2;
         }
@@ -1024,20 +973,18 @@ bool api_tls_client::request_async(const char *method, const char *path,
                                    api_callback callback,
                                    void *user_data)
 {
-    bool lock_acquired;
 
     this->abort_if_not_initialized("api_tls_client::request_async");
     if (!callback)
         return (false);
-    lock_acquired = false;
-    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
+    if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
         return (false);
     if (this->_is_shutting_down)
     {
-        this->unlock(lock_acquired);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (false);
     }
-    this->unlock(lock_acquired);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     ft_thread worker([this, method, path, payload, headers, callback, user_data]()
     {
         int status_local = -1;
@@ -1046,12 +993,11 @@ bool api_tls_client::request_async(const char *method, const char *path,
     });
     if (!worker.joinable())
         return (false);
-    lock_acquired = false;
-    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
+    if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
         return (false);
     if (this->_is_shutting_down)
     {
-        this->unlock(lock_acquired);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         if (worker.joinable())
             worker.join();
         return (false);
@@ -1064,18 +1010,17 @@ bool api_tls_client::request_async(const char *method, const char *path,
     worker_count_after = this->_async_workers.size();
     if (worker_count_after < worker_count_before + 1)
     {
-        this->unlock(lock_acquired);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         if (worker.joinable())
             worker.join();
         return (false);
     }
-    this->unlock(lock_acquired);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (true);
 }
 
 bool api_tls_client::populate_handshake_diagnostics()
 {
-    bool lock_acquired;
     const char *protocol_name;
     const SSL_CIPHER *cipher;
     const char *cipher_name;
@@ -1086,35 +1031,34 @@ bool api_tls_client::populate_handshake_diagnostics()
     X509 *leaf_certificate;
 
     this->abort_if_not_initialized("api_tls_client::populate_handshake_diagnostics");
-    lock_acquired = false;
-    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
+    if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
         return (false);
     if (this->_is_shutting_down)
     {
-        this->unlock(lock_acquired);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (false);
     }
     if (this->_ssl == ft_nullptr)
     {
-        this->unlock(lock_acquired);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (false);
     }
     this->_handshake_diagnostics.protocol.clear();
     if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->unlock(lock_acquired);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (false);
     }
     this->_handshake_diagnostics.cipher.clear();
     if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->unlock(lock_acquired);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (false);
     }
     this->_handshake_diagnostics.certificates.clear();
     if (ft_vector<api_tls_certificate_diagnostics>::last_operation_error() != FT_ERR_SUCCESS)
     {
-        this->unlock(lock_acquired);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (false);
     }
     protocol_name = SSL_get_version(this->_ssl);
@@ -1123,7 +1067,7 @@ bool api_tls_client::populate_handshake_diagnostics()
         this->_handshake_diagnostics.protocol.append(protocol_name);
         if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
         {
-            this->unlock(lock_acquired);
+            (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
             return (false);
         }
     }
@@ -1136,7 +1080,7 @@ bool api_tls_client::populate_handshake_diagnostics()
             this->_handshake_diagnostics.cipher.append(cipher_name);
             if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
             {
-                this->unlock(lock_acquired);
+                (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
                 return (false);
             }
         }
@@ -1154,7 +1098,7 @@ bool api_tls_client::populate_handshake_diagnostics()
                 if (!tls_append_certificate_diagnostic(this->_handshake_diagnostics,
                         certificate))
                 {
-                    this->unlock(lock_acquired);
+                    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
                     return (false);
                 }
             }
@@ -1166,37 +1110,35 @@ bool api_tls_client::populate_handshake_diagnostics()
         leaf_certificate = SSL_get1_peer_certificate(this->_ssl);
         if (leaf_certificate == ft_nullptr)
         {
-            this->unlock(lock_acquired);
+            (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
             return (false);
         }
         if (!tls_append_certificate_diagnostic(this->_handshake_diagnostics,
                 leaf_certificate))
         {
-            this->unlock(lock_acquired);
+            (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
             X509_free(leaf_certificate);
             return (false);
         }
         X509_free(leaf_certificate);
     }
-    this->unlock(lock_acquired);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     tls_log_handshake_diagnostics(this->_handshake_diagnostics, this->_host);
     return (true);
 }
 
 bool api_tls_client::refresh_handshake_diagnostics()
 {
-    bool lock_acquired;
 
     this->abort_if_not_initialized("api_tls_client::refresh_handshake_diagnostics");
-    lock_acquired = false;
-    if (this->lock(&lock_acquired) != FT_ERR_SUCCESS)
+    if (pt_recursive_mutex_lock_if_not_null(this->_mutex) != FT_ERR_SUCCESS)
         return (false);
     if (this->_is_shutting_down)
     {
-        this->unlock(lock_acquired);
+        (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
         return (false);
     }
-    this->unlock(lock_acquired);
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (!this->populate_handshake_diagnostics())
         return (false);
     return (true);

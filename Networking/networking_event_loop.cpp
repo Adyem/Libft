@@ -4,6 +4,7 @@
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../PThread/pthread.hpp"
 
 void event_loop_init(event_loop *loop)
@@ -132,7 +133,7 @@ int event_loop_remove_socket(event_loop *loop, int socket_fd, bool is_write)
     while (index < *descriptor_count)
     {
         if (descriptors[index] == socket_fd)
-            break;
+            break ;
         index++;
     }
     if (index == *descriptor_count)
@@ -240,7 +241,7 @@ int event_loop_lock(event_loop *loop, bool *lock_acquired)
         (void)(FT_ERR_SUCCESS);
         return (0);
     }
-    if (loop->mutex->lock() != FT_ERR_SUCCESS)
+    if (pt_mutex_lock_if_not_null(loop->mutex) != FT_ERR_SUCCESS)
         return (-1);
     if (lock_acquired)
         *lock_acquired = true;
@@ -260,7 +261,7 @@ void event_loop_unlock(event_loop *loop, bool lock_acquired)
         (void)(FT_ERR_SUCCESS);
         return ;
     }
-    if (loop->mutex->unlock() != FT_ERR_SUCCESS)
+    if (pt_mutex_unlock_if_not_null(loop->mutex) != FT_ERR_SUCCESS)
         return ;
     (void)(FT_ERR_SUCCESS);
     return ;

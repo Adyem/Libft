@@ -3,6 +3,7 @@
 #include "logger_internal.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../PThread/pthread.hpp"
 
 int network_sink_prepare_thread_safety(s_network_sink *sink)
@@ -57,7 +58,7 @@ int network_sink_lock(const s_network_sink *sink, bool *lock_acquired)
     mutable_sink = const_cast<s_network_sink *>(sink);
     if (!mutable_sink->thread_safe_enabled || !mutable_sink->mutex)
         return (FT_ERR_SUCCESS);
-    error_code = mutable_sink->mutex->lock();
+    error_code = pt_mutex_lock_if_not_null(mutable_sink->mutex);
     if (error_code != FT_ERR_SUCCESS)
         return (error_code);
     if (lock_acquired)
@@ -75,6 +76,6 @@ void network_sink_unlock(const s_network_sink *sink, bool lock_acquired)
     mutable_sink = const_cast<s_network_sink *>(sink);
     if (!mutable_sink->mutex)
         return ;
-    (void)mutable_sink->mutex->unlock();
+    (void)pt_mutex_unlock_if_not_null(mutable_sink->mutex);
     return ;
 }

@@ -4,6 +4,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 
 int html_attr_prepare_thread_safety(html_attr *attribute)
 {
@@ -11,17 +12,17 @@ int html_attr_prepare_thread_safety(html_attr *attribute)
     int initialize_error;
 
     if (!attribute)
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     if (attribute->thread_safe_enabled && attribute->mutex)
         return (0);
     mutex_pointer = new (std::nothrow) pt_mutex();
     if (!mutex_pointer)
-        return (-1);
+        return (FT_ERR_NO_MEMORY);
     initialize_error = mutex_pointer->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
     {
         delete mutex_pointer;
-        return (-1);
+        return (initialize_error);
     }
     attribute->mutex = mutex_pointer;
     attribute->thread_safe_enabled = true;
@@ -50,13 +51,13 @@ int html_attr_lock(const html_attr *attribute, bool *lock_acquired)
     if (lock_acquired)
         *lock_acquired = false;
     if (!attribute)
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     mutable_attribute = const_cast<html_attr *>(attribute);
     if (!mutable_attribute->thread_safe_enabled || !mutable_attribute->mutex)
         return (0);
-    lock_error = mutable_attribute->mutex->lock();
+    lock_error = pt_mutex_lock_if_not_null(mutable_attribute->mutex);
     if (lock_error != FT_ERR_SUCCESS)
-        return (-1);
+        return (lock_error);
     if (lock_acquired)
         *lock_acquired = true;
     return (0);
@@ -71,7 +72,7 @@ void html_attr_unlock(const html_attr *attribute, bool lock_acquired)
     mutable_attribute = const_cast<html_attr *>(attribute);
     if (!mutable_attribute->mutex)
         return ;
-    mutable_attribute->mutex->unlock();
+    pt_mutex_unlock_if_not_null(mutable_attribute->mutex);
     return ;
 }
 

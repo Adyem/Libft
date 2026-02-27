@@ -1,3 +1,4 @@
+#include "../PThread/pthread_internal.hpp"
 #include "game_equipment.hpp"
 #include <new>
 
@@ -41,7 +42,7 @@ int ft_equipment::lock_internal(bool *lock_acquired) const noexcept
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    lock_error = this->_mutex->lock();
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -65,7 +66,7 @@ void ft_equipment::unlock_internal(bool lock_acquired) const noexcept
         this->set_error(FT_ERR_SUCCESS);
         return ;
     }
-    (void)this->_mutex->unlock();
+    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }

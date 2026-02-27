@@ -9,6 +9,7 @@
 #include "../Template/vector.hpp"
 #include "../Parser/document_backend.hpp"
 #include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "../PThread/thread.hpp"
 #include "../PThread/pthread.hpp"
 #include "../sqlite_support.hpp"
@@ -56,14 +57,11 @@ class kv_store_entry
         static const uint8_t _state_uninitialized = 0;
         static const uint8_t _state_destroyed = 1;
         static const uint8_t _state_initialized = 2;
-        mutable pt_mutex _mutex;
+        mutable pt_recursive_mutex *_mutex;
 
         void abort_lifecycle_error(const char *method_name,
             const char *reason) const noexcept;
         void abort_if_not_initialized(const char *method_name) const noexcept;
-        int lock_entry() const noexcept;
-        int unlock_entry() const noexcept;
-
     public:
         kv_store_entry() noexcept;
         kv_store_entry(const kv_store_entry &other) noexcept = delete;
@@ -71,6 +69,9 @@ class kv_store_entry
         kv_store_entry &operator=(const kv_store_entry &other) noexcept = delete;
         kv_store_entry &operator=(kv_store_entry &&other) noexcept = delete;
         ~kv_store_entry() noexcept;
+        int enable_thread_safety() noexcept;
+        int disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
         int initialize() noexcept;
         int initialize(const kv_store_entry &other) noexcept;
         int destroy() noexcept;
@@ -129,8 +130,8 @@ class kv_store
         bool _background_stop_requested;
         long long _background_interval_seconds;
         ft_thread _background_thread;
-        mutable pt_mutex _background_mutex;
-        mutable pt_mutex _mutex;
+        mutable pt_recursive_mutex *_background_mutex;
+        mutable pt_recursive_mutex *_mutex;
         mutable long long _metrics_set_operations;
         mutable long long _metrics_delete_operations;
         mutable long long _metrics_get_hits;
@@ -140,7 +141,7 @@ class kv_store
         mutable long long _metrics_total_prune_duration_ms;
         mutable long long _metrics_last_prune_duration_ms;
         ft_vector<kv_store_replication_sink> _replication_sinks;
-        mutable pt_mutex _replication_mutex;
+        mutable pt_recursive_mutex *_replication_mutex;
 
         void abort_lifecycle_error(const char *method_name,
             const char *reason) const noexcept;
@@ -188,6 +189,9 @@ class kv_store
         kv_store &operator=(const kv_store &other) = delete;
         kv_store &operator=(kv_store &&other) = delete;
         ~kv_store();
+        int enable_thread_safety() noexcept;
+        int disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
         int initialize(const char *file_path, const char *encryption_key = ft_nullptr, bool enable_encryption = false);
         int destroy();
 
@@ -202,7 +206,7 @@ class kv_store
         int kv_apply(const ft_vector<kv_store_operation> &operations);
         int kv_compare_and_swap(const char *key_string, const char *expected_value, const char *new_value, long long ttl_seconds = -1);
 #ifdef LIBFT_TEST_BUILD
-        pt_mutex *get_mutex_for_validation() const noexcept;
+        pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
         int get_metrics(kv_store_metrics &out_metrics) const;
         int export_snapshot(ft_vector<kv_store_snapshot_entry> &out_entries) const;

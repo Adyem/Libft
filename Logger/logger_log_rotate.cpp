@@ -97,7 +97,7 @@ static int logger_prepare_rotation_internal(s_file_sink *sink,
         *rotate_for_age = false;
         return (0);
     }
-    if (fstat(sink->fd, &file_stats) == -1)
+    if (fstat(sink->file_descriptor, &file_stats) == -1)
         return (-1);
     retention_count = sink->retention_count;
     if (retention_count > 1024)
@@ -181,15 +181,15 @@ void logger_execute_rotation(s_file_sink *sink)
     {
         reopen_flags = O_CREAT | O_WRONLY | O_TRUNC | O_APPEND;
     }
-    close_result = close(sink->fd);
+    close_result = close(sink->file_descriptor);
     if (close_result == -1)
     {
-        sink->fd = -1;
+        sink->file_descriptor = -1;
         goto cleanup;
     }
-    sink->fd = -1;
-    sink->fd = open(sink->path.c_str(), reopen_flags, 0644);
-    if (sink->fd == -1)
+    sink->file_descriptor = -1;
+    sink->file_descriptor = open(sink->path.c_str(), reopen_flags, 0644);
+    if (sink->file_descriptor == -1)
         goto cleanup;
 
 cleanup:

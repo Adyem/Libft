@@ -34,10 +34,10 @@ static bool api_http_apply_timeouts(ft_socket &socket_wrapper, int timeout)
     DWORD win_timeout;
 
     win_timeout = static_cast<DWORD>(timeout);
-    if (setsockopt(socket_wrapper.get_fd(), SOL_SOCKET, SO_RCVTIMEO,
+    if (setsockopt(socket_wrapper.get_file_descriptor(), SOL_SOCKET, SO_RCVTIMEO,
             reinterpret_cast<const char*>(&win_timeout), sizeof(win_timeout)) != 0)
         return (false);
-    if (setsockopt(socket_wrapper.get_fd(), SOL_SOCKET, SO_SNDTIMEO,
+    if (setsockopt(socket_wrapper.get_file_descriptor(), SOL_SOCKET, SO_SNDTIMEO,
             reinterpret_cast<const char*>(&win_timeout), sizeof(win_timeout)) != 0)
         return (false);
 #else
@@ -45,10 +45,10 @@ static bool api_http_apply_timeouts(ft_socket &socket_wrapper, int timeout)
 
     tv.tv_sec = timeout / 1000;
     tv.tv_usec = (timeout % 1000) * 1000;
-    if (setsockopt(socket_wrapper.get_fd(), SOL_SOCKET, SO_RCVTIMEO,
+    if (setsockopt(socket_wrapper.get_file_descriptor(), SOL_SOCKET, SO_RCVTIMEO,
             &tv, sizeof(tv)) != 0)
         return (false);
-    if (setsockopt(socket_wrapper.get_fd(), SOL_SOCKET, SO_SNDTIMEO,
+    if (setsockopt(socket_wrapper.get_file_descriptor(), SOL_SOCKET, SO_SNDTIMEO,
             &tv, sizeof(tv)) != 0)
         return (false);
 #endif
@@ -170,7 +170,7 @@ bool api_http_plain_socket_is_alive(api_connection_pool_handle &connection_handl
     {
         return (false);
     }
-    poll_descriptor = connection_handle.socket.get_fd();
+    poll_descriptor = connection_handle.socket.get_file_descriptor();
     if (poll_descriptor < 0)
     {
         return (false);
@@ -2692,7 +2692,7 @@ char *api_http_execute_plain_http2(api_connection_pool_handle &connection_handle
             api_connection_pool_evict(connection_handle);
         attempt_index++;
         if (attempt_index >= max_attempts)
-            break;
+            break ;
         if (current_delay > 0)
         {
             int sleep_delay;
@@ -2802,7 +2802,7 @@ char *api_http_execute_plain(api_connection_pool_handle &connection_handle,
             continue ;
         }
         if (attempt_index >= max_attempts)
-            break;
+            break ;
         if (current_delay > 0)
         {
             int sleep_delay;

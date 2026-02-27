@@ -5,6 +5,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/condition.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../PThread/pthread.hpp"
 #include "../PThread/thread.hpp"
 #include "../Printf/printf.hpp"
@@ -76,7 +77,7 @@ class ft_thread_pool
                 *lock_acquired = false;
             if (this->_thread_safe_mutex == ft_nullptr)
                 return (FT_ERR_SUCCESS);
-            lock_result = this->_thread_safe_mutex->lock();
+            lock_result = pt_recursive_mutex_lock_if_not_null(this->_thread_safe_mutex);
             if (lock_result != FT_ERR_SUCCESS)
                 return (set_last_operation_error(lock_result));
             if (lock_acquired != ft_nullptr)
@@ -90,7 +91,7 @@ class ft_thread_pool
                 return ;
             if (this->_thread_safe_mutex == ft_nullptr)
                 return ;
-            (void)this->_thread_safe_mutex->unlock();
+            (void)pt_recursive_mutex_unlock_if_not_null(this->_thread_safe_mutex);
             return ;
         }
 
@@ -142,9 +143,6 @@ class ft_thread_pool
 
         ~ft_thread_pool()
         {
-            if (this->_initialized_state == _state_uninitialized)
-                this->abort_lifecycle_error("ft_thread_pool::~ft_thread_pool",
-                    "destructor called while object is uninitialized");
             if (this->_initialized_state == _state_initialized)
                 this->destroy();
             if (this->_thread_safe_mutex != ft_nullptr)
@@ -209,7 +207,11 @@ class ft_thread_pool
             size_t worker_index;
             size_t worker_count;
 
-            this->abort_if_not_initialized("ft_thread_pool::destroy");
+            if (this->_initialized_state != _state_initialized)
+            {
+                set_last_operation_error(FT_ERR_INVALID_STATE);
+                return ;
+            }
             if (pthread_mutex_lock(&this->_mutex) != 0)
             {
                 set_last_operation_error(FT_ERR_INVALID_STATE);

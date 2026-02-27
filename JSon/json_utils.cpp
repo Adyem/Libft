@@ -5,6 +5,7 @@
 #include "../Basic/basic.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/pthread_internal.hpp"
 
 static thread_local int g_json_utils_last_error = FT_ERR_SUCCESS;
 
@@ -86,7 +87,7 @@ json_item *json_find_item(json_group *group, const char *key)
         json_utils_push_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
-    lock_error = group->_mutex->lock();
+    lock_error = pt_mutex_lock_if_not_null(group->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         json_utils_push_error(lock_error);
@@ -98,7 +99,7 @@ json_item *json_find_item(json_group *group, const char *key)
         if (current->key && ft_strcmp(current->key, key) == 0)
         {
             json_group_set_error_unlocked(group, FT_ERR_SUCCESS);
-            unlock_error = group->_mutex->unlock();
+            unlock_error = pt_mutex_unlock_if_not_null(group->_mutex);
             if (unlock_error != FT_ERR_SUCCESS)
             {
                 json_utils_push_error(unlock_error);
@@ -110,7 +111,7 @@ json_item *json_find_item(json_group *group, const char *key)
         current = current->next;
     }
     json_group_set_error_unlocked(group, FT_ERR_NOT_FOUND);
-    unlock_error = group->_mutex->unlock();
+    unlock_error = pt_mutex_unlock_if_not_null(group->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         json_utils_push_error(unlock_error);
@@ -133,7 +134,7 @@ void json_remove_item(json_group *group, const char *key)
         json_utils_push_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
-    lock_error = group->_mutex->lock();
+    lock_error = pt_mutex_lock_if_not_null(group->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         json_utils_push_error(lock_error);
@@ -158,7 +159,7 @@ void json_remove_item(json_group *group, const char *key)
             (void)json_item_disable_thread_safety(current);
             delete current;
             json_group_set_error_unlocked(group, FT_ERR_SUCCESS);
-            unlock_error = group->_mutex->unlock();
+            unlock_error = pt_mutex_unlock_if_not_null(group->_mutex);
             if (unlock_error != FT_ERR_SUCCESS)
             {
                 json_utils_push_error(unlock_error);
@@ -171,7 +172,7 @@ void json_remove_item(json_group *group, const char *key)
         current = current->next;
     }
     json_group_set_error_unlocked(group, FT_ERR_NOT_FOUND);
-    unlock_error = group->_mutex->unlock();
+    unlock_error = pt_mutex_unlock_if_not_null(group->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
     {
         json_utils_push_error(unlock_error);
@@ -195,7 +196,7 @@ void json_update_item(json_group *group, const char *key, const char *value)
         json_utils_push_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
-    lock_error = group->_mutex->lock();
+    lock_error = pt_mutex_lock_if_not_null(group->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         json_utils_push_error(lock_error);
@@ -215,7 +216,7 @@ void json_update_item(json_group *group, const char *key, const char *value)
         json_utils_push_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
-    item_lock_error = item->_mutex->lock();
+    item_lock_error = pt_mutex_lock_if_not_null(item->_mutex);
     if (item_lock_error != FT_ERR_SUCCESS)
     {
         json_group_set_error_unlocked(group, item_lock_error);
@@ -235,8 +236,8 @@ void json_update_item(json_group *group, const char *key, const char *value)
     {
         json_item_set_error_unlocked(item, FT_ERR_NO_MEMORY);
         json_group_set_error_unlocked(group, FT_ERR_NO_MEMORY);
-        (void)item->_mutex->unlock();
-        (void)group->_mutex->unlock();
+        (void)pt_mutex_unlock_if_not_null(item->_mutex);
+        (void)pt_mutex_unlock_if_not_null(group->_mutex);
         json_utils_push_error(FT_ERR_NO_MEMORY);
         return ;
     }
@@ -248,13 +249,13 @@ void json_update_item(json_group *group, const char *key, const char *value)
     {
         json_group_set_error_unlocked(group, refresh_error);
         json_item_set_error_unlocked(item, refresh_error);
-        (void)item->_mutex->unlock();
-        (void)group->_mutex->unlock();
+        (void)pt_mutex_unlock_if_not_null(item->_mutex);
+        (void)pt_mutex_unlock_if_not_null(group->_mutex);
         json_utils_push_error(refresh_error);
         return ;
     }
-    item_unlock_error = item->_mutex->unlock();
-    unlock_error = group->_mutex->unlock();
+    item_unlock_error = pt_mutex_unlock_if_not_null(item->_mutex);
+    unlock_error = pt_mutex_unlock_if_not_null(group->_mutex);
     if (item_unlock_error != FT_ERR_SUCCESS)
     {
         json_utils_push_error(item_unlock_error);
@@ -283,7 +284,7 @@ void json_update_item(json_group *group, const char *key, const int value)
         json_utils_push_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
-    lock_error = group->_mutex->lock();
+    lock_error = pt_mutex_lock_if_not_null(group->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         json_utils_push_error(lock_error);
@@ -303,7 +304,7 @@ void json_update_item(json_group *group, const char *key, const int value)
         json_utils_push_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
-    item_lock_error = item->_mutex->lock();
+    item_lock_error = pt_mutex_lock_if_not_null(item->_mutex);
     if (item_lock_error != FT_ERR_SUCCESS)
     {
         json_group_set_error_unlocked(group, item_lock_error);
@@ -323,8 +324,8 @@ void json_update_item(json_group *group, const char *key, const int value)
     {
         json_item_set_error_unlocked(item, FT_ERR_NO_MEMORY);
         json_group_set_error_unlocked(group, FT_ERR_NO_MEMORY);
-        (void)item->_mutex->unlock();
-        (void)group->_mutex->unlock();
+        (void)pt_mutex_unlock_if_not_null(item->_mutex);
+        (void)pt_mutex_unlock_if_not_null(group->_mutex);
         json_utils_push_error(FT_ERR_NO_MEMORY);
         return ;
     }
@@ -336,13 +337,13 @@ void json_update_item(json_group *group, const char *key, const int value)
     {
         json_group_set_error_unlocked(group, refresh_error);
         json_item_set_error_unlocked(item, refresh_error);
-        (void)item->_mutex->unlock();
-        (void)group->_mutex->unlock();
+        (void)pt_mutex_unlock_if_not_null(item->_mutex);
+        (void)pt_mutex_unlock_if_not_null(group->_mutex);
         json_utils_push_error(refresh_error);
         return ;
     }
-    item_unlock_error = item->_mutex->unlock();
-    unlock_error = group->_mutex->unlock();
+    item_unlock_error = pt_mutex_unlock_if_not_null(item->_mutex);
+    unlock_error = pt_mutex_unlock_if_not_null(group->_mutex);
     if (item_unlock_error != FT_ERR_SUCCESS)
     {
         json_utils_push_error(item_unlock_error);
@@ -371,7 +372,7 @@ void json_update_item(json_group *group, const char *key, const bool value)
         json_utils_push_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
-    lock_error = group->_mutex->lock();
+    lock_error = pt_mutex_lock_if_not_null(group->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         json_utils_push_error(lock_error);
@@ -391,7 +392,7 @@ void json_update_item(json_group *group, const char *key, const bool value)
         json_utils_push_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
-    item_lock_error = item->_mutex->lock();
+    item_lock_error = pt_mutex_lock_if_not_null(item->_mutex);
     if (item_lock_error != FT_ERR_SUCCESS)
     {
         json_group_set_error_unlocked(group, item_lock_error);
@@ -414,8 +415,8 @@ void json_update_item(json_group *group, const char *key, const bool value)
     {
         json_item_set_error_unlocked(item, FT_ERR_NO_MEMORY);
         json_group_set_error_unlocked(group, FT_ERR_NO_MEMORY);
-        (void)item->_mutex->unlock();
-        (void)group->_mutex->unlock();
+        (void)pt_mutex_unlock_if_not_null(item->_mutex);
+        (void)pt_mutex_unlock_if_not_null(group->_mutex);
         json_utils_push_error(FT_ERR_NO_MEMORY);
         return ;
     }
@@ -427,13 +428,13 @@ void json_update_item(json_group *group, const char *key, const bool value)
     {
         json_group_set_error_unlocked(group, refresh_error);
         json_item_set_error_unlocked(item, refresh_error);
-        (void)item->_mutex->unlock();
-        (void)group->_mutex->unlock();
+        (void)pt_mutex_unlock_if_not_null(item->_mutex);
+        (void)pt_mutex_unlock_if_not_null(group->_mutex);
         json_utils_push_error(refresh_error);
         return ;
     }
-    item_unlock_error = item->_mutex->unlock();
-    unlock_error = group->_mutex->unlock();
+    item_unlock_error = pt_mutex_unlock_if_not_null(item->_mutex);
+    unlock_error = pt_mutex_unlock_if_not_null(group->_mutex);
     if (item_unlock_error != FT_ERR_SUCCESS)
     {
         json_utils_push_error(item_unlock_error);
@@ -462,7 +463,7 @@ void json_update_item(json_group *group, const char *key, const ft_big_number &v
         json_utils_push_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
-    lock_error = group->_mutex->lock();
+    lock_error = pt_mutex_lock_if_not_null(group->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         json_utils_push_error(lock_error);
@@ -482,7 +483,7 @@ void json_update_item(json_group *group, const char *key, const ft_big_number &v
         json_utils_push_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
-    item_lock_error = item->_mutex->lock();
+    item_lock_error = pt_mutex_lock_if_not_null(item->_mutex);
     if (item_lock_error != FT_ERR_SUCCESS)
     {
         json_group_set_error_unlocked(group, item_lock_error);
@@ -502,8 +503,8 @@ void json_update_item(json_group *group, const char *key, const ft_big_number &v
     {
         json_item_set_error_unlocked(item, FT_ERR_NO_MEMORY);
         json_group_set_error_unlocked(group, FT_ERR_NO_MEMORY);
-        (void)item->_mutex->unlock();
-        (void)group->_mutex->unlock();
+        (void)pt_mutex_unlock_if_not_null(item->_mutex);
+        (void)pt_mutex_unlock_if_not_null(group->_mutex);
         json_utils_push_error(FT_ERR_NO_MEMORY);
         return ;
     }
@@ -515,13 +516,13 @@ void json_update_item(json_group *group, const char *key, const ft_big_number &v
     {
         json_group_set_error_unlocked(group, refresh_error);
         json_item_set_error_unlocked(item, refresh_error);
-        (void)item->_mutex->unlock();
-        (void)group->_mutex->unlock();
+        (void)pt_mutex_unlock_if_not_null(item->_mutex);
+        (void)pt_mutex_unlock_if_not_null(group->_mutex);
         json_utils_push_error(refresh_error);
         return ;
     }
-    item_unlock_error = item->_mutex->unlock();
-    unlock_error = group->_mutex->unlock();
+    item_unlock_error = pt_mutex_unlock_if_not_null(item->_mutex);
+    unlock_error = pt_mutex_unlock_if_not_null(group->_mutex);
     if (item_unlock_error != FT_ERR_SUCCESS)
     {
         json_utils_push_error(item_unlock_error);

@@ -3,6 +3,7 @@
 #include "../Errno/errno.hpp"
 #include "../Printf/printf.hpp"
 #include "../PThread/mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../System_utils/system_utils.hpp"
 #include <new>
 
@@ -28,34 +29,6 @@ void html_document::abort_if_not_initialized(const char *method_name) const noex
     return ;
 }
 
-int html_document::lock_document(bool *lock_acquired) const noexcept
-{
-    int lock_error;
-
-    if (lock_acquired != ft_nullptr)
-        *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    lock_error = this->_mutex->lock();
-    if (lock_error != FT_ERR_SUCCESS)
-        return (lock_error);
-    if (lock_acquired != ft_nullptr)
-        *lock_acquired = true;
-    return (FT_ERR_SUCCESS);
-}
-
-int html_document::unlock_document(bool lock_acquired) const noexcept
-{
-    int unlock_error;
-
-    if (lock_acquired == false)
-        return (FT_ERR_SUCCESS);
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    unlock_error = this->_mutex->unlock();
-    return (unlock_error);
-}
-
 html_document::html_document() noexcept
     : _root(ft_nullptr), _mutex(ft_nullptr),
     _state(html_document::_state_uninitialized)
@@ -65,9 +38,6 @@ html_document::html_document() noexcept
 
 html_document::~html_document() noexcept
 {
-    if (this->_state == html_document::_state_uninitialized)
-        this->abort_lifecycle_error("html_document::~html_document",
-            "destructor called while object is uninitialized");
     if (this->_state == html_document::_state_initialized)
         (void)this->destroy();
     return ;
@@ -90,10 +60,7 @@ int html_document::destroy() noexcept
     int thread_safety_error;
 
     if (this->_state != html_document::_state_initialized)
-    {
-        this->abort_lifecycle_error("html_document::destroy",
-            "destroy called while object is not initialized");
-    }
+        return (FT_ERR_INVALID_STATE);
     html_free_nodes(this->_root);
     this->_root = ft_nullptr;
     thread_safety_error = this->disable_thread_safety();
@@ -137,144 +104,136 @@ int html_document::disable_thread_safety() noexcept
 
 bool html_document::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("html_document::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
 html_node *html_document::create_node(const char *tag_name,
     const char *text_content) noexcept
 {
-    bool lock_acquired;
     int lock_error;
     html_node *node;
 
     this->abort_if_not_initialized("html_document::create_node");
-    lock_error = this->lock_document(&lock_acquired);
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (ft_nullptr);
     if (tag_name == ft_nullptr)
     {
-        (void)this->unlock_document(lock_acquired);
+        (void)pt_mutex_unlock_if_not_null(this->_mutex);
         return (ft_nullptr);
     }
     node = html_create_node(tag_name, text_content);
-    (void)this->unlock_document(lock_acquired);
+    (void)pt_mutex_unlock_if_not_null(this->_mutex);
     return (node);
 }
 
 html_attr *html_document::create_attr(const char *key, const char *value) noexcept
 {
-    bool lock_acquired;
     int lock_error;
     html_attr *attribute;
 
     this->abort_if_not_initialized("html_document::create_attr");
-    lock_error = this->lock_document(&lock_acquired);
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (ft_nullptr);
     if (key == ft_nullptr || value == ft_nullptr)
     {
-        (void)this->unlock_document(lock_acquired);
+        (void)pt_mutex_unlock_if_not_null(this->_mutex);
         return (ft_nullptr);
     }
     attribute = html_create_attr(key, value);
-    (void)this->unlock_document(lock_acquired);
+    (void)pt_mutex_unlock_if_not_null(this->_mutex);
     return (attribute);
 }
 
 void html_document::add_attr(html_node *target_node, html_attr *new_attribute) noexcept
 {
-    bool lock_acquired;
     int lock_error;
 
     this->abort_if_not_initialized("html_document::add_attr");
-    lock_error = this->lock_document(&lock_acquired);
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     if (target_node == ft_nullptr || new_attribute == ft_nullptr)
     {
-        (void)this->unlock_document(lock_acquired);
+        (void)pt_mutex_unlock_if_not_null(this->_mutex);
         return ;
     }
     html_add_attr(target_node, new_attribute);
-    (void)this->unlock_document(lock_acquired);
+    (void)pt_mutex_unlock_if_not_null(this->_mutex);
     return ;
 }
 
 void html_document::remove_attr(html_node *target_node, const char *key) noexcept
 {
-    bool lock_acquired;
     int lock_error;
 
     this->abort_if_not_initialized("html_document::remove_attr");
-    lock_error = this->lock_document(&lock_acquired);
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     if (target_node == ft_nullptr || key == ft_nullptr)
     {
-        (void)this->unlock_document(lock_acquired);
+        (void)pt_mutex_unlock_if_not_null(this->_mutex);
         return ;
     }
     html_remove_attr(target_node, key);
-    (void)this->unlock_document(lock_acquired);
+    (void)pt_mutex_unlock_if_not_null(this->_mutex);
     return ;
 }
 
 void html_document::add_child(html_node *parent_node, html_node *child_node) noexcept
 {
-    bool lock_acquired;
     int lock_error;
 
     this->abort_if_not_initialized("html_document::add_child");
-    lock_error = this->lock_document(&lock_acquired);
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     if (parent_node == ft_nullptr || child_node == ft_nullptr)
     {
-        (void)this->unlock_document(lock_acquired);
+        (void)pt_mutex_unlock_if_not_null(this->_mutex);
         return ;
     }
     html_add_child(parent_node, child_node);
-    (void)this->unlock_document(lock_acquired);
+    (void)pt_mutex_unlock_if_not_null(this->_mutex);
     return ;
 }
 
 void html_document::append_node(html_node *new_node) noexcept
 {
-    bool lock_acquired;
     int lock_error;
 
     this->abort_if_not_initialized("html_document::append_node");
-    lock_error = this->lock_document(&lock_acquired);
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     if (new_node == ft_nullptr)
     {
-        (void)this->unlock_document(lock_acquired);
+        (void)pt_mutex_unlock_if_not_null(this->_mutex);
         return ;
     }
     html_append_node(&this->_root, new_node);
-    (void)this->unlock_document(lock_acquired);
+    (void)pt_mutex_unlock_if_not_null(this->_mutex);
     return ;
 }
 
 int html_document::write_to_file(const char *file_path) const noexcept
 {
-    bool lock_acquired;
     int lock_error;
     int write_error;
 
     this->abort_if_not_initialized("html_document::write_to_file");
-    lock_error = this->lock_document(&lock_acquired);
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
     if (file_path == ft_nullptr)
     {
-        (void)this->unlock_document(lock_acquired);
+        (void)pt_mutex_unlock_if_not_null(this->_mutex);
         return (-1);
     }
     write_error = html_write_to_file(file_path, this->_root);
-    (void)this->unlock_document(lock_acquired);
+    (void)pt_mutex_unlock_if_not_null(this->_mutex);
     if (write_error != 0)
         return (-1);
     return (0);
@@ -282,188 +241,178 @@ int html_document::write_to_file(const char *file_path) const noexcept
 
 char *html_document::write_to_string() const noexcept
 {
-    bool lock_acquired;
     int lock_error;
     char *result;
 
     this->abort_if_not_initialized("html_document::write_to_string");
-    lock_error = this->lock_document(&lock_acquired);
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (ft_nullptr);
     result = html_write_to_string(this->_root);
-    (void)this->unlock_document(lock_acquired);
+    (void)pt_mutex_unlock_if_not_null(this->_mutex);
     return (result);
 }
 
 void html_document::remove_nodes_by_tag(const char *tag_name) noexcept
 {
-    bool lock_acquired;
     int lock_error;
 
     this->abort_if_not_initialized("html_document::remove_nodes_by_tag");
-    lock_error = this->lock_document(&lock_acquired);
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     if (tag_name == ft_nullptr)
     {
-        (void)this->unlock_document(lock_acquired);
+        (void)pt_mutex_unlock_if_not_null(this->_mutex);
         return ;
     }
     html_remove_nodes_by_tag(&this->_root, tag_name);
-    (void)this->unlock_document(lock_acquired);
+    (void)pt_mutex_unlock_if_not_null(this->_mutex);
     return ;
 }
 
 void html_document::remove_nodes_by_attr(const char *key, const char *value) noexcept
 {
-    bool lock_acquired;
     int lock_error;
 
     this->abort_if_not_initialized("html_document::remove_nodes_by_attr");
-    lock_error = this->lock_document(&lock_acquired);
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     if (key == ft_nullptr || value == ft_nullptr)
     {
-        (void)this->unlock_document(lock_acquired);
+        (void)pt_mutex_unlock_if_not_null(this->_mutex);
         return ;
     }
     html_remove_nodes_by_attr(&this->_root, key, value);
-    (void)this->unlock_document(lock_acquired);
+    (void)pt_mutex_unlock_if_not_null(this->_mutex);
     return ;
 }
 
 void html_document::remove_nodes_by_text(const char *text_content) noexcept
 {
-    bool lock_acquired;
     int lock_error;
 
     this->abort_if_not_initialized("html_document::remove_nodes_by_text");
-    lock_error = this->lock_document(&lock_acquired);
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     if (text_content == ft_nullptr)
     {
-        (void)this->unlock_document(lock_acquired);
+        (void)pt_mutex_unlock_if_not_null(this->_mutex);
         return ;
     }
     html_remove_nodes_by_text(&this->_root, text_content);
-    (void)this->unlock_document(lock_acquired);
+    (void)pt_mutex_unlock_if_not_null(this->_mutex);
     return ;
 }
 
 html_node *html_document::find_by_tag(const char *tag_name) const noexcept
 {
-    bool lock_acquired;
     int lock_error;
     html_node *node;
 
     this->abort_if_not_initialized("html_document::find_by_tag");
-    lock_error = this->lock_document(&lock_acquired);
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (ft_nullptr);
     if (tag_name == ft_nullptr)
     {
-        (void)this->unlock_document(lock_acquired);
+        (void)pt_mutex_unlock_if_not_null(this->_mutex);
         return (ft_nullptr);
     }
     node = html_find_by_tag(this->_root, tag_name);
-    (void)this->unlock_document(lock_acquired);
+    (void)pt_mutex_unlock_if_not_null(this->_mutex);
     return (node);
 }
 
 html_node *html_document::find_by_attr(const char *key, const char *value) const noexcept
 {
-    bool lock_acquired;
     int lock_error;
     html_node *node;
 
     this->abort_if_not_initialized("html_document::find_by_attr");
-    lock_error = this->lock_document(&lock_acquired);
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (ft_nullptr);
     if (key == ft_nullptr || value == ft_nullptr)
     {
-        (void)this->unlock_document(lock_acquired);
+        (void)pt_mutex_unlock_if_not_null(this->_mutex);
         return (ft_nullptr);
     }
     node = html_find_by_attr(this->_root, key, value);
-    (void)this->unlock_document(lock_acquired);
+    (void)pt_mutex_unlock_if_not_null(this->_mutex);
     return (node);
 }
 
 html_node *html_document::find_by_text(const char *text_content) const noexcept
 {
-    bool lock_acquired;
     int lock_error;
     html_node *node;
 
     this->abort_if_not_initialized("html_document::find_by_text");
-    lock_error = this->lock_document(&lock_acquired);
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (ft_nullptr);
     if (text_content == ft_nullptr)
     {
-        (void)this->unlock_document(lock_acquired);
+        (void)pt_mutex_unlock_if_not_null(this->_mutex);
         return (ft_nullptr);
     }
     node = html_find_by_text(this->_root, text_content);
-    (void)this->unlock_document(lock_acquired);
+    (void)pt_mutex_unlock_if_not_null(this->_mutex);
     return (node);
 }
 
 html_node *html_document::find_by_selector(const char *selector) const noexcept
 {
-    bool lock_acquired;
     int lock_error;
     html_node *node;
 
     this->abort_if_not_initialized("html_document::find_by_selector");
-    lock_error = this->lock_document(&lock_acquired);
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (ft_nullptr);
     if (selector == ft_nullptr)
     {
-        (void)this->unlock_document(lock_acquired);
+        (void)pt_mutex_unlock_if_not_null(this->_mutex);
         return (ft_nullptr);
     }
     node = html_find_by_selector(this->_root, selector);
-    (void)this->unlock_document(lock_acquired);
+    (void)pt_mutex_unlock_if_not_null(this->_mutex);
     return (node);
 }
 
 size_t html_document::count_nodes_by_tag(const char *tag_name) const noexcept
 {
-    bool lock_acquired;
     int lock_error;
     size_t node_count;
 
     this->abort_if_not_initialized("html_document::count_nodes_by_tag");
-    lock_error = this->lock_document(&lock_acquired);
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (0);
     if (tag_name == ft_nullptr)
     {
-        (void)this->unlock_document(lock_acquired);
+        (void)pt_mutex_unlock_if_not_null(this->_mutex);
         return (0);
     }
     node_count = html_count_nodes_by_tag(this->_root, tag_name);
-    (void)this->unlock_document(lock_acquired);
+    (void)pt_mutex_unlock_if_not_null(this->_mutex);
     return (node_count);
 }
 
 html_node *html_document::get_root() const noexcept
 {
-    bool lock_acquired;
     int lock_error;
     html_node *root_node;
 
     this->abort_if_not_initialized("html_document::get_root");
-    lock_error = this->lock_document(&lock_acquired);
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (ft_nullptr);
     root_node = this->_root;
-    (void)this->unlock_document(lock_acquired);
+    (void)pt_mutex_unlock_if_not_null(this->_mutex);
     return (root_node);
 }
 
@@ -486,22 +435,16 @@ const char *html_document::get_error_str() const noexcept
 
 void html_document::clear() noexcept
 {
-    bool lock_acquired;
     int lock_error;
 
     this->abort_if_not_initialized("html_document::clear");
-    lock_error = this->lock_document(&lock_acquired);
+    lock_error = pt_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     html_free_nodes(this->_root);
     this->_root = ft_nullptr;
-    (void)this->unlock_document(lock_acquired);
+    (void)pt_mutex_unlock_if_not_null(this->_mutex);
     return ;
-}
-
-bool html_document::is_thread_safe_enabled() const noexcept
-{
-    return (this->is_thread_safe());
 }
 
 #ifdef LIBFT_TEST_BUILD
