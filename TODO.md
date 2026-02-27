@@ -1,6 +1,6 @@
 # TODO
 
-Remaining unchecked items: 153
+Remaining unchecked items: 144
 
 ## Mutex reinitialization audit
 
@@ -28,21 +28,6 @@ All mutex reinitialization audit items have been completed.
 ## Advanced module AGENTS.md compliance
 
 - [ ] Rename short variable names in `Advanced` module to full descriptive snake_case names (for example `len1`, `len2`, `i`, `j`, `src`, `dest`).
-
-## Compatebility module AGENTS.md compliance
-
-- [ ] Remove `for` loop from `Compatebility/Compatebility_cross_process_posix.cpp` (`cmp_cross_process_lock_mutex`, line 133) and replace with compliant control flow (`while`).
-- [ ] Change `break;` to `break ;` in `Compatebility/Compatebility_cross_process_posix.cpp` (line 147).
-- [ ] Change `break;` to `break ;` in `Compatebility/Compatebility_time.cpp` (line 182).
-- [ ] Change `break;` to `break ;` in `Compatebility/Compatebility_system.cpp` (line 860).
-- [ ] Change `break;` to `break ;` in `Compatebility/Compatebility_cross_process_windows.cpp` (line 151).
-- [ ] Change `break;` to `break ;` in `Compatebility/Compatebility_cross_process_windows.cpp` (line 157).
-
-## CMA module AGENTS.md compliance
-
-- [ ] Remove ternary operator from `CMA/cma_backend.cpp` (`cma_backend_is_enabled`, line 94).
-- [ ] Remove ternary operator from `CMA/cma_aligned_alloc.cpp` (line 175).
-- [ ] Update non-Allman `if` brace style in `CMA/cma_utils.cpp` (line 263) so opening brace is on the next line.
 
 ## SCMA module AGENTS.md compliance
 

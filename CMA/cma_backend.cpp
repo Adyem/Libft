@@ -91,7 +91,9 @@ int32_t cma_clear_backend(void)
 
 int32_t cma_backend_is_enabled(void)
 {
-    return (g_cma_backend_enabled ? 1 : 0);
+    if (g_cma_backend_enabled)
+        return (1);
+    return (0);
 }
 
 int32_t cma_backend_owns_pointer(const void *memory_pointer)

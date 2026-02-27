@@ -148,13 +148,13 @@ int32_t cmp_cross_process_lock_mutex(const cross_process_message &message, cmp_c
         if (wait_result == WAIT_OBJECT_0 || wait_result == WAIT_ABANDONED)
         {
             mutex_locked = true;
-            break;
+            break ;
         }
         if (wait_result == WAIT_TIMEOUT)
         {
             attempt_count += 1;
             if (attempt_count >= 5)
-                break;
+                break ;
             Sleep(50);
             continue;
         }

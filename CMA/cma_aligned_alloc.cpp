@@ -172,7 +172,12 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
         return (ft_nullptr);
     if (alignment > FT_SYSTEM_SIZE_MAX || size > FT_SYSTEM_SIZE_MAX)
         return (ft_nullptr);
-    ft_size_t request_size = (size == 0) ? 1 : size;
+    ft_size_t request_size;
+
+    if (size == 0)
+        request_size = 1;
+    else
+        request_size = size;
     ft_size_t backend_aligned_size = align16(request_size);
     if (backend_aligned_size < request_size)
         return (ft_nullptr);

@@ -260,7 +260,8 @@ Page *create_page(ft_size_t size)
     page->blocks->prev = ft_nullptr;
     cma_validate_block(page->blocks, "create_page", ft_nullptr);
     determine_page_use(page);
-    if (!page_list) {
+    if (!page_list)
+    {
         page_list = page;
     }
     else

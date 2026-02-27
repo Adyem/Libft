@@ -130,7 +130,10 @@ int32_t cmp_cross_process_lock_mutex(const cross_process_message &message, cmp_c
         return (cmp_map_system_error_to_ft(errno));
     }
     pthread_mutex_t *shared_mutex = reinterpret_cast<pthread_mutex_t *>(mapping->mutex_address);
-    for (int32_t attempt_count = 0; attempt_count < 5; ++attempt_count)
+    int32_t attempt_count;
+
+    attempt_count = 0;
+    while (attempt_count < 5)
     {
         int32_t lock_error = pthread_mutex_trylock(shared_mutex);
         if (lock_error == 0)
@@ -144,8 +147,9 @@ int32_t cmp_cross_process_lock_mutex(const cross_process_message &message, cmp_c
             return (cmp_map_system_error_to_ft(errno));
         }
         if (attempt_count >= 4)
-            break;
+            break ;
         usleep(50000);
+        attempt_count += 1;
     }
     errno = ETIMEDOUT;
     return (cmp_map_system_error_to_ft(errno));

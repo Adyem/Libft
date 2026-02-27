@@ -179,7 +179,7 @@ int32_t cmp_high_resolution_time(int64_t *nanoseconds_out)
             clock_identifier = CLOCK_MONOTONIC;
         call_result = clock_gettime(clock_identifier, &time_value);
         if (call_result == 0)
-            break;
+            break ;
         if (errno != EINVAL)
         {
             return (cmp_map_system_error_to_ft(errno));

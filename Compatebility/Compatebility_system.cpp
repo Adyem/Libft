@@ -857,7 +857,7 @@ const char *cmp_system_strerror(int32_t error_code)
             if (current_character != '\r' && current_character != '\n'
                 && current_character != '\t' && current_character != ' '
                 && current_character != '\0')
-                break;
+                break ;
             message_buffer[format_result - 1] = '\0';
             format_result--;
         }
