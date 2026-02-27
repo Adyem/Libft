@@ -46,8 +46,12 @@ char *adv_strtrim(const char *input_string, const char *set)
     char *result = static_cast<char *>(cma_malloc(result_length + 1));
     if (result == ft_nullptr)
         return (ft_nullptr);
-    for (ft_size_t index = 0; index < result_length; ++index)
+    ft_size_t index = 0;
+    while (index < result_length)
+    {
         result[index] = input_string[start + index];
+        ++index;
+    }
     result[result_length] = '\0';
     return (result);
 }

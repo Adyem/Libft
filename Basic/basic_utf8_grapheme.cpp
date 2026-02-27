@@ -7,7 +7,9 @@
 static int ft_utf8_code_point_in_range(uint32_t code_point, uint32_t start_value,
         uint32_t end_value)
 {
-    return (code_point >= start_value && code_point <= end_value) ? 1 : 0;
+    if (code_point >= start_value && code_point <= end_value)
+        return (1);
+    return (0);
 }
 
 int ft_utf8_is_combining_code_point(uint32_t code_point)
@@ -41,15 +43,15 @@ int ft_utf8_next_grapheme(const char *string, ft_size_t string_length,
     while (true)
     {
         if (grapheme_end >= string_length)
-            break;
+            break ;
         uint32_t lookahead_code_point = 0;
         ft_size_t lookahead_length = 0;
         ft_size_t lookahead_index = grapheme_end;
         if (ft_utf8_next(string, string_length, &lookahead_index,
                 &lookahead_code_point, &lookahead_length) != FT_SUCCESS)
-            break;
+            break ;
         if (!ft_utf8_is_combining_code_point(lookahead_code_point))
-            break;
+            break ;
         grapheme_end = lookahead_index;
     }
     *grapheme_length_pointer = grapheme_end - *index_pointer;

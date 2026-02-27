@@ -33,11 +33,23 @@ char *adv_strjoin(char const *string_1, char const *string_2)
         return (ft_nullptr);
     ft_size_t write_index = 0;
     if (string_1)
-        for (ft_size_t i = 0; i < len1; ++i)
-            result[write_index++] = string_1[i];
+    {
+        ft_size_t index = 0;
+        while (index < len1)
+        {
+            result[write_index++] = string_1[index];
+            ++index;
+        }
+    }
     if (string_2)
-        for (ft_size_t i = 0; i < len2; ++i)
-            result[write_index++] = string_2[i];
+    {
+        ft_size_t index = 0;
+        while (index < len2)
+        {
+            result[write_index++] = string_2[index];
+            ++index;
+        }
+    }
     result[write_index] = '\0';
     return (result);
 }

@@ -4,7 +4,9 @@
 
 static int ft_utf8_is_trailing_byte(unsigned char byte_value)
 {
-    return ((byte_value & 0xC0) == 0x80) ? 1 : 0;
+    if ((byte_value & 0xC0) == 0x80)
+        return (1);
+    return (0);
 }
 
 static int ft_utf8_detect_sequence(unsigned char first_byte, ft_size_t *expected_length,

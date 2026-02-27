@@ -31,7 +31,8 @@ char *adv_strjoin_multiple(int32_t count, ...)
     va_list args;
     va_start(args, count);
     ft_size_t total_length = 0;
-    for (int32_t i = 0; i < count; ++i)
+    int32_t index_argument = 0;
+    while (index_argument < count)
     {
         const char *current = va_arg(args, const char *);
         ft_size_t length = safe_strlen(current);
@@ -47,8 +48,9 @@ char *adv_strjoin_multiple(int32_t count, ...)
             cma_free(length_cache);
             return (ft_nullptr);
         }
-        length_cache[i] = length;
+        length_cache[index_argument] = length;
         total_length += length;
+        ++index_argument;
     }
     va_end(args);
     ft_size_t allocation_size = total_length + 1;
@@ -60,12 +62,18 @@ char *adv_strjoin_multiple(int32_t count, ...)
     }
     va_start(args, count);
     ft_size_t write_index = 0;
-    for (int32_t i = 0; i < count; ++i)
+    index_argument = 0;
+    while (index_argument < count)
     {
         const char *current = va_arg(args, const char *);
-        ft_size_t length = length_cache[i];
-        for (ft_size_t j = 0; j < length; ++j)
-            result[write_index++] = current[j];
+        ft_size_t length = length_cache[index_argument];
+        ft_size_t index_character = 0;
+        while (index_character < length)
+        {
+            result[write_index++] = current[index_character];
+            ++index_character;
+        }
+        ++index_argument;
     }
     va_end(args);
     cma_free(length_cache);

@@ -11,6 +11,7 @@ static void zero_buffer(char *buffer, ft_size_t buffer_size)
         buffer[index] = '\0';
         ++index;
     }
+    return ;
 }
 
 int32_t ft_strncat_s(char *destination, ft_size_t destination_size,

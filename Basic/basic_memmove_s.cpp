@@ -13,6 +13,7 @@ static void zero_buffer(void *buffer, ft_size_t buffer_size)
         bytes[index] = 0;
         ++index;
     }
+    return ;
 }
 
 int32_t ft_memmove_s(void *destination, ft_size_t destination_size, const void *source,

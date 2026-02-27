@@ -7,7 +7,8 @@ static ft_size_t count_words(const char *string, char delimiter)
 {
     ft_size_t count = 0;
     bool in_word = false;
-    for (ft_size_t index = 0; string[index] != '\0'; ++index)
+    ft_size_t index = 0;
+    while (string[index] != '\0')
     {
         if (string[index] != delimiter && !in_word)
         {
@@ -18,18 +19,22 @@ static ft_size_t count_words(const char *string, char delimiter)
         {
             in_word = false;
         }
+        ++index;
     }
     return (count);
 }
 
 static void free_strings(char **strings, ft_size_t filled)
 {
-    for (ft_size_t index = 0; index < filled; ++index)
+    ft_size_t index = 0;
+    while (index < filled)
     {
         if (strings[index])
             cma_free(strings[index]);
+        ++index;
     }
     cma_free(strings);
+    return ;
 }
 
 static char *duplicate_range(const char *source, ft_size_t start, ft_size_t length)
@@ -37,8 +42,12 @@ static char *duplicate_range(const char *source, ft_size_t start, ft_size_t leng
     char *result = static_cast<char *>(cma_malloc(length + 1));
     if (result == ft_nullptr)
         return (ft_nullptr);
-    for (ft_size_t index = 0; index < length; ++index)
+    ft_size_t index = 0;
+    while (index < length)
+    {
         result[index] = source[start + index];
+        ++index;
+    }
     result[length] = '\0';
     return (result);
 }

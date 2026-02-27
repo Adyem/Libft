@@ -32,7 +32,11 @@ static char *convert_int(int32_t number, int32_t is_negative)
     char *result = static_cast<char *>(cma_malloc(static_cast<ft_size_t>(length + 1 + is_negative)));
     if (result == ft_nullptr)
         return (ft_nullptr);
-    uint32_t absolute_value = (number < 0) ? -static_cast<uint32_t>(number) : static_cast<uint32_t>(number);
+    uint32_t absolute_value = 0;
+    if (number < 0)
+        absolute_value = -static_cast<uint32_t>(number);
+    else
+        absolute_value = static_cast<uint32_t>(number);
     result[length + is_negative] = '\0';
     if (is_negative == 0)
         fill_digits(result, absolute_value, length - 1);
@@ -55,6 +59,8 @@ char *adv_itoa(int32_t number)
         result[1] = '\0';
         return (result);
     }
-    int32_t is_negative = (number < 0) ? 1 : 0;
+    int32_t is_negative = 0;
+    if (number < 0)
+        is_negative = 1;
     return (convert_int(number, is_negative));
 }
