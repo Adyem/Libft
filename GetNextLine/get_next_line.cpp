@@ -46,7 +46,7 @@ static bool stream_map_has_new_error(ft_unordered_map<int, gnl_stream*> &map,
     return (false);
 }
 
-static gnl_stream *gnl_acquire_stream(int fd, int *stream_error)
+static gnl_stream *gnl_acquire_stream(int file_descriptor, int *stream_error)
 {
     int map_error_before;
     int map_error_after;
@@ -57,22 +57,22 @@ static gnl_stream *gnl_acquire_stream(int fd, int *stream_error)
 
     if (stream_error)
         *stream_error = FT_ERR_SUCCESS;
-    if (fd < 0)
+    if (file_descriptor < 0)
     {
         if (stream_error)
             *stream_error = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     map_error_before = g_gnl_streams.last_operation_error();
-    ft_unordered_map<int, gnl_stream*>::iterator stream_it(g_gnl_streams.find(fd));
+    ft_unordered_map<int, gnl_stream*>::iterator stream_iterator(g_gnl_streams.find(file_descriptor));
     if (stream_map_has_new_error(g_gnl_streams, map_error_before, &map_error_after))
     {
         if (stream_error)
             *stream_error = map_error_after;
         return (ft_nullptr);
     }
-    if (stream_it != g_gnl_streams.end())
-        return (stream_it->second);
+    if (stream_iterator != g_gnl_streams.end())
+        return (stream_iterator->second);
     memory = cma_malloc(sizeof(gnl_stream));
     if (!memory)
     {
@@ -83,7 +83,7 @@ static gnl_stream *gnl_acquire_stream(int fd, int *stream_error)
     new_stream = new(memory) gnl_stream();
     init_error = new_stream->initialize();
     if (init_error == FT_ERR_SUCCESS)
-        init_error = new_stream->init_from_fd(fd);
+        init_error = new_stream->init_from_fd(file_descriptor);
     if (init_error != FT_ERR_SUCCESS)
     {
         if (new_stream != ft_nullptr)
@@ -95,7 +95,7 @@ static gnl_stream *gnl_acquire_stream(int fd, int *stream_error)
         return (ft_nullptr);
     }
     map_error_before = g_gnl_streams.last_operation_error();
-    g_gnl_streams.insert(fd, new_stream);
+    g_gnl_streams.insert(file_descriptor, new_stream);
     if (stream_map_has_new_error(g_gnl_streams, map_error_before, &map_error_after))
     {
         new_stream->reset();
@@ -398,7 +398,7 @@ static char* read_stream(gnl_stream *stream, char* readed_string, std::size_t bu
     return (readed_string);
 }
 
-int gnl_clear_stream(int fd)
+int gnl_clear_stream(int file_descriptor)
 {
     int map_error_before;
     int map_error_after;
@@ -406,14 +406,14 @@ int gnl_clear_stream(int fd)
     gnl_stream *stream_pointer;
 
     map_error_before = g_gnl_leftovers.last_operation_error();
-    ft_unordered_map<int, char*>::iterator map_it(g_gnl_leftovers.find(fd));
+    ft_unordered_map<int, char*>::iterator map_iterator(g_gnl_leftovers.find(file_descriptor));
     if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
         return (map_error_after);
-    if (map_it == g_gnl_leftovers.end())
+    if (map_iterator == g_gnl_leftovers.end())
         return (FT_ERR_SUCCESS);
-    leftover = map_it->second;
+    leftover = map_iterator->second;
     map_error_before = g_gnl_leftovers.last_operation_error();
-    g_gnl_leftovers.erase(fd);
+    g_gnl_leftovers.erase(file_descriptor);
     if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
     {
         if (leftover)
@@ -423,14 +423,14 @@ int gnl_clear_stream(int fd)
     if (leftover)
         cma_free(leftover);
     map_error_before = g_gnl_streams.last_operation_error();
-    ft_unordered_map<int, gnl_stream*>::iterator stream_it(g_gnl_streams.find(fd));
+    ft_unordered_map<int, gnl_stream*>::iterator stream_iterator(g_gnl_streams.find(file_descriptor));
     if (stream_map_has_new_error(g_gnl_streams, map_error_before, &map_error_after))
         return (map_error_after);
-    if (stream_it != g_gnl_streams.end())
+    if (stream_iterator != g_gnl_streams.end())
     {
-        stream_pointer = stream_it->second;
+        stream_pointer = stream_iterator->second;
         map_error_before = g_gnl_streams.last_operation_error();
-        g_gnl_streams.erase(fd);
+        g_gnl_streams.erase(file_descriptor);
         if (stream_map_has_new_error(g_gnl_streams, map_error_before, &map_error_after))
             return (map_error_after);
         if (stream_pointer)
@@ -443,7 +443,7 @@ int gnl_clear_stream(int fd)
     return (FT_ERR_SUCCESS);
 }
 
-char    *get_next_line(int fd, std::size_t buffer_size)
+char    *get_next_line(int file_descriptor, std::size_t buffer_size)
 {
     char                                   *line;
     char                                   *combined_buffer;
@@ -461,9 +461,9 @@ char    *get_next_line(int fd, std::size_t buffer_size)
     line = ft_nullptr;
     combined_buffer = ft_nullptr;
     leftover_string = ft_nullptr;
-    if (buffer_size == 0 || fd < 0)
+    if (buffer_size == 0 || file_descriptor < 0)
         return (ft_nullptr);
-    stream = gnl_acquire_stream(fd, &stream_error);
+    stream = gnl_acquire_stream(file_descriptor, &stream_error);
     if (!stream)
     {
         error_code = stream_error;
@@ -472,14 +472,14 @@ char    *get_next_line(int fd, std::size_t buffer_size)
         return (ft_nullptr);
     }
     map_error_before = g_gnl_leftovers.last_operation_error();
-    ft_unordered_map<int, char*>::iterator map_it = g_gnl_leftovers.find(fd);
+    ft_unordered_map<int, char*>::iterator map_iterator = g_gnl_leftovers.find(file_descriptor);
     if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
         return (ft_nullptr);
-    if (map_it != g_gnl_leftovers.end())
+    if (map_iterator != g_gnl_leftovers.end())
     {
-        combined_buffer = map_it->second;
+        combined_buffer = map_iterator->second;
         map_error_before = g_gnl_leftovers.last_operation_error();
-        g_gnl_leftovers.erase(fd);
+        g_gnl_leftovers.erase(file_descriptor);
         if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
         {
             if (combined_buffer)
@@ -520,7 +520,7 @@ char    *get_next_line(int fd, std::size_t buffer_size)
         if (leftover_string)
         {
             map_error_before = g_gnl_leftovers.last_operation_error();
-            g_gnl_leftovers.insert(fd, leftover_string);
+            g_gnl_leftovers.insert(file_descriptor, leftover_string);
             if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
             {
                 cma_free(leftover_string);
@@ -535,7 +535,7 @@ char    *get_next_line(int fd, std::size_t buffer_size)
     if (leftover_string)
     {
         map_error_before = g_gnl_leftovers.last_operation_error();
-        g_gnl_leftovers.insert(fd, leftover_string);
+        g_gnl_leftovers.insert(file_descriptor, leftover_string);
         if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
         {
             cma_free(leftover_string);

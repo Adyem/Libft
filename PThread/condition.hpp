@@ -33,7 +33,7 @@ class pt_condition_variable
         pt_condition_variable &operator=(const pt_condition_variable&) = delete;
 
         int enable_thread_safety();
-        void disable_thread_safety();
+        int disable_thread_safety();
         bool is_thread_safe() const;
         int lock_state(bool *lock_acquired) const;
         void unlock_state(bool lock_acquired) const;

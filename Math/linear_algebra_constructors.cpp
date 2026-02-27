@@ -239,6 +239,8 @@ int vector2::initialize(vector2 &&other) noexcept
 
 int vector2::destroy() noexcept
 {
+    int disable_error;
+
     if (this->_initialized_state != vector2::_state_initialized)
     {
         this->abort_lifecycle_error("vector2::destroy",
@@ -247,7 +249,9 @@ int vector2::destroy() noexcept
     }
     this->_x = 0.0;
     this->_y = 0.0;
-    this->disable_thread_safety();
+    disable_error = this->disable_thread_safety();
+    if (disable_error != FT_ERR_SUCCESS)
+        return (disable_error);
     this->_initialized_state = vector2::_state_destroyed;
     return (FT_ERR_SUCCESS);
 }
@@ -276,12 +280,6 @@ vector2::vector2(double x, double y)
 
 vector2::~vector2()
 {
-    if (this->_initialized_state == vector2::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("vector2::~vector2",
-            "destructor called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == vector2::_state_initialized)
         (void)this->destroy();
     return ;
@@ -439,6 +437,8 @@ int vector3::initialize(vector3 &&other) noexcept
 
 int vector3::destroy() noexcept
 {
+    int disable_error;
+
     if (this->_initialized_state != vector3::_state_initialized)
     {
         this->abort_lifecycle_error("vector3::destroy",
@@ -448,7 +448,9 @@ int vector3::destroy() noexcept
     this->_x = 0.0;
     this->_y = 0.0;
     this->_z = 0.0;
-    this->disable_thread_safety();
+    disable_error = this->disable_thread_safety();
+    if (disable_error != FT_ERR_SUCCESS)
+        return (disable_error);
     this->_initialized_state = vector3::_state_destroyed;
     return (FT_ERR_SUCCESS);
 }
@@ -479,12 +481,6 @@ vector3::vector3(double x, double y, double z)
 
 vector3::~vector3()
 {
-    if (this->_initialized_state == vector3::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("vector3::~vector3",
-            "destructor called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == vector3::_state_initialized)
         (void)this->destroy();
     return ;
@@ -647,6 +643,8 @@ int vector4::initialize(vector4 &&other) noexcept
 
 int vector4::destroy() noexcept
 {
+    int disable_error;
+
     if (this->_initialized_state != vector4::_state_initialized)
     {
         this->abort_lifecycle_error("vector4::destroy",
@@ -657,7 +655,9 @@ int vector4::destroy() noexcept
     this->_y = 0.0;
     this->_z = 0.0;
     this->_w = 0.0;
-    this->disable_thread_safety();
+    disable_error = this->disable_thread_safety();
+    if (disable_error != FT_ERR_SUCCESS)
+        return (disable_error);
     this->_initialized_state = vector4::_state_destroyed;
     return (FT_ERR_SUCCESS);
 }
@@ -690,12 +690,6 @@ vector4::vector4(double x, double y, double z, double w)
 
 vector4::~vector4()
 {
-    if (this->_initialized_state == vector4::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("vector4::~vector4",
-            "destructor called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == vector4::_state_initialized)
         (void)this->destroy();
     return ;
@@ -873,6 +867,8 @@ int matrix2::initialize(matrix2 &&other) noexcept
 
 int matrix2::destroy() noexcept
 {
+    int disable_error;
+
     if (this->_initialized_state != matrix2::_state_initialized)
     {
         this->abort_lifecycle_error("matrix2::destroy",
@@ -880,7 +876,9 @@ int matrix2::destroy() noexcept
         return (FT_ERR_INVALID_STATE);
     }
     matrix2_set_identity(this->_m);
-    this->disable_thread_safety();
+    disable_error = this->disable_thread_safety();
+    if (disable_error != FT_ERR_SUCCESS)
+        return (disable_error);
     this->_initialized_state = matrix2::_state_destroyed;
     return (FT_ERR_SUCCESS);
 }
@@ -907,12 +905,6 @@ matrix2::matrix2(double m00, double m01, double m10, double m11)
 
 matrix2::~matrix2()
 {
-    if (this->_initialized_state == matrix2::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("matrix2::~matrix2",
-            "destructor called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == matrix2::_state_initialized)
         (void)this->destroy();
     return ;
@@ -1097,6 +1089,8 @@ int matrix3::initialize(matrix3 &&other) noexcept
 
 int matrix3::destroy() noexcept
 {
+    int disable_error;
+
     if (this->_initialized_state != matrix3::_state_initialized)
     {
         this->abort_lifecycle_error("matrix3::destroy",
@@ -1104,7 +1098,9 @@ int matrix3::destroy() noexcept
         return (FT_ERR_INVALID_STATE);
     }
     matrix3_set_identity(this->_m);
-    this->disable_thread_safety();
+    disable_error = this->disable_thread_safety();
+    if (disable_error != FT_ERR_SUCCESS)
+        return (disable_error);
     this->_initialized_state = matrix3::_state_destroyed;
     return (FT_ERR_SUCCESS);
 }
@@ -1133,12 +1129,6 @@ matrix3::matrix3(double m00, double m01, double m02,
 
 matrix3::~matrix3()
 {
-    if (this->_initialized_state == matrix3::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("matrix3::~matrix3",
-            "destructor called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == matrix3::_state_initialized)
         (void)this->destroy();
     return ;
@@ -1331,6 +1321,8 @@ int matrix4::initialize(matrix4 &&other) noexcept
 
 int matrix4::destroy() noexcept
 {
+    int disable_error;
+
     if (this->_initialized_state != matrix4::_state_initialized)
     {
         this->abort_lifecycle_error("matrix4::destroy",
@@ -1338,7 +1330,9 @@ int matrix4::destroy() noexcept
         return (FT_ERR_INVALID_STATE);
     }
     matrix4_set_identity(this->_m);
-    this->disable_thread_safety();
+    disable_error = this->disable_thread_safety();
+    if (disable_error != FT_ERR_SUCCESS)
+        return (disable_error);
     this->_initialized_state = matrix4::_state_destroyed;
     return (FT_ERR_SUCCESS);
 }
@@ -1371,12 +1365,6 @@ matrix4::matrix4(double m00, double m01, double m02, double m03,
 
 matrix4::~matrix4()
 {
-    if (this->_initialized_state == matrix4::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("matrix4::~matrix4",
-            "destructor called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == matrix4::_state_initialized)
         (void)this->destroy();
     return ;

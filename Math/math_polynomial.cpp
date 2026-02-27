@@ -90,21 +90,25 @@ int ft_cubic_spline::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-void ft_cubic_spline::disable_thread_safety() noexcept
+int ft_cubic_spline::disable_thread_safety() noexcept
 {
+    int mutex_error;
+
     this->abort_if_not_initialized("ft_cubic_spline::disable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
-        this->_mutex->destroy();
+        mutex_error = this->_mutex->destroy();
+        if (mutex_error != FT_ERR_SUCCESS)
+            return (mutex_error);
         delete this->_mutex;
         this->_mutex = ft_nullptr;
     }
-    return ;
+    return (FT_ERR_SUCCESS);
 }
 
-bool ft_cubic_spline::is_thread_safe_enabled() const noexcept
+bool ft_cubic_spline::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("ft_cubic_spline::is_thread_safe_enabled");
+    this->abort_if_not_initialized("ft_cubic_spline::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
@@ -337,6 +341,7 @@ int ft_cubic_spline::initialize(ft_cubic_spline &&other) noexcept
 int ft_cubic_spline::destroy() noexcept
 {
     int destroy_error;
+    int disable_error;
 
     if (this->_initialized_state != ft_cubic_spline::_state_initialized)
     {
@@ -344,7 +349,9 @@ int ft_cubic_spline::destroy() noexcept
             "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
     }
-    this->disable_thread_safety();
+    disable_error = this->disable_thread_safety();
+    if (disable_error != FT_ERR_SUCCESS)
+        return (disable_error);
     destroy_error = this->x_values.destroy();
     if (destroy_error == FT_ERR_SUCCESS)
         destroy_error = this->a_coefficients.destroy();
@@ -362,17 +369,12 @@ int ft_cubic_spline::destroy() noexcept
 
 ft_cubic_spline::~ft_cubic_spline() noexcept
 {
-    if (this->_initialized_state == ft_cubic_spline::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("ft_cubic_spline::~ft_cubic_spline",
-            "destructor called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == ft_cubic_spline::_state_initialized)
         (void)this->destroy();
     return ;
 }
 
+#ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex *ft_cubic_spline::get_mutex_for_validation() const noexcept
 {
     pt_recursive_mutex *mutex_pointer;
@@ -395,6 +397,7 @@ pt_recursive_mutex *ft_cubic_spline::get_mutex_for_validation() const noexcept
     }
     return (this->_mutex);
 }
+#endif
 
 static int math_polynomial_validate_coefficients(const ft_vector<double> &coefficients) noexcept
 {

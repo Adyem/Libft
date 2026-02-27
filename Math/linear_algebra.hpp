@@ -54,8 +54,8 @@ class vector2
         pt_recursive_mutex *get_mutex_for_testing() noexcept;
 #endif
         int  enable_thread_safety() noexcept;
-        void disable_thread_safety() noexcept;
-        bool is_thread_safe_enabled() const noexcept;
+        int disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
 };
 
 class vector3
@@ -109,8 +109,8 @@ class vector3
         pt_recursive_mutex *get_mutex_for_testing() noexcept;
 #endif
         int  enable_thread_safety() noexcept;
-        void disable_thread_safety() noexcept;
-        bool is_thread_safe_enabled() const noexcept;
+        int disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
 };
 
 class vector4
@@ -165,8 +165,8 @@ class vector4
         pt_recursive_mutex *get_mutex_for_testing() noexcept;
 #endif
         int  enable_thread_safety() noexcept;
-        void disable_thread_safety() noexcept;
-        bool is_thread_safe_enabled() const noexcept;
+        int disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
 };
 
 class matrix2
@@ -212,8 +212,8 @@ class matrix2
         pt_recursive_mutex *get_mutex_for_testing() noexcept;
 #endif
         int  enable_thread_safety() noexcept;
-        void disable_thread_safety() noexcept;
-        bool is_thread_safe_enabled() const noexcept;
+        int disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
 };
 
 class matrix3
@@ -262,8 +262,8 @@ class matrix3
         pt_recursive_mutex *get_mutex_for_testing() noexcept;
 #endif
         int  enable_thread_safety() noexcept;
-        void disable_thread_safety() noexcept;
-        bool is_thread_safe_enabled() const noexcept;
+        int disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
 };
 
 class matrix4
@@ -319,8 +319,8 @@ class matrix4
         pt_recursive_mutex *get_mutex_for_testing() noexcept;
 #endif
         int  enable_thread_safety() noexcept;
-        void disable_thread_safety() noexcept;
-        bool is_thread_safe_enabled() const noexcept;
+        int disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
 };
 
 # include "linear_algebra_quaternion.hpp"

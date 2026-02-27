@@ -299,6 +299,8 @@ int quaternion::initialize(quaternion &&other) noexcept
 
 int quaternion::destroy() noexcept
 {
+    int disable_error;
+
     if (this->_initialized_state != quaternion::_state_initialized)
     {
         this->abort_lifecycle_error("quaternion::destroy",
@@ -309,19 +311,15 @@ int quaternion::destroy() noexcept
     this->_x = 0.0;
     this->_y = 0.0;
     this->_z = 0.0;
-    this->disable_thread_safety();
+    disable_error = this->disable_thread_safety();
+    if (disable_error != FT_ERR_SUCCESS)
+        return (disable_error);
     this->_initialized_state = quaternion::_state_destroyed;
     return (FT_ERR_SUCCESS);
 }
 
 quaternion::~quaternion()
 {
-    if (this->_initialized_state == quaternion::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("quaternion::~quaternion",
-            "destructor called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == quaternion::_state_initialized)
         (void)this->destroy();
     return ;
@@ -576,21 +574,25 @@ int quaternion::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-void quaternion::disable_thread_safety() noexcept
+int quaternion::disable_thread_safety() noexcept
 {
+    int mutex_error;
+
     this->abort_if_not_initialized("quaternion::disable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
-        this->_mutex->destroy();
+        mutex_error = this->_mutex->destroy();
+        if (mutex_error != FT_ERR_SUCCESS)
+            return (mutex_error);
         delete this->_mutex;
         this->_mutex = ft_nullptr;
     }
-    return ;
+    return (FT_ERR_SUCCESS);
 }
 
-bool quaternion::is_thread_safe_enabled() const noexcept
+bool quaternion::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("quaternion::is_thread_safe_enabled");
+    this->abort_if_not_initialized("quaternion::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 

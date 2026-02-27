@@ -197,15 +197,25 @@ int ft_thread::enable_thread_safety()
     return (FT_ERR_SUCCESS);
 }
 
-void ft_thread::disable_thread_safety()
+int ft_thread::disable_thread_safety()
 {
-    this->teardown_thread_safety();
-    return ;
+    if (this->_state_mutex != ft_nullptr)
+    {
+        int destroy_error;
+
+        destroy_error = this->_state_mutex->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+        delete this->_state_mutex;
+        this->_state_mutex = ft_nullptr;
+    }
+    this->_thread_safe_enabled = false;
+    return (FT_ERR_SUCCESS);
 }
 
-bool ft_thread::is_thread_safe_enabled() const
+bool ft_thread::is_thread_safe() const
 {
-    return (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr);
+    return (this->_state_mutex != ft_nullptr);
 }
 
 int ft_thread::lock(bool *lock_acquired) const

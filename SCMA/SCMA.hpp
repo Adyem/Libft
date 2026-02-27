@@ -727,7 +727,7 @@ class scma_handle_accessor_element_proxy
         ft_size_t _index;
         TValue _value;
         int32_t _should_write_back;
-        int32_t _last_error;
+        static thread_local int32_t _last_error;
         int32_t _is_valid;
 
 
@@ -757,7 +757,7 @@ class scma_handle_accessor_const_element_proxy
         const scma_handle_accessor<TValue> *_parent;
         ft_size_t _index;
         mutable TValue _value;
-        int32_t _last_error;
+        static thread_local int32_t _last_error;
         int32_t _is_valid;
 
 
@@ -772,7 +772,7 @@ class scma_handle_accessor_const_element_proxy
         const TValue    *operator->(void) const;
         const TValue    &operator*(void) const;
         operator TValue(void) const;
-        void set_error(int32_t error_code);
+        void set_error(int32_t error_code) const;
         int32_t get_error(void) const;
         const char *get_error_str(void) const;
         int32_t is_valid(void) const;
@@ -861,6 +861,9 @@ inline scma_handle_accessor_element_proxy<TValue>::~scma_handle_accessor_element
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
+
+template <typename TValue>
+thread_local int32_t scma_handle_accessor_element_proxy<TValue>::_last_error = FT_ERR_INVALID_STATE;
 
 template <typename TValue>
 inline TValue    *scma_handle_accessor_element_proxy<TValue>::operator->(void)
@@ -1022,7 +1025,11 @@ inline const TValue    *scma_handle_accessor_const_element_proxy<TValue>::operat
     static TValue error_value = TValue();
 
     if (!this->_is_valid)
+    {
+        this->set_error(FT_ERR_INVALID_STATE);
         return (&error_value);
+    }
+    this->set_error(FT_ERR_SUCCESS);
     return (&this->_value);
 }
 
@@ -1032,39 +1039,56 @@ inline const TValue    &scma_handle_accessor_const_element_proxy<TValue>::operat
     static TValue error_value = TValue();
 
     if (!this->_is_valid)
+    {
+        this->set_error(FT_ERR_INVALID_STATE);
         return (error_value);
+    }
+    this->set_error(FT_ERR_SUCCESS);
     return (this->_value);
 }
 
 template <typename TValue>
 inline scma_handle_accessor_const_element_proxy<TValue>::operator TValue(void) const
 {
+    if (!this->_is_valid)
+        this->set_error(FT_ERR_INVALID_STATE);
+    else
+        this->set_error(FT_ERR_SUCCESS);
     return (this->_value);
 }
 
 template <typename TValue>
 inline int32_t scma_handle_accessor_const_element_proxy<TValue>::get_error(void) const
 {
+    this->set_error(scma_handle_accessor_const_element_proxy<TValue>::_last_error);
     return (this->_last_error);
 }
 
 template <typename TValue>
-inline void scma_handle_accessor_const_element_proxy<TValue>::set_error(int32_t error_code)
+inline void scma_handle_accessor_const_element_proxy<TValue>::set_error(int32_t error_code) const
 {
-    this->_last_error = error_code;
+    scma_handle_accessor_const_element_proxy<TValue>::_last_error = error_code;
     return ;
 }
 
 template <typename TValue>
 inline const char *scma_handle_accessor_const_element_proxy<TValue>::get_error_str(void) const
 {
+    this->set_error(scma_handle_accessor_const_element_proxy<TValue>::_last_error);
     return (ft_strerror(this->_last_error));
 }
 
 template <typename TValue>
 inline int32_t scma_handle_accessor_const_element_proxy<TValue>::is_valid(void) const
 {
+    if (!this->_is_valid)
+        this->set_error(FT_ERR_INVALID_STATE);
+    else
+        this->set_error(FT_ERR_SUCCESS);
     return (this->_is_valid);
 }
+
+template <typename TValue>
+thread_local int32_t scma_handle_accessor_const_element_proxy<TValue>::_last_error = FT_ERR_INVALID_STATE;
 
 #endif

@@ -63,7 +63,7 @@ FT_TEST(test_ft_fd_istream_thread_safety_toggle_is_explicit,
     read_descriptor = -1;
     write_descriptor = -1;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, create_pipe_descriptors(read_descriptor, write_descriptor));
-    stream_value.set_fd(read_descriptor);
+    stream_value.set_file_descriptor(read_descriptor);
     FT_ASSERT_EQ(false, stream_value.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, stream_value.enable_thread_safety());
     FT_ASSERT_EQ(true, stream_value.is_thread_safe());

@@ -15,7 +15,7 @@ namespace
     }
 }
 
-int cp_receive_memory(int socket_fd, cross_process_read_result &result)
+int cp_receive_memory(int socket_file_descriptor, cross_process_read_result &result)
 {
     cross_process_message message;
     cmp_cross_process_mapping mapping;
@@ -38,7 +38,7 @@ int cp_receive_memory(int socket_fd, cross_process_read_result &result)
     mapping.platform_handle = ft_nullptr;
     mapping.mutex_address = ft_nullptr;
     mutex_state.platform_mutex = ft_nullptr;
-    if (cmp_cross_process_receive_descriptor(socket_fd, message) != 0)
+    if (cmp_cross_process_receive_descriptor(socket_file_descriptor, message) != 0)
         return (-1);
     if (cmp_cross_process_open_mapping(message, &mapping) != 0)
         return (-1);

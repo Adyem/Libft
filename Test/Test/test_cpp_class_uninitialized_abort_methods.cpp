@@ -256,14 +256,14 @@ static void ofstream_disable_thread_safety_uninitialized_aborts(void)
 static void fd_istream_set_fd_uninitialized_aborts(void)
 {
     ft_fd_istream *stream_pointer = make_uninitialized_fd_istream();
-    stream_pointer->set_fd(0);
+    stream_pointer->set_file_descriptor(0);
     return ;
 }
 
 static void fd_istream_get_fd_uninitialized_aborts(void)
 {
     ft_fd_istream *stream_pointer = make_uninitialized_fd_istream();
-    (void)stream_pointer->get_fd();
+    (void)stream_pointer->get_file_descriptor();
     return ;
 }
 
@@ -475,14 +475,14 @@ FT_TEST(test_ft_ofstream_disable_thread_safety_uninitialized_aborts,
 }
 
 FT_TEST(test_ft_fd_istream_set_fd_uninitialized_aborts,
-    "ft_fd_istream set_fd aborts when object is uninitialized")
+    "ft_fd_istream set_file_descriptor aborts when object is uninitialized")
 {
     FT_ASSERT_EQ(1, expect_sigabrt(fd_istream_set_fd_uninitialized_aborts));
     return (1);
 }
 
 FT_TEST(test_ft_fd_istream_get_fd_uninitialized_aborts,
-    "ft_fd_istream get_fd aborts when object is uninitialized")
+    "ft_fd_istream get_file_descriptor aborts when object is uninitialized")
 {
     FT_ASSERT_EQ(1, expect_sigabrt(fd_istream_get_fd_uninitialized_aborts));
     return (1);

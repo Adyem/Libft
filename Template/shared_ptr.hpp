@@ -303,7 +303,12 @@ class ft_sharedptr
                     return (set_last_operation_error(FT_ERR_NO_MEMORY));
                 }
             }
-            this->_array_size = array_type ? array_size : (pointer == ft_nullptr ? 0 : 1);
+            if (array_type)
+                this->_array_size = array_size;
+            else if (pointer == ft_nullptr)
+                this->_array_size = 0;
+            else
+                this->_array_size = 1;
             this->_is_array_type = array_type;
             this->_initialized_state = _state_initialized;
             return (set_last_operation_error(FT_ERR_SUCCESS));
@@ -520,7 +525,12 @@ class ft_sharedptr
                     return ;
                 }
             }
-            this->_array_size = array_type ? size : (pointer == ft_nullptr ? 0 : 1);
+            if (array_type)
+                this->_array_size = size;
+            else if (pointer == ft_nullptr)
+                this->_array_size = 0;
+            else
+                this->_array_size = 1;
             this->_is_array_type = array_type;
             set_last_operation_error(FT_ERR_SUCCESS);
             return ;

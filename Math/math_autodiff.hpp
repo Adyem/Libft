@@ -73,8 +73,8 @@ class ft_dual_number
         pt_recursive_mutex *get_mutex_for_validation() const noexcept;
 #endif
         int enable_thread_safety() noexcept;
-        void disable_thread_safety() noexcept;
-        bool is_thread_safe_enabled() const noexcept;
+        int disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
         static int last_operation_error() noexcept;
         static const char *last_operation_error_str() noexcept;
 };

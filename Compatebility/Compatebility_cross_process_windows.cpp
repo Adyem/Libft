@@ -12,7 +12,7 @@ static ft_size_t compute_offset(uint64_t pointer_value, uint64_t base_value)
     return (static_cast<ft_size_t>(pointer_value - base_value));
 }
 
-int32_t cmp_cross_process_send_descriptor(int32_t socket_fd, const cross_process_message &message)
+int32_t cmp_cross_process_send_descriptor(int32_t socket_file_descriptor, const cross_process_message &message)
 {
     WSABUF buffer;
     DWORD bytes_sent;
@@ -21,7 +21,7 @@ int32_t cmp_cross_process_send_descriptor(int32_t socket_fd, const cross_process
     buffer.buf = reinterpret_cast<char *>(const_cast<cross_process_message *>(&message));
     buffer.len = static_cast<ULONG>(sizeof(cross_process_message));
     bytes_sent = 0;
-    result = WSASend(reinterpret_cast<SOCKET>(socket_fd), &buffer, 1, &bytes_sent, 0, 0, 0);
+    result = WSASend(reinterpret_cast<SOCKET>(socket_file_descriptor), &buffer, 1, &bytes_sent, 0, 0, 0);
     if (result != 0 || bytes_sent != buffer.len)
     {
         int32_t windows_error;
@@ -33,7 +33,7 @@ int32_t cmp_cross_process_send_descriptor(int32_t socket_fd, const cross_process
     return (0);
 }
 
-int32_t cmp_cross_process_receive_descriptor(int32_t socket_fd, cross_process_message &message)
+int32_t cmp_cross_process_receive_descriptor(int32_t socket_file_descriptor, cross_process_message &message)
 {
     char *raw_message;
     ft_size_t total_size;
@@ -46,7 +46,7 @@ int32_t cmp_cross_process_receive_descriptor(int32_t socket_fd, cross_process_me
     {
         int32_t chunk_size;
 
-        chunk_size = recv(reinterpret_cast<SOCKET>(socket_fd), raw_message + offset, static_cast<int32_t>(total_size - offset), 0);
+        chunk_size = recv(reinterpret_cast<SOCKET>(socket_file_descriptor), raw_message + offset, static_cast<int32_t>(total_size - offset), 0);
         if (chunk_size == SOCKET_ERROR)
         {
             int32_t windows_error;

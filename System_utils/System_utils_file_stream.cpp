@@ -204,7 +204,7 @@ size_t su_fread(void *buffer, size_t size, size_t count, su_file *stream)
         bytes_read = su_read(stream->_descriptor,
             byte_buffer + total_read, total_size - total_read);
         if (bytes_read <= 0)
-            break;
+            break ;
         total_read += static_cast<size_t>(bytes_read);
     }
     su_file_unlock(stream, lock_acquired);

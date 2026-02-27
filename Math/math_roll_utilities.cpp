@@ -7,7 +7,7 @@
 #include "../Basic/basic.hpp"
 #include "../Printf/printf.hpp"
 
-static int math_check_value_roll(const char *str)
+static int math_check_value_roll(const char *string_pointer)
 {
     int                    sign;
     unsigned long long    result;
@@ -16,22 +16,22 @@ static int math_check_value_roll(const char *str)
     sign = 1;
     result = 0;
     limit = static_cast<unsigned long long>(INT_MAX) + 1;
-    while (*str == ' ' || (*str >= 9 && *str <= 13))
-        str++;
-    if (*str == '-' || *str == '+')
+    while (*string_pointer == ' ' || (*string_pointer >= 9 && *string_pointer <= 13))
+        string_pointer++;
+    if (*string_pointer == '-' || *string_pointer == '+')
     {
-        if (*str == '-')
+        if (*string_pointer == '-')
             sign = -1;
-        str++;
+        string_pointer++;
     }
-    while (*str && ft_isdigit(*str))
+    while (*string_pointer && ft_isdigit(*string_pointer))
     {
-        result = result * 10 + (static_cast<unsigned long long>(*str) - '0');
-        str++;
+        result = result * 10 + (static_cast<unsigned long long>(*string_pointer) - '0');
+        string_pointer++;
         if ((sign == 1 && result > INT_MAX) || (sign == -1 && result > limit))
             return (1);
         if (DEBUG == 1)
-            pf_printf("FT_CHECK_VALUE_ROLL the string is %s\n", str);
+            pf_printf("FT_CHECK_VALUE_ROLL the string is %s\n", string_pointer);
     }
     if (sign == -1 && result > limit)
         return (1);
@@ -40,17 +40,17 @@ static int math_check_value_roll(const char *str)
 
 int    math_check_string_number(char *string)
 {
-    int    i;
+    int    index;
 
-    i = 0;
-    if (string[i] == '+' || string[i] == '-')
-        i++;
-    if (!string[i])
+    index = 0;
+    if (string[index] == '+' || string[index] == '-')
+        index++;
+    if (!string[index])
         return (0);
-    while (string[i])
+    while (string[index])
     {
-        if (string[i] >= '0' && string[i] <= '9')
-            i++;
+        if (string[index] >= '0' && string[index] <= '9')
+            index++;
         else
             return (0);
     }
@@ -73,24 +73,24 @@ void    math_free_parse(char **to_parse)
     return ;
 }
 
-int math_roll_convert_previous(char *string, int *i, int *error)
+int math_roll_convert_previous(char *string, int *index, int *error)
 {
     int result;
     int    check;
 
-    while (*i > 0 && (string[*i] >= '0' && string[*i] <= '9'))
-        (*i)--;
-    if (string[*i] == '-' || string[*i] == '+')
+    while (*index > 0 && (string[*index] >= '0' && string[*index] <= '9'))
+        (*index)--;
+    if (string[*index] == '-' || string[*index] == '+')
     {
-        if (*i > 0)
+        if (*index > 0)
         {
-            if ((string[*i - 1] >= '0' && string[*i - 1] <= '9') || string[*i - 1] == ')')
-                (*i)++;
+            if ((string[*index - 1] >= '0' && string[*index - 1] <= '9') || string[*index - 1] == ')')
+                (*index)++;
         }
     }
-    else if (string[*i] < '0' || string[*i] > '9')
-        (*i)++;
-    check = math_check_value_roll(&string[*i]);
+    else if (string[*index] < '0' || string[*index] > '9')
+        (*index)++;
+    check = math_check_value_roll(&string[*index]);
     if (check != 0)
     {
         *error = 1;
@@ -100,18 +100,18 @@ int math_roll_convert_previous(char *string, int *i, int *error)
         }
         return (0);
     }
-    result = ft_atoi(&string[*i]);
+    result = ft_atoi(&string[*index]);
     if (DEBUG == 1)
-        pf_printf("the first number is %d and i=%d\n", result, *i);
+        pf_printf("the first number is %d and i=%d\n", result, *index);
     return (result);
 }
 
-int    math_roll_convert_next(char *string, int i, int *error)
+int    math_roll_convert_next(char *string, int index, int *error)
 {
     int    result;
     int    check;
 
-    check = math_check_value_roll(&string[i]);
+    check = math_check_value_roll(&string[index]);
     if (check != 0)
     {
         *error = 1;
@@ -121,29 +121,29 @@ int    math_roll_convert_next(char *string, int i, int *error)
         }
         return (0);
     }
-    result = ft_atoi(&string[i]);
+    result = ft_atoi(&string[index]);
     if (DEBUG == 1)
         pf_printf("the second number is %d\n", result);
     return (result);
 }
 
-int    math_roll_itoa(int result, int *i, char *string)
+int    math_roll_itoa(int result, int *index, char *string)
 {
     char    temp[32];
-    int     y;
+    int     temp_index;
     int     written_count;
 
     if (DEBUG == 1)
-        pf_printf("roll itoa: the value of i=%d\n", *i);
+        pf_printf("roll itoa: the value of i=%d\n", *index);
     written_count = std::snprintf(temp, sizeof(temp), "%d", result);
     if (written_count < 0)
         return (1);
-    y = 0;
-    while (temp[y])
+    temp_index = 0;
+    while (temp[temp_index])
     {
-        string[*i] = temp[y];
-        (*i)++;
-        y++;
+        string[*index] = temp[temp_index];
+        (*index)++;
+        temp_index++;
     }
     return (0);
 }

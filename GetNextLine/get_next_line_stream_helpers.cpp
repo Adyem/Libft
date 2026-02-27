@@ -25,19 +25,19 @@ static int append_line_to_vector(ft_vector<ft_string> &, char *line_buffer)
     return (FT_ERR_SUCCESS);
 }
 
-int ft_read_file_lines(int fd, ft_vector<ft_string> &lines, std::size_t buffer_size)
+int ft_read_file_lines(int file_descriptor, ft_vector<ft_string> &lines, std::size_t buffer_size)
 {
     char *line_pointer;
     bool finished;
     int append_status;
     int clear_status;
 
-    if (buffer_size == 0 || fd < 0)
+    if (buffer_size == 0 || file_descriptor < 0)
         return (-1);
     finished = false;
     while (finished == false)
     {
-        line_pointer = get_next_line(fd, buffer_size);
+        line_pointer = get_next_line(file_descriptor, buffer_size);
         if (!line_pointer)
         {
             finished = true;
@@ -47,12 +47,12 @@ int ft_read_file_lines(int fd, ft_vector<ft_string> &lines, std::size_t buffer_s
             append_status = append_line_to_vector(lines, line_pointer);
             if (append_status != FT_ERR_SUCCESS)
             {
-                gnl_clear_stream(fd);
+                gnl_clear_stream(file_descriptor);
                 return (-1);
             }
         }
     }
-    clear_status = gnl_clear_stream(fd);
+    clear_status = gnl_clear_stream(file_descriptor);
     if (clear_status != FT_ERR_SUCCESS)
         return (-1);
     return (0);

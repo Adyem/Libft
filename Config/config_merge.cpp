@@ -6,38 +6,44 @@
 #include "../Advanced/advanced.hpp"
 #include <cstddef>
 #include "../PThread/mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 
-static int cnfg_config_lock_if_enabled(cnfg_config *config, bool *lock_acquired)
+static int config_lock_if_enabled(config_data *config, bool *lock_acquired)
 {
-    if (!config || !config->mutex)
+    int lock_result;
+
+    if (!config)
         return (FT_ERR_SUCCESS);
-    int lock_result = config->mutex->lock();
+    lock_result = pt_mutex_lock_if_not_null(config->mutex);
     if (lock_result == FT_ERR_SUCCESS && lock_acquired)
-        *lock_acquired = true;
+    {
+        if (config->mutex != ft_nullptr)
+            *lock_acquired = true;
+    }
     return (lock_result);
 }
 
-static void cnfg_config_unlock_guard(cnfg_config *config, bool lock_acquired)
+static void config_unlock_guard(config_data *config, bool lock_acquired)
 {
-    if (!config || !config->mutex || !lock_acquired)
+    if (!config || !lock_acquired)
         return ;
-    config->mutex->unlock();
+    (void)pt_mutex_unlock_if_not_null(config->mutex);
     return ;
 }
 
-static void cnfg_config_unlock_all(const cnfg_config *base_config, bool base_locked,
-    const cnfg_config *override_config, bool override_locked,
-    cnfg_config *result, bool result_locked)
+static void config_unlock_all(const config_data *base_config, bool base_locked,
+    const config_data *override_config, bool override_locked,
+    config_data *result, bool result_locked)
 {
     if (base_config)
-        cnfg_config_unlock_guard(const_cast<cnfg_config*>(base_config), base_locked);
+        config_unlock_guard(const_cast<config_data*>(base_config), base_locked);
     if (override_config)
-        cnfg_config_unlock_guard(const_cast<cnfg_config*>(override_config), override_locked);
-    cnfg_config_unlock_guard(result, result_locked);
+        config_unlock_guard(const_cast<config_data*>(override_config), override_locked);
+    config_unlock_guard(result, result_locked);
     return ;
 }
 
-static void config_free_entry_contents_unlocked(cnfg_entry *entry)
+static void config_free_entry_contents_unlocked(config_entry *entry)
 {
     if (!entry)
         return ;
@@ -53,23 +59,23 @@ static void config_free_entry_contents_unlocked(cnfg_entry *entry)
     return ;
 }
 
-static void config_free_entry_contents(cnfg_entry *entry)
+static void config_free_entry_contents(config_entry *entry)
 {
     if (!entry)
     {
         return ;
     }
     bool entry_locked;
-    if (cnfg_entry_lock(entry, &entry_locked) != 0)
+    if (config_entry_lock(entry, &entry_locked) != 0)
         return ;
     config_free_entry_contents_unlocked(entry);
-    cnfg_entry_unlock(entry, entry_locked);
+    config_entry_unlock(entry, entry_locked);
     return ;
 }
 
-static int config_duplicate_entry(const cnfg_entry *source, cnfg_entry *destination)
+static int config_duplicate_entry(const config_entry *source, config_entry *destination)
 {
-    cnfg_entry *mutable_source;
+    config_entry *mutable_source;
     bool source_locked;
 
     if (!source || !destination)
@@ -80,15 +86,15 @@ static int config_duplicate_entry(const cnfg_entry *source, cnfg_entry *destinat
     destination->section = ft_nullptr;
     destination->key = ft_nullptr;
     destination->value = ft_nullptr;
-    mutable_source = const_cast<cnfg_entry*>(source);
-    if (cnfg_entry_lock(mutable_source, &source_locked) != 0)
+    mutable_source = const_cast<config_entry*>(source);
+    if (config_entry_lock(mutable_source, &source_locked) != 0)
         return (-1);
     if (source->section)
     {
         destination->section = adv_strdup(source->section);
         if (!destination->section)
         {
-            cnfg_entry_unlock(mutable_source, source_locked);
+            config_entry_unlock(mutable_source, source_locked);
             config_free_entry_contents(destination);
             return (-1);
         }
@@ -98,7 +104,7 @@ static int config_duplicate_entry(const cnfg_entry *source, cnfg_entry *destinat
         destination->key = adv_strdup(source->key);
         if (!destination->key)
         {
-            cnfg_entry_unlock(mutable_source, source_locked);
+            config_entry_unlock(mutable_source, source_locked);
             config_free_entry_contents(destination);
             return (-1);
         }
@@ -108,12 +114,12 @@ static int config_duplicate_entry(const cnfg_entry *source, cnfg_entry *destinat
         destination->value = adv_strdup(source->value);
         if (!destination->value)
         {
-            cnfg_entry_unlock(mutable_source, source_locked);
+            config_entry_unlock(mutable_source, source_locked);
             config_free_entry_contents(destination);
             return (-1);
         }
     }
-    cnfg_entry_unlock(mutable_source, source_locked);
+    config_entry_unlock(mutable_source, source_locked);
     return (0);
 }
 
@@ -128,7 +134,7 @@ static int config_strings_equal(const char *left, const char *right)
     return (0);
 }
 
-static cnfg_entry *config_find_matching_entry(cnfg_config *config, const cnfg_entry *entry)
+static config_entry *config_find_matching_entry(config_data *config, const config_entry *entry)
 {
     size_t index;
 
@@ -139,14 +145,14 @@ static cnfg_entry *config_find_matching_entry(cnfg_config *config, const cnfg_en
     index = 0;
     while (index < config->entry_count)
     {
-        cnfg_entry *candidate = &config->entries[index];
+        config_entry *candidate = &config->entries[index];
         bool candidate_locked;
         bool matches;
-        if (cnfg_entry_lock(candidate, &candidate_locked) != 0)
+        if (config_entry_lock(candidate, &candidate_locked) != 0)
             return (ft_nullptr);
         matches = config_strings_equal(candidate->section, entry->section)
             && config_strings_equal(candidate->key, entry->key);
-        cnfg_entry_unlock(candidate, candidate_locked);
+        config_entry_unlock(candidate, candidate_locked);
         if (matches)
         {
             return (candidate);
@@ -156,11 +162,11 @@ static cnfg_entry *config_find_matching_entry(cnfg_config *config, const cnfg_en
     return (ft_nullptr);
 }
 
-static int config_append_entry(cnfg_config *destination, const cnfg_entry *source)
+static int config_append_entry(config_data *destination, const config_entry *source)
 {
-    cnfg_entry copy;
-    cnfg_entry *new_entries;
-    cnfg_entry *target;
+    config_entry copy;
+    config_entry *new_entries;
+    config_entry *target;
 
     if (!destination || !source)
     {
@@ -168,8 +174,8 @@ static int config_append_entry(cnfg_config *destination, const cnfg_entry *sourc
     }
     if (config_duplicate_entry(source, &copy) != 0)
         return (-1);
-    new_entries = static_cast<cnfg_entry*>(cma_realloc(destination->entries,
-            sizeof(cnfg_entry) * (destination->entry_count + 1)));
+    new_entries = static_cast<config_entry*>(cma_realloc(destination->entries,
+            sizeof(config_entry) * (destination->entry_count + 1)));
     if (!new_entries)
     {
         config_free_entry_contents(&copy);
@@ -184,7 +190,7 @@ static int config_append_entry(cnfg_config *destination, const cnfg_entry *sourc
     copy.section = ft_nullptr;
     copy.key = ft_nullptr;
     copy.value = ft_nullptr;
-    if (cnfg_entry_prepare_thread_safety(target) != 0)
+    if (config_entry_prepare_thread_safety(target) != 0)
     {
         config_free_entry_contents_unlocked(target);
         return (-1);
@@ -193,7 +199,7 @@ static int config_append_entry(cnfg_config *destination, const cnfg_entry *sourc
     return (0);
 }
 
-static int config_copy_entries(cnfg_config *destination, const cnfg_config *source)
+static int config_copy_entries(config_data *destination, const config_data *source)
 {
     size_t index;
 
@@ -213,9 +219,9 @@ static int config_copy_entries(cnfg_config *destination, const cnfg_config *sour
     return (0);
 }
 
-cnfg_config *config_merge(const cnfg_config *base_config, const cnfg_config *override_config)
+config_data *config_merge(const config_data *base_config, const config_data *override_config)
 {
-    cnfg_config *result;
+    config_data *result;
     size_t index;
     bool base_locked = false;
     bool override_locked = false;
@@ -226,74 +232,74 @@ cnfg_config *config_merge(const cnfg_config *base_config, const cnfg_config *ove
     {
         return (ft_nullptr);
     }
-    result = cnfg_config_create();
+    result = config_data_create();
     if (!result)
         return (ft_nullptr);
-    lock_error = cnfg_config_lock_if_enabled(result, &result_locked);
+    lock_error = config_lock_if_enabled(result, &result_locked);
     if (lock_error != FT_ERR_SUCCESS)
     {
-        cnfg_config_unlock_all(base_config, base_locked, override_config, override_locked, result, result_locked);
-        cnfg_free(result);
+        config_unlock_all(base_config, base_locked, override_config, override_locked, result, result_locked);
+        config_data_free(result);
         return (ft_nullptr);
     }
     if (override_config && override_config->entry_count && !override_config->entries)
     {
-        cnfg_config_unlock_all(base_config, base_locked, override_config, override_locked, result, result_locked);
-        cnfg_free(result);
+        config_unlock_all(base_config, base_locked, override_config, override_locked, result, result_locked);
+        config_data_free(result);
         return (ft_nullptr);
     }
     if (base_config)
     {
-        lock_error = cnfg_config_lock_if_enabled(const_cast<cnfg_config*>(base_config), &base_locked);
+        lock_error = config_lock_if_enabled(const_cast<config_data*>(base_config), &base_locked);
         if (lock_error != FT_ERR_SUCCESS)
         {
-            cnfg_config_unlock_all(base_config, base_locked, override_config, override_locked, result, result_locked);
-            cnfg_free(result);
+            config_unlock_all(base_config, base_locked, override_config, override_locked, result, result_locked);
+            config_data_free(result);
             return (ft_nullptr);
         }
     }
     if (override_config)
     {
-        lock_error = cnfg_config_lock_if_enabled(const_cast<cnfg_config*>(override_config), &override_locked);
+        lock_error = config_lock_if_enabled(const_cast<config_data*>(override_config), &override_locked);
         if (lock_error != FT_ERR_SUCCESS)
         {
-            cnfg_config_unlock_all(base_config, base_locked, override_config, override_locked, result, result_locked);
-            cnfg_free(result);
+            config_unlock_all(base_config, base_locked, override_config, override_locked, result, result_locked);
+            config_data_free(result);
             return (ft_nullptr);
         }
     }
     if (config_copy_entries(result, base_config) != 0)
     {
-        cnfg_config_unlock_all(base_config, base_locked, override_config, override_locked, result, result_locked);
-        cnfg_free(result);
+        config_unlock_all(base_config, base_locked, override_config, override_locked, result, result_locked);
+        config_data_free(result);
         return (ft_nullptr);
     }
     if (!override_config)
     {
-        cnfg_config_unlock_all(base_config, base_locked, override_config, override_locked, result, result_locked);
+        config_unlock_all(base_config, base_locked, override_config, override_locked, result, result_locked);
         return (result);
     }
     index = 0;
     while (index < override_config->entry_count)
     {
-        const cnfg_entry *override_entry = &override_config->entries[index];
-        cnfg_entry *existing = config_find_matching_entry(result, override_entry);
+        const config_entry *override_entry = &override_config->entries[index];
+        config_entry *existing = config_find_matching_entry(result, override_entry);
         if (existing)
         {
-            cnfg_entry replacement;
+            config_entry replacement;
             bool existing_locked;
 
             if (config_duplicate_entry(override_entry, &replacement) != 0)
             {
-                cnfg_config_unlock_all(base_config, base_locked, override_config, override_locked, result, result_locked);
-                cnfg_free(result);
+                config_unlock_all(base_config, base_locked, override_config, override_locked, result, result_locked);
+                config_data_free(result);
                 return (ft_nullptr);
             }
-            if (cnfg_entry_lock(existing, &existing_locked) != 0)
+            if (config_entry_lock(existing, &existing_locked) != 0)
             {
                 config_free_entry_contents(&replacement);
-                cnfg_config_unlock_all(base_config, base_locked, override_config, override_locked, result, result_locked);
-                cnfg_free(result);
+                config_unlock_all(base_config, base_locked, override_config, override_locked, result, result_locked);
+                config_data_free(result);
                 return (ft_nullptr);
             }
             config_free_entry_contents_unlocked(existing);
@@ -303,19 +309,19 @@ cnfg_config *config_merge(const cnfg_config *base_config, const cnfg_config *ove
             replacement.section = ft_nullptr;
             replacement.key = ft_nullptr;
             replacement.value = ft_nullptr;
-            cnfg_entry_unlock(existing, existing_locked);
+            config_entry_unlock(existing, existing_locked);
         }
         else
         {
             if (config_append_entry(result, override_entry) != 0)
             {
-                cnfg_config_unlock_all(base_config, base_locked, override_config, override_locked, result, result_locked);
-                cnfg_free(result);
+                config_unlock_all(base_config, base_locked, override_config, override_locked, result, result_locked);
+                config_data_free(result);
                 return (ft_nullptr);
             }
         }
         ++index;
     }
-    cnfg_config_unlock_all(base_config, base_locked, override_config, override_locked, result, result_locked);
+    config_unlock_all(base_config, base_locked, override_config, override_locked, result, result_locked);
     return (result);
 }

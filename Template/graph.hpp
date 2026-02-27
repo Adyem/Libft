@@ -125,7 +125,10 @@ class ft_graph
 
             if (desired_capacity <= this->_node_capacity)
                 return (true);
-            new_capacity = this->_node_capacity == 0 ? 1 : this->_node_capacity * 2;
+            if (this->_node_capacity == 0)
+                new_capacity = 1;
+            else
+                new_capacity = this->_node_capacity * 2;
             while (new_capacity < desired_capacity)
                 new_capacity *= 2;
             new_nodes = static_cast<graph_node*>(cma_malloc(sizeof(graph_node) * new_capacity));
@@ -169,7 +172,10 @@ class ft_graph
 
             if (desired_capacity <= node._edge_capacity)
                 return (true);
-            new_capacity = node._edge_capacity == 0 ? 1 : node._edge_capacity * 2;
+            if (node._edge_capacity == 0)
+                new_capacity = 1;
+            else
+                new_capacity = node._edge_capacity * 2;
             while (new_capacity < desired_capacity)
                 new_capacity *= 2;
             new_edges = static_cast<size_t*>(cma_malloc(sizeof(size_t) * new_capacity));

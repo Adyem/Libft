@@ -3,6 +3,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 
 int rl_state_prepare_thread_safety(readline_state_t *state)
 {
@@ -48,23 +49,21 @@ int rl_state_lock(readline_state_t *state, bool *lock_acquired)
         *lock_acquired = false;
     if (state == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
-    if (state->mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    int mutex_error = state->mutex->lock();
+    int mutex_error = pt_recursive_mutex_lock_if_not_null(state->mutex);
     if (mutex_error != FT_ERR_SUCCESS)
         return (mutex_error);
-    if (lock_acquired != ft_nullptr)
+    if (lock_acquired != ft_nullptr && state->mutex != ft_nullptr)
         *lock_acquired = true;
     return (FT_ERR_SUCCESS);
 }
 
 int rl_state_unlock(readline_state_t *state, bool lock_acquired)
 {
-    if (state == ft_nullptr || lock_acquired == false)
+    if (state == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
-    if (state->mutex == ft_nullptr)
-        return (FT_ERR_INVALID_STATE);
-    int mutex_error = state->mutex->unlock();
+    if (lock_acquired == false)
+        return (FT_ERR_SUCCESS);
+    int mutex_error = pt_recursive_mutex_unlock_if_not_null(state->mutex);
     if (mutex_error != FT_ERR_SUCCESS)
         return (mutex_error);
     return (FT_ERR_SUCCESS);

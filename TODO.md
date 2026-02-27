@@ -1,6 +1,6 @@
 # TODO
 
-Remaining unchecked items: 144
+Remaining unchecked items: 89
 
 ## Mutex reinitialization audit
 
@@ -9,14 +9,12 @@ All mutex reinitialization audit items have been completed.
 ## Lifecycle contract violators (repo-wide class list)
 
 - [ ] `API`: `api_retry_policy`, `api_streaming_handler`, `api_tls_client`.
-- [ ] `CPP_class`: `ft_big_number`, `ft_ofstream`.
 - [ ] `File`: `ft_file_watch`.
 - [ ] `Geometry`: `aabb`, `circle`, `sphere`.
 - [ ] `HTML`: `html_document`.
 - [ ] `JSon`: `json_document`.
 - [ ] `Math`: `ft_cubic_spline`, `ft_dual_number`, `vector2`, `vector3`, `vector4`, `matrix2`, `matrix3`, `matrix4`, `quaternion`.
 - [ ] `Networking`: `SocketConfig`, `ft_socket`, `ft_socket_handle`, `ft_http_server`, `ft_websocket_client`, `ft_websocket_server`, `http2_header_field`, `http2_frame`, `http2_stream_manager`, `http2_settings_state`, `quic_experimental_session`.
-- [ ] `PThread`: `scheduled_task`, `ft_task_scheduler`, `pt_recursive_mutex`.
 - [ ] `Parser`: `ft_dom_node`, `ft_dom_document`, `ft_dom_schema`, `ft_dom_validation_report`, `ft_document_source`, `ft_document_sink`, `ft_file_document_source`, `ft_file_document_sink`, `ft_memory_document_source`, `ft_memory_document_sink`, `ft_http_document_source`, `ft_http_document_sink`.
 - [ ] `RNG`: `rng_stream`.
 - [ ] `Storage`: `kv_store`, `kv_store_entry`.
@@ -25,107 +23,8 @@ All mutex reinitialization audit items have been completed.
 - [ ] `XML`: `xml_document`.
 - [ ] `YAML`: `yaml_value`.
 
-## Advanced module AGENTS.md compliance
-
-- [ ] Rename short variable names in `Advanced` module to full descriptive snake_case names (for example `len1`, `len2`, `i`, `j`, `src`, `dest`).
-
-## SCMA module AGENTS.md compliance
-
-- [ ] Update proxy `_last_error` fields in `SCMA/SCMA.hpp` to follow the `_last_error` contract (`static thread_local int32_t _last_error`) instead of instance fields (lines 730 and 760).
-- [ ] Ensure SCMA proxy public methods in `SCMA/SCMA.hpp` set `_last_error` on every exit path (for example `operator->`, `operator*`, conversion operator, `get_error`, `get_error_str`, `is_valid`; lines 1020, 1030, 1040, 1046, 1059, and 1065).
-- [ ] Replace tab indentation with 4-space indentation in `SCMA/scma_io.cpp` (lines 7, 33, and 52).
-
-## GetNextLine module AGENTS.md compliance
-
-- [ ] Rename short `fd` parameters/variables to descriptive `file_descriptor` naming in `GetNextLine` public headers and implementation (`get_next_line.hpp`, `get_next_line.cpp`, `get_next_line_stream_helpers.cpp`).
-- [ ] Rename abbreviated iterator variables in `GetNextLine/get_next_line.cpp` (`map_it`, `stream_it`) to full descriptive names.
-
-## DUMB module AGENTS.md compliance
-
-- [ ] Refactor platform sound device classes so non-template class member function definitions are moved out of class declarations into proper `.hpp` declarations and `.cpp` definitions (`DUMB/dumb_sound_macos_coreaudio.cpp`, `DUMB/dumb_sound_win32.cpp`, `DUMB/dumb_sound_linux_alsa.cpp`).
-- [ ] Remove all `for` loops from DUMB platform sound backends and replace with compliant control flow (`while`) in `DUMB/dumb_sound_macos_coreaudio.cpp` and `DUMB/dumb_sound_win32.cpp`.
-- [ ] Change `return;` to `return ;` in DUMB platform sound sources (`DUMB/dumb_sound_macos_coreaudio.cpp` lines 24 and 143; `DUMB/dumb_sound_win32.cpp` lines 31 and 158).
-- [ ] Add final `return ;` to void methods missing it in DUMB platform sound sources (`play`/`stop` in `DUMB/dumb_sound_macos_coreaudio.cpp`, `DUMB/dumb_sound_win32.cpp`, and `DUMB/dumb_sound_linux_alsa.cpp`).
-- [ ] Rename short loop/index variable names (for example `i`) to full descriptive snake_case names in DUMB platform sound sources.
-
-## Math module AGENTS.md compliance
-
-- [ ] Fix non-void return formatting in `Math/math_roll_parse_md.cpp` (`return 1;` -> `return (1);`).
-- [ ] Rename short variable and parameter names to full descriptive snake_case names across Math roll parser utilities (`i`, `j`, `x`, `y`) in `Math/math_roll_parse_utils.cpp`, `Math/math_roll_parse_dice.cpp`, `Math/math_roll_parse_pm.cpp`, `Math/math_roll_parse_md.cpp`, and `Math/math_roll_utilities.cpp`.
-- [ ] Rename abbreviated parameter `str` to a descriptive name in `Math/math_roll_utilities.cpp` (`math_check_value_roll`).
-- [ ] Update destructors to avoid lifecycle abort on uninitialized state and return cleanly when state is uninitialized/destroyed (`Math/math_autodiff.cpp`, `Math/math_polynomial.cpp`, `Math/linear_algebra_constructors.cpp`, `Math/linear_algebra_quaternion.cpp`).
-- [ ] Align Math class thread-safety APIs with the required trio contract by changing `disable_thread_safety()` to return `int` and propagate underlying mutex destroy errors (`Math/math_autodiff.*`, `Math/math_polynomial.*`, `Math/linear_algebra*.hpp/.cpp`, `Math/linear_algebra_quaternion.*`).
-- [ ] Align Math class thread-safety naming to the required `is_thread_safe()` helper (currently `is_thread_safe_enabled()` across linear algebra, quaternion, polynomial, and autodiff classes).
-- [ ] Guard `ft_cubic_spline::get_mutex_for_validation()` behind `LIBFT_TEST_BUILD` in declaration and definition (`Math/math_polynomial.hpp`, `Math/math_polynomial.cpp`).
-
-## Geometry module AGENTS.md compliance
-
-- [ ] Update Geometry destructors to avoid lifecycle abort in uninitialized state and return cleanly instead (`Geometry/geometry_circle.cpp`, `Geometry/geometry_sphere.cpp`, `Geometry/geometry_aabb.cpp`).
-- [ ] Align Geometry thread-safety helper trio with required names/signatures: add/rename `is_thread_safe()`, and make `disable_thread_safety()` return underlying error codes (`Geometry/geometry_circle.hpp/.cpp`, `Geometry/geometry_sphere.hpp/.cpp`, `Geometry/geometry_aabb.hpp/.cpp`).
-- [ ] Replace open-coded nullable mutex lock/unlock checks with shared PThread safe lock/unlock helper usage in Geometry classes (`Geometry/geometry_circle.cpp`, `Geometry/geometry_sphere.cpp`, `Geometry/geometry_aabb.cpp`).
-- [ ] Change `break;` to `break ;` in `Geometry/geometry_lock_tracker.cpp` (line 136).
-
-## System_utils module AGENTS.md compliance
-
-- [ ] Change `break;` to `break ;` in `System_utils/System_utils_file_utils.cpp` (lines 123, 130, 132, 136, 140, 142, and 147) and `System_utils/System_utils_file_stream.cpp` (line 207).
-- [ ] Remove RAII lock-guard usage (`std::lock_guard<std::mutex>`) and replace with explicit/shared lock-unlock handling in `System_utils/System_utils_resource_tracer.cpp` and `System_utils/System_utils_health.cpp`.
-
-## Printf module AGENTS.md compliance
-
-- [ ] Rename short `fd` parameter names to descriptive `file_descriptor` naming across Printf public/internal APIs and implementations (`Printf/printf.hpp`, `Printf/printf_internal.hpp`, `Printf/printf_printf.cpp`, `Printf/printf_format.cpp`, `Printf/printf_print_args.cpp`).
-- [ ] Rename short `args` parameter/local names to descriptive naming (for example `argument_list`) across Printf APIs and implementations (`Printf/printf.hpp`, `Printf/printf_internal.hpp`, `Printf/printf_engine.hpp`, `Printf/printf_printf.cpp`, `Printf/printf_vsnprintf.cpp`, `Printf/printf_custom_specifier.cpp`, `Printf/printf_engine.cpp`).
-- [ ] Align Printf thread-safety API with meaningful error-code returns for thread-safety operations (especially teardown path in `pf_disable_thread_safety`) and propagate underlying mutex errors (`Printf/printf.hpp`, `Printf/printf_custom_specifier.cpp`).
-- [ ] Replace open-coded nullable mutex lock/unlock checks with the shared PThread safe lock/unlock helper in Printf custom-specifier synchronization (`Printf/printf_custom_specifier.cpp`).
-
-## PThread module AGENTS.md compliance
-
-- [ ] Align PThread optional thread-safety APIs with the required lifecycle trio contract: make `disable_thread_safety()` return underlying error codes and standardize `is_thread_safe()` naming (currently mixed `disable_thread_safety()` void and `is_thread_safe_enabled()` names) across `PThread/thread.hpp`, `PThread/condition.hpp`, `PThread/task_scheduler.hpp`, and corresponding `.cpp` files.
-- [ ] Update destructors to avoid lifecycle abort on uninitialized state and return cleanly when state is uninitialized/destroyed (`PThread/pthread_recursive_mutex.cpp`, `PThread/pthread_task_scheduler.cpp`).
-- [ ] Remove RAII lock-guard usage from library code and use explicit/shared PThread lock helpers instead (`PThread/pthread_task_scheduler_tracing.cpp`).
-- [ ] Remove ternary operator from `PThread/pt_buffer.hpp` (`pt_buffer_reserve`, line 40).
-- [ ] Change all `break;` to `break ;` in `PThread/pthread_task_scheduler.cpp` and `PThread/task_scheduler.hpp`.
-
-## ReadLine module AGENTS.md compliance
-
-- [ ] Replace open-coded nullable mutex lock/unlock checks with shared PThread nullable lock helpers in `ReadLine/readline_thread_safety.cpp` (`rl_state_lock`, `rl_state_unlock`).
-- [ ] Replace open-coded nullable mutex lock/unlock checks with shared PThread nullable lock helpers in `ReadLine/readline_terminal_dimensions.cpp` (`rl_terminal_dimensions_lock`, `rl_terminal_dimensions_unlock`).
-- [ ] Rename single-letter parameter `c` to a descriptive snake_case name (for example `character`) in `ReadLine/readline_internal.hpp` and `ReadLine/readline_printeble_char.cpp`.
-
-## CPP_class module AGENTS.md compliance
-
-- [ ] Change all `break;` to `break ;` in `CPP_class/cpp_class_big_number.cpp` (lines 832, 1297, and 1656).
-- [ ] Remove ternary operator usage in `CPP_class/cpp_class_string_methods.cpp` (`ft_string::c_str`, line 528).
-- [ ] Replace tab indentation with 4-space indentation in `CPP_class/class_big_number.hpp` (lines 26 and 27) and `CPP_class/cpp_class_big_number.cpp` (lines 173, 196, and 207).
-- [ ] Update destructors to avoid lifecycle abort on uninitialized state and return cleanly instead (`CPP_class/cpp_class_ofstream.cpp`, `CPP_class/cpp_class_big_number.cpp`).
-- [ ] Replace open-coded nullable mutex lock/unlock checks with shared PThread nullable lock helpers in class mutex helpers (`CPP_class/cpp_class_file.cpp`, `CPP_class/cpp_class_istream.cpp`, `CPP_class/cpp_class_fd_istream.cpp`, `CPP_class/cpp_class_ofstream.cpp`, `CPP_class/cpp_class_stringbuf.cpp`, `CPP_class/cpp_class_data_buffer.cpp`, `CPP_class/cpp_class_big_number.cpp`).
-- [ ] Rename abbreviated `fd` identifiers to descriptive `file_descriptor` naming in `CPP_class` APIs and internals (`CPP_class/class_fd_istream.hpp`, `CPP_class/class_file.hpp`, `CPP_class/cpp_class_fd_istream.cpp`, `CPP_class/cpp_class_file.cpp`).
-- [ ] Rename class member `_fd` to a descriptive name (for example `_file_descriptor`) in `CPP_class/ft_file` and `CPP_class/ft_fd_istream`.
-
-## Template module AGENTS.md compliance
-
-- [ ] Remove ternary operators in `Template/template_compile_bitset.cpp`, `Template/shared_ptr.hpp`, and `Template/graph.hpp`.
-- [ ] Change `break;` to `break ;` in `Template/priority_queue.hpp` (lines 77 and 102).
-- [ ] Replace tab indentation with 4-space indentation in `Template/vector.hpp` (for example lines 72, 73, 91, 92, 94-97, 99-104, and 188-191).
-- [ ] Align thread-safety lifecycle API signatures so `disable_thread_safety()` returns meaningful error codes in `Template/promise.hpp` and `Template/future.hpp` (including `void` specializations).
-- [ ] Refactor `enable_thread_safety()` / `disable_thread_safety()` in `Template/promise.hpp` and `Template/future.hpp` to manage mutex lifecycle directly rather than delegating to separate prepare/teardown helpers.
-- [ ] Replace open-coded nullable mutex lock/unlock checks with shared PThread nullable lock/unlock helpers in `Template/promise.hpp` and `Template/future.hpp`.
-
 ## Config module AGENTS.md compliance
 
-- [ ] Replace open-coded nullable mutex lock/unlock checks with shared PThread nullable lock/unlock helpers across `Config/config_entry_thread_safety.cpp`, `Config/config_parse.cpp`, `Config/config_merge.cpp`, and `Config/config_write.cpp` (and mirrored `config/` files).
-- [ ] Return underlying mutex/thread-safety error codes directly instead of collapsing to generic `-1` in Config thread-safety functions (`Config/config_entry_thread_safety.cpp`, `Config/config_parse.cpp`, and mirrored `config/` files).
-- [ ] Rename abbreviated `cnfg_*` identifiers in Config public API and internals to full descriptive snake_case names (`Config/config.hpp`, `Config/config_parse.cpp`, `Config/config_merge.cpp`, `Config/config_write.cpp`, and mirrored `config/` files).
-
-## CrossProcess module AGENTS.md compliance
-
-- [ ] Rename abbreviated `fd`/`socket_fd` identifiers to descriptive `file_descriptor` naming in CrossProcess public APIs and implementations (`CrossProcess/cross_process.hpp`, `CrossProcess/CrossProcess_send_descriptor.cpp`, `CrossProcess/CrossProcess_receive_descriptor.cpp`, `CrossProcess/CrossProcess_receive_memory.cpp`), and align related Compatebility cross-process declarations.
-
-## Encryption module AGENTS.md compliance
-
-- [ ] Update `encryption_aead_context` destructor to return cleanly when lifecycle state is uninitialized/destroyed and avoid aborting in destructor (`Encryption/Encryption_aead.cpp`).
-- [ ] Remove automatic thread-safety enabling from `encryption_aead_context::initialize()` so thread safety is enabled only via explicit `enable_thread_safety()` (`Encryption/Encryption_aead.cpp`).
-- [ ] Replace open-coded nullable mutex lock/unlock checks with shared PThread nullable lock/unlock helper usage in AEAD context methods (`Encryption/Encryption_aead.cpp`).
-- [ ] Remove deprecated `ft_errno` references from Encryption module documentation (`Encryption/README` and mirrored `encryption/README` if kept).
 
 ## Compression module AGENTS.md compliance
 

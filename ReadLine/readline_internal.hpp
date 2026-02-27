@@ -72,7 +72,7 @@ int        rl_resize_buffer(char **buffer_pointer, int *current_size_pointer, in
 int        rl_handle_escape_sequence(readline_state_t *state, const char *prompt);
 int        rl_handle_backspace(readline_state_t *state, const char *prompt);
 int        rl_handle_tab_completion(readline_state_t *state, const char *prompt);
-int        rl_handle_printable_char(readline_state_t *state, char c, const char *prompt);
+int        rl_handle_printable_char(readline_state_t *state, char character, const char *prompt);
 int        rl_update_display_metrics(readline_state_t *state);
 int        rl_utf8_compute_columns(const char *string, int *columns);
 int        rl_utf8_find_previous_grapheme(const char *buffer, int cursor_pos,

@@ -6,7 +6,7 @@
 
 class pt_mutex;
 
-struct cnfg_entry
+struct config_entry
 {
     pt_mutex *mutex;
     char    *section;
@@ -14,26 +14,26 @@ struct cnfg_entry
     char    *value;
 };
 
-struct cnfg_config
+struct config_data
 {
-    cnfg_entry  *entries;
+    config_entry  *entries;
     size_t               entry_count;
     pt_mutex             *mutex;
 };
 
-cnfg_config   *cnfg_config_create();
-int         cnfg_config_prepare_thread_safety(cnfg_config *config);
-void        cnfg_config_teardown_thread_safety(cnfg_config *config);
-cnfg_config   *cnfg_parse(const char *filename);
-void        cnfg_free(cnfg_config *config);
-cnfg_config   *config_load_env();
-cnfg_config   *config_load_file(const char *filename);
-int         config_write_file(const cnfg_config *config, const char *filename);
-cnfg_config   *config_merge(const cnfg_config *base_config, const cnfg_config *override_config);
+config_data   *config_data_create();
+int         config_data_prepare_thread_safety(config_data *config);
+void        config_data_teardown_thread_safety(config_data *config);
+config_data   *config_parse(const char *filename);
+void        config_data_free(config_data *config);
+config_data   *config_load_env();
+config_data   *config_load_file(const char *filename);
+int         config_write_file(const config_data *config, const char *filename);
+config_data   *config_merge(const config_data *base_config, const config_data *override_config);
 
-int         cnfg_entry_prepare_thread_safety(cnfg_entry *entry);
-void        cnfg_entry_teardown_thread_safety(cnfg_entry *entry);
-int         cnfg_entry_lock(cnfg_entry *entry, bool *lock_acquired);
-void        cnfg_entry_unlock(cnfg_entry *entry, bool lock_acquired);
+int         config_entry_prepare_thread_safety(config_entry *entry);
+void        config_entry_teardown_thread_safety(config_entry *entry);
+int         config_entry_lock(config_entry *entry, bool *lock_acquired);
+void        config_entry_unlock(config_entry *entry, bool lock_acquired);
 
 #endif

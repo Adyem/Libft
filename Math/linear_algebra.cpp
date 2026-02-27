@@ -217,21 +217,25 @@ int matrix2::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-void matrix2::disable_thread_safety() noexcept
+int matrix2::disable_thread_safety() noexcept
 {
+    int mutex_error;
+
     this->abort_if_not_initialized("matrix2::disable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
-        this->_mutex->destroy();
+        mutex_error = this->_mutex->destroy();
+        if (mutex_error != FT_ERR_SUCCESS)
+            return (mutex_error);
         delete this->_mutex;
         this->_mutex = ft_nullptr;
     }
-    return ;
+    return (FT_ERR_SUCCESS);
 }
 
-bool matrix2::is_thread_safe_enabled() const noexcept
+bool matrix2::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("matrix2::is_thread_safe_enabled");
+    this->abort_if_not_initialized("matrix2::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
@@ -466,21 +470,25 @@ int matrix3::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-void matrix3::disable_thread_safety() noexcept
+int matrix3::disable_thread_safety() noexcept
 {
+    int mutex_error;
+
     this->abort_if_not_initialized("matrix3::disable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
-        this->_mutex->destroy();
+        mutex_error = this->_mutex->destroy();
+        if (mutex_error != FT_ERR_SUCCESS)
+            return (mutex_error);
         delete this->_mutex;
         this->_mutex = ft_nullptr;
     }
-    return ;
+    return (FT_ERR_SUCCESS);
 }
 
-bool matrix3::is_thread_safe_enabled() const noexcept
+bool matrix3::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("matrix3::is_thread_safe_enabled");
+    this->abort_if_not_initialized("matrix3::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
@@ -866,20 +874,24 @@ int matrix4::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-void matrix4::disable_thread_safety() noexcept
+int matrix4::disable_thread_safety() noexcept
 {
+    int mutex_error;
+
     this->abort_if_not_initialized("matrix4::disable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
-        this->_mutex->destroy();
+        mutex_error = this->_mutex->destroy();
+        if (mutex_error != FT_ERR_SUCCESS)
+            return (mutex_error);
         delete this->_mutex;
         this->_mutex = ft_nullptr;
     }
-    return ;
+    return (FT_ERR_SUCCESS);
 }
 
-bool matrix4::is_thread_safe_enabled() const noexcept
+bool matrix4::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("matrix4::is_thread_safe_enabled");
+    this->abort_if_not_initialized("matrix4::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }

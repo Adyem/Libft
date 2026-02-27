@@ -44,10 +44,12 @@ class ft_cubic_spline
         int initialize(ft_cubic_spline &&other) noexcept;
         int destroy() noexcept;
         int move(ft_cubic_spline &other) noexcept;
+#ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex *get_mutex_for_validation() const noexcept;
+#endif
         int enable_thread_safety() noexcept;
-        void disable_thread_safety() noexcept;
-        bool is_thread_safe_enabled() const noexcept;
+        int disable_thread_safety() noexcept;
+        bool is_thread_safe() const noexcept;
 };
 
 int math_polynomial_evaluate(const ft_vector<double> &coefficients,

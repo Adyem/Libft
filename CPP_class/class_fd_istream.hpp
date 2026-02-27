@@ -9,7 +9,7 @@
 class ft_fd_istream : public ft_istream
 {
     private:
-        int _fd;
+        int _file_descriptor;
         mutable pt_recursive_mutex *_mutex;
         uint8_t _initialized_state;
         static const uint8_t _state_uninitialized = 0;
@@ -21,7 +21,7 @@ class ft_fd_istream : public ft_istream
                 const char *reason) noexcept;
         void abort_if_not_initialized(const char *method_name) const noexcept;
     public:
-        ft_fd_istream(int fd) noexcept;
+        ft_fd_istream(int file_descriptor) noexcept;
         ft_fd_istream(const ft_fd_istream &other) noexcept = delete;
         ft_fd_istream(ft_fd_istream &&other) noexcept = delete;
         ~ft_fd_istream() noexcept;
@@ -29,8 +29,8 @@ class ft_fd_istream : public ft_istream
         ft_fd_istream &operator=(const ft_fd_istream &other) noexcept = delete;
         ft_fd_istream &operator=(ft_fd_istream &&other) noexcept = delete;
 
-        void set_fd(int fd) noexcept;
-        int get_fd() const noexcept;
+        void set_file_descriptor(int file_descriptor) noexcept;
+        int get_file_descriptor() const noexcept;
         int enable_thread_safety(void) noexcept;
         int disable_thread_safety(void) noexcept;
         bool is_thread_safe(void) const noexcept;

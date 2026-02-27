@@ -133,7 +133,7 @@ static void geometry_lock_tracker_clear_wait(pt_thread_id_type thread_identifier
             }
             if (!g_geometry_wait_records.empty())
                 g_geometry_wait_records.pop_back();
-            break;
+            break ;
         }
         index += 1;
     }

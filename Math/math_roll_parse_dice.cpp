@@ -4,18 +4,18 @@
 #include "../RNG/rng.hpp"
 #include <climits>
 
-static int math_handle_dice_roll(char *string, int *i, int *x, int *error)
+static int math_handle_dice_roll(char *string, int *index, int *next_number_index, int *error)
 {
     int first_number;
     int second_number;
 
     if (DEBUG == 1)
-        pf_printf("The value of x = %d\n", *x);
-    if (string[*i] >= '0' && string[*i] <= '9')
-        first_number = math_roll_convert_previous(string, i, error);
+        pf_printf("The value of x = %d\n", *next_number_index);
+    if (string[*index] >= '0' && string[*index] <= '9')
+        first_number = math_roll_convert_previous(string, index, error);
     else
         first_number = 1;
-    second_number = math_roll_convert_next(string, *x, error);
+    second_number = math_roll_convert_next(string, *next_number_index, error);
     if (*error)
         return (1);
     if (first_number <= 0)
@@ -38,58 +38,58 @@ static int math_handle_dice_roll(char *string, int *i, int *x, int *error)
     return ft_dice_roll(first_number, second_number);
 }
 
-static int math_handle_result_replacement(char *string, int *i, int x, int result)
+static int math_handle_result_replacement(char *string, int *index, int read_index, int result)
 {
-    if (math_roll_itoa(result, i, string))
+    if (math_roll_itoa(result, index, string))
         return (1);
     if (DEBUG == 1)
-        pf_printf("1 The value of i = %d and x = %d\n", *i, x);
-    if (string[x] == '-' || string[x] == '+')
-        x++;
-    while (string[x] >= '0' && string[x] <= '9')
-        x++;
+        pf_printf("1 The value of i = %d and x = %d\n", *index, read_index);
+    if (string[read_index] == '-' || string[read_index] == '+')
+        read_index++;
+    while (string[read_index] >= '0' && string[read_index] <= '9')
+        read_index++;
     if (DEBUG == 1)
-        pf_printf("2 The value of i = %d and x = %d\n", *i, x);
-    while (string[x])
+        pf_printf("2 The value of i = %d and x = %d\n", *index, read_index);
+    while (string[read_index])
     {
-        string[*i] = string[x];
-        (*i)++;
-        x++;
+        string[*index] = string[read_index];
+        (*index)++;
+        read_index++;
     }
-    string[*i] = '\0';
-    *i = 0;
+    string[*index] = '\0';
+    *index = 0;
     return (0);
 }
 
-int math_roll_excecute_droll(char *string, int *i, int j)
+int math_roll_excecute_droll(char *string, int *index, int string_boundary)
 {
     int result;
-    int x;
+    int next_number_index;
     int error = 0;
 
-    while (*i < j)
+    while (*index < string_boundary)
     {
-        if (!string[*i] || string[*i] == ')')
+        if (!string[*index] || string[*index] == ')')
             break ;
-        if (string[*i] == 'd')
+        if (string[*index] == 'd')
         {
-            x = *i;
-            if (*i > 0)
-                (*i)--;
-            x++;
-            result = math_handle_dice_roll(string, i, &x, &error);
+            next_number_index = *index;
+            if (*index > 0)
+                (*index)--;
+            next_number_index++;
+            result = math_handle_dice_roll(string, index, &next_number_index, &error);
             if (result == -1 || error)
                 return (1);
 
-            if (math_handle_result_replacement(string, i, x, result))
+            if (math_handle_result_replacement(string, index, next_number_index, result))
                 return (1);
-            math_calculate_j(string, &j);
-            *i = 0;
+            math_calculate_j(string, &string_boundary);
+            *index = 0;
         }
         else
-            (*i)++;
+            (*index)++;
     }
-    math_calculate_j(string, &j);
+    math_calculate_j(string, &string_boundary);
     if (DEBUG == 1)
         pf_printf_fd(2, "After dice rolling result is %s\n", string);
     return (0);

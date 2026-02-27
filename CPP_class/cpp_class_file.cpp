@@ -6,6 +6,7 @@
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
 #include "../PThread/pthread.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "class_nullptr.hpp"
 #include <cerrno>
 #include <cstdarg>
@@ -14,16 +15,12 @@
 
 int ft_file::lock_mutex(void) const noexcept
 {
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->lock());
+    return (pt_recursive_mutex_lock_if_not_null(this->_mutex));
 }
 
 int ft_file::unlock_mutex(void) const noexcept
 {
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->unlock());
+    return (pt_recursive_mutex_unlock_if_not_null(this->_mutex));
 }
 
 int ft_file::enable_thread_safety(void) noexcept
@@ -62,7 +59,7 @@ bool ft_file::is_thread_safe(void) const noexcept
 }
 
 ft_file::ft_file() noexcept
-    : _fd(-1), _mutex(ft_nullptr)
+    : _file_descriptor(-1), _mutex(ft_nullptr)
 {
     return ;
 }
@@ -79,12 +76,12 @@ ft_file::~ft_file() noexcept
         return ;
     }
     final_error = FT_ERR_SUCCESS;
-    if (this->_fd >= 0)
+    if (this->_file_descriptor >= 0)
     {
-        if (su_close(this->_fd) == -1)
+        if (su_close(this->_file_descriptor) == -1)
             final_error = cmp_map_system_error_to_ft(errno);
         else
-            this->_fd = -1;
+            this->_file_descriptor = -1;
     }
     int unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESS && final_error == FT_ERR_SUCCESS)
@@ -102,12 +99,12 @@ void    ft_file::close() noexcept
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     final_error = FT_ERR_SUCCESS;
-    if (this->_fd < 0)
+    if (this->_file_descriptor < 0)
         final_error = FT_ERR_INVALID_HANDLE;
-    else if (su_close(this->_fd) == -1)
+    else if (su_close(this->_file_descriptor) == -1)
         final_error = cmp_map_system_error_to_ft(errno);
     else
-        this->_fd = -1;
+        this->_file_descriptor = -1;
     int unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESS && final_error == FT_ERR_SUCCESS)
         final_error = unlock_error;
@@ -118,7 +115,7 @@ int ft_file::open(const char* filename, int flags, mode_t mode) noexcept
 {
     int lock_error;
     int final_error;
-    int new_fd;
+    int new_file_descriptor;
 
     lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
@@ -126,21 +123,21 @@ int ft_file::open(const char* filename, int flags, mode_t mode) noexcept
     final_error = FT_ERR_SUCCESS;
     if (DEBUG == 1)
         pf_printf("Opening %s\n", filename);
-    new_fd = su_open(filename, flags, mode);
-    if (new_fd < 0)
+    new_file_descriptor = su_open(filename, flags, mode);
+    if (new_file_descriptor < 0)
         final_error = cmp_map_system_error_to_ft(errno);
     else
     {
-        if (this->_fd >= 0)
+        if (this->_file_descriptor >= 0)
         {
-            if (su_close(this->_fd) == -1)
+            if (su_close(this->_file_descriptor) == -1)
             {
                 final_error = cmp_map_system_error_to_ft(errno);
-                su_close(new_fd);
+                su_close(new_file_descriptor);
             }
         }
         if (final_error == FT_ERR_SUCCESS)
-            this->_fd = new_fd;
+            this->_file_descriptor = new_file_descriptor;
     }
     int unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESS && final_error == FT_ERR_SUCCESS)
@@ -154,27 +151,27 @@ int ft_file::open(const char* filename, int flags) noexcept
 {
     int lock_error;
     int final_error;
-    int new_fd;
+    int new_file_descriptor;
 
     lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (1);
     final_error = FT_ERR_SUCCESS;
-    new_fd = su_open(filename, flags);
-    if (new_fd < 0)
+    new_file_descriptor = su_open(filename, flags);
+    if (new_file_descriptor < 0)
         final_error = cmp_map_system_error_to_ft(errno);
     else
     {
-        if (this->_fd >= 0)
+        if (this->_file_descriptor >= 0)
         {
-            if (su_close(this->_fd) == -1)
+            if (su_close(this->_file_descriptor) == -1)
             {
                 final_error = cmp_map_system_error_to_ft(errno);
-                su_close(new_fd);
+                su_close(new_file_descriptor);
             }
         }
         if (final_error == FT_ERR_SUCCESS)
-            this->_fd = new_fd;
+            this->_file_descriptor = new_file_descriptor;
     }
     int unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESS && final_error == FT_ERR_SUCCESS)
@@ -184,27 +181,27 @@ int ft_file::open(const char* filename, int flags) noexcept
     return (1);
 }
 
-int ft_file::get_fd() const
+int ft_file::get_file_descriptor() const
 {
     int lock_error;
     int final_error;
-    int descriptor;
+    int file_descriptor;
 
     lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
     final_error = FT_ERR_SUCCESS;
-    descriptor = -1;
-    if (this->_fd < 0)
+    file_descriptor = -1;
+    if (this->_file_descriptor < 0)
         final_error = FT_ERR_INVALID_HANDLE;
     else
-        descriptor = this->_fd;
+        file_descriptor = this->_file_descriptor;
     int unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESS && final_error == FT_ERR_SUCCESS)
         final_error = unlock_error;
     if (final_error != FT_ERR_SUCCESS)
         return (-1);
-    return (descriptor);
+    return (file_descriptor);
 }
 
 ssize_t ft_file::read(char *buffer, int count) noexcept
@@ -220,11 +217,11 @@ ssize_t ft_file::read(char *buffer, int count) noexcept
     bytes_read = -1;
     if (buffer == ft_nullptr || count <= 0)
         final_error = FT_ERR_INVALID_ARGUMENT;
-    else if (this->_fd < 0)
+    else if (this->_file_descriptor < 0)
         final_error = FT_ERR_INVALID_HANDLE;
     else
     {
-        bytes_read = su_read(this->_fd, buffer, static_cast<size_t>(count));
+        bytes_read = su_read(this->_file_descriptor, buffer, static_cast<size_t>(count));
         if (bytes_read == -1)
             final_error = cmp_map_system_error_to_ft(errno);
     }
@@ -249,11 +246,11 @@ ssize_t ft_file::write(const char *string) noexcept
     result = -1;
     if (string == ft_nullptr)
         final_error = FT_ERR_INVALID_ARGUMENT;
-    else if (this->_fd < 0)
+    else if (this->_file_descriptor < 0)
         final_error = FT_ERR_INVALID_HANDLE;
     else
     {
-        result = su_write(this->_fd, string, ft_strlen(string));
+        result = su_write(this->_file_descriptor, string, ft_strlen(string));
         if (result == -1)
             final_error = cmp_map_system_error_to_ft(errno);
     }
@@ -278,13 +275,13 @@ ssize_t ft_file::write_buffer(const char *buffer, size_t length) noexcept
     result = -1;
     if (buffer == ft_nullptr && length != 0)
         final_error = FT_ERR_INVALID_ARGUMENT;
-    else if (this->_fd < 0)
+    else if (this->_file_descriptor < 0)
         final_error = FT_ERR_INVALID_HANDLE;
     else if (length == 0)
         result = 0;
     else
     {
-        result = su_write(this->_fd, buffer, length);
+        result = su_write(this->_file_descriptor, buffer, length);
         if (result == -1)
             final_error = cmp_map_system_error_to_ft(errno);
     }
@@ -306,11 +303,11 @@ int ft_file::seek(off_t offset, int whence) noexcept
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
     final_error = FT_ERR_SUCCESS;
-    if (this->_fd < 0)
+    if (this->_file_descriptor < 0)
         final_error = FT_ERR_INVALID_HANDLE;
     else
     {
-        result = ::lseek(this->_fd, offset, whence);
+        result = ::lseek(this->_file_descriptor, offset, whence);
         if (result == -1)
             final_error = cmp_map_system_error_to_ft(errno);
     }
@@ -335,14 +332,14 @@ int ft_file::printf(const char *format, ...)
     printed_chars = 0;
     if (format == ft_nullptr)
         final_error = FT_ERR_INVALID_ARGUMENT;
-    else if (this->_fd < 0)
+    else if (this->_file_descriptor < 0)
         final_error = FT_ERR_INVALID_HANDLE;
     else
     {
         va_list args;
 
         va_start(args, format);
-        printed_chars = pf_printf_fd_v(this->_fd, format, args);
+        printed_chars = pf_printf_fd_v(this->_file_descriptor, format, args);
         va_end(args);
         if (printed_chars < 0)
             final_error = FT_ERR_IO;
@@ -359,7 +356,7 @@ int ft_file::copy_to_with_buffer(const char *destination_path, size_t buffer_siz
 {
     if (destination_path == ft_nullptr)
         return (-1);
-    if (this->_fd < 0)
+    if (this->_file_descriptor < 0)
         return (-1);
     ft_file destination_file;
     int destination_flags;

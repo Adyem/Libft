@@ -78,7 +78,7 @@ void pf_reset_ftell_function(void)
     return ;
 }
 
-int pf_vsnprintf(char *string, size_t size, const char *format, va_list args)
+int pf_vsnprintf(char *string, size_t size, const char *format, va_list argument_list)
 {
     int error_code;
 
@@ -92,7 +92,7 @@ int pf_vsnprintf(char *string, size_t size, const char *format, va_list args)
         return (-1);
     }
     va_list copy;
-    va_copy(copy, args);
+    va_copy(copy, argument_list);
     int printed = ft_vfprintf(stream, format, copy);
     va_end(copy);
     if (printed < 0)

@@ -52,8 +52,8 @@ class ft_thread
         void detach();
 
         int enable_thread_safety();
-        void disable_thread_safety();
-        bool is_thread_safe_enabled() const;
+        int disable_thread_safety();
+        bool is_thread_safe() const;
         int lock(bool *lock_acquired) const;
         void unlock(bool lock_acquired) const;
 };

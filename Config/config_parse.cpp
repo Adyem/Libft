@@ -6,33 +6,35 @@
 #include "../File/file_utils.hpp"
 #include "../JSon/json.hpp"
 #include "../PThread/mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include <new>
 #include <cstdio>
 
-static int cnfg_mutex_lock(pt_mutex *mutex, bool *lock_acquired)
+static int config_mutex_lock(pt_mutex *mutex, bool *lock_acquired)
 {
-    if (!mutex)
-        return (FT_ERR_SUCCESS);
-    int lock_result = mutex->lock();
+    int lock_result;
+
+    lock_result = pt_mutex_lock_if_not_null(mutex);
     if (lock_result == FT_ERR_SUCCESS && lock_acquired)
-        *lock_acquired = true;
+    {
+        if (mutex != ft_nullptr)
+            *lock_acquired = true;
+    }
     return (lock_result);
 }
 
-static int cnfg_config_lock_if_enabled(cnfg_config *config, bool *lock_acquired)
+static int config_lock_if_enabled(config_data *config, bool *lock_acquired)
 {
     if (!config || !config->mutex)
         return (FT_ERR_SUCCESS);
-    return (cnfg_mutex_lock(config->mutex, lock_acquired));
+    return (config_mutex_lock(config->mutex, lock_acquired));
 }
-static int cnfg_mutex_unlock(pt_mutex *mutex)
+static int config_mutex_unlock(pt_mutex *mutex)
 {
-    if (!mutex)
-        return (FT_ERR_SUCCESS);
-    return (mutex->unlock());
+    return (pt_mutex_unlock_if_not_null(mutex));
 }
 
-static int cnfg_mutex_create(pt_mutex **mutex_pointer)
+static int config_mutex_create(pt_mutex **mutex_pointer)
 {
     if (!mutex_pointer)
         return (FT_ERR_INVALID_ARGUMENT);
@@ -51,7 +53,7 @@ static int cnfg_mutex_create(pt_mutex **mutex_pointer)
     return (FT_ERR_SUCCESS);
 }
 
-static void cnfg_mutex_destroy(pt_mutex **mutex_pointer)
+static void config_mutex_destroy(pt_mutex **mutex_pointer)
 {
     if (!mutex_pointer || *mutex_pointer == ft_nullptr)
         return ;
@@ -61,24 +63,24 @@ static void cnfg_mutex_destroy(pt_mutex **mutex_pointer)
     *mutex_pointer = ft_nullptr;
 }
 
-static void cnfg_config_unlock_guard(cnfg_config *config, bool lock_acquired)
+static void config_unlock_guard(config_data *config, bool lock_acquired)
 {
     if (!config || !config->mutex || !lock_acquired)
         return ;
-    cnfg_mutex_unlock(config->mutex);
+    config_mutex_unlock(config->mutex);
     return ;
 }
 
-cnfg_config *cnfg_config_create()
+config_data *config_data_create()
 {
-    cnfg_config *config;
+    config_data *config;
 
-    config = static_cast<cnfg_config*>(adv_calloc(1, sizeof(cnfg_config)));
+    config = static_cast<config_data*>(adv_calloc(1, sizeof(config_data)));
     if (!config)
     {
         return (ft_nullptr);
     }
-    if (cnfg_config_prepare_thread_safety(config) != 0)
+    if (config_data_prepare_thread_safety(config) != 0)
     {
         cma_free(config);
         return (ft_nullptr);
@@ -86,29 +88,29 @@ cnfg_config *cnfg_config_create()
     return (config);
 }
 
-int cnfg_config_prepare_thread_safety(cnfg_config *config)
+int config_data_prepare_thread_safety(config_data *config)
 {
     if (!config)
     {
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     if (config->mutex)
     {
-        return (0);
+        return (FT_ERR_SUCCESS);
     }
-    int mutex_error = cnfg_mutex_create(&config->mutex);
+    int mutex_error = config_mutex_create(&config->mutex);
     if (mutex_error != FT_ERR_SUCCESS)
     {
-        return (-1);
+        return (mutex_error);
     }
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
-void cnfg_config_teardown_thread_safety(cnfg_config *config)
+void config_data_teardown_thread_safety(config_data *config)
 {
     if (!config)
         return ;
-    cnfg_mutex_destroy(&config->mutex);
+    config_mutex_destroy(&config->mutex);
     return ;
 }
 
@@ -125,7 +127,7 @@ static char *trim_whitespace(char *string)
     return (string);
 }
 
-void cnfg_free(cnfg_config *config)
+void config_data_free(config_data *config)
 {
     if (!config)
     {
@@ -135,7 +137,7 @@ void cnfg_free(cnfg_config *config)
     size_t entry_index;
 
     bool already_owned = false;
-    int lock_result = cnfg_config_lock_if_enabled(config, &mutex_locked);
+    int lock_result = config_lock_if_enabled(config, &mutex_locked);
     if (lock_result != FT_ERR_SUCCESS)
     {
         if (lock_result == FT_ERR_MUTEX_ALREADY_LOCKED && config->mutex)
@@ -144,7 +146,7 @@ void cnfg_free(cnfg_config *config)
         }
         else
         {
-            cnfg_config_teardown_thread_safety(config);
+            config_data_teardown_thread_safety(config);
             cma_free(config);
             return ;
         }
@@ -155,20 +157,20 @@ void cnfg_free(cnfg_config *config)
         cma_free(config->entries[entry_index].section);
         cma_free(config->entries[entry_index].key);
         cma_free(config->entries[entry_index].value);
-        cnfg_entry_teardown_thread_safety(&config->entries[entry_index]);
+        config_entry_teardown_thread_safety(&config->entries[entry_index]);
         ++entry_index;
     }
     cma_free(config->entries);
     if (already_owned)
-        cnfg_mutex_unlock(config->mutex);
+        config_mutex_unlock(config->mutex);
     else
-        cnfg_config_unlock_guard(config, mutex_locked);
-    cnfg_config_teardown_thread_safety(config);
+        config_unlock_guard(config, mutex_locked);
+    config_data_teardown_thread_safety(config);
     cma_free(config);
     return ;
 }
 
-cnfg_config *cnfg_parse(const char *filename)
+config_data *config_parse(const char *filename)
 {
     if (!filename)
     {
@@ -177,7 +179,7 @@ cnfg_config *cnfg_parse(const char *filename)
     FILE *file = ft_fopen(filename, "r");
     if (!file)
         return (ft_nullptr);
-    cnfg_config *config = cnfg_config_create();
+    config_data *config = config_data_create();
     if (!config)
     {
         ft_fclose(file);
@@ -203,7 +205,7 @@ cnfg_config *cnfg_parse(const char *filename)
                     current_section = adv_strdup(line_string + 1);
                     if (!current_section)
                     {
-                        cnfg_free(config);
+                        config_data_free(config);
                         ft_fclose(file);
                         return (ft_nullptr);
                     }
@@ -225,7 +227,7 @@ cnfg_config *cnfg_parse(const char *filename)
                 if (!key)
                 {
                     cma_free(value);
-                    cnfg_free(config);
+                    config_data_free(config);
                     if (current_section)
                         cma_free(current_section);
                     ft_fclose(file);
@@ -238,7 +240,7 @@ cnfg_config *cnfg_parse(const char *filename)
                 if (!value)
                 {
                     cma_free(key);
-                    cnfg_free(config);
+                    config_data_free(config);
                     if (current_section)
                         cma_free(current_section);
                     ft_fclose(file);
@@ -254,7 +256,7 @@ cnfg_config *cnfg_parse(const char *filename)
                 key = adv_strdup(key_start);
                 if (!key)
                 {
-                    cnfg_free(config);
+                    config_data_free(config);
                     if (current_section)
                         cma_free(current_section);
                     ft_fclose(file);
@@ -262,19 +264,19 @@ cnfg_config *cnfg_parse(const char *filename)
                 }
             }
         }
-        cnfg_entry *new_entries = static_cast<cnfg_entry*>(cma_realloc(config->entries, sizeof(cnfg_entry) * (config->entry_count + 1)));
+        config_entry *new_entries = static_cast<config_entry*>(cma_realloc(config->entries, sizeof(config_entry) * (config->entry_count + 1)));
         if (!new_entries)
         {
             cma_free(key);
             cma_free(value);
-            cnfg_free(config);
+            config_data_free(config);
             if (current_section)
                 cma_free(current_section);
             ft_fclose(file);
             return (ft_nullptr);
         }
         config->entries = new_entries;
-        cnfg_entry *new_entry = &config->entries[config->entry_count];
+        config_entry *new_entry = &config->entries[config->entry_count];
         new_entry->mutex = ft_nullptr;
         if (current_section)
         {
@@ -285,7 +287,7 @@ cnfg_config *cnfg_parse(const char *filename)
                 cma_free(value);
                 new_entry->key = ft_nullptr;
                 new_entry->value = ft_nullptr;
-                cnfg_free(config);
+                config_data_free(config);
                 if (current_section)
                     cma_free(current_section);
                 ft_fclose(file);
@@ -296,7 +298,7 @@ cnfg_config *cnfg_parse(const char *filename)
             new_entry->section = ft_nullptr;
         new_entry->key = key;
         new_entry->value = value;
-        if (cnfg_entry_prepare_thread_safety(new_entry) != 0)
+        if (config_entry_prepare_thread_safety(new_entry) != 0)
         {
             cma_free(new_entry->section);
             cma_free(new_entry->key);
@@ -304,7 +306,7 @@ cnfg_config *cnfg_parse(const char *filename)
             new_entry->section = ft_nullptr;
             new_entry->key = ft_nullptr;
             new_entry->value = ft_nullptr;
-            cnfg_free(config);
+            config_data_free(config);
             if (current_section)
                 cma_free(current_section);
             ft_fclose(file);
@@ -318,7 +320,7 @@ cnfg_config *cnfg_parse(const char *filename)
     return (config);
 }
 
-static cnfg_config *cnfg_parse_json(const char *filename)
+static config_data *config_parse_json_internal(const char *filename)
 {
     if (!filename)
     {
@@ -346,7 +348,7 @@ static cnfg_config *cnfg_parse_json(const char *filename)
         }
         group_pointer = group_pointer->next;
     }
-    cnfg_config *config = cnfg_config_create();
+    config_data *config = config_data_create();
     if (!config)
     {
         json_free_groups(groups);
@@ -354,10 +356,10 @@ static cnfg_config *cnfg_parse_json(const char *filename)
     }
     if (count)
     {
-        config->entries = static_cast<cnfg_entry*>(adv_calloc(count, sizeof(cnfg_entry)));
+        config->entries = static_cast<config_entry*>(adv_calloc(count, sizeof(config_entry)));
         if (!config->entries)
         {
-            cnfg_config_teardown_thread_safety(config);
+            config_data_teardown_thread_safety(config);
             cma_free(config);
             json_free_groups(groups);
             return (ft_nullptr);
@@ -370,7 +372,7 @@ static cnfg_config *cnfg_parse_json(const char *filename)
         json_item *item_pointer = group_pointer->items;
         while (item_pointer)
         {
-            cnfg_entry *entry = &config->entries[index];
+            config_entry *entry = &config->entries[index];
             entry->mutex = ft_nullptr;
             if (group_pointer->name)
             {
@@ -378,7 +380,7 @@ static cnfg_config *cnfg_parse_json(const char *filename)
                 if (!entry->section)
                 {
                     config->entry_count = index;
-                    cnfg_free(config);
+                    config_data_free(config);
                     json_free_groups(groups);
                     return (ft_nullptr);
                 }
@@ -389,7 +391,7 @@ static cnfg_config *cnfg_parse_json(const char *filename)
                 if (!entry->key)
                 {
                     config->entry_count = index + 1;
-                    cnfg_free(config);
+                    config_data_free(config);
                     json_free_groups(groups);
                     return (ft_nullptr);
                 }
@@ -400,15 +402,15 @@ static cnfg_config *cnfg_parse_json(const char *filename)
                 if (!entry->value)
                 {
                     config->entry_count = index + 1;
-                    cnfg_free(config);
+                    config_data_free(config);
                     json_free_groups(groups);
                     return (ft_nullptr);
                 }
             }
-            if (cnfg_entry_prepare_thread_safety(entry) != 0)
+            if (config_entry_prepare_thread_safety(entry) != 0)
             {
                 config->entry_count = index + 1;
-                cnfg_free(config);
+                config_data_free(config);
                 json_free_groups(groups);
                 return (ft_nullptr);
             }
@@ -422,10 +424,10 @@ static cnfg_config *cnfg_parse_json(const char *filename)
     return (config);
 }
 
-cnfg_config *config_load_env()
+config_data *config_load_env()
 {
     extern char **environ;
-    cnfg_config *config = cnfg_config_create();
+    config_data *config = config_data_create();
     if (!config)
         return (ft_nullptr);
     size_t count = 0;
@@ -438,10 +440,10 @@ cnfg_config *config_load_env()
     {
         return (config);
     }
-    config->entries = static_cast<cnfg_entry*>(adv_calloc(count, sizeof(cnfg_entry)));
+    config->entries = static_cast<config_entry*>(adv_calloc(count, sizeof(config_entry)));
     if (!config->entries)
     {
-        cnfg_config_teardown_thread_safety(config);
+        config_data_teardown_thread_safety(config);
         cma_free(config);
         return (ft_nullptr);
     }
@@ -452,7 +454,7 @@ cnfg_config *config_load_env()
         char *equals_sign = ft_nullptr;
         if (pair)
             equals_sign = ft_strchr(pair, '=');
-        cnfg_entry *entry = &config->entries[index];
+        config_entry *entry = &config->entries[index];
         entry->mutex = ft_nullptr;
         if (equals_sign)
         {
@@ -461,7 +463,7 @@ cnfg_config *config_load_env()
             if (!entry->key)
             {
                 config->entry_count = index;
-                cnfg_free(config);
+                config_data_free(config);
                 return (ft_nullptr);
             }
             ft_memcpy(entry->key, pair, key_length);
@@ -471,7 +473,7 @@ cnfg_config *config_load_env()
                 if (!entry->value)
                 {
                     config->entry_count = index + 1;
-                    cnfg_free(config);
+                    config_data_free(config);
                     return (ft_nullptr);
                 }
             }
@@ -482,15 +484,15 @@ cnfg_config *config_load_env()
             if (!entry->key)
             {
                 config->entry_count = index;
-                cnfg_free(config);
+                config_data_free(config);
                 return (ft_nullptr);
             }
         }
         entry->section = ft_nullptr;
-        if (cnfg_entry_prepare_thread_safety(entry) != 0)
+        if (config_entry_prepare_thread_safety(entry) != 0)
         {
             config->entry_count = index + 1;
-            cnfg_free(config);
+            config_data_free(config);
             return (ft_nullptr);
         }
         ++index;
@@ -499,9 +501,9 @@ cnfg_config *config_load_env()
     return (config);
 }
 
-cnfg_config *config_load_file(const char *filename)
+config_data *config_load_file(const char *filename)
 {
-    cnfg_config *config;
+    config_data *config;
 
     if (!filename)
     {
@@ -510,11 +512,11 @@ cnfg_config *config_load_file(const char *filename)
     const char *dot = ft_strrchr(filename, '.');
     if (dot && ft_strcmp(dot, ".json") == 0)
     {
-        config = cnfg_parse_json(filename);
+        config = config_parse_json_internal(filename);
         if (config)
             return (config);
     }
-    config = cnfg_parse(filename);
+    config = config_parse(filename);
     if (config)
         return (config);
     return (ft_nullptr);

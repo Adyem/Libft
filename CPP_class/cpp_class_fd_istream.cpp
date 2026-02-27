@@ -3,6 +3,7 @@
 #include "../Errno/errno.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include <new>
 
 void ft_fd_istream::abort_lifecycle_error(const char *method_name,
@@ -27,16 +28,12 @@ void ft_fd_istream::abort_if_not_initialized(const char *method_name) const noex
 
 int ft_fd_istream::lock_mutex(void) const noexcept
 {
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->lock());
+    return (pt_recursive_mutex_lock_if_not_null(this->_mutex));
 }
 
 int ft_fd_istream::unlock_mutex(void) const noexcept
 {
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->unlock());
+    return (pt_recursive_mutex_unlock_if_not_null(this->_mutex));
 }
 
 int ft_fd_istream::enable_thread_safety(void) noexcept
@@ -77,8 +74,8 @@ bool ft_fd_istream::is_thread_safe(void) const noexcept
     return (this->_mutex != ft_nullptr);
 }
 
-ft_fd_istream::ft_fd_istream(int fd) noexcept
-    : ft_istream(), _fd(fd), _mutex(ft_nullptr),
+ft_fd_istream::ft_fd_istream(int file_descriptor) noexcept
+    : ft_istream(), _file_descriptor(file_descriptor), _mutex(ft_nullptr),
       _initialized_state(ft_fd_istream::_state_uninitialized)
 {
     int initialize_error = this->initialize();
@@ -102,43 +99,43 @@ ft_fd_istream::~ft_fd_istream() noexcept
     return ;
 }
 
-void ft_fd_istream::set_fd(int fd) noexcept
+void ft_fd_istream::set_file_descriptor(int file_descriptor) noexcept
 {
-    this->abort_if_not_initialized("ft_fd_istream::set_fd");
+    this->abort_if_not_initialized("ft_fd_istream::set_file_descriptor");
     if (this->lock_mutex() != FT_ERR_SUCCESS)
         return ;
-    this->_fd = fd;
+    this->_file_descriptor = file_descriptor;
     this->unlock_mutex();
     return ;
 }
 
-int ft_fd_istream::get_fd() const noexcept
+int ft_fd_istream::get_file_descriptor() const noexcept
 {
-    int descriptor;
+    int file_descriptor;
 
-    this->abort_if_not_initialized("ft_fd_istream::get_fd");
+    this->abort_if_not_initialized("ft_fd_istream::get_file_descriptor");
     if (this->lock_mutex() != FT_ERR_SUCCESS)
         return (-1);
-    descriptor = this->_fd;
+    file_descriptor = this->_file_descriptor;
     if (this->unlock_mutex() != FT_ERR_SUCCESS)
         return (-1);
-    return (descriptor);
+    return (file_descriptor);
 }
 
 ssize_t ft_fd_istream::do_read(char *buffer, std::size_t count)
 {
-    int descriptor;
+    int file_descriptor;
     int unlock_error;
     ssize_t result;
 
     this->abort_if_not_initialized("ft_fd_istream::do_read");
     if (this->lock_mutex() != FT_ERR_SUCCESS)
         return (-1);
-    descriptor = this->_fd;
+    file_descriptor = this->_file_descriptor;
     unlock_error = this->unlock_mutex();
     if (unlock_error != FT_ERR_SUCCESS)
         return (-1);
-    result = su_read(descriptor, buffer, count);
+    result = su_read(file_descriptor, buffer, count);
     if (result < 0)
         return (-1);
     return (result);

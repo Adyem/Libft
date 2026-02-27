@@ -35,15 +35,22 @@ void pt_buffer_destroy(pt_buffer<t_type> &buffer)
 template <typename t_type>
 int pt_buffer_reserve(pt_buffer<t_type> &buffer, ft_size_t required)
 {
+    ft_size_t new_capacity;
+    void *new_data;
+    ft_size_t copy_index;
+
     if (required <= buffer.capacity)
         return (FT_ERR_SUCCESS);
-    ft_size_t new_capacity = buffer.capacity != 0 ? buffer.capacity * 2 : 4;
+    if (buffer.capacity != 0)
+        new_capacity = buffer.capacity * 2;
+    else
+        new_capacity = 4;
     if (new_capacity < required)
         new_capacity = required;
-    void *new_data = std::malloc(new_capacity * sizeof(t_type));
+    new_data = std::malloc(new_capacity * sizeof(t_type));
     if (new_data == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
-    ft_size_t copy_index = 0;
+    copy_index = 0;
     while (copy_index < buffer.size)
     {
         static_cast<t_type *>(new_data)[copy_index] = buffer.data[copy_index];

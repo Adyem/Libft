@@ -1,6 +1,7 @@
 #include "printf_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include <climits>
 #include <new>
@@ -9,16 +10,12 @@ static pt_recursive_mutex *g_pf_custom_specifiers_mutex = ft_nullptr;
 
 static int pf_custom_specifiers_lock(void)
 {
-    if (g_pf_custom_specifiers_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (g_pf_custom_specifiers_mutex->lock());
+    return (pt_recursive_mutex_lock_if_not_null(g_pf_custom_specifiers_mutex));
 }
 
 static int pf_custom_specifiers_unlock(void)
 {
-    if (g_pf_custom_specifiers_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (g_pf_custom_specifiers_mutex->unlock());
+    return (pt_recursive_mutex_unlock_if_not_null(g_pf_custom_specifiers_mutex));
 }
 
 int pf_enable_thread_safety(void)
@@ -41,18 +38,18 @@ int pf_enable_thread_safety(void)
     return (FT_ERR_SUCCESS);
 }
 
-void pf_disable_thread_safety(void)
+int pf_disable_thread_safety(void)
 {
     int destroy_error;
 
     if (g_pf_custom_specifiers_mutex == ft_nullptr)
-        return ;
+        return (FT_ERR_SUCCESS);
     destroy_error = g_pf_custom_specifiers_mutex->destroy();
     if (destroy_error != FT_ERR_SUCCESS)
-        return ;
+        return (destroy_error);
     delete g_pf_custom_specifiers_mutex;
     g_pf_custom_specifiers_mutex = ft_nullptr;
-    return ;
+    return (FT_ERR_SUCCESS);
 }
 
 typedef struct s_pf_custom_specifier_entry
@@ -114,7 +111,7 @@ int pf_unregister_custom_specifier(char specifier)
     return (0);
 }
 
-int pf_try_format_custom_specifier(char specifier, va_list *args, ft_string &output, bool *handled)
+int pf_try_format_custom_specifier(char specifier, va_list *argument_list, ft_string &output, bool *handled)
 {
     unsigned char         index;
     t_pf_custom_formatter handler;
@@ -129,7 +126,7 @@ int pf_try_format_custom_specifier(char specifier, va_list *args, ft_string &out
         return (FT_ERR_INVALID_ARGUMENT);
     }
     *handled = false;
-    if (args == ft_nullptr)
+    if (argument_list == ft_nullptr)
     {
         return (FT_ERR_INVALID_POINTER);
     }
@@ -152,7 +149,7 @@ int pf_try_format_custom_specifier(char specifier, va_list *args, ft_string &out
     if (string_error != FT_ERR_SUCCESS)
         return (string_error);
     *handled = true;
-    if (handler(args, output, context) != 0)
+    if (handler(argument_list, output, context) != 0)
     {
         string_error = pf_string_pop_last_error(output);
         error_code = string_error;

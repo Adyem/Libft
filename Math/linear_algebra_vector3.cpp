@@ -342,21 +342,25 @@ int vector3::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-void vector3::disable_thread_safety() noexcept
+int vector3::disable_thread_safety() noexcept
 {
+    int mutex_error;
+
     this->abort_if_not_initialized("vector3::disable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
-        this->_mutex->destroy();
+        mutex_error = this->_mutex->destroy();
+        if (mutex_error != FT_ERR_SUCCESS)
+            return (mutex_error);
         delete this->_mutex;
         this->_mutex = ft_nullptr;
     }
-    return ;
+    return (FT_ERR_SUCCESS);
 }
 
-bool vector3::is_thread_safe_enabled() const noexcept
+bool vector3::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("vector3::is_thread_safe_enabled");
+    this->abort_if_not_initialized("vector3::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 

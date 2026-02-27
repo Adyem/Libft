@@ -4,31 +4,32 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include <new>
 
-int cnfg_entry_prepare_thread_safety(cnfg_entry *entry)
+int config_entry_prepare_thread_safety(config_entry *entry)
 {
     pt_mutex *mutex_pointer;
     int initialize_error;
 
     if (!entry)
-        return (-1);
+        return (FT_ERR_INVALID_ARGUMENT);
     if (entry->mutex)
-        return (0);
+        return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_mutex();
     if (!mutex_pointer)
-        return (-1);
+        return (FT_ERR_NO_MEMORY);
     initialize_error = mutex_pointer->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
     {
         delete mutex_pointer;
-        return (-1);
+        return (initialize_error);
     }
     entry->mutex = mutex_pointer;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
-void cnfg_entry_teardown_thread_safety(cnfg_entry *entry)
+void config_entry_teardown_thread_safety(config_entry *entry)
 {
     if (!entry)
         return ;
@@ -41,26 +42,26 @@ void cnfg_entry_teardown_thread_safety(cnfg_entry *entry)
     return ;
 }
 
-int cnfg_entry_lock(cnfg_entry *entry, bool *lock_acquired)
+int config_entry_lock(config_entry *entry, bool *lock_acquired)
 {
+    int lock_error;
+
     if (lock_acquired)
         *lock_acquired = false;
     if (!entry)
-        return (-1);
-    if (!entry->mutex)
-        return (0);
-    int lock_error = entry->mutex->lock();
+        return (FT_ERR_INVALID_ARGUMENT);
+    lock_error = pt_mutex_lock_if_not_null(entry->mutex);
     if (lock_error != FT_ERR_SUCCESS)
-        return (-1);
-    if (lock_acquired)
+        return (lock_error);
+    if (lock_acquired && entry->mutex)
         *lock_acquired = true;
-    return (0);
+    return (FT_ERR_SUCCESS);
 }
 
-void cnfg_entry_unlock(cnfg_entry *entry, bool lock_acquired)
+void config_entry_unlock(config_entry *entry, bool lock_acquired)
 {
-    if (!entry || !lock_acquired || !entry->mutex)
+    if (!entry || !lock_acquired)
         return ;
-    entry->mutex->unlock();
+    (void)pt_mutex_unlock_if_not_null(entry->mutex);
     return ;
 }

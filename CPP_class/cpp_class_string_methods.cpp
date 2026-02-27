@@ -525,7 +525,12 @@ const char* ft_string::c_str() const noexcept
         int32_t lock_error = this->_mutex->lock();
         if (lock_error != FT_ERR_SUCCESS)
             return (const_cast<char *>(""));
-        const char *value = (this->_data ? this->_data : const_cast<char *>(""));
+        const char *value;
+
+        if (this->_data != ft_nullptr)
+            value = this->_data;
+        else
+            value = const_cast<char *>("");
         this->_mutex->unlock();
         return (value);
     }

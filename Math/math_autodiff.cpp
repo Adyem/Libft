@@ -315,13 +315,21 @@ int ft_dual_number::initialize(ft_dual_number &&other) noexcept
 
 int ft_dual_number::destroy() noexcept
 {
+    int disable_error;
+
     if (this->_initialized_state != ft_dual_number::_state_initialized)
     {
         this->abort_lifecycle_error("ft_dual_number::destroy",
             "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
     }
-    this->disable_thread_safety();
+    disable_error = this->disable_thread_safety();
+    if (disable_error != FT_ERR_SUCCESS)
+    {
+        this->_operation_error = disable_error;
+        ft_dual_number::set_last_operation_error(this->_operation_error);
+        return (disable_error);
+    }
     this->_value = 0.0;
     this->_derivative = 0.0;
     this->_operation_error = FT_ERR_SUCCESS;
@@ -331,12 +339,6 @@ int ft_dual_number::destroy() noexcept
 
 ft_dual_number::~ft_dual_number() noexcept
 {
-    if (this->_initialized_state == ft_dual_number::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("ft_dual_number::~ft_dual_number",
-            "destructor called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == ft_dual_number::_state_initialized)
         this->destroy();
     return ;
@@ -471,23 +473,31 @@ int ft_dual_number::enable_thread_safety() noexcept
     return (enable_error);
 }
 
-void ft_dual_number::disable_thread_safety() noexcept
+int ft_dual_number::disable_thread_safety() noexcept
 {
+    int mutex_error;
+
     this->abort_if_not_initialized("ft_dual_number::disable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
-        this->_mutex->destroy();
+        mutex_error = this->_mutex->destroy();
+        if (mutex_error != FT_ERR_SUCCESS)
+        {
+            this->_operation_error = mutex_error;
+            ft_dual_number::set_last_operation_error(this->_operation_error);
+            return (mutex_error);
+        }
         delete this->_mutex;
         this->_mutex = ft_nullptr;
     }
     this->_operation_error = FT_ERR_SUCCESS;
     ft_dual_number::set_last_operation_error(this->_operation_error);
-    return ;
+    return (FT_ERR_SUCCESS);
 }
 
-bool ft_dual_number::is_thread_safe_enabled() const noexcept
+bool ft_dual_number::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("ft_dual_number::is_thread_safe_enabled");
+    this->abort_if_not_initialized("ft_dual_number::is_thread_safe");
     ft_dual_number::set_last_operation_error(FT_ERR_SUCCESS);
     return (this->_mutex != ft_nullptr);
 }

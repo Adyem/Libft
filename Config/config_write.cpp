@@ -7,22 +7,28 @@
 #include "../JSon/json.hpp"
 #include <cstddef>
 #include "../PThread/mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 
-static int cnfg_config_lock_if_enabled(cnfg_config *config, bool *lock_acquired)
+static int config_lock_if_enabled(config_data *config, bool *lock_acquired)
 {
-    if (!config || !config->mutex)
+    int lock_result;
+
+    if (!config)
         return (FT_ERR_SUCCESS);
-    int lock_result = config->mutex->lock();
+    lock_result = pt_mutex_lock_if_not_null(config->mutex);
     if (lock_result == FT_ERR_SUCCESS && lock_acquired)
-        *lock_acquired = true;
+    {
+        if (config->mutex != ft_nullptr)
+            *lock_acquired = true;
+    }
     return (lock_result);
 }
 
-static void cnfg_config_unlock_guard(cnfg_config *config, bool lock_acquired)
+static void config_unlock_guard(config_data *config, bool lock_acquired)
 {
-    if (!config || !config->mutex || !lock_acquired)
+    if (!config || !lock_acquired)
         return ;
-    config->mutex->unlock();
+    (void)pt_mutex_unlock_if_not_null(config->mutex);
     return ;
 }
 
@@ -33,7 +39,7 @@ static int config_handle_write_failure(FILE *file)
     return (FT_ERR_IO);
 }
 
-static int config_write_ini(const cnfg_config *config, const char *filename)
+static int config_write_ini(const config_data *config, const char *filename)
 {
     FILE *file;
     const char *last_section;
@@ -46,7 +52,7 @@ static int config_write_ini(const cnfg_config *config, const char *filename)
     entry_index = 0;
     while (config && entry_index < config->entry_count)
     {
-        const cnfg_entry *entry = &config->entries[entry_index];
+        const config_entry *entry = &config->entries[entry_index];
         if (entry->section)
         {
             if (!last_section || ft_strcmp(entry->section, last_section) != 0)
@@ -121,7 +127,7 @@ static json_group *config_find_or_create_group(json_group **groups_head, const c
     return (new_group);
 }
 
-static int config_write_json(const cnfg_config *config, const char *filename)
+static int config_write_json(const config_data *config, const char *filename)
 {
     json_group *groups;
     size_t entry_index;
@@ -130,7 +136,7 @@ static int config_write_json(const cnfg_config *config, const char *filename)
     entry_index = 0;
     while (config && entry_index < config->entry_count)
     {
-        const cnfg_entry *entry = &config->entries[entry_index];
+        const config_entry *entry = &config->entries[entry_index];
         if (!entry->key || !entry->value)
         {
             json_free_groups(groups);
@@ -160,7 +166,7 @@ static int config_write_json(const cnfg_config *config, const char *filename)
     return (0);
 }
 
-int config_write_file(const cnfg_config *config, const char *filename)
+int config_write_file(const config_data *config, const char *filename)
 {
     const char *extension;
     bool mutex_locked = false;
@@ -170,14 +176,14 @@ int config_write_file(const cnfg_config *config, const char *filename)
     {
         return (-1);
     }
-    lock_error = cnfg_config_lock_if_enabled(const_cast<cnfg_config*>(config), &mutex_locked);
+    lock_error = config_lock_if_enabled(const_cast<config_data*>(config), &mutex_locked);
     if (lock_error != FT_ERR_SUCCESS)
     {
         return (-1);
     }
     if (config->entry_count && !config->entries)
     {
-        cnfg_config_unlock_guard(const_cast<cnfg_config*>(config), mutex_locked);
+        config_unlock_guard(const_cast<config_data*>(config), mutex_locked);
         return (-1);
     }
     extension = ft_strrchr(filename, '.');
@@ -186,12 +192,12 @@ int config_write_file(const cnfg_config *config, const char *filename)
         int write_result;
 
         write_result = config_write_json(config, filename);
-        cnfg_config_unlock_guard(const_cast<cnfg_config*>(config), mutex_locked);
+        config_unlock_guard(const_cast<config_data*>(config), mutex_locked);
         return (write_result);
     }
     int write_result;
 
     write_result = config_write_ini(config, filename);
-    cnfg_config_unlock_guard(const_cast<cnfg_config*>(config), mutex_locked);
+    config_unlock_guard(const_cast<config_data*>(config), mutex_locked);
     return (write_result);
 }

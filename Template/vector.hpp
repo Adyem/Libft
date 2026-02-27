@@ -69,8 +69,8 @@ class ft_vector
         const ElementType  *small_data() const;
         bool    using_small_buffer() const;
         void    reset_to_small_buffer();
-	int32_t     lock_internal(bool *lock_acquired) const;
-	int32_t     unlock_internal(bool lock_acquired) const;
+    int32_t     lock_internal(bool *lock_acquired) const;
+    int32_t     unlock_internal(bool lock_acquired) const;
         template <typename ArgType>
         int32_t construct_element_unlocked(ElementType *destination, ArgType &&value);
         static int32_t set_last_operation_error(int32_t error_code) noexcept;
@@ -88,20 +88,20 @@ class ft_vector
         ft_vector(const ft_vector&) = delete;
         ft_vector& operator=(const ft_vector&) = delete;
 
-	    ft_vector(ft_vector&& other) = delete;
-	    ft_vector& operator=(ft_vector&& other) = delete;
+        ft_vector(ft_vector&& other) = delete;
+        ft_vector& operator=(ft_vector&& other) = delete;
 
-	    int32_t     initialize() noexcept;
-	    int32_t     initialize(const ft_vector<ElementType> &other);
-	    int32_t     initialize(ft_vector<ElementType> &&other);
-	    int32_t     destroy() noexcept;
+        int32_t     initialize() noexcept;
+        int32_t     initialize(const ft_vector<ElementType> &other);
+        int32_t     initialize(ft_vector<ElementType> &&other);
+        int32_t     destroy() noexcept;
 
-	    int32_t     enable_thread_safety();
-	    int32_t     disable_thread_safety();
-	    int32_t     copy_from(const ft_vector<ElementType> &other);
-	    bool    is_thread_safe() const;
-	    int32_t     lock(bool *lock_acquired) const;
-	    void    unlock(bool lock_acquired) const;
+        int32_t     enable_thread_safety();
+        int32_t     disable_thread_safety();
+        int32_t     copy_from(const ft_vector<ElementType> &other);
+        bool    is_thread_safe() const;
+        int32_t     lock(bool *lock_acquired) const;
+        void    unlock(bool lock_acquired) const;
         static int32_t last_operation_error() noexcept;
         static const char *last_operation_error_str() noexcept;
 #ifdef LIBFT_TEST_BUILD
@@ -185,10 +185,10 @@ int32_t ft_vector<ElementType>::construct_element_unlocked(
 
 template <typename ElementType>
 ft_vector<ElementType>::ft_vector(ft_size_t initial_capacity)
-	: _data(ft_nullptr),
-	  _size(0),
-	  _capacity(0),
-	  _mutex(ft_nullptr)
+    : _data(ft_nullptr),
+      _size(0),
+      _capacity(0),
+      _mutex(ft_nullptr)
 {
     this->reset_to_small_buffer();
     if (initial_capacity > SMALL_CAPACITY)

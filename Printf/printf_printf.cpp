@@ -8,28 +8,28 @@
 #include <limits.h>
 #include <stddef.h>
 
-int pf_printf_fd(int fd, const char *format, ...)
+int pf_printf_fd(int file_descriptor, const char *format, ...)
 {
-    va_list args;
+    va_list argument_list;
     int printed_chars;
 
     if (!format)
         return (-1);
-    va_start(args, format);
-    printed_chars = pf_printf_fd_v(fd, format, args);
-    va_end(args);
+    va_start(argument_list, format);
+    printed_chars = pf_printf_fd_v(file_descriptor, format, argument_list);
+    va_end(argument_list);
     return (printed_chars);
 }
 
 int pf_printf(const char *format, ...)
 {
-    va_list args;
+    va_list argument_list;
     int printed_chars;
 
     if (!format)
         return (-1);
-    va_start(args, format);
-    printed_chars = pf_printf_fd_v(1, format, args);
-    va_end(args);
+    va_start(argument_list, format);
+    printed_chars = pf_printf_fd_v(1, format, argument_list);
+    va_end(argument_list);
     return (printed_chars);
 }

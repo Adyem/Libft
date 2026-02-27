@@ -5,6 +5,7 @@
 #include "../Errno/errno.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/pthread.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../PThread/pthread.hpp"
 #include <atomic>
 #include <utility>
@@ -21,8 +22,6 @@ class ft_promise
         mutable pt_recursive_mutex *_mutex;
         int lock_internal(bool *lock_acquired) const;
         int unlock_internal(bool lock_acquired) const;
-        int prepare_thread_safety();
-        void teardown_thread_safety();
 
     protected:
     public:
@@ -40,7 +39,7 @@ class ft_promise
         bool is_ready() const;
 
         int enable_thread_safety();
-        void disable_thread_safety();
+        int disable_thread_safety();
         bool is_thread_safe() const;
         int lock(bool *lock_acquired) const;
         void unlock(bool lock_acquired) const;
@@ -57,8 +56,6 @@ class ft_promise<void>
         mutable pt_recursive_mutex *_mutex;
         int lock_internal(bool *lock_acquired) const;
         int unlock_internal(bool lock_acquired) const;
-        int prepare_thread_safety();
-        void teardown_thread_safety();
 
     public:
         ft_promise();
@@ -74,7 +71,7 @@ class ft_promise<void>
         bool is_ready() const;
 
         int enable_thread_safety();
-        void disable_thread_safety();
+        int disable_thread_safety();
         bool is_thread_safe() const;
         int lock(bool *lock_acquired) const;
         void unlock(bool lock_acquired) const;
@@ -110,71 +107,6 @@ inline ft_promise<void>::~ft_promise()
 }
 
 template <typename ValueType>
-int ft_promise<ValueType>::prepare_thread_safety()
-{
-    pt_recursive_mutex *mutex_pointer;
-    int mutex_error;
-
-    if (this->_mutex != ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
-    if (mutex_pointer == ft_nullptr)
-        return (FT_ERR_NO_MEMORY);
-    mutex_error = mutex_pointer->initialize();
-    if (mutex_error != FT_ERR_SUCCESS)
-    {
-        delete mutex_pointer;
-        return (mutex_error);
-    }
-    this->_mutex = mutex_pointer;
-    return (FT_ERR_SUCCESS);
-}
-
-inline int ft_promise<void>::prepare_thread_safety()
-{
-    pt_recursive_mutex *mutex_pointer;
-    int mutex_error;
-
-    if (this->_mutex != ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
-    if (mutex_pointer == ft_nullptr)
-        return (FT_ERR_NO_MEMORY);
-    mutex_error = mutex_pointer->initialize();
-    if (mutex_error != FT_ERR_SUCCESS)
-    {
-        delete mutex_pointer;
-        return (mutex_error);
-    }
-    this->_mutex = mutex_pointer;
-    return (FT_ERR_SUCCESS);
-}
-
-template <typename ValueType>
-void ft_promise<ValueType>::teardown_thread_safety()
-{
-    if (this->_mutex != ft_nullptr)
-    {
-        (void)this->_mutex->destroy();
-        delete this->_mutex;
-        this->_mutex = ft_nullptr;
-    }
-    return ;
-}
-
-inline void ft_promise<void>::teardown_thread_safety()
-{
-    if (this->_mutex != ft_nullptr)
-    {
-        (void)this->_mutex->destroy();
-        delete this->_mutex;
-        this->_mutex = ft_nullptr;
-    }
-    return ;
-}
-
-
-template <typename ValueType>
 int ft_promise<ValueType>::lock(bool *lock_acquired) const
 {
     return (this->lock_internal(lock_acquired));
@@ -205,12 +137,10 @@ int ft_promise<ValueType>::lock_internal(bool *lock_acquired) const
 
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    mutex_result = this->_mutex->lock();
+    mutex_result = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (mutex_result != FT_ERR_SUCCESS)
         return (mutex_result);
-    if (lock_acquired != ft_nullptr)
+    if (lock_acquired != ft_nullptr && this->_mutex != ft_nullptr)
         *lock_acquired = true;
     return (FT_ERR_SUCCESS);
 }
@@ -221,12 +151,10 @@ inline int ft_promise<void>::lock_internal(bool *lock_acquired) const
 
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    mutex_result = this->_mutex->lock();
+    mutex_result = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (mutex_result != FT_ERR_SUCCESS)
         return (mutex_result);
-    if (lock_acquired != ft_nullptr)
+    if (lock_acquired != ft_nullptr && this->_mutex != ft_nullptr)
         *lock_acquired = true;
     return (FT_ERR_SUCCESS);
 }
@@ -236,9 +164,9 @@ int ft_promise<ValueType>::unlock_internal(bool lock_acquired) const
 {
     int mutex_result;
 
-    if (!lock_acquired || this->_mutex == ft_nullptr)
+    if (!lock_acquired)
         return (FT_ERR_SUCCESS);
-    mutex_result = this->_mutex->unlock();
+    mutex_result = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (mutex_result != FT_ERR_SUCCESS)
         return (mutex_result);
     return (FT_ERR_SUCCESS);
@@ -248,9 +176,9 @@ inline int ft_promise<void>::unlock_internal(bool lock_acquired) const
 {
     int mutex_result;
 
-    if (!lock_acquired || this->_mutex == ft_nullptr)
+    if (!lock_acquired)
         return (FT_ERR_SUCCESS);
-    mutex_result = this->_mutex->unlock();
+    mutex_result = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (mutex_result != FT_ERR_SUCCESS)
         return (mutex_result);
     return (FT_ERR_SUCCESS);
@@ -342,25 +270,65 @@ inline bool ft_promise<void>::is_ready() const
 template <typename ValueType>
 int ft_promise<ValueType>::enable_thread_safety()
 {
-    return (this->prepare_thread_safety());
+    if (this->_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    pt_recursive_mutex *mutex_pointer;
+
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
+    if (mutex_pointer == ft_nullptr)
+        return (FT_ERR_NO_MEMORY);
+    int mutex_error = mutex_pointer->initialize();
+    if (mutex_error != FT_ERR_SUCCESS)
+    {
+        delete mutex_pointer;
+        return (mutex_error);
+    }
+    this->_mutex = mutex_pointer;
+    return (FT_ERR_SUCCESS);
 }
 
 inline int ft_promise<void>::enable_thread_safety()
 {
-    return (this->prepare_thread_safety());
+    if (this->_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    pt_recursive_mutex *mutex_pointer;
+
+    mutex_pointer = new (std::nothrow) pt_recursive_mutex();
+    if (mutex_pointer == ft_nullptr)
+        return (FT_ERR_NO_MEMORY);
+    int mutex_error = mutex_pointer->initialize();
+    if (mutex_error != FT_ERR_SUCCESS)
+    {
+        delete mutex_pointer;
+        return (mutex_error);
+    }
+    this->_mutex = mutex_pointer;
+    return (FT_ERR_SUCCESS);
 }
 
 template <typename ValueType>
-void ft_promise<ValueType>::disable_thread_safety()
+int ft_promise<ValueType>::disable_thread_safety()
 {
-    this->teardown_thread_safety();
-    return ;
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    int destroy_error = this->_mutex->destroy();
+    if (destroy_error != FT_ERR_SUCCESS)
+        return (destroy_error);
+    delete this->_mutex;
+    this->_mutex = ft_nullptr;
+    return (FT_ERR_SUCCESS);
 }
 
-inline void ft_promise<void>::disable_thread_safety()
+inline int ft_promise<void>::disable_thread_safety()
 {
-    this->teardown_thread_safety();
-    return ;
+    if (this->_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    int destroy_error = this->_mutex->destroy();
+    if (destroy_error != FT_ERR_SUCCESS)
+        return (destroy_error);
+    delete this->_mutex;
+    this->_mutex = ft_nullptr;
+    return (FT_ERR_SUCCESS);
 }
 
 template <typename ValueType>

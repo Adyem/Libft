@@ -74,7 +74,7 @@ class ft_priority_queue
             {
                 parent_index = (index - 1) / 2;
                 if (!this->_comp(this->_data[parent_index], this->_data[index]))
-                    break;
+                    break ;
                 ft_swap(this->_data[parent_index], this->_data[index]);
                 index = parent_index;
             }
@@ -99,7 +99,7 @@ class ft_priority_queue
                     && this->_comp(this->_data[largest_index], this->_data[right_child_index]))
                     largest_index = right_child_index;
                 if (largest_index == index)
-                    break;
+                    break ;
                 ft_swap(this->_data[index], this->_data[largest_index]);
                 index = largest_index;
             }

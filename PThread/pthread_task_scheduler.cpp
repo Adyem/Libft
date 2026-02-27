@@ -30,13 +30,6 @@ ft_task_scheduler::scheduled_task::scheduled_task()
 
 ft_task_scheduler::scheduled_task::~scheduled_task()
 {
-    if (this->_initialized_state == ft_task_scheduler::scheduled_task::_state_uninitialized)
-    {
-        task_scheduler_abort_lifecycle_error(
-            "scheduled_task::~scheduled_task",
-            "destructor called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == ft_task_scheduler::scheduled_task::_state_initialized)
         (void)this->destroy();
     return ;
@@ -259,13 +252,22 @@ int ft_scheduled_task_state::enable_thread_safety()
     return (0);
 }
 
-void ft_scheduled_task_state::disable_thread_safety()
+int ft_scheduled_task_state::disable_thread_safety()
 {
-    this->teardown_thread_safety();
-    return ;
+    if (this->_state_mutex != ft_nullptr)
+    {
+        int destroy_error;
+
+        destroy_error = this->_state_mutex->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+        delete this->_state_mutex;
+        this->_state_mutex = ft_nullptr;
+    }
+    return (FT_ERR_SUCCESS);
 }
 
-bool ft_scheduled_task_state::is_thread_safe_enabled() const
+bool ft_scheduled_task_state::is_thread_safe() const
 {
     return (this->_state_mutex != ft_nullptr);
 }
@@ -537,13 +539,22 @@ int ft_scheduled_task_handle::enable_thread_safety()
     return (0);
 }
 
-void ft_scheduled_task_handle::disable_thread_safety()
+int ft_scheduled_task_handle::disable_thread_safety()
 {
-    this->teardown_thread_safety();
-    return ;
+    if (this->_state_mutex != ft_nullptr)
+    {
+        int destroy_error;
+
+        destroy_error = this->_state_mutex->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+        delete this->_state_mutex;
+        this->_state_mutex = ft_nullptr;
+    }
+    return (FT_ERR_SUCCESS);
 }
 
-bool ft_scheduled_task_handle::is_thread_safe_enabled() const
+bool ft_scheduled_task_handle::is_thread_safe() const
 {
     return (this->_state_mutex != ft_nullptr);
 }
@@ -653,12 +664,6 @@ ft_task_scheduler::ft_task_scheduler(size_t thread_count)
 
 ft_task_scheduler::~ft_task_scheduler()
 {
-    if (this->_initialized_state == ft_task_scheduler::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("ft_task_scheduler::~ft_task_scheduler",
-            "destructor called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == ft_task_scheduler::_state_initialized)
         (void)this->destroy();
     return ;
@@ -748,7 +753,7 @@ int ft_task_scheduler::initialize(size_t thread_count)
             if (worker_error != FT_ERR_SUCCESS)
             {
                 worker_failure = true;
-                break;
+                break ;
             }
         }
         this->_workers.push_back(ft_move(worker));
@@ -759,18 +764,18 @@ int ft_task_scheduler::initialize(size_t thread_count)
             if (worker_push_error != FT_ERR_SUCCESS)
             {
                 worker_failure = true;
-                break;
+                break ;
             }
         }
         if (!this->update_worker_total(1))
         {
             worker_failure = true;
-            break;
+            break ;
         }
         if (!this->update_worker_counters(0, 1))
         {
             worker_failure = true;
-            break;
+            break ;
         }
         index++;
     }
@@ -886,12 +891,12 @@ void ft_task_scheduler::worker_loop()
         unsigned long long previous_span;
 
         if (!this->_running.load())
-            break;
+            break ;
         has_task = this->_queue.wait_pop(queue_entry, this->_running);
         if (!has_task)
         {
             if (!this->_running.load())
-                break;
+                break ;
             continue;
         }
         if (!this->update_worker_counters(1, -1))
@@ -927,7 +932,7 @@ void ft_task_scheduler::scheduled_heap_sift_up(size_t index)
         comparison = time_monotonic_point_compare(this->_scheduled[index]._time,
                 this->_scheduled[parent_index]._time);
         if (comparison >= 0)
-            break;
+            break ;
         temp_task = ft_move(this->_scheduled[index]);
         this->_scheduled[index] = ft_move(this->_scheduled[parent_index]);
         this->_scheduled[parent_index] = ft_move(temp_task);
@@ -950,10 +955,10 @@ void ft_task_scheduler::scheduled_heap_sift_down(size_t index)
 
         size = this->_scheduled.size();
         if (index >= size)
-            break;
+            break ;
         left_child = index * 2 + 1;
         if (left_child >= size)
-            break;
+            break ;
         smallest = left_child;
         right_child = left_child + 1;
         if (right_child < size)
@@ -968,7 +973,7 @@ void ft_task_scheduler::scheduled_heap_sift_down(size_t index)
                 this->_scheduled[index]._time,
                 this->_scheduled[smallest]._time);
         if (comparison_left <= 0)
-            break;
+            break ;
         temp_task = ft_move(this->_scheduled[index]);
         this->_scheduled[index] = ft_move(this->_scheduled[smallest]);
         this->_scheduled[smallest] = ft_move(temp_task);
@@ -1174,7 +1179,7 @@ bool ft_task_scheduler::cancel_task_state(const ft_sharedptr<ft_scheduled_task_s
             return (false);
         }
         if (index >= size)
-            break;
+            break ;
         if (this->_scheduled[index]._state.get() == state_pointer)
         {
             cancelled_trace_id = this->_scheduled[index]._trace_id;
@@ -1193,7 +1198,7 @@ bool ft_task_scheduler::cancel_task_state(const ft_sharedptr<ft_scheduled_task_s
                 }
             removed_entry = true;
             should_emit_cancel = true;
-            break;
+            break ;
         }
         index++;
     }
@@ -1227,7 +1232,7 @@ void ft_task_scheduler::timer_loop()
     while (true)
     {
         if (!this->_running.load())
-            break;
+            break ;
         if (this->_scheduled_mutex.lock() != FT_ERR_SUCCESS)
             return ;
         while (true)
@@ -1301,7 +1306,7 @@ void ft_task_scheduler::timer_loop()
                     return ;
                 }
             }
-            break;
+            break ;
         }
         while (true)
         {
@@ -1319,11 +1324,11 @@ void ft_task_scheduler::timer_loop()
                 return ;
             }
             if (scheduled_count == 0)
-                break;
+                break ;
             now = time_monotonic_point_now();
             time_comparison = time_monotonic_point_compare(now, this->_scheduled[0]._time);
             if (time_comparison < 0)
-                break;
+                break ;
             pop_success = this->scheduled_heap_pop(expired_task);
             if (!pop_success)
             {
@@ -1764,11 +1769,11 @@ int ft_task_scheduler::disable_thread_safety()
     return (FT_ERR_SUCCESS);
 }
 
-bool ft_task_scheduler::is_thread_safe_enabled() const
+bool ft_task_scheduler::is_thread_safe() const
 {
     bool enabled;
 
-    this->abort_if_not_initialized("ft_task_scheduler::is_thread_safe_enabled");
+    this->abort_if_not_initialized("ft_task_scheduler::is_thread_safe");
     enabled = (this->_state_mutex != ft_nullptr);
     return (enabled);
 }

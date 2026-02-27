@@ -120,54 +120,54 @@ static int math_calculate_result(int first_number, int second_number, char sign)
     return (0);
 }
 
-static void math_update_string(char *string, int *i, int x)
+static void math_update_string(char *string, int *index, int read_index)
 {
-    if (string[x] == '-' || string[x] == '+')
-        x++;
-    while (string[x] >= '0' && string[x] <= '9')
-        x++;
+    if (string[read_index] == '-' || string[read_index] == '+')
+        read_index++;
+    while (string[read_index] >= '0' && string[read_index] <= '9')
+        read_index++;
     if (DEBUG == 1)
-        pf_printf("string = %s and x = %d\n", string, x);
-    while (string[x])
+        pf_printf("string = %s and x = %d\n", string, read_index);
+    while (string[read_index])
     {
-        string[*i] = string[x];
-        (*i)++;
-        x++;
+        string[*index] = string[read_index];
+        (*index)++;
+        read_index++;
     }
-    while (string[*i])
+    while (string[*index])
     {
-        string[*i] = '\0';
-        (*i)++;
+        string[*index] = '\0';
+        (*index)++;
     }
     return ;
 }
 
-int math_process_sign(char *string, int *i, int j, int *error)
+int math_process_sign(char *string, int *index, int string_boundary, int *error)
 {
     char sign;
     int result;
     int first_number;
     int second_number;
-    int x;
+    int second_number_index;
 
-    sign = string[*i];
-    x = *i;
-    if (*i > 0)
-        (*i)--;
-    x++;
-    first_number = math_roll_convert_previous(string, i, error);
-    second_number = math_roll_convert_next(string, x, error);
+    sign = string[*index];
+    second_number_index = *index;
+    if (*index > 0)
+        (*index)--;
+    second_number_index++;
+    first_number = math_roll_convert_previous(string, index, error);
+    second_number = math_roll_convert_next(string, second_number_index, error);
     if (*error)
         return (1);
     if (math_check_overflow(first_number, second_number, sign))
         return (1);
     result = math_calculate_result(first_number, second_number, sign);
     if (DEBUG == 1)
-        pf_printf("result = %d and i=%d\n", result, *i);
-    if (math_roll_itoa(result, i, string))
+        pf_printf("result = %d and i=%d\n", result, *index);
+    if (math_roll_itoa(result, index, string))
         return (1);
-    math_update_string(string, i, x);
-    *i = 0;
-    math_calculate_j(string, &j);
+    math_update_string(string, index, second_number_index);
+    *index = 0;
+    math_calculate_j(string, &string_boundary);
     return (0);
 }

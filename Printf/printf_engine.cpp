@@ -630,13 +630,13 @@ static int pf_engine_format_boolean(int value, t_pf_engine_write_callback writer
 
 static int pf_engine_format_with_snprintf(const ft_string &format_string, t_pf_engine_write_callback writer, void *context, size_t *written_count, ...)
 {
-    va_list args;
+    va_list argument_list;
     int write_error;
 
-    va_start(args, written_count);
+    va_start(argument_list, written_count);
     int required_length;
-    required_length = std::vsnprintf(ft_nullptr, 0, format_string.c_str(), args);
-    va_end(args);
+    required_length = std::vsnprintf(ft_nullptr, 0, format_string.c_str(), argument_list);
+    va_end(argument_list);
     if (required_length < 0)
         return (FT_ERR_IO);
     if (required_length == 0)
@@ -660,10 +660,10 @@ static int pf_engine_format_with_snprintf(const ft_string &format_string, t_pf_e
         return (string_error);
     if (output_buffer == ft_nullptr)
         return (FT_ERR_IO);
-    va_start(args, written_count);
+    va_start(argument_list, written_count);
     int written_length;
-    written_length = std::vsnprintf(output_buffer, static_cast<size_t>(required_length) + 1, format_string.c_str(), args);
-    va_end(args);
+    written_length = std::vsnprintf(output_buffer, static_cast<size_t>(required_length) + 1, format_string.c_str(), argument_list);
+    va_end(argument_list);
     if (written_length < 0)
         return (FT_ERR_IO);
     output.resize_length(static_cast<size_t>(written_length));
@@ -684,7 +684,7 @@ static int pf_engine_format_with_snprintf(const ft_string &format_string, t_pf_e
     return (FT_ERR_SUCCESS);
 }
 
-static int pf_engine_format_standard_sequential(const pf_engine_format_spec &original_spec, va_list *args, t_pf_engine_write_callback writer, void *context, size_t *written_count, size_t *character_count)
+static int pf_engine_format_standard_sequential(const pf_engine_format_spec &original_spec, va_list *argument_list, t_pf_engine_write_callback writer, void *context, size_t *written_count, size_t *character_count)
 {
     pf_engine_format_spec spec;
     spec = original_spec;
@@ -695,7 +695,7 @@ static int pf_engine_format_standard_sequential(const pf_engine_format_spec &ori
     if (spec.width_from_argument)
     {
         int dynamic_width;
-        dynamic_width = va_arg(*args, int);
+        dynamic_width = va_arg(*argument_list, int);
         if (dynamic_width < 0)
         {
             spec.flag_left_align = true;
@@ -715,7 +715,7 @@ static int pf_engine_format_standard_sequential(const pf_engine_format_spec &ori
     if (spec.precision_from_argument)
     {
         int dynamic_precision;
-        dynamic_precision = va_arg(*args, int);
+        dynamic_precision = va_arg(*argument_list, int);
         if (dynamic_precision >= 0)
         {
             precision_value = dynamic_precision;
@@ -731,56 +731,56 @@ static int pf_engine_format_standard_sequential(const pf_engine_format_spec &ori
         if (spec.length_modifier == PF_LEN_HH)
         {
             signed char *pointer;
-            pointer = va_arg(*args, signed char*);
+            pointer = va_arg(*argument_list, signed char*);
             if (pointer)
                 *pointer = static_cast<signed char>(value);
         }
         else if (spec.length_modifier == PF_LEN_H)
         {
             short *pointer;
-            pointer = va_arg(*args, short*);
+            pointer = va_arg(*argument_list, short*);
             if (pointer)
                 *pointer = static_cast<short>(value);
         }
         else if (spec.length_modifier == PF_LEN_L)
         {
             long *pointer;
-            pointer = va_arg(*args, long*);
+            pointer = va_arg(*argument_list, long*);
             if (pointer)
                 *pointer = static_cast<long>(value);
         }
         else if (spec.length_modifier == PF_LEN_LL)
         {
             long long *pointer;
-            pointer = va_arg(*args, long long*);
+            pointer = va_arg(*argument_list, long long*);
             if (pointer)
                 *pointer = static_cast<long long>(value);
         }
         else if (spec.length_modifier == PF_LEN_J)
         {
             intmax_t *pointer;
-            pointer = va_arg(*args, intmax_t*);
+            pointer = va_arg(*argument_list, intmax_t*);
             if (pointer)
                 *pointer = static_cast<intmax_t>(value);
         }
         else if (spec.length_modifier == PF_LEN_Z)
         {
             size_t *pointer;
-            pointer = va_arg(*args, size_t*);
+            pointer = va_arg(*argument_list, size_t*);
             if (pointer)
                 *pointer = value;
         }
         else if (spec.length_modifier == PF_LEN_T)
         {
             ptrdiff_t *pointer;
-            pointer = va_arg(*args, ptrdiff_t*);
+            pointer = va_arg(*argument_list, ptrdiff_t*);
             if (pointer)
                 *pointer = static_cast<ptrdiff_t>(value);
         }
         else
         {
             int *pointer;
-            pointer = va_arg(*args, int*);
+            pointer = va_arg(*argument_list, int*);
             if (pointer)
                 *pointer = static_cast<int>(value);
         }
@@ -791,7 +791,7 @@ static int pf_engine_format_standard_sequential(const pf_engine_format_spec &ori
         int boolean_value;
         int format_error;
 
-        boolean_value = va_arg(*args, int);
+        boolean_value = va_arg(*argument_list, int);
         format_error = pf_engine_format_boolean(boolean_value, writer, context, written_count);
         if (format_error != FT_ERR_SUCCESS)
             return (format_error);
@@ -806,7 +806,7 @@ static int pf_engine_format_standard_sequential(const pf_engine_format_spec &ori
         if (spec.length_modifier == PF_LEN_HH)
         {
             int value;
-            value = va_arg(*args, int);
+            value = va_arg(*argument_list, int);
             signed char converted;
             converted = static_cast<signed char>(value);
             status = pf_engine_format_with_snprintf(format_string, writer, context, written_count, converted);
@@ -814,7 +814,7 @@ static int pf_engine_format_standard_sequential(const pf_engine_format_spec &ori
         else if (spec.length_modifier == PF_LEN_H)
         {
             int value;
-            value = va_arg(*args, int);
+            value = va_arg(*argument_list, int);
             short converted;
             converted = static_cast<short>(value);
             status = pf_engine_format_with_snprintf(format_string, writer, context, written_count, converted);
@@ -822,37 +822,37 @@ static int pf_engine_format_standard_sequential(const pf_engine_format_spec &ori
         else if (spec.length_modifier == PF_LEN_L)
         {
             long value;
-            value = va_arg(*args, long);
+            value = va_arg(*argument_list, long);
             status = pf_engine_format_with_snprintf(format_string, writer, context, written_count, value);
         }
         else if (spec.length_modifier == PF_LEN_LL)
         {
             long long value;
-            value = va_arg(*args, long long);
+            value = va_arg(*argument_list, long long);
             status = pf_engine_format_with_snprintf(format_string, writer, context, written_count, value);
         }
         else if (spec.length_modifier == PF_LEN_J)
         {
             intmax_t value;
-            value = va_arg(*args, intmax_t);
+            value = va_arg(*argument_list, intmax_t);
             status = pf_engine_format_with_snprintf(format_string, writer, context, written_count, value);
         }
         else if (spec.length_modifier == PF_LEN_Z)
         {
             pf_signed_size_t value;
-            value = va_arg(*args, pf_signed_size_t);
+            value = va_arg(*argument_list, pf_signed_size_t);
             status = pf_engine_format_with_snprintf(format_string, writer, context, written_count, value);
         }
         else if (spec.length_modifier == PF_LEN_T)
         {
             ptrdiff_t value;
-            value = va_arg(*args, ptrdiff_t);
+            value = va_arg(*argument_list, ptrdiff_t);
             status = pf_engine_format_with_snprintf(format_string, writer, context, written_count, value);
         }
         else
         {
             int value;
-            value = va_arg(*args, int);
+            value = va_arg(*argument_list, int);
             status = pf_engine_format_with_snprintf(format_string, writer, context, written_count, value);
         }
     }
@@ -861,7 +861,7 @@ static int pf_engine_format_standard_sequential(const pf_engine_format_spec &ori
         if (spec.length_modifier == PF_LEN_HH)
         {
             unsigned int value;
-            value = va_arg(*args, unsigned int);
+            value = va_arg(*argument_list, unsigned int);
             unsigned char converted;
             converted = static_cast<unsigned char>(value);
             status = pf_engine_format_with_snprintf(format_string, writer, context, written_count, converted);
@@ -869,7 +869,7 @@ static int pf_engine_format_standard_sequential(const pf_engine_format_spec &ori
         else if (spec.length_modifier == PF_LEN_H)
         {
             unsigned int value;
-            value = va_arg(*args, unsigned int);
+            value = va_arg(*argument_list, unsigned int);
             unsigned short converted;
             converted = static_cast<unsigned short>(value);
             status = pf_engine_format_with_snprintf(format_string, writer, context, written_count, converted);
@@ -877,37 +877,37 @@ static int pf_engine_format_standard_sequential(const pf_engine_format_spec &ori
         else if (spec.length_modifier == PF_LEN_L)
         {
             unsigned long value;
-            value = va_arg(*args, unsigned long);
+            value = va_arg(*argument_list, unsigned long);
             status = pf_engine_format_with_snprintf(format_string, writer, context, written_count, value);
         }
         else if (spec.length_modifier == PF_LEN_LL)
         {
             unsigned long long value;
-            value = va_arg(*args, unsigned long long);
+            value = va_arg(*argument_list, unsigned long long);
             status = pf_engine_format_with_snprintf(format_string, writer, context, written_count, value);
         }
         else if (spec.length_modifier == PF_LEN_J)
         {
             uintmax_t value;
-            value = va_arg(*args, uintmax_t);
+            value = va_arg(*argument_list, uintmax_t);
             status = pf_engine_format_with_snprintf(format_string, writer, context, written_count, value);
         }
         else if (spec.length_modifier == PF_LEN_Z)
         {
             size_t value;
-            value = va_arg(*args, size_t);
+            value = va_arg(*argument_list, size_t);
             status = pf_engine_format_with_snprintf(format_string, writer, context, written_count, value);
         }
         else if (spec.length_modifier == PF_LEN_T)
         {
             pf_unsigned_ptrdiff_t value;
-            value = va_arg(*args, pf_unsigned_ptrdiff_t);
+            value = va_arg(*argument_list, pf_unsigned_ptrdiff_t);
             status = pf_engine_format_with_snprintf(format_string, writer, context, written_count, value);
         }
         else
         {
             unsigned int value;
-            value = va_arg(*args, unsigned int);
+            value = va_arg(*argument_list, unsigned int);
             status = pf_engine_format_with_snprintf(format_string, writer, context, written_count, value);
         }
     }
@@ -916,13 +916,13 @@ static int pf_engine_format_standard_sequential(const pf_engine_format_spec &ori
         if (spec.length_modifier == PF_LEN_CAPITAL_L)
         {
             long double value;
-            value = va_arg(*args, long double);
+            value = va_arg(*argument_list, long double);
             status = pf_engine_format_with_snprintf(format_string, writer, context, written_count, value);
         }
         else
         {
             double value;
-            value = va_arg(*args, double);
+            value = va_arg(*argument_list, double);
             status = pf_engine_format_with_snprintf(format_string, writer, context, written_count, value);
         }
     }
@@ -931,13 +931,13 @@ static int pf_engine_format_standard_sequential(const pf_engine_format_spec &ori
         if (spec.length_modifier == PF_LEN_L)
         {
             wint_t value;
-            value = va_arg(*args, wint_t);
+            value = va_arg(*argument_list, wint_t);
             status = pf_engine_format_with_snprintf(format_string, writer, context, written_count, value);
         }
         else
         {
             int value;
-            value = va_arg(*args, int);
+            value = va_arg(*argument_list, int);
             status = pf_engine_format_with_snprintf(format_string, writer, context, written_count, value);
         }
     }
@@ -946,20 +946,20 @@ static int pf_engine_format_standard_sequential(const pf_engine_format_spec &ori
         if (spec.length_modifier == PF_LEN_L)
         {
             const wchar_t *value;
-            value = va_arg(*args, const wchar_t*);
+            value = va_arg(*argument_list, const wchar_t*);
             status = pf_engine_format_with_snprintf(format_string, writer, context, written_count, value);
         }
         else
         {
             const char *value;
-            value = va_arg(*args, const char*);
+            value = va_arg(*argument_list, const char*);
             status = pf_engine_format_with_snprintf(format_string, writer, context, written_count, value);
         }
     }
     else if (spec.conversion_specifier == 'p')
     {
         void *value;
-        value = va_arg(*args, void*);
+        value = va_arg(*argument_list, void*);
         status = pf_engine_format_with_snprintf(format_string, writer, context, written_count, value);
     }
     else if (spec.conversion_specifier == '%')
@@ -980,14 +980,14 @@ static int pf_engine_format_standard_sequential(const pf_engine_format_spec &ori
     return (FT_ERR_SUCCESS);
 }
 
-static int pf_engine_process_sequential(const std::vector<pf_engine_token> &tokens, va_list args, t_pf_engine_write_callback writer, void *context, size_t *written_count)
+static int pf_engine_process_sequential(const std::vector<pf_engine_token> &tokens, va_list argument_list, t_pf_engine_write_callback writer, void *context, size_t *written_count)
 {
     size_t index;
     index = 0;
     size_t character_count;
     character_count = *written_count;
     va_list current_args;
-    va_copy(current_args, args);
+    va_copy(current_args, argument_list);
     int status;
     status = FT_ERR_SUCCESS;
     bool mark_overflow;
@@ -1207,12 +1207,12 @@ static int pf_engine_collect_argument_kinds(const std::vector<pf_engine_token> &
     return (0);
 }
 
-static int pf_engine_store_arguments(const std::vector<pf_engine_argument_kind> &kinds, va_list args, std::vector<pf_engine_argument_value> &values)
+static int pf_engine_store_arguments(const std::vector<pf_engine_argument_kind> &kinds, va_list argument_list, std::vector<pf_engine_argument_value> &values)
 {
     size_t index;
     index = 0;
     va_list current_args;
-    va_copy(current_args, args);
+    va_copy(current_args, argument_list);
     while (index < kinds.size())
     {
         pf_engine_argument_kind kind;
@@ -1467,13 +1467,13 @@ static int pf_engine_format_standard_positional(const pf_engine_format_spec &ori
     return (FT_ERR_SUCCESS);
 }
 
-static int pf_engine_process_positional(const std::vector<pf_engine_token> &tokens, va_list args, t_pf_engine_write_callback writer, void *context, size_t *written_count)
+static int pf_engine_process_positional(const std::vector<pf_engine_token> &tokens, va_list argument_list, t_pf_engine_write_callback writer, void *context, size_t *written_count)
 {
     std::vector<pf_engine_argument_kind> kinds;
     if (pf_engine_collect_argument_kinds(tokens, kinds) != 0)
         return (FT_ERR_INVALID_ARGUMENT);
     std::vector<pf_engine_argument_value> values;
-    if (pf_engine_store_arguments(kinds, args, values) != 0)
+    if (pf_engine_store_arguments(kinds, argument_list, values) != 0)
         return (FT_ERR_INVALID_ARGUMENT);
     size_t index;
     index = 0;
@@ -1507,7 +1507,7 @@ static int pf_engine_process_positional(const std::vector<pf_engine_token> &toke
     return (FT_ERR_SUCCESS);
 }
 
-int pf_engine_format(const char *format, va_list args, t_pf_engine_write_callback writer, void *context, size_t *written_count)
+int pf_engine_format(const char *format, va_list argument_list, t_pf_engine_write_callback writer, void *context, size_t *written_count)
 {
     if (!format || !written_count || !writer)
         return (FT_ERR_INVALID_ARGUMENT);
@@ -1531,9 +1531,9 @@ int pf_engine_format(const char *format, va_list args, t_pf_engine_write_callbac
     initial_count = *written_count;
     int status;
     if (uses_positional)
-        status = pf_engine_process_positional(tokens, args, writer, context, written_count);
+        status = pf_engine_process_positional(tokens, argument_list, writer, context, written_count);
     else
-        status = pf_engine_process_sequential(tokens, args, writer, context, written_count);
+        status = pf_engine_process_sequential(tokens, argument_list, writer, context, written_count);
     if (status != FT_ERR_SUCCESS)
         return (status);
     if (*written_count < initial_count)

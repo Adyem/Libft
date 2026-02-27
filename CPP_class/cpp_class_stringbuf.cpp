@@ -3,6 +3,7 @@
 #include "../Errno/errno.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include <new>
 
 void ft_stringbuf::abort_lifecycle_error(const char *method_name,
@@ -27,16 +28,12 @@ void ft_stringbuf::abort_if_not_initialized(const char *method_name) const noexc
 
 int ft_stringbuf::lock_mutex(void) const noexcept
 {
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->lock());
+    return (pt_recursive_mutex_lock_if_not_null(this->_mutex));
 }
 
 int ft_stringbuf::unlock_mutex(void) const noexcept
 {
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->unlock());
+    return (pt_recursive_mutex_unlock_if_not_null(this->_mutex));
 }
 
 ft_stringbuf::ft_stringbuf() noexcept

@@ -6,7 +6,7 @@
 #include "../Basic/basic.hpp"
 #include "readline_internal.hpp"
 
-int rl_handle_printable_char(readline_state_t *state, char c, const char *prompt)
+int rl_handle_printable_char(readline_state_t *state, char character, const char *prompt)
 {
     bool lock_acquired;
     int  result;
@@ -39,7 +39,7 @@ int rl_handle_printable_char(readline_state_t *state, char c, const char *prompt
     }
     ft_memmove(&state->buffer[state->pos + 1], &state->buffer[state->pos],
                ft_strlen(&state->buffer[state->pos]) + 1);
-    state->buffer[state->pos] = c;
+    state->buffer[state->pos] = character;
     state->pos++;
     if (rl_update_display_metrics(state) != FT_ERR_SUCCESS)
         goto cleanup;

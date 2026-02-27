@@ -50,8 +50,8 @@ class ft_blocking_queue
         ft_blocking_queue &operator=(const ft_blocking_queue&) = delete;
 
         int enable_thread_safety();
-        void disable_thread_safety();
-        bool is_thread_safe_enabled() const;
+        int disable_thread_safety();
+        bool is_thread_safe() const;
         int lock(bool *lock_acquired) const;
         void unlock(bool lock_acquired) const;
 
@@ -84,8 +84,8 @@ class ft_scheduled_task_state
         bool is_cancelled() const;
 
         int enable_thread_safety();
-        void disable_thread_safety();
-        bool is_thread_safe_enabled() const;
+        int disable_thread_safety();
+        bool is_thread_safe() const;
         int lock(bool *lock_acquired) const;
         void unlock(bool lock_acquired) const;
 };
@@ -114,8 +114,8 @@ class ft_scheduled_task_handle
         const ft_scheduled_task_state *get_state() const;
 
         int enable_thread_safety();
-        void disable_thread_safety();
-        bool is_thread_safe_enabled() const;
+        int disable_thread_safety();
+        bool is_thread_safe() const;
         int lock(bool *lock_acquired) const;
         void unlock(bool lock_acquired) const;
 };
@@ -240,7 +240,7 @@ class ft_task_scheduler
 
         int enable_thread_safety();
         int disable_thread_safety();
-        bool is_thread_safe_enabled() const;
+        bool is_thread_safe() const;
         int lock(bool *lock_acquired) const;
         int unlock(bool lock_acquired) const;
         pt_recursive_mutex *mutex_handle() const;
@@ -358,14 +358,28 @@ int ft_blocking_queue<ElementType>::enable_thread_safety()
 }
 
 template <typename ElementType>
-void ft_blocking_queue<ElementType>::disable_thread_safety()
+int ft_blocking_queue<ElementType>::disable_thread_safety()
 {
-    this->teardown_thread_safety();
-    return ;
+    int condition_error;
+
+    condition_error = this->_condition.disable_thread_safety();
+    if (condition_error != FT_ERR_SUCCESS)
+        return (condition_error);
+    if (this->_state_mutex != ft_nullptr)
+    {
+        int destroy_error;
+
+        destroy_error = this->_state_mutex->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+        delete this->_state_mutex;
+        this->_state_mutex = ft_nullptr;
+    }
+    return (FT_ERR_SUCCESS);
 }
 
 template <typename ElementType>
-bool ft_blocking_queue<ElementType>::is_thread_safe_enabled() const
+bool ft_blocking_queue<ElementType>::is_thread_safe() const
 {
     bool enabled;
 
@@ -520,7 +534,7 @@ bool ft_blocking_queue<ElementType>::wait_pop(ElementType &result, const std::at
             return (false);
         }
         if (!is_empty)
-            break;
+            break ;
         if (!running_flag.load() || this->_shutdown)
         {
             this->_mutex.unlock();

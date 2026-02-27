@@ -1,6 +1,7 @@
 #include "class_data_buffer.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include <new>
 
 thread_local int32_t DataBuffer::_last_error = FT_ERR_SUCCESS;
@@ -92,16 +93,12 @@ void DataBuffer::set_operation_error(int32_t error_code) noexcept
 
 int DataBuffer::lock_mutex(void) const noexcept
 {
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->lock());
+    return (pt_recursive_mutex_lock_if_not_null(this->_mutex));
 }
 
 int DataBuffer::unlock_mutex(void) const noexcept
 {
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->unlock());
+    return (pt_recursive_mutex_unlock_if_not_null(this->_mutex));
 }
 
 int DataBuffer::write_length_locked(size_t length) noexcept

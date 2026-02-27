@@ -18,7 +18,7 @@ static ft_size_t compute_offset(uint64_t pointer_value, uint64_t base_value)
     return (pointer_value - base_value);
 }
 
-int32_t cmp_cross_process_send_descriptor(int32_t socket_fd, const cross_process_message &message)
+int32_t cmp_cross_process_send_descriptor(int32_t socket_file_descriptor, const cross_process_message &message)
 {
     const unsigned char *raw_message;
     ft_size_t total_size;
@@ -31,7 +31,7 @@ int32_t cmp_cross_process_send_descriptor(int32_t socket_fd, const cross_process
     {
         int64_t written;
 
-        written = ::send(socket_fd, raw_message + offset,
+        written = ::send(socket_file_descriptor, raw_message + offset,
                 total_size - offset, 0);
         if (written < 0)
         {
@@ -44,7 +44,7 @@ int32_t cmp_cross_process_send_descriptor(int32_t socket_fd, const cross_process
     return (FT_ERR_SUCCESS);
 }
 
-int32_t cmp_cross_process_receive_descriptor(int32_t socket_fd, cross_process_message &message)
+int32_t cmp_cross_process_receive_descriptor(int32_t socket_file_descriptor, cross_process_message &message)
 {
     unsigned char *raw_message;
     ft_size_t total_size;
@@ -57,7 +57,7 @@ int32_t cmp_cross_process_receive_descriptor(int32_t socket_fd, cross_process_me
     {
         int64_t received;
 
-        received = ::recv(socket_fd, raw_message + offset,
+        received = ::recv(socket_file_descriptor, raw_message + offset,
                 total_size - offset, 0);
         if (received < 0)
         {

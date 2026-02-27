@@ -16,8 +16,8 @@ struct cmp_cross_process_mutex_state
     void *platform_mutex;
 };
 
-int32_t cmp_cross_process_send_descriptor(int32_t socket_fd, const cross_process_message &message);
-int32_t cmp_cross_process_receive_descriptor(int32_t socket_fd, cross_process_message &message);
+int32_t cmp_cross_process_send_descriptor(int32_t socket_file_descriptor, const cross_process_message &message);
+int32_t cmp_cross_process_receive_descriptor(int32_t socket_file_descriptor, cross_process_message &message);
 int32_t cmp_cross_process_open_mapping(const cross_process_message &message, cmp_cross_process_mapping *mapping);
 int32_t cmp_cross_process_close_mapping(cmp_cross_process_mapping *mapping);
 int32_t cmp_cross_process_lock_mutex(const cross_process_message &message, cmp_cross_process_mapping *mapping, cmp_cross_process_mutex_state *mutex_state);

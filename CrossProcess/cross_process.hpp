@@ -22,9 +22,9 @@ struct cross_process_read_result
     ft_string payload;
 };
 
-int cp_send_descriptor(int socket_fd, const cross_process_message &message);
-int cp_receive_descriptor(int socket_fd, cross_process_message &message);
-int cp_receive_memory(int socket_fd, cross_process_read_result &result);
+int cp_send_descriptor(int socket_file_descriptor, const cross_process_message &message);
+int cp_receive_descriptor(int socket_file_descriptor, cross_process_message &message);
+int cp_receive_memory(int socket_file_descriptor, cross_process_read_result &result);
 int cp_write_memory(const cross_process_message &message, const unsigned char *payload, ft_size_t payload_length, int error_code);
 
 #endif

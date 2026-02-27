@@ -152,10 +152,19 @@ int pt_condition_variable::enable_thread_safety()
     return (FT_ERR_SUCCESS);
 }
 
-void pt_condition_variable::disable_thread_safety()
+int pt_condition_variable::disable_thread_safety()
 {
-    this->teardown_thread_safety();
-    return ;
+    if (this->_state_mutex != ft_nullptr)
+    {
+        int destroy_error;
+
+        destroy_error = this->_state_mutex->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            return (destroy_error);
+        delete this->_state_mutex;
+        this->_state_mutex = ft_nullptr;
+    }
+    return (FT_ERR_SUCCESS);
 }
 
 bool pt_condition_variable::is_thread_safe() const

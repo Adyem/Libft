@@ -239,13 +239,13 @@ static void mark_count_error(size_t *count)
     return ;
 }
 
-static void write_buffer_fd(const char *buffer, size_t length, int fd, size_t *count)
+static void write_buffer_fd(const char *buffer, size_t length, int file_descriptor, size_t *count)
 {
     if (count_has_error(count))
         return ;
     if (length == 0)
         return ;
-    ssize_t return_value = su_write(fd, buffer, length);
+    ssize_t return_value = su_write(file_descriptor, buffer, length);
     if (return_value != static_cast<ssize_t>(length))
     {
         mark_count_error(count);
@@ -255,7 +255,7 @@ static void write_buffer_fd(const char *buffer, size_t length, int fd, size_t *c
     return ;
 }
 
-static void write_decimal_from_pairs(uintmax_t number, int fd, size_t *count)
+static void write_decimal_from_pairs(uintmax_t number, int file_descriptor, size_t *count)
 {
     char        buffer[32];
     char        *cursor;
@@ -288,11 +288,11 @@ static void write_decimal_from_pairs(uintmax_t number, int fd, size_t *count)
     }
     size_t length = static_cast<size_t>((buffer + sizeof(buffer)) - cursor);
 
-    write_buffer_fd(cursor, length, fd, count);
+    write_buffer_fd(cursor, length, file_descriptor, count);
     return ;
 }
 
-static void write_hex_from_pairs(uintmax_t number, bool uppercase, int fd, size_t *count)
+static void write_hex_from_pairs(uintmax_t number, bool uppercase, int file_descriptor, size_t *count)
 {
     char        buffer[32];
     char        *cursor;
@@ -304,7 +304,7 @@ static void write_hex_from_pairs(uintmax_t number, bool uppercase, int fd, size_
     {
         cursor -= 1;
         cursor[0] = '0';
-        write_buffer_fd(cursor, 1, fd, count);
+        write_buffer_fd(cursor, 1, file_descriptor, count);
         return ;
     }
     while (number != 0)
@@ -331,11 +331,11 @@ static void write_hex_from_pairs(uintmax_t number, bool uppercase, int fd, size_
     }
     size_t length = static_cast<size_t>((buffer + sizeof(buffer)) - cursor);
 
-    write_buffer_fd(cursor, length, fd, count);
+    write_buffer_fd(cursor, length, file_descriptor, count);
     return ;
 }
 
-static void write_octal_from_triplets(uintmax_t number, int fd, size_t *count)
+static void write_octal_from_triplets(uintmax_t number, int file_descriptor, size_t *count)
 {
     char        buffer[66];
     char        *cursor;
@@ -347,7 +347,7 @@ static void write_octal_from_triplets(uintmax_t number, int fd, size_t *count)
     {
         cursor -= 1;
         cursor[0] = '0';
-        write_buffer_fd(cursor, 1, fd, count);
+        write_buffer_fd(cursor, 1, file_descriptor, count);
         return ;
     }
     while (number != 0)
@@ -367,7 +367,7 @@ static void write_octal_from_triplets(uintmax_t number, int fd, size_t *count)
     }
     size_t length = static_cast<size_t>((buffer + sizeof(buffer)) - cursor);
 
-    write_buffer_fd(cursor, length, fd, count);
+    write_buffer_fd(cursor, length, file_descriptor, count);
     return ;
 }
 
@@ -425,27 +425,27 @@ size_t ft_strlen_printf(const char *string)
     return (length);
 }
 
-void ft_putchar_fd(const char character, int fd, size_t *count)
+void ft_putchar_fd(const char character, int file_descriptor, size_t *count)
 {
-    write_buffer_fd(&character, 1, fd, count);
+    write_buffer_fd(&character, 1, file_descriptor, count);
     return ;
 }
 
-void ft_putstr_fd(const char *string, int fd, size_t *count)
+void ft_putstr_fd(const char *string, int file_descriptor, size_t *count)
 {
     if (count_has_error(count))
         return ;
     if (!string)
     {
-        write_buffer_fd("(null)", 6, fd, count);
+        write_buffer_fd("(null)", 6, file_descriptor, count);
         return ;
     }
     size_t length = ft_strlen_printf(string);
-    write_buffer_fd(string, length, fd, count);
+    write_buffer_fd(string, length, file_descriptor, count);
     return ;
 }
 
-void ft_putnbr_fd(long number, int fd, size_t *count)
+void ft_putnbr_fd(long number, int file_descriptor, size_t *count)
 {
     uintmax_t  absolute_value;
 
@@ -453,7 +453,7 @@ void ft_putnbr_fd(long number, int fd, size_t *count)
         return ;
     if (number < 0)
     {
-        ft_putchar_fd('-', fd, count);
+        ft_putchar_fd('-', file_descriptor, count);
         if (count_has_error(count))
             return ;
         absolute_value = static_cast<uintmax_t>(-(number + 1)) + 1;
@@ -462,41 +462,41 @@ void ft_putnbr_fd(long number, int fd, size_t *count)
     {
         absolute_value = static_cast<uintmax_t>(number);
     }
-    write_decimal_from_pairs(absolute_value, fd, count);
+    write_decimal_from_pairs(absolute_value, file_descriptor, count);
     return ;
 }
 
-void ft_putunsigned_fd(uintmax_t number, int fd, size_t *count)
+void ft_putunsigned_fd(uintmax_t number, int file_descriptor, size_t *count)
 {
-    write_decimal_from_pairs(number, fd, count);
+    write_decimal_from_pairs(number, file_descriptor, count);
     return ;
 }
 
-void ft_puthex_fd(uintmax_t number, int fd, bool uppercase, size_t *count)
+void ft_puthex_fd(uintmax_t number, int file_descriptor, bool uppercase, size_t *count)
 {
-    write_hex_from_pairs(number, uppercase, fd, count);
+    write_hex_from_pairs(number, uppercase, file_descriptor, count);
     return ;
 }
 
-void ft_putoctal_fd(uintmax_t number, int fd, size_t *count)
+void ft_putoctal_fd(uintmax_t number, int file_descriptor, size_t *count)
 {
-    write_octal_from_triplets(number, fd, count);
+    write_octal_from_triplets(number, file_descriptor, count);
     return ;
 }
 
-void ft_putptr_fd(void *pointer, int fd, size_t *count)
+void ft_putptr_fd(void *pointer, int file_descriptor, size_t *count)
 {
     if (count_has_error(count))
         return ;
     uintptr_t address = reinterpret_cast<uintptr_t>(pointer);
-    ft_putstr_fd("0x", fd, count);
+    ft_putstr_fd("0x", file_descriptor, count);
     if (count_has_error(count))
         return ;
-    ft_puthex_fd(address, fd, false, count);
+    ft_puthex_fd(address, file_descriptor, false, count);
     return ;
 }
 
-void ft_putfloat_fd(double number, int fd, size_t *count, int precision)
+void ft_putfloat_fd(double number, int file_descriptor, size_t *count, int precision)
 {
     if (count_has_error(count))
         return ;
@@ -509,11 +509,11 @@ void ft_putfloat_fd(double number, int fd, size_t *count, int precision)
     size_t output_length = formatted_output.size();
     if (output_length == 0)
         return ;
-    write_buffer_fd(formatted_output.c_str(), output_length, fd, count);
+    write_buffer_fd(formatted_output.c_str(), output_length, file_descriptor, count);
     return ;
 }
 
-void ft_putscientific_fd(double number, bool uppercase, int fd, size_t *count, int precision)
+void ft_putscientific_fd(double number, bool uppercase, int file_descriptor, size_t *count, int precision)
 {
     if (count_has_error(count))
         return ;
@@ -532,11 +532,11 @@ void ft_putscientific_fd(double number, bool uppercase, int fd, size_t *count, i
     size_t output_length = formatted_output.size();
     if (output_length == 0)
         return ;
-    write_buffer_fd(formatted_output.c_str(), output_length, fd, count);
+    write_buffer_fd(formatted_output.c_str(), output_length, file_descriptor, count);
     return ;
 }
 
-void ft_putgeneral_fd(double number, bool uppercase, int fd, size_t *count, int precision)
+void ft_putgeneral_fd(double number, bool uppercase, int file_descriptor, size_t *count, int precision)
 {
     if (count_has_error(count))
         return ;
@@ -555,11 +555,11 @@ void ft_putgeneral_fd(double number, bool uppercase, int fd, size_t *count, int 
     size_t output_length = formatted_output.size();
     if (output_length == 0)
         return ;
-    write_buffer_fd(formatted_output.c_str(), output_length, fd, count);
+    write_buffer_fd(formatted_output.c_str(), output_length, file_descriptor, count);
     return ;
 }
 
-void pf_write_ft_string_fd(const ft_string &output, int fd, size_t *count)
+void pf_write_ft_string_fd(const ft_string &output, int file_descriptor, size_t *count)
 {
     const char  *buffer;
     size_t      length;
@@ -585,6 +585,6 @@ void pf_write_ft_string_fd(const ft_string &output, int fd, size_t *count)
     }
     if (length == 0)
         return ;
-    write_buffer_fd(buffer, length, fd, count);
+    write_buffer_fd(buffer, length, file_descriptor, count);
     return ;
 }

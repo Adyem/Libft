@@ -2,6 +2,7 @@
 #include <new>
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/recursive_mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 
 #include "../Errno/errno.hpp"
@@ -61,23 +62,21 @@ int rl_terminal_dimensions_lock(terminal_dimensions *dimensions, bool *lock_acqu
         *lock_acquired = false;
     if (dimensions == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
-    if (dimensions->mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    int mutex_error = dimensions->mutex->lock();
+    int mutex_error = pt_recursive_mutex_lock_if_not_null(dimensions->mutex);
     if (mutex_error != FT_ERR_SUCCESS)
         return (mutex_error);
-    if (lock_acquired != ft_nullptr)
+    if (lock_acquired != ft_nullptr && dimensions->mutex != ft_nullptr)
         *lock_acquired = true;
     return (FT_ERR_SUCCESS);
 }
 
 int rl_terminal_dimensions_unlock(terminal_dimensions *dimensions, bool lock_acquired)
 {
-    if (dimensions == ft_nullptr || lock_acquired == false)
+    if (dimensions == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
-    if (dimensions->mutex == ft_nullptr)
-        return (FT_ERR_INVALID_STATE);
-    int mutex_error = dimensions->mutex->unlock();
+    if (lock_acquired == false)
+        return (FT_ERR_SUCCESS);
+    int mutex_error = pt_recursive_mutex_unlock_if_not_null(dimensions->mutex);
     if (mutex_error != FT_ERR_SUCCESS)
         return (mutex_error);
     return (FT_ERR_SUCCESS);

@@ -19,12 +19,6 @@ pt_recursive_mutex::pt_recursive_mutex()
 
 pt_recursive_mutex::~pt_recursive_mutex()
 {
-    if (this->_initialized_state == pt_recursive_mutex::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("pt_recursive_mutex::~pt_recursive_mutex",
-            "destructor called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == pt_recursive_mutex::_state_initialized)
         (void)this->destroy();
     this->teardown_thread_safety();

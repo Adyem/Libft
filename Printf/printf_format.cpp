@@ -35,18 +35,18 @@ static int pf_fd_writer(const char *data_pointer, size_t data_length, void *cont
     return (FT_ERR_SUCCESS);
 }
 
-int pf_printf_fd_v(int fd, const char *format, va_list args)
+int pf_printf_fd_v(int file_descriptor, const char *format, va_list argument_list)
 {
     int error_code;
 
-    if (fd < 0 || format == ft_nullptr)
+    if (file_descriptor < 0 || format == ft_nullptr)
         return (-1);
     pf_fd_writer_context context;
-    context.file_descriptor = fd;
+    context.file_descriptor = file_descriptor;
     size_t written_count;
     written_count = 0;
     va_list current_args;
-    va_copy(current_args, args);
+    va_copy(current_args, argument_list);
     error_code = pf_engine_format(format, current_args, pf_fd_writer, &context, &written_count);
     if (error_code != FT_ERR_SUCCESS)
     {

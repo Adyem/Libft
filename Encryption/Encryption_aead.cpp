@@ -4,6 +4,7 @@
 #include "../Basic/basic.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include <new>
 #include <cstdio>
 
@@ -36,9 +37,6 @@ encryption_aead_context::~encryption_aead_context()
 {
     if (this->_initialized_state == this->_state_initialized)
         (void)this->destroy();
-    else if (this->_initialized_state == this->_state_uninitialized)
-        this->abort_lifecycle_error("~encryption_aead_context",
-            "destroyed while uninitialized");
     return ;
 }
 
@@ -103,21 +101,12 @@ bool encryption_aead_context::is_thread_safe() const
 
 int encryption_aead_context::initialize()
 {
-    int mutex_error;
-
     if (this->_initialized_state == this->_state_initialized)
         return (FT_ERR_INVALID_STATE);
     this->_initialized_state = this->_state_initialized;
-    mutex_error = this->enable_thread_safety();
-    if (mutex_error != FT_ERR_SUCCESS)
-    {
-        this->_initialized_state = this->_state_destroyed;
-        return (mutex_error);
-    }
     this->_context = EVP_CIPHER_CTX_new();
     if (this->_context == NULL)
     {
-        (void)this->disable_thread_safety();
         this->_initialized_state = this->_state_destroyed;
         return (FT_ERR_NO_MEMORY);
     }
@@ -147,12 +136,7 @@ int encryption_aead_context::destroy()
 int encryption_aead_context::finalize_operation(int result) const
 {
     this->abort_if_not_initialized("finalize_operation");
-    int unlock_error;
-
-    if (this->_mutex == ft_nullptr)
-        unlock_error = FT_ERR_SUCCESS;
-    else
-        unlock_error = this->_mutex->unlock();
+    int unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_error != FT_ERR_SUCCESS)
         return (unlock_error);
     return (result);
@@ -168,10 +152,7 @@ int encryption_aead_context::configure_cipher(const unsigned char *key, size_t k
     int encrypt_flag = 0;
     int lock_result;
 
-    if (this->_mutex == ft_nullptr)
-        lock_result = FT_ERR_SUCCESS;
-    else
-        lock_result = this->_mutex->lock();
+    lock_result = pt_recursive_mutex_lock_if_not_null(this->_mutex);
 
     if (lock_result != FT_ERR_SUCCESS)
         return (lock_result);
@@ -226,10 +207,7 @@ int encryption_aead_context::update_aad(const unsigned char *aad, size_t aad_len
     this->abort_if_not_initialized("update_aad");
     int lock_result;
 
-    if (this->_mutex == ft_nullptr)
-        lock_result = FT_ERR_SUCCESS;
-    else
-        lock_result = this->_mutex->lock();
+    lock_result = pt_recursive_mutex_lock_if_not_null(this->_mutex);
 
     if (lock_result != FT_ERR_SUCCESS)
         return (lock_result);
@@ -253,10 +231,7 @@ int encryption_aead_context::update(const unsigned char *input, size_t input_len
     this->abort_if_not_initialized("update");
     int lock_result;
 
-    if (this->_mutex == ft_nullptr)
-        lock_result = FT_ERR_SUCCESS;
-    else
-        lock_result = this->_mutex->lock();
+    lock_result = pt_recursive_mutex_lock_if_not_null(this->_mutex);
 
     output_length = 0;
     if (lock_result != FT_ERR_SUCCESS)
@@ -281,10 +256,7 @@ int encryption_aead_context::finalize(unsigned char *tag, size_t tag_length)
     this->abort_if_not_initialized("finalize");
     int lock_result;
 
-    if (this->_mutex == ft_nullptr)
-        lock_result = FT_ERR_SUCCESS;
-    else
-        lock_result = this->_mutex->lock();
+    lock_result = pt_recursive_mutex_lock_if_not_null(this->_mutex);
 
     if (lock_result != FT_ERR_SUCCESS)
         return (lock_result);
@@ -327,10 +299,7 @@ int encryption_aead_context::set_tag(const unsigned char *tag, size_t tag_length
     this->abort_if_not_initialized("set_tag");
     int lock_result;
 
-    if (this->_mutex == ft_nullptr)
-        lock_result = FT_ERR_SUCCESS;
-    else
-        lock_result = this->_mutex->lock();
+    lock_result = pt_recursive_mutex_lock_if_not_null(this->_mutex);
 
     if (lock_result != FT_ERR_SUCCESS)
         return (lock_result);
@@ -353,10 +322,7 @@ void    encryption_aead_context::reset()
     this->abort_if_not_initialized("reset");
     int lock_result;
 
-    if (this->_mutex == ft_nullptr)
-        lock_result = FT_ERR_SUCCESS;
-    else
-        lock_result = this->_mutex->lock();
+    lock_result = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_result != FT_ERR_SUCCESS)
         return ;
     if (this->_context != NULL)
@@ -367,10 +333,7 @@ void    encryption_aead_context::reset()
     this->_iv_length = 0;
     int unlock_result;
 
-    if (this->_mutex == ft_nullptr)
-        unlock_result = FT_ERR_SUCCESS;
-    else
-        unlock_result = this->_mutex->unlock();
+    unlock_result = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     if (unlock_result != FT_ERR_SUCCESS)
         return ;
     return ;

@@ -21,7 +21,7 @@ FT_TEST(test_ft_file_default_constructor_starts_closed,
 {
     ft_file file;
 
-    FT_ASSERT_EQ(-1, file.get_fd());
+    FT_ASSERT_EQ(-1, file.get_file_descriptor());
     return (1);
 }
 
@@ -34,10 +34,10 @@ FT_TEST(test_ft_file_open_close_lifecycle_cycle,
     path = "tmp_ft_file_lifecycle_cycle.txt";
     cleanup_file(path);
     FT_ASSERT_EQ(0, file.open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644));
-    FT_ASSERT(file.get_fd() >= 0);
+    FT_ASSERT(file.get_file_descriptor() >= 0);
     FT_ASSERT_EQ(5, static_cast<int>(file.write("hello")));
     file.close();
-    FT_ASSERT_EQ(-1, file.get_fd());
+    FT_ASSERT_EQ(-1, file.get_file_descriptor());
     cleanup_file(path);
     return (1);
 }
@@ -69,7 +69,7 @@ FT_TEST(test_ft_file_close_when_already_closed_keeps_invalid_fd,
     ft_file file;
 
     file.close();
-    FT_ASSERT_EQ(-1, file.get_fd());
+    FT_ASSERT_EQ(-1, file.get_file_descriptor());
     return (1);
 }
 

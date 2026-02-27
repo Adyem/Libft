@@ -23,70 +23,86 @@ static void task_scheduler_trace_set_error(int error)
 
 int task_scheduler_register_trace_sink(task_scheduler_trace_sink sink)
 {
+    bool lock_acquired;
+
     if (sink == ft_nullptr)
     {
         task_scheduler_trace_set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
-    {
-        std::lock_guard<std::mutex> guard(g_task_scheduler_trace_mutex);
-        size_t index;
-        size_t count;
+    lock_acquired = false;
+    g_task_scheduler_trace_mutex.lock();
+    lock_acquired = true;
+    size_t index;
+    size_t count;
 
-        index = 0;
-        count = g_task_scheduler_trace_sinks.size();
-        while (index < count)
+    index = 0;
+    count = g_task_scheduler_trace_sinks.size();
+    while (index < count)
+    {
+        if (g_task_scheduler_trace_sinks[index] == sink)
         {
-            if (g_task_scheduler_trace_sinks[index] == sink)
-            {
-                task_scheduler_trace_set_error(FT_ERR_ALREADY_EXISTS);
-                return (-1);
-            }
-            index += 1;
-        }
-        g_task_scheduler_trace_sinks.push_back(sink);
-        int push_error = ft_vector<task_scheduler_trace_sink>::last_operation_error();
-        if (push_error != FT_ERR_SUCCESS)
-        {
-            task_scheduler_trace_set_error(push_error);
+            if (lock_acquired)
+                g_task_scheduler_trace_mutex.unlock();
+            task_scheduler_trace_set_error(FT_ERR_ALREADY_EXISTS);
             return (-1);
         }
+        index += 1;
     }
+    g_task_scheduler_trace_sinks.push_back(sink);
+    int push_error = ft_vector<task_scheduler_trace_sink>::last_operation_error();
+    if (push_error != FT_ERR_SUCCESS)
+    {
+        if (lock_acquired)
+            g_task_scheduler_trace_mutex.unlock();
+        task_scheduler_trace_set_error(push_error);
+        return (-1);
+    }
+    if (lock_acquired)
+        g_task_scheduler_trace_mutex.unlock();
     task_scheduler_trace_set_error(FT_ERR_SUCCESS);
     return (0);
 }
 
 int task_scheduler_unregister_trace_sink(task_scheduler_trace_sink sink)
 {
+    bool lock_acquired;
+
     if (sink == ft_nullptr)
     {
         task_scheduler_trace_set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
-    {
-        std::lock_guard<std::mutex> guard(g_task_scheduler_trace_mutex);
-        size_t index;
-        size_t count;
+    lock_acquired = false;
+    g_task_scheduler_trace_mutex.lock();
+    lock_acquired = true;
+    size_t index;
+    size_t count;
 
-        index = 0;
-        count = g_task_scheduler_trace_sinks.size();
-        while (index < count)
+    index = 0;
+    count = g_task_scheduler_trace_sinks.size();
+    while (index < count)
+    {
+        if (g_task_scheduler_trace_sinks[index] == sink)
         {
-            if (g_task_scheduler_trace_sinks[index] == sink)
+            g_task_scheduler_trace_sinks.erase(g_task_scheduler_trace_sinks.begin() + index);
+            int erase_error = ft_vector<task_scheduler_trace_sink>::last_operation_error();
+            if (erase_error != FT_ERR_SUCCESS)
             {
-                g_task_scheduler_trace_sinks.erase(g_task_scheduler_trace_sinks.begin() + index);
-                int erase_error = ft_vector<task_scheduler_trace_sink>::last_operation_error();
-                if (erase_error != FT_ERR_SUCCESS)
-                {
-                    task_scheduler_trace_set_error(erase_error);
-                    return (-1);
-                }
-                task_scheduler_trace_set_error(FT_ERR_SUCCESS);
-                return (0);
+                if (lock_acquired)
+                    g_task_scheduler_trace_mutex.unlock();
+                task_scheduler_trace_set_error(erase_error);
+                return (-1);
             }
-            index += 1;
+            if (lock_acquired)
+                g_task_scheduler_trace_mutex.unlock();
+            task_scheduler_trace_set_error(FT_ERR_SUCCESS);
+            return (0);
         }
+        index += 1;
     }
+    if (lock_acquired)
+        g_task_scheduler_trace_mutex.unlock();
     task_scheduler_trace_set_error(FT_ERR_NOT_FOUND);
     return (-1);
 }
@@ -94,29 +110,33 @@ int task_scheduler_unregister_trace_sink(task_scheduler_trace_sink sink)
 void task_scheduler_trace_emit(const ft_task_trace_event &event)
 {
     ft_vector<task_scheduler_trace_sink> sinks_copy;
+    bool lock_acquired;
+    size_t index;
+    size_t count;
 
+    lock_acquired = false;
+    g_task_scheduler_trace_mutex.lock();
+    lock_acquired = true;
+    index = 0;
+    count = g_task_scheduler_trace_sinks.size();
+    while (index < count)
     {
-        std::lock_guard<std::mutex> guard(g_task_scheduler_trace_mutex);
-        size_t index;
-        size_t count;
+        task_scheduler_trace_sink sink_instance;
 
-        index = 0;
-        count = g_task_scheduler_trace_sinks.size();
-        while (index < count)
+        sink_instance = g_task_scheduler_trace_sinks[index];
+        sinks_copy.push_back(sink_instance);
+        int push_error = ft_vector<task_scheduler_trace_sink>::last_operation_error();
+        if (push_error != FT_ERR_SUCCESS)
         {
-            task_scheduler_trace_sink sink_instance;
-
-            sink_instance = g_task_scheduler_trace_sinks[index];
-            sinks_copy.push_back(sink_instance);
-            int push_error = ft_vector<task_scheduler_trace_sink>::last_operation_error();
-            if (push_error != FT_ERR_SUCCESS)
-            {
-                task_scheduler_trace_set_error(push_error);
-                return ;
-            }
-            index += 1;
+            if (lock_acquired)
+                g_task_scheduler_trace_mutex.unlock();
+            task_scheduler_trace_set_error(push_error);
+            return ;
         }
+        index += 1;
     }
+    if (lock_acquired)
+        g_task_scheduler_trace_mutex.unlock();
     size_t call_index;
     size_t call_count;
 

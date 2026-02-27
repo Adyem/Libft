@@ -15,7 +15,7 @@
 class ft_file
 {
     private:
-        int _fd;
+        int _file_descriptor;
         mutable pt_recursive_mutex *_mutex;
 
         int lock_mutex(void) const noexcept;
@@ -30,7 +30,7 @@ class ft_file
         ft_file(ft_file&& other) = delete;
         ft_file& operator=(ft_file&& other) = delete;
 
-        int            get_fd() const;
+        int            get_file_descriptor() const;
 
         int            open(const char* filename, int flags, mode_t mode) noexcept;
         int            open(const char* filename, int flags) noexcept;

@@ -1,6 +1,7 @@
 #include "geometry_circle.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/pthread.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
 #include <new>
@@ -35,17 +36,13 @@ void circle::abort_if_not_initialized(const char *method_name) const noexcept
 int circle::lock_mutex() const noexcept
 {
     this->abort_if_not_initialized("circle::lock_mutex");
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->lock());
+    return (pt_recursive_mutex_lock_if_not_null(this->_mutex));
 }
 
 int circle::unlock_mutex() const noexcept
 {
     this->abort_if_not_initialized("circle::unlock_mutex");
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->unlock());
+    return (pt_recursive_mutex_unlock_if_not_null(this->_mutex));
 }
 
 int circle::lock_pair(const circle &other, const circle *&lower,
@@ -261,13 +258,17 @@ int circle::initialize(circle &&other) noexcept
 
 int circle::destroy() noexcept
 {
+    int disable_error;
+
     if (this->_initialized_state != circle::_state_initialized)
     {
         this->abort_lifecycle_error("circle::destroy",
             "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
     }
-    this->disable_thread_safety();
+    disable_error = this->disable_thread_safety();
+    if (disable_error != FT_ERR_SUCCESS)
+        return (disable_error);
     this->_center_x = 0.0;
     this->_center_y = 0.0;
     this->_radius = 0.0;
@@ -277,12 +278,6 @@ int circle::destroy() noexcept
 
 circle::~circle()
 {
-    if (this->_initialized_state == circle::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("circle::~circle",
-            "destructor called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == circle::_state_initialized)
         (void)this->destroy();
     return ;
@@ -425,21 +420,24 @@ int circle::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-void circle::disable_thread_safety() noexcept
+int circle::disable_thread_safety() noexcept
 {
+    int mutex_error;
+
     this->abort_if_not_initialized("circle::disable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
-        this->_mutex->destroy();
+        mutex_error = this->_mutex->destroy();
+        if (mutex_error != FT_ERR_SUCCESS)
+            return (mutex_error);
         delete this->_mutex;
         this->_mutex = ft_nullptr;
     }
-    return ;
+    return (FT_ERR_SUCCESS);
 }
 
-bool circle::is_thread_safe_enabled() const noexcept
+bool circle::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("circle::is_thread_safe_enabled");
     return (this->_mutex != ft_nullptr);
 }
 

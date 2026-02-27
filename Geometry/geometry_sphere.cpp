@@ -1,6 +1,7 @@
 #include "geometry_sphere.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/pthread.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
 #include <new>
@@ -35,17 +36,13 @@ void sphere::abort_if_not_initialized(const char *method_name) const noexcept
 int sphere::lock_mutex() const noexcept
 {
     this->abort_if_not_initialized("sphere::lock_mutex");
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->lock());
+    return (pt_recursive_mutex_lock_if_not_null(this->_mutex));
 }
 
 int sphere::unlock_mutex() const noexcept
 {
     this->abort_if_not_initialized("sphere::unlock_mutex");
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->unlock());
+    return (pt_recursive_mutex_unlock_if_not_null(this->_mutex));
 }
 
 sphere::sphere()
@@ -219,13 +216,17 @@ int sphere::initialize(sphere &&other) noexcept
 
 int sphere::destroy() noexcept
 {
+    int disable_error;
+
     if (this->_initialized_state != sphere::_state_initialized)
     {
         this->abort_lifecycle_error("sphere::destroy",
             "called while object is not initialized");
         return (FT_ERR_INVALID_STATE);
     }
-    this->disable_thread_safety();
+    disable_error = this->disable_thread_safety();
+    if (disable_error != FT_ERR_SUCCESS)
+        return (disable_error);
     this->_center_x = 0.0;
     this->_center_y = 0.0;
     this->_center_z = 0.0;
@@ -236,12 +237,6 @@ int sphere::destroy() noexcept
 
 sphere::~sphere()
 {
-    if (this->_initialized_state == sphere::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("sphere::~sphere",
-            "destructor called while object is uninitialized");
-        return ;
-    }
     if (this->_initialized_state == sphere::_state_initialized)
         (void)this->destroy();
     return ;
@@ -469,21 +464,24 @@ int sphere::enable_thread_safety() noexcept
     return (FT_ERR_SUCCESS);
 }
 
-void sphere::disable_thread_safety() noexcept
+int sphere::disable_thread_safety() noexcept
 {
+    int mutex_error;
+
     this->abort_if_not_initialized("sphere::disable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
-        this->_mutex->destroy();
+        mutex_error = this->_mutex->destroy();
+        if (mutex_error != FT_ERR_SUCCESS)
+            return (mutex_error);
         delete this->_mutex;
         this->_mutex = ft_nullptr;
     }
-    return ;
+    return (FT_ERR_SUCCESS);
 }
 
-bool sphere::is_thread_safe_enabled() const noexcept
+bool sphere::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("sphere::is_thread_safe_enabled");
     return (this->_mutex != ft_nullptr);
 }
 

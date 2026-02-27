@@ -23,8 +23,8 @@ class ft_big_number
         static const uint8_t       _state_initialized = 2;
         static thread_local int _last_error;
 
-		void    abort_lifecycle_error(const char *method_name, const char *reason) const noexcept;
-		void    abort_if_not_initialized(const char *method_name) const noexcept;
+        void    abort_lifecycle_error(const char *method_name, const char *reason) const noexcept;
+        void    abort_if_not_initialized(const char *method_name) const noexcept;
         void    reserve(ft_size_t new_capacity) noexcept;
         void    shrink_capacity() noexcept;
                 int     lock_mutex(void) const noexcept;

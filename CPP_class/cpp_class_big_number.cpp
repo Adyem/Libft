@@ -5,6 +5,7 @@
 #include "../CMA/CMA.hpp"
 #include "../Basic/basic.hpp"
 #include "../PThread/pthread.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../Template/move.hpp"
 #include "../System_utils/system_utils.hpp"
 #include "../Printf/printf.hpp"
@@ -100,16 +101,12 @@ static char ft_big_number_digit_symbol(int value) noexcept
 int ft_big_number::lock_mutex(void) const noexcept
 {
     this->abort_if_not_initialized("ft_big_number::lock_mutex");
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->lock());
+    return (pt_recursive_mutex_lock_if_not_null(this->_mutex));
 }
 
 int ft_big_number::unlock_mutex(void) const noexcept
 {
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
-    return (this->_mutex->unlock());
+    return (pt_recursive_mutex_unlock_if_not_null(this->_mutex));
 }
 
 int ft_big_number::lock_pair(const ft_big_number &first, const ft_big_number &second,
@@ -170,7 +167,7 @@ int ft_big_number::enable_thread_safety(void) noexcept
     pt_recursive_mutex *mutex_pointer;
     int mutex_error;
 
-	this->abort_if_not_initialized("enable thread safety");
+    this->abort_if_not_initialized("enable thread safety");
     if (this->_mutex != ft_nullptr)
     {
         ft_big_number::set_last_operation_error(FT_ERR_SUCCESS);
@@ -193,7 +190,7 @@ int ft_big_number::disable_thread_safety(void) noexcept
 {
     int destroy_error;
 
-	this->abort_if_not_initialized("disable thread safety");
+    this->abort_if_not_initialized("disable thread safety");
     if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
     destroy_error = this->_mutex->destroy();
@@ -204,7 +201,7 @@ int ft_big_number::disable_thread_safety(void) noexcept
 
 bool ft_big_number::is_thread_safe(void) const noexcept
 {
-	this->abort_if_not_initialized("is thread safe");
+    this->abort_if_not_initialized("is thread safe");
     return (this->_mutex != ft_nullptr);
 }
 
@@ -406,13 +403,7 @@ ft_big_number::ft_big_number(ft_big_number&& other) noexcept
 
 ft_big_number::~ft_big_number() noexcept
 {
-    if (this->_initialized_state == ft_big_number::_state_uninitialized)
-    {
-        this->abort_lifecycle_error("ft_big_number::~ft_big_number",
-            "destructor called while object is uninitialized");
-        return ;
-    }
-    if (this->_initialized_state == ft_big_number::_state_destroyed)
+    if (this->_initialized_state != ft_big_number::_state_initialized)
         return ;
     this->disable_thread_safety();
     cma_free(this->_digits);
@@ -829,7 +820,7 @@ void ft_big_number::assign_base(const char* digits, int base) noexcept
                 if (digit_value < 0 || digit_value >= base)
                 {
                     local_error = FT_ERR_INVALID_ARGUMENT;
-                    break;
+                    break ;
                 }
                 ft_big_number product = result * base_number;
                 result = product;
@@ -1294,7 +1285,7 @@ ft_big_number_proxy ft_big_number::operator*(const ft_big_number& other) const n
                             + (total_value % 10));
                     carry_value = total_value / 10;
                     if (carry_position == 0)
-                        break;
+                        break ;
                     carry_position--;
                 }
                 left_offset++;
@@ -1653,7 +1644,7 @@ bool ft_big_number::operator==(const ft_big_number& other) const noexcept
                 if (this->_digits[digit_index] != other._digits[digit_index])
                 {
                     are_equal = false;
-                    break;
+                    break ;
                 }
                 digit_index++;
             }

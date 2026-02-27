@@ -49,8 +49,8 @@ class circle
         double  get_center_y() const;
         double  get_radius() const;
         int     enable_thread_safety() noexcept;
-        void    disable_thread_safety() noexcept;
-        bool    is_thread_safe_enabled() const noexcept;
+        int disable_thread_safety() noexcept;
+        bool    is_thread_safe() const noexcept;
 
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex *get_mutex_for_testing() noexcept;

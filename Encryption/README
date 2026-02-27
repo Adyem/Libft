@@ -21,7 +21,7 @@ strings, including the terminator byte, so secrets retrieved with
 ## Key management helpers
 
 `encryption_fill_secure_buffer` writes cryptographically secure random bytes
-into an existing buffer and propagates `ft_errno` on failure. The helper is
+into an existing buffer and returns explicit error codes on failure. The helper is
 used by `encryption_generate_symmetric_key` and
 `encryption_generate_initialization_vector`, which allocate CMA-backed buffers
 that are automatically filled with secure randomness before being returned to
@@ -96,4 +96,3 @@ This implementation uses small primes for demonstration and relies on 64-bit
 arithmetic. Large key sizes drastically slow down operations and may exceed
 the limits of this module. For real-world security, use keys of at least 2048
 bits and a vetted cryptographic library.
-

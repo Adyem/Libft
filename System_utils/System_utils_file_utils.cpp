@@ -120,31 +120,31 @@ static int su_copy_directory_contents(const char *source_path, const char *desti
     {
         directory_entry = cmp_dir_read(directory_stream, &error_code);
         if (directory_entry == ft_nullptr)
-            break;
+            break ;
         if (su_should_skip_directory_entry(directory_entry->d_name))
             continue ;
         ft_string source_child;
         ft_string destination_child;
 
         if (su_join_paths(source_path, directory_entry->d_name, &source_child) != FT_ERR_SUCCESS)
-            break;
+            break ;
         if (su_join_paths(destination_path, directory_entry->d_name, &destination_child) != FT_ERR_SUCCESS)
-            break;
+            break ;
         child_is_directory = 0;
         child_status = cmp_directory_exists(source_child.c_str(), &child_is_directory, &error_code);
         if (child_status != FT_ERR_SUCCESS)
-            break;
+            break ;
         if (child_is_directory == 1)
         {
             if (su_ensure_directory_exists(destination_child.c_str()) != 0)
-                break;
+                break ;
             if (su_copy_directory_contents(source_child.c_str(), destination_child.c_str()) != 0)
-                break;
+                break ;
         }
         else
         {
             if (su_copy_file(source_child.c_str(), destination_child.c_str()) != 0)
-                break;
+                break ;
         }
     }
     if (directory_entry == ft_nullptr && error_code == FT_ERR_SUCCESS)
