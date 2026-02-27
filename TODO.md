@@ -1,6 +1,6 @@
 # TODO
 
-Remaining unchecked items: 13
+Remaining unchecked items: 17
 
 ## Mutex reinitialization audit
 
@@ -21,3 +21,10 @@ All mutex reinitialization audit items have been completed.
 - [ ] Add final `return ;` at end of `zero_buffer` in `Basic/basic_strcat_s.cpp`.
 - [ ] Add final `return ;` at end of `zero_buffer` in `Basic/basic_strncat_s.cpp`.
 - [ ] Add final `return ;` at end of `ft_to_upper` in `Basic/basic_toupper.cpp`.
+
+## Advanced module AGENTS.md compliance
+
+- [ ] Remove all `for` loops in `Advanced` module source files and replace them with compliant control flow (`while`), including `advanced_split.cpp`, `advanced_strjoin.cpp`, `advanced_strjoin_multiple.cpp`, `advanced_memdup.cpp`, `advanced_strndup.cpp`, and `advanced_strtrim.cpp`.
+- [ ] Remove all ternary operators from `Advanced/advanced_itoa.cpp` and `Advanced/advanced_itoa_base.cpp`.
+- [ ] Add final `return ;` to void helper `free_strings` in `Advanced/advanced_split.cpp`.
+- [ ] Rename short variable names in `Advanced` module to full descriptive snake_case names (for example `len1`, `len2`, `i`, `j`, `src`, `dest`).
