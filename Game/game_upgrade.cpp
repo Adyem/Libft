@@ -109,9 +109,8 @@ int ft_upgrade::destroy() noexcept
 
     if (this->_initialized_state != ft_upgrade::_state_initialized)
     {
-        this->_initialized_state = ft_upgrade::_state_destroyed;
-        this->set_error(FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
     }
     disable_error = this->disable_thread_safety();
     this->_id = 0;
@@ -175,7 +174,6 @@ int ft_upgrade::disable_thread_safety() noexcept
 
 bool ft_upgrade::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("ft_upgrade::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 
@@ -186,11 +184,6 @@ int ft_upgrade::lock_internal(bool *lock_acquired) const noexcept
     this->abort_if_not_initialized("ft_upgrade::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-    {
-        this->set_error(FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
-    }
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -207,11 +200,6 @@ int ft_upgrade::unlock_internal(bool lock_acquired) const noexcept
 {
     this->abort_if_not_initialized("ft_upgrade::unlock_internal");
     if (lock_acquired == false)
-    {
-        this->set_error(FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
-    }
-    if (this->_mutex == ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);

@@ -16,7 +16,7 @@ static void rl_open_log_file(readline_state_t *state)
     }
     else if (DEBUG == 1)
         state->error_file.open("data/data--log", O_WRONLY | O_CREAT | O_APPEND, S_IRUSR | S_IWUSR);
-    if (state->error_file.get_fd() != -1)
+    if (state->error_file.get_file_descriptor() != -1)
         state->error_file.printf("printing to log file\n");
     return ;
 }

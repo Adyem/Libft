@@ -186,10 +186,7 @@ int ft_vendor_profile::disable_thread_safety() noexcept
 
 bool ft_vendor_profile::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("ft_vendor_profile::is_thread_safe");
-    const bool result = (this->_mutex != ft_nullptr);
-    this->set_error(FT_ERR_SUCCESS);
-    return (result);
+    return (this->_mutex != ft_nullptr);
 }
 
 int ft_vendor_profile::lock_internal(bool *lock_acquired) const noexcept
@@ -199,11 +196,6 @@ int ft_vendor_profile::lock_internal(bool *lock_acquired) const noexcept
     this->abort_if_not_initialized("ft_vendor_profile::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-    {
-        this->set_error(FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
-    }
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -220,11 +212,6 @@ int ft_vendor_profile::unlock_internal(bool lock_acquired) const noexcept
 {
     this->abort_if_not_initialized("ft_vendor_profile::unlock_internal");
     if (lock_acquired == false)
-    {
-        this->set_error(FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
-    }
-    if (this->_mutex == ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);

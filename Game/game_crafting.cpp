@@ -128,8 +128,6 @@ int ft_crafting_ingredient::lock_internal(bool *lock_acquired) const noexcept
 
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
@@ -141,8 +139,6 @@ int ft_crafting_ingredient::lock_internal(bool *lock_acquired) const noexcept
 void ft_crafting_ingredient::unlock_internal(bool lock_acquired) const noexcept
 {
     if (lock_acquired == false)
-        return ;
-    if (this->_mutex == ft_nullptr)
         return ;
     (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return ;
@@ -201,9 +197,7 @@ int ft_crafting_ingredient::disable_thread_safety() noexcept
 
 bool ft_crafting_ingredient::is_thread_safe() const noexcept
 {
-    bool result = (this->_mutex != ft_nullptr);
-    this->set_error(FT_ERR_SUCCESS);
-    return (result);
+    return (this->_mutex != ft_nullptr);
 }
 
 int ft_crafting_ingredient::get_item_id() const noexcept
@@ -333,8 +327,6 @@ int ft_crafting::lock_internal(bool *lock_acquired) const noexcept
 
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
@@ -346,8 +338,6 @@ int ft_crafting::lock_internal(bool *lock_acquired) const noexcept
 void ft_crafting::unlock_internal(bool lock_acquired) const noexcept
 {
     if (lock_acquired == false)
-        return ;
-    if (this->_mutex == ft_nullptr)
         return ;
     (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return ;
@@ -406,9 +396,7 @@ int ft_crafting::disable_thread_safety() noexcept
 
 bool ft_crafting::is_thread_safe() const noexcept
 {
-    bool result = (this->_mutex != ft_nullptr);
-    this->set_error(FT_ERR_SUCCESS);
-    return (result);
+    return (this->_mutex != ft_nullptr);
 }
 
 ft_map<int, ft_vector<ft_crafting_ingredient>> &ft_crafting::get_recipes() noexcept

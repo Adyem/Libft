@@ -189,10 +189,7 @@ int ft_goal::disable_thread_safety() noexcept
 
 bool ft_goal::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("ft_goal::is_thread_safe");
-    const bool result = (this->_mutex != ft_nullptr);
-    this->set_error(FT_ERR_SUCCESS);
-    return (result);
+    return (this->_mutex != ft_nullptr);
 }
 
 int ft_goal::lock_internal(bool *lock_acquired) const noexcept
@@ -202,11 +199,6 @@ int ft_goal::lock_internal(bool *lock_acquired) const noexcept
     this->abort_if_not_initialized("ft_goal::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-    {
-        this->set_error(FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
-    }
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -222,11 +214,6 @@ int ft_goal::lock_internal(bool *lock_acquired) const noexcept
 int ft_goal::unlock_internal(bool lock_acquired) const noexcept
 {
     if (lock_acquired == false)
-    {
-        this->set_error(FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
-    }
-    if (this->_mutex == ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
@@ -585,10 +572,7 @@ int ft_achievement::disable_thread_safety() noexcept
 
 bool ft_achievement::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("ft_achievement::is_thread_safe");
-    const bool result = (this->_mutex != ft_nullptr);
-    this->set_error(FT_ERR_SUCCESS);
-    return (result);
+    return (this->_mutex != ft_nullptr);
 }
 
 int ft_achievement::lock_internal(bool *lock_acquired) const noexcept
@@ -598,11 +582,6 @@ int ft_achievement::lock_internal(bool *lock_acquired) const noexcept
     this->abort_if_not_initialized("ft_achievement::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-    {
-        this->set_error(FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
-    }
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -618,11 +597,6 @@ int ft_achievement::lock_internal(bool *lock_acquired) const noexcept
 int ft_achievement::unlock_internal(bool lock_acquired) const noexcept
 {
     if (lock_acquired == false)
-    {
-        this->set_error(FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
-    }
-    if (this->_mutex == ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);

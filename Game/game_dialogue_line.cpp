@@ -27,8 +27,6 @@ int ft_dialogue_line::lock_internal(bool *lock_acquired) const noexcept
 
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
@@ -40,8 +38,6 @@ int ft_dialogue_line::lock_internal(bool *lock_acquired) const noexcept
 void ft_dialogue_line::unlock_internal(bool lock_acquired) const noexcept
 {
     if (lock_acquired == false)
-        return ;
-    if (this->_mutex == ft_nullptr)
         return ;
     (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return ;
@@ -301,10 +297,7 @@ int ft_dialogue_line::disable_thread_safety() noexcept
 
 bool ft_dialogue_line::is_thread_safe() const noexcept
 {
-    const bool result = (this->_mutex != ft_nullptr);
-
-    this->set_error(FT_ERR_SUCCESS);
-    return (result);
+    return (this->_mutex != ft_nullptr);
 }
 
 int ft_dialogue_line::get_error() const noexcept

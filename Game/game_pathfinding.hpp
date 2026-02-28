@@ -85,8 +85,6 @@ class ft_path_step_test_helper
 
         static int unlock(ft_path_step &step) noexcept
         {
-            if (step._mutex == ft_nullptr)
-                return (FT_ERR_INVALID_STATE);
             return (pt_recursive_mutex_unlock_if_not_null(step._mutex));
         }
 

@@ -155,10 +155,7 @@ int ft_buff::disable_thread_safety() noexcept
 
 bool ft_buff::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("ft_buff::is_thread_safe");
-    bool result = (this->_mutex != ft_nullptr);
-    this->set_error(FT_ERR_SUCCESS);
-    return (result);
+    return (this->_mutex != ft_nullptr);
 }
 
 int ft_buff::lock_internal(bool *lock_acquired) const noexcept
@@ -167,8 +164,6 @@ int ft_buff::lock_internal(bool *lock_acquired) const noexcept
 
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
@@ -180,8 +175,6 @@ int ft_buff::lock_internal(bool *lock_acquired) const noexcept
 int ft_buff::unlock_internal(bool lock_acquired) const noexcept
 {
     if (lock_acquired == false)
-        return (FT_ERR_SUCCESS);
-    if (this->_mutex == ft_nullptr)
         return (FT_ERR_SUCCESS);
     return (pt_recursive_mutex_unlock_if_not_null(this->_mutex));
 }

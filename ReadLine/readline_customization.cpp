@@ -186,7 +186,7 @@ static int rl_history_plain_load(void *context_pointer)
     if (open_result != 0)
         return (-1);
     rl_clear_history();
-    file_descriptor = history_file.get_fd();
+    file_descriptor = history_file.get_file_descriptor();
     if (file_descriptor == -1)
     {
         history_file.close();

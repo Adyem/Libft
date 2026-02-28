@@ -46,11 +46,6 @@ int ft_path_step::lock_internal(bool *lock_acquired) const noexcept
 
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-    {
-        this->set_error(FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
-    }
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -66,11 +61,6 @@ int ft_path_step::lock_internal(bool *lock_acquired) const noexcept
 int ft_path_step::unlock_internal(bool lock_acquired) const noexcept
 {
     if (lock_acquired == false)
-    {
-        this->set_error(FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
-    }
-    if (this->_mutex == ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
@@ -164,9 +154,8 @@ int ft_path_step::destroy() noexcept
 
     if (this->_initialized_state != ft_path_step::_state_initialized)
     {
-        this->_initialized_state = ft_path_step::_state_destroyed;
-        this->set_error(FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
     }
     disable_error = this->disable_thread_safety();
     this->_x = 0;
@@ -226,10 +215,7 @@ int ft_path_step::disable_thread_safety() noexcept
 
 bool ft_path_step::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("ft_path_step::is_thread_safe");
-    const bool result = (this->_mutex != ft_nullptr);
-    this->set_error(FT_ERR_SUCCESS);
-    return (result);
+    return (this->_mutex != ft_nullptr);
 }
 
 int ft_path_step::set_coordinates(size_t x, size_t y, size_t z) noexcept
@@ -354,11 +340,6 @@ int ft_pathfinding::lock_internal(bool *lock_acquired) const noexcept
 
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-    {
-        this->set_error(FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
-    }
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -374,11 +355,6 @@ int ft_pathfinding::lock_internal(bool *lock_acquired) const noexcept
 int ft_pathfinding::unlock_internal(bool lock_acquired) const noexcept
 {
     if (lock_acquired == false)
-    {
-        this->set_error(FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
-    }
-    if (this->_mutex == ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
@@ -425,9 +401,8 @@ int ft_pathfinding::destroy() noexcept
 
     if (this->_initialized_state != ft_pathfinding::_state_initialized)
     {
-        this->_initialized_state = ft_pathfinding::_state_destroyed;
-        this->set_error(FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
     }
     disable_error = this->disable_thread_safety();
     this->_current_path.clear();
@@ -486,10 +461,7 @@ int ft_pathfinding::disable_thread_safety() noexcept
 
 bool ft_pathfinding::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("ft_pathfinding::is_thread_safe");
-    const bool result = (this->_mutex != ft_nullptr);
-    this->set_error(FT_ERR_SUCCESS);
-    return (result);
+    return (this->_mutex != ft_nullptr);
 }
 
 int ft_pathfinding::lock(bool *lock_acquired) const noexcept

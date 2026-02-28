@@ -118,11 +118,6 @@ int ft_event_scheduler::lock_internal(bool *lock_acquired) const noexcept
 
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-    {
-        this->set_error(FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
-    }
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -139,11 +134,6 @@ int ft_event_scheduler::lock_internal(bool *lock_acquired) const noexcept
 void ft_event_scheduler::unlock_internal(bool lock_acquired) const noexcept
 {
     if (lock_acquired == false)
-    {
-        this->set_error(FT_ERR_SUCCESS);
-        return ;
-    }
-    if (this->_mutex == ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
         return ;
@@ -469,9 +459,7 @@ int ft_event_scheduler::disable_thread_safety() noexcept
 
 bool ft_event_scheduler::is_thread_safe() const noexcept
 {
-    const bool result = (this->_mutex != ft_nullptr);
-    this->set_error(FT_ERR_SUCCESS);
-    return (result);
+    return (this->_mutex != ft_nullptr);
 }
 
 int log_event_to_file(const ft_event &event, const char *file_path) noexcept

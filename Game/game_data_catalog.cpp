@@ -249,9 +249,7 @@ int ft_item_definition::disable_thread_safety() noexcept
 
 bool ft_item_definition::is_thread_safe() const noexcept
 {
-    const bool result = (this->_mutex != ft_nullptr);
-    this->set_error(FT_ERR_SUCCESS);
-    return (result);
+    return (this->_mutex != ft_nullptr);
 }
 
 void ft_item_definition::abort_lifecycle_error(const char *method_name,
@@ -283,11 +281,6 @@ int ft_item_definition::lock_internal(bool *lock_acquired) const noexcept
     this->abort_if_not_initialized("ft_item_definition::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-    {
-        this->set_error(FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
-    }
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -303,11 +296,6 @@ int ft_item_definition::lock_internal(bool *lock_acquired) const noexcept
 void ft_item_definition::unlock_internal(bool lock_acquired) const noexcept
 {
     if (lock_acquired == false)
-    {
-        this->set_error(FT_ERR_SUCCESS);
-        return ;
-    }
-    if (this->_mutex == ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
         return ;
@@ -443,9 +431,8 @@ int ft_item_definition::destroy() noexcept
 {
     if (this->_initialized_state != ft_item_definition::_state_initialized)
     {
-        this->_initialized_state = ft_item_definition::_state_destroyed;
-        this->set_error(FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
     }
     this->_item_id = 0;
     this->_rarity = 0;
@@ -865,9 +852,7 @@ int ft_recipe_blueprint::disable_thread_safety() noexcept
 
 bool ft_recipe_blueprint::is_thread_safe() const noexcept
 {
-    const bool result = (this->_mutex != ft_nullptr);
-    this->set_error(FT_ERR_SUCCESS);
-    return (result);
+    return (this->_mutex != ft_nullptr);
 }
 
 void ft_recipe_blueprint::abort_lifecycle_error(const char *method_name,
@@ -899,11 +884,6 @@ int ft_recipe_blueprint::lock_internal(bool *lock_acquired) const noexcept
     this->abort_if_not_initialized("ft_recipe_blueprint::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-    {
-        this->set_error(FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
-    }
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -919,11 +899,6 @@ int ft_recipe_blueprint::lock_internal(bool *lock_acquired) const noexcept
 void ft_recipe_blueprint::unlock_internal(bool lock_acquired) const noexcept
 {
     if (lock_acquired == false)
-    {
-        this->set_error(FT_ERR_SUCCESS);
-        return ;
-    }
-    if (this->_mutex == ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
         return ;
@@ -1071,9 +1046,8 @@ int ft_recipe_blueprint::destroy() noexcept
 {
     if (this->_initialized_state != ft_recipe_blueprint::_state_initialized)
     {
-        this->_initialized_state = ft_recipe_blueprint::_state_destroyed;
-        this->set_error(FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
     }
     (void)this->_ingredients.destroy();
     this->_recipe_id = 0;
@@ -1349,9 +1323,7 @@ int ft_loadout_entry::disable_thread_safety() noexcept
 
 bool ft_loadout_entry::is_thread_safe() const noexcept
 {
-    const bool result = (this->_mutex != ft_nullptr);
-    this->set_error(FT_ERR_SUCCESS);
-    return (result);
+    return (this->_mutex != ft_nullptr);
 }
 
 void ft_loadout_entry::abort_lifecycle_error(const char *method_name,
@@ -1383,11 +1355,6 @@ int ft_loadout_entry::lock_internal(bool *lock_acquired) const noexcept
     this->abort_if_not_initialized("ft_loadout_entry::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-    {
-        this->set_error(FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
-    }
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1403,11 +1370,6 @@ int ft_loadout_entry::lock_internal(bool *lock_acquired) const noexcept
 void ft_loadout_entry::unlock_internal(bool lock_acquired) const noexcept
 {
     if (lock_acquired == false)
-    {
-        this->set_error(FT_ERR_SUCCESS);
-        return ;
-    }
-    if (this->_mutex == ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
         return ;
@@ -1523,9 +1485,8 @@ int ft_loadout_entry::destroy() noexcept
 {
     if (this->_initialized_state != ft_loadout_entry::_state_initialized)
     {
-        this->_initialized_state = ft_loadout_entry::_state_destroyed;
-        this->set_error(FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
     }
     this->_slot = 0;
     this->_item_id = 0;
@@ -1783,9 +1744,7 @@ int ft_loadout_blueprint::disable_thread_safety() noexcept
 
 bool ft_loadout_blueprint::is_thread_safe() const noexcept
 {
-    const bool result = (this->_mutex != ft_nullptr);
-    this->set_error(FT_ERR_SUCCESS);
-    return (result);
+    return (this->_mutex != ft_nullptr);
 }
 
 void ft_loadout_blueprint::abort_lifecycle_error(const char *method_name,
@@ -1817,11 +1776,6 @@ int ft_loadout_blueprint::lock_internal(bool *lock_acquired) const noexcept
     this->abort_if_not_initialized("ft_loadout_blueprint::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-    {
-        this->set_error(FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
-    }
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -1837,11 +1791,6 @@ int ft_loadout_blueprint::lock_internal(bool *lock_acquired) const noexcept
 void ft_loadout_blueprint::unlock_internal(bool lock_acquired) const noexcept
 {
     if (lock_acquired == false)
-    {
-        this->set_error(FT_ERR_SUCCESS);
-        return ;
-    }
-    if (this->_mutex == ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
         return ;
@@ -1987,9 +1936,8 @@ int ft_loadout_blueprint::destroy() noexcept
 {
     if (this->_initialized_state != ft_loadout_blueprint::_state_initialized)
     {
-        this->_initialized_state = ft_loadout_blueprint::_state_destroyed;
-        this->set_error(FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
     }
     (void)this->_entries.destroy();
     this->_loadout_id = 0;
@@ -2221,9 +2169,7 @@ int ft_data_catalog::disable_thread_safety() noexcept
 
 bool ft_data_catalog::is_thread_safe() const noexcept
 {
-    const bool result = (this->_mutex != ft_nullptr);
-    this->set_error(FT_ERR_SUCCESS);
-    return (result);
+    return (this->_mutex != ft_nullptr);
 }
 
 void ft_data_catalog::abort_lifecycle_error(const char *method_name,
@@ -2255,11 +2201,6 @@ int ft_data_catalog::lock_internal(bool *lock_acquired) const noexcept
     this->abort_if_not_initialized("ft_data_catalog::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-    {
-        this->set_error(FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
-    }
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -2275,11 +2216,6 @@ int ft_data_catalog::lock_internal(bool *lock_acquired) const noexcept
 void ft_data_catalog::unlock_internal(bool lock_acquired) const noexcept
 {
     if (lock_acquired == false)
-    {
-        this->set_error(FT_ERR_SUCCESS);
-        return ;
-    }
-    if (this->_mutex == ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
         return ;
@@ -2425,9 +2361,8 @@ int ft_data_catalog::destroy() noexcept
 {
     if (this->_initialized_state != ft_data_catalog::_state_initialized)
     {
-        this->_initialized_state = ft_data_catalog::_state_destroyed;
-        this->set_error(FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
     }
     (void)this->_item_definitions.destroy();
     (void)this->_recipes.destroy();

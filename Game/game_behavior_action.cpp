@@ -110,8 +110,6 @@ int ft_behavior_action::lock_internal(bool *lock_acquired) const noexcept
 
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-        return (FT_ERR_SUCCESS);
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
@@ -123,8 +121,6 @@ int ft_behavior_action::lock_internal(bool *lock_acquired) const noexcept
 void ft_behavior_action::unlock_internal(bool lock_acquired) const noexcept
 {
     if (lock_acquired == false)
-        return ;
-    if (this->_mutex == ft_nullptr)
         return ;
     (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return ;

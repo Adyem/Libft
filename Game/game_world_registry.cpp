@@ -143,9 +143,8 @@ int ft_world_registry::destroy() noexcept
 
     if (this->_initialized_state != ft_world_registry::_state_initialized)
     {
-        this->_initialized_state = ft_world_registry::_state_destroyed;
-        this->set_error(FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
     }
     this->_regions.clear();
     this->_world_regions.clear();
@@ -204,10 +203,7 @@ int ft_world_registry::disable_thread_safety() noexcept
 
 bool ft_world_registry::is_thread_safe() const noexcept
 {
-    this->abort_if_not_initialized("ft_world_registry::is_thread_safe");
-    const bool result = (this->_mutex != ft_nullptr);
-    this->set_error(FT_ERR_SUCCESS);
-    return (result);
+    return (this->_mutex != ft_nullptr);
 }
 
 int ft_world_registry::lock_internal(bool *lock_acquired) const noexcept
@@ -216,11 +212,6 @@ int ft_world_registry::lock_internal(bool *lock_acquired) const noexcept
 
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (this->_mutex == ft_nullptr)
-    {
-        this->set_error(FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
-    }
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
@@ -236,11 +227,6 @@ int ft_world_registry::lock_internal(bool *lock_acquired) const noexcept
 int ft_world_registry::unlock_internal(bool lock_acquired) const noexcept
 {
     if (lock_acquired == false)
-    {
-        this->set_error(FT_ERR_SUCCESS);
-        return (FT_ERR_SUCCESS);
-    }
-    if (this->_mutex == ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
