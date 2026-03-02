@@ -162,8 +162,8 @@ int DataBuffer::read_value(ValueType &value) noexcept
     this->_read_pos += length;
     ft_string string_value(bytes);
     cma_free(bytes);
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
-        return (ft_string::last_operation_error());
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
+        return (ft_string::get_error());
     ft_istringstream input_stream(string_value);
     input_stream >> value;
     return (FT_ERR_SUCCESS);

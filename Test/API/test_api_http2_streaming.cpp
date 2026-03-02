@@ -424,12 +424,12 @@ static int http2_test_server(http2_test_server_state *state)
         return (ft_vector<http2_header_field>::last_operation_error());
     }
     compressed_headers.clear();
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
     {
-        state->result.store(ft_string::last_operation_error(),
+        state->result.store(ft_string::get_error(),
             std::memory_order_relaxed);
         nw_close(client_fd);
-        return (ft_string::last_operation_error());
+        return (ft_string::get_error());
     }
     if (!http2_compress_headers(response_headers, compressed_headers,
             encode_error))

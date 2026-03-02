@@ -98,8 +98,8 @@ int ft_world_replay_session::capture_snapshot(ft_world &world,
     if (callback_result != FT_ERR_SUCCESS)
         return (callback_result);
     this->_snapshot_payload = snapshot_buffer;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
-        return (ft_string::last_operation_error());
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
+        return (ft_string::get_error());
     this->_event_callbacks.clear();
     callback_index = 0;
     callback_count = callback_snapshot.size();
@@ -163,8 +163,8 @@ int ft_world_replay_session::import_snapshot(const ft_string &snapshot_payload)
     noexcept
 {
     this->_snapshot_payload = snapshot_payload;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
-        return (ft_string::last_operation_error());
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
+        return (ft_string::get_error());
     this->_event_callbacks.clear();
     return (FT_ERR_SUCCESS);
 }
@@ -173,8 +173,8 @@ int ft_world_replay_session::export_snapshot(ft_string &out_snapshot) const
     noexcept
 {
     out_snapshot = this->_snapshot_payload;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
-        return (ft_string::last_operation_error());
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
+        return (ft_string::get_error());
     return (FT_ERR_SUCCESS);
 }
 

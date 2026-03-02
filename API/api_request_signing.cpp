@@ -37,7 +37,7 @@ namespace
         if (!value)
             return (0);
         target += value;
-        string_error = ft_string::last_operation_error();
+        string_error = ft_string::get_error();
         if (string_error != FT_ERR_SUCCESS)
         {
             api_request_signing_set_error(string_error);
@@ -52,7 +52,7 @@ namespace
         int string_error;
 
         target.append(value);
-        string_error = ft_string::last_operation_error();
+        string_error = ft_string::get_error();
         if (string_error != FT_ERR_SUCCESS)
         {
             api_request_signing_set_error(string_error);
@@ -96,7 +96,7 @@ namespace
             if (unreserved)
             {
                 output.append(static_cast<char>(character));
-                string_error = ft_string::last_operation_error();
+                string_error = ft_string::get_error();
                 if (string_error != FT_ERR_SUCCESS)
                 {
                     api_request_signing_set_error(string_error);
@@ -112,7 +112,7 @@ namespace
                 encoded_chunk[2] = hex_table[character & 0x0F];
                 encoded_chunk[3] = '\0';
                 output.append(encoded_chunk, 3);
-                string_error = ft_string::last_operation_error();
+                string_error = ft_string::get_error();
                 if (string_error != FT_ERR_SUCCESS)
                 {
                     api_request_signing_set_error(string_error);
@@ -145,7 +145,7 @@ namespace
             if (character >= 'a' && character <= 'z')
                 character = static_cast<unsigned char>(character - 'a' + 'A');
             output.append(static_cast<char>(character));
-            string_error = ft_string::last_operation_error();
+            string_error = ft_string::get_error();
             if (string_error != FT_ERR_SUCCESS)
             {
                 api_request_signing_set_error(string_error);
@@ -333,9 +333,9 @@ int api_sign_request_hmac_sha256(const api_hmac_signature_input &input,
     }
     signature_output = reinterpret_cast<const char *>(encoded_buffer);
     cma_free(encoded_buffer);
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
     {
-        api_request_signing_set_error(ft_string::last_operation_error());
+        api_request_signing_set_error(ft_string::get_error());
         return (api_request_signing_finish(-1));
     }
     api_request_signing_set_error(FT_ERR_SUCCESS);
@@ -473,9 +473,9 @@ int api_build_oauth1_authorization_header(
     ft_string base_string;
 
     base_string = encoded_method.c_str();
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
     {
-        api_request_signing_set_error(ft_string::last_operation_error());
+        api_request_signing_set_error(ft_string::get_error());
         return (api_request_signing_finish(-1));
     }
     if (api_request_signing_append(base_string, "&") != 0)
@@ -497,9 +497,9 @@ int api_build_oauth1_authorization_header(
             encoded_token_secret) != 0)
         return (api_request_signing_finish(-1));
     signing_key = encoded_consumer_secret.c_str();
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
     {
-        api_request_signing_set_error(ft_string::last_operation_error());
+        api_request_signing_set_error(ft_string::get_error());
         return (api_request_signing_finish(-1));
     }
     if (api_request_signing_append(signing_key, "&") != 0)
@@ -531,9 +531,9 @@ int api_build_oauth1_authorization_header(
     }
     signature_string = reinterpret_cast<const char *>(encoded_buffer);
     cma_free(encoded_buffer);
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
     {
-        api_request_signing_set_error(ft_string::last_operation_error());
+        api_request_signing_set_error(ft_string::get_error());
         return (api_request_signing_finish(-1));
     }
     if (api_request_signing_percent_encode(signature_string.c_str(),

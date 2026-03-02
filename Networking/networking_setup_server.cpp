@@ -152,7 +152,7 @@ int ft_socket::configure_address(const SocketConfig &config)
 
     ft_memset(&this->_address, 0, sizeof(this->_address));
     host_copy = config._ip;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
     {
         (void)nw_close(this->_socket_file_descriptor);
         this->_socket_file_descriptor = -1;

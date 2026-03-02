@@ -503,8 +503,8 @@ int ft_file_document_source::read_all(ft_string &output)
     }
     output.assign(content_pointer, file_size);
     cma_free(content_pointer);
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
-        return (ft_string::last_operation_error());
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
+        return (ft_string::get_error());
     return (FT_ERR_SUCCESS);
 }
 
@@ -884,8 +884,8 @@ int ft_memory_document_source::read_all(ft_string &output)
     if (this->_data_pointer == ft_nullptr && this->_data_length != 0)
         return (FT_ERR_INVALID_ARGUMENT);
     output.assign(this->_data_pointer, this->_data_length);
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
-        return (ft_string::last_operation_error());
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
+        return (ft_string::get_error());
     return (FT_ERR_SUCCESS);
 }
 
@@ -1065,8 +1065,8 @@ int ft_memory_document_sink::write_all(const char *data_pointer, size_t data_len
     if (data_pointer == ft_nullptr && data_length != 0)
         return (FT_ERR_INVALID_ARGUMENT);
     this->_storage_pointer->assign(data_pointer, data_length);
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
-        return (ft_string::last_operation_error());
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
+        return (ft_string::get_error());
     return (FT_ERR_SUCCESS);
 }
 
@@ -1299,8 +1299,8 @@ int ft_http_document_source::read_all(ft_string &output)
     if (request_status != 0)
         return (request_status);
     output = response;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
-        return (ft_string::last_operation_error());
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
+        return (ft_string::get_error());
     return (FT_ERR_SUCCESS);
 }
 
@@ -1528,8 +1528,8 @@ int ft_http_document_sink::write_all(const char *data_pointer, size_t data_lengt
     if (data_pointer == ft_nullptr && data_length != 0)
         return (FT_ERR_INVALID_ARGUMENT);
     body.assign(data_pointer, data_length);
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
-        return (ft_string::last_operation_error());
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
+        return (ft_string::get_error());
     port_pointer = ft_nullptr;
     if (this->_port.size() > 0)
         port_pointer = this->_port.c_str();

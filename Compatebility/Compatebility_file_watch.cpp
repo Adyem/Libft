@@ -25,8 +25,8 @@ struct cmp_file_watch_context
 {
     std::atomic<bool>    running;
 #if defined(__linux__)
-    int32_t                  fd;
-    int32_t                  watch;
+    int32_t                  file_descriptor;
+    int32_t                  watch_descriptor;
     char                 buffer[4096];
     ft_size_t               buffer_offset;
     ft_size_t               buffer_size;
@@ -94,8 +94,8 @@ cmp_file_watch_context *cmp_file_watch_create(void)
 
     context->running.store(false);
 #if defined(__linux__)
-    context->fd = -1;
-    context->watch = -1;
+    context->file_descriptor = -1;
+    context->watch_descriptor = -1;
     context->buffer_offset = 0;
     context->buffer_size = 0;
 #elif defined(__APPLE__) || defined(__FreeBSD__)
@@ -126,18 +126,18 @@ int32_t cmp_file_watch_start(cmp_file_watch_context *context, const char *path)
         return (FT_ERR_INVALID_ARGUMENT);
     cmp_file_watch_stop(context);
 #if defined(__linux__)
-    context->fd = inotify_init();
-    if (context->fd < 0)
+    context->file_descriptor = inotify_init();
+    if (context->file_descriptor < 0)
     {
         error_code = cmp_file_watch_translate_error();
         return (error_code);
     }
-    context->watch = inotify_add_watch(context->fd, path, IN_CREATE | IN_MODIFY | IN_DELETE);
-    if (context->watch < 0)
+    context->watch_descriptor = inotify_add_watch(context->file_descriptor, path, IN_CREATE | IN_MODIFY | IN_DELETE);
+    if (context->watch_descriptor < 0)
     {
         error_code = cmp_file_watch_translate_error();
-        close(context->fd);
-        context->fd = -1;
+        close(context->file_descriptor);
+        context->file_descriptor = -1;
         return (error_code);
     }
     context->buffer_offset = 0;
@@ -192,12 +192,12 @@ void cmp_file_watch_stop(cmp_file_watch_context *context)
         return ;
     context->running.store(false);
 #if defined(__linux__)
-    if (context->watch >= 0 && context->fd >= 0)
-        inotify_rm_watch(context->fd, context->watch);
-    if (context->fd >= 0)
-        close(context->fd);
-    context->watch = -1;
-    context->fd = -1;
+    if (context->watch_descriptor >= 0 && context->file_descriptor >= 0)
+        inotify_rm_watch(context->file_descriptor, context->watch_descriptor);
+    if (context->file_descriptor >= 0)
+        close(context->file_descriptor);
+    context->watch_descriptor = -1;
+    context->file_descriptor = -1;
     context->buffer_offset = 0;
     context->buffer_size = 0;
 #elif defined(__APPLE__) || defined(__FreeBSD__)
@@ -257,7 +257,7 @@ bool cmp_file_watch_wait_event(cmp_file_watch_context *context,
             }
             return (true);
         }
-        int64_t read_result = ::read(context->fd, context->buffer,
+        int64_t read_result = ::read(context->file_descriptor, context->buffer,
                 sizeof(context->buffer));
         if (read_result <= 0)
         {

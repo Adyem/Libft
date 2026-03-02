@@ -223,11 +223,11 @@ int ft_dom_validation_report::add_error(const ft_string &path,
 
     this->abort_if_not_initialized("ft_dom_validation_report::add_error");
     error_entry.path = path;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
-        return (ft_string::last_operation_error());
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
+        return (ft_string::get_error());
     error_entry.message = message;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
-        return (ft_string::last_operation_error());
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
+        return (ft_string::get_error());
     lock_acquired = false;
     lock_error = this->lock_internal(&lock_acquired);
     if (lock_error != FT_ERR_SUCCESS)

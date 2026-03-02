@@ -29,7 +29,8 @@ class ft_string
         void        abort_lifecycle_error(const char *method_name,
                     const char *reason) const noexcept;
         void        abort_if_not_initialized(const char *method_name) const noexcept;
-        static int32_t set_last_operation_error(int32_t error_code) noexcept;
+        static int32_t set_error(int32_t error_code) noexcept;
+        friend class ft_string_proxy;
 
 
         int32_t     enable_thread_safety(void) noexcept;
@@ -102,8 +103,8 @@ class ft_string
         ft_string   substr(ft_size_t index, ft_size_t count = npos) const noexcept;
 
         static const ft_size_t npos = static_cast<ft_size_t>(-1);
-        static int32_t     last_operation_error() noexcept;
-        static const char  *last_operation_error_str() noexcept;
+        static int32_t     get_error() noexcept;
+        static const char  *get_error_str() noexcept;
 
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex *get_mutex_for_validation() const noexcept;

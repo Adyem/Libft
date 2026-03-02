@@ -12,7 +12,7 @@ static int logger_append_quoted_token(ft_string &buffer, const char *value)
     if (!value)
         return (-1);
     buffer.append('"');
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
         return (-1);
     index = 0;
     while (value[index] != '\0')
@@ -23,10 +23,10 @@ static int logger_append_quoted_token(ft_string &buffer, const char *value)
         if (character == '"' || character == '\\')
         {
             buffer.append('\\');
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+            if (ft_string::get_error() != FT_ERR_SUCCESS)
                 return (-1);
             buffer.append(static_cast<char>(character));
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+            if (ft_string::get_error() != FT_ERR_SUCCESS)
                 return (-1);
         }
         else if (character < 0x20)
@@ -39,19 +39,19 @@ static int logger_append_quoted_token(ft_string &buffer, const char *value)
             escape_buffer[3] = hex_digits[character & 0x0F];
             escape_buffer[4] = '\0';
             buffer.append(escape_buffer);
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+            if (ft_string::get_error() != FT_ERR_SUCCESS)
                 return (-1);
         }
         else
         {
             buffer.append(static_cast<char>(character));
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+            if (ft_string::get_error() != FT_ERR_SUCCESS)
                 return (-1);
         }
         index += 1;
     }
     buffer.append('"');
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
         return (-1);
     return (0);
 }
@@ -66,7 +66,7 @@ int logger_build_standard_message(t_log_level level, const ft_string &message_te
     int severity_length;
 
     timestamp = time_format_iso8601(time_now());
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
         return (-1);
     severity_value = ft_log_level_to_severity(level);
     severity_length = pf_snprintf(severity_buffer, sizeof(severity_buffer), "%d",
@@ -76,42 +76,42 @@ int logger_build_standard_message(t_log_level level, const ft_string &message_te
         return (-1);
     if (assembled.initialize("time=") != FT_ERR_SUCCESS)
         return (-1);
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
         return (-1);
     assembled.append(timestamp);
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
         return (-1);
     assembled.append(" level=");
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
         return (-1);
     assembled.append(ft_level_to_str(level));
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
         return (-1);
     assembled.append(" severity=");
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
         return (-1);
     assembled.append(severity_buffer);
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
         return (-1);
     assembled.append(" message=");
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
         return (-1);
     if (logger_append_quoted_token(assembled, message_text.c_str()) != 0)
         return (-1);
     if (context_fragment.size() > 0)
     {
         assembled.append(' ');
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+        if (ft_string::get_error() != FT_ERR_SUCCESS)
             return (-1);
         assembled.append(context_fragment);
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+        if (ft_string::get_error() != FT_ERR_SUCCESS)
             return (-1);
     }
     assembled.append('\n');
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
         return (-1);
     formatted_message = assembled;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
         return (-1);
     return (0);
 }
@@ -141,7 +141,7 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
         return ;
     if (message_text.initialize(message_buffer) != FT_ERR_SUCCESS)
         return ;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
         return ;
     if (logger_lock_sinks() != 0)
         return ;

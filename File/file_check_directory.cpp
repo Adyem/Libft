@@ -25,7 +25,7 @@ int file_dir_exists(const char *rel_path)
     int exists_value;
     int status;
 
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
         return (-1);
     exists_value = 0;
     status = cmp_directory_exists(path.c_str(), &exists_value, &error_code);

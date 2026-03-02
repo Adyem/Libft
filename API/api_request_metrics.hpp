@@ -74,23 +74,23 @@ struct api_request_metrics_guard
         {
             this->_enabled = false;
             this->_initialized_state = _state_destroyed;
-            return (ft_string::last_operation_error());
+            return (ft_string::get_error());
         }
         if (this->_endpoint.clear() != FT_ERR_SUCCESS)
         {
             this->_enabled = false;
             this->_initialized_state = _state_destroyed;
-            return (ft_string::last_operation_error());
+            return (ft_string::get_error());
         }
         if (host)
             this->_endpoint = host;
         else
             this->_endpoint = "(null)";
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+        if (ft_string::get_error() != FT_ERR_SUCCESS)
         {
             this->_enabled = false;
             this->_initialized_state = _state_destroyed;
-            return (ft_string::last_operation_error());
+            return (ft_string::get_error());
         }
         if (port != 0)
         {
@@ -106,18 +106,18 @@ struct api_request_metrics_guard
                 return (FT_ERR_IO);
             }
             this->_endpoint.append(':');
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+            if (ft_string::get_error() != FT_ERR_SUCCESS)
             {
                 this->_enabled = false;
                 this->_initialized_state = _state_destroyed;
-                return (ft_string::last_operation_error());
+                return (ft_string::get_error());
             }
             this->_endpoint.append(port_string);
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+            if (ft_string::get_error() != FT_ERR_SUCCESS)
             {
                 this->_enabled = false;
                 this->_initialized_state = _state_destroyed;
-                return (ft_string::last_operation_error());
+                return (ft_string::get_error());
             }
         }
         return (FT_ERR_SUCCESS);

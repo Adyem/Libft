@@ -27,7 +27,7 @@ ft_string::ft_string(const ft_string &other) noexcept
     this->_operation_error = this->initialize(other);
     if (this->_operation_error == FT_ERR_SUCCESS)
         this->_operation_error = other._operation_error;
-    ft_string::set_last_operation_error(this->_operation_error);
+    ft_string::set_error(this->_operation_error);
     return ;
 }
 
@@ -45,7 +45,7 @@ ft_string::ft_string(ft_string &&other) noexcept
         this->_operation_error = other._operation_error;
         other._operation_error = FT_ERR_SUCCESS;
     }
-    ft_string::set_last_operation_error(this->_operation_error);
+    ft_string::set_error(this->_operation_error);
     return ;
 }
 
@@ -63,12 +63,12 @@ ft_string::ft_string(int32_t error_code) noexcept
     if (initialization_error != FT_ERR_SUCCESS)
     {
         this->_operation_error = initialization_error;
-        ft_string::set_last_operation_error(initialization_error);
+        ft_string::set_error(initialization_error);
     }
     else
     {
         this->_operation_error = error_code;
-        ft_string::set_last_operation_error(error_code);
+        ft_string::set_error(error_code);
     }
     return ;
 }
@@ -233,19 +233,19 @@ ft_string &ft_string::operator=(const ft_string &other) noexcept
 
     if (this == &other)
     {
-        ft_string::set_last_operation_error(FT_ERR_SUCCESS);
+        ft_string::set_error(FT_ERR_SUCCESS);
         return (*this);
     }
     if (other._initialized_state == ft_string::_state_uninitialized)
     {
         other.abort_lifecycle_error("ft_string::operator=(const ft_string &) source",
             "called with uninitialized source object");
-        ft_string::set_last_operation_error(FT_ERR_INVALID_STATE);
+        ft_string::set_error(FT_ERR_INVALID_STATE);
         return (*this);
     }
     if (other._initialized_state != ft_string::_state_initialized)
     {
-        ft_string::set_last_operation_error(FT_ERR_INVALID_STATE);
+        ft_string::set_error(FT_ERR_INVALID_STATE);
         return (*this);
     }
     if (this->_initialized_state == ft_string::_state_initialized)
@@ -253,7 +253,7 @@ ft_string &ft_string::operator=(const ft_string &other) noexcept
         assignment_error = this->destroy();
         if (assignment_error != FT_ERR_SUCCESS)
         {
-            ft_string::set_last_operation_error(assignment_error);
+            ft_string::set_error(assignment_error);
             return (*this);
         }
     }
@@ -262,7 +262,7 @@ ft_string &ft_string::operator=(const ft_string &other) noexcept
         this->_operation_error = other._operation_error;
     else
         this->_operation_error = assignment_error;
-    ft_string::set_last_operation_error(this->_operation_error);
+    ft_string::set_error(this->_operation_error);
     return (*this);
 }
 
@@ -274,17 +274,17 @@ ft_string &ft_string::operator=(ft_string &&other) noexcept
     {
         other.abort_lifecycle_error("ft_string::operator=(ft_string &&) source",
             "called with uninitialized source object");
-        ft_string::set_last_operation_error(FT_ERR_INVALID_STATE);
+        ft_string::set_error(FT_ERR_INVALID_STATE);
         return (*this);
     }
     if (other._initialized_state != ft_string::_state_initialized)
     {
-        ft_string::set_last_operation_error(FT_ERR_INVALID_STATE);
+        ft_string::set_error(FT_ERR_INVALID_STATE);
         return (*this);
     }
     if (this == &other)
     {
-        ft_string::set_last_operation_error(FT_ERR_SUCCESS);
+        ft_string::set_error(FT_ERR_SUCCESS);
         return (*this);
     }
     if (this->_initialized_state == ft_string::_state_initialized)
@@ -292,7 +292,7 @@ ft_string &ft_string::operator=(ft_string &&other) noexcept
         assignment_error = this->destroy();
         if (assignment_error != FT_ERR_SUCCESS)
         {
-            ft_string::set_last_operation_error(assignment_error);
+            ft_string::set_error(assignment_error);
             return (*this);
         }
     }
@@ -304,7 +304,7 @@ ft_string &ft_string::operator=(ft_string &&other) noexcept
     }
     else
         this->_operation_error = assignment_error;
-    ft_string::set_last_operation_error(this->_operation_error);
+    ft_string::set_error(this->_operation_error);
     return (*this);
 }
 
@@ -317,7 +317,7 @@ ft_string &ft_string::operator=(const char *string) noexcept
         assignment_error = this->initialize();
         if (assignment_error != FT_ERR_SUCCESS)
         {
-            ft_string::set_last_operation_error(assignment_error);
+            ft_string::set_error(assignment_error);
             return (*this);
         }
     }
@@ -326,7 +326,7 @@ ft_string &ft_string::operator=(const char *string) noexcept
     else
         assignment_error = this->assign(string, ft_strlen_size_t(string));
     this->_operation_error = assignment_error;
-    ft_string::set_last_operation_error(this->_operation_error);
+    ft_string::set_error(this->_operation_error);
     return (*this);
 }
 

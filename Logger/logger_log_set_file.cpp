@@ -53,7 +53,7 @@ int ft_log_set_file(const char *path, size_t max_size)
     sink->max_size = max_size;
     sink->retention_count = 1;
     sink->max_age_seconds = 0;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
     {
         close(file_descriptor);
         delete sink;

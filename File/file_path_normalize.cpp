@@ -5,7 +5,7 @@
 
 static int file_string_error(void) noexcept
 {
-    return (ft_string::last_operation_error());
+    return (ft_string::get_error());
 }
 
 ft_string file_path_normalize(const char *path)

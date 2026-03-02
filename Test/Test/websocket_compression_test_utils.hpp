@@ -139,7 +139,7 @@ static bool websocket_permessage_deflate_decompress(const unsigned char *payload
     }
     inflateEnd(&stream);
     message.assign(reinterpret_cast<const char *>(output_buffer.begin()), output_buffer.size());
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
         return (false);
     return (true);
 }

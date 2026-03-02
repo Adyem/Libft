@@ -14,7 +14,7 @@ static bool compression_vector_operation_failed(void)
 
 static int compression_string_pop_error(const ft_string &)
 {
-    return (ft_string::last_operation_error());
+    return (ft_string::get_error());
 }
 
 static int  compression_store_in_vector(ft_vector<unsigned char> &destination, const unsigned char *buffer, std::size_t size)
@@ -46,7 +46,7 @@ static int  compression_assign_string(ft_string &destination, const unsigned cha
 {
     int string_error;
 
-    string_error = ft_string::last_operation_error();
+    string_error = ft_string::get_error();
     if (string_error != FT_ERR_SUCCESS)
     {
         return (1);
@@ -54,7 +54,7 @@ static int  compression_assign_string(ft_string &destination, const unsigned cha
     if (size == 0)
     {
         destination.clear();
-        string_error = ft_string::last_operation_error();
+        string_error = ft_string::get_error();
         if (string_error != FT_ERR_SUCCESS)
         {
             return (1);
@@ -66,7 +66,7 @@ static int  compression_assign_string(ft_string &destination, const unsigned cha
         return (1);
     }
     destination.assign(reinterpret_cast<const char *>(buffer), size);
-        string_error = ft_string::last_operation_error();
+        string_error = ft_string::get_error();
         if (string_error != FT_ERR_SUCCESS)
         {
             return (1);

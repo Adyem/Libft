@@ -1,5 +1,6 @@
 #include "errno.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 
 typedef struct s_ft_error_string
 {
@@ -90,11 +91,11 @@ static const char *ft_find_custom_error(int32_t error_code)
     error_index = 0;
     while (error_index < error_count)
     {
-        if (g_error_strings[error_index].error_code == error_code)
+    if (g_error_strings[error_index].error_code == error_code)
             return (g_error_strings[error_index].error_message);
         error_index++;
     }
-    return (NULL);
+    return (ft_nullptr);
 }
 
 const char* ft_strerror(int32_t error_code)
@@ -104,12 +105,12 @@ const char* ft_strerror(int32_t error_code)
     const char *error_message;
 
     custom_message = ft_find_custom_error(error_code);
-    if (custom_message != NULL)
+    if (custom_message != ft_nullptr)
         error_message = custom_message;
     else
     {
         system_message = cmp_system_strerror(error_code);
-        if (system_message != NULL)
+        if (system_message != ft_nullptr)
             error_message = system_message;
         else
             error_message = "Unrecognized error code";

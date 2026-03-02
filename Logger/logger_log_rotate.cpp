@@ -15,7 +15,7 @@ static int logger_build_rotation_path(const ft_string &rotation_base,
 
     std::snprintf(index_buffer, sizeof(index_buffer), "%zu", index);
     path = rotation_base + index_buffer;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
         return (-1);
     return (0);
 }
@@ -165,14 +165,14 @@ void logger_execute_rotation(s_file_sink *sink)
     if (retention_count > 0)
     {
         rotation_base = sink->path + ".";
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+        if (ft_string::get_error() != FT_ERR_SUCCESS)
             goto cleanup;
         if (logger_remove_oldest_rotation(rotation_base, retention_count) != 0)
             goto cleanup;
         if (logger_shift_rotation_chain(rotation_base, retention_count) != 0)
             goto cleanup;
         rotated_path = sink->path + ".1";
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+        if (ft_string::get_error() != FT_ERR_SUCCESS)
             goto cleanup;
         if (::rename(sink->path.c_str(), rotated_path.c_str()) != 0)
             goto cleanup;

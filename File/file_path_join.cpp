@@ -4,7 +4,7 @@
 
 static int file_string_error(void) noexcept
 {
-    return (ft_string::last_operation_error());
+    return (ft_string::get_error());
 }
 
 ft_string file_path_join(const char *path_left, const char *path_right)

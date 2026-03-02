@@ -13,7 +13,7 @@
 
 int pf_string_pop_last_error(const ft_string &)
 {
-    return (ft_string::last_operation_error());
+    return (ft_string::get_error());
 }
 
 static const char g_decimal_pairs[200] =

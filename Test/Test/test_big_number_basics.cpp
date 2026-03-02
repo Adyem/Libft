@@ -128,18 +128,18 @@ FT_TEST(test_big_number_to_string_base_conversions, "ft_big_number to_string_bas
     negative_value.assign("-240");
 
     ft_string hex_output = decimal_value.to_string_base(16);
-    FT_ASSERT_EQ(0, ft_string::last_operation_error());
+    FT_ASSERT_EQ(0, ft_string::get_error());
     FT_ASSERT(hex_output == "FF");
 
     ft_string octal_output = decimal_value.to_string_base(8);
-    FT_ASSERT_EQ(0, ft_string::last_operation_error());
+    FT_ASSERT_EQ(0, ft_string::get_error());
     FT_ASSERT(octal_output == "377");
 
     ft_string binary_output = negative_value.to_string_base(2);
-    FT_ASSERT_EQ(0, ft_string::last_operation_error());
+    FT_ASSERT_EQ(0, ft_string::get_error());
     FT_ASSERT(binary_output == "-11110000");
 
     ft_string invalid_output = decimal_value.to_string_base(1);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_string::get_error());
     return (1);
 }

@@ -173,7 +173,7 @@ static int xml_dom_check_string_error(const ft_string &value) noexcept
     int error_code;
 
     (void)value;
-    error_code = ft_string::last_operation_error();
+    error_code = ft_string::get_error();
     return (error_code);
 }
 

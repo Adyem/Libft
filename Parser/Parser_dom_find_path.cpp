@@ -48,10 +48,10 @@ int ft_dom_find_path(const ft_dom_node *root, const ft_string &path, const ft_do
             ft_string segment;
 
             segment.assign(raw_path + start_index, segment_length);
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+            if (ft_string::get_error() != FT_ERR_SUCCESS)
             {
                 status = -1;
-                error_code = ft_string::last_operation_error();
+                error_code = ft_string::get_error();
             }
             else
             {

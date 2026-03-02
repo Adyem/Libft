@@ -57,16 +57,16 @@ int ft_dom_node::initialize() noexcept
     this->_attribute_keys.clear();
     this->_attribute_values.clear();
     this->_name = "";
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
     {
         this->_initialized_state = ft_dom_node::_state_destroyed;
-        return (ft_string::last_operation_error());
+        return (ft_string::get_error());
     }
     this->_value = "";
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
     {
         this->_initialized_state = ft_dom_node::_state_destroyed;
-        return (ft_string::last_operation_error());
+        return (ft_string::get_error());
     }
     this->_initialized_state = ft_dom_node::_state_initialized;
     return (FT_ERR_SUCCESS);
@@ -213,8 +213,8 @@ int ft_dom_node::set_name(const ft_string &name) noexcept
         return (lock_error);
     this->_name = name;
     (void)this->unlock_internal(lock_acquired);
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
-        return (ft_string::last_operation_error());
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
+        return (ft_string::get_error());
     return (FT_ERR_SUCCESS);
 }
 
@@ -226,8 +226,8 @@ int ft_dom_node::set_name(const char *name) noexcept
     if (name == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     name_string = name;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
-        return (ft_string::last_operation_error());
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
+        return (ft_string::get_error());
     return (this->set_name(name_string));
 }
 
@@ -249,8 +249,8 @@ int ft_dom_node::set_value(const ft_string &value) noexcept
         return (lock_error);
     this->_value = value;
     (void)this->unlock_internal(lock_acquired);
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
-        return (ft_string::last_operation_error());
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
+        return (ft_string::get_error());
     return (FT_ERR_SUCCESS);
 }
 
@@ -262,8 +262,8 @@ int ft_dom_node::set_value(const char *value) noexcept
     if (value == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     value_string = value;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
-        return (ft_string::last_operation_error());
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
+        return (ft_string::get_error());
     return (this->set_value(value_string));
 }
 
@@ -316,7 +316,7 @@ int ft_dom_node::add_attribute(const ft_string &key, const ft_string &value) noe
         {
             this->_attribute_values[key_index] = value;
             (void)this->unlock_internal(lock_acquired);
-            return (ft_string::last_operation_error());
+            return (ft_string::get_error());
         }
         key_index += 1;
     }
@@ -340,11 +340,11 @@ int ft_dom_node::add_attribute(const char *key, const char *value) noexcept
     if (key == ft_nullptr || value == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
     key_string = key;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
-        return (ft_string::last_operation_error());
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
+        return (ft_string::get_error());
     value_string = value;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
-        return (ft_string::last_operation_error());
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
+        return (ft_string::get_error());
     return (this->add_attribute(key_string, value_string));
 }
 

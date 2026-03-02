@@ -80,7 +80,7 @@ FT_TEST(test_yaml_round_trip, "yaml round trip")
     numbers_value_guard.release();
 
     yaml_string = yaml_write_to_string(&root);
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
         return (0);
 
     parsed_value_guard.reset(yaml_read_from_string(yaml_string));
@@ -88,7 +88,7 @@ FT_TEST(test_yaml_round_trip, "yaml round trip")
         return (0);
 
     round_trip_string = yaml_write_to_string(parsed_value_guard.get());
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
         return (0);
     FT_ASSERT_EQ(0, ft_strcmp(yaml_string.c_str(), round_trip_string.c_str()));
     return (1);

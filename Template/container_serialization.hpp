@@ -21,7 +21,7 @@ int default_string_serializer(const ElementType &value, ft_string &output) noexc
     if constexpr (std::is_same<ElementType, ft_string>::value)
     {
         output = value;
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+        if (ft_string::get_error() != FT_ERR_SUCCESS)
             return (-1);
         return (0);
     }
@@ -30,7 +30,7 @@ int default_string_serializer(const ElementType &value, ft_string &output) noexc
         if (value == ft_nullptr)
             return (-1);
         output = value;
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+        if (ft_string::get_error() != FT_ERR_SUCCESS)
             return (-1);
         return (0);
     }
@@ -46,7 +46,7 @@ int default_string_serializer(const ElementType &value, ft_string &output) noexc
             if (format_result <= 0)
                 return (-1);
             output = number_buffer;
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+            if (ft_string::get_error() != FT_ERR_SUCCESS)
                 return (-1);
             return (0);
         }
@@ -57,7 +57,7 @@ int default_string_serializer(const ElementType &value, ft_string &output) noexc
             if (format_result <= 0)
                 return (-1);
             output = number_buffer;
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+            if (ft_string::get_error() != FT_ERR_SUCCESS)
                 return (-1);
             return (0);
         }
@@ -72,7 +72,7 @@ int default_string_serializer(const ElementType &value, ft_string &output) noexc
         if (format_result <= 0)
             return (-1);
         output = number_buffer;
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+        if (ft_string::get_error() != FT_ERR_SUCCESS)
             return (-1);
         return (0);
     }
@@ -87,7 +87,7 @@ int default_string_deserializer(const char *value_string, ElementType &output) n
     if constexpr (std::is_same<ElementType, ft_string>::value)
     {
         output = value_string;
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+        if (ft_string::get_error() != FT_ERR_SUCCESS)
             return (-1);
         return (0);
     }
@@ -184,13 +184,13 @@ int ft_vector_serialize_json(const ft_vector<ElementType> &values,
             }
             index_string = index_buffer;
         }
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+        if (ft_string::get_error() != FT_ERR_SUCCESS)
         {
             json_free_groups(group);
             return (-1);
         }
         key_string += index_string;
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+        if (ft_string::get_error() != FT_ERR_SUCCESS)
         {
             json_free_groups(group);
             return (-1);
@@ -270,10 +270,10 @@ int ft_vector_deserialize_json(json_group *group,
                 return (-1);
             index_string = index_buffer;
         }
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+        if (ft_string::get_error() != FT_ERR_SUCCESS)
             return (-1);
         key_string += index_string;
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+        if (ft_string::get_error() != FT_ERR_SUCCESS)
             return (-1);
         value_item = json_find_item(group, key_string.c_str());
         if (value_item == ft_nullptr || value_item->value == ft_nullptr)

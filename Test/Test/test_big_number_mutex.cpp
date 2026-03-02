@@ -285,7 +285,7 @@ FT_TEST(test_big_number_mutex_to_string_invalid_base_unlocks,
 
     FT_ASSERT(number_mutex != ft_nullptr);
 
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_string::get_error());
     FT_ASSERT_EQ(false, number_mutex->lockState());
     return (1);
 }
@@ -469,7 +469,7 @@ FT_TEST(test_big_number_mutex_to_string_valid_unlocks,
 
     FT_ASSERT_EQ(false, number_mutex->lockState());
     FT_ASSERT_EQ(false, string_mutex->lockState());
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::get_error());
     FT_ASSERT_EQ(3, decimal_string.size());
     return (1);
 }
@@ -599,7 +599,7 @@ FT_TEST(test_big_number_mutex_to_string_negative_base_unlocks,
     FT_ASSERT(number_mutex != ft_nullptr);
     FT_ASSERT(string_mutex != ft_nullptr);
 
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_string::get_error());
     FT_ASSERT_EQ(false, number_mutex->lockState());
     FT_ASSERT_EQ(false, string_mutex->lockState());
     return (1);

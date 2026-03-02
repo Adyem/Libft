@@ -1320,7 +1320,7 @@ static bool parse_url(const char *url, bool &tls, ft_string &host,
     while (walker < scheme_end)
     {
         scheme.append(*walker);
-        int scheme_error = ft_string::last_operation_error();
+        int scheme_error = ft_string::get_error();
         if (scheme_error != FT_ERR_SUCCESS)
         {
             error_code = scheme_error;
@@ -1335,7 +1335,7 @@ static bool parse_url(const char *url, bool &tls, ft_string &host,
     if (path_start)
     {
         path.append(path_start);
-        int path_error = ft_string::last_operation_error();
+        int path_error = ft_string::get_error();
         if (path_error != FT_ERR_SUCCESS)
         {
             error_code = path_error;
@@ -1346,7 +1346,7 @@ static bool parse_url(const char *url, bool &tls, ft_string &host,
     {
         slash = "/";
         path = slash;
-        int path_error = ft_string::last_operation_error();
+        int path_error = ft_string::get_error();
         if (path_error != FT_ERR_SUCCESS)
         {
             error_code = path_error;
@@ -1360,7 +1360,7 @@ static bool parse_url(const char *url, bool &tls, ft_string &host,
         while (walker < path_start)
         {
             hostport.append(*walker);
-            int hostport_error = ft_string::last_operation_error();
+            int hostport_error = ft_string::get_error();
             if (hostport_error != FT_ERR_SUCCESS)
             {
                 error_code = hostport_error;
@@ -1373,7 +1373,7 @@ static bool parse_url(const char *url, bool &tls, ft_string &host,
     {
         hostport.clear();
         hostport.append(host_start);
-        int hostport_error = ft_string::last_operation_error();
+        int hostport_error = ft_string::get_error();
         if (hostport_error != FT_ERR_SUCCESS)
         {
             error_code = hostport_error;
@@ -1388,7 +1388,7 @@ static bool parse_url(const char *url, bool &tls, ft_string &host,
         while (walker < colon)
         {
             host.append(*walker);
-            int host_error = ft_string::last_operation_error();
+            int host_error = ft_string::get_error();
             if (host_error != FT_ERR_SUCCESS)
             {
                 error_code = host_error;
@@ -1401,7 +1401,7 @@ static bool parse_url(const char *url, bool &tls, ft_string &host,
     else
     {
         host = hostport;
-        int host_error = ft_string::last_operation_error();
+        int host_error = ft_string::get_error();
         if (host_error != FT_ERR_SUCCESS)
         {
             error_code = host_error;

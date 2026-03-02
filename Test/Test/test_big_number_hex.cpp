@@ -16,7 +16,7 @@ FT_TEST(test_big_number_hex_serialization_round_trip, "ft_big_number hex seriali
     decimal_value.assign("3735928559");
 
     ft_string hex_string = big_number_to_hex_string(decimal_value);
-    FT_ASSERT_EQ(0, ft_string::last_operation_error());
+    FT_ASSERT_EQ(0, ft_string::get_error());
     FT_ASSERT(hex_string == "DEADBEEF");
 
     ft_big_number parsed_value = big_number_from_hex_string(hex_string.c_str());
@@ -34,7 +34,7 @@ FT_TEST(test_big_number_hex_serialization_prefix_support, "ft_big_number hex ser
     negative_decimal.assign("-4660");
 
     ft_string negative_hex = big_number_to_hex_string(negative_decimal);
-    FT_ASSERT_EQ(0, ft_string::last_operation_error());
+    FT_ASSERT_EQ(0, ft_string::get_error());
     FT_ASSERT(negative_hex == "-1234");
 
     ft_big_number round_trip_negative = big_number_from_hex_string(negative_hex.c_str());

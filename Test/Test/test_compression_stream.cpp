@@ -289,7 +289,7 @@ FT_TEST(test_ft_compress_stream_ratio_preset_outperforms_speed_preset, "ratio pr
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, payload.initialize());
     payload.assign(32768, 'A');
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::get_error());
     ft_compress_stream_apply_speed_preset(&speed_options);
     ft_compress_stream_apply_ratio_preset(&ratio_options);
     speed_size = compression_stream_collect_compressed_size(payload.data(), payload.size(), &speed_options);

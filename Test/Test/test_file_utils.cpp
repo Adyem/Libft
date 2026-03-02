@@ -154,7 +154,7 @@ FT_TEST(test_file_path_join_prefers_absolute_right, "file_path_join returns abso
 {
     ft_string result = file_path_join("/etc", "/var/log");
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::get_error());
     FT_ASSERT_EQ(0, ft_strcmp(result.c_str(), "/var/log"));
     return (1);
 }
@@ -163,7 +163,7 @@ FT_TEST(test_file_path_join_keeps_drive_letter, "file_path_join keeps Windows dr
 {
     ft_string result = file_path_join("/left", "C:/temp");
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::get_error());
     FT_ASSERT_EQ(0, ft_strcmp(result.c_str(), "C:/temp"));
     return (1);
 }
@@ -176,7 +176,7 @@ FT_TEST(test_file_path_normalize_collapses_duplicates, "file_path_normalize coll
 
     build_alternate_separator_path(path_buffer, "/folder///sub///file.txt");
     normalized = file_path_normalize(path_buffer);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::get_error());
     build_native_path(expected_buffer, "/folder/sub/file.txt");
     FT_ASSERT_EQ(0, ft_strcmp(normalized.c_str(), expected_buffer));
     return (1);
@@ -190,7 +190,7 @@ FT_TEST(test_file_path_normalize_preserves_trailing_separator, "file_path_normal
 
     build_alternate_separator_path(path_buffer, "/folder/subdir///");
     normalized = file_path_normalize(path_buffer);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::get_error());
     build_native_path(expected_buffer, "/folder/subdir/");
     FT_ASSERT_EQ(0, ft_strcmp(normalized.c_str(), expected_buffer));
     return (1);
@@ -201,7 +201,7 @@ FT_TEST(test_file_path_normalize_handles_null_input, "file_path_normalize gracef
     ft_string normalized;
 
     normalized = file_path_normalize(ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::get_error());
     FT_ASSERT_EQ(0, ft_strcmp(normalized.c_str(), ""));
     return (1);
 }
@@ -216,7 +216,7 @@ FT_TEST(test_file_path_join_appends_missing_separator, "file_path_join inserts m
     build_alternate_separator_path(left_buffer, "/var//log");
     build_alternate_separator_path(right_buffer, "nginx///access.log");
     result = file_path_join(left_buffer, right_buffer);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::get_error());
     build_native_path(expected_buffer, "/var/log/nginx/access.log");
     FT_ASSERT_EQ(0, ft_strcmp(result.c_str(), expected_buffer));
     return (1);
@@ -230,7 +230,7 @@ FT_TEST(test_file_path_join_with_empty_left, "file_path_join handles empty left 
 
     build_alternate_separator_path(right_buffer, "folder//file.txt");
     result = file_path_join("", right_buffer);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::get_error());
     build_native_path(expected_buffer, "folder/file.txt");
     FT_ASSERT_EQ(0, ft_strcmp(result.c_str(), expected_buffer));
     return (1);

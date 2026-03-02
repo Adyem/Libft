@@ -24,7 +24,7 @@ struct timeval
 # endif
 struct file_dir
 {
-    intptr_t fd;
+    intptr_t file_descriptor;
     WIN32_FIND_DATAA w_find_data;
     bool first_read;
     pt_mutex mutex;
@@ -46,7 +46,7 @@ int32_t cmp_write(int32_t file_descriptor, const void *buffer, ft_size_t count,
 # include <sys/time.h>
 struct file_dir
 {
-    intptr_t fd;
+    intptr_t file_descriptor;
     char *buffer;
     ft_size_t buffer_size;
     int64_t buffer_used;

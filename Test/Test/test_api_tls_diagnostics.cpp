@@ -181,7 +181,7 @@ static bool tls_write_temp_file(const char *prefix, const char *contents, ft_str
         return (false);
     }
     path = template_path;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
     {
         TLS_TEST_UNLINK(template_path);
         return (false);
@@ -349,7 +349,7 @@ static bool tls_compute_expected_fingerprint(ft_string &fingerprint)
     char byte_buffer[3];
 
     fingerprint.clear();
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
         return (false);
     memory = BIO_new_mem_buf(g_tls_test_server_certificate, -1);
     if (!memory)
@@ -372,7 +372,7 @@ static bool tls_compute_expected_fingerprint(ft_string &fingerprint)
             return (false);
         }
         fingerprint.append(byte_buffer, 2);
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+        if (ft_string::get_error() != FT_ERR_SUCCESS)
         {
             X509_free(certificate);
             return (false);
@@ -380,7 +380,7 @@ static bool tls_compute_expected_fingerprint(ft_string &fingerprint)
         if (index + 1 < digest_length)
         {
             fingerprint.append(':');
-            if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+            if (ft_string::get_error() != FT_ERR_SUCCESS)
             {
                 X509_free(certificate);
                 return (false);
@@ -424,7 +424,7 @@ FT_TEST(test_api_tls_client_populates_handshake_diagnostics,
     if (has_original_cert_file)
     {
         original_cert_file_copy = original_cert_file;
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+        if (ft_string::get_error() != FT_ERR_SUCCESS)
         {
             TLS_TEST_UNLINK(ca_path.c_str());
             TLS_TEST_UNLINK(cert_path.c_str());

@@ -119,7 +119,7 @@ FT_TEST(test_big_number_errno_resets_arithmetic, "ft_big_number arithmetic prese
     FT_ASSERT_EQ(0, std::strcmp(power_number.c_str(), "1"));
 
     ft_string base16_string = left_number.to_string_base(16);
-    FT_ASSERT_EQ(0, ft_string::last_operation_error());
+    FT_ASSERT_EQ(0, ft_string::get_error());
     ft_big_number error_divisor;
 
     error_divisor.assign("0");
@@ -135,7 +135,7 @@ FT_TEST(test_big_number_errno_resets_hex_helpers, "ft_big_number hex helpers cle
     number_value.assign("255");
 
     ft_string hex_digits = big_number_to_hex_string(number_value);
-    FT_ASSERT_EQ(0, ft_string::last_operation_error());
+    FT_ASSERT_EQ(0, ft_string::get_error());
     FT_ASSERT(hex_digits == "FF");
 
     ft_big_number parsed_value = big_number_from_hex_string(hex_digits.c_str());

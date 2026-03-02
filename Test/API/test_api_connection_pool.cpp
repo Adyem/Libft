@@ -110,9 +110,9 @@ static void api_pool_test_server(api_pool_test_server_context *context)
 
                 current_char = buffer[buffer_index];
                 request_storage.append(current_char);
-                if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+                if (ft_string::get_error() != FT_ERR_SUCCESS)
                 {
-                    context->result.store(ft_string::last_operation_error());
+                    context->result.store(ft_string::get_error());
                     connection_active = false;
                     break;
                 }

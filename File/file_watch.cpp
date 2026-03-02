@@ -149,7 +149,7 @@ int ft_file_watch::watch_directory(const char *path,
             return (-1);
     }
     int32_t initialization_error = this->_path.initialize(path);
-    if (initialization_error != FT_ERR_SUCCESS || ft_string::last_operation_error() != FT_ERR_SUCCESS)
+    if (initialization_error != FT_ERR_SUCCESS || ft_string::get_error() != FT_ERR_SUCCESS)
     {
         this->_callback = ft_nullptr;
         this->_user_data = ft_nullptr;
@@ -229,7 +229,7 @@ bool ft_file_watch::snapshot_callback(void (**callback)(const char *, int, void 
     *callback = this->_callback;
     user_data = this->_user_data;
     path_snapshot = this->_path;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
         path_snapshot.clear();
     (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
     return (true);

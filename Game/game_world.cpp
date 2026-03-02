@@ -507,11 +507,11 @@ int ft_world::save_to_buffer(ft_string &out_buffer, const ft_character &characte
         return (this->get_error());
     }
     out_buffer = serialized_state;
-    if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
     {
         int assign_error;
 
-        assign_error = ft_string::last_operation_error();
+        assign_error = ft_string::get_error();
         cma_free(serialized_state);
         this->set_error(assign_error);
         return (this->get_error());

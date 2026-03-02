@@ -48,7 +48,7 @@ static int json_dom_append_item(const json_item *item, ft_dom_node *group_node) 
         ft_string number_string;
 
         number_string = item->big_number->to_string_base(10);
-        if (ft_string::last_operation_error() != FT_ERR_SUCCESS)
+        if (ft_string::get_error() != FT_ERR_SUCCESS)
         {
             json_dom_delete_node(item_node);
             return (-1);

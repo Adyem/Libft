@@ -39,7 +39,7 @@ FT_TEST(test_ft_string_append_char_allocation_failure,
     append_error = string_value.append('x');
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, append_error);
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::get_error());
     FT_ASSERT_EQ(false, mutex_pointer->lockState());
     return (1);
 }
@@ -55,7 +55,7 @@ FT_TEST(test_ft_string_append_cstring_allocation_failure,
     append_error = string_value.append("abcd");
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, append_error);
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::get_error());
     return (1);
 }
 
@@ -70,7 +70,7 @@ FT_TEST(test_ft_string_assign_count_allocation_failure,
     assign_error = string_value.assign(8, 'a');
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, assign_error);
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::get_error());
     return (1);
 }
 
@@ -85,7 +85,7 @@ FT_TEST(test_ft_string_assign_cstring_allocation_failure,
     assign_error = string_value.assign("abcdef", 6);
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, assign_error);
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::get_error());
     return (1);
 }
 
@@ -100,7 +100,7 @@ FT_TEST(test_ft_string_resize_allocation_failure,
     resize_error = string_value.resize(64);
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, resize_error);
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::get_error());
     return (1);
 }
 
@@ -115,7 +115,7 @@ FT_TEST(test_ft_string_resize_length_allocation_failure,
     resize_error = string_value.resize_length(12);
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, resize_error);
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::get_error());
     return (1);
 }
 
@@ -128,7 +128,7 @@ FT_TEST(test_ft_string_constructor_cstring_allocation_failure,
     cma_set_alloc_limit(0);
 
     (void)string_value;
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::get_error());
     return (1);
 }
 
@@ -143,7 +143,7 @@ FT_TEST(test_ft_string_copy_constructor_allocation_failure,
     cma_set_alloc_limit(0);
 
     (void)copy_value;
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::get_error());
     return (1);
 }
 
@@ -159,7 +159,7 @@ FT_TEST(test_ft_string_copy_assignment_allocation_failure,
     destination = source;
     cma_set_alloc_limit(0);
 
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::get_error());
     return (1);
 }
 
@@ -180,7 +180,7 @@ FT_TEST(test_ft_string_operator_plus_allocation_failure,
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, proxy_result.get_error());
     result = proxy_result;
     (void)result;
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::get_error());
     return (1);
 }
 
@@ -195,10 +195,10 @@ FT_TEST(test_ft_string_allocation_failure_recovery_after_reset_limit,
     append_error = string_value.append("abcd");
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, append_error);
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, string_value.append("ok"));
     FT_ASSERT(string_value == "ok");
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::get_error());
     return (1);
 }
 
@@ -218,7 +218,7 @@ FT_TEST(test_ft_string_late_append_growth_failure_releases_memory_after_destroy,
             "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, append_error);
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, string_value.destroy());
     bytes_after_destroy = string_current_allocated_bytes();
     FT_ASSERT_EQ(baseline_bytes, bytes_after_destroy);
@@ -245,7 +245,7 @@ FT_TEST(test_ft_string_operator_plus_late_allocation_failure_releases_memory,
         cma_set_alloc_limit(0);
         FT_ASSERT_EQ(FT_ERR_NO_MEMORY, proxy_result.get_error());
         result = proxy_result;
-        FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::last_operation_error());
+        FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::get_error());
         (void)result;
     }
     bytes_after_scope = string_current_allocated_bytes();

@@ -145,7 +145,7 @@ FT_TEST(test_ft_string_chain_error_propagates_to_assignment,
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, proxy_result.get_error());
     destination = proxy_result;
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::get_error());
     return (1);
 }
 
@@ -165,9 +165,9 @@ FT_TEST(test_ft_string_chain_error_does_not_stick_after_success,
     cma_set_alloc_limit(0);
         FT_ASSERT_EQ(FT_ERR_NO_MEMORY, proxy_result.get_error());
     destination = proxy_result;
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::get_error());
     destination = "ok";
     FT_ASSERT(destination == "ok");
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ft_string::get_error());
     return (1);
 }
