@@ -13,6 +13,7 @@ Use Allman style braces (opening brace on a new line).
 Write `break` statements as `break ;` (a space between the keyword and the semicolon) to keep the spacing rules consistent.
 In classes, member variable names must start with an underscore (_).
 Within class member functions, access members and other methods using the this keyword.
+For testing builds only, it is allowed to expose class member variables under `#ifdef LIBFT_TEST_BUILD` (for example by temporarily making them public) so tests can validate expected internal state. This must never be exposed in production builds.
 Template classes may define member functions in the same file as the class declaration, but
 other classes must split declarations into .hpp files and definitions into .cpp files. Inline and constexpr are allowed in headers for templates. For template classes, declare all member functions in the class declaration, then place the definitions below the class declaration in the same header.
 Do not define member function bodies inside the class declaration; place all definitions outside the class.

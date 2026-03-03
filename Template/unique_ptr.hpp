@@ -81,6 +81,8 @@ class ft_uniqueptr
                     return ;
                 }
 
+                ~reference_proxy();
+
                 operator ManagedType&() const noexcept
                 {
                     static ManagedType fallback = ManagedType();
@@ -114,6 +116,8 @@ class ft_uniqueptr
                 {
                     return ;
                 }
+
+                ~const_reference_proxy();
 
                 operator const ManagedType&() const noexcept
                 {
@@ -509,6 +513,18 @@ class ft_uniqueptr
         }
 #endif
 };
+
+template <typename ManagedType>
+ft_uniqueptr<ManagedType>::reference_proxy::~reference_proxy()
+{
+    return ;
+}
+
+template <typename ManagedType>
+ft_uniqueptr<ManagedType>::const_reference_proxy::~const_reference_proxy()
+{
+    return ;
+}
 
 template <typename ManagedType>
 thread_local int32_t ft_uniqueptr<ManagedType>::_last_error = FT_ERR_SUCCESS;

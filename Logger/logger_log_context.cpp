@@ -61,7 +61,7 @@ int logger_context_push(const s_log_field *fields, size_t field_count,
             return (-1);
         }
         entry.key = field->key;
-        error_code = entry.key.last_operation_error();
+        error_code = ft_string::get_error();
         if (error_code != FT_ERR_SUCCESS)
         {
             log_field_unlock(field, lock_acquired);
@@ -71,7 +71,7 @@ int logger_context_push(const s_log_field *fields, size_t field_count,
         if (field->value)
         {
             entry.value = field->value;
-            error_code = entry.value.last_operation_error();
+            error_code = ft_string::get_error();
             if (error_code != FT_ERR_SUCCESS)
             {
                 log_field_unlock(field, lock_acquired);
@@ -148,7 +148,7 @@ static int logger_context_format_prefix(ft_string &prefix)
         return (0);
     }
     prefix.append('[');
-    error_code = prefix.last_operation_error();
+    error_code = ft_string::get_error();
     if (error_code != FT_ERR_SUCCESS)
     {
         return (-1);
@@ -167,7 +167,7 @@ static int logger_context_format_prefix(ft_string &prefix)
         if (!first_entry)
         {
             prefix.append(' ');
-            error_code = prefix.last_operation_error();
+            error_code = ft_string::get_error();
             if (error_code != FT_ERR_SUCCESS)
             {
                 return (-1);
@@ -176,7 +176,7 @@ static int logger_context_format_prefix(ft_string &prefix)
         else
             first_entry = false;
         prefix.append(entry.key);
-        error_code = prefix.last_operation_error();
+        error_code = ft_string::get_error();
         if (error_code != FT_ERR_SUCCESS)
         {
             return (-1);
@@ -184,13 +184,13 @@ static int logger_context_format_prefix(ft_string &prefix)
         if (entry.has_value)
         {
             prefix.append('=');
-            error_code = prefix.last_operation_error();
+            error_code = ft_string::get_error();
             if (error_code != FT_ERR_SUCCESS)
             {
                 return (-1);
             }
             prefix.append(entry.value);
-            error_code = prefix.last_operation_error();
+            error_code = ft_string::get_error();
             if (error_code != FT_ERR_SUCCESS)
             {
                 return (-1);
@@ -199,13 +199,13 @@ static int logger_context_format_prefix(ft_string &prefix)
         index += 1;
     }
     prefix.append(']');
-    error_code = prefix.last_operation_error();
+    error_code = ft_string::get_error();
     if (error_code != FT_ERR_SUCCESS)
     {
         return (-1);
     }
     prefix.append(' ');
-    error_code = prefix.last_operation_error();
+    error_code = ft_string::get_error();
     if (error_code != FT_ERR_SUCCESS)
     {
         return (-1);
@@ -224,24 +224,24 @@ int logger_context_apply_plain(ft_string &text)
         if (result == 0)
         return (result);
     }
-    if (prefix.last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
     {
         return (-1);
     }
     ft_string combined(prefix);
-    int error_code = combined.last_operation_error();
+    int error_code = ft_string::get_error();
     if (error_code != FT_ERR_SUCCESS)
     {
         return (-1);
     }
     combined.append(text);
-    error_code = combined.last_operation_error();
+    error_code = ft_string::get_error();
     if (error_code != FT_ERR_SUCCESS)
     {
         return (-1);
     }
     text = combined;
-    error_code = text.last_operation_error();
+    error_code = ft_string::get_error();
     if (error_code != FT_ERR_SUCCESS)
     {
         return (-1);
@@ -281,7 +281,7 @@ static int logger_context_append_flat_value(ft_string &output, const char *value
     if (!logger_context_value_needs_quotes(value))
     {
         output.append(value);
-        error_code = output.last_operation_error();
+        error_code = ft_string::get_error();
         if (error_code != FT_ERR_SUCCESS)
         {
             return (-1);
@@ -289,7 +289,7 @@ static int logger_context_append_flat_value(ft_string &output, const char *value
         return (0);
     }
     output.append('"');
-    error_code = output.last_operation_error();
+    error_code = ft_string::get_error();
     if (error_code != FT_ERR_SUCCESS)
     {
         return (-1);
@@ -303,13 +303,13 @@ static int logger_context_append_flat_value(ft_string &output, const char *value
         if (character == '"' || character == '\\')
         {
             output.append('\\');
-            error_code = output.last_operation_error();
+            error_code = ft_string::get_error();
             if (error_code != FT_ERR_SUCCESS)
             {
                 return (-1);
             }
             output.append(character);
-            error_code = output.last_operation_error();
+            error_code = ft_string::get_error();
             if (error_code != FT_ERR_SUCCESS)
             {
                 return (-1);
@@ -325,7 +325,7 @@ static int logger_context_append_flat_value(ft_string &output, const char *value
             escape_buffer[3] = hex_digits[static_cast<unsigned char>(character) & 0x0F];
             escape_buffer[4] = '\0';
             output.append(escape_buffer);
-            error_code = output.last_operation_error();
+            error_code = ft_string::get_error();
             if (error_code != FT_ERR_SUCCESS)
             {
                 return (-1);
@@ -334,7 +334,7 @@ static int logger_context_append_flat_value(ft_string &output, const char *value
         else
         {
             output.append(character);
-            error_code = output.last_operation_error();
+            error_code = ft_string::get_error();
             if (error_code != FT_ERR_SUCCESS)
             {
                 return (-1);
@@ -343,7 +343,7 @@ static int logger_context_append_flat_value(ft_string &output, const char *value
         index += 1;
     }
     output.append('"');
-    error_code = output.last_operation_error();
+    error_code = ft_string::get_error();
     if (error_code != FT_ERR_SUCCESS)
     {
         return (-1);
@@ -359,7 +359,7 @@ int logger_context_format_flat(ft_string &output)
     int error_code;
 
     output.clear();
-    error_code = output.last_operation_error();
+    error_code = ft_string::get_error();
     if (error_code != FT_ERR_SUCCESS)
     {
         return (-1);
@@ -388,7 +388,7 @@ int logger_context_format_flat(ft_string &output)
         if (!first_entry)
         {
             output.append(' ');
-            error_code = output.last_operation_error();
+            error_code = ft_string::get_error();
             if (error_code != FT_ERR_SUCCESS)
             {
                 return (-1);
@@ -397,7 +397,7 @@ int logger_context_format_flat(ft_string &output)
         else
             first_entry = false;
         output.append(entry.key);
-        error_code = output.last_operation_error();
+        error_code = ft_string::get_error();
         if (error_code != FT_ERR_SUCCESS)
         {
             return (-1);
@@ -405,12 +405,12 @@ int logger_context_format_flat(ft_string &output)
         if (entry.has_value)
         {
             output.append('=');
-            error_code = output.last_operation_error();
+            error_code = ft_string::get_error();
             if (error_code != FT_ERR_SUCCESS)
             {
                 return (-1);
             }
-            error_code = entry.value.last_operation_error();
+            error_code = ft_string::get_error();
             if (error_code != FT_ERR_SUCCESS)
             {
                 return (-1);

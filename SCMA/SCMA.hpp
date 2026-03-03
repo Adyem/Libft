@@ -810,7 +810,7 @@ inline scma_handle_accessor_element_proxy<TValue>::scma_handle_accessor_element_
     this->_index = other._index;
     this->_value = other._value;
     this->_should_write_back = other._should_write_back;
-    this->set_error(other._last_error);
+    this->set_error(other.get_error());
     this->_is_valid = other._is_valid;
     other._parent = ft_nullptr;
     other._should_write_back = 0;
@@ -837,7 +837,7 @@ inline scma_handle_accessor_element_proxy<TValue>    &scma_handle_accessor_eleme
     this->_index = other._index;
     this->_value = other._value;
     this->_should_write_back = other._should_write_back;
-    this->set_error(other._last_error);
+    this->set_error(other.get_error());
     this->_is_valid = other._is_valid;
     other._parent = ft_nullptr;
     other._should_write_back = 0;
@@ -980,7 +980,7 @@ inline scma_handle_accessor_const_element_proxy<TValue>::scma_handle_accessor_co
     this->_parent = other._parent;
     this->_index = other._index;
     this->_value = other._value;
-    this->set_error(other._last_error);
+    this->set_error(other.get_error());
     this->_is_valid = other._is_valid;
     other._parent = ft_nullptr;
     other.set_error(FT_ERR_INVALID_STATE);
@@ -1005,7 +1005,7 @@ inline scma_handle_accessor_const_element_proxy<TValue>    &scma_handle_accessor
     this->_parent = other._parent;
     this->_index = other._index;
     this->_value = other._value;
-    this->set_error(other._last_error);
+    this->set_error(other.get_error());
     this->_is_valid = other._is_valid;
     other._parent = ft_nullptr;
     other.set_error(FT_ERR_INVALID_STATE);

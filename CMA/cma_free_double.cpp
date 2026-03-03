@@ -18,4 +18,5 @@ void    cma_free_double(char **content)
             break ;
     }
     cma_free(content);
+    return ;
 }

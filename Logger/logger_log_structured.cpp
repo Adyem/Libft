@@ -11,8 +11,8 @@ static void logger_append_literal(ft_string &buffer, const char *literal,
         return ;
     }
     buffer.append(literal);
-    if (buffer.last_operation_error() != FT_ERR_SUCCESS)
-        error_code = buffer.last_operation_error();
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
+        error_code = ft_string::get_error();
     return ;
 }
 
@@ -22,8 +22,8 @@ static void logger_append_character_sequence(ft_string &buffer, const char *sequ
     if (error_code != FT_ERR_SUCCESS)
         return ;
     buffer.append(sequence);
-    if (buffer.last_operation_error() != FT_ERR_SUCCESS)
-        error_code = buffer.last_operation_error();
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
+        error_code = ft_string::get_error();
     return ;
 }
 
@@ -37,14 +37,14 @@ static void logger_append_json_escaped(ft_string &buffer, char character,
     if (character == '\\' || character == '"')
     {
         buffer.append('\\');
-        if (buffer.last_operation_error() != FT_ERR_SUCCESS)
+        if (ft_string::get_error() != FT_ERR_SUCCESS)
         {
-            error_code = buffer.last_operation_error();
+            error_code = ft_string::get_error();
             return ;
         }
         buffer.append(character);
-        if (buffer.last_operation_error() != FT_ERR_SUCCESS)
-            error_code = buffer.last_operation_error();
+        if (ft_string::get_error() != FT_ERR_SUCCESS)
+            error_code = ft_string::get_error();
         return ;
     }
     if (character == '\b')
@@ -90,8 +90,8 @@ static void logger_append_json_escaped(ft_string &buffer, char character,
         return ;
     }
     buffer.append(character);
-    if (buffer.last_operation_error() != FT_ERR_SUCCESS)
-        error_code = buffer.last_operation_error();
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
+        error_code = ft_string::get_error();
     return ;
 }
 
@@ -108,9 +108,9 @@ static void logger_append_json_string(ft_string &buffer, const char *value,
         return ;
     }
     buffer.append('"');
-    if (buffer.last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
     {
-        error_code = buffer.last_operation_error();
+        error_code = ft_string::get_error();
         return ;
     }
     index = 0;
@@ -122,8 +122,8 @@ static void logger_append_json_string(ft_string &buffer, const char *value,
     if (error_code != FT_ERR_SUCCESS)
         return ;
     buffer.append('"');
-    if (buffer.last_operation_error() != FT_ERR_SUCCESS)
-        error_code = buffer.last_operation_error();
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
+        error_code = ft_string::get_error();
     return ;
 }
 
@@ -255,7 +255,7 @@ void ft_log_structured(t_log_level level, const char *message,
     {
         return ;
     }
-    if (payload.last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
     {
         return ;
     }

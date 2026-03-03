@@ -148,13 +148,13 @@ bool ft_stringbuf::is_valid() const noexcept
     return (true);
 }
 
-int ft_stringbuf::str(ft_string &value) const noexcept
+int ft_stringbuf::get_string(ft_string &value) const noexcept
 {
     int lock_error;
     int assign_error;
     int unlock_error;
 
-    this->abort_if_not_initialized("ft_stringbuf::str");
+    this->abort_if_not_initialized("ft_stringbuf::get_string");
     lock_error = this->lock_mutex();
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);

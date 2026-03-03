@@ -17,7 +17,7 @@ class ft_istringstream : public ft_istream
         ft_istringstream(const ft_istringstream &) = delete;
         ft_istringstream &operator=(const ft_istringstream &) = delete;
 
-        ft_string str() const;
+        ft_string get_string() const;
 
     protected:
         ssize_t do_read(char *buffer, std::size_t count);

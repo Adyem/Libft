@@ -14,12 +14,12 @@ static int logger_apply_redaction_rule(ft_string &text,
     const char  *source;
     ft_string   result;
 
-    if (text.last_operation_error() != FT_ERR_SUCCESS)
-        return (text.last_operation_error());
-    if (rule.pattern.last_operation_error() != FT_ERR_SUCCESS)
-        return (rule.pattern.last_operation_error());
-    if (rule.replacement.last_operation_error() != FT_ERR_SUCCESS)
-        return (rule.replacement.last_operation_error());
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
+        return (ft_string::get_error());
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
+        return (ft_string::get_error());
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
+        return (ft_string::get_error());
     pattern = rule.pattern.c_str();
     if (!pattern)
         return (FT_ERR_SUCCESS);
@@ -28,8 +28,8 @@ static int logger_apply_redaction_rule(ft_string &text,
         return (FT_ERR_SUCCESS);
     replacement = rule.replacement.c_str();
     text_length = text.size();
-    if (text.last_operation_error() != FT_ERR_SUCCESS)
-        return (text.last_operation_error());
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
+        return (ft_string::get_error());
     source = text.c_str();
     if (!source)
         source = "";
@@ -46,19 +46,19 @@ static int logger_apply_redaction_rule(ft_string &text,
         if (match_index == pattern_length)
         {
             result.append(replacement);
-            if (result.last_operation_error() != FT_ERR_SUCCESS)
-                return (result.last_operation_error());
+            if (ft_string::get_error() != FT_ERR_SUCCESS)
+                return (ft_string::get_error());
             index += pattern_length;
             continue ;
         }
         result.push_back(source[index]);
-        if (result.last_operation_error() != FT_ERR_SUCCESS)
-            return (result.last_operation_error());
+        if (ft_string::get_error() != FT_ERR_SUCCESS)
+            return (ft_string::get_error());
         index++;
     }
     text = result;
-    if (text.last_operation_error() != FT_ERR_SUCCESS)
-        return (text.last_operation_error());
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
+        return (ft_string::get_error());
     return (FT_ERR_SUCCESS);
 }
 
@@ -85,12 +85,12 @@ int ft_log_add_redaction_with_replacement(const char *pattern,
     }
     rule.pattern = pattern;
     rule.replacement = replacement_value;
-    if (rule.pattern.last_operation_error() != FT_ERR_SUCCESS
-        || rule.replacement.last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS
+        || ft_string::get_error() != FT_ERR_SUCCESS)
     {
-        error_code = rule.pattern.last_operation_error();
+        error_code = ft_string::get_error();
         if (error_code == FT_ERR_SUCCESS)
-            error_code = rule.replacement.last_operation_error();
+            error_code = ft_string::get_error();
         if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_NO_MEMORY;
         lock_error = logger_unlock_sinks();
@@ -182,8 +182,8 @@ int logger_apply_redactions(ft_string &text,
     size_t index;
     int error_code;
 
-    if (text.last_operation_error() != FT_ERR_SUCCESS)
-        return (text.last_operation_error());
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
+        return (ft_string::get_error());
     rule_count = rules.size();
     if (rules.last_operation_error() != FT_ERR_SUCCESS)
         return (rules.last_operation_error());

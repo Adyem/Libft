@@ -128,6 +128,7 @@ class ft_thread_pool
                     pthread_cond_broadcast(&this->_cond);
                 pthread_mutex_unlock(&this->_mutex);
             }
+            return ;
         }
 
     public:

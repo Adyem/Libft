@@ -275,7 +275,7 @@ static int logger_snapshot_network_sinks(ft_vector<s_network_sink_snapshot> &sna
                 snapshot_entry.socket_fd = network_sink->socket_fd;
                 snapshot_entry.send_function = network_sink->send_function;
                 snapshot_entry.host = network_sink->host;
-                if (snapshot_entry.host.last_operation_error() != FT_ERR_SUCCESS)
+                if (ft_string::get_error() != FT_ERR_SUCCESS)
                 {
                     if (network_lock_acquired)
                         network_sink_unlock(network_sink, network_lock_acquired);
@@ -364,7 +364,7 @@ static int logger_health_sync_states(const ft_vector<s_network_sink_snapshot> &s
             if (snapshot_entry.sink == state.sink)
             {
                 state.host = snapshot_entry.host;
-                if (state.host.last_operation_error() != FT_ERR_SUCCESS)
+                if (ft_string::get_error() != FT_ERR_SUCCESS)
                 {
                     unlock_result = logger_health_unlock();
                     if (unlock_result != 0)
@@ -448,7 +448,7 @@ static int logger_health_sync_states(const ft_vector<s_network_sink_snapshot> &s
 
             new_state.sink = snapshot_entry.sink;
             new_state.host = snapshot_entry.host;
-            if (new_state.host.last_operation_error() != FT_ERR_SUCCESS)
+            if (ft_string::get_error() != FT_ERR_SUCCESS)
             {
                 unlock_result = logger_health_unlock();
                 if (unlock_result != 0)

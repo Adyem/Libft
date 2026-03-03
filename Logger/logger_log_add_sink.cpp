@@ -28,8 +28,8 @@ static void logger_json_sink_append_literal(ft_string &buffer, const char *liter
         return ;
     }
     buffer.append(literal);
-    if (buffer.last_operation_error() != FT_ERR_SUCCESS)
-        error_code = buffer.last_operation_error();
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
+        error_code = ft_string::get_error();
     return ;
 }
 
@@ -43,8 +43,8 @@ static void logger_json_sink_append_character_sequence(ft_string &buffer, const 
         return ;
     }
     buffer.append(sequence);
-    if (buffer.last_operation_error() != FT_ERR_SUCCESS)
-        error_code = buffer.last_operation_error();
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
+        error_code = ft_string::get_error();
     return ;
 }
 
@@ -57,14 +57,14 @@ static void logger_json_sink_append_json_escaped(ft_string &buffer, char charact
     if (character == '\\' || character == '"')
     {
         buffer.append('\\');
-        if (buffer.last_operation_error() != FT_ERR_SUCCESS)
+        if (ft_string::get_error() != FT_ERR_SUCCESS)
         {
-            error_code = buffer.last_operation_error();
+            error_code = ft_string::get_error();
             return ;
         }
         buffer.append(character);
-        if (buffer.last_operation_error() != FT_ERR_SUCCESS)
-            error_code = buffer.last_operation_error();
+        if (ft_string::get_error() != FT_ERR_SUCCESS)
+            error_code = ft_string::get_error();
         return ;
     }
     if (character >= 0 && character < 0x20)
@@ -82,8 +82,8 @@ static void logger_json_sink_append_json_escaped(ft_string &buffer, char charact
         return ;
     }
     buffer.append(character);
-    if (buffer.last_operation_error() != FT_ERR_SUCCESS)
-        error_code = buffer.last_operation_error();
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
+        error_code = ft_string::get_error();
     return ;
 }
 
@@ -99,9 +99,9 @@ static void logger_json_sink_append_json_string(ft_string &buffer, const char *v
         return ;
     }
     buffer.append('"');
-    if (buffer.last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
     {
-        error_code = buffer.last_operation_error();
+        error_code = ft_string::get_error();
         return ;
     }
     index = 0;
@@ -113,8 +113,8 @@ static void logger_json_sink_append_json_string(ft_string &buffer, const char *v
     if (error_code != FT_ERR_SUCCESS)
         return ;
     buffer.append('"');
-    if (buffer.last_operation_error() != FT_ERR_SUCCESS)
-        error_code = buffer.last_operation_error();
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
+        error_code = ft_string::get_error();
     return ;
 }
 
@@ -317,14 +317,14 @@ void ft_json_sink(const char *message, void *user_data)
             s_json_sink_field field;
 
             field.key = key_buffer;
-            if (field.key.last_operation_error() != FT_ERR_SUCCESS)
+            if (ft_string::get_error() != FT_ERR_SUCCESS)
                 return ;
             field.has_value = has_value;
             field.value_is_json = value_is_json;
             if (has_value)
             {
                 field.value = value_buffer;
-                if (field.value.last_operation_error() != FT_ERR_SUCCESS)
+                if (ft_string::get_error() != FT_ERR_SUCCESS)
                     return ;
             }
             context_fields.push_back(field);
@@ -339,7 +339,7 @@ void ft_json_sink(const char *message, void *user_data)
     {
         return ;
     }
-    error_code = payload.last_operation_error();
+    error_code = ft_string::get_error();
     logger_json_sink_append_literal(payload, "\"time\":", error_code);
     logger_json_sink_append_json_string(payload, time_buffer, error_code);
     logger_json_sink_append_literal(payload, ",\"level\":", error_code);
@@ -386,7 +386,7 @@ void ft_json_sink(const char *message, void *user_data)
     {
         return ;
     }
-    if (payload.last_operation_error() != FT_ERR_SUCCESS)
+    if (ft_string::get_error() != FT_ERR_SUCCESS)
     {
         return ;
     }

@@ -22,24 +22,24 @@ ssize_t ft_istringstream::do_read(char *buffer, std::size_t count)
     return (result);
 }
 
-ft_string ft_istringstream::str() const
+ft_string ft_istringstream::get_string() const
 {
     ft_string value;
 
-    if (this->_buffer.str(value) != FT_ERR_SUCCESS)
+    if (this->_buffer.get_string(value) != FT_ERR_SUCCESS)
         return (value);
     return (value);
 }
 
 ft_istringstream &operator>>(ft_istringstream &input, int &value)
 {
-    ft_string content = input.str();
+    ft_string content = input.get_string();
     value = ft_atoi(content.c_str());
     return (input);
 }
 
 ft_istringstream &operator>>(ft_istringstream &input, ft_string &value)
 {
-    value = input.str();
+    value = input.get_string();
     return (input);
 }

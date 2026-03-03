@@ -11,11 +11,6 @@ std::atomic<bool> g_random_engine_seeded(false);
 
 static pt_mutex *g_random_engine_mutex = ft_nullptr;
 
-pt_mutex *rng_random_engine_mutex_instance(void)
-{
-    return (g_random_engine_mutex);
-}
-
 int rng_enable_random_engine_thread_safety(void)
 {
     pt_mutex *mutex;

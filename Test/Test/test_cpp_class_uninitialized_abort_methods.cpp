@@ -186,7 +186,7 @@ static void stringbuf_str_uninitialized_aborts(void)
             is_value_initialized = true;
         }
     }
-    (void)buffer_pointer->str(value);
+    (void)buffer_pointer->get_string(value);
     return ;
 }
 

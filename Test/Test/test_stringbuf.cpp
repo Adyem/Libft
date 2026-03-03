@@ -58,7 +58,7 @@ FT_TEST(test_ft_stringbuf_str_returns_remaining, "ft_stringbuf::str exposes unre
     FT_ASSERT_EQ(static_cast<std::size_t>(3), bytes_read);
     FT_ASSERT_EQ(0, ft_strcmp(storage, "abc"));
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.str(remaining));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.get_string(remaining));
     FT_ASSERT_EQ(0, ft_strcmp(remaining.c_str(), "def"));
     FT_ASSERT_EQ(true, buffer.is_valid());
     return (1);
@@ -141,7 +141,7 @@ FT_TEST(test_ft_stringbuf_concurrent_reads_are_serialized,
 
     ft_string remaining;
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.str(remaining));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buffer.get_string(remaining));
     FT_ASSERT_EQ(0u, remaining.size());
 
     bool seen[128];

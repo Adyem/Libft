@@ -106,6 +106,8 @@ class ft_sharedptr
                     return ;
                 }
 
+                ~reference_proxy();
+
                 operator ManagedType&() const noexcept
                 {
                     static ManagedType fallback = ManagedType();
@@ -139,6 +141,8 @@ class ft_sharedptr
                 {
                     return ;
                 }
+
+                ~const_reference_proxy();
 
                 operator const ManagedType&() const noexcept
                 {
@@ -652,6 +656,18 @@ class ft_sharedptr
         }
 #endif
 };
+
+template <typename ManagedType>
+ft_sharedptr<ManagedType>::reference_proxy::~reference_proxy()
+{
+    return ;
+}
+
+template <typename ManagedType>
+ft_sharedptr<ManagedType>::const_reference_proxy::~const_reference_proxy()
+{
+    return ;
+}
 
 template <typename ManagedType>
 thread_local int32_t ft_sharedptr<ManagedType>::_last_error = FT_ERR_SUCCESS;

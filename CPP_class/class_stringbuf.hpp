@@ -36,7 +36,7 @@ class ft_stringbuf
         int destroy() noexcept;
         ssize_t read(char *buffer, std::size_t count) noexcept;
         bool is_valid() const noexcept;
-        int str(ft_string &value) const noexcept;
+        int get_string(ft_string &value) const noexcept;
         int enable_thread_safety(void) noexcept;
         int disable_thread_safety(void) noexcept;
         bool is_thread_safe(void) const noexcept;
