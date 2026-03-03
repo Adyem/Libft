@@ -309,7 +309,10 @@ int ft_dialogue_script::lock(bool *lock_acquired) const noexcept
 void ft_dialogue_script::unlock(bool lock_acquired) const noexcept
 {
     this->abort_if_not_initialized("ft_dialogue_script::unlock");
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -327,7 +330,10 @@ void ft_dialogue_script::set_script_id(int script_id) noexcept
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     this->_script_id = script_id;
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -345,7 +351,10 @@ void ft_dialogue_script::set_title(const ft_string &title) noexcept
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     this->_title = title;
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -363,7 +372,10 @@ void ft_dialogue_script::set_summary(const ft_string &summary) noexcept
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     this->_summary = summary;
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -381,7 +393,10 @@ void ft_dialogue_script::set_start_line_id(int start_line_id) noexcept
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     this->_start_line_id = start_line_id;
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -406,7 +421,10 @@ void ft_dialogue_script::set_lines(
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     game_dialogue_copy_line_vector(lines, this->_lines);
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 

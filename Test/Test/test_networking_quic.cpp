@@ -7,6 +7,7 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
+#if NETWORKING_HAS_OPENSSL
 #include <openssl/ssl.h>
 #include <openssl/pem.h>
 
@@ -310,3 +311,4 @@ FT_TEST(test_networking_quic_encrypt_roundtrip, "QUIC experimental session encry
     FT_ASSERT(networking_quic_disable_experimental());
     return (1);
 }
+#endif

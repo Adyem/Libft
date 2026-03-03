@@ -238,8 +238,12 @@ void ft_behavior_table::set_profiles(
         entry++;
         index += 1;
     }
-    (void)this->unlock_internal(lock_acquired);
-    this->set_error(FT_ERR_SUCCESS);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
+    else
+        this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -257,8 +261,12 @@ int ft_behavior_table::register_profile(const ft_behavior_profile &profile) noex
     }
     profile_identifier = profile.get_profile_id();
     this->_profiles.insert(profile_identifier, profile);
-    (void)this->unlock_internal(lock_acquired);
-    this->set_error(FT_ERR_SUCCESS);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
+    else
+        this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 

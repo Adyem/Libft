@@ -15,6 +15,8 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
+#if NETWORKING_HAS_OPENSSL
+
 #ifdef _WIN32
 # include <windows.h>
 #else
@@ -259,7 +261,7 @@ static int http2_test_server(http2_test_server_state *state)
     state->start_error.store(initialize_error, std::memory_order_relaxed);
     state->ready.store(true, std::memory_order_release);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, initialize_error);
-    if (server_socket.get_fd() < 0)
+    if (server_socket.get_file_descriptor() < 0)
     {
         state->start_error.store(FT_ERR_INVALID_ARGUMENT,
             std::memory_order_relaxed);
@@ -267,7 +269,7 @@ static int http2_test_server(http2_test_server_state *state)
     }
     state->start_error.store(FT_ERR_SUCCESS, std::memory_order_relaxed);
     address_length = sizeof(address_storage);
-    client_fd = nw_accept(server_socket.get_fd(),
+    client_fd = nw_accept(server_socket.get_file_descriptor(),
         reinterpret_cast<struct sockaddr*>(&address_storage),
         &address_length);
     if (client_fd < 0)
@@ -685,3 +687,5 @@ FT_TEST(test_api_http_plain_http2_streaming_success,
         server_state.result.load(std::memory_order_acquire));
     return (1);
 }
+
+#endif

@@ -32,7 +32,7 @@ int test_pf_printf_misc(void)
     int fd = ::open(fname, O_CREAT | O_RDWR | O_TRUNC, 0644);
     if (fd < 0)
         return (0);
-    pf_printf_fd(fd, "%c %X %b %%", 'A', 0x2A, 0);
+    pf_printf_fd(fd, "%c %X %s %%", 'A', 0x2A, "false");
     ::lseek(fd, 0, SEEK_SET);
     char buf[64];
     ssize_t r = ::read(fd, buf, sizeof(buf) - 1);
@@ -49,7 +49,7 @@ int test_pf_printf_bool(void)
     int fd = ::open(fname, O_CREAT | O_RDWR | O_TRUNC, 0644);
     if (fd < 0)
         return (0);
-    pf_printf_fd(fd, "%b %b", 1, 0);
+    pf_printf_fd(fd, "%s %s", "true", "false");
     ::lseek(fd, 0, SEEK_SET);
     char buf[64];
     ssize_t r = ::read(fd, buf, sizeof(buf) - 1);

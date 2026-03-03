@@ -11,6 +11,8 @@ static int file_string_error(void) noexcept
 ft_string file_path_normalize(const char *path)
 {
     ft_string empty_result;
+    if (empty_result.initialize() != FT_ERR_SUCCESS)
+        return (empty_result);
 
     if (path == ft_nullptr)
         return (empty_result);
@@ -24,6 +26,8 @@ ft_string file_path_normalize(const char *path)
         return (empty_result);
     cmp_normalize_slashes(data);
     ft_string result;
+    if (result.initialize() != FT_ERR_SUCCESS)
+        return (empty_result);
     if (file_string_error() != FT_ERR_SUCCESS)
         return (result);
     size_t index = 0;

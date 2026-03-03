@@ -31,11 +31,11 @@ FT_TEST(test_time_monotonic_point_prepare_thread_safety_enables_mutex,
     t_monotonic_time_point time_point;
 
     time_point = time_monotonic_point_create(42);
-    FT_ASSERT_EQ(false, time_monotonic_point_is_thread_safe_enabled(&time_point));
+    FT_ASSERT_EQ(false, time_monotonic_point_is_thread_safe(&time_point));
     FT_ASSERT_EQ(0, time_monotonic_point_prepare_thread_safety(&time_point));
-    FT_ASSERT_EQ(true, time_monotonic_point_is_thread_safe_enabled(&time_point));
+    FT_ASSERT_EQ(true, time_monotonic_point_is_thread_safe(&time_point));
     time_monotonic_point_teardown_thread_safety(&time_point);
-    FT_ASSERT_EQ(false, time_monotonic_point_is_thread_safe_enabled(&time_point));
+    FT_ASSERT_EQ(false, time_monotonic_point_is_thread_safe(&time_point));
     return (1);
 }
 
@@ -61,11 +61,11 @@ FT_TEST(test_time_duration_prepare_thread_safety_enables_mutex,
     t_duration_milliseconds duration;
 
     duration = time_duration_ms_create(100);
-    FT_ASSERT_EQ(false, time_duration_ms_is_thread_safe_enabled(&duration));
+    FT_ASSERT_EQ(false, time_duration_ms_is_thread_safe(&duration));
     FT_ASSERT_EQ(0, time_duration_ms_prepare_thread_safety(&duration));
-    FT_ASSERT_EQ(true, time_duration_ms_is_thread_safe_enabled(&duration));
+    FT_ASSERT_EQ(true, time_duration_ms_is_thread_safe(&duration));
     time_duration_ms_teardown_thread_safety(&duration);
-    FT_ASSERT_EQ(false, time_duration_ms_is_thread_safe_enabled(&duration));
+    FT_ASSERT_EQ(false, time_duration_ms_is_thread_safe(&duration));
     return (1);
 }
 
@@ -91,11 +91,11 @@ FT_TEST(test_time_info_prepare_thread_safety_enables_mutex,
     t_time_info info;
 
     info = create_thread_safe_time_info();
-    FT_ASSERT_EQ(false, time_info_is_thread_safe_enabled(&info));
+    FT_ASSERT_EQ(false, time_info_is_thread_safe(&info));
     FT_ASSERT_EQ(0, time_info_prepare_thread_safety(&info));
-    FT_ASSERT_EQ(true, time_info_is_thread_safe_enabled(&info));
+    FT_ASSERT_EQ(true, time_info_is_thread_safe(&info));
     time_info_teardown_thread_safety(&info);
-    FT_ASSERT_EQ(false, time_info_is_thread_safe_enabled(&info));
+    FT_ASSERT_EQ(false, time_info_is_thread_safe(&info));
     return (1);
 }
 

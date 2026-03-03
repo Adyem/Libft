@@ -59,8 +59,8 @@ FT_TEST(test_scma_accessor_float_array_semantics, "scma accessor supports float 
     index = 0;
     while (index < 3)
     {
-        write_values[static_cast<size_t>(index)] = static_cast<float>(index) + 0.5f;
-        accessor[index] = write_values[static_cast<size_t>(index)];
+        write_values[index] = static_cast<float>(index) + 0.5f;
+        accessor[index] = write_values[index];
         index = index + 1;
     }
     read_value = accessor[2];
@@ -145,35 +145,35 @@ FT_TEST(test_scma_accessor_struct_vector_semantics, "scma accessor pointer opera
     return (1);
 }
 
-FT_TEST(test_scma_accessor_copy_and_move_semantics, "scma accessor copy and move constructors maintain binding")
+FT_TEST(test_scma_accessor_shared_handle_binding_semantics,
+    "multiple accessors bound to the same handle observe shared updates")
 {
     scma_handle handle;
     scma_handle_accessor<scma_test_pair> primary_accessor;
+    scma_handle_accessor<scma_test_pair> secondary_accessor;
     scma_test_pair pair_value;
 
     FT_ASSERT_EQ(1, scma_test_initialize(sizeof(scma_test_pair)));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, primary_accessor.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, secondary_accessor.initialize());
     handle = scma_allocate(sizeof(scma_test_pair));
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
     FT_ASSERT_EQ(1, primary_accessor.bind(handle));
+    FT_ASSERT_EQ(1, secondary_accessor.bind(handle));
     {
         auto proxy = primary_accessor.operator->();
         proxy->first = 55;
         proxy->second = 65;
     }
-    scma_handle_accessor<scma_test_pair> copy_accessor(primary_accessor);
-    FT_ASSERT_EQ(1, copy_accessor.is_bound());
+    FT_ASSERT_EQ(1, secondary_accessor.is_bound());
     {
-        auto proxy = copy_accessor.operator->();
+        auto proxy = secondary_accessor.operator->();
         FT_ASSERT_EQ(55, proxy->first);
         FT_ASSERT_EQ(65, proxy->second);
     }
-    scma_handle_accessor<scma_test_pair> moved_accessor(std::move(copy_accessor));
-    FT_ASSERT_EQ(1, moved_accessor.is_bound());
-    FT_ASSERT_EQ(0, copy_accessor.is_bound());
     pair_value.first = 77;
     pair_value.second = 88;
-    FT_ASSERT_EQ(1, moved_accessor.write_struct(pair_value));
+    FT_ASSERT_EQ(1, secondary_accessor.write_struct(pair_value));
     FT_ASSERT_EQ(1, primary_accessor.read_struct(pair_value));
     FT_ASSERT_EQ(77, pair_value.first);
     FT_ASSERT_EQ(88, pair_value.second);
@@ -231,8 +231,8 @@ FT_TEST(test_scma_accessor_dereference_reads_value, "scma accessor dereference r
     accessor[1] = 34;
     read_value = *accessor;
     FT_ASSERT_EQ(12, read_value);
-    const scma_handle_accessor<int> const_accessor(accessor);
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, const_accessor.get_error());
+    const scma_handle_accessor<int> &const_accessor = accessor;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, accessor.get_error());
     read_value = const_accessor[1];
     FT_ASSERT_EQ(34, read_value);
     scma_shutdown();

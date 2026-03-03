@@ -115,7 +115,7 @@ static void dual_number_call_is_thread_safe_enabled_uninitialized(void)
 {
     ft_dual_number dual_number_value;
 
-    (void)dual_number_value.is_thread_safe_enabled();
+    (void)dual_number_value.is_thread_safe();
     return ;
 }
 
@@ -537,13 +537,13 @@ FT_TEST(test_dual_number_thread_safety_toggle_and_validation_mutex,
     pt_recursive_mutex *mutex_pointer;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, dual_number_value.initialize(1.0, 1.0));
-    FT_ASSERT_EQ(false, dual_number_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, dual_number_value.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, dual_number_value.enable_thread_safety());
-    FT_ASSERT_EQ(true, dual_number_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, dual_number_value.is_thread_safe());
     mutex_pointer = dual_number_value.get_mutex_for_validation();
     FT_ASSERT_EQ(1, dual_number_expect_recursive_mutex_usable(mutex_pointer));
     dual_number_value.disable_thread_safety();
-    FT_ASSERT_EQ(false, dual_number_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, dual_number_value.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, dual_number_value.destroy());
     return (1);
 }
@@ -556,10 +556,10 @@ FT_TEST(test_dual_number_get_mutex_validation_lifecycle,
 
     FT_ASSERT(ft_nullptr == dual_number_value.get_mutex_for_validation());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, dual_number_value.initialize());
-    FT_ASSERT_EQ(false, dual_number_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, dual_number_value.is_thread_safe());
     mutex_pointer = dual_number_value.get_mutex_for_validation();
     FT_ASSERT(mutex_pointer != ft_nullptr);
-    FT_ASSERT_EQ(true, dual_number_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, dual_number_value.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, dual_number_value.destroy());
     FT_ASSERT(ft_nullptr == dual_number_value.get_mutex_for_validation());
     return (1);
@@ -735,9 +735,9 @@ FT_TEST(test_dual_number_enable_thread_safety_allocation_failure_then_recover,
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, enable_error);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_dual_number::last_operation_error());
-    FT_ASSERT_EQ(false, dual_number_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, dual_number_value.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, dual_number_value.enable_thread_safety());
-    FT_ASSERT_EQ(true, dual_number_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, dual_number_value.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, dual_number_value.destroy());
     return (1);
 }
@@ -753,7 +753,7 @@ FT_TEST(test_dual_number_validation_mutex_allocation_failure_then_recover,
     mutex_pointer = dual_number_value.get_mutex_for_validation();
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(ft_nullptr, mutex_pointer);
-    FT_ASSERT_EQ(false, dual_number_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, dual_number_value.is_thread_safe());
     mutex_pointer = dual_number_value.get_mutex_for_validation();
     FT_ASSERT(mutex_pointer != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_pointer->lock());

@@ -40,13 +40,13 @@ int ft_event::lock_internal(bool *lock_acquired) const noexcept
 
 void ft_event::unlock_internal(bool lock_acquired) const noexcept
 {
+    int unlock_error;
+
     if (lock_acquired == false)
-    {
-        this->set_error(FT_ERR_SUCCESS);
         return ;
-    }
-    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    this->set_error(FT_ERR_SUCCESS);
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -61,8 +61,8 @@ int ft_event::get_id() const noexcept
     if (lock_error != FT_ERR_SUCCESS)
         return (0);
     value = this->_id;
-    this->unlock_internal(lock_acquired);
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return (value);
 }
 
@@ -100,8 +100,8 @@ int ft_event::get_duration() const noexcept
     if (lock_error != FT_ERR_SUCCESS)
         return (0);
     value = this->_duration;
-    this->unlock_internal(lock_acquired);
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return (value);
 }
 

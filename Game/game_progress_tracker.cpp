@@ -259,7 +259,10 @@ int ft_progress_tracker::lock(bool *lock_acquired) const noexcept
 void ft_progress_tracker::unlock(bool lock_acquired) const noexcept
 {
     this->abort_if_not_initialized("ft_progress_tracker::unlock");
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -316,8 +319,12 @@ void ft_progress_tracker::set_achievements(
         entry++;
         index += 1;
     }
-    (void)this->unlock_internal(lock_acquired);
-    this->set_error(FT_ERR_SUCCESS);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
+    else
+        this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -349,8 +356,12 @@ void ft_progress_tracker::set_quests(const ft_map<int, ft_quest> &quests) noexce
         entry++;
         index += 1;
     }
-    (void)this->unlock_internal(lock_acquired);
-    this->set_error(FT_ERR_SUCCESS);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
+    else
+        this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -369,8 +380,12 @@ int ft_progress_tracker::register_achievement(
         return (lock_error);
     }
     this->_achievements.insert(achievement.get_id(), achievement);
-    (void)this->unlock_internal(lock_acquired);
-    this->set_error(FT_ERR_SUCCESS);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
+    else
+        this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
@@ -388,8 +403,12 @@ int ft_progress_tracker::register_quest(const ft_quest &quest) noexcept
         return (lock_error);
     }
     this->_quests.insert(quest.get_id(), quest);
-    (void)this->unlock_internal(lock_acquired);
-    this->set_error(FT_ERR_SUCCESS);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
+    else
+        this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 

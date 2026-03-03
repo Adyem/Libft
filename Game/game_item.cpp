@@ -57,10 +57,7 @@ int ft_item_modifier::initialize(const ft_item_modifier &other) noexcept
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    if (other._mutex == ft_nullptr)
-        lock_error = FT_ERR_SUCCESS;
-    else
-        lock_error = pt_recursive_mutex_lock_if_not_null(other._mutex);
+    lock_error = pt_recursive_mutex_lock_if_not_null(other._mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -68,11 +65,12 @@ int ft_item_modifier::initialize(const ft_item_modifier &other) noexcept
     }
     this->_id = other._id;
     this->_value = other._value;
-    if (other._mutex == ft_nullptr)
-        unlock_error = FT_ERR_SUCCESS;
-    else
-        unlock_error = pt_recursive_mutex_unlock_if_not_null(other._mutex);
-    (void)unlock_error;
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(other._mutex);
+    if (unlock_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(unlock_error);
+        return (unlock_error);
+    }
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
@@ -87,10 +85,7 @@ int ft_item_modifier::initialize(ft_item_modifier &&other) noexcept
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    if (other._mutex == ft_nullptr)
-        lock_error = FT_ERR_SUCCESS;
-    else
-        lock_error = pt_recursive_mutex_lock_if_not_null(other._mutex);
+    lock_error = pt_recursive_mutex_lock_if_not_null(other._mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
@@ -100,11 +95,12 @@ int ft_item_modifier::initialize(ft_item_modifier &&other) noexcept
     this->_value = other._value;
     other._id = 0;
     other._value = 0;
-    if (other._mutex == ft_nullptr)
-        unlock_error = FT_ERR_SUCCESS;
-    else
-        unlock_error = pt_recursive_mutex_unlock_if_not_null(other._mutex);
-    (void)unlock_error;
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(other._mutex);
+    if (unlock_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(unlock_error);
+        return (unlock_error);
+    }
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
@@ -166,21 +162,19 @@ int ft_item_modifier::get_id() const noexcept
     int lock_error;
     int unlock_error;
 
-    if (this->_mutex == ft_nullptr)
-        lock_error = FT_ERR_SUCCESS;
-    else
-        lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         return (0);
     }
     modifier_id = this->_id;
-    if (this->_mutex == ft_nullptr)
-        unlock_error = FT_ERR_SUCCESS;
-    else
-        unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    (void)unlock_error;
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    if (unlock_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(unlock_error);
+        return (0);
+    }
     this->set_error(FT_ERR_SUCCESS);
     return (modifier_id);
 }
@@ -190,21 +184,19 @@ void ft_item_modifier::set_id(int id) noexcept
     int lock_error;
     int unlock_error;
 
-    if (this->_mutex == ft_nullptr)
-        lock_error = FT_ERR_SUCCESS;
-    else
-        lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         return ;
     }
     this->_id = id;
-    if (this->_mutex == ft_nullptr)
-        unlock_error = FT_ERR_SUCCESS;
-    else
-        unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    (void)unlock_error;
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    if (unlock_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(unlock_error);
+        return ;
+    }
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
@@ -215,21 +207,19 @@ int ft_item_modifier::get_value() const noexcept
     int lock_error;
     int unlock_error;
 
-    if (this->_mutex == ft_nullptr)
-        lock_error = FT_ERR_SUCCESS;
-    else
-        lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         return (0);
     }
     modifier_value = this->_value;
-    if (this->_mutex == ft_nullptr)
-        unlock_error = FT_ERR_SUCCESS;
-    else
-        unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    (void)unlock_error;
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    if (unlock_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(unlock_error);
+        return (0);
+    }
     this->set_error(FT_ERR_SUCCESS);
     return (modifier_value);
 }
@@ -239,21 +229,19 @@ void ft_item_modifier::set_value(int value) noexcept
     int lock_error;
     int unlock_error;
 
-    if (this->_mutex == ft_nullptr)
-        lock_error = FT_ERR_SUCCESS;
-    else
-        lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
+    lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
     {
         this->set_error(lock_error);
         return ;
     }
     this->_value = value;
-    if (this->_mutex == ft_nullptr)
-        unlock_error = FT_ERR_SUCCESS;
-    else
-        unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    (void)unlock_error;
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    if (unlock_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(unlock_error);
+        return ;
+    }
     this->set_error(FT_ERR_SUCCESS);
     return ;
 }
@@ -290,9 +278,13 @@ int ft_item::lock_internal(bool *lock_acquired) const noexcept
 
 void ft_item::unlock_internal(bool lock_acquired) const noexcept
 {
+    int unlock_error;
+
     if (lock_acquired == false)
         return ;
-    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    if (unlock_error != FT_ERR_SUCCESS)
+        const_cast<ft_item *>(this)->set_error(unlock_error);
     return ;
 }
 

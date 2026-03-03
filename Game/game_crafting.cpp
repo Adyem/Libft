@@ -117,8 +117,8 @@ int ft_crafting_ingredient::initialize(int item_id, int count, int rarity) noexc
     this->_item_id = item_id;
     this->_count = count;
     this->_rarity = rarity;
-    this->unlock_internal(lock_acquired);
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return (FT_ERR_SUCCESS);
 }
 
@@ -138,9 +138,13 @@ int ft_crafting_ingredient::lock_internal(bool *lock_acquired) const noexcept
 
 void ft_crafting_ingredient::unlock_internal(bool lock_acquired) const noexcept
 {
+    int unlock_error;
+
     if (lock_acquired == false)
         return ;
-    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -337,9 +341,13 @@ int ft_crafting::lock_internal(bool *lock_acquired) const noexcept
 
 void ft_crafting::unlock_internal(bool lock_acquired) const noexcept
 {
+    int unlock_error;
+
     if (lock_acquired == false)
         return ;
-    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -442,8 +450,8 @@ int ft_crafting::register_recipe(int recipe_id,
         ingredient_index++;
     }
     this->_recipes.insert(recipe_id, copied_ingredients);
-    this->unlock_internal(lock_acquired);
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return (FT_ERR_SUCCESS);
 }
 

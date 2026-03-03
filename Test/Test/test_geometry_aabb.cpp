@@ -178,7 +178,7 @@ static void aabb_is_thread_safe_enabled_destroyed_aborts_operation()
     aabb box(0.0, 0.0, 1.0, 1.0);
 
     (void)box.destroy();
-    (void)box.is_thread_safe_enabled();
+    (void)box.is_thread_safe();
     return ;
 }
 
@@ -250,7 +250,7 @@ static void aabb_is_thread_safe_enabled_uninitialized_aborts_operation()
 {
     aabb box;
 
-    (void)box.is_thread_safe_enabled();
+    (void)box.is_thread_safe();
     return ;
 }
 
@@ -718,11 +718,11 @@ FT_TEST(test_aabb_lifecycle_thread_safety_cycles,
                 -2.0 - iteration_index,
                 3.0 + iteration_index,
                 4.0 + iteration_index));
-        FT_ASSERT_EQ(false, box.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, box.is_thread_safe());
         FT_ASSERT_EQ(FT_ERR_SUCCESS, box.enable_thread_safety());
-        FT_ASSERT_EQ(true, box.is_thread_safe_enabled());
+        FT_ASSERT_EQ(true, box.is_thread_safe());
         box.disable_thread_safety();
-        FT_ASSERT_EQ(false, box.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, box.is_thread_safe());
         FT_ASSERT_EQ(FT_ERR_SUCCESS, box.destroy());
         iteration_index = iteration_index + 1;
     }
@@ -740,11 +740,11 @@ FT_TEST(test_aabb_enable_thread_safety_failure_then_recovery,
     error_code = box.enable_thread_safety();
     cma_set_alloc_limit(0);
     FT_ASSERT_NEQ(FT_ERR_SUCCESS, error_code);
-    FT_ASSERT_EQ(false, box.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, box.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.enable_thread_safety());
-    FT_ASSERT_EQ(true, box.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, box.is_thread_safe());
     box.disable_thread_safety();
-    FT_ASSERT_EQ(false, box.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, box.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.destroy());
     return (1);
 }
@@ -763,7 +763,7 @@ FT_TEST(test_aabb_enable_thread_safety_repeated_alloc_failures,
     {
         error_code = box.enable_thread_safety();
         FT_ASSERT_NEQ(FT_ERR_SUCCESS, error_code);
-        FT_ASSERT_EQ(false, box.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, box.is_thread_safe());
         iteration_index = iteration_index + 1;
     }
     cma_set_alloc_limit(0);
@@ -782,7 +782,7 @@ FT_TEST(test_aabb_enable_thread_safety_alloc_failure_then_destroy,
     error_code = box.enable_thread_safety();
     cma_set_alloc_limit(0);
     FT_ASSERT_NEQ(FT_ERR_SUCCESS, error_code);
-    FT_ASSERT_EQ(false, box.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, box.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.destroy());
     return (1);
 }
@@ -796,12 +796,12 @@ FT_TEST(test_aabb_enable_thread_safety_alloc_failure_after_disable,
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.initialize(-1.0, -1.0, 1.0, 1.0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.enable_thread_safety());
     box.disable_thread_safety();
-    FT_ASSERT_EQ(false, box.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, box.is_thread_safe());
     cma_set_alloc_limit(1);
     error_code = box.enable_thread_safety();
     cma_set_alloc_limit(0);
     FT_ASSERT_NEQ(FT_ERR_SUCCESS, error_code);
-    FT_ASSERT_EQ(false, box.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, box.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.destroy());
     return (1);
 }
@@ -817,7 +817,7 @@ FT_TEST(test_aabb_get_mutex_for_testing_alloc_failure_returns_null,
     mutex_pointer = box.get_mutex_for_testing();
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(ft_nullptr, mutex_pointer);
-    FT_ASSERT_EQ(false, box.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, box.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.destroy());
     return (1);
 }
@@ -835,7 +835,7 @@ FT_TEST(test_aabb_get_mutex_for_testing_recovers_after_alloc_failure,
     cma_set_alloc_limit(0);
     mutex_pointer = box.get_mutex_for_testing();
     FT_ASSERT_NEQ(ft_nullptr, mutex_pointer);
-    FT_ASSERT_EQ(true, box.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, box.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.destroy());
     return (1);
 }
@@ -854,7 +854,7 @@ FT_TEST(test_aabb_enable_thread_safety_alloc_failure_reinit_cycle,
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.initialize(-4.0, -4.0, 4.0, 4.0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.enable_thread_safety());
-    FT_ASSERT_EQ(true, box.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, box.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.destroy());
     return (1);
 }
@@ -889,9 +889,9 @@ FT_TEST(test_aabb_enable_thread_safety_alloc_limit_two_state_consistent,
     error_code = box.enable_thread_safety();
     cma_set_alloc_limit(0);
     if (error_code == FT_ERR_SUCCESS)
-        FT_ASSERT_EQ(true, box.is_thread_safe_enabled());
+        FT_ASSERT_EQ(true, box.is_thread_safe());
     else
-        FT_ASSERT_EQ(false, box.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, box.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.destroy());
     return (1);
 }
@@ -907,9 +907,9 @@ FT_TEST(test_aabb_enable_thread_safety_alloc_limit_three_state_consistent,
     error_code = box.enable_thread_safety();
     cma_set_alloc_limit(0);
     if (error_code == FT_ERR_SUCCESS)
-        FT_ASSERT_EQ(true, box.is_thread_safe_enabled());
+        FT_ASSERT_EQ(true, box.is_thread_safe());
     else
-        FT_ASSERT_EQ(false, box.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, box.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.destroy());
     return (1);
 }
@@ -926,12 +926,12 @@ FT_TEST(test_aabb_enable_thread_safety_alloc_limit_two_then_recover,
     cma_set_alloc_limit(0);
     if (error_code == FT_ERR_SUCCESS)
     {
-        FT_ASSERT_EQ(true, box.is_thread_safe_enabled());
+        FT_ASSERT_EQ(true, box.is_thread_safe());
         box.disable_thread_safety();
     }
-    FT_ASSERT_EQ(false, box.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, box.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.enable_thread_safety());
-    FT_ASSERT_EQ(true, box.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, box.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.destroy());
     return (1);
 }
@@ -948,12 +948,12 @@ FT_TEST(test_aabb_enable_thread_safety_alloc_limit_three_then_recover,
     cma_set_alloc_limit(0);
     if (error_code == FT_ERR_SUCCESS)
     {
-        FT_ASSERT_EQ(true, box.is_thread_safe_enabled());
+        FT_ASSERT_EQ(true, box.is_thread_safe());
         box.disable_thread_safety();
     }
-    FT_ASSERT_EQ(false, box.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, box.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.enable_thread_safety());
-    FT_ASSERT_EQ(true, box.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, box.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.destroy());
     return (1);
 }
@@ -969,9 +969,9 @@ FT_TEST(test_aabb_get_mutex_for_testing_alloc_limit_two_consistent,
     mutex_pointer = box.get_mutex_for_testing();
     cma_set_alloc_limit(0);
     if (mutex_pointer == ft_nullptr)
-        FT_ASSERT_EQ(false, box.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, box.is_thread_safe());
     else
-        FT_ASSERT_EQ(true, box.is_thread_safe_enabled());
+        FT_ASSERT_EQ(true, box.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.destroy());
     return (1);
 }
@@ -987,9 +987,9 @@ FT_TEST(test_aabb_get_mutex_for_testing_alloc_limit_three_consistent,
     mutex_pointer = box.get_mutex_for_testing();
     cma_set_alloc_limit(0);
     if (mutex_pointer == ft_nullptr)
-        FT_ASSERT_EQ(false, box.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, box.is_thread_safe());
     else
-        FT_ASSERT_EQ(true, box.is_thread_safe_enabled());
+        FT_ASSERT_EQ(true, box.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.destroy());
     return (1);
 }
@@ -1022,9 +1022,9 @@ FT_TEST(test_aabb_enable_thread_safety_alloc_limit_four_state_consistent,
     error_code = box.enable_thread_safety();
     cma_set_alloc_limit(0);
     if (error_code == FT_ERR_SUCCESS)
-        FT_ASSERT_EQ(true, box.is_thread_safe_enabled());
+        FT_ASSERT_EQ(true, box.is_thread_safe());
     else
-        FT_ASSERT_EQ(false, box.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, box.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.destroy());
     return (1);
 }
@@ -1040,9 +1040,9 @@ FT_TEST(test_aabb_enable_thread_safety_alloc_limit_five_state_consistent,
     error_code = box.enable_thread_safety();
     cma_set_alloc_limit(0);
     if (error_code == FT_ERR_SUCCESS)
-        FT_ASSERT_EQ(true, box.is_thread_safe_enabled());
+        FT_ASSERT_EQ(true, box.is_thread_safe());
     else
-        FT_ASSERT_EQ(false, box.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, box.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.destroy());
     return (1);
 }
@@ -1058,9 +1058,9 @@ FT_TEST(test_aabb_enable_thread_safety_alloc_limit_six_state_consistent,
     error_code = box.enable_thread_safety();
     cma_set_alloc_limit(0);
     if (error_code == FT_ERR_SUCCESS)
-        FT_ASSERT_EQ(true, box.is_thread_safe_enabled());
+        FT_ASSERT_EQ(true, box.is_thread_safe());
     else
-        FT_ASSERT_EQ(false, box.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, box.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.destroy());
     return (1);
 }
@@ -1078,10 +1078,10 @@ FT_TEST(test_aabb_enable_thread_safety_alloc_limit_four_then_recover,
     if (error_code == FT_ERR_SUCCESS)
     {
         box.disable_thread_safety();
-        FT_ASSERT_EQ(false, box.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, box.is_thread_safe());
     }
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.enable_thread_safety());
-    FT_ASSERT_EQ(true, box.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, box.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.destroy());
     return (1);
 }
@@ -1099,10 +1099,10 @@ FT_TEST(test_aabb_enable_thread_safety_alloc_limit_five_then_recover,
     if (error_code == FT_ERR_SUCCESS)
     {
         box.disable_thread_safety();
-        FT_ASSERT_EQ(false, box.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, box.is_thread_safe());
     }
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.enable_thread_safety());
-    FT_ASSERT_EQ(true, box.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, box.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.destroy());
     return (1);
 }
@@ -1118,9 +1118,9 @@ FT_TEST(test_aabb_get_mutex_for_testing_alloc_limit_four_consistent,
     mutex_pointer = box.get_mutex_for_testing();
     cma_set_alloc_limit(0);
     if (mutex_pointer == ft_nullptr)
-        FT_ASSERT_EQ(false, box.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, box.is_thread_safe());
     else
-        FT_ASSERT_EQ(true, box.is_thread_safe_enabled());
+        FT_ASSERT_EQ(true, box.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.destroy());
     return (1);
 }
@@ -1153,9 +1153,9 @@ FT_TEST(test_aabb_enable_thread_safety_alloc_limit_seven_state_consistent,
     error_code = box.enable_thread_safety();
     cma_set_alloc_limit(0);
     if (error_code == FT_ERR_SUCCESS)
-        FT_ASSERT_EQ(true, box.is_thread_safe_enabled());
+        FT_ASSERT_EQ(true, box.is_thread_safe());
     else
-        FT_ASSERT_EQ(false, box.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, box.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.destroy());
     return (1);
 }
@@ -1171,9 +1171,9 @@ FT_TEST(test_aabb_enable_thread_safety_alloc_limit_eight_state_consistent,
     error_code = box.enable_thread_safety();
     cma_set_alloc_limit(0);
     if (error_code == FT_ERR_SUCCESS)
-        FT_ASSERT_EQ(true, box.is_thread_safe_enabled());
+        FT_ASSERT_EQ(true, box.is_thread_safe());
     else
-        FT_ASSERT_EQ(false, box.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, box.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.destroy());
     return (1);
 }
@@ -1189,9 +1189,9 @@ FT_TEST(test_aabb_enable_thread_safety_alloc_limit_nine_state_consistent,
     error_code = box.enable_thread_safety();
     cma_set_alloc_limit(0);
     if (error_code == FT_ERR_SUCCESS)
-        FT_ASSERT_EQ(true, box.is_thread_safe_enabled());
+        FT_ASSERT_EQ(true, box.is_thread_safe());
     else
-        FT_ASSERT_EQ(false, box.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, box.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.destroy());
     return (1);
 }
@@ -1209,10 +1209,10 @@ FT_TEST(test_aabb_enable_thread_safety_alloc_limit_seven_then_recover,
     if (error_code == FT_ERR_SUCCESS)
     {
         box.disable_thread_safety();
-        FT_ASSERT_EQ(false, box.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, box.is_thread_safe());
     }
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.enable_thread_safety());
-    FT_ASSERT_EQ(true, box.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, box.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.destroy());
     return (1);
 }
@@ -1230,10 +1230,10 @@ FT_TEST(test_aabb_enable_thread_safety_alloc_limit_eight_then_recover,
     if (error_code == FT_ERR_SUCCESS)
     {
         box.disable_thread_safety();
-        FT_ASSERT_EQ(false, box.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, box.is_thread_safe());
     }
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.enable_thread_safety());
-    FT_ASSERT_EQ(true, box.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, box.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.destroy());
     return (1);
 }
@@ -1249,9 +1249,9 @@ FT_TEST(test_aabb_get_mutex_for_testing_alloc_limit_seven_consistent,
     mutex_pointer = box.get_mutex_for_testing();
     cma_set_alloc_limit(0);
     if (mutex_pointer == ft_nullptr)
-        FT_ASSERT_EQ(false, box.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, box.is_thread_safe());
     else
-        FT_ASSERT_EQ(true, box.is_thread_safe_enabled());
+        FT_ASSERT_EQ(true, box.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.destroy());
     return (1);
 }
@@ -1994,13 +1994,13 @@ FT_TEST(test_aabb_thread_safety_enable_disable,
     aabb box;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.initialize(0.0, 0.0, 1.0, 1.0));
-    FT_ASSERT_EQ(false, box.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, box.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.enable_thread_safety());
-    FT_ASSERT_EQ(true, box.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, box.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.enable_thread_safety());
-    FT_ASSERT_EQ(true, box.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, box.is_thread_safe());
     box.disable_thread_safety();
-    FT_ASSERT_EQ(false, box.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, box.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.destroy());
     return (1);
 }
@@ -2039,9 +2039,9 @@ FT_TEST(test_aabb_mutex_testing_accessor_lifecycle,
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.initialize(0.0, 0.0, 1.0, 1.0));
     mutex_pointer = box.get_mutex_for_testing();
     FT_ASSERT_NEQ(ft_nullptr, mutex_pointer);
-    FT_ASSERT_EQ(true, box.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, box.is_thread_safe());
     box.disable_thread_safety();
-    FT_ASSERT_EQ(false, box.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, box.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.destroy());
     FT_ASSERT_EQ(ft_nullptr, box.get_mutex_for_testing());
     return (1);
@@ -2058,7 +2058,7 @@ FT_TEST(test_aabb_enable_thread_safety_allocation_failure,
     error_code = box.enable_thread_safety();
     cma_set_alloc_limit(0);
     FT_ASSERT_NEQ(FT_ERR_SUCCESS, error_code);
-    FT_ASSERT_EQ(false, box.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, box.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, box.destroy());
     return (1);
 }

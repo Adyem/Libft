@@ -26,9 +26,6 @@ static void economy_table_signal_handler(int signal_value)
     siglongjmp(g_economy_table_signal_jump_buffer, 1);
 }
 
-#if defined(__GNUC__) || defined(__clang__)
-__attribute__((no_stack_protector))
-#endif
 static int expect_sigabrt_on_uninitialized_table(void (*operation)(ft_economy_table &))
 {
     std::memset(&g_economy_table_old_action_abort, 0,

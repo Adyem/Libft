@@ -11,11 +11,11 @@ FT_TEST(test_ft_thread_enable_thread_safety_allocates_mutex,
 {
     ft_thread thread;
 
-    FT_ASSERT_EQ(false, thread.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, thread.is_thread_safe());
     FT_ASSERT_EQ(0, thread.enable_thread_safety());
-    FT_ASSERT_EQ(true, thread.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, thread.is_thread_safe());
     thread.disable_thread_safety();
-    FT_ASSERT_EQ(false, thread.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, thread.is_thread_safe());
     return (1);
 }
 
@@ -43,7 +43,7 @@ FT_TEST(test_ft_thread_join_respects_thread_safety,
     });
 
     FT_ASSERT_EQ(0, worker.enable_thread_safety());
-    FT_ASSERT_EQ(true, worker.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, worker.is_thread_safe());
     FT_ASSERT_EQ(true, worker.joinable());
     worker.join();
     FT_ASSERT_EQ(false, worker.joinable());

@@ -79,7 +79,7 @@ void* operator new(std::size_t size, std::align_val_t alignment)
     void *pointer;
 
     pointer = cma_aligned_alloc(static_cast<ft_size_t>(alignment),
-            static_cast<ft_size_t>(size));
+            size);
     if (pointer == NULL)
         throw std::bad_alloc();
     return (pointer);
@@ -89,7 +89,7 @@ void* operator new(std::size_t size, std::align_val_t alignment,
     const std::nothrow_t&) noexcept
 {
     return (cma_aligned_alloc(static_cast<ft_size_t>(alignment),
-            static_cast<ft_size_t>(size)));
+            size));
 }
 
 void operator delete(void* ptr, std::align_val_t) noexcept
@@ -115,7 +115,7 @@ void* operator new[](std::size_t size, std::align_val_t alignment)
    void *pointer;
 
     pointer = cma_aligned_alloc(static_cast<ft_size_t>(alignment),
-            static_cast<ft_size_t>(size));
+            size);
     if (pointer == NULL)
         throw std::bad_alloc();
     return (pointer);
@@ -125,7 +125,7 @@ void* operator new[](std::size_t size, std::align_val_t alignment,
     const std::nothrow_t&) noexcept
 {
     return (cma_aligned_alloc(static_cast<ft_size_t>(alignment),
-            static_cast<ft_size_t>(size)));
+            size));
 }
 
 void operator delete[](void* ptr, std::align_val_t) noexcept

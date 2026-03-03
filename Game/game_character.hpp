@@ -101,6 +101,7 @@ class ft_character
     public:
         ft_character() noexcept;
         virtual ~ft_character() noexcept;
+        int initialize() noexcept;
         ft_character(const ft_character &other) noexcept = delete;
         ft_character &operator=(const ft_character &other) noexcept = delete;
         ft_character(ft_character &&other) noexcept = delete;

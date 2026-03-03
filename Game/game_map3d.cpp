@@ -231,8 +231,12 @@ void ft_map3d::resize(size_t width, size_t height, size_t depth, int value)
     this->_height = height;
     this->_depth = depth;
     this->allocate(width, height, depth, value);
-    (void)this->unlock_internal(lock_acquired);
-    this->set_error(FT_ERR_SUCCESS);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
+    else
+        this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -252,15 +256,23 @@ int ft_map3d::get(size_t x, size_t y, size_t z) const
     if (this->_data == ft_nullptr || x >= this->_width || y >= this->_height
         || z >= this->_depth)
     {
-        (void)this->unlock_internal(lock_acquired);
+        int unlock_error;
+
+        unlock_error = this->unlock_internal(lock_acquired);
+        if (unlock_error != FT_ERR_SUCCESS)
+            this->set_error(unlock_error);
         this->set_error(FT_ERR_OUT_OF_RANGE);
         return (0);
     }
     int value;
 
     value = this->_data[z][y][x];
-    (void)this->unlock_internal(lock_acquired);
-    this->set_error(FT_ERR_SUCCESS);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
+    else
+        this->set_error(FT_ERR_SUCCESS);
     return (value);
 }
 
@@ -282,12 +294,20 @@ void ft_map3d::set(size_t x, size_t y, size_t z, int value)
         this->_data[z][y][x] = value;
     else
     {
-        (void)this->unlock_internal(lock_acquired);
+        int unlock_error;
+
+        unlock_error = this->unlock_internal(lock_acquired);
+        if (unlock_error != FT_ERR_SUCCESS)
+            this->set_error(unlock_error);
         this->set_error(FT_ERR_OUT_OF_RANGE);
         return ;
     }
-    (void)this->unlock_internal(lock_acquired);
-    this->set_error(FT_ERR_SUCCESS);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
+    else
+        this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -319,7 +339,11 @@ void ft_map3d::toggle_obstacle(size_t x, size_t y, size_t z,
     if (this->_data == ft_nullptr || x >= this->_width || y >= this->_height
         || z >= this->_depth)
     {
-        (void)this->unlock_internal(lock_acquired);
+        int unlock_error;
+
+        unlock_error = this->unlock_internal(lock_acquired);
+        if (unlock_error != FT_ERR_SUCCESS)
+            this->set_error(unlock_error);
         this->set_error(FT_ERR_OUT_OF_RANGE);
         return ;
     }
@@ -328,8 +352,12 @@ void ft_map3d::toggle_obstacle(size_t x, size_t y, size_t z,
     else
         this->_data[z][y][x] = 0;
     new_value = this->_data[z][y][x];
-    (void)this->unlock_internal(lock_acquired);
-    this->set_error(FT_ERR_SUCCESS);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
+    else
+        this->set_error(FT_ERR_SUCCESS);
     if (listener != ft_nullptr)
         listener->update_obstacle(x, y, z, new_value);
     return ;
@@ -350,8 +378,12 @@ size_t ft_map3d::get_width() const
         return (0);
     }
     width_value = this->_width;
-    (void)this->unlock_internal(lock_acquired);
-    this->set_error(FT_ERR_SUCCESS);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
+    else
+        this->set_error(FT_ERR_SUCCESS);
     return (width_value);
 }
 
@@ -370,8 +402,12 @@ size_t ft_map3d::get_height() const
         return (0);
     }
     height_value = this->_height;
-    (void)this->unlock_internal(lock_acquired);
-    this->set_error(FT_ERR_SUCCESS);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
+    else
+        this->set_error(FT_ERR_SUCCESS);
     return (height_value);
 }
 
@@ -390,8 +426,12 @@ size_t ft_map3d::get_depth() const
         return (0);
     }
     depth_value = this->_depth;
-    (void)this->unlock_internal(lock_acquired);
-    this->set_error(FT_ERR_SUCCESS);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
+    else
+        this->set_error(FT_ERR_SUCCESS);
     return (depth_value);
 }
 

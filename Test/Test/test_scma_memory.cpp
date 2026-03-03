@@ -37,7 +37,7 @@ FT_TEST(test_scma_allocation_unsigned_char_payload, "scma allocation stores arbi
     index = 0;
     while (index < 6)
     {
-        payload[static_cast<size_t>(index)] = static_cast<unsigned char>(index * 3 + 1);
+        payload[index] = static_cast<unsigned char>(index * 3 + 1);
         index = index + 1;
     }
     FT_ASSERT_EQ(1, scma_write(handle, 0, payload, 6));
@@ -46,7 +46,7 @@ FT_TEST(test_scma_allocation_unsigned_char_payload, "scma allocation stores arbi
     index = 0;
     while (index < 6)
     {
-        FT_ASSERT_EQ(payload[static_cast<size_t>(index)], readback[static_cast<size_t>(index)]);
+        FT_ASSERT_EQ(payload[index], readback[index]);
         index = index + 1;
     }
     scma_shutdown();
@@ -100,7 +100,7 @@ FT_TEST(test_scma_allocation_double_precision_roundtrip, "scma allocation keeps 
     index = 0;
     while (index < 3)
     {
-        write_values[static_cast<size_t>(index)] = static_cast<double>(index) + 0.125;
+        write_values[index] = static_cast<double>(index) + 0.125;
         index = index + 1;
     }
     FT_ASSERT_EQ(1, scma_write(handle, 0, write_values, sizeof(double) * 3));
@@ -109,7 +109,7 @@ FT_TEST(test_scma_allocation_double_precision_roundtrip, "scma allocation keeps 
     index = 0;
     while (index < 3)
     {
-        FT_ASSERT_EQ(write_values[static_cast<size_t>(index)], read_values[static_cast<size_t>(index)]);
+        FT_ASSERT_EQ(write_values[index], read_values[index]);
         index = index + 1;
     }
     scma_shutdown();
@@ -130,10 +130,10 @@ FT_TEST(test_scma_compaction_reuses_space_for_new_blocks, "scma compaction recla
     index = 0;
     while (index < 3)
     {
-        handles[static_cast<size_t>(index)] = scma_allocate(sizeof(int));
-        FT_ASSERT_EQ(1, scma_handle_is_valid(handles[static_cast<size_t>(index)]));
-        stored_values[static_cast<size_t>(index)] = static_cast<int>(index * 100 + 1);
-        FT_ASSERT_EQ(1, scma_write(handles[static_cast<size_t>(index)], 0, &stored_values[static_cast<size_t>(index)], sizeof(int)));
+        handles[index] = scma_allocate(sizeof(int));
+        FT_ASSERT_EQ(1, scma_handle_is_valid(handles[index]));
+        stored_values[index] = static_cast<int>(index * 100 + 1);
+        FT_ASSERT_EQ(1, scma_write(handles[index], 0, &stored_values[index], sizeof(int)));
         index = index + 1;
     }
     FT_ASSERT_EQ(1, scma_free(handles[1]));
@@ -142,10 +142,10 @@ FT_TEST(test_scma_compaction_reuses_space_for_new_blocks, "scma compaction recla
     expanded_index = 0;
     while (expanded_index < 4)
     {
-        expanded_values[static_cast<size_t>(expanded_index)] = static_cast<int>(expanded_index + 10);
+        expanded_values[expanded_index] = static_cast<int>(expanded_index + 10);
         FT_ASSERT_EQ(1, scma_write(expanded_handle,
                 sizeof(int) * expanded_index,
-                &expanded_values[static_cast<size_t>(expanded_index)],
+                &expanded_values[expanded_index],
                 sizeof(int)));
         expanded_index = expanded_index + 1;
     }
@@ -175,7 +175,7 @@ FT_TEST(test_scma_resize_grow_and_shrink_preserves_data, "scma resize keeps live
     index = 0;
     while (index < 4)
     {
-        initial_payload[static_cast<size_t>(index)] = static_cast<unsigned char>(index + 1);
+        initial_payload[index] = static_cast<unsigned char>(index + 1);
         index = index + 1;
     }
     FT_ASSERT_EQ(1, scma_write(handle, 0, initial_payload, 4));
@@ -186,7 +186,7 @@ FT_TEST(test_scma_resize_grow_and_shrink_preserves_data, "scma resize keeps live
     index = 0;
     while (index < 4)
     {
-        FT_ASSERT_EQ(initial_payload[static_cast<size_t>(index)], buffer[static_cast<size_t>(index)]);
+        FT_ASSERT_EQ(initial_payload[index], buffer[index]);
         index = index + 1;
     }
     buffer[0] = 9;

@@ -354,10 +354,10 @@ static void api_request_send_failure_server(void)
     api_request_send_failure_server_signal_ready(initialize_error);
     if (initialize_error != FT_ERR_SUCCESS)
         return ;
-    if (server_socket.get_fd() < 0)
+    if (server_socket.get_file_descriptor() < 0)
         return ;
     address_length = sizeof(address_storage);
-    client_fd = nw_accept(server_socket.get_fd(), reinterpret_cast<struct sockaddr*>(&address_storage), &address_length);
+    client_fd = nw_accept(server_socket.get_file_descriptor(), reinterpret_cast<struct sockaddr*>(&address_storage), &address_length);
     if (client_fd >= 0)
         nw_close(client_fd);
     return ;
@@ -501,7 +501,7 @@ static void api_request_bearer_server(api_request_bearer_server_context *context
         context->ready.store(true, std::memory_order_release);
         return ;
     }
-    if (server_socket.get_fd() < 0)
+    if (server_socket.get_file_descriptor() < 0)
     {
         context->result.store(FT_ERR_SUCCESS, std::memory_order_relaxed);
         context->ready.store(true, std::memory_order_release);
@@ -510,7 +510,7 @@ static void api_request_bearer_server(api_request_bearer_server_context *context
     context->result.store(0, std::memory_order_relaxed);
     context->ready.store(true, std::memory_order_release);
     address_length = sizeof(address_storage);
-    client_fd = nw_accept(server_socket.get_fd(), reinterpret_cast<struct sockaddr*>(&address_storage), &address_length);
+    client_fd = nw_accept(server_socket.get_file_descriptor(), reinterpret_cast<struct sockaddr*>(&address_storage), &address_length);
     if (client_fd < 0)
     {
         context->result.store(-1, std::memory_order_relaxed);
@@ -574,7 +574,7 @@ static void api_request_basic_server(api_request_basic_server_context *context)
         context->ready.store(true, std::memory_order_release);
         return ;
     }
-    if (server_socket.get_fd() < 0)
+    if (server_socket.get_file_descriptor() < 0)
     {
         context->result.store(FT_ERR_SUCCESS, std::memory_order_relaxed);
         context->ready.store(true, std::memory_order_release);
@@ -583,7 +583,7 @@ static void api_request_basic_server(api_request_basic_server_context *context)
     context->result.store(0, std::memory_order_relaxed);
     context->ready.store(true, std::memory_order_release);
     address_length = sizeof(address_storage);
-    client_fd = nw_accept(server_socket.get_fd(), reinterpret_cast<struct sockaddr*>(&address_storage), &address_length);
+    client_fd = nw_accept(server_socket.get_file_descriptor(), reinterpret_cast<struct sockaddr*>(&address_storage), &address_length);
     if (client_fd < 0)
     {
         context->result.store(-1, std::memory_order_relaxed);
@@ -650,7 +650,7 @@ static void api_request_success_server(void)
         api_request_success_server_signal_ready(FT_ERR_SUCCESS);
         return ;
     }
-    if (server_socket.get_fd() < 0)
+    if (server_socket.get_file_descriptor() < 0)
     {
         api_request_success_server_signal_ready(FT_ERR_SUCCESS);
         return ;
@@ -666,7 +666,7 @@ static void api_request_success_server(void)
         ssize_t bytes_sent;
 
         address_length = sizeof(address_storage);
-        client_fd = nw_accept(server_socket.get_fd(),
+        client_fd = nw_accept(server_socket.get_file_descriptor(),
                               reinterpret_cast<struct sockaddr*>(&address_storage),
                               &address_length);
         if (client_fd < 0)
@@ -712,14 +712,14 @@ static void api_request_stream_large_response_server(void)
         api_request_stream_large_server_signal_ready(FT_ERR_SUCCESS);
         return ;
     }
-    if (server_socket.get_fd() < 0)
+    if (server_socket.get_file_descriptor() < 0)
     {
         api_request_stream_large_server_signal_ready(FT_ERR_SUCCESS);
         return ;
     }
     api_request_stream_large_server_signal_ready(FT_ERR_SUCCESS);
     address_length = sizeof(address_storage);
-    client_fd = nw_accept(server_socket.get_fd(),
+    client_fd = nw_accept(server_socket.get_file_descriptor(),
             reinterpret_cast<struct sockaddr*>(&address_storage),
             &address_length);
     if (client_fd < 0)
@@ -819,7 +819,7 @@ static void api_request_retry_success_server(void)
     ft_socket server_socket;
     if (server_socket.initialize(server_configuration) != FT_ERR_SUCCESS)
         return ;
-    if (server_socket.get_fd() < 0)
+    if (server_socket.get_file_descriptor() < 0)
         return ;
     accepted_count = 0;
     start_time = std::chrono::steady_clock::now();
@@ -831,7 +831,7 @@ static void api_request_retry_success_server(void)
         if (elapsed.count() > 2000)
             break ;
         address_length = sizeof(address_storage);
-        client_fd = nw_accept(server_socket.get_fd(),
+        client_fd = nw_accept(server_socket.get_file_descriptor(),
                 reinterpret_cast<struct sockaddr*>(&address_storage),
                 &address_length);
         if (client_fd < 0)
@@ -883,7 +883,7 @@ static void api_request_retry_failure_server(void)
     ft_socket server_socket;
     if (server_socket.initialize(server_configuration) != FT_ERR_SUCCESS)
         return ;
-    if (server_socket.get_fd() < 0)
+    if (server_socket.get_file_descriptor() < 0)
         return ;
     accepted_count = 0;
     start_time = std::chrono::steady_clock::now();
@@ -898,7 +898,7 @@ static void api_request_retry_failure_server(void)
         if (elapsed_time.count() > 2000)
             break ;
         address_length = sizeof(address_storage);
-        client_fd = nw_accept(server_socket.get_fd(),
+        client_fd = nw_accept(server_socket.get_file_descriptor(),
                 reinterpret_cast<struct sockaddr*>(&address_storage),
                 &address_length);
         if (client_fd < 0)
@@ -955,7 +955,7 @@ static void api_request_circuit_success_server(
         context->ready.store(true, std::memory_order_release);
         return ;
     }
-    if (server_socket.get_fd() < 0)
+    if (server_socket.get_file_descriptor() < 0)
     {
         context->ready.store(true, std::memory_order_release);
         return ;
@@ -974,7 +974,7 @@ static void api_request_circuit_success_server(
         if (elapsed_ms > 20000)
             break ;
         address_length = sizeof(address_storage);
-        client_fd = nw_accept(server_socket.get_fd(),
+        client_fd = nw_accept(server_socket.get_file_descriptor(),
                 reinterpret_cast<struct sockaddr*>(&address_storage),
                 &address_length);
         if (client_fd < 0)
@@ -1023,12 +1023,12 @@ static void api_request_retry_timeout_server(void)
     ft_socket server_socket;
     if (server_socket.initialize(server_configuration) != FT_ERR_SUCCESS)
         return ;
-    if (server_socket.get_fd() < 0)
+    if (server_socket.get_file_descriptor() < 0)
         return ;
     accepted_count = 0;
     start_time = std::chrono::steady_clock::now();
     accept_timeout = std::chrono::milliseconds(2000);
-    poll_descriptors[0] = server_socket.get_fd();
+    poll_descriptors[0] = server_socket.get_file_descriptor();
     while (accepted_count < 3)
     {
         std::chrono::steady_clock::time_point current_time;
@@ -1049,7 +1049,7 @@ static void api_request_retry_timeout_server(void)
         if (poll_result <= 0)
             continue ;
         address_length = sizeof(address_storage);
-        client_fd = nw_accept(server_socket.get_fd(),
+        client_fd = nw_accept(server_socket.get_file_descriptor(),
                 reinterpret_cast<struct sockaddr*>(&address_storage),
                 &address_length);
         if (client_fd < 0)
@@ -1138,14 +1138,14 @@ static void api_request_stream_chunked_response_server(void)
         api_request_stream_chunked_server_signal_ready(FT_ERR_SUCCESS);
         return ;
     }
-    if (server_socket.get_fd() < 0)
+    if (server_socket.get_file_descriptor() < 0)
     {
         api_request_stream_chunked_server_signal_ready(FT_ERR_SUCCESS);
         return ;
     }
     api_request_stream_chunked_server_signal_ready(FT_ERR_SUCCESS);
     address_length = sizeof(address_storage);
-    client_fd = nw_accept(server_socket.get_fd(),
+    client_fd = nw_accept(server_socket.get_file_descriptor(),
             reinterpret_cast<struct sockaddr*>(&address_storage),
             &address_length);
     if (client_fd < 0)
@@ -1192,10 +1192,10 @@ static void api_request_async_retry_server(void)
     ft_socket server_socket;
     if (server_socket.initialize(server_configuration) != FT_ERR_SUCCESS)
         return ;
-    if (server_socket.get_fd() < 0)
+    if (server_socket.get_file_descriptor() < 0)
         return ;
     address_length = sizeof(address_storage);
-    client_fd = nw_accept(server_socket.get_fd(),
+    client_fd = nw_accept(server_socket.get_file_descriptor(),
                           reinterpret_cast<struct sockaddr*>(&address_storage),
                           &address_length);
     if (client_fd < 0)
@@ -1608,11 +1608,13 @@ FT_TEST(test_api_request_string_url_invalid_sets_errno, "api_request_string_url 
 
 FT_TEST(test_api_request_tls_missing_host_sets_errno, "api_request_string_tls missing host sets errno")
 {
+#if NETWORKING_HAS_OPENSSL
     char *result;
 
     result = api_request_string_tls(ft_nullptr, 443, "GET", "/", ft_nullptr, ft_nullptr, ft_nullptr, 1000);
     if (result != ft_nullptr)
         return (0);
+#endif
     return (1);
 }
 

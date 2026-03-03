@@ -3,6 +3,7 @@
 #include "api_http_internal.hpp"
 #include "api_request_metrics.hpp"
 #include "../Networking/socket_class.hpp"
+#include "../Networking/openssl_support.hpp"
 #include "../CPP_class/class_string.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
@@ -230,11 +231,17 @@ bool api_request_stream(const char *ip, uint16_t port,
     }
     bool result;
 
+#if NETWORKING_HAS_OPENSSL
     result = api_http_execute_plain_streaming(connection_handle, method, path,
             ip, payload, headers, timeout, ip, port, retry_policy,
             streaming_handler, error_code);
     if (!result)
         return (false);
+#else
+    (void)result;
+    error_code = FT_ERR_INVALID_OPERATION;
+    return (false);
+#endif
     connection_guard.set_success();
     return (true);
 }
@@ -348,10 +355,10 @@ bool api_request_stream_http2(const char *ip, uint16_t port,
         return (false);
     }
     bool http2_used_local;
-    bool result;
 
     http2_used_local = false;
 #if NETWORKING_HAS_OPENSSL
+    bool result;
     result = api_http_execute_plain_http2_streaming(connection_handle, method,
             path, ip, payload, headers, timeout, ip, port, retry_policy,
             streaming_handler, http2_used_local, error_code);
@@ -366,11 +373,8 @@ bool api_request_stream_http2(const char *ip, uint16_t port,
         http2_used_local = false;
     }
 #else
-    result = api_http_execute_plain_streaming(connection_handle, method,
-            path, ip, payload, headers, timeout, ip, port, retry_policy,
-            streaming_handler, error_code);
-    if (!result)
-        return (false);
+    error_code = FT_ERR_INVALID_OPERATION;
+    return (false);
 #endif
     connection_guard.set_success();
     if (used_http2)
@@ -510,11 +514,16 @@ char *api_request_string(const char *ip, uint16_t port,
         error_code = FT_ERR_IO;
         return (ft_nullptr);
     }
+#if NETWORKING_HAS_OPENSSL
     metrics_result_body = api_http_execute_plain(connection_handle, method,
             path, ip, payload, headers, status, timeout, ip, port,
             retry_policy, error_code);
     if (!metrics_result_body)
         return (ft_nullptr);
+#else
+    error_code = FT_ERR_INVALID_OPERATION;
+    return (ft_nullptr);
+#endif
     connection_guard.set_success();
     return (metrics_result_body);
 }
@@ -658,13 +667,6 @@ char *api_request_string_http2(const char *ip, uint16_t port,
     } connection_guard(connection_handle);
     if (downgrade_due_to_connect_failure)
     {
-        int max_attempts;
-        int attempt_index;
-        int initial_delay;
-        int current_delay;
-        int max_delay;
-        int multiplier;
-
         if (g_api_request_wait_hook)
         {
             bool wait_ready;
@@ -673,6 +675,14 @@ char *api_request_string_http2(const char *ip, uint16_t port,
             if (!wait_ready)
                 return (ft_nullptr);
         }
+#if NETWORKING_HAS_OPENSSL
+        int max_attempts;
+        int attempt_index;
+        int initial_delay;
+        int current_delay;
+        int max_delay;
+        int multiplier;
+
         max_attempts = api_retry_get_max_attempts(retry_policy);
         initial_delay = api_retry_get_initial_delay(retry_policy);
         max_delay = api_retry_get_max_delay(retry_policy);
@@ -725,6 +735,12 @@ char *api_request_string_http2(const char *ip, uint16_t port,
                 current_delay = api_retry_prepare_delay(initial_delay,
                         max_delay);
         }
+#else
+        error_code = FT_ERR_INVALID_OPERATION;
+        if (used_http2)
+            *used_http2 = false;
+        return (ft_nullptr);
+#endif
         if (error_code == FT_ERR_SUCCESS)
             error_code = FT_ERR_IO;
         if (used_http2)
@@ -781,11 +797,8 @@ char *api_request_string_http2(const char *ip, uint16_t port,
         http2_used_local = false;
     }
 #else
-    metrics_result_body = api_http_execute_plain(connection_handle, method,
-            path, ip, payload, headers, status, timeout, ip, port,
-            retry_policy, error_code);
-    if (!metrics_result_body)
-        return (ft_nullptr);
+    error_code = FT_ERR_INVALID_OPERATION;
+    return (ft_nullptr);
 #endif
     connection_guard.set_success();
     if (used_http2)
@@ -1445,9 +1458,16 @@ char *api_request_string_url(const char *url, const char *method,
         return (ft_nullptr);
     char *result;
     if (tls)
+    {
+#if NETWORKING_HAS_OPENSSL
         result = api_request_string_tls(host.c_str(), port, method,
                 path.c_str(), payload, headers, status, timeout,
                 retry_policy);
+#else
+        error_code = FT_ERR_INVALID_OPERATION;
+        return (ft_nullptr);
+#endif
+    }
     else
         result = api_request_string_host(host.c_str(), port, method,
                 path.c_str(), payload, headers, status, timeout,

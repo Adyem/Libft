@@ -380,7 +380,10 @@ void ft_game_hooks::set_on_item_crafted(
         entry.metadata.listener_name);
     this->insert_listener_unlocked(entry);
     this->append_metadata_unlocked(entry.metadata);
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -405,7 +408,10 @@ void ft_game_hooks::set_on_character_damaged(
         entry.metadata.listener_name);
     this->insert_listener_unlocked(entry);
     this->append_metadata_unlocked(entry.metadata);
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -430,7 +436,10 @@ void ft_game_hooks::set_on_event_triggered(
         entry.metadata.listener_name);
     this->insert_listener_unlocked(entry);
     this->append_metadata_unlocked(entry.metadata);
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -542,7 +551,10 @@ void ft_game_hooks::register_listener(const ft_game_hook_metadata &metadata,
         entry.metadata.listener_name);
     this->insert_listener_unlocked(entry);
     this->append_metadata_unlocked(entry.metadata);
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -555,7 +567,10 @@ void ft_game_hooks::unregister_listener(const ft_string &hook_identifier,
     if (this->lock_internal(&lock_acquired) != FT_ERR_SUCCESS)
         return ;
     this->remove_listener_unlocked(hook_identifier, listener_name);
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -584,7 +599,10 @@ void ft_game_hooks::reset() noexcept
     this->_legacy_event_triggered = ft_function<void(ft_world&, ft_event&)>();
     this->_listener_catalog.clear();
     this->_catalog_metadata.clear();
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 

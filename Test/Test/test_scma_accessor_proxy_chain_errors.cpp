@@ -148,7 +148,7 @@ FT_TEST(test_scma_const_proxy_invalid_index_reports_error,
     FT_ASSERT_EQ(1, accessor.bind(handle));
     accessor[0] = 6;
 
-    const scma_handle_accessor<int> const_accessor(accessor);
+    const scma_handle_accessor<int> &const_accessor = accessor;
     auto invalid_proxy = const_accessor[8];
 
     FT_ASSERT_EQ(0, invalid_proxy.is_valid());
@@ -170,7 +170,7 @@ FT_TEST(test_scma_const_proxy_invalid_arrow_is_safe,
     FT_ASSERT_EQ(1, accessor.bind(handle));
     accessor[0].operator->()->number = 13;
 
-    const scma_handle_accessor<scma_chain_value> const_accessor(accessor);
+    const scma_handle_accessor<scma_chain_value> &const_accessor = accessor;
     auto invalid_proxy = const_accessor[9];
     const scma_chain_value *value_pointer = invalid_proxy.operator->();
 

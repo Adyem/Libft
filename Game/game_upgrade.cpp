@@ -221,7 +221,10 @@ int ft_upgrade::lock(bool *lock_acquired) const noexcept
 void ft_upgrade::unlock(bool lock_acquired) const noexcept
 {
     this->abort_if_not_initialized("ft_upgrade::unlock");
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 

@@ -51,13 +51,13 @@ int ft_equipment::lock_internal(bool *lock_acquired) const noexcept
 
 void ft_equipment::unlock_internal(bool lock_acquired) const noexcept
 {
+    int unlock_error;
+
     if (lock_acquired == false)
-    {
-        this->set_error(FT_ERR_SUCCESS);
         return ;
-    }
-    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    this->set_error(FT_ERR_SUCCESS);
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -201,8 +201,8 @@ ft_sharedptr<ft_item> ft_equipment::get_item(int slot) const noexcept
         const_cast<ft_equipment *>(this)->set_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_sharedptr<ft_item>());
     }
-    this->unlock_internal(lock_acquired);
     const_cast<ft_equipment *>(this)->set_error(FT_ERR_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return (result);
 }
 

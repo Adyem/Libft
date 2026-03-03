@@ -16,7 +16,7 @@ FT_TEST(test_vector2_enable_thread_safety_allocation_failure,
     enable_error = vector_value.enable_thread_safety();
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, enable_error);
-    FT_ASSERT_EQ(false, vector_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, vector_value.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_value.destroy());
     return (1);
 }
@@ -31,7 +31,7 @@ FT_TEST(test_vector3_enable_thread_safety_allocation_failure,
     enable_error = vector_value.enable_thread_safety();
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, enable_error);
-    FT_ASSERT_EQ(false, vector_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, vector_value.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_value.destroy());
     return (1);
 }
@@ -46,7 +46,7 @@ FT_TEST(test_vector4_enable_thread_safety_allocation_failure,
     enable_error = vector_value.enable_thread_safety();
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, enable_error);
-    FT_ASSERT_EQ(false, vector_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, vector_value.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_value.destroy());
     return (1);
 }
@@ -61,7 +61,7 @@ FT_TEST(test_matrix2_enable_thread_safety_allocation_failure,
     enable_error = matrix_value.enable_thread_safety();
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, enable_error);
-    FT_ASSERT_EQ(false, matrix_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, matrix_value.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, matrix_value.destroy());
     return (1);
 }
@@ -78,7 +78,7 @@ FT_TEST(test_matrix3_enable_thread_safety_allocation_failure,
     enable_error = matrix_value.enable_thread_safety();
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, enable_error);
-    FT_ASSERT_EQ(false, matrix_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, matrix_value.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, matrix_value.destroy());
     return (1);
 }
@@ -96,7 +96,7 @@ FT_TEST(test_matrix4_enable_thread_safety_allocation_failure,
     enable_error = matrix_value.enable_thread_safety();
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, enable_error);
-    FT_ASSERT_EQ(false, matrix_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, matrix_value.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, matrix_value.destroy());
     return (1);
 }
@@ -111,7 +111,7 @@ FT_TEST(test_quaternion_enable_thread_safety_allocation_failure,
     enable_error = quaternion_value.enable_thread_safety();
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, enable_error);
-    FT_ASSERT_EQ(false, quaternion_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, quaternion_value.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, quaternion_value.destroy());
     return (1);
 }

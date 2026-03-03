@@ -224,7 +224,10 @@ int ft_skill::lock(bool *lock_acquired) const noexcept
 void ft_skill::unlock(bool lock_acquired) const noexcept
 {
     this->abort_if_not_initialized("ft_skill::unlock");
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 

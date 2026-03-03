@@ -304,7 +304,7 @@ FT_TEST(test_ft_putunsigned_fd_uintmax_max, "ft_putunsigned_fd prints UINTMAX_MA
 
     FT_ASSERT(create_pipe(pipe_fds));
     value = std::numeric_limits<uintmax_t>::max();
-    expected_length = std::snprintf(expected, sizeof(expected), "%ju", static_cast<uintmax_t>(value));
+    expected_length = std::snprintf(expected, sizeof(expected), "%ju", value);
     FT_ASSERT(expected_length > 0);
     write_count = 0;
     ft_putunsigned_fd(value, pipe_fds[1], &write_count);

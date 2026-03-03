@@ -279,7 +279,10 @@ int ft_dialogue_table::lock(bool *lock_acquired) const noexcept
 void ft_dialogue_table::unlock(bool lock_acquired) const noexcept
 {
     this->abort_if_not_initialized("ft_dialogue_table::unlock");
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -299,13 +302,21 @@ int ft_dialogue_table::register_line(const ft_dialogue_line &line) noexcept
     stored_line = game_dialogue_table_clone_line(line);
     if (stored_line == ft_sharedptr<ft_dialogue_line>())
     {
-        (void)this->unlock_internal(lock_acquired);
+        int unlock_error;
+
+        unlock_error = this->unlock_internal(lock_acquired);
+        if (unlock_error != FT_ERR_SUCCESS)
+            this->set_error(unlock_error);
         this->set_error(FT_ERR_NO_MEMORY);
         return (FT_ERR_NO_MEMORY);
     }
     this->_lines.insert(line.get_line_id(), stored_line);
-    (void)this->unlock_internal(lock_acquired);
-    this->set_error(FT_ERR_SUCCESS);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
+    else
+        this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
@@ -322,8 +333,12 @@ int ft_dialogue_table::register_script(const ft_dialogue_script &script) noexcep
         return (lock_error);
     }
     this->_scripts.insert(script.get_script_id(), script);
-    (void)this->unlock_internal(lock_acquired);
-    this->set_error(FT_ERR_SUCCESS);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
+    else
+        this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
@@ -348,14 +363,22 @@ int ft_dialogue_table::fetch_line(int line_id,
     if (entry == this->_lines.end())
     {
         this->set_error(FT_ERR_NOT_FOUND);
-        (void)this->unlock_internal(lock_acquired);
+        int unlock_error;
+
+        unlock_error = this->unlock_internal(lock_acquired);
+        if (unlock_error != FT_ERR_SUCCESS)
+            this->set_error(unlock_error);
         return (FT_ERR_NOT_FOUND);
     }
     stored_line = entry->value;
     if (stored_line == ft_sharedptr<ft_dialogue_line>())
     {
         this->set_error(FT_ERR_NOT_FOUND);
-        (void)this->unlock_internal(lock_acquired);
+        int unlock_error;
+
+        unlock_error = this->unlock_internal(lock_acquired);
+        if (unlock_error != FT_ERR_SUCCESS)
+            this->set_error(unlock_error);
         return (FT_ERR_NOT_FOUND);
     }
     out_line.set_line_id(stored_line->get_line_id());
@@ -376,7 +399,10 @@ int ft_dialogue_table::fetch_line(int line_id,
     }
     out_line.set_next_line_ids(copied_next_ids);
     this->set_error(FT_ERR_SUCCESS);
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return (FT_ERR_SUCCESS);
 }
 
@@ -399,18 +425,29 @@ int ft_dialogue_table::fetch_script(int script_id,
     if (entry == this->_scripts.end())
     {
         this->set_error(FT_ERR_NOT_FOUND);
-        (void)this->unlock_internal(lock_acquired);
+        int unlock_error;
+
+        unlock_error = this->unlock_internal(lock_acquired);
+        if (unlock_error != FT_ERR_SUCCESS)
+            this->set_error(unlock_error);
         return (FT_ERR_NOT_FOUND);
     }
     int initialize_error = out_script.initialize(entry->value);
     if (initialize_error != FT_ERR_SUCCESS)
     {
         this->set_error(initialize_error);
-        (void)this->unlock_internal(lock_acquired);
+        int unlock_error;
+
+        unlock_error = this->unlock_internal(lock_acquired);
+        if (unlock_error != FT_ERR_SUCCESS)
+            this->set_error(unlock_error);
         return (initialize_error);
     }
     this->set_error(FT_ERR_SUCCESS);
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return (FT_ERR_SUCCESS);
 }
 
@@ -456,8 +493,12 @@ void ft_dialogue_table::set_lines(
         entry++;
         index += 1;
     }
-    (void)this->unlock_internal(lock_acquired);
     this->set_error(FT_ERR_SUCCESS);
+    int unlock_error;
+
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -503,8 +544,12 @@ void ft_dialogue_table::set_scripts(
         entry++;
         index += 1;
     }
-    (void)this->unlock_internal(lock_acquired);
-    this->set_error(FT_ERR_SUCCESS);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
+    else
+        this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 

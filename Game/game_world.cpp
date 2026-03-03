@@ -112,6 +112,11 @@ ft_world::ft_world() noexcept
         this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
+    if (this->_world_region->initialize() != FT_ERR_SUCCESS)
+    {
+        this->set_error(this->_world_region->get_error());
+        return ;
+    }
     if (!this->_quest)
     {
         this->set_error(FT_ERR_NO_MEMORY);
@@ -194,7 +199,10 @@ ft_sharedptr<ft_event_scheduler> &ft_world::get_event_scheduler() noexcept
 
     previous_error = this->get_error();
     if (previous_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(previous_error);
         return (this->_event_scheduler);
+    }
     this->set_error(FT_ERR_SUCCESS);
     return (this->_event_scheduler);
 }
@@ -205,7 +213,10 @@ const ft_sharedptr<ft_event_scheduler> &ft_world::get_event_scheduler() const no
 
     previous_error = this->get_error();
     if (previous_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(previous_error);
         return (this->_event_scheduler);
+    }
     this->set_error(FT_ERR_SUCCESS);
     return (this->_event_scheduler);
 }
@@ -314,7 +325,10 @@ ft_sharedptr<ft_quest> &ft_world::get_quest() noexcept
     if (this->propagate_quest_state_error() == true)
         return (this->_quest);
     if (previous_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(previous_error);
         return (this->_quest);
+    }
     this->set_error(FT_ERR_SUCCESS);
     return (this->_quest);
 }
@@ -327,7 +341,10 @@ const ft_sharedptr<ft_quest> &ft_world::get_quest() const noexcept
     if (this->propagate_quest_state_error() == true)
         return (this->_quest);
     if (previous_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(previous_error);
         return (this->_quest);
+    }
     this->set_error(FT_ERR_SUCCESS);
     return (this->_quest);
 }
@@ -340,7 +357,10 @@ ft_sharedptr<ft_vendor_profile> &ft_world::get_vendor_profile() noexcept
     if (this->propagate_vendor_profile_state_error() == true)
         return (this->_vendor_profile);
     if (previous_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(previous_error);
         return (this->_vendor_profile);
+    }
     this->set_error(FT_ERR_SUCCESS);
     return (this->_vendor_profile);
 }
@@ -353,7 +373,10 @@ const ft_sharedptr<ft_vendor_profile> &ft_world::get_vendor_profile() const noex
     if (this->propagate_vendor_profile_state_error() == true)
         return (this->_vendor_profile);
     if (previous_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(previous_error);
         return (this->_vendor_profile);
+    }
     this->set_error(FT_ERR_SUCCESS);
     return (this->_vendor_profile);
 }

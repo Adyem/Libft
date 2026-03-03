@@ -230,7 +230,10 @@ int ft_reputation::lock(bool *lock_acquired) const noexcept
 void ft_reputation::unlock(bool lock_acquired) const noexcept
 {
     this->abort_if_not_initialized("ft_reputation::unlock");
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -284,7 +287,10 @@ void ft_reputation::set_total_rep(int rep) noexcept
         this->set_error(unlock_error);
         return ;
     }
-    this->set_error(valid ? FT_ERR_SUCCESS : FT_ERR_INVALID_ARGUMENT);
+    if (valid == true)
+        this->set_error(FT_ERR_SUCCESS);
+    else
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
     return ;
 }
 
@@ -388,7 +394,10 @@ void ft_reputation::set_current_rep(int rep) noexcept
         this->set_error(unlock_error);
         return ;
     }
-    this->set_error(valid ? FT_ERR_SUCCESS : FT_ERR_INVALID_ARGUMENT);
+    if (valid == true)
+        this->set_error(FT_ERR_SUCCESS);
+    else
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
     return ;
 }
 

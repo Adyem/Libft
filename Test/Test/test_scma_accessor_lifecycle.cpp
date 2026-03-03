@@ -3,6 +3,7 @@
 #include <csetjmp>
 #include <csignal>
 #include <cstring>
+#include <type_traits>
 #include "../../CPP_class/class_nullptr.hpp"
 
 #ifndef LIBFT_TEST_BUILD
@@ -68,50 +69,6 @@ static void scma_accessor_is_bound_on_destroyed_aborts_operation()
     (void)accessor.initialize();
     (void)accessor.destroy();
     (void)accessor.is_bound();
-    return ;
-}
-
-static void scma_accessor_copy_ctor_from_destroyed_source_aborts_operation()
-{
-    scma_handle_accessor<int> source_accessor;
-
-    (void)scma_test_initialize(64);
-    (void)source_accessor.initialize();
-    (void)source_accessor.destroy();
-    scma_handle_accessor<int> copy_accessor(source_accessor);
-    (void)copy_accessor;
-    return ;
-}
-
-static void scma_accessor_move_ctor_from_destroyed_source_aborts_operation()
-{
-    scma_handle_accessor<int> source_accessor;
-
-    (void)scma_test_initialize(64);
-    (void)source_accessor.initialize();
-    (void)source_accessor.destroy();
-    scma_handle_accessor<int> moved_accessor(
-        static_cast<scma_handle_accessor<int> &&>(source_accessor));
-    (void)moved_accessor;
-    return ;
-}
-
-static void scma_accessor_copy_ctor_from_uninitialized_source_aborts_operation()
-{
-    scma_handle_accessor<int> source_accessor;
-    scma_handle_accessor<int> copy_accessor(source_accessor);
-
-    (void)copy_accessor;
-    return ;
-}
-
-static void scma_accessor_move_ctor_from_uninitialized_source_aborts_operation()
-{
-    scma_handle_accessor<int> source_accessor;
-    scma_handle_accessor<int> moved_accessor(
-        static_cast<scma_handle_accessor<int> &&>(source_accessor));
-
-    (void)moved_accessor;
     return ;
 }
 
@@ -188,34 +145,18 @@ FT_TEST(test_scma_accessor_is_bound_after_destroy_aborts,
     return (1);
 }
 
-FT_TEST(test_scma_accessor_copy_ctor_from_destroyed_source_aborts,
-    "scma accessor copy constructor aborts when source is destroyed")
+FT_TEST(test_scma_accessor_copy_constructor_deleted,
+    "scma accessor copy constructor is deleted")
 {
-    FT_ASSERT_EQ(1, scma_accessor_expect_sigabrt(
-        scma_accessor_copy_ctor_from_destroyed_source_aborts_operation));
+    FT_ASSERT_EQ(false,
+        static_cast<bool>(std::is_copy_constructible<scma_handle_accessor<int> >::value));
     return (1);
 }
 
-FT_TEST(test_scma_accessor_move_ctor_from_destroyed_source_aborts,
-    "scma accessor move constructor aborts when source is destroyed")
+FT_TEST(test_scma_accessor_move_constructor_deleted,
+    "scma accessor move constructor is deleted")
 {
-    FT_ASSERT_EQ(1, scma_accessor_expect_sigabrt(
-        scma_accessor_move_ctor_from_destroyed_source_aborts_operation));
-    return (1);
-}
-
-FT_TEST(test_scma_accessor_copy_ctor_from_uninitialized_source_aborts,
-    "scma accessor copy constructor aborts when source is uninitialized")
-{
-    FT_ASSERT_EQ(1, scma_accessor_expect_sigabrt(
-        scma_accessor_copy_ctor_from_uninitialized_source_aborts_operation));
-    return (1);
-}
-
-FT_TEST(test_scma_accessor_move_ctor_from_uninitialized_source_aborts,
-    "scma accessor move constructor aborts when source is uninitialized")
-{
-    FT_ASSERT_EQ(1, scma_accessor_expect_sigabrt(
-        scma_accessor_move_ctor_from_uninitialized_source_aborts_operation));
+    FT_ASSERT_EQ(false,
+        static_cast<bool>(std::is_move_constructible<scma_handle_accessor<int> >::value));
     return (1);
 }

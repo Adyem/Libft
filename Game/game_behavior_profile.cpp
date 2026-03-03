@@ -251,7 +251,10 @@ void ft_behavior_profile::set_profile_id(int profile_id) noexcept
     }
     this->_profile_id = profile_id;
     this->set_error(FT_ERR_SUCCESS);
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -275,7 +278,10 @@ void ft_behavior_profile::set_aggression_weight(double aggression_weight) noexce
     }
     this->_aggression_weight = aggression_weight;
     this->set_error(FT_ERR_SUCCESS);
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -299,7 +305,10 @@ void ft_behavior_profile::set_caution_weight(double caution_weight) noexcept
     }
     this->_caution_weight = caution_weight;
     this->set_error(FT_ERR_SUCCESS);
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -333,7 +342,10 @@ void ft_behavior_profile::set_actions(
     }
     game_behavior_copy_action_vector(actions, this->_actions);
     this->set_error(FT_ERR_SUCCESS);
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 

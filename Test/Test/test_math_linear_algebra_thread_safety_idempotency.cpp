@@ -12,10 +12,10 @@ FT_TEST(test_vector2_thread_safety_enable_disable_idempotent,
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_value.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_value.enable_thread_safety());
-    FT_ASSERT_EQ(true, vector_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, vector_value.is_thread_safe());
     vector_value.disable_thread_safety();
     vector_value.disable_thread_safety();
-    FT_ASSERT_EQ(false, vector_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, vector_value.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_value.destroy());
     return (1);
 }
@@ -27,10 +27,10 @@ FT_TEST(test_vector3_thread_safety_enable_disable_idempotent,
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_value.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_value.enable_thread_safety());
-    FT_ASSERT_EQ(true, vector_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, vector_value.is_thread_safe());
     vector_value.disable_thread_safety();
     vector_value.disable_thread_safety();
-    FT_ASSERT_EQ(false, vector_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, vector_value.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_value.destroy());
     return (1);
 }
@@ -42,10 +42,10 @@ FT_TEST(test_vector4_thread_safety_enable_disable_idempotent,
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_value.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_value.enable_thread_safety());
-    FT_ASSERT_EQ(true, vector_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, vector_value.is_thread_safe());
     vector_value.disable_thread_safety();
     vector_value.disable_thread_safety();
-    FT_ASSERT_EQ(false, vector_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, vector_value.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, vector_value.destroy());
     return (1);
 }
@@ -57,10 +57,10 @@ FT_TEST(test_matrix2_thread_safety_enable_disable_idempotent,
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, matrix_value.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, matrix_value.enable_thread_safety());
-    FT_ASSERT_EQ(true, matrix_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, matrix_value.is_thread_safe());
     matrix_value.disable_thread_safety();
     matrix_value.disable_thread_safety();
-    FT_ASSERT_EQ(false, matrix_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, matrix_value.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, matrix_value.destroy());
     return (1);
 }
@@ -74,10 +74,10 @@ FT_TEST(test_matrix3_thread_safety_enable_disable_idempotent,
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, matrix_value.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, matrix_value.enable_thread_safety());
-    FT_ASSERT_EQ(true, matrix_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, matrix_value.is_thread_safe());
     matrix_value.disable_thread_safety();
     matrix_value.disable_thread_safety();
-    FT_ASSERT_EQ(false, matrix_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, matrix_value.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, matrix_value.destroy());
     return (1);
 }
@@ -92,10 +92,10 @@ FT_TEST(test_matrix4_thread_safety_enable_disable_idempotent,
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, matrix_value.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, matrix_value.enable_thread_safety());
-    FT_ASSERT_EQ(true, matrix_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, matrix_value.is_thread_safe());
     matrix_value.disable_thread_safety();
     matrix_value.disable_thread_safety();
-    FT_ASSERT_EQ(false, matrix_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, matrix_value.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, matrix_value.destroy());
     return (1);
 }
@@ -107,10 +107,10 @@ FT_TEST(test_quaternion_thread_safety_enable_disable_idempotent,
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, quaternion_value.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, quaternion_value.enable_thread_safety());
-    FT_ASSERT_EQ(true, quaternion_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, quaternion_value.is_thread_safe());
     quaternion_value.disable_thread_safety();
     quaternion_value.disable_thread_safety();
-    FT_ASSERT_EQ(false, quaternion_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, quaternion_value.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, quaternion_value.destroy());
     return (1);
 }

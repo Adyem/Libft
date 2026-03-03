@@ -13,6 +13,51 @@ static size_t distance_component(size_t left_value, size_t right_value)
 
 thread_local int ft_path_step::_last_error = FT_ERR_SUCCESS;
 
+#ifdef LIBFT_TEST_BUILD
+
+int ft_path_step_test_helper::ensure_thread_safe(ft_path_step &step) noexcept
+{
+    if (step._mutex != ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    return (step.enable_thread_safety());
+}
+
+int ft_path_step_test_helper::lock(ft_path_step &step) noexcept
+{
+    int ensure_error;
+
+    ensure_error = ft_path_step_test_helper::ensure_thread_safe(step);
+    if (ensure_error != FT_ERR_SUCCESS)
+        return (ensure_error);
+    return (pt_recursive_mutex_lock_if_not_null(step._mutex));
+}
+
+int ft_path_step_test_helper::unlock(ft_path_step &step) noexcept
+{
+    return (pt_recursive_mutex_unlock_if_not_null(step._mutex));
+}
+
+bool ft_path_step_test_helper::is_locked(const ft_path_step &step) noexcept
+{
+    return (step._mutex != ft_nullptr && step._mutex->lockState());
+}
+
+bool ft_path_step_test_helper::is_owned_by_thread(const ft_path_step &step,
+    pthread_t thread_id) noexcept
+{
+    return (step._mutex != ft_nullptr
+        && step._mutex->is_owned_by_thread(thread_id));
+}
+
+int ft_path_step_test_helper::get_mutex_error(const ft_path_step &step) noexcept
+{
+    if (step._mutex == ft_nullptr)
+        return (FT_ERR_INVALID_STATE);
+    return (step._mutex->lock_state(ft_nullptr));
+}
+
+#endif
+
 void ft_path_step::abort_lifecycle_error(const char *method_name,
     const char *reason) const
 {
@@ -60,13 +105,16 @@ int ft_path_step::lock_internal(bool *lock_acquired) const noexcept
 
 int ft_path_step::unlock_internal(bool lock_acquired) const noexcept
 {
+    int unlock_error;
+
     if (lock_acquired == false)
-    {
-        this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    if (unlock_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(unlock_error);
+        return (unlock_error);
     }
-    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
@@ -230,7 +278,10 @@ int ft_path_step::set_coordinates(size_t x, size_t y, size_t z) noexcept
     this->_x = x;
     this->_y = y;
     this->_z = z;
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return (FT_ERR_SUCCESS);
 }
 
@@ -244,7 +295,10 @@ int ft_path_step::set_x(size_t x) noexcept
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     this->_x = x;
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return (FT_ERR_SUCCESS);
 }
 
@@ -258,7 +312,10 @@ int ft_path_step::set_y(size_t y) noexcept
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     this->_y = y;
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return (FT_ERR_SUCCESS);
 }
 
@@ -272,7 +329,10 @@ int ft_path_step::set_z(size_t z) noexcept
     if (lock_error != FT_ERR_SUCCESS)
         return (lock_error);
     this->_z = z;
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return (FT_ERR_SUCCESS);
 }
 
@@ -354,13 +414,16 @@ int ft_pathfinding::lock_internal(bool *lock_acquired) const noexcept
 
 int ft_pathfinding::unlock_internal(bool lock_acquired) const noexcept
 {
+    int unlock_error;
+
     if (lock_acquired == false)
-    {
-        this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    if (unlock_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(unlock_error);
+        return (unlock_error);
     }
-    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
@@ -473,7 +536,10 @@ int ft_pathfinding::lock(bool *lock_acquired) const noexcept
 void ft_pathfinding::unlock(bool lock_acquired) const noexcept
 {
     this->abort_if_not_initialized("ft_pathfinding::unlock");
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -500,14 +566,20 @@ void ft_pathfinding::update_obstacle(size_t x, size_t y, size_t z,
             && this->_current_path[index].get_z() == z)
         {
             this->_needs_replan = true;
-            (void)this->unlock_internal(lock_acquired);
             this->set_error(FT_ERR_SUCCESS);
+            int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
             return ;
         }
         index += 1;
     }
-    (void)this->unlock_internal(lock_acquired);
     this->set_error(FT_ERR_SUCCESS);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -537,8 +609,12 @@ int ft_pathfinding::recalculate_path(const ft_map3d &grid,
             out_path.push_back(this->_current_path[index]);
             index += 1;
         }
-        (void)this->unlock_internal(lock_acquired);
         this->set_error(FT_ERR_SUCCESS);
+        int unlock_error;
+
+        unlock_error = this->unlock_internal(lock_acquired);
+        if (unlock_error != FT_ERR_SUCCESS)
+            this->set_error(unlock_error);
         return (FT_ERR_SUCCESS);
     }
     result = this->astar_grid(grid, start_x, start_y, start_z,
@@ -556,7 +632,10 @@ int ft_pathfinding::recalculate_path(const ft_map3d &grid,
     }
     else
         this->_needs_replan = true;
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     this->set_error(result);
     return (result);
 }

@@ -306,7 +306,10 @@ int ft_quest::lock(bool *lock_acquired) const noexcept
 void ft_quest::unlock(bool lock_acquired) const noexcept
 {
     this->abort_if_not_initialized("ft_quest::unlock");
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -325,7 +328,10 @@ int ft_quest::get_id() const noexcept
     }
     this->set_error(FT_ERR_SUCCESS);
     int identifier = this->_id;
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return (identifier);
 }
 
@@ -346,8 +352,14 @@ void ft_quest::set_id(int id) noexcept
     valid = (id >= 0);
     if (valid)
         this->_id = id;
-    this->set_error(valid ? FT_ERR_SUCCESS : FT_ERR_INVALID_ARGUMENT);
-    (void)this->unlock_internal(lock_acquired);
+    if (valid == true)
+        this->set_error(FT_ERR_SUCCESS);
+    else
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -366,7 +378,10 @@ int ft_quest::get_phases() const noexcept
     }
     int phases_value = this->_phases;
     this->set_error(FT_ERR_SUCCESS);
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return (phases_value);
 }
 
@@ -391,8 +406,14 @@ void ft_quest::set_phases(int phases) noexcept
         if (this->_current_phase > this->_phases)
             this->_current_phase = this->_phases;
     }
-    this->set_error(valid ? FT_ERR_SUCCESS : FT_ERR_INVALID_ARGUMENT);
-    (void)this->unlock_internal(lock_acquired);
+    if (valid == true)
+        this->set_error(FT_ERR_SUCCESS);
+    else
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -411,7 +432,10 @@ int ft_quest::get_current_phase() const noexcept
     }
     int phase_value = this->_current_phase;
     this->set_error(FT_ERR_SUCCESS);
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return (phase_value);
 }
 
@@ -432,8 +456,14 @@ void ft_quest::set_current_phase(int phase) noexcept
     valid = (phase >= 0 && phase <= this->_phases);
     if (valid)
         this->_current_phase = phase;
-    this->set_error(valid ? FT_ERR_SUCCESS : FT_ERR_INVALID_ARGUMENT);
-    (void)this->unlock_internal(lock_acquired);
+    if (valid == true)
+        this->set_error(FT_ERR_SUCCESS);
+    else
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -459,7 +489,10 @@ void ft_quest::set_description(const ft_string &description) noexcept
     }
     this->_description = description;
     this->set_error(FT_ERR_SUCCESS);
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -485,7 +518,10 @@ void ft_quest::set_objective(const ft_string &objective) noexcept
     }
     this->_objective = objective;
     this->set_error(FT_ERR_SUCCESS);
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -513,8 +549,14 @@ void ft_quest::set_reward_experience(int experience) noexcept
     valid = (experience >= 0);
     if (valid)
         this->_reward_experience = experience;
-    this->set_error(valid ? FT_ERR_SUCCESS : FT_ERR_INVALID_ARGUMENT);
-    (void)this->unlock_internal(lock_acquired);
+    if (valid == true)
+        this->set_error(FT_ERR_SUCCESS);
+    else
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -546,7 +588,10 @@ void ft_quest::set_reward_items(const ft_vector<ft_sharedptr<ft_item> > &items) 
         return ;
     }
     copy_error = this->_reward_items.copy_from(items);
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     if (copy_error != FT_ERR_SUCCESS)
     {
         this->set_error(copy_error);
@@ -572,7 +617,10 @@ bool ft_quest::is_complete() const noexcept
     }
     result = (this->_current_phase >= this->_phases);
     this->set_error(FT_ERR_SUCCESS);
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return (result);
 }
 
@@ -593,7 +641,10 @@ void ft_quest::advance_phase() noexcept
     if (this->_current_phase < this->_phases)
         this->_current_phase += 1;
     this->set_error(FT_ERR_SUCCESS);
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 

@@ -252,8 +252,12 @@ int ft_vendor_profile::get_vendor_id() const noexcept
         return (0);
     }
     value = this->_vendor_id;
-    (void)this->unlock_internal(lock_acquired);
-    this->set_error(FT_ERR_SUCCESS);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
+    else
+        this->set_error(FT_ERR_SUCCESS);
     return (value);
 }
 
@@ -276,8 +280,12 @@ void ft_vendor_profile::set_vendor_id(int vendor_id) noexcept
         return ;
     }
     this->_vendor_id = vendor_id;
-    (void)this->unlock_internal(lock_acquired);
-    this->set_error(FT_ERR_SUCCESS);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
+    else
+        this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -296,8 +304,12 @@ double ft_vendor_profile::get_buy_markup() const noexcept
         return (0.0);
     }
     value = this->_buy_markup;
-    (void)this->unlock_internal(lock_acquired);
-    this->set_error(FT_ERR_SUCCESS);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
+    else
+        this->set_error(FT_ERR_SUCCESS);
     return (value);
 }
 
@@ -315,8 +327,12 @@ void ft_vendor_profile::set_buy_markup(double buy_markup) noexcept
         return ;
     }
     this->_buy_markup = buy_markup;
-    (void)this->unlock_internal(lock_acquired);
-    this->set_error(FT_ERR_SUCCESS);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
+    else
+        this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -335,8 +351,12 @@ double ft_vendor_profile::get_sell_multiplier() const noexcept
         return (0.0);
     }
     value = this->_sell_multiplier;
-    (void)this->unlock_internal(lock_acquired);
-    this->set_error(FT_ERR_SUCCESS);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
+    else
+        this->set_error(FT_ERR_SUCCESS);
     return (value);
 }
 
@@ -354,8 +374,12 @@ void ft_vendor_profile::set_sell_multiplier(double sell_multiplier) noexcept
         return ;
     }
     this->_sell_multiplier = sell_multiplier;
-    (void)this->unlock_internal(lock_acquired);
-    this->set_error(FT_ERR_SUCCESS);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
+    else
+        this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
@@ -374,8 +398,12 @@ double ft_vendor_profile::get_tax_rate() const noexcept
         return (0.0);
     }
     value = this->_tax_rate;
-    (void)this->unlock_internal(lock_acquired);
-    this->set_error(FT_ERR_SUCCESS);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
+    else
+        this->set_error(FT_ERR_SUCCESS);
     return (value);
 }
 
@@ -393,8 +421,12 @@ void ft_vendor_profile::set_tax_rate(double tax_rate) noexcept
         return ;
     }
     this->_tax_rate = tax_rate;
-    (void)this->unlock_internal(lock_acquired);
-    this->set_error(FT_ERR_SUCCESS);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
+    else
+        this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 

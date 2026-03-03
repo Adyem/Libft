@@ -157,7 +157,7 @@ static void spline_call_is_thread_safe_enabled_uninitialized()
 {
     ft_cubic_spline spline_value;
 
-    (void)spline_value.is_thread_safe_enabled();
+    (void)spline_value.is_thread_safe();
     return ;
 }
 
@@ -395,15 +395,15 @@ FT_TEST(test_cubic_spline_thread_safety_and_validation_mutex,
     pt_recursive_mutex *mutex_pointer;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, spline_value.initialize());
-    FT_ASSERT_EQ(false, spline_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, spline_value.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, spline_value.enable_thread_safety());
-    FT_ASSERT_EQ(true, spline_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, spline_value.is_thread_safe());
     mutex_pointer = spline_value.get_mutex_for_validation();
     FT_ASSERT(mutex_pointer != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_pointer->lock());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_pointer->unlock());
     spline_value.disable_thread_safety();
-    FT_ASSERT_EQ(false, spline_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, spline_value.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, spline_value.destroy());
     return (1);
 }
@@ -424,10 +424,10 @@ FT_TEST(test_cubic_spline_get_mutex_for_validation_lazily_creates_mutex,
     pt_recursive_mutex *mutex_pointer;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, spline_value.initialize());
-    FT_ASSERT_EQ(false, spline_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, spline_value.is_thread_safe());
     mutex_pointer = spline_value.get_mutex_for_validation();
     FT_ASSERT(mutex_pointer != ft_nullptr);
-    FT_ASSERT_EQ(true, spline_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, spline_value.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_pointer->lock());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, mutex_pointer->unlock());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, spline_value.destroy());
@@ -441,7 +441,7 @@ FT_TEST(test_cubic_spline_disable_thread_safety_without_enable_is_safe,
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, spline_value.initialize());
     spline_value.disable_thread_safety();
-    FT_ASSERT_EQ(false, spline_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, spline_value.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, spline_value.destroy());
     return (1);
 }
@@ -530,7 +530,7 @@ FT_TEST(test_cubic_spline_enable_thread_safety_allocation_failure,
     enable_error = spline_value.enable_thread_safety();
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, enable_error);
-    FT_ASSERT_EQ(false, spline_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, spline_value.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, spline_value.destroy());
     return (1);
 }
@@ -545,9 +545,9 @@ FT_TEST(test_cubic_spline_enable_thread_safety_failure_then_recover,
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, spline_value.enable_thread_safety());
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, spline_value.enable_thread_safety());
-    FT_ASSERT_EQ(true, spline_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, spline_value.is_thread_safe());
     spline_value.disable_thread_safety();
-    FT_ASSERT_EQ(false, spline_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, spline_value.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, spline_value.destroy());
     return (1);
 }
@@ -560,7 +560,7 @@ FT_TEST(test_cubic_spline_enable_thread_safety_idempotent_success,
     FT_ASSERT_EQ(FT_ERR_SUCCESS, spline_value.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, spline_value.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, spline_value.enable_thread_safety());
-    FT_ASSERT_EQ(true, spline_value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, spline_value.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, spline_value.destroy());
     return (1);
 }

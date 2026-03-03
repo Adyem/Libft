@@ -132,7 +132,7 @@ FT_TEST(test_ft_socket_send_all_thread_safety,
         {
             int descriptor;
 
-            descriptor = client_socket.get_fd();
+            descriptor = client_socket.get_file_descriptor();
             if (descriptor < 0)
             {
                 thread_failed.store(true);

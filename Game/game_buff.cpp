@@ -188,7 +188,10 @@ int ft_buff::lock(bool *lock_acquired) const noexcept
 void ft_buff::unlock(bool lock_acquired) const noexcept
 {
     this->abort_if_not_initialized("ft_buff::unlock");
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -220,7 +223,10 @@ int ft_buff::get_id() const noexcept
     if (lock_error != FT_ERR_SUCCESS)
         return (0);
     value = this->_id;
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return (value);
 }
 
@@ -236,7 +242,10 @@ void ft_buff::set_id(int id) noexcept
         return ;
     if (id >= 0)
         this->_id = id;
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -256,7 +265,10 @@ int ft_buff::get_duration() const noexcept
     }
     value = this->_duration;
     this->set_error(FT_ERR_SUCCESS);
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return (value);
 }
 
@@ -276,7 +288,10 @@ void ft_buff::set_duration(int duration) noexcept
     if (duration >= 0)
         this->_duration = duration;
     this->set_error(FT_ERR_SUCCESS);
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -296,7 +311,10 @@ void ft_buff::add_duration(int duration) noexcept
     if (duration >= 0)
         this->_duration += duration;
     this->set_error(FT_ERR_SUCCESS);
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -316,7 +334,10 @@ void ft_buff::sub_duration(int duration) noexcept
     if (duration >= 0)
         this->_duration -= duration;
     this->set_error(FT_ERR_SUCCESS);
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -332,7 +353,10 @@ int ft_buff::get_modifier1() const noexcept
     if (lock_error != FT_ERR_SUCCESS)
         return (0);
     value = this->_modifier1;
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return (value);
 }
 
@@ -347,7 +371,10 @@ void ft_buff::set_modifier1(int mod) noexcept
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     this->_modifier1 = mod;
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -362,7 +389,10 @@ void ft_buff::add_modifier1(int mod) noexcept
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     this->_modifier1 += mod;
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -377,7 +407,10 @@ void ft_buff::sub_modifier1(int mod) noexcept
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     this->_modifier1 -= mod;
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -393,7 +426,10 @@ int ft_buff::get_modifier2() const noexcept
     if (lock_error != FT_ERR_SUCCESS)
         return (0);
     value = this->_modifier2;
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return (value);
 }
 
@@ -408,7 +444,10 @@ void ft_buff::set_modifier2(int mod) noexcept
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     this->_modifier2 = mod;
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -423,7 +462,10 @@ void ft_buff::add_modifier2(int mod) noexcept
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     this->_modifier2 += mod;
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -438,7 +480,10 @@ void ft_buff::sub_modifier2(int mod) noexcept
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     this->_modifier2 -= mod;
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -454,7 +499,10 @@ int ft_buff::get_modifier3() const noexcept
     if (lock_error != FT_ERR_SUCCESS)
         return (0);
     value = this->_modifier3;
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return (value);
 }
 
@@ -469,7 +517,10 @@ void ft_buff::set_modifier3(int mod) noexcept
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     this->_modifier3 = mod;
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -484,7 +535,10 @@ void ft_buff::add_modifier3(int mod) noexcept
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     this->_modifier3 += mod;
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -499,7 +553,10 @@ void ft_buff::sub_modifier3(int mod) noexcept
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     this->_modifier3 -= mod;
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -515,7 +572,10 @@ int ft_buff::get_modifier4() const noexcept
     if (lock_error != FT_ERR_SUCCESS)
         return (0);
     value = this->_modifier4;
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return (value);
 }
 
@@ -530,7 +590,10 @@ void ft_buff::set_modifier4(int mod) noexcept
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     this->_modifier4 = mod;
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -545,7 +608,10 @@ void ft_buff::add_modifier4(int mod) noexcept
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     this->_modifier4 += mod;
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -560,7 +626,10 @@ void ft_buff::sub_modifier4(int mod) noexcept
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     this->_modifier4 -= mod;
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 

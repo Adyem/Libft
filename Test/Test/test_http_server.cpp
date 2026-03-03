@@ -84,7 +84,7 @@ FT_TEST(test_http_server_get_response, "HTTP server handles GET requests")
         server_thread.join();
         return (0);
     }
-    if (collect_response(client_socket.get_fd(), response) == 0)
+    if (collect_response(client_socket.get_file_descriptor(), response) == 0)
     {
         server_thread.join();
         return (0);
@@ -185,7 +185,7 @@ FT_TEST(test_http_server_post_echoes_body, "HTTP server echoes POST body")
         server_thread.join();
         return (0);
     }
-    if (collect_response(client_socket.get_fd(), response) == 0)
+    if (collect_response(client_socket.get_file_descriptor(), response) == 0)
     {
         server_thread.join();
         return (0);
@@ -244,7 +244,7 @@ FT_TEST(test_http_server_keep_alive_multiple_requests, "HTTP server handles sequ
         server_thread.join();
         return (0);
     }
-    if (collect_response(client_socket.get_fd(), response) == 0)
+    if (collect_response(client_socket.get_file_descriptor(), response) == 0)
     {
         server_thread.join();
         return (0);
@@ -308,7 +308,7 @@ FT_TEST(test_http_server_thread_safe_run_once, "ft_http_server run_once works wi
         error_thread.join();
         return (0);
     }
-    if (collect_response(client_socket.get_fd(), response) == 0)
+    if (collect_response(client_socket.get_file_descriptor(), response) == 0)
     {
         server_thread.join();
         error_thread.join();

@@ -1,6 +1,7 @@
 #include "api.hpp"
 #include "api_internal.hpp"
 #include "../Networking/socket_class.hpp"
+#include "../Networking/openssl_support.hpp"
 #include "../CPP_class/class_string.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
@@ -130,7 +131,11 @@ static bool api_async_build_request(const api_async_request &data,
 {
     ft_string body_string;
     char *temporary_string;
+    if (request.initialize() != FT_ERR_SUCCESS)
+        return (false);
     request.clear();
+    if (body_string.initialize() != FT_ERR_SUCCESS)
+        return (false);
     body_string.clear();
     if (!data.method || !data.path || !data.ip)
     {
@@ -513,8 +518,21 @@ bool    api_request_string_tls_http2_async(const char *host, uint16_t port,
 {
     if (used_http2)
         *used_http2 = false;
+#if NETWORKING_HAS_OPENSSL
     return (api_request_string_tls_async(host, port, method, path, callback,
             user_data, payload, headers, timeout));
+#else
+    (void)host;
+    (void)port;
+    (void)method;
+    (void)path;
+    (void)callback;
+    (void)user_data;
+    (void)payload;
+    (void)headers;
+    (void)timeout;
+    return (false);
+#endif
 }
 
 bool    api_request_json_http2_async(const char *ip, uint16_t port,
@@ -535,6 +553,19 @@ bool    api_request_json_tls_http2_async(const char *host, uint16_t port,
 {
     if (used_http2)
         *used_http2 = false;
+#if NETWORKING_HAS_OPENSSL
     return (api_request_json_tls_async(host, port, method, path, callback,
             user_data, payload, headers, timeout));
+#else
+    (void)host;
+    (void)port;
+    (void)method;
+    (void)path;
+    (void)callback;
+    (void)user_data;
+    (void)payload;
+    (void)headers;
+    (void)timeout;
+    return (false);
+#endif
 }

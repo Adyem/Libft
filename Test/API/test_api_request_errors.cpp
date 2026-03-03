@@ -6,6 +6,7 @@
 #include "../../Basic/basic.hpp"
 #include "../../Networking/socket_class.hpp"
 #include "../../Networking/networking.hpp"
+#include "../../Networking/openssl_support.hpp"
 #include "../../PThread/thread.hpp"
 
 #ifndef LIBFT_TEST_BUILD
@@ -14,8 +15,10 @@
 #ifndef _WIN32
 # include <errno.h>
 #endif
+#if NETWORKING_HAS_OPENSSL
 #include <openssl/ssl.h>
 #include <openssl/err.h>
+#endif
 #include <atomic>
 #include <cstdint>
 #ifdef _WIN32
@@ -133,6 +136,7 @@ FT_TEST(test_api_request_set_resolve_error_handles_system_errno,
 FT_TEST(test_api_request_set_ssl_error_prefers_openssl_queue,
     "api_request_set_ssl_error prioritizes library errors over session state")
 {
+#if NETWORKING_HAS_OPENSSL
     unsigned long expected_error;
 
     ERR_clear_error();
@@ -140,20 +144,24 @@ FT_TEST(test_api_request_set_ssl_error_prefers_openssl_queue,
     expected_error = ERR_peek_error();
     FT_ASSERT(expected_error != 0);
     api_request_set_ssl_error(ft_nullptr, 0);
+#endif
     return (1);
 }
 
 FT_TEST(test_api_request_set_ssl_error_handles_missing_session,
     "api_request_set_ssl_error falls back to FT_ERR_IO without a session")
 {
+#if NETWORKING_HAS_OPENSSL
     ERR_clear_error();
     api_request_set_ssl_error(ft_nullptr, 0);
+#endif
     return (1);
 }
 
 FT_TEST(test_api_request_set_ssl_error_reports_errno_for_syscall,
     "api_request_set_ssl_error propagates errno when SSL_ERROR_SYSCALL occurs")
 {
+#if NETWORKING_HAS_OPENSSL
 #ifdef _WIN32
     FT_ASSERT_EQ(1, 1);
 #else
@@ -181,6 +189,7 @@ FT_TEST(test_api_request_set_ssl_error_reports_errno_for_syscall,
     errno = previous_errno;
     SSL_free(session);
     SSL_CTX_free(context);
+#endif
 #endif
     return (1);
 }

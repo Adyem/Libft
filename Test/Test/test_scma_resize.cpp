@@ -17,10 +17,10 @@ FT_TEST(test_scma_resize_grows_preserves_data, "scma resize enlarges block while
     index = 0;
     while (index < 2)
     {
-        write_values[static_cast<size_t>(index)] = static_cast<int>(index * 10 + 1);
+        write_values[index] = static_cast<int>(index * 10 + 1);
         FT_ASSERT_EQ(1, scma_write(handle,
                 sizeof(int) * index,
-                &write_values[static_cast<size_t>(index)],
+                &write_values[index],
                 sizeof(int)));
         index = index + 1;
     }
@@ -34,7 +34,7 @@ FT_TEST(test_scma_resize_grows_preserves_data, "scma resize enlarges block while
                 sizeof(int) * index,
                 &read_value,
                 sizeof(int)));
-        FT_ASSERT_EQ(write_values[static_cast<size_t>(index)], read_value);
+        FT_ASSERT_EQ(write_values[index], read_value);
         index = index + 1;
     }
     write_values[2] = 33;
@@ -70,10 +70,10 @@ FT_TEST(test_scma_resize_shrinks_truncates_tail, "scma resize shrinking truncate
     index = 0;
     while (index < 3)
     {
-        write_values[static_cast<size_t>(index)] = static_cast<int>(index * 5 + 2);
+        write_values[index] = static_cast<int>(index * 5 + 2);
         FT_ASSERT_EQ(1, scma_write(handle,
                 sizeof(int) * index,
-                &write_values[static_cast<size_t>(index)],
+                &write_values[index],
                 sizeof(int)));
         index = index + 1;
     }
@@ -87,7 +87,7 @@ FT_TEST(test_scma_resize_shrinks_truncates_tail, "scma resize shrinking truncate
                 sizeof(int) * index,
                 &read_value,
                 sizeof(int)));
-        FT_ASSERT_EQ(write_values[static_cast<size_t>(index)], read_value);
+        FT_ASSERT_EQ(write_values[index], read_value);
         index = index + 1;
     }
     read_value = 0;

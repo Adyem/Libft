@@ -13,18 +13,12 @@ FT_TEST(test_xml_document_initialize_and_thread_guard,
         "xml_document initializes lazily and thread_guard locks after initialize")
 {
     xml_document document;
-    xml_document::thread_guard guard_before_initialize(&document);
-
-    FT_ASSERT_EQ(-1, guard_before_initialize.get_status());
-    FT_ASSERT_EQ(false, guard_before_initialize.lock_acquired());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, document.initialize());
-    FT_ASSERT_EQ(true, document.is_thread_safe_enabled());
-    {
-        xml_document::thread_guard guard_after_initialize(&document);
-
-        FT_ASSERT_EQ(0, guard_after_initialize.get_status());
-        FT_ASSERT_EQ(true, guard_after_initialize.lock_acquired());
-    }
+    FT_ASSERT_EQ(true, document.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, document.disable_thread_safety());
+    FT_ASSERT_EQ(false, document.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, document.enable_thread_safety());
+    FT_ASSERT_EQ(true, document.is_thread_safe());
     return (1);
 }
 
@@ -162,7 +156,7 @@ FT_TEST(test_xml_node_thread_safety_root_locking,
     FT_ASSERT_EQ(FT_ERR_SUCCESS, document.load_from_string("<root><child/></root>"));
     root_node = document.get_root();
     FT_ASSERT(root_node != ft_nullptr);
-    FT_ASSERT_EQ(true, xml_node_is_thread_safe_enabled(root_node));
+    FT_ASSERT(root_node->mutex != ft_nullptr);
     lock_acquired = false;
     lock_status = xml_node_lock(root_node, &lock_acquired);
     FT_ASSERT_EQ(0, lock_status);
@@ -177,7 +171,6 @@ FT_TEST(test_xml_node_thread_safety_rejects_null_nodes,
     bool lock_acquired;
     int lock_status;
 
-    FT_ASSERT_EQ(false, xml_node_is_thread_safe_enabled(ft_nullptr));
     lock_acquired = true;
     lock_status = xml_node_lock(ft_nullptr, &lock_acquired);
     FT_ASSERT_EQ(-1, lock_status);

@@ -10,11 +10,11 @@ FT_TEST(test_ft_blocking_queue_enable_thread_safety_controls,
 {
     ft_blocking_queue<int> queue;
 
-    FT_ASSERT_EQ(false, queue.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, queue.is_thread_safe());
     FT_ASSERT_EQ(0, queue.enable_thread_safety());
-    FT_ASSERT_EQ(true, queue.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, queue.is_thread_safe());
     queue.disable_thread_safety();
-    FT_ASSERT_EQ(false, queue.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, queue.is_thread_safe());
     return (1);
 }
 

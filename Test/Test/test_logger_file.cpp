@@ -48,7 +48,7 @@ FT_TEST(test_logger_file_sink_prepare_thread_safety_initializes_mutex,
 
     temp_fd = mkstemp(template_path);
     FT_ASSERT(temp_fd >= 0);
-    sink.fd = temp_fd;
+    sink.file_descriptor = temp_fd;
     ft_string sink_path;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, sink_path.initialize(template_path));
     sink.path = sink_path;
@@ -80,7 +80,7 @@ FT_TEST(test_logger_file_sink_lock_blocks_until_release,
 
     temp_fd = mkstemp(template_path);
     FT_ASSERT(temp_fd >= 0);
-    sink.fd = temp_fd;
+    sink.file_descriptor = temp_fd;
     sink.max_size = 0;
     sink.retention_count = 1;
     sink.max_age_seconds = 0;
@@ -175,7 +175,7 @@ FT_TEST(test_logger_rotate_fstat_failure_sets_errno, "ft_log_rotate reports fsta
 {
     s_file_sink sink;
 
-    sink.fd = -1;
+    sink.file_descriptor = -1;
     ft_string invalid_path;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, invalid_path.initialize("/tmp/libft_logger_invalid_fd"));
     sink.path = invalid_path;
@@ -197,17 +197,17 @@ FT_TEST(test_logger_rotate_success_clears_errno, "ft_log_rotate clears errno aft
     FT_ASSERT(temp_fd >= 0);
     write_result = write(temp_fd, "rotation-test", 13);
     FT_ASSERT_EQ(13, write_result);
-    sink.fd = temp_fd;
+    sink.file_descriptor = temp_fd;
     ft_string sink_path;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, sink_path.initialize(template_path));
     sink.path = sink_path;
     sink.max_size = 4;
     errno = 0;
     ft_log_rotate(&sink);
-    FT_ASSERT(sink.fd >= 0);
+    FT_ASSERT(sink.file_descriptor >= 0);
     rotated_path = sink.path + ".1";
     FT_ASSERT_EQ(0, access(rotated_path.c_str(), F_OK));
-    close(sink.fd);
+    close(sink.file_descriptor);
     unlink(template_path);
     unlink(rotated_path.c_str());
     return (1);
@@ -233,16 +233,16 @@ FT_TEST(test_logger_rotate_rename_failure_reopens_file, "ft_log_rotate reopens o
     FT_ASSERT(file_descriptor >= 0);
     write_result = write(file_descriptor, "trigger", 7);
     FT_ASSERT_EQ(7, write_result);
-    sink.fd = file_descriptor;
+    sink.file_descriptor = file_descriptor;
     sink.path = file_path;
     sink.max_size = 4;
     errno = 0;
     ft_log_rotate(&sink);
     FT_ASSERT_EQ(ENAMETOOLONG, errno);
-    FT_ASSERT_EQ(file_descriptor, sink.fd);
-    write_result = write(sink.fd, "ok", 2);
+    FT_ASSERT_EQ(file_descriptor, sink.file_descriptor);
+    write_result = write(sink.file_descriptor, "ok", 2);
     FT_ASSERT_EQ(2, write_result);
-    close(sink.fd);
+    close(sink.file_descriptor);
     FT_ASSERT_EQ(0, unlink(file_path.c_str()));
     FT_ASSERT_EQ(0, rmdir(directory_path));
     return (1);

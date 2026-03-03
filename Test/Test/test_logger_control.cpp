@@ -175,7 +175,7 @@ FT_TEST(test_ft_logger_constructor_enables_thread_safety,
 {
     ft_logger logger_instance;
 
-    FT_ASSERT_EQ(true, logger_instance.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, logger_instance.is_thread_safe());
     return (1);
 }
 
@@ -184,15 +184,15 @@ FT_TEST(test_ft_logger_prepare_thread_safety_idempotent,
 {
     ft_logger logger_instance;
 
-    FT_ASSERT_EQ(true, logger_instance.is_thread_safe_enabled());
-    FT_ASSERT_EQ(0, logger_instance.prepare_thread_safety());
-    FT_ASSERT_EQ(true, logger_instance.is_thread_safe_enabled());
-    FT_ASSERT_EQ(0, logger_instance.prepare_thread_safety());
-    FT_ASSERT_EQ(true, logger_instance.is_thread_safe_enabled());
-    logger_instance.teardown_thread_safety();
-    FT_ASSERT_EQ(false, logger_instance.is_thread_safe_enabled());
-    FT_ASSERT_EQ(0, logger_instance.prepare_thread_safety());
-    FT_ASSERT_EQ(true, logger_instance.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, logger_instance.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, logger_instance.enable_thread_safety());
+    FT_ASSERT_EQ(true, logger_instance.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, logger_instance.enable_thread_safety());
+    FT_ASSERT_EQ(true, logger_instance.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, logger_instance.disable_thread_safety());
+    FT_ASSERT_EQ(false, logger_instance.is_thread_safe());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, logger_instance.enable_thread_safety());
+    FT_ASSERT_EQ(true, logger_instance.is_thread_safe());
     return (1);
 }
 

@@ -295,13 +295,13 @@ int ft_item_definition::lock_internal(bool *lock_acquired) const noexcept
 
 void ft_item_definition::unlock_internal(bool lock_acquired) const noexcept
 {
+    int unlock_error;
+
     if (lock_acquired == false)
-    {
-        this->set_error(FT_ERR_SUCCESS);
         return ;
-    }
-    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    this->set_error(FT_ERR_SUCCESS);
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -898,13 +898,13 @@ int ft_recipe_blueprint::lock_internal(bool *lock_acquired) const noexcept
 
 void ft_recipe_blueprint::unlock_internal(bool lock_acquired) const noexcept
 {
+    int unlock_error;
+
     if (lock_acquired == false)
-    {
-        this->set_error(FT_ERR_SUCCESS);
         return ;
-    }
-    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    this->set_error(FT_ERR_SUCCESS);
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -1149,8 +1149,8 @@ ft_vector<ft_crafting_ingredient> &ft_recipe_blueprint::get_ingredients() noexce
         this->set_error(lock_error);
         return (this->_ingredients);
     }
-    this->unlock_internal(lock_acquired);
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return (this->_ingredients);
 }
 
@@ -1167,8 +1167,8 @@ const ft_vector<ft_crafting_ingredient> &ft_recipe_blueprint::get_ingredients() 
         this->set_error(lock_error);
         return (this->_ingredients);
     }
-    this->unlock_internal(lock_acquired);
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return (this->_ingredients);
 }
 
@@ -1369,13 +1369,13 @@ int ft_loadout_entry::lock_internal(bool *lock_acquired) const noexcept
 
 void ft_loadout_entry::unlock_internal(bool lock_acquired) const noexcept
 {
+    int unlock_error;
+
     if (lock_acquired == false)
-    {
-        this->set_error(FT_ERR_SUCCESS);
         return ;
-    }
-    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    this->set_error(FT_ERR_SUCCESS);
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -1588,8 +1588,8 @@ int ft_loadout_entry::get_quantity() const noexcept
         return (lock_error);
     }
     quantity_value = this->_quantity;
-    this->unlock_internal(lock_acquired);
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return (quantity_value);
 }
 
@@ -1607,8 +1607,8 @@ void ft_loadout_entry::set_quantity(int quantity) noexcept
         return ;
     }
     this->_quantity = quantity;
-    this->unlock_internal(lock_acquired);
     this->set_error(FT_ERR_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
@@ -1790,13 +1790,13 @@ int ft_loadout_blueprint::lock_internal(bool *lock_acquired) const noexcept
 
 void ft_loadout_blueprint::unlock_internal(bool lock_acquired) const noexcept
 {
+    int unlock_error;
+
     if (lock_acquired == false)
-    {
-        this->set_error(FT_ERR_SUCCESS);
         return ;
-    }
-    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    this->set_error(FT_ERR_SUCCESS);
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -2215,13 +2215,13 @@ int ft_data_catalog::lock_internal(bool *lock_acquired) const noexcept
 
 void ft_data_catalog::unlock_internal(bool lock_acquired) const noexcept
 {
+    int unlock_error;
+
     if (lock_acquired == false)
-    {
-        this->set_error(FT_ERR_SUCCESS);
         return ;
-    }
-    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    this->set_error(FT_ERR_SUCCESS);
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 

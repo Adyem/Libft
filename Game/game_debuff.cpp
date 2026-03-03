@@ -240,7 +240,10 @@ void ft_debuff::set_id(int id) noexcept
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     this->_id = id;
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -263,7 +266,10 @@ void ft_debuff::set_duration(int duration) noexcept
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     this->_duration = duration;
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -280,7 +286,10 @@ void ft_debuff::add_duration(int duration) noexcept
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     this->_duration += duration;
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 
@@ -297,7 +306,10 @@ void ft_debuff::sub_duration(int duration) noexcept
     if (lock_error != FT_ERR_SUCCESS)
         return ;
     this->_duration -= duration;
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 

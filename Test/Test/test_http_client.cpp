@@ -1,6 +1,7 @@
 #include "../test_internal.hpp"
 #include "../../Networking/http_client.hpp"
 #include "../../Networking/http_server.hpp"
+#include "../../Networking/networking.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../PThread/thread.hpp"
 #include "../../Basic/basic.hpp"
@@ -9,6 +10,7 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
+#if NETWORKING_HAS_OPENSSL
 struct http_client_server_context
 {
     ft_http_server *server;
@@ -82,3 +84,4 @@ FT_TEST(test_http_client_reuses_keep_alive_connection, "HTTP client reuses poole
         return (0);
     return (1);
 }
+#endif

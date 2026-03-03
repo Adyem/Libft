@@ -54,7 +54,18 @@ int ft_inventory::initialize() noexcept
             "called while object is already initialized");
         return (FT_ERR_INVALID_STATE);
     }
-    this->_items.clear();
+    const int destroy_error = this->_items.destroy();
+    if (destroy_error != FT_ERR_SUCCESS && destroy_error != FT_ERR_INVALID_STATE)
+    {
+        this->set_error(destroy_error);
+        return (destroy_error);
+    }
+    const int map_initialize_error = this->_items.initialize();
+    if (map_initialize_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(map_initialize_error);
+        return (map_initialize_error);
+    }
     this->_used_slots = 0;
     this->_current_weight = 0;
     this->_next_slot = 0;
@@ -92,6 +103,15 @@ int ft_inventory::initialize(const ft_inventory &other) noexcept
     }
     if (&other == this)
         return (FT_ERR_SUCCESS);
+    if (this->_initialized_state == ft_inventory::_state_initialized)
+    {
+        int destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+        {
+            this->set_error(destroy_error);
+            return (destroy_error);
+        }
+    }
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
         return (initialize_error);

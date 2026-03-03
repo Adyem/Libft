@@ -50,7 +50,8 @@ int ft_file_watch::initialize()
         this->abort_lifecycle_error("ft_file_watch::initialize",
             "initialize called while already initialized");
     }
-    this->_path.clear();
+    if (this->_path.initialize() != FT_ERR_SUCCESS)
+        return (FT_ERR_NO_MEMORY);
     this->_callback = ft_nullptr;
     this->_user_data = ft_nullptr;
     this->_running = false;
@@ -130,8 +131,8 @@ int ft_file_watch::watch_directory(const char *path,
 {
     ft_thread new_thread;
     int lock_error;
-
-    this->abort_if_not_initialized("ft_file_watch::watch_directory");
+    if (this->_initialized_state != ft_file_watch::_state_initialized)
+        return (-1);
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
     if (lock_error != FT_ERR_SUCCESS)
         return (-1);
@@ -148,8 +149,10 @@ int ft_file_watch::watch_directory(const char *path,
         if (lock_error != FT_ERR_SUCCESS)
             return (-1);
     }
-    int32_t initialization_error = this->_path.initialize(path);
-    if (initialization_error != FT_ERR_SUCCESS || ft_string::get_error() != FT_ERR_SUCCESS)
+    this->_path.clear();
+    int32_t initialization_error =
+        this->_path.assign(path, static_cast<ft_size_t>(ft_strlen(path)));
+    if (initialization_error != FT_ERR_SUCCESS)
     {
         this->_callback = ft_nullptr;
         this->_user_data = ft_nullptr;

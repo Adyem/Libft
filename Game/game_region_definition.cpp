@@ -237,7 +237,10 @@ int ft_region_definition::get_region_id() const noexcept
     if (lock_result != FT_ERR_SUCCESS)
         return (0);
     this->set_error(FT_ERR_SUCCESS);
-    (void)this->unlock_internal(lock_acquired);
+    int unlock_error;
+    unlock_error = this->unlock_internal(lock_acquired);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return (this->_region_id);
 }
 

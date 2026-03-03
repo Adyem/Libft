@@ -14,7 +14,7 @@ class ft_resistance
 
         void set_error(int error) const noexcept;
         int lock_internal(bool *lock_acquired) const noexcept;
-        void unlock_internal(bool lock_acquired) const noexcept;
+        int unlock_internal(bool lock_acquired) const noexcept;
 
     public:
         ft_resistance() noexcept;

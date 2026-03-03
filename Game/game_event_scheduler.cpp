@@ -133,13 +133,13 @@ int ft_event_scheduler::lock_internal(bool *lock_acquired) const noexcept
 
 void ft_event_scheduler::unlock_internal(bool lock_acquired) const noexcept
 {
+    int unlock_error;
+
     if (lock_acquired == false)
-    {
-        this->set_error(FT_ERR_SUCCESS);
         return ;
-    }
-    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    this->set_error(FT_ERR_SUCCESS);
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    if (unlock_error != FT_ERR_SUCCESS)
+        this->set_error(unlock_error);
     return ;
 }
 

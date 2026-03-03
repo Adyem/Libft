@@ -19,22 +19,13 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
-struct http_stream_test_server_context
+static int socket_creation_failure_hook(int, int, int)
 {
-    ft_socket   *server_socket;
-};
+    errno = 0;
+    return (-1);
+}
 
-struct http_stream_handler_state
-{
-    int         status_code;
-    bool        finished;
-    int         chunk_count;
-    ft_string   headers;
-    ft_string   chunks[3];
-};
-
-static http_stream_handler_state *g_http_stream_handler_state = NULL;
-
+#if NETWORKING_HAS_OPENSSL
 static bool get_socket_port_string(ft_socket &socket, ft_string &port_string)
 {
     struct sockaddr_storage local_address;
@@ -42,7 +33,7 @@ static bool get_socket_port_string(ft_socket &socket, ft_string &port_string)
     int socket_fd;
     unsigned short port_value;
 
-    socket_fd = socket.get_fd();
+    socket_fd = socket.get_file_descriptor();
     if (socket_fd < 0)
         return (false);
     address_length = sizeof(local_address);
@@ -70,11 +61,21 @@ static bool get_socket_port_string(ft_socket &socket, ft_string &port_string)
     return (true);
 }
 
-static int socket_creation_failure_hook(int, int, int)
+struct http_stream_test_server_context
 {
-    errno = 0;
-    return (-1);
-}
+    ft_socket   *server_socket;
+};
+
+struct http_stream_handler_state
+{
+    int         status_code;
+    bool        finished;
+    int         chunk_count;
+    ft_string   headers;
+    ft_string   chunks[3];
+};
+
+static http_stream_handler_state *g_http_stream_handler_state = NULL;
 
 static void http_stream_test_server(http_stream_test_server_context *context)
 {
@@ -96,7 +97,7 @@ static void http_stream_test_server(http_stream_test_server_context *context)
     if (context->server_socket == NULL)
         return ;
     address_length = sizeof(address_storage);
-    client_fd = nw_accept(context->server_socket->get_fd(),
+    client_fd = nw_accept(context->server_socket->get_file_descriptor(),
         reinterpret_cast<struct sockaddr*>(&address_storage), &address_length);
     if (client_fd < 0)
         return ;
@@ -164,6 +165,7 @@ static void test_http_streaming_handler(int status_code, const ft_string &header
     }
     return ;
 }
+#endif
 
 FT_TEST(test_network_send_receive_ipv4, "nw_send/nw_recv IPv4")
 {
@@ -194,7 +196,7 @@ FT_TEST(test_network_send_receive_ipv4, "nw_send/nw_recv IPv4")
     if (client_socket.initialize(client_configuration) != FT_ERR_SUCCESS)
         return (0);
     address_length = sizeof(address_storage);
-    client_fd = nw_accept(server_socket.get_fd(), reinterpret_cast<struct sockaddr*>(&address_storage), &address_length);
+    client_fd = nw_accept(server_socket.get_file_descriptor(), reinterpret_cast<struct sockaddr*>(&address_storage), &address_length);
     if (client_fd < 0)
         return (0);
     message = "ping";
@@ -327,7 +329,7 @@ FT_TEST(test_network_poll_ipv6_ready, "nw_poll detects IPv6 readiness")
     if (client_socket.initialize(client_configuration) != FT_ERR_SUCCESS)
         return (0);
     address_length = sizeof(address_storage);
-    client_fd = nw_accept(server_socket.get_fd(), reinterpret_cast<struct sockaddr*>(&address_storage), &address_length);
+    client_fd = nw_accept(server_socket.get_file_descriptor(), reinterpret_cast<struct sockaddr*>(&address_storage), &address_length);
     if (client_fd < 0)
         return (0);
     if (nw_set_nonblocking(client_fd) != 0)
@@ -365,6 +367,7 @@ FT_TEST(test_network_poll_ipv6_ready, "nw_poll detects IPv6 readiness")
     return (ft_strcmp(buffer, message) == 0);
 }
 
+#if NETWORKING_HAS_OPENSSL
 FT_TEST(test_http_client_streaming_chunks, "http_get_stream handles chunked responses")
 {
     SocketConfig server_configuration;
@@ -418,6 +421,7 @@ FT_TEST(test_http_client_streaming_chunks, "http_get_stream handles chunked resp
         return (0);
     return (1);
 }
+#endif
 
 FT_TEST(test_server_config_ipv4_any_address, "server accepts empty IPv4 address as any")
 {
@@ -583,7 +587,7 @@ FT_TEST(test_networking_check_socket_after_send_detects_disconnect, "networking_
     if (client_socket.initialize(client_configuration) != FT_ERR_SUCCESS)
         return (0);
     address_length = sizeof(address_storage);
-    accepted_fd = nw_accept(server_socket.get_fd(), reinterpret_cast<struct sockaddr*>(&address_storage), &address_length);
+    accepted_fd = nw_accept(server_socket.get_file_descriptor(), reinterpret_cast<struct sockaddr*>(&address_storage), &address_length);
     if (accepted_fd < 0)
         return (0);
     client_socket.close_socket();
@@ -631,7 +635,7 @@ FT_TEST(test_networking_check_socket_after_send_reports_success, "networking_che
     if (client_socket.initialize(client_configuration) != FT_ERR_SUCCESS)
         return (0);
     address_length = sizeof(address_storage);
-    accepted_fd = nw_accept(server_socket.get_fd(), reinterpret_cast<struct sockaddr*>(&address_storage), &address_length);
+    accepted_fd = nw_accept(server_socket.get_file_descriptor(), reinterpret_cast<struct sockaddr*>(&address_storage), &address_length);
     if (accepted_fd < 0)
         return (0);
     check_result = networking_check_socket_after_send(accepted_fd);

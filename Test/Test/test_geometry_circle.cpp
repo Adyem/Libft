@@ -178,7 +178,7 @@ static void circle_is_thread_safe_enabled_destroyed_aborts_operation()
     circle shape(0.0, 0.0, 1.0);
 
     (void)shape.destroy();
-    (void)shape.is_thread_safe_enabled();
+    (void)shape.is_thread_safe();
     return ;
 }
 
@@ -250,7 +250,7 @@ static void circle_is_thread_safe_enabled_uninitialized_aborts_operation()
 {
     circle shape;
 
-    (void)shape.is_thread_safe_enabled();
+    (void)shape.is_thread_safe();
     return ;
 }
 
@@ -618,11 +618,11 @@ FT_TEST(test_circle_lifecycle_thread_safety_cycles,
                 -1.0 - iteration_index,
                 2.0 + iteration_index,
                 3.0 + iteration_index));
-        FT_ASSERT_EQ(false, shape.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, shape.is_thread_safe());
         FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.enable_thread_safety());
-        FT_ASSERT_EQ(true, shape.is_thread_safe_enabled());
+        FT_ASSERT_EQ(true, shape.is_thread_safe());
         shape.disable_thread_safety();
-        FT_ASSERT_EQ(false, shape.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, shape.is_thread_safe());
         FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
         iteration_index = iteration_index + 1;
     }
@@ -640,11 +640,11 @@ FT_TEST(test_circle_enable_thread_safety_failure_then_recovery,
     error_code = shape.enable_thread_safety();
     cma_set_alloc_limit(0);
     FT_ASSERT_NEQ(FT_ERR_SUCCESS, error_code);
-    FT_ASSERT_EQ(false, shape.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.enable_thread_safety());
-    FT_ASSERT_EQ(true, shape.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, shape.is_thread_safe());
     shape.disable_thread_safety();
-    FT_ASSERT_EQ(false, shape.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
     return (1);
 }
@@ -663,7 +663,7 @@ FT_TEST(test_circle_enable_thread_safety_repeated_alloc_failures,
     {
         error_code = shape.enable_thread_safety();
         FT_ASSERT_NEQ(FT_ERR_SUCCESS, error_code);
-        FT_ASSERT_EQ(false, shape.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, shape.is_thread_safe());
         iteration_index = iteration_index + 1;
     }
     cma_set_alloc_limit(0);
@@ -682,7 +682,7 @@ FT_TEST(test_circle_enable_thread_safety_alloc_failure_then_destroy,
     error_code = shape.enable_thread_safety();
     cma_set_alloc_limit(0);
     FT_ASSERT_NEQ(FT_ERR_SUCCESS, error_code);
-    FT_ASSERT_EQ(false, shape.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
     return (1);
 }
@@ -696,12 +696,12 @@ FT_TEST(test_circle_enable_thread_safety_alloc_failure_after_disable,
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.initialize(-1.0, -1.0, 1.0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.enable_thread_safety());
     shape.disable_thread_safety();
-    FT_ASSERT_EQ(false, shape.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, shape.is_thread_safe());
     cma_set_alloc_limit(1);
     error_code = shape.enable_thread_safety();
     cma_set_alloc_limit(0);
     FT_ASSERT_NEQ(FT_ERR_SUCCESS, error_code);
-    FT_ASSERT_EQ(false, shape.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
     return (1);
 }
@@ -717,7 +717,7 @@ FT_TEST(test_circle_get_mutex_for_testing_alloc_failure_returns_null,
     mutex_pointer = shape.get_mutex_for_testing();
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(ft_nullptr, mutex_pointer);
-    FT_ASSERT_EQ(false, shape.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
     return (1);
 }
@@ -735,7 +735,7 @@ FT_TEST(test_circle_get_mutex_for_testing_recovers_after_alloc_failure,
     cma_set_alloc_limit(0);
     mutex_pointer = shape.get_mutex_for_testing();
     FT_ASSERT_NEQ(ft_nullptr, mutex_pointer);
-    FT_ASSERT_EQ(true, shape.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
     return (1);
 }
@@ -754,7 +754,7 @@ FT_TEST(test_circle_enable_thread_safety_alloc_failure_reinit_cycle,
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.initialize(-4.0, -4.0, 4.0));
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.enable_thread_safety());
-    FT_ASSERT_EQ(true, shape.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
     return (1);
 }
@@ -788,9 +788,9 @@ FT_TEST(test_circle_enable_thread_safety_alloc_limit_two_state_consistent,
     error_code = shape.enable_thread_safety();
     cma_set_alloc_limit(0);
     if (error_code == FT_ERR_SUCCESS)
-        FT_ASSERT_EQ(true, shape.is_thread_safe_enabled());
+        FT_ASSERT_EQ(true, shape.is_thread_safe());
     else
-        FT_ASSERT_EQ(false, shape.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
     return (1);
 }
@@ -806,9 +806,9 @@ FT_TEST(test_circle_enable_thread_safety_alloc_limit_three_state_consistent,
     error_code = shape.enable_thread_safety();
     cma_set_alloc_limit(0);
     if (error_code == FT_ERR_SUCCESS)
-        FT_ASSERT_EQ(true, shape.is_thread_safe_enabled());
+        FT_ASSERT_EQ(true, shape.is_thread_safe());
     else
-        FT_ASSERT_EQ(false, shape.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
     return (1);
 }
@@ -825,12 +825,12 @@ FT_TEST(test_circle_enable_thread_safety_alloc_limit_two_then_recover,
     cma_set_alloc_limit(0);
     if (error_code == FT_ERR_SUCCESS)
     {
-        FT_ASSERT_EQ(true, shape.is_thread_safe_enabled());
+        FT_ASSERT_EQ(true, shape.is_thread_safe());
         shape.disable_thread_safety();
     }
-    FT_ASSERT_EQ(false, shape.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.enable_thread_safety());
-    FT_ASSERT_EQ(true, shape.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
     return (1);
 }
@@ -847,12 +847,12 @@ FT_TEST(test_circle_enable_thread_safety_alloc_limit_three_then_recover,
     cma_set_alloc_limit(0);
     if (error_code == FT_ERR_SUCCESS)
     {
-        FT_ASSERT_EQ(true, shape.is_thread_safe_enabled());
+        FT_ASSERT_EQ(true, shape.is_thread_safe());
         shape.disable_thread_safety();
     }
-    FT_ASSERT_EQ(false, shape.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.enable_thread_safety());
-    FT_ASSERT_EQ(true, shape.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
     return (1);
 }
@@ -868,9 +868,9 @@ FT_TEST(test_circle_get_mutex_for_testing_alloc_limit_two_consistent,
     mutex_pointer = shape.get_mutex_for_testing();
     cma_set_alloc_limit(0);
     if (mutex_pointer == ft_nullptr)
-        FT_ASSERT_EQ(false, shape.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, shape.is_thread_safe());
     else
-        FT_ASSERT_EQ(true, shape.is_thread_safe_enabled());
+        FT_ASSERT_EQ(true, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
     return (1);
 }
@@ -886,9 +886,9 @@ FT_TEST(test_circle_get_mutex_for_testing_alloc_limit_three_consistent,
     mutex_pointer = shape.get_mutex_for_testing();
     cma_set_alloc_limit(0);
     if (mutex_pointer == ft_nullptr)
-        FT_ASSERT_EQ(false, shape.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, shape.is_thread_safe());
     else
-        FT_ASSERT_EQ(true, shape.is_thread_safe_enabled());
+        FT_ASSERT_EQ(true, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
     return (1);
 }
@@ -920,9 +920,9 @@ FT_TEST(test_circle_enable_thread_safety_alloc_limit_four_state_consistent,
     error_code = shape.enable_thread_safety();
     cma_set_alloc_limit(0);
     if (error_code == FT_ERR_SUCCESS)
-        FT_ASSERT_EQ(true, shape.is_thread_safe_enabled());
+        FT_ASSERT_EQ(true, shape.is_thread_safe());
     else
-        FT_ASSERT_EQ(false, shape.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
     return (1);
 }
@@ -938,9 +938,9 @@ FT_TEST(test_circle_enable_thread_safety_alloc_limit_five_state_consistent,
     error_code = shape.enable_thread_safety();
     cma_set_alloc_limit(0);
     if (error_code == FT_ERR_SUCCESS)
-        FT_ASSERT_EQ(true, shape.is_thread_safe_enabled());
+        FT_ASSERT_EQ(true, shape.is_thread_safe());
     else
-        FT_ASSERT_EQ(false, shape.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
     return (1);
 }
@@ -956,9 +956,9 @@ FT_TEST(test_circle_enable_thread_safety_alloc_limit_six_state_consistent,
     error_code = shape.enable_thread_safety();
     cma_set_alloc_limit(0);
     if (error_code == FT_ERR_SUCCESS)
-        FT_ASSERT_EQ(true, shape.is_thread_safe_enabled());
+        FT_ASSERT_EQ(true, shape.is_thread_safe());
     else
-        FT_ASSERT_EQ(false, shape.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
     return (1);
 }
@@ -976,10 +976,10 @@ FT_TEST(test_circle_enable_thread_safety_alloc_limit_four_then_recover,
     if (error_code == FT_ERR_SUCCESS)
     {
         shape.disable_thread_safety();
-        FT_ASSERT_EQ(false, shape.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, shape.is_thread_safe());
     }
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.enable_thread_safety());
-    FT_ASSERT_EQ(true, shape.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
     return (1);
 }
@@ -997,10 +997,10 @@ FT_TEST(test_circle_enable_thread_safety_alloc_limit_five_then_recover,
     if (error_code == FT_ERR_SUCCESS)
     {
         shape.disable_thread_safety();
-        FT_ASSERT_EQ(false, shape.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, shape.is_thread_safe());
     }
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.enable_thread_safety());
-    FT_ASSERT_EQ(true, shape.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
     return (1);
 }
@@ -1016,9 +1016,9 @@ FT_TEST(test_circle_get_mutex_for_testing_alloc_limit_four_consistent,
     mutex_pointer = shape.get_mutex_for_testing();
     cma_set_alloc_limit(0);
     if (mutex_pointer == ft_nullptr)
-        FT_ASSERT_EQ(false, shape.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, shape.is_thread_safe());
     else
-        FT_ASSERT_EQ(true, shape.is_thread_safe_enabled());
+        FT_ASSERT_EQ(true, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
     return (1);
 }
@@ -1050,9 +1050,9 @@ FT_TEST(test_circle_enable_thread_safety_alloc_limit_seven_state_consistent,
     error_code = shape.enable_thread_safety();
     cma_set_alloc_limit(0);
     if (error_code == FT_ERR_SUCCESS)
-        FT_ASSERT_EQ(true, shape.is_thread_safe_enabled());
+        FT_ASSERT_EQ(true, shape.is_thread_safe());
     else
-        FT_ASSERT_EQ(false, shape.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
     return (1);
 }
@@ -1068,9 +1068,9 @@ FT_TEST(test_circle_enable_thread_safety_alloc_limit_eight_state_consistent,
     error_code = shape.enable_thread_safety();
     cma_set_alloc_limit(0);
     if (error_code == FT_ERR_SUCCESS)
-        FT_ASSERT_EQ(true, shape.is_thread_safe_enabled());
+        FT_ASSERT_EQ(true, shape.is_thread_safe());
     else
-        FT_ASSERT_EQ(false, shape.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
     return (1);
 }
@@ -1086,9 +1086,9 @@ FT_TEST(test_circle_enable_thread_safety_alloc_limit_nine_state_consistent,
     error_code = shape.enable_thread_safety();
     cma_set_alloc_limit(0);
     if (error_code == FT_ERR_SUCCESS)
-        FT_ASSERT_EQ(true, shape.is_thread_safe_enabled());
+        FT_ASSERT_EQ(true, shape.is_thread_safe());
     else
-        FT_ASSERT_EQ(false, shape.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
     return (1);
 }
@@ -1106,10 +1106,10 @@ FT_TEST(test_circle_enable_thread_safety_alloc_limit_seven_then_recover,
     if (error_code == FT_ERR_SUCCESS)
     {
         shape.disable_thread_safety();
-        FT_ASSERT_EQ(false, shape.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, shape.is_thread_safe());
     }
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.enable_thread_safety());
-    FT_ASSERT_EQ(true, shape.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
     return (1);
 }
@@ -1127,10 +1127,10 @@ FT_TEST(test_circle_enable_thread_safety_alloc_limit_eight_then_recover,
     if (error_code == FT_ERR_SUCCESS)
     {
         shape.disable_thread_safety();
-        FT_ASSERT_EQ(false, shape.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, shape.is_thread_safe());
     }
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.enable_thread_safety());
-    FT_ASSERT_EQ(true, shape.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
     return (1);
 }
@@ -1146,9 +1146,9 @@ FT_TEST(test_circle_get_mutex_for_testing_alloc_limit_seven_consistent,
     mutex_pointer = shape.get_mutex_for_testing();
     cma_set_alloc_limit(0);
     if (mutex_pointer == ft_nullptr)
-        FT_ASSERT_EQ(false, shape.is_thread_safe_enabled());
+        FT_ASSERT_EQ(false, shape.is_thread_safe());
     else
-        FT_ASSERT_EQ(true, shape.is_thread_safe_enabled());
+        FT_ASSERT_EQ(true, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
     return (1);
 }
@@ -1818,13 +1818,13 @@ FT_TEST(test_circle_thread_safety_enable_disable,
     circle shape;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.initialize(0.0, 0.0, 1.0));
-    FT_ASSERT_EQ(false, shape.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.enable_thread_safety());
-    FT_ASSERT_EQ(true, shape.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.enable_thread_safety());
-    FT_ASSERT_EQ(true, shape.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, shape.is_thread_safe());
     shape.disable_thread_safety();
-    FT_ASSERT_EQ(false, shape.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
     return (1);
 }
@@ -1862,9 +1862,9 @@ FT_TEST(test_circle_mutex_testing_accessor_lifecycle,
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.initialize(0.0, 0.0, 1.0));
     mutex_pointer = shape.get_mutex_for_testing();
     FT_ASSERT_NEQ(ft_nullptr, mutex_pointer);
-    FT_ASSERT_EQ(true, shape.is_thread_safe_enabled());
+    FT_ASSERT_EQ(true, shape.is_thread_safe());
     shape.disable_thread_safety();
-    FT_ASSERT_EQ(false, shape.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
     FT_ASSERT_EQ(ft_nullptr, shape.get_mutex_for_testing());
     return (1);
@@ -1881,7 +1881,7 @@ FT_TEST(test_circle_enable_thread_safety_allocation_failure,
     error_code = shape.enable_thread_safety();
     cma_set_alloc_limit(0);
     FT_ASSERT_NEQ(FT_ERR_SUCCESS, error_code);
-    FT_ASSERT_EQ(false, shape.is_thread_safe_enabled());
+    FT_ASSERT_EQ(false, shape.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, shape.destroy());
     return (1);
 }

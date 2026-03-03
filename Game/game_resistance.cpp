@@ -32,12 +32,19 @@ int ft_resistance::lock_internal(bool *lock_acquired) const noexcept
     return (FT_ERR_SUCCESS);
 }
 
-void ft_resistance::unlock_internal(bool lock_acquired) const noexcept
+int ft_resistance::unlock_internal(bool lock_acquired) const noexcept
 {
+    int unlock_error;
+
     if (lock_acquired == false)
-        return ;
-    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
-    return ;
+        return (FT_ERR_SUCCESS);
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    if (unlock_error != FT_ERR_SUCCESS)
+    {
+        const_cast<ft_resistance *>(this)->set_error(unlock_error);
+        return (unlock_error);
+    }
+    return (FT_ERR_SUCCESS);
 }
 
 int ft_resistance::set_percent(int percent_value) noexcept
@@ -54,7 +61,9 @@ int ft_resistance::set_percent(int percent_value) noexcept
     }
     this->_percent_value = percent_value;
     this->set_error(FT_ERR_SUCCESS);
-    this->unlock_internal(lock_acquired);
+    lock_error = this->unlock_internal(lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
     return (FT_ERR_SUCCESS);
 }
 
@@ -72,7 +81,9 @@ int ft_resistance::set_flat(int flat_value) noexcept
     }
     this->_flat_value = flat_value;
     this->set_error(FT_ERR_SUCCESS);
-    this->unlock_internal(lock_acquired);
+    lock_error = this->unlock_internal(lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
     return (FT_ERR_SUCCESS);
 }
 
@@ -91,7 +102,9 @@ int ft_resistance::set_values(int percent_value, int flat_value) noexcept
     this->_percent_value = percent_value;
     this->_flat_value = flat_value;
     this->set_error(FT_ERR_SUCCESS);
-    this->unlock_internal(lock_acquired);
+    lock_error = this->unlock_internal(lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (lock_error);
     return (FT_ERR_SUCCESS);
 }
 
@@ -115,7 +128,9 @@ int ft_resistance::get_percent() const noexcept
     }
     percent_value = this->_percent_value;
     const_cast<ft_resistance *>(this)->set_error(FT_ERR_SUCCESS);
-    this->unlock_internal(lock_acquired);
+    lock_error = this->unlock_internal(lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (0);
     return (percent_value);
 }
 
@@ -134,7 +149,9 @@ int ft_resistance::get_flat() const noexcept
     }
     flat_value = this->_flat_value;
     const_cast<ft_resistance *>(this)->set_error(FT_ERR_SUCCESS);
-    this->unlock_internal(lock_acquired);
+    lock_error = this->unlock_internal(lock_acquired);
+    if (lock_error != FT_ERR_SUCCESS)
+        return (0);
     return (flat_value);
 }
 
@@ -144,7 +161,10 @@ int ft_resistance::enable_thread_safety() noexcept
     int initialize_error;
 
     if (this->_mutex != ft_nullptr)
+    {
+        this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
+    }
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
     if (mutex_pointer == ft_nullptr)
     {
@@ -168,7 +188,10 @@ int ft_resistance::disable_thread_safety() noexcept
     int destroy_error;
 
     if (this->_mutex == ft_nullptr)
+    {
+        this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
+    }
     destroy_error = this->_mutex->destroy();
     delete this->_mutex;
     this->_mutex = ft_nullptr;

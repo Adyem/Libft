@@ -1481,8 +1481,12 @@ int ft_character::lock_internal(bool *lock_acquired) const noexcept
 
 void ft_character::unlock_internal(bool lock_acquired) const noexcept
 {
+    int unlock_error;
+
     if (lock_acquired == false)
         return ;
-    (void)pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
+    if (unlock_error != FT_ERR_SUCCESS)
+        const_cast<ft_character *>(this)->set_error(unlock_error);
     return ;
 }

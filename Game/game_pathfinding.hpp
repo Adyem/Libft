@@ -67,43 +67,15 @@ class ft_path_step
 class ft_path_step_test_helper
 {
     private:
-        static int ensure_thread_safe(ft_path_step &step) noexcept
-        {
-            if (step._mutex != ft_nullptr)
-                return (FT_ERR_SUCCESS);
-            return (step.enable_thread_safety());
-        }
+        static int ensure_thread_safe(ft_path_step &step) noexcept;
 
     public:
-        static int lock(ft_path_step &step) noexcept
-        {
-            int ensure_error = ensure_thread_safe(step);
-            if (ensure_error != FT_ERR_SUCCESS)
-                return (ensure_error);
-            return (pt_recursive_mutex_lock_if_not_null(step._mutex));
-        }
-
-        static int unlock(ft_path_step &step) noexcept
-        {
-            return (pt_recursive_mutex_unlock_if_not_null(step._mutex));
-        }
-
-        static bool is_locked(const ft_path_step &step) noexcept
-        {
-            return (step._mutex != ft_nullptr && step._mutex->lockState());
-        }
-
-        static bool is_owned_by_thread(const ft_path_step &step, pthread_t thread_id) noexcept
-        {
-            return (step._mutex != ft_nullptr && step._mutex->is_owned_by_thread(thread_id));
-        }
-
-        static int get_mutex_error(const ft_path_step &step) noexcept
-        {
-            if (step._mutex == ft_nullptr)
-                return (FT_ERR_INVALID_STATE);
-            return (step._mutex->lock_state(ft_nullptr));
-        }
+        static int lock(ft_path_step &step) noexcept;
+        static int unlock(ft_path_step &step) noexcept;
+        static bool is_locked(const ft_path_step &step) noexcept;
+        static bool is_owned_by_thread(const ft_path_step &step,
+            pthread_t thread_id) noexcept;
+        static int get_mutex_error(const ft_path_step &step) noexcept;
 };
 
 #endif

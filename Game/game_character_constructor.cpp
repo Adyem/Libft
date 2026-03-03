@@ -46,10 +46,71 @@ ft_character::ft_character() noexcept
       _physical_res(), _skills(), _buffs(), _debuffs(), _upgrades(), _quests(), _achievements(), _reputation(), _inventory(), _equipment(),
       _mutex(ft_nullptr)
 {
+    if (this->initialize() != FT_ERR_SUCCESS)
+        return ;
     if (this->check_internal_errors() == true)
         return ;
     this->set_error(FT_ERR_SUCCESS);
     return ;
+}
+
+int ft_character::initialize() noexcept
+{
+    int initialize_error;
+
+    initialize_error = this->_skills.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(initialize_error);
+        return (initialize_error);
+    }
+    initialize_error = this->_buffs.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_skills.destroy();
+        this->set_error(initialize_error);
+        return (initialize_error);
+    }
+    initialize_error = this->_debuffs.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_skills.destroy();
+        (void)this->_buffs.destroy();
+        this->set_error(initialize_error);
+        return (initialize_error);
+    }
+    initialize_error = this->_upgrades.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_skills.destroy();
+        (void)this->_buffs.destroy();
+        (void)this->_debuffs.destroy();
+        this->set_error(initialize_error);
+        return (initialize_error);
+    }
+    initialize_error = this->_quests.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_skills.destroy();
+        (void)this->_buffs.destroy();
+        (void)this->_debuffs.destroy();
+        (void)this->_upgrades.destroy();
+        this->set_error(initialize_error);
+        return (initialize_error);
+    }
+    initialize_error = this->_achievements.initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_skills.destroy();
+        (void)this->_buffs.destroy();
+        (void)this->_debuffs.destroy();
+        (void)this->_upgrades.destroy();
+        (void)this->_quests.destroy();
+        this->set_error(initialize_error);
+        return (initialize_error);
+    }
+    this->set_error(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 ft_character::~ft_character() noexcept

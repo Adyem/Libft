@@ -63,7 +63,7 @@ static void api_pool_test_server(api_pool_test_server_context *context)
         context->ready.store(true);
         return ;
     }
-    if (server_socket.get_fd() < 0)
+    if (server_socket.get_file_descriptor() < 0)
     {
         context->result.store(FT_ERR_INVALID_OPERATION);
         context->ready.store(true);
@@ -71,7 +71,7 @@ static void api_pool_test_server(api_pool_test_server_context *context)
     }
     context->ready.store(true);
     address_length = sizeof(address_storage);
-    client_fd = nw_accept(server_socket.get_fd(),
+    client_fd = nw_accept(server_socket.get_file_descriptor(),
             reinterpret_cast<struct sockaddr*>(&address_storage),
             &address_length);
     if (client_fd < 0)
