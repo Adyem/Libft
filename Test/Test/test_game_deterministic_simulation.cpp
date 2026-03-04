@@ -60,6 +60,7 @@ FT_TEST(test_game_deterministic_simulation_scenarios,
     sword_recipe.push_back(iron_requirement);
 
     int const crafted_sword_recipe_id = 501;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, crafting_system.initialize());
     FT_ASSERT_EQ(crafting_system.register_recipe(crafted_sword_recipe_id, ft_move(sword_recipe)), FT_ERR_SUCCESS);
 
     ft_sharedptr<ft_item> crafted_sword(new (std::nothrow) ft_item());
@@ -74,6 +75,7 @@ FT_TEST(test_game_deterministic_simulation_scenarios,
     FT_ASSERT_EQ(FT_ERR_SUCCESS, crafted_sword->get_error());
 
     ft_quest crafting_quest;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, crafting_quest.initialize());
     crafting_quest.set_id(77);
     crafting_quest.set_phases(2);
     crafting_quest.set_current_phase(0);

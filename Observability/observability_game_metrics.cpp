@@ -2,11 +2,44 @@
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/mutex.hpp"
+#include "../PThread/pthread_internal.hpp"
 #include "../Basic/basic.hpp"
 
-static pt_mutex g_observability_game_mutex;
+static pt_mutex *g_observability_game_mutex = ft_nullptr;
 static bool g_observability_game_initialized = false;
 static ft_game_observability_exporter g_observability_game_exporter = ft_nullptr;
+
+int observability_game_metrics_enable_thread_safety(void)
+{
+    if (g_observability_game_mutex != ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    pt_mutex *mutex_pointer = new (std::nothrow) pt_mutex();
+    if (mutex_pointer == ft_nullptr)
+        return (FT_ERR_NO_MEMORY);
+    int initialize_error = mutex_pointer->initialize();
+    if (initialize_error != FT_ERR_SUCCESS)
+    {
+        delete mutex_pointer;
+        return (initialize_error);
+    }
+    g_observability_game_mutex = mutex_pointer;
+    return (FT_ERR_SUCCESS);
+}
+
+int observability_game_metrics_disable_thread_safety(void)
+{
+    if (g_observability_game_mutex == ft_nullptr)
+        return (FT_ERR_SUCCESS);
+    int destroy_error = g_observability_game_mutex->destroy();
+    delete g_observability_game_mutex;
+    g_observability_game_mutex = ft_nullptr;
+    return (destroy_error);
+}
+
+bool observability_game_metrics_is_thread_safe(void)
+{
+    return (g_observability_game_mutex != ft_nullptr);
+}
 int observability_game_metrics_initialize(ft_game_observability_exporter exporter)
 {
     int result;
@@ -15,13 +48,16 @@ int observability_game_metrics_initialize(ft_game_observability_exporter exporte
 
     if (exporter == ft_nullptr)
         return (FT_ERR_INVALID_ARGUMENT);
+    result = observability_game_metrics_enable_thread_safety();
+    if (result != FT_ERR_SUCCESS)
+        return (result);
     result = FT_ERR_SUCCESS;
-    lock_result = g_observability_game_mutex.lock();
+    lock_result = pt_mutex_lock_if_not_null(g_observability_game_mutex);
     if (lock_result != FT_ERR_SUCCESS)
         return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
     g_observability_game_exporter = exporter;
     g_observability_game_initialized = true;
-    unlock_result = g_observability_game_mutex.unlock();
+    unlock_result = pt_mutex_unlock_if_not_null(g_observability_game_mutex);
     if (unlock_result != FT_ERR_SUCCESS)
         result = FT_ERR_SYS_MUTEX_UNLOCK_FAILED;
     return (result);
@@ -34,14 +70,17 @@ int observability_game_metrics_shutdown(void)
     int unlock_result;
 
     result = FT_ERR_SUCCESS;
-    lock_result = g_observability_game_mutex.lock();
+    lock_result = pt_mutex_lock_if_not_null(g_observability_game_mutex);
     if (lock_result != FT_ERR_SUCCESS)
         return (FT_ERR_SYS_MUTEX_LOCK_FAILED);
     g_observability_game_initialized = false;
     g_observability_game_exporter = ft_nullptr;
-    unlock_result = g_observability_game_mutex.unlock();
+    unlock_result = pt_mutex_unlock_if_not_null(g_observability_game_mutex);
     if (unlock_result != FT_ERR_SUCCESS)
         result = FT_ERR_SYS_MUTEX_UNLOCK_FAILED;
+    int disable_error = observability_game_metrics_disable_thread_safety();
+    if (result == FT_ERR_SUCCESS)
+        result = disable_error;
     return (result);
 }
 
@@ -61,7 +100,7 @@ void observability_game_metrics_record(const ft_game_observability_sample &sampl
     exported_sample = sample;
     exporter_copy = ft_nullptr;
     should_emit = false;
-    lock_result = g_observability_game_mutex.lock();
+    lock_result = pt_mutex_lock_if_not_null(g_observability_game_mutex);
     if (lock_result != FT_ERR_SUCCESS)
         return ;
     if (g_observability_game_initialized && g_observability_game_exporter != ft_nullptr)
@@ -69,7 +108,7 @@ void observability_game_metrics_record(const ft_game_observability_sample &sampl
         exporter_copy = g_observability_game_exporter;
         should_emit = true;
     }
-    unlock_result = g_observability_game_mutex.unlock();
+    unlock_result = pt_mutex_unlock_if_not_null(g_observability_game_mutex);
     if (unlock_result != FT_ERR_SUCCESS)
         return ;
     if (should_emit == false || exporter_copy == ft_nullptr)

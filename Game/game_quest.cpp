@@ -78,6 +78,7 @@ int ft_quest::initialize() noexcept
     description_error = this->_description.initialize();
     if (description_error != FT_ERR_SUCCESS)
     {
+        this->_initialized_state = ft_quest::_state_destroyed;
         this->set_error(description_error);
         return (description_error);
     }
@@ -85,6 +86,7 @@ int ft_quest::initialize() noexcept
     if (objective_error != FT_ERR_SUCCESS)
     {
         (void)this->_description.destroy();
+        this->_initialized_state = ft_quest::_state_destroyed;
         this->set_error(objective_error);
         return (objective_error);
     }
@@ -93,13 +95,11 @@ int ft_quest::initialize() noexcept
     {
         (void)this->_description.destroy();
         (void)this->_objective.destroy();
+        this->_initialized_state = ft_quest::_state_destroyed;
         this->set_error(reward_items_error);
         return (reward_items_error);
     }
-    this->_description.clear();
-    this->_objective.clear();
     this->_reward_experience = 0;
-    this->_reward_items.clear();
     this->_initialized_state = ft_quest::_state_initialized;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
@@ -121,6 +121,15 @@ int ft_quest::initialize(const ft_quest &other) noexcept
     {
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
+    }
+    if (this->_initialized_state == ft_quest::_state_initialized)
+    {
+        initialize_error = this->destroy();
+        if (initialize_error != FT_ERR_SUCCESS)
+        {
+            this->set_error(initialize_error);
+            return (initialize_error);
+        }
     }
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
@@ -162,6 +171,15 @@ int ft_quest::initialize(ft_quest &&other) noexcept
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
+    if (this->_initialized_state == ft_quest::_state_initialized)
+    {
+        initialize_error = this->destroy();
+        if (initialize_error != FT_ERR_SUCCESS)
+        {
+            this->set_error(initialize_error);
+            return (initialize_error);
+        }
+    }
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
     {
@@ -187,25 +205,38 @@ int ft_quest::initialize(ft_quest &&other) noexcept
 
 int ft_quest::destroy() noexcept
 {
+    int description_error;
+    int objective_error;
+    int reward_items_error;
     int disable_error;
+    int first_error;
 
     if (this->_initialized_state != ft_quest::_state_initialized)
     {
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
-    this->_reward_items.clear();
-    this->_description.clear();
-    this->_objective.clear();
+    first_error = FT_ERR_SUCCESS;
+    description_error = this->_description.destroy();
+    if (first_error == FT_ERR_SUCCESS && description_error != FT_ERR_SUCCESS)
+        first_error = description_error;
+    objective_error = this->_objective.destroy();
+    if (first_error == FT_ERR_SUCCESS && objective_error != FT_ERR_SUCCESS)
+        first_error = objective_error;
+    reward_items_error = this->_reward_items.destroy();
+    if (first_error == FT_ERR_SUCCESS && reward_items_error != FT_ERR_SUCCESS)
+        first_error = reward_items_error;
     this->_id = 0;
     this->_phases = 0;
     this->_current_phase = 0;
     this->_reward_experience = 0;
-    (void)this->_description.destroy();
-    (void)this->_objective.destroy();
-    (void)this->_reward_items.destroy();
     disable_error = this->disable_thread_safety();
     this->_initialized_state = ft_quest::_state_destroyed;
+    if (first_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(first_error);
+        return (first_error);
+    }
     this->set_error(disable_error);
     return (disable_error);
 }

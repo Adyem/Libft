@@ -93,6 +93,7 @@ class ft_string
         char*       print() noexcept;
         ft_size_t   size() const noexcept;
         bool        empty() const noexcept;
+        bool        is_initialized() const noexcept;
         int32_t     move(ft_string& other) noexcept;
         int32_t     erase(ft_size_t index, ft_size_t count) noexcept;
         int32_t     push_back(char character) noexcept;

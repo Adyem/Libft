@@ -10,6 +10,8 @@
 #include <openssl/ssl.h>
 #include <cstdlib>
 
+thread_local int http2_frame::_last_error = FT_ERR_SUCCESS;
+
 static void http2_append_raw_byte(ft_string &target, unsigned char value)
 {
     target.append(static_cast<char>(value));
@@ -55,54 +57,81 @@ int http2_header_field::initialize() noexcept
     if (this->_initialized_state == _state_initialized)
         this->abort_lifecycle_error("http2_header_field::initialize",
             "initialize called on initialized instance");
-    this->_name.clear();
-    this->_value.clear();
+    int name_error = this->_name.initialize();
+    if (name_error != FT_ERR_SUCCESS)
+        return (name_error);
+    int value_error = this->_value.initialize();
+    if (value_error != FT_ERR_SUCCESS)
+    {
+        this->_name.destroy();
+        return (value_error);
+    }
     this->_initialized_state = _state_initialized;
     return (FT_ERR_SUCCESS);
 }
 
 int http2_header_field::destroy() noexcept
 {
+    int disable_error;
+
     if (this->_initialized_state != _state_initialized)
         return (FT_ERR_INVALID_STATE);
-    this->clear();
-    this->teardown_thread_safety();
+    int name_error = this->_name.destroy();
+    int value_error = this->_value.destroy();
+    if (name_error != FT_ERR_SUCCESS)
+        return (name_error);
+    if (value_error != FT_ERR_SUCCESS)
+        return (value_error);
+    disable_error = this->disable_thread_safety();
+    if (disable_error != FT_ERR_SUCCESS)
+        return (disable_error);
     this->_initialized_state = _state_destroyed;
     return (FT_ERR_SUCCESS);
 }
 
-int http2_header_field::prepare_thread_safety() noexcept
+int http2_header_field::enable_thread_safety() noexcept
 {
     void *memory_pointer;
     pt_recursive_mutex *mutex_pointer;
+    int mutex_error;
 
+    this->abort_if_not_initialized("http2_header_field::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     memory_pointer = std::malloc(sizeof(pt_recursive_mutex));
     if (memory_pointer == ft_nullptr)
         return (FT_ERR_NO_MEMORY);
     mutex_pointer = new(memory_pointer) pt_recursive_mutex();
-    if (mutex_pointer->initialize() != FT_ERR_SUCCESS)
+    mutex_error = mutex_pointer->initialize();
+    if (mutex_error != FT_ERR_SUCCESS)
     {
-        (void)mutex_pointer->destroy();
         mutex_pointer->~pt_recursive_mutex();
         std::free(memory_pointer);
-        return (FT_ERR_INVALID_OPERATION);
+        return (mutex_error);
     }
     this->_mutex = mutex_pointer;
     return (FT_ERR_SUCCESS);
 }
 
-void http2_header_field::teardown_thread_safety() noexcept
+int http2_header_field::disable_thread_safety() noexcept
 {
+    int destroy_error;
+
+    this->abort_if_not_initialized("http2_header_field::disable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
-        (void)this->_mutex->destroy();
+        destroy_error = this->_mutex->destroy();
         this->_mutex->~pt_recursive_mutex();
         std::free(this->_mutex);
         this->_mutex = ft_nullptr;
+        return (destroy_error);
     }
-    return ;
+    return (FT_ERR_SUCCESS);
+}
+
+bool http2_header_field::is_thread_safe() const noexcept
+{
+    return (this->_mutex != ft_nullptr);
 }
 
 int http2_header_field::lock(bool *lock_acquired) const noexcept
@@ -351,22 +380,48 @@ int http2_frame::initialize() noexcept
     this->_type = 0;
     this->_flags = 0;
     this->_stream_identifier = 0;
-    this->_payload.clear();
+    int payload_error = this->_payload.initialize();
+    if (payload_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(payload_error);
+        return (payload_error);
+    }
     this->_mutex = ft_nullptr;
     this->_initialized_state = _state_initialized;
+    this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
 int http2_frame::destroy() noexcept
 {
+    int disable_error;
+
     if (this->_initialized_state != _state_initialized)
         return (FT_ERR_INVALID_STATE);
-    this->clear_payload();
-    this->teardown_thread_safety();
+    int payload_error = this->_payload.destroy();
+    if (payload_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(payload_error);
+        disable_error = this->disable_thread_safety();
+        if (disable_error != FT_ERR_SUCCESS)
+            this->set_error(disable_error);
+        this->_type = 0;
+        this->_flags = 0;
+        this->_stream_identifier = 0;
+        this->_initialized_state = _state_destroyed;
+        return (payload_error);
+    }
+    disable_error = this->disable_thread_safety();
+    if (disable_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(disable_error);
+        return (disable_error);
+    }
     this->_type = 0;
     this->_flags = 0;
     this->_stream_identifier = 0;
     this->_initialized_state = _state_destroyed;
+    this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 
@@ -459,18 +514,6 @@ int http2_frame::enable_thread_safety() noexcept
     }
     this->_mutex = mutex_pointer;
     return (FT_ERR_SUCCESS);
-}
-
-void http2_frame::teardown_thread_safety() noexcept
-{
-    if (this->_mutex != ft_nullptr)
-    {
-        (void)this->_mutex->destroy();
-        this->_mutex->~pt_recursive_mutex();
-        std::free(this->_mutex);
-        this->_mutex = ft_nullptr;
-    }
-    return ;
 }
 
 int http2_frame::disable_thread_safety() noexcept
@@ -630,6 +673,22 @@ bool http2_frame::copy_payload(ft_string &out_payload) const noexcept
     return (ft_string::get_error() == FT_ERR_SUCCESS);
 }
 
+void http2_frame::set_error(int32_t error_code) const noexcept
+{
+    http2_frame::_last_error = error_code;
+    return ;
+}
+
+int32_t http2_frame::get_error(void) const noexcept
+{
+    return (http2_frame::_last_error);
+}
+
+const char *http2_frame::get_error_str(void) const noexcept
+{
+    return (ft_strerror(http2_frame::_last_error));
+}
+
 void http2_frame::clear_payload() noexcept
 {
     bool lock_acquired;
@@ -697,8 +756,19 @@ int http2_stream_manager::initialize() noexcept
     if (this->_initialized_state == _state_initialized)
         this->abort_lifecycle_error("http2_stream_manager::initialize",
             "initialize called on initialized instance");
-    this->_streams.clear();
-    this->_stream_identifiers.clear();
+    int streams_error = this->_streams.initialize();
+    if (streams_error != FT_ERR_SUCCESS)
+    {
+        this->_initialized_state = _state_uninitialized;
+        return (streams_error);
+    }
+    int identifiers_error = this->_stream_identifiers.initialize();
+    if (identifiers_error != FT_ERR_SUCCESS)
+    {
+        this->_streams.destroy();
+        this->_initialized_state = _state_uninitialized;
+        return (identifiers_error);
+    }
     this->_initial_remote_window = 65535;
     this->_initial_local_window = 65535;
     this->_connection_remote_window = 65535;
@@ -709,25 +779,30 @@ int http2_stream_manager::initialize() noexcept
 
 int http2_stream_manager::destroy() noexcept
 {
+    int disable_error;
+
     if (this->_initialized_state != _state_initialized)
         return (FT_ERR_INVALID_STATE);
-    this->_streams.clear();
-    this->_stream_identifiers.clear();
+    this->_streams.destroy();
+    this->_stream_identifiers.destroy();
     this->_initial_remote_window = 65535;
     this->_initial_local_window = 65535;
     this->_connection_remote_window = 65535;
     this->_connection_local_window = 65535;
-    this->teardown_thread_safety();
+    disable_error = this->disable_thread_safety();
+    if (disable_error != FT_ERR_SUCCESS)
+        return (disable_error);
     this->_initialized_state = _state_destroyed;
     return (FT_ERR_SUCCESS);
 }
 
-int http2_stream_manager::prepare_thread_safety() noexcept
+int http2_stream_manager::enable_thread_safety() noexcept
 {
     void *memory_pointer;
     pt_recursive_mutex *mutex_pointer;
     int mutex_error;
 
+    this->abort_if_not_initialized("http2_stream_manager::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
     {
         return (FT_ERR_SUCCESS);
@@ -743,21 +818,10 @@ int http2_stream_manager::prepare_thread_safety() noexcept
     {
         mutex_pointer->~pt_recursive_mutex();
         std::free(memory_pointer);
-        return (FT_ERR_INVALID_OPERATION);
+        return (mutex_error);
     }
     this->_mutex = mutex_pointer;
     return (FT_ERR_SUCCESS);
-}
-
-void http2_stream_manager::teardown_thread_safety() noexcept
-{
-    if (this->_mutex != ft_nullptr)
-    {
-        this->_mutex->~pt_recursive_mutex();
-        std::free(this->_mutex);
-        this->_mutex = ft_nullptr;
-    }
-    return ;
 }
 
 int http2_stream_manager::lock(bool *lock_acquired) const noexcept
@@ -788,12 +852,6 @@ void http2_stream_manager::unlock(bool lock_acquired) const noexcept
     mutable_manager = const_cast<http2_stream_manager *>(this);
     (void)pt_recursive_mutex_unlock_if_not_null(mutable_manager->_mutex);
     return ;
-}
-
-int http2_stream_manager::enable_thread_safety() noexcept
-{
-    this->abort_if_not_initialized("http2_stream_manager::enable_thread_safety");
-    return (this->prepare_thread_safety());
 }
 
 int http2_stream_manager::disable_thread_safety() noexcept
@@ -922,8 +980,11 @@ bool http2_stream_manager::open_stream(uint32_t stream_identifier) noexcept
     {
         new_state.remote_window = this->_initial_remote_window;
         new_state.local_window = this->_initial_local_window;
-        this->_streams.insert(stream_identifier, new_state);
-            }
+        if (new_state.buffer.initialize() != FT_ERR_SUCCESS)
+            success_state = false;
+        else
+            this->_streams.insert(stream_identifier, new_state);
+    }
     if (success_state)
     {
         this->_stream_identifiers.push_back(stream_identifier);
@@ -1931,7 +1992,11 @@ bool http2_decode_frame(const unsigned char *buffer, size_t buffer_size,
         error_code = FT_ERR_OUT_OF_RANGE;
         return (false);
     }
-    payload_copy.clear();
+    if (payload_copy.initialize() != FT_ERR_SUCCESS)
+    {
+        error_code = ft_string::get_error();
+        return (false);
+    }
     if (ft_string::get_error() != FT_ERR_SUCCESS)
     {
         error_code = ft_string::get_error();
@@ -2139,6 +2204,12 @@ bool http2_decompress_headers(const ft_string &block,
         http2_header_field entry;
         size_t name_length;
         size_t value_length;
+
+        if (entry.initialize() != FT_ERR_SUCCESS)
+        {
+            error_code = FT_ERR_INVALID_STATE;
+            return (false);
+        }
 
         if (cursor + 4 > end)
         {

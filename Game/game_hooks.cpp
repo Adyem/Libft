@@ -118,6 +118,21 @@ int ft_game_hooks::initialize() noexcept
     this->_legacy_item_crafted = ft_function<void(ft_character&, ft_item&)>();
     this->_legacy_character_damaged = ft_function<void(ft_character&, int, uint8_t)>();
     this->_legacy_event_triggered = ft_function<void(ft_world&, ft_event&)>();
+    int map_error = this->_listener_catalog.initialize();
+    if (map_error != FT_ERR_SUCCESS)
+    {
+        this->_initialized_state = ft_game_hooks::_state_destroyed;
+        this->set_error(map_error);
+        return (map_error);
+    }
+    int metadata_error = this->_catalog_metadata.initialize();
+    if (metadata_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_listener_catalog.destroy();
+        this->_initialized_state = ft_game_hooks::_state_destroyed;
+        this->set_error(metadata_error);
+        return (metadata_error);
+    }
     this->_listener_catalog.clear();
     this->_catalog_metadata.clear();
     this->_initialized_state = ft_game_hooks::_state_initialized;
@@ -195,12 +210,17 @@ int ft_game_hooks::destroy() noexcept
     this->_legacy_item_crafted = ft_function<void(ft_character&, ft_item&)>();
     this->_legacy_character_damaged = ft_function<void(ft_character&, int, uint8_t)>();
     this->_legacy_event_triggered = ft_function<void(ft_world&, ft_event&)>();
-    this->_listener_catalog.clear();
-    this->_catalog_metadata.clear();
+    int map_destroy_error = this->_listener_catalog.destroy();
+    int metadata_destroy_error = this->_catalog_metadata.destroy();
     disable_error = this->disable_thread_safety();
     this->_initialized_state = ft_game_hooks::_state_destroyed;
-    this->set_error(disable_error);
-    return (disable_error);
+    int final_error = disable_error;
+    if (final_error == FT_ERR_SUCCESS && map_destroy_error != FT_ERR_SUCCESS)
+        final_error = map_destroy_error;
+    if (final_error == FT_ERR_SUCCESS && metadata_destroy_error != FT_ERR_SUCCESS)
+        final_error = metadata_destroy_error;
+    this->set_error(final_error);
+    return (final_error);
 }
 
 int ft_game_hooks::enable_thread_safety() noexcept

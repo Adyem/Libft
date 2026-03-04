@@ -2,8 +2,6 @@ include ../compiler_flags.mk
 TARGET := Compatebility.a
 DEBUG_TARGET := Compatebility_debug.a
 
-.RECIPEPREFIX := >
-
 SRCS := Compatebility_file_io.cpp Compatebility_file_ops.cpp Compatebility_file_watch.cpp Compatebility_file_dir.cpp Compatebility_file_path.cpp Compatebility_rng.cpp Compatebility_readline.cpp Compatebility_pthread.cpp Compatebility_system.cpp Compatebility_write.cpp Compatebility_syslog.cpp Compatebility_networking.cpp Compatebility_time.cpp Compatebility_cross_process_posix.cpp Compatebility_cross_process_windows.cpp
 MM_SRCS :=
 HEADERS := compatebility_internal.hpp \
@@ -39,7 +37,7 @@ ARFLAGS   := rcs
 BUILD_OBJ_SUFFIX :=
 ifneq ($(findstring -DLIBFT_TEST_BUILD,$(COMPILE_FLAGS)),)
     BUILD_OBJ_SUFFIX := _test
-endif
+	endif
 
 OBJDIR         := objs$(BUILD_OBJ_SUFFIX)
 DEBUG_OBJDIR   := objs_debug$(BUILD_OBJ_SUFFIX)
@@ -60,33 +58,33 @@ DEBUG_DEPS := $(DEBUG_OBJS:.o=.d)
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
->@$(AR) $(ARFLAGS) $@ $^
->@printf '        [%s] Module archive ready (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS)
+	@$(AR) $(ARFLAGS) $@ $^
+	@printf '        [%s] Module archive ready (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS)
 
 $(OBJDIR)/%.o: %.cpp $(HEADERS) | $(OBJDIR)
->@$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
->@count=$$(find $(OBJDIR) -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
->    printf '        [%s] Building file %s (%d/%d)\n' "$(MODULE_NAME)" "$<" $$count $(TOTAL_SRCS)
+	@$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
+	@count=$$(find $(OBJDIR) -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
+	printf '        [%s] Building file %s (%d/%d)\n' "$(MODULE_NAME)" "$<" $$count $(TOTAL_SRCS)
 
 $(OBJDIR)/%.o: %.mm $(HEADERS) | $(OBJDIR)
->@$(CXX) $(MMFLAGS) -MMD -MP -c $< -o $@
->@count=$$(find $(OBJDIR) -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
->    printf '        [%s] Building file %s (%d/%d)\n' "$(MODULE_NAME)" "$<" $$count $(TOTAL_SRCS)
+	@$(CXX) $(MMFLAGS) -MMD -MP -c $< -o $@
+	@count=$$(find $(OBJDIR) -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
+	printf '        [%s] Building file %s (%d/%d)\n' "$(MODULE_NAME)" "$<" $$count $(TOTAL_SRCS)
 
 debug: CXXFLAGS += -DDEBUG=1
 debug: $(DEBUG_TARGET)
 
 $(DEBUG_TARGET): $(DEBUG_OBJS)
->@$(AR) $(ARFLAGS) $@ $^
->@printf '        [%s Debug] Module archive ready (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS)
+	@$(AR) $(ARFLAGS) $@ $^
+	@printf '        [%s Debug] Module archive ready (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS)
 
 $(DEBUG_OBJDIR)/%.o: %.cpp $(HEADERS) | $(DEBUG_OBJDIR)
->@$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
->@count=$$(find $(DEBUG_OBJDIR) -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
->    printf '        [%s Debug] Building file %s (%d/%d)\n' "$(MODULE_NAME)" "$<" $$count $(TOTAL_SRCS)
+	@$(CXX) $(CFLAGS) -MMD -MP -c $< -o $@
+	@count=$$(find $(DEBUG_OBJDIR) -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
+	printf '        [%s Debug] Building file %s (%d/%d)\n' "$(MODULE_NAME)" "$<" $$count $(TOTAL_SRCS)
 
 $(OBJDIR) $(DEBUG_OBJDIR):
->@$(MKDIR) $@
+	@$(MKDIR) $@
 
 CLEAN_OBJS := $(wildcard $(OBJDIR)/*.o) $(wildcard $(OBJDIR)/*.d) $(wildcard $(DEBUG_OBJDIR)/*.o) $(wildcard $(DEBUG_OBJDIR)/*.d)
 
@@ -100,31 +98,35 @@ CLEAN_FILES := $(CLEAN_OBJS)
 endif
 
 clean:
->@if $(RM) $(CLEAN_FILES); then \
->    printf '        [%s] clean: success\n' "$(MODULE_NAME)"; \
->else \
->    printf '        [%s] clean: failed\n' "$(MODULE_NAME)"; \
->    exit 1; \
->fi
+	@if $(RM) $(CLEAN_FILES); then \
+    printf '        [%s] clean: success\n' "$(MODULE_NAME)"; \
+	else \
+    printf '        [%s] clean: failed\n' "$(MODULE_NAME)"; \
+	exit 1; \
+	fi
 
 fclean:
->@status=0; \
->if ! $(RM) $(CLEAN_FILES); then \
->    status=1; \
->fi; \
->if ! $(RM) $(TARGET) $(DEBUG_TARGET); then \
->    status=1; \
->fi; \
->if [ $$status -eq 0 ]; then \
->    printf '        [%s] fclean: success\n' "$(MODULE_NAME)"; \
->else \
->    printf '        [%s] fclean: failed\n' "$(MODULE_NAME)"; \
->    exit 1; \
->fi
+	@status=0; \
+	if ! $(RM) $(CLEAN_FILES); then \
+	status=1; \
+	fi; \
+	if ! $(RM) $(TARGET) $(DEBUG_TARGET); then \
+	status=1; \
+	fi; \
+	if [ $$status -eq 0 ]; then \
+    printf '        [%s] fclean: success\n' "$(MODULE_NAME)"; \
+	else \
+    printf '        [%s] fclean: failed\n' "$(MODULE_NAME)"; \
+	exit 1; \
+	fi
 
 re: fclean all
 
 both: all debug
+
+
+%_test.a:
+	@$(MAKE) TARGET="$@" $(SUBMAKE_OVERRIDES) COMPILE_FLAGS="$(COMPILE_FLAGS) -DLIBFT_TEST_BUILD" all
 
 -include $(DEPS) $(DEBUG_DEPS)
 

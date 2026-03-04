@@ -25,4 +25,8 @@ int observability_game_metrics_initialize(ft_game_observability_exporter exporte
 int observability_game_metrics_shutdown(void);
 void observability_game_metrics_record(const ft_game_observability_sample &sample);
 
+int observability_game_metrics_enable_thread_safety(void);
+int observability_game_metrics_disable_thread_safety(void);
+bool observability_game_metrics_is_thread_safe(void);
+
 #endif

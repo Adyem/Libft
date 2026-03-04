@@ -585,6 +585,11 @@ bool ft_string::empty() const noexcept
     return (this->size() == 0);
 }
 
+bool ft_string::is_initialized() const noexcept
+{
+    return (this->_initialized_state == ft_string::_state_initialized);
+}
+
 int32_t ft_string::move(ft_string& other) noexcept
 {
     if (other._initialized_state != ft_string::_state_initialized)

@@ -91,8 +91,10 @@ LIB_BASES := \
 
 LIBS       := $(addsuffix .a, $(LIB_BASES))
 DEBUG_LIBS := $(addsuffix _debug.a, $(LIB_BASES))
+TEST_LIBS  := $(addsuffix _test.a, $(LIB_BASES))
 TOTAL_LIBS := $(words $(LIBS))
 TOTAL_DEBUG_LIBS := $(words $(DEBUG_LIBS))
+TOTAL_TEST_LIBS := $(words $(TEST_LIBS))
 
 TARGET        := Full_Libft.a
 DEBUG_TARGET  := Full_Libft_debug.a
@@ -185,11 +187,11 @@ $(DEBUG_TARGET): $(DEBUG_LIBS)
 	@$(AR) $(ARFLAGS) $@ temp_objs/*.o
 	@$(RMDIR) temp_objs
 
-$(TEST_TARGET): $(LIBS)
-	@printf '\033[1;35m[LIBFT BUILD] Combining %d modules into %s\033[0m\n' $(TOTAL_LIBS) $@
+$(TEST_TARGET): $(TEST_LIBS)
+	@printf '\033[1;35m[LIBFT BUILD] Combining %d modules into %s\033[0m\n' $(TOTAL_TEST_LIBS) $@
 	@$(RM) $@
 	@$(MKDIR) temp_objs_test
-	@$(foreach lib,$(LIBS),cd temp_objs_test && $(AR) x ../$(lib) && cd ..;)
+	@$(foreach lib,$(TEST_LIBS),cd temp_objs_test && $(AR) x ../$(lib) && cd ..;)
 	@$(AR) $(ARFLAGS) $@ temp_objs_test/*.o
 	@$(RMDIR) temp_objs_test
 
@@ -241,6 +243,27 @@ $(TEST_DEBUG_TARGET): $(DEBUG_LIBS)
                 progress_index=$$(printf '%s\n' "$(DEBUG_LIBS)" | tr ' ' '\n' | nl -ba | awk -v target="$$module_path" '$$2==target {print $$1}'); \
                 printf '\033[1;35m[LIBFT BUILD] (%d/%d) Building %s\033[0m\n' "$$progress_index" "$(TOTAL_DEBUG_LIBS)" "$$module_path"; \
                 $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES); \
+        fi
+
+%_test.a: FORCE
+	@module_dir="$(patsubst %/,%,$(dir $@))"; \
+	module_target="$(notdir $@)"; \
+	need_build=0; \
+	if $(MAKE) -C $$module_dir -q $$module_target $(SUBMAKE_OVERRIDES) TARGET="$$module_target" COMPILE_FLAGS="$(COMPILE_FLAGS) -DLIBFT_TEST_BUILD"; then \
+	        :; \
+	else \
+	        status=$$?; \
+	        if [ $$status -eq 1 ]; then \
+	                need_build=1; \
+	        else \
+	                exit $$status; \
+	        fi; \
+	fi; \
+        if [ $$need_build -eq 1 ] || [ ! -f $@ ]; then \
+                module_path="$$module_dir/$$module_target"; \
+                progress_index=$$(printf '%s\n' "$(TEST_LIBS)" | tr ' ' '\n' | nl -ba | awk -v target="$$module_path" '$$2==target {print $$1}'); \
+                printf '\033[1;35m[LIBFT BUILD] (%d/%d) Building %s\033[0m\n' "$$progress_index" "$(TOTAL_TEST_LIBS)" "$$module_path"; \
+                $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES) TARGET="$$module_target" COMPILE_FLAGS="$(COMPILE_FLAGS) -DLIBFT_TEST_BUILD"; \
         fi
 
 clean:

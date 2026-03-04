@@ -62,6 +62,9 @@ void ft_reputation::abort_if_not_initialized(const char *method_name) const
 
 int ft_reputation::initialize() noexcept
 {
+    int milestones_error;
+    int reps_error;
+
     if (this->_initialized_state == ft_reputation::_state_initialized)
     {
         this->abort_lifecycle_error("ft_reputation::initialize",
@@ -69,8 +72,21 @@ int ft_reputation::initialize() noexcept
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
-    this->_milestones.clear();
-    this->_reps.clear();
+    milestones_error = this->_milestones.initialize();
+    if (milestones_error != FT_ERR_SUCCESS)
+    {
+        this->_initialized_state = ft_reputation::_state_destroyed;
+        this->set_error(milestones_error);
+        return (milestones_error);
+    }
+    reps_error = this->_reps.initialize();
+    if (reps_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_milestones.destroy();
+        this->_initialized_state = ft_reputation::_state_destroyed;
+        this->set_error(reps_error);
+        return (reps_error);
+    }
     this->_total_rep = 0;
     this->_current_rep = 0;
     this->_initialized_state = ft_reputation::_state_initialized;
@@ -83,6 +99,12 @@ int ft_reputation::initialize(const ft_map<int, int> &milestones,
 {
     int initialize_error;
 
+    if (this->_initialized_state == ft_reputation::_state_initialized)
+    {
+        initialize_error = this->destroy();
+        if (initialize_error != FT_ERR_SUCCESS)
+            return (initialize_error);
+    }
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
         return (initialize_error);
@@ -97,8 +119,21 @@ int ft_reputation::initialize(const ft_reputation &other) noexcept
 {
     int initialize_error;
 
+    if (other._initialized_state != ft_reputation::_state_initialized)
+    {
+        other.abort_lifecycle_error("ft_reputation::initialize(copy)",
+            "source object is not initialized");
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
+    }
     if (&other == this)
         return (FT_ERR_SUCCESS);
+    if (this->_initialized_state == ft_reputation::_state_initialized)
+    {
+        initialize_error = this->destroy();
+        if (initialize_error != FT_ERR_SUCCESS)
+            return (initialize_error);
+    }
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
         return (initialize_error);
@@ -117,19 +152,32 @@ int ft_reputation::initialize(ft_reputation &&other) noexcept
 
 int ft_reputation::destroy() noexcept
 {
+    int milestones_error;
+    int reps_error;
     int disable_error;
+    int first_error;
 
     if (this->_initialized_state != ft_reputation::_state_initialized)
     {
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_ERR_INVALID_STATE);
     }
-    this->_milestones.clear();
-    this->_reps.clear();
+    first_error = FT_ERR_SUCCESS;
+    milestones_error = this->_milestones.destroy();
+    if (first_error == FT_ERR_SUCCESS && milestones_error != FT_ERR_SUCCESS)
+        first_error = milestones_error;
+    reps_error = this->_reps.destroy();
+    if (first_error == FT_ERR_SUCCESS && reps_error != FT_ERR_SUCCESS)
+        first_error = reps_error;
     this->_total_rep = 0;
     this->_current_rep = 0;
     disable_error = this->disable_thread_safety();
     this->_initialized_state = ft_reputation::_state_destroyed;
+    if (first_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(first_error);
+        return (first_error);
+    }
     this->set_error(disable_error);
     return (disable_error);
 }

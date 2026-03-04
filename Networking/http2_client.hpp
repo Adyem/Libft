@@ -27,8 +27,6 @@ class http2_header_field
 
         int     lock(bool *lock_acquired) const noexcept;
         void    unlock(bool lock_acquired) const noexcept;
-        void    teardown_thread_safety() noexcept;
-        int     prepare_thread_safety() noexcept;
 
     public:
         http2_header_field() noexcept;
@@ -40,6 +38,9 @@ class http2_header_field
         http2_header_field &operator=(http2_header_field &&other) noexcept;
         int     initialize() noexcept;
         int     destroy() noexcept;
+        int     enable_thread_safety() noexcept;
+        int     disable_thread_safety() noexcept;
+        bool    is_thread_safe() const noexcept;
 
         bool    set_name(const ft_string &name_value) noexcept;
         bool    set_name_from_cstr(const char *name_value) noexcept;
@@ -75,10 +76,11 @@ class http2_frame
         uint32_t            _stream_identifier;
         ft_string           _payload;
         mutable pt_recursive_mutex   *_mutex;
+        static thread_local int32_t _last_error;
 
         int     lock(bool *lock_acquired) const noexcept;
         void    unlock(bool lock_acquired) const noexcept;
-        void    teardown_thread_safety() noexcept;
+        void    set_error(int32_t error_code) const noexcept;
 
     public:
         http2_frame() noexcept;
@@ -108,6 +110,8 @@ class http2_frame
         bool    set_payload_from_buffer(const char *buffer, size_t length) noexcept;
         bool    copy_payload(ft_string &out_payload) const noexcept;
         void    clear_payload() noexcept;
+        int32_t get_error(void) const noexcept;
+        const char *get_error_str(void) const noexcept;
 };
 
 struct http2_stream_state
@@ -149,8 +153,6 @@ class http2_stream_manager
         uint32_t                                _connection_local_window;
         mutable pt_recursive_mutex   *_mutex;
 
-        int         prepare_thread_safety() noexcept;
-        void        teardown_thread_safety() noexcept;
         int         lock(bool *lock_acquired) const noexcept;
         void        unlock(bool lock_acquired) const noexcept;
 

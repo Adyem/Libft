@@ -102,6 +102,11 @@ ft_world::ft_world() noexcept
         this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
+    if (this->_crafting->initialize() != FT_ERR_SUCCESS)
+    {
+        this->set_error(this->_crafting->get_error());
+        return ;
+    }
     if (!this->_dialogue_table)
     {
         this->set_error(FT_ERR_NO_MEMORY);

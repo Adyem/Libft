@@ -22,42 +22,92 @@ static void source_state_signal_handler(int signal_value)
     return ;
 }
 
-template <typename TypeName>
-static int expect_sigabrt_copy_from_uninitialized_source()
+static int source_state_install_signal_handlers(
+    struct sigaction &old_action_abort,
+    struct sigaction &old_action_iot,
+    bool &iot_handler_installed)
 {
-    struct sigaction old_action_abort;
     struct sigaction new_action_abort;
-    struct sigaction old_action_iot;
     struct sigaction new_action_iot;
-    int jump_result;
 
+    std::memset(&old_action_abort, 0, sizeof(old_action_abort));
+    std::memset(&old_action_iot, 0, sizeof(old_action_iot));
     std::memset(&new_action_abort, 0, sizeof(new_action_abort));
     std::memset(&new_action_iot, 0, sizeof(new_action_iot));
     new_action_abort.sa_handler = &source_state_signal_handler;
     new_action_iot.sa_handler = &source_state_signal_handler;
-    sigemptyset(&new_action_abort.sa_mask);
-    sigemptyset(&new_action_iot.sa_mask);
+    if (sigemptyset(&new_action_abort.sa_mask) != 0)
+        return (0);
+    if (sigemptyset(&new_action_iot.sa_mask) != 0)
+        return (0);
+    iot_handler_installed = false;
     if (sigaction(SIGABRT, &new_action_abort, &old_action_abort) != 0)
         return (0);
-    if (sigaction(SIGIOT, &new_action_iot, &old_action_iot) != 0)
+    if (SIGIOT != SIGABRT)
     {
-        (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
+        if (sigaction(SIGIOT, &new_action_iot, &old_action_iot) != 0)
+        {
+            if (sigaction(SIGABRT, &old_action_abort, ft_nullptr) != 0)
+                return (0);
+            return (0);
+        }
+        iot_handler_installed = true;
+    }
+    return (1);
+}
+
+static int source_state_restore_signal_handlers(
+    const struct sigaction &old_action_abort,
+    const struct sigaction &old_action_iot,
+    bool iot_handler_installed)
+{
+    if (sigaction(SIGABRT, &old_action_abort, ft_nullptr) != 0)
+        return (0);
+    if (iot_handler_installed == true)
+    {
+        if (sigaction(SIGIOT, &old_action_iot, ft_nullptr) != 0)
+            return (0);
+    }
+    return (1);
+}
+
+template <typename TypeName>
+static int expect_sigabrt_copy_from_uninitialized_source()
+{
+    struct sigaction old_action_abort;
+    struct sigaction old_action_iot;
+    bool iot_handler_installed;
+    int jump_result;
+    TypeName *source_pointer;
+    TypeName *destination_pointer;
+
+    if (source_state_install_signal_handlers(old_action_abort, old_action_iot,
+            iot_handler_installed) == 0)
+        return (0);
+    source_pointer = new (std::nothrow) TypeName();
+    destination_pointer = new (std::nothrow) TypeName();
+    if (source_pointer == ft_nullptr || destination_pointer == ft_nullptr)
+    {
+        delete source_pointer;
+        delete destination_pointer;
+        if (source_state_restore_signal_handlers(old_action_abort,
+                old_action_iot, iot_handler_installed) == 0)
+            return (0);
         return (0);
     }
     g_source_state_signal_caught = 0;
     jump_result = sigsetjmp(g_source_state_jump_buffer, 1);
     if (jump_result == 0)
+        (void)destination_pointer->initialize(*source_pointer);
+    if (source_state_restore_signal_handlers(old_action_abort, old_action_iot,
+            iot_handler_installed) == 0)
     {
-        alignas(TypeName) unsigned char storage[sizeof(TypeName)];
-        TypeName *source_pointer;
-        TypeName destination;
-
-        std::memset(storage, 0, sizeof(storage));
-        source_pointer = reinterpret_cast<TypeName *>(storage);
-        (void)destination.initialize(*source_pointer);
+        delete source_pointer;
+        delete destination_pointer;
+        return (0);
     }
-    (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
-    (void)sigaction(SIGIOT, &old_action_iot, ft_nullptr);
+    delete source_pointer;
+    delete destination_pointer;
     if (g_source_state_signal_caught == SIGABRT)
         return (1);
     return (g_source_state_signal_caught == SIGIOT);
@@ -67,38 +117,40 @@ template <typename TypeName>
 static int expect_sigabrt_move_from_uninitialized_source()
 {
     struct sigaction old_action_abort;
-    struct sigaction new_action_abort;
     struct sigaction old_action_iot;
-    struct sigaction new_action_iot;
+    bool iot_handler_installed;
     int jump_result;
+    TypeName *source_pointer;
+    TypeName *destination_pointer;
 
-    std::memset(&new_action_abort, 0, sizeof(new_action_abort));
-    std::memset(&new_action_iot, 0, sizeof(new_action_iot));
-    new_action_abort.sa_handler = &source_state_signal_handler;
-    new_action_iot.sa_handler = &source_state_signal_handler;
-    sigemptyset(&new_action_abort.sa_mask);
-    sigemptyset(&new_action_iot.sa_mask);
-    if (sigaction(SIGABRT, &new_action_abort, &old_action_abort) != 0)
+    if (source_state_install_signal_handlers(old_action_abort, old_action_iot,
+            iot_handler_installed) == 0)
         return (0);
-    if (sigaction(SIGIOT, &new_action_iot, &old_action_iot) != 0)
+    source_pointer = new (std::nothrow) TypeName();
+    destination_pointer = new (std::nothrow) TypeName();
+    if (source_pointer == ft_nullptr || destination_pointer == ft_nullptr)
     {
-        (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
+        delete source_pointer;
+        delete destination_pointer;
+        if (source_state_restore_signal_handlers(old_action_abort,
+                old_action_iot, iot_handler_installed) == 0)
+            return (0);
         return (0);
     }
     g_source_state_signal_caught = 0;
     jump_result = sigsetjmp(g_source_state_jump_buffer, 1);
     if (jump_result == 0)
+        (void)destination_pointer->initialize(
+            static_cast<TypeName &&>(*source_pointer));
+    if (source_state_restore_signal_handlers(old_action_abort, old_action_iot,
+            iot_handler_installed) == 0)
     {
-        alignas(TypeName) unsigned char storage[sizeof(TypeName)];
-        TypeName *source_pointer;
-        TypeName destination;
-
-        std::memset(storage, 0, sizeof(storage));
-        source_pointer = reinterpret_cast<TypeName *>(storage);
-        (void)destination.initialize(static_cast<TypeName &&>(*source_pointer));
+        delete source_pointer;
+        delete destination_pointer;
+        return (0);
     }
-    (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
-    (void)sigaction(SIGIOT, &old_action_iot, ft_nullptr);
+    delete source_pointer;
+    delete destination_pointer;
     if (g_source_state_signal_caught == SIGABRT)
         return (1);
     return (g_source_state_signal_caught == SIGIOT);
@@ -108,39 +160,57 @@ template <typename TypeName>
 static int expect_sigabrt_copy_from_destroyed_source()
 {
     struct sigaction old_action_abort;
-    struct sigaction new_action_abort;
     struct sigaction old_action_iot;
-    struct sigaction new_action_iot;
-    TypeName source;
+    bool iot_handler_installed;
+    TypeName *source_pointer;
+    TypeName *destination_pointer;
     int jump_result;
 
-    std::memset(&new_action_abort, 0, sizeof(new_action_abort));
-    std::memset(&new_action_iot, 0, sizeof(new_action_iot));
-    new_action_abort.sa_handler = &source_state_signal_handler;
-    new_action_iot.sa_handler = &source_state_signal_handler;
-    sigemptyset(&new_action_abort.sa_mask);
-    sigemptyset(&new_action_iot.sa_mask);
-    if (sigaction(SIGABRT, &new_action_abort, &old_action_abort) != 0)
+    if (source_state_install_signal_handlers(old_action_abort, old_action_iot,
+            iot_handler_installed) == 0)
         return (0);
-    if (sigaction(SIGIOT, &new_action_iot, &old_action_iot) != 0)
+    source_pointer = new (std::nothrow) TypeName();
+    destination_pointer = new (std::nothrow) TypeName();
+    if (source_pointer == ft_nullptr || destination_pointer == ft_nullptr)
     {
-        (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
+        delete source_pointer;
+        delete destination_pointer;
+        if (source_state_restore_signal_handlers(old_action_abort,
+                old_action_iot, iot_handler_installed) == 0)
+            return (0);
         return (0);
     }
-    if (source.initialize() != FT_ERR_SUCCESS)
+    if (source_pointer->initialize() != FT_ERR_SUCCESS)
+    {
+        delete source_pointer;
+        delete destination_pointer;
+        if (source_state_restore_signal_handlers(old_action_abort,
+                old_action_iot, iot_handler_installed) == 0)
+            return (0);
         return (0);
-    if (source.destroy() != FT_ERR_SUCCESS)
+    }
+    if (source_pointer->destroy() != FT_ERR_SUCCESS)
+    {
+        delete source_pointer;
+        delete destination_pointer;
+        if (source_state_restore_signal_handlers(old_action_abort,
+                old_action_iot, iot_handler_installed) == 0)
+            return (0);
         return (0);
+    }
     g_source_state_signal_caught = 0;
     jump_result = sigsetjmp(g_source_state_jump_buffer, 1);
     if (jump_result == 0)
+        (void)destination_pointer->initialize(*source_pointer);
+    if (source_state_restore_signal_handlers(old_action_abort, old_action_iot,
+            iot_handler_installed) == 0)
     {
-        TypeName destination;
-
-        (void)destination.initialize(source);
+        delete source_pointer;
+        delete destination_pointer;
+        return (0);
     }
-    (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
-    (void)sigaction(SIGIOT, &old_action_iot, ft_nullptr);
+    delete source_pointer;
+    delete destination_pointer;
     if (g_source_state_signal_caught == SIGABRT)
         return (1);
     return (g_source_state_signal_caught == SIGIOT);
@@ -150,39 +220,58 @@ template <typename TypeName>
 static int expect_sigabrt_move_from_destroyed_source()
 {
     struct sigaction old_action_abort;
-    struct sigaction new_action_abort;
     struct sigaction old_action_iot;
-    struct sigaction new_action_iot;
-    TypeName source;
+    bool iot_handler_installed;
+    TypeName *source_pointer;
+    TypeName *destination_pointer;
     int jump_result;
 
-    std::memset(&new_action_abort, 0, sizeof(new_action_abort));
-    std::memset(&new_action_iot, 0, sizeof(new_action_iot));
-    new_action_abort.sa_handler = &source_state_signal_handler;
-    new_action_iot.sa_handler = &source_state_signal_handler;
-    sigemptyset(&new_action_abort.sa_mask);
-    sigemptyset(&new_action_iot.sa_mask);
-    if (sigaction(SIGABRT, &new_action_abort, &old_action_abort) != 0)
+    if (source_state_install_signal_handlers(old_action_abort, old_action_iot,
+            iot_handler_installed) == 0)
         return (0);
-    if (sigaction(SIGIOT, &new_action_iot, &old_action_iot) != 0)
+    source_pointer = new (std::nothrow) TypeName();
+    destination_pointer = new (std::nothrow) TypeName();
+    if (source_pointer == ft_nullptr || destination_pointer == ft_nullptr)
     {
-        (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
+        delete source_pointer;
+        delete destination_pointer;
+        if (source_state_restore_signal_handlers(old_action_abort,
+                old_action_iot, iot_handler_installed) == 0)
+            return (0);
         return (0);
     }
-    if (source.initialize() != FT_ERR_SUCCESS)
+    if (source_pointer->initialize() != FT_ERR_SUCCESS)
+    {
+        delete source_pointer;
+        delete destination_pointer;
+        if (source_state_restore_signal_handlers(old_action_abort,
+                old_action_iot, iot_handler_installed) == 0)
+            return (0);
         return (0);
-    if (source.destroy() != FT_ERR_SUCCESS)
+    }
+    if (source_pointer->destroy() != FT_ERR_SUCCESS)
+    {
+        delete source_pointer;
+        delete destination_pointer;
+        if (source_state_restore_signal_handlers(old_action_abort,
+                old_action_iot, iot_handler_installed) == 0)
+            return (0);
         return (0);
+    }
     g_source_state_signal_caught = 0;
     jump_result = sigsetjmp(g_source_state_jump_buffer, 1);
     if (jump_result == 0)
+        (void)destination_pointer->initialize(
+            static_cast<TypeName &&>(*source_pointer));
+    if (source_state_restore_signal_handlers(old_action_abort, old_action_iot,
+            iot_handler_installed) == 0)
     {
-        TypeName destination;
-
-        (void)destination.initialize(static_cast<TypeName &&>(source));
+        delete source_pointer;
+        delete destination_pointer;
+        return (0);
     }
-    (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
-    (void)sigaction(SIGIOT, &old_action_iot, ft_nullptr);
+    delete source_pointer;
+    delete destination_pointer;
     if (g_source_state_signal_caught == SIGABRT)
         return (1);
     return (g_source_state_signal_caught == SIGIOT);

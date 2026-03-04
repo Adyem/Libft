@@ -5,6 +5,8 @@
 #include "../Basic/basic.hpp"
 #include "../Time/time.hpp"
 #include "../Errno/errno.hpp"
+#include "../System_utils/system_utils.hpp"
+#include <new>
 #include <climits>
 
 struct api_circuit_state
@@ -23,9 +25,18 @@ static ft_vector<api_circuit_state> &api_retry_circuit_get_states(void)
     return (states);
 }
 
-static pt_mutex &api_retry_circuit_get_mutex(void)
+static pt_mutex *api_retry_circuit_get_mutex(void)
 {
-    static pt_mutex circuit_mutex;
+    static pt_mutex *circuit_mutex = ft_nullptr;
+
+    if (circuit_mutex == ft_nullptr)
+    {
+        circuit_mutex = new (std::nothrow) pt_mutex();
+        if (circuit_mutex == ft_nullptr)
+            su_abort();
+        if (circuit_mutex->initialize() != FT_ERR_SUCCESS)
+            su_abort();
+    }
 
     return (circuit_mutex);
 }
@@ -112,16 +123,18 @@ static api_circuit_state *api_retry_circuit_get_state(
 bool api_retry_circuit_allow(const api_connection_pool_handle &handle,
     const api_retry_policy *retry_policy, int &error_code)
 {
+    pt_mutex *circuit_mutex;
     int threshold;
     const char *key_cstr;
 
+    circuit_mutex = api_retry_circuit_get_mutex();
     threshold = api_retry_get_circuit_threshold(retry_policy);
     if (threshold <= 0)
         return (true);
     key_cstr = handle.key.c_str();
     if (!key_cstr || key_cstr[0] == '\0')
         return (true);
-    if (api_retry_circuit_get_mutex().lock() != FT_ERR_SUCCESS)
+    if (circuit_mutex->lock() != FT_ERR_SUCCESS)
         return (true);
     ft_vector<api_circuit_state> &states = api_retry_circuit_get_states();
     api_circuit_state *state;
@@ -129,7 +142,7 @@ bool api_retry_circuit_allow(const api_connection_pool_handle &handle,
     state = api_retry_circuit_get_state(states, handle.key);
     if (!state)
     {
-        (void)api_retry_circuit_get_mutex().unlock();
+        (void)circuit_mutex->unlock();
         return (true);
     }
     long long now_ms;
@@ -138,7 +151,7 @@ bool api_retry_circuit_allow(const api_connection_pool_handle &handle,
     if (state->open_until_ms > now_ms)
     {
         error_code = FT_ERR_API_CIRCUIT_OPEN;
-        (void)api_retry_circuit_get_mutex().unlock();
+        (void)circuit_mutex->unlock();
         return (false);
     }
     if (state->open_until_ms != 0 && state->open_until_ms <= now_ms)
@@ -148,23 +161,25 @@ bool api_retry_circuit_allow(const api_connection_pool_handle &handle,
         state->half_open_success_count = 0;
         state->failure_count = 0;
     }
-    (void)api_retry_circuit_get_mutex().unlock();
+    (void)circuit_mutex->unlock();
     return (true);
 }
 
 void api_retry_circuit_record_success(const api_connection_pool_handle &handle,
     const api_retry_policy *retry_policy)
 {
+    pt_mutex *circuit_mutex;
     int threshold;
     const char *key_cstr;
 
+    circuit_mutex = api_retry_circuit_get_mutex();
     threshold = api_retry_get_circuit_threshold(retry_policy);
     if (threshold <= 0)
         return ;
     key_cstr = handle.key.c_str();
     if (!key_cstr || key_cstr[0] == '\0')
         return ;
-    if (api_retry_circuit_get_mutex().lock() != FT_ERR_SUCCESS)
+    if (circuit_mutex->lock() != FT_ERR_SUCCESS)
         return ;
     ft_vector<api_circuit_state> &states = api_retry_circuit_get_states();
     api_circuit_state *state;
@@ -172,7 +187,7 @@ void api_retry_circuit_record_success(const api_connection_pool_handle &handle,
     state = api_retry_circuit_get_state(states, handle.key);
     if (!state)
     {
-        (void)api_retry_circuit_get_mutex().unlock();
+        (void)circuit_mutex->unlock();
         return ;
     }
     state->failure_count = 0;
@@ -193,23 +208,25 @@ void api_retry_circuit_record_success(const api_connection_pool_handle &handle,
     }
     else
         state->half_open_success_count = 0;
-    (void)api_retry_circuit_get_mutex().unlock();
+    (void)circuit_mutex->unlock();
     return ;
 }
 
 void api_retry_circuit_record_failure(const api_connection_pool_handle &handle,
     const api_retry_policy *retry_policy)
 {
+    pt_mutex *circuit_mutex;
     int threshold;
     const char *key_cstr;
 
+    circuit_mutex = api_retry_circuit_get_mutex();
     threshold = api_retry_get_circuit_threshold(retry_policy);
     if (threshold <= 0)
         return ;
     key_cstr = handle.key.c_str();
     if (!key_cstr || key_cstr[0] == '\0')
         return ;
-    if (api_retry_circuit_get_mutex().lock() != FT_ERR_SUCCESS)
+    if (circuit_mutex->lock() != FT_ERR_SUCCESS)
         return ;
     ft_vector<api_circuit_state> &states = api_retry_circuit_get_states();
     api_circuit_state *state;
@@ -217,7 +234,7 @@ void api_retry_circuit_record_failure(const api_connection_pool_handle &handle,
     state = api_retry_circuit_get_state(states, handle.key);
     if (!state)
     {
-        (void)api_retry_circuit_get_mutex().unlock();
+        (void)circuit_mutex->unlock();
         return ;
     }
     long long now_ms;
@@ -232,7 +249,7 @@ void api_retry_circuit_record_failure(const api_connection_pool_handle &handle,
         state->failure_count = threshold;
         state->open_until_ms = api_retry_circuit_compute_deadline(now_ms,
                 cooldown_ms);
-        (void)api_retry_circuit_get_mutex().unlock();
+        (void)circuit_mutex->unlock();
         return ;
     }
     if (state->failure_count < threshold)
@@ -245,17 +262,20 @@ void api_retry_circuit_record_failure(const api_connection_pool_handle &handle,
         state->open_until_ms = api_retry_circuit_compute_deadline(now_ms,
                 cooldown_ms);
     }
-    (void)api_retry_circuit_get_mutex().unlock();
+    (void)circuit_mutex->unlock();
     return ;
 }
 
 void api_retry_circuit_reset(void)
 {
-    if (api_retry_circuit_get_mutex().lock() != FT_ERR_SUCCESS)
+    pt_mutex *circuit_mutex;
+
+    circuit_mutex = api_retry_circuit_get_mutex();
+    if (circuit_mutex->lock() != FT_ERR_SUCCESS)
         return ;
     ft_vector<api_circuit_state> &states = api_retry_circuit_get_states();
 
     states.clear();
-    (void)api_retry_circuit_get_mutex().unlock();
+    (void)circuit_mutex->unlock();
     return ;
 }

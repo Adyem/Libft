@@ -29,33 +29,62 @@ static int expect_sigabrt_on_uninitialized_object(void (*operation)(TypeName &))
     struct sigaction old_action_iot;
     struct sigaction new_action_iot;
     int jump_result;
+    bool iot_handler_installed;
+    int restore_error;
 
+    std::memset(&old_action_abort, 0, sizeof(old_action_abort));
     std::memset(&new_action_abort, 0, sizeof(new_action_abort));
+    std::memset(&old_action_iot, 0, sizeof(old_action_iot));
     std::memset(&new_action_iot, 0, sizeof(new_action_iot));
     new_action_abort.sa_handler = &record_lifecycle_signal_handler;
     new_action_iot.sa_handler = &record_lifecycle_signal_handler;
-    sigemptyset(&new_action_abort.sa_mask);
-    sigemptyset(&new_action_iot.sa_mask);
+    if (sigemptyset(&new_action_abort.sa_mask) != 0)
+        return (0);
+    if (sigemptyset(&new_action_iot.sa_mask) != 0)
+        return (0);
+    iot_handler_installed = false;
     if (sigaction(SIGABRT, &new_action_abort, &old_action_abort) != 0)
         return (0);
-    if (sigaction(SIGIOT, &new_action_iot, &old_action_iot) != 0)
+    if (SIGIOT != SIGABRT)
     {
-        (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
-        return (0);
+        if (sigaction(SIGIOT, &new_action_iot, &old_action_iot) != 0)
+        {
+            if (sigaction(SIGABRT, &old_action_abort, ft_nullptr) != 0)
+                return (0);
+            return (0);
+        }
+        iot_handler_installed = true;
     }
     g_record_lifecycle_signal_caught = 0;
     jump_result = sigsetjmp(g_record_lifecycle_signal_jump_buffer, 1);
     if (jump_result == 0)
     {
-        alignas(TypeName) unsigned char storage[sizeof(TypeName)];
         TypeName *object_pointer;
 
-        std::memset(storage, 0, sizeof(storage));
-        object_pointer = reinterpret_cast<TypeName *>(storage);
+        object_pointer = new (std::nothrow) TypeName();
+        if (object_pointer == ft_nullptr)
+        {
+            if (sigaction(SIGABRT, &old_action_abort, ft_nullptr) != 0)
+                return (0);
+            if (iot_handler_installed == true)
+            {
+                if (sigaction(SIGIOT, &old_action_iot, ft_nullptr) != 0)
+                    return (0);
+            }
+            return (0);
+        }
         operation(*object_pointer);
+        delete object_pointer;
     }
-    (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
-    (void)sigaction(SIGIOT, &old_action_iot, ft_nullptr);
+    restore_error = sigaction(SIGABRT, &old_action_abort, ft_nullptr);
+    if (restore_error != 0)
+        return (0);
+    if (iot_handler_installed == true)
+    {
+        restore_error = sigaction(SIGIOT, &old_action_iot, ft_nullptr);
+        if (restore_error != 0)
+            return (0);
+    }
     if (g_record_lifecycle_signal_caught == SIGABRT)
         return (1);
     return (g_record_lifecycle_signal_caught == SIGIOT);

@@ -64,8 +64,6 @@ int ft_currency_rate::initialize() noexcept
 
 int ft_currency_rate::initialize(const ft_currency_rate &other) noexcept
 {
-    int initialize_error;
-
     if (other._initialized_state != ft_currency_rate::_state_initialized)
     {
         other.abort_lifecycle_error("ft_currency_rate::initialize(copy)",
@@ -77,15 +75,10 @@ int ft_currency_rate::initialize(const ft_currency_rate &other) noexcept
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
-    initialize_error = this->initialize();
-    if (initialize_error != FT_ERR_SUCCESS)
-    {
-        this->set_error(initialize_error);
-        return (initialize_error);
-    }
     this->_currency_id = other._currency_id;
     this->_rate_to_base = other._rate_to_base;
     this->_display_precision = other._display_precision;
+    this->_initialized_state = ft_currency_rate::_state_initialized;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }

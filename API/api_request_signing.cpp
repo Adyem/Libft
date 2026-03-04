@@ -29,10 +29,23 @@ namespace
         return (result);
     }
 
+    int api_request_signing_ensure_string(ft_string &target) noexcept
+    {
+        if (target.is_initialized())
+            return (FT_ERR_SUCCESS);
+        int initialization_error = target.initialize();
+        if (initialization_error != FT_ERR_SUCCESS)
+            api_request_signing_set_error(initialization_error);
+        return (initialization_error);
+    }
+
     int api_request_signing_append(ft_string &target,
         const char *value) noexcept
     {
         int string_error;
+
+        if (api_request_signing_ensure_string(target) != FT_ERR_SUCCESS)
+            return (-1);
 
         if (!value)
             return (0);
@@ -51,6 +64,9 @@ namespace
     {
         int string_error;
 
+        if (api_request_signing_ensure_string(target) != FT_ERR_SUCCESS)
+            return (-1);
+
         target.append(value);
         string_error = ft_string::get_error();
         if (string_error != FT_ERR_SUCCESS)
@@ -68,7 +84,9 @@ namespace
         size_t index;
         int string_error;
 
-        output.clear();
+        if (api_request_signing_ensure_string(output) != FT_ERR_SUCCESS)
+            return (-1);
+
         if (!input)
             return (0);
         index = 0;
@@ -135,7 +153,8 @@ namespace
             api_request_signing_set_error(FT_ERR_INVALID_ARGUMENT);
             return (-1);
         }
-        output.clear();
+        if (api_request_signing_ensure_string(output) != FT_ERR_SUCCESS)
+            return (-1);
         index = 0;
         while (input[index] != '\0')
         {
@@ -164,7 +183,8 @@ namespace
             api_request_signing_set_error(FT_ERR_INVALID_ARGUMENT);
             return (-1);
         }
-        canonical.clear();
+        if (api_request_signing_ensure_string(canonical) != FT_ERR_SUCCESS)
+            return (-1);
         if (api_request_signing_append(canonical, input.method) != 0)
             return (-1);
         if (api_request_signing_append_character(canonical, '\n') != 0)
@@ -216,6 +236,12 @@ namespace
             api_request_signing_set_error(FT_ERR_INVALID_ARGUMENT);
             return (-1);
         }
+        if (entry.key.initialize() != FT_ERR_SUCCESS ||
+            entry.value.initialize() != FT_ERR_SUCCESS)
+        {
+            api_request_signing_set_error(ft_string::get_error());
+            return (-1);
+        }
         local_value = value;
         if (!local_value)
             local_value = "";
@@ -259,6 +285,12 @@ namespace
     {
         ft_string encoded_value;
         const char *local_value;
+
+        if (encoded_value.initialize() != FT_ERR_SUCCESS)
+        {
+            api_request_signing_set_error(ft_string::get_error());
+            return (-1);
+        }
 
         if (!key)
         {
@@ -306,6 +338,11 @@ int api_sign_request_hmac_sha256(const api_hmac_signature_input &input,
     if (!key || key_length == 0)
     {
         api_request_signing_set_error(FT_ERR_INVALID_ARGUMENT);
+        return (api_request_signing_finish(-1));
+    }
+    if (canonical.initialize() != FT_ERR_SUCCESS)
+    {
+        api_request_signing_set_error(ft_string::get_error());
         return (api_request_signing_finish(-1));
     }
     if (api_request_signing_build_canonical(input, canonical) != 0)
@@ -363,7 +400,10 @@ int api_apply_hmac_signature_header(const api_hmac_signature_input &input,
         api_request_signing_set_error(sign_error);
         return (api_request_signing_finish(-1));
     }
-    header_output.clear();
+    if (api_request_signing_ensure_string(header_output) != FT_ERR_SUCCESS)
+        return (api_request_signing_finish(-1));
+    if (api_request_signing_ensure_string(header_output) != FT_ERR_SUCCESS)
+        return (api_request_signing_finish(-1));
     if (api_request_signing_append(header_output, header_name) != 0)
         return (api_request_signing_finish(-1));
     if (api_request_signing_append(header_output, ": ") != 0)
@@ -455,7 +495,8 @@ int api_build_oauth1_authorization_header(
                 return (false);
             return (std::strcmp(lhs.value.c_str(), rhs.value.c_str()) < 0);
         });
-    normalized_parameters.clear();
+    if (api_request_signing_ensure_string(normalized_parameters) != FT_ERR_SUCCESS)
+        return (api_request_signing_finish(-1));
     if (api_request_signing_append_normalized(normalized_parameters,
             entries) != 0)
         return (api_request_signing_finish(-1));
@@ -539,7 +580,6 @@ int api_build_oauth1_authorization_header(
     if (api_request_signing_percent_encode(signature_string.c_str(),
             encoded_signature) != 0)
         return (api_request_signing_finish(-1));
-    header_output.clear();
     if (api_request_signing_append(header_output,
             "Authorization: OAuth ") != 0)
         return (api_request_signing_finish(-1));

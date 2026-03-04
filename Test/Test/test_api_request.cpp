@@ -1673,9 +1673,14 @@ FT_TEST(test_http2_frame_roundtrip, "http2 frame encode decode roundtrip")
     http2_frame input_frame;
     ft_string encoded;
     http2_frame decoded_frame;
+
+    if (encoded.initialize() != FT_ERR_SUCCESS)
+        return (0);
     size_t offset;
     int error_code;
 
+    if (input_frame.initialize() != FT_ERR_SUCCESS)
+        return (0);
     if (!input_frame.set_type(0x1))
         return (0);
     if (!input_frame.set_flags(0x5))
@@ -1684,12 +1689,16 @@ FT_TEST(test_http2_frame_roundtrip, "http2 frame encode decode roundtrip")
         return (0);
     if (!input_frame.set_payload_from_buffer("Hello", 5))
         return (0);
+    if (input_frame.get_error() != FT_ERR_SUCCESS)
+        return (0);
     error_code = FT_ERR_SUCCESS;
     if (!http2_encode_frame(input_frame, encoded, error_code))
         return (0);
     if (error_code != FT_ERR_SUCCESS)
         return (0);
     offset = 0;
+    if (decoded_frame.initialize() != FT_ERR_SUCCESS)
+        return (0);
     if (!http2_decode_frame(reinterpret_cast<const unsigned char*>(encoded.c_str()),
             encoded.size(), offset, decoded_frame, error_code))
         return (0);
@@ -1741,25 +1750,29 @@ FT_TEST(test_http2_header_compression_roundtrip, "http2 header compression round
     size_t header_count;
     size_t index;
 
-    if (!field_entry.assign_from_cstr(":method", "GET"))
+    auto append_header = [&](const char *name, const char *value) -> int
+    {
+        if (field_entry.initialize() != FT_ERR_SUCCESS)
+            return (0);
+        if (!field_entry.assign_from_cstr(name, value))
+            return (0);
+        headers.push_back(field_entry);
+        if (ft_vector<http2_header_field>::last_operation_error() != FT_ERR_SUCCESS)
+            return (0);
+        if (field_entry.destroy() != FT_ERR_SUCCESS)
+            return (0);
+        return (1);
+    };
+
+    if (!append_header(":method", "GET"))
         return (0);
-    headers.push_back(field_entry);
-    if (ft_vector<http2_header_field>::last_operation_error() != FT_ERR_SUCCESS)
+    if (!append_header(":path", "/resource"))
         return (0);
-    if (!field_entry.assign_from_cstr(":path", "/resource"))
+    if (!append_header("user-agent", "libft-tests"))
         return (0);
-    headers.push_back(field_entry);
-    if (ft_vector<http2_header_field>::last_operation_error() != FT_ERR_SUCCESS)
+    if (!append_header("accept", "*/*"))
         return (0);
-    if (!field_entry.assign_from_cstr("user-agent", "libft-tests"))
-        return (0);
-    headers.push_back(field_entry);
-    if (ft_vector<http2_header_field>::last_operation_error() != FT_ERR_SUCCESS)
-        return (0);
-    if (!field_entry.assign_from_cstr("accept", "*/*"))
-        return (0);
-    headers.push_back(field_entry);
-    if (ft_vector<http2_header_field>::last_operation_error() != FT_ERR_SUCCESS)
+    if (compressed.initialize() != FT_ERR_SUCCESS)
         return (0);
     error_code = FT_ERR_SUCCESS;
     if (!http2_compress_headers(headers, compressed, error_code))
@@ -1785,6 +1798,14 @@ FT_TEST(test_http2_header_compression_roundtrip, "http2 header compression round
         ft_string original_name;
         ft_string original_value;
 
+        if (decoded_name.initialize() != FT_ERR_SUCCESS)
+            return (0);
+        if (decoded_value.initialize() != FT_ERR_SUCCESS)
+            return (0);
+        if (original_name.initialize() != FT_ERR_SUCCESS)
+            return (0);
+        if (original_value.initialize() != FT_ERR_SUCCESS)
+            return (0);
         if (!decoded_headers[index].copy_name(decoded_name))
             return (0);
         if (!headers[index].copy_name(original_name))
@@ -1806,6 +1827,11 @@ FT_TEST(test_http2_stream_manager_concurrent_streams, "http2 stream manager trac
 {
     http2_stream_manager manager;
     ft_string buffer;
+
+    if (manager.initialize() != FT_ERR_SUCCESS)
+        return (0);
+    if (buffer.initialize() != FT_ERR_SUCCESS)
+        return (0);
 
     if (!manager.open_stream(1))
         return (0);
@@ -1835,6 +1861,11 @@ FT_TEST(test_http2_stream_manager_flow_control, "http2 stream manager enforces f
     http2_stream_manager manager;
     ft_string buffer;
     uint32_t window_value;
+
+    if (manager.initialize() != FT_ERR_SUCCESS)
+        return (0);
+    if (buffer.initialize() != FT_ERR_SUCCESS)
+        return (0);
 
     if (!manager.update_local_initial_window(8))
         return (0);
@@ -1874,6 +1905,9 @@ FT_TEST(test_http2_stream_manager_priority_reassignment, "http2 priority exclusi
     uint8_t weight_value;
     bool exclusive_flag;
 
+    if (manager.initialize() != FT_ERR_SUCCESS)
+        return (0);
+
     if (!manager.open_stream(1))
         return (0);
     if (!manager.open_stream(3))
@@ -1908,9 +1942,12 @@ FT_TEST(test_http2_settings_apply_remote_settings, "http2 settings adjusts remot
     http2_stream_manager manager;
     http2_settings_state settings;
     http2_frame frame;
+    if (frame.initialize() != FT_ERR_SUCCESS)
+        return (0);
     char payload_bytes[6];
     uint32_t window_value;
-
+    if (manager.initialize() != FT_ERR_SUCCESS)
+        return (0);
     if (!manager.open_stream(1))
         return (0);
     if (!frame.set_type(0x4))
@@ -1926,6 +1963,8 @@ FT_TEST(test_http2_settings_apply_remote_settings, "http2 settings adjusts remot
     payload_bytes[4] = 0x04;
     payload_bytes[5] = 0x00;
     if (!frame.set_payload_from_buffer(payload_bytes, 6))
+        return (0);
+    if (frame.get_error() != FT_ERR_SUCCESS)
         return (0);
     if (!settings.apply_remote_settings(frame, manager))
         return (0);

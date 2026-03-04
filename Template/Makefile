@@ -95,6 +95,10 @@ fclean: clean
 
 re: fclean all
 
+
+%_test.a:
+	@$(MAKE) TARGET="$@" $(SUBMAKE_OVERRIDES) COMPILE_FLAGS="$(COMPILE_FLAGS) -DLIBFT_TEST_BUILD" all
+
 -include $(DEPS) $(DEBUG_DEPS)
 
 .PHONY: all clean fclean re

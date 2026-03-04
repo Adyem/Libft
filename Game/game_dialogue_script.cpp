@@ -31,6 +31,8 @@ static ft_sharedptr<ft_dialogue_line> game_dialogue_clone_line_ptr(
 
     if (line == ft_sharedptr<ft_dialogue_line>())
         return (ft_sharedptr<ft_dialogue_line>());
+    if (copied_next_ids.initialize() != FT_ERR_SUCCESS)
+        return (ft_sharedptr<ft_dialogue_line>());
     cloned_line = new (std::nothrow) ft_dialogue_line();
     if (cloned_line == ft_nullptr)
         return (ft_sharedptr<ft_dialogue_line>());
@@ -68,6 +70,8 @@ static void game_dialogue_copy_plain_line_vector(const ft_vector<ft_dialogue_lin
     ft_dialogue_line *cloned_line;
     ft_vector<int> copied_next_ids;
 
+    if (copied_next_ids.initialize() != FT_ERR_SUCCESS)
+        return ;
     destination.clear();
     entry = source.begin();
     entry_end = source.end();
@@ -138,6 +142,7 @@ void ft_dialogue_script::abort_if_not_initialized(const char *method_name) const
 
 int ft_dialogue_script::initialize() noexcept
 {
+    int lines_error;
     if (this->_initialized_state == ft_dialogue_script::_state_initialized)
     {
         this->abort_lifecycle_error("ft_dialogue_script::initialize",
@@ -152,12 +157,18 @@ int ft_dialogue_script::initialize() noexcept
     if (summary_error != FT_ERR_SUCCESS)
     {
         (void)this->_title.destroy();
+        this->_initialized_state = ft_dialogue_script::_state_destroyed;
         return (summary_error);
     }
-    this->_title.clear();
-    this->_summary.clear();
+    lines_error = this->_lines.initialize();
+    if (lines_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_title.destroy();
+        (void)this->_summary.destroy();
+        this->_initialized_state = ft_dialogue_script::_state_destroyed;
+        return (lines_error);
+    }
     this->_start_line_id = 0;
-    this->_lines.clear();
     this->_initialized_state = ft_dialogue_script::_state_initialized;
     return (FT_ERR_SUCCESS);
 }
@@ -174,6 +185,12 @@ int ft_dialogue_script::initialize(const ft_dialogue_script &other) noexcept
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
+    if (this->_initialized_state == ft_dialogue_script::_state_initialized)
+    {
+        initialize_error = this->destroy();
+        if (initialize_error != FT_ERR_SUCCESS)
+            return (initialize_error);
+    }
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
         return (initialize_error);
@@ -197,6 +214,12 @@ int ft_dialogue_script::initialize(ft_dialogue_script &&other) noexcept
     }
     if (this == &other)
         return (FT_ERR_SUCCESS);
+    if (this->_initialized_state == ft_dialogue_script::_state_initialized)
+    {
+        initialize_error = this->destroy();
+        if (initialize_error != FT_ERR_SUCCESS)
+            return (initialize_error);
+    }
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
         return (initialize_error);
@@ -214,6 +237,12 @@ int ft_dialogue_script::initialize(int script_id, const ft_string &title,
 {
     int initialize_error;
 
+    if (this->_initialized_state == ft_dialogue_script::_state_initialized)
+    {
+        initialize_error = this->destroy();
+        if (initialize_error != FT_ERR_SUCCESS)
+            return (initialize_error);
+    }
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
         return (initialize_error);
@@ -227,17 +256,30 @@ int ft_dialogue_script::initialize(int script_id, const ft_string &title,
 
 int ft_dialogue_script::destroy() noexcept
 {
+    int lines_error;
+    int title_error;
+    int summary_error;
+    int first_error;
     int disable_error;
 
     if (this->_initialized_state != ft_dialogue_script::_state_initialized)
         return (FT_ERR_INVALID_STATE);
+    first_error = FT_ERR_SUCCESS;
+    lines_error = this->_lines.destroy();
+    if (first_error == FT_ERR_SUCCESS && lines_error != FT_ERR_SUCCESS)
+        first_error = lines_error;
+    title_error = this->_title.destroy();
+    if (first_error == FT_ERR_SUCCESS && title_error != FT_ERR_SUCCESS)
+        first_error = title_error;
+    summary_error = this->_summary.destroy();
+    if (first_error == FT_ERR_SUCCESS && summary_error != FT_ERR_SUCCESS)
+        first_error = summary_error;
     this->_script_id = 0;
-    this->_title.clear();
-    this->_summary.clear();
     this->_start_line_id = 0;
-    this->_lines.clear();
     disable_error = this->disable_thread_safety();
     this->_initialized_state = ft_dialogue_script::_state_destroyed;
+    if (first_error != FT_ERR_SUCCESS)
+        return (first_error);
     return (disable_error);
 }
 

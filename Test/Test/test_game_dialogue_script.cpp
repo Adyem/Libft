@@ -27,10 +27,13 @@ static ft_sharedptr<ft_dialogue_line> make_line(int id, const char *speaker,
 FT_TEST(test_dialogue_script_initial_state, "default dialogue script starts empty")
 {
     ft_dialogue_script script;
+    ft_string empty;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, script.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, empty.initialize());
     FT_ASSERT_EQ(0, script.get_script_id());
-    FT_ASSERT_EQ(ft_string(), script.get_title());
-    FT_ASSERT_EQ(ft_string(), script.get_summary());
+    FT_ASSERT_EQ(empty, script.get_title());
+    FT_ASSERT_EQ(empty, script.get_summary());
     FT_ASSERT_EQ(0, script.get_start_line_id());
     FT_ASSERT_EQ(0u, script.get_lines().size());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, script.get_error());
