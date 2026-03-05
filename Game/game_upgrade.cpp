@@ -32,8 +32,14 @@ ft_upgrade::ft_upgrade() noexcept
 
 ft_upgrade::~ft_upgrade() noexcept
 {
+    int destroy_error;
+
     if (this->_initialized_state == ft_upgrade::_state_initialized)
-        (void)this->destroy();
+    {
+        destroy_error = this->destroy();
+        if (destroy_error != FT_ERR_SUCCESS)
+            this->set_error(destroy_error);
+    }
     return ;
 }
 
@@ -82,6 +88,12 @@ int ft_upgrade::initialize(const ft_upgrade &other) noexcept
 {
     int initialize_error;
 
+    if (other._initialized_state != ft_upgrade::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_upgrade::initialize(copy)",
+            "source object is not initialized");
+        return (FT_ERR_INVALID_STATE);
+    }
     if (&other == this)
         return (FT_ERR_SUCCESS);
     initialize_error = this->initialize();

@@ -14,6 +14,7 @@ int test_event_scheduler_cancel_missing_event(void)
 {
     ft_event_scheduler scheduler;
     ft_sharedptr<ft_event> first(new ft_event());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first->initialize());
     ft_vector<ft_sharedptr<ft_event> > events;
 
     first->set_id(1);
@@ -34,6 +35,7 @@ int test_event_scheduler_reschedule_duration(void)
 {
     ft_event_scheduler scheduler;
     ft_sharedptr<ft_event> timed(new ft_event());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, timed->initialize());
     ft_vector<ft_sharedptr<ft_event> > events;
 
     timed->set_id(4);
@@ -54,6 +56,7 @@ int test_event_scheduler_clear_queue(void)
 {
     ft_event_scheduler scheduler;
     ft_sharedptr<ft_event> pending(new ft_event());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, pending->initialize());
     ft_vector<ft_sharedptr<ft_event> > events;
 
     pending->set_id(9);
@@ -72,7 +75,9 @@ int test_event_scheduler_prioritizes_shorter_events(void)
 {
     ft_event_scheduler scheduler;
     ft_sharedptr<ft_event> long_event(new ft_event());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, long_event->initialize());
     ft_sharedptr<ft_event> short_event(new ft_event());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, short_event->initialize());
     ft_vector<ft_sharedptr<ft_event> > events;
 
     long_event->set_id(11);
@@ -112,6 +117,7 @@ FT_TEST(test_game_event_scheduler_processes_ready_events, "ft_event_scheduler ru
     ft_event_scheduler scheduler;
     ft_sharedptr<ft_world> world(new ft_world());
     ft_sharedptr<ft_event> ready_event(new ft_event());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ready_event->initialize());
     ft_vector<ft_sharedptr<ft_event> > remaining;
     int callback_runs;
 
@@ -139,6 +145,7 @@ FT_TEST(test_game_event_scheduler_reschedules_remaining_events, "ft_event_schedu
     ft_event_scheduler scheduler;
     ft_sharedptr<ft_world> world(new ft_world());
     ft_sharedptr<ft_event> delayed_event(new ft_event());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, delayed_event->initialize());
     ft_vector<ft_sharedptr<ft_event> > pending;
 
     delayed_event->set_id(22);
@@ -157,6 +164,7 @@ FT_TEST(test_game_event_scheduler_rejects_null_world, "ft_event_scheduler::updat
 {
     ft_event_scheduler scheduler;
     ft_sharedptr<ft_event> mission(new ft_event());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, mission->initialize());
     ft_vector<ft_sharedptr<ft_event> > queued;
     ft_sharedptr<ft_world> world;
 
@@ -177,6 +185,7 @@ FT_TEST(test_game_event_scheduler_profiles_updates, "ft_event_scheduler records 
     ft_event_scheduler scheduler;
     ft_sharedptr<ft_world> world(new ft_world());
     ft_sharedptr<ft_event> task(new ft_event());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, task->initialize());
     t_event_scheduler_profile profile;
 
     scheduler.enable_profiling(true);
@@ -200,6 +209,7 @@ FT_TEST(test_game_event_scheduler_reset_profile_clears_metrics, "ft_event_schedu
     ft_event_scheduler scheduler;
     ft_sharedptr<ft_world> world(new ft_world());
     ft_sharedptr<ft_event> quick_task(new ft_event());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, quick_task->initialize());
     t_event_scheduler_profile profile;
 
     scheduler.enable_profiling(true);
@@ -223,7 +233,9 @@ FT_TEST(test_game_event_scheduler_size_tracks_scheduled_events, "ft_event_schedu
 {
     ft_event_scheduler scheduler;
     ft_sharedptr<ft_event> first(new ft_event());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first->initialize());
     ft_sharedptr<ft_event> second(new ft_event());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second->initialize());
 
     first->set_id(31);
     first->set_duration(2);
@@ -240,6 +252,7 @@ FT_TEST(test_game_event_scheduler_cancel_existing_event_clears_queue, "ft_event_
 {
     ft_event_scheduler scheduler;
     ft_sharedptr<ft_event> quest(new ft_event());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, quest->initialize());
     ft_vector<ft_sharedptr<ft_event> > events;
 
     quest->set_id(33);
@@ -296,6 +309,7 @@ FT_TEST(test_game_event_scheduler_profile_counts_reschedules, "ft_event_schedule
     ft_event_scheduler scheduler;
     ft_sharedptr<ft_world> world(new ft_world());
     ft_sharedptr<ft_event> delayed(new ft_event());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, delayed->initialize());
     t_event_scheduler_profile profile;
 
     scheduler.enable_profiling(true);

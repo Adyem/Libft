@@ -11,6 +11,7 @@
 FT_TEST(test_game_buff_rejects_negative_id, "Game: buff setter rejects negative identifiers")
 {
     ft_buff buff;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buff.initialize());
 
     buff.set_id(-4);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, buff.get_error());
@@ -25,6 +26,7 @@ FT_TEST(test_game_buff_rejects_negative_id, "Game: buff setter rejects negative 
 FT_TEST(test_game_buff_duration_addition_rejects_negative, "Game: buff duration addition enforces non-negative increments")
 {
     ft_buff buff;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, buff.initialize());
 
     buff.add_duration(-3);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, buff.get_error());
@@ -39,6 +41,7 @@ FT_TEST(test_game_buff_duration_addition_rejects_negative, "Game: buff duration 
 FT_TEST(test_game_debuff_modifier_updates_apply_deltas, "Game: debuff modifier updates accumulate changes")
 {
     ft_debuff debuff;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, debuff.initialize());
 
     debuff.set_modifier2(5);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, debuff.get_error());
@@ -55,6 +58,7 @@ FT_TEST(test_game_debuff_modifier_updates_apply_deltas, "Game: debuff modifier u
 FT_TEST(test_game_resistance_reset_clears_values, "Game: resistance reset restores zeroed values")
 {
     ft_resistance resistance;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, resistance.initialize());
 
     resistance.set_values(25, 10);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, resistance.get_error());
@@ -76,6 +80,8 @@ FT_TEST(test_game_resistance_set_values_copy_values, "Game: resistance set value
 {
     ft_resistance source;
     ft_resistance destination;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.initialize());
 
     source.set_values(15, 3);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());

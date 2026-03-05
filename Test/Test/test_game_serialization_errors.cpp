@@ -157,6 +157,7 @@ FT_TEST(test_serialize_character_skill_error_sets_errno, "serialize_character re
 {
     cma_set_alloc_limit(1);
     ft_character broken_character;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, broken_character.initialize());
     cma_set_alloc_limit(0);
 
     json_group *group = serialize_character(broken_character);
@@ -170,6 +171,9 @@ FT_TEST(test_serialize_character_success_clears_errno, "serialize_character clea
     ft_character character;
     ft_skill skill;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, character.initialize());
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, skill.initialize());
     skill.set_id(3);
     skill.set_level(2);
     skill.set_cooldown(5);

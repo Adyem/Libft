@@ -18,8 +18,10 @@ static void *buff_increment_task(void *argument)
     if (args == ft_nullptr)
         return (ft_nullptr);
     ft_buff shared_buff;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, shared_buff.initialize());
     for (int index = 0; index < args->iterations; ++index)
         shared_buff.add_modifier1(1);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, shared_buff.destroy());
     return (ft_nullptr);
 }
 
@@ -29,8 +31,10 @@ static void *skill_cooldown_task(void *argument)
     if (args == ft_nullptr)
         return (ft_nullptr);
     ft_skill shared_skill;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, shared_skill.initialize());
     for (int index = 0; index < args->iterations; ++index)
         shared_skill.add_cooldown(1);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, shared_skill.destroy());
     return (ft_nullptr);
 }
 

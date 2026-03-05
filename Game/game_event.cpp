@@ -1,6 +1,8 @@
 #include "../PThread/pthread_internal.hpp"
 #include "game_event.hpp"
 #include "../Template/move.hpp"
+#include "../Printf/printf.hpp"
+#include "../System_utils/system_utils.hpp"
 #include <climits>
 #include <new>
 
@@ -8,7 +10,8 @@ thread_local int ft_event::_last_error = FT_ERR_SUCCESS;
 
 ft_event::ft_event() noexcept
     : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0),
-      _modifier4(0), _callback(), _mutex(ft_nullptr)
+      _modifier4(0), _callback(), _mutex(ft_nullptr),
+      _initialized_state(ft_event::_state_uninitialized)
 {
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -16,14 +19,78 @@ ft_event::ft_event() noexcept
 
 ft_event::~ft_event() noexcept
 {
-    (void)this->disable_thread_safety();
+    if (this->_initialized_state == ft_event::_state_initialized)
+        (void)this->destroy();
     return ;
+}
+
+void ft_event::abort_lifecycle_error(const char *method_name,
+    const char *reason) const
+{
+    if (method_name == ft_nullptr)
+        method_name = "unknown";
+    if (reason == ft_nullptr)
+        reason = "unknown";
+    pf_printf_fd(2, "ft_event lifecycle error: %s: %s\n", method_name, reason);
+    su_abort();
+    return ;
+}
+
+void ft_event::abort_if_not_initialized(const char *method_name) const
+{
+    if (this->_initialized_state == ft_event::_state_initialized)
+        return ;
+    this->abort_lifecycle_error(method_name,
+        "called while object is not initialized");
+    return ;
+}
+
+int ft_event::initialize() noexcept
+{
+    if (this->_initialized_state == ft_event::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_event::initialize",
+            "already initialized");
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
+    }
+    this->_id = 0;
+    this->_duration = 0;
+    this->_modifier1 = 0;
+    this->_modifier2 = 0;
+    this->_modifier3 = 0;
+    this->_modifier4 = 0;
+    this->_callback = ft_function<void(ft_world&, ft_event&)>();
+    this->_initialized_state = ft_event::_state_initialized;
+    this->set_error(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
+}
+
+int ft_event::destroy() noexcept
+{
+    if (this->_initialized_state != ft_event::_state_initialized)
+    {
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
+    }
+    this->_id = 0;
+    this->_duration = 0;
+    this->_modifier1 = 0;
+    this->_modifier2 = 0;
+    this->_modifier3 = 0;
+    this->_modifier4 = 0;
+    this->_callback = ft_function<void(ft_world&, ft_event&)>();
+    int disable_error = this->disable_thread_safety();
+    this->_initialized_state = ft_event::_state_destroyed;
+    this->set_error(disable_error);
+    return (disable_error);
 }
 
 int ft_event::lock_internal(bool *lock_acquired) const noexcept
 {
     int lock_error;
 
+    this->abort_if_not_initialized("ft_event::lock_internal");
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     lock_error = pt_recursive_mutex_lock_if_not_null(this->_mutex);
@@ -42,6 +109,7 @@ void ft_event::unlock_internal(bool lock_acquired) const noexcept
 {
     int unlock_error;
 
+    this->abort_if_not_initialized("ft_event::unlock_internal");
     if (lock_acquired == false)
         return ;
     unlock_error = pt_recursive_mutex_unlock_if_not_null(this->_mutex);
@@ -307,6 +375,7 @@ int ft_event::enable_thread_safety() noexcept
     pt_recursive_mutex *mutex_pointer;
     int initialize_error;
 
+    this->abort_if_not_initialized("ft_event::enable_thread_safety");
     if (this->_mutex != ft_nullptr)
         return (FT_ERR_SUCCESS);
     mutex_pointer = new (std::nothrow) pt_recursive_mutex();
@@ -331,6 +400,7 @@ int ft_event::disable_thread_safety() noexcept
 {
     int destroy_error;
 
+    this->abort_if_not_initialized("ft_event::disable_thread_safety");
     if (this->_mutex == ft_nullptr)
     {
         this->set_error(FT_ERR_SUCCESS);
@@ -345,6 +415,7 @@ int ft_event::disable_thread_safety() noexcept
 
 bool ft_event::is_thread_safe() const noexcept
 {
+    this->abort_if_not_initialized("ft_event::is_thread_safe");
     return (this->_mutex != ft_nullptr);
 }
 

@@ -10,15 +10,24 @@ class ft_resistance
         int              _percent_value;
         int              _flat_value;
         mutable pt_recursive_mutex *_mutex;
+        uint8_t          _initialized_state;
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
         static thread_local int _last_error;
 
         void set_error(int error) const noexcept;
+        void abort_lifecycle_error(const char *method_name,
+            const char *reason) const noexcept;
+        void abort_if_not_initialized(const char *method_name) const noexcept;
         int lock_internal(bool *lock_acquired) const noexcept;
         int unlock_internal(bool lock_acquired) const noexcept;
 
     public:
         ft_resistance() noexcept;
         ~ft_resistance() noexcept;
+        int initialize() noexcept;
+        int destroy() noexcept;
         ft_resistance(const ft_resistance &other) noexcept = delete;
         ft_resistance &operator=(const ft_resistance &other) noexcept = delete;
         ft_resistance(ft_resistance &&other) noexcept = delete;

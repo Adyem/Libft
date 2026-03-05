@@ -10,6 +10,7 @@
 FT_TEST(test_game_skill_rejects_negative_id, "Game: skill set_id rejects negative values")
 {
     ft_skill skill;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, skill.initialize());
 
     skill.set_id(-2);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, skill.get_error());
@@ -22,6 +23,7 @@ FT_TEST(test_game_skill_rejects_negative_id, "Game: skill set_id rejects negativ
 FT_TEST(test_game_skill_modifier_accumulation, "Game: skill modifier setters accumulate deltas")
 {
     ft_skill skill;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, skill.initialize());
 
     skill.set_modifier1(3);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, skill.get_error());
@@ -38,6 +40,7 @@ FT_TEST(test_game_skill_modifier_accumulation, "Game: skill modifier setters acc
 FT_TEST(test_game_upgrade_add_level_caps_at_max, "Game: upgrade add_level clamps to maximum")
 {
     ft_upgrade upgrade;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, upgrade.initialize());
 
     upgrade.set_max_level(5);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, upgrade.get_error());
@@ -54,6 +57,7 @@ FT_TEST(test_game_upgrade_add_level_caps_at_max, "Game: upgrade add_level clamps
 FT_TEST(test_game_upgrade_sub_level_floors_at_zero, "Game: upgrade sub_level floors progress at zero")
 {
     ft_upgrade upgrade;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, upgrade.initialize());
 
     upgrade.set_current_level(3);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, upgrade.get_error());

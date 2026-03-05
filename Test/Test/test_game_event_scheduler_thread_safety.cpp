@@ -37,6 +37,7 @@ static void *scheduler_schedule_task(void *argument)
             arguments->result_code = FT_ERR_NO_MEMORY;
             return (ft_nullptr);
         }
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, event_instance->initialize());
         if (event_instance->get_error() != FT_ERR_SUCCESS)
         {
             arguments->result_code = event_instance->get_error();
@@ -202,6 +203,7 @@ FT_TEST(test_game_event_scheduler_concurrent_reschedule,
         ft_sharedptr<ft_event> event_instance(new (std::nothrow) ft_event());
 
         FT_ASSERT_EQ(1, static_cast<int>(static_cast<bool>(event_instance)));
+        FT_ASSERT_EQ(FT_ERR_SUCCESS, event_instance->initialize());
         event_instance->set_id(preload_index);
         event_instance->set_duration(1);
         scheduler_instance.schedule_event(event_instance);

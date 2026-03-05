@@ -28,6 +28,7 @@
 #include <csignal>
 #include <csetjmp>
 #include <cstring>
+#include <new>
 
 #ifndef LIBFT_TEST_BUILD
 #endif
@@ -48,9 +49,17 @@ static int expect_no_sigabrt_on_uninitialized_destructor()
     struct sigaction new_action_abort;
     struct sigaction old_action_iot;
     struct sigaction new_action_iot;
+    struct sigaction restore_action_abort;
+    struct sigaction restore_action_iot;
     int jump_result;
+    int restore_abort_result;
+    int restore_iot_result;
+    TypeName *object_instance;
+    alignas(TypeName) unsigned char object_storage[sizeof(TypeName)];
 
+    std::memset(&old_action_abort, 0, sizeof(old_action_abort));
     std::memset(&new_action_abort, 0, sizeof(new_action_abort));
+    std::memset(&old_action_iot, 0, sizeof(old_action_iot));
     std::memset(&new_action_iot, 0, sizeof(new_action_iot));
     new_action_abort.sa_handler = &uninitialized_destructor_signal_handler;
     new_action_iot.sa_handler = &uninitialized_destructor_signal_handler;
@@ -60,7 +69,13 @@ static int expect_no_sigabrt_on_uninitialized_destructor()
         return (0);
     if (sigaction(SIGIOT, &new_action_iot, &old_action_iot) != 0)
     {
-        (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
+        std::memset(&restore_action_abort, 0, sizeof(restore_action_abort));
+        restore_action_abort.sa_handler = old_action_abort.sa_handler;
+        restore_action_abort.sa_mask = old_action_abort.sa_mask;
+        restore_action_abort.sa_flags = old_action_abort.sa_flags;
+        restore_abort_result = sigaction(SIGABRT, &restore_action_abort, ft_nullptr);
+        if (restore_abort_result != 0)
+            return (0);
         return (0);
     }
 
@@ -68,13 +83,24 @@ static int expect_no_sigabrt_on_uninitialized_destructor()
     jump_result = sigsetjmp(g_signal_jump_buffer, 1);
     if (jump_result == 0)
     {
-        TypeName object_instance;
-
-        (void)object_instance;
+        object_instance = new (object_storage) TypeName();
+        object_instance->~TypeName();
     }
 
-    (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
-    (void)sigaction(SIGIOT, &old_action_iot, ft_nullptr);
+    std::memset(&restore_action_abort, 0, sizeof(restore_action_abort));
+    std::memset(&restore_action_iot, 0, sizeof(restore_action_iot));
+    restore_action_abort.sa_handler = old_action_abort.sa_handler;
+    restore_action_abort.sa_mask = old_action_abort.sa_mask;
+    restore_action_abort.sa_flags = old_action_abort.sa_flags;
+    restore_action_iot.sa_handler = old_action_iot.sa_handler;
+    restore_action_iot.sa_mask = old_action_iot.sa_mask;
+    restore_action_iot.sa_flags = old_action_iot.sa_flags;
+    restore_abort_result = sigaction(SIGABRT, &restore_action_abort, ft_nullptr);
+    restore_iot_result = sigaction(SIGIOT, &restore_action_iot, ft_nullptr);
+    if (restore_abort_result != 0)
+        return (0);
+    if (restore_iot_result != 0)
+        return (0);
     return (g_signal_caught == 0);
 }
 

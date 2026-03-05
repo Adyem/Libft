@@ -49,6 +49,7 @@ FT_TEST(test_game_script_context_variable_controls,
     "ft_game_script_context stores, updates, and clears script variables")
 {
     ft_game_script_context context;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, context.initialize());
     const ft_string *value_pointer;
 
     ft_string quest_stage_key;
@@ -63,7 +64,8 @@ FT_TEST(test_game_script_context_variable_controls,
     FT_ASSERT_EQ(FT_ERR_SUCCESS, context.get_error());
     FT_ASSERT_STR_EQ("3", value_pointer->c_str());
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, quest_stage_value.initialize("4"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, quest_stage_value.clear());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, quest_stage_value.append("4"));
     context.set_variable(quest_stage_key, quest_stage_value);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, context.get_error());
 
@@ -79,7 +81,8 @@ FT_TEST(test_game_script_context_variable_controls,
     FT_ASSERT(value_pointer == ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, context.get_error());
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, quest_stage_value.initialize("7"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, quest_stage_value.clear());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, quest_stage_value.append("7"));
     context.set_variable(quest_stage_key, quest_stage_value);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, context.get_error());
 
@@ -98,6 +101,7 @@ FT_TEST(test_game_script_bridge_executes_callbacks,
 {
     ft_sharedptr<ft_world> world_pointer(new ft_world());
     ft_game_state state;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, state.initialize());
     ft_game_script_bridge bridge;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.initialize(world_pointer));
     ft_function<int(ft_game_script_context &, const ft_vector<ft_string> &)> adjust_function(game_script_adjust_score);
@@ -133,6 +137,7 @@ FT_TEST(test_game_script_bridge_operation_limit,
 {
     ft_sharedptr<ft_world> world_pointer(new ft_world());
     ft_game_state state;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, state.initialize());
     ft_game_script_bridge bridge;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.initialize(world_pointer));
     ft_function<int(ft_game_script_context &, const ft_vector<ft_string> &)> adjust_function(game_script_adjust_score);

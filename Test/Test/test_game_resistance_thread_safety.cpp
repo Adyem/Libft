@@ -85,6 +85,7 @@ FT_TEST(test_game_resistance_thread_safety,
     "ft_resistance serializes concurrent updates and reads")
 {
     ft_resistance primary_resistance;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, primary_resistance.initialize());
     game_resistance_update_args update_arguments;
     game_resistance_read_args read_arguments;
     pthread_t update_thread;

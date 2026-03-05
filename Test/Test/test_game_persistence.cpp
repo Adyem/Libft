@@ -48,6 +48,7 @@ FT_TEST(test_game_world_persistence_round_trip,
 
     ft_sharedptr<ft_event> scheduled_event(new (std::nothrow) ft_event());
     FT_ASSERT(scheduled_event.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduled_event->initialize());
     FT_ASSERT_EQ(scheduled_event->get_error(), FT_ERR_SUCCESS);
     scheduled_event->set_id(7);
     scheduled_event->set_duration(5);

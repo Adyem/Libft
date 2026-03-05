@@ -5,6 +5,8 @@
 #include "../Errno/errno.hpp"
 #include "../Basic/basic.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Printf/printf.hpp"
+#include "../System_utils/system_utils.hpp"
 #include <cstdio>
 #include <new>
 
@@ -46,22 +48,41 @@ void ft_game_script_context::set_error(int error) const noexcept
 }
 
 ft_game_script_context::ft_game_script_context() noexcept
-    : _state(ft_nullptr), _world(), _variables()
+    : _state(ft_nullptr), _world(), _variables(),
+      _initialized_state(ft_game_script_context::_state_uninitialized)
 {
+    this->set_error(FT_ERR_SUCCESS);
     return ;
 }
 
 ft_game_script_context::~ft_game_script_context() noexcept
 {
+    if (this->_initialized_state == ft_game_script_context::_state_initialized)
+        (void)this->destroy();
+    else
+        this->_initialized_state = ft_game_script_context::_state_destroyed;
     return ;
 }
 
 int ft_game_script_context::initialize() noexcept
 {
+    if (this->_initialized_state == ft_game_script_context::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_game_script_context::initialize",
+            "already initialized");
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
+    }
+    int variable_error = this->_variables.initialize();
+    if (variable_error != FT_ERR_SUCCESS)
+    {
+        this->_initialized_state = ft_game_script_context::_state_destroyed;
+        this->set_error(variable_error);
+        return (variable_error);
+    }
     this->_state = ft_nullptr;
     this->_world = ft_sharedptr<ft_world>();
-    this->_variables.clear();
-    this->set_error(FT_ERR_SUCCESS);
+    this->_initialized_state = ft_game_script_context::_state_initialized;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
@@ -69,10 +90,23 @@ int ft_game_script_context::initialize() noexcept
 int ft_game_script_context::initialize(ft_game_state *state,
     const ft_sharedptr<ft_world> &world) noexcept
 {
+    if (this->_initialized_state == ft_game_script_context::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_game_script_context::initialize",
+            "already initialized");
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
+    }
+    int variable_error = this->_variables.initialize();
+    if (variable_error != FT_ERR_SUCCESS)
+    {
+        this->_initialized_state = ft_game_script_context::_state_destroyed;
+        this->set_error(variable_error);
+        return (variable_error);
+    }
     this->_state = state;
     this->_world = world;
-    this->_variables.clear();
-    this->set_error(FT_ERR_SUCCESS);
+    this->_initialized_state = ft_game_script_context::_state_initialized;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
@@ -81,11 +115,78 @@ int ft_game_script_context::initialize(const ft_game_script_context &other) noex
 {
     if (this == &other)
         return (FT_ERR_SUCCESS);
+    if (other._initialized_state != ft_game_script_context::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_game_script_context::initialize",
+            "source object is not initialized");
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
+    }
+    if (this->_initialized_state == ft_game_script_context::_state_initialized)
+    {
+        this->abort_lifecycle_error("ft_game_script_context::initialize",
+            "already initialized");
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
+    }
+    int variable_error = this->_variables.initialize();
+    if (variable_error != FT_ERR_SUCCESS)
+    {
+        this->_initialized_state = ft_game_script_context::_state_destroyed;
+        this->set_error(variable_error);
+        return (variable_error);
+    }
+    int copy_error = this->_variables.copy_from(other._variables);
+    if (copy_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_variables.destroy();
+        this->_initialized_state = ft_game_script_context::_state_destroyed;
+        this->set_error(copy_error);
+        return (copy_error);
+    }
     this->_state = other._state;
     this->_world = other._world;
-    this->_variables = other._variables;
+    this->_initialized_state = ft_game_script_context::_state_initialized;
     this->set_error(other.get_error());
     return (FT_ERR_SUCCESS);
+}
+
+int ft_game_script_context::destroy() noexcept
+{
+    if (this->_initialized_state != ft_game_script_context::_state_initialized)
+    {
+        this->_initialized_state = ft_game_script_context::_state_destroyed;
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (FT_ERR_INVALID_STATE);
+    }
+    this->_state = ft_nullptr;
+    this->_world = ft_sharedptr<ft_world>();
+    int destroy_error = this->_variables.destroy();
+    this->_initialized_state = ft_game_script_context::_state_destroyed;
+    this->set_error(destroy_error);
+    return (destroy_error);
+}
+
+void ft_game_script_context::abort_lifecycle_error(const char *method_name,
+        const char *reason) const noexcept
+{
+    if (method_name == ft_nullptr)
+        method_name = "unknown";
+    if (reason == ft_nullptr)
+        reason = "unknown";
+    pf_printf_fd(2, "ft_game_script_context lifecycle error: %s: %s\n",
+        method_name, reason);
+    su_abort();
+    return ;
+}
+
+void ft_game_script_context::abort_if_not_initialized(const char *method_name) const noexcept
+{
+    if (this->_initialized_state == ft_game_script_context::_state_initialized)
+        return ;
+    this->abort_lifecycle_error(method_name,
+        "called while object is not initialized");
+    return ;
 }
 
 ft_game_state *ft_game_script_context::get_state() const noexcept
@@ -100,6 +201,7 @@ const ft_sharedptr<ft_world> &ft_game_script_context::get_world() const noexcept
 
 void ft_game_script_context::set_state(ft_game_state *state) noexcept
 {
+    this->abort_if_not_initialized("ft_game_script_context::set_state");
     this->_state = state;
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -107,6 +209,7 @@ void ft_game_script_context::set_state(ft_game_state *state) noexcept
 
 void ft_game_script_context::set_world(const ft_sharedptr<ft_world> &world) noexcept
 {
+    this->abort_if_not_initialized("ft_game_script_context::set_world");
     this->_world = world;
     this->set_error(FT_ERR_SUCCESS);
     return ;
@@ -114,6 +217,7 @@ void ft_game_script_context::set_world(const ft_sharedptr<ft_world> &world) noex
 
 void ft_game_script_context::set_variable(const ft_string &key, const ft_string &value) noexcept
 {
+    this->abort_if_not_initialized("ft_game_script_context::set_variable");
     if (this->_state)
     {
         this->_state->set_variable(key, value);
@@ -146,6 +250,7 @@ void ft_game_script_context::set_variable(const ft_string &key, const ft_string 
 
 const ft_string *ft_game_script_context::get_variable(const ft_string &key) const noexcept
 {
+    this->abort_if_not_initialized("ft_game_script_context::get_variable");
     if (this->_state)
     {
         const ft_string *value;
@@ -173,6 +278,7 @@ const ft_string *ft_game_script_context::get_variable(const ft_string &key) cons
 
 void ft_game_script_context::remove_variable(const ft_string &key) noexcept
 {
+    this->abort_if_not_initialized("ft_game_script_context::remove_variable");
     if (this->_state)
     {
         this->_state->remove_variable(key);
@@ -191,6 +297,7 @@ void ft_game_script_context::remove_variable(const ft_string &key) noexcept
 
 void ft_game_script_context::clear_variables() noexcept
 {
+    this->abort_if_not_initialized("ft_game_script_context::clear_variables");
     if (this->_state)
     {
         this->_state->clear_variables();
@@ -251,6 +358,12 @@ ft_game_script_bridge::ft_game_script_bridge() noexcept
 int ft_game_script_bridge::initialize(const ft_sharedptr<ft_world> &world,
     const char *language) noexcept
 {
+    int map_error = this->_callbacks.initialize();
+    if (map_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(map_error);
+        return (map_error);
+    }
     this->_world = world;
     if (language)
         this->_language = language;
@@ -272,6 +385,7 @@ int ft_game_script_bridge::initialize(const ft_sharedptr<ft_world> &world,
 
 ft_game_script_bridge::~ft_game_script_bridge() noexcept
 {
+    (void)this->_callbacks.destroy();
     (void)this->disable_thread_safety();
     return ;
 }

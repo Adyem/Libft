@@ -8,14 +8,16 @@
 FT_TEST(test_game_region_definition_defaults, "Region definition defaults to zeroed values")
 {
     ft_region_definition region;
+    ft_string empty;
 
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     FT_ASSERT_EQ(0, region.get_region_id());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
-    FT_ASSERT_EQ(ft_string(), region.get_name());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, empty.initialize());
+    FT_ASSERT_EQ(empty, region.get_name());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
-    FT_ASSERT_EQ(ft_string(), region.get_description());
+    FT_ASSERT_EQ(empty, region.get_description());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());
     FT_ASSERT_EQ(0, region.get_recommended_level());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, region.get_error());

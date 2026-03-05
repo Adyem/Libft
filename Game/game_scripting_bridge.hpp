@@ -17,13 +17,21 @@ class ft_game_script_context
         ft_game_state                         *_state;
         ft_sharedptr<ft_world>                _world;
         ft_map<ft_string, ft_string>          _variables;
+        uint8_t                               _initialized_state;
+        static const uint8_t                  _state_uninitialized = 0;
+        static const uint8_t                  _state_destroyed = 1;
+        static const uint8_t                  _state_initialized = 2;
         static thread_local int                _last_error;
 
         void set_error(int error) const noexcept;
+        void abort_lifecycle_error(const char *method_name,
+            const char *reason) const noexcept;
+        void abort_if_not_initialized(const char *method_name) const noexcept;
 
     public:
         ft_game_script_context() noexcept;
         ~ft_game_script_context() noexcept;
+        int destroy() noexcept;
         ft_game_script_context(const ft_game_script_context &other) noexcept = delete;
         ft_game_script_context &operator=(const ft_game_script_context &other) noexcept = delete;
 

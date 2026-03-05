@@ -10,6 +10,7 @@
 #include "../Template/shared_ptr.hpp"
 #include "../PThread/recursive_mutex.hpp"
 #include "../PThread/mutex.hpp"
+#include <stdint.h>
 
 class ft_game_hooks;
 
@@ -21,8 +22,15 @@ class ft_game_state
         ft_map<ft_string, ft_string>           _variables;
         ft_sharedptr<ft_game_hooks>            _hooks;
         mutable pt_recursive_mutex                       *_mutex;
+        uint8_t                                _initialized_state;
         static thread_local int                _last_error;
+        static const uint8_t                   _state_uninitialized = 0;
+        static const uint8_t                   _state_destroyed = 1;
+        static const uint8_t                   _state_initialized = 2;
 
+        void abort_lifecycle_error(const char *method_name,
+            const char *reason) const;
+        void abort_if_not_initialized(const char *method_name) const;
         void set_error(int error) const noexcept;
         int lock_internal(bool *lock_acquired) const noexcept;
         void unlock_internal(bool lock_acquired) const noexcept;
@@ -34,6 +42,9 @@ class ft_game_state
         ft_game_state &operator=(const ft_game_state &other) noexcept = delete;
         ft_game_state(ft_game_state &&other) noexcept = delete;
         ft_game_state &operator=(ft_game_state &&other) noexcept = delete;
+
+        int initialize() noexcept;
+        int destroy() noexcept;
 
         ft_vector<ft_sharedptr<ft_world> > &get_worlds() noexcept;
 

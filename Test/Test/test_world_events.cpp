@@ -12,6 +12,7 @@ FT_TEST(test_world_process_events, "ft_world event expiration")
 {
     ft_sharedptr<ft_world> world(new ft_world());
     ft_sharedptr<ft_event> event(new ft_event());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, event->initialize());
     event->set_id(1);
     event->set_duration(3);
     world->schedule_event(event);

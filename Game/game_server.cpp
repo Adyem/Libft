@@ -67,6 +67,18 @@ int ft_game_server::initialize(const ft_sharedptr<ft_world> &world,
         return (FT_ERR_INVALID_STATE);
     }
     this->_world = world;
+    if (this->_auth_token.initialize() != FT_ERR_SUCCESS)
+    {
+        this->set_error(this->_auth_token.get_error());
+        return (this->get_error());
+    }
+    int clients_error = this->_clients.initialize();
+    if (clients_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_auth_token.destroy();
+        this->set_error(clients_error);
+        return (this->get_error());
+    }
     this->_auth_token.clear();
     this->_clients.clear();
     this->_on_join = ft_nullptr;

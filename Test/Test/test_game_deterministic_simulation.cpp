@@ -89,6 +89,7 @@ FT_TEST(test_game_deterministic_simulation_scenarios,
 
     ft_sharedptr<ft_event> crafting_event(new (std::nothrow) ft_event());
     FT_ASSERT(crafting_event.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, crafting_event->initialize());
     crafting_event->set_id(1);
     crafting_event->set_duration(1);
     crafting_event->set_modifier1(crafted_sword_recipe_id);
@@ -110,6 +111,7 @@ FT_TEST(test_game_deterministic_simulation_scenarios,
 
     ft_sharedptr<ft_event> combat_event(new (std::nothrow) ft_event());
     FT_ASSERT(combat_event.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, combat_event->initialize());
     combat_event->set_id(2);
     combat_event->set_duration(3);
     combat_event->set_modifier1(18);
@@ -122,6 +124,7 @@ FT_TEST(test_game_deterministic_simulation_scenarios,
 
     ft_sharedptr<ft_event> completion_event(new (std::nothrow) ft_event());
     FT_ASSERT(completion_event.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, completion_event->initialize());
     completion_event->set_id(3);
     completion_event->set_duration(4);
     completion_event->set_callback(ft_function<void(ft_world&, ft_event&)>([&](ft_world &world_reference, ft_event &event_reference)

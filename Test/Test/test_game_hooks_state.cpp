@@ -17,11 +17,13 @@
 FT_TEST(test_game_state_dispatches_registered_hooks, "Game: game state dispatch forwards callbacks")
 {
     ft_game_state state;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, state.initialize());
     ft_sharedptr<ft_game_hooks> hooks;
     ft_character character;
     ft_item item;
     ft_world world;
     ft_event event;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, event.initialize());
     int crafted_invocations;
     int damaged_invocations;
     int event_invocations;
@@ -72,11 +74,13 @@ FT_TEST(test_game_state_dispatches_registered_hooks, "Game: game state dispatch 
 FT_TEST(test_game_state_reset_hooks_clears_callbacks, "Game: game state reset clears callbacks")
 {
     ft_game_state state;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, state.initialize());
     ft_sharedptr<ft_game_hooks> hooks;
     ft_character character;
     ft_item item;
     ft_world world;
     ft_event event;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, event.initialize());
     int crafted_invocations;
     int damaged_invocations;
     int event_invocations;

@@ -52,6 +52,7 @@ FT_TEST(test_game_event_add_duration_thread_safe, "ft_event::add_duration remain
     const char *failure_expression;
     int failure_line;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, event_instance.initialize());
     event_instance.set_duration(0);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, event_instance.enable_thread_safety());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, event_instance.get_error());
@@ -155,6 +156,7 @@ FT_TEST(test_game_event_setters_thread_safe, "ft_event setters synchronize share
     const char *failure_expression;
     int failure_line;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, event_instance.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, event_instance.enable_thread_safety());
     event_instance.set_id(1);
     event_instance.set_duration(1);

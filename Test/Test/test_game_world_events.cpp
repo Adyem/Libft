@@ -28,6 +28,7 @@ FT_TEST(test_game_world_propagates_invalid_event_errors, "Game world refuses eve
     ft_world world;
     ft_vector<ft_sharedptr<ft_event> > queued;
     ft_sharedptr<ft_event> invalid_event(new ft_event());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, invalid_event->initialize());
 
     invalid_event->set_id(4);
     invalid_event->set_duration(-2);
@@ -43,6 +44,7 @@ FT_TEST(test_game_world_update_requires_self_reference, "Game world update requi
 {
     ft_world world;
     ft_sharedptr<ft_event> quest_event(new ft_event());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, quest_event->initialize());
     ft_vector<ft_sharedptr<ft_event> > remaining;
     ft_sharedptr<ft_world> null_world;
 
@@ -62,6 +64,7 @@ FT_TEST(test_game_world_copy_keeps_scheduled_events, "Game world copy constructo
 {
     ft_world original;
     ft_sharedptr<ft_event> battle(new ft_event());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, battle->initialize());
     ft_vector<ft_sharedptr<ft_event> > original_events;
     ft_vector<ft_sharedptr<ft_event> > copied_events;
 
@@ -87,7 +90,9 @@ FT_TEST(test_game_world_schedule_clears_previous_error, "Game world resets error
     ft_world world;
     ft_vector<ft_sharedptr<ft_event> > queued;
     ft_sharedptr<ft_event> invalid_event(new ft_event());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, invalid_event->initialize());
     ft_sharedptr<ft_event> valid_event(new ft_event());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, valid_event->initialize());
 
     invalid_event->set_duration(-1);
     world.schedule_event(invalid_event);
@@ -107,6 +112,7 @@ FT_TEST(test_game_world_update_removes_completed_events, "Game world removes eve
 {
     ft_sharedptr<ft_world> world(new ft_world());
     ft_sharedptr<ft_event> immediate(new ft_event());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, immediate->initialize());
     ft_vector<ft_sharedptr<ft_event> > remaining;
 
     immediate->set_id(30);
@@ -124,7 +130,9 @@ FT_TEST(test_game_world_update_reschedules_remaining_events, "Game world keeps l
 {
     ft_sharedptr<ft_world> world(new ft_world());
     ft_sharedptr<ft_event> short_event(new ft_event());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, short_event->initialize());
     ft_sharedptr<ft_event> long_event(new ft_event());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, long_event->initialize());
     ft_vector<ft_sharedptr<ft_event> > remaining;
 
     short_event->set_id(31);
@@ -147,6 +155,7 @@ FT_TEST(test_game_world_update_zero_ticks_preserves_duration, "Game world keeps 
 {
     ft_sharedptr<ft_world> world(new ft_world());
     ft_sharedptr<ft_event> paused_event(new ft_event());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, paused_event->initialize());
     ft_vector<ft_sharedptr<ft_event> > queued;
 
     paused_event->set_id(41);
@@ -166,6 +175,7 @@ FT_TEST(test_game_world_move_assignment_transfers_scheduled_events, "Game world 
     ft_world source;
     ft_world destination;
     ft_sharedptr<ft_event> scheduled(new ft_event());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduled->initialize());
     ft_vector<ft_sharedptr<ft_event> > moved_events;
     ft_vector<ft_sharedptr<ft_event> > source_events;
 
@@ -189,7 +199,9 @@ FT_TEST(test_game_world_copy_assignment_shares_scheduler_state, "Game world copy
     ft_world source;
     ft_world destination;
     ft_sharedptr<ft_event> source_event(new ft_event());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source_event->initialize());
     ft_sharedptr<ft_event> destination_event(new ft_event());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination_event->initialize());
     ft_vector<ft_sharedptr<ft_event> > destination_events;
 
     source_event->set_id(43);
@@ -213,6 +225,7 @@ FT_TEST(test_game_world_move_transfers_scheduler_state, "Game world move constru
 {
     ft_world original;
     ft_sharedptr<ft_event> queued_event(new ft_event());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, queued_event->initialize());
     ft_vector<ft_sharedptr<ft_event> > moved_events;
 
     queued_event->set_id(40);
@@ -227,4 +240,3 @@ FT_TEST(test_game_world_move_transfers_scheduler_state, "Game world move constru
     FT_ASSERT_EQ(FT_ERR_SUCCESS, moved.get_error());
     return (1);
 }
-

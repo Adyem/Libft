@@ -23,6 +23,7 @@ FT_TEST(test_game_script_context_initialize_stores_inputs,
     "Game: script context initialize stores state and world")
 {
     ft_game_state state;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, state.initialize());
     ft_sharedptr<ft_world> world_pointer(new ft_world());
     ft_game_script_context context;
 
@@ -39,6 +40,8 @@ FT_TEST(test_game_script_context_initialize_copy_preserves_error,
     ft_game_script_context original;
     ft_game_script_context copy;
     const ft_string *value_pointer;
+
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.initialize());
 
     ft_string missing_key;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, missing_key.initialize("missing"));
@@ -73,6 +76,9 @@ FT_TEST(test_game_script_context_initialize_copy_replaces_state,
     ft_game_script_context destination;
     const ft_string *value_pointer;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, first_state.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, second_state.initialize());
+
     FT_ASSERT_EQ(FT_ERR_SUCCESS,
         source.initialize(&second_state, ft_sharedptr<ft_world>(new ft_world())));
     FT_ASSERT_EQ(FT_ERR_SUCCESS,
@@ -84,10 +90,12 @@ FT_TEST(test_game_script_context_initialize_copy_replaces_state,
     source.set_variable(score_key, score_val);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source.get_error());
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, score_val.initialize("7"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, score_val.clear());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, score_val.append("7"));
     destination.set_variable(score_key, score_val);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.get_error());
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.destroy());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.initialize(source));
     FT_ASSERT_EQ(&second_state, destination.get_state());
     FT_ASSERT_EQ(source.get_world().get(), destination.get_world().get());
@@ -105,6 +113,9 @@ FT_TEST(test_game_script_context_set_state_clears_previous_error,
     ft_game_state initial_state;
     ft_game_state updated_state;
     ft_game_script_context context;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, context.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, initial_state.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, updated_state.initialize());
     const ft_string *value_pointer;
 
     ft_string unknown_key;
@@ -127,6 +138,7 @@ FT_TEST(test_game_script_context_set_world_updates_pointer,
     "Game: set_world stores shared pointer and resets error")
 {
     ft_game_script_context context;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, context.initialize());
     ft_sharedptr<ft_world> first_world(new ft_world());
     ft_sharedptr<ft_world> second_world(new ft_world());
 
@@ -144,6 +156,7 @@ FT_TEST(test_game_script_context_set_variable_overwrites_existing,
     "Game: set_variable overwrites existing entries and keeps success")
 {
     ft_game_script_context context;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, context.initialize());
     const ft_string *value_pointer;
 
     ft_string stage_key;
@@ -153,7 +166,8 @@ FT_TEST(test_game_script_context_set_variable_overwrites_existing,
     context.set_variable(stage_key, stage_value);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, context.get_error());
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESS, stage_value.initialize("2"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stage_value.clear());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, stage_value.append("2"));
     context.set_variable(stage_key, stage_value);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, context.get_error());
 
@@ -168,6 +182,7 @@ FT_TEST(test_game_script_context_remove_variable_clears_entry,
     "Game: remove_variable deletes entry and reports not found after removal")
 {
     ft_game_script_context context;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, context.initialize());
     const ft_string *value_pointer;
 
     ft_string target_key;
@@ -190,6 +205,7 @@ FT_TEST(test_game_script_context_clear_variables_removes_all,
     "Game: clear_variables removes stored entries and resets error")
 {
     ft_game_script_context context;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, context.initialize());
     const ft_string *value_pointer;
 
     ft_string alpha_key;
@@ -217,6 +233,7 @@ FT_TEST(test_game_script_context_get_error_str_matches_errno,
     "Game: get_error_str matches ft_strerror output")
 {
     ft_game_script_context context;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, context.initialize());
     const char *message;
 
     ft_string key_name;

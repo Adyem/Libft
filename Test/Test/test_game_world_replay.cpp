@@ -31,6 +31,8 @@ FT_TEST(test_game_world_replay_capture_restore_replay,
     int replay_result;
 
     FT_ASSERT(world_pointer.get() != ft_nullptr);
+    FT_ASSERT(damage_event.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, damage_event->initialize());
 
     hero_character.set_hit_points(20);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, hero_character.get_error());

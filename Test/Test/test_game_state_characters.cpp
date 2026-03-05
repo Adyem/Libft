@@ -11,6 +11,7 @@
 FT_TEST(test_game_state_adds_valid_character, "Game: add_character stores valid entries")
 {
     ft_game_state state;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, state.initialize());
     ft_sharedptr<ft_character> hero(new (std::nothrow) ft_character());
     ft_vector<ft_sharedptr<ft_character> > *characters;
     int result;
@@ -29,6 +30,7 @@ FT_TEST(test_game_state_adds_valid_character, "Game: add_character stores valid 
 FT_TEST(test_game_state_rejects_null_character, "Game: add_character rejects null shared pointers")
 {
     ft_game_state state;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, state.initialize());
     ft_sharedptr<ft_character> empty;
     int result;
 
@@ -42,6 +44,7 @@ FT_TEST(test_game_state_rejects_null_character, "Game: add_character rejects nul
 FT_TEST(test_game_state_remove_invalid_index_sets_error, "Game: remove_character guards out of range indices")
 {
     ft_game_state state;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, state.initialize());
     ft_sharedptr<ft_character> hero(new (std::nothrow) ft_character());
 
     FT_ASSERT(static_cast<bool>(hero));
@@ -56,6 +59,7 @@ FT_TEST(test_game_state_remove_invalid_index_sets_error, "Game: remove_character
 FT_TEST(test_game_state_remove_character_shrinks_vector, "Game: remove_character deletes stored character")
 {
     ft_game_state state;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, state.initialize());
     ft_sharedptr<ft_character> first(new (std::nothrow) ft_character());
     ft_sharedptr<ft_character> second(new (std::nothrow) ft_character());
 
@@ -75,6 +79,7 @@ FT_TEST(test_game_state_remove_character_shrinks_vector, "Game: remove_character
 FT_TEST(test_game_state_thread_safety_toggle, "Game: game state thread safety toggles explicitly")
 {
     ft_game_state state;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, state.initialize());
 
     FT_ASSERT_EQ(false, state.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, state.get_error());

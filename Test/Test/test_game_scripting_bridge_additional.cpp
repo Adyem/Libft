@@ -212,6 +212,7 @@ FT_TEST(test_game_script_bridge_execute_reports_unknown_commands, "Game: execute
     ft_sharedptr<ft_world> world_pointer(new ft_world());
     ft_game_state state;
     ft_game_script_bridge bridge;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, state.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.initialize(world_pointer));
     ft_string script;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, script.initialize("unknown jump\n"));
@@ -228,6 +229,7 @@ FT_TEST(test_game_script_bridge_execute_with_registered_callback_runs_successful
     ft_sharedptr<ft_world> world_pointer(new ft_world());
     ft_game_state state;
     ft_game_script_bridge bridge;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, state.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, bridge.initialize(world_pointer));
     ft_function<int(ft_game_script_context &, const ft_vector<ft_string> &)> callback(script_set_score);
     const ft_string *score_value;

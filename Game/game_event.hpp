@@ -19,9 +19,16 @@ class ft_event
         int _modifier4;
         ft_function<void(ft_world&, ft_event&)> _callback;
         mutable pt_recursive_mutex *_mutex;
+        uint8_t _initialized_state;
         static thread_local int _last_error;
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
 
         void set_error(int err) const noexcept;
+        void abort_lifecycle_error(const char *method_name,
+            const char *reason) const;
+        void abort_if_not_initialized(const char *method_name) const;
         int lock_internal(bool *lock_acquired) const noexcept;
         void unlock_internal(bool lock_acquired) const noexcept;
 
@@ -30,6 +37,8 @@ class ft_event
     public:
         ft_event() noexcept;
         virtual ~ft_event() noexcept;
+        int initialize() noexcept;
+        int destroy() noexcept;
         ft_event(const ft_event &other) noexcept = delete;
         ft_event &operator=(const ft_event &other) noexcept = delete;
         ft_event(ft_event &&other) noexcept = delete;

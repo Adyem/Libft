@@ -88,6 +88,7 @@ int test_game_simulation(void)
 
     ft_sharedptr<ft_world> overworld(new ft_world());
     ft_sharedptr<ft_event> meeting(new ft_event());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, meeting->initialize());
     meeting->set_id(1);
     meeting->set_duration(5);
     overworld->schedule_event(meeting);
@@ -172,6 +173,7 @@ int test_game_save_load(void)
     hero.set_hit_points(42);
     ft_world world;
     ft_sharedptr<ft_event> event(new ft_event());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, event->initialize());
     event->set_id(1);
     event->set_duration(5);
     world.schedule_event(event);
@@ -238,6 +240,7 @@ int test_debuff_subtracters(void)
 int test_event_subtracters(void)
 {
     ft_event ev;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, ev.initialize());
     ev.set_duration(5);
     ev.sub_duration(1);
     ev.set_modifier1(4);
@@ -256,6 +259,7 @@ int test_event_subtracters(void)
 FT_TEST(test_game_event_sub_duration_prevents_underflow, "ft_event::sub_duration rejects underflow")
 {
     ft_event event;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, event.initialize());
 
     event.set_duration(3);
     event.sub_duration(5);
@@ -272,6 +276,7 @@ FT_TEST(test_game_event_sub_duration_prevents_underflow, "ft_event::sub_duration
 FT_TEST(test_game_event_add_duration_detects_overflow, "ft_event::add_duration rejects overflow")
 {
     ft_event event;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, event.initialize());
 
     event.set_duration(INT_MAX - 2);
     event.add_duration(5);
@@ -287,6 +292,7 @@ FT_TEST(test_game_event_add_duration_detects_overflow, "ft_event::add_duration r
 FT_TEST(test_game_event_add_duration_rejects_negative, "ft_event::add_duration rejects negative input")
 {
     ft_event event;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, event.initialize());
 
     event.set_duration(4);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, event.add_duration(-1));
