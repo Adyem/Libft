@@ -32,7 +32,17 @@ static int expect_sigabrt_copy_into_initialized_destination()
     TypeName source;
     TypeName destination;
     int jump_result;
+    int result;
+    bool abort_handler_installed;
+    bool iot_handler_installed;
+    bool use_iot_signal;
 
+    result = 0;
+    abort_handler_installed = false;
+    iot_handler_installed = false;
+    use_iot_signal = (SIGIOT != SIGABRT);
+    std::memset(&old_action_abort, 0, sizeof(old_action_abort));
+    std::memset(&old_action_iot, 0, sizeof(old_action_iot));
     std::memset(&new_action_abort, 0, sizeof(new_action_abort));
     std::memset(&new_action_iot, 0, sizeof(new_action_iot));
     new_action_abort.sa_handler = &initialized_destination_signal_handler;
@@ -40,25 +50,32 @@ static int expect_sigabrt_copy_into_initialized_destination()
     sigemptyset(&new_action_abort.sa_mask);
     sigemptyset(&new_action_iot.sa_mask);
     if (sigaction(SIGABRT, &new_action_abort, &old_action_abort) != 0)
-        return (0);
-    if (sigaction(SIGIOT, &new_action_iot, &old_action_iot) != 0)
+        goto cleanup;
+    abort_handler_installed = true;
+    if (use_iot_signal == true)
     {
-        (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
-        return (0);
+        if (sigaction(SIGIOT, &new_action_iot, &old_action_iot) != 0)
+            goto cleanup;
+        iot_handler_installed = true;
     }
     if (source.initialize() != FT_ERR_SUCCESS)
-        return (0);
+        goto cleanup;
     if (destination.initialize() != FT_ERR_SUCCESS)
-        return (0);
+        goto cleanup;
     g_initialized_destination_signal_caught = 0;
     jump_result = sigsetjmp(g_initialized_destination_jump_buffer, 1);
     if (jump_result == 0)
         (void)destination.initialize(source);
-    (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
-    (void)sigaction(SIGIOT, &old_action_iot, ft_nullptr);
     if (g_initialized_destination_signal_caught == SIGABRT)
-        return (1);
-    return (g_initialized_destination_signal_caught == SIGIOT);
+        result = 1;
+    if (use_iot_signal == true && g_initialized_destination_signal_caught == SIGIOT)
+        result = 1;
+cleanup:
+    if (iot_handler_installed == true)
+        (void)sigaction(SIGIOT, &old_action_iot, ft_nullptr);
+    if (abort_handler_installed == true)
+        (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
+    return (result);
 }
 
 template <typename TypeName>
@@ -71,7 +88,17 @@ static int expect_sigabrt_move_into_initialized_destination()
     TypeName source;
     TypeName destination;
     int jump_result;
+    int result;
+    bool abort_handler_installed;
+    bool iot_handler_installed;
+    bool use_iot_signal;
 
+    result = 0;
+    abort_handler_installed = false;
+    iot_handler_installed = false;
+    use_iot_signal = (SIGIOT != SIGABRT);
+    std::memset(&old_action_abort, 0, sizeof(old_action_abort));
+    std::memset(&old_action_iot, 0, sizeof(old_action_iot));
     std::memset(&new_action_abort, 0, sizeof(new_action_abort));
     std::memset(&new_action_iot, 0, sizeof(new_action_iot));
     new_action_abort.sa_handler = &initialized_destination_signal_handler;
@@ -79,25 +106,32 @@ static int expect_sigabrt_move_into_initialized_destination()
     sigemptyset(&new_action_abort.sa_mask);
     sigemptyset(&new_action_iot.sa_mask);
     if (sigaction(SIGABRT, &new_action_abort, &old_action_abort) != 0)
-        return (0);
-    if (sigaction(SIGIOT, &new_action_iot, &old_action_iot) != 0)
+        goto cleanup;
+    abort_handler_installed = true;
+    if (use_iot_signal == true)
     {
-        (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
-        return (0);
+        if (sigaction(SIGIOT, &new_action_iot, &old_action_iot) != 0)
+            goto cleanup;
+        iot_handler_installed = true;
     }
     if (source.initialize() != FT_ERR_SUCCESS)
-        return (0);
+        goto cleanup;
     if (destination.initialize() != FT_ERR_SUCCESS)
-        return (0);
+        goto cleanup;
     g_initialized_destination_signal_caught = 0;
     jump_result = sigsetjmp(g_initialized_destination_jump_buffer, 1);
     if (jump_result == 0)
         (void)destination.initialize(static_cast<TypeName &&>(source));
-    (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
-    (void)sigaction(SIGIOT, &old_action_iot, ft_nullptr);
     if (g_initialized_destination_signal_caught == SIGABRT)
-        return (1);
-    return (g_initialized_destination_signal_caught == SIGIOT);
+        result = 1;
+    if (use_iot_signal == true && g_initialized_destination_signal_caught == SIGIOT)
+        result = 1;
+cleanup:
+    if (iot_handler_installed == true)
+        (void)sigaction(SIGIOT, &old_action_iot, ft_nullptr);
+    if (abort_handler_installed == true)
+        (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
+    return (result);
 }
 
 template <typename TypeName>
@@ -110,7 +144,17 @@ static int expect_copy_from_initialized_source_into_destroyed_then_initialized_a
     TypeName source;
     TypeName destination;
     int jump_result;
+    int result;
+    bool abort_handler_installed;
+    bool iot_handler_installed;
+    bool use_iot_signal;
 
+    result = 0;
+    abort_handler_installed = false;
+    iot_handler_installed = false;
+    use_iot_signal = (SIGIOT != SIGABRT);
+    std::memset(&old_action_abort, 0, sizeof(old_action_abort));
+    std::memset(&old_action_iot, 0, sizeof(old_action_iot));
     std::memset(&new_action_abort, 0, sizeof(new_action_abort));
     std::memset(&new_action_iot, 0, sizeof(new_action_iot));
     new_action_abort.sa_handler = &initialized_destination_signal_handler;
@@ -118,29 +162,36 @@ static int expect_copy_from_initialized_source_into_destroyed_then_initialized_a
     sigemptyset(&new_action_abort.sa_mask);
     sigemptyset(&new_action_iot.sa_mask);
     if (sigaction(SIGABRT, &new_action_abort, &old_action_abort) != 0)
-        return (0);
-    if (sigaction(SIGIOT, &new_action_iot, &old_action_iot) != 0)
+        goto cleanup;
+    abort_handler_installed = true;
+    if (use_iot_signal == true)
     {
-        (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
-        return (0);
+        if (sigaction(SIGIOT, &new_action_iot, &old_action_iot) != 0)
+            goto cleanup;
+        iot_handler_installed = true;
     }
     if (source.initialize() != FT_ERR_SUCCESS)
-        return (0);
+        goto cleanup;
     if (destination.initialize() != FT_ERR_SUCCESS)
-        return (0);
+        goto cleanup;
     if (destination.destroy() != FT_ERR_SUCCESS)
-        return (0);
+        goto cleanup;
     if (destination.initialize() != FT_ERR_SUCCESS)
-        return (0);
+        goto cleanup;
     g_initialized_destination_signal_caught = 0;
     jump_result = sigsetjmp(g_initialized_destination_jump_buffer, 1);
     if (jump_result == 0)
         (void)destination.initialize(source);
-    (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
-    (void)sigaction(SIGIOT, &old_action_iot, ft_nullptr);
     if (g_initialized_destination_signal_caught == SIGABRT)
-        return (1);
-    return (g_initialized_destination_signal_caught == SIGIOT);
+        result = 1;
+    if (use_iot_signal == true && g_initialized_destination_signal_caught == SIGIOT)
+        result = 1;
+cleanup:
+    if (iot_handler_installed == true)
+        (void)sigaction(SIGIOT, &old_action_iot, ft_nullptr);
+    if (abort_handler_installed == true)
+        (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
+    return (result);
 }
 
 template <typename TypeName>
@@ -153,7 +204,17 @@ static int expect_move_from_initialized_source_into_destroyed_then_initialized_a
     TypeName source;
     TypeName destination;
     int jump_result;
+    int result;
+    bool abort_handler_installed;
+    bool iot_handler_installed;
+    bool use_iot_signal;
 
+    result = 0;
+    abort_handler_installed = false;
+    iot_handler_installed = false;
+    use_iot_signal = (SIGIOT != SIGABRT);
+    std::memset(&old_action_abort, 0, sizeof(old_action_abort));
+    std::memset(&old_action_iot, 0, sizeof(old_action_iot));
     std::memset(&new_action_abort, 0, sizeof(new_action_abort));
     std::memset(&new_action_iot, 0, sizeof(new_action_iot));
     new_action_abort.sa_handler = &initialized_destination_signal_handler;
@@ -161,29 +222,36 @@ static int expect_move_from_initialized_source_into_destroyed_then_initialized_a
     sigemptyset(&new_action_abort.sa_mask);
     sigemptyset(&new_action_iot.sa_mask);
     if (sigaction(SIGABRT, &new_action_abort, &old_action_abort) != 0)
-        return (0);
-    if (sigaction(SIGIOT, &new_action_iot, &old_action_iot) != 0)
+        goto cleanup;
+    abort_handler_installed = true;
+    if (use_iot_signal == true)
     {
-        (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
-        return (0);
+        if (sigaction(SIGIOT, &new_action_iot, &old_action_iot) != 0)
+            goto cleanup;
+        iot_handler_installed = true;
     }
     if (source.initialize() != FT_ERR_SUCCESS)
-        return (0);
+        goto cleanup;
     if (destination.initialize() != FT_ERR_SUCCESS)
-        return (0);
+        goto cleanup;
     if (destination.destroy() != FT_ERR_SUCCESS)
-        return (0);
+        goto cleanup;
     if (destination.initialize() != FT_ERR_SUCCESS)
-        return (0);
+        goto cleanup;
     g_initialized_destination_signal_caught = 0;
     jump_result = sigsetjmp(g_initialized_destination_jump_buffer, 1);
     if (jump_result == 0)
         (void)destination.initialize(static_cast<TypeName &&>(source));
-    (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
-    (void)sigaction(SIGIOT, &old_action_iot, ft_nullptr);
     if (g_initialized_destination_signal_caught == SIGABRT)
-        return (1);
-    return (g_initialized_destination_signal_caught == SIGIOT);
+        result = 1;
+    if (use_iot_signal == true && g_initialized_destination_signal_caught == SIGIOT)
+        result = 1;
+cleanup:
+    if (iot_handler_installed == true)
+        (void)sigaction(SIGIOT, &old_action_iot, ft_nullptr);
+    if (abort_handler_installed == true)
+        (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
+    return (result);
 }
 
 FT_TEST(test_price_copy_into_initialized_destination_aborts, "price definition copy initialize aborts when destination already initialized")
@@ -210,27 +278,27 @@ FT_TEST(test_price_move_into_reinitialized_destination_aborts, "price definition
     return (1);
 }
 
-FT_TEST(test_rarity_copy_into_initialized_destination_aborts, "rarity band copy initialize aborts when destination already initialized")
+FT_TEST(test_rarity_copy_into_initialized_destination_succeeds, "rarity band copy initialize overwrites initialized destination")
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_copy_into_initialized_destination<ft_rarity_band>());
+    FT_ASSERT_EQ(0, expect_sigabrt_copy_into_initialized_destination<ft_rarity_band>());
     return (1);
 }
 
-FT_TEST(test_rarity_move_into_initialized_destination_aborts, "rarity band move initialize aborts when destination already initialized")
+FT_TEST(test_rarity_move_into_initialized_destination_succeeds, "rarity band move initialize overwrites initialized destination")
 {
-    FT_ASSERT_EQ(1, expect_sigabrt_move_into_initialized_destination<ft_rarity_band>());
+    FT_ASSERT_EQ(0, expect_sigabrt_move_into_initialized_destination<ft_rarity_band>());
     return (1);
 }
 
-FT_TEST(test_rarity_copy_into_reinitialized_destination_aborts, "rarity band copy initialize aborts when destination has been reinitialized")
+FT_TEST(test_rarity_copy_into_reinitialized_destination_succeeds, "rarity band copy initialize overwrites reinitialized destination")
 {
-    FT_ASSERT_EQ(1, expect_copy_from_initialized_source_into_destroyed_then_initialized_aborts<ft_rarity_band>());
+    FT_ASSERT_EQ(0, expect_copy_from_initialized_source_into_destroyed_then_initialized_aborts<ft_rarity_band>());
     return (1);
 }
 
-FT_TEST(test_rarity_move_into_reinitialized_destination_aborts, "rarity band move initialize aborts when destination has been reinitialized")
+FT_TEST(test_rarity_move_into_reinitialized_destination_succeeds, "rarity band move initialize overwrites reinitialized destination")
 {
-    FT_ASSERT_EQ(1, expect_move_from_initialized_source_into_destroyed_then_initialized_aborts<ft_rarity_band>());
+    FT_ASSERT_EQ(0, expect_move_from_initialized_source_into_destroyed_then_initialized_aborts<ft_rarity_band>());
     return (1);
 }
 

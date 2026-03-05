@@ -53,12 +53,32 @@ void ft_region_definition::abort_if_not_initialized(const char *method_name) con
 
 int ft_region_definition::initialize() noexcept
 {
+    int name_error;
+    int description_error;
+
     if (this->_initialized_state == ft_region_definition::_state_initialized)
     {
         this->abort_lifecycle_error("ft_region_definition::initialize",
             "called while object is already initialized");
         return (FT_ERR_INVALID_STATE);
     }
+    name_error = this->_name.initialize();
+    if (name_error != FT_ERR_SUCCESS)
+    {
+        this->_initialized_state = ft_region_definition::_state_destroyed;
+        this->set_error(name_error);
+        return (name_error);
+    }
+    description_error = this->_description.initialize();
+    if (description_error != FT_ERR_SUCCESS)
+    {
+        (void)this->_name.destroy();
+        this->_initialized_state = ft_region_definition::_state_destroyed;
+        this->set_error(description_error);
+        return (description_error);
+    }
+    this->_region_id = 0;
+    this->_recommended_level = 0;
     this->_initialized_state = ft_region_definition::_state_initialized;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
@@ -78,6 +98,15 @@ int ft_region_definition::initialize(const ft_region_definition &other) noexcept
     {
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
+    }
+    if (this->_initialized_state == ft_region_definition::_state_initialized)
+    {
+        initialize_error = this->destroy();
+        if (initialize_error != FT_ERR_SUCCESS)
+        {
+            this->set_error(initialize_error);
+            return (initialize_error);
+        }
     }
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
@@ -103,6 +132,15 @@ int ft_region_definition::initialize(int region_id, const ft_string &name,
 {
     int initialize_error;
 
+    if (this->_initialized_state == ft_region_definition::_state_initialized)
+    {
+        initialize_error = this->destroy();
+        if (initialize_error != FT_ERR_SUCCESS)
+        {
+            this->set_error(initialize_error);
+            return (initialize_error);
+        }
+    }
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
     {
@@ -120,6 +158,8 @@ int ft_region_definition::initialize(int region_id, const ft_string &name,
 int ft_region_definition::destroy() noexcept
 {
     int disable_error;
+    int description_error;
+    int name_error;
 
     if (this->_initialized_state != ft_region_definition::_state_initialized)
     {
@@ -127,9 +167,28 @@ int ft_region_definition::destroy() noexcept
         return (FT_ERR_INVALID_STATE);
     }
     disable_error = this->disable_thread_safety();
+    description_error = this->_description.destroy();
+    name_error = this->_name.destroy();
+    this->_region_id = 0;
+    this->_recommended_level = 0;
     this->_initialized_state = ft_region_definition::_state_destroyed;
-    this->set_error(disable_error);
-    return (disable_error);
+    if (disable_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(disable_error);
+        return (disable_error);
+    }
+    if (description_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(description_error);
+        return (description_error);
+    }
+    if (name_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(name_error);
+        return (name_error);
+    }
+    this->set_error(FT_ERR_SUCCESS);
+    return (FT_ERR_SUCCESS);
 }
 
 int ft_region_definition::enable_thread_safety() noexcept

@@ -31,7 +31,17 @@ static int expect_sigabrt_on_destroyed_object(void (*operation)(TypeName &))
     struct sigaction new_action_iot;
     TypeName object_instance;
     int jump_result;
+    int result;
+    bool abort_handler_installed;
+    bool iot_handler_installed;
+    bool use_iot_signal;
 
+    result = 0;
+    abort_handler_installed = false;
+    iot_handler_installed = false;
+    use_iot_signal = (SIGIOT != SIGABRT);
+    std::memset(&old_action_abort, 0, sizeof(old_action_abort));
+    std::memset(&old_action_iot, 0, sizeof(old_action_iot));
     std::memset(&new_action_abort, 0, sizeof(new_action_abort));
     std::memset(&new_action_iot, 0, sizeof(new_action_iot));
     new_action_abort.sa_handler = &destroyed_state_signal_handler;
@@ -39,35 +49,33 @@ static int expect_sigabrt_on_destroyed_object(void (*operation)(TypeName &))
     sigemptyset(&new_action_abort.sa_mask);
     sigemptyset(&new_action_iot.sa_mask);
     if (sigaction(SIGABRT, &new_action_abort, &old_action_abort) != 0)
-        return (0);
-    if (sigaction(SIGIOT, &new_action_iot, &old_action_iot) != 0)
+        goto cleanup;
+    abort_handler_installed = true;
+    if (use_iot_signal == true)
     {
-        (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
-        return (0);
+        if (sigaction(SIGIOT, &new_action_iot, &old_action_iot) != 0)
+            goto cleanup;
+        iot_handler_installed = true;
     }
     if (object_instance.initialize() != FT_ERR_SUCCESS)
-    {
-        (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
-        (void)sigaction(SIGIOT, &old_action_iot, ft_nullptr);
-        return (0);
-    }
+        goto cleanup;
     if (object_instance.destroy() != FT_ERR_SUCCESS)
-    {
-        (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
-        (void)sigaction(SIGIOT, &old_action_iot, ft_nullptr);
-        return (0);
-    }
+        goto cleanup;
 
     g_destroyed_state_signal_caught = 0;
     jump_result = sigsetjmp(g_destroyed_state_jump_buffer, 1);
     if (jump_result == 0)
         operation(object_instance);
-
-    (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
-    (void)sigaction(SIGIOT, &old_action_iot, ft_nullptr);
     if (g_destroyed_state_signal_caught == SIGABRT)
-        return (1);
-    return (g_destroyed_state_signal_caught == SIGIOT);
+        result = 1;
+    if (use_iot_signal == true && g_destroyed_state_signal_caught == SIGIOT)
+        result = 1;
+cleanup:
+    if (iot_handler_installed == true)
+        (void)sigaction(SIGIOT, &old_action_iot, ft_nullptr);
+    if (abort_handler_installed == true)
+        (void)sigaction(SIGABRT, &old_action_abort, ft_nullptr);
+    return (result);
 }
 
 static void price_destroyed_get_item_id(ft_price_definition &definition) { (void)definition.get_item_id(); return ; }

@@ -5,6 +5,7 @@
 #include <ctime>
 #include <new>
 
+#include "../Basic/basic.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
 
@@ -163,9 +164,34 @@ int kv_store::initialize(const char *file_path, const char *encryption_key, bool
     json_item *item_pointer;
     ft_map<ft_string, long long> ttl_metadata;
     size_t ttl_prefix_length;
+    int member_error;
+    bool data_initialized = false;
+    bool file_path_initialized = false;
+    bool encryption_key_initialized = false;
+    bool replication_sinks_initialized = false;
 
     if (this->_initialized_state == kv_store::_state_initialized)
         this->abort_lifecycle_error("kv_store::initialize", "initialize called on initialized instance");
+    member_error = this->_data.initialize();
+    if (member_error != FT_ERR_SUCCESS)
+        return (this->cleanup_partial_initialization(false, false,
+            false, false, member_error));
+    data_initialized = true;
+    member_error = this->_file_path.initialize();
+    if (member_error != FT_ERR_SUCCESS)
+        return (this->cleanup_partial_initialization(data_initialized, false,
+            false, false, member_error));
+    file_path_initialized = true;
+    member_error = this->_encryption_key.initialize();
+    if (member_error != FT_ERR_SUCCESS)
+        return (this->cleanup_partial_initialization(data_initialized, file_path_initialized,
+            false, false, member_error));
+    encryption_key_initialized = true;
+    member_error = this->_replication_sinks.initialize();
+    if (member_error != FT_ERR_SUCCESS)
+        return (this->cleanup_partial_initialization(data_initialized, file_path_initialized,
+            encryption_key_initialized, false, member_error));
+    replication_sinks_initialized = true;
     this->_initialized_state = kv_store::_state_initialized;
     this->_data.clear();
     this->_file_path.clear();
@@ -187,22 +213,22 @@ int kv_store::initialize(const char *file_path, const char *encryption_key, bool
     if (file_path == ft_nullptr)
     {
         this->_file_path.clear();
-        this->_initialized_state = kv_store::_state_destroyed;
-        return (FT_ERR_INVALID_ARGUMENT);
+        return (this->cleanup_partial_initialization(data_initialized, file_path_initialized,
+            encryption_key_initialized, replication_sinks_initialized, FT_ERR_INVALID_ARGUMENT));
     }
     this->_file_path = file_path;
     if (enable_encryption)
     {
         if (encryption_key == ft_nullptr)
         {
-            this->_initialized_state = kv_store::_state_destroyed;
-            return (FT_ERR_INVALID_ARGUMENT);
+            return (this->cleanup_partial_initialization(data_initialized, file_path_initialized,
+                encryption_key_initialized, replication_sinks_initialized, FT_ERR_INVALID_ARGUMENT));
         }
         this->_encryption_key = encryption_key;
         if (this->_encryption_key.size() != 16)
         {
-            this->_initialized_state = kv_store::_state_destroyed;
-            return (FT_ERR_INVALID_ARGUMENT);
+            return (this->cleanup_partial_initialization(data_initialized, file_path_initialized,
+                encryption_key_initialized, replication_sinks_initialized, FT_ERR_INVALID_ARGUMENT));
         }
         this->_encryption_enabled = true;
     }
@@ -220,37 +246,39 @@ int kv_store::initialize(const char *file_path, const char *encryption_key, bool
     group_head = json_read_from_file(file_path);
     if (group_head == ft_nullptr)
     {
-        this->_initialized_state = kv_store::_state_destroyed;
-        return (FT_ERR_IO);
+        return (this->cleanup_partial_initialization(data_initialized, file_path_initialized,
+            encryption_key_initialized, replication_sinks_initialized, FT_ERR_IO));
     }
     store_group = json_find_group(group_head, "kv_store");
     if (store_group == ft_nullptr)
     {
         json_free_groups(group_head);
-        this->_initialized_state = kv_store::_state_destroyed;
-        return (FT_ERR_INVALID_ARGUMENT);
+        return (this->cleanup_partial_initialization(data_initialized, file_path_initialized,
+            encryption_key_initialized, replication_sinks_initialized, FT_ERR_INVALID_ARGUMENT));
     }
     ttl_prefix_length = std::strlen(g_kv_store_ttl_prefix);
     item_pointer = store_group->items;
     while (item_pointer != ft_nullptr)
     {
-        if (std::strcmp(item_pointer->key, "__encryption__") == 0)
+        if (ft_strcmp(item_pointer->key, "__encryption__") == 0)
         {
-            if (std::strcmp(item_pointer->value, "aes-128-ecb-base64") == 0)
-            {
-                if (this->_encryption_enabled == false)
+                if (ft_strcmp(item_pointer->value, "aes-128-ecb-base64") == 0)
+                {
+                    if (this->_encryption_enabled == false)
+                    {
+                        json_free_groups(group_head);
+                        return (this->cleanup_partial_initialization(data_initialized,
+                            file_path_initialized, encryption_key_initialized,
+                            replication_sinks_initialized, FT_ERR_INVALID_ARGUMENT));
+                    }
+                }
+                else
                 {
                     json_free_groups(group_head);
-                    this->_initialized_state = kv_store::_state_destroyed;
-                    return (FT_ERR_INVALID_ARGUMENT);
+                    return (this->cleanup_partial_initialization(data_initialized,
+                        file_path_initialized, encryption_key_initialized,
+                        replication_sinks_initialized, FT_ERR_INVALID_ARGUMENT));
                 }
-            }
-            else
-            {
-                json_free_groups(group_head);
-                this->_initialized_state = kv_store::_state_destroyed;
-                return (FT_ERR_INVALID_ARGUMENT);
-            }
             item_pointer = item_pointer->next;
             continue;
         }
@@ -261,16 +289,18 @@ int kv_store::initialize(const char *file_path, const char *encryption_key, bool
             if (ttl_suffix.initialize(item_pointer->key + ttl_prefix_length) != FT_ERR_SUCCESS)
             {
                 json_free_groups(group_head);
-                this->_initialized_state = kv_store::_state_destroyed;
-                return (FT_ERR_INVALID_OPERATION);
+                return (this->cleanup_partial_initialization(data_initialized,
+                    file_path_initialized, encryption_key_initialized,
+                    replication_sinks_initialized, FT_ERR_INVALID_OPERATION));
             }
             ttl_key = ttl_suffix;
             long long expiration_timestamp;
             if (this->parse_expiration_timestamp(item_pointer->value, expiration_timestamp) != 0)
             {
                 json_free_groups(group_head);
-                this->_initialized_state = kv_store::_state_destroyed;
-                return (FT_ERR_INVALID_ARGUMENT);
+                return (this->cleanup_partial_initialization(data_initialized,
+                    file_path_initialized, encryption_key_initialized,
+                    replication_sinks_initialized, FT_ERR_INVALID_ARGUMENT));
             }
             ttl_metadata.insert(ttl_key, expiration_timestamp);
             item_pointer = item_pointer->next;
@@ -280,21 +310,24 @@ int kv_store::initialize(const char *file_path, const char *encryption_key, bool
         if (key_storage.initialize(item_pointer->key) != FT_ERR_SUCCESS)
         {
             json_free_groups(group_head);
-            this->_initialized_state = kv_store::_state_destroyed;
-            return (FT_ERR_INVALID_OPERATION);
+            return (this->cleanup_partial_initialization(data_initialized,
+                file_path_initialized, encryption_key_initialized,
+                replication_sinks_initialized, FT_ERR_INVALID_OPERATION));
         }
         kv_store_entry entry;
         if (entry.initialize() != FT_ERR_SUCCESS)
         {
             json_free_groups(group_head);
-            this->_initialized_state = kv_store::_state_destroyed;
-            return (FT_ERR_INVALID_OPERATION);
+            return (this->cleanup_partial_initialization(data_initialized,
+                file_path_initialized, encryption_key_initialized,
+                replication_sinks_initialized, FT_ERR_INVALID_OPERATION));
         }
         if (entry.configure_expiration(false, 0) != 0)
         {
             json_free_groups(group_head);
-            this->_initialized_state = kv_store::_state_destroyed;
-            return (FT_ERR_INVALID_OPERATION);
+            return (this->cleanup_partial_initialization(data_initialized,
+                file_path_initialized, encryption_key_initialized,
+                replication_sinks_initialized, FT_ERR_INVALID_OPERATION));
         }
         if (this->_encryption_enabled)
         {
@@ -302,21 +335,24 @@ int kv_store::initialize(const char *file_path, const char *encryption_key, bool
             if (encoded_value.initialize(item_pointer->value) != FT_ERR_SUCCESS)
             {
                 json_free_groups(group_head);
-                this->_initialized_state = kv_store::_state_destroyed;
-                return (FT_ERR_INVALID_OPERATION);
+                return (this->cleanup_partial_initialization(data_initialized,
+                    file_path_initialized, encryption_key_initialized,
+                    replication_sinks_initialized, FT_ERR_INVALID_OPERATION));
             }
             ft_string decrypted_value;
             if (this->decrypt_value(encoded_value, decrypted_value) != 0)
             {
                 json_free_groups(group_head);
-                this->_initialized_state = kv_store::_state_destroyed;
-                return (FT_ERR_INVALID_ARGUMENT);
+                return (this->cleanup_partial_initialization(data_initialized,
+                    file_path_initialized, encryption_key_initialized,
+                    replication_sinks_initialized, FT_ERR_INVALID_ARGUMENT));
             }
             if (entry.set_value(decrypted_value) != 0)
             {
                 json_free_groups(group_head);
-                this->_initialized_state = kv_store::_state_destroyed;
-                return (FT_ERR_INVALID_OPERATION);
+                return (this->cleanup_partial_initialization(data_initialized,
+                    file_path_initialized, encryption_key_initialized,
+                    replication_sinks_initialized, FT_ERR_INVALID_OPERATION));
             }
         }
         else
@@ -325,14 +361,16 @@ int kv_store::initialize(const char *file_path, const char *encryption_key, bool
             if (plain_value.initialize(item_pointer->value) != FT_ERR_SUCCESS)
             {
                 json_free_groups(group_head);
-                this->_initialized_state = kv_store::_state_destroyed;
-                return (FT_ERR_INVALID_OPERATION);
+                return (this->cleanup_partial_initialization(data_initialized,
+                    file_path_initialized, encryption_key_initialized,
+                    replication_sinks_initialized, FT_ERR_INVALID_OPERATION));
             }
             if (entry.set_value(plain_value) != 0)
             {
                 json_free_groups(group_head);
-                this->_initialized_state = kv_store::_state_destroyed;
-                return (FT_ERR_INVALID_OPERATION);
+                return (this->cleanup_partial_initialization(data_initialized,
+                    file_path_initialized, encryption_key_initialized,
+                    replication_sinks_initialized, FT_ERR_INVALID_OPERATION));
             }
         }
         this->_data.insert(key_storage, entry);
@@ -361,8 +399,9 @@ int kv_store::initialize(const char *file_path, const char *encryption_key, bool
                 if (data_pair->value.configure_expiration(true, ttl_entry.value) != 0)
                 {
                     json_free_groups(group_head);
-                    this->_initialized_state = kv_store::_state_destroyed;
-                    return (FT_ERR_INVALID_OPERATION);
+                    return (this->cleanup_partial_initialization(data_initialized,
+                        file_path_initialized, encryption_key_initialized,
+                        replication_sinks_initialized, FT_ERR_INVALID_OPERATION));
                 }
             }
             ttl_index++;
@@ -371,8 +410,8 @@ int kv_store::initialize(const char *file_path, const char *encryption_key, bool
     if (this->prune_expired() != 0)
     {
         json_free_groups(group_head);
-        this->_initialized_state = kv_store::_state_destroyed;
-        return (FT_ERR_INVALID_OPERATION);
+        return (this->cleanup_partial_initialization(data_initialized, file_path_initialized,
+            encryption_key_initialized, replication_sinks_initialized, FT_ERR_INVALID_OPERATION));
     }
     json_free_groups(group_head);
     return (FT_ERR_SUCCESS);
@@ -406,6 +445,21 @@ int kv_store::destroy()
         return (disable_error);
     this->_initialized_state = kv_store::_state_destroyed;
     return (FT_ERR_SUCCESS);
+}
+
+int kv_store::cleanup_partial_initialization(bool data_initialized, bool file_path_initialized,
+    bool encryption_key_initialized, bool replication_sinks_initialized, int error_code) noexcept
+{
+    if (replication_sinks_initialized)
+        (void)this->_replication_sinks.destroy();
+    if (encryption_key_initialized)
+        (void)this->_encryption_key.destroy();
+    if (file_path_initialized)
+        (void)this->_file_path.destroy();
+    if (data_initialized)
+        (void)this->_data.destroy();
+    this->_initialized_state = kv_store::_state_destroyed;
+    return (error_code);
 }
 
 kv_store::~kv_store()

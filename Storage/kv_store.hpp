@@ -181,6 +181,8 @@ class kv_store
         int lock_replication(bool *lock_acquired) const noexcept;
         int notify_replication_listeners(const ft_vector<kv_store_operation> &operations) const;
         int dispatch_snapshot_to_sink(kv_store_replication_snapshot_callback snapshot_callback, void *user_data) const;
+        int cleanup_partial_initialization(bool data_initialized, bool file_path_initialized,
+            bool encryption_key_initialized, bool replication_sinks_initialized, int error_code) noexcept;
 
     public:
         kv_store(const char *file_path, const char *encryption_key = ft_nullptr, bool enable_encryption = false);

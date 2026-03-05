@@ -246,6 +246,8 @@ void ft_big_number::append_digit_unlocked(char digit) noexcept
     {
         this->reserve(required_capacity);
     }
+    if (!this->_digits)
+        return ;
     if (this->_size == 1 && this->_digits[0] == '0')
         this->_size = 0;
     this->_digits[this->_size] = digit;

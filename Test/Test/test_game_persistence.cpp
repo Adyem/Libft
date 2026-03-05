@@ -41,6 +41,7 @@ FT_TEST(test_game_world_persistence_round_trip,
     FT_ASSERT_EQ(su_fclose(store_file), 0);
 
     kv_store persistence_store(store_path);
+    FT_ASSERT_EQ(persistence_store.initialize(store_path), FT_ERR_SUCCESS);
 
     ft_world world_instance;
     FT_ASSERT_EQ(world_instance.get_error(), FT_ERR_SUCCESS);

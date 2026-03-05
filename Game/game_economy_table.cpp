@@ -112,6 +112,15 @@ int ft_economy_table::initialize(const ft_economy_table &other) noexcept
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
+    if (this->_initialized_state == ft_economy_table::_state_initialized)
+    {
+        initialize_error = this->destroy();
+        if (initialize_error != FT_ERR_SUCCESS)
+        {
+            this->set_error(initialize_error);
+            return (initialize_error);
+        }
+    }
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
         return (initialize_error);

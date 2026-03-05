@@ -81,6 +81,15 @@ int ft_rarity_band::initialize(const ft_rarity_band &other) noexcept
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
     }
+    if (this->_initialized_state == ft_rarity_band::_state_initialized)
+    {
+        initialize_error = this->destroy();
+        if (initialize_error != FT_ERR_SUCCESS)
+        {
+            this->set_error(initialize_error);
+            return (initialize_error);
+        }
+    }
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
     {
@@ -102,6 +111,15 @@ int ft_rarity_band::initialize(int rarity, double value_multiplier) noexcept
 {
     int initialize_error;
 
+    if (this->_initialized_state == ft_rarity_band::_state_initialized)
+    {
+        initialize_error = this->destroy();
+        if (initialize_error != FT_ERR_SUCCESS)
+        {
+            this->set_error(initialize_error);
+            return (initialize_error);
+        }
+    }
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
     {
