@@ -9,9 +9,12 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
+#define INIT_BIG_NUMBER(number) FT_ASSERT_EQ(FT_ERR_SUCCESS, number.initialize())
+
 FT_TEST(test_big_number_hex_serialization_round_trip, "ft_big_number hex serialization round trip")
 {
     ft_big_number decimal_value;
+    INIT_BIG_NUMBER(decimal_value);
 
     decimal_value.assign("3735928559");
 
@@ -30,6 +33,7 @@ FT_TEST(test_big_number_hex_serialization_round_trip, "ft_big_number hex seriali
 FT_TEST(test_big_number_hex_serialization_prefix_support, "ft_big_number hex serialization handles prefixes and signs")
 {
     ft_big_number negative_decimal;
+    INIT_BIG_NUMBER(negative_decimal);
 
     negative_decimal.assign("-4660");
 
@@ -54,3 +58,5 @@ FT_TEST(test_big_number_hex_serialization_prefix_support, "ft_big_number hex ser
     FT_ASSERT_EQ(0, std::strcmp(prefixed_positive.c_str(), "3405691582"));
     return (1);
 }
+
+#undef INIT_BIG_NUMBER

@@ -85,7 +85,7 @@ int ft_game_state::initialize() noexcept
         return (variables_error);
     }
     world = ft_sharedptr<ft_world>(new (std::nothrow) ft_world());
-    if (!world || world->get_error() != FT_ERR_SUCCESS)
+    if (!world)
     {
         (void)this->_worlds.destroy();
         (void)this->_characters.destroy();
@@ -93,6 +93,15 @@ int ft_game_state::initialize() noexcept
         this->_initialized_state = ft_game_state::_state_destroyed;
         this->set_error(FT_ERR_GAME_GENERAL_ERROR);
         return (FT_ERR_GAME_GENERAL_ERROR);
+    }
+    if (world->initialize() != FT_ERR_SUCCESS)
+    {
+        (void)this->_worlds.destroy();
+        (void)this->_characters.destroy();
+        (void)this->_variables.destroy();
+        this->_initialized_state = ft_game_state::_state_destroyed;
+        this->set_error(world->get_error());
+        return (world->get_error());
     }
     this->_worlds.push_back(world);
     this->_hooks = ft_sharedptr<ft_game_hooks>();

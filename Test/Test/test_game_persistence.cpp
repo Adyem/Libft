@@ -44,6 +44,7 @@ FT_TEST(test_game_world_persistence_round_trip,
     FT_ASSERT_EQ(persistence_store.initialize(store_path), FT_ERR_SUCCESS);
 
     ft_world world_instance;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world_instance.initialize());
     FT_ASSERT_EQ(world_instance.get_error(), FT_ERR_SUCCESS);
 
     ft_sharedptr<ft_event> scheduled_event(new (std::nothrow) ft_event());

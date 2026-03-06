@@ -19,6 +19,8 @@ FT_TEST(test_game_deterministic_simulation_scenarios,
 {
     ft_sharedptr<ft_world> world_instance(new (std::nothrow) ft_world());
     FT_ASSERT(world_instance.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world_instance->initialize());
+    FT_ASSERT(world_instance.get() != ft_nullptr);
     ft_character hero_character;
     ft_character enemy_character;
     hero_character.set_damage_rule(FT_DAMAGE_RULE_FLAT);

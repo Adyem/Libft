@@ -12,6 +12,7 @@
 #include "../PThread/mutex.hpp"
 #include "../Time/time.hpp"
 #include <cstddef>
+#include <stdint.h>
 
 struct json_group;
 class ft_world;
@@ -42,8 +43,16 @@ class ft_event_scheduler
         mutable bool _profiling_enabled;
         mutable t_event_scheduler_profile _profile;
         mutable ft_vector<ft_sharedptr<ft_event> > _ready_cache;
+        uint8_t _initialized_state;
+
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
 
         void set_error(int error) const noexcept;
+        void abort_lifecycle_error(const char *method_name,
+                const char *reason) const;
+        void abort_if_not_initialized(const char *method_name) const;
         int lock_internal(bool *lock_acquired) const noexcept;
         void unlock_internal(bool lock_acquired) const noexcept;
         void reset_profile_locked() const noexcept;
@@ -67,6 +76,8 @@ class ft_event_scheduler
         ft_event_scheduler(ft_event_scheduler &&other) noexcept = delete;
         ft_event_scheduler &operator=(ft_event_scheduler &&other) noexcept = delete;
 
+        int initialize() noexcept;
+        int destroy() noexcept;
         void schedule_event(const ft_sharedptr<ft_event> &event) noexcept;
         void cancel_event(int id) noexcept;
         void reschedule_event(int id, int new_duration) noexcept;

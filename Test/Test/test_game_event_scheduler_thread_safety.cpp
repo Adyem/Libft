@@ -77,6 +77,7 @@ FT_TEST(test_game_event_scheduler_concurrent_schedule,
     test_failed = 0;
     failure_expression = ft_nullptr;
     failure_line = 0;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.initialize());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.enable_thread_safety());
     thread_index = 0;
     while (thread_index < 4)
@@ -197,6 +198,7 @@ FT_TEST(test_game_event_scheduler_concurrent_reschedule,
     int failure_line;
 
     iteration_count = 64;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduler_instance.initialize());
     preload_index = 0;
     while (preload_index < 3)
     {

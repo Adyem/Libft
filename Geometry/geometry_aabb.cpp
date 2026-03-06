@@ -38,6 +38,7 @@ int aabb::lock_pair(const aabb &other, const aabb *&lower,
 {
     const aabb *ordered_first;
     const aabb *ordered_second;
+    int attempt_count;
 
     ordered_first = this;
     ordered_second = &other;
@@ -54,25 +55,35 @@ int aabb::lock_pair(const aabb &other, const aabb *&lower,
     }
     lower = ordered_first;
     upper = ordered_second;
-    while (true)
+    attempt_count = 0;
+    while (attempt_count < 8192)
     {
         int lower_error;
         int upper_error;
 
         lower_error = pt_recursive_mutex_lock_if_not_null(lower->_mutex);
+        if (lower_error == FT_ERR_MUTEX_ALREADY_LOCKED)
+        {
+            attempt_count = attempt_count + 1;
+            aabb_sleep_backoff();
+            continue;
+        }
         if (lower_error != FT_ERR_SUCCESS)
             return (lower_error);
         upper_error = pt_recursive_mutex_lock_if_not_null(upper->_mutex);
         if (upper_error == FT_ERR_SUCCESS)
             return (FT_ERR_SUCCESS);
-        if (upper_error != FT_ERR_MUTEX_ALREADY_LOCKED)
-        {
-            pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
-            return (upper_error);
-        }
         pt_recursive_mutex_unlock_if_not_null(lower->_mutex);
-        aabb_sleep_backoff();
+        if (upper_error == FT_ERR_MUTEX_ALREADY_LOCKED)
+        {
+            attempt_count = attempt_count + 1;
+            aabb_sleep_backoff();
+            continue;
+        }
+        if (upper_error != FT_ERR_MUTEX_ALREADY_LOCKED)
+            return (upper_error);
     }
+    return (FT_ERR_MUTEX_ALREADY_LOCKED);
 }
 
 void aabb::unlock_pair(const aabb *lower, const aabb *upper)

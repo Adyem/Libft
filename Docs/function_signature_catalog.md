@@ -948,6 +948,9 @@ The catalog lists the function declarations and definitions that appear in the C
 - `int ft_big_number::initialize_errno_keeper() noexcept`
 - `int ft_big_number::last_error() noexcept`
 - `int ft_big_number::last_operation_error() noexcept`
+- `int ft_big_number::get_error() noexcept`
+- `const char* ft_big_number::get_error_str() noexcept`
+- `int ft_big_number::set_error(int error_code) noexcept`
 - `int ft_big_number::lock_pair(const ft_big_number &first, const ft_big_number &second, ft_big_number_mutex_guard &first_guard, ft_big_number_mutex_guard &second_guard) noexcept`
 - `int ft_big_number::lock_self(ft_big_number_mutex_guard &guard) const noexcept`
 - `int ft_big_number::operation_error_at(ft_size_t index) noexcept`
@@ -963,7 +966,7 @@ The catalog lists the function declarations and definitions that appear in the C
 - `void ft_big_number::append_unsigned(unsigned long value) noexcept`
 - `void ft_big_number::append_unsigned_unlocked(unsigned long value) noexcept`
 - `void ft_big_number::assign(const char* number) noexcept`
-- `void ft_big_number::assign_base(const char* digits, int base) noexcept`
+- `int ft_big_number::assign_base(const char* digits, int base) noexcept`
 - `void ft_big_number::clear() noexcept`
 - `void ft_big_number::clear_unlocked() noexcept`
 - `void ft_big_number::finalize_errno_keeper(int stored_errno) noexcept`

@@ -22,6 +22,7 @@ FT_TEST(test_game_state_dispatches_registered_hooks, "Game: game state dispatch 
     ft_character character;
     ft_item item;
     ft_world world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
     ft_event event;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, event.initialize());
     int crafted_invocations;
@@ -79,6 +80,7 @@ FT_TEST(test_game_state_reset_hooks_clears_callbacks, "Game: game state reset cl
     ft_character character;
     ft_item item;
     ft_world world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
     ft_event event;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, event.initialize());
     int crafted_invocations;

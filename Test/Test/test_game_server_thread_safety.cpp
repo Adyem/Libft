@@ -25,6 +25,8 @@ static void *game_server_run_task(void *argument)
 FT_TEST(test_game_server_thread_safety, "ft_game_server handles run_once concurrently")
 {
     ft_sharedptr<ft_world> world_pointer(new ft_world());
+    FT_ASSERT(world_pointer.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world_pointer->initialize());
     ft_game_server server;
     pthread_t threads[4];
     game_server_run_args arguments[4];

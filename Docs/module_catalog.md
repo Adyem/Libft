@@ -1082,7 +1082,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `bool operator<(const ft_big_number& other) const noexcept`
   - `bool operator>(const ft_big_number& other) const noexcept`
   - `void assign(const char* number) noexcept`
-  - `void assign_base(const char* digits, int base) noexcept`
+  - `int assign_base(const char* digits, int base) noexcept`
   - `void append_digit(char digit) noexcept`
   - `void append(const char* digits) noexcept`
   - `void append_unsigned(unsigned long value) noexcept`
@@ -1353,6 +1353,9 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `unsigned long long ft_big_number::last_op_id() noexcept`
   - `int ft_big_number::error_for(unsigned long long operation_id) noexcept`
   - `int ft_big_number::last_operation_error() noexcept`
+  - `int ft_big_number::get_error() noexcept`
+  - `const char *ft_big_number::get_error_str() noexcept`
+  - `int ft_big_number::set_error(int error_code) noexcept`
   - `int ft_big_number::operation_error_at(ft_size_t index) noexcept`
   - `void ft_big_number::pop_operation_errors() noexcept`
   - `int ft_big_number::pop_oldest_operation_error() noexcept`
@@ -1379,7 +1382,7 @@ Each top-level module is listed below with every `.cpp` and `.hpp` file currentl
   - `void ft_big_number::reserve(ft_size_t new_capacity) noexcept`
   - `void ft_big_number::shrink_capacity() noexcept`
   - `void ft_big_number::assign(const char* number) noexcept`
-  - `void ft_big_number::assign_base(const char* digits, int base) noexcept`
+  - `int ft_big_number::assign_base(const char* digits, int base) noexcept`
   - `void ft_big_number::append_digit(char digit) noexcept`
   - `void ft_big_number::append(const char* digits) noexcept`
   - `void ft_big_number::append_unsigned(unsigned long value) noexcept`

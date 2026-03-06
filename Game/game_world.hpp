@@ -15,6 +15,7 @@
 #include "ft_vendor_profile.hpp"
 #include "game_world_registry.hpp"
 #include "game_upgrade.hpp"
+#include <stdint.h>
 
 class ft_character;
 class ft_inventory;
@@ -43,8 +44,16 @@ class ft_world
         ft_sharedptr<ft_vendor_profile> _vendor_profile;
         ft_sharedptr<ft_upgrade> _upgrade;
         static thread_local int        _last_error;
+        uint8_t _initialized_state;
+
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
 
         void set_error(int err) const noexcept;
+        void abort_lifecycle_error(const char *method_name,
+            const char *reason) const;
+        void abort_if_not_initialized(const char *method_name) const;
         bool propagate_scheduler_state_error() const noexcept;
         bool propagate_registry_state_error() const noexcept;
         bool propagate_replay_state_error() const noexcept;
@@ -68,6 +77,8 @@ class ft_world
         ft_world(ft_world &&other) noexcept = delete;
         ft_world &operator=(ft_world &&other) noexcept = delete;
 
+        int initialize() noexcept;
+        int destroy() noexcept;
         void schedule_event(const ft_sharedptr<ft_event> &event) noexcept;
         void update_events(ft_sharedptr<ft_world> &self, int ticks, const char *log_file_path = ft_nullptr, ft_string *log_buffer = ft_nullptr) noexcept;
 

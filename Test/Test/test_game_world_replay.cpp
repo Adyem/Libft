@@ -18,6 +18,8 @@ FT_TEST(test_game_world_replay_capture_restore_replay,
     "ft_world_replay_session captures snapshots, restores, and replays deterministically")
 {
     ft_sharedptr<ft_world> world_pointer(new (std::nothrow) ft_world());
+    FT_ASSERT(world_pointer.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world_pointer->initialize());
     ft_world_replay_session session;
     ft_character hero_character;
     ft_inventory hero_inventory;
@@ -31,6 +33,7 @@ FT_TEST(test_game_world_replay_capture_restore_replay,
     int replay_result;
 
     FT_ASSERT(world_pointer.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, session.initialize());
     FT_ASSERT(damage_event.get() != ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_SUCCESS, damage_event->initialize());
 
@@ -102,6 +105,8 @@ FT_TEST(test_game_world_replay_import_export_clear,
     "ft_world_replay_session imports, exports, and clears snapshots while propagating errors")
 {
     ft_sharedptr<ft_world> world_pointer(new (std::nothrow) ft_world());
+    FT_ASSERT(world_pointer.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world_pointer->initialize());
     ft_world_replay_session session;
     ft_world_replay_session imported_session;
     ft_character hero_character;
@@ -113,6 +118,10 @@ FT_TEST(test_game_world_replay_import_export_clear,
     int restore_result;
 
     FT_ASSERT(world_pointer.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, session.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, imported_session.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, exported_snapshot.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, cleared_snapshot.initialize());
 
     restore_result = session.restore_snapshot(world_pointer, hero_character, hero_inventory);
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, restore_result);

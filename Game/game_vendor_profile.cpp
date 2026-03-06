@@ -60,6 +60,10 @@ int ft_vendor_profile::initialize() noexcept
             "called while object is already initialized");
         return (FT_ERR_INVALID_STATE);
     }
+    this->_vendor_id = 0;
+    this->_buy_markup = 1.0;
+    this->_sell_multiplier = 1.0;
+    this->_tax_rate = 0.0;
     this->_initialized_state = ft_vendor_profile::_state_initialized;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
@@ -79,6 +83,15 @@ int ft_vendor_profile::initialize(const ft_vendor_profile &other) noexcept
     {
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
+    }
+    if (this->_initialized_state == ft_vendor_profile::_state_initialized)
+    {
+        initialize_error = this->destroy();
+        if (initialize_error != FT_ERR_SUCCESS)
+        {
+            this->set_error(initialize_error);
+            return (initialize_error);
+        }
     }
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
@@ -104,6 +117,15 @@ int ft_vendor_profile::initialize(int vendor_id, double buy_markup,
 {
     int initialize_error;
 
+    if (this->_initialized_state == ft_vendor_profile::_state_initialized)
+    {
+        initialize_error = this->destroy();
+        if (initialize_error != FT_ERR_SUCCESS)
+        {
+            this->set_error(initialize_error);
+            return (initialize_error);
+        }
+    }
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
     {

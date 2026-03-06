@@ -101,6 +101,7 @@ int ft_dialogue_table::initialize() noexcept
     int lines_error = this->_lines.initialize();
     if (lines_error != FT_ERR_SUCCESS)
     {
+        this->_initialized_state = ft_dialogue_table::_state_destroyed;
         this->set_error(lines_error);
         return (lines_error);
     }
@@ -108,6 +109,7 @@ int ft_dialogue_table::initialize() noexcept
     if (scripts_error != FT_ERR_SUCCESS)
     {
         (void)this->_lines.destroy();
+        this->_initialized_state = ft_dialogue_table::_state_destroyed;
         this->set_error(scripts_error);
         return (scripts_error);
     }
@@ -136,10 +138,25 @@ int ft_dialogue_table::initialize(const ft_dialogue_table &other) noexcept
         return (FT_ERR_INVALID_STATE);
     }
     if (this == &other)
+    {
+        this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
+    }
+    if (this->_initialized_state == ft_dialogue_table::_state_initialized)
+    {
+        initialize_error = this->destroy();
+        if (initialize_error != FT_ERR_SUCCESS)
+        {
+            this->set_error(initialize_error);
+            return (initialize_error);
+        }
+    }
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(initialize_error);
         return (initialize_error);
+    }
     lines_count = other._lines.size();
     lines_end = other._lines.end();
     line_entry = lines_end - lines_count;
@@ -160,6 +177,7 @@ int ft_dialogue_table::initialize(const ft_dialogue_table &other) noexcept
         script_entry++;
         index += 1;
     }
+    this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
 }
 

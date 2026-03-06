@@ -147,6 +147,7 @@ FT_TEST(test_json_dom_bridge_round_trip, "json dom bridge round trips document d
     json_item *big_number_item;
     ft_big_number big_number_value;
 
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, big_number_value.initialize());
     settings_group = source_document.create_group("settings");
     FT_ASSERT(settings_group != ft_nullptr);
     name_item = source_document.create_item("name", "example");

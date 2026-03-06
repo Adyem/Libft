@@ -1,52 +1,197 @@
 #Coding Guidelines
 
-Use return ; for void functions. Include a space before the semicolon and always place a return ; at the end of every void function.
-Use return (value); for non-void returns. Include a space before the opening parenthesis.
+Void functions must always end with `return ;` (space before `;`).
+Non-void functions must return using `return (value);` (space before `(`).
 Do not use for loops, ternary operators, or switch statements.
 Indent code using 4 spaces per level.
 After declaring a class, indent access specifiers (private, public, protected) by 4 spaces and indent member declarations within them by 8 spaces. This does not apply to structs.
 In class declarations, place private members above public members and separate the sections with an empty line.
 Function and variable names must use snake_case.
+Constants and macros must use UPPER_SNAKE_CASE (all uppercase letters with `_` separators), for example `FT_ERR_SUCCESS`.
+Do not use built-in width-ambiguous integer types such as `int`, `unsigned int`, `long`, `unsigned long`, `long long`, or `unsigned long long`.
+Use project/fixed-width integer types instead (`ft_size_t`, `uint32_t`, `uint64_t`, `int32_t`, `int64_t`, and their signed/unsigned fixed-width variants).
+Do not use built-in `bool`; use `ft_bool` (`typedef uint8_t ft_bool`) so boolean storage is always 8-bit.
+Define boolean constants as `#define FT_FALSE ((ft_bool)0U)` and `#define FT_TRUE  ((ft_bool)1U)`.
 Use full variable names instead of short ones or single letters, dont use s or str use string. Use names like file_descriptor and index; if multiple file descriptors or indexes are used, name each of them like file_descriptor_input, file_descriptor_output, index_height, index_width.
 
 Use Allman style braces (opening brace on a new line).
 Write `break` statements as `break ;` (a space between the keyword and the semicolon) to keep the spacing rules consistent.
 In classes, member variable names must start with an underscore (_).
 Within class member functions, access members and other methods using the this keyword.
-For testing builds only, it is allowed to expose class member variables under `#ifdef LIBFT_TEST_BUILD` (for example by temporarily making them public) so tests can validate expected internal state. This must never be exposed in production builds.
-Template classes may define member functions in the same file as the class declaration, but
-other classes must split declarations into .hpp files and definitions into .cpp files. Inline and constexpr are allowed in headers for templates. For template classes, declare all member functions in the class declaration, then place the definitions below the class declaration in the same header.
+For testing builds only, class private member variables must be exposed as `public` under `#ifdef LIBFT_TEST_BUILD` so tests can validate expected internal state directly. This must never be exposed in production builds.
+Template classes may define member functions in the same header as the class declaration, but
+other classes must split declarations into .hpp files and definitions into .cpp files. Inline and constexpr are allowed in headers for templates.
+For template classes, the top section of the header must contain only the class declaration (member variables and method declarations).
+Template member function bodies must not be defined inside the class declaration; they must be defined out-of-class in a separate section below the class declaration in the same header.
 Do not define member function bodies inside the class declaration; place all definitions outside the class.
-Every class must declare and define a constructor and destructor, even if they simply contain return ;. Do not use = default; explicitly define the bodies.
+Every class must declare and define a default constructor and destructor. Do not use = default; explicitly define the bodies.
+All classes must define copy and move constructors.
+All classes must delete copy and move assignment operators by default. Only add assignment operators when a class explicitly needs assignment semantics and document that requirement. Operator overloading alone does not justify adding assignment operators.
+Lifecycle classes must expose a dedicated explicit move helper named exactly `move` (for example `uint32_t move(ft_string& other) noexcept`) and keep this name consistent across classes.
 
-## Thread-safety Lifecycle Contract
+## Class Skeleton Baseline
 
-Every class that offers optional thread safety must provide the trio of explicit helpers `enable_thread_safety()`, `disable_thread_safety()`, and `is_thread_safe()`.
-- `enable_thread_safety()` and `disable_thread_safety()` are the primary entry points for toggling synchronization. They must manage the mutex entirely on their own (e.g., `new`ing the mutex and calling its `initialize()` when enabling, destroying and deleting it when disabling) and cannot rely on other per-class helpers to bootstrap or tear down thread safety. They should return any underlying error code directly.
-- `is_thread_safe()` should simply return whether the class currently owns a valid mutex pointer (i.e., `_mutex != ft_nullptr`), making it the single authoritative check for callers.
-- Keep `_mutex` in the private section and start it as `ft_nullptr`; when `enable_thread_safety()` succeeds, the mutex pointer becomes valid, and `disable_thread_safety()` resets it to `ft_nullptr` before returning.
+Use this baseline skeleton for classes (extend only when needed):
+
+```cpp
+typedef uint8_t ft_bool;
+#define FT_FALSE ((ft_bool)0U)
+#define FT_TRUE  ((ft_bool)1U)
+
+class ft_example
+{
+#ifdef LIBFT_TEST_BUILD
+    public:
+#else
+    private:
+#endif
+        static thread_local uint32_t _last_error;
+        uint8_t _initialized_state;
+        pt_recursive_mutex *_mutex;
+
+    public:
+        ft_example() noexcept;
+        ft_example(const ft_example &other) noexcept;
+        ft_example(ft_example &&other) noexcept;
+        ~ft_example() noexcept;
+
+        ft_example &operator=(const ft_example &other) noexcept = delete;
+        ft_example &operator=(ft_example &&other) noexcept = delete;
+
+        uint32_t initialize() noexcept;
+        uint32_t initialize(const ft_example &other) noexcept;
+        uint32_t initialize(ft_example &&other) noexcept;
+        uint32_t destroy() noexcept;
+        uint32_t move(ft_example &other) noexcept;
+
+        uint32_t enable_thread_safety() noexcept;
+        uint32_t disable_thread_safety() noexcept;
+        ft_bool is_thread_safe() const noexcept;
+
+        static uint32_t set_error(uint32_t error_code) noexcept;
+        static uint32_t get_error() noexcept;
+        static const char *get_error_str() noexcept;
+};
+```
+
+Notes:
+- This skeleton is the default for lifecycle-style classes. Keep existing documented exemptions (proxy classes, `ft_nullptr` stand-ins, `Template/pair.hpp`, and `Template/function.hpp`).
+- Use `pt_recursive_mutex *` for class-owned mutexes, never raw `pthread_mutex_t *`.
+- Include `_last_error` helpers only for classes that expose `_last_error` behavior.
+
+## Lifecycle, Error, and Thread-Safety Contract (Authoritative)
+
+These rules are authoritative for lifecycle classes and override older conflicting wording.
+
+Lifecycle scope:
+- A lifecycle class is any class that can fail in isolation (for example, can return an error code, can fail allocation, can fail mutex/resource setup, or can otherwise enter a meaningful failure state on its own).
+- Lifecycle enforcement is mandatory for all lifecycle classes except explicitly exempt categories listed below.
+- Explicit exemptions:
+  - Proxy classes are exempt from lifecycle and thread-safety ownership requirements; proxies must be designed so proxy operations themselves do not fail unexpectedly, while underlying class operations may fail and report errors explicitly.
+    - A class is considered a proxy class only when its class name explicitly contains `proxy`.
+  - `ft_nullptr`/`nullptr` stand-in utility classes are exempt from lifecycle enforcement and optional thread-safety helper requirements because they have no meaningful failure state and must complete their local task without failure.
+  - `ft_nullptr` must explicitly behave as a null-pointer literal stand-in: assigning it to any pointer type must set that pointer value to `0` (null), equivalent to `nullptr`.
+
+Lifecycle state:
+- Classes with lifecycle management must keep an explicit 8-bit state field named exactly `_initialized_state` with type `uint8_t`:
+  - `0`: uninitialized
+  - `1`: destroyed
+  - `2`: initialized
+- Default constructors must never fail or abort.
+- Constructors may zero/reset fields into a safe known uninitialized-ready state (`state = 0`), but must not perform fallible setup.
+- Member-class objects must not be lifecycle-initialized in the constructor; they remain uninitialized until the owning class `initialize(...)` runs and initializes them explicitly.
+- All fallible setup belongs in `initialize(...)`.
+- Lifecycle class instances may be created on stack or heap; in both cases, callers are responsible for calling `initialize(...)` before first use.
+
+Lifecycle error signaling:
+- Add a dedicated not-initialized error code in the Errno module (for example `FT_ERR_NOT_INITIALIZED`) and use it consistently.
+- Classes that expose `_last_error` must follow the single authoritative `#_last_error Contract` section below (including required prototype `set_error(uint32_t error_code)`).
+- `get_error()` and `get_error_str()` called on uninitialized objects must report the not-initialized error code/string.
+
+Shared lifecycle abort helper:
+- Lifecycle abort formatting/behavior must be centralized in shared Errno internal helpers instead of per-class duplicated implementations.
+- These helpers are for internal use only and must be declared in `Errno/errno_internal.hpp`.
+- Required internal helper prototypes:
+  - `void errno_abort_if_uninitialised(uint8_t initialized_state, const char *method_name);`
+  - `void errno_abort_lifecycle(uint8_t initialized_state, const char *method_name, const char *reason);`
+- Usage rules:
+  - `errno_abort_if_uninitialised(...)` is used for the common guard path where a method requires `state == 2` and no custom reason text is needed.
+  - `errno_abort_lifecycle(...)` is used when a specific reason must be attached (for example invalid source state in copy/move flows).
+  - Classes must pass lifecycle state and method context into these helpers; classes must not format lifecycle abort messages locally.
+- The helper prints a clear message to `stderr` and calls `su_abort();`.
+- `su_abort();` is non-returning by contract: once called, execution must never continue in the caller path.
+
+Initialize / destroy / destructor rules:
+- `initialize()` aborts only when called while already initialized (`state == 2`) unless a class explicitly documents a different contract.
+- Copy/move style initialization (`initialize(const T&)`, `initialize(T&&)`, copy/move constructors, explicit `move(...)`, and any explicitly-enabled copy/move assignment) must follow:
+  1. Source must be initialized (`state == 2`) or lifecycle abort helper is invoked.
+  2. `this == &other` is a no-op success.
+  3. Destination may be uninitialized, destroyed, or initialized.
+  4. If destination is initialized, call `destroy()` first and honor its return value.
+- If initialization fails after partial work, the object must end in destroyed state (`state = 1`).
+- `destroy()` must return error codes (no abort).
+- If `destroy()` is called while the class is uninitialized (or already destroyed), it is a no-op and must return `FT_ERR_SUCCESS`.
+- If the object is initialized and thread safety is enabled, `destroy()` must call `disable_thread_safety()` as the first cleanup step.
+- `destroy()` must always continue cleanup of all owned resources even after a failure; if multiple failures occur, return only the first error code encountered.
+- Destructors must fail silently (no abort), and are valid in uninitialized/destroyed states.
+- For initialized objects, destructors must call `destroy()`; `destroy()` is responsible for running `disable_thread_safety()` first.
+- Destructors must always run cleanup to completion: if intermediate steps fail, continue cleanup as best-effort and do not stop early.
+- Destructor cleanup must leave class fields reset to an uninitialized-ready state (so `initialize(...)` could be called again in theory), even though destructor-time reinitialization should not be relied on.
+
+Copy/move safety rules:
+- For copy/move paths, perform all potentially failing work first.
+- Only after success, apply non-failing state swaps/commits.
+- Source remains unchanged until the failing phase is complete.
+- On any copy/move failure (allocation failure, mutex/setup failure, or any reported sub-call failure), destination must be left in destroyed state (`state = 1`).
+- For constructor-based copy/move, lifecycle state is the primary success/failure signal:
+  - success => destination `_initialized_state == 2`
+  - failure => destination `_initialized_state == 1`
+  - Destroyed-state propagation is intentional for constructors: copy-constructing or move-constructing from a destroyed source (`state = 1`) is valid and must produce a destroyed destination (`state = 1`).
+- Source state handling:
+  - Source in uninitialized state (`state = 0`) is lifecycle misuse and must trigger lifecycle abort behavior.
+  - Source in destroyed state (`state = 1`) is allowed for copy/move propagation paths; destination must end in destroyed state as well.
+  - Source `_last_error` state is propagated as part of copy/move behavior when the class exposes `_last_error`.
+
+Sub-object initialization:
+- When a class initializes multiple sub-objects, it must call `initialize(...)` on each required sub-object.
+- If one sub-object initialization fails, destroy all already-initialized sub-objects before returning.
+- Parent object ends in destroyed state (`state = 1`) after failed initialization.
+
+Thread-safety ownership and mutex requirements:
+- Thread-safety support must be implemented if a class:
+  - owns mutable shared state
+  - allocates memory
+  - modifies internal containers
+  - may be accessed concurrently by callers
+- Classes that only read immutable state may omit thread-safety support.
+- `nullptr` utility/wrapper classes are an explicit exempt example.
+- Optional thread-safe classes expose `enable_thread_safety()`, `disable_thread_safety()`, and `is_thread_safe()`.
+- `_mutex` remains private and starts as `ft_nullptr`; `is_thread_safe()` is authoritative (`_mutex != ft_nullptr`).
+- The mutex must be created/initialized only when the user explicitly calls `enable_thread_safety()`.
+- Mutex allocation/ownership rule:
+  - Class mutexes must always be recursive mutexes.
+  - The mutex must always be heap-allocated.
+  - For regular classes, the mutex is instance-local and must not be shared across instances.
+  - Exception: the SCMA module may use one shared global mutex, and that global mutex must also live on the heap.
+
+Enable/disable behavior:
+- `enable_thread_safety()` must be safely retryable. If enable fails, object state remains valid for later retries.
+- `disable_thread_safety()` destroys and deallocates the mutex and must set `_mutex = ft_nullptr` before returning, even when teardown reports an error.
+- Mutex teardown must happen through `disable_thread_safety()`, including when called from `destroy()` or from destructor cleanup paths.
+- If teardown fails, return the error code but still leave the class in a retry-safe state.
 
 Locking rules:
-- Add and use a PThread module safe lock helper (and matching unlock helper) that accepts a mutex pointer (including recursive mutex pointers) and only locks/unlocks when the pointer is not `ft_nullptr`.
-- Classes and modules should use this PThread safe helper for mutex locking and unlocking instead of open-coding pointer checks around lock/unlock calls.
-- Do not use RAII guards or hidden lock wrappers beyond this shared PThread helper. The moment thread safety is enabled, every method that mutates internal state should take the mutex and return any locking error immediately.
-- Methods that operate on multiple objects (e.g., copying, moving, comparing two instances) must order the mutex pointers deterministically, lock them manually, and unlock them without relying on helper guards.
+- Use shared pthread safe lock/unlock helpers from `PThread/pthread_internal.hpp` for nullable mutex pointers; no RAII lock guards.
+- Internal helper prototypes to use:
+  - `int pt_mutex_lock_if_not_null(const pt_mutex *mutex_pointer)`
+  - `int pt_mutex_unlock_if_not_null(const pt_mutex *mutex_pointer)`
+  - `int pt_recursive_mutex_lock_if_not_null(const pt_recursive_mutex *mutex_pointer)`
+  - `int pt_recursive_mutex_unlock_if_not_null(const pt_recursive_mutex *mutex_pointer)`
+- For multi-object operations, always lock mutexes in ascending memory-address order (lowest address first) and unlock explicitly in reverse order.
+- Unlock failures should be treated as non-recoverable usage-level issues: call sites may ignore unlock return values (`(void)unlock...`) after best effort and continue cleanup flow.
 
-This contract keeps mutex management consistent across the codebase while ensuring that enabling/disabling thread safety is explicit and self-contained.
-
-#Class Mutex Requirements
-
-Each class must own a recursive mutex that can be locked multiple times and must be unlocked the same number of times.
-
-All class definitions must become thread-safe only when the user explicitly enables thread safety (for example by calling `enable_thread_safety()`); until then, callers are responsible for any synchronization they require.
-
-Every class must expose a helper function that provides direct access to its recursive mutex.
-Document and implement this helper as a dedicated low-level interface intended for cases like
-validating constructor error handling immediately after construction by manually locking and
-unlocking the mutex to verify proper use.
-Because these helpers are only intended for testing and validation, guard their declarations
-and definitions behind `LIBFT_TEST_BUILD` (or another dedicated testing-only macro); production
-builds must never expose the recursive mutex or operation-stack handles publicly.
+Dedicated testing-only mutex exposure helpers are not required.
+Prefer test-build member exposure through `LIBFT_TEST_BUILD`; existing per-class mutex testing helpers should be removed unless a class explicitly documents a temporary exception.
 
 ## Pair Exception
 
@@ -68,44 +213,27 @@ error handling and synchronization to callers rather than reintroducing state in
 new code. Remove references if you encounter them, and rely on return codes or other explicit error
 reporting mechanisms instead.
 
-## Lazy Initialization Contract
+## Error Code Definition Contract
 
-Every class (particularly those that own mutexes) must only prepare its synchronization members in the constructor—real backing resources are created on-demand when `initialize()` is called. `destroy()` must be invoked explicitly before reusing or destructing the object again so the instance can return to an uninitialized state. This keeps object lifecycles predictable and matches the new `pt_mutex` contract.
-Proxy classes are exempt from the lifecycle contract requirements in this section and the `Initialization State Contract` below unless they explicitly document otherwise.
+All functions that return an error code must return one of the following only:
+- `FT_ERR_SUCCESS`
+- `FT_ERR_*`
 
-## Initialization State Contract
+Functions must never invent ad-hoc numeric error codes outside the Errno module.
+Any new error code must be defined in the Errno `.hpp` file before use.
 
-For every class that has lifecycle methods, store lifecycle state in an explicit 8-bit field:
-- `0`: uninitialized
-- `1`: destroyed
-- `2`: initialized
+## Initialize Return Contract
 
-Behavior rules:
-- Constructors must never abort, and must leave objects in the `0` (uninitialized) state.
-- `initialize()` must abort only when called while already in state `2`.
-    - For copy/move style operations (`initialize(copy)`, `initialize(move)`, copy/move constructors, copy/move assignment, and explicit `move(...)` helpers):
-      - the destination object may be in state `0`, `1`, or `2` when the operation starts; when it is already initialized (`state == 2`) you must call `destroy()` and honor its return value (abort the copy/move if destroy fails) before continuing, so the destructor never sees a double-initialized object.
-      - the source object must be in state `2`; if the source is in state `0` or `1`, the operation must print the lifecycle error and abort.
-  - Always apply checks in this order for copy/move paths:
-    1. Validate the source object is initialized (`state == 2`), abort otherwise.
-    2. Check `this == &other`; if true, treat as a no-op success.
-    3. Continue the operation (including lazy-initializing the destination if needed).
-- If any `initialize(...)` overload fails after it begins initialization work, it must leave the object in state `1` (destroyed), never in state `0`. This guarantees later destruction does not abort because of a failed initialization attempt.
-- `destroy()` must move state `2 -> 1` on success. If the object is still in state `0` or `1` because its constructor already leaves dependent members prepared (e.g., `ft_economy_table`), it may return `FT_ERR_INVALID_STATE` without aborting; the rest of the lifecycle contract must still guard misuse.
-- All methods other than constructors and `initialize()` must abort when called in state `0` or `1` unless a class explicitly documents that it tolerates no-ops while uninitialized.
-+ Destructors must never call `su_abort();` when the object is in state `0` or `1`. Instead they should return cleanly, only tearing down live resources when state is `2`, and allow lightweight helpers such as `ft_goal` to be destroyed safely even if they were never initialized.
+`initialize(...)` methods must return `uint32_t` and follow the Error Code Definition Contract.
 
-Abort behavior is mandatory and uniform:
-- Print a clear lifecycle error through the Printf module (for example `pf_printf_fd(2, "...\\n")`) with a trailing newline.
-- Immediately call `su_abort();`.
 
 Only .cpp files must be prefixed with the name of the module they belong to. Nested modules must contain both the original module name followed by the nested module name.
 For .hpp files, prefix only those meant for internal use with the module name.
-Generic headers may use the module's name, while class headers should use the class name as the filename.
+Generic headers are headers used widely across the module that primarily collect many simple function prototypes and shared module-level declarations (module-wide API/utility/umbrella headers). These may use the module name (for example `math.hpp`, `networking.hpp`, `api.hpp`), while class headers should use the class name as the filename (for example `class_string.hpp`, `socket_handle.hpp`).
 
 Update README.md only when the change is important for the end user, such as improved functionality or unavoidable undefined behavior. Bug fixes alone do not require README updates.
 
-Code that relies on platform-specific features must place only the platform-dependent portions into helper functions in the Compatebility module. Platform-specific means the code cannot run on all of Linux, Windows, and macOS.
+Code that relies on platform-specific features must place only the platform-dependent portions into helper functions in the Compatibility module. Platform-specific means the code cannot run on all of Linux, Windows, and macOS.
 
 #Build and Test Timing
 
@@ -121,7 +249,7 @@ When using `cma_set_alloc_limit` in tests to force allocation failures:
 
 #Locking guidelines
 
-No function in the library should rely on RAII helpers such as lock guards or unique locks for locking mutexes; use the shared PThread safe lock/unlock helper (for nullable mutex pointers) or explicit direct lock/unlock calls when null checks are not needed. Handle errors directly and never cache guard objects to perform locking implicitly.
+This section defers to the authoritative `Locking rules` above.
 
 #CMA Error Handling Rules
 
@@ -131,14 +259,18 @@ Within the CMA module, only the documented public-facing entry points should sur
 
 Within the SCMA module, only the listed public-facing helpers should expose errors directly; all other utilities rely on the module’s internal reporting to keep overall state coherent.
 SCMA classes do not need a per-class local mutex when the module-level global mutex already provides the required synchronization; prefer the SCMA global mutex in that case.
-- When a class maintains a `_last_error` field, the only sanctioned public accessor for other classes should be the `get_error()` (and optionally `get_error_str()`) helper; no other class should read `_last_error` directly or expose additional interfaces for that value.
+- `_last_error` access and behavior are defined only in the authoritative `#_last_error Contract` section below.
 
 #`_last_error` Contract
 
 When a class maintains a `_last_error` field, treat it as thread-local diagnostic state rather than a shared global-style error channel.
 - `_last_error` must be thread-local per thread of execution. Code must not rely on a single shared `_last_error` value across threads.
-- Declare `_last_error` as `static thread_local int _last_error` (typically initialized to `FT_ERR_SUCCESS`) so each thread has its own copy while the class exposes a single helper suite.
-- Classes that expose `_last_error` behavior must provide `set_error(int error_code)`, `get_error()`, and `get_error_str()` helpers. `set_error(...)` is the only writer for `_last_error`.
-- `get_error()` / `get_error_str()` are the only sanctioned public interfaces for reading the class error state. Other classes must not read `_last_error` directly.
+- Declare `_last_error` as `static thread_local uint32_t _last_error` so each thread has its own copy while the class exposes a single helper suite.
+- `_last_error` must be initialized to `0` (`FT_ERR_SUCCESS`) once at thread/program startup for that thread-local instance, not per object instance.
+- Constructors and destructors must never modify `_last_error`.
+- Classes that expose `_last_error` behavior must provide `uint32_t set_error(uint32_t error_code)`, `get_error()`, and `get_error_str()` helpers. `set_error(uint32_t error_code)` is the only writer for `_last_error`.
+- `get_error()` / `get_error_str()` are the sanctioned public interfaces for reading class error state across classes when required. Other classes must not read `_last_error` directly.
+- If a called method does not return an error code (for example `void` methods or value-returning methods without status), callers must read `get_error()` to obtain the operation error result.
 - New code should still return error codes directly from methods that can fail. `_last_error` is a secondary diagnostic/compatibility channel, not the primary error transport.
-- Public methods should set `_last_error` on every exit path (`FT_ERR_SUCCESS` on success, exact error code on failure). Private helpers should generally return errors upward and let the public entry point set `_last_error`.
+- `_last_error` may be stale relative to earlier operations; lifecycle state is the authoritative indicator of constructor copy/move success.
+- Only meaningful user-callable operational methods should set `_last_error` on every exit path (`FT_ERR_SUCCESS` on success, exact error code on failure). Private helpers should generally return errors upward and let the public entry point set `_last_error`.

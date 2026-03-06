@@ -95,10 +95,25 @@ int ft_upgrade::initialize(const ft_upgrade &other) noexcept
         return (FT_ERR_INVALID_STATE);
     }
     if (&other == this)
+    {
+        this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
+    }
+    if (this->_initialized_state == ft_upgrade::_state_initialized)
+    {
+        initialize_error = this->destroy();
+        if (initialize_error != FT_ERR_SUCCESS)
+        {
+            this->set_error(initialize_error);
+            return (initialize_error);
+        }
+    }
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(initialize_error);
         return (initialize_error);
+    }
     this->_id = other._id;
     this->_current_level = other._current_level;
     this->_max_level = other._max_level;

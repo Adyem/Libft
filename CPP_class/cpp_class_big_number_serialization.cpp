@@ -3,7 +3,11 @@
 
 ft_string big_number_to_hex_string(const ft_big_number& number) noexcept
 {
-    ft_big_number number_copy(number);
+    ft_big_number number_copy;
+    int number_copy_initialization_error = number_copy.initialize(number);
+
+    if (number_copy_initialization_error != FT_ERR_SUCCESS)
+        return (ft_string(number_copy_initialization_error));
     ft_string hex_string = number_copy.to_string_base(16);
     return (hex_string);
 }
@@ -14,7 +18,8 @@ ft_big_number big_number_from_hex_string(const char* hex_digits) noexcept
 
     if (!hex_digits)
     {
-        result.assign_base("", 16);
+        int assign_error = result.assign_base("", 16);
+        (void)assign_error;
         return (result);
     }
     const char* digits = hex_digits;
@@ -32,7 +37,9 @@ ft_big_number big_number_from_hex_string(const char* hex_digits) noexcept
         if (digits[1] == 'x' || digits[1] == 'X')
             digits += 2;
     }
-    result.assign_base(digits, 16);
+    int assign_error = result.assign_base(digits, 16);
+    if (assign_error != FT_ERR_SUCCESS)
+        return (result);
     if (!has_negative_sign)
         return (result);
     ft_big_number zero_reference;

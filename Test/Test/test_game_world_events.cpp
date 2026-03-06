@@ -13,6 +13,7 @@
 FT_TEST(test_game_world_rejects_null_event_schedule, "Game world rejects scheduling null events")
 {
     ft_world world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
     ft_vector<ft_sharedptr<ft_event> > queued;
 
     world.schedule_event(ft_sharedptr<ft_event>());
@@ -26,6 +27,7 @@ FT_TEST(test_game_world_rejects_null_event_schedule, "Game world rejects schedul
 FT_TEST(test_game_world_propagates_invalid_event_errors, "Game world refuses events already in error state")
 {
     ft_world world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
     ft_vector<ft_sharedptr<ft_event> > queued;
     ft_sharedptr<ft_event> invalid_event(new ft_event());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, invalid_event->initialize());
@@ -43,6 +45,7 @@ FT_TEST(test_game_world_propagates_invalid_event_errors, "Game world refuses eve
 FT_TEST(test_game_world_update_requires_self_reference, "Game world update requires a valid world reference")
 {
     ft_world world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
     ft_sharedptr<ft_event> quest_event(new ft_event());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, quest_event->initialize());
     ft_vector<ft_sharedptr<ft_event> > remaining;
@@ -63,6 +66,7 @@ FT_TEST(test_game_world_update_requires_self_reference, "Game world update requi
 FT_TEST(test_game_world_copy_keeps_scheduled_events, "Game world copy constructor retains scheduled events")
 {
     ft_world original;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.initialize());
     ft_sharedptr<ft_event> battle(new ft_event());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, battle->initialize());
     ft_vector<ft_sharedptr<ft_event> > original_events;
@@ -88,6 +92,7 @@ FT_TEST(test_game_world_copy_keeps_scheduled_events, "Game world copy constructo
 FT_TEST(test_game_world_schedule_clears_previous_error, "Game world resets error state after successful scheduling")
 {
     ft_world world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
     ft_vector<ft_sharedptr<ft_event> > queued;
     ft_sharedptr<ft_event> invalid_event(new ft_event());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, invalid_event->initialize());
@@ -111,6 +116,8 @@ FT_TEST(test_game_world_schedule_clears_previous_error, "Game world resets error
 FT_TEST(test_game_world_update_removes_completed_events, "Game world removes events that finish during update")
 {
     ft_sharedptr<ft_world> world(new ft_world());
+    FT_ASSERT(world.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world->initialize());
     ft_sharedptr<ft_event> immediate(new ft_event());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, immediate->initialize());
     ft_vector<ft_sharedptr<ft_event> > remaining;
@@ -129,6 +136,8 @@ FT_TEST(test_game_world_update_removes_completed_events, "Game world removes eve
 FT_TEST(test_game_world_update_reschedules_remaining_events, "Game world keeps longer events queued after ticking")
 {
     ft_sharedptr<ft_world> world(new ft_world());
+    FT_ASSERT(world.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world->initialize());
     ft_sharedptr<ft_event> short_event(new ft_event());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, short_event->initialize());
     ft_sharedptr<ft_event> long_event(new ft_event());
@@ -154,6 +163,8 @@ FT_TEST(test_game_world_update_reschedules_remaining_events, "Game world keeps l
 FT_TEST(test_game_world_update_zero_ticks_preserves_duration, "Game world keeps event duration unchanged when ticking zero")
 {
     ft_sharedptr<ft_world> world(new ft_world());
+    FT_ASSERT(world.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world->initialize());
     ft_sharedptr<ft_event> paused_event(new ft_event());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, paused_event->initialize());
     ft_vector<ft_sharedptr<ft_event> > queued;
@@ -173,7 +184,9 @@ FT_TEST(test_game_world_update_zero_ticks_preserves_duration, "Game world keeps 
 FT_TEST(test_game_world_move_assignment_transfers_scheduled_events, "Game world move assignment moves queued events and resets source")
 {
     ft_world source;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize());
     ft_world destination;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.initialize());
     ft_sharedptr<ft_event> scheduled(new ft_event());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, scheduled->initialize());
     ft_vector<ft_sharedptr<ft_event> > moved_events;
@@ -197,7 +210,9 @@ FT_TEST(test_game_world_move_assignment_transfers_scheduled_events, "Game world 
 FT_TEST(test_game_world_copy_assignment_shares_scheduler_state, "Game world copy assignment points to the same scheduled events")
 {
     ft_world source;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize());
     ft_world destination;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.initialize());
     ft_sharedptr<ft_event> source_event(new ft_event());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, source_event->initialize());
     ft_sharedptr<ft_event> destination_event(new ft_event());
@@ -224,6 +239,7 @@ FT_TEST(test_game_world_copy_assignment_shares_scheduler_state, "Game world copy
 FT_TEST(test_game_world_move_transfers_scheduler_state, "Game world move constructor transfers queued events")
 {
     ft_world original;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, original.initialize());
     ft_sharedptr<ft_event> queued_event(new ft_event());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, queued_event->initialize());
     ft_vector<ft_sharedptr<ft_event> > moved_events;

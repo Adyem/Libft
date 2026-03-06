@@ -6,10 +6,15 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
+#define INIT_BIG_NUMBER(number) FT_ASSERT_EQ(FT_ERR_SUCCESS, number.initialize())
+
 FT_TEST(test_math_big_gcd_large_operands, "math_big_gcd computes gcd for large operands")
 {
     ft_big_number first_number;
     ft_big_number second_number;
+
+    INIT_BIG_NUMBER(first_number);
+    INIT_BIG_NUMBER(second_number);
 
     first_number.assign("123456789012345678901234567890");
     second_number.assign("987654321098765432109876543210");
@@ -20,6 +25,9 @@ FT_TEST(test_math_big_gcd_large_operands, "math_big_gcd computes gcd for large o
 
     ft_big_number negative_first_number;
     ft_big_number negative_second_number;
+
+    INIT_BIG_NUMBER(negative_first_number);
+    INIT_BIG_NUMBER(negative_second_number);
 
     negative_first_number.assign("-123456789012345678901234567890");
     negative_second_number.assign("-987654321098765432109876543210");
@@ -35,6 +43,9 @@ FT_TEST(test_math_big_lcm_large_operands, "math_big_lcm computes lcm for large o
     ft_big_number first_number;
     ft_big_number second_number;
 
+    INIT_BIG_NUMBER(first_number);
+    INIT_BIG_NUMBER(second_number);
+
     first_number.assign("123456789012345678901234567890");
     second_number.assign("987654321098765432109876543210");
 
@@ -43,6 +54,7 @@ FT_TEST(test_math_big_lcm_large_operands, "math_big_lcm computes lcm for large o
     FT_ASSERT_EQ(0, std::strcmp(lcm_value.c_str(), "13548070124980948012498094801236261410"));
 
     ft_big_number negative_second_number;
+    INIT_BIG_NUMBER(negative_second_number);
 
     negative_second_number.assign("-987654321098765432109876543210");
 
@@ -51,9 +63,12 @@ FT_TEST(test_math_big_lcm_large_operands, "math_big_lcm computes lcm for large o
     FT_ASSERT_EQ(0, std::strcmp(mixed_lcm_value.c_str(), "13548070124980948012498094801236261410"));
 
     ft_big_number zero_number;
+    INIT_BIG_NUMBER(zero_number);
 
     ft_big_number zero_lcm_value = math_big_lcm(first_number, zero_number);
 
     FT_ASSERT_EQ(0, std::strcmp(zero_lcm_value.c_str(), "0"));
     return (1);
 }
+
+#undef INIT_BIG_NUMBER

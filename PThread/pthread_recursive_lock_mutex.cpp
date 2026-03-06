@@ -34,7 +34,7 @@ int pt_recursive_mutex::lock() const
 
     pt_mutex_vector owned_mutexes;
     int tracking_error = FT_ERR_SUCCESS;
-    const void *mutex_handle = static_cast<const void *>(this->_native_mutex);
+    const void *mutex_handle = static_cast<const void *>(this);
 
     owned_mutexes = pt_lock_tracking::get_owned_mutexes(thread_id, &tracking_error);
     if (tracking_error != FT_ERR_SUCCESS)

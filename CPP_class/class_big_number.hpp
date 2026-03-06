@@ -44,13 +44,18 @@ class ft_big_number
         int     compare_magnitude(const ft_big_number& other) const noexcept;
         ft_big_number    add_magnitude(const ft_big_number& other) const noexcept;
         ft_big_number    subtract_magnitude(const ft_big_number& other) const noexcept;
-        static int set_last_operation_error(int error_code) noexcept;
 
     public:
         ft_big_number() noexcept;
-        ft_big_number(const ft_big_number& other) noexcept;
-        ft_big_number(ft_big_number&& other) noexcept;
+        ft_big_number(const ft_big_number& other) noexcept = delete;
+        ft_big_number(ft_big_number&& other) noexcept = delete;
         ~ft_big_number() noexcept;
+
+        int         initialize() noexcept;
+        int         initialize(const ft_big_number& other) noexcept;
+        int         initialize(ft_big_number&& other) noexcept;
+        int         destroy() noexcept;
+        int         move(ft_big_number& other) noexcept;
 
         ft_big_number& operator=(const ft_big_number& other) noexcept;
         ft_big_number& operator=(ft_big_number&& other) noexcept;
@@ -67,7 +72,7 @@ class ft_big_number
         bool          operator>=(const ft_big_number& other) const noexcept;
 
         void        assign(const char* number) noexcept;
-        void        assign_base(const char* digits, int base) noexcept;
+        int         assign_base(const char* digits, int base) noexcept;
         void        append_digit(char digit) noexcept;
         void        append(const char* digits) noexcept;
         void        append_unsigned(unsigned long value) noexcept;
@@ -83,6 +88,9 @@ class ft_big_number
         ft_string   to_string_base(int base) noexcept;
         ft_big_number mod_pow(const ft_big_number& exponent, const ft_big_number& modulus) const noexcept;
         static const char *last_operation_error_str() noexcept;
+        static int get_error() noexcept;
+        static const char *get_error_str() noexcept;
+        static int set_error(int error_code) noexcept;
         int     enable_thread_safety(void) noexcept;
         int     disable_thread_safety(void) noexcept;
         bool    is_thread_safe(void) const noexcept;

@@ -9,20 +9,29 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
+#define INIT_BIG_NUMBER(number) FT_ASSERT_EQ(FT_ERR_SUCCESS, number.initialize())
+
 FT_TEST(test_big_number_errno_resets_construction_and_assignment, "ft_big_number constructors preserve error state")
 {
     {
         ft_big_number default_number;
+
+        INIT_BIG_NUMBER(default_number);
     }
 
     ft_big_number seeded_number;
+    INIT_BIG_NUMBER(seeded_number);
 
     seeded_number.assign("123");
-    ft_big_number copied_number(seeded_number);
+    ft_big_number copied_number;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, copied_number.initialize(seeded_number));
 
-    ft_big_number moved_number(ft_move(copied_number));
+    ft_big_number moved_number;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_number.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, moved_number.move(copied_number));
 
     ft_big_number assign_target;
+    INIT_BIG_NUMBER(assign_target);
 
     assign_target = seeded_number;
 
@@ -33,10 +42,11 @@ FT_TEST(test_big_number_errno_resets_construction_and_assignment, "ft_big_number
 FT_TEST(test_big_number_errno_resets_mutators, "ft_big_number mutators clear stale error state on success")
 {
     ft_big_number number;
+    INIT_BIG_NUMBER(number);
 
     number.assign("4567");
 
-    number.assign_base("1111", 2);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, number.assign_base("1111", 2));
 
     number.append_digit('8');
 
@@ -56,6 +66,11 @@ FT_TEST(test_big_number_errno_resets_accessors, "ft_big_number accessors and com
 {
     ft_big_number left_number;
     ft_big_number right_number;
+    ft_big_number zero_number;
+
+    INIT_BIG_NUMBER(left_number);
+    INIT_BIG_NUMBER(right_number);
+    INIT_BIG_NUMBER(zero_number);
 
     left_number.assign("50");
     right_number.assign("25");
@@ -70,7 +85,7 @@ FT_TEST(test_big_number_errno_resets_accessors, "ft_big_number accessors and com
 
     FT_ASSERT(left_number >= left_number);
 
-    FT_ASSERT(!(left_number < ft_big_number()));
+    FT_ASSERT(!(left_number < zero_number));
 
     FT_ASSERT(right_number <= left_number);
 
@@ -93,6 +108,12 @@ FT_TEST(test_big_number_errno_resets_arithmetic, "ft_big_number arithmetic prese
     ft_big_number base_number;
     ft_big_number exponent_number;
     ft_big_number modulus_number;
+
+    INIT_BIG_NUMBER(left_number);
+    INIT_BIG_NUMBER(right_number);
+    INIT_BIG_NUMBER(base_number);
+    INIT_BIG_NUMBER(exponent_number);
+    INIT_BIG_NUMBER(modulus_number);
 
     left_number.assign("20");
     right_number.assign("5");
@@ -121,6 +142,7 @@ FT_TEST(test_big_number_errno_resets_arithmetic, "ft_big_number arithmetic prese
     ft_string base16_string = left_number.to_string_base(16);
     FT_ASSERT_EQ(0, ft_string::get_error());
     ft_big_number error_divisor;
+    INIT_BIG_NUMBER(error_divisor);
 
     error_divisor.assign("0");
     ft_big_number error_quotient = left_number / error_divisor;
@@ -132,6 +154,7 @@ FT_TEST(test_big_number_errno_resets_hex_helpers, "ft_big_number hex helpers cle
 {
     ft_big_number number_value;
 
+    INIT_BIG_NUMBER(number_value);
     number_value.assign("255");
 
     ft_string hex_digits = big_number_to_hex_string(number_value);
@@ -142,3 +165,5 @@ FT_TEST(test_big_number_errno_resets_hex_helpers, "ft_big_number hex helpers cle
     FT_ASSERT_EQ(0, std::strcmp(parsed_value.c_str(), "255"));
     return (1);
 }
+
+#undef INIT_BIG_NUMBER

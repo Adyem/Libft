@@ -87,6 +87,8 @@ int test_game_simulation(void)
         return (0);
 
     ft_sharedptr<ft_world> overworld(new ft_world());
+    FT_ASSERT(overworld.get() != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, overworld->initialize());
     ft_sharedptr<ft_event> meeting(new ft_event());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, meeting->initialize());
     meeting->set_id(1);
@@ -172,6 +174,7 @@ int test_game_save_load(void)
     ft_character hero;
     hero.set_hit_points(42);
     ft_world world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
     ft_sharedptr<ft_event> event(new ft_event());
     FT_ASSERT_EQ(FT_ERR_SUCCESS, event->initialize());
     event->set_id(1);
@@ -182,6 +185,7 @@ int test_game_save_load(void)
         return (0);
     ft_character loaded_hero;
     ft_world loaded_world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, loaded_world.initialize());
     ft_inventory loaded_inventory;
     if (loaded_world.load_from_file("test_save.json", loaded_hero, loaded_inventory) != FT_ERR_SUCCESS)
         return (0);
@@ -585,6 +589,7 @@ FT_TEST(test_world_region_copy_assignment_preserves_content, "Game: copying worl
 FT_TEST(test_world_default_region_pointer_available, "Game: world exposes default world_region pointer")
 {
     ft_world world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
     ft_sharedptr<ft_world_region> &region_pointer = world.get_world_region();
 
     FT_ASSERT_EQ(true, static_cast<bool>(region_pointer));

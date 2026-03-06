@@ -22,6 +22,8 @@
 #include "../../Game/ft_world_region.hpp"
 #include "../../Game/ft_region_definition.hpp"
 #include "../../Game/game_world_registry.hpp"
+#include "../../Game/game_event_scheduler.hpp"
+#include "../../Game/game_world_replay.hpp"
 #include "../../Game/game_quest.hpp"
 #include "../../Game/game_upgrade.hpp"
 #include "../../System_utils/test_runner.hpp"
@@ -49,8 +51,7 @@ static int expect_no_sigabrt_on_uninitialized_destructor()
     struct sigaction new_action_abort;
     struct sigaction old_action_iot;
     struct sigaction new_action_iot;
-    struct sigaction restore_action_abort;
-    struct sigaction restore_action_iot;
+    bool iot_handler_installed;
     int jump_result;
     int restore_abort_result;
     int restore_iot_result;
@@ -65,19 +66,19 @@ static int expect_no_sigabrt_on_uninitialized_destructor()
     new_action_iot.sa_handler = &uninitialized_destructor_signal_handler;
     sigemptyset(&new_action_abort.sa_mask);
     sigemptyset(&new_action_iot.sa_mask);
+    iot_handler_installed = false;
     if (sigaction(SIGABRT, &new_action_abort, &old_action_abort) != 0)
         return (0);
-    if (sigaction(SIGIOT, &new_action_iot, &old_action_iot) != 0)
+    if (SIGIOT != SIGABRT && sigaction(SIGIOT, &new_action_iot,
+            &old_action_iot) != 0)
     {
-        std::memset(&restore_action_abort, 0, sizeof(restore_action_abort));
-        restore_action_abort.sa_handler = old_action_abort.sa_handler;
-        restore_action_abort.sa_mask = old_action_abort.sa_mask;
-        restore_action_abort.sa_flags = old_action_abort.sa_flags;
-        restore_abort_result = sigaction(SIGABRT, &restore_action_abort, ft_nullptr);
+        restore_abort_result = sigaction(SIGABRT, &old_action_abort, ft_nullptr);
         if (restore_abort_result != 0)
             return (0);
         return (0);
     }
+    if (SIGIOT != SIGABRT)
+        iot_handler_installed = true;
 
     g_signal_caught = 0;
     jump_result = sigsetjmp(g_signal_jump_buffer, 1);
@@ -87,16 +88,10 @@ static int expect_no_sigabrt_on_uninitialized_destructor()
         object_instance->~TypeName();
     }
 
-    std::memset(&restore_action_abort, 0, sizeof(restore_action_abort));
-    std::memset(&restore_action_iot, 0, sizeof(restore_action_iot));
-    restore_action_abort.sa_handler = old_action_abort.sa_handler;
-    restore_action_abort.sa_mask = old_action_abort.sa_mask;
-    restore_action_abort.sa_flags = old_action_abort.sa_flags;
-    restore_action_iot.sa_handler = old_action_iot.sa_handler;
-    restore_action_iot.sa_mask = old_action_iot.sa_mask;
-    restore_action_iot.sa_flags = old_action_iot.sa_flags;
-    restore_abort_result = sigaction(SIGABRT, &restore_action_abort, ft_nullptr);
-    restore_iot_result = sigaction(SIGIOT, &restore_action_iot, ft_nullptr);
+    restore_abort_result = sigaction(SIGABRT, &old_action_abort, ft_nullptr);
+    restore_iot_result = 0;
+    if (iot_handler_installed == true)
+        restore_iot_result = sigaction(SIGIOT, &old_action_iot, ft_nullptr);
     if (restore_abort_result != 0)
         return (0);
     if (restore_iot_result != 0)
@@ -458,6 +453,29 @@ FT_TEST(test_game_world_registry_destroy_uninitialized_is_non_aborting,
     FT_ASSERT_EQ(destroy_error, world_registry.get_error());
     FT_ASSERT_EQ(1,
         expect_no_sigabrt_on_uninitialized_destructor<ft_world_registry>());
+    return (1);
+}
+
+FT_TEST(test_game_event_scheduler_destroy_uninitialized_is_non_aborting,
+    "ft_event_scheduler destroy on uninitialized object is non-aborting")
+{
+    ft_event_scheduler scheduler;
+
+    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, scheduler.destroy());
+    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, scheduler.get_error());
+    FT_ASSERT_EQ(1,
+        expect_no_sigabrt_on_uninitialized_destructor<ft_event_scheduler>());
+    return (1);
+}
+
+FT_TEST(test_game_world_replay_destroy_uninitialized_is_non_aborting,
+    "ft_world_replay_session destroy on uninitialized object is non-aborting")
+{
+    ft_world_replay_session replay_session;
+
+    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, replay_session.destroy());
+    FT_ASSERT_EQ(1, expect_no_sigabrt_on_uninitialized_destructor<
+        ft_world_replay_session>());
     return (1);
 }
 

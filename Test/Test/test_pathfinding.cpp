@@ -14,6 +14,7 @@ FT_TEST(test_world_plan_route, "world plan route")
     FT_ASSERT_EQ(FT_ERR_SUCCESS, grid.initialize(3, 3, 1, 0));
     grid.set(1, 1, 0, 1);
     ft_world world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
     ft_vector<ft_path_step> path;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, world.plan_route(grid, 0, 0, 0, 2, 2, 0, path));
     FT_ASSERT_EQ(5u, path.size());

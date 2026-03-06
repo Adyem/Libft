@@ -61,24 +61,34 @@ int ft_economy_table::initialize() noexcept
     error = this->_price_definitions.initialize();
     if (error)
     {
+        this->_initialized_state = ft_economy_table::_state_destroyed;
         this->set_error(error);
         return (error);
     }
     error = this->_rarity_bands.initialize();
     if (error)
     {
+        (void)this->_price_definitions.destroy();
+        this->_initialized_state = ft_economy_table::_state_destroyed;
         this->set_error(error);
         return (error);
     }
     error = this->_vendor_profiles.initialize();
     if (error)
     {
+        (void)this->_rarity_bands.destroy();
+        (void)this->_price_definitions.destroy();
+        this->_initialized_state = ft_economy_table::_state_destroyed;
         this->set_error(error);
         return (error);
     }
     error = this->_currency_rates.initialize();
     if (error)
     {
+        (void)this->_vendor_profiles.destroy();
+        (void)this->_rarity_bands.destroy();
+        (void)this->_price_definitions.destroy();
+        this->_initialized_state = ft_economy_table::_state_destroyed;
         this->set_error(error);
         return (error);
     }
@@ -123,7 +133,10 @@ int ft_economy_table::initialize(const ft_economy_table &other) noexcept
     }
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
+    {
+        this->set_error(initialize_error);
         return (initialize_error);
+    }
     count = other._price_definitions.size();
     price_end = other._price_definitions.end();
     price_entry = price_end - count;

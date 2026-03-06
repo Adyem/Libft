@@ -9,12 +9,14 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
+#define INIT_BIG_NUMBER(number) FT_ASSERT_EQ(FT_ERR_SUCCESS, number.initialize())
+
 FT_TEST(test_big_number_mutex_construction_and_assignment_unlocks, "ft_big_number constructors and assignments unlock mutexes")
 {
     ft_big_number default_number;
     ft_big_number source_number;
-    ft_big_number copy_number(source_number);
-    ft_big_number moved_number(ft_move(source_number));
+    ft_big_number copy_number;
+    ft_big_number moved_number;
     ft_big_number assigned_number;
     ft_big_number move_assigned_number;
     pt_recursive_mutex *default_mutex;
@@ -23,7 +25,15 @@ FT_TEST(test_big_number_mutex_construction_and_assignment_unlocks, "ft_big_numbe
     pt_recursive_mutex *assigned_mutex;
     pt_recursive_mutex *move_assigned_mutex;
 
+    INIT_BIG_NUMBER(default_number);
+    INIT_BIG_NUMBER(source_number);
+    INIT_BIG_NUMBER(copy_number);
+    INIT_BIG_NUMBER(moved_number);
+    INIT_BIG_NUMBER(assigned_number);
+    INIT_BIG_NUMBER(move_assigned_number);
     source_number.assign("42");
+    copy_number = source_number;
+    moved_number = ft_move(copy_number);
     assigned_number = source_number;
     move_assigned_number = ft_move(source_number);
     default_mutex = default_number.get_mutex_for_testing();
@@ -63,6 +73,13 @@ FT_TEST(test_big_number_mutex_arithmetic_unlocks, "ft_big_number arithmetic oper
     pt_recursive_mutex *quotient_mutex;
     pt_recursive_mutex *remainder_mutex;
 
+    INIT_BIG_NUMBER(left_number);
+    INIT_BIG_NUMBER(right_number);
+    INIT_BIG_NUMBER(sum_number);
+    INIT_BIG_NUMBER(difference_number);
+    INIT_BIG_NUMBER(product_number);
+    INIT_BIG_NUMBER(quotient_number);
+    INIT_BIG_NUMBER(remainder_number);
     left_number.assign("144");
     right_number.assign("12");
     sum_number = left_number + right_number;
@@ -109,6 +126,8 @@ FT_TEST(test_big_number_mutex_comparisons_unlock, "ft_big_number comparison oper
     bool greater_result;
     bool greater_or_equal_result;
 
+    INIT_BIG_NUMBER(smaller_number);
+    INIT_BIG_NUMBER(larger_number);
     smaller_number.assign("7");
     larger_number.assign("21");
     equality_result = smaller_number == larger_number;
@@ -139,8 +158,9 @@ FT_TEST(test_big_number_mutex_mutators_unlock, "ft_big_number mutator methods un
     ft_big_number number;
     pt_recursive_mutex *number_mutex;
 
+    INIT_BIG_NUMBER(number);
     number.assign("1000");
-    number.assign_base("FF", 16);
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, number.assign_base("FF", 16));
     number.append_digit('0');
     number.append("1");
     number.append_unsigned(5);
@@ -174,6 +194,12 @@ FT_TEST(test_big_number_mutex_observers_unlock, "ft_big_number observer methods 
     bool positive_flag;
     ft_size_t size_value;
 
+    INIT_BIG_NUMBER(positive_number);
+    INIT_BIG_NUMBER(negative_number);
+    INIT_BIG_NUMBER(modulus_number);
+    INIT_BIG_NUMBER(exponent_number);
+    INIT_BIG_NUMBER(base_number);
+    INIT_BIG_NUMBER(mod_pow_result);
     positive_number.assign("255");
     base_number.assign("4");
     exponent_number.assign("2");
@@ -214,6 +240,7 @@ FT_TEST(test_big_number_mutex_error_helpers_unlock, "ft_big_number error helpers
     int error_value;
     const char *error_string;
 
+    INIT_BIG_NUMBER(number);
     number.append_digit('X');
     error_value = FT_ERR_INVALID_ARGUMENT;
     error_string = ft_big_number::last_operation_error_str();
@@ -235,6 +262,9 @@ FT_TEST(test_big_number_mutex_division_unlocks_on_divide_by_zero, "ft_big_number
     pt_recursive_mutex *divisor_mutex;
     ft_big_number quotient_result;
 
+    INIT_BIG_NUMBER(dividend_number);
+    INIT_BIG_NUMBER(divisor_number);
+    INIT_BIG_NUMBER(quotient_result);
     dividend_number.assign("100");
     dividend_mutex = dividend_number.get_mutex_for_testing();
     divisor_mutex = divisor_number.get_mutex_for_testing();
@@ -257,6 +287,9 @@ FT_TEST(test_big_number_mutex_modulus_unlocks_on_operand_error, "ft_big_number m
     pt_recursive_mutex *right_mutex;
     ft_big_number remainder_result;
 
+    INIT_BIG_NUMBER(invalid_left_number);
+    INIT_BIG_NUMBER(right_number);
+    INIT_BIG_NUMBER(remainder_result);
     right_number.assign("2");
     invalid_left_number.append_digit('x');
     left_mutex = invalid_left_number.get_mutex_for_testing();
@@ -279,6 +312,7 @@ FT_TEST(test_big_number_mutex_to_string_invalid_base_unlocks,
     ft_string result_string;
     pt_recursive_mutex *number_mutex;
 
+    INIT_BIG_NUMBER(number);
     number.assign("10");
     result_string = number.to_string_base(1);
     number_mutex = number.get_mutex_for_testing();
@@ -296,7 +330,8 @@ FT_TEST(test_big_number_mutex_assign_base_invalid_digits_unlocks,
     ft_big_number number;
     pt_recursive_mutex *number_mutex;
 
-    number.assign_base("1Z", 10);
+    INIT_BIG_NUMBER(number);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, number.assign_base("1Z", 10));
     number_mutex = number.get_mutex_for_testing();
 
     FT_ASSERT(number_mutex != ft_nullptr);
@@ -311,6 +346,7 @@ FT_TEST(test_big_number_mutex_append_digit_invalid_unlocks,
     ft_big_number number;
     pt_recursive_mutex *number_mutex;
 
+    INIT_BIG_NUMBER(number);
     number.append_digit('x');
     number_mutex = number.get_mutex_for_testing();
 
@@ -325,6 +361,7 @@ FT_TEST(test_big_number_mutex_append_unsigned_unlocks,
     ft_big_number number;
     pt_recursive_mutex *number_mutex;
 
+    INIT_BIG_NUMBER(number);
     number.append_unsigned(12345);
     number_mutex = number.get_mutex_for_testing();
 
@@ -346,6 +383,10 @@ FT_TEST(test_big_number_mutex_mod_pow_zero_modulus_unlocks,
     pt_recursive_mutex *modulus_mutex;
     pt_recursive_mutex *result_mutex;
 
+    INIT_BIG_NUMBER(base_number);
+    INIT_BIG_NUMBER(exponent_number);
+    INIT_BIG_NUMBER(modulus_number);
+    INIT_BIG_NUMBER(result_number);
     base_number.assign("5");
     exponent_number.assign("3");
     modulus_number.append_digit('0');
@@ -377,6 +418,9 @@ FT_TEST(test_big_number_mutex_addition_with_error_operand_unlocks,
     pt_recursive_mutex *valid_mutex;
     pt_recursive_mutex *sum_mutex;
 
+    INIT_BIG_NUMBER(invalid_number);
+    INIT_BIG_NUMBER(valid_number);
+    INIT_BIG_NUMBER(sum_number);
     invalid_number.append_digit('q');
     valid_number.assign("9");
     sum_number = invalid_number + valid_number;
@@ -400,6 +444,7 @@ FT_TEST(test_big_number_mutex_clear_after_error_unlocks,
     ft_big_number number;
     pt_recursive_mutex *number_mutex;
 
+    INIT_BIG_NUMBER(number);
     number.append_digit('m');
     number.clear();
     number_mutex = number.get_mutex_for_testing();
@@ -416,7 +461,8 @@ FT_TEST(test_big_number_mutex_assign_base_zero_unlocks,
     ft_big_number number;
     pt_recursive_mutex *number_mutex;
 
-    number.assign_base("10", 0);
+    INIT_BIG_NUMBER(number);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, number.assign_base("10", 0));
     number_mutex = number.get_mutex_for_testing();
 
     FT_ASSERT(number_mutex != ft_nullptr);
@@ -434,6 +480,9 @@ FT_TEST(test_big_number_mutex_multiplication_with_error_operand_unlocks,
     pt_recursive_mutex *valid_mutex;
     pt_recursive_mutex *product_mutex;
 
+    INIT_BIG_NUMBER(invalid_number);
+    INIT_BIG_NUMBER(valid_number);
+    INIT_BIG_NUMBER(product_number);
     invalid_number.append_digit('Z');
     valid_number.assign("4");
     product_number = invalid_number * valid_number;
@@ -459,6 +508,7 @@ FT_TEST(test_big_number_mutex_to_string_valid_unlocks,
     pt_recursive_mutex *number_mutex;
     pt_recursive_mutex *string_mutex;
 
+    INIT_BIG_NUMBER(number);
     number.assign("256");
     decimal_string = number.to_string_base(10);
     number_mutex = number.get_mutex_for_testing();
@@ -486,6 +536,10 @@ FT_TEST(test_big_number_mutex_mod_pow_with_error_operand_unlocks,
     pt_recursive_mutex *modulus_mutex;
     pt_recursive_mutex *result_mutex;
 
+    INIT_BIG_NUMBER(base_number);
+    INIT_BIG_NUMBER(exponent_number);
+    INIT_BIG_NUMBER(modulus_number);
+    INIT_BIG_NUMBER(result_number);
     base_number.append_digit('x');
     exponent_number.assign("2");
     modulus_number.assign("3");
@@ -513,6 +567,7 @@ FT_TEST(test_big_number_mutex_trim_leading_zeros_after_error_unlocks,
     ft_big_number number;
     pt_recursive_mutex *number_mutex;
 
+    INIT_BIG_NUMBER(number);
     number.append_digit('y');
     number.trim_leading_zeros();
     number_mutex = number.get_mutex_for_testing();
@@ -528,6 +583,7 @@ FT_TEST(test_big_number_mutex_assign_nullptr_unlocks,
     ft_big_number number;
     pt_recursive_mutex *number_mutex;
 
+    INIT_BIG_NUMBER(number);
     number.assign(ft_nullptr);
     number_mutex = number.get_mutex_for_testing();
 
@@ -542,6 +598,7 @@ FT_TEST(test_big_number_mutex_append_nullptr_unlocks,
     ft_big_number number;
     pt_recursive_mutex *number_mutex;
 
+    INIT_BIG_NUMBER(number);
     number.append(ft_nullptr);
     number_mutex = number.get_mutex_for_testing();
 
@@ -562,6 +619,10 @@ FT_TEST(test_big_number_mutex_mod_pow_invalid_exponent_unlocks,
     pt_recursive_mutex *modulus_mutex;
     pt_recursive_mutex *result_mutex;
 
+    INIT_BIG_NUMBER(base_number);
+    INIT_BIG_NUMBER(exponent_number);
+    INIT_BIG_NUMBER(modulus_number);
+    INIT_BIG_NUMBER(result_number);
     base_number.assign("2");
     exponent_number.append_digit('g');
     modulus_number.assign("5");
@@ -591,6 +652,7 @@ FT_TEST(test_big_number_mutex_to_string_negative_base_unlocks,
     pt_recursive_mutex *number_mutex;
     pt_recursive_mutex *string_mutex;
 
+    INIT_BIG_NUMBER(number);
     number.assign("10");
     result_string = number.to_string_base(-2);
     number_mutex = number.get_mutex_for_testing();
@@ -611,6 +673,7 @@ FT_TEST(test_big_number_mutex_from_hex_string_null_unlocks,
     ft_big_number result_number;
     pt_recursive_mutex *result_mutex;
 
+    INIT_BIG_NUMBER(result_number);
     result_number = big_number_from_hex_string(ft_nullptr);
     result_mutex = result_number.get_mutex_for_testing();
 
@@ -618,3 +681,5 @@ FT_TEST(test_big_number_mutex_from_hex_string_null_unlocks,
     FT_ASSERT_EQ(false, result_mutex->lockState());
     return (1);
 }
+
+#undef INIT_BIG_NUMBER

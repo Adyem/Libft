@@ -64,6 +64,7 @@ int ft_world_registry::initialize() noexcept
     regions_error = this->_regions.initialize();
     if (regions_error != FT_ERR_SUCCESS)
     {
+        this->_initialized_state = ft_world_registry::_state_destroyed;
         this->set_error(regions_error);
         return (regions_error);
     }
@@ -71,6 +72,7 @@ int ft_world_registry::initialize() noexcept
     if (worlds_error != FT_ERR_SUCCESS)
     {
         (void)this->_regions.destroy();
+        this->_initialized_state = ft_world_registry::_state_destroyed;
         this->set_error(worlds_error);
         return (worlds_error);
     }
@@ -101,6 +103,15 @@ int ft_world_registry::initialize(const ft_world_registry &other) noexcept
     {
         this->set_error(FT_ERR_SUCCESS);
         return (FT_ERR_SUCCESS);
+    }
+    if (this->_initialized_state == ft_world_registry::_state_initialized)
+    {
+        initialize_error = this->destroy();
+        if (initialize_error != FT_ERR_SUCCESS)
+        {
+            this->set_error(initialize_error);
+            return (initialize_error);
+        }
     }
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)

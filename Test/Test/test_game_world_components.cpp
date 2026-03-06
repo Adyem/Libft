@@ -24,6 +24,7 @@
 FT_TEST(test_game_world_initializes_new_subsystems, "Game world creates quest vendor and upgrade resources")
 {
     ft_world world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
 
     FT_ASSERT_EQ(false, world.get_quest().get() == ft_nullptr);
     FT_ASSERT_EQ(false, world.get_vendor_profile().get() == ft_nullptr);
@@ -36,6 +37,8 @@ FT_TEST(test_game_world_initializes_new_subsystems, "Game world creates quest ve
 FT_TEST(test_game_world_copy_preserves_new_resources, "Game world copy retains quest vendor and upgrade values")
 {
     ft_world world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.get_error());
     ft_sharedptr<ft_quest> quest = world.get_quest();
     ft_sharedptr<ft_vendor_profile> vendor = world.get_vendor_profile();
     ft_sharedptr<ft_upgrade> upgrade = world.get_upgrade();
@@ -64,6 +67,7 @@ FT_TEST(test_game_world_copy_preserves_new_resources, "Game world copy retains q
 FT_TEST(test_game_world_move_transfers_new_resources, "Game world move transfers quest vendor and upgrade ownership")
 {
     ft_world source;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize());
     ft_sharedptr<ft_quest> quest = source.get_quest();
     ft_sharedptr<ft_vendor_profile> vendor = source.get_vendor_profile();
     ft_sharedptr<ft_upgrade> upgrade = source.get_upgrade();
@@ -92,6 +96,7 @@ FT_TEST(test_game_world_move_transfers_new_resources, "Game world move transfers
 FT_TEST(test_game_world_get_quest_propagates_errors, "Game world getters propagate quest validation failures")
 {
     ft_world world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
     ft_sharedptr<ft_quest> quest = world.get_quest();
 
     quest->set_phases(-5);
@@ -104,6 +109,7 @@ FT_TEST(test_game_world_get_quest_propagates_errors, "Game world getters propaga
 FT_TEST(test_game_world_get_vendor_profile_propagates_null_pointer_error, "Game world vendor profile getter reports missing pointer")
 {
     ft_world world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
     ft_sharedptr<ft_vendor_profile> &vendor_profile = world.get_vendor_profile();
 
     vendor_profile.reset();
@@ -117,6 +123,7 @@ FT_TEST(test_game_world_get_vendor_profile_propagates_null_pointer_error, "Game 
 FT_TEST(test_game_world_get_vendor_profile_propagates_errors, "Game world getters propagate vendor profile validation failures")
 {
     ft_world world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
     ft_sharedptr<ft_vendor_profile> vendor_profile = world.get_vendor_profile();
 
     vendor_profile->set_vendor_id(-9);
@@ -129,6 +136,7 @@ FT_TEST(test_game_world_get_vendor_profile_propagates_errors, "Game world getter
 FT_TEST(test_game_world_vendor_profile_recovers_after_replacement, "Game world vendor profile getter clears error after restoring pointer")
 {
     ft_world world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
     ft_sharedptr<ft_vendor_profile> &vendor_profile = world.get_vendor_profile();
 
     vendor_profile.reset();
@@ -146,6 +154,7 @@ FT_TEST(test_game_world_vendor_profile_recovers_after_replacement, "Game world v
 FT_TEST(test_game_world_get_upgrade_recovers_after_replacement, "Game world upgrade getter clears error after restoring pointer")
 {
     ft_world world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
     ft_sharedptr<ft_upgrade> &upgrade = world.get_upgrade();
 
     upgrade.reset();
@@ -162,6 +171,7 @@ FT_TEST(test_game_world_get_upgrade_recovers_after_replacement, "Game world upgr
 FT_TEST(test_game_world_get_upgrade_propagates_errors, "Game world getters propagate upgrade validation failures")
 {
     ft_world world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
     ft_sharedptr<ft_upgrade> upgrade = world.get_upgrade();
 
     upgrade->set_id(-3);
@@ -174,6 +184,7 @@ FT_TEST(test_game_world_get_upgrade_propagates_errors, "Game world getters propa
 FT_TEST(test_game_world_copy_preserves_quest_text_fields, "Game world copy retains quest descriptive fields")
 {
     ft_world world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
 
     ft_string description;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, description.initialize("Enter the catacombs"));
@@ -196,6 +207,7 @@ FT_TEST(test_game_world_copy_preserves_quest_text_fields, "Game world copy retai
 FT_TEST(test_game_world_move_preserves_vendor_pricing_fields, "Game world move keeps vendor pricing and taxes")
 {
     ft_world source;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize());
 
     source.get_vendor_profile()->set_vendor_id(88);
     source.get_vendor_profile()->set_buy_markup(1.4);
@@ -217,7 +229,9 @@ FT_TEST(test_game_world_move_preserves_vendor_pricing_fields, "Game world move k
 FT_TEST(test_game_world_copy_assignment_preserves_new_resources, "Game world copy assignment copies quest vendor and upgrade data")
 {
     ft_world source;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize());
     ft_world destination;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.initialize());
 
     source.get_quest()->set_id(24);
     source.get_quest()->set_phases(4);
@@ -244,6 +258,7 @@ FT_TEST(test_game_world_copy_assignment_preserves_new_resources, "Game world cop
 FT_TEST(test_game_world_copy_preserves_world_region_content, "Game world copy retains world region identifiers")
 {
     ft_world world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
     ft_vector<int> region_ids;
 
     region_ids.push_back(5);
@@ -265,6 +280,7 @@ FT_TEST(test_game_world_copy_preserves_world_region_content, "Game world copy re
 FT_TEST(test_game_world_copy_preserves_registered_regions, "Game world copy maintains registry entries")
 {
     ft_world world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
     ft_region_definition region_definition;
     ft_region_definition fetched_region;
     ft_world_region fetched_world;
@@ -297,7 +313,9 @@ FT_TEST(test_game_world_copy_preserves_registered_regions, "Game world copy main
 FT_TEST(test_game_world_move_assignment_transfers_new_resources, "Game world move assignment moves quest vendor and upgrade ownership")
 {
     ft_world source;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize());
     ft_world destination;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, destination.initialize());
 
     source.get_quest()->set_id(45);
     source.get_vendor_profile()->set_vendor_id(91);
@@ -324,6 +342,7 @@ FT_TEST(test_game_world_move_assignment_transfers_new_resources, "Game world mov
 FT_TEST(test_game_world_move_transfers_world_region_data, "Game world move transfers world region and resets source")
 {
     ft_world source;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, source.initialize());
     ft_sharedptr<ft_world_region> world_region = source.get_world_region();
     ft_vector<int> region_ids;
 
@@ -347,6 +366,7 @@ FT_TEST(test_game_world_move_transfers_world_region_data, "Game world move trans
 FT_TEST(test_game_world_reuses_shared_new_components, "Game world getters return shared quest vendor and upgrade pointers")
 {
     ft_world world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
     ft_sharedptr<ft_quest> first_quest = world.get_quest();
     ft_sharedptr<ft_vendor_profile> first_vendor = world.get_vendor_profile();
     ft_sharedptr<ft_upgrade> first_upgrade = world.get_upgrade();
@@ -365,6 +385,7 @@ FT_TEST(test_game_world_reuses_shared_new_components, "Game world getters return
 FT_TEST(test_game_world_get_world_region_propagates_null_pointer_error, "Game world reports missing world region pointer")
 {
     ft_world world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
     ft_sharedptr<ft_world_region> &world_region = world.get_world_region();
 
     world_region.reset();
@@ -378,6 +399,7 @@ FT_TEST(test_game_world_get_world_region_propagates_null_pointer_error, "Game wo
 FT_TEST(test_game_world_get_world_region_recovers_after_replacement, "Game world clears error once world region is restored")
 {
     ft_world world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
     ft_sharedptr<ft_world_region> &world_region = world.get_world_region();
 
     world_region.reset();
@@ -395,6 +417,7 @@ FT_TEST(test_game_world_get_world_region_recovers_after_replacement, "Game world
 FT_TEST(test_game_world_exposes_economy_crafting_and_dialogue, "Game world provides economy, crafting, and dialogue accessors")
 {
     ft_world world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
 
     FT_ASSERT_NE((void *)ft_nullptr, world.get_economy_table().get());
     FT_ASSERT_NE((void *)ft_nullptr, world.get_crafting().get());
@@ -407,6 +430,7 @@ FT_TEST(test_game_world_exposes_economy_crafting_and_dialogue, "Game world provi
 FT_TEST(test_game_world_registers_economy_entries_through_shared_tables, "Game world registers vendor and currency data through economy table")
 {
     ft_world world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
     ft_price_definition potion_price;
     ft_vendor_profile vendor_profile;
     ft_currency_rate gold_rate;
@@ -426,6 +450,7 @@ FT_TEST(test_game_world_registers_economy_entries_through_shared_tables, "Game w
 FT_TEST(test_game_world_propagates_null_shared_components, "Game world reports errors when shared components are missing")
 {
     ft_world world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
 
     world.get_economy_table().reset();
     world.get_crafting().reset();
@@ -443,6 +468,7 @@ FT_TEST(test_game_world_propagates_null_shared_components, "Game world reports e
 FT_TEST(test_game_world_get_upgrade_propagates_level_error, "Game world upgrade getter propagates invalid level errors")
 {
     ft_world world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
     ft_sharedptr<ft_upgrade> upgrade = world.get_upgrade();
 
     upgrade->set_max_level(2);
@@ -456,6 +482,7 @@ FT_TEST(test_game_world_get_upgrade_propagates_level_error, "Game world upgrade 
 FT_TEST(test_game_world_upgrade_error_clears_after_valid_level, "Game world clears upgrade errors once level is valid")
 {
     ft_world world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
     ft_sharedptr<ft_upgrade> upgrade = world.get_upgrade();
 
     upgrade->set_max_level(1);
@@ -474,6 +501,7 @@ FT_TEST(test_game_world_upgrade_error_clears_after_valid_level, "Game world clea
 FT_TEST(test_game_world_vendor_profile_error_clears_after_valid_id, "Game world clears vendor profile errors after valid id reset")
 {
     ft_world world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
     ft_sharedptr<ft_vendor_profile> vendor_profile = world.get_vendor_profile();
 
     vendor_profile->set_vendor_id(-3);

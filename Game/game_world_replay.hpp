@@ -10,12 +10,22 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Template/vector.hpp"
 #include "../Template/function.hpp"
+#include <stdint.h>
 
 class ft_world_replay_session
 {
     private:
         ft_string   _snapshot_payload;
         ft_vector<ft_function<void(ft_world&, ft_event&)> > _event_callbacks;
+        uint8_t     _initialized_state;
+
+        static const uint8_t _state_uninitialized = 0;
+        static const uint8_t _state_destroyed = 1;
+        static const uint8_t _state_initialized = 2;
+
+        void abort_lifecycle_error(const char *method_name,
+                const char *reason) const;
+        void abort_if_not_initialized(const char *method_name) const;
 
     public:
         ft_world_replay_session() noexcept;
@@ -25,6 +35,8 @@ class ft_world_replay_session
         ft_world_replay_session(ft_world_replay_session &&other) noexcept = delete;
         ft_world_replay_session &operator=(ft_world_replay_session &&other) noexcept = delete;
 
+        int initialize() noexcept;
+        int destroy() noexcept;
         int capture_snapshot(ft_world &world, const ft_character &character, const ft_inventory &inventory) noexcept;
         int restore_snapshot(ft_sharedptr<ft_world> &world_ptr, ft_character &character, ft_inventory &inventory) noexcept;
         int replay_ticks(ft_sharedptr<ft_world> &world_ptr, ft_character &character, ft_inventory &inventory, int ticks,

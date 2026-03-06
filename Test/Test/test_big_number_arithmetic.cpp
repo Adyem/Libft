@@ -8,10 +8,15 @@
 #ifndef LIBFT_TEST_BUILD
 #endif
 
+#define INIT_BIG_NUMBER(number) FT_ASSERT_EQ(FT_ERR_SUCCESS, number.initialize())
+
 FT_TEST(test_big_number_addition_large_values, "ft_big_number addition handles large operands")
 {
     ft_big_number left_number;
     ft_big_number right_number;
+
+    INIT_BIG_NUMBER(left_number);
+    INIT_BIG_NUMBER(right_number);
 
     left_number.assign("12345678901234567890");
     right_number.assign("98765432109876543210");
@@ -28,6 +33,11 @@ FT_TEST(test_big_number_signed_addition, "ft_big_number addition handles negativ
     ft_big_number negative_two_hundred;
     ft_big_number positive_two_hundred;
     ft_big_number positive_five_hundred;
+
+    INIT_BIG_NUMBER(negative_five_hundred);
+    INIT_BIG_NUMBER(negative_two_hundred);
+    INIT_BIG_NUMBER(positive_two_hundred);
+    INIT_BIG_NUMBER(positive_five_hundred);
 
     negative_five_hundred.assign("-500");
     negative_two_hundred.assign("-200");
@@ -61,6 +71,9 @@ FT_TEST(test_big_number_subtraction_basic, "ft_big_number subtraction removes di
     ft_big_number left_number;
     ft_big_number right_number;
 
+    INIT_BIG_NUMBER(left_number);
+    INIT_BIG_NUMBER(right_number);
+
     left_number.assign("1000");
     right_number.assign("1");
     ft_big_number difference_number = left_number - right_number;
@@ -77,6 +90,12 @@ FT_TEST(test_big_number_signed_subtraction, "ft_big_number subtraction handles n
     ft_big_number negative_five;
     ft_big_number negative_three;
     ft_big_number negative_ten;
+
+    INIT_BIG_NUMBER(positive_five);
+    INIT_BIG_NUMBER(positive_three);
+    INIT_BIG_NUMBER(negative_five);
+    INIT_BIG_NUMBER(negative_three);
+    INIT_BIG_NUMBER(negative_ten);
 
     positive_five.assign("5");
     positive_three.assign("3");
@@ -111,6 +130,9 @@ FT_TEST(test_big_number_subtraction_negative_result, "ft_big_number subtraction 
     ft_big_number small_number;
     ft_big_number large_number;
 
+    INIT_BIG_NUMBER(small_number);
+    INIT_BIG_NUMBER(large_number);
+
     small_number.assign("5");
     large_number.assign("10");
     ft_big_number result_number = small_number - large_number;
@@ -125,6 +147,9 @@ FT_TEST(test_big_number_multiplication_large_values, "ft_big_number multiplicati
     ft_big_number left_number;
     ft_big_number right_number;
 
+    INIT_BIG_NUMBER(left_number);
+    INIT_BIG_NUMBER(right_number);
+
     left_number.assign("99999");
     right_number.assign("88888");
     ft_big_number product_number = left_number * right_number;
@@ -137,6 +162,10 @@ FT_TEST(test_big_number_signed_multiplication, "ft_big_number multiplication app
     ft_big_number positive_twelve;
     ft_big_number negative_three;
     ft_big_number negative_four;
+
+    INIT_BIG_NUMBER(positive_twelve);
+    INIT_BIG_NUMBER(negative_three);
+    INIT_BIG_NUMBER(negative_four);
 
     positive_twelve.assign("12");
     negative_three.assign("-3");
@@ -164,6 +193,9 @@ FT_TEST(test_big_number_division_even, "ft_big_number division returns quotient"
     ft_big_number numerator_number;
     ft_big_number denominator_number;
 
+    INIT_BIG_NUMBER(numerator_number);
+    INIT_BIG_NUMBER(denominator_number);
+
     numerator_number.assign("99999999999999999999");
     denominator_number.assign("3");
     ft_big_number quotient_number = numerator_number / denominator_number;
@@ -177,6 +209,11 @@ FT_TEST(test_big_number_signed_division, "ft_big_number division applies sign")
     ft_big_number numerator_negative;
     ft_big_number denominator_positive;
     ft_big_number denominator_negative;
+
+    INIT_BIG_NUMBER(numerator_positive);
+    INIT_BIG_NUMBER(numerator_negative);
+    INIT_BIG_NUMBER(denominator_positive);
+    INIT_BIG_NUMBER(denominator_negative);
 
     numerator_positive.assign("100");
     numerator_negative.assign("-100");
@@ -205,6 +242,9 @@ FT_TEST(test_big_number_division_by_zero_error, "ft_big_number division reports 
     ft_big_number numerator_number;
     ft_big_number zero_number;
 
+    INIT_BIG_NUMBER(numerator_number);
+    INIT_BIG_NUMBER(zero_number);
+
     zero_number.assign("0");
     numerator_number.assign("12345");
     ft_big_number result_number = numerator_number / zero_number;
@@ -216,6 +256,9 @@ FT_TEST(test_big_number_modulus_basic, "ft_big_number modulus returns signed rem
     ft_big_number positive_dividend;
     ft_big_number divisor;
 
+    INIT_BIG_NUMBER(positive_dividend);
+    INIT_BIG_NUMBER(divisor);
+
     positive_dividend.assign("100");
     divisor.assign("7");
 
@@ -225,6 +268,7 @@ FT_TEST(test_big_number_modulus_basic, "ft_big_number modulus returns signed rem
     FT_ASSERT(positive_remainder.is_positive());
 
     ft_big_number negative_dividend;
+    INIT_BIG_NUMBER(negative_dividend);
 
     negative_dividend.assign("-100");
     ft_big_number negative_remainder = negative_dividend % divisor;
@@ -235,6 +279,9 @@ FT_TEST(test_big_number_modulus_basic, "ft_big_number modulus returns signed rem
     ft_big_number small_dividend;
     ft_big_number large_divisor;
 
+    INIT_BIG_NUMBER(small_dividend);
+    INIT_BIG_NUMBER(large_divisor);
+
     small_dividend.assign("3");
     large_divisor.assign("10");
     ft_big_number small_remainder = small_dividend % large_divisor;
@@ -243,6 +290,7 @@ FT_TEST(test_big_number_modulus_basic, "ft_big_number modulus returns signed rem
     FT_ASSERT(small_remainder.is_positive());
 
     ft_big_number zero_divisor;
+    INIT_BIG_NUMBER(zero_divisor);
 
     zero_divisor.assign("0");
     ft_big_number error_remainder = positive_dividend % zero_divisor;
@@ -255,6 +303,10 @@ FT_TEST(test_big_number_modular_exponentiation, "ft_big_number mod_pow performs 
     ft_big_number exponent_number;
     ft_big_number modulus_number;
 
+    INIT_BIG_NUMBER(base_number);
+    INIT_BIG_NUMBER(exponent_number);
+    INIT_BIG_NUMBER(modulus_number);
+
     base_number.assign("7");
     exponent_number.assign("4");
     modulus_number.assign("13");
@@ -264,6 +316,7 @@ FT_TEST(test_big_number_modular_exponentiation, "ft_big_number mod_pow performs 
     FT_ASSERT(power_result.is_positive());
 
     ft_big_number zero_exponent;
+    INIT_BIG_NUMBER(zero_exponent);
 
     zero_exponent.assign("0");
     ft_big_number identity_result = base_number.mod_pow(zero_exponent, modulus_number);
@@ -274,6 +327,10 @@ FT_TEST(test_big_number_modular_exponentiation, "ft_big_number mod_pow performs 
     ft_big_number negative_base;
     ft_big_number cube_exponent;
     ft_big_number modulus_five;
+
+    INIT_BIG_NUMBER(negative_base);
+    INIT_BIG_NUMBER(cube_exponent);
+    INIT_BIG_NUMBER(modulus_five);
 
     negative_base.assign("-2");
     cube_exponent.assign("3");
@@ -286,11 +343,15 @@ FT_TEST(test_big_number_modular_exponentiation, "ft_big_number mod_pow performs 
     ft_big_number zero_modulus;
     ft_big_number exponent_one;
 
+    INIT_BIG_NUMBER(zero_modulus);
+    INIT_BIG_NUMBER(exponent_one);
+
     zero_modulus.assign("0");
     exponent_one.assign("1");
     ft_big_number modulus_error = base_number.mod_pow(exponent_one, zero_modulus);
 
     ft_big_number negative_exponent;
+    INIT_BIG_NUMBER(negative_exponent);
 
     negative_exponent.assign("-1");
     ft_big_number exponent_error
@@ -304,6 +365,11 @@ FT_TEST(test_big_number_comparisons, "ft_big_number comparison operators compare
     ft_big_number second_number;
     ft_big_number third_number;
     ft_big_number zero_number;
+
+    INIT_BIG_NUMBER(first_number);
+    INIT_BIG_NUMBER(second_number);
+    INIT_BIG_NUMBER(third_number);
+    INIT_BIG_NUMBER(zero_number);
 
     first_number.assign("12345");
     second_number.assign("12345");
@@ -328,6 +394,12 @@ FT_TEST(test_big_number_signed_comparisons, "ft_big_number comparisons handle si
     ft_big_number positive_large;
     ft_big_number negative_small_copy;
 
+    INIT_BIG_NUMBER(negative_large);
+    INIT_BIG_NUMBER(negative_small);
+    INIT_BIG_NUMBER(positive_small);
+    INIT_BIG_NUMBER(positive_large);
+    INIT_BIG_NUMBER(negative_small_copy);
+
     negative_large.assign("-200");
     negative_small.assign("-50");
     positive_small.assign("50");
@@ -350,3 +422,5 @@ FT_TEST(test_big_number_signed_comparisons, "ft_big_number comparisons handle si
     FT_ASSERT(negative_small != positive_small);
     return (1);
 }
+
+#undef INIT_BIG_NUMBER

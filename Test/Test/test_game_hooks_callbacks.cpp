@@ -17,6 +17,7 @@ FT_TEST(test_game_hooks_invoke_callbacks, "Game: hooks dispatch registered callb
     ft_character character;
     ft_item item;
     ft_world world;
+    FT_ASSERT_EQ(FT_ERR_SUCCESS, world.initialize());
     ft_event event;
     FT_ASSERT_EQ(FT_ERR_SUCCESS, event.initialize());
     int crafted_invocations;

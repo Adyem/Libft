@@ -75,6 +75,8 @@ int ft_world_region::initialize() noexcept
             "called while object is already initialized");
         return (FT_ERR_INVALID_STATE);
     }
+    this->_world_id = 0;
+    this->_region_ids.clear();
     this->_initialized_state = ft_world_region::_state_initialized;
     this->set_error(FT_ERR_SUCCESS);
     return (FT_ERR_SUCCESS);
@@ -126,6 +128,15 @@ int ft_world_region::initialize(int world_id,
 {
     int initialize_error;
 
+    if (this->_initialized_state == ft_world_region::_state_initialized)
+    {
+        initialize_error = this->destroy();
+        if (initialize_error != FT_ERR_SUCCESS)
+        {
+            this->set_error(initialize_error);
+            return (initialize_error);
+        }
+    }
     initialize_error = this->initialize();
     if (initialize_error != FT_ERR_SUCCESS)
     {
